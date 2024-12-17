@@ -1,5 +1,5 @@
+import tailwindProse from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
-
 export default {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -14,5 +14,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [tailwindProse],
 } satisfies Config;
