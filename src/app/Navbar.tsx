@@ -1,4 +1,3 @@
-import { ButtonLink } from "@/components/ui/button";
 import clsx from "clsx";
 import { Children } from "react";
 
@@ -11,15 +10,6 @@ export function Navbar({ className, children }: { children?: React.ReactNode; cl
             {child}
           </li>
         ))}
-        <li className="flex">
-          <ButtonLink variant={"outline"}>Three</ButtonLink>
-        </li>
-        <li className="flex">
-          <ButtonLink variant={"outline"}>Three</ButtonLink>
-        </li>
-        <li className="flex">
-          <ButtonLink variant={"outline"}>Three</ButtonLink>
-        </li>
       </ul>
     </nav>
   );

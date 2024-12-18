@@ -91,7 +91,7 @@ body {
 }
 
 .content-editable {
-  @apply prose;
+  /* @apply prose; */
   max-width: 100%;
   height: calc(100vh - var(--editor-toolbar-height) - var(--navbar-height));
 }
