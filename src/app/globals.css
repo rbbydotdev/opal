@@ -41,6 +41,9 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --navbar-height: 2.5rem;
+    --editor-toolbar-height: 3.5rem;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -85,4 +88,17 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.content-editable {
+  @apply prose;
+  max-width: 100%;
+  height: calc(100vh - var(--editor-toolbar-height) - var(--navbar-height));
+}
+.mdxeditor-toolbar {
+  height: var(--editor-toolbar-height);
+  align-items: start !important;
+  display: flex;
+  /* mdxeditor-toolbar: */
+  scrollbar-width: thin;
 }
