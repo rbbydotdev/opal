@@ -90,8 +90,10 @@ body {
   }
 }
 
+.mdxeditor-popup-container {
+  z-index: 10 !important;
+}
 .content-editable {
-  /* @apply prose; */
   max-width: 100%;
   height: calc(100vh - var(--editor-toolbar-height) - var(--navbar-height));
 }
