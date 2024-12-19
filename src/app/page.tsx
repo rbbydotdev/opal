@@ -27,7 +27,7 @@ export default async function Home() {
                   <Editor
                     markdown={md}
                     className="flex flex-col"
-                    contentEditableClassName="max-w-full overflow-auto content-editable"
+                    contentEditableClassName="max-w-full overflow-auto content-editable prose"
                   />
                 </div>
               </div>
