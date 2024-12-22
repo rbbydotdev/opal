@@ -9,6 +9,11 @@ export default {
   ],
   theme: {
     extend: {
+      fontSize: {
+        "2xs": ".625rem",
+        "3xs": ".5rem",
+        "4xs": ".375rem",
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -68,5 +73,6 @@ export default {
       },
     },
   },
+  safelist: [{ pattern: /pl-.+/ }],
   plugins: [tailwindProse, require("tailwindcss-animate")],
 } satisfies Config;
