@@ -142,12 +142,14 @@ const Sidebar = React.forwardRef<
 
   if (collapsible === "none") {
     return (
-      <div
-        className={cn("flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground", className)}
-        ref={ref}
-        {...props}
-      >
-        {children}
+      <div>
+        <div
+          className={cn("flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground", className)}
+          ref={ref}
+          {...props}
+        >
+          {children}
+        </div>
       </div>
     );
   }
@@ -567,7 +569,7 @@ const SidebarMenuSub = React.forwardRef<HTMLUListElement, React.ComponentProps<"
       ref={ref}
       data-sidebar="menu-sub"
       className={cn(
-        "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5",
+        "ml-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border py-0.5",
         "group-data-[collapsible=icon]:hidden",
         className
       )}
