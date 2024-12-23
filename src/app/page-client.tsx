@@ -1,4 +1,5 @@
 "use client";
+import { BigButtonBar } from "@/app/BigButtonBar";
 import { Navbar } from "@/app/Navbar";
 import { Editor } from "@/components/Editor/Editor";
 import ModeToggle from "@/components/mode-toggle";
@@ -12,7 +13,8 @@ const AppSidebar = dynamic(() => import("@/components/app-sidebar").then((mod) =
 
 export function Page({ md }: { md: string }) {
   return (
-    <div className="w-full h-screen">
+    <div className="w-full h-screen flex" style={{ "--sidebar-width": "100%" } as React.CSSProperties}>
+      <BigButtonBar />
       <ResizablePanelGroup direction="horizontal" autoSaveId={"1"}>
         <ResizablePanel>
           <AppSidebar />

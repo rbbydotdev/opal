@@ -144,8 +144,8 @@ function SidebarFileMenu() {
 
 export function AppSidebar() {
   return (
-    <Sidebar collapsible="none">
-      <SidebarContent className="overflow-hidden">
+    <Sidebar collapsible="none" className="h-screen">
+      <SidebarContent>
         <Connections />
         <SidebarFileMenu />
       </SidebarContent>
