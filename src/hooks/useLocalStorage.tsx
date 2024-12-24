@@ -3,19 +3,17 @@ import { useCallback, useEffect, useState } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   // State to store our value
-  let _window: Window;
-
-  const [storedValue, setStoredValue] = useState<T>(() => {
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
+  useEffect(() => {
     try {
       // Get from local storage by key
       const item = window.localStorage.getItem(key);
       // Parse stored json or if none return initialValue
-      return item ? JSON.parse(item) : initialValue;
+      setStoredValue(item ? JSON.parse(item) : initialValue);
     } catch (error) {
       console.error(error);
-      return initialValue;
     }
-  });
+  }, [key, initialValue]);
 
   // Return a wrapped version of useState's setter function that persists the new value to localStorage
   const setValue = useCallback(

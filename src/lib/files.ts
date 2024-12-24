@@ -6,6 +6,8 @@ export type TreeFile = {
 
 export type TreeNode = TreeDir | TreeFile;
 
+export type TreeList = Array<string>;
+
 export type TreeDir = {
   children: Array<TreeNode>;
   name: string;
@@ -61,23 +63,46 @@ export function fileListToTree(fileList: string[]) {
   return root;
 }
 
+export type FileTreeJType = ReturnType<typeof FileTree.prototype.toJSON>;
+
 export class FileTree {
   tree = {} as TreeDir;
-  constructor(fileList: string[]) {
-    this.tree = fileListToTree(fileList);
+
+  constructor(tree: TreeList | TreeDir, public id = "filetree_id") {
+    if (Array.isArray(tree)) {
+      this.tree = fileListToTree(tree);
+    } else {
+      this.tree = tree;
+    }
   }
-  walk(fn: (n: TreeNode) => unknown, node = this.tree) {
+
+  walk(fn: (n: TreeNode, depth?: number) => unknown, node = this.tree, depth = 0) {
     node.children.forEach((child) => {
-      fn(child);
+      fn(child, depth);
       if (child.type === "dir") {
-        this.walk(fn, child);
+        this.walk(fn, child, depth + 1);
       }
     });
   }
+
   get root() {
     return this.tree;
   }
+
   get children() {
     return this.tree.children;
+  }
+
+  // Method to serialize the FileTree instance to a JSON object
+  toJSON() {
+    return {
+      tree: this.tree,
+      id: this.id,
+    };
+  }
+
+  // Static method to create a FileTree instance from a JSON object
+  static fromJSON(json: { tree: TreeDir; id: string }): FileTree {
+    return new FileTree(json.tree, json.id);
   }
 }
