@@ -2,6 +2,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 
+import { BigButtonBar } from "@/app/BigButtonBar";
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
@@ -36,7 +37,10 @@ export default async function RootLayout({
         <JotaiProvider>
           <SidebarProvider defaultOpen={defaultOpen}>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              {children}
+              <div className="w-full h-screen flex">
+                <BigButtonBar />
+                {children}
+              </div>
             </ThemeProvider>
           </SidebarProvider>
         </JotaiProvider>
