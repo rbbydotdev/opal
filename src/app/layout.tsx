@@ -2,7 +2,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 
-import { BigButtonBar, Workspaces } from "@/app/BigButtonBar";
+import { BigButtonBar } from "@/app/BigButtonBar";
+
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";

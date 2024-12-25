@@ -1,6 +1,6 @@
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { FileTree } from "@/shapes/workspace";
+import { FileTree } from "@/shapes/filetree";
 import React from "react";
 
 const FILE_TREE = new FileTree([
@@ -27,7 +27,6 @@ export default async function Layout({
   params: { workspaceId: string };
 }) {
   const fileTree = FILE_TREE;
-  await new Promise((rs) => setTimeout(rs, 0));
 
   return (
     <div className="w-full flex flex-col">

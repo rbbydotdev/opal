@@ -3,7 +3,7 @@ import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { FileTree, FileTreeJType } from "@/shapes/workspace";
+import { FileTree, FileTreeJType } from "@/shapes/filetree";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
