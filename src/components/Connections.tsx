@@ -10,7 +10,7 @@ import { Github } from "lucide-react";
 
 export function Connections() {
   return (
-    <SidebarGroup className="">
+    <SidebarGroup>
       <SidebarGroupLabel className="flex justify-between">Connections</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>

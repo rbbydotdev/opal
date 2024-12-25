@@ -3,10 +3,16 @@ import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { FileTree, FileTreeJType } from "@/lib/files";
+import { FileTree, FileTreeJType } from "@/shapes/workspace";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-export function SidebarFileMenu({ fileTreeJson }: { fileTreeJson: FileTreeJType }) {
+
+export function SidebarFileMenu({
+  fileTreeJson,
+  ...props
+}: {
+  fileTreeJson: FileTreeJType;
+} & React.ComponentProps<typeof SidebarGroup>) {
   const fileTree = useMemo(() => FileTree.fromJSON(fileTreeJson), [fileTreeJson]);
   const [expanded, updateExpanded] = useLocalStorage<{ [k: string]: boolean } | null>("expandedFiles", null);
   const [fileTreeId, setfileTreeId] = useLocalStorage<string>("filetree_id", fileTreeJson.id);
@@ -38,7 +44,7 @@ export function SidebarFileMenu({ fileTreeJson }: { fileTreeJson: FileTreeJType 
   }, [expanded, fileTreeJson.id, fileTreeId, setfileTreeId, updateExpanded]);
 
   return (
-    <SidebarGroup className="pb-14">
+    <SidebarGroup {...props} className="h-full p-0">
       <SidebarGroupLabel className="flex justify-between">
         Files
         <div>
@@ -54,8 +60,8 @@ export function SidebarFileMenu({ fileTreeJson }: { fileTreeJson: FileTreeJType 
           </Button>
         </div>
       </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <FileTreeMenu fileTree={fileTree.children} depth={0} expand={expand} expanded={expanded ?? {}} />
+      <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
+        <FileTreeMenu fileTreeChildren={fileTree.children} depth={0} expand={expand} expanded={expanded ?? {}} />
       </SidebarGroupContent>
     </SidebarGroup>
   );
