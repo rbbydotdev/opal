@@ -9,6 +9,9 @@ export default {
   ],
   theme: {
     extend: {
+      scrollbar: {
+        thin: "thin",
+      },
       fontSize: {
         "2xs": ".625rem",
         "3xs": ".5rem",
@@ -74,5 +77,15 @@ export default {
     },
   },
   safelist: [{ pattern: /pl-.+/ }],
-  plugins: [tailwindProse, require("tailwindcss-animate")],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        ".scrollbar-thin": {
+          "scrollbar-width": "thin",
+        },
+      });
+    },
+    tailwindProse,
+    require("tailwindcss-animate"),
+  ],
 } satisfies Config;

@@ -2,7 +2,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 
-import { BigButtonBar } from "@/app/BigButtonBar";
+import { BigButtonBar, Workspaces } from "@/app/BigButtonBar";
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
@@ -30,6 +30,24 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar:state")?.value === "true";
+  const workspaces: Workspaces = [
+    {
+      name: "Workspace 1",
+      href: "/workspace/WRK1",
+    },
+    {
+      name: "Workspace 2",
+      href: "/workspace/WRK2",
+    },
+    {
+      name: "Workspace 3",
+      href: "/workspace/WRK3",
+    },
+    {
+      name: "Workspace 4",
+      href: "/workspace/WRK4",
+    },
+  ];
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -37,8 +55,8 @@ export default async function RootLayout({
         <JotaiProvider>
           <SidebarProvider defaultOpen={defaultOpen}>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <div className="w-full h-screen flex">
-                <BigButtonBar />
+              <div className="w-full flex h-screen overflow-hidden">
+                <BigButtonBar workspaces={workspaces} />
                 {children}
               </div>
             </ThemeProvider>

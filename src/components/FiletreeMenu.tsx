@@ -1,59 +1,63 @@
-import { SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from "@/components/ui/sidebar";
-import { TreeDir } from "@/lib/files";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { FileTree } from "@/shapes/workspace";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import clsx from "clsx";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 export function FileTreeMenu({
-  fileTree,
+  fileTreeChildren,
   depth = 0,
   expand,
   expanded,
 }: {
   expand: (s: string, b: boolean) => void;
   expanded: { [path: string]: boolean };
-  fileTree?: TreeDir["children"];
+  fileTreeChildren?: FileTree["children"];
   depth?: number;
 }) {
-  if (!fileTree) return null;
+  if (!fileTreeChildren) return null;
   const isExpanded = (file: { path: string }) => {
     return !!(expanded && file.path && expanded[file.path]);
   };
   return (
-    <SidebarMenuSub className={clsx(depth === 0 ? "m-0" : "")}>
-      {fileTree.map((file) => (
+    <SidebarMenu className="">
+      {fileTreeChildren.map((file) => (
         <Collapsible
           key={file.name}
           open={isExpanded(file)}
           defaultOpen={isExpanded(file)}
           onOpenChange={(o) => expand(file.path, o)}
         >
-          <SidebarMenuSubItem>
+          <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuSubButton asChild>
+              <SidebarMenuButton asChild>
                 {file.type === "dir" ? (
-                  <a href={"#"} className="group">
-                    <span>
-                      <ChevronDown size={18} className="group-data-[state=closed]:hidden" />
-                      <ChevronRight size={18} className="group-data-[state=open]:hidden" />
+                  <Link href={"#"} className="group">
+                    <span className="inline-flex" style={{ marginLeft: depth * 1 + "rem" }}>
+                      <span className="mr-2">
+                        <ChevronDown size={18} className="group-data-[state=closed]:hidden" />
+                        <ChevronRight size={18} className="group-data-[state=open]:hidden" />
+                      </span>
+                      <span>{file.name}</span>
                     </span>
-                    <span>{file.name}</span>
-                  </a>
+                  </Link>
                 ) : (
-                  <a href={"#"} className="group">
-                    <span>{file.name}</span>
-                  </a>
+                  <Link href={{ pathname: file.href, query: { sf: "1" } }} className="group">
+                    <span style={{ marginLeft: depth * 1 + "rem" }}>
+                      <span className="pl-3">{file.name}</span>
+                    </span>
+                  </Link>
                 )}
-              </SidebarMenuSubButton>
+              </SidebarMenuButton>
             </CollapsibleTrigger>
             <CollapsibleContent>
               {file.type === "dir" ? (
-                <FileTreeMenu expand={expand} fileTree={file.children} depth={depth + 1} expanded={expanded} />
+                <FileTreeMenu expand={expand} fileTreeChildren={file.children} depth={depth + 1} expanded={expanded} />
               ) : null}
             </CollapsibleContent>
-          </SidebarMenuSubItem>
+          </SidebarMenuItem>
         </Collapsible>
       ))}
-    </SidebarMenuSub>
+    </SidebarMenu>
   );
 }

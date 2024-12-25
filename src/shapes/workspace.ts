@@ -1,7 +1,10 @@
+import { absPath } from "@/lib/paths";
+
 export type TreeFile = {
   name: string;
   type: "file";
   path: string;
+  href: string;
 };
 
 export type TreeNode = TreeDir | TreeFile;
@@ -39,6 +42,7 @@ export function fileListToTree(fileList: string[]) {
           type: "file",
           path,
           name: segment,
+          href: absPath("/workspace/mywrkspc").join(path).str,
         });
         break;
       }
