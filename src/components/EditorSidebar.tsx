@@ -1,6 +1,6 @@
 import { SidebarFileMenu } from "@/components/SidebarFileMenu";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
-import { FileTreeJType } from "@/shapes/workspace";
+import { FileTreeJType } from "@/shapes/filetree";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 export function EditorSidebar({

@@ -1,17 +1,18 @@
 "use client";
+import Identicon from "@/components/Identicon";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { ChevronDown, ChevronUp, CirclePlus, Files, LucideIcon, Settings } from "lucide-react";
+import { ChevronDown, ChevronUp, CirclePlus, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { twMerge } from "tailwind-merge";
 function BigButton({
-  Icon,
+  icon,
   title,
   active,
   ...restProps
 }: {
-  Icon: LucideIcon;
+  icon: React.ReactNode;
   title?: string;
   active?: boolean;
 } & React.ComponentProps<typeof Link>) {
@@ -21,14 +22,14 @@ function BigButton({
     <Link
       {...restProps}
       className={twMerge(
-        "text-3xs  h-16 p-0 cursor-pointer w-full hover:bg-slate-800 gap-2 stroke-slate-500 text-slate-500 hover:stroke-white hover:text-white bg-slate-900 flex items-center",
+        "text-3xs h-16 p-0 cursor-pointer w-full hover:bg-slate-800 gap-2 stroke-slate-500 text-slate-500 hover:stroke-white hover:text-white bg-slate-900 flex items-center",
         restProps.className
       )}
     >
       <div className="grid w-full items-center">
         {isActive && <div className="w-0.5 h-full bg-white col-start-1 row-start-1 ml-1"></div>}
         <div className="flex flex-col items-center justify-center col-start-1 row-start-1">
-          <Icon stroke="current" size={32} strokeWidth={1.25} />
+          {icon}
           {title && <div className="uppercase p-1 flex items-center justify-center text-center font-mono">{title}</div>}
         </div>
       </div>
@@ -37,12 +38,12 @@ function BigButton({
 }
 
 function DropDownButton({
-  Icon,
+  icon,
   title,
   href,
   className,
 }: {
-  Icon: LucideIcon;
+  icon: React.ReactNode;
   title?: string;
   href: string;
   className?: string;
@@ -59,7 +60,9 @@ function DropDownButton({
       <div className="grid w-full items-center">
         {/* <div className="w-1 h-1 bg-white col-start-1 row-start-1 ml-1  hidden group-hover:block"></div> */}
         <div className="flex flex-col items-center justify-center col-start-1 row-start-1">
-          <Icon stroke="current" size={24} strokeWidth={1.25} />
+          {/* <Icon stroke="current" size={24} strokeWidth={1.25} /> */}
+          {/* {Icon} */}
+          {icon}
           {title && <div className="uppercase p-1 flex items-center justify-center text-center font-mono">{title}</div>}
         </div>
       </div>
@@ -75,8 +78,14 @@ export function BigButtonBar({ workspaces }: { workspaces: Workspaces }) {
   const restWorkspaces = workspaces.filter((workspace) => workspace.href !== currentWorkspace.href);
   return (
     <div className="bg-slate-900 dark:bg-slate-100 w-20 flex flex-col flex-shrink-0 pt-4">
-      <BigButton Icon={Settings} title="" href="/settings" />
-      <BigButton Icon={Files} title={currentWorkspace.name} href={currentWorkspace.href} className="text-white" />
+      <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
+      <BigButton icon={<Settings stroke="current" size={32} strokeWidth={1.25} />} title="settings" href="/settings" />
+      <BigButton
+        icon={<Identicon input={currentWorkspace.href} size={4} scale={7} />}
+        title={currentWorkspace.name}
+        href={currentWorkspace.href}
+        className="text-white"
+      />
       <Collapsible className="w-full flex flex-col justify-center items-center" open={expand} onOpenChange={setExpand}>
         <CollapsibleTrigger
           className="h-8 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
@@ -87,9 +96,21 @@ export function BigButtonBar({ workspaces }: { workspaces: Workspaces }) {
         </CollapsibleTrigger>
         <CollapsibleContent className="w-full bg-slate-800">
           {restWorkspaces.map((workspace) => (
-            <DropDownButton Icon={Files} href={workspace.href} title={workspace.name} key={workspace.href} />
+            <DropDownButton
+              icon={<Identicon input={workspace.href} size={4} scale={7} />}
+              className=""
+              href={workspace.href}
+              title={workspace.name}
+              key={workspace.href}
+            />
           ))}
-          <DropDownButton Icon={CirclePlus} title="NEW" href="/" className="text-xs" />
+
+          <DropDownButton
+            icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
+            title="NEW"
+            href="/"
+            className="text-xs"
+          />
         </CollapsibleContent>
       </Collapsible>
     </div>
