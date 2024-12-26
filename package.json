@@ -22,6 +22,9 @@
     "@ukstv/jazzicon-react": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dexie": "^4.0.10",
+    "dexie-encrypted": "^2.0.0",
+    "dexie-react-hooks": "^1.1.7",
     "jotai": "^2.10.4",
     "lucide-react": "^0.468.0",
     "memfs": "^4.15.1",
@@ -30,6 +33,7 @@
     "next-view-transitions": "^0.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-fps-stats": "^0.3.1",
     "react-resizable-panels": "^2.1.7",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7"

@@ -1,9 +1,13 @@
-import { ClientIcon } from "@/app/sand/ClientIcon";
+// const IdxFun = dynamic(() => import("@/app/sand/IdxFun"), {
+//   ssr: false,
 
-export default function Page() {
+import IdxFun from "@/app/sand/IdxFun";
+
+// });
+export default async function Page() {
   return (
     <div className="w-full h-full">
-      <ClientIcon />
+      <IdxFun />
     </div>
   );
 }

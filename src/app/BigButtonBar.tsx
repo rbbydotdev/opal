@@ -1,10 +1,11 @@
 "use client";
 import Identicon from "@/components/Identicon";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { ChevronDown, ChevronUp, CirclePlus, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 function BigButton({
   icon,
@@ -72,10 +73,19 @@ function DropDownButton({
 
 export function BigButtonBar({ workspaces }: { workspaces: Workspaces }) {
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
-
+  const [selectedWorkspace, setSelectedWorkspace] = useLocalStorage("BigButtonBar/selectedWorkspace", workspaces[0]);
   const pathname = usePathname();
-  const currentWorkspace = workspaces.filter((workspace) => pathname.startsWith(workspace.href))[0] ?? workspaces[0];
+  // const [currentWorkspace, restWorkspaces] = useWorkspaces(pathname);
+  // this needs to be hoisted up to a provider
+  const currentWorkspace =
+    workspaces.filter((workspace) => pathname.startsWith(workspace.href))[0] ?? selectedWorkspace;
   const restWorkspaces = workspaces.filter((workspace) => workspace.href !== currentWorkspace.href);
+  useEffect(() => {
+    if (workspaces.some((wrk) => wrk.href.startsWith(pathname))) {
+      setSelectedWorkspace(currentWorkspace);
+    }
+  }, [currentWorkspace, pathname, setSelectedWorkspace, workspaces]);
+
   return (
     <div className="bg-slate-900 dark:bg-slate-100 w-20 flex flex-col flex-shrink-0 pt-4">
       <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
@@ -104,14 +114,13 @@ export function BigButtonBar({ workspaces }: { workspaces: Workspaces }) {
               key={workspace.href}
             />
           ))}
-
-          <DropDownButton
-            icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
-            title="NEW"
-            href="/"
-            className="text-xs"
-          />
         </CollapsibleContent>
+        <DropDownButton
+          icon={<CirclePlus stroke="current" size={32} strokeWidth={1.25} />}
+          title="new workspace"
+          href="/workspace/new"
+          className="text-3xs"
+        />
       </Collapsible>
     </div>
   );

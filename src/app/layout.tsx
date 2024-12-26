@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { BigButtonBar } from "@/app/BigButtonBar";
 
 import { JotaiProvider } from "@/app/JotaiProvider";
+import { FPSStats } from "@/components/FPSStats";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
@@ -34,25 +35,26 @@ export default async function RootLayout({
   const workspaces: Workspaces = [
     {
       name: "Workspace 1",
-      href: "/workspace/WRK1",
+      href: "/workspace/wrk1",
     },
     {
       name: "Workspace 2",
-      href: "/workspace/WRK2",
+      href: "/workspace/wrk2",
     },
     {
       name: "Workspace 3",
-      href: "/workspace/WRK3",
+      href: "/workspace/wrk3",
     },
     {
       name: "Workspace 4",
-      href: "/workspace/WRK4",
+      href: "/workspace/wrk4",
     },
   ];
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <FPSStats />
         <JotaiProvider>
           <SidebarProvider defaultOpen={defaultOpen}>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

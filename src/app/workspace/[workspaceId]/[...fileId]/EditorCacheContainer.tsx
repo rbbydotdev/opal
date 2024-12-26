@@ -1,5 +1,7 @@
+"use client";
 import { Editor } from "@/components/Editor/Editor";
 
+//@ TODO: rename me
 export function EditorCacheContainer({
   skipFetch,
   workspaceId,
