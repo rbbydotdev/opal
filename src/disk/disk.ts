@@ -1,11 +1,18 @@
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { memfs } from "memfs";
+import { customAlphabet, nanoid } from "nanoid";
 
 export type FSJType = { guid: string; type: FSTypes; fs: Record<string, string> };
 
 export type FSTypes = IndexedDbDisk["type"] | MemDisk["type"];
 
 export abstract class Disk {
+  static guid = () => "disk:" + nanoid();
+
+  static New(type: FSTypes, guid: string = Disk.guid()) {
+    return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
+  }
+
   abstract readonly type: FSTypes;
   abstract readonly guid: string;
   abstract fs: InstanceType<typeof LightningFs> | ReturnType<typeof memfs>["fs"];
@@ -97,8 +104,4 @@ export class MemDisk extends Disk {
     this.fs = memfs().fs;
   }
   async mount() {}
-}
-
-export function newDisk(type: FSTypes, guid: string) {
-  return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
 }

@@ -17,7 +17,7 @@ export default function Page() {
         <Button
           onClick={
             async () => {
-              new Workspace(name);
+              await new Workspace(name).save();
             }
             // await ClientDb.workspaces.put({
             //   name,
