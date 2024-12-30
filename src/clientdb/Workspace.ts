@@ -58,6 +58,12 @@ export class Workspace implements WorkspaceRecord {
     return workspace;
   }
 
+  static fromRoute(route: string) {
+    if (!route.startsWith(Workspace.routeRoot)) throw new Error("Invalid route");
+    const guid = route.slice(Workspace.routeRoot.length + 1);
+    return new Workspace(guid);
+  }
+
   static fromGuid(guid: string) {
     return new Workspace(guid);
   }
@@ -87,11 +93,11 @@ export class Workspace implements WorkspaceRecord {
   async create() {
     //check first if disk exists
     if (!this.disk || !this.disk.guid) {
-      this.disk = Disk.new("IndexedDbDisk", this.diskGuid);
+      this.disk = Disk.new(this.diskGuid);
       await this.disk!.mount();
       await this.disk!.create();
     }
-    const guid = await this.db.updateWorkspace(this);
+    const guid = await this.db.updateWorkspace(this.toJSON());
     this.guid = guid;
     return this;
   }
