@@ -1,15 +1,15 @@
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { memfs } from "memfs";
 
-type FSJType = { id: string; type: FSTypes; fs: Record<string, string> };
+export type FSJType = { guid: string; type: FSTypes; fs: Record<string, string> };
 
-type FSTypes = LightningDisk["type"] | MemDisk["type"];
+export type FSTypes = IndexedDbDisk["type"] | MemDisk["type"];
 
 export abstract class Disk {
   abstract readonly type: FSTypes;
-  abstract readonly id: string;
+  abstract readonly guid: string;
   abstract fs: InstanceType<typeof LightningFs> | ReturnType<typeof memfs>["fs"];
-  abstract hydrate(): Promise<void>;
+  abstract mount(): Promise<void>;
 
   get promises() {
     return this.fs.promises;
@@ -49,11 +49,11 @@ export abstract class Disk {
       }
     };
     await traverse("/");
-    return { type: this.type, fs: result, id: this.id } as FSJType;
+    return { type: this.type, fs: result, guid: this.guid } as FSJType;
   }
   static async fromJSON(json: FSJType) {
     const fs = json.fs;
-    const instance = json.type === "LightningDisk" ? new LightningDisk(json.id) : new MemDisk(json.id);
+    const instance = json.type === "IndexedDbDisk" ? new IndexedDbDisk(json.guid) : new MemDisk(json.guid);
     for (const [fullPath, content] of Object.entries(fs)) {
       const dirPath = fullPath.substring(0, fullPath.lastIndexOf("/"));
       try {
@@ -74,14 +74,17 @@ export abstract class Disk {
   }
 }
 
-export class LightningDisk extends Disk {
-  readonly type = "LightningDisk";
+export class IndexedDbDisk extends Disk {
+  readonly type = "IndexedDbDisk";
   public readonly fs: InstanceType<typeof LightningFs>;
-  async hydrate() {}
+  async mount() {
+    await this.fs.init(this.guid); //needed?
+  }
 
-  constructor(public readonly id: string) {
+  constructor(public readonly guid: string) {
     super();
-    this.fs = new LightningFs(id);
+    //TODO: i am not sure if this should be moved out of the constructor and into the module or not
+    this.fs = new LightningFs(guid);
   }
 }
 
@@ -89,9 +92,13 @@ export class MemDisk extends Disk {
   readonly type = "MemDisk";
   public readonly fs: ReturnType<typeof memfs>["fs"];
 
-  constructor(public readonly id: string) {
+  constructor(public readonly guid: string) {
     super();
     this.fs = memfs().fs;
   }
-  async hydrate() {}
+  async mount() {}
+}
+
+export function newDisk(type: FSTypes, guid: string) {
+  return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
 }

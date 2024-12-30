@@ -1,2 +1,2 @@
-import { ClientDb } from "@/clientdb";
-export const db = new ClientDb();
+import { ClientIndexedDb } from "@/clientdb";
+export const ClientDb = new ClientIndexedDb();

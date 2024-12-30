@@ -1,11 +1,12 @@
 "use client";
 import Identicon from "@/components/Identicon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { WorkspaceContext } from "@/context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { ChevronDown, ChevronUp, CirclePlus, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useContext, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 function BigButton({
   icon,
@@ -71,31 +72,27 @@ function DropDownButton({
   );
 }
 
-export function BigButtonBar({ workspaces }: { workspaces: Workspaces }) {
-  const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
-  const [selectedWorkspace, setSelectedWorkspace] = useLocalStorage("BigButtonBar/selectedWorkspace", workspaces[0]);
-  const pathname = usePathname();
-  // const [currentWorkspace, restWorkspaces] = useWorkspaces(pathname);
-  // this needs to be hoisted up to a provider
-  const currentWorkspace =
-    workspaces.filter((workspace) => pathname.startsWith(workspace.href))[0] ?? selectedWorkspace;
-  const restWorkspaces = workspaces.filter((workspace) => workspace.href !== currentWorkspace.href);
-  useEffect(() => {
-    if (workspaces.some((wrk) => wrk.href.startsWith(pathname))) {
-      setSelectedWorkspace(currentWorkspace);
-    }
-  }, [currentWorkspace, pathname, setSelectedWorkspace, workspaces]);
+export function BigButtonBar() {
+  const { currentWorkspace, workspaces } = useContext(WorkspaceContext);
 
+  const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
+
+  const filteredWorkspaces = useMemo(
+    () => workspaces.filter((workspace) => workspace.href !== currentWorkspace?.href),
+    [workspaces, currentWorkspace]
+  );
   return (
     <div className="bg-slate-900 dark:bg-slate-100 w-20 flex flex-col flex-shrink-0 pt-4">
       <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
       <BigButton icon={<Settings stroke="current" size={32} strokeWidth={1.25} />} title="settings" href="/settings" />
-      <BigButton
-        icon={<Identicon input={currentWorkspace.href} size={4} scale={7} />}
-        title={currentWorkspace.name}
-        href={currentWorkspace.href}
-        className="text-white"
-      />
+      {currentWorkspace && (
+        <BigButton
+          icon={<Identicon input={currentWorkspace.href} size={4} scale={7} />}
+          title={currentWorkspace.name}
+          href={currentWorkspace.href}
+          className="text-white"
+        />
+      )}
       <Collapsible className="w-full flex flex-col justify-center items-center" open={expand} onOpenChange={setExpand}>
         <CollapsibleTrigger
           className="h-8 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
@@ -105,7 +102,7 @@ export function BigButtonBar({ workspaces }: { workspaces: Workspaces }) {
           <ChevronDown size={16} className="group-data-[state=open]:hidden w-full" />
         </CollapsibleTrigger>
         <CollapsibleContent className="w-full bg-slate-800">
-          {restWorkspaces.map((workspace) => (
+          {filteredWorkspaces.map((workspace) => (
             <DropDownButton
               icon={<Identicon input={workspace.href} size={4} scale={7} />}
               className=""

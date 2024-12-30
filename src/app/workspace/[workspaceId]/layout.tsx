@@ -1,3 +1,4 @@
+import { WorkspaceName } from "@/app/workspace/[workspaceId]/WorkspaceName";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { FileTree } from "@/shapes/filetree";
@@ -19,19 +20,13 @@ const FILE_TREE = new FileTree([
   "/project/a/b/e/w/e/w/x/y/z/file13.md",
 ]);
 
-export default async function Layout({
-  children,
-  params: { workspaceId },
-}: {
-  children: React.ReactNode;
-  params: { workspaceId: string };
-}) {
+export default async function Layout({ children }: { children: React.ReactNode }) {
   const fileTree = FILE_TREE;
 
   return (
     <div className="w-full flex flex-col">
       <div className="w-full h-8 flex-shrink-0 flex justify-start pl-2 items-center bg-slate-900 text-white font-mono uppercase">
-        {workspaceId}
+        <WorkspaceName />
       </div>
       <div className="w-full flex flex-grow">
         <ResizablePanelGroup direction="horizontal" autoSaveId="editorSideBar/editor">
