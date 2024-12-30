@@ -1,7 +1,7 @@
 // import { Disk as DiskDbRecord, Disk } from '@/disk/disk';
 import { ProviderAuthDbRecord } from "@/clientdb/Provider";
 import { SettingsDBRecord } from "@/clientdb/Settings";
-import { Workspace, WorkspaceDbRecord, WorkspaceRecord } from "@/clientdb/Workspace";
+import { Workspace, WorkspaceDbRecord } from "@/clientdb/Workspace";
 import { Disk } from "@/disk/disk";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
@@ -10,7 +10,7 @@ import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-
 
 const WORKSPACE_SEED: Workspace[] = [];
 export class ClientIndexedDb extends Dexie {
-  workspaces!: EntityTable<WorkspaceDbRecord, "id">;
+  workspaces!: EntityTable<WorkspaceRecord, "id">;
   providerAuths!: EntityTable<ProviderAuthDbRecord, "id">;
   settings!: EntityTable<SettingsDBRecord, "name">;
   disks!: EntityTable<Disk, "guid">;
