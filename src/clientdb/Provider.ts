@@ -1,8 +1,8 @@
 import { ClientIndexedDb } from "@/clientdb";
 import { Entity } from "dexie";
 
-export class ProviderAuthDbRecord extends Entity<ClientIndexedDb> implements ProviderAuthRecord {
-  id!: number;
+export class RemoteAuthDbRecord extends Entity<ClientIndexedDb> implements RemoteAuthRecord {
+  guid!: string;
   type!: string;
   accessToken!: string; // The access token used to authenticate requests
   tokenType!: string; // Typically "Bearer"
@@ -13,8 +13,8 @@ export class ProviderAuthDbRecord extends Entity<ClientIndexedDb> implements Pro
   idToken!: string; // Optional: JWT token containing user identity information
 }
 
-export interface ProviderAuthRecord {
-  id: number;
+export interface RemoteAuthRecord {
+  guid: string;
   type: string;
   accessToken: string; // The access token used to authenticate requests
   tokenType: string; // Typically "Bearer"

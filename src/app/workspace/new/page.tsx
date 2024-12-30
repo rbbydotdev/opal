@@ -25,7 +25,7 @@ export default function Page() {
             //   description: "myworkspace",
             //   href: "/workspace/" + name,
             //   createdAt: new Date(),
-            //   providerAuthId: 0,
+            //   RemoteAuthId: 0,
             //   diskGuid: nanoid(),
             // })
           }
