@@ -30,7 +30,7 @@ export class ClientIndexedDb extends Dexie {
 
   getWorkspaceByGuid = (guid: string) => this.workspaces.where("guid").equals(guid).first();
 
-  updateWorkspace = async (workspace: WorkspaceDbRecord | Workspace) => {
+  updateWorkspace = async (workspace: WorkspaceRecord | Workspace) => {
     return this.workspaces.put(workspace instanceof Workspace ? workspace.toJSON() : workspace);
   };
 
@@ -59,7 +59,7 @@ export class ClientIndexedDb extends Dexie {
     this.version(1).stores({
       settings: "name",
       remoteAuths: "guid",
-      workspaces: "guid, name, RemoteAuthGuid",
+      workspaces: "guid",
       disks: "guid",
     });
 
