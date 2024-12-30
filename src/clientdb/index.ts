@@ -1,55 +1,51 @@
-import { default as Dexie, Entity, type EntityTable } from "dexie";
+// import { Disk as DiskDbRecord, Disk } from '@/disk/disk';
+import { ProviderAuthDbRecord } from "@/clientdb/Provider";
+import { SettingsDBRecord } from "@/clientdb/Settings";
+import { Workspace, WorkspaceDbRecord, WorkspaceRecord } from "@/clientdb/Workspace";
+import { Disk } from "@/disk/disk";
+import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 // const db = new Dexie("decrypt-test-2");
-export class ClientDb extends Dexie {
-  providerAuth!: EntityTable<ProviderAuthDb, "id">;
-  workspace!: EntityTable<WorkspaceDB, "id">;
-  settings!: EntityTable<SettingsDB, "name">;
+// export class ClientIndexedDb extends Dexie {
+
+const WORKSPACE_SEED: Workspace[] = [];
+export class ClientIndexedDb extends Dexie {
+  workspaces!: EntityTable<WorkspaceDbRecord, "id">;
+  providerAuths!: EntityTable<ProviderAuthDbRecord, "id">;
+  settings!: EntityTable<SettingsDBRecord, "name">;
+  disks!: EntityTable<Disk, "guid">;
 
   constructor() {
-    super("ClientDb");
-    this.version(1).stores({
-      settings: "name",
-      providerAuth: "++id",
-      workspace: "++id, name",
+    super("ClientIndexedDb");
+
+    //TODO DELETE ME
+    this.on("ready", () => {
+      (async () => {
+        //TODO: a regular async seems to be blocking the db?
+        if ((await this.workspaces.count()) === 0) {
+          this.workspaces.bulkAdd(WORKSPACE_SEED).then(() => {
+            console.log("Seeded workspaces");
+          });
+        }
+      })();
     });
 
-    this.providerAuth.mapToClass(ProviderAuthDb);
-    this.workspace.mapToClass(WorkspaceDB);
+    this.version(1).stores({
+      settings: "name",
+      providerAuths: "++id",
+      workspaces: "++id, name, providerAuthId",
+      disks: "guid",
+    });
 
-    applyEncryptionMiddleware(
-      this as ClientDb,
+    this.providerAuths.mapToClass(ProviderAuthDbRecord);
+    this.workspaces.mapToClass(WorkspaceDbRecord);
+    applyEncryptionMiddleware<ClientIndexedDb>(
+      this as ClientIndexedDb,
       new Uint8Array(new Array(32).fill(0)),
       {
-        providerAuth: cryptoOptions.NON_INDEXED_FIELDS,
+        providerAuths: cryptoOptions.NON_INDEXED_FIELDS,
       },
       clearAllTables
     );
   }
-}
-
-export class SettingsDB extends Entity<ClientDb> {
-  name!: string;
-  value!: object;
-}
-
-class WorkspaceDB extends Entity<ClientDb> {
-  id!: number;
-  name!: string;
-  type!: string;
-  description!: string;
-  href!: string;
-  createdAt!: Date;
-}
-
-class ProviderAuthDb extends Entity<ClientDb> {
-  id!: number;
-  type!: string;
-  accessToken!: string; // The access token used to authenticate requests
-  tokenType!: string; // Typically "Bearer"
-  expiresIn!: number; // Time in seconds until the token expires
-  refreshToken!: string; // Optional: The refresh token to obtain new access tokens
-  scope!: string; // The scopes granted by the user
-  obtainedAt!: number; // Timestamp when the token was obtained
-  idToken!: string; // Optional: JWT token containing user identity information
 }

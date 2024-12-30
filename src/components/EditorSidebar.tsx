@@ -1,3 +1,4 @@
+"use client";
 import { SidebarFileMenu } from "@/components/SidebarFileMenu";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import { FileTreeJType } from "@/shapes/filetree";

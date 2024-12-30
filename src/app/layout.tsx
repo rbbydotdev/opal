@@ -6,9 +6,11 @@ import { BigButtonBar } from "@/app/BigButtonBar";
 
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { FPSStats } from "@/components/FPSStats";
+import { WorkspaceProvider } from "@/context";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
+// import { AppContext } from "@/context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,39 +34,23 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar:state")?.value === "true";
-  const workspaces: Workspaces = [
-    {
-      name: "Workspace 1",
-      href: "/workspace/wrk1",
-    },
-    {
-      name: "Workspace 2",
-      href: "/workspace/wrk2",
-    },
-    {
-      name: "Workspace 3",
-      href: "/workspace/wrk3",
-    },
-    {
-      name: "Workspace 4",
-      href: "/workspace/wrk4",
-    },
-  ];
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <FPSStats />
-        <JotaiProvider>
-          <SidebarProvider defaultOpen={defaultOpen}>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <div className="w-full flex h-screen overflow-hidden">
-                <BigButtonBar workspaces={workspaces} />
-                {children}
-              </div>
-            </ThemeProvider>
-          </SidebarProvider>
-        </JotaiProvider>
+        <WorkspaceProvider>
+          <JotaiProvider>
+            <SidebarProvider defaultOpen={defaultOpen}>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                <div className="w-full flex h-screen overflow-hidden">
+                  <BigButtonBar />
+                  {children}
+                </div>
+              </ThemeProvider>
+            </SidebarProvider>
+          </JotaiProvider>
+        </WorkspaceProvider>
       </body>
     </html>
   );

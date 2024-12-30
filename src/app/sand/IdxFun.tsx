@@ -1,5 +1,5 @@
 "use client";
-import { db } from "@/clientdb/instance";
+import { ClientDb } from "@/clientdb/instance";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useState } from "react";
 
@@ -14,7 +14,7 @@ interface ProviderAuth {
 }
 
 function setAuth(value: Auth) {
-  db.providerAuth.put({ id: 1, value });
+  ClientDb.providerAuths.put({ id: 1, value });
 }
 
 export default function IdxFun() {
@@ -25,7 +25,7 @@ export default function IdxFun() {
   const decrement = () => setCount(count! - 1);
 
   const providerAuth = useLiveQuery<ProviderAuth>(async () => {
-    return (await db.providerAuth.where({ id: 1 }).first()) as ProviderAuth;
+    return (await ClientDb.providerAuths.where({ id: 1 }).first()) as ProviderAuth;
   }, []);
 
   const loaded = providerAuth !== undefined;
