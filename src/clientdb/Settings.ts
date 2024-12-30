@@ -1,7 +1,7 @@
 import { ClientIndexedDb } from "@/clientdb";
 import { Entity } from "dexie";
 
-export class SettingsDBRecord extends Entity<ClientIndexedDb> {
+export class SettingsDbRecord extends Entity<ClientIndexedDb> {
   name!: string;
   value!: object;
 }

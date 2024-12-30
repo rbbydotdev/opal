@@ -1,4 +1,4 @@
-import ProviderAuth from "@/oauthprovider";
+import RemoteAuth from "@/oauthprovider";
 
 class Client {}
 
@@ -10,7 +10,7 @@ class Agent {
 }
 
 class GithubAgent extends Agent {
-  // ProviderAuth = new ProviderAuth();
+  // RemoteAuth = new RemoteAuth();
 
   constructor() {
     super();

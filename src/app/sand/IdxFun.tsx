@@ -8,13 +8,13 @@ interface Auth {
   text: string;
 }
 
-interface ProviderAuth {
+interface RemoteAuth {
   id: number;
   value: Auth;
 }
 
 function setAuth(value: Auth) {
-  ClientDb.providerAuths.put({ id: 1, value });
+  ClientDb.remoteAuths.put({ id: 1, value });
 }
 
 export default function IdxFun() {
@@ -24,11 +24,11 @@ export default function IdxFun() {
   const increment = () => setCount(count! + 1);
   const decrement = () => setCount(count! - 1);
 
-  const providerAuth = useLiveQuery<ProviderAuth>(async () => {
-    return (await ClientDb.providerAuths.where({ id: 1 }).first()) as ProviderAuth;
+  const RemoteAuth = useLiveQuery<RemoteAuth>(async () => {
+    return (await ClientDb.remoteAuths.where({ id: 1 }).first()) as RemoteAuth;
   }, []);
 
-  const loaded = providerAuth !== undefined;
+  const loaded = RemoteAuth !== undefined;
 
   useEffect(() => {
     if (!loaded) return;
@@ -39,11 +39,11 @@ export default function IdxFun() {
   }, [count, text, loaded]);
 
   useEffect(() => {
-    if (providerAuth) {
-      setCount(providerAuth.value.count);
-      setText(providerAuth.value.text);
+    if (RemoteAuth) {
+      setCount(RemoteAuth.value.count);
+      setText(RemoteAuth.value.text);
     }
-  }, [providerAuth]);
+  }, [RemoteAuth]);
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-900">
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg text-center">
@@ -71,7 +71,7 @@ export default function IdxFun() {
             placeholder="Enter text"
           />
         </div>
-        <pre className="text-white">{JSON.stringify(providerAuth, null, 4)}</pre>
+        <pre className="text-white">{JSON.stringify(RemoteAuth, null, 4)}</pre>
       </div>
     </div>
   );
