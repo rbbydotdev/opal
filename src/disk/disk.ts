@@ -1,7 +1,10 @@
 import { ClientDb } from "@/clientdb/instance";
+import { FileTree } from "@/disk/filetree";
+import { errorCode } from "@/lib/errors";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { memfs } from "memfs";
 import { nanoid } from "nanoid";
+import path from "path";
 
 export type DiskJType = { guid: string; type: DiskType; fs: Record<string, string> };
 
@@ -9,93 +12,6 @@ export type DiskType = IndexedDbDisk["type"] | MemDisk["type"];
 
 export type FsType = InstanceType<typeof LightningFs> | ReturnType<typeof memfs>["fs"];
 
-export type TreeFile = {
-  name: string;
-  type: "file";
-  path: string;
-  href: string;
-  depth: number;
-};
-
-class FileTree {
-  root: TreeDir = {
-    name: "/",
-    path: "/",
-    type: "dir",
-    children: [],
-    depth: 0,
-  };
-  tree: TreeDir | string[] = this.root;
-  constructor(private fs: FsType) {}
-
-  async build(type: "nested" | "flat" = "nested") {
-    if (type === "nested") {
-      await FileTree.recurseTree(this.root.path, this.root.children, type, 0, false, this.fs);
-      return this.root;
-    } else {
-      const parent: string[] = [];
-      await FileTree.recurseTree(this.root.path, parent, type, 0, false, this.fs);
-      return parent;
-    }
-  }
-
-  static recurseTree = async (
-    dir: string,
-    parent: (TreeNode | string)[] = [],
-    type: "flat" | "nested" = "nested",
-    depth = 0,
-    haltOnError = false,
-    fs: FsType
-  ) => {
-    try {
-      const entries = await fs.promises.readdir(dir);
-      for (const entry of entries) {
-        const fullPath = `${dir}/${entry}`;
-        const stat = await fs.promises.stat(fullPath);
-        let nextParent = null;
-        let treeEntry: TreeDir | TreeFile | string = "";
-
-        if (stat.isDirectory()) {
-          if (type === "flat") {
-            treeEntry = fullPath;
-            nextParent = parent;
-          } else {
-            treeEntry = { name: entry.toString(), depth, type: "dir", path: fullPath, children: [] };
-            nextParent = treeEntry.children;
-          }
-          await FileTree.recurseTree(fullPath, nextParent, type, depth + 1, haltOnError, fs);
-        } else {
-          if (type === "flat") {
-            treeEntry = fullPath;
-          } else {
-            treeEntry = { name: entry.toString(), depth, type: "file", path: fullPath, href: fullPath };
-          }
-        }
-
-        parent.push(treeEntry);
-      }
-      // return parent;
-    } catch (err) {
-      console.error(`Error reading ${dir}:`, err);
-      if (haltOnError) {
-        throw err;
-      }
-      // return parent;
-    }
-  };
-}
-
-export type TreeNode = TreeDir | TreeFile;
-
-export type TreeList = Array<string>;
-
-export type TreeDir = {
-  children: Array<TreeNode>;
-  name: string;
-  type: "dir";
-  path: string;
-  depth: number;
-};
 export interface DiskRecord {
   guid: string;
   type: DiskType;
@@ -108,11 +24,13 @@ export class DiskDbRecord implements DiskRecord {
 export abstract class Disk implements DiskRecord {
   abstract fs: FsType;
 
+  static defaultDiskType: DiskType = "IndexedDbDisk";
+
   abstract db: typeof ClientDb;
 
   static guid = () => "disk:" + nanoid();
 
-  static new(guid: string = Disk.guid(), type: DiskType = "IndexedDbDisk") {
+  static new(guid: string = Disk.guid(), type: DiskType = Disk.defaultDiskType) {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
   static fromJSON(json: Partial<DiskRecord | Disk> & Pick<DiskRecord, "guid">) {
@@ -122,8 +40,27 @@ export abstract class Disk implements DiskRecord {
 
   abstract readonly fileTree: FileTree;
 
-  async init() {
-    await this.mount();
+  writeFiles(files: Record<string, string>) {
+    const promises: Promise<void>[] = [];
+    for (const [filePath, content] of Object.entries(files)) {
+      const writeFile = async (filePath: string, content: string) => {
+        try {
+          await this.fs.promises.mkdir(path.dirname(filePath), { recursive: true, mode: 0o777 });
+        } catch (err) {
+          if (errorCode(err).code !== "EEXIST") {
+            console.error(`Error creating directory ${path.dirname(filePath)}:`, err);
+          }
+        }
+        try {
+          await this.fs.promises.writeFile(filePath, content, { encoding: "utf8", mode: 0o777 });
+        } catch (err) {
+          console.error(`Error writing file ${filePath}:`, err);
+        }
+      };
+
+      promises.push(writeFile(filePath, content));
+    }
+    return Promise.all(promises);
   }
 
   toJSON() {
@@ -138,45 +75,47 @@ export abstract class Disk implements DiskRecord {
 
   abstract readonly type: DiskType;
   abstract readonly guid: string;
-  abstract mount(): Promise<this>;
+  abstract init(): Promise<this>;
 
   get promises() {
     return this.fs.promises;
   }
   get tree() {
-    return this.fileTree.tree;
+    return this.fileTree;
   }
 }
 export class IndexedDbDisk extends Disk {
-  static db = ClientDb;
+  // static db = ClientDb;
 
   readonly type = "IndexedDbDisk";
 
-  readonly fileTree = new FileTree(this.fs);
   public readonly fs: InstanceType<typeof LightningFs>;
+  readonly fileTree: FileTree;
 
-  async mount() {
-    await this.fs.init(this.guid);
+  async init() {
     await this.fileTree.build();
     return this;
   }
-  constructor(public readonly guid: string, public readonly db = IndexedDbDisk.db) {
+  constructor(public readonly guid: string, public readonly db = ClientDb) {
     super();
-    //TODO: i am not sure if this should be moved out of the constructor and into the module or not
-    this.fs = new LightningFs(guid);
+    this.fs = new LightningFs();
+    this.fs.init(this.guid);
+    this.fileTree = new FileTree(this.fs, this.guid);
   }
 }
 
 export class MemDisk extends Disk {
-  static db = ClientDb;
+  // static db = ClientDb;
   readonly type = "MemDisk";
   public readonly fs: ReturnType<typeof memfs>["fs"];
-  readonly fileTree = new FileTree(this.fs);
-  constructor(public readonly guid: string, public readonly db = MemDisk.db) {
+  readonly fileTree: FileTree; // = new FileTree(this.fs);
+  constructor(public readonly guid: string, public readonly db = ClientDb) {
     super();
+    throw new Error("do not use me!");
     this.fs = memfs().fs;
+    this.fileTree = new FileTree(this.fs, this.guid);
   }
-  async mount() {
+  async init() {
     await this.fileTree.build();
     return this;
   }

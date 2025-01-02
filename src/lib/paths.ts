@@ -7,8 +7,8 @@ export class AbsPath extends String {
   get str() {
     return this.toString();
   }
-  join(...paths: string[]) {
-    return AbsPath.New(this.path + "/" + paths.map((p) => new RelPath(p).str).join("/"));
+  join(...paths: string[] | RelPath[]) {
+    return AbsPath.New(this.path + "/" + paths.map((p) => new RelPath(p.toString()).str).join("/"));
   }
 
   constructor(path: string) {
@@ -27,8 +27,8 @@ export class RelPath extends String {
   static New(path: string) {
     return new RelPath(path);
   }
-  join(...paths: string[]) {
-    return RelPath.New(this.path + "/" + paths.map((p) => new RelPath(p).str).join("/"));
+  join(...paths: string[] | RelPath[]) {
+    return RelPath.New(this.path + "/" + paths.map((p) => new RelPath(p.toString()).str).join("/"));
   }
 
   constructor(path: string) {
