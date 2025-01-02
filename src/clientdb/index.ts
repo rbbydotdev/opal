@@ -1,6 +1,6 @@
-import { RemoteAuthRecord } from "@/clientdb/RemoteAuth";
+import { RemoteAuthDAO, RemoteAuthRecord } from "@/clientdb/RemoteAuth";
 import { SettingsDbRecord, SettingsRecord } from "@/clientdb/Settings";
-import { Workspace, WorkspaceRecord } from "@/clientdb/Workspace";
+import { Workspace, WorkspaceDAO, WorkspaceRecord } from "@/clientdb/Workspace";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 import { Disk, DiskDAO, DiskRecord } from "./Disk";
@@ -9,8 +9,8 @@ import { Disk, DiskDAO, DiskRecord } from "./Disk";
 
 const WORKSPACE_SEED: WorkspaceRecord[] = [];
 export class ClientIndexedDb extends Dexie {
-  workspaces!: EntityTable<WorkspaceRecord, "guid">;
-  remoteAuths!: EntityTable<RemoteAuthRecord, "guid">;
+  workspaces!: EntityTable<WorkspaceDAO, "guid">;
+  remoteAuths!: EntityTable<RemoteAuthDAO, "guid">;
   settings!: EntityTable<SettingsRecord, "name">;
   disks!: EntityTable<DiskDAO, "guid">;
 
@@ -64,10 +64,10 @@ export class ClientIndexedDb extends Dexie {
       disks: "guid",
     });
 
-    this.remoteAuths.mapToClass(RemoteAuthRecord);
-    this.workspaces.mapToClass(WorkspaceRecord);
+    this.remoteAuths.mapToClass(RemoteAuthDAO);
+    this.workspaces.mapToClass(WorkspaceDAO);
     this.settings.mapToClass(SettingsDbRecord);
-    this.disks.mapToClass(DiskRecord);
+    this.disks.mapToClass(DiskDAO);
     applyEncryptionMiddleware<ClientIndexedDb>(
       this as ClientIndexedDb,
       new Uint8Array(new Array(32).fill(0)),

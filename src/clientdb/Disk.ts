@@ -51,7 +51,6 @@ export abstract class Disk implements DiskRecord {
   static from({ guid, type }: { guid: string; type: DiskType }) {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
-  //Do fs operations then re index the filetree
   async withFs(fn: (fs: FsType) => Promise<unknown>) {
     await fn(this.fs);
     await this.fileTree.index();
@@ -93,7 +92,6 @@ export class IndexedDbDisk extends Disk {
 }
 
 export class MemDisk extends Disk {
-  // static db = ClientDb;
   readonly type = "MemDisk";
   public readonly fs: ReturnType<typeof memfs>["fs"];
   readonly fileTree: FileTree; // = new FileTree(this.fs);

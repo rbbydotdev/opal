@@ -24,22 +24,18 @@ export class WorkspaceDAO implements WorkspaceRecord {
   createdAt!: Date;
   remoteAuthGuid!: string;
 
-  static async fromRoute(route: string) {
-    if (!route.startsWith(Workspace.rootRoute)) throw new Error("Invalid route");
-    const name = route.slice(Workspace.rootRoute.length + 1);
-    await ClientDb.getWorkspaceByName(name);
-  }
-
   static async allDAO() {
     const workspaceRecords = await ClientDb.allWorkspaces();
     return workspaceRecords.map((ws) => new WorkspaceDAO(ws));
+  }
+  get href() {
+    return `${Workspace.rootRoute}/${this.name}`;
   }
   static async all() {
     const workspaceRecords = await ClientDb.allWorkspaces();
     for (const ws of workspaceRecords) {
       const wsd = new WorkspaceDAO(ws);
-      const [auth, disk] = await Promise.all([wsd.loadRemoteAuth(), wsd.loadDisk()]);
-      return new Workspace({ ...wsd, remoteAuth: auth, disk });
+      return wsd.toWorkspace();
     }
     return workspaceRecords;
   }
@@ -69,10 +65,18 @@ export class WorkspaceDAO implements WorkspaceRecord {
   static async byGuid(guid: string) {
     const ws = await ClientDb.getWorkspaceByGuid(guid);
     if (!ws) throw new Error("Workspace not found");
+
     const wsd = new WorkspaceDAO(ws);
+
     const [auth, disk] = await Promise.all([wsd.loadRemoteAuth(), wsd.loadDisk()]);
+
     return new Workspace({ ...wsd, remoteAuth: auth, disk });
   }
+  async toWorkspace() {
+    const [auth, disk] = await Promise.all([this.loadRemoteAuth(), this.loadDisk()]);
+    return new Workspace({ ...this, remoteAuth: auth, disk });
+  }
+
   private async loadRemoteAuth() {
     const remoteAuth = await ClientDb.getRemoteAuthByGuid(this.remoteAuthGuid);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
@@ -104,6 +108,15 @@ export class Workspace implements WorkspaceRecord {
   guid: string;
   remoteAuth: RemoteAuth;
   disk: Disk;
+
+  static async fromRoute(route: string) {
+    if (!route.startsWith(Workspace.rootRoute)) throw new Error("Invalid route");
+    const name = route.slice(Workspace.rootRoute.length + 1);
+    const ws = await ClientDb.getWorkspaceByName(name);
+    if (!ws) throw new Error("Workspace not found");
+    const wsd = new WorkspaceDAO(ws);
+    return wsd.toWorkspace();
+  }
 
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
