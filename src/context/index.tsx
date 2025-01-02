@@ -1,6 +1,5 @@
 "use client";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
-import { ClientDb } from "@/clientdb/instance";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
@@ -28,12 +27,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
 
   useLiveQuery(async () => {
-    const wrkspcs = await ClientDb.workspaces.toArray();
+    const wrkspcs = await WorkspaceDAO.all();
     setWorkspaces(wrkspcs);
   }, [setWorkspaces]);
 
   useEffect(() => {
-    if (!pathname.startsWith(Workspace.rootRoute)) return;
+    if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new") return;
     Workspace.fromRoute(pathname).then(setCurrentWorkspace);
   }, [pathname, workspaces, setCurrentWorkspace]);
 
@@ -56,11 +55,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
 export const useWorkspaces = () => {
   return React.useContext(WorkspaceContext);
-};
-export const useCurrentFileTree = () => {
-  const { currentWorkspace } = useWorkspaces();
-  if (!currentWorkspace) return null;
-  return currentWorkspace?.disk?.fileTree ?? null;
 };
 
 export const useCurrentWorkspace = () => {

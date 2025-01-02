@@ -7,10 +7,7 @@ export type TreeFile = {
   path: string;
   depth: number;
 };
-type TreeType = "nested" | "flat";
-
 abstract class FileTreeBase {
-  abstract type: TreeType;
   root: TreeDir = {
     name: "/",
     path: "/",
@@ -18,12 +15,17 @@ abstract class FileTreeBase {
     children: [],
     depth: 0,
   };
-  tree: TreeDir | string[] = this.root;
-  constructor(private fs: FsType, public id: string) {}
+  tree: TreeDir = this.root;
+  constructor(private fs: FsType, public id: string) {
+    console.log("FileTreeBase", id);
+  }
+  children = this.root.children;
 
   indexed = false;
+  //poor mans queue for async indexing,
+  indexedPromise: Promise<this> | null = null;
 
-  async index() {
+  index = () => {
     this.root = {
       name: "/",
       path: "/",
@@ -31,48 +33,39 @@ abstract class FileTreeBase {
       children: [],
       depth: 0,
     };
-    return this.buildNested();
-  }
-
-  async loadTree() {
-    if (this.indexed) {
-      return this.tree;
-    } else {
-      await this.index();
-      return this.tree;
+    if (this.indexedPromise) {
+      return this.indexedPromise.then(() => {
+        this.indexedPromise = this.buildNested().then(() => this);
+      });
     }
-  }
+    return (this.indexedPromise = this.buildNested().then(() => this));
+  };
+
+  loadTree = () => {
+    if (!this.indexedPromise) {
+      return (this.indexedPromise = this.buildNested().then(() => this));
+    } else {
+      return this.indexedPromise;
+    }
+  };
 
   private async buildNested(): Promise<TreeDir> {
-    return (await this.build("nested")) as TreeDir;
+    return (await this.build()) as TreeDir;
   }
-  private async build(type: TreeType = this.type) {
-    if (type === "nested") {
-      await this.recurseTree(this.root.path, this.root.children, type, 0);
-      this.indexed = true;
-      return this.root;
-    } else {
-      const parent: string[] = [];
-      await this.recurseTree(this.root.path, parent, type, 0);
-      this.indexed = true;
-      return parent;
-    }
+  private async build() {
+    await this.recurseTree(this.root.path, this.root.children, 0);
+    this.indexed = true;
+    return this.root;
   }
 
-  private walk(cb: (node: TreeNode, depth: number) => void, node: TreeNode = this.root, depth = 0) {
+  walk(cb: (node: TreeNode, depth: number) => void, node: TreeNode = this.root, depth = 0) {
     cb(node, depth);
     if ((node as TreeDir).children) {
       (node as TreeDir).children.forEach((child) => this.walk(cb, child, depth + 1));
     }
   }
 
-  private recurseTree = async (
-    dir: string,
-    parent: (TreeNode | string)[] = [],
-    type: "flat" | "nested" = "nested",
-    depth = 0,
-    haltOnError = false
-  ) => {
+  private recurseTree = async (dir: string, parent: TreeNode[] = [], depth = 0, haltOnError = false) => {
     try {
       const entries = await this.fs.promises.readdir(dir);
       for (const entry of entries) {
@@ -82,47 +75,29 @@ abstract class FileTreeBase {
         let treeEntry: TreeDir | TreeFile | string = "";
 
         if (stat.isDirectory()) {
-          if (type === "flat") {
-            treeEntry = fullPath;
-
-            nextParent = parent;
-          } else {
-            treeEntry = { name: entry.toString(), depth, type: "dir", path: fullPath, children: [] };
-            nextParent = treeEntry.children;
-          }
-          await this.recurseTree(fullPath, nextParent, type, depth + 1, haltOnError);
+          treeEntry = { name: entry.toString(), depth, type: "dir", path: fullPath, children: [] };
+          nextParent = treeEntry.children;
+          await this.recurseTree(fullPath, nextParent, depth + 1, haltOnError);
         } else {
-          if (type === "flat") {
-            treeEntry = fullPath;
-          } else {
-            treeEntry = {
-              name: entry.toString(),
-              depth,
-              type: "file",
-              path: fullPath,
-            };
-          }
+          treeEntry = {
+            name: entry.toString(),
+            depth,
+            type: "file",
+            path: fullPath,
+          };
         }
-
         parent.push(treeEntry);
       }
-      // return parent;
     } catch (err) {
       console.error(`Error reading ${dir}:`, err);
       if (haltOnError) {
         throw err;
       }
-      // return parent;
     }
   };
 }
 
-export class FileTree extends FileTreeBase {
-  type: TreeType = "nested";
-}
-export class FileTreeFlat extends FileTreeBase {
-  type: TreeType = "flat";
-}
+export class FileTree extends FileTreeBase {}
 
 export type TreeNode = TreeDir | TreeFile;
 

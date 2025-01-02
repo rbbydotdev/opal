@@ -108,7 +108,7 @@ export function BigButtonBar() {
             <BigButton
               icon={<Identicon input={workspace.href} size={4} scale={7} />}
               className=""
-              href={workspace}
+              href={workspace.href}
               title={workspace.name}
               key={workspace.guid}
             />

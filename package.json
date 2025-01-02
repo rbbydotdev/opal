@@ -34,6 +34,7 @@
     "next-view-transitions": "^0.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-error-boundary": "^5.0.0",
     "react-fps-stats": "^0.3.1",
     "react-if": "^4.1.5",
     "react-resizable-panels": "^2.1.7",

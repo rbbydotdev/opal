@@ -26,10 +26,10 @@ export class DiskDAO implements DiskRecord {
     return new DiskDAO({ type: type, guid: DiskDAO.guid() });
   }
   static getByGuid(guid: string) {
-    return ClientDb.getDiskByGuid(guid);
+    return ClientDb.disks.where("guid").equals(guid).first();
   }
   save() {
-    return ClientDb.updateDisk(this);
+    return ClientDb.disks.put(this);
   }
   toModel() {
     return Disk.from(this);
@@ -37,7 +37,7 @@ export class DiskDAO implements DiskRecord {
 }
 export abstract class Disk implements DiskRecord {
   abstract fs: FsType;
-  abstract readonly fileTree: FileTree;
+  abstract fileTree: FileTree;
   abstract readonly type: DiskType;
   abstract readonly guid: string;
 
@@ -56,19 +56,16 @@ export abstract class Disk implements DiskRecord {
     await this.fileTree.index();
     return this.fs;
   }
-  async getFileTree() {
-    return this.fileTree.loadTree();
-  }
 
   toJSON() {
     return { guid: this.guid, type: this.type } as DiskRecord;
   }
-  create() {
-    return ClientDb.updateDisk(this.toJSON());
-  }
-  load() {
-    return ClientDb.getDiskByGuid(this.guid);
-  }
+  // create() {
+  //   return ClientDb.updateDisk(this.toJSON());
+  // }
+  // load() {
+  //   return ClientDb.getDiskByGuid(this.guid);
+  // }
 
   get promises() {
     return this.fs.promises;
@@ -80,7 +77,7 @@ export class IndexedDbDisk extends Disk {
 
   readonly type = IndexedDbDisk.type;
 
-  public readonly fs: InstanceType<typeof LightningFs>;
+  readonly fs: InstanceType<typeof LightningFs>;
   readonly fileTree: FileTree;
 
   constructor(public readonly guid: string, public readonly db = ClientDb) {

@@ -6,7 +6,7 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/componen
 import { withCurrentWorkspace } from "@/context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import React, { use, useCallback, useEffect, useState } from "react";
 
 function SidebarFileMenuInternal({
   currentWorkspace,
@@ -14,8 +14,7 @@ function SidebarFileMenuInternal({
 }: {
   currentWorkspace: Workspace;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const fileTree = currentWorkspace.disk!.fileTree;
-  const resolveFileUrl = currentWorkspace.resolveFileUrl;
+  const fileTree = use(currentWorkspace.fileTree);
   const [expanded, updateExpanded] = useLocalStorage<{ [k: string]: boolean } | null>("expandedFiles", null);
   const [fileTreeId, setfileTreeId] = useLocalStorage<string>("filetree_id", fileTree.id);
   const [expCol, toggleExpCol] = useState(true);
@@ -33,11 +32,11 @@ function SidebarFileMenuInternal({
   );
 
   useEffect(() => {
-    if (fileTreeId !== fileTree?.id) {
+    if (fileTreeId !== fileTree.id) {
       updateExpanded({});
       setfileTreeId(fileTree.id);
     }
-  }, [expanded, fileTree?.id, fileTreeId, setfileTreeId, updateExpanded]);
+  }, [expanded, fileTree.id, fileTreeId, setfileTreeId, updateExpanded]);
   if (!fileTree) return null;
   if (!currentWorkspace) return null;
 
@@ -60,7 +59,7 @@ function SidebarFileMenuInternal({
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
         <FileTreeMenu
-          resolveFileUrl={resolveFileUrl}
+          resolveFileUrl={currentWorkspace.resolveFileUrl}
           fileTree={fileTree.children}
           depth={0}
           expand={expand}
@@ -70,4 +69,8 @@ function SidebarFileMenuInternal({
     </SidebarGroup>
   );
 }
-export const SidebarFileMenu = withCurrentWorkspace(SidebarFileMenuInternal);
+const SidebarFileMenuWithWorkspace = withCurrentWorkspace(SidebarFileMenuInternal);
+
+export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>) => {
+  return <SidebarFileMenuWithWorkspace {...props} />;
+};
