@@ -1,3 +1,5 @@
+import { ClientDb } from "@/clientdb/instance";
+import { nanoid } from "nanoid";
 export class RemoteAuthRecord {
   guid!: string;
   type!: string;
@@ -23,9 +25,13 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
     Object.assign(this, remoteAuth);
   }
   static new() {
-    return new RemoteAuthDAO({} as any);
+    return new RemoteAuthDAO({
+      guid: nanoid(),
+    } as any);
   }
-  save() {}
+  save() {
+    return ClientDb.remoteAuths.put(this);
+  }
   toModel() {
     return new RemoteAuth(this);
   }

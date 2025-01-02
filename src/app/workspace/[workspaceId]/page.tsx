@@ -1,29 +1,20 @@
 "use client";
-import { WorkspaceName } from "@/app/workspace/[workspaceId]/WorkspaceName";
-import { EditorSidebar } from "@/components/EditorSidebar";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCurrentWorkspace } from "@/context";
 
 export default function Page() {
+  const currentWorkspace = useCurrentWorkspace();
   return (
-    <div className="w-full flex flex-col">
-      <div className="w-full h-8 flex-shrink-0 flex justify-start pl-2 items-center bg-slate-900 text-white font-mono uppercase">
-        <WorkspaceName />
-      </div>
-      <div className="w-full flex flex-grow">
-        <ResizablePanelGroup direction="horizontal" autoSaveId="editorSideBar/editor">
-          <ResizablePanel id="editorSideBar" defaultSize={18} minSize={12} collapsible={true}>
-            <EditorSidebar
-              className="h-[calc(100vh-20px)]"
-              style={{ "--sidebar-width": "100%" } as React.CSSProperties}
-            />
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel id="editor">
-            <div className="overflow-hidden min-w-full w-0">FOO BAR BIZZ BAZ</div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
+    <div className="page flex justify-center items-center h-full w-full">
+      <Card className="card w-96 h-96">
+        <CardHeader>
+          <CardTitle>Workspace {currentWorkspace?.name}</CardTitle>
+          <CardDescription>guid: {currentWorkspace?.guid}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>select a file to get started</CardDescription>
+        </CardContent>
+      </Card>
     </div>
   );
 }

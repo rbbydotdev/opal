@@ -1,4 +1,4 @@
-import { FileTree } from "@/clientdb/filetree";
+import { TreeDir } from "@/clientdb/filetree";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -14,12 +14,9 @@ export function FileTreeMenu({
   resolveFileUrl: (path: string) => string;
   expand: (s: string, b: boolean) => void;
   expanded: { [path: string]: boolean };
-  fileTree?: FileTree["children"];
+  fileTree?: TreeDir["children"];
   depth?: number;
 }) {
-  // const { currentWorkspace } = useWorkspaces();
-  // if (!fileTree || !currentWorkspace) return null;
-  // const { resolveFileUrl } = currentWorkspace;
   if (!fileTree) return null;
   const isExpanded = (file: { path: string }) => {
     return !!(expanded && file.path && expanded[file.path]);

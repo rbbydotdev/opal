@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  reactStrictMode: false,
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
