@@ -1,16 +1,16 @@
 "use client";
-import { Workspace, WorkspaceRecord } from "@/clientdb/Workspace";
+import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { ClientDb } from "@/clientdb/instance";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 
 export const WorkspaceContext = React.createContext<{
-  workspaces: WorkspaceRecord[];
+  workspaces: WorkspaceDAO[];
   currentWorkspace: Workspace | null;
   actions: {
-    addWorkspace: (workspace: WorkspaceRecord) => void;
-    removeWorkspace: (workspace: WorkspaceRecord) => void;
+    addWorkspace: (workspace: WorkspaceDAO) => void;
+    removeWorkspace: (workspace: WorkspaceDAO) => void;
   };
 }>({
   workspaces: [],
@@ -21,10 +21,10 @@ export const WorkspaceContext = React.createContext<{
   },
 });
 
-export type Workspaces = WorkspaceRecord[];
+export type Workspaces = WorkspaceDAO[];
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
+  const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
 
   useLiveQuery(async () => {
@@ -33,16 +33,16 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   }, [setWorkspaces]);
 
   useEffect(() => {
-    const cur = !pathname.startsWith("/workspace") ? null : workspaces.find((w) => pathname.startsWith(w.href)) ?? null;
-    if (cur) new Workspace(cur).loadFromDbAndMountDisk().then(setCurrentWorkspace);
+    if (!pathname.startsWith(Workspace.rootRoute)) return;
+    Workspace.fromRoute(pathname).then(setCurrentWorkspace);
   }, [pathname, workspaces, setCurrentWorkspace]);
 
   const actions = useMemo(
     () => ({
-      addWorkspace: (workspace: WorkspaceRecord) => {
+      addWorkspace: (workspace: WorkspaceDAO) => {
         setWorkspaces([...workspaces, workspace]);
       },
-      removeWorkspace: (workspace: WorkspaceRecord) => {
+      removeWorkspace: (workspace: WorkspaceDAO) => {
         setWorkspaces(workspaces.filter((w) => w.guid !== workspace.guid));
       },
     }),

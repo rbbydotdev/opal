@@ -66,7 +66,7 @@ export function BigButtonBar() {
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
 
   const filteredWorkspaces = useMemo(
-    () => workspaces.filter((workspace) => workspace.href !== currentWorkspace?.href),
+    () => workspaces.filter((workspace) => workspace.guid !== currentWorkspace?.guid),
     [workspaces, currentWorkspace]
   );
   return (
@@ -108,7 +108,7 @@ export function BigButtonBar() {
             <BigButton
               icon={<Identicon input={workspace.href} size={4} scale={7} />}
               className=""
-              href={workspace.href}
+              href={workspace}
               title={workspace.name}
               key={workspace.guid}
             />
