@@ -1,4 +1,4 @@
-import { FsType } from "@/disk/disk";
+import { FsType } from "@/clientdb/Disk";
 import { absPath } from "@/lib/paths";
 
 export type TreeFile = {
@@ -21,34 +21,52 @@ abstract class FileTreeBase {
   tree: TreeDir | string[] = this.root;
   constructor(private fs: FsType, public id: string) {}
 
-  // teardown() {
-  //   this.tree = {} as any;
-  //   this.root = {} as any;
-  // }
+  indexed = false;
 
-  async build(type: TreeType = this.type) {
+  async index() {
+    this.root = {
+      name: "/",
+      path: "/",
+      type: "dir",
+      children: [],
+      depth: 0,
+    };
+    return this.buildNested();
+  }
+
+  async loadTree() {
+    if (this.indexed) {
+      return this.tree;
+    } else {
+      await this.index();
+      return this.tree;
+    }
+  }
+
+  private async buildNested(): Promise<TreeDir> {
+    return (await this.build("nested")) as TreeDir;
+  }
+  private async build(type: TreeType = this.type) {
     if (type === "nested") {
       await this.recurseTree(this.root.path, this.root.children, type, 0);
+      this.indexed = true;
       return this.root;
     } else {
       const parent: string[] = [];
       await this.recurseTree(this.root.path, parent, type, 0);
+      this.indexed = true;
       return parent;
     }
   }
 
-  walk(cb: (node: TreeNode, depth: number) => void, node: TreeNode = this.root, depth = 0) {
+  private walk(cb: (node: TreeNode, depth: number) => void, node: TreeNode = this.root, depth = 0) {
     cb(node, depth);
     if ((node as TreeDir).children) {
       (node as TreeDir).children.forEach((child) => this.walk(cb, child, depth + 1));
     }
   }
 
-  get children() {
-    return this.root.children;
-  }
-
-  recurseTree = async (
+  private recurseTree = async (
     dir: string,
     parent: (TreeNode | string)[] = [],
     type: "flat" | "nested" = "nested",

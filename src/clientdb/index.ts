@@ -1,10 +1,9 @@
-// import { Disk as DiskDbRecord, Disk } from '@/disk/disk';
-import { RemoteAuthDbRecord, RemoteAuthRecord } from "@/clientdb/Provider";
+import { RemoteAuthRecord } from "@/clientdb/RemoteAuth";
 import { SettingsDbRecord, SettingsRecord } from "@/clientdb/Settings";
-import { Workspace, WorkspaceDbRecord, WorkspaceRecord } from "@/clientdb/Workspace";
-import { Disk, DiskDbRecord, DiskRecord } from "@/disk/disk";
+import { Workspace, WorkspaceRecord } from "@/clientdb/Workspace";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
+import { Disk, DiskDAO, DiskRecord } from "./Disk";
 // const db = new Dexie("decrypt-test-2");
 // export class ClientIndexedDb extends Dexie {
 
@@ -13,16 +12,16 @@ export class ClientIndexedDb extends Dexie {
   workspaces!: EntityTable<WorkspaceRecord, "guid">;
   remoteAuths!: EntityTable<RemoteAuthRecord, "guid">;
   settings!: EntityTable<SettingsRecord, "name">;
-  disks!: EntityTable<DiskRecord, "guid">;
+  disks!: EntityTable<DiskDAO, "guid">;
 
   getRemoteAuthByGuid = (guid: string) => {
     return this.remoteAuths.where("guid").equals(guid).first();
   };
-  updateRemoteAuth = (RemoteAuth: RemoteAuthDbRecord | RemoteAuthRecord) => {
+  updateRemoteAuth = (RemoteAuth: RemoteAuthRecord) => {
     return this.remoteAuths.put(RemoteAuth);
   };
 
-  updateDisk = async (disk: DiskDbRecord | Disk) => {
+  updateDisk = async (disk: DiskRecord | Disk) => {
     return this.disks.put(disk instanceof Disk ? disk.toJSON() : disk);
   };
 
@@ -65,10 +64,10 @@ export class ClientIndexedDb extends Dexie {
       disks: "guid",
     });
 
-    this.remoteAuths.mapToClass(RemoteAuthDbRecord);
+    this.remoteAuths.mapToClass(RemoteAuthRecord);
     this.workspaces.mapToClass(WorkspaceRecord);
     this.settings.mapToClass(SettingsDbRecord);
-    this.disks.mapToClass(DiskDbRecord);
+    this.disks.mapToClass(DiskRecord);
     applyEncryptionMiddleware<ClientIndexedDb>(
       this as ClientIndexedDb,
       new Uint8Array(new Array(32).fill(0)),

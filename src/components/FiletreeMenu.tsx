@@ -1,5 +1,5 @@
+import { FileTree } from "@/clientdb/filetree";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { FileTree } from "@/disk/filetree";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
