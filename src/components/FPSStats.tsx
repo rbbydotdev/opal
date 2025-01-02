@@ -5,5 +5,5 @@ import dynamic from "next/dynamic";
 const FPSStatsComponent = dynamic(() => import("react-fps-stats"), { ssr: false });
 export function FPSStats() {
   if (process.env.NODE_ENV === "production") return null;
-  return <FPSStatsComponent graphWidth={30} />;
+  return <FPSStatsComponent />;
 }

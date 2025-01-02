@@ -25,7 +25,10 @@
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "**/types.d.ts"],
   "exclude": [
+    ".next",
+    "src/app/sand/**",
     "node_modules",
+    "tailwind.config.ts",
     "**/*.ignore.*", // Excludes any file with `.ignore.` in its name
     "**/_*" // Excludes any file or directory starting with `_`
   ]

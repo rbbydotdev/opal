@@ -12,6 +12,9 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       setStoredValue(item ? JSON.parse(item) : initialValue);
     } catch (error) {
       console.error(error);
+      console.error("could not get item from local storage text:", window.localStorage.getItem(key));
+      console.error("deleting ...");
+      window.localStorage.removeItem(key);
     }
   }, [key, initialValue]);
 

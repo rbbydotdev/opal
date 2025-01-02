@@ -1,13 +1,8 @@
-// const IdxFun = dynamic(() => import("@/app/sand/IdxFun"), {
-//   ssr: false,
+"use client";
 
-import IdxFun from "@/app/sand/IdxFun";
+import React, { use } from "react";
 
-// });
-export default async function Page() {
-  return (
-    <div className="w-full h-full">
-      <IdxFun />
-    </div>
-  );
+export default function Page() {
+  const value = use<string>(new Promise((resolve) => setTimeout(() => resolve("foo"), 5000)));
+  return <div className="w-full h-full">hello world + {value}</div>;
 }

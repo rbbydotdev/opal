@@ -2,6 +2,10 @@ type ErrorWithMessage = {
   message: string;
 };
 
+type ErrorWithCode = Error & {
+  code: string;
+};
+
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (
     typeof error === "object" &&
@@ -29,4 +33,13 @@ export function unwrapError(error: unknown) {
 
 export function isErrorWithCode(error: unknown, code?: string): boolean {
   return error instanceof Error && (code ? (error as { code?: string }).code === code : true);
+}
+
+export function errorCode(error: unknown, code?: string): ErrorWithCode {
+  if (isErrorWithCode(error, code)) {
+    return error as ErrorWithCode;
+  }
+  const newError = new Error(JSON.stringify(error)) as ErrorWithCode;
+  newError.code = code ?? "unknown";
+  return newError;
 }

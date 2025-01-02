@@ -30,6 +30,8 @@ export class ClientIndexedDb extends Dexie {
 
   getWorkspaceByGuid = (guid: string) => this.workspaces.where("guid").equals(guid).first();
 
+  getWorkspaceByName = (name: string) => this.workspaces.where("name").equals(name).first();
+
   updateWorkspace = async (workspace: WorkspaceRecord | Workspace) => {
     return this.workspaces.put(workspace instanceof Workspace ? workspace.toJSON() : workspace);
   };
@@ -64,7 +66,7 @@ export class ClientIndexedDb extends Dexie {
     });
 
     this.remoteAuths.mapToClass(RemoteAuthDbRecord);
-    this.workspaces.mapToClass(WorkspaceDbRecord);
+    this.workspaces.mapToClass(WorkspaceRecord);
     this.settings.mapToClass(SettingsDbRecord);
     this.disks.mapToClass(DiskDbRecord);
     applyEncryptionMiddleware<ClientIndexedDb>(

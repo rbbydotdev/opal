@@ -1,47 +1,45 @@
 "use client";
+import { Workspace } from "@/clientdb/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { withCurrentWorkspace } from "@/context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { FileTree, FileTreeJType } from "@/shapes/filetree";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-export function SidebarFileMenu({
-  fileTreeJson,
+function SidebarFileMenuInternal({
+  currentWorkspace,
   ...props
 }: {
-  fileTreeJson: FileTreeJType;
+  currentWorkspace: Workspace;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const fileTree = useMemo(() => FileTree.fromJSON(fileTreeJson), [fileTreeJson]);
+  const fileTree = currentWorkspace.disk!.fileTree;
+  const resolveFileUrl = currentWorkspace.resolveFileUrl;
   const [expanded, updateExpanded] = useLocalStorage<{ [k: string]: boolean } | null>("expandedFiles", null);
-  const [fileTreeId, setfileTreeId] = useLocalStorage<string>("filetree_id", fileTreeJson.id);
+  const [fileTreeId, setfileTreeId] = useLocalStorage<string>("filetree_id", fileTree.id);
   const [expCol, toggleExpCol] = useState(true);
   const expand = (path: string, expanded: boolean) => {
     updateExpanded((prev) => ({ ...prev, [path]: expanded }));
   };
-  // const width = useMemo(() => {
-  //   let max = 12;
-  //   fileTree.walk((file, depth = 0) => {
-  //     if (file.name.length + depth * 2 > max) {
-  //       max = file.name.length + depth * 2;
-  //     }
-  //   });
-  //   return max;
-  // }, [fileTree]);
-  const expandAll = (bool: boolean) => {
-    const exp: { [x: string]: boolean } = {};
-    fileTree.walk((file) => (exp[file.path] = bool));
-    fileTree.children.forEach((file) => (exp[file.path] = true)); //keeps root dirs open
-    updateExpanded(exp);
-  };
+  const expandAll = useCallback(
+    (bool: boolean) => {
+      const exp: { [x: string]: boolean } = {};
+      fileTree.walk((file) => (exp[file.path] = bool));
+      fileTree.children.forEach((file) => (exp[file.path] = true)); //keeps root dirs open
+      updateExpanded(exp);
+    },
+    [fileTree, updateExpanded]
+  );
 
   useEffect(() => {
-    if (fileTreeId !== fileTreeJson.id) {
+    if (fileTreeId !== fileTree?.id) {
       updateExpanded({});
-      setfileTreeId(fileTreeJson.id);
+      setfileTreeId(fileTree.id);
     }
-  }, [expanded, fileTreeJson.id, fileTreeId, setfileTreeId, updateExpanded]);
+  }, [expanded, fileTree?.id, fileTreeId, setfileTreeId, updateExpanded]);
+  if (!fileTree) return null;
+  if (!currentWorkspace) return null;
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
@@ -61,8 +59,15 @@ export function SidebarFileMenu({
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
-        <FileTreeMenu fileTreeChildren={fileTree.children} depth={0} expand={expand} expanded={expanded ?? {}} />
+        <FileTreeMenu
+          resolveFileUrl={resolveFileUrl}
+          fileTree={fileTree.children}
+          depth={0}
+          expand={expand}
+          expanded={expanded ?? {}}
+        />
       </SidebarGroupContent>
     </SidebarGroup>
   );
 }
+export const SidebarFileMenu = withCurrentWorkspace(SidebarFileMenuInternal);
