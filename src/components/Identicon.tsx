@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import React from "react";
 
 // Helper function to convert RGB to HSL
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
@@ -86,7 +85,7 @@ interface IdenticonProps {
   scale?: number; // Size of each cell in pixels
 }
 
-const Identicon: React.FC<IdenticonProps> = ({ input, size = 5, scale = 20 }) => {
+const Identicon = ({ input, size = 5, scale = 20 }: IdenticonProps) => {
   const hash = hashString(input);
 
   // Generate the background color

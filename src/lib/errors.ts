@@ -43,3 +43,21 @@ export function errorCode(error: unknown, code?: string): ErrorWithCode {
   newError.code = code ?? "unknown";
   return newError;
 }
+
+export const NOTFOUND = "NOTFOUND";
+export const BADREQUEST = "BADREQUEST";
+
+export class BadRequestError extends Error {
+  code = BADREQUEST;
+  constructor(message: string) {
+    super(message);
+    this.name = "BadRequest";
+  }
+}
+export class NotFoundError extends Error {
+  code = NOTFOUND;
+  constructor(message: string) {
+    super(message);
+    this.name = "NotFound";
+  }
+}

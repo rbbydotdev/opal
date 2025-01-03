@@ -1,7 +1,7 @@
 import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
 import { ClientDb } from "@/clientdb/instance";
 // import { randomSlug } from "@/lib/randomSlug";
-import { errorCode } from "@/lib/errors";
+import { BadRequestError, errorCode, NotFoundError } from "@/lib/errors";
 import { nanoid } from "nanoid";
 import path from "path";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
@@ -65,7 +65,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
   }
   static async byGuid(guid: string) {
     const ws = await ClientDb.workspaces.where("guid").equals(guid).first();
-    if (!ws) throw new Error("Workspace not found");
+    if (!ws) throw new NotFoundError("Workspace not found");
 
     const wsd = new WorkspaceDAO(ws);
 
@@ -82,13 +82,13 @@ export class WorkspaceDAO implements WorkspaceRecord {
     const remoteAuth = await ClientDb.remoteAuths.where("guid").equals(this.remoteAuthGuid).first();
     // console.log("remoteAuth", remoteAuth, this.remoteAuthGuid);
     // console.log(await ClientDb.remoteAuths.toArray());
-    if (!remoteAuth) throw new Error("RemoteAuth not found");
+    if (!remoteAuth) throw new NotFoundError("RemoteAuth not found");
     return new RemoteAuthDAO(remoteAuth);
   }
   private async loadDisk() {
     const disk = await ClientDb.disks.where("guid").equals(this.diskGuid).first();
 
-    if (!disk) throw new Error("Disk not found");
+    if (!disk) throw new NotFoundError("Disk not found");
     return new DiskDAO(disk);
   }
 
@@ -114,14 +114,14 @@ export class Workspace implements WorkspaceRecord {
   private disk: Disk;
 
   static async fromRoute(route: string) {
-    if (!route.startsWith(Workspace.rootRoute)) throw new Error("Invalid route");
+    if (!route.startsWith(Workspace.rootRoute)) throw new BadRequestError("Invalid route");
 
     const name = route.slice(Workspace.rootRoute.length + 1).split("/")[0];
 
     const ws =
       (await ClientDb.workspaces.where("name").equals(name).first()) ??
       (await ClientDb.workspaces.where("guid").equals(name).first());
-    if (!ws) throw new Error("Workspace not found");
+    if (!ws) throw new NotFoundError("Workspace not found");
     const wsd = new WorkspaceDAO(ws);
     return wsd.toWorkspace();
   }
