@@ -1,4 +1,5 @@
 "use client";
+import { FileTree } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname } from "next/navigation";
@@ -7,6 +8,7 @@ import React, { useEffect, useMemo, useState } from "react";
 export const WorkspaceContext = React.createContext<{
   workspaces: WorkspaceDAO[];
   currentWorkspace: Workspace | null;
+  workspaceRoute: { id: string | null; path: string | null };
   actions: {
     addWorkspace: (workspace: WorkspaceDAO) => void;
     removeWorkspace: (workspace: WorkspaceDAO) => void;
@@ -14,17 +16,32 @@ export const WorkspaceContext = React.createContext<{
 }>({
   workspaces: [],
   currentWorkspace: null,
+  workspaceRoute: { id: null, path: null },
   actions: {
     addWorkspace: () => {},
     removeWorkspace: () => {},
   },
 });
 
+export type WorkspaceRouteType = { id: string | null; path: string | null };
+
 export type Workspaces = WorkspaceDAO[];
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+
+  const [workspaceRoute, setRouteWorkspaceInfo] = useState<WorkspaceRouteType>({
+    id: null,
+    path: null,
+  });
+  useEffect(() => {
+    const match = pathname.match(/^\/workspace\/([^/]+)(\/.*)?$/);
+    if (match) {
+      const [_, wsid, filePath] = match;
+      setRouteWorkspaceInfo({ id: wsid ?? null, path: filePath ?? null });
+    }
+  }, [pathname]);
 
   useLiveQuery(async () => {
     const wrkspcs = await WorkspaceDAO.all();
@@ -49,7 +66,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   );
 
   return (
-    <WorkspaceContext.Provider value={{ workspaces, actions, currentWorkspace }}>{children}</WorkspaceContext.Provider>
+    <WorkspaceContext.Provider value={{ workspaces, actions, currentWorkspace, workspaceRoute }}>
+      {children}
+    </WorkspaceContext.Provider>
   );
 };
 
@@ -58,19 +77,20 @@ export const useWorkspaces = () => {
 };
 
 export const useCurrentWorkspaceData = () => {
-  const { currentWorkspace } = useWorkspaces();
+  const { currentWorkspace, workspaceRoute } = useWorkspaces();
   const [data, setData] = useState<{
     currentWorkspace: Workspace | null;
-    fileTree: Awaited<Workspace["fileTree"]> | null;
-  }>({ currentWorkspace: null, fileTree: null });
+    fileTree: FileTree | null;
+    workspaceRoute: WorkspaceRouteType;
+  }>({ currentWorkspace: null, fileTree: null, workspaceRoute });
   useEffect(() => {
     const fetchData = async () => {
       if (!currentWorkspace) return;
       const fileTree = await currentWorkspace.fileTree;
-      setData({ currentWorkspace, fileTree });
+      setData({ currentWorkspace, fileTree, workspaceRoute });
     };
     fetchData();
-  }, [currentWorkspace]);
+  }, [currentWorkspace, workspaceRoute]);
   return data;
 };
 
@@ -79,12 +99,24 @@ export const useCurrentWorkspace = () => {
   return currentWorkspace;
 };
 
+//Helper to delay rendering of child components until the current workspace is loaded
 export function withCurrentWorkspace<
-  T extends { currentWorkspace: Workspace; fileTree: Awaited<Workspace["fileTree"]> }
+  T extends {
+    currentWorkspace: Workspace;
+    fileTree: Awaited<Workspace["fileTree"]>;
+    workspaceRoute: WorkspaceRouteType;
+  }
 >(Component: React.ComponentType<T>) {
-  return function WrappedComponent(props: Omit<T, "currentWorkspace" | "fileTree">) {
-    const { fileTree, currentWorkspace } = useCurrentWorkspaceData();
+  return function WrappedComponent(props: Omit<T, "currentWorkspace" | "fileTree" | "workspaceRoute">) {
+    const { fileTree, currentWorkspace, workspaceRoute } = useCurrentWorkspaceData();
     if (!fileTree || !currentWorkspace) return null;
-    return <Component {...(props as T)} currentWorkspace={currentWorkspace} fileTree={fileTree} />;
+    return (
+      <Component
+        {...(props as T)}
+        workspaceRoute={workspaceRoute}
+        currentWorkspace={currentWorkspace}
+        fileTree={fileTree}
+      />
+    );
   };
 }
