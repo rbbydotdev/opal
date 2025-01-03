@@ -19,11 +19,12 @@ export class FileTree {
   constructor(private fs: FsType, public id: string) {}
   children = this.root.children;
 
-  onReadyQueue: Array<(fileTree: this) => void> = [];
-  onReady = (fn: () => void) => this.onReadyQueue.push(fn);
+  onIndexedQueue: Array<(root: typeof this.root, fileTree: this) => void> = [];
+  onIndexed = (fn: () => void) => this.onIndexedQueue.push(fn);
   flushQueue = () => {
-    this.onReadyQueue.forEach((fn) => fn(this));
-    this.onReadyQueue = [];
+    while (this.onIndexedQueue.length) {
+      this.onIndexedQueue.shift()!(this.root, this);
+    }
   };
 
   indexed = false;
@@ -39,6 +40,10 @@ export class FileTree {
       children: [],
       depth: 0,
     };
+    // return this.buildNested().then(() => {
+    //   this.flushQueue();
+    //   return this;
+    // });
     if (this.indexedPromise) {
       return this.indexedPromise.then(() => {
         this.indexedPromise = this.buildNested().then(() => this);
@@ -58,6 +63,7 @@ export class FileTree {
   };
 
   loadTree = () => {
+    //return this.buildNested().then(() => {flushQueue();return this});
     if (!this.indexedPromise) {
       return (this.indexedPromise = this.buildNested().then(() => this));
     } else {
@@ -82,7 +88,6 @@ export class FileTree {
   }
   private async build() {
     await this.recurseTree(this.root.path, this.root.children, 0);
-    this.indexed = true;
     return this.root;
   }
 
