@@ -57,15 +57,34 @@ export const useWorkspaces = () => {
   return React.useContext(WorkspaceContext);
 };
 
+export const useCurrentWorkspaceData = () => {
+  const { currentWorkspace } = useWorkspaces();
+  const [data, setData] = useState<{
+    currentWorkspace: Workspace | null;
+    fileTree: Awaited<Workspace["fileTree"]> | null;
+  }>({ currentWorkspace: null, fileTree: null });
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentWorkspace) return;
+      const fileTree = await currentWorkspace.fileTree;
+      setData({ currentWorkspace, fileTree });
+    };
+    fetchData();
+  }, [currentWorkspace]);
+  return data;
+};
+
 export const useCurrentWorkspace = () => {
   const { currentWorkspace } = useWorkspaces();
   return currentWorkspace;
 };
 
-export function withCurrentWorkspace<T extends { currentWorkspace: Workspace }>(Component: React.ComponentType<T>) {
-  return function WrappedComponent(props: Omit<T, "currentWorkspace">) {
-    const currentWorkspace = useCurrentWorkspace();
-    if (!currentWorkspace) return null;
-    return <Component {...(props as T)} currentWorkspace={currentWorkspace} />;
+export function withCurrentWorkspace<
+  T extends { currentWorkspace: Workspace; fileTree: Awaited<Workspace["fileTree"]> }
+>(Component: React.ComponentType<T>) {
+  return function WrappedComponent(props: Omit<T, "currentWorkspace" | "fileTree">) {
+    const { fileTree, currentWorkspace } = useCurrentWorkspaceData();
+    if (!fileTree || !currentWorkspace) return null;
+    return <Component {...(props as T)} currentWorkspace={currentWorkspace} fileTree={fileTree} />;
   };
 }

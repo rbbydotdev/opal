@@ -7,7 +7,7 @@ export type TreeFile = {
   path: string;
   depth: number;
 };
-abstract class FileTreeBase {
+export class FileTree {
   root: TreeDir = {
     name: "/",
     path: "/",
@@ -16,14 +16,20 @@ abstract class FileTreeBase {
     depth: 0,
   };
   tree: TreeDir = this.root;
-  constructor(private fs: FsType, public id: string) {
-    console.log("FileTreeBase", id);
-  }
+  constructor(private fs: FsType, public id: string) {}
   children = this.root.children;
+
+  onReadyQueue: Array<(fileTree: this) => void> = [];
+  onReady = (fn: () => void) => this.onReadyQueue.push(fn);
+  flushQueue = () => {
+    this.onReadyQueue.forEach((fn) => fn(this));
+    this.onReadyQueue = [];
+  };
 
   indexed = false;
   //poor mans queue for async indexing,
   indexedPromise: Promise<this> | null = null;
+  // private resolve: typeof Promise.resolve;
 
   index = () => {
     this.root = {
@@ -41,6 +47,16 @@ abstract class FileTreeBase {
     return (this.indexedPromise = this.buildNested().then(() => this));
   };
 
+  flatDirTree = () => {
+    const flat: TreeList = [];
+    this.walk((node) => {
+      if (node.type === "dir") {
+        flat.push(node.path);
+      }
+    });
+    return flat;
+  };
+
   loadTree = () => {
     if (!this.indexedPromise) {
       return (this.indexedPromise = this.buildNested().then(() => this));
@@ -48,6 +64,18 @@ abstract class FileTreeBase {
       return this.indexedPromise;
     }
   };
+
+  async getFirstFile() {
+    await this.loadTree();
+    let first = null;
+    this.walk((file, _, exit) => {
+      if (file.type === "file") {
+        first = file;
+        exit();
+      }
+    });
+    return first;
+  }
 
   private async buildNested(): Promise<TreeDir> {
     return (await this.build()) as TreeDir;
@@ -58,10 +86,17 @@ abstract class FileTreeBase {
     return this.root;
   }
 
-  walk(cb: (node: TreeNode, depth: number) => void, node: TreeNode = this.root, depth = 0) {
-    cb(node, depth);
-    if ((node as TreeDir).children) {
-      (node as TreeDir).children.forEach((child) => this.walk(cb, child, depth + 1));
+  walk(
+    cb: (node: TreeNode, depth: number, exit: () => void) => void,
+    node: TreeNode = this.root,
+    depth = 0,
+    status = { exit: false }
+  ) {
+    const exit = () => (status.exit = true);
+    cb(node, depth, exit);
+    for (const childNode of (node as TreeDir).children ?? []) {
+      if (status.exit) break;
+      this.walk(cb, childNode, depth + 1, status);
     }
   }
 
@@ -96,8 +131,6 @@ abstract class FileTreeBase {
     }
   };
 }
-
-export class FileTree extends FileTreeBase {}
 
 export type TreeNode = TreeDir | TreeFile;
 

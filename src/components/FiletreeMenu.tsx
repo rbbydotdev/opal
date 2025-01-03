@@ -44,7 +44,7 @@ export function FileTreeMenu({
                     </span>
                   </span>
                 ) : (
-                  <Link href={{ pathname: resolveFileUrl(file.path), query: { sf: "1" } }} className="group">
+                  <Link href={{ pathname: resolveFileUrl(file.path) }} className="group">
                     <span style={{ marginLeft: depth * 1 + "rem" }}>
                       <span className="pl-3">{file.name}</span>
                     </span>
