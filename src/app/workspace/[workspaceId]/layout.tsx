@@ -11,8 +11,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <WorkspaceName />
       </div>
       <div className="w-full flex flex-grow">
-        <ResizablePanelGroup direction="horizontal" autoSaveId="editorSideBar/editor">
-          <ResizablePanel id="editorSideBar" defaultSize={18} minSize={12} collapsible={true}>
+        <ResizablePanelGroup direction="horizontal" autoSaveId={"editorSideBar/editor"}>
+          <ResizablePanel id="editorSideBar" defaultSize={10} minSize={12} collapsible={true}>
             <EditorSidebar
               className="h-[calc(100vh-20px)]"
               style={{ "--sidebar-width": "100%" } as React.CSSProperties}

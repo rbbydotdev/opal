@@ -26,6 +26,7 @@ export const WorkspaceContext = React.createContext<{
 export type WorkspaceRouteType = { id: string | null; path: string | null };
 
 export type Workspaces = WorkspaceDAO[];
+
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
