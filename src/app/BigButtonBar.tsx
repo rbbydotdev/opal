@@ -82,7 +82,7 @@ export function BigButtonBar() {
 
       {currentWorkspace && (
         <BigButton
-          icon={<Identicon input={currentWorkspace.href} size={4} scale={7} />}
+          icon={<Identicon input={currentWorkspace.guid} size={4} scale={7} />}
           title={currentWorkspace.name}
           href={currentWorkspace.href}
           className="text-white"
@@ -93,7 +93,7 @@ export function BigButtonBar() {
         open={expand}
         onOpenChange={setExpand}
       >
-        {workspaces.length > 0 && (
+        {workspaces.length > 1 && (
           <CollapsibleTrigger
             className="h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
   hover:text-slate-200 bg-slate-900 flex items-center"
@@ -106,7 +106,7 @@ export function BigButtonBar() {
         <CollapsibleContent className="w-full bg-slate-800 ">
           {filteredWorkspaces.map((workspace) => (
             <BigButton
-              icon={<Identicon input={workspace.href} size={4} scale={7} />}
+              icon={<Identicon input={workspace.guid} size={4} scale={7} />}
               className=""
               href={workspace.href}
               title={workspace.name}
