@@ -8,14 +8,18 @@ export type TreeFile = {
   path: string;
   depth: number;
 };
+
+export const EmptyFileTree: TreeDir = {
+  name: "/",
+  path: "/",
+  type: "dir",
+  children: [],
+  depth: 0,
+};
+
+// export type EmptyFileTreeType = typeof EmptyFileTree;
 export class FileTree {
-  private root: TreeDir = {
-    name: "/",
-    path: "/",
-    type: "dir",
-    children: [],
-    depth: 0,
-  };
+  root: TreeDir = EmptyFileTree;
   // private tree: TreeDir = this.root;
   constructor(private fs: FsType, public id: string) {}
   children = this.root.children;
@@ -35,13 +39,7 @@ export class FileTree {
   // private resolve: typeof Promise.resolve;
 
   reIndex = () => {
-    this.root = {
-      name: "/",
-      path: "/",
-      type: "dir",
-      children: [],
-      depth: 0,
-    };
+    this.root = EmptyFileTree;
     this.indexed = false;
     return this.index();
   };
@@ -62,6 +60,7 @@ export class FileTree {
     await this.buildNested();
     this.flushQueue();
     this.emitter.emit("index", this);
+    await new Promise((rs) => queueMicrotask(() => rs(null)));
     return this;
   };
 

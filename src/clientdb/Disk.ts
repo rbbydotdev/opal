@@ -1,8 +1,10 @@
 import { FileTree } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
+import { errorCode } from "@/lib/errors";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { memfs } from "memfs";
 import { nanoid } from "nanoid";
+import path from "path";
 
 export type DiskJType = { guid: string; type: DiskType; fs: Record<string, string> };
 
@@ -55,8 +57,32 @@ export abstract class Disk implements DiskRecord {
   static from({ guid, type }: { guid: string; type: DiskType }) {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
+  async mkdirRecursive(filePath: string) {
+    const segments = path.dirname(filePath).split("/").slice(1);
+    for (let i = 1; i <= segments.length; i++) {
+      try {
+        //because lightningfs does not support recursive mkdir
+        await this.fs.promises.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
+      } catch (err) {
+        if (errorCode(err).code !== "EEXIST") {
+          console.error(`Error creating directory ${path.dirname(filePath)}:`, err);
+        }
+      }
+    }
+  }
+  async writeFileRecursive(filePath: string, content: string) {
+    await this.mkdirRecursive(filePath);
+    try {
+      await this.fs.promises.writeFile(filePath, content, { encoding: "utf8", mode: 0o777 });
+    } catch (err) {
+      if (errorCode(err).code !== "EEXIST") {
+        console.error(`Error writing file ${filePath}:`, err);
+      }
+    }
+  }
+
   //callback to do fs operations and then re-index the file tree
-  async withFs(fn: (fs: FsType) => Promise<unknown>) {
+  async withFs(fn: (fs: FsType) => Promise<unknown> | unknown) {
     await fn(this.fs);
     await this.fileTree.reIndex();
     return this.fs;
