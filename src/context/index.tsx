@@ -40,6 +40,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const match = pathname.match(/^\/workspace\/([^/]+)(\/.*)?$/);
     if (match) {
       const [_, wsid, filePath] = match;
+      if (wsid === "new") return;
       setRouteWorkspaceInfo({ id: wsid ?? null, path: filePath ?? null });
     }
   }, [pathname]);
@@ -50,8 +51,19 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   }, [setWorkspaces]);
 
   useEffect(() => {
-    if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new") return;
-    Workspace.fromRoute(pathname).then(setCurrentWorkspace);
+    let tearDownFn: (() => void) | null = null;
+    const setupWorkspace = async () => {
+      if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new") {
+        return;
+      }
+      const currentWorkspace = await Workspace.fromRoute(pathname);
+      setCurrentWorkspace(currentWorkspace);
+      tearDownFn = currentWorkspace.teardown;
+    };
+    setupWorkspace();
+    return () => {
+      if (tearDownFn) tearDownFn();
+    };
   }, [pathname, workspaces, setCurrentWorkspace]);
 
   const actions = useMemo(
@@ -79,19 +91,23 @@ export const useWorkspaces = () => {
 
 export const useCurrentWorkspaceData = () => {
   const { currentWorkspace, workspaceRoute } = useWorkspaces();
+
   const [data, setData] = useState<{
     currentWorkspace: Workspace | null;
     fileTree: FileTree | null;
     workspaceRoute: WorkspaceRouteType;
   }>({ currentWorkspace: null, fileTree: null, workspaceRoute });
+
   useEffect(() => {
     const fetchData = async () => {
       if (!currentWorkspace) return;
-      const fileTree = await currentWorkspace.fileTree;
+
+      const fileTree = await currentWorkspace.getFileTree();
       setData({ currentWorkspace, fileTree, workspaceRoute });
     };
     fetchData();
-  }, [currentWorkspace, workspaceRoute]);
+  }, [currentWorkspace, workspaceRoute, setData]);
+
   return data;
 };
 
@@ -104,7 +120,7 @@ export const useCurrentWorkspace = () => {
 export function withCurrentWorkspace<
   T extends {
     currentWorkspace: Workspace;
-    fileTree: Awaited<Workspace["fileTree"]>;
+    fileTree: Awaited<ReturnType<Workspace["getFileTree"]>>;
     workspaceRoute: WorkspaceRouteType;
   }
 >(Component: React.ComponentType<T>) {

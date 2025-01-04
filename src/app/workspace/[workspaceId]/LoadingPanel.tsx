@@ -1,9 +1,9 @@
 import { Loader } from "lucide-react";
 
 export const LoadingPanel = () => (
-  <div>
-    <div className="animate-spin">
-      <Loader />
+  <div className="flex justify-center items-center">
+    <div>
+      <Loader size={96} className="animate-spin" />
     </div>
   </div>
 );

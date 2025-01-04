@@ -1,5 +1,6 @@
 import { FsType } from "@/clientdb/Disk";
 import { absPath } from "@/lib/paths";
+import Emittery from "emittery";
 
 export type TreeFile = {
   name: string;
@@ -8,31 +9,32 @@ export type TreeFile = {
   depth: number;
 };
 export class FileTree {
-  root: TreeDir = {
+  private root: TreeDir = {
     name: "/",
     path: "/",
     type: "dir",
     children: [],
     depth: 0,
   };
-  tree: TreeDir = this.root;
+  // private tree: TreeDir = this.root;
   constructor(private fs: FsType, public id: string) {}
   children = this.root.children;
 
-  onIndexedQueue: Array<(root: typeof this.root, fileTree: this) => void> = [];
-  onIndexed = (fn: () => void) => this.onIndexedQueue.push(fn);
+  private onIndexedQueue: Array<(root: typeof this.root, fileTree: this) => void> = [];
+  // private onIndexed = (fn: () => void) => this.onIndexedQueue.push(fn);
   flushQueue = () => {
     while (this.onIndexedQueue.length) {
       this.onIndexedQueue.shift()!(this.root, this);
     }
   };
+  private emitter = new Emittery();
 
   indexed = false;
   //poor mans queue for async indexing,
-  indexedPromise: Promise<this> | null = null;
+  // indexedPromise: Promise<this> | null = null;
   // private resolve: typeof Promise.resolve;
 
-  index = () => {
+  reIndex = () => {
     this.root = {
       name: "/",
       path: "/",
@@ -40,16 +42,8 @@ export class FileTree {
       children: [],
       depth: 0,
     };
-    // return this.buildNested().then(() => {
-    //   this.flushQueue();
-    //   return this;
-    // });
-    if (this.indexedPromise) {
-      return this.indexedPromise.then(() => {
-        this.indexedPromise = this.buildNested().then(() => this);
-      });
-    }
-    return (this.indexedPromise = this.buildNested().then(() => this));
+    this.indexed = false;
+    return this.index();
   };
 
   flatDirTree = () => {
@@ -62,17 +56,17 @@ export class FileTree {
     return flat;
   };
 
-  loadTree = () => {
-    //return this.buildNested().then(() => {flushQueue();return this});
-    if (!this.indexedPromise) {
-      return (this.indexedPromise = this.buildNested().then(() => this));
-    } else {
-      return this.indexedPromise;
-    }
+  index = async () => {
+    if (this.indexed) return this;
+    this.indexed = true;
+    await this.buildNested();
+    this.flushQueue();
+    this.emitter.emit("index", this);
+    return this;
   };
 
-  async getFirstFile() {
-    await this.loadTree();
+  async getFirstFile(): Promise<TreeFile | null> {
+    await this.index();
     let first = null;
     this.walk((file, _, exit) => {
       if (file.type === "file") {
@@ -83,12 +77,24 @@ export class FileTree {
     return first;
   }
 
-  private async buildNested(): Promise<TreeDir> {
-    return (await this.build()) as TreeDir;
-  }
-  private async build() {
+  // private async buildNested(): Promise<TreeDir> {
+  //   return (await this.build()) as TreeDir;
+  // }
+  private async buildNested() {
+    // while (this.root.children.length) {
+    //   this.root.children.pop();
+    // }
     await this.recurseTree(this.root.path, this.root.children, 0);
     return this.root;
+  }
+
+  watch(callback: (fileTree: this) => void) {
+    return this.emitter.on("index", () => callback(this));
+  }
+
+  teardown() {
+    this.emitter.clearListeners();
+    this.onIndexedQueue.length = 0;
   }
 
   walk(

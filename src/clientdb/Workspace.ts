@@ -1,3 +1,4 @@
+"use client";
 import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
 import { ClientDb } from "@/clientdb/instance";
 // import { randomSlug } from "@/lib/randomSlug";
@@ -101,10 +102,11 @@ export class WorkspaceDAO implements WorkspaceRecord {
 //for exampple the diskguid
 export class Workspace implements WorkspaceRecord {
   static seedFiles: Record<string, string> = {
-    "/welcome.md": "# Welcome to your new workspace!",
+    // "/welcome.md": "# Welcome to your new workspace!",
     "/home/post1.md": "# Hello World!",
-    "/drafts/draft1.md": "# Goodbye World!",
-    "/ideas/ideas.md": "# Red Green Blue",
+    "/home/a/b/c/d/post1.md": "# Hello World!",
+    // "/drafts/draft1.md": "# Goodbye World!",
+    // "/ideas/ideas.md": "# Red Green Blue",
   };
 
   createdAt: Date = new Date();
@@ -128,21 +130,27 @@ export class Workspace implements WorkspaceRecord {
 
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
+
+    //TODO ??
     await ws.disk.withFs(async (fs) => {
       const promises: Promise<void>[] = [];
+
       for (const [filePath, content] of Object.entries(Workspace.seedFiles)) {
         const writeFile = async (filePath: string, content: string) => {
-          try {
-            await fs.promises.mkdir(path.dirname(filePath), { recursive: true, mode: 0o777 });
-          } catch (err) {
-            if (errorCode(err).code !== "EEXIST") {
-              console.error(`Error creating directory ${path.dirname(filePath)}:`, err);
+          const segments = path.dirname(filePath).split("/").slice(1);
+          for (let i = 1; i <= segments.length; i++) {
+            try {
+              await fs.promises.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
+            } catch (err) {
+              if (errorCode(err).code !== "EEXIST") {
+                console.error(`Error creating directory ${path.dirname(filePath)}:`, err);
+              }
             }
           }
           try {
             await fs.promises.writeFile(filePath, content, { encoding: "utf8", mode: 0o777 });
           } catch (err) {
-            console.error(`Error writing file ${filePath}:`, err);
+            console.error(`Error writing file ${filePath}:`);
           }
         };
         promises.push(writeFile(filePath, content));
@@ -152,8 +160,8 @@ export class Workspace implements WorkspaceRecord {
     return ws;
   }
 
-  get fileTree() {
-    return this.disk.fileTree.loadTree();
+  getFileTree() {
+    return this.disk.fileTree.index();
   }
 
   static rootRoute = "/workspace";
@@ -174,6 +182,9 @@ export class Workspace implements WorkspaceRecord {
     this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
   }
+  teardown = () => {
+    this.disk.teardown();
+  };
 
   toJSON() {
     return {
@@ -186,6 +197,9 @@ export class Workspace implements WorkspaceRecord {
     } satisfies WorkspaceRecord & { href: string };
   }
 
+  home = () => {
+    return this.resolveFileUrl("");
+  };
   resolveFileUrl = (filePath: string) => {
     return this.href + filePath;
   };

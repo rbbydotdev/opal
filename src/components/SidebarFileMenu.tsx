@@ -9,7 +9,7 @@ import { CopyMinus } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
 
 type ExpandMap = { [path: string]: boolean };
-function useFileTreeExpander(fileDirTree: string[], id: string) {
+function useFileTreeExpander(currentFile: string | null, fileDirTree: string[], id: string) {
   const expandTree = useMemo(
     () => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: false }), {}),
     [fileDirTree]
@@ -23,7 +23,6 @@ function useFileTreeExpander(fileDirTree: string[], id: string) {
   const expandSingle = (path: string, expanded: boolean) => {
     updateExpanded((prev) => ({ ...prev, [path]: expanded }));
   };
-
   const setExpandAll = (state: boolean) => {
     updateExpanded(setAllState(state));
   };
@@ -39,10 +38,10 @@ function SidebarFileMenuInternal({
 }: {
   workspaceRoute: WorkspaceRouteType;
   currentWorkspace: Workspace;
-  fileTree: Awaited<Workspace["fileTree"]>;
+  fileTree: Awaited<ReturnType<Workspace["getFileTree"]>>;
 } & React.ComponentProps<typeof SidebarGroup>) {
   const flatDirTree = useMemo(() => fileTree.flatDirTree(), [fileTree]);
-  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(flatDirTree, fileTree.id);
+  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(workspaceRoute.path, flatDirTree, fileTree.id);
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
@@ -64,6 +63,7 @@ function SidebarFileMenuInternal({
           resolveFileUrl={currentWorkspace.resolveFileUrl}
           fileTree={fileTree.children}
           depth={0}
+          currentFile={workspaceRoute.path}
           expand={expandSingle}
           expanded={expanded}
         />
