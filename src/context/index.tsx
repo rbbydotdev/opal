@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
 export const WorkspaceContext = React.createContext<{
-  fileTree: TreeDir | null;
+  fileTreeDir: TreeDir | null;
   workspaces: WorkspaceDAO[];
   currentWorkspace: Workspace | null;
   workspaceRoute: { id: string | null; path: string | null };
@@ -15,7 +15,7 @@ export const WorkspaceContext = React.createContext<{
     removeWorkspace: (workspace: WorkspaceDAO) => void;
   };
 }>({
-  fileTree: null,
+  fileTreeDir: null,
   workspaces: [],
   currentWorkspace: null,
   workspaceRoute: { id: null, path: null },
@@ -32,7 +32,7 @@ export type Workspaces = WorkspaceDAO[];
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
-  const [fileTree, setFileTree] = useState<TreeDir | null>(null);
+  const [fileTreeDir, setFileTree] = useState<TreeDir | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
 
   const [workspaceRoute, setRouteWorkspaceInfo] = useState<WorkspaceRouteType>({
@@ -41,11 +41,11 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   });
   useEffect(() => {
     if (currentWorkspace) {
-      currentWorkspace.watchFileTree(() => {
-        setFileTree(currentWorkspace.getFileTree());
+      return currentWorkspace.watchFileTree(() => {
+        setFileTree(currentWorkspace.getFileTreeDir());
       });
     }
-  }, [currentWorkspace]);
+  }, [currentWorkspace, setFileTree]);
   useEffect(() => {
     const match = pathname.match(/^\/workspace\/([^/]+)(\/.*)?$/);
     if (match) {
@@ -89,39 +89,36 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   );
 
   return (
-    <WorkspaceContext.Provider value={{ workspaces, actions, currentWorkspace, workspaceRoute, fileTree }}>
+    <WorkspaceContext.Provider
+      value={{ workspaces, actions, currentWorkspace, workspaceRoute, fileTreeDir: fileTreeDir }}
+    >
       {children}
     </WorkspaceContext.Provider>
   );
-};
-
-export const useWorkspaces = () => {
-  return React.useContext(WorkspaceContext);
-};
-
-export const useCurrentWorkspace = () => {
-  const { currentWorkspace } = useWorkspaces();
-  return currentWorkspace;
 };
 
 //Helper to delay rendering of child components until the current workspace is loaded
 export function withCurrentWorkspace<
   T extends {
     currentWorkspace: Workspace;
-    fileTree: TreeDir;
+    fileTreeDir: TreeDir;
     workspaceRoute: WorkspaceRouteType;
   }
 >(Component: React.ComponentType<T>) {
-  return function WrappedComponent(props: Omit<T, "currentWorkspace" | "fileTree" | "workspaceRoute">) {
-    const { fileTree, currentWorkspace, workspaceRoute } = useContext(WorkspaceContext);
-    if (!fileTree || !currentWorkspace) return null;
+  return function WrappedComponent(props: Omit<T, "currentWorkspace" | "fileTreeDir" | "workspaceRoute">) {
+    const { fileTreeDir: fileTreeDir, currentWorkspace, workspaceRoute } = useWorkspaceContext();
+    if (!fileTreeDir || !currentWorkspace) return null;
     return (
       <Component
         {...(props as T)}
         workspaceRoute={workspaceRoute}
         currentWorkspace={currentWorkspace}
-        fileTree={fileTree}
+        fileTreeDir={fileTreeDir}
       />
     );
   };
+}
+
+export function useWorkspaceContext() {
+  return useContext(WorkspaceContext);
 }

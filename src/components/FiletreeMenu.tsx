@@ -27,7 +27,7 @@ export function FileTreeMenu({
     <SidebarMenu>
       {fileTree.map((file) => (
         <Collapsible
-          key={file.name}
+          key={file.path}
           open={isExpanded(file)}
           defaultOpen={isExpanded(file)}
           onOpenChange={(o) => expand(file.path, o)}
@@ -36,7 +36,7 @@ export function FileTreeMenu({
             <CollapsibleTrigger asChild>
               <SidebarMenuButton asChild>
                 {file.type === "dir" ? (
-                  <span className="group cursor-pointer" tabIndex={1}>
+                  <span className="group cursor-pointer">
                     <span className="inline-flex" style={{ marginLeft: depth * 1 + "rem" }}>
                       <span className="mr-2">
                         <ChevronDown size={18} className="group-data-[state=closed]:hidden" />

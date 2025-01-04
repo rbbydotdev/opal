@@ -2,6 +2,7 @@
 import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
 import { ClientDb } from "@/clientdb/instance";
 // import { randomSlug } from "@/lib/randomSlug";
+import { TreeDir } from "@/clientdb/filetree";
 import { BadRequestError, NotFoundError } from "@/lib/errors";
 import { nanoid } from "nanoid";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
@@ -113,6 +114,10 @@ export class Workspace implements WorkspaceRecord {
   remoteAuth: RemoteAuth;
   private disk: Disk;
 
+  get id() {
+    return this.guid;
+  }
+
   static async fromRoute(route: string) {
     if (!route.startsWith(Workspace.rootRoute)) throw new BadRequestError("Invalid route");
 
@@ -136,12 +141,12 @@ export class Workspace implements WorkspaceRecord {
     return ws;
   }
 
-  watchFileTree(callback: (fileTree: Disk["fileTree"]) => void) {
+  watchFileTree(callback: (fileTree: TreeDir) => void) {
     //TODO this should be a method on disk?
     return this.disk.fileTree.watch(callback);
   }
-  getFileTree() {
-    return this.disk.fileTree.root;
+  getFileTreeDir() {
+    return this.disk.fileTree.getRootTree();
   }
   getFirstFile() {
     return this.disk.fileTree.getFirstFile();

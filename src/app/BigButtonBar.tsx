@@ -2,12 +2,12 @@
 import Identicon from "@/components/Identicon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { WorkspaceContext } from "@/context";
+import { useWorkspaceContext } from "@/context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { ChevronDown, ChevronUp, CirclePlus, Delete, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useContext, useMemo } from "react";
+import { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 function BigButton({
@@ -61,7 +61,7 @@ const deleteAllDbs = () =>
     });
 
 export function BigButtonBar() {
-  const { currentWorkspace, workspaces } = useContext(WorkspaceContext);
+  const { currentWorkspace, workspaces } = useWorkspaceContext();
 
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
 

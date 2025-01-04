@@ -2,6 +2,18 @@ import { FsType } from "@/clientdb/Disk";
 import { absPath } from "@/lib/paths";
 import Emittery from "emittery";
 
+export type TreeNode = TreeDir | TreeFile;
+
+export type TreeList = Array<string>;
+
+export type TreeDir = {
+  children: Array<TreeNode>;
+  name: string;
+  type: "dir";
+  path: string;
+  depth: number;
+};
+
 export type TreeFile = {
   name: string;
   type: "file";
@@ -9,40 +21,33 @@ export type TreeFile = {
   depth: number;
 };
 
-export const EmptyFileTree: TreeDir = {
-  name: "/",
-  path: "/",
-  type: "dir",
-  children: [],
-  depth: 0,
-};
-
 // export type EmptyFileTreeType = typeof EmptyFileTree;
 export class FileTree {
-  root: TreeDir = EmptyFileTree;
-  // private tree: TreeDir = this.root;
-  constructor(private fs: FsType, public id: string) {}
-  children = this.root.children;
+  static EmptyFileTree = () =>
+    ({
+      name: "/",
+      path: "/",
+      type: "dir",
+      children: [],
+      depth: 0,
+    } as TreeDir);
 
-  private onIndexedQueue: Array<(root: typeof this.root, fileTree: this) => void> = [];
-  // private onIndexed = (fn: () => void) => this.onIndexedQueue.push(fn);
-  flushQueue = () => {
-    while (this.onIndexedQueue.length) {
-      this.onIndexedQueue.shift()!(this.root, this);
-    }
-  };
+  root: TreeDir = FileTree.EmptyFileTree();
+  // private tree: TreeDir = this.root;
+  constructor(private fs: FsType, public id: string) {
+    this.index();
+  }
   private emitter = new Emittery();
 
-  indexed = false;
-  //poor mans queue for async indexing,
-  // indexedPromise: Promise<this> | null = null;
-  // private resolve: typeof Promise.resolve;
+  initialIndex = false;
 
-  reIndex = () => {
-    this.root = EmptyFileTree;
-    this.indexed = false;
-    return this.index();
-  };
+  private indexQueue: ((...a: any[]) => void)[] = [];
+
+  private locked = false;
+
+  getRootTree() {
+    return this.root;
+  }
 
   flatDirTree = () => {
     const flat: TreeList = [];
@@ -54,18 +59,30 @@ export class FileTree {
     return flat;
   };
 
-  index = async () => {
-    if (this.indexed) return this;
-    this.indexed = true;
-    await this.buildNested();
-    this.flushQueue();
-    this.emitter.emit("index", this);
-    await new Promise((rs) => queueMicrotask(() => rs(null)));
+  reIndex = () => {
+    return this.index(true);
+  };
+  index = async (force: boolean = false) => {
+    if (!force && this.initialIndex) {
+      this.emitter.emit("index");
+      return this;
+    }
+    if (this.locked) {
+      await new Promise((resolve) => this.indexQueue.push(resolve));
+    }
+    this.locked = true;
+    this.root = FileTree.EmptyFileTree();
+    await this.recurseTree(this.root.path, this.root.children, 0);
+    while (this.indexQueue.length) {
+      (this.indexQueue.shift() || (() => {}))();
+    }
+    this.initialIndex = true;
+    this.emitter.emit("index");
+    this.locked = false;
     return this;
   };
 
   async getFirstFile(): Promise<TreeFile | null> {
-    await this.index();
     let first = null;
     this.walk((file, _, exit) => {
       if (file.type === "file") {
@@ -76,24 +93,13 @@ export class FileTree {
     return first;
   }
 
-  // private async buildNested(): Promise<TreeDir> {
-  //   return (await this.build()) as TreeDir;
-  // }
-  private async buildNested() {
-    // while (this.root.children.length) {
-    //   this.root.children.pop();
-    // }
-    await this.recurseTree(this.root.path, this.root.children, 0);
-    return this.root;
-  }
-
-  watch(callback: (fileTree: this) => void) {
-    return this.emitter.on("index", () => callback(this));
+  watch(callback: (fileTree: TreeDir) => void) {
+    return this.emitter.on("index", () => callback(this.root));
   }
 
   teardown() {
     this.emitter.clearListeners();
-    this.onIndexedQueue.length = 0;
+    this.indexQueue.length = 0;
   }
 
   walk(
@@ -141,15 +147,3 @@ export class FileTree {
     }
   };
 }
-
-export type TreeNode = TreeDir | TreeFile;
-
-export type TreeList = Array<string>;
-
-export type TreeDir = {
-  children: Array<TreeNode>;
-  name: string;
-  type: "dir";
-  path: string;
-  depth: number;
-};
