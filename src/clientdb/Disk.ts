@@ -41,6 +41,10 @@ export abstract class Disk implements DiskRecord {
   abstract readonly type: DiskType;
   abstract readonly guid: string;
 
+  teardown() {
+    this.fileTree.teardown();
+  }
+
   static defaultDiskType: DiskType = "IndexedDbDisk";
 
   static guid = () => "disk:" + nanoid();
@@ -51,10 +55,15 @@ export abstract class Disk implements DiskRecord {
   static from({ guid, type }: { guid: string; type: DiskType }) {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
+  //callback to do fs operations and then re-index the file tree
   async withFs(fn: (fs: FsType) => Promise<unknown>) {
     await fn(this.fs);
-    await this.fileTree.index();
+    await this.fileTree.reIndex();
     return this.fs;
+  }
+
+  get firstFile() {
+    return this.fileTree.getFirstFile();
   }
 
   toJSON() {

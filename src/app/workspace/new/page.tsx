@@ -19,7 +19,7 @@ export default function Page() {
         <Button
           onClick={async () => {
             const ws = await Workspace.createWithSeedFiles(name);
-            router.push(`/workspace/${ws.name}`);
+            router.push(ws.home());
           }}
         >
           Create

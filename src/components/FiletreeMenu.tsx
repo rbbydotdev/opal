@@ -4,16 +4,26 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/r
 import { ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
+export function File({ selected, children }: { selected: boolean; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex gap-2">
+      {selected && <span className="text-purple-700 ">✦</span>}
+      {children}
+    </span>
+  );
+}
 export function FileTreeMenu({
   fileTree,
   resolveFileUrl,
   depth = 0,
   expand,
+  currentFile,
   expanded,
 }: {
   resolveFileUrl: (path: string) => string;
   expand: (s: string, b: boolean) => void;
   expanded: { [path: string]: boolean };
+  currentFile: string | null;
   fileTree?: TreeDir["children"];
   depth?: number;
 }) {
@@ -30,7 +40,7 @@ export function FileTreeMenu({
           defaultOpen={isExpanded(file)}
           onOpenChange={(o) => expand(file.path, o)}
         >
-          <SidebarMenuItem>
+          <SidebarMenuItem className={currentFile === file.path ? "bg-sidebar-accent" : ""}>
             <CollapsibleTrigger asChild>
               <SidebarMenuButton asChild>
                 {file.type === "dir" ? (
@@ -46,7 +56,9 @@ export function FileTreeMenu({
                 ) : (
                   <Link href={{ pathname: resolveFileUrl(file.path) }} className="group">
                     <span style={{ marginLeft: depth * 1 + "rem" }}>
-                      <span className="pl-3">{file.name}</span>
+                      <span className="pl-3">
+                        <File selected={currentFile === file.path}>{file.name}</File>
+                      </span>
                     </span>
                   </Link>
                 )}
@@ -58,6 +70,7 @@ export function FileTreeMenu({
                   expand={expand}
                   fileTree={file.children}
                   depth={depth + 1}
+                  currentFile={currentFile}
                   expanded={expanded}
                   resolveFileUrl={resolveFileUrl}
                 />
