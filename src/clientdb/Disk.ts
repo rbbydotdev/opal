@@ -70,6 +70,15 @@ export abstract class Disk implements DiskRecord {
       }
     }
   }
+  //specific to sidebar implimentation details
+  async renameFile(oldPath: string, newBaseName: string) {
+    const cleanName = newBaseName.replace(/\//g, ":");
+    if (!cleanName) return { newPath: oldPath, newName: path.basename(oldPath) };
+    const fullPath = path.join(path.dirname(oldPath), cleanName);
+    await this.fs.promises.rename(oldPath, fullPath);
+    await this.fileTree.reIndex();
+    return { newPath: fullPath, newName: path.basename(fullPath) };
+  }
   async writeFileRecursive(filePath: string, content: string) {
     await this.mkdirRecursive(filePath);
     try {

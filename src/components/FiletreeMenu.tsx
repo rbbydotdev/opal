@@ -1,5 +1,5 @@
 import { TreeDir } from "@/clientdb/filetree";
-import { EditableLink } from "@/components/EditableMenuItem";
+import { EditableLink } from "@/components/EditableLink";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -10,26 +10,24 @@ export function FileTreeMenu({
   depth = 0,
   expand,
   currentFile,
+  onRename,
   expanded,
 }: {
   resolveFileUrl: (path: string) => string;
   expand: (s: string, b: boolean) => void;
   expanded: { [path: string]: boolean };
   currentFile: string | null;
-  fileTree?: TreeDir["children"];
+  fileTree: TreeDir["children"];
+  onRename: (filePath: string, newBaseName: string) => Promise<string>;
   depth?: number;
 }) {
-  if (!fileTree) return null;
-  const isExpanded = (file: { path: string }) => {
-    return !!(expanded && file.path && expanded[file.path]);
-  };
   return (
     <SidebarMenu>
       {fileTree.map((file) => (
         <Collapsible
           key={file.path}
-          open={isExpanded(file)}
-          defaultOpen={isExpanded(file)}
+          open={expanded[file.path]}
+          defaultOpen={expanded[file.path]}
           onOpenChange={(o) => expand(file.path, o)}
         >
           <SidebarMenuItem className={currentFile === file.path ? "bg-sidebar-accent" : ""}>
@@ -50,6 +48,7 @@ export function FileTreeMenu({
                     href={{ pathname: resolveFileUrl(file.path) }}
                     isSelected={currentFile === file.path}
                     depth={depth}
+                    onRename={(newBasename) => onRename(file.path, newBasename)}
                   >
                     {file.name}
                   </EditableLink>
@@ -60,6 +59,7 @@ export function FileTreeMenu({
               {file.type === "dir" ? (
                 <FileTreeMenu
                   expand={expand}
+                  onRename={onRename}
                   fileTree={file.children}
                   depth={depth + 1}
                   currentFile={currentFile}

@@ -8,7 +8,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
 import { CopyMinus } from "lucide-react";
-import React, { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
 
 function SidebarFileMenuInternal({
   currentWorkspace,
@@ -20,12 +21,36 @@ function SidebarFileMenuInternal({
   currentWorkspace: Workspace;
   fileTreeDir: TreeDir;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const flatDirTree = useMemo(() => currentWorkspace.getFlatDirTree(), [currentWorkspace]);
-  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(
-    workspaceRoute.path,
-    flatDirTree,
+  const [flatTree, setFlatDirTree] = useState<string[]>(currentWorkspace.getFlatDirTree());
+  const router = useRouter();
+
+  const onRename = async (filePath: string, newBasename: string) => {
+    const { newPath, newName } = await currentWorkspace.renameFile(filePath, newBasename);
+    if (workspaceRoute.path === filePath) {
+      router.push(currentWorkspace.resolveFileUrl(newPath));
+    }
+    return newName;
+  };
+  useEffect(
+    () =>
+      currentWorkspace.watchFileTree(() => {
+        setFlatDirTree(currentWorkspace.getFlatDirTree());
+      }),
+    [currentWorkspace, setFlatDirTree]
+  );
+
+  const { setExpandAll, expandSingle, expanded, expandTreeForFilepath } = useFileTreeExpander(
+    flatTree,
     currentWorkspace.id
   );
+
+  // Expand the tree to the current file path on initial load
+  const initialLoadRef = useRef({ initialLoad: false });
+  useEffect(() => {
+    if (!workspaceRoute.path || initialLoadRef.current.initialLoad) return;
+    initialLoadRef.current.initialLoad = true;
+    expandTreeForFilepath(workspaceRoute.path);
+  }, [expandTreeForFilepath, initialLoadRef, workspaceRoute.path]);
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
@@ -51,6 +76,7 @@ function SidebarFileMenuInternal({
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
         <FileTreeMenu
+          onRename={onRename}
           resolveFileUrl={currentWorkspace.resolveFileUrl}
           fileTree={fileTreeDir.children}
           depth={0}

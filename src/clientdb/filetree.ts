@@ -1,5 +1,6 @@
 import { FsType } from "@/clientdb/Disk";
 import { absPath } from "@/lib/paths";
+import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 
 export type TreeNode = TreeDir | TreeFile;
@@ -32,18 +33,15 @@ export class FileTree {
       depth: 0,
     } as TreeDir);
 
+  private initialIndex = false;
   root: TreeDir = FileTree.EmptyFileTree();
   // private tree: TreeDir = this.root;
   constructor(private fs: FsType, public id: string) {
     this.index();
   }
   private emitter = new Emittery();
-
-  initialIndex = false;
-
-  private indexQueue: ((...a: any[]) => void)[] = [];
-
-  private locked = false;
+  private mutex = new Mutex();
+  private currentIndexId: number = 0;
 
   getRootTree() {
     return this.root;
@@ -64,25 +62,27 @@ export class FileTree {
   };
   index = async (force: boolean = false) => {
     if (!force && this.initialIndex) {
-      this.emitter.emit("index");
+      this.emitter.emit("index", this.currentIndexId);
       return this;
     }
-    if (this.locked) {
-      await new Promise((resolve) => this.indexQueue.push(resolve));
+
+    // Use the mutex to ensure only one index operation is happening at a time
+    const release = await this.mutex.acquire();
+    try {
+      this.root = FileTree.EmptyFileTree();
+      await this.recurseTree(this.root.path, this.root.children, 0);
+      this.initialIndex = true;
+      this.currentIndexId++;
+      this.emitter.emit("index", this.currentIndexId);
+    } finally {
+      release(); // Release the lock
     }
-    this.locked = true;
-    this.root = FileTree.EmptyFileTree();
-    await this.recurseTree(this.root.path, this.root.children, 0);
-    while (this.indexQueue.length) {
-      (this.indexQueue.shift() || (() => {}))();
-    }
-    this.initialIndex = true;
-    this.emitter.emit("index");
-    this.locked = false;
+
     return this;
   };
 
   async getFirstFile(): Promise<TreeFile | null> {
+    await this.index();
     let first = null;
     this.walk((file, _, exit) => {
       if (file.type === "file") {
@@ -93,13 +93,28 @@ export class FileTree {
     return first;
   }
 
-  watch(callback: (fileTree: TreeDir) => void) {
-    return this.emitter.on("index", () => callback(this.root));
+  onInitialIndex(callback: () => void) {
+    if (this.initialIndex) {
+      callback();
+    } else {
+      this.emitter.once("index").then(() => {
+        callback();
+      });
+    }
+  }
+
+  watch(callback: (fileTree: TreeDir, indexId: number) => void) {
+    let lastHandledIndexId = -1;
+    return this.emitter.on("index", (indexId: number) => {
+      if (indexId !== lastHandledIndexId) {
+        lastHandledIndexId = indexId;
+        callback(this.root, indexId);
+      }
+    });
   }
 
   teardown() {
     this.emitter.clearListeners();
-    this.indexQueue.length = 0;
   }
 
   walk(

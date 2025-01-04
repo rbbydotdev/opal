@@ -8,6 +8,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 export const WorkspaceContext = React.createContext<{
   fileTreeDir: TreeDir | null;
   workspaces: WorkspaceDAO[];
+  isIndexed: boolean;
   currentWorkspace: Workspace | null;
   workspaceRoute: { id: string | null; path: string | null };
   actions: {
@@ -17,6 +18,7 @@ export const WorkspaceContext = React.createContext<{
 }>({
   fileTreeDir: null,
   workspaces: [],
+  isIndexed: false,
   currentWorkspace: null,
   workspaceRoute: { id: null, path: null },
   actions: {
@@ -76,6 +78,14 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     };
   }, [pathname, workspaces, setCurrentWorkspace]);
 
+  const [isIndexed, setIndexed] = useState(false);
+  useEffect(() => {
+    if (isIndexed || !currentWorkspace) return;
+    currentWorkspace.onInitialIndex(() => {
+      if (!isIndexed) setIndexed(true);
+    });
+  }, [currentWorkspace, setIndexed, isIndexed]);
+
   const actions = useMemo(
     () => ({
       addWorkspace: (workspace: WorkspaceDAO) => {
@@ -90,7 +100,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   return (
     <WorkspaceContext.Provider
-      value={{ workspaces, actions, currentWorkspace, workspaceRoute, fileTreeDir: fileTreeDir }}
+      value={{ workspaces, actions, currentWorkspace, workspaceRoute, fileTreeDir, isIndexed }}
     >
       {children}
     </WorkspaceContext.Provider>
@@ -106,8 +116,16 @@ export function withCurrentWorkspace<
   }
 >(Component: React.ComponentType<T>) {
   return function WrappedComponent(props: Omit<T, "currentWorkspace" | "fileTreeDir" | "workspaceRoute">) {
-    const { fileTreeDir: fileTreeDir, currentWorkspace, workspaceRoute } = useWorkspaceContext();
-    if (!fileTreeDir || !currentWorkspace) return null;
+    const { fileTreeDir, currentWorkspace, workspaceRoute } = useWorkspaceContext();
+    const [isIndexed, setIndexed] = useState(false);
+    useEffect(() => {
+      if (isIndexed || !currentWorkspace) return;
+      currentWorkspace.onInitialIndex(() => {
+        if (!isIndexed) setIndexed(true);
+      });
+    }, [currentWorkspace, setIndexed, isIndexed]);
+
+    if (!fileTreeDir || !currentWorkspace || !isIndexed) return null;
     return (
       <Component
         {...(props as T)}

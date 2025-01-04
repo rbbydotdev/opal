@@ -31,6 +31,7 @@ function FirstFileRedirect() {
   return null;
 }
 export function WorkspaceCard() {
+  return null;
   const { currentWorkspace } = useWorkspaceContext();
   return (
     <div className="page flex justify-center items-center h-full w-full">
