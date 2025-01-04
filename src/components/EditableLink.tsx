@@ -5,10 +5,12 @@ export const EditableLink = ({
   children,
   depth,
   isSelected,
+  onRename,
   ...props
 }: React.ComponentProps<typeof Link> & {
   children: string;
   isSelected: boolean;
+  onRename: (newName: string) => Promise<string>;
   depth: number;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -32,8 +34,11 @@ export const EditableLink = ({
     if (e.key === "Enter") {
       if (isEditing) {
         setIsEditing(false);
-        //blur focus from input
-        linkRef.current?.focus();
+        // console.log("Save", linkText);
+        onRename(linkText).then((newPath) => {
+          setLinkText(newPath);
+          linkRef.current?.focus();
+        });
       } else {
         setIsEditing(true);
       }

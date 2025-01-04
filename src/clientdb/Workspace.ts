@@ -141,9 +141,16 @@ export class Workspace implements WorkspaceRecord {
     return ws;
   }
 
+  renameFile = async (filePath: string, newBaseName: string) => {
+    return this.disk.renameFile(filePath, newBaseName);
+  };
+
   watchFileTree(callback: (fileTree: TreeDir) => void) {
     //TODO this should be a method on disk?
     return this.disk.fileTree.watch(callback);
+  }
+  onInitialIndex(callback: () => void) {
+    return this.disk.fileTree.onInitialIndex(callback);
   }
   getFileTreeDir() {
     return this.disk.fileTree.getRootTree();
