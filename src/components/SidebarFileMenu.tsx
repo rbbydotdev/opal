@@ -3,32 +3,11 @@ import { Workspace } from "@/clientdb/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { CopyMinus } from "lucide-react";
-import React, { useCallback, useMemo } from "react";
-
-type ExpandMap = { [path: string]: boolean };
-function useFileTreeExpander(currentFile: string | null, fileDirTree: string[], id: string) {
-  const expandTree = useMemo(
-    () => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: false }), {}),
-    [fileDirTree]
-  );
-  const setAllState = useCallback(
-    (state: boolean) => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),
-    [fileDirTree]
-  );
-  const [expanded, updateExpanded] = useLocalStorage<ExpandMap>("SidebarFileMenu/expanded/" + id, expandTree);
-
-  const expandSingle = (path: string, expanded: boolean) => {
-    updateExpanded((prev) => ({ ...prev, [path]: expanded }));
-  };
-  const setExpandAll = (state: boolean) => {
-    updateExpanded(setAllState(state));
-  };
-
-  return { expandSingle, expanded, setExpandAll };
-}
+import React, { useMemo } from "react";
 
 function SidebarFileMenuInternal({
   currentWorkspace,
@@ -38,24 +17,35 @@ function SidebarFileMenuInternal({
 }: {
   workspaceRoute: WorkspaceRouteType;
   currentWorkspace: Workspace;
-  fileTree: Awaited<ReturnType<Workspace["getFileTree"]>>;
+  fileTree: ReturnType<Workspace["getFileTree"]>;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const flatDirTree = useMemo(() => fileTree.flatDirTree(), [fileTree]);
-  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(workspaceRoute.path, flatDirTree, fileTree.id);
+  const flatDirTree = useMemo(() => currentWorkspace.getFlatDirTree(), [currentWorkspace]);
+  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(
+    workspaceRoute.path,
+    flatDirTree,
+    currentWorkspace.guid
+  );
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
       <SidebarGroupLabel className="flex justify-between">
         Files
         <div>
-          <Button
-            onDoubleClick={() => setExpandAll(true)}
-            onClick={() => setExpandAll(false)}
-            className="p-1 m-0 h-fit"
-            variant="ghost"
-          >
-            <CopyMinus />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onDoubleClick={() => setExpandAll(true)}
+                onClick={() => setExpandAll(false)}
+                className="p-1 m-0 h-fit"
+                variant="ghost"
+              >
+                <CopyMinus />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" align="center">
+              Expand/Collapse All
+            </TooltipContent>
+          </Tooltip>
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">

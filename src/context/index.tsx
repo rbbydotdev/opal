@@ -1,11 +1,12 @@
 "use client";
-import { FileTree } from "@/clientdb/filetree";
+import { TreeDir } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 
 export const WorkspaceContext = React.createContext<{
+  fileTree: TreeDir | null;
   workspaces: WorkspaceDAO[];
   currentWorkspace: Workspace | null;
   workspaceRoute: { id: string | null; path: string | null };
@@ -14,6 +15,7 @@ export const WorkspaceContext = React.createContext<{
     removeWorkspace: (workspace: WorkspaceDAO) => void;
   };
 }>({
+  fileTree: null,
   workspaces: [],
   currentWorkspace: null,
   workspaceRoute: { id: null, path: null },
@@ -30,12 +32,20 @@ export type Workspaces = WorkspaceDAO[];
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
+  const [fileTree, setFileTree] = useState<TreeDir | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
 
   const [workspaceRoute, setRouteWorkspaceInfo] = useState<WorkspaceRouteType>({
     id: null,
     path: null,
   });
+  useEffect(() => {
+    if (currentWorkspace) {
+      currentWorkspace.watchFileTree(() => {
+        setFileTree(currentWorkspace.getFileTree());
+      });
+    }
+  }, [currentWorkspace]);
   useEffect(() => {
     const match = pathname.match(/^\/workspace\/([^/]+)(\/.*)?$/);
     if (match) {
@@ -79,7 +89,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   );
 
   return (
-    <WorkspaceContext.Provider value={{ workspaces, actions, currentWorkspace, workspaceRoute }}>
+    <WorkspaceContext.Provider value={{ workspaces, actions, currentWorkspace, workspaceRoute, fileTree }}>
       {children}
     </WorkspaceContext.Provider>
   );
@@ -87,28 +97,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
 export const useWorkspaces = () => {
   return React.useContext(WorkspaceContext);
-};
-
-export const useCurrentWorkspaceData = () => {
-  const { currentWorkspace, workspaceRoute } = useWorkspaces();
-
-  const [data, setData] = useState<{
-    currentWorkspace: Workspace | null;
-    fileTree: FileTree | null;
-    workspaceRoute: WorkspaceRouteType;
-  }>({ currentWorkspace: null, fileTree: null, workspaceRoute });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!currentWorkspace) return;
-
-      const fileTree = await currentWorkspace.getFileTree();
-      setData({ currentWorkspace, fileTree, workspaceRoute });
-    };
-    fetchData();
-  }, [currentWorkspace, workspaceRoute, setData]);
-
-  return data;
 };
 
 export const useCurrentWorkspace = () => {
@@ -120,12 +108,12 @@ export const useCurrentWorkspace = () => {
 export function withCurrentWorkspace<
   T extends {
     currentWorkspace: Workspace;
-    fileTree: Awaited<ReturnType<Workspace["getFileTree"]>>;
+    fileTree: TreeDir;
     workspaceRoute: WorkspaceRouteType;
   }
 >(Component: React.ComponentType<T>) {
   return function WrappedComponent(props: Omit<T, "currentWorkspace" | "fileTree" | "workspaceRoute">) {
-    const { fileTree, currentWorkspace, workspaceRoute } = useCurrentWorkspaceData();
+    const { fileTree, currentWorkspace, workspaceRoute } = useContext(WorkspaceContext);
     if (!fileTree || !currentWorkspace) return null;
     return (
       <Component

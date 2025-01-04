@@ -1,11 +1,11 @@
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCurrentWorkspaceData } from "@/context";
+import { WorkspaceContext } from "@/context";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 
 export default function Page() {
-  const { currentWorkspace } = useCurrentWorkspaceData();
+  // const { currentWorkspace } = useContext(WorkspaceContext);
   return (
     <div className="w-full h-full flex items-center justify-center">
       {/* <LoadingPanel /> */}
@@ -16,34 +16,22 @@ export default function Page() {
 }
 
 function FirstFileRedirect() {
-  const { currentWorkspace, fileTree } = useCurrentWorkspaceData();
+  const { currentWorkspace } = useContext(WorkspaceContext);
   const router = useRouter();
   useEffect(
     () =>
-      fileTree?.watch(async (tree) => {
-        const firstFile = await tree.getFirstFile();
+      currentWorkspace?.watchFileTree(async () => {
+        const firstFile = await currentWorkspace.getFirstFile();
         if (firstFile && currentWorkspace) {
           router.push(currentWorkspace.resolveFileUrl(firstFile.path));
         }
       }),
-    [fileTree, currentWorkspace, router]
+    [currentWorkspace, router]
   );
   return <></>;
 }
 export function WorkspaceCard() {
-  const { currentWorkspace, fileTree } = useCurrentWorkspaceData();
-  const router = useRouter();
-  useEffect(
-    () =>
-      fileTree?.watch(async (tree) => {
-        const firstFile = await tree.getFirstFile();
-        if (firstFile && currentWorkspace) {
-          router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-        }
-      }),
-    [fileTree, currentWorkspace, router]
-  );
-  //
+  const { currentWorkspace } = useContext(WorkspaceContext);
   return (
     <div className="page flex justify-center items-center h-full w-full">
       <Card className="card w-96 h-96">

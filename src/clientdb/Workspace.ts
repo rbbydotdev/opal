@@ -2,9 +2,8 @@
 import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
 import { ClientDb } from "@/clientdb/instance";
 // import { randomSlug } from "@/lib/randomSlug";
-import { BadRequestError, errorCode, NotFoundError } from "@/lib/errors";
+import { BadRequestError, NotFoundError } from "@/lib/errors";
 import { nanoid } from "nanoid";
-import path from "path";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
 
 export class WorkspaceRecord {
@@ -102,11 +101,10 @@ export class WorkspaceDAO implements WorkspaceRecord {
 //for exampple the diskguid
 export class Workspace implements WorkspaceRecord {
   static seedFiles: Record<string, string> = {
-    // "/welcome.md": "# Welcome to your new workspace!",
+    "/welcome.md": "# Welcome to your new workspace!",
     "/home/post1.md": "# Hello World!",
-    "/home/a/b/c/d/post1.md": "# Hello World!",
-    // "/drafts/draft1.md": "# Goodbye World!",
-    // "/ideas/ideas.md": "# Red Green Blue",
+    "/drafts/draft1.md": "# Goodbye World!",
+    "/ideas/ideas.md": "# Red Green Blue",
   };
 
   createdAt: Date = new Date();
@@ -130,38 +128,27 @@ export class Workspace implements WorkspaceRecord {
 
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
-
-    //TODO ??
-    await ws.disk.withFs(async (fs) => {
-      const promises: Promise<void>[] = [];
-
-      for (const [filePath, content] of Object.entries(Workspace.seedFiles)) {
-        const writeFile = async (filePath: string, content: string) => {
-          const segments = path.dirname(filePath).split("/").slice(1);
-          for (let i = 1; i <= segments.length; i++) {
-            try {
-              await fs.promises.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
-            } catch (err) {
-              if (errorCode(err).code !== "EEXIST") {
-                console.error(`Error creating directory ${path.dirname(filePath)}:`, err);
-              }
-            }
-          }
-          try {
-            await fs.promises.writeFile(filePath, content, { encoding: "utf8", mode: 0o777 });
-          } catch (err) {
-            console.error(`Error writing file ${filePath}:`);
-          }
-        };
-        promises.push(writeFile(filePath, content));
-      }
-      return Promise.all(promises);
+    ws.disk.withFs(async () => {
+      await Promise.all(
+        Object.entries(Workspace.seedFiles).map(([filePath, content]) => ws.disk.writeFileRecursive(filePath, content))
+      );
     });
     return ws;
   }
 
+  watchFileTree(callback: (fileTree: Disk["fileTree"]) => void) {
+    //TODO this should be a method on disk?
+    return this.disk.fileTree.watch(callback);
+  }
   getFileTree() {
-    return this.disk.fileTree.index();
+    return this.disk.fileTree.root;
+  }
+  getFirstFile() {
+    return this.disk.fileTree.getFirstFile();
+  }
+  getFlatDirTree() {
+    //TODO this should be a method on disk?
+    return this.disk.fileTree.flatDirTree();
   }
 
   static rootRoute = "/workspace";
