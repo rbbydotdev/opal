@@ -1,4 +1,5 @@
 "use client";
+import { TreeDir } from "@/clientdb/filetree";
 import { Workspace } from "@/clientdb/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
@@ -11,19 +12,19 @@ import React, { useMemo } from "react";
 
 function SidebarFileMenuInternal({
   currentWorkspace,
-  fileTree,
+  fileTreeDir: fileTreeDir,
   workspaceRoute,
   ...props
 }: {
   workspaceRoute: WorkspaceRouteType;
   currentWorkspace: Workspace;
-  fileTree: ReturnType<Workspace["getFileTree"]>;
+  fileTreeDir: TreeDir;
 } & React.ComponentProps<typeof SidebarGroup>) {
   const flatDirTree = useMemo(() => currentWorkspace.getFlatDirTree(), [currentWorkspace]);
   const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(
     workspaceRoute.path,
     flatDirTree,
-    currentWorkspace.guid
+    currentWorkspace.id
   );
 
   return (
@@ -51,7 +52,7 @@ function SidebarFileMenuInternal({
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
         <FileTreeMenu
           resolveFileUrl={currentWorkspace.resolveFileUrl}
-          fileTree={fileTree.children}
+          fileTree={fileTreeDir.children}
           depth={0}
           currentFile={workspaceRoute.path}
           expand={expandSingle}

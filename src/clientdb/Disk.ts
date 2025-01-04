@@ -88,19 +88,9 @@ export abstract class Disk implements DiskRecord {
     return this.fs;
   }
 
-  get firstFile() {
-    return this.fileTree.getFirstFile();
-  }
-
   toJSON() {
     return { guid: this.guid, type: this.type } as DiskRecord;
   }
-  // create() {
-  //   return ClientDb.updateDisk(this.toJSON());
-  // }
-  // load() {
-  //   return ClientDb.getDiskByGuid(this.guid);
-  // }
 
   get promises() {
     return this.fs.promises;

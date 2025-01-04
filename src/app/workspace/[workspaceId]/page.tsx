@@ -1,8 +1,8 @@
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WorkspaceContext } from "@/context";
+import { useWorkspaceContext } from "@/context";
 import { useRouter } from "next/navigation";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 
 export default function Page() {
   // const { currentWorkspace } = useContext(WorkspaceContext);
@@ -16,7 +16,7 @@ export default function Page() {
 }
 
 function FirstFileRedirect() {
-  const { currentWorkspace } = useContext(WorkspaceContext);
+  const { currentWorkspace } = useWorkspaceContext();
   const router = useRouter();
   useEffect(
     () =>
@@ -28,10 +28,10 @@ function FirstFileRedirect() {
       }),
     [currentWorkspace, router]
   );
-  return <></>;
+  return null;
 }
 export function WorkspaceCard() {
-  const { currentWorkspace } = useContext(WorkspaceContext);
+  const { currentWorkspace } = useWorkspaceContext();
   return (
     <div className="page flex justify-center items-center h-full w-full">
       <Card className="card w-96 h-96">
