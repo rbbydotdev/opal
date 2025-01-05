@@ -1,4 +1,5 @@
 import { FsType } from "@/clientdb/Disk";
+import { ChannelEmittery } from "@/lib/channel";
 import { absPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
@@ -24,6 +25,7 @@ export type TreeFile = {
 
 // export type EmptyFileTreeType = typeof EmptyFileTree;
 export class FileTree {
+  static LocalIndex = "LocalIndex";
   static EmptyFileTree = () =>
     ({
       name: "/",
@@ -39,6 +41,7 @@ export class FileTree {
   constructor(private fs: FsType, public id: string) {
     this.index();
   }
+
   private emitter = new Emittery();
   private mutex = new Mutex();
   private currentIndexId: number = 0;
@@ -61,23 +64,19 @@ export class FileTree {
     return this.index(true);
   };
   index = async (force: boolean = false) => {
-    if (!force && this.initialIndex) {
-      this.emitter.emit("index", this.currentIndexId);
-      return this;
+    if (force || !this.initialIndex) {
+      // Use the mutex to ensure only one index operation is happening at a time
+      const release = await this.mutex.acquire();
+      try {
+        this.root = FileTree.EmptyFileTree();
+        await this.recurseTree(this.root.path, this.root.children, 0);
+        this.initialIndex = true;
+        this.currentIndexId++;
+      } finally {
+        release(); // Release the lock
+      }
+      this.emitter.emit(FileTree.LocalIndex, this.currentIndexId);
     }
-
-    // Use the mutex to ensure only one index operation is happening at a time
-    const release = await this.mutex.acquire();
-    try {
-      this.root = FileTree.EmptyFileTree();
-      await this.recurseTree(this.root.path, this.root.children, 0);
-      this.initialIndex = true;
-      this.currentIndexId++;
-      this.emitter.emit("index", this.currentIndexId);
-    } finally {
-      release(); // Release the lock
-    }
-
     return this;
   };
 
