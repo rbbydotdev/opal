@@ -1,5 +1,6 @@
 import { FileTree } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
+import { ChannelEmittery } from "@/lib/channel";
 import { errorCode } from "@/lib/errors";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { memfs } from "memfs";
@@ -38,15 +39,22 @@ export class DiskDAO implements DiskRecord {
   }
 }
 export abstract class Disk implements DiskRecord {
+  static RemoteIndex = "RemoteIndex";
   abstract fs: FsType;
   abstract fileTree: FileTree;
   abstract readonly type: DiskType;
-  abstract readonly guid: string;
+  abstract broadcaster: ChannelEmittery;
 
-  teardown() {
-    this.fileTree.teardown();
+  initBroadcaster() {
+    this.broadcaster.on(Disk.RemoteIndex, () => {
+      this.fileTree.reIndex();
+    });
+    this.fileTree.watch(() => {
+      this.broadcaster.emit(Disk.RemoteIndex);
+    });
   }
 
+  constructor(public readonly guid: string) {}
   static defaultDiskType: DiskType = "IndexedDbDisk";
 
   static guid = () => "disk:" + nanoid();
@@ -77,6 +85,7 @@ export abstract class Disk implements DiskRecord {
     const fullPath = path.join(path.dirname(oldPath), cleanName);
     await this.fs.promises.rename(oldPath, fullPath);
     await this.fileTree.reIndex();
+    this.broadcaster.emit(Disk.RemoteIndex);
     return { newPath: fullPath, newName: path.basename(fullPath) };
   }
   async writeFileRecursive(filePath: string, content: string) {
@@ -97,8 +106,19 @@ export abstract class Disk implements DiskRecord {
     return this.fs;
   }
 
+  // watch(callback: (fileTree: TreeDir) => void) {
+  //   return this.broadcaster.on("index", () => {
+  //     callback(this.fileTree.root);
+  //   });
+  // }
+
   toJSON() {
     return { guid: this.guid, type: this.type } as DiskRecord;
+  }
+
+  teardown() {
+    this.fileTree.teardown();
+    this.broadcaster.tearDown();
   }
 
   get promises() {
@@ -108,27 +128,33 @@ export abstract class Disk implements DiskRecord {
 
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
-
   readonly type = IndexedDbDisk.type;
-
   readonly fs: InstanceType<typeof LightningFs>;
   readonly fileTree: FileTree;
 
+  broadcaster: ChannelEmittery;
+
   constructor(public readonly guid: string, public readonly db = ClientDb) {
-    super();
+    super(guid);
     this.fs = new LightningFs();
     this.fs.init(this.guid);
     this.fileTree = new FileTree(this.fs, this.guid);
+    this.broadcaster = new ChannelEmittery(guid);
+
+    this.initBroadcaster();
   }
 }
 
 export class MemDisk extends Disk {
   readonly type = "MemDisk";
   public readonly fs: ReturnType<typeof memfs>["fs"];
-  readonly fileTree: FileTree; // = new FileTree(this.fs);
+  readonly fileTree: FileTree;
+  broadcaster: ChannelEmittery;
   constructor(public readonly guid: string, public readonly db = ClientDb) {
-    super();
+    super(guid);
     this.fs = memfs().fs;
     this.fileTree = new FileTree(this.fs, this.guid);
+    this.broadcaster = new ChannelEmittery(guid);
+    this.initBroadcaster();
   }
 }
