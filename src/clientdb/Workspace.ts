@@ -147,16 +147,13 @@ export class Workspace implements WorkspaceRecord {
 
   watchFileTree(callback: (fileTree: TreeDir) => void, race?: { race: boolean }) {
     //TODO this should be a method on disk?
-    return this.disk.fileTree.watch(callback, race);
+    return this.disk.watch(callback, race);
   }
   onInitialIndex(callback: (fileTree: TreeDir) => void) {
-    return this.disk.fileTree.onInitialIndex(callback);
-  }
-  private getFileTreeDir() {
-    return this.disk.fileTree.getRootTree();
+    return this.disk.onInitialIndex(callback);
   }
   getFirstFile() {
-    return this.disk.fileTree.getFirstFile();
+    return this.disk.getFirstFile();
   }
   getFlatDirTree() {
     return this.disk.fileTree.dirs;
