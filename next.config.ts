@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  compiler: {
+    removeConsole: false,
+  },
   reactStrictMode: false,
   typescript: {
     // !! WARN !!

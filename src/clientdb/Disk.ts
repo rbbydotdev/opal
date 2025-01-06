@@ -1,7 +1,8 @@
+"use client";
 import { FileTree } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { ChannelEmittery } from "@/lib/channel";
-import { errorCode } from "@/lib/errors";
+import { ConflictError, errorCode } from "@/lib/errors";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { memfs } from "memfs";
 import { nanoid } from "nanoid";
@@ -22,39 +23,47 @@ export class DiskDAO implements DiskRecord {
   guid!: string;
   type!: DiskType;
   static guid = () => "disk:" + nanoid();
+
   constructor(disk: DiskRecord) {
     Object.assign(this, disk);
   }
+
   static new(type: DiskType = Disk.defaultDiskType) {
     return new DiskDAO({ type: type, guid: DiskDAO.guid() });
   }
+
   static getByGuid(guid: string) {
     return ClientDb.disks.where("guid").equals(guid).first();
   }
+
   save() {
     return ClientDb.disks.put(this);
   }
+
   toModel() {
     return Disk.from(this);
   }
 }
+
 export abstract class Disk implements DiskRecord {
-  static RemoteIndex = "RemoteIndex";
+  static REMOTE_INDEX = "RemoteIndex";
   abstract fs: FsType;
   abstract fileTree: FileTree;
   abstract readonly type: DiskType;
   abstract broadcaster: ChannelEmittery;
 
-  initBroadcaster() {
-    this.broadcaster.on(Disk.RemoteIndex, () => {
+  constructor(public readonly guid: string) {}
+
+  protected setupRemoteListener() {
+    return;
+    this.broadcaster.on(Disk.REMOTE_INDEX, () => {
       this.fileTree.reIndex();
     });
     this.fileTree.watch(() => {
-      this.broadcaster.emit(Disk.RemoteIndex);
+      this.broadcaster.emit(Disk.REMOTE_INDEX);
     });
   }
 
-  constructor(public readonly guid: string) {}
   static defaultDiskType: DiskType = "IndexedDbDisk";
 
   static guid = () => "disk:" + nanoid();
@@ -62,14 +71,15 @@ export abstract class Disk implements DiskRecord {
   static new(guid: string = Disk.guid(), type: DiskType = Disk.defaultDiskType) {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
+
   static from({ guid, type }: { guid: string; type: DiskType }) {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
+
   async mkdirRecursive(filePath: string) {
     const segments = path.dirname(filePath).split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
       try {
-        //because lightningfs does not support recursive mkdir
         await this.fs.promises.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
       } catch (err) {
         if (errorCode(err).code !== "EEXIST") {
@@ -78,16 +88,27 @@ export abstract class Disk implements DiskRecord {
       }
     }
   }
-  //specific to sidebar implimentation details
-  async renameFile(oldPath: string, newBaseName: string) {
+
+  async renameFile(oldPath: string, newBaseName: string): Promise<{ newPath: string; newName: string }> {
     const cleanName = newBaseName.replace(/\//g, ":");
-    if (!cleanName) return { newPath: oldPath, newName: path.basename(oldPath) };
+
+    const nochange = { newPath: oldPath, newName: path.basename(oldPath) };
+
+    if (!cleanName) return nochange;
+    if (cleanName === path.basename(oldPath)) return nochange;
+
     const fullPath = path.join(path.dirname(oldPath), cleanName);
+    //check if file exists
+    if (await this.fs.promises.stat(fullPath).catch(() => false)) {
+      return nochange;
+      // throw new ConflictError(`File ${fullPath} already exists`);
+    }
     await this.fs.promises.rename(oldPath, fullPath);
     await this.fileTree.reIndex();
-    this.broadcaster.emit(Disk.RemoteIndex);
+    this.broadcaster.emit(Disk.REMOTE_INDEX);
     return { newPath: fullPath, newName: path.basename(fullPath) };
   }
+
   async writeFileRecursive(filePath: string, content: string) {
     await this.mkdirRecursive(filePath);
     try {
@@ -99,18 +120,11 @@ export abstract class Disk implements DiskRecord {
     }
   }
 
-  //callback to do fs operations and then re-index the file tree
   async withFs(fn: (fs: FsType) => Promise<unknown> | unknown) {
     await fn(this.fs);
     await this.fileTree.reIndex();
     return this.fs;
   }
-
-  // watch(callback: (fileTree: TreeDir) => void) {
-  //   return this.broadcaster.on("index", () => {
-  //     callback(this.fileTree.root);
-  //   });
-  // }
 
   toJSON() {
     return { guid: this.guid, type: this.type } as DiskRecord;
@@ -124,6 +138,9 @@ export abstract class Disk implements DiskRecord {
   get promises() {
     return this.fs.promises;
   }
+  get isIndexed() {
+    return this.fileTree.initialIndex;
+  }
 }
 
 export class IndexedDbDisk extends Disk {
@@ -131,17 +148,17 @@ export class IndexedDbDisk extends Disk {
   readonly type = IndexedDbDisk.type;
   readonly fs: InstanceType<typeof LightningFs>;
   readonly fileTree: FileTree;
-
   broadcaster: ChannelEmittery;
 
+  setupIndexListener() {}
   constructor(public readonly guid: string, public readonly db = ClientDb) {
     super(guid);
     this.fs = new LightningFs();
     this.fs.init(this.guid);
     this.fileTree = new FileTree(this.fs, this.guid);
     this.broadcaster = new ChannelEmittery(guid);
-
-    this.initBroadcaster();
+    this.setupRemoteListener();
+    this.setupIndexListener();
   }
 }
 
@@ -150,11 +167,12 @@ export class MemDisk extends Disk {
   public readonly fs: ReturnType<typeof memfs>["fs"];
   readonly fileTree: FileTree;
   broadcaster: ChannelEmittery;
+
   constructor(public readonly guid: string, public readonly db = ClientDb) {
     super(guid);
     this.fs = memfs().fs;
     this.fileTree = new FileTree(this.fs, this.guid);
     this.broadcaster = new ChannelEmittery(guid);
-    this.initBroadcaster();
+    this.setupRemoteListener();
   }
 }

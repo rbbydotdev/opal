@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useWorkspaceContext } from "@/context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -10,7 +10,6 @@ export default function Page() {
     <div className="w-full h-full flex items-center justify-center">
       {/* <LoadingPanel /> */}
       <FirstFileRedirect />
-      <WorkspaceCard />
     </div>
   );
 }
@@ -30,24 +29,24 @@ function FirstFileRedirect() {
   );
   return null;
 }
-export function WorkspaceCard() {
-  return null;
-  const { currentWorkspace } = useWorkspaceContext();
-  return (
-    <div className="page flex justify-center items-center h-full w-full">
-      <Card className="card w-96 h-96">
-        <CardHeader>
-          <CardTitle>Workspace {currentWorkspace?.name}</CardTitle>
-          <CardDescription>guid: {currentWorkspace?.guid}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CardDescription>
-            <div>
-              <p>select a file to get started</p>
-            </div>
-          </CardDescription>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+// export function WorkspaceCard() {
+//   return null;
+//   const { currentWorkspace } = useWorkspaceContext();
+//   return (
+//     <div className="page flex justify-center items-center h-full w-full">
+//       <Card className="card w-96 h-96">
+//         <CardHeader>
+//           <CardTitle>Workspace {currentWorkspace?.name}</CardTitle>
+//           <CardDescription>guid: {currentWorkspace?.guid}</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <CardDescription>
+//             <div>
+//               <p>select a file to get started</p>
+//             </div>
+//           </CardDescription>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }

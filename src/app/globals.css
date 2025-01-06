@@ -45,7 +45,7 @@ body {
     --navbar-height: 2.5rem;
     --editor-toolbar-height: 3.5rem;
   }
-  .dark {
+  .dark__disabled {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;

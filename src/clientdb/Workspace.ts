@@ -81,8 +81,6 @@ export class WorkspaceDAO implements WorkspaceRecord {
 
   private async loadRemoteAuth() {
     const remoteAuth = await ClientDb.remoteAuths.where("guid").equals(this.remoteAuthGuid).first();
-    // console.log("remoteAuth", remoteAuth, this.remoteAuthGuid);
-    // console.log(await ClientDb.remoteAuths.toArray());
     if (!remoteAuth) throw new NotFoundError("RemoteAuth not found");
     return new RemoteAuthDAO(remoteAuth);
   }
@@ -101,6 +99,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
 //TODO: change the mututation of this class to instead have a database tied object, but when othere deps are loaded it beomces a different object
 //for exampple the diskguid
 export class Workspace implements WorkspaceRecord {
+  memid = nanoid();
   static seedFiles: Record<string, string> = {
     "/welcome.md": "# Welcome to your new workspace!",
     "/home/post1.md": "# Hello World!",
@@ -145,22 +144,21 @@ export class Workspace implements WorkspaceRecord {
     return this.disk.renameFile(filePath, newBaseName);
   };
 
-  watchFileTree(callback: (fileTree: TreeDir) => void) {
+  watchFileTree(callback: (fileTree: TreeDir) => void, race?: { race: boolean }) {
     //TODO this should be a method on disk?
-    return this.disk.fileTree.watch(callback);
+    return this.disk.fileTree.watch(callback, race);
   }
-  onInitialIndex(callback: () => void) {
+  onInitialIndex(callback: (fileTree: TreeDir) => void) {
     return this.disk.fileTree.onInitialIndex(callback);
   }
-  getFileTreeDir() {
+  private getFileTreeDir() {
     return this.disk.fileTree.getRootTree();
   }
   getFirstFile() {
     return this.disk.fileTree.getFirstFile();
   }
   getFlatDirTree() {
-    //TODO this should be a method on disk?
-    return this.disk.fileTree.flatDirTree();
+    return this.disk.fileTree.dirs;
   }
 
   static rootRoute = "/workspace";
@@ -203,6 +201,9 @@ export class Workspace implements WorkspaceRecord {
     return this.href + filePath;
   };
 
+  get isIndexed() {
+    return this.disk.isIndexed;
+  }
   get remoteAuthGuid() {
     return this.remoteAuth.guid;
   }
