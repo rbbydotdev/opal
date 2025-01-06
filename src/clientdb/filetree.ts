@@ -1,4 +1,5 @@
 import { FsType } from "@/clientdb/Disk";
+import { ChannelEmittery } from "@/lib/channel";
 import { absPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
@@ -23,8 +24,10 @@ export type TreeFile = {
 };
 
 // export type EmptyFileTreeType = typeof EmptyFileTree;
+
 export class FileTree {
   static INDEX = "index";
+  static REMOTE_INDEX = "remoteindex";
 
   static EmptyFileTree = () =>
     ({
@@ -39,9 +42,13 @@ export class FileTree {
   root: TreeDir = FileTree.EmptyFileTree();
   dirs: TreeList = [];
 
+  broadcaster: ChannelEmittery;
+
   // private tree: TreeDir = this.root;
   constructor(private fs: FsType, public id: string) {
     // const key = "IndexedDbDisk/fileTree/" + id;
+    this.broadcaster = new ChannelEmittery(id + "/fileTree"); //???
+    // this.watchRemote(() => this.remoteIndexed());
     this.initCacheIndex();
     this.index();
   }
@@ -52,7 +59,9 @@ export class FileTree {
       try {
         const treeDir = JSON.parse(cacheIndex);
         this.root = treeDir;
-        this.emitIndex();
+        this.dirs = this.flatDirTree();
+        this.initialIndex = true;
+        this.emitter.emit(FileTree.INDEX, ++this.currentIndexId);
       } catch (_e) {
         localStorage.removeItem(indexCacheKey);
       }
@@ -83,21 +92,22 @@ export class FileTree {
     return this.index({ force: true });
   };
 
-  private emitIndex = () => {
-    this.dirs = this.flatDirTree();
-    this.initialIndex = true;
-    this.emitter.emit(FileTree.INDEX, ++this.currentIndexId);
+  remoteIndexed = () => {
+    return this.index({ force: true, notifyRemote: false });
   };
-  index = async ({ force }: { force: boolean } = { force: false }) => {
+  index = async (
+    { force, notifyRemote }: { force: boolean; notifyRemote?: boolean } = { force: false, notifyRemote: true }
+  ) => {
     if (force || !this.initialIndex) {
       const release = await this.mutex.acquire();
       try {
         this.root = FileTree.EmptyFileTree();
         await this.recurseTree(this.root.path, this.root.children, 0);
-        // this.dirs = this.flatDirTree();
-        // this.initialIndex = true;
-        // this.emitter.emit(FileTree.INDEX, ++this.currentIndexId);
-        this.emitIndex();
+        this.dirs = this.flatDirTree();
+        this.initialIndex = true;
+        //compare with the previous index ???
+        this.emitter.emit(FileTree.INDEX, ++this.currentIndexId);
+        if (notifyRemote) this.broadcaster.emit(FileTree.REMOTE_INDEX);
       } finally {
         release(); // Release the lock
       }
@@ -139,9 +149,13 @@ export class FileTree {
       }
     });
   }
+  watchRemote(callback: () => void) {
+    return this.broadcaster.on(FileTree.REMOTE_INDEX, callback);
+  }
 
   teardown() {
     this.emitter.clearListeners();
+    this.broadcaster.clearListeners();
   }
 
   walk(
