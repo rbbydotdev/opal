@@ -7,9 +7,9 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/componen
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { CopyMinus } from "lucide-react";
+import { CopyMinus, CopyPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 function SidebarFileMenuInternal({
   currentWorkspace,
@@ -39,18 +39,25 @@ function SidebarFileMenuInternal({
     });
   }, [currentWorkspace, setFlatDirTree]);
 
-  const { setExpandAll, expandSingle, expanded, expandTreeForFilepath } = useFileTreeExpander(
+  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(
     flatTree,
+    workspaceRoute.path,
     currentWorkspace.id
   );
 
+  // // Expand the tree to the current file path on initial load
+  // const initialLoadRef = useRef({ initialLoad: false });
+  // useEffect(() => {
+  //   if (!workspaceRoute.path || initialLoadRef.current.initialLoad) return;
+  //   initialLoadRef.current.initialLoad = true;
+  //   expandTreeForFilepath(workspaceRoute.path);
+  // }, [expandTreeForFilepath, initialLoadRef, workspaceRoute.path, currentWorkspace, isIndexed]);
+
   // Expand the tree to the current file path on initial load
-  const initialLoadRef = useRef({ initialLoad: false });
-  useEffect(() => {
-    if (!workspaceRoute.path || initialLoadRef.current.initialLoad) return;
-    initialLoadRef.current.initialLoad = true;
-    expandTreeForFilepath(workspaceRoute.path);
-  }, [expandTreeForFilepath, initialLoadRef, workspaceRoute.path, currentWorkspace, isIndexed]);
+  // useEffect(() => {
+  //   if (!workspaceRoute.path) return;
+  //   expandTreeForFilepath(workspaceRoute.path);
+  // }, [expandTreeForFilepath, workspaceRoute]);
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
@@ -69,7 +76,17 @@ function SidebarFileMenuInternal({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left" align="center">
-              Expand/Collapse All
+              Collapse All
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={() => setExpandAll(true)} className="p-1 m-0 h-fit" variant="ghost">
+                <CopyPlus />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" align="center">
+              Expand All
             </TooltipContent>
           </Tooltip>
         </div>
