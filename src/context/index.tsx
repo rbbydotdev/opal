@@ -3,7 +3,7 @@ import { TreeDir } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname } from "next/navigation";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 export const WorkspaceContext = React.createContext<{
   fileTreeDir: TreeDir | null;
@@ -11,43 +11,24 @@ export const WorkspaceContext = React.createContext<{
   isIndexed: boolean;
   currentWorkspace: Workspace | null;
   workspaceRoute: { id: string | null; path: string | null };
-  actions: {
-    addWorkspace: (workspace: WorkspaceDAO) => void;
-    removeWorkspace: (workspace: WorkspaceDAO) => void;
-  };
 }>({
   fileTreeDir: null,
   workspaces: [],
   isIndexed: false,
   currentWorkspace: null,
   workspaceRoute: { id: null, path: null },
-  actions: {
-    addWorkspace: () => {},
-    removeWorkspace: () => {},
-  },
 });
 
 export type WorkspaceRouteType = { id: string | null; path: string | null };
 
 export type Workspaces = WorkspaceDAO[];
 
-export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
+function useWorkspaceRoute() {
   const pathname = usePathname();
-  const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
-  const [fileTreeDir, setFileTree] = useState<TreeDir | null>(null);
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
-
   const [workspaceRoute, setRouteWorkspaceInfo] = useState<WorkspaceRouteType>({
     id: null,
     path: null,
   });
-  useEffect(() => {
-    if (currentWorkspace) {
-      return currentWorkspace.watchFileTree(() => {
-        setFileTree(currentWorkspace.getFileTreeDir());
-      });
-    }
-  }, [currentWorkspace, setFileTree]);
   useEffect(() => {
     const match = pathname.match(/^\/workspace\/([^/]+)(\/.*)?$/);
     if (match) {
@@ -56,12 +37,35 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setRouteWorkspaceInfo({ id: wsid ?? null, path: filePath ?? null });
     }
   }, [pathname]);
+  return workspaceRoute;
+}
 
+function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
+  const [isIndexed, setIsIndexed] = useState(currentWorkspace?.isIndexed ?? false);
+  const [fileTreeDir, setFileTree] = useState<TreeDir | null>(null);
+  useEffect(() => {
+    if (currentWorkspace) {
+      return currentWorkspace.watchFileTree((fileTreeDir: TreeDir) => {
+        setFileTree({ ...fileTreeDir });
+        if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
+      });
+    }
+  }, [currentWorkspace, isIndexed]);
+  return { fileTreeDir, isIndexed };
+}
+
+function useLiveWorkspaces() {
+  const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
   useLiveQuery(async () => {
     const wrkspcs = await WorkspaceDAO.all();
     setWorkspaces(wrkspcs);
   }, [setWorkspaces]);
+  return workspaces;
+}
 
+function useWorkspaceFromRoute() {
+  const pathname = usePathname();
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   useEffect(() => {
     let tearDownFn: (() => void) | null = null;
     const setupWorkspace = async () => {
@@ -76,32 +80,18 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     return () => {
       if (tearDownFn) tearDownFn();
     };
-  }, [pathname, workspaces, setCurrentWorkspace]);
+  }, [pathname, setCurrentWorkspace]);
+  return currentWorkspace;
+}
 
-  const [isIndexed, setIndexed] = useState(false);
-  useEffect(() => {
-    if (isIndexed || !currentWorkspace) return;
-    currentWorkspace.onInitialIndex(() => {
-      if (!isIndexed) setIndexed(true);
-    });
-  }, [currentWorkspace, setIndexed, isIndexed]);
-
-  const actions = useMemo(
-    () => ({
-      addWorkspace: (workspace: WorkspaceDAO) => {
-        setWorkspaces([...workspaces, workspace]);
-      },
-      removeWorkspace: (workspace: WorkspaceDAO) => {
-        setWorkspaces(workspaces.filter((w) => w.guid !== workspace.guid));
-      },
-    }),
-    [workspaces]
-  );
+export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
+  const workspaces = useLiveWorkspaces();
+  const workspaceRoute = useWorkspaceRoute();
+  const currentWorkspace = useWorkspaceFromRoute();
+  const { fileTreeDir, isIndexed } = useWatchWorkspaceFileTree(currentWorkspace);
 
   return (
-    <WorkspaceContext.Provider
-      value={{ workspaces, actions, currentWorkspace, workspaceRoute, fileTreeDir, isIndexed }}
-    >
+    <WorkspaceContext.Provider value={{ workspaces, currentWorkspace, workspaceRoute, fileTreeDir, isIndexed }}>
       {children}
     </WorkspaceContext.Provider>
   );
@@ -113,25 +103,22 @@ export function withCurrentWorkspace<
     currentWorkspace: Workspace;
     fileTreeDir: TreeDir;
     workspaceRoute: WorkspaceRouteType;
+    isIndexed: boolean;
   }
 >(Component: React.ComponentType<T>) {
-  return function WrappedComponent(props: Omit<T, "currentWorkspace" | "fileTreeDir" | "workspaceRoute">) {
-    const { fileTreeDir, currentWorkspace, workspaceRoute } = useWorkspaceContext();
-    const [isIndexed, setIndexed] = useState(false);
-    useEffect(() => {
-      if (isIndexed || !currentWorkspace) return;
-      currentWorkspace.onInitialIndex(() => {
-        if (!isIndexed) setIndexed(true);
-      });
-    }, [currentWorkspace, setIndexed, isIndexed]);
+  return function WrappedComponent(
+    props: Omit<T, "isIndexed" | "currentWorkspace" | "fileTreeDir" | "workspaceRoute">
+  ) {
+    const { fileTreeDir, currentWorkspace, workspaceRoute, isIndexed } = useWorkspaceContext();
+    if (!fileTreeDir || !currentWorkspace) return null;
 
-    if (!fileTreeDir || !currentWorkspace || !isIndexed) return null;
     return (
       <Component
         {...(props as T)}
         workspaceRoute={workspaceRoute}
         currentWorkspace={currentWorkspace}
         fileTreeDir={fileTreeDir}
+        isIndexed={isIndexed}
       />
     );
   };

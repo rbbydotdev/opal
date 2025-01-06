@@ -44,8 +44,17 @@ export function errorCode(error: unknown, code?: string): ErrorWithCode {
   return newError;
 }
 
-export const NOTFOUND = "NOTFOUND";
-export const BADREQUEST = "BADREQUEST";
+export const NOTFOUND = "NOTFOUND"; // 404
+export const BADREQUEST = "BADREQUEST"; // 400
+export const CONFLICT = "CONFLICT"; // 409
+
+export class ConflictError extends Error {
+  code = CONFLICT;
+  constructor(message: string) {
+    super(message);
+    this.name = "Conflict";
+  }
+}
 
 export class BadRequestError extends Error {
   code = BADREQUEST;

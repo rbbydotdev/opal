@@ -45,7 +45,7 @@ export function FileTreeMenu({
                   </span>
                 ) : (
                   <EditableLink
-                    href={{ pathname: resolveFileUrl(file.path) }}
+                    href={resolveFileUrl(file.path)}
                     isSelected={currentFile === file.path}
                     depth={depth}
                     onRename={(newBasename) => onRename(file.path, newBasename)}

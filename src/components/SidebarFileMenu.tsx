@@ -13,13 +13,15 @@ import React, { useEffect, useRef, useState } from "react";
 
 function SidebarFileMenuInternal({
   currentWorkspace,
-  fileTreeDir: fileTreeDir,
+  fileTreeDir,
   workspaceRoute,
+  isIndexed,
   ...props
 }: {
   workspaceRoute: WorkspaceRouteType;
   currentWorkspace: Workspace;
   fileTreeDir: TreeDir;
+  isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
   const [flatTree, setFlatDirTree] = useState<string[]>(currentWorkspace.getFlatDirTree());
   const router = useRouter();
@@ -31,13 +33,11 @@ function SidebarFileMenuInternal({
     }
     return newName;
   };
-  useEffect(
-    () =>
-      currentWorkspace.watchFileTree(() => {
-        setFlatDirTree(currentWorkspace.getFlatDirTree());
-      }),
-    [currentWorkspace, setFlatDirTree]
-  );
+  useEffect(() => {
+    return currentWorkspace.watchFileTree(() => {
+      setFlatDirTree(currentWorkspace.getFlatDirTree());
+    });
+  }, [currentWorkspace, setFlatDirTree]);
 
   const { setExpandAll, expandSingle, expanded, expandTreeForFilepath } = useFileTreeExpander(
     flatTree,
@@ -50,7 +50,7 @@ function SidebarFileMenuInternal({
     if (!workspaceRoute.path || initialLoadRef.current.initialLoad) return;
     initialLoadRef.current.initialLoad = true;
     expandTreeForFilepath(workspaceRoute.path);
-  }, [expandTreeForFilepath, initialLoadRef, workspaceRoute.path]);
+  }, [expandTreeForFilepath, initialLoadRef, workspaceRoute.path, currentWorkspace, isIndexed]);
 
   return (
     <SidebarGroup {...props} className="h-full p-0">

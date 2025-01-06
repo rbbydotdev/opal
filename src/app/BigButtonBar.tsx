@@ -49,28 +49,29 @@ function BigButton({
     </Tooltip>
   );
 }
-//               {/* <div className="flex-shrink-1 max-w-full overflow-hidden whitespace-nowrap text-ellipsis uppercase p-1 flex items-center justify-center text-center font-mono"> */}
-const deleteAllDbs = () =>
-  window.indexedDB
-    .databases()
-    .then((r) => {
-      for (let i = 0; i < r.length; i++) window.indexedDB.deleteDatabase(r[i].name!);
-    })
-    .then(() => {
-      console.log("All data cleared.");
-    });
 
 export function BigButtonBar() {
   const { currentWorkspace, workspaces } = useWorkspaceContext();
 
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
 
+  //               {/* <div className="flex-shrink-1 max-w-full overflow-hidden whitespace-nowrap text-ellipsis uppercase p-1 flex items-center justify-center text-center font-mono"> */}
+  const deleteAllDbs = () => {
+    window.indexedDB
+      .databases()
+      .then((r) => {
+        for (let i = 0; i < r.length; i++) window.indexedDB.deleteDatabase(r[i].name!);
+      })
+      .then(() => {
+        console.log("All data cleared.");
+      });
+  };
   const filteredWorkspaces = useMemo(
     () => workspaces.filter((workspace) => workspace.guid !== currentWorkspace?.guid),
     [workspaces, currentWorkspace]
   );
   return (
-    <div className="py-8 bg-slate-900 dark:bg-slate-100 w-20 flex flex-col flex-shrink-0">
+    <div className="py-8 bg-slate-900  w-20 flex flex-col flex-shrink-0">
       <BigButton
         icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}
         title={"delete_all"}
