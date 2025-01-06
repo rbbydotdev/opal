@@ -1,6 +1,6 @@
 "use client";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 function expandForFile(dirTree: string[], file: string | null, exp: ExpandMap) {
   if (!file) return exp;
@@ -9,27 +9,57 @@ function expandForFile(dirTree: string[], file: string | null, exp: ExpandMap) {
 }
 type ExpandMap = { [path: string]: boolean };
 
-export function useFileTreeExpander(fileDirTree: string[], id: string) {
-  const expandTree = useMemo(
-    () => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: false }), {}),
-    [fileDirTree]
-  );
-  const [expanded, updateExpanded] = useLocalStorage<ExpandMap>("SidebarFileMenu/expanded/" + id, expandTree);
-
-  const setAllState = useCallback(
+export function useFileTreeExpander(fileDirTree: string[], currentPath: string | null, id: string) {
+  const [local, setLocal] = useState({});
+  const setAllStates = useCallback(
     (state: boolean) => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),
     [fileDirTree]
   );
+  const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${id}`, local);
+
   const expandSingle = (path: string, expanded: boolean) => {
-    updateExpanded((prev) => ({ ...prev, [path]: expanded }));
-  };
-  const expandTreeForFilepath = (path: string) => {
-    updateExpanded({ ...expandForFile(fileDirTree, path, expandTree) });
+    setLocal((prev) => ({ ...prev, [path]: expanded }));
+    setStored((prev) => ({ ...prev, [path]: expanded }));
   };
 
   const setExpandAll = (state: boolean) => {
-    updateExpanded({ ...setAllState(state) });
+    setLocal({ ...setAllStates(state) });
+    setStored({ ...setAllStates(state) });
   };
 
-  return { expandSingle, expanded, expandTreeForFilepath, setExpandAll };
+  useEffect(() => {
+    if (currentPath) {
+      setLocal((prev) => ({ ...expandForFile(fileDirTree, currentPath, prev) }));
+    }
+  }, [currentPath, fileDirTree]);
+
+  const all = { ...stored, ...local };
+  return { expandSingle, expanded: all, setExpandAll };
 }
+
+// export function useFileTreeExpander3(fileDirTree: string[], currentPath: string | null, id: string) {
+//   const [local, setLocal] = useState({});
+//   const expandTree = useMemo(() => ({}), []);
+//   const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${id}` + id, expandTree);
+
+//   const setAllStates = useCallback(
+//     (state: boolean) => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),
+//     [fileDirTree]
+//   );
+//   const expandSingle = (path: string, expanded: boolean) => {
+//     setLocal((prev) => ({ ...prev, [path]: expanded }));
+//     setStored((prev) => ({ ...prev, [path]: expanded }));
+//   };
+//   const expandTreeForFilepath = (path: string) => {
+//     setLocal((prev) => ({ ...expandForFile(fileDirTree, path, prev) }));
+//     setStored((prev) => ({ ...expandForFile(fileDirTree, path, prev) }));
+//   };
+
+//   const setExpandAll = (state: boolean) => {
+//     setLocal({ ...setAllStates(state) });
+//     setStored({ ...setAllStates(state) });
+//   };
+
+//   const all = { ...stored, ...local };
+//   return { expandSingle, expanded: all, expandTreeForFilepath, setExpandAll };
+// }
