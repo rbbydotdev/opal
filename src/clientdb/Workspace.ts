@@ -111,12 +111,13 @@ export class Workspace implements WorkspaceRecord {
   name: string;
   guid: string;
   remoteAuth: RemoteAuth;
-  private disk: Disk;
+  disk: Disk;
 
   get id() {
     return this.guid;
   }
 
+  //shoulndt this be in the dao?
   static async fromRoute(route: string) {
     if (!route.startsWith(Workspace.rootRoute)) throw new BadRequestError("Invalid route");
 

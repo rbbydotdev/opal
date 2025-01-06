@@ -2,7 +2,7 @@
 import { TreeDir } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { useLiveQuery } from "dexie-react-hooks";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useContext, useEffect, useState } from "react";
 
 export const WorkspaceContext = React.createContext<{
@@ -65,6 +65,7 @@ function useLiveWorkspaces() {
 
 function useWorkspaceFromRoute() {
   const pathname = usePathname();
+  const router = useRouter();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   useEffect(() => {
     let tearDownFn: (() => void) | null = null;
@@ -72,7 +73,16 @@ function useWorkspaceFromRoute() {
       if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new") {
         return;
       }
+      //creates workspace from route
       const currentWorkspace = await Workspace.fromRoute(pathname);
+      //move into hook? or seperate place?
+      currentWorkspace.disk.onRename(({ newPath, oldPath }) => {
+        if (pathname === currentWorkspace.resolveFileUrl(oldPath)) {
+          router.push(currentWorkspace.resolveFileUrl(newPath));
+        } else {
+        }
+      });
+
       setCurrentWorkspace(currentWorkspace);
       tearDownFn = currentWorkspace.teardown;
     };
@@ -80,7 +90,7 @@ function useWorkspaceFromRoute() {
     return () => {
       if (tearDownFn) tearDownFn();
     };
-  }, [pathname, setCurrentWorkspace]);
+  }, [pathname, router, setCurrentWorkspace]);
   return currentWorkspace;
 }
 
