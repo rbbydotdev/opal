@@ -2,7 +2,8 @@
 import { FileTree } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { ChannelEmittery } from "@/lib/channel";
-import { ConflictError, errorCode } from "@/lib/errors";
+// import { ChannelEmittery } from "@/lib/channel";
+import { errorCode } from "@/lib/errors";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { memfs } from "memfs";
 import { nanoid } from "nanoid";
@@ -45,24 +46,31 @@ export class DiskDAO implements DiskRecord {
   }
 }
 
+// private channel: BroadcastChannel;
+
+// constructor(public readonly channelName: string, options?: Options<EventData>) {
+//   super(options);
+//   this.channel = new BroadcastChannel(channelName);
 export abstract class Disk implements DiskRecord {
-  static REMOTE_INDEX = "RemoteIndex";
+  static REMOTE_RENAME = "remoterename";
   abstract fs: FsType;
   abstract fileTree: FileTree;
   abstract readonly type: DiskType;
-  abstract broadcaster: ChannelEmittery;
+  broadcaster: ChannelEmittery;
 
-  constructor(public readonly guid: string) {}
-
-  protected setupRemoteListener() {
-    return;
-    this.broadcaster.on(Disk.REMOTE_INDEX, () => {
-      this.fileTree.reIndex();
-    });
-    this.fileTree.watch(() => {
-      this.broadcaster.emit(Disk.REMOTE_INDEX);
+  constructor(public readonly guid: string) {
+    this.broadcaster = new ChannelEmittery(guid);
+    this.broadcaster.on(Disk.REMOTE_RENAME, async (data) => {
+      const { oldPath, newBaseName } = data;
+      console.log({ oldPath, newBaseName });
     });
   }
+
+  // protected setupRemoteListener_() {
+  //   this.broadcaster.on(Disk.REMOTE_INDEX, () => {
+  //     this.fileTree.reIndex();
+  //   });
+  // }
 
   static defaultDiskType: DiskType = "IndexedDbDisk";
 
@@ -98,15 +106,16 @@ export abstract class Disk implements DiskRecord {
     if (cleanName === path.basename(oldPath)) return nochange;
 
     const fullPath = path.join(path.dirname(oldPath), cleanName);
+
     //check if file exists
     if (await this.fs.promises.stat(fullPath).catch(() => false)) {
       return nochange;
-      // throw new ConflictError(`File ${fullPath} already exists`);
     }
     await this.fs.promises.rename(oldPath, fullPath);
     await this.fileTree.reIndex();
-    this.broadcaster.emit(Disk.REMOTE_INDEX);
-    return { newPath: fullPath, newName: path.basename(fullPath) };
+    const change = { newPath: fullPath, newName: path.basename(fullPath) };
+    this.broadcaster.emit(Disk.REMOTE_RENAME, { oldPath, newBaseName });
+    return change;
   }
 
   async writeFileRecursive(filePath: string, content: string) {
@@ -132,7 +141,7 @@ export abstract class Disk implements DiskRecord {
 
   teardown() {
     this.fileTree.teardown();
-    this.broadcaster.tearDown();
+    // this.broadcaster.tearDown();
   }
 
   get promises() {
@@ -148,7 +157,7 @@ export class IndexedDbDisk extends Disk {
   readonly type = IndexedDbDisk.type;
   readonly fs: InstanceType<typeof LightningFs>;
   readonly fileTree: FileTree;
-  broadcaster: ChannelEmittery;
+  // broadcaster: ChannelEmittery;
 
   setupIndexListener() {}
   constructor(public readonly guid: string, public readonly db = ClientDb) {
@@ -156,9 +165,10 @@ export class IndexedDbDisk extends Disk {
     this.fs = new LightningFs();
     this.fs.init(this.guid);
     this.fileTree = new FileTree(this.fs, this.guid);
-    this.broadcaster = new ChannelEmittery(guid);
-    this.setupRemoteListener();
-    this.setupIndexListener();
+    // this.broadcaster = new ChannelEmittery(guid);
+    // this.broadcaster.on(Disk.REMOTE_INDEX, () => {
+    //   this.fileTree.reIndex();
+    // });
   }
 }
 
@@ -166,13 +176,18 @@ export class MemDisk extends Disk {
   readonly type = "MemDisk";
   public readonly fs: ReturnType<typeof memfs>["fs"];
   readonly fileTree: FileTree;
-  broadcaster: ChannelEmittery;
+  // broadcaster: ChannelEmittery;
 
   constructor(public readonly guid: string, public readonly db = ClientDb) {
     super(guid);
     this.fs = memfs().fs;
     this.fileTree = new FileTree(this.fs, this.guid);
-    this.broadcaster = new ChannelEmittery(guid);
-    this.setupRemoteListener();
+    // this.broadcaster = new ChannelEmittery(guid);
+    // this.broadcaster.on(Disk.REMOTE_INDEX, () => {
+    //   this.fileTree.remoteIndexed();
+    // });
+    // this.fileTree.watch(() => {
+    //   this.broadcaster.emit(Disk.REMOTE_INDEX);
+    // });
   }
 }
