@@ -1,8 +1,7 @@
 "use client";
 import { FileTree } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
-import { ChannelEmittery } from "@/lib/channel";
-// import { ChannelEmittery } from "@/lib/channel";
+import { Channel } from "@/lib/channel";
 import { errorCode } from "@/lib/errors";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { memfs } from "memfs";
@@ -46,31 +45,29 @@ export class DiskDAO implements DiskRecord {
   }
 }
 
-// private channel: BroadcastChannel;
+//todo put some of the logic in a class?
 
-// constructor(public readonly channelName: string, options?: Options<EventData>) {
-//   super(options);
-//   this.channel = new BroadcastChannel(channelName);
+export type RenameFileType = { oldPath: string; oldName: string; newPath: string; newName: string };
+
 export abstract class Disk implements DiskRecord {
-  static REMOTE_RENAME = "remoterename";
+  static RENAME = "rename";
+  static REMOTE_INDEXED = "remoteindexed";
   abstract fs: FsType;
   abstract fileTree: FileTree;
   abstract readonly type: DiskType;
-  broadcaster: ChannelEmittery;
+  broadcaster: Channel;
 
   constructor(public readonly guid: string) {
-    this.broadcaster = new ChannelEmittery(guid);
-    this.broadcaster.on(Disk.REMOTE_RENAME, async (data) => {
-      const { oldPath, newBaseName } = data;
-      console.log({ oldPath, newBaseName });
+    this.broadcaster = new Channel(guid);
+    this.broadcaster.on(Disk.RENAME, async (data: RenameFileType) => {
+      const { oldPath, newPath } = data;
+      console.log("remote rename", { oldPath, newPath });
+    });
+    this.broadcaster.on(Disk.REMOTE_INDEXED, async () => {
+      console.log("remote index");
+      this.fileTree.reIndex();
     });
   }
-
-  // protected setupRemoteListener_() {
-  //   this.broadcaster.on(Disk.REMOTE_INDEX, () => {
-  //     this.fileTree.reIndex();
-  //   });
-  // }
 
   static defaultDiskType: DiskType = "IndexedDbDisk";
 
@@ -97,25 +94,42 @@ export abstract class Disk implements DiskRecord {
     }
   }
 
-  async renameFile(oldPath: string, newBaseName: string): Promise<{ newPath: string; newName: string }> {
+  onRename(fn: (props: RenameFileType) => void) {
+    return this.broadcaster.on(Disk.RENAME, fn);
+  }
+
+  async renameFile(oldPath: string, newBaseName: string, quiet: boolean = false): Promise<RenameFileType> {
     const cleanName = newBaseName.replace(/\//g, ":");
 
-    const nochange = { newPath: oldPath, newName: path.basename(oldPath) };
+    const NOCHANGE: RenameFileType = {
+      newPath: oldPath,
+      newName: path.basename(oldPath),
+      oldPath,
+      oldName: path.basename(oldPath),
+    };
 
-    if (!cleanName) return nochange;
-    if (cleanName === path.basename(oldPath)) return nochange;
+    if (!cleanName) return NOCHANGE;
+    if (cleanName === path.basename(oldPath)) return NOCHANGE;
 
     const fullPath = path.join(path.dirname(oldPath), cleanName);
 
     //check if file exists
     if (await this.fs.promises.stat(fullPath).catch(() => false)) {
-      return nochange;
+      return NOCHANGE;
     }
     await this.fs.promises.rename(oldPath, fullPath);
     await this.fileTree.reIndex();
-    const change = { newPath: fullPath, newName: path.basename(fullPath) };
-    this.broadcaster.emit(Disk.REMOTE_RENAME, { oldPath, newBaseName });
-    return change;
+
+    const CHANGE: RenameFileType = {
+      newPath: fullPath,
+      newName: path.basename(fullPath),
+      oldName: path.basename(oldPath),
+      oldPath,
+    };
+
+    await this.broadcaster.emit(Disk.REMOTE_INDEXED);
+    await this.broadcaster.emit(Disk.RENAME, CHANGE);
+    return CHANGE;
   }
 
   async writeFileRecursive(filePath: string, content: string) {
@@ -141,7 +155,7 @@ export abstract class Disk implements DiskRecord {
 
   teardown() {
     this.fileTree.teardown();
-    // this.broadcaster.tearDown();
+    this.broadcaster.tearDown();
   }
 
   get promises() {
@@ -159,16 +173,11 @@ export class IndexedDbDisk extends Disk {
   readonly fileTree: FileTree;
   // broadcaster: ChannelEmittery;
 
-  setupIndexListener() {}
   constructor(public readonly guid: string, public readonly db = ClientDb) {
     super(guid);
     this.fs = new LightningFs();
     this.fs.init(this.guid);
     this.fileTree = new FileTree(this.fs, this.guid);
-    // this.broadcaster = new ChannelEmittery(guid);
-    // this.broadcaster.on(Disk.REMOTE_INDEX, () => {
-    //   this.fileTree.reIndex();
-    // });
   }
 }
 
@@ -182,12 +191,5 @@ export class MemDisk extends Disk {
     super(guid);
     this.fs = memfs().fs;
     this.fileTree = new FileTree(this.fs, this.guid);
-    // this.broadcaster = new ChannelEmittery(guid);
-    // this.broadcaster.on(Disk.REMOTE_INDEX, () => {
-    //   this.fileTree.remoteIndexed();
-    // });
-    // this.fileTree.watch(() => {
-    //   this.broadcaster.emit(Disk.REMOTE_INDEX);
-    // });
   }
 }

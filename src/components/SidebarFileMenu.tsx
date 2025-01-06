@@ -29,7 +29,7 @@ function SidebarFileMenuInternal({
   const onRename = async (filePath: string, newBasename: string) => {
     const { newPath, newName } = await currentWorkspace.renameFile(filePath, newBasename);
     if (workspaceRoute.path === filePath) {
-      router.push(currentWorkspace.resolveFileUrl(newPath));
+      // router.push(currentWorkspace.resolveFileUrl(newPath));
     }
     return newName;
   };

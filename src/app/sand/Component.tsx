@@ -23,11 +23,11 @@ export const Component: React.FC = () => {
   }, []);
 
   const increment = () => {
-    emitter.emit("increment", { self: true });
+    emitter.emit("increment");
   };
 
   const decrement = () => {
-    emitter.emit("decrement", { self: true });
+    emitter.emit("decrement");
   };
 
   return (

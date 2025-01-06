@@ -1,5 +1,5 @@
 import { FsType } from "@/clientdb/Disk";
-import { ChannelEmittery } from "@/lib/channel";
+import { Channel } from "@/lib/channel";
 import { absPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
@@ -41,19 +41,19 @@ export class FileTree {
   initialIndex = false;
   root: TreeDir = FileTree.EmptyFileTree();
   dirs: TreeList = [];
+  id: string;
 
-  broadcaster: ChannelEmittery;
+  broadcaster: Channel;
 
   // private tree: TreeDir = this.root;
-  constructor(private fs: FsType, public id: string) {
-    // const key = "IndexedDbDisk/fileTree/" + id;
-    this.broadcaster = new ChannelEmittery(id + "/fileTree"); //???
-    // this.watchRemote(() => this.remoteIndexed());
+  constructor(private fs: FsType, diskGuid: string) {
+    this.id = `${diskGuid}/filetree`;
+    this.broadcaster = new Channel(this.id); //???
     this.initCacheIndex();
     this.index();
   }
   initCacheIndex() {
-    const indexCacheKey = `IndexedDbDisk/fileTree/${this.id}`;
+    const indexCacheKey = `${this.id}/indexCache`;
     const cacheIndex = localStorage.getItem(indexCacheKey);
     if (cacheIndex) {
       try {
@@ -92,12 +92,7 @@ export class FileTree {
     return this.index({ force: true });
   };
 
-  remoteIndexed = () => {
-    return this.index({ force: true, notifyRemote: false });
-  };
-  index = async (
-    { force, notifyRemote }: { force: boolean; notifyRemote?: boolean } = { force: false, notifyRemote: true }
-  ) => {
+  index = async ({ force }: { force: boolean; notifyRemote?: boolean } = { force: false }) => {
     if (force || !this.initialIndex) {
       const release = await this.mutex.acquire();
       try {
@@ -105,9 +100,7 @@ export class FileTree {
         await this.recurseTree(this.root.path, this.root.children, 0);
         this.dirs = this.flatDirTree();
         this.initialIndex = true;
-        //compare with the previous index ???
         this.emitter.emit(FileTree.INDEX, ++this.currentIndexId);
-        if (notifyRemote) this.broadcaster.emit(FileTree.REMOTE_INDEX);
       } finally {
         release(); // Release the lock
       }
