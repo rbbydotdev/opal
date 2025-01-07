@@ -39,8 +39,8 @@ export class FileTree {
   initialIndex = false;
   root: TreeDir = FileTree.EmptyFileTree();
   dirs: TreeList = [];
-  static COMPLETE: "complete";
   static SKIPPED: "skipped";
+  static INDEXED: "index";
 
   // private tree: TreeDir = this.root;
   constructor(private fs: FsType) {}
@@ -60,7 +60,7 @@ export class FileTree {
     return flat;
   };
 
-  reIndex = () => {
+  forceIndex = () => {
     return this.index({ force: true });
   };
   index = async ({ force = false, tree = FileTree.EmptyFileTree() }: { force?: boolean; tree?: TreeDirRoot } = {}) => {
@@ -78,7 +78,7 @@ export class FileTree {
       }
       console.debug("Indexing complete");
       console.debug(this.root.children.map((c) => c.name).join(", "));
-      return FileTree.COMPLETE;
+      return FileTree.INDEXED;
     }
     console.debug("Indexing skipped");
     return FileTree.SKIPPED;
