@@ -98,7 +98,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
 
 //TODO: change the mututation of this class to instead have a database tied object, but when othere deps are loaded it beomces a different object
 //for exampple the diskguid
-export class Workspace implements WorkspaceRecord {
+export class Workspace extends WorkspaceDAO {
   // export class Workspace implements WorkspaceRecord {
   memid = nanoid();
   static seedFiles: Record<string, string> = {
@@ -177,6 +177,7 @@ export class Workspace implements WorkspaceRecord {
     disk: DiskDAO;
     remoteAuth: RemoteAuthDAO;
   }) {
+    super({ name, guid, diskGuid: disk.guid, remoteAuthGuid: remoteAuth.guid, createdAt: new Date() });
     this.name = name;
     this.guid = guid;
     this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
@@ -207,12 +208,12 @@ export class Workspace implements WorkspaceRecord {
   get isIndexed() {
     return this.disk.isIndexed;
   }
-  get remoteAuthGuid() {
-    return this.remoteAuth.guid;
-  }
-  get diskGuid() {
-    return this.disk.guid;
-  }
+  // get remoteAuthGuid() {
+  //   return this.remoteAuth.guid;
+  // }
+  // get diskGuid() {
+  //   return this.disk.guid;
+  // }
 
   get href() {
     return `${Workspace.rootRoute}/${this.name}`;

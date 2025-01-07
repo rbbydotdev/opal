@@ -3,7 +3,7 @@ import { TreeDir, TreeFile } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 
 export const WorkspaceContext = React.createContext<{
   fileTreeDir: TreeDir | null;
@@ -26,6 +26,30 @@ export const WorkspaceContext = React.createContext<{
 export type WorkspaceRouteType = { id: string | null; path: string | null };
 
 export type Workspaces = WorkspaceDAO[];
+
+export function useCurrentFilepath() {
+  const { currentWorkspace } = useWorkspaceContext();
+  const { path: filePath } = useWorkspaceRoute();
+  const [contents, setContents] = useState<null | string>(null);
+
+  useEffect(() => {
+    if (currentWorkspace && filePath) {
+      currentWorkspace.disk.readFile(filePath).then(setContents);
+      //listener is currently only used with remote, since a local write will not trigger
+      //a local write event, this is because the common update kind of borks mdx editor
+      return currentWorkspace.disk.writeFileListener(filePath, setContents);
+    }
+  }, [currentWorkspace, filePath]);
+  const updateContents = useCallback(
+    (updates: string) => {
+      if (filePath && currentWorkspace) {
+        currentWorkspace?.disk.writeFile(filePath, updates);
+      }
+    },
+    [currentWorkspace, filePath]
+  );
+  return { filePath, contents, updateContents };
+}
 
 function useWorkspaceRoute() {
   const pathname = usePathname();
@@ -88,7 +112,6 @@ export function useWorkspaceFromRoute() {
       currentWorkspace.disk.renameListener(({ newPath, oldPath }) => {
         if (pathname === currentWorkspace.resolveFileUrl(oldPath)) {
           router.push(currentWorkspace.resolveFileUrl(newPath));
-        } else {
         }
       });
 

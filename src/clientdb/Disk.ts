@@ -12,7 +12,7 @@ export type DiskJType = { guid: string; type: DiskType; fs: Record<string, strin
 
 export type DiskType = "IndexedDbDisk" | "MemDisk";
 
-export type FsType = InstanceType<typeof LightningFs> | ReturnType<typeof memfs>["fs"];
+export type FileSystem = InstanceType<typeof LightningFs> | ReturnType<typeof memfs>["fs"];
 
 export class DiskRecord {
   guid!: string;
@@ -57,18 +57,29 @@ export class DiskDAO implements DiskRecord {
 
 export type RenameFileType = { oldPath: string; oldName: string; newPath: string; newName: string };
 
-class DiskRemoteEvents extends Channel<{ [DiskRemoteEvents.RENAME]: RenameFileType; [DiskRemoteEvents.INDEX]: never }> {
+class DiskRemoteEvents extends Channel<{
+  [DiskRemoteEvents.RENAME]: RenameFileType;
+  [DiskRemoteEvents.INDEX]: never;
+  [DiskLocalEvents.WRITE]: { filePath: string };
+}> {
+  static WRITE = "write" as const;
   static INDEX = "index" as const;
   static RENAME = "rename" as const;
 }
 
-class DiskLocalEvents extends Emittery<{ [DiskLocalEvents.RENAME]: RenameFileType; [DiskLocalEvents.INDEX]: never }> {
+class DiskLocalEvents extends Emittery<{
+  [DiskLocalEvents.RENAME]: RenameFileType;
+  [DiskLocalEvents.INDEX]: never;
+  [DiskLocalEvents.WRITE]: { filePath: string; contents: string };
+}> {
+  static WRITE = "write" as const;
   static INDEX = "index" as const;
   static RENAME = "rename" as const;
 }
 
 // export abstract class Disk implements DiskRecord {
-export abstract class Disk implements DiskRecord {
+export abstract class Disk extends DiskDAO {
+  // export abstract class Disk implements DiskRecord {
   indexId: string = "";
   // static REMOTE_INDEX = "remoteindex";
 
@@ -115,18 +126,15 @@ export abstract class Disk implements DiskRecord {
     });
   }
 
-  abstract readonly type: DiskType;
-
-  toDAO() {
-    return new DiskDAO(this);
+  fileWriteListener(callback: () => void) {
+    return this.local.on(DiskLocalEvents.WRITE, callback);
   }
-  // updateIndexId(indexId: string = this.indexId) {
-  //   this.indexId = indexId;
-  //   return this.toDAO().updateIndexId(indexId);
+  // remoteFileWriteListener(callback: () => void) {
+  //   return this.remote.on(DiskRemoteEvents.WRITE, () => {});
   // }
 
-  constructor(public readonly guid: string, public fs: FsType, public fileTree: FileTree) {
-    // this.remote = new Channel(this.guid);
+  constructor(public readonly guid: string, public fs: FileSystem, public fileTree: FileTree, type: DiskType) {
+    super({ guid, type });
     this.remote = new DiskRemoteEvents(this.guid);
   }
   async init() {
@@ -143,6 +151,11 @@ export abstract class Disk implements DiskRecord {
       this.local.emit(DiskLocalEvents.INDEX);
       console.debug("remote rename", JSON.stringify(data, null, 4));
     });
+    this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
+      const contents = (await this.fs.promises.readFile(filePath)).toString();
+      this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
+      console.debug("remote write");
+    });
   }
 
   static defaultDiskType: DiskType = "IndexedDbDisk";
@@ -153,7 +166,7 @@ export abstract class Disk implements DiskRecord {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
 
-  static from({ guid, type }: { guid: string; type: DiskType }) {
+  static from({ guid, type }: { guid: string; type: DiskType }): Disk {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
 
@@ -181,6 +194,19 @@ export abstract class Disk implements DiskRecord {
 
   renameListener(fn: (props: RenameFileType) => void) {
     return this.local.on(DiskLocalEvents.RENAME, fn);
+  }
+  writeFileListener(watchFilePath: string, fn: (contents: string) => void) {
+    return this.local.on(DiskLocalEvents.WRITE, ({ filePath, contents }) => {
+      if (watchFilePath === filePath) fn(contents);
+    });
+  }
+  remoteWriteFileListener(watchFilePath: string, fn: (contents: string) => void) {
+    return this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
+      if (watchFilePath === filePath) {
+        const contents = await this.readFile(filePath);
+        return fn(contents);
+      }
+    });
   }
 
   async renameFile(oldPath: string, newBaseName: string): Promise<RenameFileType> {
@@ -229,8 +255,18 @@ export abstract class Disk implements DiskRecord {
       }
     }
   }
+  async writeFile(filePath: string, contents: string) {
+    await this.fs.promises.writeFile(filePath, contents, { encoding: "utf8", mode: 0o777 });
+    // local messes up the editor, commenting out for now might need in the future
+    // await this.local.emit(DiskLocalEvents.WRITE, { filePath, contents });
+    await this.remote.emit(DiskRemoteEvents.WRITE, { filePath });
+    return;
+  }
+  async readFile(filePath: string) {
+    return (await this.fs.promises.readFile(filePath)).toString();
+  }
 
-  async withFs(fn: (fs: FsType) => Promise<unknown> | unknown) {
+  async withFs(fn: (fs: FileSystem) => Promise<unknown> | unknown) {
     await fn(this.fs);
     await this.fileTree.forceIndex();
     return this.fs;
@@ -254,22 +290,18 @@ export abstract class Disk implements DiskRecord {
 
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
-  readonly type = IndexedDbDisk.type;
-  // broadcaster: ChannelEmittery;
-
   constructor(public readonly guid: string, public readonly db = ClientDb) {
     const fs = new LightningFs();
     fs.init(guid);
-    super(guid, fs, new FileTree(fs));
+    super(guid, fs, new FileTree(fs), IndexedDbDisk.type);
   }
 }
 
 export class MemDisk extends Disk {
-  readonly type = "MemDisk";
-
+  static type: DiskType = "MemDisk";
   constructor(public readonly guid: string, public readonly db = ClientDb) {
     const fs = memfs().fs;
-    super(guid, fs, new FileTree(fs));
+    super(guid, fs, new FileTree(fs), MemDisk.type);
   }
 }
 

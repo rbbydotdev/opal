@@ -3,20 +3,22 @@ import Emittery, { type Options } from "emittery";
 import { nanoid } from "nanoid";
 
 export class Channel<EventData = Record<string, unknown>> extends Emittery<EventData> {
-  private channel: BroadcastChannel;
+  private channel: BroadcastChannel | null = null;
   private contextId: string = nanoid();
-  // static INCLUDE_SELF = { contextId: "self" };
 
   constructor(public readonly channelName: string, options?: Options<EventData>) {
     super(options);
-    this.channel = new BroadcastChannel(channelName);
+    this.createChannel();
+  }
+
+  private createChannel() {
+    this.channel = new BroadcastChannel(this.channelName);
 
     this.channel.onmessage = (event) => {
-      //debug messge
       const { eventData, eventName, senderId } = event.data;
       if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
-      console.debug("bcast incoming now emitting:", eventName);
+      console.debug("bcast incoming:", eventName);
       super.emit(eventName, eventData);
     };
   }
@@ -28,13 +30,23 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   ): Promise<void> {
     if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
-    // super.emit(eventName, eventData as EventData[Name]);
-    console.debug("emit incoming now bcasting:", eventName);
-    return this.channel.postMessage(JSON.parse(message));
+    console.debug("bcast outgoing:", eventName);
+    try {
+      if (this.channel) {
+        return this.channel.postMessage(JSON.parse(message));
+      } else {
+        console.error("Channel is not initialized or has been closed.");
+      }
+    } catch (e) {
+      console.error("Error during postMessage:", e);
+    }
   }
 
   tearDown() {
-    this.channel.close();
+    if (this.channel) {
+      this.channel.close();
+      this.channel = null;
+    }
     this.clearListeners();
   }
 }
