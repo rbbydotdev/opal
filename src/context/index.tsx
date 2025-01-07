@@ -85,7 +85,7 @@ export function useWorkspaceFromRoute() {
       const currentWorkspace = (await Workspace.fromRoute(pathname)).init();
 
       //move into hook? or seperate place?
-      currentWorkspace.disk.onRename(({ newPath, oldPath }) => {
+      currentWorkspace.disk.renameListener(({ newPath, oldPath }) => {
         if (pathname === currentWorkspace.resolveFileUrl(oldPath)) {
           router.push(currentWorkspace.resolveFileUrl(newPath));
         } else {

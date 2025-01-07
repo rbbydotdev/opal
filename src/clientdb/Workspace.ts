@@ -99,6 +99,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
 //TODO: change the mututation of this class to instead have a database tied object, but when othere deps are loaded it beomces a different object
 //for exampple the diskguid
 export class Workspace implements WorkspaceRecord {
+  // export class Workspace implements WorkspaceRecord {
   memid = nanoid();
   static seedFiles: Record<string, string> = {
     "/welcome.md": "# Welcome to your new workspace!",
@@ -151,10 +152,10 @@ export class Workspace implements WorkspaceRecord {
   };
 
   onInitialIndex(callback: (fileTree: TreeDir) => void) {
-    return this.disk.onInitialIndex(callback);
+    return this.disk.initialIndexListener(callback);
   }
   watchDisk(callback: (fileTree: TreeDir) => void) {
-    return this.disk.onLatestIndex(callback);
+    return this.disk.latestIndexListener(callback);
   }
   getFirstFile() {
     return this.disk.getFirstFile();

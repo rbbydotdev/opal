@@ -2,7 +2,7 @@
 import Emittery, { type Options } from "emittery";
 import { nanoid } from "nanoid";
 
-export class Channel<EventData = Record<string, any>> extends Emittery<EventData> {
+export class Channel<EventData = Record<string, unknown>> extends Emittery<EventData> {
   private channel: BroadcastChannel;
   private contextId: string = nanoid();
   // static INCLUDE_SELF = { contextId: "self" };

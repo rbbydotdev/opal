@@ -8,7 +8,6 @@ import Emittery from "emittery";
 import { memfs } from "memfs";
 import { nanoid } from "nanoid";
 import path from "path";
-
 export type DiskJType = { guid: string; type: DiskType; fs: Record<string, string> };
 
 export type DiskType = "IndexedDbDisk" | "MemDisk";
@@ -18,13 +17,13 @@ export type FsType = InstanceType<typeof LightningFs> | ReturnType<typeof memfs>
 export class DiskRecord {
   guid!: string;
   type!: DiskType;
-  indexId!: string;
+  // indexId!: string;
 }
 
 export class DiskDAO implements DiskRecord {
   guid!: string;
   type!: DiskType;
-  indexId!: string;
+  // indexId!: string;
   static guid = () => "disk:" + nanoid();
 
   constructor(disk: DiskRecord) {
@@ -32,11 +31,19 @@ export class DiskDAO implements DiskRecord {
   }
 
   static new(type: DiskType = Disk.defaultDiskType) {
-    return new DiskDAO({ type: type, guid: DiskDAO.guid(), indexId: "" });
+    return new DiskDAO({ type: type, guid: DiskDAO.guid() });
   }
 
   static getByGuid(guid: string) {
     return ClientDb.disks.where("guid").equals(guid).first();
+  }
+
+  async hydrate() {
+    return Object.assign(this, await DiskDAO.getByGuid(this.guid));
+  }
+
+  update() {
+    return ClientDb.disks.update(this.guid, this);
   }
 
   save() {
@@ -48,25 +55,33 @@ export class DiskDAO implements DiskRecord {
   }
 }
 
-//todo put some of the logic in a class?
-
 export type RenameFileType = { oldPath: string; oldName: string; newPath: string; newName: string };
 
+class DiskRemoteEvents extends Channel<{ [DiskRemoteEvents.RENAME]: RenameFileType; [DiskRemoteEvents.INDEX]: never }> {
+  static INDEX = "index" as const;
+  static RENAME = "rename" as const;
+}
+
+class DiskLocalEvents extends Emittery<{ [DiskLocalEvents.RENAME]: RenameFileType; [DiskLocalEvents.INDEX]: never }> {
+  static INDEX = "index" as const;
+  static RENAME = "rename" as const;
+}
+
+// export abstract class Disk implements DiskRecord {
 export abstract class Disk implements DiskRecord {
-  static INDEX = "index";
-  static RENAME = "rename";
+  indexId: string = "";
   // static REMOTE_INDEX = "remoteindex";
 
-  remote: Channel;
-  local: Emittery = new Emittery();
+  remote: DiskRemoteEvents;
+  local = new DiskLocalEvents();
 
-  async initIndex() {
+  async initializeIndex() {
     await this.index();
-    await this.local.emit(Disk.INDEX);
+    await this.local.emit(DiskLocalEvents.INDEX);
     return;
   }
 
-  reIndex = () => {
+  forceIndex = () => {
     return this.fileTree.index({ force: true });
   };
 
@@ -81,20 +96,20 @@ export abstract class Disk implements DiskRecord {
     return first;
   }
 
-  onInitialIndex(callback: (fileTreeDir: TreeDir) => void) {
+  initialIndexListener(callback: (fileTreeDir: TreeDir) => void) {
     if (this.fileTree.initialIndex) {
       callback(this.fileTree.getRootTree());
     } else {
-      this.local.once(Disk.INDEX).then(() => {
+      this.local.once(DiskLocalEvents.INDEX).then(() => {
         callback(this.fileTree.getRootTree());
       });
     }
   }
 
   //race will call callback if there is already a fresh initialized index
-  onLatestIndex(callback: (fileTree: TreeDir) => void) {
+  latestIndexListener(callback: (fileTree: TreeDir) => void) {
     if (this.fileTree.initialIndex) callback(this.fileTree.root);
-    return this.local.on(Disk.INDEX, () => {
+    return this.local.on(DiskLocalEvents.INDEX, () => {
       callback(this.fileTree.root);
       console.debug("disk index");
     });
@@ -102,23 +117,30 @@ export abstract class Disk implements DiskRecord {
 
   abstract readonly type: DiskType;
 
+  toDAO() {
+    return new DiskDAO(this);
+  }
+  // updateIndexId(indexId: string = this.indexId) {
+  //   this.indexId = indexId;
+  //   return this.toDAO().updateIndexId(indexId);
+  // }
+
   constructor(public readonly guid: string, public fs: FsType, public fileTree: FileTree) {
-    this.remote = new Channel(this.guid);
-    //////// put these some where
-    /////
+    // this.remote = new Channel(this.guid);
+    this.remote = new DiskRemoteEvents(this.guid);
   }
   async init() {
     console.debug("disk init");
-    this.initRemoteEvents();
-    await this.initIndex();
+    this.setupRemoteListeners();
+    await this.initializeIndex();
     return this;
   }
 
-  async initRemoteEvents() {
-    this.remote.on(Disk.RENAME, async (data: RenameFileType) => {
-      await this.local.emit(Disk.RENAME, data);
-      await this.reIndex();
-      this.local.emit(Disk.INDEX);
+  async setupRemoteListeners() {
+    this.remote.on(DiskRemoteEvents.RENAME, async (data) => {
+      await this.local.emit(DiskRemoteEvents.RENAME, data);
+      await this.forceIndex();
+      this.local.emit(DiskLocalEvents.INDEX);
       console.debug("remote rename", JSON.stringify(data, null, 4));
     });
   }
@@ -150,15 +172,15 @@ export abstract class Disk implements DiskRecord {
   async index({ tree }: { tree?: TreeDirRoot } = {}) {
     console.debug("disk index start");
     const result = await this.fileTree.index({ tree });
-    if (result === FileTree.COMPLETE) {
+    if (result !== FileTree.SKIPPED) {
       console.debug("disk index complete");
+    } else {
+      console.debug("disk index skipped");
     }
   }
 
-  onRename(fn: (props: RenameFileType) => void) {
-    // const listeners = [this.remote.on(Disk.RENAME, fn), this.local.on(Disk.RENAME, fn)];
-    // return () => listeners.forEach((off) => off());
-    return this.local.on(Disk.RENAME, fn);
+  renameListener(fn: (props: RenameFileType) => void) {
+    return this.local.on(DiskLocalEvents.RENAME, fn);
   }
 
   async renameFile(oldPath: string, newBaseName: string): Promise<RenameFileType> {
@@ -183,7 +205,7 @@ export abstract class Disk implements DiskRecord {
     } catch (_e) {}
 
     await this.fs.promises.rename(oldPath, fullPath);
-    await this.fileTree.reIndex();
+    await this.fileTree.forceIndex();
 
     const CHANGE: RenameFileType = {
       newPath: fullPath,
@@ -192,8 +214,8 @@ export abstract class Disk implements DiskRecord {
       oldPath,
     };
 
-    await this.remote.emit(Disk.RENAME, CHANGE);
-    await this.local.emit(Disk.RENAME, CHANGE);
+    await this.remote.emit(DiskRemoteEvents.RENAME, CHANGE);
+    await this.local.emit(DiskLocalEvents.RENAME, CHANGE);
     return CHANGE;
   }
 
@@ -210,7 +232,7 @@ export abstract class Disk implements DiskRecord {
 
   async withFs(fn: (fs: FsType) => Promise<unknown> | unknown) {
     await fn(this.fs);
-    await this.fileTree.reIndex();
+    await this.fileTree.forceIndex();
     return this.fs;
   }
 
