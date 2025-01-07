@@ -15,38 +15,12 @@ export default function Page() {
 }
 
 function FirstFileRedirect() {
-  const { currentWorkspace } = useWorkspaceContext();
+  const { currentWorkspace, firstFile } = useWorkspaceContext();
   const router = useRouter();
-  useEffect(
-    () =>
-      currentWorkspace?.watchFileTree(async () => {
-        const firstFile = await currentWorkspace.getFirstFile();
-        if (firstFile && currentWorkspace) {
-          router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-        }
-      }),
-    [currentWorkspace, router]
-  );
+  useEffect(() => {
+    if (firstFile && currentWorkspace) {
+      router.push(currentWorkspace.resolveFileUrl(firstFile.path));
+    }
+  }, [currentWorkspace, firstFile, router]);
   return null;
 }
-// export function WorkspaceCard() {
-//   return null;
-//   const { currentWorkspace } = useWorkspaceContext();
-//   return (
-//     <div className="page flex justify-center items-center h-full w-full">
-//       <Card className="card w-96 h-96">
-//         <CardHeader>
-//           <CardTitle>Workspace {currentWorkspace?.name}</CardTitle>
-//           <CardDescription>guid: {currentWorkspace?.guid}</CardDescription>
-//         </CardHeader>
-//         <CardContent>
-//           <CardDescription>
-//             <div>
-//               <p>select a file to get started</p>
-//             </div>
-//           </CardDescription>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// }

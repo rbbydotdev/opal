@@ -14,6 +14,8 @@ export type TreeDir = {
   depth: number;
 };
 
+export type TreeDirRoot = TreeDir & { __root: boolean };
+
 export type TreeFile = {
   name: string;
   type: "file";
@@ -24,21 +26,21 @@ export type TreeFile = {
 // export type EmptyFileTreeType = typeof EmptyFileTree;
 
 export class FileTree {
-  static INDEX = "index";
-  static REMOTE_INDEX = "remoteindex";
-
   static EmptyFileTree = () =>
     ({
+      __root: true,
       name: "/",
       path: "/",
       type: "dir",
       children: [],
       depth: 0,
-    } as TreeDir);
+    } satisfies TreeDirRoot);
 
   initialIndex = false;
   root: TreeDir = FileTree.EmptyFileTree();
   dirs: TreeList = [];
+  static COMPLETE: "complete";
+  static SKIPPED: "skipped";
 
   // private tree: TreeDir = this.root;
   constructor(private fs: FsType) {}
@@ -61,21 +63,25 @@ export class FileTree {
   reIndex = () => {
     return this.index({ force: true });
   };
-  index = async ({ force = false, tree = FileTree.EmptyFileTree() }: { force?: boolean; tree?: TreeDir } = {}) => {
+  index = async ({ force = false, tree = FileTree.EmptyFileTree() }: { force?: boolean; tree?: TreeDirRoot } = {}) => {
     if (force || !this.initialIndex) {
-      console.log("index");
+      console.debug("Indexing file tree...");
       const release = await this.mutex.acquire();
+      console.debug("Acquired unlock");
       try {
-        this.root = JSON.parse(JSON.stringify(tree));
+        this.root = tree;
         await this.recurseTree(this.root.path, this.root.children, 0);
         this.dirs = this.flatDirTree();
         this.initialIndex = true;
       } finally {
         release(); // Release the lock
       }
+      console.debug("Indexing complete");
+      console.debug(this.root.children.map((c) => c.name).join(", "));
+      return FileTree.COMPLETE;
     }
-
-    return this;
+    console.debug("Indexing skipped");
+    return FileTree.SKIPPED;
   };
 
   walk(

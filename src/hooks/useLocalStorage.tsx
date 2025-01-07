@@ -1,4 +1,5 @@
 "use client";
+
 import { useCallback, useEffect, useState } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
@@ -9,7 +10,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       // Get from local storage by key
       const item = window.localStorage.getItem(key);
       // Parse stored json or if none return initialValue
-      setStoredValue(item ? JSON.parse(item) : initialValue);
+      setStoredValue(item ? (JSON.parse(item) as T) : initialValue);
     } catch (error) {
       console.error(error);
       console.error("could not get item from local storage text:", window.localStorage.getItem(key));
@@ -40,7 +41,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       if (event.key === key) {
         try {
           const newValue = event.newValue ? JSON.parse(event.newValue) : initialValue;
-          setStoredValue(newValue);
+          setStoredValue(newValue as T);
         } catch (error) {
           console.error(error);
         }

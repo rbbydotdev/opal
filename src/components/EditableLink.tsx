@@ -62,7 +62,13 @@ export const EditableLink = ({
     }
   };
 
-  const handleBlur = () => isEditing && setIsEditing(false);
+  const handleBlur = () => {
+    if (isEditing) {
+      setIsEditing(false);
+      //reset to original text
+      setLinkText(children);
+    }
+  };
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     linkRef.current?.focus();
