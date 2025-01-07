@@ -14,7 +14,9 @@ export class Channel<EventData = Record<string, any>> extends Emittery<EventData
     this.channel.onmessage = (event) => {
       //debug messge
       const { eventData, eventName, senderId } = event.data;
+      if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
+      console.debug("bcast incoming now emitting:", eventName);
       super.emit(eventName, eventData);
     };
   }
@@ -24,13 +26,11 @@ export class Channel<EventData = Record<string, any>> extends Emittery<EventData
     eventData?: EventData[Name],
     { contextId }: { contextId?: string } = { contextId: this.contextId }
   ): Promise<void> {
+    if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
-    super.emit(eventName, eventData as EventData[Name]);
+    // super.emit(eventName, eventData as EventData[Name]);
+    console.debug("emit incoming now bcasting:", eventName);
     return this.channel.postMessage(JSON.parse(message));
-  }
-
-  closeChannel() {
-    this.channel.close();
   }
 
   tearDown() {

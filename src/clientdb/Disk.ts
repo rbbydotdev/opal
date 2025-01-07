@@ -1,10 +1,9 @@
 "use client";
-import { FileTree, TreeDir, TreeFile } from "@/clientdb/filetree";
+import { FileTree, TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
 import { errorCode } from "@/lib/errors";
 import LightningFs from "@isomorphic-git/lightning-fs";
-import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import { memfs } from "memfs";
 import { nanoid } from "nanoid";
@@ -19,11 +18,13 @@ export type FsType = InstanceType<typeof LightningFs> | ReturnType<typeof memfs>
 export class DiskRecord {
   guid!: string;
   type!: DiskType;
+  indexId!: string;
 }
 
 export class DiskDAO implements DiskRecord {
   guid!: string;
   type!: DiskType;
+  indexId!: string;
   static guid = () => "disk:" + nanoid();
 
   constructor(disk: DiskRecord) {
@@ -31,7 +32,7 @@ export class DiskDAO implements DiskRecord {
   }
 
   static new(type: DiskType = Disk.defaultDiskType) {
-    return new DiskDAO({ type: type, guid: DiskDAO.guid() });
+    return new DiskDAO({ type: type, guid: DiskDAO.guid(), indexId: "" });
   }
 
   static getByGuid(guid: string) {
@@ -53,40 +54,23 @@ export type RenameFileType = { oldPath: string; oldName: string; newPath: string
 
 export abstract class Disk implements DiskRecord {
   static INDEX = "index";
-  static REMOTE_INDEX = "remoteindex";
+  static RENAME = "rename";
+  // static REMOTE_INDEX = "remoteindex";
 
-  initialIndex = false;
+  remote: Channel;
+  local: Emittery = new Emittery();
 
-  broadcaster: Channel;
-
-  // private tree: TreeDir = this.root;
-  // constructor(private fs: FsType, diskGuid: string) {
-  // }
-  async initCacheIndex() {
-    const indexCacheKey = `${this.guid}/indexCache`;
-    const cacheIndex = localStorage.getItem(indexCacheKey);
-    if (cacheIndex) {
-      try {
-        const tree = JSON.parse(cacheIndex);
-        await this.fileTree.index({ tree });
-      } catch (_e) {
-        localStorage.removeItem(indexCacheKey);
-      }
-    }
-    this.watch((treeDir) => {
-      localStorage.setItem(indexCacheKey, JSON.stringify(treeDir));
-    });
+  async initIndex() {
+    await this.index();
+    await this.local.emit(Disk.INDEX);
+    return;
   }
-  private emitter = new Emittery();
-  private mutex = new Mutex();
-  private currentIndexId: number = 0;
 
   reIndex = () => {
     return this.fileTree.index({ force: true });
   };
 
-  async getFirstFile(): Promise<TreeFile | null> {
-    await this.index();
+  getFirstFile(): TreeFile | null {
     let first = null;
     this.fileTree.walk((file, _, exit) => {
       if (file.type === "file") {
@@ -98,46 +82,45 @@ export abstract class Disk implements DiskRecord {
   }
 
   onInitialIndex(callback: (fileTreeDir: TreeDir) => void) {
-    if (this.initialIndex) {
+    if (this.fileTree.initialIndex) {
       callback(this.fileTree.getRootTree());
     } else {
-      this.broadcaster.once(Disk.INDEX).then(() => {
+      this.local.once(Disk.INDEX).then(() => {
         callback(this.fileTree.getRootTree());
       });
     }
   }
 
   //race will call callback if there is already a fresh initialized index
-  watch(callback: (fileTree: TreeDir, indexId: number) => void, { race }: { race: boolean } = { race: true }) {
-    let lastHandledIndexId = -1;
-    if (race) callback(this.fileTree.root, Infinity);
-    return this.emitter.on(FileTree.INDEX, (indexId: number) => {
-      if (indexId !== lastHandledIndexId) {
-        lastHandledIndexId = indexId;
-        callback(this.fileTree.root, indexId);
-      }
+  onLatestIndex(callback: (fileTree: TreeDir) => void) {
+    if (this.fileTree.initialIndex) callback(this.fileTree.root);
+    return this.local.on(Disk.INDEX, () => {
+      callback(this.fileTree.root);
+      console.debug("disk index");
     });
   }
-  watchRemote(callback: () => void) {
-    return this.broadcaster.on(FileTree.REMOTE_INDEX, callback);
-  }
 
-  static RENAME = "rename";
-  static REMOTE_INDEXED = "remoteindexed";
   abstract readonly type: DiskType;
 
   constructor(public readonly guid: string, public fs: FsType, public fileTree: FileTree) {
-    this.broadcaster = new Channel(this.guid);
-    this.broadcaster.on(Disk.RENAME, async (data: RenameFileType) => {
-      const { oldPath, newPath } = data;
-      console.log("remote rename", { oldPath, newPath });
+    this.remote = new Channel(this.guid);
+    //////// put these some where
+    /////
+  }
+  async init() {
+    console.debug("disk init");
+    this.initRemoteEvents();
+    await this.initIndex();
+    return this;
+  }
+
+  async initRemoteEvents() {
+    this.remote.on(Disk.RENAME, async (data: RenameFileType) => {
+      await this.local.emit(Disk.RENAME, data);
+      await this.reIndex();
+      this.local.emit(Disk.INDEX);
+      console.debug("remote rename", JSON.stringify(data, null, 4));
     });
-    this.broadcaster.on(Disk.REMOTE_INDEXED, async () => {
-      console.log("remote index");
-      this.fileTree.reIndex();
-    });
-    this.initCacheIndex();
-    this.index();
   }
 
   static defaultDiskType: DiskType = "IndexedDbDisk";
@@ -164,15 +147,18 @@ export abstract class Disk implements DiskRecord {
       }
     }
   }
-  index() {
-    return {};
-    return this.fileTree.index();
-    // this.initialIndex = true;
-    // return this.broadcaster.emit(Disk.INDEX, ++this.currentIndexId);
+  async index({ tree }: { tree?: TreeDirRoot } = {}) {
+    console.debug("disk index start");
+    const result = await this.fileTree.index({ tree });
+    if (result === FileTree.COMPLETE) {
+      console.debug("disk index complete");
+    }
   }
 
   onRename(fn: (props: RenameFileType) => void) {
-    return this.broadcaster.on(Disk.RENAME, fn);
+    // const listeners = [this.remote.on(Disk.RENAME, fn), this.local.on(Disk.RENAME, fn)];
+    // return () => listeners.forEach((off) => off());
+    return this.local.on(Disk.RENAME, fn);
   }
 
   async renameFile(oldPath: string, newBaseName: string): Promise<RenameFileType> {
@@ -191,9 +177,11 @@ export abstract class Disk implements DiskRecord {
     const fullPath = path.join(path.dirname(oldPath), cleanName);
 
     //check if file exists
-    if (await this.fs.promises.stat(fullPath).catch(() => false)) {
+    try {
+      await this.fs.promises.stat(fullPath);
       return NOCHANGE;
-    }
+    } catch (_e) {}
+
     await this.fs.promises.rename(oldPath, fullPath);
     await this.fileTree.reIndex();
 
@@ -204,8 +192,8 @@ export abstract class Disk implements DiskRecord {
       oldPath,
     };
 
-    await this.broadcaster.emit(Disk.REMOTE_INDEXED);
-    await this.broadcaster.emit(Disk.RENAME, CHANGE);
+    await this.remote.emit(Disk.RENAME, CHANGE);
+    await this.local.emit(Disk.RENAME, CHANGE);
     return CHANGE;
   }
 
@@ -231,7 +219,7 @@ export abstract class Disk implements DiskRecord {
   }
 
   teardown() {
-    this.broadcaster.tearDown();
+    this.remote.tearDown();
   }
 
   get promises() {
@@ -262,3 +250,25 @@ export class MemDisk extends Disk {
     super(guid, fs, new FileTree(fs));
   }
 }
+
+// async initIndex() {
+//   await this.index();
+//   return;
+//   const indexCacheKey = `${this.guid}/indexCache`;
+//   const cacheIndex = localStorage.getItem(indexCacheKey);
+//   if (cacheIndex) {
+//     try {
+//       const tree = JSON.parse(cacheIndex);
+//       if ((tree as TreeDirRoot).__root) {
+//         await this.index({ tree: tree as TreeDirRoot });
+//       }
+//     } catch (_e) {
+//       localStorage.removeItem(indexCacheKey);
+//     }
+//   } else {
+//     await this.index();
+//   }
+//   this.onLatestIndex(() => {
+//     localStorage.setItem(indexCacheKey, JSON.stringify(this.fileTree.root));
+//   });
+// }

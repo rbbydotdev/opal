@@ -9,35 +9,32 @@ import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
 import { CopyMinus, CopyPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 function SidebarFileMenuInternal({
   currentWorkspace,
   fileTreeDir,
   workspaceRoute,
   isIndexed,
+  flatTree,
+  firstFile,
   ...props
 }: {
   workspaceRoute: WorkspaceRouteType;
   currentWorkspace: Workspace;
   fileTreeDir: TreeDir;
+  flatTree: string[];
+  firstFile: string;
   isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const [flatTree, setFlatDirTree] = useState<string[]>(currentWorkspace.getFlatDirTree());
   const router = useRouter();
-
   const onRename = async (filePath: string, newBasename: string) => {
     const { newPath, newName } = await currentWorkspace.renameFile(filePath, newBasename);
     if (workspaceRoute.path === filePath) {
-      // router.push(currentWorkspace.resolveFileUrl(newPath));
+      router.push(currentWorkspace.resolveFileUrl(newPath));
     }
     return newName;
   };
-  useEffect(() => {
-    return currentWorkspace.watchFileTree(() => {
-      setFlatDirTree(currentWorkspace.getFlatDirTree());
-    });
-  }, [currentWorkspace, setFlatDirTree]);
 
   const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(
     flatTree,

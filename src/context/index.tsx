@@ -1,5 +1,5 @@
 "use client";
-import { TreeDir } from "@/clientdb/filetree";
+import { TreeDir, TreeFile } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,11 +9,15 @@ export const WorkspaceContext = React.createContext<{
   fileTreeDir: TreeDir | null;
   workspaces: WorkspaceDAO[];
   isIndexed: boolean;
+  firstFile: TreeFile | null;
+  flatTree: string[];
   currentWorkspace: Workspace | null;
   workspaceRoute: { id: string | null; path: string | null };
 }>({
   fileTreeDir: null,
+  firstFile: null,
   workspaces: [],
+  flatTree: [],
   isIndexed: false,
   currentWorkspace: null,
   workspaceRoute: { id: null, path: null },
@@ -40,21 +44,25 @@ function useWorkspaceRoute() {
   return workspaceRoute;
 }
 
-function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
+export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
   const [isIndexed, setIsIndexed] = useState(currentWorkspace?.isIndexed ?? false);
   const [fileTreeDir, setFileTree] = useState<TreeDir | null>(null);
+  const [firstFile, setFirstFile] = useState<TreeFile | null>(null);
+  const [flatTree, setFlatTree] = useState<string[]>([]);
   useEffect(() => {
     if (currentWorkspace) {
-      return currentWorkspace.watchFileTree((fileTreeDir: TreeDir) => {
-        setFileTree({ ...fileTreeDir });
+      return currentWorkspace.watchDisk((fileTreeDir: TreeDir) => {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
+        setFileTree({ ...fileTreeDir });
+        setFirstFile(currentWorkspace.getFirstFile());
+        setFlatTree(currentWorkspace.getFlatDirTree());
       });
     }
   }, [currentWorkspace, isIndexed]);
-  return { fileTreeDir, isIndexed };
+  return { fileTreeDir, flatTree, isIndexed, firstFile };
 }
 
-function useLiveWorkspaces() {
+export function useLiveWorkspaces() {
   const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
   useLiveQuery(async () => {
     const wrkspcs = await WorkspaceDAO.all();
@@ -63,7 +71,7 @@ function useLiveWorkspaces() {
   return workspaces;
 }
 
-function useWorkspaceFromRoute() {
+export function useWorkspaceFromRoute() {
   const pathname = usePathname();
   const router = useRouter();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
@@ -74,7 +82,8 @@ function useWorkspaceFromRoute() {
         return;
       }
       //creates workspace from route
-      const currentWorkspace = await Workspace.fromRoute(pathname);
+      const currentWorkspace = (await Workspace.fromRoute(pathname)).init();
+
       //move into hook? or seperate place?
       currentWorkspace.disk.onRename(({ newPath, oldPath }) => {
         if (pathname === currentWorkspace.resolveFileUrl(oldPath)) {
@@ -98,10 +107,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaces = useLiveWorkspaces();
   const workspaceRoute = useWorkspaceRoute();
   const currentWorkspace = useWorkspaceFromRoute();
-  const { fileTreeDir, isIndexed } = useWatchWorkspaceFileTree(currentWorkspace);
+  const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
 
   return (
-    <WorkspaceContext.Provider value={{ workspaces, currentWorkspace, workspaceRoute, fileTreeDir, isIndexed }}>
+    <WorkspaceContext.Provider
+      value={{ workspaces, firstFile, currentWorkspace, workspaceRoute, flatTree, fileTreeDir, isIndexed }}
+    >
       {children}
     </WorkspaceContext.Provider>
   );
@@ -114,12 +125,13 @@ export function withCurrentWorkspace<
     fileTreeDir: TreeDir;
     workspaceRoute: WorkspaceRouteType;
     isIndexed: boolean;
+    firstFile: TreeFile | null;
   }
 >(Component: React.ComponentType<T>) {
   return function WrappedComponent(
-    props: Omit<T, "isIndexed" | "currentWorkspace" | "fileTreeDir" | "workspaceRoute">
+    props: Omit<T, "isIndexed" | "currentWorkspace" | "flatTree" | "fileTreeDir" | "workspaceRoute" | "firstFile">
   ) {
-    const { fileTreeDir, currentWorkspace, workspaceRoute, isIndexed } = useWorkspaceContext();
+    const { fileTreeDir, currentWorkspace, workspaceRoute, flatTree, isIndexed, firstFile } = useWorkspaceContext();
     if (!fileTreeDir || !currentWorkspace) return null;
 
     return (
@@ -129,6 +141,8 @@ export function withCurrentWorkspace<
         currentWorkspace={currentWorkspace}
         fileTreeDir={fileTreeDir}
         isIndexed={isIndexed}
+        firstFile={firstFile}
+        flatTree={flatTree}
       />
     );
   };
