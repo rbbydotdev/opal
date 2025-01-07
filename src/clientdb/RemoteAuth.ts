@@ -27,7 +27,7 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
   static new() {
     return new RemoteAuthDAO({
       guid: nanoid(),
-    } as any);
+    } as unknown as RemoteAuthRecord);
   }
   save() {
     return ClientDb.remoteAuths.put(this);

@@ -1,4 +1,4 @@
-import { FsType } from "@/clientdb/Disk";
+import { FileSystem } from "@/clientdb/Disk";
 import { absPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 
@@ -23,8 +23,6 @@ export type TreeFile = {
   depth: number;
 };
 
-// export type EmptyFileTreeType = typeof EmptyFileTree;
-
 export class FileTree {
   static EmptyFileTree = () =>
     ({
@@ -43,7 +41,7 @@ export class FileTree {
   static INDEXED: "index";
 
   // private tree: TreeDir = this.root;
-  constructor(private fs: FsType) {}
+  constructor(private fs: FileSystem) {}
   private mutex = new Mutex();
 
   getRootTree() {
@@ -101,26 +99,28 @@ export class FileTree {
   recurseTree = async (dir: string, parent: TreeNode[] = [], depth = 0, haltOnError = false) => {
     try {
       const entries = await this.fs.promises.readdir(dir);
-      for (const entry of entries) {
-        const fullPath = absPath(dir).join(entry.toString()).str;
-        const stat = await this.fs.promises.stat(fullPath);
-        let nextParent = null;
-        let treeEntry: TreeDir | TreeFile | string = "";
+      await Promise.all(
+        entries.map(async (entry) => {
+          const fullPath = absPath(dir).join(entry.toString()).str;
+          const stat = await this.fs.promises.stat(fullPath);
+          let nextParent = null;
+          let treeEntry: TreeDir | TreeFile | string = "";
 
-        if (stat.isDirectory()) {
-          treeEntry = { name: entry.toString(), depth, type: "dir", path: fullPath, children: [] };
-          nextParent = treeEntry.children;
-          await this.recurseTree(fullPath, nextParent, depth + 1, haltOnError);
-        } else {
-          treeEntry = {
-            name: entry.toString(),
-            depth,
-            type: "file",
-            path: fullPath,
-          };
-        }
-        parent.push(treeEntry);
-      }
+          if (stat.isDirectory()) {
+            treeEntry = { name: entry.toString(), depth, type: "dir", path: fullPath, children: [] };
+            nextParent = treeEntry.children;
+            await this.recurseTree(fullPath, nextParent, depth + 1, haltOnError);
+          } else {
+            treeEntry = {
+              name: entry.toString(),
+              depth,
+              type: "file",
+              path: fullPath,
+            };
+          }
+          parent.push(treeEntry);
+        })
+      );
     } catch (err) {
       console.error(`Error reading ${dir}:`, err);
       if (haltOnError) {

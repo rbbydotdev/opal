@@ -1,14 +1,12 @@
-import { Editor } from "@/components/Editor/Editor";
+"use client";
 
-export default async function Page() {
+import { WorkspaceLiveEditor } from "@/components/WorkspaceLiveEditor";
+
+export default function Page() {
   return (
     <div className="overflow-auto min-w-full w-0">
       <div className="overflow-auto min-w-full w-0">
-        <Editor
-          markdown={`# ${"workspaceId"}/${"fileId"}`}
-          className="flex flex-col"
-          contentEditableClassName="max-w-full overflow-auto content-editable prose"
-        />
+        <WorkspaceLiveEditor />
       </div>
     </div>
   );
