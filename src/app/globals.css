@@ -41,7 +41,6 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-
     --navbar-height: 2.5rem;
     --editor-toolbar-height: 3.5rem;
   }
@@ -87,6 +86,9 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  ::selection {
+    @apply bg-accent2 text-white;
   }
 }
 

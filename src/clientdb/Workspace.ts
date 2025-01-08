@@ -150,6 +150,9 @@ export class Workspace extends WorkspaceDAO {
   renameFile = async (filePath: string, newBaseName: string) => {
     return this.disk.renameFile(filePath, newBaseName);
   };
+  renameDir = async (dirPath: string, newBaseName: string) => {
+    return this.disk.renameFile(dirPath, newBaseName);
+  };
 
   onInitialIndex(callback: (fileTree: TreeDir) => void) {
     return this.disk.initialIndexListener(callback);

@@ -1,5 +1,6 @@
 import tailwindProse from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
+import colors from "tailwindcss/colors";
 export default {
   darkMode: ["class"],
   content: [
@@ -43,6 +44,9 @@ export default {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+        },
+        accent2: {
+          DEFAULT: colors.purple[700],
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -89,3 +93,7 @@ export default {
     require("tailwindcss-animate"),
   ],
 } satisfies Config;
+
+// DEFAULT: "",
+
+// DEFAULT: colors.purple[700],

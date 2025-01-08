@@ -1,5 +1,5 @@
 "use client";
-import { TreeDir } from "@/clientdb/filetree";
+import { TreeDir, TreeFile } from "@/clientdb/filetree";
 import { Workspace } from "@/clientdb/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,20 @@ function SidebarFileMenuInternal({
   currentWorkspace: Workspace;
   fileTreeDir: TreeDir;
   flatTree: string[];
-  firstFile: string;
+  firstFile: TreeFile | null;
   isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
   const router = useRouter();
-  const onRename = async (filePath: string, newBasename: string) => {
+  //hoist this logic up?
+  const onFileRename = async (filePath: string, newBasename: string) => {
+    const { newPath, newName } = await currentWorkspace.renameFile(filePath, newBasename);
+    if (workspaceRoute.path === filePath) {
+      router.push(currentWorkspace.resolveFileUrl(newPath));
+    }
+    return newName;
+  };
+
+  const onDirRename = async (filePath: string, newBasename: string) => {
     const { newPath, newName } = await currentWorkspace.renameFile(filePath, newBasename);
     if (workspaceRoute.path === filePath) {
       router.push(currentWorkspace.resolveFileUrl(newPath));
@@ -41,20 +50,6 @@ function SidebarFileMenuInternal({
     workspaceRoute.path,
     currentWorkspace.id
   );
-
-  // // Expand the tree to the current file path on initial load
-  // const initialLoadRef = useRef({ initialLoad: false });
-  // useEffect(() => {
-  //   if (!workspaceRoute.path || initialLoadRef.current.initialLoad) return;
-  //   initialLoadRef.current.initialLoad = true;
-  //   expandTreeForFilepath(workspaceRoute.path);
-  // }, [expandTreeForFilepath, initialLoadRef, workspaceRoute.path, currentWorkspace, isIndexed]);
-
-  // Expand the tree to the current file path on initial load
-  // useEffect(() => {
-  //   if (!workspaceRoute.path) return;
-  //   expandTreeForFilepath(workspaceRoute.path);
-  // }, [expandTreeForFilepath, workspaceRoute]);
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
@@ -90,7 +85,8 @@ function SidebarFileMenuInternal({
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
         <FileTreeMenu
-          onRename={onRename}
+          onFileRename={onFileRename}
+          onDirRename={onDirRename}
           resolveFileUrl={currentWorkspace.resolveFileUrl}
           fileTree={fileTreeDir.children}
           depth={0}
