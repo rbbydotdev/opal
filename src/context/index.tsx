@@ -148,6 +148,7 @@ export function withCurrentWorkspace<
     fileTreeDir: TreeDir;
     workspaceRoute: WorkspaceRouteType;
     isIndexed: boolean;
+    flatTree: string[];
     firstFile: TreeFile | null;
   }
 >(Component: React.ComponentType<T>) {

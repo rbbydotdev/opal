@@ -230,6 +230,8 @@ export abstract class Disk extends DiskDAO {
       return NOCHANGE;
     } catch (_e) {}
 
+    console.log({ oldPath, fullPath });
+
     await this.fs.promises.rename(oldPath, fullPath);
     await this.fileTree.forceIndex();
 

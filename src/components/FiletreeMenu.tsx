@@ -1,8 +1,8 @@
 import { TreeDir } from "@/clientdb/filetree";
-import { EditableLink } from "@/components/EditableLink";
+import { EditableDir } from "@/components/EditableDir";
+import { EditableFile } from "@/components/EditableFile";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { ChevronDown, ChevronRight } from "lucide-react";
 
 export function FileTreeMenu({
   fileTree,
@@ -10,7 +10,8 @@ export function FileTreeMenu({
   depth = 0,
   expand,
   currentFile,
-  onRename,
+  onDirRename,
+  onFileRename: onFileRename,
   expanded,
 }: {
   resolveFileUrl: (path: string) => string;
@@ -18,7 +19,8 @@ export function FileTreeMenu({
   expanded: { [path: string]: boolean };
   currentFile: string | null;
   fileTree: TreeDir["children"];
-  onRename: (filePath: string, newBaseName: string) => Promise<string>;
+  onDirRename: (dirPath: string, newBaseName: string) => Promise<string> | string;
+  onFileRename: (filePath: string, newBaseName: string) => Promise<string> | string;
   depth?: number;
 }) {
   return (
@@ -34,24 +36,27 @@ export function FileTreeMenu({
             <CollapsibleTrigger asChild>
               <SidebarMenuButton asChild>
                 {file.type === "dir" ? (
-                  <span className="group cursor-pointer">
-                    <span className="inline-flex" style={{ marginLeft: depth * 1 + "rem" }}>
-                      <span className="mr-2">
-                        <ChevronDown size={18} className="group-data-[state=closed]:hidden" />
-                        <ChevronRight size={18} className="group-data-[state=open]:hidden" />
-                      </span>
-                      <span>{file.name}</span>
-                    </span>
-                  </span>
+                  <EditableDir depth={depth} onRename={(newBasename) => onDirRename(file.path, newBasename)}>
+                    {file.name}
+                  </EditableDir>
                 ) : (
-                  <EditableLink
+                  // <span className="group cursor-pointer">
+                  //   <span className="inline-flex" style={{ marginLeft: depth * 1 + "rem" }}>
+                  //     <span className="mr-2">
+                  //       <ChevronDown size={18} className="group-data-[state=closed]:hidden" />
+                  //       <ChevronRight size={18} className="group-data-[state=open]:hidden" />
+                  //     </span>
+                  //     <span>{file.name}</span>
+                  //   </span>
+                  // </span>
+                  <EditableFile
                     href={resolveFileUrl(file.path)}
                     isSelected={currentFile === file.path}
                     depth={depth}
-                    onRename={(newBasename) => onRename(file.path, newBasename)}
+                    onRename={(newBasename) => onFileRename(file.path, newBasename)}
                   >
                     {file.name}
-                  </EditableLink>
+                  </EditableFile>
                 )}
               </SidebarMenuButton>
             </CollapsibleTrigger>
@@ -59,7 +64,7 @@ export function FileTreeMenu({
               {file.type === "dir" ? (
                 <FileTreeMenu
                   expand={expand}
-                  onRename={onRename}
+                  onFileRename={onFileRename}
                   fileTree={file.children}
                   depth={depth + 1}
                   currentFile={currentFile}

@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { ChannelEmittery } from "../../lib/channel";
+import { Channel } from "../../lib/channel";
 
 const channelName = "counter-channel"; // Shared channel name for all istances
-const emitter = new ChannelEmittery<{ increment: void; decrement: void }>(channelName);
+const emitter = new Channel<{ increment: void; decrement: void }>(channelName);
 export const Component: React.FC = () => {
   const [count, setCount] = useState<number>(0);
 
@@ -18,7 +18,7 @@ export const Component: React.FC = () => {
     return () => {
       emitter.off("increment", incrementListener);
       emitter.off("decrement", decrementListener);
-      emitter.closeChannel();
+      // emitter.closeChannel();
     };
   }, []);
 

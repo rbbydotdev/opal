@@ -1,11 +1,12 @@
 "use client";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { toPromise } from "@/lib/toPromise";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-export const EditableLink = ({
+export const EditableFile = ({
   children,
   depth,
   isSelected,
@@ -15,7 +16,7 @@ export const EditableLink = ({
   href: string;
   children: string;
   isSelected: boolean;
-  onRename: (newName: string) => Promise<string>;
+  onRename: (newName: string) => Promise<string> | string;
   depth: number;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -38,50 +39,56 @@ export const EditableLink = ({
     }
   }, [isEditing]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setLinkText(children);
-      setIsEditing(false);
-      linkRef.current?.focus();
-    }
-    if (e.key === "Enter") {
-      if (isEditing) {
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setLinkText(children);
         setIsEditing(false);
-        onRename(linkText).then((newPath) => {
-          setLinkText(newPath);
+        linkRef.current?.focus();
+      }
+      if (e.key === "Enter") {
+        if (isEditing) {
+          setIsEditing(false);
+          toPromise(onRename)(linkText).then((newPath) => {
+            setLinkText(newPath);
+          });
           linkRef.current?.focus();
-        });
-      } else {
-        setIsEditing(true);
+        } else {
+          setIsEditing(true);
+        }
+      } else if (e.key === " ") {
+        if (!isEditing) {
+          e.preventDefault();
+          linkRef.current?.click();
+        }
       }
-    } else if (e.key === " ") {
-      if (!isEditing) {
-        e.preventDefault();
-        linkRef.current?.click();
-      }
-    }
-  };
+    },
+    [children, isEditing, linkText, onRename]
+  );
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     if (isEditing) {
       setIsEditing(false);
       //reset to original text
       setLinkText(children);
     }
-  };
+  }, [children, isEditing]);
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    linkRef.current?.focus();
-    if (pathname === props.href) {
-      e.preventDefault();
-      return;
-    }
-    //convert props.href to string
-    setInbound(props.href);
-  };
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      linkRef.current?.focus();
+      if (pathname === props.href) {
+        e.preventDefault();
+        return;
+      }
+      //convert props.href to string
+      setInbound(props.href);
+    },
+    [pathname, props.href, setInbound]
+  );
 
   return (
-    <div>
+    <div className="select-none">
       {!isEditing ? (
         <Link
           {...props}
@@ -119,9 +126,7 @@ export const EditableLink = ({
 export function File({ selected = false, children }: { selected?: boolean; children: React.ReactNode }) {
   return (
     <span
-      className={`items-center flex gap-2 ${
-        selected ? "before:content-[attr(data-star)] before:text-purple-700 " : ""
-      }`}
+      className={`items-center flex gap-2 ${selected ? "before:content-[attr(data-star)] before:text-accent2 " : ""}`}
       data-star="✦"
     >
       {children}
