@@ -67,7 +67,10 @@ function useWorkspaceRoute() {
     if (!pathname) return;
     const { workspaceId, filePath } = Workspace.parseWorkspacePath(pathname);
     if (workspaceId && workspaceId !== "new") {
-      setRouteWorkspaceInfo({ id: workspaceId ?? null, path: filePath ?? null });
+      setRouteWorkspaceInfo({
+        id: workspaceId ?? null,
+        path: filePath ? new AbsPath(decodeURIComponent(filePath.str)) : null,
+      });
     }
   }, [pathname]);
   return workspaceRoute;

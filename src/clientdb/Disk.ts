@@ -202,6 +202,10 @@ export abstract class Disk extends DiskDAO {
       await this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
       console.debug("remote write");
     });
+    this.remote.on(DiskRemoteEvents.INDEX, async () => {
+      await this.forceIndex();
+      this.local.emit(DiskLocalEvents.INDEX);
+    });
   }
 
   static defaultDiskType: DiskType = "IndexedDbDisk";
@@ -216,14 +220,14 @@ export abstract class Disk extends DiskDAO {
     return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
   }
 
-  async mkdirRecursive(filePath: string) {
-    const segments = path.dirname(filePath).split("/").slice(1);
+  async mkdirRecursive(filePath: AbsPath) {
+    const segments = filePath.dirname().split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
       try {
         await this.fs.promises.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
       } catch (err) {
         if (errorCode(err).code !== "EEXIST") {
-          console.error(`Error creating directory ${path.dirname(filePath)}:`, err);
+          console.error(`Error creating directory ${path.dirname(filePath.str)}:`, err);
         }
       }
     }
@@ -297,14 +301,42 @@ export abstract class Disk extends DiskDAO {
     return CHANGE;
   }
 
-  async writeFileRecursive(filePath: string, content: string) {
+  async addDir(fullPath: AbsPath) {
+    while (await this.pathExists(fullPath)) {
+      fullPath = fullPath.inc();
+    }
+    await this.mkdirRecursive(fullPath);
+    await this.forceIndex();
+    await this.local.emit(DiskLocalEvents.INDEX);
+    await this.remote.emit(DiskLocalEvents.INDEX);
+    return fullPath;
+  }
+  async addFile(fullPath: AbsPath, content: string) {
+    while (await this.pathExists(fullPath)) {
+      fullPath = fullPath.inc();
+    }
+    await this.writeFileRecursive(fullPath, content);
+    await this.forceIndex();
+    await this.local.emit(DiskLocalEvents.INDEX);
+    await this.remote.emit(DiskLocalEvents.INDEX);
+    return fullPath;
+  }
+  async writeFileRecursive(filePath: AbsPath, content: string) {
     await this.mkdirRecursive(filePath);
     try {
-      this.fs.promises.writeFile(filePath, content, { encoding: "utf8", mode: 0o777 });
+      this.fs.promises.writeFile(filePath.str, content, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error writing file ${filePath}:`, err);
       }
+    }
+  }
+  async pathExists(filePath: AbsPath) {
+    try {
+      await this.fs.promises.stat(filePath.str);
+      return true;
+    } catch (_e) {
+      return false;
     }
   }
   async writeFile(filePath: AbsPath, contents: string) {

@@ -4,7 +4,28 @@ import path from "path";
 const AbsPathBrand = Symbol("AbsPath");
 const RelPathBrand = Symbol("RelPath");
 
-export class AbsPath extends String {
+export class BasePath extends String {
+  constructor(filePath: string) {
+    super(filePath);
+  }
+  get str() {
+    return this.toString();
+  }
+
+  inc() {
+    const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;
+    const match = this.toString().match(regex);
+
+    if (match) {
+      const [, prefix, number, suffix] = match;
+      const incrementedNumber = number ? parseInt(number, 10) + 1 : 1;
+      return new BasePath(`${prefix}${incrementedNumber}${suffix}`);
+    } else {
+      return new BasePath(`${this.toString()}-1`);
+    }
+  }
+}
+export class AbsPath extends BasePath {
   // Use the unique symbol as a brand
   //@ts-ignore
   private [AbsPathBrand]: void;
@@ -14,9 +35,6 @@ export class AbsPath extends String {
   static New(path: string) {
     return new AbsPath(path);
   }
-  get str() {
-    return this.toString();
-  }
   join(...paths: Array<string | RelPath>) {
     return AbsPath.New(this.path + "/" + paths.map((p) => new RelPath(p.toString()).str).join("/"));
   }
@@ -25,6 +43,10 @@ export class AbsPath extends String {
   }
   basename() {
     return new RelPath(path.basename(this.path));
+  }
+
+  inc() {
+    return new AbsPath(super.inc().toString());
   }
 
   constructor(abspath: string) {
@@ -38,7 +60,7 @@ export class AbsPath extends String {
   }
 }
 
-export class RelPath extends String {
+export class RelPath extends BasePath {
   // Use the unique symbol as a brand
 
   //@ts-expect-error
@@ -46,14 +68,14 @@ export class RelPath extends String {
 
   public readonly path: string;
 
-  get str() {
-    return this.toString();
-  }
   static New(path: string) {
     return new RelPath(path);
   }
   join(...paths: Array<string | RelPath>) {
     return RelPath.New(this.path + "/" + paths.map((p) => new RelPath(p.toString()).str).join("/"));
+  }
+  inc() {
+    return new RelPath(super.inc().toString());
   }
 
   dirname() {
