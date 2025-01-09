@@ -80,13 +80,13 @@ export const EditableDir = ({
           <ChevronRight size={18} className="group-data-[state=open]:hidden" />
         </span>
         {!isEditing ? (
-          <span onDoubleClick={() => setIsEditing(true)}>{dirName}</span>
+          <span onDoubleClick={() => setIsEditing(true)}>{dirName.basename()}</span>
         ) : (
           <input
             ref={inputRef}
             className="bg-transparent outline-none border-b border-dashed border-black"
             type="text"
-            value={dirName.str}
+            value={dirName.basename().str}
             onChange={(e) => setDirName(fullPath.dirname().join(e.target.value))}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}

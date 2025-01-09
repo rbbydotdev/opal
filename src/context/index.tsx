@@ -64,6 +64,7 @@ function useWorkspaceRoute() {
     path: null,
   });
   useEffect(() => {
+    if (!pathname) return;
     const { workspaceId, filePath } = Workspace.parseWorkspacePath(pathname);
     if (workspaceId && workspaceId !== "new") {
       setRouteWorkspaceInfo({ id: workspaceId ?? null, path: filePath ?? null });
@@ -107,7 +108,7 @@ export function useWorkspaceFromRoute() {
   const workspaceRoute = useWorkspaceRoute();
 
   useEffect(() => {
-    if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new") {
+    if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new" || !pathname) {
       return;
     }
     const ws = Workspace.fetchFromRoute(pathname).then((ws) => {
