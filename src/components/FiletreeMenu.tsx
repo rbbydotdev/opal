@@ -40,15 +40,6 @@ export function FileTreeMenu({
                     {file.name}
                   </EditableDir>
                 ) : (
-                  // <span className="group cursor-pointer">
-                  //   <span className="inline-flex" style={{ marginLeft: depth * 1 + "rem" }}>
-                  //     <span className="mr-2">
-                  //       <ChevronDown size={18} className="group-data-[state=closed]:hidden" />
-                  //       <ChevronRight size={18} className="group-data-[state=open]:hidden" />
-                  //     </span>
-                  //     <span>{file.name}</span>
-                  //   </span>
-                  // </span>
                   <EditableFile
                     href={resolveFileUrl(file.path)}
                     isSelected={currentFile === file.path}
@@ -65,6 +56,7 @@ export function FileTreeMenu({
                 <FileTreeMenu
                   expand={expand}
                   onFileRename={onFileRename}
+                  onDirRename={onDirRename}
                   fileTree={file.children}
                   depth={depth + 1}
                   currentFile={currentFile}

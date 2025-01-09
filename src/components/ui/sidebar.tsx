@@ -15,8 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { cn } from "@/lib/utils";
 
-const SIDEBAR_COOKIE_NAME = "sidebar:state";
-// const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+const SIDEBAR_STORAGE_NAME = "sidebar:state";
 const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
@@ -43,7 +42,7 @@ function useSidebar() {
   return context;
 }
 
-export function useSidebarState(sidebarId = SIDEBAR_COOKIE_NAME) {
+export function useSidebarState(sidebarId = SIDEBAR_STORAGE_NAME) {
   return useLocalStorage(sidebarId, true);
 }
 

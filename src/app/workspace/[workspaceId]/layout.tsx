@@ -5,6 +5,9 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import React from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  /*
+    
+  */
   return (
     <div className="w-full flex flex-col">
       <div className="w-full h-8 flex-shrink-0 flex justify-start pl-2 items-center bg-slate-900 text-white font-mono uppercase">

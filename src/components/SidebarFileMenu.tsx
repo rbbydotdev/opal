@@ -7,8 +7,8 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/componen
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { CopyMinus, CopyPlus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { CopyMinus, FilePlus, FolderPlus } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
 function SidebarFileMenuInternal({
@@ -27,23 +27,7 @@ function SidebarFileMenuInternal({
   firstFile: TreeFile | null;
   isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const router = useRouter();
-  //hoist this logic up?
-  const onFileRename = async (filePath: string, newBasename: string) => {
-    const { newPath, newName } = await currentWorkspace.renameFile(filePath, newBasename);
-    if (workspaceRoute.path === filePath) {
-      router.push(currentWorkspace.resolveFileUrl(newPath));
-    }
-    return newName;
-  };
-
-  const onDirRename = async (filePath: string, newBasename: string) => {
-    const { newPath, newName } = await currentWorkspace.renameFile(filePath, newBasename);
-    if (workspaceRoute.path === filePath) {
-      router.push(currentWorkspace.resolveFileUrl(newPath));
-    }
-    return newName;
-  };
+  const { onFileRename, onDirRename } = useFileMgmt(currentWorkspace, workspaceRoute);
 
   const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(
     flatTree,
@@ -53,10 +37,40 @@ function SidebarFileMenuInternal({
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
-      <SidebarGroupLabel className="flex justify-between">
-        Files
+      <SidebarGroupLabel className="flex justify-end">
+        {/* Files */}
         <div>
-          <Tooltip>
+          <Tooltip delayDuration={3000}>
+            <TooltipTrigger asChild>
+              <Button
+                onDoubleClick={() => setExpandAll(true)}
+                onClick={() => setExpandAll(false)}
+                className="p-1 m-0 h-fit"
+                variant="ghost"
+              >
+                <FilePlus />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" align="center">
+              New File
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip delayDuration={3000}>
+            <TooltipTrigger asChild>
+              <Button
+                onDoubleClick={() => setExpandAll(true)}
+                onClick={() => setExpandAll(false)}
+                className="p-1 m-0 h-fit"
+                variant="ghost"
+              >
+                <FolderPlus />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" align="center">
+              New Folder
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
               <Button
                 onDoubleClick={() => setExpandAll(true)}
@@ -71,7 +85,7 @@ function SidebarFileMenuInternal({
               Collapse All
             </TooltipContent>
           </Tooltip>
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Button onClick={() => setExpandAll(true)} className="p-1 m-0 h-fit" variant="ghost">
                 <CopyPlus />
@@ -80,7 +94,7 @@ function SidebarFileMenuInternal({
             <TooltipContent side="left" align="center">
               Expand All
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
@@ -103,3 +117,23 @@ const SidebarFileMenuWithWorkspace = withCurrentWorkspace(SidebarFileMenuInterna
 export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>) => {
   return <SidebarFileMenuWithWorkspace {...props} />;
 };
+function useFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const onFileRename = async (filePath: string, newBasename: string) => {
+    const { newPath, newName, oldPath } = await currentWorkspace.renameFile(filePath, newBasename);
+    if (workspaceRoute.path === filePath) {
+      router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+    }
+    return newName;
+  };
+
+  const onDirRename = async (filePath: string, newBasename: string) => {
+    const { newPath, newName, oldPath } = await currentWorkspace.renameDir(filePath, newBasename);
+    if (workspaceRoute.path?.startsWith(filePath) && workspaceRoute.path) {
+      router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+    }
+    return newName;
+  };
+  return { onFileRename, onDirRename };
+}
