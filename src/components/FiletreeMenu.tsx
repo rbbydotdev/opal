@@ -44,17 +44,20 @@ export function FileTreeMenu({
     const draggedData = event.dataTransfer.getData("application/json");
     try {
       //on dir rename if dir is dragged into child return
-      const { path: draggedPath, type: draggedType } = JSON.parse(draggedData) as TreeNode;
+      const { path: draggedPath, type: draggedType } = new TreeNode(JSON.parse(draggedData) as TreeNode);
       if (draggedPath && draggedPath !== targetNode.path) {
         console.log(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
+        const newPath =
+          targetNode.type === "dir"
+            ? targetNode.path.join(draggedPath.path)
+            : targetNode.dirname.join(draggedPath.basename());
+
         if (draggedType === "dir") {
-          console.log(`onDirRename(${draggedPath}, ${targetNode.path})`);
-          // onDirRename(draggedItemPath, targetNode);
+          // console.log(`onDirRename(${draggedPath}, ${newPath})`);
+          onDirRename(draggedPath, newPath);
         } else if (draggedType === "file") {
-          console.log(
-            `onFileRename(${draggedPath}, ${targetNode.type === "file" ? targetNode.dirname : targetNode.path})`
-          );
-          // onFileRename(draggedItemPath, targetNode);
+          // console.log(`onFileRename(${draggedPath}, ${newPath})`);
+          onFileRename(draggedPath, newPath);
         } else {
           console.error(`Drop: Invalid type ${draggedType}`);
         }
@@ -117,7 +120,7 @@ export function FileTreeMenu({
                   expand={expand}
                   onFileRename={onFileRename}
                   onDirRename={onDirRename}
-                  fileTree={file.children}
+                  fileTree={(file as TreeDir).children}
                   depth={depth + 1}
                   currentFile={currentFile}
                   expanded={expanded}

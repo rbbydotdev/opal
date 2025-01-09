@@ -2,43 +2,119 @@ import { FileSystem } from "@/clientdb/Disk";
 import { AbsPath, absPath, relPath, RelPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 
-export type TreeNode = TreeDir | TreeFile;
+export class TreeNode {
+  name: RelPath;
+  type: "dir" | "file";
+  dirname: AbsPath;
+  basename: RelPath;
+  path: AbsPath;
+  depth: number;
+
+  constructor({
+    name,
+    type,
+    dirname,
+    basename,
+    path,
+    depth,
+  }: {
+    name: RelPath;
+    type: "dir" | "file";
+    dirname: AbsPath;
+    basename: RelPath;
+    path: AbsPath;
+    depth: number;
+  }) {
+    this.name = typeof name === "string" ? relPath(name) : name;
+    this.type = type;
+    this.dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
+    this.basename = typeof basename === "string" ? relPath(basename) : basename;
+    this.path = typeof path === "string" ? absPath(path) : path;
+    this.depth = depth;
+  }
+
+  toJSON(): {
+    name: string;
+    type: "dir" | "file";
+    dirname: string;
+    basename: string;
+    path: string;
+    depth: number;
+  } {
+    return {
+      name: this.name.str,
+      type: this.type,
+      dirname: this.dirname.str,
+      basename: this.basename.str,
+      path: this.path.str,
+      depth: this.depth,
+    };
+  }
+}
+
+export class TreeDir extends TreeNode {
+  children: Array<TreeNode>;
+
+  constructor({
+    name,
+    dirname,
+    basename,
+    path,
+    depth,
+    children = [],
+  }: {
+    name: RelPath;
+    dirname: AbsPath;
+    basename: RelPath;
+    path: AbsPath;
+    depth: number;
+    children?: Array<TreeNode>;
+  }) {
+    super({ name, type: "dir", dirname, basename, path, depth });
+    this.children = children;
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      children: this.children.map((child) => child.toJSON()),
+    };
+  }
+}
+
+export class TreeDirRoot extends TreeDir {
+  __root: boolean;
+
+  constructor(
+    name: RelPath,
+    dirname: AbsPath,
+    basename: RelPath,
+    path: AbsPath,
+    depth: number,
+    children: Array<TreeNode> = []
+  ) {
+    super({ name, dirname, basename, path, depth, children });
+    this.__root = true;
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      __root: this.__root,
+    };
+  }
+}
+
+export class TreeFile extends TreeNode {
+  constructor(name: RelPath, dirname: AbsPath, basename: RelPath, path: AbsPath, depth: number) {
+    super({ name, type: "file", dirname, basename, path, depth });
+  }
+}
 
 export type TreeList = Array<string>;
 
-export type TreeDir = {
-  children: Array<TreeNode>;
-  name: RelPath;
-  type: "dir";
-  basename: RelPath;
-  dirname: AbsPath;
-  path: AbsPath;
-  depth: number;
-};
-
-export type TreeDirRoot = TreeDir & { __root: boolean };
-
-export type TreeFile = {
-  name: RelPath;
-  type: "file";
-  dirname: AbsPath;
-  basename: RelPath;
-  path: AbsPath;
-  depth: number;
-};
-
 export class FileTree {
-  static EmptyFileTree = () =>
-    ({
-      __root: true,
-      name: relPath("root"),
-      path: absPath("/"),
-      dirname: absPath("/"),
-      basename: relPath("root"),
-      type: "dir",
-      children: [],
-      depth: 0,
-    } satisfies TreeDirRoot);
+  static EmptyFileTree = () => new TreeDirRoot(relPath("root"), absPath("/"), relPath("root"), absPath("/"), 0, []);
 
   initialIndex = false;
   root: TreeDir = FileTree.EmptyFileTree();
@@ -109,30 +185,30 @@ export class FileTree {
         entries.map(async (entry) => {
           const fullPath = dir.join(entry.toString());
           const stat = await this.fs.promises.stat(fullPath.str);
-          let nextParent = null;
+          let nextParent: TreeNode[] | undefined = undefined;
           let treeEntry: TreeDir | TreeFile | string = "";
 
           if (stat.isDirectory()) {
-            treeEntry = {
+            treeEntry = new TreeDir({
               name: relPath(entry.toString()),
-              depth,
-              type: "dir",
-              path: fullPath,
-              children: [],
               dirname: fullPath.dirname(),
               basename: fullPath.basename(),
-            };
-            nextParent = treeEntry.children;
+              path: fullPath,
+              depth: depth,
+              children: [],
+            });
+            if (treeEntry instanceof TreeDir) {
+              nextParent = treeEntry.children;
+            }
             await this.recurseTree(fullPath, nextParent, depth + 1, haltOnError);
           } else {
-            treeEntry = {
-              name: relPath(entry.toString()),
-              depth,
-              type: "file",
-              path: fullPath,
-              dirname: fullPath.dirname(),
-              basename: fullPath.basename(),
-            };
+            treeEntry = new TreeFile(
+              relPath(entry.toString()),
+              fullPath.dirname(),
+              fullPath.basename(),
+              fullPath,
+              depth
+            );
           }
           parent.push(treeEntry);
         })
