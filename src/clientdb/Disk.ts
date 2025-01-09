@@ -17,13 +17,11 @@ export type FileSystem = InstanceType<typeof LightningFs> | ReturnType<typeof me
 export class DiskRecord {
   guid!: string;
   type!: DiskType;
-  // indexId!: string;
 }
 
 export class DiskDAO implements DiskRecord {
   guid!: string;
   type!: DiskType;
-  // indexId!: string;
   static guid = () => "disk:" + nanoid();
 
   constructor(disk: DiskRecord) {
@@ -55,7 +53,13 @@ export class DiskDAO implements DiskRecord {
   }
 }
 
-export type RenameFileType = { oldPath: string; oldName: string; newPath: string; newName: string };
+export type RenameFileType = {
+  oldPath: string;
+  oldName: string;
+  newPath: string;
+  newName: string;
+  type: "file" | "dir";
+};
 
 class DiskRemoteEvents extends Channel<{
   [DiskRemoteEvents.RENAME]: RenameFileType;
@@ -76,19 +80,19 @@ class DiskLocalEvents extends Emittery<{
   static INDEX = "index" as const;
   static RENAME = "rename" as const;
 }
-
-// export abstract class Disk implements DiskRecord {
 export abstract class Disk extends DiskDAO {
-  // export abstract class Disk implements DiskRecord {
   indexId: string = "";
-  // static REMOTE_INDEX = "remoteindex";
 
   remote: DiskRemoteEvents;
   local = new DiskLocalEvents();
 
   async initializeIndex() {
-    await this.index();
-    await this.local.emit(DiskLocalEvents.INDEX);
+    try {
+      await this.index();
+      await this.local.emit(DiskLocalEvents.INDEX);
+    } catch (e) {
+      console.warn("Error initializing index", e);
+    }
     return;
   }
 
@@ -129,31 +133,27 @@ export abstract class Disk extends DiskDAO {
   fileWriteListener(callback: () => void) {
     return this.local.on(DiskLocalEvents.WRITE, callback);
   }
-  // remoteFileWriteListener(callback: () => void) {
-  //   return this.remote.on(DiskRemoteEvents.WRITE, () => {});
-  // }
 
   constructor(public readonly guid: string, public fs: FileSystem, public fileTree: FileTree, type: DiskType) {
     super({ guid, type });
     this.remote = new DiskRemoteEvents(this.guid);
   }
-  async init() {
-    console.debug("disk init");
+  init() {
     this.setupRemoteListeners();
-    await this.initializeIndex();
-    return this;
+    this.initializeIndex();
   }
 
   async setupRemoteListeners() {
+    this.remote.init();
     this.remote.on(DiskRemoteEvents.RENAME, async (data) => {
       await this.local.emit(DiskRemoteEvents.RENAME, data);
       await this.forceIndex();
-      this.local.emit(DiskLocalEvents.INDEX);
+      await this.local.emit(DiskLocalEvents.INDEX);
       console.debug("remote rename", JSON.stringify(data, null, 4));
     });
     this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
       const contents = (await this.fs.promises.readFile(filePath)).toString();
-      this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
+      await this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
       console.debug("remote write");
     });
   }
@@ -209,10 +209,14 @@ export abstract class Disk extends DiskDAO {
     });
   }
 
-  async renameFile(oldPath: string, newBaseName: string): Promise<RenameFileType> {
+  async renameDir(oldPath: string, newBaseName: string): Promise<RenameFileType> {
+    return this.renameFile(oldPath, newBaseName, "dir");
+  }
+  async renameFile(oldPath: string, newBaseName: string, type: "file" | "dir" = "file"): Promise<RenameFileType> {
     const cleanName = newBaseName.replace(/\//g, ":");
 
     const NOCHANGE: RenameFileType = {
+      type,
       newPath: oldPath,
       newName: path.basename(oldPath),
       oldPath,
@@ -230,27 +234,31 @@ export abstract class Disk extends DiskDAO {
       return NOCHANGE;
     } catch (_e) {}
 
-    console.log({ oldPath, fullPath });
-
-    await this.fs.promises.rename(oldPath, fullPath);
+    try {
+      await this.fs.promises.rename(oldPath, fullPath);
+    } catch (_e) {
+      //throws an error wtf !:?!?!
+    }
     await this.fileTree.forceIndex();
 
     const CHANGE: RenameFileType = {
+      type,
       newPath: fullPath,
       newName: path.basename(fullPath),
       oldName: path.basename(oldPath),
       oldPath,
     };
 
-    await this.remote.emit(DiskRemoteEvents.RENAME, CHANGE);
+    this.remote.emit(DiskRemoteEvents.RENAME, CHANGE);
     await this.local.emit(DiskLocalEvents.RENAME, CHANGE);
+    await this.local.emit(DiskLocalEvents.INDEX);
     return CHANGE;
   }
 
   async writeFileRecursive(filePath: string, content: string) {
     await this.mkdirRecursive(filePath);
     try {
-      await this.fs.promises.writeFile(filePath, content, { encoding: "utf8", mode: 0o777 });
+      this.fs.promises.writeFile(filePath, content, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error writing file ${filePath}:`, err);
@@ -280,6 +288,7 @@ export abstract class Disk extends DiskDAO {
 
   teardown() {
     this.remote.tearDown();
+    this.local.clearListeners();
   }
 
   get promises() {
@@ -306,25 +315,3 @@ export class MemDisk extends Disk {
     super(guid, fs, new FileTree(fs), MemDisk.type);
   }
 }
-
-// async initIndex() {
-//   await this.index();
-//   return;
-//   const indexCacheKey = `${this.guid}/indexCache`;
-//   const cacheIndex = localStorage.getItem(indexCacheKey);
-//   if (cacheIndex) {
-//     try {
-//       const tree = JSON.parse(cacheIndex);
-//       if ((tree as TreeDirRoot).__root) {
-//         await this.index({ tree: tree as TreeDirRoot });
-//       }
-//     } catch (_e) {
-//       localStorage.removeItem(indexCacheKey);
-//     }
-//   } else {
-//     await this.index();
-//   }
-//   this.onLatestIndex(() => {
-//     localStorage.setItem(indexCacheKey, JSON.stringify(this.fileTree.root));
-//   });
-// }

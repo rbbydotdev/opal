@@ -5,23 +5,28 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 
-export const WorkspaceContext = React.createContext<{
-  fileTreeDir: TreeDir | null;
-  workspaces: WorkspaceDAO[];
-  isIndexed: boolean;
-  firstFile: TreeFile | null;
-  flatTree: string[];
-  currentWorkspace: Workspace | null;
-  workspaceRoute: { id: string | null; path: string | null };
-}>({
-  fileTreeDir: null,
-  firstFile: null,
-  workspaces: [],
-  flatTree: [],
+const defaultWorkspaceContext = {
+  fileTreeDir: null as TreeDir | null,
+  firstFile: null as TreeFile | null,
+  workspaces: [] as WorkspaceDAO[],
+  flatTree: [] as string[],
   isIndexed: false,
-  currentWorkspace: null,
-  workspaceRoute: { id: null, path: null },
-});
+  currentWorkspace: null as Workspace | null,
+  workspaceRoute: { id: null, path: null } as WorkspaceRouteType,
+};
+
+type DeepNonNullable<T extends object, K extends keyof T = never> = {
+  [P in keyof T]: P extends K
+    ? T[P]
+    : NonNullable<T[P]> extends T
+    ? DeepNonNullable<NonNullable<T[P]>, K>
+    : NonNullable<T[P]>;
+};
+type NonNullWorkspaceContext = DeepNonNullable<typeof defaultWorkspaceContext, "firstFile">;
+
+export type WorkspaceContextType = typeof defaultWorkspaceContext;
+
+export const WorkspaceContext = React.createContext<WorkspaceContextType>(defaultWorkspaceContext);
 
 export type WorkspaceRouteType = { id: string | null; path: string | null };
 
@@ -58,11 +63,9 @@ function useWorkspaceRoute() {
     path: null,
   });
   useEffect(() => {
-    const match = pathname.match(/^\/workspace\/([^/]+)(\/.*)?$/);
-    if (match) {
-      const [_, wsid, filePath] = match;
-      if (wsid === "new") return;
-      setRouteWorkspaceInfo({ id: wsid ?? null, path: filePath ?? null });
+    const { workspaceId, filePath } = Workspace.parseWorkspacePath(pathname);
+    if (workspaceId && workspaceId !== "new") {
+      setRouteWorkspaceInfo({ id: workspaceId ?? null, path: filePath ?? null });
     }
   }, [pathname]);
   return workspaceRoute;
@@ -95,34 +98,41 @@ export function useLiveWorkspaces() {
   return workspaces;
 }
 
+//There can be only one!
 export function useWorkspaceFromRoute() {
   const pathname = usePathname();
   const router = useRouter();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  const workspaceRoute = useWorkspaceRoute();
+
   useEffect(() => {
-    let tearDownFn: (() => void) | null = null;
-    const setupWorkspace = async () => {
-      if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new") {
-        return;
-      }
-      //creates workspace from route
-      const currentWorkspace = (await Workspace.fromRoute(pathname)).init();
-
-      //move into hook? or seperate place?
-      currentWorkspace.disk.renameListener(({ newPath, oldPath }) => {
-        if (pathname === currentWorkspace.resolveFileUrl(oldPath)) {
-          router.push(currentWorkspace.resolveFileUrl(newPath));
-        }
-      });
-
-      setCurrentWorkspace(currentWorkspace);
-      tearDownFn = currentWorkspace.teardown;
-    };
-    setupWorkspace();
+    if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new") {
+      return;
+    }
+    const ws = Workspace.fetchFromRoute(pathname).then((ws) => {
+      setCurrentWorkspace(ws);
+      ws.init();
+      return ws;
+    });
     return () => {
-      if (tearDownFn) tearDownFn();
+      ws.then((w) => {
+        w.teardown();
+      });
     };
-  }, [pathname, router, setCurrentWorkspace]);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!currentWorkspace) return;
+    return currentWorkspace.disk.renameListener(({ newPath, oldPath, type }) => {
+      if (
+        (type === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
+        (type === "dir" && workspaceRoute.path?.startsWith(oldPath))
+      ) {
+        router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+      }
+    });
+  }, [currentWorkspace, pathname, router, workspaceRoute.path]);
+
   return currentWorkspace;
 }
 
@@ -142,33 +152,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 };
 
 //Helper to delay rendering of child components until the current workspace is loaded
-export function withCurrentWorkspace<
-  T extends {
-    currentWorkspace: Workspace;
-    fileTreeDir: TreeDir;
-    workspaceRoute: WorkspaceRouteType;
-    isIndexed: boolean;
-    flatTree: string[];
-    firstFile: TreeFile | null;
-  }
->(Component: React.ComponentType<T>) {
-  return function WrappedComponent(
-    props: Omit<T, "isIndexed" | "currentWorkspace" | "flatTree" | "fileTreeDir" | "workspaceRoute" | "firstFile">
-  ) {
-    const { fileTreeDir, currentWorkspace, workspaceRoute, flatTree, isIndexed, firstFile } = useWorkspaceContext();
-    if (!fileTreeDir || !currentWorkspace) return null;
+export function withCurrentWorkspace<T extends NonNullWorkspaceContext>(Component: React.ComponentType<T>) {
+  return function WrappedComponent(props: Omit<T, keyof NonNullWorkspaceContext>) {
+    const context = useWorkspaceContext();
+    if (!context.fileTreeDir || !context.currentWorkspace) return null;
 
-    return (
-      <Component
-        {...(props as T)}
-        workspaceRoute={workspaceRoute}
-        currentWorkspace={currentWorkspace}
-        fileTreeDir={fileTreeDir}
-        isIndexed={isIndexed}
-        firstFile={firstFile}
-        flatTree={flatTree}
-      />
-    );
+    return <Component {...(props as T)} {...context} />;
   };
 }
 

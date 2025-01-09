@@ -2,12 +2,20 @@
 import Emittery, { type Options } from "emittery";
 import { nanoid } from "nanoid";
 
+const ChannelSet = new Set<string>();
+
 export class Channel<EventData = Record<string, unknown>> extends Emittery<EventData> {
   private channel: BroadcastChannel | null = null;
   private contextId: string = nanoid();
 
   constructor(public readonly channelName: string, options?: Options<EventData>) {
     super(options);
+  }
+  init() {
+    if (ChannelSet.has(this.channelName)) {
+      throw new Error("Channel already exists:" + this.channelName);
+    }
+    ChannelSet.add(this.channelName);
     this.createChannel();
   }
 
@@ -43,6 +51,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   }
 
   tearDown() {
+    ChannelSet.delete(this.channelName);
     if (this.channel) {
       this.channel.close();
       this.channel = null;

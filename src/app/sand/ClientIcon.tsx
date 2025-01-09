@@ -3,11 +3,6 @@ import Identicon from "@/components/Identicon";
 
 const RANDS = new Array(999).fill(0).map(() => Math.random().toString());
 export function ClientIcon() {
-  // useEffect(() => {
-  //   setInterval(() => {
-  //     setState(Math.random().toString());
-  //   }, 500);
-  // }, []);
   return (
     <div className="">
       {RANDS.map((rand) => (
