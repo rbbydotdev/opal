@@ -3,7 +3,7 @@ import { FileTree, TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
 import { errorCode } from "@/lib/errors";
-import { absPath, AbsPath, RelPath } from "@/lib/paths";
+import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import Emittery from "emittery";
 import { memfs } from "memfs";
@@ -54,16 +54,61 @@ export class DiskDAO implements DiskRecord {
   }
 }
 
-export type RenameFileType = {
+// export type RenameFileType = {
+//   oldPath: AbsPath;
+//   oldName: RelPath;
+//   newPath: AbsPath;
+//   newName: RelPath;
+//   type: "file" | "dir";
+// };
+
+export type RemoteRenameFileType = {
+  oldPath: string;
+  oldName: string;
+  newPath: string;
+  newName: string;
+  type: "file" | "dir";
+};
+
+export class RenameFileType {
   oldPath: AbsPath;
   oldName: RelPath;
   newPath: AbsPath;
   newName: RelPath;
   type: "file" | "dir";
-};
+
+  constructor({
+    oldPath,
+    oldName,
+    newPath,
+    newName,
+    type,
+  }: {
+    oldPath: string | AbsPath;
+    oldName: string | RelPath;
+    newPath: string | AbsPath;
+    newName: string | RelPath;
+    type: "file" | "dir";
+  }) {
+    this.oldPath = oldPath instanceof AbsPath ? oldPath : absPath(oldPath);
+    this.oldName = oldName instanceof RelPath ? oldName : relPath(oldName);
+    this.newPath = newPath instanceof AbsPath ? newPath : absPath(newPath);
+    this.newName = newName instanceof RelPath ? newName : relPath(newName);
+    this.type = type;
+  }
+  toJSON() {
+    return {
+      oldPath: this.oldPath.str,
+      oldName: this.oldName.str,
+      newPath: this.newPath.str,
+      newName: this.newName.str,
+      type: this.type,
+    };
+  }
+}
 
 class DiskRemoteEvents extends Channel<{
-  [DiskRemoteEvents.RENAME]: RenameFileType;
+  [DiskRemoteEvents.RENAME]: RemoteRenameFileType;
   [DiskRemoteEvents.INDEX]: never;
   [DiskLocalEvents.WRITE]: { filePath: string };
 }> {
@@ -147,7 +192,7 @@ export abstract class Disk extends DiskDAO {
   async setupRemoteListeners() {
     this.remote.init();
     this.remote.on(DiskRemoteEvents.RENAME, async (data) => {
-      await this.local.emit(DiskRemoteEvents.RENAME, data);
+      await this.local.emit(DiskRemoteEvents.RENAME, new RenameFileType(data));
       await this.forceIndex();
       await this.local.emit(DiskLocalEvents.INDEX);
       console.debug("remote rename", JSON.stringify(data, null, 4));
@@ -214,15 +259,15 @@ export abstract class Disk extends DiskDAO {
     return this.renameFile(oldFullPath, newFullPath, "dir");
   }
   async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath, type: "file" | "dir" = "file"): Promise<RenameFileType> {
-    const NOCHANGE: RenameFileType = {
+    const NOCHANGE: RenameFileType = new RenameFileType({
       type,
       newPath: oldFullPath,
       newName: oldFullPath.basename(),
       oldPath: oldFullPath,
       oldName: oldFullPath.basename(),
-    };
+    });
     if (!newFullPath) return NOCHANGE;
-    const cleanFullPath = newFullPath.join(newFullPath.basename().replace(/\//g, ":"));
+    const cleanFullPath = newFullPath.dirname().join(newFullPath.basename().replace(/\//g, ":"));
 
     if (cleanFullPath.str === oldFullPath.str) return NOCHANGE;
 
@@ -238,15 +283,15 @@ export abstract class Disk extends DiskDAO {
     }
     await this.fileTree.forceIndex();
 
-    const CHANGE: RenameFileType = {
+    const CHANGE = new RenameFileType({
       type,
       newPath: cleanFullPath,
       newName: cleanFullPath.basename(),
       oldName: oldFullPath.basename(),
       oldPath: oldFullPath,
-    };
+    });
 
-    this.remote.emit(DiskRemoteEvents.RENAME, CHANGE);
+    this.remote.emit(DiskRemoteEvents.RENAME, CHANGE.toJSON());
     await this.local.emit(DiskLocalEvents.RENAME, CHANGE);
     await this.local.emit(DiskLocalEvents.INDEX);
     return CHANGE;

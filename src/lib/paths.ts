@@ -1,12 +1,12 @@
 import path from "path";
 
 // Define unique symbols for branding
-declare const AbsPathBrand: unique symbol;
-declare const RelPathBrand: unique symbol;
+const AbsPathBrand = Symbol("AbsPath");
+const RelPathBrand = Symbol("RelPath");
 
 export class AbsPath extends String {
   // Use the unique symbol as a brand
-  //@ts-expect-error
+  //@ts-ignore
   private [AbsPathBrand]: void;
 
   public readonly path: string;
@@ -27,9 +27,12 @@ export class AbsPath extends String {
     return new RelPath(path.basename(this.path));
   }
 
-  constructor(path: string) {
-    let p = path.startsWith("/") ? path : "/" + path;
-    p = p.endsWith("/") ? p.slice(0, -1) : p;
+  constructor(abspath: string) {
+    let p = abspath.startsWith("/") ? abspath : "/" + abspath;
+    if (p !== "/") {
+      p = p.replace(/\/+/g, "/"); // Ensure only one slash separates directories
+      p = p.endsWith("/") ? p.slice(0, -1) : p;
+    }
     super(p);
     this.path = p;
   }

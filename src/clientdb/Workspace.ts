@@ -135,7 +135,7 @@ export class Workspace extends WorkspaceDAO {
       return { workspaceId: null, filePath: null };
     }
     const [_, workspaceId, filePath] = match;
-    return { workspaceId, filePath: absPath(filePath) };
+    return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
   }
   //shoulndt this be in the dao?
   static async fetchFromRoute(route: string) {
@@ -160,6 +160,7 @@ export class Workspace extends WorkspaceDAO {
     return ws;
   }
 
+  //  "/drafts/draft1.md/draft1.mddsad/draft1.mddsad"
   replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;

@@ -101,7 +101,7 @@ export function FileTreeMenu({
                 ) : (
                   <EditableFile
                     href={resolveFileUrl(file.path)}
-                    isSelected={currentFile === file.path}
+                    isSelected={currentFile?.str === file.path.str}
                     depth={depth}
                     onRename={(newPath) => onFileRename(file.path, newPath)}
                     fullPath={file.path}
