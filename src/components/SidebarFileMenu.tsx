@@ -56,6 +56,10 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
     const newFilePath = await currentWorkspace.addFile(basePath, relPath("newfile"));
     setEditing(newFilePath.str);
   };
+  const removeFile = async (path: AbsPath) => {
+    await currentWorkspace.removeFile(path);
+  };
+
   const addDir = async () => {
     const basePath = getFocusPath() ?? currentDir ?? absPath("/");
     const newDirPath = await currentWorkspace.addDir(basePath, relPath("newdir"));
@@ -68,7 +72,7 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
     }
     return newPath;
   };
-  return { renameFile, renameDir, addFile, addDir };
+  return { renameFile, renameDir, removeFile, addFile, addDir };
 }
 
 function getFocusPath() {

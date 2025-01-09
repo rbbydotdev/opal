@@ -175,6 +175,9 @@ export class Workspace extends WorkspaceDAO {
   addFile(dirPath: AbsPath, newFileName: RelPath, content = "") {
     return this.disk.addFile(dirPath.join(newFileName), content);
   }
+  removeFile = async (filePath: AbsPath) => {
+    return this.disk.removeFile(filePath);
+  };
 
   renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
     return this.disk.renameFile(oldFullPath, newFullPath);

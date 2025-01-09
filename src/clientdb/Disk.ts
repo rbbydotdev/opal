@@ -311,6 +311,17 @@ export abstract class Disk extends DiskDAO {
     await this.remote.emit(DiskLocalEvents.INDEX);
     return fullPath;
   }
+  async removeFile(filePath: AbsPath) {
+    try {
+      await this.fs.promises.unlink(filePath.str);
+    } catch (err) {
+      console.error(`Error removing file ${filePath}:`, err);
+    }
+    await this.fileTree.forceIndex();
+    await this.local.emit(DiskLocalEvents.INDEX);
+    await this.remote.emit(DiskLocalEvents.INDEX);
+  }
+
   async addFile(fullPath: AbsPath, content: string) {
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
