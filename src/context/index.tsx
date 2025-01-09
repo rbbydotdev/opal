@@ -82,7 +82,7 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
     if (currentWorkspace) {
       return currentWorkspace.watchDisk((fileTreeDir: TreeDir) => {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
-        setFileTree({ ...fileTreeDir });
+        setFileTree(new TreeDir({ ...fileTreeDir }));
         setFirstFile(currentWorkspace.getFirstFile());
         setFlatTree(currentWorkspace.getFlatDirTree());
       });
