@@ -1,26 +1,26 @@
 "use client";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { toPromise } from "@/lib/toPromise";
+import { AbsPath, RelPath, relPath } from "@/lib/paths";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableFile = ({
-  children,
   depth,
   isSelected,
+  fullPath,
   onRename,
   ...props
 }: React.ComponentProps<typeof Link> & {
   href: string;
-  children: string;
+  fullPath: AbsPath;
   isSelected: boolean;
-  onRename: (newName: string) => Promise<string> | string;
+  onRename: (newPath: AbsPath) => Promise<AbsPath>;
   depth: number;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [linkText, setLinkText] = useState(children);
+  const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
   const linkRef = useRef<HTMLAnchorElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [inbound, setInbound] = useLocalStorage<string | null>("EditableLink/inbound", null);
@@ -42,15 +42,15 @@ export const EditableFile = ({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
-        setLinkText(children);
+        setFileName(fullPath.basename());
         setIsEditing(false);
         linkRef.current?.focus();
       }
       if (e.key === "Enter") {
         if (isEditing) {
           setIsEditing(false);
-          toPromise(onRename)(linkText).then((newPath) => {
-            setLinkText(newPath);
+          onRename(fullPath.dirname().join(fileName)).then((newPath) => {
+            setFileName(newPath.basename());
           });
           linkRef.current?.focus();
         } else {
@@ -63,16 +63,16 @@ export const EditableFile = ({
         }
       }
     },
-    [children, isEditing, linkText, onRename]
+    [fullPath, isEditing, onRename, fileName]
   );
 
   const handleBlur = useCallback(() => {
     if (isEditing) {
       setIsEditing(false);
       //reset to original text
-      setLinkText(children);
+      setFileName(fullPath.basename());
     }
-  }, [children, isEditing]);
+  }, [fullPath, isEditing]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -100,7 +100,7 @@ export const EditableFile = ({
         >
           <div style={{ marginLeft: depth + 1 + "rem" }}>
             <File selected={isSelected}>
-              <span className="py-1.5 group-focus:font-bold">{linkText}</span>
+              <span className="py-1.5 group-focus:font-bold">{fileName}</span>
             </File>
           </div>
         </Link>
@@ -111,8 +111,8 @@ export const EditableFile = ({
               ref={inputRef}
               className="bg-transparent py-1.5 outline-none font-bold border-b border-dashed border-black"
               type="text"
-              value={linkText}
-              onChange={(e) => setLinkText(e.target.value)}
+              value={fileName.str}
+              onChange={(e) => setFileName(relPath(e.target.value))}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
             />
