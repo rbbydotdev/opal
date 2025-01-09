@@ -17,6 +17,7 @@ export function FileTreeMenu({
   currentFile,
   onDirRename,
   onFileRename,
+  onFileRemove,
   expanded,
 }: {
   resolveFileUrl: (path: AbsPath) => string;
@@ -26,6 +27,7 @@ export function FileTreeMenu({
   fileTree: TreeDir["children"];
   onDirRename: (dirPath: AbsPath, newFullPath: AbsPath) => Promise<AbsPath>;
   onFileRename: (filePath: AbsPath, newFullPath: AbsPath) => Promise<AbsPath>;
+  onFileRemove: (filePath: AbsPath) => Promise<void>;
   depth?: number;
 }) {
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
@@ -107,6 +109,7 @@ export function FileTreeMenu({
                     onRename={(newPath) => onDirRename(file.path, newPath)}
                     draggable
                     onDragStart={(e) => handleDragStart(e, file)}
+                    onFileRemove={onFileRemove}
                     fullPath={file.path}
                   />
                 ) : (
@@ -114,6 +117,7 @@ export function FileTreeMenu({
                     href={resolveFileUrl(file.path)}
                     isSelected={currentFile?.str === file.path.str}
                     depth={depth}
+                    onFileRemove={onFileRemove}
                     onRename={(newPath) => onFileRename(file.path, newPath)}
                     fullPath={file.path}
                     draggable
@@ -127,6 +131,7 @@ export function FileTreeMenu({
                 <FileTreeMenu
                   expand={expand}
                   onFileRename={onFileRename}
+                  onFileRemove={onFileRemove}
                   onDirRename={onDirRename}
                   fileTree={(file as TreeDir).children}
                   depth={depth + 1}
