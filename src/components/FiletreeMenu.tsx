@@ -46,11 +46,17 @@ export function FileTreeMenu({
       //on dir rename if dir is dragged into child return
       const { path: draggedPath, type: draggedType } = new TreeNode(JSON.parse(draggedData) as TreeNode);
       if (draggedPath && draggedPath !== targetNode.path) {
-        console.log(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
         const newPath =
           targetNode.type === "dir"
             ? targetNode.path.join(draggedPath.path)
             : targetNode.dirname.join(draggedPath.basename());
+
+        if (draggedType === "dir" && newPath.startsWith(draggedPath.str)) {
+          console.log(`Drop: Cannot move ${draggedPath} inside itself or its subdirectory`);
+          return;
+        }
+
+        console.log(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
 
         if (draggedType === "dir") {
           // console.log(`onDirRename(${draggedPath}, ${newPath})`);
