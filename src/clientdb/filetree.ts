@@ -10,6 +10,8 @@ export type TreeDir = {
   children: Array<TreeNode>;
   name: string;
   type: "dir";
+  basename: string;
+  dirname: string;
   path: string;
   depth: number;
 };
@@ -19,6 +21,8 @@ export type TreeDirRoot = TreeDir & { __root: boolean };
 export type TreeFile = {
   name: string;
   type: "file";
+  dirname: string;
+  basename: string;
   path: string;
   depth: number;
 };
@@ -29,6 +33,8 @@ export class FileTree {
       __root: true,
       name: "/",
       path: "/",
+      dirname: "/",
+      basename: "/",
       type: "dir",
       children: [],
       depth: 0,
@@ -107,7 +113,15 @@ export class FileTree {
           let treeEntry: TreeDir | TreeFile | string = "";
 
           if (stat.isDirectory()) {
-            treeEntry = { name: entry.toString(), depth, type: "dir", path: fullPath, children: [] };
+            treeEntry = {
+              name: entry.toString(),
+              depth,
+              type: "dir",
+              path: fullPath,
+              children: [],
+              dirname: absPath(fullPath).dirname(),
+              basename: absPath(fullPath).basename(),
+            };
             nextParent = treeEntry.children;
             await this.recurseTree(fullPath, nextParent, depth + 1, haltOnError);
           } else {
@@ -116,6 +130,8 @@ export class FileTree {
               depth,
               type: "file",
               path: fullPath,
+              dirname: absPath(fullPath).dirname(),
+              basename: absPath(fullPath).basename(),
             };
           }
           parent.push(treeEntry);

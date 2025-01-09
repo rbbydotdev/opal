@@ -3,6 +3,7 @@ import { FileTree, TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
 import { errorCode } from "@/lib/errors";
+import { absPath, AbsPath } from "@/lib/paths";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import Emittery from "emittery";
 import { memfs } from "memfs";
@@ -212,9 +213,7 @@ export abstract class Disk extends DiskDAO {
   async renameDir(oldPath: string, newBaseName: string): Promise<RenameFileType> {
     return this.renameFile(oldPath, newBaseName, "dir");
   }
-  async renameFile(oldPath: string, newBaseName: string, type: "file" | "dir" = "file"): Promise<RenameFileType> {
-    const cleanName = newBaseName.replace(/\//g, ":");
-
+  async renameFile(oldPath: string, newFullPath: AbsPath, type: "file" | "dir" = "file"): Promise<RenameFileType> {
     const NOCHANGE: RenameFileType = {
       type,
       newPath: oldPath,
@@ -222,9 +221,10 @@ export abstract class Disk extends DiskDAO {
       oldPath,
       oldName: path.basename(oldPath),
     };
+    if (!newFullPath) return NOCHANGE;
+    const cleanFullPath = absPath(newFullPath.dirname()).join(newFullPath.basename().replace(/\//g, ":"));
 
-    if (!cleanName) return NOCHANGE;
-    if (cleanName === path.basename(oldPath)) return NOCHANGE;
+    if (cleanFullPath.str === absPath(oldPath).str) return NOCHANGE;
 
     const fullPath = path.join(path.dirname(oldPath), cleanName);
 

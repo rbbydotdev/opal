@@ -112,7 +112,7 @@ export class Workspace extends WorkspaceDAO {
   memid = nanoid();
   static seedFiles: Record<string, string> = {
     "/welcome.md": "# Welcome to your new workspace!",
-    "/home/post1.md": "# Hello World!",
+    "/home/drafts/post1.md": "# Hello World!",
     "/drafts/draft1.md": "# Goodbye World!",
     "/ideas/ideas.md": "# Red Green Blue",
   };

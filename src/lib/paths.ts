@@ -1,3 +1,5 @@
+import path from "path";
+
 export class AbsPath extends String {
   public readonly path: string;
 
@@ -9,6 +11,12 @@ export class AbsPath extends String {
   }
   join(...paths: string[] | RelPath[]) {
     return AbsPath.New(this.path + "/" + paths.map((p) => new RelPath(p.toString()).str).join("/"));
+  }
+  dirname() {
+    return path.dirname(this.path);
+  }
+  basename() {
+    return path.basename(this.path);
   }
 
   constructor(path: string) {
@@ -29,6 +37,13 @@ export class RelPath extends String {
   }
   join(...paths: string[] | RelPath[]) {
     return RelPath.New(this.path + "/" + paths.map((p) => new RelPath(p.toString()).str).join("/"));
+  }
+
+  dirname() {
+    return path.dirname(this.path);
+  }
+  basename() {
+    return path.basename(this.path);
   }
 
   constructor(path: string) {
