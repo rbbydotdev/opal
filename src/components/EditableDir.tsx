@@ -1,4 +1,5 @@
 "use client";
+import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { AbsPath } from "@/lib/paths";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -9,16 +10,20 @@ export const EditableDir = ({
   depth,
   className,
   onRename,
+  onFileRemove,
   fullPath,
   ...props
 }: {
   className?: string;
   depth: number;
   onRename: (name: AbsPath) => Promise<AbsPath>;
+  onFileRemove: (path: AbsPath) => Promise<void>;
   fullPath: AbsPath;
 } & ComponentProps<typeof SidebarMenuButton>) => {
   const dirRef = useRef<HTMLElement>(null);
-  const [isEditing, setIsEditing] = useState(false);
+
+  const { editing, resetEditing, setEditing, cancelEditing } = useFileTreeMenuContext();
+  const isEditing = editing === fullPath.str;
   const [dirName, setDirName] = useState(fullPath);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -37,17 +42,17 @@ export const EditableDir = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       setDirName(fullPath);
-      setIsEditing(false);
+      cancelEditing();
     }
     if (e.key === "Enter") {
       if (isEditing) {
-        setIsEditing(false);
+        resetEditing();
         onRename(dirName).then((newName) => {
           setDirName(newName);
         });
         return e.stopPropagation();
       } else {
-        setIsEditing(true);
+        resetEditing();
       }
     }
     if (e.key === " ") {
@@ -60,7 +65,7 @@ export const EditableDir = ({
 
   const handleBlur = () => {
     if (isEditing) {
-      setIsEditing(false);
+      cancelEditing();
       setDirName(fullPath);
     }
   };
@@ -82,7 +87,7 @@ export const EditableDir = ({
           <ChevronRight size={18} className="group-data-[state=open]:hidden" />
         </span>
         {!isEditing ? (
-          <span onDoubleClick={() => setIsEditing(true)}>{dirName.basename()}</span>
+          <span onDoubleClick={() => setEditing(fullPath.str)}>{dirName.basename()}</span>
         ) : (
           <input
             data-treepath={fullPath.str}

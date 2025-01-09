@@ -15,14 +15,25 @@ import React from "react";
 const FileTreeMenuContext = React.createContext<{
   editing: string | null;
   setEditing: React.Dispatch<React.SetStateAction<string | null>>;
+  editType: "rename" | "new";
+  setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
+  cancelEditing: () => void;
   resetEditing: () => void;
 } | null>(null);
 
 const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [editing, setEditing] = React.useState<string | null>(null);
-  const resetEditing = () => setEditing(null);
+  const [editType, setEditType] = React.useState<"rename" | "new">("rename");
+  const resetEditing = () => {
+    setEditing(null);
+    setEditType("rename");
+  };
+  const cancelEditing = () => {
+    setEditing(null);
+    setEditType("rename");
+  };
   return (
-    <FileTreeMenuContext.Provider value={{ editing, setEditing, resetEditing }}>
+    <FileTreeMenuContext.Provider value={{ editType, setEditType, cancelEditing, editing, setEditing, resetEditing }}>
       {children}
     </FileTreeMenuContext.Provider>
   );
@@ -40,7 +51,7 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
   const router = useRouter();
   const pathname = usePathname();
   const currentDir = workspaceRoute.path?.dirname();
-  const { setEditing } = useFileTreeMenuContext();
+  const { setEditing, setEditType } = useFileTreeMenuContext();
 
   const renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
     const { newPath, oldPath } = await currentWorkspace.renameFile(oldFullPath, newFullPath);
@@ -54,6 +65,7 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
     //try and get active focused file or dir first
     const basePath = getFocusPath() ?? currentDir ?? absPath("/");
     const newFilePath = await currentWorkspace.addFile(basePath, relPath("newfile"));
+    setEditType("new");
     setEditing(newFilePath.str);
   };
   const removeFile = async (path: AbsPath) => {
@@ -63,6 +75,7 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
   const addDir = async () => {
     const basePath = getFocusPath() ?? currentDir ?? absPath("/");
     const newDirPath = await currentWorkspace.addDir(basePath, relPath("newdir"));
+    setEditType("new");
     setEditing(newDirPath.str);
   };
   const renameDir = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
@@ -174,6 +187,7 @@ function SidebarFileMenuInternal({
         <FileTreeMenu
           onFileRename={renameFile}
           onDirRename={renameDir}
+          onFileRemove={currentWorkspace.removeFile}
           resolveFileUrl={currentWorkspace.resolveFileUrl}
           fileTree={fileTreeDir.children}
           depth={0}

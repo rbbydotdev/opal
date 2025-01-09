@@ -12,11 +12,13 @@ export const EditableFile = ({
   isSelected,
   fullPath,
   onRename,
+  onFileRemove,
   ...props
 }: React.ComponentProps<typeof Link> & {
   href: string;
   fullPath: AbsPath;
   isSelected: boolean;
+  onFileRemove: (path: AbsPath) => Promise<void>;
   onRename: (newPath: AbsPath) => Promise<AbsPath>;
   depth: number;
 }) => {
