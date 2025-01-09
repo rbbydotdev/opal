@@ -7,6 +7,7 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/componen
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
+import { AbsPath } from "@/lib/paths";
 import { CopyMinus, FilePlus, FolderPlus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
@@ -120,20 +121,20 @@ export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>
 function useFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
   const router = useRouter();
   const pathname = usePathname();
-  const onFileRename = async (filePath: string, newBasename: string) => {
-    const { newPath, newName, oldPath } = await currentWorkspace.renameFile(filePath, newBasename);
-    if (workspaceRoute.path === filePath) {
+  const onFileRename = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
+    const { newPath, oldPath } = await currentWorkspace.renameFile(oldFullPath, newFullPath);
+    if (workspaceRoute.path?.str === oldFullPath.str) {
       router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
     }
-    return newName;
+    return newPath;
   };
 
-  const onDirRename = async (filePath: string, newBasename: string) => {
-    const { newPath, newName, oldPath } = await currentWorkspace.renameDir(filePath, newBasename);
-    if (workspaceRoute.path?.startsWith(filePath) && workspaceRoute.path) {
+  const onDirRename = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
+    const { newPath, oldPath } = await currentWorkspace.renameDir(oldFullPath, newFullPath);
+    if (workspaceRoute.path?.startsWith(oldFullPath.str) && workspaceRoute.path) {
       router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
     }
-    return newName;
+    return newPath;
   };
   return { onFileRename, onDirRename };
 }

@@ -1,6 +1,7 @@
 "use client";
 import { TreeDir, TreeFile } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
+import { AbsPath } from "@/lib/paths";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useContext, useEffect, useState } from "react";
@@ -28,7 +29,7 @@ export type WorkspaceContextType = typeof defaultWorkspaceContext;
 
 export const WorkspaceContext = React.createContext<WorkspaceContextType>(defaultWorkspaceContext);
 
-export type WorkspaceRouteType = { id: string | null; path: string | null };
+export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 
@@ -126,7 +127,7 @@ export function useWorkspaceFromRoute() {
     return currentWorkspace.disk.renameListener(({ newPath, oldPath, type }) => {
       if (
         (type === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
-        (type === "dir" && workspaceRoute.path?.startsWith(oldPath))
+        (type === "dir" && workspaceRoute.path?.startsWith(oldPath.str))
       ) {
         router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
       }

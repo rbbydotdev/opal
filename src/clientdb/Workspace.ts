@@ -3,6 +3,7 @@ import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
 import { TreeDir } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { BadRequestError, NotFoundError } from "@/lib/errors";
+import { absPath, AbsPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
 
@@ -134,7 +135,7 @@ export class Workspace extends WorkspaceDAO {
       return { workspaceId: null, filePath: null };
     }
     const [_, workspaceId, filePath] = match;
-    return { workspaceId, filePath };
+    return { workspaceId, filePath: absPath(filePath) };
   }
   //shoulndt this be in the dao?
   static async fetchFromRoute(route: string) {
@@ -159,17 +160,17 @@ export class Workspace extends WorkspaceDAO {
     return ws;
   }
 
-  replaceUrlPath(pathname: string, oldPath: string, newPath: string) {
+  replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
-    return this.resolveFileUrl(filePath.replace(oldPath, newPath));
+    return this.resolveFileUrl(absPath(filePath.replace(oldPath.str, newPath.str)));
   }
 
-  renameFile = async (filePath: string, newBaseName: string) => {
-    return this.disk.renameFile(filePath, newBaseName);
+  renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
+    return this.disk.renameFile(oldFullPath, newFullPath);
   };
-  renameDir = async (dirPath: string, newBaseName: string) => {
-    return this.disk.renameDir(dirPath, newBaseName);
+  renameDir = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
+    return this.disk.renameDir(oldFullPath, newFullPath);
   };
 
   onInitialIndex(callback: (fileTree: TreeDir) => void) {
@@ -225,10 +226,10 @@ export class Workspace extends WorkspaceDAO {
   }
 
   home = () => {
-    return this.resolveFileUrl("");
+    return this.href;
   };
-  resolveFileUrl = (filePath: string) => {
-    return this.href + filePath;
+  resolveFileUrl = (filePath: AbsPath) => {
+    return this.href + filePath.str;
   };
 
   get isIndexed() {

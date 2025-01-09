@@ -2,6 +2,7 @@ import { TreeDir, TreeNode } from "@/clientdb/filetree";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { AbsPath } from "@/lib/paths";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import React from "react";
 
@@ -15,13 +16,13 @@ export function FileTreeMenu({
   onFileRename,
   expanded,
 }: {
-  resolveFileUrl: (path: string) => string;
+  resolveFileUrl: (path: AbsPath) => string;
   expand: (s: string, b: boolean) => void;
   expanded: { [path: string]: boolean };
-  currentFile: string | null;
+  currentFile: AbsPath | null;
   fileTree: TreeDir["children"];
-  onDirRename: (dirPath: string, newBaseName: string) => Promise<string> | string;
-  onFileRename: (filePath: string, newBaseName: string) => Promise<string> | string;
+  onDirRename: (dirPath: AbsPath, newFullPath: AbsPath) => Promise<AbsPath>;
+  onFileRename: (filePath: AbsPath, newFullPath: AbsPath) => Promise<AbsPath>;
   depth?: number;
 }) {
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
@@ -42,6 +43,7 @@ export function FileTreeMenu({
     event.stopPropagation();
     const draggedData = event.dataTransfer.getData("application/json");
     try {
+      //on dir rename if dir is dragged into child return
       const { path: draggedPath, type: draggedType } = JSON.parse(draggedData) as TreeNode;
       if (draggedPath && draggedPath !== targetNode.path) {
         console.log(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
@@ -75,39 +77,37 @@ export function FileTreeMenu({
     <SidebarMenu>
       {fileTree.map((file) => (
         <Collapsible
-          key={file.path}
-          open={expanded[file.path]}
-          defaultOpen={expanded[file.path]}
-          onOpenChange={(o) => expand(file.path, o)}
+          key={file.path.str}
+          open={expanded[file.path.str]}
+          defaultOpen={expanded[file.path.str]}
+          onOpenChange={(o) => expand(file.path.str, o)}
         >
           <SidebarMenuItem
-            className={currentFile === file.path ? "bg-sidebar-accent" : ""}
+            className={currentFile?.str === file.path.str ? "bg-sidebar-accent" : ""}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, file)}
-            onDragEnter={(e) => handleDragEnter(e, file.path)}
+            onDragEnter={(e) => handleDragEnter(e, file.path.str)}
           >
             <CollapsibleTrigger asChild>
               <SidebarMenuButton asChild>
                 {file.type === "dir" ? (
                   <EditableDir
                     depth={depth}
-                    onRename={(newBasename) => onDirRename(file.path, newBasename)}
+                    onRename={(newPath) => onDirRename(file.path, newPath)}
                     draggable
                     onDragStart={(e) => handleDragStart(e, file)}
-                  >
-                    {file.name}
-                  </EditableDir>
+                    fullPath={file.path}
+                  />
                 ) : (
                   <EditableFile
                     href={resolveFileUrl(file.path)}
                     isSelected={currentFile === file.path}
                     depth={depth}
-                    onRename={(newBasename) => onFileRename(file.path, newBasename)}
+                    onRename={(newPath) => onFileRename(file.path, newPath)}
+                    fullPath={file.path}
                     draggable
                     onDragStart={(e) => handleDragStart(e, file)}
-                  >
-                    {file.name}
-                  </EditableFile>
+                  />
                 )}
               </SidebarMenuButton>
             </CollapsibleTrigger>

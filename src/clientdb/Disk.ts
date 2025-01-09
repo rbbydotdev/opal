@@ -3,7 +3,7 @@ import { FileTree, TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
 import { errorCode } from "@/lib/errors";
-import { absPath, AbsPath } from "@/lib/paths";
+import { absPath, AbsPath, RelPath } from "@/lib/paths";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import Emittery from "emittery";
 import { memfs } from "memfs";
@@ -55,10 +55,10 @@ export class DiskDAO implements DiskRecord {
 }
 
 export type RenameFileType = {
-  oldPath: string;
-  oldName: string;
-  newPath: string;
-  newName: string;
+  oldPath: AbsPath;
+  oldName: RelPath;
+  newPath: AbsPath;
+  newName: RelPath;
   type: "file" | "dir";
 };
 
@@ -196,46 +196,43 @@ export abstract class Disk extends DiskDAO {
   renameListener(fn: (props: RenameFileType) => void) {
     return this.local.on(DiskLocalEvents.RENAME, fn);
   }
-  writeFileListener(watchFilePath: string, fn: (contents: string) => void) {
+  writeFileListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
     return this.local.on(DiskLocalEvents.WRITE, ({ filePath, contents }) => {
-      if (watchFilePath === filePath) fn(contents);
+      if (watchFilePath.str === filePath) fn(contents);
     });
   }
   remoteWriteFileListener(watchFilePath: string, fn: (contents: string) => void) {
     return this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
       if (watchFilePath === filePath) {
-        const contents = await this.readFile(filePath);
+        const contents = await this.readFile(absPath(filePath));
         return fn(contents);
       }
     });
   }
 
-  async renameDir(oldPath: string, newBaseName: string): Promise<RenameFileType> {
-    return this.renameFile(oldPath, newBaseName, "dir");
+  async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
+    return this.renameFile(oldFullPath, newFullPath, "dir");
   }
-  async renameFile(oldPath: string, newFullPath: AbsPath, type: "file" | "dir" = "file"): Promise<RenameFileType> {
+  async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath, type: "file" | "dir" = "file"): Promise<RenameFileType> {
     const NOCHANGE: RenameFileType = {
       type,
-      newPath: oldPath,
-      newName: path.basename(oldPath),
-      oldPath,
-      oldName: path.basename(oldPath),
+      newPath: oldFullPath,
+      newName: oldFullPath.basename(),
+      oldPath: oldFullPath,
+      oldName: oldFullPath.basename(),
     };
     if (!newFullPath) return NOCHANGE;
-    const cleanFullPath = absPath(newFullPath.dirname()).join(newFullPath.basename().replace(/\//g, ":"));
+    const cleanFullPath = newFullPath.join(newFullPath.basename().replace(/\//g, ":"));
 
-    if (cleanFullPath.str === absPath(oldPath).str) return NOCHANGE;
+    if (cleanFullPath.str === oldFullPath.str) return NOCHANGE;
 
-    const fullPath = path.join(path.dirname(oldPath), cleanName);
-
-    //check if file exists
     try {
-      await this.fs.promises.stat(fullPath);
+      await this.fs.promises.stat(cleanFullPath.str);
       return NOCHANGE;
     } catch (_e) {}
 
     try {
-      await this.fs.promises.rename(oldPath, fullPath);
+      await this.fs.promises.rename(oldFullPath.str, cleanFullPath.str);
     } catch (_e) {
       //throws an error wtf !:?!?!
     }
@@ -243,10 +240,10 @@ export abstract class Disk extends DiskDAO {
 
     const CHANGE: RenameFileType = {
       type,
-      newPath: fullPath,
-      newName: path.basename(fullPath),
-      oldName: path.basename(oldPath),
-      oldPath,
+      newPath: cleanFullPath,
+      newName: cleanFullPath.basename(),
+      oldName: oldFullPath.basename(),
+      oldPath: oldFullPath,
     };
 
     this.remote.emit(DiskRemoteEvents.RENAME, CHANGE);
@@ -265,15 +262,15 @@ export abstract class Disk extends DiskDAO {
       }
     }
   }
-  async writeFile(filePath: string, contents: string) {
-    await this.fs.promises.writeFile(filePath, contents, { encoding: "utf8", mode: 0o777 });
+  async writeFile(filePath: AbsPath, contents: string) {
+    await this.fs.promises.writeFile(filePath.str, contents, { encoding: "utf8", mode: 0o777 });
     // local messes up the editor, commenting out for now might need in the future
     // await this.local.emit(DiskLocalEvents.WRITE, { filePath, contents });
-    await this.remote.emit(DiskRemoteEvents.WRITE, { filePath });
+    await this.remote.emit(DiskRemoteEvents.WRITE, { filePath: filePath.str });
     return;
   }
-  async readFile(filePath: string) {
-    return (await this.fs.promises.readFile(filePath)).toString();
+  async readFile(filePath: AbsPath) {
+    return (await this.fs.promises.readFile(filePath.str)).toString();
   }
 
   async withFs(fn: (fs: FileSystem) => Promise<unknown> | unknown) {

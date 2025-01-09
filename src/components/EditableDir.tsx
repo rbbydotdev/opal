@@ -1,26 +1,27 @@
 "use client";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
-import { toPromise } from "@/lib/toPromise";
+import { AbsPath } from "@/lib/paths";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { ComponentProps, useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableDir = ({
   depth,
-  children,
   className,
   onRename,
+  fullPath,
   ...props
 }: {
   className?: string;
   depth: number;
-  onRename: (name: string) => Promise<string> | string;
-  children: string & React.ReactNode;
+  onRename: (name: AbsPath) => Promise<AbsPath>;
+  fullPath: AbsPath;
 } & ComponentProps<typeof SidebarMenuButton>) => {
   const dirRef = useRef<HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [dirName, setDirName] = useState(children);
+  const [dirName, setDirName] = useState(fullPath);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // const fullAbsPath = useMemo(() => absPath(fullPath), [fullPath]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -36,13 +37,13 @@ export const EditableDir = ({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
-      setDirName(children);
+      setDirName(fullPath);
       setIsEditing(false);
     }
     if (e.key === "Enter") {
       if (isEditing) {
         setIsEditing(false);
-        toPromise(onRename)(dirName).then((newName) => {
+        onRename(dirName).then((newName) => {
           setDirName(newName);
         });
       } else {
@@ -60,7 +61,7 @@ export const EditableDir = ({
   const handleBlur = () => {
     if (isEditing) {
       setIsEditing(false);
-      setDirName(children);
+      setDirName(fullPath);
     }
   };
 
@@ -85,8 +86,8 @@ export const EditableDir = ({
             ref={inputRef}
             className="bg-transparent outline-none border-b border-dashed border-black"
             type="text"
-            value={dirName}
-            onChange={(e) => setDirName(e.target.value)}
+            value={dirName.str}
+            onChange={(e) => setDirName(fullPath.dirname().join(e.target.value))}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
           />
