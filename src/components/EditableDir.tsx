@@ -46,6 +46,7 @@ export const EditableDir = ({
         onRename(dirName).then((newName) => {
           setDirName(newName);
         });
+        return e.stopPropagation();
       } else {
         setIsEditing(true);
       }
@@ -70,6 +71,8 @@ export const EditableDir = ({
       tabIndex={0}
       {...props}
       ref={dirRef}
+      data-treepath={fullPath.str}
+      data-treetype="dir"
       onClick={handleClick}
       className={twMerge("w-full inline-block group cursor-pointer select-none", true ? "font-bold" : "", className)}
       onKeyDown={handleKeyDown}
@@ -83,6 +86,8 @@ export const EditableDir = ({
           <span onDoubleClick={() => setIsEditing(true)}>{dirName.basename()}</span>
         ) : (
           <input
+            data-treepath={fullPath.str}
+            data-treetype="dir"
             ref={inputRef}
             className="bg-transparent outline-none border-b border-dashed border-black"
             type="text"

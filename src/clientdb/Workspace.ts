@@ -3,7 +3,7 @@ import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
 import { TreeDir } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { BadRequestError, NotFoundError } from "@/lib/errors";
-import { absPath, AbsPath } from "@/lib/paths";
+import { absPath, AbsPath, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
 
@@ -154,7 +154,9 @@ export class Workspace extends WorkspaceDAO {
     const ws = await WorkspaceDAO.create(name);
     ws.disk.withFs(async () => {
       await Promise.all(
-        Object.entries(Workspace.seedFiles).map(([filePath, content]) => ws.disk.writeFileRecursive(filePath, content))
+        Object.entries(Workspace.seedFiles).map(([filePath, content]) =>
+          ws.disk.writeFileRecursive(absPath(filePath), content)
+        )
       );
     });
     return ws;
@@ -165,6 +167,13 @@ export class Workspace extends WorkspaceDAO {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
     return this.resolveFileUrl(absPath(filePath.replace(oldPath.str, newPath.str)));
+  }
+
+  addDir(dirPath: AbsPath, newDirName: RelPath) {
+    return this.disk.addDir(dirPath.join(newDirName));
+  }
+  addFile(dirPath: AbsPath, newFileName: RelPath, content = "") {
+    return this.disk.addFile(dirPath.join(newFileName), content);
   }
 
   renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
@@ -230,7 +239,7 @@ export class Workspace extends WorkspaceDAO {
     return this.href;
   };
   resolveFileUrl = (filePath: AbsPath) => {
-    return this.href + filePath.str;
+    return this.href + decodeURIComponent(filePath.str);
   };
 
   get isIndexed() {

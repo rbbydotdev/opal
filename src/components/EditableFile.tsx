@@ -1,4 +1,5 @@
 "use client";
+import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, RelPath, relPath } from "@/lib/paths";
 import Link from "next/link";
@@ -19,12 +20,26 @@ export const EditableFile = ({
   onRename: (newPath: AbsPath) => Promise<AbsPath>;
   depth: number;
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const { editing, resetEditing, setEditing } = useFileTreeMenuContext();
   const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
-  const linkRef = useRef<HTMLAnchorElement | null>(null);
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [inbound, setInbound] = useLocalStorage<string | null>("EditableLink/inbound", null);
   const pathname = usePathname();
+
+  const isEditing = editing === fullPath.str;
+  const setIsEditing = useCallback(
+    (editing: boolean) => {
+      if (editing) {
+        setEditing(fullPath.str);
+      } else {
+        resetEditing();
+      }
+    },
+    [fullPath.str, resetEditing, setEditing]
+  );
+
+  // const { addNode, removeNode } = useFileTreeMenuContext();
 
   useEffect(() => {
     if (isSelected && inbound === props.href) {
@@ -44,11 +59,13 @@ export const EditableFile = ({
       if (e.key === "Escape") {
         setFileName(fullPath.basename());
         setIsEditing(false);
+        resetEditing();
         linkRef.current?.focus();
       }
       if (e.key === "Enter") {
         if (isEditing) {
           setIsEditing(false);
+          resetEditing();
           onRename(fullPath.dirname().join(fileName)).then((newPath) => {
             setFileName(newPath.basename());
           });
@@ -63,16 +80,17 @@ export const EditableFile = ({
         }
       }
     },
-    [fullPath, isEditing, onRename, fileName]
+    [fullPath, setIsEditing, resetEditing, isEditing, onRename, fileName]
   );
 
   const handleBlur = useCallback(() => {
     if (isEditing) {
       setIsEditing(false);
+      resetEditing();
       //reset to original text
       setFileName(fullPath.basename());
     }
-  }, [fullPath, isEditing]);
+  }, [fullPath, isEditing, resetEditing, setIsEditing]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -92,6 +110,8 @@ export const EditableFile = ({
       {!isEditing ? (
         <Link
           {...props}
+          data-treepath={fullPath.str}
+          data-treetype="file"
           className={twMerge(props.className, "group cursor-pointer")}
           ref={linkRef}
           tabIndex={0}
@@ -106,7 +126,7 @@ export const EditableFile = ({
         </Link>
       ) : (
         <div style={{ marginLeft: depth + 1.5 + "rem" }}>
-          <File selected={isSelected}>
+          <File selected={isSelected} data-treepath={fullPath.str} data-treetype="file">
             <input
               ref={inputRef}
               className="bg-transparent py-1.5 outline-none font-bold border-b border-dashed border-black"
@@ -126,7 +146,7 @@ export const EditableFile = ({
 export function File({ selected = false, children }: { selected?: boolean; children: React.ReactNode }) {
   return (
     <span
-      className={`items-center flex gap-2 ${selected ? "before:content-[attr(data-star)] before:text-accent2 " : ""}`}
+      className={`items-center flex gap-2 ${selected ? "before:content-[attr(data-star)] before:text-accent2" : ""}`}
       data-star="✦"
     >
       {children}

@@ -6,6 +6,9 @@ import { AbsPath } from "@/lib/paths";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import React from "react";
 
+const LOGMODE = false;
+const consolelog = (...args: unknown[]) => (LOGMODE ? console.log(...args) : null);
+
 export function FileTreeMenu({
   fileTree,
   resolveFileUrl,
@@ -29,13 +32,13 @@ export function FileTreeMenu({
     const data = JSON.stringify(file);
     event.dataTransfer.setData("application/json", data);
     event.dataTransfer.effectAllowed = "move";
-    console.log(`Drag Start: ${file.path}`);
+    consolelog(`Drag Start: ${file.path}`);
   };
 
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
-    console.log(`Drag Over: ${event.currentTarget}`);
+    consolelog(`Drag Over: ${event.currentTarget}`);
   };
 
   const handleDrop = (event: React.DragEvent, targetNode: TreeNode) => {
@@ -48,28 +51,28 @@ export function FileTreeMenu({
       if (draggedPath && draggedPath !== targetNode.path) {
         const newPath =
           targetNode.type === "dir"
-            ? targetNode.path.join(draggedPath.path)
+            ? targetNode.path.join(draggedPath.basename())
             : targetNode.dirname.join(draggedPath.basename());
 
         if (draggedType === "dir" && newPath.startsWith(draggedPath.str)) {
-          console.log(`Drop: Cannot move ${draggedPath} inside itself or its subdirectory`);
+          consolelog(`Drop: Cannot move ${draggedPath} inside itself or its subdirectory`);
           return;
         }
 
-        console.log(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
+        consolelog(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
 
         if (draggedType === "dir") {
-          // console.log(`onDirRename(${draggedPath}, ${newPath})`);
+          // consolelog(`onDirRename(${draggedPath}, ${newPath})`);
           onDirRename(draggedPath, newPath);
         } else if (draggedType === "file") {
-          // console.log(`onFileRename(${draggedPath}, ${newPath})`);
+          // consolelog(`onFileRename(${draggedPath}, ${newPath})`);
           onFileRename(draggedPath, newPath);
         } else {
           console.error(`Drop: Invalid type ${draggedType}`);
         }
         // Implement your logic to update the file tree
       } else {
-        console.log(`Drop: Invalid operation or same target`);
+        consolelog(`Drop: Invalid operation or same target`);
       }
     } catch (error) {
       console.error("Error parsing dragged data:", error);
@@ -79,9 +82,8 @@ export function FileTreeMenu({
   const handleDragEnter = (event: React.DragEvent, path: string) => {
     event.preventDefault();
     expand(path, true);
-    console.log(`Drag Enter: ${path}`);
+    consolelog(`Drag Enter: ${path}`);
   };
-
   return (
     <SidebarMenu>
       {fileTree.map((file) => (
