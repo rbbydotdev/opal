@@ -28,6 +28,7 @@ export const EditableFile = ({
   const pathname = usePathname();
 
   const isEditing = editing === fullPath.str;
+
   const setIsEditing = useCallback(
     (editing: boolean) => {
       if (editing) {
@@ -51,12 +52,17 @@ export const EditableFile = ({
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
+      inputRef.current.select();
     }
   }, [isEditing]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (isEditing) {
+          //cancel file
+          // removeFile(fullPath.str);
+        }
         setFileName(fullPath.basename());
         setIsEditing(false);
         resetEditing();

@@ -21,7 +21,6 @@ export const EditableDir = ({
   const [isEditing, setIsEditing] = useState(false);
   const [dirName, setDirName] = useState(fullPath);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  // const fullAbsPath = useMemo(() => absPath(fullPath), [fullPath]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
