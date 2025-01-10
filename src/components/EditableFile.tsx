@@ -1,4 +1,5 @@
 "use client";
+import { TreeFile } from "@/clientdb/filetree";
 import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, RelPath, relPath } from "@/lib/paths";
@@ -12,17 +13,20 @@ export const EditableFile = ({
   isSelected,
   fullPath,
   onRename,
+  treeFile,
   onFileRemove,
   ...props
 }: React.ComponentProps<typeof Link> & {
   href: string;
+  treeFile: TreeFile;
   fullPath: AbsPath;
   isSelected: boolean;
   onFileRemove: (path: AbsPath) => Promise<void>;
   onRename: (newPath: AbsPath) => Promise<AbsPath>;
   depth: number;
 }) => {
-  const { editing, resetEditing, setEditing } = useFileTreeMenuContext();
+  const { editing, resetEditing, setEditing, setFocusedNode } = useFileTreeMenuContext();
+  console.log(editing, treeFile.path);
   const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -123,6 +127,8 @@ export const EditableFile = ({
           className={twMerge(props.className, "group cursor-pointer")}
           ref={linkRef}
           tabIndex={0}
+          onFocus={() => setFocusedNode(treeFile)}
+          onBlur={() => setFocusedNode(null)}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
         >
