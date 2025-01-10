@@ -1,11 +1,12 @@
 "use client";
 import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
-import { TreeDir } from "@/clientdb/filetree";
+import { insertClosestTreeDir, TreeDir, TreeNode } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { BadRequestError, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
+import { newTreeNode } from "./filetree";
 
 export class WorkspaceRecord {
   guid!: string;
@@ -175,6 +176,9 @@ export class Workspace extends WorkspaceDAO {
   addFile(dirPath: AbsPath, newFileName: RelPath, content = "") {
     return this.disk.addFile(dirPath.join(newFileName), content);
   }
+  newTreeNode(path: AbsPath, type: "dir" | "file", selectedNode: TreeNode) {
+    return insertClosestTreeDir(newTreeNode({ path, type }), selectedNode);
+  }
   removeFile = async (filePath: AbsPath) => {
     return this.disk.removeFile(filePath);
   };
@@ -194,6 +198,9 @@ export class Workspace extends WorkspaceDAO {
   }
   getFirstFile() {
     return this.disk.getFirstFile();
+  }
+  getFileTreeRoot() {
+    return this.disk.fileTree.root;
   }
   getFlatDirTree() {
     return this.disk.fileTree.dirs;

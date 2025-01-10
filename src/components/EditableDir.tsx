@@ -1,4 +1,5 @@
 "use client";
+import { TreeDir } from "@/clientdb/filetree";
 import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { AbsPath } from "@/lib/paths";
@@ -11,18 +12,25 @@ export const EditableDir = ({
   className,
   onRename,
   onFileRemove,
+  treeDir,
   fullPath,
   ...props
 }: {
   className?: string;
   depth: number;
+  treeDir: TreeDir;
   onRename: (name: AbsPath) => Promise<AbsPath>;
   onFileRemove: (path: AbsPath) => Promise<void>;
   fullPath: AbsPath;
 } & ComponentProps<typeof SidebarMenuButton>) => {
   const dirRef = useRef<HTMLElement>(null);
 
+  const { setFocusedNode } = useFileTreeMenuContext();
   const { editing, resetEditing, setEditing, cancelEditing } = useFileTreeMenuContext();
+  //todo
+  // if (treeDir === editNode) {
+  // }
+
   const isEditing = editing === fullPath.str;
   const [dirName, setDirName] = useState(fullPath);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -78,6 +86,7 @@ export const EditableDir = ({
       data-treepath={fullPath.str}
       data-treetype="dir"
       onClick={handleClick}
+      onFocus={() => setFocusedNode(treeDir)}
       className={twMerge("w-full inline-block group cursor-pointer select-none", true ? "font-bold" : "", className)}
       onKeyDown={handleKeyDown}
     >
@@ -95,6 +104,8 @@ export const EditableDir = ({
             ref={inputRef}
             className="bg-transparent outline-none border-b border-dashed border-black"
             type="text"
+            tabIndex={0}
+            onFocus={() => setFocusedNode(treeDir)}
             value={dirName.basename().str}
             onChange={(e) => setDirName(fullPath.dirname().join(e.target.value))}
             onKeyDown={handleKeyDown}

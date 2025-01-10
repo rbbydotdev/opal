@@ -77,6 +77,17 @@ function useWorkspaceRoute() {
 }
 
 export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
+  //TODO: should these be stored in a ref since tree index updates are manually broadcasted
+  //via events
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
   const [isIndexed, setIsIndexed] = useState(currentWorkspace?.isIndexed ?? false);
   const [fileTreeDir, setFileTree] = useState<TreeDir | null>(null);
   const [firstFile, setFirstFile] = useState<TreeFile | null>(null);

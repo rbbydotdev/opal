@@ -1,13 +1,10 @@
-import { TreeDir, TreeNode } from "@/clientdb/filetree";
+import { isTreeDir, TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { AbsPath } from "@/lib/paths";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import React from "react";
-
-const LOGMODE = false;
-const consolelog = (...args: unknown[]) => (LOGMODE ? console.log(...args) : null);
 
 export function FileTreeMenu({
   fileTree,
@@ -34,13 +31,13 @@ export function FileTreeMenu({
     const data = JSON.stringify(file);
     event.dataTransfer.setData("application/json", data);
     event.dataTransfer.effectAllowed = "move";
-    consolelog(`Drag Start: ${file.path}`);
+    console.log(`Drag Start: ${file.path}`);
   };
 
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
-    consolelog(`Drag Over: ${event.currentTarget}`);
+    console.log(`Drag Over: ${event.currentTarget}`);
   };
 
   const handleDrop = (event: React.DragEvent, targetNode: TreeNode) => {
@@ -57,24 +54,24 @@ export function FileTreeMenu({
             : targetNode.dirname.join(draggedPath.basename());
 
         if (draggedType === "dir" && newPath.startsWith(draggedPath.str)) {
-          consolelog(`Drop: Cannot move ${draggedPath} inside itself or its subdirectory`);
+          console.log(`Drop: Cannot move ${draggedPath} inside itself or its subdirectory`);
           return;
         }
 
-        consolelog(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
+        console.log(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
 
         if (draggedType === "dir") {
-          // consolelog(`onDirRename(${draggedPath}, ${newPath})`);
+          // console.log(`onDirRename(${draggedPath}, ${newPath})`);
           onDirRename(draggedPath, newPath);
         } else if (draggedType === "file") {
-          // consolelog(`onFileRename(${draggedPath}, ${newPath})`);
+          // console.log(`onFileRename(${draggedPath}, ${newPath})`);
           onFileRename(draggedPath, newPath);
         } else {
           console.error(`Drop: Invalid type ${draggedType}`);
         }
         // Implement your logic to update the file tree
       } else {
-        consolelog(`Drop: Invalid operation or same target`);
+        console.log(`Drop: Invalid operation or same target`);
       }
     } catch (error) {
       console.error("Error parsing dragged data:", error);
@@ -84,11 +81,11 @@ export function FileTreeMenu({
   const handleDragEnter = (event: React.DragEvent, path: string) => {
     event.preventDefault();
     expand(path, true);
-    consolelog(`Drag Enter: ${path}`);
+    console.log(`Drag Enter: ${path}`);
   };
   return (
     <SidebarMenu>
-      {fileTree.map((file) => (
+      {Object.values(fileTree).map((file) => (
         <Collapsible
           key={file.path.str}
           open={expanded[file.path.str]}
@@ -103,12 +100,13 @@ export function FileTreeMenu({
           >
             <CollapsibleTrigger asChild>
               <SidebarMenuButton asChild>
-                {file.type === "dir" ? (
+                {isTreeDir(file) ? (
                   <EditableDir
                     depth={depth}
                     onRename={(newPath) => onDirRename(file.path, newPath)}
                     draggable
                     onDragStart={(e) => handleDragStart(e, file)}
+                    treeDir={file}
                     onFileRemove={onFileRemove}
                     fullPath={file.path}
                   />
@@ -120,6 +118,7 @@ export function FileTreeMenu({
                     onFileRemove={onFileRemove}
                     onRename={(newPath) => onFileRename(file.path, newPath)}
                     fullPath={file.path}
+                    treeFile={file as TreeFile}
                     draggable
                     onDragStart={(e) => handleDragStart(e, file)}
                   />

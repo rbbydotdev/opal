@@ -10,7 +10,15 @@ function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) 
 }
 type ExpandMap = { [path: string]: boolean };
 
-export function useFileTreeExpander(fileDirTree: string[], currentPath: AbsPath | null, id: string) {
+export function useFileTreeExpander({
+  fileDirTree,
+  currentPath,
+  id,
+}: {
+  fileDirTree: string[];
+  currentPath: AbsPath | null;
+  id: string;
+}) {
   const [local, setLocal] = useState({});
   const setAllStates = useCallback(
     (state: boolean) => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),

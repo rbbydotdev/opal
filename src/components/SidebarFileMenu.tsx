@@ -1,5 +1,5 @@
 "use client";
-import { TreeDir, TreeFile } from "@/clientdb/filetree";
+import { TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
 import { Workspace } from "@/clientdb/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ const FileTreeMenuContext = React.createContext<{
   editing: string | null;
   setEditing: React.Dispatch<React.SetStateAction<string | null>>;
   editType: "rename" | "new";
+  setFocusedNode: (node: TreeNode | null) => void;
+  focusedNode: TreeNode | null;
   setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
   cancelEditing: () => void;
   resetEditing: () => void;
@@ -24,6 +26,8 @@ const FileTreeMenuContext = React.createContext<{
 const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [editing, setEditing] = React.useState<string | null>(null);
   const [editType, setEditType] = React.useState<"rename" | "new">("rename");
+  const [focusedNode, setFocusNode] = React.useState<null | TreeNode>(null);
+
   const resetEditing = () => {
     setEditing(null);
     setEditType("rename");
@@ -33,7 +37,18 @@ const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setEditType("rename");
   };
   return (
-    <FileTreeMenuContext.Provider value={{ editType, setEditType, cancelEditing, editing, setEditing, resetEditing }}>
+    <FileTreeMenuContext.Provider
+      value={{
+        setFocusedNode: setFocusNode,
+        editType,
+        setEditType,
+        focusedNode,
+        cancelEditing,
+        editing,
+        setEditing,
+        resetEditing,
+      }}
+    >
       {children}
     </FileTreeMenuContext.Provider>
   );
@@ -51,7 +66,7 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
   const router = useRouter();
   const pathname = usePathname();
   const currentDir = workspaceRoute.path?.dirname();
-  const { setEditing, setEditType } = useFileTreeMenuContext();
+  const { setEditing, setEditType, focusedNode } = useFileTreeMenuContext();
 
   const renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
     const { newPath, oldPath } = await currentWorkspace.renameFile(oldFullPath, newFullPath);
@@ -62,11 +77,14 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
   };
 
   const addFile = async () => {
-    //try and get active focused file or dir first
-    const basePath = getFocusPath() ?? currentDir ?? absPath("/");
-    const newFilePath = await currentWorkspace.addFile(basePath, relPath("newfile"));
+    // const basePath = getFocusPath() ?? currentDir ?? absPath("/");
+    // const newFilePath = await currentWorkspace.addFile(basePath, relPath("newfile"));
+    // setEditing(newFilePath.str);
+    const targetNode = focusedNode ?? currentWorkspace.getFileTreeRoot();
+    const newNode = currentWorkspace.newTreeNode(absPath("newfile"), "file", targetNode);
+    //weakmap, editing node key?
     setEditType("new");
-    setEditing(newFilePath.str);
+    setEditing(newNode.path.str);
   };
   const removeFile = async (path: AbsPath) => {
     await currentWorkspace.removeFile(path);
@@ -120,11 +138,11 @@ function SidebarFileMenuInternal({
     addDir,
   } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
 
-  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander(
-    flatTree,
-    workspaceRoute.path,
-    currentWorkspace.id
-  );
+  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander({
+    fileDirTree: flatTree,
+    currentPath: workspaceRoute.path,
+    id: currentWorkspace.id,
+  });
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
