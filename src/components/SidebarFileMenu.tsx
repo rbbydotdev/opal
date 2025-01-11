@@ -41,11 +41,10 @@ const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const resetEditing = () => {
     setEditing(null);
     setEditType("rename");
+    setFocused(null);
+    setVirtual(null);
   };
-  const cancelEditing = () => {
-    setEditing(null);
-    setEditType("rename");
-  };
+  const cancelEditing = resetEditing;
   return (
     <FileTreeMenuContext.Provider
       value={{

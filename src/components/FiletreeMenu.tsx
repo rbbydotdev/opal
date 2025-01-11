@@ -36,7 +36,7 @@ export function FileTreeContainer({
 
 function FileTreeMenuInternal({
   fileTree,
-  renameDirFile: renameDirFile,
+  renameDirFile,
   depth = 0,
   expand,
   expandForNode,
