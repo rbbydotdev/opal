@@ -44,6 +44,24 @@ export class TreeNode {
     this.basename = this.path.basename();
     return this;
   }
+  rename(path: AbsPath) {
+    this.path = path;
+    this.dirname = this.path.dirname();
+    this.name = this.path.basename();
+    this.basename = this.path.basename();
+    return this;
+  }
+  copy() {
+    return new TreeNode({
+      name: this.name,
+      type: this.type,
+      dirname: this.dirname,
+      basename: this.basename,
+      parent: this.parent,
+      path: this.path,
+      depth: this.depth,
+    });
+  }
   toJSON(): {
     name: string;
     type: "dir" | "file";
@@ -288,6 +306,13 @@ export class FileTree {
   }
   nodeWithPathExists(path: AbsPath) {
     return this.map.has(path.str);
+  }
+  replaceNode(oldNode: TreeNode, newNode: TreeNode) {
+    const parent = oldNode.parent;
+    if (!parent) return;
+    parent.children[newNode.name.str] = newNode;
+    this.map.delete(oldNode.path.str);
+    this.map.set(newNode.path.str, newNode);
   }
   insertClosestNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
     const parent = closestTreeDir(selectedNode);

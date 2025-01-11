@@ -36,8 +36,7 @@ export function FileTreeContainer({
 
 function FileTreeMenuInternal({
   fileTree,
-  renameFile,
-  renameDir,
+  renameDirFile: renameDirFile,
   depth = 0,
   expand,
   expandForNode,
@@ -46,8 +45,7 @@ function FileTreeMenuInternal({
   workspaceRoute,
 }: {
   fileTree: TreeDir["children"];
-  renameFile: (oldPath: AbsPath, newPath: AbsPath) => Promise<AbsPath>;
-  renameDir: (oldPath: AbsPath, newPath: AbsPath) => Promise<AbsPath>;
+  renameDirFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
   depth?: number;
   expand: (path: string, value: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
@@ -87,14 +85,7 @@ function FileTreeMenuInternal({
         }
 
         console.debug(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
-
-        if (draggedType === "dir") {
-          renameDir(draggedPath, newPath);
-        } else if (draggedType === "file") {
-          renameFile(draggedPath, newPath);
-        } else {
-          console.error(`Drop: Invalid type ${draggedType}`);
-        }
+        renameDirFile(currentWorkspace.nodeFromPath(draggedPath)!, newPath, draggedType);
       } else {
         console.debug(`Drop: Invalid operation or same target`);
       }
@@ -155,8 +146,7 @@ function FileTreeMenuInternal({
                   expand={expand}
                   expandForNode={expandForNode}
                   fileTree={(file as TreeDir).children}
-                  renameDir={renameDir}
-                  renameFile={renameFile}
+                  renameDirFile={renameDirFile}
                   currentWorkspace={currentWorkspace}
                   workspaceRoute={workspaceRoute}
                   depth={depth + 1}

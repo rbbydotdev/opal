@@ -267,9 +267,13 @@ export abstract class Disk extends DiskDAO {
   }
 
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
-    return this.renameFile(oldFullPath, newFullPath, "dir");
+    return this.renameDirFile(oldFullPath, newFullPath, "dir");
   }
-  async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath, type: "file" | "dir" = "file"): Promise<RenameFileType> {
+  async renameDirFile(
+    oldFullPath: AbsPath,
+    newFullPath: AbsPath,
+    type: "file" | "dir" = "file"
+  ): Promise<RenameFileType> {
     const NOCHANGE: RenameFileType = new RenameFileType({
       type,
       newPath: oldFullPath,
