@@ -4,7 +4,6 @@ import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
 import { useWorkspaceRoute } from "@/context";
 import { AbsPath, RelPath } from "@/lib/paths";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isTreeDir } from "../clientdb/filetree";
 
 export function useEditable<T extends TreeFile | TreeNode>({
   treeNode,
@@ -74,9 +73,9 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleClick = useCallback(() => {
     linkRef.current?.focus();
-    if (isTreeDir(treeNode)) {
-      expand(treeNode, true);
-    }
+    // if (isTreeDir(treeNode)) {
+    //   expand(treeNode, true);
+    // }
   }, []);
   return {
     isEditing,
