@@ -44,7 +44,6 @@ export default function RootLayout({
             </SidebarProvider>
           </JotaiProvider>
         </WorkspaceProvider>
-        ;
       </body>
     </html>
   );

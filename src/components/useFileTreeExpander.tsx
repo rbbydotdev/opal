@@ -1,4 +1,5 @@
 "use client";
+import { TreeNode } from "@/clientdb/filetree";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath } from "@/lib/paths";
 import { useCallback, useEffect, useState } from "react";
@@ -19,16 +20,27 @@ export function useFileTreeExpander({
   currentPath: AbsPath | null;
   id: string;
 }) {
-  const [local, setLocal] = useState({});
+  const [local, setLocal] = useState<ExpandMap>({});
   const setAllStates = useCallback(
     (state: boolean) => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),
     [fileDirTree]
   );
   const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${id}`, local);
 
+  const isExpanded = (path: string) => stored[path] && local[path];
+
   const expandSingle = (path: string, expanded: boolean) => {
+    if (isExpanded(path) === expanded) return;
     setLocal((prev) => ({ ...prev, [path]: expanded }));
     setStored((prev) => ({ ...prev, [path]: expanded }));
+  };
+
+  const expandForNode = (node: TreeNode, state: boolean) => {
+    let n: TreeNode | null = node;
+    while (n?.parent) {
+      expandSingle(n.path.str, state);
+      n = n.parent;
+    }
   };
 
   const setExpandAll = (state: boolean) => {
@@ -43,5 +55,5 @@ export function useFileTreeExpander({
   }, [currentPath, fileDirTree]);
 
   const all = { ...stored, ...local };
-  return { expandSingle, expanded: all, setExpandAll };
+  return { expandSingle, expanded: all, setExpandAll, isExpanded, expandForNode };
 }

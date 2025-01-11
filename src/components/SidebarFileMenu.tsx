@@ -1,5 +1,5 @@
 "use client";
-import { TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
+import { TreeDir, TreeFile } from "@/clientdb/filetree";
 import { Workspace } from "@/clientdb/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
@@ -7,26 +7,36 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/componen
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { absPath, AbsPath, relPath } from "@/lib/paths";
+import { absPath, AbsPath } from "@/lib/paths";
 import { CopyMinus, FilePlus, FolderPlus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
 const FileTreeMenuContext = React.createContext<{
-  editing: string | null;
-  setEditing: React.Dispatch<React.SetStateAction<string | null>>;
+  editing: AbsPath | null;
+  setEditing: React.Dispatch<React.SetStateAction<AbsPath | null>>;
   editType: "rename" | "new";
-  setFocusedNode: (node: TreeNode | null) => void;
-  focusedNode: TreeNode | null;
+  setFocused: (path: AbsPath | null) => void;
+  focused: AbsPath | null;
   setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
   cancelEditing: () => void;
   resetEditing: () => void;
+  virtual: AbsPath | null;
+  setVirtual: (path: AbsPath | null) => void;
 } | null>(null);
 
+export function useFileTreeMenuContext() {
+  const ctx = React.useContext(FileTreeMenuContext);
+  if (!ctx) {
+    throw new Error("useFileTreeMenuContext must be used within a FileTreeMenuContextProvider");
+  }
+  return ctx;
+}
 const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [editing, setEditing] = React.useState<string | null>(null);
+  const [editing, setEditing] = React.useState<AbsPath | null>(null);
   const [editType, setEditType] = React.useState<"rename" | "new">("rename");
-  const [focusedNode, setFocusNode] = React.useState<null | TreeNode>(null);
+  const [focused, setFocused] = React.useState<AbsPath | null>(null);
+  const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
 
   const resetEditing = () => {
     setEditing(null);
@@ -39,10 +49,12 @@ const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <FileTreeMenuContext.Provider
       value={{
-        setFocusedNode: setFocusNode,
+        setFocused,
         editType,
         setEditType,
-        focusedNode,
+        focused,
+        setVirtual,
+        virtual,
         cancelEditing,
         editing,
         setEditing,
@@ -54,19 +66,12 @@ const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   );
 };
 
-export function useFileTreeMenuContext() {
-  const ctx = React.useContext(FileTreeMenuContext);
-  if (!ctx) {
-    throw new Error("useFileTreeMenuContext must be used within a FileTreeMenuContextProvider");
-  }
-  return ctx;
-}
-
-function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
+export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
   const router = useRouter();
   const pathname = usePathname();
   const currentDir = workspaceRoute.path?.dirname();
-  const { setEditing, setEditType, focusedNode } = useFileTreeMenuContext();
+  const { setEditing, setEditType, resetEditing, focused, setFocused, cancelEditing, setVirtual, virtual } =
+    useFileTreeMenuContext();
 
   const renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
     const { newPath, oldPath } = await currentWorkspace.renameFile(oldFullPath, newFullPath);
@@ -76,25 +81,29 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
     return newPath;
   };
 
-  const addFile = async () => {
-    // const basePath = getFocusPath() ?? currentDir ?? absPath("/");
-    // const newFilePath = await currentWorkspace.addFile(basePath, relPath("newfile"));
-    // setEditing(newFilePath.str);
-    const targetNode = focusedNode ?? currentWorkspace.getFileTreeRoot();
-    const newNode = currentWorkspace.newTreeNode(absPath("newfile"), "file", targetNode);
-    //weakmap, editing node key?
-    setEditType("new");
-    setEditing(newNode.path.str);
+  const addFile = () => {
+    const focusedNode = currentWorkspace.nodeFromPath(focused);
+    const newNode = currentWorkspace.addVirtualFile({ type: "file", path: absPath("newfile") }, focusedNode);
+    setFocused(newNode.path);
+    setEditing(newNode.path);
+    setVirtual(newNode.path);
+    return newNode;
   };
   const removeFile = async (path: AbsPath) => {
     await currentWorkspace.removeFile(path);
   };
+  const cancelNew = () => {
+    setVirtual(null);
+    if (virtual) currentWorkspace.removeVirtualfile(virtual);
+  };
 
-  const addDir = async () => {
-    const basePath = getFocusPath() ?? currentDir ?? absPath("/");
-    const newDirPath = await currentWorkspace.addDir(basePath, relPath("newdir"));
-    setEditType("new");
-    setEditing(newDirPath.str);
+  const addDir = () => {
+    const focusedNode = currentWorkspace.nodeFromPath(focused);
+    const newNode = currentWorkspace.addVirtualFile({ type: "dir", path: absPath("newdir") }, focusedNode);
+    setFocused(newNode.path);
+    setEditing(newNode.path);
+    setVirtual(newNode.path);
+    return newNode;
   };
   const renameDir = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
     const { newPath, oldPath } = await currentWorkspace.renameDir(oldFullPath, newFullPath);
@@ -103,7 +112,18 @@ function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: Works
     }
     return newPath;
   };
-  return { renameFile, renameDir, removeFile, addFile, addDir };
+  return {
+    renameFile,
+    renameDir,
+    removeFile,
+    addFile,
+    addDir,
+    cancelNew,
+    resetEditing,
+    setEditing,
+    cancelEditing,
+    setFocused,
+  };
 }
 
 function getFocusPath() {
@@ -122,27 +142,34 @@ function SidebarFileMenuInternal({
   isIndexed,
   flatTree,
   firstFile,
+  workspaces,
   ...props
 }: {
   workspaceRoute: WorkspaceRouteType;
   currentWorkspace: Workspace;
+  workspaces: Workspace[];
   fileTreeDir: TreeDir;
   flatTree: string[];
   firstFile: TreeFile | null;
   isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const {
-    renameFile: renameFile,
-    renameDir: renameDir,
-    addFile,
-    addDir,
-  } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
-
-  const { setExpandAll, expandSingle, expanded } = useFileTreeExpander({
+  const { renameFile, renameDir, cancelNew, addFile, addDir } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
     currentPath: workspaceRoute.path,
     id: currentWorkspace.id,
   });
+
+  const addFileAndExpand = () => {
+    const newNode = addFile();
+    expandForNode(newNode, true);
+    return newNode;
+  };
+  const addDirAndExpand = () => {
+    const newNode = addDir();
+    expandForNode(newNode, true);
+    return newNode;
+  };
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
@@ -151,7 +178,7 @@ function SidebarFileMenuInternal({
         <div>
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
-              <Button onClick={addFile} className="p-1 m-0 h-fit" variant="ghost">
+              <Button onClick={addFileAndExpand} className="p-1 m-0 h-fit" variant="ghost">
                 <FilePlus />
               </Button>
             </TooltipTrigger>
@@ -161,13 +188,8 @@ function SidebarFileMenuInternal({
           </Tooltip>
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
-              <Button
-                onDoubleClick={() => setExpandAll(true)}
-                onClick={() => setExpandAll(false)}
-                className="p-1 m-0 h-fit"
-                variant="ghost"
-              >
-                <FolderPlus onClick={addDir} />
+              <Button onClick={addDirAndExpand} className="p-1 m-0 h-fit" variant="ghost">
+                <FolderPlus />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left" align="center">
@@ -189,28 +211,19 @@ function SidebarFileMenuInternal({
               Collapse All
             </TooltipContent>
           </Tooltip>
-          {/* <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={() => setExpandAll(true)} className="p-1 m-0 h-fit" variant="ghost">
-                <CopyPlus />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left" align="center">
-              Expand All
-            </TooltipContent>
-          </Tooltip> */}
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
         <FileTreeMenu
           onFileRename={renameFile}
           onDirRename={renameDir}
+          onCancelNew={cancelNew}
           onFileRemove={currentWorkspace.removeFile}
           resolveFileUrl={currentWorkspace.resolveFileUrl}
           fileTree={fileTreeDir.children}
           depth={0}
-          currentFile={workspaceRoute.path}
           expand={expandSingle}
+          expandForNode={expandForNode}
           expanded={expanded}
         />
       </SidebarGroupContent>
@@ -222,36 +235,7 @@ const SidebarFileMenuWithWorkspace = withCurrentWorkspace(SidebarFileMenuInterna
 export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>) => {
   return (
     <FileTreeMenuContextProvider>
-      <SidebarFileMenuWithWorkspace {...props} />;
+      <SidebarFileMenuWithWorkspace {...props} />
     </FileTreeMenuContextProvider>
   );
 };
-
-// addNode: (
-//   node: AbsPath,
-//   refs: { inputRef: React.RefObject<HTMLElement>; linkRef: React.RefObject<HTMLElement> }
-// ) => void;
-// removeNode: (node: AbsPath) => void;
-// getNode: (
-//   node: AbsPath
-// ) => { inputRef: React.RefObject<HTMLElement>; linkRef: React.RefObject<HTMLElement> } | undefined;
-// nodeMap: Map<AbsPath, { inputRef: React.RefObject<HTMLElement>; linkRef: React.RefObject<HTMLElement> }>;
-
-// const nodeMap = React.useRef(
-//   new Map<AbsPath, { inputRef: React.RefObject<HTMLElement>; linkRef: React.RefObject<HTMLElement> }>()
-// ).current;
-
-// const addNode = (
-//   node: AbsPath,
-//   refs: { inputRef: React.RefObject<HTMLElement>; linkRef: React.RefObject<HTMLElement> }
-// ) => {
-//   nodeMap.set(node, refs);
-// };
-
-// const removeNode = (node: AbsPath) => {
-//   nodeMap.delete(node);
-// };
-
-// const getNode = (node: AbsPath) => {
-//   return nodeMap.get(node);
-// };

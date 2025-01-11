@@ -1,6 +1,7 @@
 "use client";
-import { TreeDir, TreeFile } from "@/clientdb/filetree";
+import { TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
+import { NotFoundError } from "@/lib/errors";
 import { AbsPath } from "@/lib/paths";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
@@ -37,15 +38,25 @@ export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
   const [contents, setContents] = useState<null | string>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (currentWorkspace && filePath) {
-      currentWorkspace.disk.readFile(filePath).then(setContents);
+      currentWorkspace.disk
+        .readFile(filePath)
+        .then(setContents)
+        .catch((e) => {
+          if (e instanceof NotFoundError) {
+            // router.push(currentWorkspace.href);
+          } else {
+            throw e;
+          }
+        });
       //listener is currently only used with remote, since a local write will not trigger
       //a local write event, this is because the common update kind of borks mdx editor
       return currentWorkspace.disk.writeFileListener(filePath, setContents);
     }
-  }, [currentWorkspace, filePath]);
+  }, [currentWorkspace, filePath, router]);
   const updateContents = useCallback(
     (updates: string) => {
       if (filePath && currentWorkspace) {
@@ -57,7 +68,7 @@ export function useCurrentFilepath() {
   return { filePath, contents, updateContents };
 }
 
-function useWorkspaceRoute() {
+export function useWorkspaceRoute() {
   const pathname = usePathname();
   const [workspaceRoute, setRouteWorkspaceInfo] = useState<WorkspaceRouteType>({
     id: null,
@@ -77,17 +88,6 @@ function useWorkspaceRoute() {
 }
 
 export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
-  //TODO: should these be stored in a ref since tree index updates are manually broadcasted
-  //via events
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
   const [isIndexed, setIsIndexed] = useState(currentWorkspace?.isIndexed ?? false);
   const [fileTreeDir, setFileTree] = useState<TreeDir | null>(null);
   const [firstFile, setFirstFile] = useState<TreeFile | null>(null);
@@ -96,7 +96,7 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
     if (currentWorkspace) {
       return currentWorkspace.watchDisk((fileTreeDir: TreeDir) => {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
-        setFileTree(new TreeDir({ ...fileTreeDir }));
+        setFileTree(new TreeDirRoot(fileTreeDir));
         setFirstFile(currentWorkspace.getFirstFile());
         setFlatTree(currentWorkspace.getFlatDirTree());
       });
@@ -126,14 +126,13 @@ export function useWorkspaceFromRoute() {
       return;
     }
     const ws = Workspace.fetchFromRoute(pathname).then((ws) => {
+      // setCurrentWorkspace(ws);
       setCurrentWorkspace(ws);
       ws.init();
       return ws;
     });
     return () => {
-      ws.then((w) => {
-        w.teardown();
-      });
+      ws.then((w) => w.teardown());
     };
   }, [pathname]);
 

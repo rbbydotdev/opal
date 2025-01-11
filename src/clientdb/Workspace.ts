@@ -1,12 +1,11 @@
 "use client";
 import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
-import { insertClosestTreeDir, TreeDir, TreeNode } from "@/clientdb/filetree";
+import { TreeDir, TreeNode } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { BadRequestError, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
-import { newTreeNode } from "./filetree";
 
 export class WorkspaceRecord {
   guid!: string;
@@ -163,7 +162,6 @@ export class Workspace extends WorkspaceDAO {
     return ws;
   }
 
-  //  "/drafts/draft1.md/draft1.mddsad/draft1.mddsad"
   replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
@@ -176,8 +174,12 @@ export class Workspace extends WorkspaceDAO {
   addFile(dirPath: AbsPath, newFileName: RelPath, content = "") {
     return this.disk.addFile(dirPath.join(newFileName), content);
   }
-  newTreeNode(path: AbsPath, type: "dir" | "file", selectedNode: TreeNode) {
-    return insertClosestTreeDir(newTreeNode({ path, type }), selectedNode);
+  // add
+  addVirtualFile({ type, path }: { type: TreeNode["type"]; path: TreeNode["path"] }, selectedNode: TreeNode | null) {
+    return this.disk.addVirtualFile({ type, path }, selectedNode);
+  }
+  removeVirtualfile(path: AbsPath) {
+    return this.disk.removeVirtualFile(path);
   }
   removeFile = async (filePath: AbsPath) => {
     return this.disk.removeFile(filePath);
@@ -204,6 +206,10 @@ export class Workspace extends WorkspaceDAO {
   }
   getFlatDirTree() {
     return this.disk.fileTree.dirs;
+  }
+  nodeFromPath(path: AbsPath | null) {
+    if (path === null) return null;
+    return this.disk.fileTree.nodeFromPath(path);
   }
 
   static rootRoute = "/workspace";
