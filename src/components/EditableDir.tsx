@@ -1,10 +1,10 @@
 "use client";
-import { TreeDir } from "@/clientdb/filetree";
-import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
+import { TreeDir, TreeNode } from "@/clientdb/filetree";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { useEditable } from "@/components/useEditable";
 import { AbsPath } from "@/lib/paths";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { ComponentProps, useEffect, useRef, useState } from "react";
+import { ComponentProps } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableDir = ({
@@ -12,82 +12,55 @@ export const EditableDir = ({
   className,
   onRename,
   onFileRemove,
+  expand,
   treeDir,
   fullPath,
+
+  onCancelNew,
   ...props
 }: {
   className?: string;
   depth: number;
   treeDir: TreeDir;
+  expand: (node: TreeNode, value: boolean) => void;
   onRename: (name: AbsPath) => Promise<AbsPath>;
+  onCancelNew: (newPath: AbsPath) => void;
   onFileRemove: (path: AbsPath) => Promise<void>;
   fullPath: AbsPath;
 } & ComponentProps<typeof SidebarMenuButton>) => {
-  const dirRef = useRef<HTMLElement>(null);
-
-  const { setFocusedNode } = useFileTreeMenuContext();
-  const { editing, resetEditing, setEditing, cancelEditing } = useFileTreeMenuContext();
-  //todo
-  // if (treeDir === editNode) {
-  // }
-
-  const isEditing = editing === fullPath.str;
-  const [dirName, setDirName] = useState(fullPath);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isEditing]);
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!isEditing) {
-      props.onClick?.(e);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setDirName(fullPath);
-      cancelEditing();
-    }
-    if (e.key === "Enter") {
-      if (isEditing) {
-        resetEditing();
-        onRename(dirName).then((newName) => {
-          setDirName(newName);
-        });
-        return e.stopPropagation();
-      } else {
-        resetEditing();
-      }
-    }
-    if (e.key === " ") {
-      dirRef?.current?.click();
-      if (!isEditing) {
-        e.preventDefault();
-      }
-    }
-  };
-
-  const handleBlur = () => {
-    if (isEditing) {
-      cancelEditing();
-      setDirName(fullPath);
-    }
-  };
+  const {
+    isFocused,
+    setEditing,
+    isEditing,
+    setFocused,
+    setFileName,
+    handleKeyDown,
+    handleBlur,
+    handleClick,
+    linkRef,
+    inputRef,
+    fileName,
+  } = useEditable({
+    treeNode: treeDir,
+    expand,
+    onRename,
+    onCancelNew,
+  });
 
   return (
     <span
       tabIndex={0}
       {...props}
-      ref={dirRef}
+      ref={linkRef}
       data-treepath={fullPath.str}
       data-treetype="dir"
       onClick={handleClick}
-      onFocus={() => setFocusedNode(treeDir)}
-      className={twMerge("w-full inline-block group cursor-pointer select-none", true ? "font-bold" : "", className)}
+      onFocus={() => setFocused(treeDir.path)}
+      className={twMerge(
+        "w-full inline-block group cursor-pointer select-none",
+        isFocused ? "font-bold" : "",
+        className
+      )}
       onKeyDown={handleKeyDown}
     >
       <span className="inline-flex" style={{ marginLeft: depth * 1 + "rem" }}>
@@ -96,7 +69,7 @@ export const EditableDir = ({
           <ChevronRight size={18} className="group-data-[state=open]:hidden" />
         </span>
         {!isEditing ? (
-          <span onDoubleClick={() => setEditing(fullPath.str)}>{dirName.basename()}</span>
+          <span onDoubleClick={() => setEditing(fullPath)}>{fileName.basename()}</span>
         ) : (
           <input
             data-treepath={fullPath.str}
@@ -105,9 +78,9 @@ export const EditableDir = ({
             className="bg-transparent outline-none border-b border-dashed border-black"
             type="text"
             tabIndex={0}
-            onFocus={() => setFocusedNode(treeDir)}
-            value={dirName.basename().str}
-            onChange={(e) => setDirName(fullPath.dirname().join(e.target.value))}
+            onFocus={() => setFocused(treeDir.path)}
+            value={fileName.basename().str}
+            onChange={(e) => setFileName(fullPath.dirname().join(e.target.value).basename())}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
           />

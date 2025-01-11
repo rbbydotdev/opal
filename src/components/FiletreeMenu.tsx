@@ -2,6 +2,7 @@ import { isTreeDir, TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { useWorkspaceRoute } from "@/context";
 import { AbsPath } from "@/lib/paths";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import React from "react";
@@ -11,22 +12,26 @@ export function FileTreeMenu({
   resolveFileUrl,
   depth = 0,
   expand,
-  currentFile,
+  expandForNode,
   onDirRename,
   onFileRename,
   onFileRemove,
+  onCancelNew,
   expanded,
 }: {
   resolveFileUrl: (path: AbsPath) => string;
-  expand: (s: string, b: boolean) => void;
+  expand: (path: string, value: boolean) => void;
+  expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
-  currentFile: AbsPath | null;
   fileTree: TreeDir["children"];
   onDirRename: (dirPath: AbsPath, newFullPath: AbsPath) => Promise<AbsPath>;
   onFileRename: (filePath: AbsPath, newFullPath: AbsPath) => Promise<AbsPath>;
   onFileRemove: (filePath: AbsPath) => Promise<void>;
+  onCancelNew: (newPath: AbsPath) => void;
   depth?: number;
 }) {
+  const { path: currentFile } = useWorkspaceRoute();
+
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
     const data = JSON.stringify(file);
     event.dataTransfer.setData("application/json", data);
@@ -108,17 +113,19 @@ export function FileTreeMenu({
                     onDragStart={(e) => handleDragStart(e, file)}
                     treeDir={file}
                     onFileRemove={onFileRemove}
+                    expand={expandForNode}
                     fullPath={file.path}
                   />
                 ) : (
                   <EditableFile
                     href={resolveFileUrl(file.path)}
-                    isSelected={currentFile?.str === file.path.str}
                     depth={depth}
                     onFileRemove={onFileRemove}
                     onRename={(newPath) => onFileRename(file.path, newPath)}
+                    onCancelNew={onCancelNew}
                     fullPath={file.path}
                     treeFile={file as TreeFile}
+                    expand={expandForNode}
                     draggable
                     onDragStart={(e) => handleDragStart(e, file)}
                   />
@@ -129,12 +136,13 @@ export function FileTreeMenu({
               {file.type === "dir" ? (
                 <FileTreeMenu
                   expand={expand}
+                  expandForNode={expandForNode}
                   onFileRename={onFileRename}
                   onFileRemove={onFileRemove}
                   onDirRename={onDirRename}
+                  onCancelNew={onCancelNew}
                   fileTree={(file as TreeDir).children}
                   depth={depth + 1}
-                  currentFile={currentFile}
                   expanded={expanded}
                   resolveFileUrl={resolveFileUrl}
                 />

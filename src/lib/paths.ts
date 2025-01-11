@@ -12,6 +12,15 @@ export class BasePath extends String {
     return this.toString();
   }
 
+  equals(p?: BasePath | null) {
+    if (!p) return false;
+    return this.str === p.str;
+  }
+
+  valueOf(): string {
+    return this.str;
+  }
+
   inc() {
     const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;
     const match = this.toString().match(regex);

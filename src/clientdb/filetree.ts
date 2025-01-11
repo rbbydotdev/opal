@@ -93,6 +93,7 @@ export class TreeDir extends TreeNode {
 }
 
 export class TreeDirRoot extends TreeDir {
+  id = Date.now();
   constructor({
     name,
     dirname,
@@ -167,6 +168,7 @@ export class FileTree {
   dirs: TreeList = [];
   static SKIPPED: "skipped";
   static INDEXED: "index";
+  private map = new Map<string, TreeNode>();
 
   // private tree: TreeDir = this.root;
   constructor(private fs: FileSystem) {}
@@ -177,13 +179,7 @@ export class FileTree {
   }
 
   flatDirTree = () => {
-    const flat: TreeList = [];
-    this.walk((node) => {
-      if (node.type === "dir") {
-        flat.push(node.path.str);
-      }
-    });
-    return flat;
+    return [...this.map.keys()];
   };
 
   forceIndex = () => {
@@ -196,6 +192,7 @@ export class FileTree {
       console.debug("Acquired unlock");
       try {
         this.root = tree;
+        this.map = new Map<string, TreeNode>();
         await this.recurseTree(this.root);
         this.dirs = this.flatDirTree();
         this.initialIndex = true;
@@ -257,7 +254,7 @@ export class FileTree {
               depth: depth,
             });
           }
-          parent.children[entry.toString()] = treeEntry;
+          this.insertNode(parent, treeEntry);
         })
       );
     } catch (err) {
@@ -267,33 +264,69 @@ export class FileTree {
       }
     }
   };
+  removeNodeByPath(path: AbsPath) {
+    const node = this.map.get(path.str);
+    if (node) this.removeSelfByPathFromParent(path, node);
+  }
+  removeSelfByPathFromParent(path: AbsPath, selfNode: TreeNode) {
+    delete selfNode?.parent?.children[path.basename().str];
+    this.map.delete(path.basename().str);
+  }
+  insertNode(parent: TreeDir, newNode: TreeNode) {
+    this.map.set(newNode.path.str, newNode);
+    return insertNode(parent, newNode);
+  }
+  insertClosestNode(node: Pick<TreeNode, "path" | "type">, selectedNode: TreeNode) {
+    const parent = closestTreeDir(selectedNode);
+    const newNode = newTreeNode({ ...node, parent, depth: parent.depth + 1 });
+    return this.insertNode(parent, newNode);
+  }
+
+  nodeFromPath(path: AbsPath): TreeNode | null {
+    return this.map.get(path.str) ?? null;
+  }
 }
 
-export function closestTreeDir(node: TreeNode): TreeDir {
+function closestTreeDir(node: TreeNode): TreeDir {
   if (!node.parent) return node as TreeDir; //assumes root
   if (node.type === "file") return closestTreeDir(node.parent!);
   return node as TreeDir;
 }
-export function insertClosestTreeDir(node: TreeNode, targetNode: TreeNode) {
-  const parentNode = closestTreeDir(targetNode);
-  console.log(parentNode);
-  parentNode.children[node.name.str] = node;
-  return node;
-}
-export function insertNode(newNode: TreeNode, targetNode: TreeDir) {
+
+// function removeNode(node: TreeNode) {
+//   if (!node.parent) return;
+//   delete node.parent.children[node.name.str];
+// }
+// function insertClosestNode(node: Pick<TreeNode, "path" | "type">, selectedNode: TreeNode) {
+//   const parent = closestTreeDir(selectedNode);
+//   const newNode = newTreeNode({ ...node, parent, depth: parent.depth + 1 });
+//   return insertNode(parent, newNode);
+// }
+function insertNode(targetNode: TreeDir, newNode: TreeNode) {
   // const parentNode = closestTreeDir(targetNode);
   targetNode.children[newNode.name.str] = newNode;
+  return newNode;
 }
 
-export function newTreeNode({ type, path }: { type: "file" | "dir"; path: AbsPath }) {
+function newTreeNode({
+  type,
+  path,
+  parent = null,
+  depth = 0,
+}: {
+  type: "file" | "dir";
+  path: AbsPath;
+  depth?: number;
+  parent?: TreeDir | null;
+}) {
   if (type === "dir") {
     return new TreeDir({
       name: path.basename(),
       dirname: path.dirname(),
       basename: path.basename(),
       path,
-      parent: null,
-      depth: 0,
+      parent,
+      depth,
       children: {},
     });
   } else {
@@ -302,8 +335,8 @@ export function newTreeNode({ type, path }: { type: "file" | "dir"; path: AbsPat
       dirname: path.dirname(),
       basename: path.basename(),
       path,
-      parent: null,
-      depth: 0,
+      parent,
+      depth,
     });
   }
 }

@@ -1,121 +1,51 @@
 "use client";
-import { TreeFile } from "@/clientdb/filetree";
-import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { AbsPath, RelPath, relPath } from "@/lib/paths";
+import { TreeFile, TreeNode } from "@/clientdb/filetree";
+import { useEditable } from "@/components/useEditable";
+import { AbsPath, relPath } from "@/lib/paths";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableFile = ({
   depth,
-  isSelected,
   fullPath,
-  onRename,
   treeFile,
+  expand,
+  onRename,
   onFileRemove,
+  onCancelNew,
   ...props
 }: React.ComponentProps<typeof Link> & {
   href: string;
   treeFile: TreeFile;
   fullPath: AbsPath;
-  isSelected: boolean;
+  expand: (node: TreeNode, value: boolean) => void;
   onFileRemove: (path: AbsPath) => Promise<void>;
   onRename: (newPath: AbsPath) => Promise<AbsPath>;
+  onCancelNew: (newPath: AbsPath) => void;
   depth: number;
 }) => {
-  const { editing, resetEditing, setEditing, setFocusedNode } = useFileTreeMenuContext();
-  console.log(editing, treeFile.path);
-  const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
-  const linkRef = useRef<HTMLAnchorElement>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [inbound, setInbound] = useLocalStorage<string | null>("EditableLink/inbound", null);
-  const pathname = usePathname();
-
-  const isEditing = editing === fullPath.str;
-
-  const setIsEditing = useCallback(
-    (editing: boolean) => {
-      if (editing) {
-        setEditing(fullPath.str);
-      } else {
-        resetEditing();
-      }
-    },
-    [fullPath.str, resetEditing, setEditing]
-  );
-
-  // const { addNode, removeNode } = useFileTreeMenuContext();
+  const {
+    isEditing,
+    isSelected,
+    setFocused,
+    fileName,
+    handleKeyDown,
+    handleBlur,
+    handleClick,
+    setFileName,
+    linkRef,
+    inputRef,
+  } = useEditable({
+    treeNode: treeFile,
+    expand,
+    onRename,
+    onCancelNew,
+  });
 
   useEffect(() => {
-    if (isSelected && inbound === props.href) {
-      linkRef?.current?.focus();
-      setInbound(null);
-    }
-  }, [inbound, isSelected, props.href, linkRef, setInbound]);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (isEditing) {
-          //cancel file
-          // removeFile(fullPath.str);
-        }
-        setFileName(fullPath.basename());
-        setIsEditing(false);
-        resetEditing();
-        linkRef.current?.focus();
-      }
-      if (e.key === "Enter") {
-        if (isEditing) {
-          setIsEditing(false);
-          resetEditing();
-          onRename(fullPath.dirname().join(fileName)).then((newPath) => {
-            setFileName(newPath.basename());
-          });
-          linkRef.current?.focus();
-        } else {
-          setIsEditing(true);
-        }
-      } else if (e.key === " ") {
-        if (!isEditing) {
-          e.preventDefault();
-          linkRef.current?.click();
-        }
-      }
-    },
-    [fullPath, setIsEditing, resetEditing, isEditing, onRename, fileName]
-  );
-
-  const handleBlur = useCallback(() => {
-    if (isEditing) {
-      setIsEditing(false);
-      resetEditing();
-      //reset to original text
-      setFileName(fullPath.basename());
-    }
-  }, [fullPath, isEditing, resetEditing, setIsEditing]);
-
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>) => {
-      linkRef.current?.focus();
-      if (pathname === props.href) {
-        e.preventDefault();
-        return;
-      }
-      //convert props.href to string
-      setInbound(props.href);
-    },
-    [pathname, props.href, setInbound]
-  );
+    if (isSelected) setFocused(fullPath);
+  }, [fullPath, isSelected, setFocused]);
 
   return (
     <div className="select-none">
@@ -127,8 +57,7 @@ export const EditableFile = ({
           className={twMerge(props.className, "group cursor-pointer")}
           ref={linkRef}
           tabIndex={0}
-          onFocus={() => setFocusedNode(treeFile)}
-          onBlur={() => setFocusedNode(null)}
+          onFocus={() => setFocused(fullPath)}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
         >

@@ -1,8 +1,8 @@
 "use client";
-import { FileTree, TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
+import { FileTree, TreeDir, TreeDirRoot, TreeFile, TreeNode } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
-import { errorCode } from "@/lib/errors";
+import { errorCode, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import Emittery from "emittery";
@@ -253,8 +253,15 @@ export abstract class Disk extends DiskDAO {
   remoteWriteFileListener(watchFilePath: string, fn: (contents: string) => void) {
     return this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
       if (watchFilePath === filePath) {
-        const contents = await this.readFile(absPath(filePath));
-        return fn(contents);
+        try {
+          const contents = await this.readFile(absPath(filePath));
+          return fn(contents);
+        } catch (e) {
+          if (errorCode(e).code === "ENOENT") {
+            throw new NotFoundError(`File not found: ${filePath}`);
+          }
+          throw e;
+        }
       }
     });
   }
@@ -321,7 +328,19 @@ export abstract class Disk extends DiskDAO {
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskLocalEvents.INDEX);
   }
+  // nodeFromPath(path: AbsPath) {
+  //   return this.fileTree.nodeFromPath(
+  // }
 
+  removeVirtualFile(path: AbsPath) {
+    this.fileTree.removeNodeByPath(path);
+    this.local.emit(DiskLocalEvents.INDEX);
+  }
+  addVirtualFile({ type, path }: Pick<TreeNode, "type" | "path">, selectedNode: TreeNode | null) {
+    const node = this.fileTree.insertClosestNode({ type, path }, selectedNode || this.fileTree.root);
+    this.local.emit(DiskLocalEvents.INDEX);
+    return node;
+  }
   async addFile(fullPath: AbsPath, content: string) {
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
@@ -358,7 +377,14 @@ export abstract class Disk extends DiskDAO {
     return;
   }
   async readFile(filePath: AbsPath) {
-    return (await this.fs.promises.readFile(filePath.str)).toString();
+    try {
+      return (await this.fs.promises.readFile(filePath.str)).toString();
+    } catch (e) {
+      if (errorCode(e).code === "ENOENT") {
+        throw new NotFoundError(`File not found: ${filePath}`);
+      }
+      throw e;
+    }
   }
 
   async withFs(fn: (fs: FileSystem) => Promise<unknown> | unknown) {
