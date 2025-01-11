@@ -96,7 +96,10 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
     if (currentWorkspace) {
       return currentWorkspace.watchDisk((fileTreeDir: TreeDir) => {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
-        setFileTree(new TreeDirRoot(fileTreeDir));
+        const newTree = new TreeDirRoot(fileTreeDir);
+        setFileTree(newTree);
+        //@ts-ignore
+        // window.FILE_TREE = newTree;
         setFirstFile(currentWorkspace.getFirstFile());
         setFlatTree(currentWorkspace.getFlatDirTree());
       });

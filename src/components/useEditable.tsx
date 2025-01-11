@@ -48,11 +48,16 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent) => {
       e.stopPropagation();
-      if (e.key === "Escape" && isEditing) {
-        if (isVirtual) cancelNew();
-        setFileName(fullPath.basename());
-        resetEditing();
-        linkRef.current?.focus();
+      if (e.key === "Escape") {
+        if (isEditing) {
+          if (isVirtual) cancelNew();
+          setFileName(fullPath.basename());
+          resetEditing();
+          linkRef.current?.focus();
+        } else {
+          setFocused(null);
+          linkRef?.current?.blur();
+        }
       } else if (e.key === "Enter") {
         if (isEditing) {
           const newPath = await commitChange(treeNode, fileName);

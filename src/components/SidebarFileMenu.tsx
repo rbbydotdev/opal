@@ -10,7 +10,7 @@ import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
 import { AbsPath, RelPath, relPath } from "@/lib/paths";
 import { CopyMinus, FilePlus, FolderPlus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import React from "react";
+import React, { useCallback } from "react";
 
 const FileTreeMenuContext = React.createContext<{
   editing: AbsPath | null;
@@ -169,11 +169,30 @@ function SidebarFileMenuInternal({
     id: currentWorkspace.id,
   });
 
-  const addDirFileAndExpand = (type: TreeNode["type"]) => () => {
-    const newNode = addDirFile(type);
-    expandForNode(newNode, true);
-    return newNode;
-  };
+  const addDirFileAndExpand = useCallback(
+    (type: TreeNode["type"]) => {
+      const newNode = addDirFile(type);
+      expandForNode(newNode, true);
+      return newNode;
+    },
+    [addDirFile, expandForNode]
+  );
+  const addFile = useCallback(() => {
+    addDirFileAndExpand("file");
+  }, [addDirFileAndExpand]);
+  const addDir = useCallback(() => {
+    addDirFileAndExpand("dir");
+  }, [addDirFileAndExpand]);
+
+  // useEffect(() => {
+  //   const escapeKey = (e: KeyboardEvent) => {
+  //     if (e.key === "Escape") {
+  //       setFocused(null);
+  //     }
+  //   };
+  //   window.addEventListener("keydown", escapeKey);
+  //   return () => window.removeEventListener("keydown", escapeKey);
+  // }, [setFocused]);
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
@@ -182,7 +201,7 @@ function SidebarFileMenuInternal({
         <div>
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
-              <Button onClick={addDirFileAndExpand("file")} className="p-1 m-0 h-fit" variant="ghost">
+              <Button onClick={addFile} className="p-1 m-0 h-fit" variant="ghost">
                 <FilePlus />
               </Button>
             </TooltipTrigger>
@@ -192,7 +211,7 @@ function SidebarFileMenuInternal({
           </Tooltip>
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
-              <Button onClick={addDirFileAndExpand("dir")} className="p-1 m-0 h-fit" variant="ghost">
+              <Button onClick={addDir} className="p-1 m-0 h-fit" variant="ghost">
                 <FolderPlus />
               </Button>
             </TooltipTrigger>
