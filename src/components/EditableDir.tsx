@@ -55,13 +55,13 @@ export const EditableDir = ({
   return (
     <span
       {...props}
-      tabIndex={0}
       draggable
-      onDragStart={onDragStart}
-      ref={linkRef}
       data-treepath={fullPath.str}
       data-treetype="dir"
       onClick={handleClick}
+      tabIndex={0}
+      onDragStart={onDragStart}
+      ref={linkRef}
       onFocus={() => setFocused(treeDir.path)}
       className={twMerge(
         "w-full inline-block group cursor-pointer select-none",
@@ -84,8 +84,6 @@ export const EditableDir = ({
             ref={inputRef}
             className="bg-transparent outline-none border-b border-dashed border-black"
             type="text"
-            tabIndex={0}
-            onFocus={() => setFocused(treeDir.path)}
             value={fileName.basename().str}
             onChange={(e) => setFileName(fullPath.dirname().join(e.target.value).basename())}
             onKeyDown={handleKeyDown}

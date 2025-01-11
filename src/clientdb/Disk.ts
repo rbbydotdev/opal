@@ -221,7 +221,7 @@ export abstract class Disk extends DiskDAO {
   }
 
   async mkdirRecursive(filePath: AbsPath) {
-    const segments = filePath.dirname().split("/").slice(1);
+    const segments = filePath.split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
       try {
         await this.fs.promises.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
@@ -308,7 +308,7 @@ export abstract class Disk extends DiskDAO {
     return CHANGE;
   }
 
-  async addDir(fullPath: AbsPath) {
+  async newDir(fullPath: AbsPath) {
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
     }
@@ -341,7 +341,7 @@ export abstract class Disk extends DiskDAO {
     this.local.emit(DiskLocalEvents.INDEX);
     return node;
   }
-  async addFile(fullPath: AbsPath, content: string) {
+  async newFile(fullPath: AbsPath, content: string) {
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
     }
@@ -352,7 +352,7 @@ export abstract class Disk extends DiskDAO {
     return fullPath;
   }
   async writeFileRecursive(filePath: AbsPath, content: string) {
-    await this.mkdirRecursive(filePath);
+    await this.mkdirRecursive(filePath.dirname());
     try {
       this.fs.promises.writeFile(filePath.str, content, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
