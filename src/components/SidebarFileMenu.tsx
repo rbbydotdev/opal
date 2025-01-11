@@ -7,7 +7,7 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/componen
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { absPath, AbsPath } from "@/lib/paths";
+import { AbsPath, relPath } from "@/lib/paths";
 import { CopyMinus, FilePlus, FolderPlus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
@@ -69,7 +69,7 @@ const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
   const router = useRouter();
   const pathname = usePathname();
-  const { setEditing, resetEditing, focused, setFocused, cancelEditing, setVirtual, virtual } =
+  const { setEditing, resetEditing, setEditType, focused, setFocused, cancelEditing, setVirtual, virtual } =
     useFileTreeMenuContext();
 
   const renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
@@ -80,12 +80,17 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     return newPath;
   };
 
+  const newFile = async (path: AbsPath, content = "") => {
+    return currentWorkspace.addFile(path.dirname(), path.basename(), content);
+  };
+
   const addFile = () => {
     const focusedNode = currentWorkspace.nodeFromPath(focused);
-    const newNode = currentWorkspace.addVirtualFile({ type: "file", path: absPath("newfile") }, focusedNode);
+    const newNode = currentWorkspace.addVirtualFile({ type: "file", name: relPath("newfile") }, focusedNode);
     setFocused(newNode.path);
     setEditing(newNode.path);
     setVirtual(newNode.path);
+    setEditType("new");
     return newNode;
   };
   const removeFile = async (path: AbsPath) => {
@@ -98,7 +103,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const addDir = () => {
     const focusedNode = currentWorkspace.nodeFromPath(focused);
-    const newNode = currentWorkspace.addVirtualFile({ type: "dir", path: absPath("newdir") }, focusedNode);
+    const newNode = currentWorkspace.addVirtualFile({ type: "dir", name: relPath("newdir") }, focusedNode);
     setFocused(newNode.path);
     setEditing(newNode.path);
     setVirtual(newNode.path);
@@ -114,6 +119,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   return {
     renameFile,
     renameDir,
+    newFile,
     removeFile,
     addFile,
     addDir,
@@ -143,7 +149,7 @@ function SidebarFileMenuInternal({
   firstFile: TreeFile | null;
   isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const { renameFile, renameDir, cancelNew, addFile, addDir } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { renameFile, renameDir, addFile, addDir } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
     currentPath: workspaceRoute.path,
@@ -205,11 +211,8 @@ function SidebarFileMenuInternal({
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
         <FileTreeMenu
-          onFileRename={renameFile}
-          onDirRename={renameDir}
-          onCancelNew={cancelNew}
-          onFileRemove={currentWorkspace.removeFile}
-          resolveFileUrl={currentWorkspace.resolveFileUrl}
+          renameFile={renameFile}
+          renameDir={renameDir}
           fileTree={fileTreeDir.children}
           depth={0}
           expand={expandSingle}

@@ -1,6 +1,8 @@
 "use client";
 import { TreeFile, TreeNode } from "@/clientdb/filetree";
+import { Workspace } from "@/clientdb/Workspace";
 import { useEditable } from "@/components/useEditable";
+import { WorkspaceRouteType } from "@/context";
 import { AbsPath, relPath } from "@/lib/paths";
 import Link from "next/link";
 import { useEffect } from "react";
@@ -10,25 +12,26 @@ export const EditableFile = ({
   depth,
   fullPath,
   treeFile,
+  currentWorkspace,
+  className,
+  workspaceRoute,
   expand,
-  onRename,
-  onFileRemove,
-  onCancelNew,
-  ...props
-}: React.ComponentProps<typeof Link> & {
-  href: string;
+  onDragStart,
+}: {
+  currentWorkspace: Workspace;
+  onDragStart: (e: React.DragEvent) => void;
+  workspaceRoute: WorkspaceRouteType;
+  className?: string;
   treeFile: TreeFile;
   fullPath: AbsPath;
   expand: (node: TreeNode, value: boolean) => void;
-  onFileRemove: (path: AbsPath) => Promise<void>;
-  onRename: (newPath: AbsPath) => Promise<AbsPath>;
-  onCancelNew: (newPath: AbsPath) => void;
   depth: number;
 }) => {
   const {
     isEditing,
     isSelected,
     setFocused,
+
     fileName,
     handleKeyDown,
     handleBlur,
@@ -39,8 +42,8 @@ export const EditableFile = ({
   } = useEditable({
     treeNode: treeFile,
     expand,
-    onRename,
-    onCancelNew,
+    currentWorkspace,
+    workspaceRoute,
   });
 
   useEffect(() => {
@@ -51,10 +54,12 @@ export const EditableFile = ({
     <div className="select-none">
       {!isEditing ? (
         <Link
-          {...props}
+          draggable
+          onDragStart={onDragStart}
           data-treepath={fullPath.str}
           data-treetype="file"
-          className={twMerge(props.className, "group cursor-pointer")}
+          href={currentWorkspace.resolveFileUrl(fullPath)}
+          className={twMerge(className, "group cursor-pointer")}
           ref={linkRef}
           tabIndex={0}
           onFocus={() => setFocused(fullPath)}

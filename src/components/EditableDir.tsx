@@ -1,7 +1,9 @@
 "use client";
 import { TreeDir, TreeNode } from "@/clientdb/filetree";
+import { Workspace } from "@/clientdb/Workspace";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useEditable } from "@/components/useEditable";
+import { WorkspaceRouteType } from "@/context";
 import { AbsPath } from "@/lib/paths";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { ComponentProps } from "react";
@@ -10,22 +12,24 @@ import { twMerge } from "tailwind-merge";
 export const EditableDir = ({
   depth,
   className,
-  onRename,
-  onFileRemove,
   expand,
   treeDir,
   fullPath,
-
-  onCancelNew,
+  workspaceRoute,
+  currentWorkspace,
+  onDragStart,
+  onClick,
   ...props
 }: {
+  onDragStart: (e: React.DragEvent) => void;
   className?: string;
   depth: number;
   treeDir: TreeDir;
+  currentWorkspace: Workspace;
+  workspaceRoute: WorkspaceRouteType;
+  onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
   expand: (node: TreeNode, value: boolean) => void;
-  onRename: (name: AbsPath) => Promise<AbsPath>;
-  onCancelNew: (newPath: AbsPath) => void;
-  onFileRemove: (path: AbsPath) => Promise<void>;
+
   fullPath: AbsPath;
 } & ComponentProps<typeof SidebarMenuButton>) => {
   const {
@@ -41,24 +45,23 @@ export const EditableDir = ({
     inputRef,
     fileName,
   } = useEditable({
+    currentWorkspace,
+    onClick,
+    workspaceRoute,
     treeNode: treeDir,
     expand,
-    onRename,
-    onCancelNew,
   });
 
   return (
     <span
-      tabIndex={0}
       {...props}
+      tabIndex={0}
+      draggable
+      onDragStart={onDragStart}
       ref={linkRef}
       data-treepath={fullPath.str}
       data-treetype="dir"
-      onClick={(e: unknown) => {
-        //@ts-ignore
-        props?.onClick?.(e);
-        handleClick();
-      }}
+      onClick={handleClick}
       onFocus={() => setFocused(treeDir.path)}
       className={twMerge(
         "w-full inline-block group cursor-pointer select-none",

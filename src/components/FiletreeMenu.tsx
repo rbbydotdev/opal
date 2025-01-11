@@ -1,37 +1,60 @@
 import { isTreeDir, TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
+import { Workspace } from "@/clientdb/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useWorkspaceRoute } from "@/context";
+import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
 import { AbsPath } from "@/lib/paths";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import React from "react";
 
-export function FileTreeMenu({
+export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
+
+export function FileTreeContainer({
+  currentWorkspace,
+  fileTreeDir,
+  workspaceRoute,
+  ...props
+}: {
+  workspaceRoute: WorkspaceRouteType;
+  currentWorkspace: Workspace;
+  workspaces: Workspace[];
+  fileTreeDir: TreeDir;
+  flatTree: string[];
+  firstFile: TreeFile | null;
+  isIndexed: boolean;
+} & React.ComponentProps<typeof FileTreeMenuInternal>) {
+  return (
+    <FileTreeMenuInternal
+      {...props}
+      fileTree={fileTreeDir.children}
+      currentWorkspace={currentWorkspace}
+      workspaceRoute={workspaceRoute}
+    />
+  );
+}
+
+function FileTreeMenuInternal({
   fileTree,
-  resolveFileUrl,
+  renameFile,
+  renameDir,
   depth = 0,
   expand,
   expandForNode,
-  onDirRename,
-  onFileRename,
-  onFileRemove,
-  onCancelNew,
+  currentWorkspace,
   expanded,
+  workspaceRoute,
 }: {
-  resolveFileUrl: (path: AbsPath) => string;
+  fileTree: TreeDir["children"];
+  renameFile: (oldPath: AbsPath, newPath: AbsPath) => Promise<AbsPath>;
+  renameDir: (oldPath: AbsPath, newPath: AbsPath) => Promise<AbsPath>;
+  depth?: number;
   expand: (path: string, value: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
+  currentWorkspace: Workspace;
   expanded: { [path: string]: boolean };
-  fileTree: TreeDir["children"];
-  onDirRename: (dirPath: AbsPath, newFullPath: AbsPath) => Promise<AbsPath>;
-  onFileRename: (filePath: AbsPath, newFullPath: AbsPath) => Promise<AbsPath>;
-  onFileRemove: (filePath: AbsPath) => Promise<void>;
-  onCancelNew: (newPath: AbsPath) => void;
-  depth?: number;
+  workspaceRoute: WorkspaceRouteType;
 }) {
-  const { path: currentFile } = useWorkspaceRoute();
-
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
     const data = JSON.stringify(file);
     event.dataTransfer.setData("application/json", data);
@@ -50,7 +73,6 @@ export function FileTreeMenu({
     event.stopPropagation();
     const draggedData = event.dataTransfer.getData("application/json");
     try {
-      //on dir rename if dir is dragged into child return
       const { path: draggedPath, type: draggedType } = new TreeNode(JSON.parse(draggedData) as TreeNode);
 
       if (draggedPath && draggedPath !== targetNode.path) {
@@ -67,13 +89,12 @@ export function FileTreeMenu({
         console.debug(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
 
         if (draggedType === "dir") {
-          onDirRename(draggedPath, newPath);
+          renameDir(draggedPath, newPath);
         } else if (draggedType === "file") {
-          onFileRename(draggedPath, newPath);
+          renameFile(draggedPath, newPath);
         } else {
           console.error(`Drop: Invalid type ${draggedType}`);
         }
-        // Implement your logic to update the file tree
       } else {
         console.debug(`Drop: Invalid operation or same target`);
       }
@@ -87,6 +108,7 @@ export function FileTreeMenu({
     expand(path, true);
     console.debug(`Drag Enter: ${path}`);
   };
+
   return (
     <SidebarMenu>
       {Object.values(fileTree).map((file) => (
@@ -97,7 +119,7 @@ export function FileTreeMenu({
           onOpenChange={(o) => expand(file.path.str, o)}
         >
           <SidebarMenuItem
-            className={currentFile?.str === file.path.str ? "bg-sidebar-accent" : ""}
+            className={file.path.equals(workspaceRoute.path) ? "bg-sidebar-accent" : ""}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, file)}
             onDragEnter={(e) => handleDragEnter(e, file.path.str)}
@@ -106,27 +128,22 @@ export function FileTreeMenu({
               <SidebarMenuButton asChild>
                 {isTreeDir(file) ? (
                   <EditableDir
+                    workspaceRoute={workspaceRoute}
+                    currentWorkspace={currentWorkspace}
                     depth={depth}
-                    onRename={(newPath) => onDirRename(file.path, newPath)}
-                    draggable
                     onDragStart={(e) => handleDragStart(e, file)}
-                    onCancelNew={onCancelNew}
                     treeDir={file}
-                    onFileRemove={onFileRemove}
                     expand={expandForNode}
                     fullPath={file.path}
                   />
                 ) : (
                   <EditableFile
-                    href={resolveFileUrl(file.path)}
+                    workspaceRoute={workspaceRoute}
+                    currentWorkspace={currentWorkspace}
                     depth={depth}
-                    onFileRemove={onFileRemove}
-                    onRename={(newPath) => onFileRename(file.path, newPath)}
-                    onCancelNew={onCancelNew}
                     fullPath={file.path}
                     treeFile={file as TreeFile}
                     expand={expandForNode}
-                    draggable
                     onDragStart={(e) => handleDragStart(e, file)}
                   />
                 )}
@@ -134,17 +151,16 @@ export function FileTreeMenu({
             </CollapsibleTrigger>
             <CollapsibleContent>
               {file.type === "dir" ? (
-                <FileTreeMenu
+                <FileTreeMenuInternal
                   expand={expand}
                   expandForNode={expandForNode}
-                  onFileRename={onFileRename}
-                  onFileRemove={onFileRemove}
-                  onDirRename={onDirRename}
-                  onCancelNew={onCancelNew}
                   fileTree={(file as TreeDir).children}
+                  renameDir={renameDir}
+                  renameFile={renameFile}
+                  currentWorkspace={currentWorkspace}
+                  workspaceRoute={workspaceRoute}
                   depth={depth + 1}
                   expanded={expanded}
-                  resolveFileUrl={resolveFileUrl}
                 />
               ) : null}
             </CollapsibleContent>

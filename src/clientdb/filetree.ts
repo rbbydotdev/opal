@@ -37,6 +37,13 @@ export class TreeNode {
     this.parent = parent;
   }
 
+  inc() {
+    this.path = this.path.inc();
+    this.dirname = this.path.dirname();
+    this.name = this.path.basename();
+    this.basename = this.path.basename();
+    return this;
+  }
   toJSON(): {
     name: string;
     type: "dir" | "file";
@@ -266,19 +273,26 @@ export class FileTree {
   };
   removeNodeByPath(path: AbsPath) {
     const node = this.map.get(path.str);
-    if (node) this.removeSelfByPathFromParent(path, node);
+    if (node) {
+      this.removeSelfByPathFromParent(path, node);
+      this.map.delete(path.str);
+    }
   }
   removeSelfByPathFromParent(path: AbsPath, selfNode: TreeNode) {
     delete selfNode?.parent?.children[path.basename().str];
-    this.map.delete(path.basename().str);
+    this.map.delete(path.str);
   }
   insertNode(parent: TreeDir, newNode: TreeNode) {
     this.map.set(newNode.path.str, newNode);
     return insertNode(parent, newNode);
   }
-  insertClosestNode(node: Pick<TreeNode, "path" | "type">, selectedNode: TreeNode) {
+  nodeWithPathExists(path: AbsPath) {
+    return this.map.has(path.str);
+  }
+  insertClosestNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
     const parent = closestTreeDir(selectedNode);
-    const newNode = newTreeNode({ ...node, parent, depth: parent.depth + 1 });
+    const newNode = newTreeNode({ ...node, parent });
+    while (this.nodeWithPathExists(newNode.path)) newNode.inc();
     return this.insertNode(parent, newNode);
   }
 
@@ -308,17 +322,9 @@ function insertNode(targetNode: TreeDir, newNode: TreeNode) {
   return newNode;
 }
 
-function newTreeNode({
-  type,
-  path,
-  parent = null,
-  depth = 0,
-}: {
-  type: "file" | "dir";
-  path: AbsPath;
-  depth?: number;
-  parent?: TreeDir | null;
-}) {
+function newTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPath; parent: TreeDir }) {
+  const path = parent.path.join(name);
+  const depth = parent.depth + 1;
   if (type === "dir") {
     return new TreeDir({
       name: path.basename(),
