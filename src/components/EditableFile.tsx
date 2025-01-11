@@ -30,7 +30,6 @@ export const EditableFile = ({
     isEditing,
     isSelected,
     setFocused,
-
     fileName,
     handleKeyDown,
     handleBlur,

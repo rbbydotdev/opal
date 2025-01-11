@@ -10,6 +10,7 @@ export class TreeNode {
   parent: TreeDir | null;
   path: AbsPath;
   depth: number;
+  children?: Record<string, TreeNode>;
 
   constructor({
     name,
@@ -52,9 +53,19 @@ export class TreeNode {
     return this;
   }
   copy() {
-    return new TreeNode({
+    if (this.type === "dir") {
+      return new TreeDir({
+        name: this.name,
+        dirname: this.dirname,
+        basename: this.basename,
+        parent: this.parent,
+        path: this.path,
+        depth: this.depth,
+        children: this.children ?? {},
+      });
+    }
+    return new TreeFile({
       name: this.name,
-      type: this.type,
       dirname: this.dirname,
       basename: this.basename,
       parent: this.parent,

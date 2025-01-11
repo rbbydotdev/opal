@@ -39,6 +39,12 @@ export function useEditable<T extends TreeFile | TreeNode>({
     }
   }, [expand, fullPath, fullPath.str, isEditing, setFocused]);
 
+  // useEffect(() => {
+  //   if (isFocused && isSelected && linkRef.current) {
+  //     linkRef.current.focus();
+  //   }
+  // }, [isFocused, isSelected]);
+
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent) => {
       e.stopPropagation();
