@@ -24,9 +24,8 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
-  const { cancelNew, renameFile, newFile } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
-  const { editing, resetEditing, setEditType, editType, setEditing, setFocused, focused, virtual } =
-    useFileTreeMenuContext();
+  const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { editing, resetEditing, setEditing, setFocused, focused, virtual } = useFileTreeMenuContext();
   const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
 
   const isSelected = fullPath.equals(currentFile);
@@ -43,44 +42,29 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (isEditing && isVirtual) {
-          cancelNew();
-        }
-
-        setFileName(fullPath.basename());
-        resetEditing();
-        linkRef.current?.focus();
-      }
-      if (e.key === "Enter") {
         if (isEditing) {
-          if (editType === "rename") renameFile(fullPath, fullPath.dirname().join(fileName));
-          if (editType === "new") newFile(fullPath.dirname().join(fileName), "");
-
+          if (isVirtual) {
+            cancelNew();
+          }
+          setFileName(fullPath.basename());
           resetEditing();
+          linkRef.current?.focus();
+        }
+      } else if (e.key === "Enter") {
+        e.stopPropagation();
+        if (isEditing) {
+          commitChange(treeNode, fileName);
+          e.preventDefault();
         } else {
           setEditing(fullPath);
-          setEditType("rename");
+          setFocused(fullPath);
         }
-      } else if (e.key === " ") {
-        if (!isEditing) {
-          e.preventDefault();
-          linkRef.current?.click();
-        }
+      } else if (e.key === " " && !isEditing) {
+        e.preventDefault();
+        linkRef.current?.click();
       }
     },
-    [
-      isEditing,
-      isVirtual,
-      fullPath,
-      resetEditing,
-      cancelNew,
-      editType,
-      renameFile,
-      fileName,
-      newFile,
-      setEditing,
-      setEditType,
-    ]
+    [isEditing, isVirtual, fullPath, resetEditing, cancelNew, commitChange, treeNode, fileName, setEditing, setFocused]
   );
 
   const handleBlur = useCallback(() => {
