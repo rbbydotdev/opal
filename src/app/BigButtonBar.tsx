@@ -80,6 +80,12 @@ export function BigButtonBar() {
       />
       <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
       <BigButton icon={<Settings stroke="current" size={32} strokeWidth={1.25} />} title="settings" href="/settings" />
+      <BigButton
+        icon={<CirclePlus stroke="current" size={32} strokeWidth={1.25} />}
+        title="new workspace"
+        href="/workspace/new"
+        className="text-3xs"
+      />
 
       {currentWorkspace && (
         <BigButton
@@ -115,13 +121,6 @@ export function BigButtonBar() {
             />
           ))}
         </CollapsibleContent>
-
-        <BigButton
-          icon={<CirclePlus stroke="current" size={32} strokeWidth={1.25} />}
-          title="new workspace"
-          href="/workspace/new"
-          className="text-3xs"
-        />
       </Collapsible>
     </div>
   );

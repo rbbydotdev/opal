@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
 import { AbsPath, RelPath, relPath } from "@/lib/paths";
-import { CopyMinus, FilePlus, FolderPlus } from "lucide-react";
+import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback } from "react";
 
@@ -81,7 +81,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   };
 
   const newFileFromNode = ({ path, type }: { path: AbsPath; type: TreeNode["type"] }) => {
-    if (type === "file") return currentWorkspace.newFile(path.dirname(), path.basename(), "");
+    if (type === "file") return currentWorkspace.newFile(path.dirname(), path.basename(), "# " + path.basename());
     else {
       return currentWorkspace.newDir(path.dirname(), path.basename());
     }
@@ -93,8 +93,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     return currentWorkspace.newDir(path.dirname(), path.basename());
   };
 
-  const removeFile = async (path: AbsPath) => {
-    await currentWorkspace.removeFile(path);
+  const removeFocusedFile = async () => {
+    const focusedNode = currentWorkspace.nodeFromPath(focused);
+    if (!focusedNode) return;
+    if (focusedNode.path.str === "/") return;
+    await currentWorkspace.removeFile(focusedNode.path);
   };
   const cancelNew = () => {
     setVirtual(null);
@@ -132,7 +135,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     renameFile,
     renameDir,
     newFile,
-    removeFile,
+    removeFocusedFile,
     newDir,
     commitChange,
     addDirFile,
@@ -162,7 +165,7 @@ function SidebarFileMenuInternal({
   firstFile: TreeFile | null;
   isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const { renameFile, addDirFile } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { renameFile, addDirFile, removeFocusedFile } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
     currentPath: workspaceRoute.path,
@@ -201,6 +204,16 @@ function SidebarFileMenuInternal({
         <div>
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
+              <Button onClick={removeFocusedFile} className="p-1 m-0 h-fit" variant="ghost">
+                <Trash2 />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" align="center">
+              Delete File
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip delayDuration={3000}>
+            <TooltipTrigger asChild>
               <Button onClick={addFile} className="p-1 m-0 h-fit" variant="ghost">
                 <FilePlus />
               </Button>
@@ -237,14 +250,24 @@ function SidebarFileMenuInternal({
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
-        <FileTreeMenu
-          renameDirFile={renameFile}
-          fileTree={fileTreeDir.children}
-          depth={0}
-          expand={expandSingle}
-          expandForNode={expandForNode}
-          expanded={expanded}
-        />
+        {!Object.keys(fileTreeDir.children).length ? (
+          <div className="w-full">
+            <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border">
+              <div className="w-full">
+                No Files, Click <FilePlus className={"inline"} size={12} /> to get started
+              </div>
+            </SidebarGroupLabel>
+          </div>
+        ) : (
+          <FileTreeMenu
+            renameDirFile={renameFile}
+            fileTree={fileTreeDir.children}
+            depth={0}
+            expand={expandSingle}
+            expandForNode={expandForNode}
+            expanded={expanded}
+          />
+        )}
       </SidebarGroupContent>
     </SidebarGroup>
   );
