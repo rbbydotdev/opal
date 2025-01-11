@@ -5,7 +5,6 @@ import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
 import { AbsPath, relPath } from "@/lib/paths";
 import Link from "next/link";
-import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableFile = ({
@@ -45,10 +44,6 @@ export const EditableFile = ({
     currentWorkspace,
     workspaceRoute,
   });
-
-  useEffect(() => {
-    if (isSelected) setFocused(fullPath);
-  }, [fullPath, isSelected, setFocused]);
 
   return (
     <div className="select-none">

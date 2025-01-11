@@ -6,7 +6,6 @@ import { WorkspaceRouteType } from "@/context";
 import { AbsPath, relPath } from "@/lib/paths";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableItem = ({
@@ -51,10 +50,6 @@ export const EditableItem = ({
     currentWorkspace,
     workspaceRoute,
   });
-
-  useEffect(() => {
-    if (isFocused) setFocused(fullPath);
-  }, [fullPath, isFocused, setFocused]);
 
   const renderContent = () => {
     if (isEditing) {

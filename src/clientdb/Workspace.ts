@@ -113,9 +113,9 @@ export class Workspace extends WorkspaceDAO {
   memid = nanoid();
   static seedFiles: Record<string, string> = {
     "/welcome.md": "# Welcome to your new workspace!",
-    "/home/drafts/post1.md": "# Hello World!",
-    "/drafts/draft1.md": "# Goodbye World!",
-    "/ideas/ideas.md": "# Red Green Blue",
+    // "/home/drafts/post1.md": "# Hello World!",
+    // "/drafts/draft1.md": "# Goodbye World!",
+    // "/ideas/ideas.md": "# Red Green Blue",
   };
 
   createdAt: Date = new Date();
@@ -184,11 +184,17 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeFile(filePath);
   };
 
-  renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
-    return this.disk.renameFile(oldFullPath, newFullPath);
+  renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+    const { newPath } = await this.disk.renameDirFile(oldNode.path, newFullPath);
+    const newNode = oldNode.copy().rename(newPath);
+    this.disk.fileTree.replaceNode(oldNode, newNode);
+    return newNode;
   };
-  renameDir = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
-    return this.disk.renameDir(oldFullPath, newFullPath);
+  renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+    const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath);
+    const newNode = oldNode.copy().rename(newPath);
+    this.disk.fileTree.replaceNode(oldNode, newNode);
+    return newNode;
   };
 
   onInitialIndex(callback: (fileTree: TreeDir) => void) {

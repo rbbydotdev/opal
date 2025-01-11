@@ -72,12 +72,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   const { setEditing, resetEditing, setEditType, editType, focused, setFocused, cancelEditing, setVirtual, virtual } =
     useFileTreeMenuContext();
 
-  const renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
-    const { newPath, oldPath } = await currentWorkspace.renameFile(oldFullPath, newFullPath);
-    if (workspaceRoute.path?.str === oldFullPath.str) {
-      router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+  const renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+    const { path } = await currentWorkspace.renameFile(oldNode, newFullPath);
+
+    if (workspaceRoute.path?.str === oldNode.path.str) {
+      router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
     }
-    return newPath;
+    return path;
   };
 
   const newFileFromNode = ({ path, type }: { path: AbsPath; type: TreeNode["type"] }) => {
@@ -111,22 +112,22 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     return newNode;
   };
 
-  const renameDir = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
-    const { newPath, oldPath } = await currentWorkspace.renameDir(oldFullPath, newFullPath);
-    if (workspaceRoute.path?.startsWith(oldFullPath.str) && workspaceRoute.path) {
-      router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+  const renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+    const { path } = await currentWorkspace.renameDir(oldNode, newFullPath);
+    if (workspaceRoute.path?.startsWith(oldNode.path.str) && workspaceRoute.path) {
+      router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
     }
-    return newPath;
+    return path;
   };
-  const commitChange = (oldNode: TreeNode, fileName: RelPath) => {
-    const oldPath = oldNode.path;
+  const commitChange = async (oldNode: TreeNode, fileName: RelPath) => {
     const newPath = oldNode.path.dirname().join(fileName);
     if (editType === "rename") {
-      renameFile(oldPath, newPath).then(setFocused);
+      await renameFile(oldNode, newPath);
     } else if (editType === "new") {
-      newFileFromNode({ type: oldNode.type, path: newPath }).then(setFocused);
+      await newFileFromNode({ type: oldNode.type, path: newPath });
     }
     resetEditing();
+    return newPath;
   };
   return {
     renameFile,
@@ -162,7 +163,7 @@ function SidebarFileMenuInternal({
   firstFile: TreeFile | null;
   isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const { renameFile, renameDir, addDirFile } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { renameFile, addDirFile } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
     currentPath: workspaceRoute.path,
@@ -219,8 +220,7 @@ function SidebarFileMenuInternal({
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
         <FileTreeMenu
-          renameFile={renameFile}
-          renameDir={renameDir}
+          renameDirFile={renameFile}
           fileTree={fileTreeDir.children}
           depth={0}
           expand={expandSingle}
