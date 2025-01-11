@@ -6,7 +6,7 @@ import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
 import { AbsPath } from "@/lib/paths";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { ComponentProps } from "react";
+import { ComponentProps, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableDir = ({
@@ -51,6 +51,12 @@ export const EditableDir = ({
     treeNode: treeDir,
     expand,
   });
+
+  useEffect(() => {
+    if (isFocused && !isEditing) {
+      linkRef.current?.focus();
+    }
+  }, [isEditing, isFocused, linkRef]);
 
   return (
     <span

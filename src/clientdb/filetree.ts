@@ -327,6 +327,7 @@ export class FileTree {
   }
   insertClosestNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
     const parent = closestTreeDir(selectedNode);
+
     const newNode = newTreeNode({ ...node, parent });
     while (this.nodeWithPathExists(newNode.path)) newNode.inc();
     return this.insertNode(parent, newNode);
