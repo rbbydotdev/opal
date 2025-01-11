@@ -1,27 +1,32 @@
 "use client";
 import { TreeFile, TreeNode } from "@/clientdb/filetree";
-import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
-import { useWorkspaceRoute } from "@/context";
-import { AbsPath, RelPath } from "@/lib/paths";
+import { Workspace } from "@/clientdb/Workspace";
+import { useFileTreeMenuContext, useWorkspaceFileMgmt } from "@/components/SidebarFileMenu";
+import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
+import { RelPath } from "@/lib/paths";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useEditable<T extends TreeFile | TreeNode>({
   treeNode,
   expand,
-  onRename,
-  onCancelNew,
+  currentWorkspace,
+  onClick,
+  workspaceRoute,
 }: {
+  currentWorkspace: Workspace;
+  workspaceRoute: WorkspaceRouteType;
   treeNode: T;
+  onClick?: (e: React.MouseEvent) => void;
   href?: string;
   expand: (node: TreeNode, value: boolean) => void;
-  onRename: (newPath: AbsPath) => Promise<AbsPath>;
-  onCancelNew: (newPath: AbsPath) => void;
 }) {
   const fullPath = treeNode.path;
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
-  const { editing, resetEditing, setEditing, setFocused, focused, virtual } = useFileTreeMenuContext();
+  const { cancelNew, renameFile, newFile } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { editing, resetEditing, setEditType, editType, setEditing, setFocused, focused, virtual } =
+    useFileTreeMenuContext();
   const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
 
   const isSelected = fullPath.equals(currentFile);
@@ -39,20 +44,22 @@ export function useEditable<T extends TreeFile | TreeNode>({
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
         if (isEditing && isVirtual) {
-          onCancelNew(fullPath);
+          cancelNew();
         }
+
         setFileName(fullPath.basename());
         resetEditing();
         linkRef.current?.focus();
       }
       if (e.key === "Enter") {
         if (isEditing) {
+          if (editType === "rename") renameFile(fullPath, fullPath.dirname().join(fileName));
+          if (editType === "new") newFile(fullPath.dirname().join(fileName), "");
+
           resetEditing();
-          onRename(fullPath.dirname().join(fileName)).then((/*newPath*/) => {
-            // setFileName(newPath.basename());
-          });
         } else {
           setEditing(fullPath);
+          setEditType("rename");
         }
       } else if (e.key === " ") {
         if (!isEditing) {
@@ -61,7 +68,19 @@ export function useEditable<T extends TreeFile | TreeNode>({
         }
       }
     },
-    [isEditing, isVirtual, fullPath, resetEditing, onCancelNew, onRename, fileName, setEditing]
+    [
+      isEditing,
+      isVirtual,
+      fullPath,
+      resetEditing,
+      cancelNew,
+      editType,
+      renameFile,
+      fileName,
+      newFile,
+      setEditing,
+      setEditType,
+    ]
   );
 
   const handleBlur = useCallback(() => {
@@ -69,12 +88,19 @@ export function useEditable<T extends TreeFile | TreeNode>({
       resetEditing();
       setFileName(fullPath.basename());
     }
+    if (isEditing && isVirtual) {
+      cancelNew();
+    }
     setFocused(null);
-  }, [fullPath, isEditing, resetEditing, setFocused]);
+  }, [cancelNew, fullPath, isEditing, isVirtual, resetEditing, setFocused]);
 
-  const handleClick = useCallback(() => {
-    linkRef.current?.focus();
-  }, []);
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      linkRef.current?.focus();
+      onClick?.(e);
+    },
+    [onClick]
+  );
   return {
     isEditing,
     setFocused,

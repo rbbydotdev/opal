@@ -174,9 +174,8 @@ export class Workspace extends WorkspaceDAO {
   addFile(dirPath: AbsPath, newFileName: RelPath, content = "") {
     return this.disk.addFile(dirPath.join(newFileName), content);
   }
-  // add
-  addVirtualFile({ type, path }: { type: TreeNode["type"]; path: TreeNode["path"] }, selectedNode: TreeNode | null) {
-    return this.disk.addVirtualFile({ type, path }, selectedNode);
+  addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {
+    return this.disk.addVirtualFile({ type, name }, selectedNode);
   }
   removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
