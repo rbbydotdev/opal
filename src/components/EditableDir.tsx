@@ -54,7 +54,11 @@ export const EditableDir = ({
       ref={linkRef}
       data-treepath={fullPath.str}
       data-treetype="dir"
-      onClick={handleClick}
+      onClick={(e: unknown) => {
+        //@ts-ignore
+        props?.onClick?.(e);
+        handleClick();
+      }}
       onFocus={() => setFocused(treeDir.path)}
       className={twMerge(
         "w-full inline-block group cursor-pointer select-none",

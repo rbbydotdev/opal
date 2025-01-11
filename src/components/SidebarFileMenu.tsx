@@ -69,8 +69,7 @@ const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
   const router = useRouter();
   const pathname = usePathname();
-  const currentDir = workspaceRoute.path?.dirname();
-  const { setEditing, setEditType, resetEditing, focused, setFocused, cancelEditing, setVirtual, virtual } =
+  const { setEditing, resetEditing, focused, setFocused, cancelEditing, setVirtual, virtual } =
     useFileTreeMenuContext();
 
   const renameFile = async (oldFullPath: AbsPath, newFullPath: AbsPath) => {
@@ -124,15 +123,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     cancelEditing,
     setFocused,
   };
-}
-
-function getFocusPath() {
-  const treePath = document.activeElement?.getAttribute("data-treepath");
-  const treeType = document.activeElement?.getAttribute("data-treetype");
-  if (treePath) {
-    return treeType === "dir" ? absPath(treePath) : absPath(treePath).dirname();
-  }
-  return null;
 }
 
 function SidebarFileMenuInternal({

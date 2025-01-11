@@ -69,13 +69,11 @@ export function useEditable<T extends TreeFile | TreeNode>({
       resetEditing();
       setFileName(fullPath.basename());
     }
-  }, [fullPath, isEditing, resetEditing]);
+    setFocused(null);
+  }, [fullPath, isEditing, resetEditing, setFocused]);
 
   const handleClick = useCallback(() => {
     linkRef.current?.focus();
-    // if (isTreeDir(treeNode)) {
-    //   expand(treeNode, true);
-    // }
   }, []);
   return {
     isEditing,
