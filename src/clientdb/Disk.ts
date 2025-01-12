@@ -149,7 +149,7 @@ export abstract class Disk extends DiskDAO {
   getFirstFile(): TreeFile | null {
     let first = null;
     this.fileTree.walk((file, _, exit) => {
-      if (file.type === "file") {
+      if (file.type === "file" && !file.isVirtual) {
         first = file;
         exit();
       }

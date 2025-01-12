@@ -88,6 +88,11 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
+      if (e.shiftKey) {
+        e.preventDefault();
+        return;
+      }
+
       linkRef.current?.focus();
       onClick?.(e);
     },

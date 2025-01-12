@@ -113,9 +113,9 @@ export class Workspace extends WorkspaceDAO {
   memid = nanoid();
   static seedFiles: Record<string, string> = {
     "/welcome.md": "# Welcome to your new workspace!",
-    // "/home/drafts/post1.md": "# Hello World!",
-    // "/drafts/draft1.md": "# Goodbye World!",
-    // "/ideas/ideas.md": "# Red Green Blue",
+    "/home/drafts/post1.md": "# Hello World!",
+    "/drafts/draft1.md": "# Goodbye World!",
+    "/ideas/ideas.md": "# Red Green Blue",
   };
 
   createdAt: Date = new Date();
@@ -152,13 +152,11 @@ export class Workspace extends WorkspaceDAO {
 
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
-    ws.disk.withFs(async () => {
-      await Promise.all(
-        Object.entries(Workspace.seedFiles).map(([filePath, content]) =>
-          ws.disk.writeFileRecursive(absPath(filePath), content)
-        )
-      );
-    });
+    await Promise.all(
+      Object.entries(Workspace.seedFiles).map(([filePath, content]) =>
+        ws.disk.writeFileRecursive(absPath(filePath), content)
+      )
+    );
     return ws;
   }
 

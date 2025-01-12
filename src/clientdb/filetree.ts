@@ -3,6 +3,7 @@ import { AbsPath, absPath, relPath, RelPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 
 export class TreeNode {
+  isVirtual = false;
   name: RelPath;
   type: "dir" | "file";
   dirname: AbsPath;
@@ -188,6 +189,14 @@ export class TreeFile extends TreeNode {
 
 export type TreeList = Array<string>;
 
+class VirtualFileTreeNode extends TreeFile {
+  isVirtual = true;
+}
+
+class VirtualDirTreeNode extends TreeDir {
+  isVirtual = true;
+}
+
 export class FileTree {
   static EmptyFileTree = () =>
     new TreeDirRoot({
@@ -215,6 +224,7 @@ export class FileTree {
   }
 
   flatDirTree = () => {
+    console.log([...this.map.keys()]);
     return [...this.map.keys()];
   };
 
@@ -328,7 +338,7 @@ export class FileTree {
   insertClosestNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
     const parent = closestTreeDir(selectedNode);
 
-    const newNode = newTreeNode({ ...node, parent });
+    const newNode = newVirtualTreeNode({ ...node, parent });
     while (this.nodeWithPathExists(newNode.path)) newNode.inc();
     return this.insertNode(parent, newNode);
   }
@@ -359,11 +369,11 @@ function insertNode(targetNode: TreeDir, newNode: TreeNode) {
   return newNode;
 }
 
-function newTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPath; parent: TreeDir }) {
+function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPath; parent: TreeDir }) {
   const path = parent.path.join(name);
   const depth = parent.depth + 1;
   if (type === "dir") {
-    return new TreeDir({
+    return new VirtualDirTreeNode({
       name: path.basename(),
       dirname: path.dirname(),
       basename: path.basename(),
@@ -373,7 +383,7 @@ function newTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPa
       children: {},
     });
   } else {
-    return new TreeFile({
+    return new VirtualFileTreeNode({
       name: path.basename(),
       dirname: path.dirname(),
       basename: path.basename(),

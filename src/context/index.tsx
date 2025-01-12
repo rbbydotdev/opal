@@ -92,14 +92,13 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
   const [fileTreeDir, setFileTree] = useState<TreeDir | null>(null);
   const [firstFile, setFirstFile] = useState<TreeFile | null>(null);
   const [flatTree, setFlatTree] = useState<string[]>([]);
+
   useEffect(() => {
     if (currentWorkspace) {
       return currentWorkspace.watchDisk((fileTreeDir: TreeDir) => {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
         const newTree = new TreeDirRoot(fileTreeDir);
         setFileTree(newTree);
-        //@ts-ignore
-        // window.FILE_TREE = newTree;
         setFirstFile(currentWorkspace.getFirstFile());
         setFlatTree(currentWorkspace.getFlatDirTree());
       });
@@ -162,7 +161,15 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   return (
     <WorkspaceContext.Provider
-      value={{ workspaces, firstFile, currentWorkspace, workspaceRoute, flatTree, fileTreeDir, isIndexed }}
+      value={{
+        workspaces,
+        firstFile,
+        currentWorkspace,
+        workspaceRoute,
+        flatTree,
+        fileTreeDir,
+        isIndexed,
+      }}
     >
       {children}
     </WorkspaceContext.Provider>

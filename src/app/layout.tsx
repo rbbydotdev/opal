@@ -6,7 +6,6 @@ import { BigButtonBar } from "@/app/BigButtonBar";
 
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
-import { FPSStats } from "@/components/FPSStats";
 import { WorkspaceProvider } from "@/context";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -31,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <FPSStats />
+        {/* <FPSStats /> */}
         <WorkspaceProvider>
           <JotaiProvider>
             <SidebarProvider defaultOpen={defaultOpen}>
