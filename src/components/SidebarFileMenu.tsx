@@ -10,7 +10,7 @@ import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
 import { AbsPath, RelPath, relPath } from "@/lib/paths";
 import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 
 const FileTreeMenuContext = React.createContext<{
   editing: AbsPath | null;
@@ -87,7 +87,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     }
   };
   const newFile = async (path: AbsPath, content = "") => {
-    return currentWorkspace.newFile(path.dirname(), path.basename(), content);
+    const newPath = await currentWorkspace.newFile(path.dirname(), path.basename(), content);
+    if (!workspaceRoute.path) {
+      router.push(currentWorkspace.resolveFileUrl(newPath));
+    }
+    return newPath;
   };
   const newDir = async (path: AbsPath) => {
     return currentWorkspace.newDir(path.dirname(), path.basename());
@@ -97,7 +101,16 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     const focusedNode = currentWorkspace.nodeFromPath(focused);
     if (!focusedNode) return;
     if (focusedNode.path.str === "/") return;
+
     await currentWorkspace.removeFile(focusedNode.path);
+    if (workspaceRoute.path?.str === focusedNode.path.str) {
+      const firstFile = currentWorkspace.disk.getFirstFile();
+      if (firstFile) {
+        router.push(currentWorkspace.resolveFileUrl(firstFile.path));
+      } else {
+        router.push(currentWorkspace.href);
+      }
+    }
   };
   const cancelNew = () => {
     setVirtual(null);
@@ -187,20 +200,19 @@ function SidebarFileMenuInternal({
     addDirFileAndExpand("dir");
   }, [addDirFileAndExpand]);
 
-  // useEffect(() => {
-  //   const escapeKey = (e: KeyboardEvent) => {
-  //     if (e.key === "Escape") {
-  //       setFocused(null);
-  //     }
-  //   };
-  //   window.addEventListener("keydown", escapeKey);
-  //   return () => window.removeEventListener("keydown", escapeKey);
-  // }, [setFocused]);
+  useEffect(() => {
+    const escapeKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setFocused(null);
+      }
+    };
+    window.addEventListener("keydown", escapeKey);
+    return () => window.removeEventListener("keydown", escapeKey);
+  }, []);
 
   return (
     <SidebarGroup {...props} className="h-full p-0">
-      <SidebarGroupLabel className="flex justify-end">
-        {/* Files */}
+      <SidebarGroupContent className="flex justify-end">
         <div>
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
@@ -248,6 +260,10 @@ function SidebarFileMenuInternal({
             </TooltipContent>
           </Tooltip>
         </div>
+      </SidebarGroupContent>
+
+      <SidebarGroupLabel>
+        <div className="w-full">Files</div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
         {!Object.keys(fileTreeDir.children).length ? (
@@ -281,3 +297,6 @@ export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>
     </FileTreeMenuContextProvider>
   );
 };
+function setFocused(arg0: null) {
+  throw new Error("Function not implemented.");
+}

@@ -34,6 +34,56 @@ export function FileTreeContainer({
   );
 }
 
+// function findCommonAncestor(node1: HTMLElement, node2: HTMLElement): HTMLElement | null {
+//   const ancestors1: Set<HTMLElement> = new Set();
+//   let current: HTMLElement | null = node1;
+
+//   while (current) {
+//     ancestors1.add(current);
+//     current = current.parentElement;
+//   }
+
+//   current = node2;
+//   while (current) {
+//     if (ancestors1.has(current)) {
+//       return current;
+//     }
+//     current = current.parentElement;
+//   }
+
+//   return null;
+// }
+
+// function collectNodesToAncestor(node: HTMLElement, ancestor: HTMLElement): HTMLElement[] {
+//   const nodes: HTMLElement[] = [];
+//   let current: HTMLElement | null = node;
+
+//   while (current && current !== ancestor) {
+//     if (current.hasAttribute("data-node")) {
+//       nodes.push(current);
+//     }
+//     current = current.parentElement;
+//   }
+
+//   if (ancestor.hasAttribute("data-node")) {
+//     nodes.push(ancestor);
+//   }
+
+//   return nodes;
+// }
+
+// function getRangeArray(node1: HTMLElement, node2: HTMLElement): HTMLElement[] {
+//   const commonAncestor = findCommonAncestor(node1, node2);
+//   if (!commonAncestor) {
+//     return [];
+//   }
+
+//   const nodes1 = collectNodesToAncestor(node1, commonAncestor);
+//   const nodes2 = collectNodesToAncestor(node2, commonAncestor);
+
+//   return [...nodes1.reverse(), ...nodes2];
+// }
+
 function FileTreeMenuInternal({
   fileTree,
   renameDirFile,
@@ -100,14 +150,59 @@ function FileTreeMenuInternal({
     console.debug(`Drag Enter: ${path}`);
   };
 
+  // const [selectedRange, setSelectedRange] = useState<TreeNode[]>([]);
+  // const [shiftPressed, setShiftPressed] = useState<boolean>(false);
+  // const [startNode, setStartNode] = useState<TreeNode | null>(null);
+
+  // useEffect(() => {
+  //   const handleKeyDown = (event: KeyboardEvent) => {
+  //     if (event.key === "Shift") {
+  //       setShiftPressed(true);
+  //     }
+  //   };
+
+  //   const handleKeyUp = (event: KeyboardEvent) => {
+  //     if (event.key === "Shift") {
+  //       setShiftPressed(false);
+  //       setStartNode(null); // Reset start index when shift is released
+  //     }
+  //   };
+
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   document.addEventListener("keyup", handleKeyUp);
+
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //     document.removeEventListener("keyup", handleKeyUp);
+  //   };
+  // }, []);
+
+  // const handleItemClick = (node: TreeNode) => (event: React.MouseEvent<HTMLDivElement>) => {
+  //   if (shiftPressed) {
+  //     if (startNode === null) {
+  //       setStartNode(node);
+  //     } else {
+  //       const endNode = node;
+  //       const range = [startNode, endNode];
+  //       console.log({ range });
+  //       setSelectedRange(range);
+  //     }
+  //   } else {
+  //     // If shift is not pressed, reset the selection
+  //     setSelectedRange([]);
+  //     setStartNode(null);
+  //   }
+  // };
+
   return (
-    <SidebarMenu>
+    <SidebarMenu data-node="root">
       {Object.values(fileTree).map((file) => (
         <Collapsible
           key={file.path.str}
           open={expanded[file.path.str]}
           defaultOpen={expanded[file.path.str]}
           onOpenChange={(o) => expand(file.path.str, o)}
+          // onClick={handleItemClick(file)}
         >
           <SidebarMenuItem
             className={file.path.equals(workspaceRoute.path) ? "bg-sidebar-accent" : ""}
