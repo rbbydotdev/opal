@@ -1,10 +1,11 @@
-import { isTreeDir, TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
+import { isTreeDir, TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/clientdb/filetree";
 import { Workspace } from "@/clientdb/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
+import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { AbsPath } from "@/lib/paths";
+import { AbsPath, reduceLineage } from "@/lib/paths";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import React from "react";
 import { isAncestor } from "../lib/paths";
@@ -54,8 +55,16 @@ function FileTreeMenuInternal({
   expanded: { [path: string]: boolean };
   workspaceRoute: WorkspaceRouteType;
 }) {
+  const { selectedRange } = useFileTreeMenuContext();
+  type DragStartType = { dragStart: TreeNode[] };
+  type DragStartJType = { dragStart: TreeNodeJType[] };
+  console.log(selectedRange);
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
-    const data = JSON.stringify(file);
+    const data = JSON.stringify({
+      dragStart: Array.from(new Set([...selectedRange, file.path.str]))
+        .map((path) => currentWorkspace.disk.fileTree.nodeFromPath(path))
+        .filter(Boolean),
+    } satisfies DragStartType);
     event.dataTransfer.setData("application/json", data);
     event.dataTransfer.effectAllowed = "move";
     console.debug(`Drag Start: ${file.path}`);
@@ -70,10 +79,10 @@ function FileTreeMenuInternal({
   const handleDrop = (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
     event.stopPropagation();
-    const draggedData = event.dataTransfer.getData("application/json");
-    try {
-      const { path: draggedPath, type: draggedType } = new TreeNode(JSON.parse(draggedData) as TreeNode);
-
+    // const draggedData = ;
+    async function processDrop(node: TreeNode) {
+      const { path: draggedPath, type: draggedType } = node;
+      console.log(node);
       if (draggedPath && draggedPath !== targetNode.path) {
         const newPath =
           targetNode.type === "dir"
@@ -86,12 +95,27 @@ function FileTreeMenuInternal({
         }
 
         console.debug(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
-        renameDirFile(currentWorkspace.nodeFromPath(draggedPath)!, newPath, draggedType);
+        return renameDirFile(currentWorkspace.nodeFromPath(draggedPath)!, newPath, draggedType);
       } else {
         console.debug(`Drop: Invalid operation or same target`);
       }
-    } catch (error) {
-      console.error("Error parsing dragged data:", error);
+    }
+
+    // const { path: draggedPath, type: draggedType } = new TreeNode(JSON.parse(draggedData) as TreeNode);
+    try {
+      const { dragStart } = JSON.parse(event.dataTransfer.getData("application/json")) as DragStartJType;
+
+      if (dragStart && dragStart.length) {
+        console.log(dragStart);
+        return Promise.all(
+          reduceLineage(dragStart.map((node: TreeNodeJType) => TreeNode.fromJSON(node)))
+            .filter(Boolean)
+            .map((node) => processDrop(node))
+        );
+      }
+    } catch (e) {
+      console.error("Error parsing dragged data:", e);
+      return;
     }
   };
 
