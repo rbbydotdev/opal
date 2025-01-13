@@ -1,3 +1,4 @@
+import { TreeNode } from "@/clientdb/filetree";
 import path from "path";
 
 // Define unique symbols for branding
@@ -113,4 +114,16 @@ export function isAncestor(path: AbsPath | string | null, root: AbsPath | string
   if (path === root) return true;
   if (path === null || root === null) return false;
   return path.replace(/^\//, "").split("/")[0] === root.replace(/^\//, "");
+}
+
+export function reduceLineage<T extends (string | TreeNode)[]>(range: T): T {
+  [...range].sort((a, b) => a.length - b.length);
+  for (let i = 0; i < range.length; i++) {
+    const a = range[i];
+    for (let j = i + 1; j < range.length; j++) {
+      const b = range[j];
+      if (isAncestor(b.toString(), a.toString())) range.splice(j--, 1);
+    }
+  }
+  return range;
 }

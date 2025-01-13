@@ -210,7 +210,7 @@ export class Workspace extends WorkspaceDAO {
   getFlatDirTree() {
     return this.disk.fileTree.dirs;
   }
-  nodeFromPath(path: AbsPath | null) {
+  nodeFromPath(path: AbsPath | string | null) {
     if (path === null) return null;
     return this.disk.fileTree.nodeFromPath(path);
   }

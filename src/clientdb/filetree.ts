@@ -2,6 +2,8 @@ import { FileSystem } from "@/clientdb/Disk";
 import { AbsPath, absPath, relPath, RelPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 
+export type TreeNodeJType = ReturnType<TreeNode["toJSON"]>;
+
 export class TreeNode {
   isVirtual = false;
   name: RelPath;
@@ -13,6 +15,16 @@ export class TreeNode {
   depth: number;
   children?: Record<string, TreeNode>;
 
+  get length() {
+    return this.path.str.length;
+  }
+  toString() {
+    return this.path.str;
+  }
+  get str() {
+    return this.toString();
+  }
+
   constructor({
     name,
     type,
@@ -22,12 +34,12 @@ export class TreeNode {
     parent,
     depth,
   }: {
-    name: RelPath;
+    name: RelPath | string;
     type: "dir" | "file";
-    dirname: AbsPath;
-    basename: RelPath;
+    dirname: AbsPath | string;
+    basename: RelPath | string;
     parent: TreeDir | null;
-    path: AbsPath;
+    path: AbsPath | string;
     depth: number;
   }) {
     this.name = typeof name === "string" ? relPath(name) : name;
@@ -73,6 +85,9 @@ export class TreeNode {
       path: this.path,
       depth: this.depth,
     });
+  }
+  static fromJSON(json: TreeNodeJType, parent: TreeDir | null = null): TreeNode {
+    return new TreeNode({ ...json, parent });
   }
   toJSON(): {
     name: string;

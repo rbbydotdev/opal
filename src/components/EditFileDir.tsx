@@ -40,6 +40,7 @@ export const EditableItem = ({
     handleKeyDown,
     handleBlur,
     handleClick,
+    handleMouseUp,
     linkRef,
     inputRef,
     fileName,
@@ -50,33 +51,6 @@ export const EditableItem = ({
     currentWorkspace,
     workspaceRoute,
   });
-
-  const renderContent = () => {
-    if (isEditing) {
-      return (
-        <input
-          ref={inputRef}
-          className="bg-transparent outline-none border-b border-dashed border-black"
-          type="text"
-          value={fileName.str}
-          onChange={(e) =>
-            setFileName(isDir ? fullPath.dirname().join(e.target.value).basename() : relPath(e.target.value))
-          }
-          onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-        />
-      );
-    } else {
-      return <span onDoubleClick={() => setEditing(fullPath)}>{fileName.basename()}</span>;
-    }
-  };
-
-  const renderDirIcons = () => (
-    <span className="mr-2">
-      <ChevronDown size={18} className="group-data-[state=closed]:hidden" />
-      <ChevronRight size={18} className="group-data-[state=open]:hidden" />
-    </span>
-  );
 
   return (
     <div className="select-none group">
@@ -99,8 +73,11 @@ export const EditableItem = ({
             onKeyDown={handleKeyDown}
           >
             <span className="inline-flex group" style={{ marginLeft: depth * 1 + "rem" }}>
-              {renderDirIcons()}
-              {renderContent()}
+              <span className="mr-2">
+                <ChevronDown size={18} className="group-data-[state=closed]:hidden" />
+                <ChevronRight size={18} className="group-data-[state=open]:hidden" />
+              </span>
+              <span onDoubleClick={() => setEditing(fullPath)}>{fileName.basename()}</span>
             </span>
           </span>
         ) : (
@@ -115,6 +92,7 @@ export const EditableItem = ({
             tabIndex={0}
             onFocus={() => setFocused(fullPath)}
             onKeyDown={handleKeyDown}
+            onMouseUp={handleMouseUp}
             onClick={handleClick}
           >
             <div style={{ marginLeft: depth + 1 + "rem" }}>
@@ -127,7 +105,17 @@ export const EditableItem = ({
       ) : (
         <div style={{ marginLeft: depth + 1.5 + "rem" }}>
           <File selected={isFocused} data-treepath={fullPath.str} data-treetype={isDir ? "dir" : "file"}>
-            {renderContent()}
+            <input
+              ref={inputRef}
+              className="bg-transparent outline-none border-b border-dashed border-black"
+              type="text"
+              value={fileName.str}
+              onChange={(e) =>
+                setFileName(isDir ? fullPath.dirname().join(e.target.value).basename() : relPath(e.target.value))
+              }
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+            />
           </File>
         </div>
       )}

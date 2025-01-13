@@ -42,12 +42,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
     }
   }, [expand, fullPath, fullPath.str, isEditing, setFocused]);
 
-  // useEffect(() => {
-  //   if (isFocused && isSelected && linkRef.current) {
-  //     linkRef.current.focus();
-  //   }
-  // }, [isFocused, isSelected]);
-
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (e.shiftKey && focused) {
@@ -57,10 +51,16 @@ export function useEditable<T extends TreeFile | TreeNode>({
           setSelectedRange(range ?? []);
         }
       } else {
-        setSelectedRange([]);
+        // setSelectedRange([]);
       }
     },
     [currentWorkspace.disk.fileTree, focused, setSelectedRange, treeNode]
+  );
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      if (!e.shiftKey) setSelectedRange([]);
+    },
+    [setSelectedRange]
   );
 
   const handleKeyDown = useCallback(
@@ -91,7 +91,20 @@ export function useEditable<T extends TreeFile | TreeNode>({
         linkRef.current?.click();
       }
     },
-    [isEditing, isVirtual, fullPath, resetEditing, cancelNew, commitChange, treeNode, fileName, setEditing, setFocused]
+    [
+      isEditing,
+      isVirtual,
+      cancelNew,
+      fullPath,
+      resetEditing,
+      setFocused,
+      selectedRange.length,
+      setSelectedRange,
+      commitChange,
+      treeNode,
+      fileName,
+      setEditing,
+    ]
   );
 
   const handleFocus = useCallback(
@@ -104,7 +117,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleBlur = useCallback(() => {
     if (selectedRange.length) {
-      setSelectedRange([]);
+      // setSelectedRange([]);
     }
     if (isEditing) {
       resetEditing();
@@ -114,12 +127,13 @@ export function useEditable<T extends TreeFile | TreeNode>({
       cancelNew();
     }
     setFocused(null);
-  }, [cancelNew, fullPath, isEditing, isVirtual, resetEditing, selectedRange.length, setFocused, setSelectedRange]);
+  }, [cancelNew, fullPath, isEditing, isVirtual, resetEditing, selectedRange.length, setFocused]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       if (e.shiftKey) {
         e.preventDefault();
+        e.stopPropagation();
         return;
       }
       linkRef.current?.focus();
@@ -139,6 +153,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
     handleKeyDown,
     handleBlur,
 
+    handleMouseUp,
     handleFocus,
     handleClick,
     handleMouseDown,

@@ -36,6 +36,7 @@ export const EditableFile = ({
     handleMouseDown,
     handleBlur,
     handleClick,
+    handleMouseUp,
     handleFocus,
     isSelectedRange,
     isFocused,
@@ -71,6 +72,7 @@ export const EditableFile = ({
           ref={linkRef}
           tabIndex={0}
           onFocus={handleFocus}
+          onMouseUp={handleMouseUp}
           onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
           onClick={handleClick}

@@ -7,7 +7,7 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/componen
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { absPath, AbsPath, RelPath, relPath } from "@/lib/paths";
+import { absPath, AbsPath, reduceLineage, RelPath, relPath } from "@/lib/paths";
 import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback } from "react";
@@ -126,16 +126,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
       }
     }
 
-    //sort by length
-    range.sort((a, b) => a.length - b.length);
-    for (let i = 0; i < range.length; i++) {
-      const a = range[i];
-      for (let j = i + 1; j < range.length; j++) {
-        const b = range[j];
-        if (isAncestor(b, a)) range.splice(j--, 1);
-      }
-    }
-    const paths = range.map((pathStr) => absPath(pathStr));
+    const paths = reduceLineage(range).map((pathStr) => absPath(pathStr));
     // console.log(selectedRange, paths);
     return Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
   };
