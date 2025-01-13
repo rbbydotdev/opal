@@ -13,7 +13,7 @@ function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) 
     /helloworld123
 split?
   */
-  dirTree.filter((d) => isAncestor(file, d)).forEach((d) => (exp[d] = true));
+  dirTree.filter((dir) => isAncestor(file, dir)).forEach((d) => (exp[d] = true));
   return exp;
 }
 type ExpandMap = { [path: string]: boolean };

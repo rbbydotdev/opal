@@ -35,6 +35,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const isVirtual = fullPath.equals(virtual);
   const isSelectedRange = useMemo(() => selectedRange.includes(treeNode.path.str), [selectedRange, treeNode.path.str]);
 
+  //assuring focus on the input when editing
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -44,21 +45,32 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        setFocused(treeNode.path);
+        setSelectedRange(Array.from(new Set([...selectedRange, treeNode.path.str])));
+        return;
+      }
       if (e.shiftKey && focused) {
         const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
         if (focusedNode) {
           const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode);
           setSelectedRange(range ?? []);
         }
-      } else {
-        // setSelectedRange([]);
+
+        e.preventDefault(); ///////////
+        e.stopPropagation(); ///// the goal here is to prevent a focus on a select range
       }
     },
-    [currentWorkspace.disk.fileTree, focused, setSelectedRange, treeNode]
+    [currentWorkspace.disk.fileTree, focused, selectedRange, setFocused, setSelectedRange, treeNode]
   );
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
-      if (!e.shiftKey) setSelectedRange([]);
+      if (!e.shiftKey) {
+        setSelectedRange([]);
+        linkRef.current?.focus();
+      }
     },
     [setSelectedRange]
   );
@@ -108,17 +120,19 @@ export function useEditable<T extends TreeFile | TreeNode>({
   );
 
   const handleFocus = useCallback(
-    (e: React.MouseEvent) => {
+    (_e: React.MouseEvent) => {
+      if (selectedRange.includes(treeNode.str) && linkRef.current) {
+        linkRef.current.blur();
+        return;
+      }
+
       //range select
       setFocused(treeNode.path);
     },
-    [setFocused, treeNode]
+    [selectedRange, setFocused, treeNode.path, treeNode.str]
   );
 
   const handleBlur = useCallback(() => {
-    if (selectedRange.length) {
-      // setSelectedRange([]);
-    }
     if (isEditing) {
       resetEditing();
       setFileName(fullPath.basename());
@@ -127,16 +141,16 @@ export function useEditable<T extends TreeFile | TreeNode>({
       cancelNew();
     }
     setFocused(null);
-  }, [cancelNew, fullPath, isEditing, isVirtual, resetEditing, selectedRange.length, setFocused]);
+  }, [cancelNew, fullPath, isEditing, isVirtual, resetEditing, setFocused]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (e.shiftKey) {
+      //meta key cmd click or ctrl click
+      if (e.shiftKey || e.metaKey || e.ctrlKey) {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
-      linkRef.current?.focus();
       onClick?.(e);
     },
     [onClick]

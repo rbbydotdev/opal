@@ -73,8 +73,7 @@ export const EditableDir = ({
       onMouseDown={handleMouseDown}
       onFocus={handleFocus}
       className={twMerge(
-        isFocused ? "font-bold" : "",
-        isSelectedRange ? "bg-sidebar-accent" : "",
+        isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
         className,
         "w-full inline-block group cursor-pointer select-none rounded-none"
       )}
