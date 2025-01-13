@@ -34,11 +34,13 @@ export const EditableDir = ({
 } & ComponentProps<typeof SidebarMenuButton>) => {
   const {
     isFocused,
-    setEditing,
+    isSelectedRange,
     isEditing,
-    setFocused,
+    setEditing,
     setFileName,
     handleKeyDown,
+    handleFocus,
+    handleMouseDown,
     handleBlur,
     handleClick,
     linkRef,
@@ -68,11 +70,13 @@ export const EditableDir = ({
       tabIndex={0}
       onDragStart={onDragStart}
       ref={linkRef}
-      onFocus={() => setFocused(treeDir.path)}
+      onMouseDown={handleMouseDown}
+      onFocus={handleFocus}
       className={twMerge(
-        "w-full inline-block group cursor-pointer select-none",
         isFocused ? "font-bold" : "",
-        className
+        isSelectedRange ? "bg-sidebar-accent" : "",
+        className,
+        "w-full inline-block group cursor-pointer select-none rounded-none"
       )}
       onKeyDown={handleKeyDown}
     >

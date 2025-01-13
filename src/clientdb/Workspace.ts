@@ -3,7 +3,7 @@ import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
 import { TreeDir, TreeNode } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { BadRequestError, NotFoundError } from "@/lib/errors";
-import { absPath, AbsPath, RelPath } from "@/lib/paths";
+import { absPath, AbsPath, isAncestor, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
 
@@ -139,7 +139,7 @@ export class Workspace extends WorkspaceDAO {
   }
   //shoulndt this be in the dao?
   static async fetchFromRoute(route: string) {
-    if (!route.startsWith(Workspace.rootRoute)) throw new BadRequestError("Invalid route");
+    if (!isAncestor(route, Workspace.rootRoute)) throw new BadRequestError("Invalid route");
 
     const name = route.slice(Workspace.rootRoute.length + 1).split("/")[0];
 

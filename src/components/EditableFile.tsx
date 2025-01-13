@@ -30,11 +30,14 @@ export const EditableFile = ({
   const {
     isEditing,
     isSelected,
-    setFocused,
+    // setFocused,
     fileName,
     handleKeyDown,
+    handleMouseDown,
     handleBlur,
     handleClick,
+    handleFocus,
+    isSelectedRange,
     isFocused,
     setFileName,
     linkRef,
@@ -60,10 +63,15 @@ export const EditableFile = ({
           data-treepath={fullPath.str}
           data-treetype="file"
           href={currentWorkspace.resolveFileUrl(fullPath)}
-          className={twMerge(className, "group cursor-pointer")}
+          className={twMerge(
+            className,
+            isSelectedRange ? "bg-sidebar-accent" : "",
+            "group cursor-pointer rounded-none"
+          )}
           ref={linkRef}
           tabIndex={0}
-          onFocus={() => setFocused(fullPath)}
+          onFocus={handleFocus}
+          onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
         >
