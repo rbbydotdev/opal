@@ -108,3 +108,9 @@ export function relPath(path: string) {
 export function absPath(path: string) {
   return AbsPath.New(path);
 }
+
+export function isAncestor(path: AbsPath | string | null, root: AbsPath | string | null) {
+  if (path === root) return true;
+  if (path === null || root === null) return false;
+  return path.replace(/^\//, "").split("/")[0] === root.replace(/^\//, "");
+}

@@ -3,10 +3,17 @@ import { TreeNode } from "@/clientdb/filetree";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath } from "@/lib/paths";
 import { useCallback, useEffect, useState } from "react";
+import { isAncestor } from "../lib/paths";
 
 function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) {
   if (!file) return exp;
-  dirTree.filter((d) => file.startsWith(d)).forEach((d) => (exp[d] = true));
+  /*
+
+    /helloworld
+    /helloworld123
+split?
+  */
+  dirTree.filter((d) => isAncestor(file, d)).forEach((d) => (exp[d] = true));
   return exp;
 }
 type ExpandMap = { [path: string]: boolean };

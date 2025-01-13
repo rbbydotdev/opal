@@ -7,10 +7,11 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/componen
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { AbsPath, RelPath, relPath } from "@/lib/paths";
+import { absPath, AbsPath, RelPath, relPath } from "@/lib/paths";
 import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
+import { isAncestor } from "../lib/paths";
 
 const FileTreeMenuContext = React.createContext<{
   editing: AbsPath | null;
@@ -19,8 +20,9 @@ const FileTreeMenuContext = React.createContext<{
   setFocused: (path: AbsPath | null) => void;
   focused: AbsPath | null;
   setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
-  cancelEditing: () => void;
   resetEditing: () => void;
+  setSelectedRange: (r: string[]) => void;
+  selectedRange: string[];
   virtual: AbsPath | null;
   setVirtual: (path: AbsPath | null) => void;
 } | null>(null);
@@ -37,24 +39,35 @@ const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [editType, setEditType] = React.useState<"rename" | "new">("rename");
   const [focused, setFocused] = React.useState<AbsPath | null>(null);
   const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
-
+  const [selectedRange, setSelectedRange] = React.useState<string[]>([]);
   const resetEditing = () => {
     setEditing(null);
     setEditType("rename");
     setFocused(null);
     setVirtual(null);
   };
-  const cancelEditing = resetEditing;
+
+  React.useEffect(() => {
+    const escapeKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setFocused(null);
+        setSelectedRange([]);
+      }
+    };
+    window.addEventListener("keydown", escapeKey);
+    return () => window.removeEventListener("keydown", escapeKey);
+  }, [setFocused]);
   return (
     <FileTreeMenuContext.Provider
       value={{
+        selectedRange,
+        setSelectedRange,
         setFocused,
         editType,
         setEditType,
         focused,
         setVirtual,
         virtual,
-        cancelEditing,
         editing,
         setEditing,
         resetEditing,
@@ -68,7 +81,7 @@ const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
   const router = useRouter();
   const pathname = usePathname();
-  const { setEditing, resetEditing, setEditType, editType, focused, setFocused, cancelEditing, setVirtual, virtual } =
+  const { setEditing, selectedRange, resetEditing, setEditType, editType, focused, setFocused, setVirtual, virtual } =
     useFileTreeMenuContext();
 
   const renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
@@ -95,6 +108,36 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   };
   const newDir = async (path: AbsPath) => {
     return currentWorkspace.newDir(path.dirname(), path.basename());
+  };
+
+  const removeFiles = async () => {
+    const range = [...selectedRange];
+    if (!range.length && focused) {
+      range.push(focused.str);
+    }
+    if (!range.length) return;
+
+    if (workspaceRoute.path && range.includes(workspaceRoute.path.str)) {
+      const firstFile = currentWorkspace.disk.getFirstFile();
+      if (firstFile) {
+        router.push(currentWorkspace.resolveFileUrl(firstFile.path));
+      } else {
+        router.push(currentWorkspace.href);
+      }
+    }
+
+    //sort by length
+    range.sort((a, b) => a.length - b.length);
+    for (let i = 0; i < range.length; i++) {
+      const a = range[i];
+      for (let j = i + 1; j < range.length; j++) {
+        const b = range[j];
+        if (isAncestor(b, a)) range.splice(j--, 1);
+      }
+    }
+    const paths = range.map((pathStr) => absPath(pathStr));
+    // console.log(selectedRange, paths);
+    return Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
   };
 
   const removeFocusedFile = async () => {
@@ -129,7 +172,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const { path } = await currentWorkspace.renameDir(oldNode, newFullPath);
-    if (workspaceRoute.path?.startsWith(oldNode.path.str) && workspaceRoute.path) {
+    if (isAncestor(workspaceRoute.path, oldNode.path.str) && workspaceRoute.path) {
       router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
     }
     return path;
@@ -149,13 +192,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     renameDir,
     newFile,
     removeFocusedFile,
+    removeFiles,
     newDir,
     commitChange,
     addDirFile,
     cancelNew,
     resetEditing,
     setEditing,
-    cancelEditing,
     setFocused,
   };
 }
@@ -178,7 +221,7 @@ function SidebarFileMenuInternal({
   firstFile: TreeFile | null;
   isIndexed: boolean;
 } & React.ComponentProps<typeof SidebarGroup>) {
-  const { renameFile, addDirFile, removeFocusedFile } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { renameFile, addDirFile, removeFiles } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
     currentPath: workspaceRoute.path,
@@ -200,28 +243,18 @@ function SidebarFileMenuInternal({
     addDirFileAndExpand("dir");
   }, [addDirFileAndExpand]);
 
-  useEffect(() => {
-    const escapeKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setFocused(null);
-      }
-    };
-    window.addEventListener("keydown", escapeKey);
-    return () => window.removeEventListener("keydown", escapeKey);
-  }, []);
-
   return (
     <SidebarGroup {...props} className="h-full p-0">
       <SidebarGroupContent className="flex justify-end">
         <div>
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
-              <Button onClick={removeFocusedFile} className="p-1 m-0 h-fit" variant="ghost">
+              <Button onClick={removeFiles} className="p-1 m-0 h-fit" variant="ghost">
                 <Trash2 />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left" align="center">
-              Delete File
+              Delete File(s)
             </TooltipContent>
           </Tooltip>
           <Tooltip delayDuration={3000}>
@@ -297,6 +330,3 @@ export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>
     </FileTreeMenuContextProvider>
   );
 };
-function setFocused(arg0: null) {
-  throw new Error("Function not implemented.");
-}

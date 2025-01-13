@@ -4,7 +4,7 @@ import { Workspace } from "@/clientdb/Workspace";
 import { useFileTreeMenuContext, useWorkspaceFileMgmt } from "@/components/SidebarFileMenu";
 import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
 import { RelPath } from "@/lib/paths";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export function useEditable<T extends TreeFile | TreeNode>({
   treeNode,
@@ -25,13 +25,16 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
   const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
-  const { editing, resetEditing, setEditing, setFocused, focused, virtual } = useFileTreeMenuContext();
+  const { editing, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
+    useFileTreeMenuContext();
   const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
 
   const isSelected = fullPath.equals(currentFile);
   const isEditing = fullPath.equals(editing);
   const isFocused = fullPath.equals(focused);
   const isVirtual = fullPath.equals(virtual);
+  const isSelectedRange = useMemo(() => selectedRange.includes(treeNode.path.str), [selectedRange, treeNode.path.str]);
+
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -45,6 +48,21 @@ export function useEditable<T extends TreeFile | TreeNode>({
   //   }
   // }, [isFocused, isSelected]);
 
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.shiftKey && focused) {
+        const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
+        if (focusedNode) {
+          const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode);
+          setSelectedRange(range ?? []);
+        }
+      } else {
+        setSelectedRange([]);
+      }
+    },
+    [currentWorkspace.disk.fileTree, focused, setSelectedRange, treeNode]
+  );
+
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent) => {
       e.stopPropagation();
@@ -56,6 +74,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
           linkRef.current?.focus();
         } else {
           setFocused(null);
+          if (selectedRange.length) setSelectedRange([]);
           linkRef?.current?.blur();
         }
       } else if (e.key === "Enter") {
@@ -75,7 +94,18 @@ export function useEditable<T extends TreeFile | TreeNode>({
     [isEditing, isVirtual, fullPath, resetEditing, cancelNew, commitChange, treeNode, fileName, setEditing, setFocused]
   );
 
+  const handleFocus = useCallback(
+    (e: React.MouseEvent) => {
+      //range select
+      setFocused(treeNode.path);
+    },
+    [setFocused, treeNode]
+  );
+
   const handleBlur = useCallback(() => {
+    if (selectedRange.length) {
+      setSelectedRange([]);
+    }
     if (isEditing) {
       resetEditing();
       setFileName(fullPath.basename());
@@ -84,7 +114,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
       cancelNew();
     }
     setFocused(null);
-  }, [cancelNew, fullPath, isEditing, isVirtual, resetEditing, setFocused]);
+  }, [cancelNew, fullPath, isEditing, isVirtual, resetEditing, selectedRange.length, setFocused, setSelectedRange]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -92,7 +122,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
         e.preventDefault();
         return;
       }
-
       linkRef.current?.focus();
       onClick?.(e);
     },
@@ -104,11 +133,15 @@ export function useEditable<T extends TreeFile | TreeNode>({
     currentFile,
     fileName,
     isSelected,
+    isSelectedRange,
     isFocused,
     setEditing,
     handleKeyDown,
     handleBlur,
+
+    handleFocus,
     handleClick,
+    handleMouseDown,
     setFileName,
     linkRef,
     inputRef,

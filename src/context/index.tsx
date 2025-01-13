@@ -2,7 +2,7 @@
 import { TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { NotFoundError } from "@/lib/errors";
-import { AbsPath } from "@/lib/paths";
+import { AbsPath, isAncestor } from "@/lib/paths";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useContext, useEffect, useState } from "react";
@@ -124,7 +124,7 @@ export function useWorkspaceFromRoute() {
   const workspaceRoute = useWorkspaceRoute();
 
   useEffect(() => {
-    if (!pathname.startsWith(Workspace.rootRoute) || pathname === "/workspace/new" || !pathname) {
+    if (!isAncestor(pathname, Workspace.rootRoute) || pathname === "/workspace/new" || !pathname) {
       return;
     }
     const ws = Workspace.fetchFromRoute(pathname).then((ws) => {
@@ -143,7 +143,7 @@ export function useWorkspaceFromRoute() {
     return currentWorkspace.disk.renameListener(({ newPath, oldPath, type }) => {
       if (
         (type === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
-        (type === "dir" && workspaceRoute.path?.startsWith(oldPath.str))
+        (type === "dir" && isAncestor(workspaceRoute.path, oldPath.str))
       ) {
         router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
       }

@@ -211,6 +211,7 @@ export class FileTree {
   initialIndex = false;
   root: TreeDir = FileTree.EmptyFileTree();
   dirs: TreeList = [];
+  // nodeList: (TreeNode | null)[] = [];
   static SKIPPED: "skipped";
   static INDEXED: "index";
   private map = new Map<string, TreeNode>();
@@ -224,8 +225,42 @@ export class FileTree {
   }
 
   flatDirTree = () => {
-    console.log([...this.map.keys()]);
+    // console.log([...this.map.keys()]);
     return [...this.map.keys()];
+  };
+
+  findRange = (startNode: TreeNode, endNode: TreeNode) => {
+    const [startIndex, endIndex] = this.dirs.reduce(
+      (indices, path, index) => {
+        if (path === startNode.path.str) indices[0] = index;
+        if (path === endNode.path.str) indices[1] = index;
+        return indices;
+      },
+      [-1, -1] // Initial indices
+    );
+    // Ensure both nodes were found
+    if (startIndex === -1 || endIndex === -1) {
+      // console.warn("Start or end node not found in the directory list.");
+      return null;
+    }
+    // Sort indices to ensure correct slice
+    const [fromIndex, toIndex] = [startIndex, endIndex].sort((a, b) => a - b);
+    return this.dirs.slice(fromIndex, toIndex + 1);
+  };
+
+  findRange2 = (startNode: TreeNode, endNode: TreeNode) => {
+    let i = 0;
+    let j = this.dirs.length - 1;
+    while (i < j) {
+      if (this.dirs[i] !== startNode.path.str && this.dirs[i] !== endNode.path.str) {
+        i++;
+      }
+      if (this.dirs[j] !== startNode.path.str && this.dirs[j] !== endNode.path.str) {
+        j--;
+      }
+    }
+    this.dirs.slice(Math.min(i, j), Math.max(i, j) + 1);
+    // return [this.nodeFromPath(this.dirs[i]), this.nodeFromPath(this.dirs[j])];
   };
 
   forceIndex = () => {
@@ -241,6 +276,7 @@ export class FileTree {
         this.map = new Map<string, TreeNode>();
         await this.recurseTree(this.root);
         this.dirs = this.flatDirTree();
+        // this.nodeList = this.flatTreeToNodeList();
         this.initialIndex = true;
       } finally {
         release(); // Release the lock
@@ -267,42 +303,63 @@ export class FileTree {
     }
   }
 
-  recurseTree = async (parent: TreeDir = this.root, depth = 0, haltOnError = false) => {
+  //pre order traversal
+  recurseTree = async (parent = this.root, depth = 0, haltOnError = false) => {
     const dir = parent.path;
     try {
       const entries = await this.fs.promises.readdir(dir.str);
+
+      // Separate directories and files
+      const directories: string[] = [];
+      const files: string[] = [];
+
       await Promise.all(
         entries.map(async (entry) => {
           const fullPath = dir.join(entry.toString());
           const stat = await this.fs.promises.stat(fullPath.str);
-          // let nextParent: TreeDir["children"] | {} = undefined;
-          let treeEntry: TreeNode;
 
           if (stat.isDirectory()) {
-            treeEntry = new TreeDir({
-              name: relPath(entry.toString()),
-              dirname: fullPath.dirname(),
-              basename: fullPath.basename(),
-              path: fullPath,
-              parent,
-              depth: depth,
-              children: {},
-            });
-
-            await this.recurseTree(treeEntry as TreeDir, depth + 1, haltOnError);
+            directories.push(entry.toString());
           } else {
-            treeEntry = new TreeFile({
-              name: relPath(entry.toString()),
-              dirname: fullPath.dirname(),
-              basename: fullPath.basename(),
-              path: fullPath,
-              parent,
-              depth: depth,
-            });
+            files.push(entry.toString());
           }
+        })
+      );
+
+      // Process files first
+      await Promise.all(
+        files.map(async (entry) => {
+          const fullPath = dir.join(entry.toString());
+          const treeEntry = new TreeFile({
+            name: relPath(entry.toString()),
+            dirname: fullPath.dirname(),
+            basename: fullPath.basename(),
+            path: fullPath,
+            parent,
+            depth: depth,
+          });
           this.insertNode(parent, treeEntry);
         })
       );
+
+      // Process directories in order
+      for (const entry of directories) {
+        const fullPath = dir.join(entry.toString());
+        const treeEntry = new TreeDir({
+          name: relPath(entry.toString()),
+          dirname: fullPath.dirname(),
+          basename: fullPath.basename(),
+          path: fullPath,
+          parent,
+          depth: depth,
+          children: {},
+        });
+
+        this.insertNode(parent, treeEntry);
+
+        // Recurse into the directory
+        await this.recurseTree(treeEntry, depth + 1, haltOnError);
+      }
     } catch (err) {
       console.error(`Error reading ${dir}:`, err);
       if (haltOnError) {
@@ -310,6 +367,15 @@ export class FileTree {
       }
     }
   };
+
+  flatTreeToNodeList = () => {
+    return this.flatDirTree().map((path) => {
+      const node = this.map.get(path);
+      if (node) return node;
+      return null;
+    });
+  };
+
   removeNodeByPath(path: AbsPath) {
     const node = this.map.get(path.str);
     if (node) {
@@ -343,8 +409,8 @@ export class FileTree {
     return this.insertNode(parent, newNode);
   }
 
-  nodeFromPath(path: AbsPath): TreeNode | null {
-    return this.map.get(path.str) ?? null;
+  nodeFromPath(path: AbsPath | string): TreeNode | null {
+    return this.map.get(path + "") ?? null;
   }
 }
 
