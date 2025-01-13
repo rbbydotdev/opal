@@ -66,7 +66,7 @@ export const EditableFile = ({
           href={currentWorkspace.resolveFileUrl(fullPath)}
           className={twMerge(
             className,
-            isSelectedRange ? "bg-sidebar-accent" : "",
+            isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
             "group cursor-pointer rounded-none"
           )}
           ref={linkRef}
@@ -79,7 +79,7 @@ export const EditableFile = ({
         >
           <div style={{ marginLeft: depth + 1 + "rem" }}>
             <File selected={isSelected}>
-              <span className="py-1.5 group-focus:font-bold">{fileName}</span>
+              <span className={twMerge("py-1.5")}>{fileName}</span>
             </File>
           </div>
         </Link>

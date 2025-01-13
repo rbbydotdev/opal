@@ -55,14 +55,14 @@ function FileTreeMenuInternal({
   expanded: { [path: string]: boolean };
   workspaceRoute: WorkspaceRouteType;
 }) {
-  const { selectedRange } = useFileTreeMenuContext();
+  const { selectedRange, focused } = useFileTreeMenuContext();
   type DragStartType = { dragStart: TreeNode[] };
   type DragStartJType = { dragStart: TreeNodeJType[] };
-  console.log(selectedRange);
+  //on drag start cancel focus on key up
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
     const data = JSON.stringify({
-      dragStart: Array.from(new Set([...selectedRange, file.path.str]))
-        .map((path) => currentWorkspace.disk.fileTree.nodeFromPath(path))
+      dragStart: Array.from(new Set([...selectedRange, file.path.str, focused?.str]))
+        .map((path) => (path ? currentWorkspace.disk.fileTree.nodeFromPath(path) : null))
         .filter(Boolean),
     } satisfies DragStartType);
     event.dataTransfer.setData("application/json", data);
@@ -82,7 +82,6 @@ function FileTreeMenuInternal({
     // const draggedData = ;
     async function processDrop(node: TreeNode) {
       const { path: draggedPath, type: draggedType } = node;
-      console.log(node);
       if (draggedPath && draggedPath !== targetNode.path) {
         const newPath =
           targetNode.type === "dir"
@@ -100,13 +99,9 @@ function FileTreeMenuInternal({
         console.debug(`Drop: Invalid operation or same target`);
       }
     }
-
-    // const { path: draggedPath, type: draggedType } = new TreeNode(JSON.parse(draggedData) as TreeNode);
     try {
       const { dragStart } = JSON.parse(event.dataTransfer.getData("application/json")) as DragStartJType;
-
       if (dragStart && dragStart.length) {
-        console.log(dragStart);
         return Promise.all(
           reduceLineage(dragStart.map((node: TreeNodeJType) => TreeNode.fromJSON(node)))
             .filter(Boolean)
