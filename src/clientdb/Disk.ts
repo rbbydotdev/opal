@@ -326,7 +326,11 @@ export abstract class Disk extends DiskDAO {
     try {
       await this.fs.promises.unlink(filePath.str);
     } catch (err) {
-      console.error(`Error removing file ${filePath}:`, err);
+      if (errorCode(err).code === "ENOENT") {
+        throw new NotFoundError(`File not found: ${filePath}`);
+      } else {
+        throw err;
+      }
     }
     await this.fileTree.forceIndex();
     await this.local.emit(DiskLocalEvents.INDEX);

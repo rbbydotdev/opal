@@ -1,7 +1,6 @@
 "use client";
 import { TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
-import { NotFoundError } from "@/lib/errors";
 import { AbsPath, isAncestor } from "@/lib/paths";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
@@ -38,25 +37,28 @@ export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
   const [contents, setContents] = useState<null | string>(null);
+  const [error, setError] = useState<null | Error>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (currentWorkspace && filePath) {
-      currentWorkspace.disk
-        .readFile(filePath)
-        .then(setContents)
-        .catch((e) => {
-          if (e instanceof NotFoundError) {
-            // router.push(currentWorkspace.href);
-          } else {
-            throw e;
-          }
-        });
-      //listener is currently only used with remote, since a local write will not trigger
-      //a local write event, this is because the common update kind of borks mdx editor
-      return currentWorkspace.disk.writeFileListener(filePath, setContents);
-    }
+    const fetchFileContents = async () => {
+      if (currentWorkspace && filePath) {
+        try {
+          const contents = await currentWorkspace.disk.readFile(filePath);
+          setContents(contents);
+          setError(null);
+        } catch (error) {
+          setError(error as Error);
+        }
+        //listener is currently only used with remote, since a local write will not trigger
+        //a local write event, this is because the common update kind of borks mdx editor
+        return currentWorkspace.disk.writeFileListener(filePath, setContents);
+      }
+    };
+
+    fetchFileContents();
   }, [currentWorkspace, filePath, router]);
+
   const updateContents = useCallback(
     (updates: string) => {
       if (filePath && currentWorkspace) {
@@ -65,7 +67,7 @@ export function useCurrentFilepath() {
     },
     [currentWorkspace, filePath]
   );
-  return { filePath, contents, updateContents };
+  return { error, filePath, contents, updateContents };
 }
 
 export function useWorkspaceRoute() {
@@ -158,24 +160,15 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaceRoute = useWorkspaceRoute();
   const currentWorkspace = useWorkspaceFromRoute();
   const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
-  const router = useRouter();
 
-  //Keep the user editor on a file which exists
-  //TODO 404 page?
+  //keep at least one file open if possible
+  const router = useRouter();
   useEffect(() => {
-    if (!currentWorkspace) return;
-    const handlePathCheck = async () => {
-      if (workspaceRoute.path) {
-        const exists = await currentWorkspace.disk.pathExists(workspaceRoute.path);
-        if (!exists) {
-          router.push(firstFile?.path ? currentWorkspace.resolveFileUrl(firstFile.path) : currentWorkspace.href);
-        }
-      } else if (firstFile?.path && workspaceRoute.id) {
-        router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-      }
-    };
-    handlePathCheck();
-  }, [workspaceRoute.path, currentWorkspace, router, firstFile?.path, workspaceRoute.id]);
+    if (!workspaceRoute.path && workspaceRoute.id && currentWorkspace && isIndexed) {
+      const firstFile = currentWorkspace.getFirstFile();
+      if (firstFile) router.push(currentWorkspace.resolveFileUrl(firstFile.path));
+    }
+  }, [currentWorkspace, fileTreeDir, isIndexed, router, workspaceRoute.id, workspaceRoute.path]);
 
   return (
     <WorkspaceContext.Provider

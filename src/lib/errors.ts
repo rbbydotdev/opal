@@ -44,6 +44,10 @@ export function errorCode(error: unknown, code?: string): ErrorWithCode {
   return newError;
 }
 
+// export function isError(error: unknown, type: typeof NOTFOUND | typeof BADREQUEST | typeof CONFLICT) {
+//   return isErrorWithCode(error, type);
+// }
+
 export const NOTFOUND = "NOTFOUND"; // 404
 export const BADREQUEST = "BADREQUEST"; // 400
 export const CONFLICT = "CONFLICT"; // 409
@@ -52,21 +56,20 @@ export class ConflictError extends Error {
   code = CONFLICT;
   constructor(message: string) {
     super(message);
-    this.name = "Conflict";
+    this.name = this.constructor.name;
   }
 }
-
 export class BadRequestError extends Error {
   code = BADREQUEST;
   constructor(message: string) {
     super(message);
-    this.name = "BadRequest";
+    this.name = this.constructor.name;
   }
 }
 export class NotFoundError extends Error {
   code = NOTFOUND;
   constructor(message: string) {
     super(message);
-    this.name = "NotFound";
+    this.name = this.constructor.name;
   }
 }

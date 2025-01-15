@@ -204,6 +204,7 @@ export class Workspace extends WorkspaceDAO {
   getFirstFile() {
     return this.disk.getFirstFile();
   }
+
   getFileTreeRoot() {
     return this.disk.fileTree.root;
   }
@@ -260,6 +261,11 @@ export class Workspace extends WorkspaceDAO {
   resolveFileUrl = (filePath: AbsPath) => {
     return this.href + decodeURIComponent(filePath.str);
   };
+  tryFirstFileUrl() {
+    const ff = this.getFirstFile();
+    if (!ff) return this.href;
+    return this.resolveFileUrl(ff.path);
+  }
 
   get isIndexed() {
     return this.disk.isIndexed;

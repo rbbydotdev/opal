@@ -58,13 +58,13 @@ function useFileTreeDragAndDrop({
     } satisfies DragStartType);
     event.dataTransfer.setData("application/json", data);
     event.dataTransfer.effectAllowed = "move";
-    console.debug(`Drag Start: ${file.path}`);
+    // console.debug(`Drag Start: ${file.path}`);
   };
 
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
-    console.debug(`Drag Over: ${event.currentTarget}`);
+    // console.debug(`Drag Over: ${event.currentTarget}`);
   };
 
   const handleDrop = (event: React.DragEvent, targetNode: TreeNode) => {
@@ -96,7 +96,7 @@ function useFileTreeDragAndDrop({
   const handleDragEnter = (event: React.DragEvent, path: string) => {
     event.preventDefault();
     expand(path, true);
-    console.debug(`Drag Enter: ${path}`);
+    // console.debug(`Drag Enter: ${path}`);
   };
   return { handleDragStart, handleDragOver, handleDrop, handleDragEnter };
 }

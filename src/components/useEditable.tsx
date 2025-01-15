@@ -4,6 +4,7 @@ import { Workspace } from "@/clientdb/Workspace";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
 import { RelPath } from "@/lib/paths";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWorkspaceFileMgmt } from "./useWorkspaceFileMgmt";
 
@@ -25,6 +26,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
+  const router = useRouter();
   const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { editing, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
     useFileTreeMenuContext();
@@ -93,6 +95,10 @@ export function useEditable<T extends TreeFile | TreeNode>({
       } else if (e.key === "Enter") {
         if (isEditing) {
           const newPath = await commitChange(treeNode, fileName);
+          //navigate to new-file path or renamed-file path
+          if (fullPath.equals(workspaceRoute.path) || !workspaceRoute.path) {
+            router.push(currentWorkspace.resolveFileUrl(newPath));
+          }
           setFocused(newPath);
           e.preventDefault();
         } else {
@@ -116,6 +122,9 @@ export function useEditable<T extends TreeFile | TreeNode>({
       commitChange,
       treeNode,
       fileName,
+      workspaceRoute.path,
+      router,
+      currentWorkspace,
       setEditing,
     ]
   );

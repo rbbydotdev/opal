@@ -21,6 +21,8 @@ function FirstFileRedirect() {
     if (firstFile && currentWorkspace) {
       router.push(currentWorkspace.resolveFileUrl(firstFile.path));
     }
+
+    // router.push(currentWorkspace.tryFirstFileUrl());
   }, [currentWorkspace, firstFile, router]);
   return null;
 }
