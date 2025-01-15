@@ -113,7 +113,9 @@ export function absPath(path: string) {
 export function isAncestor(path: AbsPath | string | null, root: AbsPath | string | null) {
   if (path === root) return true;
   if (path === null || root === null) return false;
-  return path.replace(/^\//, "").split("/")[0] === root.replace(/^\//, "");
+  const rootSegments = root.split("/");
+  const pathSegments = path.split("/");
+  return pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i]);
 }
 
 export function reduceLineage<T extends (string | TreeNode)[]>(range: T): T {

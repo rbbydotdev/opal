@@ -1,198 +1,16 @@
 "use client";
 import { TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
 import { Workspace } from "@/clientdb/Workspace";
+import { FileTreeMenuContextProvider } from "@/components/FileTreeContext";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
+import { useWorkspaceFileMgmt } from "@/components/useWorkspaceFileMgmt";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { absPath, AbsPath, reduceLineage, RelPath, relPath } from "@/lib/paths";
 import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback } from "react";
-import { isAncestor } from "../lib/paths";
-
-const FileTreeMenuContext = React.createContext<{
-  editing: AbsPath | null;
-  setEditing: React.Dispatch<React.SetStateAction<AbsPath | null>>;
-  editType: "rename" | "new";
-  setFocused: (path: AbsPath | null) => void;
-  focused: AbsPath | null;
-  setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
-  resetEditing: () => void;
-  setSelectedRange: (r: string[]) => void;
-  selectedRange: string[];
-  virtual: AbsPath | null;
-  setVirtual: (path: AbsPath | null) => void;
-} | null>(null);
-
-export function useFileTreeMenuContext() {
-  const ctx = React.useContext(FileTreeMenuContext);
-  if (!ctx) {
-    throw new Error("useFileTreeMenuContext must be used within a FileTreeMenuContextProvider");
-  }
-  return ctx;
-}
-const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [editing, setEditing] = React.useState<AbsPath | null>(null);
-  const [editType, setEditType] = React.useState<"rename" | "new">("rename");
-  const [focused, setFocused] = React.useState<AbsPath | null>(null);
-  const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
-  const [selectedRange, setSelectedRange] = React.useState<string[]>([]);
-  const resetEditing = () => {
-    setEditing(null);
-    setEditType("rename");
-    setFocused(null);
-    setVirtual(null);
-  };
-
-  React.useEffect(() => {
-    const escapeKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setFocused(null);
-        setSelectedRange([]);
-      }
-    };
-    window.addEventListener("keydown", escapeKey);
-    return () => window.removeEventListener("keydown", escapeKey);
-  }, [setFocused]);
-  return (
-    <FileTreeMenuContext.Provider
-      value={{
-        selectedRange,
-        setSelectedRange,
-        setFocused,
-        editType,
-        setEditType,
-        focused,
-        setVirtual,
-        virtual,
-        editing,
-        setEditing,
-        resetEditing,
-      }}
-    >
-      {children}
-    </FileTreeMenuContext.Provider>
-  );
-};
-
-export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { setEditing, selectedRange, resetEditing, setEditType, editType, focused, setFocused, setVirtual, virtual } =
-    useFileTreeMenuContext();
-
-  const renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { path } = await currentWorkspace.renameFile(oldNode, newFullPath);
-
-    if (workspaceRoute.path?.str === oldNode.path.str) {
-      router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-    }
-    return path;
-  };
-
-  const newFileFromNode = ({ path, type }: { path: AbsPath; type: TreeNode["type"] }) => {
-    if (type === "file") return currentWorkspace.newFile(path.dirname(), path.basename(), "# " + path.basename());
-    else {
-      return currentWorkspace.newDir(path.dirname(), path.basename());
-    }
-  };
-  const newFile = async (path: AbsPath, content = "") => {
-    const newPath = await currentWorkspace.newFile(path.dirname(), path.basename(), content);
-    if (!workspaceRoute.path) {
-      router.push(currentWorkspace.resolveFileUrl(newPath));
-    }
-    return newPath;
-  };
-  const newDir = async (path: AbsPath) => {
-    return currentWorkspace.newDir(path.dirname(), path.basename());
-  };
-
-  const removeFiles = async () => {
-    const range = [...selectedRange];
-    if (!range.length && focused) {
-      range.push(focused.str);
-    }
-    if (!range.length) return;
-
-    if (workspaceRoute.path && range.includes(workspaceRoute.path.str)) {
-      const firstFile = currentWorkspace.disk.getFirstFile();
-      if (firstFile) {
-        router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-      } else {
-        router.push(currentWorkspace.href);
-      }
-    }
-
-    const paths = reduceLineage(range).map((pathStr) => absPath(pathStr));
-    // console.log(selectedRange, paths);
-    return Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
-  };
-
-  const removeFocusedFile = async () => {
-    const focusedNode = currentWorkspace.nodeFromPath(focused);
-    if (!focusedNode) return;
-    if (focusedNode.path.str === "/") return;
-
-    await currentWorkspace.removeFile(focusedNode.path);
-    if (workspaceRoute.path?.str === focusedNode.path.str) {
-      const firstFile = currentWorkspace.disk.getFirstFile();
-      if (firstFile) {
-        router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-      } else {
-        router.push(currentWorkspace.href);
-      }
-    }
-  };
-  const cancelNew = () => {
-    setVirtual(null);
-    if (virtual) currentWorkspace.removeVirtualfile(virtual);
-  };
-
-  const addDirFile = (type: TreeNode["type"]) => {
-    const focusedNode = currentWorkspace.nodeFromPath(focused);
-    const newNode = currentWorkspace.addVirtualFile({ type, name: relPath("new" + type) }, focusedNode);
-    setFocused(newNode.path);
-    setEditing(newNode.path);
-    setVirtual(newNode.path);
-    setEditType("new");
-    return newNode;
-  };
-
-  const renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { path } = await currentWorkspace.renameDir(oldNode, newFullPath);
-    if (isAncestor(workspaceRoute.path, oldNode.path.str) && workspaceRoute.path) {
-      router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-    }
-    return path;
-  };
-  const commitChange = async (oldNode: TreeNode, fileName: RelPath) => {
-    const newPath = oldNode.path.dirname().join(fileName);
-    if (editType === "rename") {
-      await renameFile(oldNode, newPath);
-    } else if (editType === "new") {
-      await newFileFromNode({ type: oldNode.type, path: newPath });
-    }
-    resetEditing();
-    return newPath;
-  };
-  return {
-    renameFile,
-    renameDir,
-    newFile,
-    removeFocusedFile,
-    removeFiles,
-    newDir,
-    commitChange,
-    addDirFile,
-    cancelNew,
-    resetEditing,
-    setEditing,
-    setFocused,
-  };
-}
 
 function SidebarFileMenuInternal({
   currentWorkspace,
@@ -237,7 +55,7 @@ function SidebarFileMenuInternal({
   return (
     <SidebarGroup {...props} className="h-full p-0">
       <SidebarGroupContent className="flex justify-end">
-        <div>
+        <div className="whitespace-nowrap">
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
               <Button onClick={removeFiles} className="p-1 m-0 h-fit" variant="ghost">
@@ -301,7 +119,6 @@ function SidebarFileMenuInternal({
         ) : (
           <FileTreeMenu
             renameDirFile={renameFile}
-            fileTree={fileTreeDir.children}
             depth={0}
             expand={expandSingle}
             expandForNode={expandForNode}

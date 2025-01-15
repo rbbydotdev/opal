@@ -69,6 +69,7 @@ export const EditableDir = ({
       onClick={handleClick}
       tabIndex={0}
       onDragStart={onDragStart}
+      // onDragEnd={onDragEnd}
       ref={linkRef}
       onMouseDown={handleMouseDown}
       onFocus={handleFocus}

@@ -158,6 +158,24 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaceRoute = useWorkspaceRoute();
   const currentWorkspace = useWorkspaceFromRoute();
   const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
+  const router = useRouter();
+
+  //Keep the user editor on a file which exists
+  //TODO 404 page?
+  useEffect(() => {
+    if (!currentWorkspace) return;
+    const handlePathCheck = async () => {
+      if (workspaceRoute.path) {
+        const exists = await currentWorkspace.disk.pathExists(workspaceRoute.path);
+        if (!exists) {
+          router.push(firstFile?.path ? currentWorkspace.resolveFileUrl(firstFile.path) : currentWorkspace.href);
+        }
+      } else if (firstFile?.path && workspaceRoute.id) {
+        router.push(currentWorkspace.resolveFileUrl(firstFile.path));
+      }
+    };
+    handlePathCheck();
+  }, [workspaceRoute.path, currentWorkspace, router, firstFile?.path, workspaceRoute.id]);
 
   return (
     <WorkspaceContext.Provider
