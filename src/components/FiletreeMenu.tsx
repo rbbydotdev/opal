@@ -2,11 +2,12 @@ import { isTreeDir, TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/clientd
 import { Workspace } from "@/clientdb/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
-import { useFileTreeMenuContext } from "@/components/SidebarFileMenu";
+import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { AbsPath, reduceLineage } from "@/lib/paths";
+import { AbsPath } from "@/lib/paths";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
+import clsx from "clsx";
 import React from "react";
 import { isAncestor } from "../lib/paths";
 
@@ -29,31 +30,21 @@ export function FileTreeContainer({
   return (
     <FileTreeMenuInternal
       {...props}
-      fileTree={fileTreeDir.children}
+      fileTreeDir={fileTreeDir}
       currentWorkspace={currentWorkspace}
       workspaceRoute={workspaceRoute}
     />
   );
 }
 
-function FileTreeMenuInternal({
-  fileTree,
-  renameDirFile,
-  depth = 0,
-  expand,
-  expandForNode,
+function useFileTreeDragAndDrop({
   currentWorkspace,
-  expanded,
-  workspaceRoute,
+  renameDirFile,
+  expand,
 }: {
-  fileTree: TreeDir["children"];
   renameDirFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
-  depth?: number;
-  expand: (path: string, value: boolean) => void;
-  expandForNode: (node: TreeNode, state: boolean) => void;
   currentWorkspace: Workspace;
-  expanded: { [path: string]: boolean };
-  workspaceRoute: WorkspaceRouteType;
+  expand: (path: string, value: boolean) => void;
 }) {
   const { selectedRange, focused } = useFileTreeMenuContext();
   type DragStartType = { dragStart: TreeNode[] };
@@ -79,33 +70,21 @@ function FileTreeMenuInternal({
   const handleDrop = (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
     event.stopPropagation();
-    // const draggedData = ;
-    async function processDrop(node: TreeNode) {
-      const { path: draggedPath, type: draggedType } = node;
-      if (draggedPath && draggedPath !== targetNode.path) {
-        const newPath =
-          targetNode.type === "dir"
-            ? targetNode.path.join(draggedPath.basename())
-            : targetNode.dirname.join(draggedPath.basename());
-
-        if (draggedType === "dir" && isAncestor(newPath, draggedPath.str)) {
-          console.debug(`Drop: Cannot move ${draggedPath} inside itself or its subdirectory`);
-          return;
-        }
-
-        console.debug(`Drop: Moving ${draggedPath} to ${targetNode.path} - ${draggedType}`);
-        return renameDirFile(currentWorkspace.nodeFromPath(draggedPath)!, newPath, draggedType);
-      } else {
-        console.debug(`Drop: Invalid operation or same target`);
-      }
-    }
     try {
       const { dragStart } = JSON.parse(event.dataTransfer.getData("application/json")) as DragStartJType;
       if (dragStart && dragStart.length) {
         return Promise.all(
-          reduceLineage(dragStart.map((node: TreeNodeJType) => TreeNode.fromJSON(node)))
-            .filter(Boolean)
-            .map((node) => processDrop(node))
+          dragStart
+            .map((node) => TreeNode.fromJSON(node))
+            .filter(({ type: draggedType, path: draggedPath }) => {
+              const newPath =
+                targetNode.type === "dir"
+                  ? targetNode.path.join(draggedPath.basename())
+                  : targetNode.dirname.join(draggedPath.basename());
+              if (draggedType !== "dir" || !isAncestor(newPath, draggedPath.str)) {
+                return renameDirFile(currentWorkspace.nodeFromPath(draggedPath)!, newPath, draggedType);
+              }
+            })
         );
       }
     } catch (e) {
@@ -119,10 +98,42 @@ function FileTreeMenuInternal({
     expand(path, true);
     console.debug(`Drag Enter: ${path}`);
   };
+  return { handleDragStart, handleDragOver, handleDrop, handleDragEnter };
+}
+
+function FileTreeMenuInternal({
+  fileTreeDir,
+  renameDirFile,
+  depth = 0,
+  expand,
+  expandForNode,
+  currentWorkspace,
+  expanded,
+  workspaceRoute,
+}: {
+  fileTreeDir: TreeDir;
+  renameDirFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
+  depth?: number;
+  expand: (path: string, value: boolean) => void;
+  expandForNode: (node: TreeNode, state: boolean) => void;
+  currentWorkspace: Workspace;
+  expanded: { [path: string]: boolean };
+  workspaceRoute: WorkspaceRouteType;
+}) {
+  const { handleDragEnter, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragAndDrop({
+    currentWorkspace,
+    renameDirFile,
+    expand,
+  });
 
   return (
-    <SidebarMenu className="gap-0">
-      {Object.values(fileTree).map((file) => (
+    <SidebarMenu
+      onDragOver={handleDragOver}
+      onDrop={(e) => handleDrop(e, fileTreeDir)}
+      onDragEnter={(e) => handleDragEnter(e, "/")}
+      className={clsx("gap-0", depth === 0 ? "pb-12 pt-2" : "")}
+    >
+      {Object.values(fileTreeDir.children).map((file) => (
         <Collapsible
           key={file.path.str}
           open={expanded[file.path.str]}
@@ -165,7 +176,7 @@ function FileTreeMenuInternal({
                 <FileTreeMenuInternal
                   expand={expand}
                   expandForNode={expandForNode}
-                  fileTree={(file as TreeDir).children}
+                  fileTreeDir={file as TreeDir}
                   renameDirFile={renameDirFile}
                   currentWorkspace={currentWorkspace}
                   workspaceRoute={workspaceRoute}

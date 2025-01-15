@@ -1,10 +1,11 @@
 "use client";
 import { TreeFile, TreeNode } from "@/clientdb/filetree";
 import { Workspace } from "@/clientdb/Workspace";
-import { useFileTreeMenuContext, useWorkspaceFileMgmt } from "@/components/SidebarFileMenu";
+import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
 import { RelPath } from "@/lib/paths";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useWorkspaceFileMgmt } from "./useWorkspaceFileMgmt";
 
 export function useEditable<T extends TreeFile | TreeNode>({
   treeNode,
