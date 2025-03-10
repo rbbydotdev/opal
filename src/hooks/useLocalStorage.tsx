@@ -2,35 +2,48 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-export function useLocalStorage<T>(key: string, initialValue: T) {
+export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
+  const isServer = typeof window === "undefined";
+
   // State to store our value
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-  useEffect(() => {
+  const [storedValue, setStoredValue] = useState<T>(
+    () =>
+      isServer
+        ? typeof initialValue === "function"
+          ? (initialValue as () => T)()
+          : initialValue
+        : (undefined as unknown as T) // Ensure the state is undefined on the server
+  );
+
+  const getInitialValue = useCallback(() => {
     try {
-      // Get from local storage by key
       const item = window.localStorage.getItem(key);
-      // Parse stored json or if none return initialValue
-      setStoredValue(item ? (JSON.parse(item) as T) : initialValue);
+      return item
+        ? (JSON.parse(item) as T)
+        : typeof initialValue === "function"
+        ? (initialValue as () => T)()
+        : initialValue;
     } catch (error) {
-      console.error(error);
-      console.error("could not get item from local storage text:", window.localStorage.getItem(key));
-      console.error("deleting ...");
-      window.localStorage.removeItem(key);
+      console.error("Error accessing localStorage", error);
+      return typeof initialValue === "function" ? (initialValue as () => T)() : initialValue;
     }
-  }, [key, initialValue]);
+  }, [initialValue, key]);
+
+  useEffect(() => {
+    if (!isServer) {
+      setStoredValue(getInitialValue());
+    }
+  }, [getInitialValue, isServer]);
 
   // Return a wrapped version of useState's setter function that persists the new value to localStorage
   const setValue = useCallback(
     (value: T | ((val: T) => T)) => {
       try {
-        // Allow value to be a function so we have the same API as useState
         const valueToStore = value instanceof Function ? value(storedValue) : value;
-        // Save state
         setStoredValue(valueToStore);
-        // Save to local storage
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       } catch (error) {
-        console.error(error);
+        console.error("Error setting localStorage value", error);
       }
     },
     [key, storedValue]
@@ -40,22 +53,20 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === key) {
         try {
-          const newValue = event.newValue ? JSON.parse(event.newValue) : initialValue;
+          const newValue = event.newValue ? JSON.parse(event.newValue) : getInitialValue();
           setStoredValue(newValue as T);
         } catch (error) {
-          console.error(error);
+          console.error("Error parsing localStorage change", error);
         }
       }
     };
 
-    // Listen for storage changes
     window.addEventListener("storage", handleStorageChange);
 
-    // Cleanup listener on unmount
     return () => {
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [key, initialValue]);
+  }, [getInitialValue, key]);
 
   return [storedValue, setValue] as const;
 }

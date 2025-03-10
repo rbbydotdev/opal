@@ -4,8 +4,6 @@ import { AllPlugins } from "@/components/Editor/AllPlugins";
 import { MDXEditor, type MDXEditorMethods, type MDXEditorProps } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
 import type { ForwardedRef } from "react";
-// import {
-// } from '../'
 
 // Only import this to the next file
 export default function InitializedMDXEditor({
