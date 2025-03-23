@@ -11,8 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_STORAGE_NAME = "sidebar:state";

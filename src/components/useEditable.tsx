@@ -129,18 +129,15 @@ export function useEditable<T extends TreeFile | TreeNode>({
     ]
   );
 
-  const handleFocus = useCallback(
-    (_e: React.MouseEvent) => {
-      if (selectedRange.includes(treeNode.str) && linkRef.current) {
-        linkRef.current.blur();
-        return;
-      }
+  const handleFocus = useCallback(() => {
+    if (selectedRange.includes(treeNode.str) && linkRef.current) {
+      linkRef.current.blur();
+      return;
+    }
 
-      //range select
-      setFocused(treeNode.path);
-    },
-    [selectedRange, setFocused, treeNode.path, treeNode.str]
-  );
+    //range select
+    setFocused(treeNode.path);
+  }, [selectedRange, setFocused, treeNode.path, treeNode.str]);
 
   const handleBlur = useCallback(() => {
     if (isEditing) {

@@ -66,11 +66,11 @@ function hashString(input: string): Buffer {
 }
 
 // Function to generate a color from a hash
-function generateColor(hash: Buffer, index: number): string {
+function generateColor(hash: Buffer, index: number): { colors: { r: number; g: number; b: number } } {
   const r = hash[index] % 256;
   const g = hash[index + 1] % 256;
   const b = hash[index + 2] % 256;
-  return `rgb(${r}, ${g}, ${b})`;
+  return { colors: { r, g, b } };
 }
 
 // Function to determine the shape based on the hash
@@ -89,12 +89,8 @@ const Identicon = ({ input, size = 5, scale = 20 }: IdenticonProps) => {
   const hash = hashString(input);
 
   // Generate the background color
-  const backgroundColor = generateColor(hash, 0);
-  const [h, s] = rgbToHsl(
-    parseInt(backgroundColor.slice(4, 7), 10),
-    parseInt(backgroundColor.slice(9, 12), 10),
-    parseInt(backgroundColor.slice(14, 17), 10)
-  );
+  const { colors } = generateColor(hash, 0);
+  const [h, s] = rgbToHsl(colors.r, colors.g, colors.b);
 
   // Generate the identicon grid
   const generateGrid = (): {
@@ -140,7 +136,7 @@ const Identicon = ({ input, size = 5, scale = 20 }: IdenticonProps) => {
         height={size * scale}
         viewBox={`0 0 ${size * scale} ${size * scale}`}
         xmlns="http://www.w3.org/2000/svg"
-        style={{ backgroundColor }} // Set the background color
+        style={{ backgroundColor: `rgb(${colors.r},${colors.g},${colors.b})` }} // Set the background color
         stroke="none"
       >
         {grid.map((row, i) =>

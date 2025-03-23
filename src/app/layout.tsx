@@ -2,7 +2,7 @@
 import { SidebarProvider, useSidebarState } from "@/components/ui/sidebar";
 import { ThemeProvider } from "next-themes";
 
-import { BigButtonBar } from "@/app/BigButtonBar";
+import { WrkSpcButtonBar } from "@/app/WrkSpcButtonBar";
 
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
@@ -36,7 +36,7 @@ export default function RootLayout({
             <SidebarProvider defaultOpen={defaultOpen}>
               <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                 <div className="w-full flex h-screen overflow-hidden">
-                  <BigButtonBar />
+                  <WrkSpcButtonBar />
                   <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>
                 </div>
               </ThemeProvider>

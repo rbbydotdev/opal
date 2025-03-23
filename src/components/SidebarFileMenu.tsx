@@ -1,7 +1,6 @@
 "use client";
 import { TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
 import { Workspace } from "@/clientdb/Workspace";
-import { FileTreeMenuContextProvider } from "@/components/FileTreeContext";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
@@ -9,7 +8,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/components/useWorkspaceFileMgmt";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
+import { CopyMinus, FilePlus, FolderPlus, Settings, Trash2, Undo } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React, { useCallback } from "react";
 
 function SidebarFileMenuInternal({
@@ -52,10 +53,41 @@ function SidebarFileMenuInternal({
     addDirFileAndExpand("dir");
   }, [addDirFileAndExpand]);
 
+  const route = usePathname();
+  const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
+
   return (
     <SidebarGroup {...props} className="h-full p-0">
       <SidebarGroupContent className="flex justify-end">
         <div className="whitespace-nowrap">
+          {isSettingsView ? (
+            <Tooltip delayDuration={3000}>
+              <TooltipTrigger asChild>
+                <Button className="p-1 m-0 h-fit" variant="ghost" asChild>
+                  <Link href={currentWorkspace.href}>
+                    <Undo />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" align="center">
+                Return to Workspace
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Tooltip delayDuration={3000}>
+              <TooltipTrigger asChild>
+                <Button className="p-1 m-0 h-fit" variant="ghost" asChild>
+                  <Link href={currentWorkspace.subRoute("settings")}>
+                    <Settings />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" align="center">
+                Workspace Settings
+              </TooltipContent>
+            </Tooltip>
+          )}
+
           <Tooltip delayDuration={3000}>
             <TooltipTrigger asChild>
               <Button onClick={removeFiles} className="p-1 m-0 h-fit" variant="ghost">
@@ -132,9 +164,5 @@ function SidebarFileMenuInternal({
 const SidebarFileMenuWithWorkspace = withCurrentWorkspace(SidebarFileMenuInternal);
 
 export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>) => {
-  return (
-    <FileTreeMenuContextProvider>
-      <SidebarFileMenuWithWorkspace {...props} />
-    </FileTreeMenuContextProvider>
-  );
+  return <SidebarFileMenuWithWorkspace {...props} />;
 };

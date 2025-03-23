@@ -2,7 +2,7 @@
 import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
 import { TreeDir, TreeNode } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
-import { BadRequestError, NotFoundError } from "@/lib/errors";
+import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, isAncestor, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
@@ -146,7 +146,7 @@ export class Workspace extends WorkspaceDAO {
     const ws =
       (await ClientDb.workspaces.where("name").equals(name).first()) ??
       (await ClientDb.workspaces.where("guid").equals(name).first());
-    if (!ws) throw new NotFoundError("Workspace not found");
+    if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}, guid:${name}`);
     return (await new WorkspaceDAO(ws).withRelations()).toModel();
   }
 
@@ -260,6 +260,9 @@ export class Workspace extends WorkspaceDAO {
   };
   resolveFileUrl = (filePath: AbsPath) => {
     return this.href + decodeURIComponent(filePath.str);
+  };
+  subRoute = (path: string) => {
+    return `${this.href.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
   };
   tryFirstFileUrl() {
     const ff = this.getFirstFile();

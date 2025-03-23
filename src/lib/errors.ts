@@ -43,33 +43,147 @@ export function errorCode(error: unknown, code?: string): ErrorWithCode {
   newError.code = code ?? "unknown";
   return newError;
 }
+export class ApplicationError extends Error {
+  name = "ApplicationError";
+  code: number;
+  _hint?: string;
 
-// export function isError(error: unknown, type: typeof NOTFOUND | typeof BADREQUEST | typeof CONFLICT) {
-//   return isErrorWithCode(error, type);
-// }
+  getHint() {
+    return this._hint || this.name;
+  }
+  hint(hint: unknown) {
+    if (typeof hint === "undefined") {
+      return this._hint || this.name;
+    }
+    this._hint = unwrapError(hint);
+    return this;
+  }
 
-export const NOTFOUND = "NOTFOUND"; // 404
-export const BADREQUEST = "BADREQUEST"; // 400
-export const CONFLICT = "CONFLICT"; // 409
+  constructor(errorOrMessage: Error | string = "application error", code: number = 500) {
+    let message: string;
+    let originalStack: string | undefined;
 
-export class ConflictError extends Error {
-  code = CONFLICT;
-  constructor(message: string) {
+    if (typeof errorOrMessage === "string") {
+      message = errorOrMessage;
+    } else {
+      message = errorOrMessage.message;
+      originalStack = errorOrMessage.stack;
+    }
+
     super(message);
-    this.name = this.constructor.name;
+    this.code = code;
+
+    // Preserve the original stack trace if given an Error object
+    if (originalStack) {
+      this.stack = `${this.name}: ${message}\n${originalStack.split("\n").slice(1).join("\n")}`;
+    }
+
+    Object.setPrototypeOf(this, ApplicationError.prototype);
   }
 }
-export class BadRequestError extends Error {
-  code = BADREQUEST;
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
+
+export class NotFoundError extends ApplicationError {
+  name = "NotFoundError";
+  constructor(errorOrMessage: Error | string = "not found", public path?: string) {
+    super(errorOrMessage, 404);
+    Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
-export class NotFoundError extends Error {
-  code = NOTFOUND;
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
+
+export class ConflictError extends ApplicationError {
+  name = "ConflictError";
+  constructor(errorOrMessage: Error | string = "conflict") {
+    super(errorOrMessage, 409);
+    Object.setPrototypeOf(this, ConflictError.prototype);
   }
+}
+
+export class BadGatewayError extends ApplicationError {
+  name = "BadGatewayError";
+  constructor(errorOrMessage: Error | string = "bad gateway") {
+    super(errorOrMessage, 502);
+    Object.setPrototypeOf(this, BadGatewayError.prototype);
+  }
+}
+
+export class UnauthorizedError extends ApplicationError {
+  name = "UnauthorizedError";
+  constructor(errorOrMessage: Error | string = "unauthorized") {
+    super(errorOrMessage, 401);
+    Object.setPrototypeOf(this, UnauthorizedError.prototype);
+  }
+}
+
+export class BadRequestError extends ApplicationError {
+  name = "BadRequestError";
+  constructor(errorOrMessage: Error | string = "bad request") {
+    super(errorOrMessage, 400);
+    // Object.setPrototypeOf(this, ApplicationError.prototype);
+  }
+}
+
+export class ForbiddenError extends ApplicationError {
+  name = "ForbiddenError";
+  constructor(errorOrMessage: Error | string = "forbidden") {
+    super(errorOrMessage, 403);
+    Object.setPrototypeOf(this, ForbiddenError.prototype);
+  }
+}
+
+export class InternalServerError extends ApplicationError {
+  name = "InternalServerError";
+  constructor(errorOrMessage: Error | string = "Internal Server Error") {
+    super(errorOrMessage, 500);
+    Object.setPrototypeOf(this, InternalServerError.prototype);
+  }
+}
+
+export class ServiceUnavailableError extends ApplicationError {
+  name = "ServiceUnavailableError";
+  constructor(errorOrMessage: Error | string = "Service Unavailable") {
+    super(errorOrMessage, 503);
+    Object.setPrototypeOf(this, ServiceUnavailableError.prototype);
+  }
+}
+
+export class GatewayTimeoutError extends ApplicationError {
+  name = "GatewayTimeoutError";
+  constructor(errorOrMessage: Error | string = "Gateway Timeout") {
+    super(errorOrMessage, 504);
+    Object.setPrototypeOf(this, GatewayTimeoutError.prototype);
+  }
+}
+
+export class NotImplementedError extends ApplicationError {
+  name = "NotImplementedError";
+  constructor(errorOrMessage: Error | string = "Not Implemented") {
+    super(errorOrMessage, 501);
+    Object.setPrototypeOf(this, NotImplementedError.prototype);
+  }
+}
+
+// Custom template tag to format errors
+export function errF(strings: TemplateStringsArray, ...values: unknown[]): Error {
+  const message = strings.reduce((result, str, i) => {
+    const value = values[i - 1];
+    let formattedValue: object | null | string = "";
+
+    if (value instanceof Error) {
+      formattedValue = value.message;
+    } else {
+      formattedValue = value !== undefined ? value : "";
+    }
+
+    return result + formattedValue + str;
+  }, "");
+
+  const error = new Error(message);
+
+  // Find the first error in the values to copy the stack from
+  const originalError = values.find((value) => value instanceof Error) as Error | undefined;
+  if (originalError && originalError.stack) {
+    error.stack = originalError.stack;
+  }
+
+  return error;
 }

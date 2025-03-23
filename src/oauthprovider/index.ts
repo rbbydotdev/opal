@@ -20,7 +20,19 @@ class OAuthProvider {
       obtainedAt: this.obtainedAt,
     };
   }
-  static fromJSON({ accessToken, tokenType, scope, obtainedAt, _type }: any) {
+  static fromJSON({
+    accessToken,
+    tokenType,
+    scope,
+    obtainedAt,
+    _type,
+  }: {
+    accessToken: string;
+    tokenType: string;
+    scope: string;
+    obtainedAt: number;
+    _type: string;
+  }) {
     if (_type === "GithubProvider") {
       return new GithubProvider(accessToken, tokenType, scope, obtainedAt);
     }

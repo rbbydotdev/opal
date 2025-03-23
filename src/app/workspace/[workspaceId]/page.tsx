@@ -1,8 +1,5 @@
 "use client";
 // import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useWorkspaceContext } from "@/context";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function Page() {
   // const { currentWorkspace } = useContext(WorkspaceContext);
@@ -14,15 +11,15 @@ export default function Page() {
   );
 }
 
-function FirstFileRedirect() {
-  const { currentWorkspace, firstFile } = useWorkspaceContext();
-  const router = useRouter();
-  useEffect(() => {
-    if (firstFile && currentWorkspace) {
-      router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-    }
+// function FirstFileRedirect() {
+//   const { currentWorkspace, firstFile } = useWorkspaceContext();
+//   const router = useRouter();
+//   useEffect(() => {
+//     if (firstFile && currentWorkspace) {
+//       router.push(currentWorkspace.resolveFileUrl(firstFile.path));
+//     }
 
-    // router.push(currentWorkspace.tryFirstFileUrl());
-  }, [currentWorkspace, firstFile, router]);
-  return null;
-}
+//     // router.push(currentWorkspace.tryFirstFileUrl());
+//   }, [currentWorkspace, firstFile, router]);
+//   return null;
+// }
