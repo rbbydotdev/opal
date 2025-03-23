@@ -1,7 +1,7 @@
 export default function Page() {
   return (
-    <div>
-      <h1>Page</h1>
+    <div className="p-4">
+      <h1 className="text-2xl">Settings</h1>
     </div>
   );
 }

@@ -50,7 +50,7 @@ function BigButton({
   );
 }
 
-export function BigButtonBar() {
+export function WrkSpcButtonBar() {
   const { currentWorkspace, workspaces } = useWorkspaceContext();
 
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
