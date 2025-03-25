@@ -6,11 +6,15 @@ const AbsPathBrand = Symbol("AbsPath");
 const RelPathBrand = Symbol("RelPath");
 
 export class BasePath extends String {
-  constructor(filePath: string) {
+  constructor(private filePath: string) {
     super(filePath);
   }
   get str() {
     return this.toString();
+  }
+
+  toString() {
+    return this.filePath;
   }
 
   equals(p?: BasePath | null) {

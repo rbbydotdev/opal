@@ -1,4 +1,5 @@
 import { FileSystem } from "@/clientdb/Disk";
+import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, absPath, relPath, RelPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 
@@ -9,6 +10,7 @@ export class TreeNode {
   name: RelPath;
   type: "dir" | "file";
   dirname: AbsPath;
+  mimeType?: string;
   basename: RelPath;
   parent: TreeDir | null;
   path: AbsPath;
@@ -29,6 +31,7 @@ export class TreeNode {
     name,
     type,
     dirname,
+    mimeType,
     basename,
     path,
     parent,
@@ -39,11 +42,13 @@ export class TreeNode {
     dirname: AbsPath | string;
     basename: RelPath | string;
     parent: TreeDir | null;
+    mimeType?: string;
     path: AbsPath | string;
     depth: number;
   }) {
     this.name = typeof name === "string" ? relPath(name) : name;
     this.type = type;
+    this.mimeType = mimeType;
     this.dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
     this.basename = typeof basename === "string" ? relPath(basename) : basename;
     this.path = typeof path === "string" ? absPath(path) : path;
@@ -81,6 +86,7 @@ export class TreeNode {
       name: this.name,
       dirname: this.dirname,
       basename: this.basename,
+      mimeType: this.mimeType || getMimeType(this.path),
       parent: this.parent,
       path: this.path,
       depth: this.depth,
@@ -183,22 +189,26 @@ export function isTreeDir(node: TreeNode): node is TreeDir {
 
 export class TreeFile extends TreeNode {
   type = "file" as const;
+  mimeType = "text/markdown";
   constructor({
     name,
     dirname,
     basename,
+    mimeType,
     path,
     depth,
     parent,
   }: {
     name: RelPath;
     dirname: AbsPath;
+    mimeType: string;
     basename: RelPath;
     path: AbsPath;
     depth: number;
     parent: TreeDir | null;
   }) {
     super({ name, type: "file", parent, dirname, basename, path, depth });
+    this.mimeType = mimeType;
   }
 }
 
@@ -291,7 +301,6 @@ export class FileTree {
         this.map = new Map<string, TreeNode>();
         await this.recurseTree(this.root);
         this.dirs = this.flatDirTree();
-        // this.nodeList = this.flatTreeToNodeList();
         this.initialIndex = true;
       } finally {
         release(); // Release the lock
@@ -350,6 +359,7 @@ export class FileTree {
             dirname: fullPath.dirname(),
             basename: fullPath.basename(),
             path: fullPath,
+            mimeType: getMimeType(fullPath),
             parent,
             depth: depth,
           });
@@ -468,6 +478,7 @@ function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name
       name: path.basename(),
       dirname: path.dirname(),
       basename: path.basename(),
+      mimeType: getMimeType(path.str),
       path,
       parent,
       depth,
