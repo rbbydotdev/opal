@@ -57,7 +57,7 @@ function SidebarFileMenuInternal({
   const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
 
   return (
-    <SidebarGroup {...props} className="h-full p-0">
+    <SidebarGroup {...props} className="h-full p-0 bg-secondary">
       <SidebarGroupContent className="flex justify-end">
         <div className="whitespace-nowrap">
           {isSettingsView ? (

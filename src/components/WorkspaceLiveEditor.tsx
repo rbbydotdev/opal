@@ -7,7 +7,54 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
-export function WorkspaceLiveEditor({ className, ...props }: { className?: string } & Partial<MDXEditorProps>) {
+interface WorkspaceLiveEditorProps extends Partial<MDXEditorProps> {
+  className?: string;
+}
+
+export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
+  const router = useRouter();
+  const { currentWorkspace } = useWorkspaceContext();
+  const { error, mimeType, contents, filePath } = useCurrentFilepath();
+  useEffect(() => {
+    if (error !== null && currentWorkspace) {
+      router.push(currentWorkspace.tryFirstFileUrl());
+    }
+  }, [currentWorkspace, error, router]);
+
+  if (!mimeType) return null;
+
+  if (mimeType?.startsWith("image/")) {
+    return <ImageViewer imageContent={contents} alt={filePath?.str} />;
+  }
+  return <WorkspaceLiveEditorInternal {...props} />;
+}
+export function ImageViewer({
+  imageContent,
+  alt = "image",
+}: {
+  imageContent: string | Uint8Array<ArrayBufferLike> | null;
+  alt?: string;
+}) {
+  const imgSrc = useRef<string | null>(null);
+  useEffect(() => {
+    if (typeof imageContent === "string") {
+      imgSrc.current = imageContent;
+    } else if (imageContent instanceof Uint8Array) {
+      imgSrc.current = URL.createObjectURL(new Blob([imageContent]));
+      console.log(imgSrc.current);
+      return () => URL.revokeObjectURL(imgSrc.current!);
+    }
+  }, [imageContent]);
+
+  if (typeof imgSrc.current !== "string") return null;
+  return (
+    <div className="p-4 border-2 m-auto flex justify-center items-center h-full w-full">
+      <img className="max-h-[85%]" alt={alt} src={imgSrc.current} />
+    </div>
+  );
+}
+
+export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLiveEditorProps) {
   const ref = useRef<MDXEditorMethods>(null);
   const router = useRouter();
   const { currentWorkspace } = useWorkspaceContext();
@@ -19,7 +66,7 @@ export function WorkspaceLiveEditor({ className, ...props }: { className?: strin
   }, [currentWorkspace, error, router]);
   useEffect(() => {
     if (ref.current && contents !== null) {
-      ref.current?.setMarkdown(contents);
+      ref.current?.setMarkdown(String(contents));
     }
   }, [contents]);
   if (contents === null) return null;
@@ -28,7 +75,7 @@ export function WorkspaceLiveEditor({ className, ...props }: { className?: strin
       {...props}
       ref={ref}
       onChange={updateContents}
-      markdown={contents}
+      markdown={String(contents)}
       className={twMerge("flex flex-col", className)}
       contentEditableClassName="max-w-full overflow-auto content-editable prose"
     />

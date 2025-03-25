@@ -35,9 +35,13 @@ export default function RootLayout({
           <JotaiProvider>
             <SidebarProvider defaultOpen={defaultOpen}>
               <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                <div className="w-full flex h-screen overflow-hidden">
-                  <WrkSpcButtonBar />
-                  <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>
+                <div className="w-screen overflow-hidden flex ">
+                  <div className="w-20 flex flex-col flex-shrink-0 py-8 bg-secondary-foreground">
+                    <WrkSpcButtonBar />
+                  </div>
+                  <div className="flex h-screen w-[calc(100vw-5rem)]">
+                    <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>
+                  </div>
                 </div>
               </ThemeProvider>
             </SidebarProvider>

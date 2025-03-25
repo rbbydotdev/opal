@@ -255,7 +255,7 @@ export abstract class Disk extends DiskDAO {
       if (watchFilePath === filePath) {
         try {
           const contents = await this.readFile(absPath(filePath));
-          return fn(contents);
+          return fn(contents.toString());
         } catch (e) {
           if (errorCode(e).code === "ENOENT") {
             throw new NotFoundError(`File not found: ${filePath}`);
@@ -349,7 +349,7 @@ export abstract class Disk extends DiskDAO {
     this.local.emit(DiskLocalEvents.INDEX);
     return node;
   }
-  async newFile(fullPath: AbsPath, content: string) {
+  async newFile(fullPath: AbsPath, content: string | Uint8Array) {
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
     }
@@ -359,7 +359,7 @@ export abstract class Disk extends DiskDAO {
     await this.remote.emit(DiskLocalEvents.INDEX);
     return fullPath;
   }
-  async writeFileRecursive(filePath: AbsPath, content: string) {
+  async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
     await this.mkdirRecursive(filePath.dirname());
     try {
       this.fs.promises.writeFile(filePath.str, content, { encoding: "utf8", mode: 0o777 });
@@ -377,7 +377,7 @@ export abstract class Disk extends DiskDAO {
       return false;
     }
   }
-  async writeFile(filePath: AbsPath, contents: string) {
+  async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
     await this.fs.promises.writeFile(filePath.str, contents, { encoding: "utf8", mode: 0o777 });
     // local messes up the editor, commenting out for now might need in the future
     // await this.local.emit(DiskLocalEvents.WRITE, { filePath, contents });
@@ -386,19 +386,13 @@ export abstract class Disk extends DiskDAO {
   }
   async readFile(filePath: AbsPath) {
     try {
-      return (await this.fs.promises.readFile(filePath.str)).toString();
+      return await this.fs.promises.readFile(filePath.str);
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
         throw new NotFoundError(`File not found: ${filePath}`);
       }
       throw e;
     }
-  }
-
-  async withFs(fn: (fs: FileSystem) => Promise<unknown> | unknown) {
-    await fn(this.fs);
-    await this.fileTree.forceIndex();
-    return this.fs;
   }
 
   toJSON() {

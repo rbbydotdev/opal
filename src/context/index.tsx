@@ -1,6 +1,7 @@
 "use client";
 import { TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
+import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor } from "@/lib/paths";
 import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
@@ -36,7 +37,8 @@ export type Workspaces = WorkspaceDAO[];
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
-  const [contents, setContents] = useState<null | string>(null);
+  const [contents, setContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
+  const [mimeType, setMimeType] = useState<null | string>(null);
   const [error, setError] = useState<null | Error>(null);
   const router = useRouter();
 
@@ -45,7 +47,8 @@ export function useCurrentFilepath() {
       if (currentWorkspace && filePath) {
         try {
           const contents = await currentWorkspace.disk.readFile(filePath);
-          setContents(contents);
+          setContents(contents); //TODO!
+          setMimeType(getMimeType(filePath.str));
           setError(null);
         } catch (error) {
           setError(error as Error);
@@ -67,7 +70,7 @@ export function useCurrentFilepath() {
     },
     [currentWorkspace, filePath]
   );
-  return { error, filePath, contents, updateContents };
+  return { error, filePath, contents, updateContents, mimeType };
 }
 
 export function useWorkspaceRoute() {

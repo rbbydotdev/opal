@@ -1,26 +1,103 @@
-export default function Page() {
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+// Define the form schema with zod
+const workspaceFormSchema = z.object({
+  workspaceName: z
+    .string()
+    .min(2, { message: "Workspace name must be at least 2 characters." })
+    .max(50, { message: "Workspace name must not exceed 50 characters." }),
+  workspaceDescription: z.string().max(500, { message: "Description must not exceed 500 characters." }).optional(),
+});
+
+type WorkspaceFormValues = z.infer<typeof workspaceFormSchema>;
+
+// Default values for the form
+const defaultValues: Partial<WorkspaceFormValues> = {
+  workspaceName: "",
+  workspaceDescription: "",
+};
+
+export default function WorkspaceSettingsPage() {
+  // Initialize the form
+  const form = useForm<WorkspaceFormValues>({
+    resolver: zodResolver(workspaceFormSchema),
+    defaultValues,
+  });
+
+  // Form submission handler
+  function onSubmit(data: WorkspaceFormValues) {
+    toast({
+      title: "Workspace updated",
+      description: "Your workspace settings have been updated.",
+    });
+    console.log(data);
+  }
+
+  // Delete workspace handler
+  function handleDeleteWorkspace() {
+    // Show confirmation dialog or directly handle deletion
+    toast({
+      variant: "destructive",
+      title: "Workspace deletion requested",
+      description: "This action would delete your workspace.",
+    });
+  }
+
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Workspace Settings</h1>
-      <div className="border-2 rounded-lg min-h-48 p-4 flex flex-col">
+      <div className="border-2 rounded-lg p-4 flex flex-col">
         <h2 className="text-lg font-bold mb-4">General</h2>
-        <div className="flex flex-col space-y-4">
-          <div className="flex flex-col space-y-1">
-            <label htmlFor="workspaceName" className="text-sm font-bold">
-              Workspace Name
-            </label>
-            <input type="text" id="workspaceName" className="input" />
-          </div>
-          <div className="flex flex-col space-y-1">
-            <label htmlFor="workspaceDescription" className="text-sm font-bold">
-              Description
-            </label>
-            <textarea id="workspaceDescription" className="input" />
-          </div>
-        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="workspaceName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-bold">Workspace Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="My Workspace" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="workspaceDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-bold">Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Describe your workspace" className="resize-none" {...field} />
+                  </FormControl>
+                  <FormDescription>Brief description of your workspace&apos;s purpose.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit">Save Changes</Button>
+          </form>
+        </Form>
+
         <h2 className="text-lg font-bold mt-8 mb-4">Danger Zone</h2>
         <div className="flex flex-col space-y-4">
-          <button className="btn btn-danger">Delete Workspace</button>
+          <Button variant="destructive" onClick={handleDeleteWorkspace}>
+            Delete Workspace
+          </Button>
         </div>
       </div>
     </div>

@@ -28,7 +28,7 @@ function BigButton({
         <Link
           {...restProps}
           className={twMerge(
-            "text-3xs py-2 cursor-pointer w-full hover:bg-slate-800 gap-2 stroke-slate-500 text-slate-500 hover:stroke-white hover:text-white bg-slate-900 flex items-center",
+            "text-3xs py-2 cursor-pointer w-full hover:bg-slate-800 gap-2 stroke-slate-500 text-slate-500 hover:stroke-white hover:text-white bg-secondary-foreground flex items-center",
             restProps.className
           )}
         >
@@ -71,7 +71,7 @@ export function WrkSpcButtonBar() {
     [workspaces, currentWorkspace]
   );
   return (
-    <div className="py-8 bg-slate-900  w-20 flex flex-col flex-shrink-0">
+    <div className="">
       <BigButton
         icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}
         title={"delete_all"}
@@ -103,7 +103,7 @@ export function WrkSpcButtonBar() {
         {workspaces.length > 1 && (
           <CollapsibleTrigger
             className="h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
-  hover:text-slate-200 bg-slate-900 flex items-center"
+  hover:text-slate-200 bg-secondary-foreground flex items-center"
           >
             <ChevronUp size={16} className="group-data-[state=closed]:hidden w-full" />
             <ChevronDown size={16} className="group-data-[state=open]:hidden w-full" />

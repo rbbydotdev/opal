@@ -13,6 +13,18 @@ import { isAncestor } from "../lib/paths";
 
 export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
 
+const ACCEPTED_FILE_TYPES = [
+  "text/plain",
+  "text/markdown",
+  "text/x-markdown",
+  "text/x-markdown",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
+const isAcceptedFileType = (file: File) => ACCEPTED_FILE_TYPES.includes(file.type);
+
 export function FileTreeContainer({
   currentWorkspace,
   fileTreeDir,
@@ -37,6 +49,8 @@ export function FileTreeContainer({
   );
 }
 
+const INTERNAL_FILE_TYPE = "__internal_file__";
+
 function useFileTreeDragAndDrop({
   currentWorkspace,
   renameDirFile,
@@ -56,7 +70,7 @@ function useFileTreeDragAndDrop({
         .map((path) => (path ? currentWorkspace.disk.fileTree.nodeFromPath(path) : null))
         .filter(Boolean),
     } satisfies DragStartType);
-    event.dataTransfer.setData("application/json", data);
+    event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
     event.dataTransfer.effectAllowed = "move";
     // console.debug(`Drag Start: ${file.path}`);
   };
@@ -67,25 +81,43 @@ function useFileTreeDragAndDrop({
     // console.debug(`Drag Over: ${event.currentTarget}`);
   };
 
+  const handleExternalDrop = async (event: React.DragEvent, targetPath: AbsPath) => {
+    console.log("External Drop");
+    // currentWorkspace;
+
+    const { files } = event.dataTransfer;
+    for (const file of files) {
+      if (isAcceptedFileType(file)) {
+        currentWorkspace.disk.newFile(AbsPath.New(file.name), new Uint8Array(await file.arrayBuffer()));
+        console.log(targetPath.join(file.name));
+      }
+    }
+    console.log(event.dataTransfer.files);
+  };
+
   const handleDrop = (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
     event.stopPropagation();
+    const targetPath = targetNode.type === "dir" ? targetNode.path : targetNode.dirname;
     try {
-      const { dragStart } = JSON.parse(event.dataTransfer.getData("application/json")) as DragStartJType;
-      if (dragStart && dragStart.length) {
-        return Promise.all(
-          dragStart
-            .map((node) => TreeNode.fromJSON(node))
-            .filter(({ type: draggedType, path: draggedPath }) => {
-              const newPath =
-                targetNode.type === "dir"
-                  ? targetNode.path.join(draggedPath.basename())
-                  : targetNode.dirname.join(draggedPath.basename());
-              if (draggedType !== "dir" || !isAncestor(newPath, draggedPath.str)) {
-                return renameDirFile(currentWorkspace.nodeFromPath(draggedPath)!, newPath, draggedType);
-              }
-            })
-        );
+      if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
+        //handle external file drop
+        handleExternalDrop(event, targetPath);
+      } else {
+        const { dragStart } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as DragStartJType;
+
+        if (dragStart && dragStart.length) {
+          return Promise.all(
+            dragStart
+              .map((node) => TreeNode.fromJSON(node))
+              .filter(({ type: draggedType, path: draggedPath }) => {
+                const dropPath = targetPath.join(draggedPath.basename());
+                if (draggedType !== "dir" || !isAncestor(dropPath, draggedPath.str)) {
+                  return renameDirFile(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
+                }
+              })
+          );
+        }
       }
     } catch (e) {
       console.error("Error parsing dragged data:", e);

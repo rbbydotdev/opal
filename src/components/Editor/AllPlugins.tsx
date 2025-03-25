@@ -129,7 +129,7 @@ export const AllPlugins = [
   toolbarPlugin({ toolbarContents: () => <KitchenSinkToolbar /> }),
   listsPlugin(),
   quotePlugin(),
-  headingsPlugin({ allowedHeadingLevels: [1, 2, 3] }),
+  headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
   linkPlugin(),
   linkDialogPlugin(),
   imagePlugin({
@@ -145,6 +145,6 @@ export const AllPlugins = [
     codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
   }),
   directivesPlugin({ directiveDescriptors: [YoutubeDirectiveDescriptor, AdmonitionDirectiveDescriptor] }),
-  diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: "boo" }),
+  diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: "<ORIGINAL_MARKDOWN_HERE>" }),
   markdownShortcutPlugin(),
 ];
