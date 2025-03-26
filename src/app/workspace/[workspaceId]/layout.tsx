@@ -2,6 +2,7 @@
 import { WorkspaceStatus } from "@/app/workspace/[workspaceId]/WorkspaceStatus";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuContextProvider } from "@/components/FileTreeContext";
+import { WorkerContextProvider } from "@/components/SWImages";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import React from "react";
 
@@ -24,7 +25,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <ResizableHandle />
             <ResizablePanel id="editor" defaultSize={85}>
               <div className="w-full h-full bg-secondary">
-                <div>{children}</div>
+                <WorkerContextProvider>
+                  <div>{children}</div>
+                </WorkerContextProvider>
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>

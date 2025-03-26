@@ -1,6 +1,8 @@
 "use client";
 
 import { Editor } from "@/components/Editor/Editor";
+import { useWorkerContext } from "@/components/SWImages";
+import { Button } from "@/components/ui/button";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import { useRouter } from "next/navigation";
@@ -69,15 +71,21 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
       ref.current?.setMarkdown(String(contents));
     }
   }, [contents]);
+  const api = useWorkerContext();
   if (contents === null) return null;
   return (
-    <Editor
-      {...props}
-      ref={ref}
-      onChange={updateContents}
-      markdown={String(contents)}
-      className={twMerge("flex flex-col", className)}
-      contentEditableClassName="max-w-full overflow-auto content-editable prose"
-    />
+    <>
+      <Button onClick={() => api.performTask(String(contents)).then((result) => console.log({ result }))}>
+        Perform Task
+      </Button>
+      <Editor
+        {...props}
+        ref={ref}
+        onChange={updateContents}
+        markdown={String(contents)}
+        className={twMerge("flex flex-col", className)}
+        contentEditableClassName="max-w-full overflow-auto content-editable prose"
+      />
+    </>
   );
 }
