@@ -414,16 +414,17 @@ export abstract class Disk extends DiskDAO {
 
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
-  constructor(public readonly guid: string, public readonly db = ClientDb) {
+  ready: Promise<void>;
+  constructor(public readonly guid: string) {
     const fs = new LightningFs();
-    fs.init(guid);
     super(guid, fs, new FileTree(fs), IndexedDbDisk.type);
+    this.ready = fs.init(guid) as unknown as Promise<void>;
   }
 }
 
 export class MemDisk extends Disk {
   static type: DiskType = "MemDisk";
-  constructor(public readonly guid: string, public readonly db = ClientDb) {
+  constructor(public readonly guid: string) {
     const fs = memfs().fs;
     super(guid, fs, new FileTree(fs), MemDisk.type);
   }

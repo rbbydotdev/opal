@@ -1,6 +1,14 @@
-import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
 
-const nextConfig: NextConfig = {
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  reloadOnOnline: false,
+  maximumFileSizeToCacheInBytes: 15000000,
+  include: [/^(?!.*\/icons\/(android|ios)\/).*/],
+});
+
+export default withSerwist({
   /* config options here */
   eslint: {
     ignoreDuringBuilds: true,
@@ -16,6 +24,4 @@ const nextConfig: NextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
-};
-
-export default nextConfig;
+});
