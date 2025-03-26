@@ -1,4 +1,5 @@
 "use client";
+import { DexieFsDb } from "@/clientdb/DexieFsDb";
 import { FileTree, TreeDir, TreeDirRoot, TreeFile, TreeNode } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
@@ -11,9 +12,35 @@ import { nanoid } from "nanoid";
 import path from "path";
 export type DiskJType = { guid: string; type: DiskType; fs: Record<string, string> };
 
-export type DiskType = "IndexedDbDisk" | "MemDisk";
+export type DiskType = "IndexedDbDisk" | "MemDisk" | "DexieFsDbDisk";
 
-export type FileSystem = InstanceType<typeof LightningFs> | ReturnType<typeof memfs>["fs"];
+interface CommonFileSystem {
+  readdir(path: string): Promise<
+    (
+      | string
+      | Buffer<ArrayBufferLike>
+      | {
+          name: string | Buffer<ArrayBufferLike>;
+          isDirectory: () => boolean;
+          isFile: () => boolean;
+        }
+    )[]
+  >;
+  stat(path: string): Promise<{ isDirectory: () => boolean }>; // Exact type can vary based on implementation details.
+  readFile(path: string, options?: { encoding?: "utf8" }): Promise<Uint8Array | Buffer | string>;
+  mkdir(path: string, options?: { recursive?: boolean; mode: number }): Promise<string | void>;
+  rename(oldPath: string, newPath: string): Promise<void>;
+  unlink(path: string): Promise<void>;
+  writeFile(
+    path: string,
+    data: Uint8Array | Buffer | string,
+    options?: { encoding?: "utf8"; mode: number }
+  ): Promise<void>;
+}
+
+// export type FileSystem = InstanceType<typeof LightningFs>["promises"] | ReturnType<typeof memfs>["fs"]["promises"];
+
+export type FileSystem = CommonFileSystem;
 
 export class DiskRecord {
   guid!: string;
@@ -198,7 +225,7 @@ export abstract class Disk extends DiskDAO {
       console.debug("remote rename", JSON.stringify(data, null, 4));
     });
     this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
-      const contents = (await this.fs.promises.readFile(filePath)).toString();
+      const contents = (await this.fs.readFile(filePath)).toString();
       await this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
       console.debug("remote write");
     });
@@ -213,18 +240,27 @@ export abstract class Disk extends DiskDAO {
   static guid = () => "disk:" + nanoid();
 
   static new(guid: string = Disk.guid(), type: DiskType = Disk.defaultDiskType) {
-    return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
+    return new {
+      [IndexedDbDisk.type]: IndexedDbDisk,
+      [MemDisk.type]: MemDisk,
+      [DexieFsDbDisk.type]: DexieFsDbDisk,
+    }[type](guid);
   }
 
   static from({ guid, type }: { guid: string; type: DiskType }): Disk {
-    return type === "IndexedDbDisk" ? new IndexedDbDisk(guid) : new MemDisk(guid);
+    return new {
+      [IndexedDbDisk.type]: IndexedDbDisk,
+      [MemDisk.type]: MemDisk,
+      [DexieFsDbDisk.type]: DexieFsDbDisk,
+    }[type](guid);
   }
 
   async mkdirRecursive(filePath: AbsPath) {
     const segments = filePath.split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
       try {
-        await this.fs.promises.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
+        // await this.fs.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true });
+        await this.fs.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
       } catch (err) {
         if (errorCode(err).code !== "EEXIST") {
           console.error(`Error creating directory ${path.dirname(filePath.str)}:`, err);
@@ -287,14 +323,16 @@ export abstract class Disk extends DiskDAO {
     if (cleanFullPath.str === oldFullPath.str) return NOCHANGE;
 
     try {
-      await this.fs.promises.stat(cleanFullPath.str);
+      await this.fs.stat(cleanFullPath.str);
       return NOCHANGE;
-    } catch (_e) {}
+    } catch (e) {
+      console.error(e);
+    }
 
     try {
-      await this.fs.promises.rename(oldFullPath.str, cleanFullPath.str);
-    } catch (_e) {
-      //throws an error wtf !:?!?!
+      await this.fs.rename(oldFullPath.str, cleanFullPath.str);
+    } catch (e) {
+      console.error(e);
     }
     await this.fileTree.forceIndex();
 
@@ -324,7 +362,7 @@ export abstract class Disk extends DiskDAO {
   }
   async removeFile(filePath: AbsPath) {
     try {
-      await this.fs.promises.unlink(filePath.str);
+      await this.fs.unlink(filePath.str);
     } catch (err) {
       if (errorCode(err).code === "ENOENT") {
         throw new NotFoundError(`File not found: ${filePath}`);
@@ -362,7 +400,7 @@ export abstract class Disk extends DiskDAO {
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
     await this.mkdirRecursive(filePath.dirname());
     try {
-      this.fs.promises.writeFile(filePath.str, content, { encoding: "utf8", mode: 0o777 });
+      this.fs.writeFile(filePath.str, content, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error writing file ${filePath}:`, err);
@@ -371,14 +409,14 @@ export abstract class Disk extends DiskDAO {
   }
   async pathExists(filePath: AbsPath) {
     try {
-      await this.fs.promises.stat(filePath.str);
+      await this.fs.stat(filePath.str);
       return true;
     } catch (_e) {
       return false;
     }
   }
   async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
-    await this.fs.promises.writeFile(filePath.str, contents, { encoding: "utf8", mode: 0o777 });
+    await this.fs.writeFile(filePath.str, contents, { encoding: "utf8", mode: 0o777 });
     // local messes up the editor, commenting out for now might need in the future
     // await this.local.emit(DiskLocalEvents.WRITE, { filePath, contents });
     await this.remote.emit(DiskRemoteEvents.WRITE, { filePath: filePath.str });
@@ -386,7 +424,7 @@ export abstract class Disk extends DiskDAO {
   }
   async readFile(filePath: AbsPath) {
     try {
-      return await this.fs.promises.readFile(filePath.str);
+      return await this.fs.readFile(filePath.str);
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
         throw new NotFoundError(`File not found: ${filePath}`);
@@ -405,10 +443,18 @@ export abstract class Disk extends DiskDAO {
   }
 
   get promises() {
-    return this.fs.promises;
+    return this.fs;
   }
   get isIndexed() {
     return this.fileTree.initialIndex;
+  }
+}
+
+export class DexieFsDbDisk extends Disk {
+  static type: DiskType = "DexieFsDbDisk";
+  constructor(public readonly guid: string) {
+    const fs = new DexieFsDb(guid);
+    super(guid, fs, new FileTree(fs), DexieFsDbDisk.type);
   }
 }
 
@@ -417,7 +463,7 @@ export class IndexedDbDisk extends Disk {
   ready: Promise<void>;
   constructor(public readonly guid: string) {
     const fs = new LightningFs();
-    super(guid, fs, new FileTree(fs), IndexedDbDisk.type);
+    super(guid, fs.promises, new FileTree(fs.promises), IndexedDbDisk.type);
     this.ready = fs.init(guid) as unknown as Promise<void>;
   }
 }
@@ -426,6 +472,6 @@ export class MemDisk extends Disk {
   static type: DiskType = "MemDisk";
   constructor(public readonly guid: string) {
     const fs = memfs().fs;
-    super(guid, fs, new FileTree(fs), MemDisk.type);
+    super(guid, fs.promises, new FileTree(fs.promises), MemDisk.type);
   }
 }
