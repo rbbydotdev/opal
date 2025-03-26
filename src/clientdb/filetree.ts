@@ -331,7 +331,7 @@ export class FileTree {
   recurseTree = async (parent = this.root, depth = 0, haltOnError = false) => {
     const dir = parent.path;
     try {
-      const entries = await this.fs.promises.readdir(dir.str);
+      const entries = await this.fs.readdir(dir.str);
 
       // Separate directories and files
       const directories: string[] = [];
@@ -340,7 +340,7 @@ export class FileTree {
       await Promise.all(
         entries.map(async (entry) => {
           const fullPath = dir.join(entry.toString());
-          const stat = await this.fs.promises.stat(fullPath.str);
+          const stat = await this.fs.stat(fullPath.str);
 
           if (stat.isDirectory()) {
             directories.push(entry.toString());
