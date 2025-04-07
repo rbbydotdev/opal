@@ -3,7 +3,7 @@ import { DexieFsDb } from "@/clientdb/DexieFsDb";
 import { FileTree, TreeDir, TreeDirRoot, TreeFile, TreeNode } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
-import { errorCode, NotFoundError } from "@/lib/errors";
+import { ConflictError, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import Emittery from "emittery";
@@ -211,9 +211,8 @@ export abstract class Disk extends DiskDAO {
     super({ guid, type });
     this.remote = new DiskRemoteEvents(this.guid);
   }
-  init() {
-    this.setupRemoteListeners();
-    this.initializeIndex();
+  async init() {
+    return Promise.all([this.setupRemoteListeners(), this.initializeIndex()]);
   }
 
   async setupRemoteListeners() {
@@ -322,17 +321,14 @@ export abstract class Disk extends DiskDAO {
 
     if (cleanFullPath.str === oldFullPath.str) return NOCHANGE;
 
-    try {
-      await this.fs.stat(cleanFullPath.str);
-      return NOCHANGE;
-    } catch (e) {
-      console.error(e);
+    if (await this.pathExists(cleanFullPath)) {
+      throw new ConflictError().hint(`File already exists: ${cleanFullPath}`);
     }
 
     try {
       await this.fs.rename(oldFullPath.str, cleanFullPath.str);
     } catch (e) {
-      console.error(e);
+      throw e;
     }
     await this.fileTree.forceIndex();
 
@@ -364,7 +360,7 @@ export abstract class Disk extends DiskDAO {
     try {
       await this.fs.unlink(filePath.str);
     } catch (err) {
-      if (errorCode(err).code === "ENOENT") {
+      if (isErrorWithCode(err, "ENOENT")) {
         throw new NotFoundError(`File not found: ${filePath}`);
       } else {
         throw err;

@@ -58,6 +58,8 @@ const SidebarProvider = React.forwardRef<
   const [openMobile, setOpenMobile] = React.useState(false);
   const [_, setOpenLS] = useSidebarState();
 
+  // const [defaultOpen] = useSidebarState();
+
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);

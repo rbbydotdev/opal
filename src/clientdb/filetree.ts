@@ -250,7 +250,6 @@ export class FileTree {
   }
 
   flatDirTree = () => {
-    // console.log([...this.map.keys()]);
     return [...this.map.keys()];
   };
 

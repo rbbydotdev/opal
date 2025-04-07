@@ -2,12 +2,12 @@
 import Identicon from "@/components/Identicon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useWorkspaceContext } from "@/context";
+import { WorkspaceContext } from "@/context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { ChevronDown, ChevronUp, CirclePlus, Delete, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { use, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 function BigButton({
@@ -51,7 +51,8 @@ function BigButton({
 }
 
 export function WrkSpcButtonBar() {
-  const { currentWorkspace, workspaces } = useWorkspaceContext();
+  // const { currentWorkspace, workspaces } = useWorkspaceContext();
+  const { currentWorkspace, workspaces } = use(WorkspaceContext);
 
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
 
@@ -71,7 +72,7 @@ export function WrkSpcButtonBar() {
     [workspaces, currentWorkspace]
   );
   return (
-    <div className="">
+    <>
       <BigButton
         icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}
         title={"delete_all"}
@@ -114,7 +115,6 @@ export function WrkSpcButtonBar() {
           {filteredWorkspaces.map((workspace) => (
             <BigButton
               icon={<Identicon input={workspace.guid} size={4} scale={7} />}
-              className=""
               href={workspace.href}
               title={workspace.name}
               key={workspace.guid}
@@ -122,6 +122,6 @@ export function WrkSpcButtonBar() {
           ))}
         </CollapsibleContent>
       </Collapsible>
-    </div>
+    </>
   );
 }

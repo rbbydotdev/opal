@@ -2,10 +2,8 @@
 
 import { Editor } from "@/components/Editor/Editor";
 import { useWorkerContext } from "@/components/SWImages";
-import { Button } from "@/components/ui/button";
-import { useCurrentFilepath, useWorkspaceContext } from "@/context";
+import { useCurrentFilepath } from "@/context";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -14,14 +12,7 @@ interface WorkspaceLiveEditorProps extends Partial<MDXEditorProps> {
 }
 
 export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
-  const router = useRouter();
-  const { currentWorkspace } = useWorkspaceContext();
-  const { error, mimeType, contents, filePath } = useCurrentFilepath();
-  useEffect(() => {
-    if (error !== null && currentWorkspace) {
-      router.push(currentWorkspace.tryFirstFileUrl());
-    }
-  }, [currentWorkspace, error, router]);
+  const { mimeType, contents, filePath } = useCurrentFilepath();
 
   if (!mimeType) return null;
 
@@ -58,14 +49,7 @@ export function ImageViewer({
 
 export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLiveEditorProps) {
   const ref = useRef<MDXEditorMethods>(null);
-  const router = useRouter();
-  const { currentWorkspace } = useWorkspaceContext();
-  const { contents, updateContents, error } = useCurrentFilepath();
-  useEffect(() => {
-    if (error !== null && currentWorkspace) {
-      router.push(currentWorkspace.tryFirstFileUrl());
-    }
-  }, [currentWorkspace, error, router]);
+  const { contents, updateContents } = useCurrentFilepath();
   useEffect(() => {
     if (ref.current && contents !== null) {
       ref.current?.setMarkdown(String(contents));
@@ -75,9 +59,6 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
   if (contents === null) return null;
   return (
     <>
-      <Button onClick={() => api.performTask(String(contents)).then((result) => console.log({ result }))}>
-        Perform Task
-      </Button>
       <Editor
         {...props}
         ref={ref}
