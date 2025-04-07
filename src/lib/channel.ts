@@ -2,7 +2,7 @@
 import Emittery, { type Options } from "emittery";
 import { nanoid } from "nanoid";
 
-const ChannelSet = new Set<string>();
+const ChannelSet = new Map<string, () => void>();
 
 export class Channel<EventData = Record<string, unknown>> extends Emittery<EventData> {
   private channel: BroadcastChannel | null = null;
@@ -13,9 +13,16 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   }
   init() {
     if (ChannelSet.has(this.channelName)) {
-      throw new Error("Channel already exists:" + this.channelName);
+      console.warn("Channel already exists:" + this.channelName + " ... removing");
+      try {
+        const close = ChannelSet.get(this.channelName);
+        if (close) close();
+      } catch (e) {
+        console.error("Error during channel teardown:", e);
+      }
+      ChannelSet.delete(this.channelName);
     }
-    ChannelSet.add(this.channelName);
+    ChannelSet.set(this.channelName, this.tearDown);
     this.createChannel();
   }
 
@@ -40,6 +47,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
     console.debug("bcast outgoing:", eventName);
     try {
+      //TODO:
       if (this.channel) {
         return this.channel.postMessage(JSON.parse(message));
       } else {
@@ -50,12 +58,12 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
     }
   }
 
-  tearDown() {
+  tearDown = () => {
     ChannelSet.delete(this.channelName);
     if (this.channel) {
       this.channel.close();
       this.channel = null;
     }
     this.clearListeners();
-  }
+  };
 }

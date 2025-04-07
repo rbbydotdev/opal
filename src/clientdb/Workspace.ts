@@ -149,6 +149,9 @@ export class Workspace extends WorkspaceDAO {
     if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}, guid:${name}`);
     return (await new WorkspaceDAO(ws).withRelations()).toModel();
   }
+  static async fetchFromRouteAndInit(route: string) {
+    return (await Workspace.fetchFromRoute(route)).init();
+  }
 
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
@@ -236,8 +239,9 @@ export class Workspace extends WorkspaceDAO {
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
   }
 
-  init() {
-    this.disk.init();
+  async init() {
+    await this.disk.init();
+    return this;
   }
 
   teardown = () => {

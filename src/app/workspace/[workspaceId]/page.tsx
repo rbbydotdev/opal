@@ -1,25 +1,36 @@
 "use client";
+
+import { useWorkspaceContext } from "@/context";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
 // import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Page() {
-  // const { currentWorkspace } = useContext(WorkspaceContext);
   return (
     <div className="w-full h-full flex items-center justify-center">
       {/* <LoadingPanel /> */}
-      {/* <FirstFileRedirect /> */}
+      <FirstFileRedirectWithCurrentWorkspace />
+      {/* <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center">
+        <div>
+          <Opal size={78} />
+        </div>
+        <div className="font-thin text-2xl font-mono text-center">welcome to your workspace</div>
+      </div> */}
     </div>
   );
 }
 
-// function FirstFileRedirect() {
-//   const { currentWorkspace, firstFile } = useWorkspaceContext();
-//   const router = useRouter();
-//   useEffect(() => {
-//     if (firstFile && currentWorkspace) {
-//       router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-//     }
+function FirstFileRedirect() {
+  // function FirstFileRedirect({ currentWorkspace }: { currentWorkspace: Workspace; fileTreeDir: TreeDir }) {
+  const router = useRouter();
 
-//     // router.push(currentWorkspace.tryFirstFileUrl());
-//   }, [currentWorkspace, firstFile, router]);
-//   return null;
-// }
+  const { currentWorkspace } = useWorkspaceContext();
+  useEffect(() => {
+    if (currentWorkspace) router.push(currentWorkspace.tryFirstFileUrl());
+  }, [currentWorkspace, router]);
+  return null;
+}
+
+// const FirstFileRedirectWithCurrentWorkspace = withCurrentWorkspace(FirstFileRedirect);
+const FirstFileRedirectWithCurrentWorkspace = FirstFileRedirect;

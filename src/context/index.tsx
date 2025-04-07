@@ -132,14 +132,12 @@ export function useWorkspaceFromRoute() {
     if (!isAncestor(pathname, Workspace.rootRoute) || pathname === "/workspace/new" || !pathname) {
       return;
     }
-    const ws = Workspace.fetchFromRoute(pathname).then((ws) => {
-      // setCurrentWorkspace(ws);
+    const workspace = Workspace.fetchFromRouteAndInit(pathname).then((ws) => {
       setCurrentWorkspace(ws);
-      ws.init();
       return ws;
     });
     return () => {
-      ws.then((w) => w.teardown());
+      workspace.then((ws) => ws.teardown());
     };
   }, [pathname]);
 
@@ -155,6 +153,8 @@ export function useWorkspaceFromRoute() {
     });
   }, [currentWorkspace, pathname, router, workspaceRoute.path]);
 
+  //pathname is sync current workspace is async update therefor if out of sync return null
+  if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return null;
   return currentWorkspace;
 }
 
@@ -164,14 +164,14 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const currentWorkspace = useWorkspaceFromRoute();
   const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
 
-  //keep at least one file open if possible
-  const router = useRouter();
-  useEffect(() => {
-    if (!workspaceRoute.path && workspaceRoute.id && currentWorkspace && isIndexed) {
-      const firstFile = currentWorkspace.getFirstFile();
-      if (firstFile) router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-    }
-  }, [currentWorkspace, fileTreeDir, isIndexed, router, workspaceRoute.id, workspaceRoute.path]);
+  // //keep at least one file open if possible
+  // const router = useRouter();
+  // useEffect(() => {
+  //   if (!workspaceRoute.path && workspaceRoute.id && currentWorkspace && isIndexed) {
+  //     const firstFile = currentWorkspace.getFirstFile();
+  //     if (firstFile) router.push(currentWorkspace.resolveFileUrl(firstFile.path));
+  //   }
+  // }, [currentWorkspace, fileTreeDir, isIndexed, router, workspaceRoute.id, workspaceRoute.path]);
 
   return (
     <WorkspaceContext.Provider

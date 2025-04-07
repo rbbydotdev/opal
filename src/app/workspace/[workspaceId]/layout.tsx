@@ -24,10 +24,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </ResizablePanel>
             <ResizableHandle />
             <ResizablePanel id="editor" defaultSize={85}>
-              <div className="w-full h-full bg-secondary">
-                <WorkerContextProvider>
-                  <div>{children}</div>
-                </WorkerContextProvider>
+              <div className="w-full h-full bg-background">
+                <WorkerContextProvider>{children}</WorkerContextProvider>
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>

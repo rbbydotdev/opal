@@ -79,6 +79,7 @@
     "eslint-config-next": "15.1.0",
     "eslint-plugin-immutable": "^1.0.0",
     "postcss": "^8",
+    "react-dev-inspector": "^2.0.1",
     "serwist": "^9.0.12",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

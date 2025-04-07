@@ -15,10 +15,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const { path } = await currentWorkspace.renameFile(oldNode, newFullPath);
-
-    // if (workspaceRoute.path?.str === oldNode.path.str) {
-    //   router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-    // }
+    if (workspaceRoute.path?.str === oldNode.path.str) {
+      router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
+    }
     return path;
   };
 
@@ -106,7 +105,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   const commitChange = async (oldNode: TreeNode, fileName: RelPath) => {
     const newPath = oldNode.path.dirname().join(fileName);
     if (editType === "rename") {
-      await renameFile(oldNode, newPath);
+      if (oldNode.type === "dir") await renameDir(oldNode, newPath);
+      else await renameFile(oldNode, newPath);
     } else if (editType === "new") {
       await newFileFromNode({ type: oldNode.type, path: newPath });
     }
