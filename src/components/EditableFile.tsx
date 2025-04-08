@@ -76,10 +76,11 @@ export const EditableFile = ({
           onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
+          prefetch={false}
         >
-          <div style={{ marginLeft: depth + 1 + "rem" }}>
+          <div style={{ marginLeft: depth + 1 + "rem", width: "100%" }}>
             <File selected={isSelected}>
-              <span className={twMerge("py-1.5")}>{fileName}</span>
+              <span className={twMerge("py-1.5", "truncate overflow-hidden whitespace-nowrap w-full")}>{fileName}</span>
             </File>
           </div>
         </Link>

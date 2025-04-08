@@ -4,6 +4,7 @@ import { FileTree, TreeDir, TreeDirRoot, TreeFile, TreeNode } from "@/clientdb/f
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
 import { ConflictError, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
+import { getEtagSync } from "@/lib/getEtag";
 import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import Emittery from "emittery";
@@ -161,7 +162,16 @@ export abstract class Disk extends DiskDAO {
 
   async initializeIndex() {
     try {
-      await this.index();
+      await this.index({
+        visitor: async (node) => {
+          // console.log(node);
+          if (node.mimeType?.startsWith("image/")) {
+            const fileContent = await this.readFile(node.path);
+            node.eTag = getEtagSync(Buffer.isBuffer(fileContent) ? fileContent : Buffer.from(fileContent));
+          }
+          return node;
+        },
+      });
       await this.local.emit(DiskLocalEvents.INDEX);
     } catch (e) {
       console.warn("Error initializing index", e);
@@ -170,12 +180,12 @@ export abstract class Disk extends DiskDAO {
   }
 
   forceIndex = () => {
-    return this.fileTree.index({ force: true });
+    return this.fileTree.index();
   };
 
   getFirstFile(): TreeFile | null {
     let first = null;
-    this.fileTree.walk((file, _, exit) => {
+    this.fileTree.root.walk((file, _, exit) => {
       if (file.type === "file" && !file.isVirtual) {
         first = file;
         exit();
@@ -192,6 +202,14 @@ export abstract class Disk extends DiskDAO {
         callback(this.fileTree.getRootTree());
       });
     }
+  }
+
+  awaitFirstIndex() {
+    return new Promise((rs) =>
+      this.initialIndexListener((fileTreeDir: TreeDir) => {
+        rs(fileTreeDir);
+      })
+    );
   }
 
   //race will call callback if there is already a fresh initialized index
@@ -267,10 +285,12 @@ export abstract class Disk extends DiskDAO {
       }
     }
   }
-  async index({ tree }: { tree?: TreeDirRoot } = {}) {
-    console.debug("disk index start");
-    const result = await this.fileTree.index({ tree });
-    if (result !== FileTree.SKIPPED) {
+  async index({
+    tree,
+    visitor,
+  }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => Promise<TreeNode> | TreeNode } = {}) {
+    if (!this.fileTree.initialIndex) {
+      await this.fileTree.index({ tree, visitor });
       console.debug("disk index complete");
     } else {
       console.debug("disk index skipped");
@@ -370,9 +390,9 @@ export abstract class Disk extends DiskDAO {
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskLocalEvents.INDEX);
   }
-  // nodeFromPath(path: AbsPath) {
-  //   return this.fileTree.nodeFromPath(
-  // }
+  nodeFromPath(path: AbsPath) {
+    return this.fileTree.nodeFromPath(path);
+  }
 
   removeVirtualFile(path: AbsPath) {
     this.fileTree.removeNodeByPath(path);

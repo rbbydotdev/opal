@@ -9,11 +9,11 @@ import React from "react";
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <FileTreeMenuContextProvider>
-      <div className="w-full flex flex-col">
-        <div className="w-full h-8 flex-shrink-0 flex justify-start pl-2 items-center bg-secondary-foreground text-white font-mono uppercase">
+      <div className="w-full flex flex-col h-screen">
+        <div className="w-full h-[32px] flex-shrink-0 flex justify-start pl-2 items-center bg-secondary-foreground text-white font-mono uppercase truncate overflow-hidden whitespace-nowrap ">
           <WorkspaceStatus />
         </div>
-        <div className="h-full flex">
+        <div className="h-[calc(100vh-32px)] flex">
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel id="editorSideBar" defaultSize={15} minSize={7} collapsible={true}>
               <EditorSidebar
@@ -24,9 +24,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </ResizablePanel>
             <ResizableHandle />
             <ResizablePanel id="editor" defaultSize={85}>
-              <div className="w-full h-full bg-background">
-                <WorkerContextProvider>{children}</WorkerContextProvider>
-              </div>
+              <WorkerContextProvider>{children}</WorkerContextProvider>
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>

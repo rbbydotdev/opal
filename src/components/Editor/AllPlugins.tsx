@@ -134,7 +134,9 @@ export const AllPlugins = [
   linkDialogPlugin(),
   imagePlugin({
     imageAutocompleteSuggestions: ["https://via.placeholder.com/150", "https://via.placeholder.com/150"],
-    imageUploadHandler: async () => Promise.resolve("https://picsum.photos/200/300"),
+    imageUploadHandler: async (file) => {
+      return Promise.resolve(file.name);
+    },
   }),
   tablePlugin(),
   thematicBreakPlugin(),

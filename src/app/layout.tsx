@@ -2,7 +2,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ThemeProvider } from "next-themes";
 
-import { WrkSpcButtonBar } from "@/app/WrkSpcButtonBar";
+import { WorkSpaceButtonBar } from "@/app/WorkSpaceButtonBar";
 
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
@@ -37,7 +37,7 @@ export default function RootLayout({
               <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                 <div className="w-screen overflow-hidden flex ">
                   <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
-                    <WrkSpcButtonBar />
+                    <WorkSpaceButtonBar />
                   </div>
                   <div className="flex h-screen w-[calc(100vw-5rem)]">
                     <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>

@@ -4,7 +4,7 @@ import { Editor } from "@/components/Editor/Editor";
 import { useWorkerContext } from "@/components/SWImages";
 import { useCurrentFilepath } from "@/context";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface WorkspaceLiveEditorProps extends Partial<MDXEditorProps> {
@@ -14,35 +14,46 @@ interface WorkspaceLiveEditorProps extends Partial<MDXEditorProps> {
 export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
   const { mimeType, contents, filePath } = useCurrentFilepath();
 
-  if (!mimeType) return null;
-
+  if (!mimeType || !contents || !filePath) {
+    return null;
+  }
   if (mimeType?.startsWith("image/")) {
-    return <ImageViewer imageContent={contents} alt={filePath?.str} />;
+    return <ImageViewer imageContent={contents} alt={filePath.str} origSrc={filePath.str} />;
   }
   return <WorkspaceLiveEditorInternal {...props} />;
 }
+//TODO MOVE THIS OUT
 export function ImageViewer({
   imageContent,
   alt = "image",
+  origSrc = "",
 }: {
   imageContent: string | Uint8Array<ArrayBufferLike> | null;
   alt?: string;
+  origSrc?: string;
 }) {
-  const imgSrc = useRef<string | null>(null);
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
   useEffect(() => {
     if (typeof imageContent === "string") {
-      imgSrc.current = imageContent;
+      setImgSrc(imageContent);
     } else if (imageContent instanceof Uint8Array) {
-      imgSrc.current = URL.createObjectURL(new Blob([imageContent]));
-      console.log(imgSrc.current);
-      return () => URL.revokeObjectURL(imgSrc.current!);
+      setImgSrc(URL.createObjectURL(new Blob([imageContent])));
+      return () => {
+        if (imgSrc) {
+          URL.revokeObjectURL(imgSrc);
+        }
+      };
     }
-  }, [imageContent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  if (typeof imgSrc.current !== "string") return null;
+  if (typeof imgSrc !== "string") {
+    return null;
+  }
   return (
-    <div className="p-4 border-2 m-auto flex justify-center items-center h-full w-full">
-      <img className="max-h-[85%]" alt={alt} src={imgSrc.current} />
+    <div className="p-4 border-2 m-auto flex justify-center items-center h-full w-full flex-col">
+      <img className="max-h-[85%]" alt={alt} src={origSrc} />
+      {/* <img className="max-h-[85%]" alt={alt} src={imgSrc} /> */}
     </div>
   );
 }
@@ -56,6 +67,10 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
     }
   }, [contents]);
   const api = useWorkerContext();
+  // console.log(api.performTask);
+  // api.performTask("test").then((result) => {
+  //   console.log(result);
+  // });
   if (contents === null) return null;
   return (
     <>
