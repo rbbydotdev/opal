@@ -2,7 +2,7 @@
 
 import { Editor } from "@/components/Editor/Editor";
 import { useWorkerContext } from "@/components/SWImages";
-import { useCurrentFilepath } from "@/context";
+import { useCurrentFilepath, useWorkspaceContext } from "@/context";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -67,16 +67,18 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
     }
   }, [contents]);
   const api = useWorkerContext();
+  const { currentWorkspace } = useWorkspaceContext();
   // console.log(api.performTask);
   // api.performTask("test").then((result) => {
   //   console.log(result);
   // });
-  if (contents === null) return null;
+  if (contents === null || !currentWorkspace) return null;
   return (
     <>
       <Editor
         {...props}
         ref={ref}
+        currentWorkspace={currentWorkspace}
         onChange={updateContents}
         markdown={String(contents)}
         className={twMerge("flex flex-col", className)}

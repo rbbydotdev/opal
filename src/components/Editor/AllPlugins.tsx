@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Workspace } from "@/clientdb/Workspace";
+import { useWorkspaceRoute } from "@/context";
+import { AbsPath } from "@/lib/paths";
 import {
   AdmonitionDirectiveDescriptor,
   DirectiveDescriptor,
@@ -22,6 +25,7 @@ import {
   toolbarPlugin,
 } from "@mdxeditor/editor";
 import { LeafDirective } from "mdast-util-directive";
+import { useEffect, useState } from "react";
 // import dataCode from './assets/dataCode.ts?raw'
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
 
@@ -125,28 +129,44 @@ export const YoutubeDirectiveDescriptor: DirectiveDescriptor<YoutubeDirectiveNod
   },
 };
 
-export const AllPlugins = [
-  toolbarPlugin({ toolbarContents: () => <KitchenSinkToolbar /> }),
-  listsPlugin(),
-  quotePlugin(),
-  headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
-  linkPlugin(),
-  linkDialogPlugin(),
-  imagePlugin({
-    imageAutocompleteSuggestions: ["https://via.placeholder.com/150", "https://via.placeholder.com/150"],
-    imageUploadHandler: async (file) => {
-      return Promise.resolve(file.name);
-    },
-  }),
-  tablePlugin(),
-  thematicBreakPlugin(),
-  frontmatterPlugin(),
-  codeBlockPlugin({ defaultCodeBlockLanguage: "" }),
-  sandpackPlugin({ sandpackConfig: virtuosoSampleSandpackConfig }),
-  codeMirrorPlugin({
-    codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
-  }),
-  directivesPlugin({ directiveDescriptors: [YoutubeDirectiveDescriptor, AdmonitionDirectiveDescriptor] }),
-  diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: "<ORIGINAL_MARKDOWN_HERE>" }),
-  markdownShortcutPlugin(),
-];
+export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  const [imgs, setImgs] = useState<string[]>([]);
+
+  const { path } = useWorkspaceRoute();
+  useEffect(() => {
+    return currentWorkspace.disk.latestIndexListener(() => {
+      setImgs(currentWorkspace.getImages().map((i) => i.str));
+    });
+  }, [currentWorkspace]);
+
+  return [
+    toolbarPlugin({ toolbarContents: () => <KitchenSinkToolbar /> }),
+    listsPlugin(),
+    quotePlugin(),
+    headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
+    linkPlugin(),
+    linkDialogPlugin(),
+    imagePlugin({
+      imageAutocompleteSuggestions: imgs,
+      imageUploadHandler: async (file) => {
+        if (file.type.endsWith("+opal")) {
+          return file.name;
+        }
+        const targetPath = path?.dirname() ?? AbsPath.New("/");
+        await currentWorkspace.dropExternalFile(file, targetPath);
+        return targetPath.join(file.name).str;
+      },
+    }),
+    tablePlugin(),
+    thematicBreakPlugin(),
+    frontmatterPlugin(),
+    codeBlockPlugin({ defaultCodeBlockLanguage: "" }),
+    sandpackPlugin({ sandpackConfig: virtuosoSampleSandpackConfig }),
+    codeMirrorPlugin({
+      codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
+    }),
+    directivesPlugin({ directiveDescriptors: [YoutubeDirectiveDescriptor, AdmonitionDirectiveDescriptor] }),
+    diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: "<ORIGINAL_MARKDOWN_HERE>" }),
+    markdownShortcutPlugin(),
+  ];
+}

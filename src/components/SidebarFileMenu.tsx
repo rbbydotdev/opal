@@ -12,6 +12,7 @@ import { CopyMinus, FilePlus, FolderPlus, Settings, Trash2, Undo } from "lucide-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useCallback } from "react";
+import { twMerge } from "tailwind-merge";
 
 function SidebarFileMenuInternal({
   currentWorkspace,
@@ -57,7 +58,7 @@ function SidebarFileMenuInternal({
   const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
 
   return (
-    <SidebarGroup {...props} className="h-full p-0 bg-secondary">
+    <SidebarGroup {...props} className={twMerge("h-full p-0 bg-secondary sidebar-group", props.className)}>
       <SidebarGroupContent className="flex justify-end">
         <div className="whitespace-nowrap">
           {isSettingsView ? (
@@ -139,7 +140,7 @@ function SidebarFileMenuInternal({
       <SidebarGroupLabel>
         <div className="w-full">Files</div>
       </SidebarGroupLabel>
-      <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16">
+      <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full">
         {!Object.keys(fileTreeDir.children).length ? (
           <div className="w-full">
             <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border">
