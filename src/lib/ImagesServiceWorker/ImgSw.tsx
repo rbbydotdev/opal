@@ -1,4 +1,5 @@
 import { Workspace } from "@/clientdb/Workspace";
+import { useWorkerContext } from "@/components/SWImages";
 import { RemoteObj } from "@/lib/ImagesServiceWorker/sw";
 import * as Comlink from "comlink";
 import { usePathname } from "next/navigation";
@@ -7,6 +8,7 @@ import { useEffect } from "react";
 export const ImgSw = () => {
   const pathname = usePathname();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
+  const { currentWorkspace } = useWorkerContext();
 
   useEffect(() => {
     if (!workspaceId) {

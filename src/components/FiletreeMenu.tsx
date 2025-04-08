@@ -49,7 +49,7 @@ export function FileTreeContainer({
   );
 }
 
-const INTERNAL_FILE_TYPE = "application/x-opal-editor";
+const INTERNAL_FILE_TYPE = "_INTERNAL_";
 
 function useFileTreeDragAndDrop({
   currentWorkspace,
@@ -80,9 +80,10 @@ function useFileTreeDragAndDrop({
 
     const dragFiles = allFiles
       .filter(Boolean)
-      .map((fpath) => new File([], fpath, { type: currentWorkspace.disk.nodeFromPath(AbsPath.New(fpath))?.mimeType }));
-    // Set the file in the dataTransfer object
-    // event.dataTransfer.setData(file.mimeType!, JSON.stringify({ name: dragFile.name, type: dragFile.type }));
+      .map(
+        (fpath) =>
+          new File([], fpath, { type: currentWorkspace.disk.nodeFromPath(AbsPath.New(fpath))?.mimeType + "+opal" })
+      );
 
     // Prepare the data for the internal file type
     const data = JSON.stringify({
@@ -105,14 +106,11 @@ function useFileTreeDragAndDrop({
   };
 
   const handleExternalDrop = async (event: React.DragEvent, targetPath: AbsPath) => {
-    console.log("External Drop");
-    // currentWorkspace;
-
+    // console.debug("External Drop");
     const { files } = event.dataTransfer;
     for (const file of files) {
       if (isAcceptedFileType(file)) {
-        currentWorkspace.disk.newFile(AbsPath.New(file.name), new Uint8Array(await file.arrayBuffer()));
-        console.log(targetPath.join(file.name));
+        currentWorkspace.disk.newFile(targetPath.join(file.name), new Uint8Array(await file.arrayBuffer()));
       }
     }
   };
@@ -121,6 +119,7 @@ function useFileTreeDragAndDrop({
     event.preventDefault();
     event.stopPropagation();
     const targetPath = targetNode.type === "dir" ? targetNode.path : targetNode.dirname;
+    console.log(targetNode.path, targetNode.dirname);
     try {
       if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
         //handle external file drop

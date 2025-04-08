@@ -239,6 +239,9 @@ export class Workspace extends WorkspaceDAO {
     await this.disk.awaitFirstIndex();
     return this.disk.getFirstFile();
   }
+  async dropExternalFile(file: File, targetPath: AbsPath) {
+    return this.disk.newFile(targetPath.join(file.name), new Uint8Array(await file.arrayBuffer()));
+  }
 
   getFileTreeRoot() {
     return this.disk.fileTree.root;
@@ -306,14 +309,15 @@ export class Workspace extends WorkspaceDAO {
     return this.resolveFileUrl(ff.path);
   }
 
-  async getImagePaths() {
-    const result = [];
-    await this.disk.initialIndexListener(() => {});
+  getImages() {
+    const result: AbsPath[] = [];
+    // await this.disk.initialIndexListener(() => {});
     this.disk.fileTree.walk((node) => {
       if (node.mimeType?.startsWith("image/")) {
         result.push(node.path);
       }
     });
+    return result;
   }
 
   get isIndexed() {

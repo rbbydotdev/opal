@@ -39,6 +39,14 @@ const Methods = {
     }
     return;
   },
+  async index() {
+    if (!Store.currentWorkspace) {
+      console.warn("reIndex / Workspace not found");
+      return;
+    }
+    const workspace = await Store.currentWorkspace;
+    await (await workspace).disk.index();
+  },
   unmountWorkspace: async (workspaceId: string) => {
     const workspace = Store.currentWorkspace;
     if (!workspace) {
@@ -78,6 +86,7 @@ self.addEventListener("message", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.destination === "image" && !url.pathname.startsWith("/icons")) {
+    const pathname = decodeURIComponent(url.pathname);
     console.log(event.request);
     console.log(`Intercepted request for: ${url.pathname}`);
 
@@ -101,10 +110,10 @@ self.addEventListener("fetch", (event) => {
           }
 
           await workspace.disk.awaitFirstIndex();
-          const { eTag } = workspace.disk.nodeFromPath(AbsPath.New(url.pathname)) ?? {};
+          const { eTag } = workspace.disk.nodeFromPath(AbsPath.New(pathname)) ?? {};
 
           try {
-            const contents = await workspace.disk.readFile(AbsPath.New(url.pathname));
+            const contents = await workspace.disk.readFile(AbsPath.New(pathname));
 
             if (contents) {
               // Determine the content type based on the file extension or other logic
