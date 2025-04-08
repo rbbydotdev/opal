@@ -11,6 +11,7 @@ export class TreeNode {
   type: "dir" | "file";
   dirname: AbsPath;
   mimeType?: string;
+  eTag?: string;
   basename: RelPath;
   parent: TreeDir | null;
   path: AbsPath;
@@ -27,6 +28,33 @@ export class TreeNode {
     return this.toString();
   }
 
+  replaceWith(newNode: TreeNode) {
+    this.name = newNode.name;
+    this.type = newNode.type;
+    this.dirname = newNode.dirname;
+    this.basename = newNode.basename;
+    this.path = newNode.path;
+    this.mimeType = newNode.mimeType;
+    this.eTag = newNode.eTag;
+    this.depth = newNode.depth;
+    this.parent = newNode.parent;
+    this.children = newNode.children;
+    this.isVirtual = newNode.isVirtual;
+  }
+
+  walk(
+    cb: (node: TreeNode, depth: number, exit: () => void) => void,
+    node: TreeNode = this,
+    depth = 0,
+    status = { exit: false }
+  ) {
+    const exit = () => (status.exit = true);
+    cb(node, depth, exit);
+    for (const childNode of Object.values((node as TreeDir).children ?? {})) {
+      if (status.exit) break;
+      this.walk(cb, childNode, depth + 1, status);
+    }
+  }
   constructor({
     name,
     type,
@@ -35,6 +63,7 @@ export class TreeNode {
     basename,
     path,
     parent,
+    eTag,
     depth,
   }: {
     name: RelPath | string;
@@ -43,12 +72,14 @@ export class TreeNode {
     basename: RelPath | string;
     parent: TreeDir | null;
     mimeType?: string;
+    eTag?: string;
     path: AbsPath | string;
     depth: number;
   }) {
     this.name = typeof name === "string" ? relPath(name) : name;
     this.type = type;
     this.mimeType = mimeType;
+    this.eTag = eTag;
     this.dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
     this.basename = typeof basename === "string" ? relPath(basename) : basename;
     this.path = typeof path === "string" ? absPath(path) : path;
@@ -288,28 +319,27 @@ export class FileTree {
   };
 
   forceIndex = () => {
-    return this.index({ force: true });
+    return this.index();
   };
-  index = async ({ force = false, tree = FileTree.EmptyFileTree() }: { force?: boolean; tree?: TreeDirRoot } = {}) => {
-    if (force || !this.initialIndex) {
-      console.debug("Indexing file tree...");
-      const release = await this.mutex.acquire();
-      console.debug("Acquired unlock");
-      try {
-        this.root = tree;
-        this.map = new Map<string, TreeNode>();
-        await this.recurseTree(this.root);
-        this.dirs = this.flatDirTree();
-        this.initialIndex = true;
-      } finally {
-        release(); // Release the lock
-      }
-      console.debug("Indexing complete");
-      console.debug(Object.keys(this.root.children).join(", "));
-      return FileTree.INDEXED;
+  index = async ({
+    tree = FileTree.EmptyFileTree(),
+    visitor,
+  }: { force?: boolean; tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
+    console.debug("Indexing file tree...");
+    const release = await this.mutex.acquire();
+    console.debug("Acquired unlock");
+    try {
+      this.root = tree;
+      this.map = new Map<string, TreeNode>();
+      await this.recurseTree(this.root, visitor);
+      this.dirs = this.flatDirTree();
+      this.initialIndex = true;
+    } finally {
+      release(); // Release the lock
     }
-    console.debug("Indexing skipped");
-    return FileTree.SKIPPED;
+    console.debug("Indexing complete");
+    console.debug(Object.keys(this.root.children).join(", "));
+    return FileTree.INDEXED;
   };
 
   walk(
@@ -327,7 +357,12 @@ export class FileTree {
   }
 
   //pre order traversal
-  recurseTree = async (parent = this.root, depth = 0, haltOnError = false) => {
+  recurseTree = async (
+    parent = this.root,
+    visitor: (node: TreeNode) => TreeNode | Promise<TreeNode> = (node) => node,
+    depth = 0,
+    haltOnError = false
+  ) => {
     const dir = parent.path;
     try {
       const entries = await this.fs.readdir(dir.str);
@@ -362,7 +397,8 @@ export class FileTree {
             parent,
             depth: depth,
           });
-          this.insertNode(parent, treeEntry);
+          const result = visitor(treeEntry);
+          this.insertNode(parent, result instanceof Promise ? await result : result);
         })
       );
 
@@ -379,10 +415,11 @@ export class FileTree {
           children: {},
         });
 
-        this.insertNode(parent, treeEntry);
+        const result = visitor(treeEntry);
+        this.insertNode(parent, result instanceof Promise ? await result : result);
 
         // Recurse into the directory
-        await this.recurseTree(treeEntry, depth + 1, haltOnError);
+        await this.recurseTree(treeEntry, visitor, depth + 1, haltOnError);
       }
     } catch (err) {
       console.error(`Error reading ${dir}:`, err);

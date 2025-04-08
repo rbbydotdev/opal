@@ -49,7 +49,7 @@ export function FileTreeContainer({
   );
 }
 
-const INTERNAL_FILE_TYPE = "__internal_file__";
+const INTERNAL_FILE_TYPE = "application/x-opal-editor";
 
 function useFileTreeDragAndDrop({
   currentWorkspace,
@@ -64,21 +64,44 @@ function useFileTreeDragAndDrop({
   type DragStartType = { dragStart: TreeNode[] };
   type DragStartJType = { dragStart: TreeNodeJType[] };
   //on drag start cancel focus on key up
+
+  // const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
+  //   const data = JSON.stringify({
+  //     dragStart: Array.from(new Set([...selectedRange, file.path.str, focused?.str]))
+  //       .map((path) => (path ? currentWorkspace.disk.fileTree.nodeFromPath(path) : null))
+  //       .filter(Boolean),
+  //   } satisfies DragStartType);
+  //   event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+  //   event.dataTransfer.effectAllowed = "move";
+  // };
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
+    // Create a new File object with an empty Blob and the desired MIME type
+    const allFiles = Array.from(new Set([...selectedRange, file.path.str, focused?.str]));
+
+    const dragFiles = allFiles
+      .filter(Boolean)
+      .map((fpath) => new File([], fpath, { type: currentWorkspace.disk.nodeFromPath(AbsPath.New(fpath))?.mimeType }));
+    // Set the file in the dataTransfer object
+    // event.dataTransfer.setData(file.mimeType!, JSON.stringify({ name: dragFile.name, type: dragFile.type }));
+
+    // Prepare the data for the internal file type
     const data = JSON.stringify({
       dragStart: Array.from(new Set([...selectedRange, file.path.str, focused?.str]))
         .map((path) => (path ? currentWorkspace.disk.fileTree.nodeFromPath(path) : null))
         .filter(Boolean),
     } satisfies DragStartType);
-    event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+
     event.dataTransfer.effectAllowed = "move";
-    // console.debug(`Drag Start: ${file.path}`);
+    // Set the internal file type data
+    event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+    for (const file of dragFiles) {
+      event.dataTransfer.items.add(file);
+    }
   };
 
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
-    // console.debug(`Drag Over: ${event.currentTarget}`);
   };
 
   const handleExternalDrop = async (event: React.DragEvent, targetPath: AbsPath) => {
@@ -92,7 +115,6 @@ function useFileTreeDragAndDrop({
         console.log(targetPath.join(file.name));
       }
     }
-    console.log(event.dataTransfer.files);
   };
 
   const handleDrop = (event: React.DragEvent, targetNode: TreeNode) => {

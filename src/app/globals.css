@@ -101,8 +101,20 @@ body {
 }
 .mdxeditor-toolbar {
   height: var(--editor-toolbar-height);
+  min-height: var(--editor-toolbar-height);
+  border-radius: 0 !important;
   align-items: start !important;
   display: flex;
   /* mdxeditor-toolbar: */
   scrollbar-width: thin;
+  /* overflow-x: visible !impor; */
+}
+
+.mdxeditor {
+  overflow: scroll;
+  max-height: 100%;
+}
+
+.mdxeditor-popup-container [class^="_dialogContent_"] {
+  flex-direction: column;
 }

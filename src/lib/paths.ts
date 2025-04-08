@@ -58,6 +58,9 @@ export class AbsPath extends BasePath {
   basename() {
     return new RelPath(path.basename(this.path));
   }
+  extname() {
+    return path.extname(this.path);
+  }
 
   inc() {
     return new AbsPath(super.inc().toString());
@@ -97,6 +100,10 @@ export class RelPath extends BasePath {
   }
   basename() {
     return new RelPath(path.basename(this.path));
+  }
+
+  extname() {
+    return path.extname(this.path);
   }
 
   constructor(path: string) {

@@ -102,6 +102,39 @@ export class WorkspaceDAO implements WorkspaceRecord {
     return new DiskDAO(disk);
   }
 
+  static async fetchFromRoute(route: string) {
+    if (!isAncestor(route, Workspace.rootRoute)) throw new BadRequestError("Invalid route");
+
+    const name = route.slice(Workspace.rootRoute.length + 1).split("/")[0];
+
+    const ws =
+      (await ClientDb.workspaces.where("name").equals(name).first()) ??
+      (await ClientDb.workspaces.where("guid").equals(name).first());
+    if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}, guid:${name}`);
+    return (await new WorkspaceDAO(ws).withRelations()).toModel();
+  }
+  static async fetchFromGuid(guid: string) {
+    const ws = await ClientDb.workspaces.where("guid").equals(guid).first();
+    if (!ws) throw new NotFoundError(errF`Workspace not found guid:${guid}`);
+    return (await new WorkspaceDAO(ws).withRelations()).toModel();
+  }
+  static async fetchFromName(name: string) {
+    const ws = await ClientDb.workspaces.where("name").equals(name).first();
+    if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}`);
+    return (await new WorkspaceDAO(ws).withRelations()).toModel();
+  }
+
+  static async fetchFromGuidAndInit(guid: string) {
+    return (await WorkspaceDAO.fetchFromGuid(guid)).init();
+  }
+  static async fetchFromNameAndInit(name: string) {
+    return (await WorkspaceDAO.fetchFromName(name)).init();
+  }
+
+  static async fetchFromRouteAndInit(route: string) {
+    return (await WorkspaceDAO.fetchFromRoute(route)).init();
+  }
+
   constructor(properties: WorkspaceRecord) {
     Object.assign(this, properties);
   }
@@ -137,21 +170,18 @@ export class Workspace extends WorkspaceDAO {
     const [_, workspaceId, filePath] = match;
     return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
   }
-  //shoulndt this be in the dao?
-  static async fetchFromRoute(route: string) {
-    if (!isAncestor(route, Workspace.rootRoute)) throw new BadRequestError("Invalid route");
+  // //shoulndt this be in the dao?
+  // static async fetchFromRoute(route: string) {
+  //   if (!isAncestor(route, Workspace.rootRoute)) throw new BadRequestError("Invalid route");
 
-    const name = route.slice(Workspace.rootRoute.length + 1).split("/")[0];
+  //   const name = route.slice(Workspace.rootRoute.length + 1).split("/")[0];
 
-    const ws =
-      (await ClientDb.workspaces.where("name").equals(name).first()) ??
-      (await ClientDb.workspaces.where("guid").equals(name).first());
-    if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}, guid:${name}`);
-    return (await new WorkspaceDAO(ws).withRelations()).toModel();
-  }
-  static async fetchFromRouteAndInit(route: string) {
-    return (await Workspace.fetchFromRoute(route)).init();
-  }
+  //   const ws =
+  //     (await ClientDb.workspaces.where("name").equals(name).first()) ??
+  //     (await ClientDb.workspaces.where("guid").equals(name).first());
+  //   if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}, guid:${name}`);
+  //   return (await new WorkspaceDAO(ws).withRelations()).toModel();
+  // }
 
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
@@ -204,7 +234,9 @@ export class Workspace extends WorkspaceDAO {
   watchDisk(callback: (fileTree: TreeDir) => void) {
     return this.disk.latestIndexListener(callback);
   }
-  getFirstFile() {
+  async getFirstFile() {
+    //TODO dont you need to make sure its indexed first?
+    await this.disk.awaitFirstIndex();
     return this.disk.getFirstFile();
   }
 
@@ -268,10 +300,20 @@ export class Workspace extends WorkspaceDAO {
   subRoute = (path: string) => {
     return `${this.href.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
   };
-  tryFirstFileUrl() {
-    const ff = this.getFirstFile();
+  async tryFirstFileUrl() {
+    const ff = await this.getFirstFile();
     if (!ff) return this.href;
     return this.resolveFileUrl(ff.path);
+  }
+
+  async getImagePaths() {
+    const result = [];
+    await this.disk.initialIndexListener(() => {});
+    this.disk.fileTree.walk((node) => {
+      if (node.mimeType?.startsWith("image/")) {
+        result.push(node.path);
+      }
+    });
   }
 
   get isIndexed() {

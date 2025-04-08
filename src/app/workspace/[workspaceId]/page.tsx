@@ -10,6 +10,7 @@ export default function Page() {
   return (
     <div className="w-full h-full flex items-center justify-center">
       {/* <LoadingPanel /> */}
+
       <FirstFileRedirectWithCurrentWorkspace />
       {/* <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center">
         <div>
@@ -27,7 +28,7 @@ function FirstFileRedirect() {
 
   const { currentWorkspace } = useWorkspaceContext();
   useEffect(() => {
-    if (currentWorkspace) router.push(currentWorkspace.tryFirstFileUrl());
+    if (currentWorkspace) currentWorkspace.tryFirstFileUrl().then((ff) => router.push(ff));
   }, [currentWorkspace, router]);
   return null;
 }

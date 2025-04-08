@@ -51,7 +51,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
       if (this.channel) {
         return this.channel.postMessage(JSON.parse(message));
       } else {
-        console.error("Channel is not initialized or has been closed.");
+        console.warn("Channel is not initialized or has been closed.");
       }
     } catch (e) {
       console.error("Error during postMessage:", e);

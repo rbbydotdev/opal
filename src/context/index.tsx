@@ -104,7 +104,7 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
         const newTree = new TreeDirRoot(fileTreeDir);
         setFileTree(newTree);
-        setFirstFile(currentWorkspace.getFirstFile());
+        currentWorkspace.getFirstFile().then((ff) => setFirstFile(ff));
         setFlatTree(currentWorkspace.getFlatDirTree());
       });
     }
@@ -127,19 +127,22 @@ export function useWorkspaceFromRoute() {
   const router = useRouter();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   const workspaceRoute = useWorkspaceRoute();
+  const { workspaceId } = Workspace.parseWorkspacePath(pathname);
 
   useEffect(() => {
-    if (!isAncestor(pathname, Workspace.rootRoute) || pathname === "/workspace/new" || !pathname) {
+    if (workspaceId === "new" || !workspaceId) {
+      setCurrentWorkspace(null);
       return;
     }
-    const workspace = Workspace.fetchFromRouteAndInit(pathname).then((ws) => {
+    const workspace = WorkspaceDAO.fetchFromNameAndInit(workspaceId).then((ws) => {
       setCurrentWorkspace(ws);
+      console.debug("Initialize Workspace");
       return ws;
     });
     return () => {
       workspace.then((ws) => ws.teardown());
     };
-  }, [pathname]);
+  }, [workspaceId]);
 
   useEffect(() => {
     if (!currentWorkspace) return;

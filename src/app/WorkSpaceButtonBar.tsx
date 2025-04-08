@@ -50,7 +50,7 @@ function BigButton({
   );
 }
 
-export function WrkSpcButtonBar() {
+export function WorkSpaceButtonBar() {
   // const { currentWorkspace, workspaces } = useWorkspaceContext();
   const { currentWorkspace, workspaces } = use(WorkspaceContext);
 
@@ -88,14 +88,17 @@ export function WrkSpcButtonBar() {
         className="text-3xs"
       />
 
-      {currentWorkspace && (
+      {currentWorkspace ? (
         <BigButton
           icon={<Identicon input={currentWorkspace.guid} size={4} scale={7} />}
           title={currentWorkspace.name}
           href={currentWorkspace.href}
-          className="text-white"
+          className="text-white big-button-active"
         />
+      ) : (
+        <div className="bg-secondary-foreground w-[80px] h-[64px]"></div>
       )}
+
       <Collapsible
         className="w-full flex flex-col justify-start overflow-scroll pb-12 scrollbar-thin items-center"
         open={expand}

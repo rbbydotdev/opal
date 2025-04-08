@@ -49,7 +49,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     try {
       await Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
       if (workspaceRoute.path && range.includes(workspaceRoute.path.str)) {
-        router.push(currentWorkspace.tryFirstFileUrl());
+        router.push(await currentWorkspace.tryFirstFileUrl());
       }
     } catch (e) {
       if (e instanceof NotFoundError) {
@@ -77,7 +77,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
       }
     }
     if (workspaceRoute.path?.str === focusedNode.path.str) {
-      router.push(currentWorkspace.tryFirstFileUrl());
+      router.push(await currentWorkspace.tryFirstFileUrl());
     }
   };
   const cancelNew = () => {

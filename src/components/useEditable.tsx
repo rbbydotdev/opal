@@ -94,11 +94,14 @@ export function useEditable<T extends TreeFile | TreeNode>({
         }
       } else if (e.key === "Enter") {
         if (isEditing) {
-          const newPath = await commitChange(treeNode, fileName);
+          const finalName = !fileName.extname() ? RelPath.New(fileName.str + fullPath.extname()) : fileName;
+          setFileName(finalName);
+          const newPath = await commitChange(treeNode, finalName);
           //navigate to new-file path or renamed-file path
           if (fullPath.equals(workspaceRoute.path) || !workspaceRoute.path) {
             router.push(currentWorkspace.resolveFileUrl(newPath));
           }
+
           setFocused(newPath);
           e.preventDefault();
         } else {
