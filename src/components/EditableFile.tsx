@@ -85,7 +85,7 @@ export const EditableFile = ({
           </div>
         </Link>
       ) : (
-        <div style={{ marginLeft: depth + 1.5 + "rem" }}>
+        <div style={{ marginLeft: depth + 1 + "rem", width: "100%" }}>
           <File selected={isSelected} data-treepath={fullPath.str} data-treetype="file">
             <input
               ref={inputRef}

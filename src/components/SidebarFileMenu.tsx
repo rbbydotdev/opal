@@ -140,10 +140,10 @@ function SidebarFileMenuInternal({
       <SidebarGroupLabel>
         <div className="w-full">Files</div>
       </SidebarGroupLabel>
-      <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full">
+      <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full overflow-hidden">
         {!Object.keys(fileTreeDir.children).length ? (
           <div className="w-full">
-            <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border">
+            <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
               <div className="w-full">
                 No Files, Click <FilePlus className={"inline"} size={12} /> to get started
               </div>

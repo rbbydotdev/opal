@@ -1,4 +1,5 @@
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
+import { errF } from "@/lib/errors";
 import { AbsPath } from "@/lib/paths";
 import * as Comlink from "comlink";
 declare const self: ServiceWorkerGlobalScope;
@@ -11,66 +12,82 @@ self.addEventListener("activate", function (event) {
   return event.waitUntil(self.clients.claim()); // Become available to all pages
 });
 
-const Store = {
-  currentWorkspace: null as Promise<Workspace> | null,
-  queue: [] as [resolve: (workspace: Workspace) => void, reject: (reason?: unknown) => void][],
-};
+class WorkspaceStore {
+  Store = {
+    currentWorkspace: null as Workspace | null,
+    queue: [] as [resolve: (workspace: Workspace) => void, reject: (reason?: unknown) => void][],
+  };
 
-const Methods = {
-  mountWorkspace: async (workspaceId: string) => {
-    if (Store.currentWorkspace && (await Store.currentWorkspace).id === workspaceId) {
-      console.warn("Workspace already mounted");
-      return;
-    }
-    Store.currentWorkspace = WorkspaceDAO.fetchFromNameAndInit(workspaceId).then((workspace) => {
-      if (!workspace) {
-        throw new Error("Workspace not found");
-      }
-      console.log("Mounting workspace:", workspaceId);
-      return workspace;
-    });
-    const ws = await Store.currentWorkspace;
-    while (Store.queue.length) {
-      const item = Store.queue.pop();
+  setWorkspace(ws: Workspace) {
+    this.Store.currentWorkspace = ws;
+    while (this.Store.queue.length) {
+      const item = this.Store.queue.pop();
       if (item) {
         const [resolve] = item;
         resolve(ws);
       }
     }
-    return;
-  },
-  async index() {
-    if (!Store.currentWorkspace) {
-      console.warn("reIndex / Workspace not found");
-      return;
-    }
-    const workspace = await Store.currentWorkspace;
-    await (await workspace).disk.index();
-  },
-  unmountWorkspace: async (workspaceId: string) => {
-    const workspace = Store.currentWorkspace;
-    if (!workspace) {
-      console.warn("unmountWorkspace / Workspace not found");
-    } else {
-      console.log("Unmounting workspace:", workspaceId);
-      await (await workspace).teardown();
-      Store.currentWorkspace = null;
-    }
-
-    while (Store.queue.length) {
-      const item = Store.queue.pop();
+  }
+  unsetWorkspace() {
+    this.Store.currentWorkspace = null;
+    while (this.Store.queue.length) {
+      const item = this.Store.queue.pop();
       if (item) {
         const [_, reject] = item;
         reject();
       }
     }
+  }
+
+  async awaitWorkspace() {
+    if (!this.Store.currentWorkspace) {
+      console.log("SW: awaiting workspace");
+      return new Promise<Workspace>((resolve, reject) => {
+        this.Store.queue.push([resolve, reject]);
+      });
+    } else {
+      console.log(`SW: workspace mounted ${this.Store.currentWorkspace.id} `);
+      return this.Store.currentWorkspace;
+    }
+  }
+  peekWorkspace() {
+    return this.Store.currentWorkspace;
+  }
+}
+
+const workspaceStore = new WorkspaceStore();
+
+const Methods = {
+  mountWorkspace: async (workspaceId: string) => {
+    if (workspaceStore.peekWorkspace() && workspaceStore.peekWorkspace()?.id === workspaceId) {
+      console.warn("SW: Workspace already mounted");
+      return;
+    }
+    WorkspaceDAO.fetchFromNameAndInit(workspaceId).then((workspace) => {
+      if (!workspace) {
+        throw new Error("Workspace not found");
+      }
+      console.log("SW: Mounting workspace:" + workspaceId);
+      workspaceStore.setWorkspace(workspace);
+    });
   },
-  counter: 0,
-  inc() {
-    this.counter++;
+  async index() {
+    if (!(await workspaceStore.awaitWorkspace())) {
+      console.warn("SW: reindex / workspace not found");
+      return;
+    }
+    const workspace = await workspaceStore.awaitWorkspace();
+    await workspace.disk.index();
   },
-  task() {
-    return "foobar";
+  unmountWorkspace: async (workspaceId: string) => {
+    const workspace = await workspaceStore.awaitWorkspace();
+    if (!workspace) {
+      console.warn("SW: unmountWorkspace / Workspace not found");
+    } else {
+      console.log("SW: Unmounting workspace:" + workspaceId);
+      await workspace.teardown();
+      workspaceStore.unsetWorkspace();
+    }
   },
 };
 
@@ -83,31 +100,20 @@ self.addEventListener("message", (event) => {
   }
 });
 
-self.addEventListener("fetch", (event) => {
+self.addEventListener("fetch", async (event) => {
   const url = new URL(event.request.url);
   if (event.request.destination === "image" && !url.pathname.startsWith("/icons")) {
     const pathname = decodeURIComponent(url.pathname);
-    console.log(event.request);
-    console.log(`Intercepted request for: ${url.pathname}`);
+    console.log(`SW: Intercepted request for: ${url.pathname}`);
 
-    if (!Store.currentWorkspace) {
-      console.warn("No workspace mounted");
-      return;
+    if (!workspaceStore.awaitWorkspace()) {
+      throw new Error("No workspace mounted");
     }
 
     event.respondWith(
       (async function retry() {
         try {
-          let workspace = await Store.currentWorkspace;
-          if (!workspace) {
-            workspace = await new Promise((rs, rj) => {
-              Store.queue.push([rs, rj]);
-            });
-          }
-          if (!workspace) {
-            console.warn("Workspace not found");
-            return new Response("Workspace not found", { status: 404 });
-          }
+          const workspace = await workspaceStore.awaitWorkspace();
 
           await workspace.disk.awaitFirstIndex();
           const { eTag } = workspace.disk.nodeFromPath(AbsPath.New(pathname)) ?? {};
@@ -141,13 +147,13 @@ self.addEventListener("fetch", (event) => {
               return await fetch(event.request);
             }
           } catch (error) {
-            console.error("Error reading file from workspace:", error);
-            console.log(JSON.stringify(workspace.disk.fileTree));
+            console.error(errF`Error reading file from workspace: ${error}`);
+            // console.log(JSON.stringify(workspace.disk.fileTree));
             // In case of an error, fall back to fetching the original request
             return fetch(event.request);
           }
         } catch (error) {
-          console.error("Error accessing workspace:", error);
+          console.error(errF`Error accessing workspace: ${error}`);
           // In case of an error, fall back to fetching the original request
           return fetch(event.request);
         }

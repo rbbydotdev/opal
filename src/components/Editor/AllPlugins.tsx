@@ -148,13 +148,17 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
     linkDialogPlugin(),
     imagePlugin({
       imageAutocompleteSuggestions: imgs,
-      imageUploadHandler: async (file) => {
+      imagePreviewHandler: async (src: string) => {
+        return Promise.resolve(src);
+      },
+      imageUploadHandler: (file) => {
+        console.log(file);
         if (file.type.endsWith("+opal")) {
-          return file.name;
+          return Promise.resolve(String(file.name));
         }
-        const targetPath = path?.dirname() ?? AbsPath.New("/");
-        await currentWorkspace.dropExternalFile(file, targetPath);
-        return targetPath.join(file.name).str;
+        return currentWorkspace
+          .dropExternalFile(file, path?.dirname() ?? AbsPath.New("/"))
+          .then((absPath) => absPath.str);
       },
     }),
     tablePlugin(),
