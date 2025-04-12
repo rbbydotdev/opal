@@ -1,7 +1,6 @@
 "use client";
 
 import { Editor } from "@/components/Editor/Editor";
-import { useWorkerContext } from "@/components/SWImages";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import { useEffect, useRef, useState } from "react";
@@ -66,7 +65,7 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
       ref.current?.setMarkdown(String(contents));
     }
   }, [contents]);
-  const api = useWorkerContext();
+  // const api = useWorkerContext();
   const { currentWorkspace } = useWorkspaceContext();
   // console.log(api.performTask);
   // api.performTask("test").then((result) => {

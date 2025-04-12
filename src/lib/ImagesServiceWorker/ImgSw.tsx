@@ -1,5 +1,4 @@
 import { Workspace } from "@/clientdb/Workspace";
-import { useWorkerContext } from "@/components/SWImages";
 import { RemoteObj } from "@/lib/ImagesServiceWorker/sw";
 import * as Comlink from "comlink";
 import { usePathname } from "next/navigation";
@@ -8,7 +7,6 @@ import { useEffect } from "react";
 export const ImgSw = () => {
   const pathname = usePathname();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
-  const { currentWorkspace } = useWorkerContext();
 
   useEffect(() => {
     if (!workspaceId) {
@@ -21,6 +19,7 @@ export const ImgSw = () => {
     setupServiceWorkerAndComlink().then(async (comlink) => {
       if (comlink) {
         await comlink.mountWorkspace(workspaceId);
+        //TODO: WATCH INDEX ?
         console.log("Mounted workspace");
         unmountFn = comlink.unmountWorkspace;
       }
