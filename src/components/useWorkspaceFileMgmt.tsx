@@ -1,5 +1,5 @@
 "use client";
-import { TreeNode } from "@/clientdb/filetree";
+import { TreeNode } from "@/clientdb/TreeNode";
 import { Workspace } from "@/clientdb/Workspace";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { WorkspaceRouteType } from "@/context";

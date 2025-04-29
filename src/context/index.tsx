@@ -1,5 +1,5 @@
 "use client";
-import { TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/filetree";
+import { TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/TreeNode";
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor } from "@/lib/paths";
@@ -193,11 +193,21 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   );
 };
 
-//Helper to delay rendering of child components until the current workspace is loaded
+// Helper to delay rendering of child components until the current workspace is loaded
 export function withCurrentWorkspace<T extends NonNullWorkspaceContext>(Component: React.ComponentType<T>) {
   return function WrappedComponent(props: Omit<T, keyof NonNullWorkspaceContext>) {
     const context = useWorkspaceContext();
+
+    // Start timing when the component first loads
+    React.useEffect(() => {
+      console.time("WorkspaceLoadTime");
+    }, []); // Empty dependency array ensures this runs only once when the component mounts
+
+    // Check if the conditions are met
     if (!context.fileTreeDir || !context.currentWorkspace) return null;
+
+    // End timing when the conditions are met
+    console.timeEnd("WorkspaceLoadTime");
 
     return <Component {...(props as T)} {...context} />;
   };

@@ -1,11 +1,11 @@
 "use client";
 import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
-import { TreeDir, TreeNode } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, isAncestor, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
+import { TreeDir, TreeNode } from "./TreeNode";
 
 export class WorkspaceRecord {
   guid!: string;
@@ -293,6 +293,12 @@ export class Workspace extends WorkspaceDAO {
       diskGuid: this.disk.guid,
     } satisfies WorkspaceRecord & { href: string };
   }
+
+  delete = async () => {
+    await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
+      await Promise.all([ClientDb.workspaces.delete(this.guid), this.disk.teardown(), this.disk.delete()]);
+    });
+  };
 
   home = () => {
     return this.href;

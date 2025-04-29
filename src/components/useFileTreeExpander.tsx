@@ -1,5 +1,5 @@
 "use client";
-import { TreeNode } from "@/clientdb/filetree";
+import { TreeNode } from "@/clientdb/TreeNode";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath } from "@/lib/paths";
 import { useCallback, useEffect, useState } from "react";
