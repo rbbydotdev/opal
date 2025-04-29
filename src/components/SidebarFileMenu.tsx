@@ -1,5 +1,5 @@
 "use client";
-import { TreeDir, TreeFile, TreeNode } from "@/clientdb/filetree";
+import { TreeDir, TreeFile, TreeNode } from "@/clientdb/TreeNode";
 import { Workspace } from "@/clientdb/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";

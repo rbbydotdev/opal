@@ -1,4 +1,4 @@
-import { isTreeDir, TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/clientdb/filetree";
+import { isTreeDir, TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/clientdb/TreeNode";
 import { Workspace } from "@/clientdb/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";

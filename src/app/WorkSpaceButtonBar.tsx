@@ -58,7 +58,7 @@ export function WorkSpaceButtonBar() {
 
   //               {/* <div className="flex-shrink-1 max-w-full overflow-hidden whitespace-nowrap text-ellipsis uppercase p-1 flex items-center justify-center text-center font-mono"> */}
   const deleteAllDbs = () => {
-    window.indexedDB
+    void window.indexedDB
       .databases()
       .then((r) => {
         for (let i = 0; i < r.length; i++) window.indexedDB.deleteDatabase(r[i].name!);

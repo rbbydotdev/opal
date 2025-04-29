@@ -1,6 +1,6 @@
 "use client";
 import { DexieFsDb } from "@/clientdb/DexieFsDb";
-import { FileTree, TreeDir, TreeDirRoot, TreeFile, TreeNode } from "@/clientdb/filetree";
+import { FileTree } from "@/clientdb/filetree";
 import { ClientDb } from "@/clientdb/instance";
 import { Channel } from "@/lib/channel";
 import { ConflictError, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
@@ -11,6 +11,7 @@ import Emittery from "emittery";
 import { memfs } from "memfs";
 import { nanoid } from "nanoid";
 import path from "path";
+import { TreeDir, TreeDirRoot, TreeFile, TreeNode } from "./TreeNode";
 export type DiskJType = { guid: string; type: DiskType; fs: Record<string, string> };
 
 export type DiskType = "IndexedDbDisk" | "MemDisk" | "DexieFsDbDisk";
@@ -160,9 +161,10 @@ export abstract class Disk extends DiskDAO {
   remote: DiskRemoteEvents;
   local = new DiskLocalEvents();
 
-  async initializeIndex() {
+  async initializeIndex({ useCache }: { useCache: boolean } = { useCache: false }) {
     try {
       await this.index({
+        useCache,
         visitor: async (node) => {
           // console.log(node);
           if (node.mimeType?.startsWith("image/")) {
@@ -198,7 +200,7 @@ export abstract class Disk extends DiskDAO {
     if (this.fileTree.initialIndex) {
       callback(this.fileTree.getRootTree());
     } else {
-      this.local.once(DiskLocalEvents.INDEX).then(() => {
+      void this.local.once(DiskLocalEvents.INDEX).then(() => {
         callback(this.fileTree.getRootTree());
       });
     }
@@ -230,7 +232,7 @@ export abstract class Disk extends DiskDAO {
     this.remote = new DiskRemoteEvents(this.guid);
   }
   async init() {
-    return Promise.all([this.setupRemoteListeners(), this.initializeIndex()]);
+    return Promise.all([this.setupRemoteListeners(), this.initializeIndex({ useCache: true })]);
   }
 
   async setupRemoteListeners() {
@@ -248,7 +250,7 @@ export abstract class Disk extends DiskDAO {
     });
     this.remote.on(DiskRemoteEvents.INDEX, async () => {
       await this.forceIndex();
-      this.local.emit(DiskLocalEvents.INDEX);
+      void this.local.emit(DiskLocalEvents.INDEX);
     });
   }
 
@@ -286,11 +288,12 @@ export abstract class Disk extends DiskDAO {
     }
   }
   async index({
+    useCache = false,
     tree,
     visitor,
-  }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => Promise<TreeNode> | TreeNode } = {}) {
+  }: { useCache?: boolean; tree?: TreeDirRoot; visitor?: (node: TreeNode) => Promise<TreeNode> | TreeNode } = {}) {
     if (!this.fileTree.initialIndex) {
-      await this.fileTree.index({ tree, visitor });
+      await this.fileTree.index({ useCache, tree, visitor });
       console.debug("disk index complete");
     } else {
       console.debug("disk index skipped");
@@ -360,7 +363,7 @@ export abstract class Disk extends DiskDAO {
       oldPath: oldFullPath,
     });
 
-    this.remote.emit(DiskRemoteEvents.RENAME, CHANGE.toJSON());
+    void this.remote.emit(DiskRemoteEvents.RENAME, CHANGE.toJSON());
     await this.local.emit(DiskLocalEvents.RENAME, CHANGE);
     await this.local.emit(DiskLocalEvents.INDEX);
     return CHANGE;
@@ -381,7 +384,7 @@ export abstract class Disk extends DiskDAO {
       await this.fs.unlink(filePath.str);
     } catch (err) {
       if (isErrorWithCode(err, "ENOENT")) {
-        throw new NotFoundError(`File not found: ${filePath}`);
+        throw new NotFoundError().hint(`File not found: ${filePath}`);
       } else {
         throw err;
       }
@@ -396,11 +399,11 @@ export abstract class Disk extends DiskDAO {
 
   removeVirtualFile(path: AbsPath) {
     this.fileTree.removeNodeByPath(path);
-    this.local.emit(DiskLocalEvents.INDEX);
+    void this.local.emit(DiskLocalEvents.INDEX);
   }
   addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
     const node = this.fileTree.insertClosestNode({ type, name }, selectedNode || this.fileTree.root);
-    this.local.emit(DiskLocalEvents.INDEX);
+    void this.local.emit(DiskLocalEvents.INDEX);
     return node;
   }
   async newFile(fullPath: AbsPath, content: string | Uint8Array) {
@@ -416,7 +419,7 @@ export abstract class Disk extends DiskDAO {
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
     await this.mkdirRecursive(filePath.dirname());
     try {
-      this.fs.writeFile(filePath.str, content, { encoding: "utf8", mode: 0o777 });
+      return this.fs.writeFile(filePath.str, content, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error writing file ${filePath}:`, err);
@@ -443,7 +446,7 @@ export abstract class Disk extends DiskDAO {
       return await this.fs.readFile(filePath.str);
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
-        throw new NotFoundError(`File not found: ${filePath}`);
+        throw new NotFoundError().hint(`File not found: ${filePath}`);
       }
       throw e;
     }
@@ -453,6 +456,10 @@ export abstract class Disk extends DiskDAO {
     return { guid: this.guid, type: this.type } as DiskRecord;
   }
 
+  async delete() {
+    this.fileTree.clearCache();
+    throw new Error("Not implemented");
+  }
   teardown() {
     this.remote.tearDown();
     this.local.clearListeners();
@@ -470,7 +477,7 @@ export class DexieFsDbDisk extends Disk {
   static type: DiskType = "DexieFsDbDisk";
   constructor(public readonly guid: string) {
     const fs = new DexieFsDb(guid);
-    super(guid, fs, new FileTree(fs), DexieFsDbDisk.type);
+    super(guid, fs, new FileTree(fs, guid), DexieFsDbDisk.type);
   }
 }
 
@@ -479,7 +486,7 @@ export class IndexedDbDisk extends Disk {
   ready: Promise<void>;
   constructor(public readonly guid: string) {
     const fs = new LightningFs();
-    super(guid, fs.promises, new FileTree(fs.promises), IndexedDbDisk.type);
+    super(guid, fs.promises, new FileTree(fs.promises, guid), IndexedDbDisk.type);
     this.ready = fs.init(guid) as unknown as Promise<void>;
   }
 }
@@ -488,6 +495,6 @@ export class MemDisk extends Disk {
   static type: DiskType = "MemDisk";
   constructor(public readonly guid: string) {
     const fs = memfs().fs;
-    super(guid, fs.promises, new FileTree(fs.promises), MemDisk.type);
+    super(guid, fs.promises, new FileTree(fs.promises, guid), MemDisk.type);
   }
 }

@@ -16,8 +16,18 @@ export const ImgSw = () => {
 
     let unmountFn: ((arg0: string) => void) | undefined;
 
-    setupServiceWorkerAndComlink().then(async (comlink) => {
+    void setupServiceWorkerAndComlink().then(async (comlink) => {
       if (comlink) {
+        await comlink.registerLogger(
+          Comlink.proxy((msg: string) => {
+            console.log(
+              "%cISW:%c %s",
+              "background: purple; color: white; padding: 2px; border-radius: 3px;",
+              "background: none; color: inherit;",
+              msg
+            );
+          })
+        );
         await comlink.mountWorkspace(workspaceId);
         //TODO: WATCH INDEX ?
         console.log("Mounted workspace");
@@ -39,6 +49,8 @@ export async function setupServiceWorkerAndComlink() {
       console.warn("Service Worker is not controlling the page.");
       await navigator.serviceWorker.register(new URL("@/lib/ImagesServiceWorker/sw.ts", import.meta.url), {
         scope: "/",
+        // updateViaCache: "none",
+        // updateViaCache: process.env.NODE_ENV === 'development' ? 'none' : 'all'
       });
       await navigator.serviceWorker.ready;
     }

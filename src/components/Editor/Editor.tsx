@@ -2,6 +2,7 @@
 import { Workspace } from "@/clientdb/Workspace";
 // ForwardRefEditor.tsx
 import { type MDXEditorMethods, type MDXEditorProps } from "@mdxeditor/editor";
+import { Loader } from "lucide-react";
 import dynamic from "next/dynamic";
 import { forwardRef } from "react";
 
@@ -9,6 +10,11 @@ import { forwardRef } from "react";
 const InitializedMDXEditor = dynamic(() => import("./InitializedMDXEditor"), {
   // Make sure we turn SSR off
   ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center animate-spin">
+      <Loader />
+    </div>
+  ),
 });
 
 // This is what is imported by other components. Pre-initialized with plugins, and ready

@@ -1,4 +1,4 @@
-import { TreeNode } from "@/clientdb/filetree";
+import { TreeNode } from "@/clientdb/TreeNode";
 import path from "path";
 
 // Define unique symbols for branding

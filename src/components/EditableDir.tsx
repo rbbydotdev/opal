@@ -1,5 +1,5 @@
 "use client";
-import { TreeDir, TreeNode } from "@/clientdb/filetree";
+import { TreeDir, TreeNode } from "@/clientdb/TreeNode";
 import { Workspace } from "@/clientdb/Workspace";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useEditable } from "@/components/useEditable";

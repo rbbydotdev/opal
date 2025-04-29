@@ -4,7 +4,6 @@ import { useWorkspaceRoute } from "@/context";
 import { AbsPath } from "@/lib/paths";
 import {
   AdmonitionDirectiveDescriptor,
-  DirectiveDescriptor,
   KitchenSinkToolbar,
   SandpackConfig,
   codeBlockPlugin,
@@ -24,7 +23,7 @@ import {
   thematicBreakPlugin,
   toolbarPlugin,
 } from "@mdxeditor/editor";
-import { LeafDirective } from "mdast-util-directive";
+// import { LeafDirective } from "mdast-util-directive";
 import { useEffect, useState } from "react";
 // import dataCode from './assets/dataCode.ts?raw'
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
@@ -90,44 +89,44 @@ export async function expressImageUploadHandler(image: File) {
   return json.url;
 }
 
-interface YoutubeDirectiveNode extends LeafDirective {
-  name: "youtube";
-  attributes: { id: string };
-}
+// interface YoutubeDirectiveNode extends LeafDirective {
+//   name: "youtube";
+//   attributes: { id: string };
+// }
 
-export const YoutubeDirectiveDescriptor: DirectiveDescriptor<YoutubeDirectiveNode> = {
-  name: "youtube",
-  type: "leafDirective",
-  testNode(node) {
-    return node.name === "youtube";
-  },
-  attributes: ["id"],
-  hasChildren: false,
-  Editor: ({ mdastNode, lexicalNode, parentEditor }) => {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-        <button
-          onClick={() => {
-            parentEditor.update(() => {
-              lexicalNode.selectNext();
-              lexicalNode.remove();
-            });
-          }}
-        >
-          delete
-        </button>
-        <iframe
-          width="560"
-          height="315"
-          src={`https://www.youtube.com/embed/${mdastNode.attributes.id}`}
-          title="YouTube video player"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        ></iframe>
-      </div>
-    );
-  },
-};
+// export const YoutubeDirectiveDescriptor: DirectiveDescriptor<YoutubeDirectiveNode> = {
+//   name: "youtube",
+//   type: "leafDirective",
+//   testNode(node) {
+//     return node.name === "youtube";
+//   },
+//   attributes: ["id"],
+//   hasChildren: false,
+//   Editor: ({ mdastNode, lexicalNode, parentEditor }) => {
+//     return (
+//       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+//         <button
+//           onClick={() => {
+//             parentEditor.update(() => {
+//               lexicalNode.selectNext();
+//               lexicalNode.remove();
+//             });
+//           }}
+//         >
+//           delete
+//         </button>
+//         <iframe
+//           width="560"
+//           height="315"
+//           src={`https://www.youtube.com/embed/${mdastNode.attributes.id}`}
+//           title="YouTube video player"
+//           frameBorder="0"
+//           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+//         ></iframe>
+//       </div>
+//     );
+//   },
+// };
 
 export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const [imgs, setImgs] = useState<string[]>([]);
@@ -169,7 +168,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
     codeMirrorPlugin({
       codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
     }),
-    directivesPlugin({ directiveDescriptors: [YoutubeDirectiveDescriptor, AdmonitionDirectiveDescriptor] }),
+    directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
     diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: "<ORIGINAL_MARKDOWN_HERE>" }),
     markdownShortcutPlugin(),
   ];

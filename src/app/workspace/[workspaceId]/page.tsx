@@ -3,7 +3,6 @@
 import { useWorkspaceContext } from "@/context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
 // import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Page() {
@@ -28,7 +27,7 @@ function FirstFileRedirect() {
 
   const { currentWorkspace } = useWorkspaceContext();
   useEffect(() => {
-    if (currentWorkspace) currentWorkspace.tryFirstFileUrl().then((ff) => router.push(ff));
+    if (currentWorkspace) void currentWorkspace.tryFirstFileUrl().then((ff) => router.push(ff));
   }, [currentWorkspace, router]);
   return null;
 }

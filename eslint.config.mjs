@@ -1,4 +1,7 @@
+// eslint.config.mjs
 import { FlatCompat } from "@eslint/eslintrc";
+import typescriptEslintPlugin from "@typescript-eslint/eslint-plugin";
+import typescriptEslintParser from "@typescript-eslint/parser";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -9,11 +12,21 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const eslintConfig = [
+export default [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parser: typescriptEslintParser,
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": typescriptEslintPlugin,
+    },
     rules: {
-      // "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-floating-promises": "error",
       "@next/next/no-img-element": "off",
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-unused-vars": [
@@ -31,5 +44,3 @@ const eslintConfig = [
     },
   },
 ];
-
-export default eslintConfig;
