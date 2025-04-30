@@ -457,7 +457,7 @@ export abstract class Disk extends DiskDAO {
   }
 
   async delete() {
-    this.fileTree.clearCache();
+    void this.fileTree.clearCache();
     throw new Error("Not implemented");
   }
   teardown() {

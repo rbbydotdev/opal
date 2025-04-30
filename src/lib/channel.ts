@@ -34,7 +34,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
       if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
       console.debug("bcast incoming:", eventName);
-      super.emit(eventName, eventData);
+      void super.emit(eventName, eventData);
     };
   }
 
