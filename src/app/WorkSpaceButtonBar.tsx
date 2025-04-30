@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceContext } from "@/context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { Opal } from "@/lib/Opal";
 import { ChevronDown, ChevronUp, CirclePlus, Delete, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -73,6 +74,10 @@ export function WorkSpaceButtonBar() {
   );
   return (
     <>
+      <div className="m-2 flex justify-center flex-col items-center">
+        <Opal size={16} />
+        <div className="text-white text-xs mt-1">opal</div>
+      </div>
       <BigButton
         icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}
         title={"delete_all"}

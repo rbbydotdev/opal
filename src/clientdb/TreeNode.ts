@@ -140,6 +140,8 @@ export class TreeNode {
     basename: string;
     path: string;
     depth: number;
+    mimeType?: string;
+    eTag?: string;
   } {
     return {
       name: this.name.str,
@@ -148,6 +150,8 @@ export class TreeNode {
       basename: this.basename.str,
       path: this.path.str,
       depth: this.depth,
+      mimeType: this.mimeType,
+      eTag: this.eTag,
     };
   }
 }

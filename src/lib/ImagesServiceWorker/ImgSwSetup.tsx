@@ -2,13 +2,14 @@ import { Workspace } from "@/clientdb/Workspace";
 import { RemoteObj } from "@/lib/ImagesServiceWorker/sw";
 import * as Comlink from "comlink";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useLayoutEffect, useState } from "react";
 
-export const ImgSw = () => {
+export const ImgSw = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
+  const [resolved, setResolved] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!workspaceId) {
       console.log("No current workspace");
       return;
@@ -29,18 +30,25 @@ export const ImgSw = () => {
           })
         );
         await comlink.mountWorkspace(workspaceId);
-        //TODO: WATCH INDEX ?
+        // await new Promise((rs) => void comlink.mountWorkspace(workspaceId, Comlink.proxy(rs)));
         console.log("Mounted workspace");
         unmountFn = comlink.unmountWorkspace;
+        setResolved(true);
       }
     });
 
     return () => {
       if (unmountFn) unmountFn(workspaceId);
     };
-  }, [workspaceId]);
+  }, [workspaceId, setResolved]);
 
-  return null;
+  if (!resolved) {
+    // if (false) {
+    return null;
+  } else {
+    return <>{children}</>;
+  }
+  // return <>{children}</>;
 };
 
 export async function setupServiceWorkerAndComlink() {
@@ -49,7 +57,7 @@ export async function setupServiceWorkerAndComlink() {
       console.warn("Service Worker is not controlling the page.");
       await navigator.serviceWorker.register(new URL("@/lib/ImagesServiceWorker/sw.ts", import.meta.url), {
         scope: "/",
-        // updateViaCache: "none",
+        updateViaCache: "none",
         // updateViaCache: process.env.NODE_ENV === 'development' ? 'none' : 'all'
       });
       await navigator.serviceWorker.ready;

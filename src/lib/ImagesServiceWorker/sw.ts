@@ -1,5 +1,6 @@
 import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
 import { errF } from "@/lib/errors";
+import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths";
 import * as Comlink from "comlink";
 declare const self: ServiceWorkerGlobalScope;
@@ -46,7 +47,7 @@ class WorkspaceStore {
         this.Store.queue.push([resolve, reject]);
       });
     } else {
-      LOG(`awaited workspace ${this.Store.currentWorkspace.id} `);
+      LOG(`awaited workspace ${this.Store.currentWorkspace.id}`);
       return this.Store.currentWorkspace;
     }
   }
@@ -60,8 +61,8 @@ const workspaceStore = new WorkspaceStore();
 let LOG = (_msg: string) => {};
 
 const Methods = {
-  mountWorkspace: async (workspaceId: string) => {
-    if (workspaceStore.peekWorkspace() && workspaceStore.peekWorkspace()?.id === workspaceId) {
+  mountWorkspace: async (workspaceId: string, cb?: (a?: unknown) => void) => {
+    if (workspaceStore.peekWorkspace()?.id === workspaceId) {
       LOG("Workspace already mounted");
       return;
     }
@@ -71,6 +72,7 @@ const Methods = {
       }
       LOG("Mounting workspace:" + workspaceId);
       workspaceStore.setWorkspace(workspace);
+      cb?.();
     });
   },
   registerLogger: async (logger: (msg: string) => void) => {
@@ -96,9 +98,6 @@ const Methods = {
     }
   },
 };
-
-export type RemoteObj = Comlink.Remote<typeof Methods>;
-
 self.addEventListener("message", (event) => {
   if (event.data.comlinkInit) {
     Comlink.expose(Methods, event.data.port);
@@ -111,15 +110,14 @@ self.addEventListener("fetch", async (event) => {
   if (event.request.destination === "image" && !url.pathname.startsWith("/icons") && url.pathname !== "/favicon.ico") {
     const pathname = decodeURIComponent(url.pathname);
     LOG(`Intercepted request for: ${url.pathname}`);
-
-    if (!workspaceStore.awaitWorkspace()) {
+    const awaitedWorkspace = await workspaceStore.awaitWorkspace();
+    if (!awaitedWorkspace) {
       throw new Error("No workspace mounted");
     }
-
     void event.respondWith(
       (async function retry() {
         try {
-          const workspace = await workspaceStore.awaitWorkspace();
+          const workspace = awaitedWorkspace;
           const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Indexing timeout")), 5000)
           );
@@ -131,7 +129,7 @@ self.addEventListener("fetch", async (event) => {
 
             if (contents) {
               // Determine the content type based on the file extension or other logic
-              const contentType = "image/jpeg"; // Adjust as needed
+              // const contentType = "image/jpeg"; // Adjust as needed
               const requestETag = event.request.headers.get("If-None-Match");
 
               if (requestETag === eTag) {
@@ -145,7 +143,7 @@ self.addEventListener("fetch", async (event) => {
               // Create a Response object with the binary data and ETag
               return new Response(contents, {
                 headers: {
-                  "Content-Type": contentType,
+                  "Content-Type": getMimeType(pathname),
                   ...(eTag ? { ETag: eTag } : {}), // Include the ETag in the response headers
                   "Cache-Control": "public, max-age=31536000, immutable", // Cache for 1 year
                 },
@@ -169,3 +167,5 @@ self.addEventListener("fetch", async (event) => {
     );
   }
 });
+
+export type RemoteObj = Comlink.Remote<typeof Methods>;

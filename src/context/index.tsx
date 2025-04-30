@@ -197,18 +197,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 export function withCurrentWorkspace<T extends NonNullWorkspaceContext>(Component: React.ComponentType<T>) {
   return function WrappedComponent(props: Omit<T, keyof NonNullWorkspaceContext>) {
     const context = useWorkspaceContext();
-
-    // Start timing when the component first loads
-    React.useEffect(() => {
-      console.time("WorkspaceLoadTime");
-    }, []); // Empty dependency array ensures this runs only once when the component mounts
-
-    // Check if the conditions are met
     if (!context.fileTreeDir || !context.currentWorkspace) return null;
-
-    // End timing when the conditions are met
-    console.timeEnd("WorkspaceLoadTime");
-
     return <Component {...(props as T)} {...context} />;
   };
 }

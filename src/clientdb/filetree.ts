@@ -30,7 +30,7 @@ export class FileTree {
   constructor(private fs: FileSystem, guid: string) {
     this.guid = `${guid}/FileTree`;
 
-    this.cacheId = `${this.guid}/cache`;
+    this.cacheId = `${this.guid}/cache/v2`;
   }
   private mutex = new Mutex();
 
@@ -83,14 +83,11 @@ export class FileTree {
   clearCache() {
     return set(this.cacheId, null);
   }
-  private tryGetCachedRoot = async () => {
+  private loadRootFromCache = async () => {
     const cache = await get(this.cacheId);
-    try {
-      if (!cache) throw null;
-      return TreeDirRoot.fromJSON(JSON.parse(cache) as TreeNodeDirJType);
-    } catch (_e) {
-      return FileTree.EmptyFileTree();
-    }
+    if (!cache) return FileTree.EmptyFileTree();
+    const tree = TreeDirRoot.fromJSON(JSON.parse(cache) as TreeNodeDirJType);
+    return tree;
   };
   private setCachedRoot = async (root: TreeDirRoot = this.root) => {
     return set(this.cacheId, JSON.stringify(root));
@@ -108,7 +105,7 @@ export class FileTree {
     try {
       this.map = new Map<string, TreeNode>();
       if (useCache) {
-        this.root = await this.tryGetCachedRoot();
+        this.root = await this.loadRootFromCache();
       }
       if (!useCache || this.root.isEmpty()) {
         this.root = (await this.recurseTree(tree, visitor)) as TreeDirRoot;
@@ -120,6 +117,7 @@ export class FileTree {
     }
     console.timeEnd("Indexing file tree");
     console.debug(Object.keys(this.root.children).join(", "));
+    this.root.walk((node) => this.map.set(node.path.str, node));
     void this.setCachedRoot(this.root);
     return this.root;
   };
@@ -234,7 +232,7 @@ export class FileTree {
   }
   insertNode(parent: TreeDir, newNode: TreeNode) {
     this.map.set(newNode.path.str, newNode);
-    return insertNode(parent, newNode);
+    return spliceNode(parent, newNode);
   }
   nodeWithPathExists(path: AbsPath) {
     return this.map.has(path.str);
@@ -274,7 +272,7 @@ function closestTreeDir(node: TreeNode): TreeDir {
 //   const newNode = newTreeNode({ ...node, parent, depth: parent.depth + 1 });
 //   return insertNode(parent, newNode);
 // }
-function insertNode(targetNode: TreeDir, newNode: TreeNode) {
+function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
   // const parentNode = closestTreeDir(targetNode);
   targetNode.children[newNode.name.str] = newNode;
   return newNode;
