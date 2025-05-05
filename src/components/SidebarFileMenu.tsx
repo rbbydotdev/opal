@@ -1,6 +1,5 @@
 "use client";
-import { TreeDir, TreeFile, TreeNode } from "@/clientdb/TreeNode";
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
@@ -8,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/components/useWorkspaceFileMgmt";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
+import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { CopyMinus, FilePlus, FolderPlus, Settings, Trash2, Undo } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -140,7 +140,7 @@ function SidebarFileMenuInternal({
       <SidebarGroupLabel>
         <div className="w-full">Files</div>
       </SidebarGroupLabel>
-      <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full overflow-hidden">
+      <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full overflow-x-hidden">
         {!Object.keys(fileTreeDir.children).length ? (
           <div className="w-full">
             <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">

@@ -1,4 +1,4 @@
-import { FileSystem } from "@/clientdb/Disk";
+import { FileSystem } from "@/Db/Disk";
 import {
   TreeDir,
   TreeDirRoot,
@@ -8,11 +8,10 @@ import {
   TreeNodeDirJType,
   VirtualDirTreeNode,
   VirtualFileTreeNode,
-} from "@/clientdb/TreeNode";
+} from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, relPath, RelPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
-import { get, set } from "idb-keyval";
 
 export class FileTree {
   static EmptyFileTree = () => new TreeDirRoot();
@@ -21,10 +20,10 @@ export class FileTree {
   guid: string;
   cacheId: string;
 
-  root: TreeDirRoot = FileTree.EmptyFileTree();
   dirs: TreeList = [];
   // nodeList: (TreeNode | null)[] = [];
   private map = new Map<string, TreeNode>();
+  public root: TreeDirRoot = FileTree.EmptyFileTree();
 
   // private tree: TreeDir = this.root;
   constructor(private fs: FileSystem, guid: string) {
@@ -80,45 +79,55 @@ export class FileTree {
     return this.index();
   };
 
-  clearCache() {
-    return set(this.cacheId, null);
-  }
-  private loadRootFromCache = async () => {
-    const cache = await get(this.cacheId);
-    if (!cache) return FileTree.EmptyFileTree();
-    const tree = TreeDirRoot.fromJSON(JSON.parse(cache) as TreeNodeDirJType);
-    return tree;
-  };
-  private setCachedRoot = async (root: TreeDirRoot = this.root) => {
-    return set(this.cacheId, JSON.stringify(root));
+  indexFromJSON = async (json: TreeNodeDirJType) => {
+    this.map = new Map<string, TreeNode>();
+    this.root = TreeDirRoot.fromJSON(json);
+    this.dirs = this.flatDirTree();
+    this.root.walk((node) => this.map.set(node.path.str, node));
+    // this.initialIndex = true; ?
   };
 
+  static fromJSON(json: TreeNodeDirJType, fs: FileSystem, guid: string) {
+    const tree = new FileTree(fs, guid);
+    tree.root = TreeDirRoot.fromJSON(json);
+    tree.map = new Map<string, TreeNode>();
+    tree.root.walk((node) => tree.map.set(node.path.str, node));
+    return tree;
+  }
+
+  // clearCache() {
+  //   // return set(this.cacheId, null);
+  // }
+  // private loadRootFromCache = async () => {
+  //   console.debug("Loading root from cache...", this.cacheId);
+  //   // const cache = await get(this.cacheId);
+  //   const cache = null;
+  //   console.debug("Cache:", typeof cache);
+  //   if (!cache) return FileTree.EmptyFileTree();
+  //   const tree = TreeDirRoot.fromJSON(JSON.parse(cache) as TreeNodeDirJType);
+  //   return tree;
+  // };
+
   index = async ({
-    useCache = false,
     tree = FileTree.EmptyFileTree(),
     visitor,
-  }: { useCache?: boolean; tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
-    console.time("Indexing file tree");
-    console.debug("Indexing file tree...");
+  }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
     const release = await this.mutex.acquire();
-    console.debug("Acquired unlock");
     try {
       this.map = new Map<string, TreeNode>();
-      if (useCache) {
-        this.root = await this.loadRootFromCache();
-      }
-      if (!useCache || this.root.isEmpty()) {
-        this.root = (await this.recurseTree(tree, visitor)) as TreeDirRoot;
-      }
+      this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
+
       this.dirs = this.flatDirTree();
       this.initialIndex = true;
+    } catch (e) {
+      console.error("Error during file tree indexing:", e);
+      throw e;
     } finally {
       release(); // Release the lock
     }
     console.timeEnd("Indexing file tree");
     console.debug(Object.keys(this.root.children).join(", "));
     this.root.walk((node) => this.map.set(node.path.str, node));
-    void this.setCachedRoot(this.root);
     return this.root;
   };
 

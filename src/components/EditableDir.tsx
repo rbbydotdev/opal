@@ -1,9 +1,9 @@
 "use client";
-import { TreeDir, TreeNode } from "@/clientdb/TreeNode";
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
+import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { ComponentProps, useEffect } from "react";

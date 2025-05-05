@@ -1,5 +1,5 @@
 "use client";
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 // ForwardRefEditor.tsx
 import { type MDXEditorMethods, type MDXEditorProps } from "@mdxeditor/editor";
 import { Loader } from "lucide-react";

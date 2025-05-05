@@ -1,9 +1,9 @@
 "use client";
-import { TreeNode } from "@/clientdb/TreeNode";
-import { Workspace } from "@/clientdb/Workspace";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { WorkspaceRouteType } from "@/context";
+import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath, isAncestor, reduceLineage, relPath, RelPath } from "@/lib/paths";
 import { usePathname, useRouter } from "next/navigation";
 

@@ -4,6 +4,9 @@ import { AbsPath, absPath, RelPath, relPath } from "@/lib/paths";
 export type TreeNodeJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
 };
+
+export type TreeDirRootJType = TreeNodeDirJType; //ReturnType<TreeDirRoot["toJSON"]>;
+
 export type TreeNodeDirJType = ReturnType<TreeNode["toJSON"]> & {
   children: Record<string, TreeNodeJType | TreeNodeDirJType>;
   type: "dir";
@@ -84,9 +87,9 @@ export class TreeNode {
     this.type = type;
     this.mimeType = mimeType;
     this.eTag = eTag;
-    this.dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
-    this.basename = typeof basename === "string" ? relPath(basename) : basename;
-    this.path = typeof path === "string" ? absPath(path) : path;
+    this.dirname = absPath(dirname);
+    this.basename = relPath(basename);
+    this.path = absPath(path);
     this.depth = depth;
     this.parent = parent;
   }
@@ -181,26 +184,32 @@ export class TreeDir extends TreeNode {
     this.children = children;
   }
 
-  toJSON() {
+  toJSON(): TreeNodeDirJType {
     return {
       ...super.toJSON(),
-      children: Object.fromEntries(Object.entries(this.children).map(([key, child]) => [key, child.toJSON()])),
+      type: "dir",
+      children: Object.fromEntries(
+        Object.entries(this.children).map(([key, child]) => [key, child.toJSON() as TreeNodeDirJType | TreeNodeJType])
+      ),
     };
   }
 
   static fromJSON(json: TreeNodeDirJType, parent: TreeDir | null = null): TreeDir {
-    const parentNode = new TreeDir({ ...TreeNode.fromJSON({ ...json, type: "file" }), parent, children: {} });
-    const children = Object.entries(json.children).reduce((acc, [key, child]) => {
-      acc[key] = child.type === "file" ? TreeNode.fromJSON(child, parentNode) : TreeDir.fromJSON(child, parentNode);
-      return acc;
-    }, {} as Record<string, TreeNode>);
-    parentNode.children = children;
+    const parentNode = new TreeDir({
+      ...TreeNode.fromJSON({ ...json, type: "file" }),
+      parent,
+      children: Object.fromEntries(
+        Object.entries(json.children).map(([key, child]) => [key, TreeNode.fromJSON(child)])
+      ),
+    });
+
     return parentNode;
   }
 }
 
 export class TreeDirRoot extends TreeDir {
   id = Date.now();
+  type = "dir" as const;
   constructor({ children = {} }: { children: TreeDir["children"] } = { children: {} }) {
     super({
       name: relPath(":root"),
@@ -222,6 +231,7 @@ export class TreeDirRoot extends TreeDir {
       ...super.toJSON(),
     };
   }
+
   static fromJSON(json: TreeNodeDirJType): TreeDirRoot {
     return new TreeDirRoot(TreeDir.fromJSON(json));
   }

@@ -23,7 +23,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
       ChannelSet.delete(this.channelName);
     }
     ChannelSet.set(this.channelName, this.tearDown);
-    this.createChannel();
+    return this.createChannel();
   }
 
   private createChannel() {
@@ -35,6 +35,10 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
       console.debug("bcast incoming:", eventName);
       void super.emit(eventName, eventData);
+    };
+    return () => {
+      this.channel?.close();
+      this.channel = null;
     };
   }
 

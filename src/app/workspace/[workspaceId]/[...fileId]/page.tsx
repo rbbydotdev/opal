@@ -1,4 +1,5 @@
 "use client";
+import { ClientOnly } from "@/components/ClientOnly";
 // import * as None from "@/components/Editor/InitializedMDXEditor";
 import { WorkspaceLiveEditor } from "@/components/WorkspaceLiveEditor";
 import { ImgSw } from "@/lib/ImagesServiceWorker/ImgSwSetup";
@@ -7,10 +8,13 @@ import { ImgSw } from "@/lib/ImagesServiceWorker/ImgSwSetup";
 
 export default function Page() {
   return (
-    <div>
-      <ImgSw>
+    <>
+      <ClientOnly>
+        <ImgSw />
+      </ClientOnly>
+      <ClientOnly>
         <WorkspaceLiveEditor />
-      </ImgSw>
-    </div>
+      </ClientOnly>
+    </>
   );
 }

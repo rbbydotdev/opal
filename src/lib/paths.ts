@@ -1,4 +1,4 @@
-import { TreeNode } from "@/clientdb/TreeNode";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import path from "path";
 
 // Define unique symbols for branding
@@ -15,6 +15,9 @@ export class BasePath extends String {
 
   toString() {
     return this.filePath;
+  }
+  toJSON() {
+    return this.str;
   }
 
   equals(p?: BasePath | null) {
@@ -114,11 +117,11 @@ export class RelPath extends BasePath {
   }
 }
 
-export function relPath(path: string) {
-  return RelPath.New(path);
+export function relPath(path: string | RelPath) {
+  return RelPath.New(String(path));
 }
-export function absPath(path: string) {
-  return AbsPath.New(path);
+export function absPath(path: string | AbsPath) {
+  return AbsPath.New(String(path));
 }
 
 export function isAncestor(path: AbsPath | string | null, root: AbsPath | string | null) {

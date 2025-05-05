@@ -1,5 +1,5 @@
 "use client";
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { customAlphabet } from "nanoid";

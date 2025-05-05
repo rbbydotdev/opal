@@ -1,6 +1,6 @@
 "use client";
-import { TreeDir, TreeDirRoot, TreeFile } from "@/clientdb/TreeNode";
-import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
+import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
+import { TreeDir, TreeDirRoot, TreeFile } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor } from "@/lib/paths";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -59,13 +59,13 @@ export function useCurrentFilepath() {
       }
     };
 
-    fetchFileContents();
+    void fetchFileContents();
   }, [currentWorkspace, filePath, router]);
 
   const updateContents = useCallback(
     (updates: string) => {
       if (filePath && currentWorkspace) {
-        currentWorkspace?.disk.writeFile(filePath, updates);
+        void currentWorkspace?.disk.writeFile(filePath, updates);
       }
     },
     [currentWorkspace, filePath]
@@ -104,7 +104,7 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
         const newTree = new TreeDirRoot(fileTreeDir);
         setFileTree(newTree);
-        currentWorkspace.getFirstFile().then((ff) => setFirstFile(ff));
+        void currentWorkspace.getFirstFile().then((ff) => setFirstFile(ff));
         setFlatTree(currentWorkspace.getFlatDirTree());
       });
     }
@@ -140,7 +140,7 @@ export function useWorkspaceFromRoute() {
       return ws;
     });
     return () => {
-      workspace.then((ws) => ws.teardown());
+      void workspace.then((ws) => ws.teardown());
     };
   }, [workspaceId]);
 

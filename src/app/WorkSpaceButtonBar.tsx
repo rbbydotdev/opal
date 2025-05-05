@@ -1,4 +1,5 @@
 "use client";
+import { deleteIDBs } from "@/app/deleteIDBs";
 import Identicon from "@/components/Identicon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -58,16 +59,6 @@ export function WorkSpaceButtonBar() {
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
 
   //               {/* <div className="flex-shrink-1 max-w-full overflow-hidden whitespace-nowrap text-ellipsis uppercase p-1 flex items-center justify-center text-center font-mono"> */}
-  const deleteAllDbs = () => {
-    void window.indexedDB
-      .databases()
-      .then((r) => {
-        for (let i = 0; i < r.length; i++) window.indexedDB.deleteDatabase(r[i].name!);
-      })
-      .then(() => {
-        console.log("All data cleared.");
-      });
-  };
   const filteredWorkspaces = useMemo(
     () => workspaces.filter((workspace) => workspace.guid !== currentWorkspace?.guid),
     [workspaces, currentWorkspace]
@@ -82,7 +73,7 @@ export function WorkSpaceButtonBar() {
         icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}
         title={"delete_all"}
         href="#"
-        onClick={deleteAllDbs}
+        onClick={deleteIDBs}
       />
       <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
       <BigButton icon={<Settings stroke="current" size={32} strokeWidth={1.25} />} title="settings" href="/settings" />
