@@ -1,5 +1,6 @@
-import { Workspace, WorkspaceDAO } from "@/clientdb/Workspace";
+import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
+import { SwLogger } from "@/lib/ImagesServiceWorker/ImgSwSetup";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths";
 import * as Comlink from "comlink";
@@ -15,28 +16,35 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 });
 
 self.addEventListener("activate", (event) => {
+  SwLogger("Service Worker activated");
+  WorkspaceStore.tearDown();
   event.waitUntil(self.clients.claim());
 });
-console.log("loaded");
 
 // Workspace Store
-class WorkspaceStore {
+const WorkspaceStore = new (class {
   private currentWorkspace: Workspace | null = null;
   private queue: Array<[(workspace: Workspace) => void, (reason?: unknown) => void]> = [];
+
+  get imageCacheKey() {
+    return `${this.currentWorkspace?.id}/image-cache`;
+  }
 
   setWorkspace(workspace: Workspace) {
     this.currentWorkspace = workspace;
     this.resolveQueue(workspace);
   }
 
-  unsetWorkspace() {
+  tearDown() {
+    this.currentWorkspace?.teardown();
     this.currentWorkspace = null;
     this.rejectQueue();
+    this.queue = [];
   }
 
   async awaitWorkspace(): Promise<Workspace> {
     if (this.currentWorkspace) {
-      LOG(`Workspace available: ${this.currentWorkspace?.id}`);
+      LOG(`Current Workspace: ${this.currentWorkspace?.id}`);
       return this.currentWorkspace;
     }
     LOG("Awaiting workspace...");
@@ -62,22 +70,16 @@ class WorkspaceStore {
       reject();
     }
   }
-}
-
-const workspaceStore = new WorkspaceStore();
+})();
 
 // Methods exposed via Comlink
 const Methods = {
-  async mountWorkspace(workspaceId: string, cb?: (_a?: unknown) => void) {
-    if (workspaceStore.peekWorkspace()?.id === workspaceId) {
-      LOG("Workspace already mounted");
-      return;
-    }
-    const workspace = await WorkspaceDAO.fetchFromNameAndInit(workspaceId);
+  async mountWorkspace(workspaceName: string, cb?: (_a?: unknown) => void) {
+    const workspace = await WorkspaceDAO.fetchFromNameAndInit(workspaceName);
     if (!workspace) throw new Error("Workspace not found");
 
-    LOG(`Mounting workspace: ${workspaceId}`);
-    workspaceStore.setWorkspace(workspace);
+    LOG(`Mounting workspace: ${workspaceName}`);
+    WorkspaceStore.setWorkspace(workspace);
     cb?.();
   },
 
@@ -87,23 +89,22 @@ const Methods = {
   },
 
   async index() {
-    const workspace = await workspaceStore.awaitWorkspace();
+    const workspace = WorkspaceStore.peekWorkspace() ?? (await WorkspaceStore.awaitWorkspace());
     if (!workspace) {
       LOG("Reindex / workspace not found");
       return;
     }
-    await workspace.disk.index();
+    await workspace.disk.firstIndex();
   },
 
   async unmountWorkspace(workspaceId: string) {
-    const workspace = await workspaceStore.awaitWorkspace();
-    if (!workspace) {
-      LOG("Unmount workspace / Workspace not found");
-      return;
-    }
+    // const workspace = await WorkspaceStore.awaitWorkspace();
+    // if (!workspace) {
+    //   LOG("Unmount workspace / Workspace not found");
+    //   return;
+    // }
     LOG(`Unmounting workspace: ${workspaceId}`);
-    await workspace.teardown();
-    workspaceStore.unsetWorkspace();
+    WorkspaceStore.tearDown();
   },
 };
 
@@ -126,7 +127,19 @@ async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response
   const pathname = decodeURIComponent(url.pathname);
   LOG(`Intercepted request for: ${url.pathname}`);
 
-  const workspace = await workspaceStore.awaitWorkspace();
+  const workspace = WorkspaceStore.peekWorkspace() ?? (await WorkspaceStore.awaitWorkspace());
+
+  const cache = await caches.open(WorkspaceStore.imageCacheKey); // Open the cache
+
+  // Check if the request is already in the cache
+  const cachedResponse = await cache.match(event.request);
+  if (cachedResponse) {
+    LOG(`Cache hit for: ${url.pathname}`);
+
+    return cachedResponse;
+  }
+
+  LOG(`Cache miss for: ${url.pathname}, fetching from workspace`);
 
   if (!workspace) throw new Error("No workspace mounted");
 
@@ -136,22 +149,27 @@ async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response
       new Promise((_, reject) => setTimeout(() => reject(new Error("Indexing timeout")), 5000)),
     ]);
 
-    const { eTag } = workspace.disk.nodeFromPath(AbsPath.New(pathname)) ?? {};
+    // const { eTag } = workspace.disk.nodeFromPath(AbsPath.New(pathname)) ?? {};
     const contents = await workspace.disk.readFile(AbsPath.New(pathname));
 
     if (contents) {
-      const requestETag = event.request.headers.get("If-None-Match");
-      if (requestETag === eTag) {
-        return new Response(null, { status: 304, statusText: "Not Modified" });
-      }
+      // const requestETag = event.request.headers.get("If-None-Match");
+      // if (requestETag === eTag) {
+      //   return new Response(null, { status: 304, statusText: "Not Modified" });
+      // }
 
-      return new Response(contents, {
+      const response = new Response(contents, {
         headers: {
           "Content-Type": getMimeType(pathname),
-          ...(eTag ? { ETag: eTag } : {}),
+          // ...(eTag ? { ETag: eTag } : {}),
           "Cache-Control": "public, max-age=31536000, immutable",
         },
       });
+
+      // Store the response in the cache
+      await cache.put(event.request, response.clone());
+
+      return response;
     }
   } catch (error) {
     LOG(errF`Error reading file from workspace: ${error}`.toString());
@@ -161,5 +179,3 @@ async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response
 }
 
 export type RemoteObj = Comlink.Remote<typeof Methods>;
-
-console.log(">>>>> Service Worker loaded");

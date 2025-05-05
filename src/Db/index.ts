@@ -1,6 +1,6 @@
-import { RemoteAuthRecord } from "@/clientdb/RemoteAuth";
-import { SettingsDbRecord, SettingsRecord } from "@/clientdb/Settings";
-import { WorkspaceRecord } from "@/clientdb/Workspace";
+import { RemoteAuthRecord } from "@/Db/RemoteAuth";
+import { SettingsDbRecord, SettingsRecord } from "@/Db/Settings";
+import { WorkspaceRecord } from "@/Db/Workspace";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 import { DiskDAO, DiskRecord } from "./Disk";

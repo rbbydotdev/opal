@@ -1,4 +1,4 @@
-import { ClientIndexedDb } from "@/clientdb";
+import { ClientIndexedDb } from "@/Db";
 
 let _db: ClientIndexedDb | null = null;
 

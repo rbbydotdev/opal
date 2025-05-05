@@ -1,4 +1,4 @@
-import { ClientIndexedDb } from "@/clientdb";
+import { ClientIndexedDb } from "@/Db";
 import { Entity } from "dexie";
 
 export class SettingsDbRecord extends Entity<ClientIndexedDb> {

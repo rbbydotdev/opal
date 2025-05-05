@@ -1,8 +1,8 @@
 "use client";
-import { TreeFile, TreeNode } from "@/clientdb/TreeNode";
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
+import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { RelPath } from "@/lib/paths";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

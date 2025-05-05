@@ -1,11 +1,11 @@
 "use client";
-import { Disk, DiskDAO, IndexedDbDisk } from "@/clientdb/Disk";
-import { ClientDb } from "@/clientdb/instance";
+import { Disk, DiskDAO, IndexedDbDisk } from "@/Db/Disk";
+import { ClientDb } from "@/Db/instance";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, isAncestor, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
+import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
-import { TreeDir, TreeNode } from "./TreeNode";
 
 export class WorkspaceRecord {
   guid!: string;

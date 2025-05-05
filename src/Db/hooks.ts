@@ -1,4 +1,4 @@
-import { ClientDb } from "@/clientdb/instance";
+import { ClientDb } from "@/Db/instance";
 import { useLiveQuery } from "dexie-react-hooks";
 import { SettingsRecord } from "./Settings";
 

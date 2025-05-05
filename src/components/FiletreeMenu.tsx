@@ -1,10 +1,10 @@
-import { isTreeDir, TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/clientdb/TreeNode";
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
+import { isTreeDir, TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import clsx from "clsx";

@@ -1,5 +1,5 @@
 "use client";
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 // InitializedMDXEditor.tsx
 import { MDXEditor, type MDXEditorMethods, type MDXEditorProps } from "@mdxeditor/editor";

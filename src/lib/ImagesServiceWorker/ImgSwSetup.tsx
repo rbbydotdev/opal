@@ -1,9 +1,9 @@
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { RemoteObj } from "@/lib/ImagesServiceWorker/sw";
 import * as Comlink from "comlink";
 import { usePathname } from "next/navigation";
-import { useLayoutEffect, useState } from "react";
-const SwLogger = (msg: string) => {
+import { useLayoutEffect } from "react";
+export const SwLogger = (msg: string) => {
   console.log(
     "%cISW:%c %s",
     "background: purple; color: white; padding: 2px; border-radius: 3px;",
@@ -12,37 +12,11 @@ const SwLogger = (msg: string) => {
   );
 };
 
-async function unregisterServiceWorkers() {
-  console.debug("Unregistering all service workers...");
-  return navigator.serviceWorker
-    .getRegistrations()
-    .then((registrations) =>
-      Promise.all(
-        registrations.map((registration) =>
-          registration
-            .unregister()
-            .then((success) => {
-              if (success) {
-                console.debug("Service Worker unregistered:", registration);
-              } else {
-                console.debug("Service Worker could not be unregistered:", registration);
-              }
-            })
-            .catch((error) => {
-              console.error("Error unregistering Service Worker:", error);
-            })
-        )
-      )
-    )
-    .catch((error) => {
-      console.error("Error getting Service Worker registrations:", error);
-    });
-}
-
-export const ImgSw = ({ children }: { children: React.ReactNode }) => {
+// export const ImgSw = ({ children }: { children: React.ReactNode }) => {
+export const ImgSw = () => {
   const pathname = usePathname();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
-  const [swLoaded, setSwLoaded] = useState(false);
+  // const [swLoaded, setSwLoaded] = useState(false);
 
   useLayoutEffect(() => {
     if (!workspaceId) {
@@ -50,16 +24,17 @@ export const ImgSw = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    let unmountFn: ((arg0: string) => void) | undefined;
+    let unmountFn: ((workspaceId: string) => void) | undefined;
 
     void setupServiceWorkerAndComlink().then(async (comlink) => {
       if (comlink) {
-        await comlink.registerLogger(Comlink.proxy(SwLogger));
-        // await comlink.mountWorkspace(workspaceId);
-        await new Promise((rs) => void comlink.mountWorkspace(workspaceId, Comlink.proxy(rs)));
+        await Promise.all([comlink.registerLogger(Comlink.proxy(SwLogger)), comlink.mountWorkspace(workspaceId)]);
+        // await new Promise((rs) => void comlink.mountWorkspace(workspaceId, Comlink.proxy(rs)));
         console.log("Mounted workspace");
         unmountFn = comlink.unmountWorkspace;
-        setSwLoaded(true);
+        // setSwLoaded(true);
+      } else {
+        throw new Error("Service Worker not loaded");
       }
     });
 
@@ -67,17 +42,13 @@ export const ImgSw = ({ children }: { children: React.ReactNode }) => {
       if (unmountFn) unmountFn(workspaceId);
     };
   }, [workspaceId]);
-  if (!swLoaded) {
-    return null;
-  } else {
-    return children;
-  }
+  return null;
 };
 
 export async function setupServiceWorkerAndComlink(): Promise<Comlink.Remote<RemoteObj> | undefined> {
   try {
     // Register the service worker if it's not controlling the page
-    await unregisterServiceWorkers();
+    // await unregisterServiceWorkers();
     if (!navigator.serviceWorker.controller) {
       console.warn("Service Worker is not controlling the page.");
       await navigator.serviceWorker.register(new URL("@/lib/ImagesServiceWorker/sw.ts", import.meta.url), {
@@ -104,6 +75,7 @@ export async function setupServiceWorkerAndComlink(): Promise<Comlink.Remote<Rem
     });
   } catch (error) {
     console.error("Error setting up Service Worker and Comlink:", error);
+    throw error;
   }
 }
 
@@ -122,4 +94,31 @@ async function initializeComlink() {
   navigator.serviceWorker.controller.postMessage(msg, [port1]);
 
   return Comlink.wrap<RemoteObj>(port2);
+}
+
+async function _unregisterServiceWorkers() {
+  console.debug("Unregistering all service workers...");
+  return navigator.serviceWorker
+    .getRegistrations()
+    .then((registrations) =>
+      Promise.all(
+        registrations.map((registration) =>
+          registration
+            .unregister()
+            .then((success) => {
+              if (success) {
+                console.debug("Service Worker unregistered:", registration);
+              } else {
+                console.debug("Service Worker could not be unregistered:", registration);
+              }
+            })
+            .catch((error) => {
+              console.error("Error unregistering Service Worker:", error);
+            })
+        )
+      )
+    )
+    .catch((error) => {
+      console.error("Error getting Service Worker registrations:", error);
+    });
 }

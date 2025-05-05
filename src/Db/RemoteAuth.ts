@@ -1,4 +1,4 @@
-import { ClientDb } from "@/clientdb/instance";
+import { ClientDb } from "@/Db/instance";
 import { nanoid } from "nanoid";
 export class RemoteAuthRecord {
   guid!: string;

@@ -1,8 +1,8 @@
 "use client";
-import { TreeFile, TreeNode } from "@/clientdb/TreeNode";
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
+import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, relPath } from "@/lib/paths";
 import Link from "next/link";
 import { useEffect } from "react";

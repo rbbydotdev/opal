@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Workspace } from "@/clientdb/Workspace";
+import { Workspace } from "@/Db/Workspace";
 import { useWorkspaceRoute } from "@/context";
 import { AbsPath } from "@/lib/paths";
 import {
@@ -151,7 +151,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
         return Promise.resolve(src);
       },
       imageUploadHandler: (file) => {
-        if (!file) return;
+        // if (!file) return;
         console.log(file);
         if (file.type.endsWith("+opal")) {
           return Promise.resolve(String(file.name));
