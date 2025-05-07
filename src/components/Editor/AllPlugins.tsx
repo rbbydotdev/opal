@@ -151,8 +151,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
         return Promise.resolve(src);
       },
       imageUploadHandler: (file) => {
-        // if (!file) return;
-        console.log(file);
+        console.log("img upload handler", file);
         if (file.type.endsWith("+opal")) {
           return Promise.resolve(String(file.name));
         }

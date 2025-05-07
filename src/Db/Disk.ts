@@ -346,13 +346,16 @@ export abstract class Disk extends DiskDAO {
       oldName: oldFullPath.basename(),
     });
     if (!newFullPath) return NOCHANGE;
-    const cleanFullPath = newFullPath.dirname().join(newFullPath.basename().replace(/\//g, ":"));
+    let cleanFullPath = newFullPath.dirname().join(newFullPath.basename().replace(/\//g, ":"));
 
     if (cleanFullPath.str === oldFullPath.str) return NOCHANGE;
 
-    if (await this.pathExists(cleanFullPath)) {
-      throw new ConflictError().hint(`File already exists: ${cleanFullPath}`);
+    while (await this.pathExists(cleanFullPath)) {
+      cleanFullPath = cleanFullPath.inc();
     }
+    // if (await this.pathExists(cleanFullPath)) {
+    //   throw new ConflictError().hint(`File already exists: ${cleanFullPath}`);
+    // }
 
     try {
       await this.fs.rename(oldFullPath.str, cleanFullPath.str);

@@ -10,10 +10,9 @@ export default function Page() {
   return (
     <>
       <ClientOnly>
-        <ImgSw />
-      </ClientOnly>
-      <ClientOnly>
-        <WorkspaceLiveEditor />
+        <ImgSw>
+          <WorkspaceLiveEditor />
+        </ImgSw>
       </ClientOnly>
     </>
   );
