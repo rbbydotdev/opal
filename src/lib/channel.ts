@@ -12,6 +12,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
     super(options);
   }
   init() {
+    console.log("channel setup");
     if (ChannelSet.has(this.channelName)) {
       console.warn("Channel already exists:" + this.channelName + " ... removing");
       try {
@@ -63,6 +64,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   }
 
   tearDown = () => {
+    console.log("channel tearDown");
     ChannelSet.delete(this.channelName);
     if (this.channel) {
       this.channel.close();

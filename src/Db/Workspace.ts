@@ -212,6 +212,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeVirtualFile(path);
   }
   removeFile = async (filePath: AbsPath) => {
+    // await serviceworker.evictCache(filePath);
     return this.disk.removeFile(filePath);
   };
 
@@ -238,6 +239,9 @@ export class Workspace extends WorkspaceDAO {
     //TODO dont you need to make sure its indexed first?
     await this.disk.awaitFirstIndex();
     return this.disk.getFirstFile();
+  }
+  async awaitFirstIndex() {
+    return this.disk.awaitFirstIndex();
   }
   async dropExternalFile(file: File, targetPath: AbsPath) {
     return this.disk.newFile(targetPath.join(file.name), new Uint8Array(await file.arrayBuffer()));

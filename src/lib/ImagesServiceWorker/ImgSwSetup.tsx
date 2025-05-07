@@ -24,23 +24,21 @@ export const ImgSw = () => {
       return;
     }
 
-    let unmountFn: ((workspaceId: string) => void) | undefined;
+    // let unmountFn: ((workspaceId: string) => void) | undefined;
 
     void setupServiceWorkerAndComlink().then(async (comlink) => {
       if (comlink) {
         await Promise.all([comlink.registerLogger(Comlink.proxy(SwLogger)), comlink.mountWorkspace(workspaceId)]);
-        // await new Promise((rs) => void comlink.mountWorkspace(workspaceId, Comlink.proxy(rs)));
         console.log("Mounted workspace");
-        unmountFn = comlink.unmountWorkspace;
-        // setSwLoaded(true);
+        //>>>> i do not think this is needed unmountFn = comlink.unmountWorkspace;
       } else {
         throw new Error("Service Worker not loaded");
       }
     });
 
-    return () => {
-      if (unmountFn) unmountFn(workspaceId);
-    };
+    // return () => {
+    //   if (unmountFn) unmountFn(workspaceId);
+    // };
   }, [workspaceId]);
   return null;
 };

@@ -1,14 +1,29 @@
 import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
-import { SwLogger } from "@/lib/ImagesServiceWorker/ImgSwSetup";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths";
 import * as Comlink from "comlink";
 
+// ahhh! https://web.dev/articles/service-worker-mindset
+
+/*
+
+
+TODO: image cache is working very well, but will have to decide on a cache eviction strategy,
+should i just evict the cache when the workspace is unmounted?
+or should i evict the cache when the workspace is mounted?(
+  could cache all images in the background
+)
+or should i evict an item in the cache before its name is added as new file
+
+
+
+
+*/
 declare const self: ServiceWorkerGlobalScope;
 
 // Logger
-let LOG = (_msg: string) => {};
+let SwLogger = (_msg: string) => {};
 
 // Service Worker Installation and Activation
 self.addEventListener("install", (event: ExtendableEvent) => {
@@ -41,13 +56,19 @@ const WorkspaceStore = new (class {
     this.rejectQueue();
     this.queue = [];
   }
+  getCache() {
+    return caches.open(this.imageCacheKey);
+  }
+  clearCache() {
+    return caches.delete(this.imageCacheKey);
+  }
 
   async awaitWorkspace(): Promise<Workspace> {
     if (this.currentWorkspace) {
-      LOG(`Current Workspace: ${this.currentWorkspace?.id}`);
+      SwLogger(`Current Workspace: ${this.currentWorkspace?.id}`);
       return this.currentWorkspace;
     }
-    LOG("Awaiting workspace...");
+    SwLogger("Awaiting workspace...");
     return new Promise<Workspace>((resolve, reject) => {
       this.queue.push([resolve, reject]);
     });
@@ -75,36 +96,55 @@ const WorkspaceStore = new (class {
 // Methods exposed via Comlink
 const Methods = {
   async mountWorkspace(workspaceName: string, cb?: (_a?: unknown) => void) {
-    const workspace = await WorkspaceDAO.fetchFromNameAndInit(workspaceName);
-    if (!workspace) throw new Error("Workspace not found");
+    // await this.local.emit(DiskLocalEvents.INDEX);
+    // await this.remote.emit(DiskLocalEvents.INDEX);
+    // WorkspaceStore.peekWorkspace()?.
+    if (workspaceName !== WorkspaceStore.peekWorkspace()?.name) {
+      WorkspaceStore.tearDown();
 
-    LOG(`Mounting workspace: ${workspaceName}`);
-    WorkspaceStore.setWorkspace(workspace);
+      const workspace = await WorkspaceDAO.fetchFromNameAndInit(workspaceName);
+      if (!workspace) throw new Error("Workspace not found");
+      SwLogger(`Mounting workspace: ${workspaceName}`);
+      WorkspaceStore.setWorkspace(workspace);
+      ///EXPERIMENTAL
+      void (async function backgroundCache() {
+        await workspace.awaitFirstIndex();
+        const cache = await caches.open(WorkspaceStore.imageCacheKey);
+        for (const imgPath of workspace.getImages()) {
+          const contents = await workspace.disk.readFile(imgPath);
+          if (contents) {
+            const response = new Response(contents, {
+              headers: {
+                "Content-Type": getMimeType(imgPath.str),
+                "Cache-Control": "public, max-age=31536000, immutable",
+              },
+            });
+            await cache.put(new Request(imgPath.str), response.clone());
+          }
+        }
+      })().catch((_err) => SwLogger(`Failed background cache`));
+    }
     cb?.();
   },
 
   registerLogger(logger: (msg: string) => void) {
-    LOG = logger;
-    LOG("Logger registered");
+    SwLogger = logger;
+    SwLogger("Logger registered");
   },
 
   async index() {
     const workspace = WorkspaceStore.peekWorkspace() ?? (await WorkspaceStore.awaitWorkspace());
     if (!workspace) {
-      LOG("Reindex / workspace not found");
+      SwLogger("Reindex / workspace not found");
       return;
     }
     await workspace.disk.firstIndex();
   },
 
   async unmountWorkspace(workspaceId: string) {
-    // const workspace = await WorkspaceStore.awaitWorkspace();
-    // if (!workspace) {
-    //   LOG("Unmount workspace / Workspace not found");
-    //   return;
-    // }
-    LOG(`Unmounting workspace: ${workspaceId}`);
-    WorkspaceStore.tearDown();
+    SwLogger(`Skipping unmounting ${workspaceId} workspace experimentally yall`);
+    // LOG(`Unmounting workspace: ${workspaceId}`);
+    // WorkspaceStore.tearDown();
   },
 };
 
@@ -118,34 +158,39 @@ self.addEventListener("message", (event) => {
 // Fetch Event Listener
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (event.request.destination === "image" && !url.pathname.startsWith("/icons") && url.pathname !== "/favicon.ico") {
+  if (
+    event.request.destination === "image" &&
+    !url.pathname.startsWith("/icon" /*TODO FIX*/) &&
+    url.pathname !== "/favicon.ico"
+  ) {
     void event.respondWith(handleImageRequest(event, url));
   }
 });
 
 async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response> {
   const pathname = decodeURIComponent(url.pathname);
-  LOG(`Intercepted request for: ${url.pathname}`);
+  SwLogger(`Intercepted request for: ${url.pathname}`);
 
   const workspace = WorkspaceStore.peekWorkspace() ?? (await WorkspaceStore.awaitWorkspace());
 
   const cache = await caches.open(WorkspaceStore.imageCacheKey); // Open the cache
 
   // Check if the request is already in the cache
+  //TODO will need to evict items from the cache when its added to the cache or removed
   const cachedResponse = await cache.match(event.request);
   if (cachedResponse) {
-    LOG(`Cache hit for: ${url.pathname}`);
+    SwLogger(`Cache hit for: ${url.pathname}`);
 
     return cachedResponse;
   }
 
-  LOG(`Cache miss for: ${url.pathname}, fetching from workspace`);
+  SwLogger(`Cache miss for: ${url.pathname}, fetching from workspace`);
 
   if (!workspace) throw new Error("No workspace mounted");
 
   try {
     await Promise.race([
-      workspace.disk.awaitFirstIndex(),
+      workspace.awaitFirstIndex(),
       new Promise((_, reject) => setTimeout(() => reject(new Error("Indexing timeout")), 5000)),
     ]);
 
@@ -172,7 +217,7 @@ async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response
       return response;
     }
   } catch (error) {
-    LOG(errF`Error reading file from workspace: ${error}`.toString());
+    SwLogger(errF`Error reading file from workspace: ${error}`.toString());
   }
 
   return fetch(event.request);

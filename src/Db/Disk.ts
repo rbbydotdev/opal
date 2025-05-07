@@ -138,8 +138,7 @@ export class RenameFileType {
     };
   }
 }
-
-class DiskRemoteEvents extends Channel<{
+export class DiskRemoteEvents extends Channel<{
   [DiskRemoteEvents.RENAME]: RemoteRenameFileType;
   [DiskRemoteEvents.INDEX]: never;
   [DiskLocalEvents.WRITE]: { filePath: string };
@@ -149,7 +148,7 @@ class DiskRemoteEvents extends Channel<{
   static RENAME = "rename" as const;
 }
 
-class DiskLocalEvents extends Emittery<{
+export class DiskLocalEvents extends Emittery<{
   [DiskLocalEvents.RENAME]: RenameFileType;
   [DiskLocalEvents.INDEX]: never;
   [DiskLocalEvents.WRITE]: { filePath: string; contents: string };
@@ -171,6 +170,7 @@ export abstract class Disk extends DiskDAO {
 
   async initializeIndex() {
     try {
+      await this.hydrate(); //TODO: this should go from DAO to Disk may need to re-work workspace to do so as well
       await this.firstIndex();
       await this.local.emit(DiskLocalEvents.INDEX);
     } catch (e) {
@@ -180,7 +180,7 @@ export abstract class Disk extends DiskDAO {
   }
 
   fileTreeIndex = async ({
-    tree = TreeDirRoot.fromJSON(this.indexCache),
+    tree,
     visitor,
     writeIndexCache = true,
   }: {
@@ -189,7 +189,9 @@ export abstract class Disk extends DiskDAO {
     writeIndexCache?: boolean;
   } = {}) => {
     const newIndex = await this.fileTree.index({ tree, visitor });
-    if (writeIndexCache) await this.update({ indexCache: newIndex.toJSON() });
+    if (writeIndexCache) {
+      await this.update({ indexCache: newIndex.toJSON() });
+    }
     return newIndex;
   };
 
@@ -236,32 +238,30 @@ export abstract class Disk extends DiskDAO {
   }
 
   async init() {
-    //TODO: this should go from DAO to Disk may need to re-work workspace to do so as well
-    await this.hydrate();
-    const [_, unsub] = await Promise.all([this.initializeIndex(), this.setupRemoteListeners()]);
-    return unsub;
+    await this.initializeIndex();
+    return this.setupRemoteListeners();
   }
 
   async setupRemoteListeners() {
-    return () =>
-      [
-        this.remote.init(),
-        this.remote.on(DiskRemoteEvents.RENAME, async (data) => {
-          await this.local.emit(DiskRemoteEvents.RENAME, new RenameFileType(data));
-          await this.fileTreeIndex();
-          await this.local.emit(DiskLocalEvents.INDEX);
-          console.debug("remote rename", JSON.stringify(data, null, 4));
-        }),
-        this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
-          const contents = (await this.fs.readFile(filePath)).toString();
-          await this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
-          console.debug("remote write");
-        }),
-        this.remote.on(DiskRemoteEvents.INDEX, async () => {
-          await this.fileTreeIndex();
-          void this.local.emit(DiskLocalEvents.INDEX);
-        }),
-      ].forEach((p) => p());
+    const listeners = [
+      this.remote.init(),
+      this.remote.on(DiskRemoteEvents.RENAME, async (data) => {
+        await this.local.emit(DiskRemoteEvents.RENAME, new RenameFileType(data));
+        await this.fileTreeIndex();
+        await this.local.emit(DiskLocalEvents.INDEX);
+        console.debug("remote rename", JSON.stringify(data, null, 4));
+      }),
+      this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
+        const contents = (await this.fs.readFile(filePath)).toString();
+        await this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
+        console.debug("remote write");
+      }),
+      this.remote.on(DiskRemoteEvents.INDEX, async () => {
+        await this.fileTreeIndex();
+        void this.local.emit(DiskLocalEvents.INDEX);
+      }),
+    ];
+    return () => listeners.forEach((p) => p());
   }
 
   static defaultDiskType: DiskType = "IndexedDbDisk";
@@ -395,7 +395,7 @@ export abstract class Disk extends DiskDAO {
         throw err;
       }
     }
-    await this.fileTree.forceIndex();
+    await this.fileTreeIndex();
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskLocalEvents.INDEX);
   }
