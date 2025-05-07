@@ -87,7 +87,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const addDirFile = (type: TreeNode["type"]) => {
     const focusedNode = currentWorkspace.nodeFromPath(focused);
-    const newNode = currentWorkspace.addVirtualFile({ type, name: relPath("new" + type) }, focusedNode);
+    const name = type === "dir" ? "New-Dir" : "newfile.md";
+    const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);
     setFocused(newNode.path);
     setEditing(newNode.path);
     setVirtual(newNode.path);

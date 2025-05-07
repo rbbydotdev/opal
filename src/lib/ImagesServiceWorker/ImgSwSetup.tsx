@@ -1,49 +1,24 @@
 import { Workspace } from "@/Db/Workspace";
-import { RemoteObj } from "@/lib/ImagesServiceWorker/sw";
-import * as Comlink from "comlink";
 import { usePathname } from "next/navigation";
-import { useLayoutEffect } from "react";
-export const SwLogger = (msg: string) => {
-  console.log(
-    "%cISW:%c %s",
-    "background: purple; color: white; padding: 2px; border-radius: 3px;",
-    "background: none; color: inherit;",
-    msg
-  );
-};
+import { useLayoutEffect, useState } from "react";
 
-// export const ImgSw = ({ children }: { children: React.ReactNode }) => {
-export const ImgSw = () => {
+export const ImgSw = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
-  // const [swLoaded, setSwLoaded] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useLayoutEffect(() => {
     if (!workspaceId) {
       console.log("No current workspace");
       return;
     }
-
-    // let unmountFn: ((workspaceId: string) => void) | undefined;
-
-    void setupServiceWorkerAndComlink().then(async (comlink) => {
-      if (comlink) {
-        await Promise.all([comlink.registerLogger(Comlink.proxy(SwLogger)), comlink.mountWorkspace(workspaceId)]);
-        console.log("Mounted workspace");
-        //>>>> i do not think this is needed unmountFn = comlink.unmountWorkspace;
-      } else {
-        throw new Error("Service Worker not loaded");
-      }
-    });
-
-    // return () => {
-    //   if (unmountFn) unmountFn(workspaceId);
-    // };
+    void setupServiceWorker().then(() => setReady(true));
   }, [workspaceId]);
+  if (ready) return children;
   return null;
 };
 
-export async function setupServiceWorkerAndComlink(): Promise<Comlink.Remote<RemoteObj> | undefined> {
+export async function setupServiceWorker(): Promise<void> {
   try {
     // Register the service worker if it's not controlling the page
     // await unregisterServiceWorkers();
@@ -56,67 +31,10 @@ export async function setupServiceWorkerAndComlink(): Promise<Comlink.Remote<Rem
 
       // Wait for the service worker to be ready
       await navigator.serviceWorker.ready;
+      console.log("service worker ready");
     }
-
-    // Listen for the controllerchange event to ensure the service worker is controlling the page
-    return new Promise((resolve) => {
-      if (navigator.serviceWorker.controller) {
-        // If already controlled, initialize Comlink immediately
-        resolve(initializeComlink());
-      } else {
-        // Otherwise, wait for the controllerchange event
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          console.log("Service Worker is now controlling the page.");
-          resolve(initializeComlink());
-        });
-      }
-    });
   } catch (error) {
     console.error("Error setting up Service Worker and Comlink:", error);
     throw error;
   }
-}
-
-async function initializeComlink() {
-  if (!navigator.serviceWorker.controller) {
-    console.warn("Service Worker is not controlling the page.");
-    return;
-  }
-
-  const { port1, port2 } = new MessageChannel();
-  const msg = {
-    comlinkInit: true,
-    port: port1,
-  };
-
-  navigator.serviceWorker.controller.postMessage(msg, [port1]);
-
-  return Comlink.wrap<RemoteObj>(port2);
-}
-
-async function _unregisterServiceWorkers() {
-  console.debug("Unregistering all service workers...");
-  return navigator.serviceWorker
-    .getRegistrations()
-    .then((registrations) =>
-      Promise.all(
-        registrations.map((registration) =>
-          registration
-            .unregister()
-            .then((success) => {
-              if (success) {
-                console.debug("Service Worker unregistered:", registration);
-              } else {
-                console.debug("Service Worker could not be unregistered:", registration);
-              }
-            })
-            .catch((error) => {
-              console.error("Error unregistering Service Worker:", error);
-            })
-        )
-      )
-    )
-    .catch((error) => {
-      console.error("Error getting Service Worker registrations:", error);
-    });
 }
