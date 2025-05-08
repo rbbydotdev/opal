@@ -27,7 +27,6 @@ const defaultValues: Partial<WorkspaceFormValues> = {
 };
 
 export default function WorkspaceSettingsPage() {
-  // Initialize the form
   const form = useForm<WorkspaceFormValues>({
     resolver: zodResolver(workspaceFormSchema),
     defaultValues,
@@ -53,51 +52,53 @@ export default function WorkspaceSettingsPage() {
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Workspace Settings</h1>
-      <div className="border-2 rounded-lg p-4 flex flex-col">
-        <h2 className="text-lg font-bold mb-4">General</h2>
+    <div className="flex w-full items-center justify-center">
+      <div className="p-4 max-w-lg w-full">
+        <h1 className="text-2xl font-bold mb-4">Workspace Settings</h1>
+        <div className="border-2 rounded-lg p-4 flex flex-col">
+          <h2 className="text-lg font-bold mb-4">General</h2>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="workspaceName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-bold">Workspace Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="My Workspace" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="workspaceName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-bold">Workspace Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="My Workspace" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="workspaceDescription"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-bold">Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Describe your workspace" className="resize-none" {...field} />
-                  </FormControl>
-                  <FormDescription>Brief description of your workspace&apos;s purpose.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="workspaceDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-bold">Description</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Describe your workspace" className="resize-none" {...field} />
+                    </FormControl>
+                    <FormDescription>Brief description of your workspace&apos;s purpose.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <Button type="submit">Save Changes</Button>
-          </form>
-        </Form>
+              <Button type="submit">Save Changes</Button>
+            </form>
+          </Form>
 
-        <h2 className="text-lg font-bold mt-8 mb-4">Danger Zone</h2>
-        <div className="flex flex-col space-y-4">
-          <Button variant="destructive" onClick={handleDeleteWorkspace}>
-            Delete Workspace
-          </Button>
+          <h2 className="text-lg font-bold mt-8 mb-4">Danger Zone</h2>
+          <div className="flex flex-col space-y-4">
+            <Button variant="destructive" onClick={handleDeleteWorkspace}>
+              Delete Workspace
+            </Button>
+          </div>
         </div>
       </div>
     </div>

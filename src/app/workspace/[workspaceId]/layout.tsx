@@ -4,11 +4,13 @@ import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuContextProvider } from "@/components/FileTreeContext";
 import { WorkerContextProvider } from "@/components/SWImages";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { Toaster } from "@/components/ui/toaster";
 import React from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <FileTreeMenuContextProvider>
+      <Toaster />
       <div className="w-full flex flex-col h-screen">
         <div className="w-full h-[32px] flex-shrink-0 flex justify-start pl-2 items-center bg-secondary-foreground text-white font-mono uppercase truncate overflow-hidden whitespace-nowrap ">
           <WorkspaceStatus />
