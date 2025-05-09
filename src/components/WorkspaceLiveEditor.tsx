@@ -51,7 +51,7 @@ export function ImageViewer({
   }
   return (
     <div className="p-4 border-2 m-auto flex justify-center items-center h-full w-full flex-col">
-      <img className="max-h-[85%]" alt={alt} src={origSrc} />
+      <img className="max-h-[500px] aspect-auto" alt={alt} src={origSrc} />
       {/* <img className="max-h-[85%]" alt={alt} src={imgSrc} /> */}
     </div>
   );

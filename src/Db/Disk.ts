@@ -14,7 +14,7 @@ import path from "path";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
 
 // Utility type to make certain properties optional
-export type DiskJType = { guid: string; type: DiskType; fs: Record<string, string> };
+export type DiskJType = { guid: string; type: DiskType };
 
 export const DiskTypes = ["IndexedDbDisk", "MemDisk", "DexieFsDbDisk", "NullDisk"] as const;
 export type DiskType = (typeof DiskTypes)[number];
@@ -61,6 +61,18 @@ export class DiskDAO implements DiskRecord {
 
   constructor(disk: Optional<DiskRecord, "indexCache">) {
     return Object.assign(this, disk);
+  }
+
+  static fromJSON(json: DiskJType) {
+    return new DiskDAO(json);
+  }
+
+  toJSON({ includeIndexCache = false }: { includeIndexCache?: boolean } = {}) {
+    return {
+      guid: this.guid,
+      type: this.type,
+      ...(includeIndexCache ? { indexCache: this.indexCache } : {}),
+    };
   }
 
   static new(type: DiskType = Disk.defaultDiskType) {
@@ -159,8 +171,6 @@ export class DiskLocalEvents extends Emittery<{
   static RENAME = "rename" as const;
 }
 export abstract class Disk extends DiskDAO {
-  indexId: string = "";
-
   remote: DiskRemoteEvents;
   local = new DiskLocalEvents();
 
@@ -191,6 +201,8 @@ export abstract class Disk extends DiskDAO {
   } = {}) => {
     const newIndex = await this.fileTree.index({ tree, visitor });
     if (writeIndexCache) {
+      try {
+      } catch (_e) {}
       await this.update({ indexCache: newIndex.toJSON() });
     }
     return newIndex;
@@ -269,16 +281,16 @@ export abstract class Disk extends DiskDAO {
 
   static guid = () => "disk:" + nanoid();
 
-  static fromURI(uriStr: string) {
-    const [type, ...guid] = uriStr.split("@");
-    if (!DiskTypes.includes(type as DiskType)) {
-      throw new Error(`Invalid disk type: ${type}`);
-    }
-    return Disk.from({ guid: guid.join("@"), type: type as DiskType });
-  }
-  toURI() {
-    return `${this.type}@${this.guid}`;
-  }
+  // static fromURI(uriStr: string) {
+  //   const [type, ...guid] = uriStr.split("@");
+  //   if (!DiskTypes.includes(type as DiskType)) {
+  //     throw new Error(`Invalid disk type: ${type}`);
+  //   }
+  //   return Disk.from({ guid: guid.join("@"), type: type as DiskType });
+  // }
+  // toURI() {
+  //   return `${this.type}@${this.guid}`;
+  // }
   static from({ guid, type }: { guid: string; type: DiskType }): Disk {
     return new {
       [IndexedDbDisk.type]: IndexedDbDisk,
@@ -460,10 +472,6 @@ export abstract class Disk extends DiskDAO {
       }
       throw e;
     }
-  }
-
-  toJSON() {
-    return { guid: this.guid, type: this.type } as DiskRecord;
   }
 
   async delete() {

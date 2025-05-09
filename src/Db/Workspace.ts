@@ -1,18 +1,18 @@
 "use client";
-import { Disk, DiskDAO, IndexedDbDisk, NullDisk } from "@/Db/Disk";
+import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, isAncestor, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
-import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
+import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./RemoteAuth";
 
 export class WorkspaceRecord {
   guid!: string;
   name!: string;
-  diskGuid!: string;
+  disk!: DiskJType;
   createdAt!: Date;
-  remoteAuthGuid!: string;
+  remoteAuth!: RemoteAuthJType;
 }
 
 export class WorkspaceDAO implements WorkspaceRecord {
@@ -21,11 +21,16 @@ export class WorkspaceDAO implements WorkspaceRecord {
 
   guid!: string;
   name!: string;
-  diskGuid!: string;
+  disk!: DiskJType;
   createdAt!: Date;
-  remoteAuthGuid!: string;
+  remoteAuth!: RemoteAuthJType;
+
   RemoteAuth?: RemoteAuthDAO;
   Disk?: DiskDAO;
+
+  static fromJSON(json: WorkspaceRecord) {
+    return new WorkspaceDAO(json);
+  }
 
   static async allDAO() {
     return ClientDb.workspaces.toArray();
@@ -41,8 +46,8 @@ export class WorkspaceDAO implements WorkspaceRecord {
     return ClientDb.workspaces.put({
       guid: this.guid,
       name: this.name,
-      diskGuid: this.diskGuid,
-      remoteAuthGuid: this.remoteAuthGuid,
+      disk: this.disk,
+      remoteAuth: this.remoteAuth,
       createdAt: this.createdAt,
     });
   };
@@ -54,25 +59,15 @@ export class WorkspaceDAO implements WorkspaceRecord {
     const workspace = new WorkspaceDAO({
       name,
       guid: WorkspaceDAO.guid(),
-      diskGuid: disk.guid,
-      remoteAuthGuid: remoteAuth.guid,
+      disk: disk.toJSON(),
+      remoteAuth: remoteAuth.toJSON(),
       createdAt: new Date(),
     });
-    await ClientDb.transaction(
-      "rw",
-      ClientDb.disks,
-      ClientDb.remoteAuths,
-      ClientDb.workspaces,
-      async () => {
-        //TODO will this work?
-        //mem leak?
-        return await Promise.all([
-          disk.save(),
-          remoteAuth.save(),
-          workspace.save(),
-        ]);
-      }
-    );
+    await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
+      //TODO will this work?
+      //mem leak?
+      return await Promise.all([disk.save(), remoteAuth.save(), workspace.save()]);
+    });
 
     return new Workspace({ ...workspace, remoteAuth, disk });
   }
@@ -82,18 +77,12 @@ export class WorkspaceDAO implements WorkspaceRecord {
 
     const wsd = new WorkspaceDAO(ws);
 
-    const [auth, disk] = await Promise.all([
-      wsd.getRemoteAuth(),
-      wsd.getDisk(),
-    ]);
+    const [auth, disk] = await Promise.all([wsd.getRemoteAuth(), wsd.getDisk()]);
 
     return new Workspace({ ...wsd, remoteAuth: auth, disk });
   }
   async withRelations() {
-    const [auth, disk] = await Promise.all([
-      this.getRemoteAuth(),
-      this.getDisk(),
-    ]);
+    const [auth, disk] = await Promise.all([this.getRemoteAuth(), this.getDisk()]);
     this.RemoteAuth = auth;
     this.Disk = disk;
     return this;
@@ -107,36 +96,26 @@ export class WorkspaceDAO implements WorkspaceRecord {
   }
 
   private async getRemoteAuth() {
-    const remoteAuth = await ClientDb.remoteAuths
-      .where("guid")
-      .equals(this.remoteAuthGuid)
-      .first();
+    const remoteAuth = await ClientDb.remoteAuths.where("guid").equals(this.remoteAuth.guid).first();
     if (!remoteAuth) throw new NotFoundError("RemoteAuth not found");
     return new RemoteAuthDAO(remoteAuth);
   }
   private async getDisk() {
-    const disk = await ClientDb.disks
-      .where("guid")
-      .equals(this.diskGuid)
-      .first();
+    const disk = await ClientDb.disks.where("guid").equals(this.disk.guid).first();
 
     if (!disk) throw new NotFoundError("Disk not found");
     return new DiskDAO(disk);
   }
 
   static async fetchFromRoute(route: string) {
-    if (!isAncestor(route, Workspace.rootRoute))
-      throw new BadRequestError("Invalid route").hint(route);
+    if (!isAncestor(route, Workspace.rootRoute)) throw new BadRequestError("Invalid route").hint(route);
 
     const name = route.slice(Workspace.rootRoute.length + 1).split("/")[0];
 
     const ws =
       (await ClientDb.workspaces.where("name").equals(name).first()) ??
       (await ClientDb.workspaces.where("guid").equals(name).first());
-    if (!ws)
-      throw new NotFoundError(
-        errF`Workspace not found name:${name}, guid:${name}`
-      );
+    if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}, guid:${name}`);
     return (await new WorkspaceDAO(ws).withRelations()).toModel();
   }
   static async fetchFromGuid(guid: string) {
@@ -197,14 +176,13 @@ export class Workspace extends WorkspaceDAO {
     super({
       name,
       guid,
-      diskGuid: disk.guid,
-      remoteAuthGuid: remoteAuth.guid,
+      disk: disk.toJSON(),
+      remoteAuth: remoteAuth.toJSON(),
       createdAt: new Date(),
     });
     this.name = name;
     this.guid = guid;
-    this.remoteAuth =
-      remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
+    this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
   }
 
@@ -213,9 +191,7 @@ export class Workspace extends WorkspaceDAO {
   }
 
   static parseWorkspacePath(pathname: string) {
-    const workspaceRouteRegex = new RegExp(
-      `^${Workspace.rootRoute.replace(/\//g, "\\/")}\\/([^/]+)(\\/.*)?$`
-    );
+    const workspaceRouteRegex = new RegExp(`^${Workspace.rootRoute.replace(/\//g, "\\/")}\\/([^/]+)(\\/.*)?$`);
     const match = pathname.match(workspaceRouteRegex);
     if (!match) {
       return { workspaceId: null, filePath: null };
@@ -236,9 +212,7 @@ export class Workspace extends WorkspaceDAO {
   replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
-    return this.resolveFileUrl(
-      absPath(filePath.replace(oldPath.str, newPath.str))
-    );
+    return this.resolveFileUrl(absPath(filePath.replace(oldPath.str, newPath.str)));
   }
 
   newDir(dirPath: AbsPath, newDirName: RelPath) {
@@ -247,10 +221,7 @@ export class Workspace extends WorkspaceDAO {
   newFile(dirPath: AbsPath, newFileName: RelPath, content = "") {
     return this.disk.newFile(dirPath.join(newFileName), content);
   }
-  addVirtualFile(
-    { type, name }: { type: TreeNode["type"]; name: TreeNode["name"] },
-    selectedNode: TreeNode | null
-  ) {
+  addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {
     return this.disk.addVirtualFile({ type, name }, selectedNode);
   }
   removeVirtualfile(path: AbsPath) {
@@ -262,10 +233,7 @@ export class Workspace extends WorkspaceDAO {
   };
 
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { newPath } = await this.disk.renameDirFile(
-      oldNode.path,
-      newFullPath
-    );
+    const { newPath } = await this.disk.renameDirFile(oldNode.path, newFullPath);
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode);
     return newNode;
@@ -292,10 +260,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.awaitFirstIndex();
   }
   async dropExternalFile(file: File, targetPath: AbsPath) {
-    return this.disk.newFile(
-      targetPath.join(file.name),
-      new Uint8Array(await file.arrayBuffer())
-    );
+    return this.disk.newFile(targetPath.join(file.name), new Uint8Array(await file.arrayBuffer()));
   }
 
   getFileTreeRoot() {
@@ -326,24 +291,26 @@ export class Workspace extends WorkspaceDAO {
       guid: this.guid,
       href: this.href,
       createdAt: this.createdAt,
-      remoteAuthGuid: this.remoteAuth.guid,
-      diskGuid: this.disk.guid,
+      remoteAuth: this.remoteAuth.toJSON(),
+      disk: this.disk.toJSON(),
     } satisfies WorkspaceRecord & { href: string };
   }
 
+  // serialize() {
+  //   return {
+  //     ...this.toJSON(),
+  //     disk: this.disk.toJSON({ includeIndexCache: true }),
+  //   };
+  // }
+  // static async deserialize(data: ReturnType<Workspace["serialize"]>) {
+  //   const disk = await Disk.fromJSON(data.disk);
+  //   return new Workspace({ ...data, disk, remoteAuth: new NullRemoteAuth() });
+  // }
+
   delete = async () => {
-    await ClientDb.transaction(
-      "rw",
-      ClientDb.workspaces,
-      ClientDb.disks,
-      async () => {
-        await Promise.all([
-          ClientDb.workspaces.delete(this.guid),
-          this.disk.teardown(),
-          this.disk.delete(),
-        ]);
-      }
-    );
+    await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
+      await Promise.all([ClientDb.workspaces.delete(this.guid), this.disk.teardown(), this.disk.delete()]);
+    });
   };
 
   home = () => {
@@ -393,15 +360,5 @@ export class NullWorkspace extends Workspace {
       disk: new NullDisk(),
       remoteAuth: new NullRemoteAuth(),
     });
-  }
-}
-
-export class Foo {
-  constructor(public bar: string) {}
-  get baz() {
-    return this.bar;
-  }
-  set baz(value: string) {
-    this.bar = value;
   }
 }

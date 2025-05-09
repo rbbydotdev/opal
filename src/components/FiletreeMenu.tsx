@@ -2,11 +2,11 @@ import { Workspace } from "@/Db/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { isTreeDir, TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
+import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
+import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import clsx from "clsx";
 import React from "react";
 import { isAncestor } from "../lib/paths";
@@ -21,6 +21,7 @@ const ACCEPTED_FILE_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
+  "image/gif",
 ];
 
 const isAcceptedFileType = (file: File) => ACCEPTED_FILE_TYPES.includes(file.type);
@@ -30,15 +31,7 @@ export function FileTreeContainer({
   fileTreeDir,
   workspaceRoute,
   ...props
-}: {
-  workspaceRoute: WorkspaceRouteType;
-  currentWorkspace: Workspace;
-  workspaces: Workspace[];
-  fileTreeDir: TreeDir;
-  flatTree: string[];
-  firstFile: TreeFile | null;
-  isIndexed: boolean;
-} & React.ComponentProps<typeof FileTreeMenuInternal>) {
+}: WorkspaceContextType & React.ComponentProps<typeof FileTreeMenuInternal>) {
   return (
     <FileTreeMenuInternal
       {...props}
@@ -49,7 +42,7 @@ export function FileTreeContainer({
   );
 }
 
-const INTERNAL_FILE_TYPE = "application/x-opal-filetree-drag-drop";
+const INTERNAL_FILE_TYPE = "application/x-opal";
 
 function useFileTreeDragAndDrop({
   currentWorkspace,
@@ -79,16 +72,18 @@ function useFileTreeDragAndDrop({
     // Set the effect allowed for the drag operation
     event.dataTransfer.effectAllowed = "all";
 
+    //log event.dataTransfer items
+    event.dataTransfer.clearData();
+
     // Set the internal file type data
     event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
 
-    allFiles.filter(Boolean).forEach((fpath) => {
-      // Create a new File object with an empty Blob and the desired MIME type
-      const mimeType = currentWorkspace.disk.nodeFromPath(AbsPath.New(fpath))?.mimeType + ";opal-virtual";
-      event.dataTransfer.setData(mimeType, fpath);
-    });
+    event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${url}">${url}</a>`).join("\n"));
 
-    console.log("Drag Start");
+    allFiles.filter(Boolean).forEach((fpath) => {
+      const mimeType = currentWorkspace.disk.nodeFromPath(AbsPath.New(fpath))?.mimeType;
+      event.dataTransfer.setData(mimeType!, fpath);
+    });
   };
 
   const handleDragOver = (event: React.DragEvent) => {
@@ -179,9 +174,8 @@ function FileTreeMenuInternal({
     >
       {Object.values(fileTreeDir.children).map((file) => (
         <Collapsible
-          key={file.path.str}
+          key={`${file.path.str}:${!!expanded[file.path.str]}`}
           open={expanded[file.path.str]}
-          defaultOpen={expanded[file.path.str]}
           onOpenChange={(o) => expand(file.path.str, o)}
         >
           <SidebarMenuItem
@@ -192,7 +186,7 @@ function FileTreeMenuInternal({
           >
             <CollapsibleTrigger asChild>
               <SidebarMenuButton asChild>
-                {isTreeDir(file) ? (
+                {file.isTreeDir() ? (
                   <EditableDir
                     workspaceRoute={workspaceRoute}
                     currentWorkspace={currentWorkspace}

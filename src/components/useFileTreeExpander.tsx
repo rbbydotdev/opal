@@ -7,12 +7,6 @@ import { isAncestor } from "../lib/paths";
 
 function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) {
   if (!file) return exp;
-  /*
-
-    /helloworld
-    /helloworld123
-split?
-  */
   dirTree.filter((dir) => isAncestor(file, dir)).forEach((d) => (exp[d] = true));
   return exp;
 }
