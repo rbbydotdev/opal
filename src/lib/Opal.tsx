@@ -13,7 +13,7 @@ export const Opal = ({ size = 28, invert }: { size?: number; invert?: boolean })
         <circle cx="14" cy="14" r="14" fill="white"></circle> {/* Centered and full radius */}
       </mask>
     </defs>
-    <g mask="url(#circleMask)">
+    <g>
       <rect width="28" height="28" fill="rgb(255, 248, 240)"></rect>
       <circle cx="3.5" cy="3.5" r="2.905" fill="rgb(102, 153, 255)" opacity="0.93"></circle>
       <circle cx="10.5" cy="3.5" r="2.87" fill="rgb(255, 102, 178)" opacity="0.72"></circle>
