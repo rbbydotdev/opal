@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useWorkspaceContext } from "@/context";
 import { toast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -20,17 +21,25 @@ const workspaceFormSchema = z.object({
 
 type WorkspaceFormValues = z.infer<typeof workspaceFormSchema>;
 
-// Default values for the form
+// // Default values for the form
 const defaultValues: Partial<WorkspaceFormValues> = {
   workspaceName: "",
-  workspaceDescription: "",
 };
 
-export default function WorkspaceSettingsPage() {
+export default function Page() {
+  const { currentWorkspace } = useWorkspaceContext();
   const form = useForm<WorkspaceFormValues>({
     resolver: zodResolver(workspaceFormSchema),
     defaultValues,
   });
+  useEffect(() => {
+    if (!currentWorkspace.isNull) {
+      form.reset({
+        workspaceName: currentWorkspace.name,
+      });
+      console.log(currentWorkspace.name, "reset");
+    }
+  }, [currentWorkspace, form]);
 
   // Form submission handler
   function onSubmit(data: WorkspaceFormValues) {
@@ -74,7 +83,7 @@ export default function WorkspaceSettingsPage() {
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="workspaceDescription"
                 render={({ field }) => (
@@ -87,7 +96,7 @@ export default function WorkspaceSettingsPage() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               <Button type="submit">Save Changes</Button>
             </form>

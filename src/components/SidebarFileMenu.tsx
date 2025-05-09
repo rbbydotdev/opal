@@ -131,6 +131,12 @@ function SidebarFileMenuInternal({
       <SidebarGroupLabel>
         <div className="w-full">Files</div>
       </SidebarGroupLabel>
+
+      <SidebarGroupContent className="overflow-y-scroll max-h-12 scrollbar-thin p-0 pb-16 max-w-full overflow-x-hidden"></SidebarGroupContent>
+
+      <SidebarGroupLabel>
+        <div className="w-full">Files</div>
+      </SidebarGroupLabel>
       <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full overflow-x-hidden">
         {!Object.keys(fileTreeDir.children).length ? (
           <div className="w-full">
