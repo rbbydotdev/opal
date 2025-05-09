@@ -19,7 +19,11 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 // Fetch Event Listener
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (event.request.destination === "image" && url.pathname !== "/favicon.ico") {
+  if (
+    event.request.destination === "image" &&
+    url.origin === self.location.origin && // Only intercept local requests
+    url.pathname !== "/favicon.ico"
+  ) {
     void event.respondWith(handleImageRequest(event, url));
   }
 });

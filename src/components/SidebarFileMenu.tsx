@@ -1,13 +1,12 @@
 "use client";
-import { Workspace } from "@/Db/Workspace";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/components/useWorkspaceFileMgmt";
-import { withCurrentWorkspace, WorkspaceRouteType } from "@/context";
-import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
+import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { CopyMinus, FilePlus, FolderPlus, Settings, Trash2, Undo } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,15 +22,7 @@ function SidebarFileMenuInternal({
   firstFile,
   workspaces,
   ...props
-}: {
-  workspaceRoute: WorkspaceRouteType;
-  currentWorkspace: Workspace;
-  workspaces: Workspace[];
-  fileTreeDir: TreeDir;
-  flatTree: string[];
-  firstFile: TreeFile | null;
-  isIndexed: boolean;
-} & React.ComponentProps<typeof SidebarGroup>) {
+}: WorkspaceContextType & React.ComponentProps<typeof SidebarGroup>) {
   const { renameFile, addDirFile, removeFiles } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,

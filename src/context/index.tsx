@@ -8,7 +8,6 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 
 const NULL_WORKSPACE = new NullWorkspace();
-console.log(NULL_WORKSPACE.toJSON());
 const NULL_TREE_ROOT = new TreeDirRoot();
 
 const defaultWorkspaceContext = {
@@ -21,7 +20,7 @@ const defaultWorkspaceContext = {
   workspaceRoute: { id: null, path: null } as WorkspaceRouteType,
 };
 
-type DeepNonNullable<T extends object, K extends keyof T = never> = {
+export type DeepNonNullable<T extends object, K extends keyof T = never> = {
   [P in keyof T]: P extends K
     ? T[P]
     : NonNullable<T[P]> extends T

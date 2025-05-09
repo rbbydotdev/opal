@@ -136,6 +136,13 @@ export class TreeNode {
     }
     return new TreeNode({ ...json, parent });
   }
+  isTreeDir(): this is TreeDir {
+    // return isTreeDir(this);
+    return this.type === "dir";
+  }
+  isTreeFile(): this is TreeFile {
+    return this.type === "file";
+  }
   toJSON(): {
     name: string;
     type: "dir" | "file";
