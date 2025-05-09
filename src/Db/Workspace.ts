@@ -144,7 +144,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
   static async fetchFromName(name: string, options: { throwNotFound: boolean }): Promise<Workspace | null>;
   static async fetchFromName(
     name: string,
-    options: { throwNotFound: boolean } = { throwNotFound: false }
+    options: { throwNotFound: boolean } = { throwNotFound: true }
   ): Promise<Workspace | null> {
     const ws = await ClientDb.workspaces.where("name").equals(name).first();
     if (!ws) {
