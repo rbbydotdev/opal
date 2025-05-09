@@ -84,7 +84,7 @@ export function WorkSpaceButtonBar() {
         className="text-3xs"
       />
 
-      {currentWorkspace ? (
+      {!currentWorkspace.isNull ? (
         <BigButton
           icon={<Identicon input={currentWorkspace.guid} size={4} scale={7} />}
           title={currentWorkspace.name}

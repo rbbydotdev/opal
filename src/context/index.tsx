@@ -1,5 +1,5 @@
 "use client";
-import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
+import { NullWorkspace, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { TreeDir, TreeDirRoot, TreeFile } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor } from "@/lib/paths";
@@ -7,13 +7,17 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 
+const NULL_WORKSPACE = new NullWorkspace();
+console.log(NULL_WORKSPACE.toJSON());
+const NULL_TREE_ROOT = new TreeDirRoot();
+
 const defaultWorkspaceContext = {
-  fileTreeDir: null as TreeDir | null,
+  fileTreeDir: NULL_TREE_ROOT,
   firstFile: null as TreeFile | null,
   workspaces: [] as WorkspaceDAO[],
   flatTree: [] as string[],
   isIndexed: false,
-  currentWorkspace: null as Workspace | null,
+  currentWorkspace: NULL_WORKSPACE,
   workspaceRoute: { id: null, path: null } as WorkspaceRouteType,
 };
 
@@ -92,9 +96,9 @@ export function useWorkspaceRoute() {
   return workspaceRoute;
 }
 
-export function useWatchWorkspaceFileTree(currentWorkspace: Workspace | null) {
+export function useWatchWorkspaceFileTree(currentWorkspace: Workspace) {
   const [isIndexed, setIsIndexed] = useState(currentWorkspace?.isIndexed ?? false);
-  const [fileTreeDir, setFileTree] = useState<TreeDir | null>(null);
+  const [fileTreeDir, setFileTree] = useState<TreeDirRoot>(NULL_TREE_ROOT);
   const [firstFile, setFirstFile] = useState<TreeFile | null>(null);
   const [flatTree, setFlatTree] = useState<string[]>([]);
 
@@ -125,13 +129,13 @@ export function useLiveWorkspaces() {
 export function useWorkspaceFromRoute() {
   const pathname = usePathname();
   const router = useRouter();
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
   const workspaceRoute = useWorkspaceRoute();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
 
   useEffect(() => {
     if (workspaceId === "new" || !workspaceId) {
-      setCurrentWorkspace(null);
+      setCurrentWorkspace(NULL_WORKSPACE);
       return;
     }
     const workspace = WorkspaceDAO.fetchFromNameAndInit(workspaceId).then((ws) => {
@@ -157,7 +161,7 @@ export function useWorkspaceFromRoute() {
   }, [currentWorkspace, pathname, router, workspaceRoute.path]);
 
   //pathname is sync current workspace is async update therefor if out of sync return null
-  if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return null;
+  if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return new NullWorkspace();
   return currentWorkspace;
 }
 
@@ -166,15 +170,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaceRoute = useWorkspaceRoute();
   const currentWorkspace = useWorkspaceFromRoute();
   const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
-
-  // //keep at least one file open if possible
-  // const router = useRouter();
-  // useEffect(() => {
-  //   if (!workspaceRoute.path && workspaceRoute.id && currentWorkspace && isIndexed) {
-  //     const firstFile = currentWorkspace.getFirstFile();
-  //     if (firstFile) router.push(currentWorkspace.resolveFileUrl(firstFile.path));
-  //   }
-  // }, [currentWorkspace, fileTreeDir, isIndexed, router, workspaceRoute.id, workspaceRoute.path]);
 
   return (
     <WorkspaceContext.Provider
@@ -197,7 +192,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 export function withCurrentWorkspace<T extends NonNullWorkspaceContext>(Component: React.ComponentType<T>) {
   return function WrappedComponent(props: Omit<T, keyof NonNullWorkspaceContext>) {
     const context = useWorkspaceContext();
-    if (!context.fileTreeDir || !context.currentWorkspace) return null;
     return <Component {...(props as T)} {...context} />;
   };
 }

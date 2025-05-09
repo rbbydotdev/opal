@@ -2,7 +2,7 @@
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { ClientDb } from "@/Db/instance";
 import { Channel } from "@/lib/channel";
-import { ConflictError, errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
+import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
 import { Optional } from "@/types";
@@ -16,7 +16,8 @@ import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../l
 // Utility type to make certain properties optional
 export type DiskJType = { guid: string; type: DiskType; fs: Record<string, string> };
 
-export type DiskType = "IndexedDbDisk" | "MemDisk" | "DexieFsDbDisk";
+export const DiskTypes = ["IndexedDbDisk", "MemDisk", "DexieFsDbDisk", "NullDisk"] as const;
+export type DiskType = (typeof DiskTypes)[number];
 
 interface CommonFileSystem {
   readdir(path: string): Promise<
@@ -55,7 +56,7 @@ export class DiskRecord {
 export class DiskDAO implements DiskRecord {
   guid!: string;
   type!: DiskType;
-  indexCache: TreeDirRootJType = FileTree.EmptyFileTree().toJSON();
+  indexCache: TreeDirRootJType = new TreeDirRoot().toJSON();
   static guid = () => "disk:" + nanoid();
 
   constructor(disk: Optional<DiskRecord, "indexCache">) {
@@ -268,19 +269,22 @@ export abstract class Disk extends DiskDAO {
 
   static guid = () => "disk:" + nanoid();
 
-  static new(guid: string = Disk.guid(), type: DiskType = Disk.defaultDiskType) {
-    return new {
-      [IndexedDbDisk.type]: IndexedDbDisk,
-      [MemDisk.type]: MemDisk,
-      [DexieFsDbDisk.type]: DexieFsDbDisk,
-    }[type](guid);
+  static fromURI(uriStr: string) {
+    const [type, ...guid] = uriStr.split("@");
+    if (!DiskTypes.includes(type as DiskType)) {
+      throw new Error(`Invalid disk type: ${type}`);
+    }
+    return Disk.from({ guid: guid.join("@"), type: type as DiskType });
   }
-
+  toURI() {
+    return `${this.type}@${this.guid}`;
+  }
   static from({ guid, type }: { guid: string; type: DiskType }): Disk {
     return new {
       [IndexedDbDisk.type]: IndexedDbDisk,
       [MemDisk.type]: MemDisk,
       [DexieFsDbDisk.type]: DexieFsDbDisk,
+      [NullDisk.type]: NullDisk,
     }[type](guid);
   }
 
@@ -353,9 +357,6 @@ export abstract class Disk extends DiskDAO {
     while (await this.pathExists(cleanFullPath)) {
       cleanFullPath = cleanFullPath.inc();
     }
-    // if (await this.pathExists(cleanFullPath)) {
-    //   throw new ConflictError().hint(`File already exists: ${cleanFullPath}`);
-    // }
 
     try {
       await this.fs.rename(oldFullPath.str, cleanFullPath.str);
@@ -508,5 +509,14 @@ export class MemDisk extends Disk {
     const fs = memfs().fs;
     const ft = new FileTree(fs.promises, guid);
     super(guid, fs.promises, ft, MemDisk.type);
+  }
+}
+
+export class NullDisk extends Disk {
+  static type: DiskType = "NullDisk";
+  constructor() {
+    const fs = memfs().fs;
+    const ft = new FileTree(fs.promises, "null");
+    super("null", fs.promises, ft, NullDisk.type);
   }
 }

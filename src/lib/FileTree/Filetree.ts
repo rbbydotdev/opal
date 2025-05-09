@@ -14,8 +14,6 @@ import { AbsPath, relPath, RelPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 
 export class FileTree {
-  static EmptyFileTree = () => new TreeDirRoot();
-
   initialIndex = false;
   guid: string;
   cacheId: string;
@@ -23,7 +21,7 @@ export class FileTree {
   dirs: TreeList = [];
   // nodeList: (TreeNode | null)[] = [];
   private map = new Map<string, TreeNode>();
-  public root: TreeDirRoot = FileTree.EmptyFileTree();
+  public root: TreeDirRoot = new TreeDirRoot();
 
   // private tree: TreeDir = this.root;
   constructor(private fs: FileSystem, guid: string) {
@@ -95,21 +93,9 @@ export class FileTree {
     return tree;
   }
 
-  // clearCache() {
-  //   // return set(this.cacheId, null);
-  // }
-  // private loadRootFromCache = async () => {
-  //   console.debug("Loading root from cache...", this.cacheId);
-  //   // const cache = await get(this.cacheId);
-  //   const cache = null;
-  //   console.debug("Cache:", typeof cache);
-  //   if (!cache) return FileTree.EmptyFileTree();
-  //   const tree = TreeDirRoot.fromJSON(JSON.parse(cache) as TreeNodeDirJType);
-  //   return tree;
-  // };
-
   index = async ({
-    tree = FileTree.EmptyFileTree(),
+    tree = new TreeDirRoot(),
+
     visitor,
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
     const release = await this.mutex.acquire();

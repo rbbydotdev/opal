@@ -51,3 +51,19 @@ export class RemoteAuth implements RemoteAuthRecord {
     Object.assign(this, ra);
   }
 }
+
+export class NullRemoteAuth extends RemoteAuthDAO {
+  constructor() {
+    super({
+      guid: "",
+      type: "",
+      accessToken: "",
+      tokenType: "",
+      expiresIn: 0,
+      refreshToken: "",
+      scope: "",
+      obtainedAt: 0,
+      idToken: "",
+    });
+  }
+}
