@@ -2,6 +2,9 @@ import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths";
+
+const WHITELIST = ["/opal.svg", "/favicon.ico"];
+
 declare const self: ServiceWorkerGlobalScope;
 
 // Logger
@@ -22,7 +25,8 @@ self.addEventListener("fetch", (event) => {
   if (
     event.request.destination === "image" &&
     url.origin === self.location.origin && // Only intercept local requests
-    url.pathname !== "/favicon.ico"
+    url.pathname !== "/favicon.ico" &&
+    !WHITELIST.includes(url.pathname)
   ) {
     void event.respondWith(handleImageRequest(event, url));
   }

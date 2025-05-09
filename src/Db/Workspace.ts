@@ -4,6 +4,7 @@ import { ClientDb } from "@/Db/instance";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, isAncestor, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
+import slugify from "slugify";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./RemoteAuth";
 
@@ -42,6 +43,13 @@ export class WorkspaceDAO implements WorkspaceRecord {
     const workspaceRecords = await ClientDb.workspaces.toArray();
     return workspaceRecords.map((ws) => new WorkspaceDAO(ws));
   }
+  static async nameExists(name: string) {
+    const result = await WorkspaceDAO.fetchFromName(name, {
+      throwNotFound: false,
+    });
+    return result !== null;
+  }
+
   save = async () => {
     return ClientDb.workspaces.put({
       guid: this.guid,
@@ -56,8 +64,14 @@ export class WorkspaceDAO implements WorkspaceRecord {
     remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
     disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
   ) {
+    let uniqueName = WorkspaceDAO.Slugify(name);
+    let inc = 0;
+    while (await WorkspaceDAO.nameExists(uniqueName)) {
+      uniqueName = `${name}-${++inc}`;
+      console.log(uniqueName);
+    }
     const workspace = new WorkspaceDAO({
-      name,
+      name: uniqueName,
       guid: WorkspaceDAO.guid(),
       disk: disk.toJSON(),
       remoteAuth: remoteAuth.toJSON(),
@@ -86,6 +100,9 @@ export class WorkspaceDAO implements WorkspaceRecord {
     this.RemoteAuth = auth;
     this.Disk = disk;
     return this;
+  }
+  static Slugify(name: string) {
+    return slugify(name);
   }
   async toModel() {
     const [auth, disk] = await Promise.all([
@@ -123,9 +140,17 @@ export class WorkspaceDAO implements WorkspaceRecord {
     if (!ws) throw new NotFoundError(errF`Workspace not found guid:${guid}`);
     return (await new WorkspaceDAO(ws).withRelations()).toModel();
   }
-  static async fetchFromName(name: string) {
+  static async fetchFromName(name: string): Promise<Workspace>;
+  static async fetchFromName(name: string, options: { throwNotFound: boolean }): Promise<Workspace | null>;
+  static async fetchFromName(
+    name: string,
+    options: { throwNotFound: boolean } = { throwNotFound: false }
+  ): Promise<Workspace | null> {
     const ws = await ClientDb.workspaces.where("name").equals(name).first();
-    if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}`);
+    if (!ws) {
+      if (!options.throwNotFound) return null;
+      throw new NotFoundError(errF`Workspace not found name:${name}`);
+    }
     return (await new WorkspaceDAO(ws).withRelations()).toModel();
   }
 
@@ -180,7 +205,7 @@ export class Workspace extends WorkspaceDAO {
       remoteAuth: remoteAuth.toJSON(),
       createdAt: new Date(),
     });
-    this.name = name;
+    this.name = Workspace.Slugify(name);
     this.guid = guid;
     this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
@@ -355,8 +380,8 @@ export class NullWorkspace extends Workspace {
   isNull = true;
   constructor() {
     super({
-      name: "null",
-      guid: "null",
+      name: "",
+      guid: "",
       disk: new NullDisk(),
       remoteAuth: new NullRemoteAuth(),
     });

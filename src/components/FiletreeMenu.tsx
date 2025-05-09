@@ -22,6 +22,7 @@ const ACCEPTED_FILE_TYPES = [
   "image/png",
   "image/webp",
   "image/gif",
+  "image/svg",
 ];
 
 const isAcceptedFileType = (file: File) => ACCEPTED_FILE_TYPES.includes(file.type);
