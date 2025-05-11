@@ -246,10 +246,6 @@ export abstract class Disk extends DiskDAO {
     });
   }
 
-  fileWriteListener(callback: () => void) {
-    return this.local.on(DiskLocalEvents.WRITE, callback);
-  }
-
   async init() {
     await this.initializeIndex();
     return this.setupRemoteListeners();
@@ -266,9 +262,9 @@ export abstract class Disk extends DiskDAO {
       }),
       this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
         const contents = (await this.fs.readFile(absPath(filePath).encode())).toString();
-        await this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
-        console.debug("remote write");
+        await this.local.emit(DiskLocalEvents.WRITE, { contents: contents, filePath });
       }),
+
       this.remote.on(DiskRemoteEvents.INDEX, async () => {
         await this.fileTreeIndex();
         void this.local.emit(DiskLocalEvents.INDEX);
@@ -330,6 +326,7 @@ export abstract class Disk extends DiskDAO {
       if (watchFilePath.str === filePath) fn(contents);
     });
   }
+  /*
   remoteWriteFileListener(watchFilePath: string, fn: (contents: string) => void) {
     return this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
       if (watchFilePath === filePath) {
@@ -345,6 +342,7 @@ export abstract class Disk extends DiskDAO {
       }
     });
   }
+  */
 
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
     return this.renameDirFile(oldFullPath, newFullPath, "dir");
@@ -458,8 +456,6 @@ export abstract class Disk extends DiskDAO {
   }
   async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
     await this.fs.writeFile(filePath.encode(), contents, { encoding: "utf8", mode: 0o777 });
-    // local messes up the editor, commenting out for now might need in the future
-    // await this.local.emit(DiskLocalEvents.WRITE, { filePath, contents });
     await this.remote.emit(DiskRemoteEvents.WRITE, { filePath: filePath.str });
     return;
   }

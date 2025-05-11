@@ -2,6 +2,7 @@
 
 import { Editor } from "@/components/Editor/Editor";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context";
+import { BasePath } from "@/lib/paths";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -13,7 +14,7 @@ interface WorkspaceLiveEditorProps extends Partial<MDXEditorProps> {
 export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
   const { mimeType, contents, filePath } = useCurrentFilepath();
 
-  if (!mimeType || !contents || !filePath) {
+  if (!mimeType || contents === null || !filePath) {
     return null;
   }
   if (mimeType?.startsWith("image/")) {
@@ -51,8 +52,7 @@ export function ImageViewer({
   }
   return (
     <div className="p-4 border-2 m-auto flex justify-center items-center h-full w-full flex-col">
-      <img className="max-h-[500px] aspect-auto" alt={alt} src={origSrc} />
-      {/* <img className="max-h-[85%]" alt={alt} src={imgSrc} /> */}
+      <img className="max-h-[500px] aspect-auto" alt={alt} src={BasePath.encode(origSrc)} />
     </div>
   );
 }
@@ -65,12 +65,8 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
       ref.current?.setMarkdown(String(contents));
     }
   }, [contents]);
-  // const api = useWorkerContext();
   const { currentWorkspace } = useWorkspaceContext();
-  // console.log(api.performTask);
-  // api.performTask("test").then((result) => {
-  //   console.log(result);
-  // });
+
   if (contents === null || !currentWorkspace) return null;
   return (
     <>

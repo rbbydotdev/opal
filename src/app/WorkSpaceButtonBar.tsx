@@ -85,7 +85,7 @@ export function WorkSpaceButtonBar() {
       <BigButton
         icon={<CirclePlus stroke="current" size={32} strokeWidth={1.25} />}
         title="new workspace"
-        href="/workspace/new"
+        href="/new"
         className="text-3xs"
       />
 

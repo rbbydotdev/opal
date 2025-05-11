@@ -36,7 +36,7 @@ export const AsyncWindowErrorBoundary = ({ children }: { children: React.ReactNo
         <Card className=" max-w-2xl max-h-[32rem] flex flex-col border-2 border-destructive shadow-lg">
           <CardHeader className="flex-grow">
             <CardTitle>Error</CardTitle>
-            <CardDescription>Something went wrong...</CardDescription>
+            {/* <CardDescription>Something went wrong...</CardDescription> */}
           </CardHeader>
           <CardContent className="flex-grow card-content min-h-0 flex flex-col">
             {/* <CardContent className="flex flex-col flex-grow"> */}

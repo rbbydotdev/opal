@@ -216,10 +216,10 @@ export class Workspace extends WorkspaceDAO {
   }
 
   static parseWorkspacePath(pathname: string) {
+    if (!pathname.startsWith(Workspace.rootRoute)) return { workspaceId: null, filePath: null };
     const [workspaceId, ...filePathRest] = relPath(pathname.replace(this.rootRoute, "")).decode().split("/");
     const filePath = filePathRest.join("/");
     if (!workspaceId) {
-      //TODO * ???
       return { workspaceId: null, filePath: null };
     }
     // const workspaceRouteRegex = new RegExp(`^${Workspace.rootRoute.replace(/\//g, "\\/")}\\/([^/]+)(\\/.*)?$`);

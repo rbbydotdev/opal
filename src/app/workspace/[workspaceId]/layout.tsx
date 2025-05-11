@@ -2,7 +2,6 @@
 import { WorkspaceStatus } from "@/app/workspace/[workspaceId]/WorkspaceStatus";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuContextProvider } from "@/components/FileTreeContext";
-import { WorkerContextProvider } from "@/components/SWImages";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Toaster } from "@/components/ui/toaster";
 import React from "react";
@@ -22,7 +21,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </ResizablePanel>
             <ResizableHandle />
             <ResizablePanel id="editor" defaultSize={85}>
-              <WorkerContextProvider>{children}</WorkerContextProvider>
+              {children}
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>

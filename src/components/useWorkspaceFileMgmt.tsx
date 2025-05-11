@@ -121,7 +121,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     removeFocusedFile,
     removeFiles,
     newDir,
-    commitChange,
+    commitFilenameChange: commitChange,
     addDirFile,
     cancelNew,
     resetEditing,

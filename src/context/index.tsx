@@ -49,8 +49,7 @@ export function useCurrentFilepath() {
     const fetchFileContents = async () => {
       if (currentWorkspace && filePath) {
         try {
-          const contents = await currentWorkspace.disk.readFile(filePath);
-          setContents(contents); //TODO!
+          setContents(await currentWorkspace.disk.readFile(filePath));
           setMimeType(getMimeType(filePath.str));
           setError(null);
         } catch (error) {
