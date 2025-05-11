@@ -5,7 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceContext } from "@/context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { ChevronDown, ChevronUp, CirclePlus, Delete, Settings, Zap } from "lucide-react";
+import { ChevronDown, CirclePlus, DatabaseZap, Delete, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { use, useMemo } from "react";
@@ -108,10 +108,16 @@ export function WorkSpaceButtonBar() {
         {workspaces.length > 1 && (
           <CollapsibleTrigger
             className="h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
-  hover:text-slate-200 bg-secondary-foreground flex items-center"
+  hover:text-slate-200 bg-secondary-foreground flex items-center relative"
           >
-            <ChevronUp size={16} className="group-data-[state=closed]:hidden w-full" />
-            <ChevronDown size={16} className="group-data-[state=open]:hidden w-full" />
+            <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
+            <div className=" group-data-[state=open]:hidden text-white absolute top-0 right-2 rounded-full bg-slate-700 w-[1.25rem] p-0 flex justify-center items-center h-[1.25rem] text-xs">
+              {workspaces.length > 1 ? workspaces.length - 1 : ""}
+            </div>
+            <DatabaseZap size={16} className="group-data-[state=open]:hidden w-full m-auto absolute r-0" />
+
+            {/* <div className="w-full flex justify-center items-center text-xs relative">
+            </div> */}
           </CollapsibleTrigger>
         )}
 

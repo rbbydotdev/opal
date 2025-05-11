@@ -28,6 +28,44 @@ export class BasePath extends String {
   valueOf(): string {
     return this.str;
   }
+  encode() {
+    return BasePath.encode(this);
+  }
+  decode() {
+    return BasePath.decode(this);
+  }
+  urlSafe() {
+    return this.encode();
+  }
+
+  static encode(path: BasePath | string) {
+    return path
+      .split("/")
+      .map((part) => {
+        try {
+          // Check if the part is already encoded
+          return part !== decodeURIComponent(part) ? part : encodeURIComponent(part);
+        } catch (_e) {
+          // If decoding throws an error, it means the string is not properly encoded
+          return encodeURIComponent(part);
+        }
+      })
+      .join("/");
+  }
+  static decode(path: BasePath | string) {
+    return path
+      .split("/")
+      .map((part) => {
+        try {
+          // Check if the part is already decoded
+          return part === decodeURIComponent(part) ? part : decodeURIComponent(part);
+        } catch (_e) {
+          // If decoding throws an error, it means the string is not properly encoded
+          return part;
+        }
+      })
+      .join("/");
+  }
 
   inc() {
     const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;

@@ -88,7 +88,7 @@ export function useWorkspaceRoute() {
     if (workspaceId && workspaceId !== "new") {
       setRouteWorkspaceInfo({
         id: workspaceId ?? null,
-        path: filePath ? new AbsPath(decodeURIComponent(filePath.str)) : null,
+        path: filePath ?? null,
       });
     }
   }, [pathname]);

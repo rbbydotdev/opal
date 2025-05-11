@@ -2,7 +2,7 @@
 import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
-import { absPath, AbsPath, isAncestor, RelPath } from "@/lib/paths";
+import { absPath, AbsPath, isAncestor, relPath, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
@@ -216,12 +216,18 @@ export class Workspace extends WorkspaceDAO {
   }
 
   static parseWorkspacePath(pathname: string) {
-    const workspaceRouteRegex = new RegExp(`^${Workspace.rootRoute.replace(/\//g, "\\/")}\\/([^/]+)(\\/.*)?$`);
-    const match = pathname.match(workspaceRouteRegex);
-    if (!match) {
+    const [workspaceId, ...filePathRest] = relPath(pathname.replace(this.rootRoute, "")).decode().split("/");
+    const filePath = filePathRest.join("/");
+    if (!workspaceId) {
+      //TODO * ???
       return { workspaceId: null, filePath: null };
     }
-    const [_, workspaceId, filePath] = match;
+    // const workspaceRouteRegex = new RegExp(`^${Workspace.rootRoute.replace(/\//g, "\\/")}\\/([^/]+)(\\/.*)?$`);
+    // const match = pathname.match(workspaceRouteRegex);
+    // if (!match) {
+    //   return { workspaceId: null, filePath: null };
+    // }
+    // const [_, workspaceId, filePath] = match;
     return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
   }
   static async createWithSeedFiles(name: string) {
@@ -342,7 +348,7 @@ export class Workspace extends WorkspaceDAO {
     return this.href;
   };
   resolveFileUrl = (filePath: AbsPath) => {
-    return this.href + decodeURIComponent(filePath.str);
+    return this.href + filePath.urlSafe();
   };
   subRoute = (path: string) => {
     return `${this.href.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;

@@ -265,7 +265,7 @@ export abstract class Disk extends DiskDAO {
         console.debug("remote rename", JSON.stringify(data, null, 4));
       }),
       this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
-        const contents = (await this.fs.readFile(filePath)).toString();
+        const contents = (await this.fs.readFile(absPath(filePath).encode())).toString();
         await this.local.emit(DiskLocalEvents.WRITE, { contents, filePath });
         console.debug("remote write");
       }),
@@ -301,7 +301,7 @@ export abstract class Disk extends DiskDAO {
   }
 
   async mkdirRecursive(filePath: AbsPath) {
-    const segments = filePath.split("/").slice(1);
+    const segments = filePath.encode().split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
       try {
         await this.fs.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
@@ -371,7 +371,7 @@ export abstract class Disk extends DiskDAO {
     }
 
     try {
-      await this.fs.rename(oldFullPath.str, cleanFullPath.str);
+      await this.fs.rename(oldFullPath.encode(), cleanFullPath.encode());
     } catch (e) {
       throw e;
     }
@@ -403,7 +403,7 @@ export abstract class Disk extends DiskDAO {
   }
   async removeFile(filePath: AbsPath) {
     try {
-      await this.fs.unlink(filePath.str);
+      await this.fs.unlink(filePath.encode());
     } catch (err) {
       if (isErrorWithCode(err, "ENOENT")) {
         throw new NotFoundError().hint(`File not found: ${filePath}`);
@@ -441,7 +441,7 @@ export abstract class Disk extends DiskDAO {
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
     await this.mkdirRecursive(filePath.dirname());
     try {
-      return this.fs.writeFile(filePath.str, content, { encoding: "utf8", mode: 0o777 });
+      return this.fs.writeFile(filePath.encode(), content, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error writing file ${filePath}:`, err);
@@ -450,14 +450,14 @@ export abstract class Disk extends DiskDAO {
   }
   async pathExists(filePath: AbsPath) {
     try {
-      await this.fs.stat(filePath.str);
+      await this.fs.stat(filePath.encode());
       return true;
     } catch (_e) {
       return false;
     }
   }
   async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
-    await this.fs.writeFile(filePath.str, contents, { encoding: "utf8", mode: 0o777 });
+    await this.fs.writeFile(filePath.encode(), contents, { encoding: "utf8", mode: 0o777 });
     // local messes up the editor, commenting out for now might need in the future
     // await this.local.emit(DiskLocalEvents.WRITE, { filePath, contents });
     await this.remote.emit(DiskRemoteEvents.WRITE, { filePath: filePath.str });
@@ -465,7 +465,7 @@ export abstract class Disk extends DiskDAO {
   }
   async readFile(filePath: AbsPath) {
     try {
-      return await this.fs.readFile(filePath.str);
+      return await this.fs.readFile(filePath.encode());
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
         throw new NotFoundError().hint(`File not found: ${filePath}`);

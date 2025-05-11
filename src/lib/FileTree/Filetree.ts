@@ -10,7 +10,7 @@ import {
   VirtualFileTreeNode,
 } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, relPath, RelPath } from "@/lib/paths";
+import { AbsPath, BasePath, relPath, RelPath } from "@/lib/paths";
 import { Mutex } from "async-mutex";
 
 export class FileTree {
@@ -140,21 +140,21 @@ export class FileTree {
   ): Promise<TreeDir> => {
     const dir = parent.path;
     try {
-      const entries = await this.fs.readdir(dir.str);
+      const entries = (await this.fs.readdir(dir.encode())).map((e) => relPath(BasePath.decode(e.toString())));
 
       // Separate directories and files
-      const directories: string[] = [];
-      const files: string[] = [];
+      const directories: RelPath[] = [];
+      const files: RelPath[] = [];
 
       await Promise.all(
         entries.map(async (entry) => {
-          const fullPath = dir.join(entry.toString());
-          const stat = await this.fs.stat(fullPath.str);
+          const fullPath = dir.join(entry);
+          const stat = await this.fs.stat(fullPath.encode());
 
           if (stat.isDirectory()) {
-            directories.push(entry.toString());
+            directories.push(entry);
           } else {
-            files.push(entry.toString());
+            files.push(entry);
           }
         })
       );
@@ -162,9 +162,9 @@ export class FileTree {
       // Process files first
       await Promise.all(
         files.map(async (entry) => {
-          const fullPath = dir.join(entry.toString());
+          const fullPath = dir.join(entry);
           const treeEntry = new TreeFile({
-            name: relPath(entry.toString()),
+            name: relPath(entry),
             dirname: fullPath.dirname(),
             basename: fullPath.basename(),
             path: fullPath,
@@ -179,9 +179,9 @@ export class FileTree {
 
       // Process directories in order
       for (const entry of directories) {
-        const fullPath = dir.join(entry.toString());
+        const fullPath = dir.join(entry);
         const treeEntry = new TreeDir({
-          name: relPath(entry.toString()),
+          name: entry,
           dirname: fullPath.dirname(),
           basename: fullPath.basename(),
           path: fullPath,
