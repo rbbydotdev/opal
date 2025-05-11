@@ -17,12 +17,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="h-[calc(100vh-32px)] flex">
           <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel id="editorSideBar" defaultSize={15} minSize={7} collapsible={true}>
-              <EditorSidebar
-                // className="h-[calc(100vh-20px)]"
-                // className="inset-0 absolute "
-                style={{ "--sidebar-width": "100%" } as React.CSSProperties}
-              />
+            <ResizablePanel id="editorSideBar" defaultSize={20} minSize={20} collapsible={true}>
+              <EditorSidebar style={{ "--sidebar-width": "100%" } as React.CSSProperties} />
             </ResizablePanel>
             <ResizableHandle />
             <ResizablePanel id="editor" defaultSize={85}>

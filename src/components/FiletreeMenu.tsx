@@ -6,7 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
-import { AbsPath } from "@/lib/paths";
+import { absPath, AbsPath } from "@/lib/paths";
 import clsx from "clsx";
 import React from "react";
 import { isAncestor } from "../lib/paths";
@@ -61,7 +61,9 @@ function useFileTreeDragAndDrop({
 
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
     // Create a set of unique file paths from the selected range, the current file, and the focused file
-    const allFiles = Array.from(new Set([...selectedRange, file.path.str, focused?.str]));
+    const allFiles = Array.from(new Set([...selectedRange, file.path.str, focused?.str]))
+      .filter(Boolean)
+      .map((entry) => absPath(entry));
 
     // Prepare the data for the internal file type
     const data = JSON.stringify({
@@ -82,8 +84,8 @@ function useFileTreeDragAndDrop({
     event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${url}">${url}</a>`).join("\n"));
 
     allFiles.filter(Boolean).forEach((fpath) => {
-      const mimeType = currentWorkspace.disk.nodeFromPath(AbsPath.New(fpath))?.mimeType;
-      event.dataTransfer.setData(mimeType!, fpath);
+      const mimeType = currentWorkspace.disk.nodeFromPath(fpath)?.mimeType;
+      event.dataTransfer.setData(mimeType!, fpath.str);
     });
   };
 
