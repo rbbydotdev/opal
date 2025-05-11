@@ -81,11 +81,11 @@ function useFileTreeDragAndDrop({
     // Set the internal file type data
     event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
 
-    event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${url}">${url}</a>`).join("\n"));
+    event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${url.urlSafe()}">${url}</a>`).join("\n"));
 
     allFiles.filter(Boolean).forEach((fpath) => {
       const mimeType = currentWorkspace.disk.nodeFromPath(fpath)?.mimeType;
-      event.dataTransfer.setData(mimeType!, fpath.str);
+      event.dataTransfer.setData(mimeType!, fpath.urlSafe());
     });
   };
 

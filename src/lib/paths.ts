@@ -8,9 +8,22 @@ const RelPathBrand = Symbol("RelPath");
 export class BasePath extends String {
   constructor(private filePath: string) {
     super(filePath);
+    this.path = filePath;
   }
+
+  protected path: string;
+
   get str() {
     return this.toString();
+  }
+
+  extname() {
+    return path.extname(this.basename().str);
+  }
+
+  prefix() {
+    const ext = this.extname();
+    return ext.length ? this.basename().slice(0, this.basename().length - ext.length) : this.basename();
   }
 
   toString() {
@@ -67,6 +80,10 @@ export class BasePath extends String {
       .join("/");
   }
 
+  basename() {
+    return new RelPath(path.basename(this.path));
+  }
+
   inc() {
     const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;
     const match = this.toString().match(regex);
@@ -96,11 +113,12 @@ export class AbsPath extends BasePath {
   dirname() {
     return new AbsPath(path.dirname(this.path));
   }
-  basename() {
-    return new RelPath(path.basename(this.path));
-  }
-  extname() {
-    return path.extname(this.path);
+
+  changePrefix(newPrefix: string) {
+    console.log({ newPrefix }, this.prefix(), this.extname());
+    const ext = this.extname();
+    if (!ext) return this.dirname().join(newPrefix);
+    return this.dirname().join(`${newPrefix}${this.extname()}`);
   }
 
   inc() {
@@ -124,8 +142,6 @@ export class RelPath extends BasePath {
   //@ts-expect-error
   private [RelPathBrand]: void;
 
-  public readonly path: string;
-
   static New(path: string) {
     return new RelPath(path);
   }
@@ -139,12 +155,11 @@ export class RelPath extends BasePath {
   dirname() {
     return new RelPath(path.dirname(this.path));
   }
-  basename() {
-    return new RelPath(path.basename(this.path));
-  }
 
-  extname() {
-    return path.extname(this.path);
+  changePrefix(newPrefix: string) {
+    const ext = this.extname();
+    if (!ext) return this.dirname().join(newPrefix);
+    return this.dirname().join(`${newPrefix}.${this.extname()}`);
   }
 
   constructor(path: string) {

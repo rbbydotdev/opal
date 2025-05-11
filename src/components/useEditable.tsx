@@ -27,7 +27,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
   const router = useRouter();
-  const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { cancelNew, commitFilenameChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { editing, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
     useFileTreeMenuContext();
   const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
@@ -94,9 +94,10 @@ export function useEditable<T extends TreeFile | TreeNode>({
         }
       } else if (e.key === "Enter") {
         if (isEditing) {
-          const finalName = !fileName.extname() ? RelPath.New(fileName.str + fullPath.extname()) : fileName;
+          // const finalName = !fileName.extname() ? RelPath.New(fileName.str + fullPath.extname()) : fileName;
+          const finalName = fullPath.changePrefix(String(fileName.prefix())).basename();
+          const newPath = await commitFilenameChange(treeNode, finalName);
           setFileName(finalName);
-          const newPath = await commitChange(treeNode, finalName);
           //navigate to new-file path or renamed-file path
           if (fullPath.equals(workspaceRoute.path) || !workspaceRoute.path) {
             router.push(currentWorkspace.resolveFileUrl(newPath));
@@ -122,7 +123,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
       setFocused,
       selectedRange.length,
       setSelectedRange,
-      commitChange,
+      commitFilenameChange,
       treeNode,
       fileName,
       workspaceRoute.path,
