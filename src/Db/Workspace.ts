@@ -327,17 +327,6 @@ export class Workspace extends WorkspaceDAO {
     } satisfies WorkspaceRecord & { href: string };
   }
 
-  // serialize() {
-  //   return {
-  //     ...this.toJSON(),
-  //     disk: this.disk.toJSON({ includeIndexCache: true }),
-  //   };
-  // }
-  // static async deserialize(data: ReturnType<Workspace["serialize"]>) {
-  //   const disk = await Disk.fromJSON(data.disk);
-  //   return new Workspace({ ...data, disk, remoteAuth: new NullRemoteAuth() });
-  // }
-
   delete = async () => {
     await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
       await Promise.all([ClientDb.workspaces.delete(this.guid), this.disk.teardown(), this.disk.delete()]);
