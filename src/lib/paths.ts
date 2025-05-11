@@ -2,8 +2,10 @@ import { TreeNode } from "@/lib/FileTree/TreeNode";
 import path from "path";
 
 // Define unique symbols for branding
-const AbsPathBrand = Symbol("AbsPath");
-const RelPathBrand = Symbol("RelPath");
+// const AbsPathBrand = Symbol("AbsPath");
+// const RelPathBrand = Symbol("RelPath");
+
+// this class is a th
 
 export class BasePath extends String {
   constructor(private filePath: string) {
@@ -99,8 +101,8 @@ export class BasePath extends String {
 }
 export class AbsPath extends BasePath {
   // Use the unique symbol as a brand
-  //@ts-ignore
-  private [AbsPathBrand]: void;
+  //@ts-ig_nore
+  // private [AbsPathBrand]: void;
 
   public readonly path: string;
 
@@ -138,8 +140,8 @@ export class AbsPath extends BasePath {
 export class RelPath extends BasePath {
   // Use the unique symbol as a brand
 
-  //@ts-expect-error
-  private [RelPathBrand]: void;
+  //@ts-expect-er_ror
+  // private [RelPathBrand]: void;
 
   static New(path: string) {
     return new RelPath(path);

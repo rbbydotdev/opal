@@ -151,7 +151,7 @@ export class TreeNode {
     path: string;
     depth: number;
     mimeType?: string;
-    parent: TreeNode["parent"];
+    // parent: TreeNode["parent"];
     // eTag?: string;
   } {
     return {
@@ -162,7 +162,7 @@ export class TreeNode {
       path: this.path.str,
       depth: this.depth,
       mimeType: this.mimeType,
-      parent: this.parent,
+      // parent: this.parent,
       // eTag: this.eTag,
     };
   }
