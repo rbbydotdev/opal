@@ -18,7 +18,7 @@ export class TreeNode {
   type: "dir" | "file";
   dirname: AbsPath;
   mimeType?: string;
-  eTag?: string;
+  // eTag?: string;
   basename: RelPath;
   parent: TreeDir | null;
   path: AbsPath;
@@ -42,7 +42,7 @@ export class TreeNode {
     this.basename = newNode.basename;
     this.path = newNode.path;
     this.mimeType = newNode.mimeType;
-    this.eTag = newNode.eTag;
+    // this.eTag = newNode.eTag;
     this.depth = newNode.depth;
     this.parent = newNode.parent;
     this.children = newNode.children;
@@ -70,7 +70,7 @@ export class TreeNode {
     basename,
     path,
     parent,
-    eTag,
+    // eTag,
     depth,
   }: {
     name: RelPath | string;
@@ -79,14 +79,14 @@ export class TreeNode {
     basename: RelPath | string;
     parent: TreeDir | null;
     mimeType?: string;
-    eTag?: string;
+    // eTag?: string;
     path: AbsPath | string;
     depth: number;
   }) {
     this.name = typeof name === "string" ? relPath(name) : name;
     this.type = type;
     this.mimeType = mimeType;
-    this.eTag = eTag;
+    // this.eTag = eTag;
     this.dirname = absPath(dirname);
     this.basename = relPath(basename);
     this.path = absPath(path);
@@ -151,7 +151,8 @@ export class TreeNode {
     path: string;
     depth: number;
     mimeType?: string;
-    eTag?: string;
+    parent: TreeNode["parent"];
+    // eTag?: string;
   } {
     return {
       name: this.name.str,
@@ -161,7 +162,8 @@ export class TreeNode {
       path: this.path.str,
       depth: this.depth,
       mimeType: this.mimeType,
-      eTag: this.eTag,
+      parent: this.parent,
+      // eTag: this.eTag,
     };
   }
 }
@@ -205,10 +207,11 @@ export class TreeDir extends TreeNode {
     const parentNode = new TreeDir({
       ...TreeNode.fromJSON({ ...json, type: "file" }),
       parent,
-      children: Object.fromEntries(
-        Object.entries(json.children).map(([key, child]) => [key, TreeNode.fromJSON(child)])
-      ),
+      children: {},
     });
+    parentNode.children = Object.fromEntries(
+      Object.entries(json.children).map(([key, child]) => [key, TreeNode.fromJSON(child, parentNode)])
+    );
 
     return parentNode;
   }

@@ -115,7 +115,6 @@ export class AbsPath extends BasePath {
   }
 
   changePrefix(newPrefix: string) {
-    console.log({ newPrefix }, this.prefix(), this.extname());
     const ext = this.extname();
     if (!ext) return this.dirname().join(newPrefix);
     return this.dirname().join(`${newPrefix}${this.extname()}`);

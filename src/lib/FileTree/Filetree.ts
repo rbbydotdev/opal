@@ -58,33 +58,6 @@ export class FileTree {
     return this.dirs.slice(fromIndex, toIndex + 1);
   };
 
-  findRange2 = (startNode: TreeNode, endNode: TreeNode) => {
-    let i = 0;
-    let j = this.dirs.length - 1;
-    while (i < j) {
-      if (this.dirs[i] !== startNode.path.str && this.dirs[i] !== endNode.path.str) {
-        i++;
-      }
-      if (this.dirs[j] !== startNode.path.str && this.dirs[j] !== endNode.path.str) {
-        j--;
-      }
-    }
-    this.dirs.slice(Math.min(i, j), Math.max(i, j) + 1);
-    // return [this.nodeFromPath(this.dirs[i]), this.nodeFromPath(this.dirs[j])];
-  };
-
-  forceIndex = () => {
-    return this.index();
-  };
-
-  indexFromJSON = async (json: TreeNodeDirJType) => {
-    this.map = new Map<string, TreeNode>();
-    this.root = TreeDirRoot.fromJSON(json);
-    this.dirs = this.flatDirTree();
-    this.root.walk((node) => this.map.set(node.path.str, node));
-    // this.initialIndex = true; ?
-  };
-
   static fromJSON(json: TreeNodeDirJType, fs: FileSystem, guid: string) {
     const tree = new FileTree(fs, guid);
     tree.root = TreeDirRoot.fromJSON(json);
@@ -98,8 +71,9 @@ export class FileTree {
 
     visitor,
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
-    const release = await this.mutex.acquire();
+    console.timeLog("Indexing file tree");
     try {
+      //acquire mutex?
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
 
@@ -108,11 +82,8 @@ export class FileTree {
     } catch (e) {
       console.error("Error during file tree indexing:", e);
       throw e;
-    } finally {
-      release(); // Release the lock
     }
     console.timeEnd("Indexing file tree");
-    console.debug(Object.keys(this.root.children).join(", "));
     this.root.walk((node) => this.map.set(node.path.str, node));
     return this.root;
   };
