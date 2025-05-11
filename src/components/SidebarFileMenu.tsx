@@ -1,14 +1,15 @@
 "use client";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/components/useWorkspaceFileMgmt";
 import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { Workspace } from "@/Db/Workspace";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { CopyMinus, FilePlus, FolderPlus, Settings, Trash2, Undo } from "lucide-react";
+import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
+import { AbsPath } from "@/lib/paths";
+import { CopyMinus, FilePlus, FolderPlus, Plus, Settings, Trash2, Undo } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useCallback } from "react";
@@ -62,33 +63,58 @@ function SidebarFileMenuInternal({
             setExpandAll={setExpandAll}
           />
         </SidebarGroupContent>
-        <SidebarGroupLabel>
-          <div className="w-full">Files</div>
-        </SidebarGroupLabel>
-
-        <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full overflow-x-hidden">
-          {!Object.keys(fileTreeDir.children).length ? (
-            <div className="w-full">
-              <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
-                <div className="w-full">
-                  No Files, Click <FilePlus className={"inline"} size={12} /> to get started
-                </div>
-              </SidebarGroupLabel>
-            </div>
-          ) : (
-            <FileTreeMenu
-              renameDirFile={renameFile}
-              depth={0}
-              expand={expandSingle}
-              expandForNode={expandForNode}
-              expanded={expanded}
-            />
-          )}
-        </SidebarGroupContent>
+        <SidebarFileMenuConnections />
+        <SidebarFileMenuFiles
+          fileTreeDir={fileTreeDir}
+          renameFile={renameFile}
+          expandSingle={expandSingle}
+          expandForNode={expandForNode}
+          expanded={expanded}
+        />
       </SidebarGroup>
     </>
   );
 }
+
+export const SidebarFileMenuFiles = ({
+  fileTreeDir,
+  renameFile,
+  expandSingle,
+  expandForNode,
+  expanded,
+}: {
+  fileTreeDir: TreeDirRoot;
+  expandSingle: (path: string, expanded: boolean) => void;
+  expandForNode: (node: TreeNode, state: boolean) => void;
+  expanded: { [key: string]: boolean };
+  renameFile: (oldNode: TreeNode, newFullPath: AbsPath) => Promise<AbsPath>;
+}) => (
+  <SidebarGroup>
+    <SidebarGroupLabel>
+      <div className="w-full">Files</div>
+    </SidebarGroupLabel>
+    <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full overflow-x-hidden">
+      {!Object.keys(fileTreeDir.children).length ? (
+        <div className="w-full">
+          <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
+            <div className="w-full">
+              No Files, Click <FilePlus className={"inline"} size={12} /> to get started
+            </div>
+          </SidebarGroupLabel>
+        </div>
+      ) : (
+        <FileTreeMenu
+          renameDirFile={renameFile}
+          expand={expandSingle}
+          expandForNode={expandForNode}
+          expanded={expanded}
+          depth={0}
+        />
+      )}
+    </SidebarGroupContent>
+  </SidebarGroup>
+);
+
 const SidebarFileMenuWithWorkspace = withCurrentWorkspace(SidebarFileMenuInternal);
 
 export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>) => {
@@ -186,3 +212,16 @@ const SidebarFileMenuFilesActions = ({
     </Tooltip>
   </div>
 );
+function SidebarFileMenuConnections() {
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>
+        <div className="w-full">Connections</div>
+        <SidebarGroupAction>
+          <Plus />
+        </SidebarGroupAction>
+      </SidebarGroupLabel>
+      <SidebarGroupContent></SidebarGroupContent>
+    </SidebarGroup>
+  );
+}

@@ -201,9 +201,7 @@ export abstract class Disk extends DiskDAO {
   } = {}) => {
     const newIndex = await this.fileTree.index({ tree, visitor });
     if (writeIndexCache) {
-      try {
-      } catch (_e) {}
-      await this.update({ indexCache: newIndex.toJSON() });
+      /*await*/ void this.update({ indexCache: newIndex.toJSON() });
     }
     return newIndex;
   };
@@ -310,7 +308,7 @@ export abstract class Disk extends DiskDAO {
   }
   async firstIndex() {
     if (!this.fileTree.initialIndex) {
-      if (!this.indexCache) await this.hydrate(); //defensive - but should be going from DAO.hydrate to Disk
+      if (!this.indexCache) await this.hydrate(); //defensive check should already be present - TODO should be going from DAO.hydrate to Disk
       return this.fileTreeIndex({ tree: TreeDirRoot.fromJSON(this.indexCache), writeIndexCache: false });
     } else {
       console.debug("disk index skipped");
