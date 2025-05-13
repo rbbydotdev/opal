@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEscapeKeyClose } from "@/hooks/useEscapeKeyClose";
 import { usePathname } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 
@@ -21,6 +22,8 @@ export const AsyncWindowErrorBoundary = ({ children }: { children: React.ReactNo
   useEffect(() => {
     reset();
   }, [pathname, reset]);
+  //close on keyboard escape key
+  useEscapeKeyClose(isOpen, reset);
 
   useEffect(() => {
     window.addEventListener("unhandledrejection", promiseRejectionHandler);

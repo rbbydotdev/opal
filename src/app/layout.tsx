@@ -9,6 +9,8 @@ import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary"
 import { WorkspaceProvider } from "@/context";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { ErrorPopper } from "@/components/ui/error-popup";
+import React from "react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,22 +33,25 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* <FPSStats /> */}
         {/* <Inspector /> */}
-        <WorkspaceProvider>
-          <JotaiProvider>
-            <SidebarProvider>
-              <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                <div className="w-screen overflow-hidden flex ">
-                  <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
-                    <WorkSpaceButtonBar />
+
+        <ErrorPopper>
+          <WorkspaceProvider>
+            <JotaiProvider>
+              <SidebarProvider>
+                <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                  <div className="w-screen overflow-hidden flex ">
+                    <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
+                      <WorkSpaceButtonBar />
+                    </div>
+                    <div className="flex h-screen w-[calc(100vw-5rem)]">
+                      <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>
+                    </div>
                   </div>
-                  <div className="flex h-screen w-[calc(100vw-5rem)]">
-                    <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>
-                  </div>
-                </div>
-              </ThemeProvider>
-            </SidebarProvider>
-          </JotaiProvider>
-        </WorkspaceProvider>
+                </ThemeProvider>
+              </SidebarProvider>
+            </JotaiProvider>
+          </WorkspaceProvider>
+        </ErrorPopper>
       </body>
     </html>
   );

@@ -9,7 +9,7 @@ import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { Workspace } from "@/Db/Workspace";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
-import { CopyMinus, FilePlus, FolderPlus, Plus, Settings, Trash2, Undo } from "lucide-react";
+import { CopyMinus, FilePlus, FolderPlus, Plus, Settings, Trash2, Undo, UploadIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useCallback } from "react";
@@ -63,6 +63,7 @@ function SidebarFileMenuInternal({
             setExpandAll={setExpandAll}
           />
         </SidebarGroupContent>
+        <SidebarFileMenuPublish />
         <SidebarFileMenuConnections />
         <SidebarFileMenuFiles
           fileTreeDir={fileTreeDir}
@@ -219,6 +220,20 @@ function SidebarFileMenuConnections() {
         <div className="w-full">Connections</div>
         <SidebarGroupAction>
           <Plus />
+        </SidebarGroupAction>
+      </SidebarGroupLabel>
+      <SidebarGroupContent></SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
+function SidebarFileMenuPublish() {
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>
+        <div className="w-full">Publish</div>
+        <SidebarGroupAction>
+          <UploadIcon />
         </SidebarGroupAction>
       </SidebarGroupLabel>
       <SidebarGroupContent></SidebarGroupContent>
