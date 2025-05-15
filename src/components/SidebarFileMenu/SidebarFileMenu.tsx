@@ -113,7 +113,7 @@ export const SidebarFileMenuFiles = ({
   expanded: { [key: string]: boolean };
   renameFile: (oldNode: TreeNode, newFullPath: AbsPath) => Promise<AbsPath>;
 }) => (
-  <SidebarGroup>
+  <SidebarGroup className="pb-12 h-full">
     <SidebarGroupLabel>
       <div className="w-full">Files</div>
     </SidebarGroupLabel>
@@ -289,7 +289,7 @@ function SidebarFileMenuConnections() {
                   <SidebarMenuItem key={connection.name}>
                     <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
                       <div className="w-full whitespace-nowrap flex items-center space-x-1">
-                        <span>{VENDOR_ICONS[connection.vendor]}</span>
+                        <span>{VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}</span>
                         <span className="overflow-hidden text-ellipsis">{connection.name}</span>
                       </div>
                     </SidebarMenuButton>

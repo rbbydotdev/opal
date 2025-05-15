@@ -1,5 +1,7 @@
 import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { isImageType } from "@/lib/fileType";
 import path from "path";
+import { getMimeType } from "./mimeType";
 
 // Define unique symbols for branding
 // const AbsPathBrand = Symbol("AbsPath");
@@ -51,6 +53,12 @@ export class BasePath extends String {
   }
   urlSafe() {
     return this.encode();
+  }
+  getMimeType() {
+    return getMimeType(String(this));
+  }
+  isImage() {
+    return isImageType(this.getMimeType());
   }
 
   static encode(path: BasePath | string) {

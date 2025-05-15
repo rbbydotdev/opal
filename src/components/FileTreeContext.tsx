@@ -1,4 +1,7 @@
+"use client";
+import { Workspace } from "@/Db/Workspace";
 import { AbsPath } from "@/lib/paths";
+import { usePathname } from "next/navigation";
 import React from "react";
 
 export const FileTreeMenuContext = React.createContext<{
@@ -23,9 +26,18 @@ export function useFileTreeMenuContext() {
   return ctx;
 }
 export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // const focusedHardNav = useRef(false);
+  const pathname = usePathname();
+  const { filePath } = Workspace.parseWorkspacePath(pathname);
   const [editing, setEditing] = React.useState<AbsPath | null>(null);
   const [editType, setEditType] = React.useState<"rename" | "new">("rename");
-  const [focused, setFocused] = React.useState<AbsPath | null>(null);
+  const [focused, setFocused] = React.useState<AbsPath | null>(filePath ?? null);
+  // useEffect(() => {
+  //   if (!focusedHardNav.current && !filePath?.equals(focused)) {
+  //     setFocused(filePath!);
+  //     focusedHardNav.current = true;
+  //   }
+  // }, [filePath, focused]);
   const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
   const [selectedRange, setSelectedRange] = React.useState<string[]>([]);
   const resetEditing = () => {

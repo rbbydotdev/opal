@@ -58,8 +58,8 @@ export function useEditable<T extends TreeFile | TreeNode>({
       if (e.shiftKey && focused) {
         const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
         if (focusedNode) {
-          const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode);
-          setSelectedRange(range ?? []);
+          const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode) ?? [];
+          setSelectedRange(range);
         }
 
         e.preventDefault(); ///////////

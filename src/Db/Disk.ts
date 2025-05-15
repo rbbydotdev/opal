@@ -4,6 +4,7 @@ import { ClientDb } from "@/Db/instance";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
+import { isServiceWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
 import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
@@ -243,10 +244,17 @@ export abstract class Disk extends DiskDAO {
       console.debug("disk index");
     });
   }
+  // static INIT_LISTENERS = true;
+  // static NO_INIT_LISTENERS = false;
 
+  // async init(setupListeners = Disk.INIT_LISTENERS) {
   async init() {
     await this.initializeIndex();
-    return this.setupRemoteListeners();
+    if (!isServiceWorker()) {
+      return this.setupRemoteListeners();
+    } else {
+      console.debug("skipping remote listeners in service worker");
+    }
   }
 
   async setupRemoteListeners() {
@@ -423,6 +431,13 @@ export abstract class Disk extends DiskDAO {
     const node = this.fileTree.insertClosestNode({ type, name }, selectedNode || this.fileTree.root);
     void this.local.emit(DiskLocalEvents.INDEX);
     return node;
+  }
+
+  async nextPath(fullPath: AbsPath) {
+    while (await this.pathExists(fullPath)) {
+      fullPath = fullPath.inc();
+    }
+    return fullPath;
   }
   async newFile(fullPath: AbsPath, content: string | Uint8Array) {
     while (await this.pathExists(fullPath)) {
