@@ -1,3 +1,4 @@
+import { MimeType, MimeTypes } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, absPath, RelPath, relPath } from "@/lib/paths";
 
@@ -17,7 +18,7 @@ export class TreeNode {
   name: RelPath;
   type: "dir" | "file";
   dirname: AbsPath;
-  mimeType?: string;
+  mimeType?: MimeType;
   // eTag?: string;
   basename: RelPath;
   parent: TreeDir | null;
@@ -78,7 +79,7 @@ export class TreeNode {
     dirname: AbsPath | string;
     basename: RelPath | string;
     parent: TreeDir | null;
-    mimeType?: string;
+    mimeType?: MimeType;
     // eTag?: string;
     path: AbsPath | string;
     depth: number;
@@ -134,7 +135,11 @@ export class TreeNode {
     if (json.type === "dir") {
       return TreeDir.fromJSON(json as TreeNodeDirJType, parent);
     }
-    return new TreeNode({ ...json, parent });
+    return new TreeNode({
+      ...json,
+      parent,
+      mimeType: json.mimeType ? getMimeType(absPath(json.path)) : undefined,
+    });
   }
   isTreeDir(): this is TreeDir {
     // return isTreeDir(this);
@@ -253,12 +258,9 @@ export function isTreeFile(node: TreeNode): node is TreeFile {
 export function isTreeDir(node: TreeNode): node is TreeDir {
   return node.type === "dir";
 }
-// export function getTreeType<T extends TreeNode>(node: T): "dir" | "file" {
-//   return node.type;
-// }
 export class TreeFile extends TreeNode {
   type = "file" as const;
-  mimeType = "text/markdown";
+  mimeType: MimeType = MimeTypes.MARKDOWN;
   constructor({
     name,
     dirname,
@@ -270,7 +272,7 @@ export class TreeFile extends TreeNode {
   }: {
     name: RelPath;
     dirname: AbsPath;
-    mimeType: string;
+    mimeType: MimeType;
     basename: RelPath;
     path: AbsPath;
     depth: number;

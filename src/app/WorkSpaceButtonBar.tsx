@@ -5,7 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceContext } from "@/context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { ChevronDown, CirclePlus, DatabaseZap, Delete, Plug, Settings } from "lucide-react";
+import { ChevronDown, CirclePlus, DatabaseZap, Delete, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { use, useMemo } from "react";
@@ -80,11 +80,7 @@ export function WorkSpaceButtonBar() {
         href="#"
         onClick={deleteIDBs}
       />
-      <BigButton
-        icon={<Plug stroke="current" size={32} strokeWidth={1.25} />}
-        title="connections"
-        href="/connections"
-      />
+      <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
       <BigButton icon={<Settings stroke="current" size={32} strokeWidth={1.25} />} title="settings" href="/settings" />
       <BigButton
         icon={<CirclePlus stroke="current" size={32} strokeWidth={1.25} />}

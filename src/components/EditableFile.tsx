@@ -7,6 +7,7 @@ import { AbsPath, relPath } from "@/lib/paths";
 import Link from "next/link";
 import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
+import { isImageType } from "../lib/fileType";
 
 export const EditableFile = ({
   depth,
@@ -30,7 +31,6 @@ export const EditableFile = ({
   const {
     isEditing,
     isSelected,
-    // setFocused,
     fileName,
     handleKeyDown,
     handleMouseDown,
@@ -50,6 +50,7 @@ export const EditableFile = ({
     workspaceRoute,
   });
 
+  //
   useEffect(() => {
     if (isFocused && !isEditing) {
       linkRef.current?.focus();
@@ -61,8 +62,6 @@ export const EditableFile = ({
         <Link
           draggable
           onDragStart={onDragStart}
-          data-treepath={fullPath.str}
-          data-treetype="file"
           href={currentWorkspace.resolveFileUrl(fullPath)}
           className={twMerge(
             className,
@@ -78,18 +77,21 @@ export const EditableFile = ({
           onClick={handleClick}
           prefetch={false}
         >
-          <div style={{ marginLeft: depth + 1 + "rem", width: "100%" }}>
+          <div style={{ marginLeft: depth + "rem", width: "100%" }}>
             <File selected={isSelected}>
-              <span className={twMerge("py-1.5", "truncate overflow-hidden whitespace-nowrap w-full")}>{fileName}</span>
+              {isImageType(treeFile.mimeType) ? (
+                <img src={treeFile.str} alt={treeFile.str} className="w-4 h-4 rounded-sm" />
+              ) : null}
+              <span className={"py-2.5 truncate w-full text-xs text-ellipsis"}>{fileName}</span>
             </File>
           </div>
         </Link>
       ) : (
-        <div style={{ marginLeft: depth + 1 + "rem", width: "100%" }}>
-          <File selected={isSelected} data-treepath={fullPath.str} data-treetype="file">
+        <div style={{ marginLeft: depth + "rem", width: "100%" }}>
+          <File selected={isSelected}>
             <input
               ref={inputRef}
-              className="bg-transparent py-1.5 outline-none font-bold border-b border-dashed border-black"
+              className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs"
               type="text"
               value={fileName.str}
               onChange={(e) => setFileName(relPath(e.target.value))}

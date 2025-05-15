@@ -3,7 +3,7 @@ import { errF } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths";
 
-const WHITELIST = ["/opal.svg", "/favicon.ico"];
+const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -20,7 +20,7 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 });
 
 // Fetch Event Listener
-self.addEventListener("fetch", (event) => {
+self.addEventListener("fetch", async (event) => {
   const url = new URL(event.request.url);
   if (
     event.request.destination === "image" &&
@@ -28,7 +28,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname !== "/favicon.ico" &&
     !WHITELIST.includes(url.pathname)
   ) {
-    void event.respondWith(handleImageRequest(event, url));
+    return event.respondWith(handleImageRequest(event, url));
   }
 });
 

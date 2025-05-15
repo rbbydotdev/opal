@@ -83,9 +83,10 @@ function useFileTreeDragAndDrop({
 
     event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${url.urlSafe()}">${url}</a>`).join("\n"));
 
-    allFiles.filter(Boolean).forEach((fpath) => {
+    allFiles.filter(Boolean).forEach((fpath, i) => {
       const mimeType = currentWorkspace.disk.nodeFromPath(fpath)?.mimeType;
-      event.dataTransfer.setData(mimeType!, fpath.urlSafe());
+      //using semi-colon to play nice with possible mimeType collision (hackish)
+      event.dataTransfer.setData(`${mimeType!};index=${i}`, fpath.urlSafe());
     });
   };
 
