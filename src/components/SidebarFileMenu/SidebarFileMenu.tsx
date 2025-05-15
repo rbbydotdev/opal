@@ -117,7 +117,7 @@ export const SidebarFileMenuFiles = ({
     <SidebarGroupLabel>
       <div className="w-full">Files</div>
     </SidebarGroupLabel>
-    <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pb-16 max-w-full overflow-x-hidden">
+    <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-3 pb-16 max-w-full overflow-x-hidden">
       {!Object.keys(fileTreeDir.children).length ? (
         <div className="w-full">
           <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">

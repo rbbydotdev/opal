@@ -4,6 +4,7 @@ import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, relPath } from "@/lib/paths";
+import clsx from "clsx";
 import Link from "next/link";
 import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
@@ -80,7 +81,7 @@ export const EditableFile = ({
           <div style={{ marginLeft: depth + "rem", width: "100%" }}>
             <File selected={isSelected}>
               {isImageType(treeFile.mimeType) ? (
-                <img src={treeFile.str} alt={treeFile.str} className="w-4 h-4 rounded-sm" />
+                <img src={treeFile.path.str} alt={""} className="w-4 h-4 rounded-sm" />
               ) : null}
               <span className={"py-2.5 truncate w-full text-xs text-ellipsis"}>{fileName}</span>
             </File>
@@ -108,7 +109,10 @@ export const EditableFile = ({
 export function File({ selected = false, children }: { selected?: boolean; children: React.ReactNode }) {
   return (
     <span
-      className={`items-center flex gap-2 ${selected ? "before:content-[attr(data-star)] before:text-accent2" : ""}`}
+      className={clsx(
+        { "before:content-[attr(data-star)] before:text-accent2 -ml-[1.2rem]": selected },
+        "items-center flex gap-2"
+      )}
       data-star="✦"
     >
       {children}

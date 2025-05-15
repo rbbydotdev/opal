@@ -4,6 +4,7 @@ import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuContextProvider } from "@/components/FileTreeContext";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Toaster } from "@/components/ui/toaster";
+import { ImgSw } from "@/lib/ImagesServiceWorker/ImgSwSetup";
 import React from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -15,15 +16,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <WorkspaceStatus />
         </div>
         <div className="h-[calc(100vh-32px)] flex">
-          <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel id="editorSideBar" defaultSize={20} minSize={20} collapsible={true}>
-              <EditorSidebar style={{ "--sidebar-width": "100%" } as React.CSSProperties} />
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel id="editor" defaultSize={85}>
-              {children}
-            </ResizablePanel>
-          </ResizablePanelGroup>
+          <ImgSw>
+            <ResizablePanelGroup direction="horizontal">
+              <ResizablePanel id="editorSideBar" defaultSize={20} minSize={20} collapsible={true}>
+                <EditorSidebar style={{ "--sidebar-width": "100%" } as React.CSSProperties} />
+              </ResizablePanel>
+              <ResizableHandle />
+              <ResizablePanel id="editor" defaultSize={85}>
+                {children}
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </ImgSw>
         </div>
       </div>
     </FileTreeMenuContextProvider>

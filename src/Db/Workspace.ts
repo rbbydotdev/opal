@@ -1,12 +1,16 @@
 "use client";
+import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
+import { ThumbnailDAO } from "@/Db/Thumbnails";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
+import { getFileType, isImageType } from "@/lib/fileType";
 import { absPath, AbsPath, isAncestor, relPath, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./RemoteAuth";
+import { Thumbnail } from "./Thumbnails";
 
 export class WorkspaceRecord {
   guid!: string;
@@ -25,7 +29,6 @@ export class WorkspaceDAO implements WorkspaceRecord {
   disk!: DiskJType;
   createdAt!: Date;
   remoteAuth!: RemoteAuthJType;
-
   RemoteAuth?: RemoteAuthDAO;
   Disk?: DiskDAO;
 
@@ -33,7 +36,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
     return new WorkspaceDAO(json);
   }
 
-  static async allDAO() {
+  static async allRecords() {
     return ClientDb.workspaces.toArray();
   }
   get href() {
@@ -68,7 +71,6 @@ export class WorkspaceDAO implements WorkspaceRecord {
     let inc = 0;
     while (await WorkspaceDAO.nameExists(uniqueName)) {
       uniqueName = `${name}-${++inc}`;
-      console.log(uniqueName);
     }
     const workspace = new WorkspaceDAO({
       name: uniqueName,
@@ -186,6 +188,7 @@ export class Workspace extends WorkspaceDAO {
   guid: string;
   remoteAuth: RemoteAuth;
   disk: Disk;
+  // thumbnails: Thumbnails;
 
   constructor({
     name,
@@ -249,9 +252,22 @@ export class Workspace extends WorkspaceDAO {
   newDir(dirPath: AbsPath, newDirName: RelPath) {
     return this.disk.newDir(dirPath.join(newDirName));
   }
-  newFile(dirPath: AbsPath, newFileName: RelPath, content = "") {
+  newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
     return this.disk.newFile(dirPath.join(newFileName), content);
   }
+  async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
+    const path = await this.newFile(dirPath, newFileName, content);
+    await Thumbnail.fromImage(this.guid, path, content);
+    return path;
+  }
+  removeImageFile = async (filePath: AbsPath) => {
+    return this.disk.removeFile(filePath);
+  };
+  async getImageThumbFile(filePath: AbsPath) {
+    const { content } = await ThumbnailDAO.byPath(this.guid, filePath, ThumbnailDAO.THROW);
+    return content;
+  }
+
   addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {
     return this.disk.addVirtualFile({ type, name }, selectedNode);
   }
@@ -259,8 +275,13 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeVirtualFile(path);
   }
   removeFile = async (filePath: AbsPath) => {
-    // await serviceworker.evictCache(filePath);
-    return this.disk.removeFile(filePath);
+    return Promise.all([this.disk.removeFile(filePath), ThumbnailDAO.remove(this.guid, filePath)]);
+  };
+  renameImageFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+    return Promise.all([
+      ThumbnailDAO.move(this.guid, oldNode.path, newFullPath),
+      this.renameFile(oldNode, newFullPath),
+    ]);
   };
 
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
@@ -274,6 +295,9 @@ export class Workspace extends WorkspaceDAO {
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode);
     return newNode;
+  };
+  readFile = (filePath: AbsPath) => {
+    return this.disk.readFile(filePath);
   };
 
   onInitialIndex(callback: (fileTree: TreeDir) => void) {
@@ -290,8 +314,16 @@ export class Workspace extends WorkspaceDAO {
   async awaitFirstIndex() {
     return this.disk.awaitFirstIndex();
   }
-  async dropExternalFile(file: File, targetPath: AbsPath) {
-    return this.disk.newFile(targetPath.join(file.name), new Uint8Array(await file.arrayBuffer()));
+  async dropImageFile(file: File, targetPath: AbsPath) {
+    const fileType = getFileType(new Uint8Array(await file.arrayBuffer()));
+    if (!isImageType(fileType)) {
+      ErrorPopupControl.show({
+        title: "Not a valid image",
+        description: "Please upload a valid image file (png,gif,webp,jpg)",
+      });
+      return "";
+    }
+    return this.newImageFile(targetPath, relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
 
   getFileTreeRoot() {
@@ -329,7 +361,14 @@ export class Workspace extends WorkspaceDAO {
 
   delete = async () => {
     await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
-      await Promise.all([ClientDb.workspaces.delete(this.guid), this.disk.teardown(), this.disk.delete()]);
+      // ClientDb.thumbnails.delete(this.guid);
+
+      await Promise.all([
+        ClientDb.workspaces.delete(this.guid),
+        this.disk.teardown(),
+        this.disk.delete(),
+        ThumbnailDAO.removeWorkspace(this.guid),
+      ]);
     });
   };
 
@@ -379,6 +418,7 @@ export class NullWorkspace extends Workspace {
       guid: "",
       disk: new NullDisk(),
       remoteAuth: new NullRemoteAuth(),
+      // thumbnails: null,
     });
   }
 }

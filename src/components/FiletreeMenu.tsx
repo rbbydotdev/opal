@@ -6,9 +6,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath } from "@/lib/paths";
+import { getFileType } from "@/lib/fileType";
+import { absPath, AbsPath, relPath } from "@/lib/paths";
 import clsx from "clsx";
 import React from "react";
+import { isImageType } from "../lib/fileType";
 import { isAncestor } from "../lib/paths";
 
 export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
@@ -100,7 +102,13 @@ function useFileTreeDragAndDrop({
     const { files } = event.dataTransfer;
     for (const file of files) {
       if (isAcceptedFileType(file)) {
-        void currentWorkspace.disk.newFile(targetPath.join(file.name), new Uint8Array(await file.arrayBuffer()));
+        const fileContents = new Uint8Array(await file.arrayBuffer());
+        const fileType = getFileType(fileContents);
+        if (isImageType(fileType)) {
+          void currentWorkspace.newImageFile(targetPath, relPath(file.name), fileContents);
+        } else {
+          void currentWorkspace.newFile(targetPath, relPath(file.name), fileContents);
+        }
       }
     }
   };

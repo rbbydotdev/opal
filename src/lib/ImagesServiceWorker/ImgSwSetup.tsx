@@ -2,6 +2,7 @@ import { Workspace } from "@/Db/Workspace";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useState } from "react";
 
+//will delay the loading of the page until the service worker is ready
 export const ImgSw = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
