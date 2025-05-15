@@ -45,6 +45,7 @@ export function useFileTreeExpander({
   };
 
   const setExpandAll = (state: boolean) => {
+    console.log({ state });
     setLocal({ ...setAllStates(state) });
     setStored({ ...setAllStates(state) });
   };

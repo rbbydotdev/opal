@@ -1,7 +1,19 @@
 "use client";
+import { ConnectionsModal } from "@/components/connections-modal";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
+import { ClosedChevron, OpenedChevron } from "@/components/SidebarFileMenu/Icons";
 import { Button } from "@/components/ui/button";
-import { SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+import {
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTreeExpander } from "@/components/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/components/useWorkspaceFileMgmt";
@@ -9,7 +21,18 @@ import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { Workspace } from "@/Db/Workspace";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
-import { CopyMinus, FilePlus, FolderPlus, Plus, Settings, Trash2, Undo, UploadIcon } from "lucide-react";
+import {
+  CopyMinus,
+  FilePlus,
+  FolderPlus,
+  Github,
+  ChromeIcon as Google,
+  Plus,
+  Settings,
+  Trash2,
+  Undo,
+  UploadIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useCallback } from "react";
@@ -213,17 +236,71 @@ const SidebarFileMenuFilesActions = ({
     </Tooltip>
   </div>
 );
+const VENDOR_ICONS = {
+  GitHub: <Github size={14} />,
+  Google: <Google size={14} />,
+};
+const MOCK_CONNECTIONS = [
+  {
+    name: "GitHub",
+    type: "oauth",
+    vendor: "GitHub",
+  },
+  {
+    name: "GitHub API",
+    type: "apikey",
+    vendor: "GitHub",
+  },
+  {
+    name: "Google Drive",
+    type: "oauth",
+    vendor: "Google",
+  },
+  {
+    name: "Google Drive API",
+    type: "apikey",
+    vendor: "Google",
+  },
+];
 function SidebarFileMenuConnections() {
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>
-        <div className="w-full">Connections</div>
-        <SidebarGroupAction>
-          <Plus />
-        </SidebarGroupAction>
-      </SidebarGroupLabel>
-      <SidebarGroupContent></SidebarGroupContent>
-    </SidebarGroup>
+    <>
+      <SidebarGroup>
+        <Collapsible className="group">
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton className="pl-0">
+              <SidebarGroupLabel className="pl-1">
+                <OpenedChevron className="pr-1 group:data-[state=open]:hidden" />
+                <ClosedChevron className="pr-1 group:data-[state=closed]:hidden" />
+                <div className="w-full">Connections</div>
+              </SidebarGroupLabel>
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+
+          <ConnectionsModal>
+            <SidebarGroupAction>
+              <Plus />
+            </SidebarGroupAction>
+          </ConnectionsModal>
+          <CollapsibleContent>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {MOCK_CONNECTIONS.map((connection) => (
+                  <SidebarMenuItem key={connection.name}>
+                    <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
+                      <div className="w-full whitespace-nowrap flex items-center space-x-1">
+                        <span>{VENDOR_ICONS[connection.vendor]}</span>
+                        <span className="overflow-hidden text-ellipsis">{connection.name}</span>
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </SidebarGroup>
+    </>
   );
 }
 

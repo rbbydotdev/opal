@@ -1,5 +1,5 @@
 "use client";
-import { SidebarFileMenu } from "@/components/SidebarFileMenu";
+import { SidebarFileMenu } from "@/components/SidebarFileMenu/SidebarFileMenu";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import React from "react";
 import { twMerge } from "tailwind-merge";

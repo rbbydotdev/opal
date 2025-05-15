@@ -7,6 +7,15 @@ export const FileTypes = {
   MARKDOWN: "text/markdown",
 } as const;
 
+export const MimeTypeExt = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "application/octet-stream": "bin",
+  "text/markdown": "md",
+} as const;
+
 export const MimeTypes = {
   PNG: "image/png",
   JPEG: "image/jpeg",
@@ -19,7 +28,7 @@ export const MimeTypes = {
 export type FileType = (typeof FileTypes)[keyof typeof FileTypes];
 export type MimeType = (typeof MimeTypes)[keyof typeof MimeTypes];
 
-export const isImageType = (type: FileType): boolean => {
+export const isImageType = (type: FileType | string): boolean => {
   return type.startsWith("image/");
 };
 export const isMarkdownType = (type: FileType): boolean => {
@@ -31,6 +40,11 @@ export const isBinaryType = (type: FileType): boolean => {
 export function contentsToMimeType(contents: Uint8Array<ArrayBufferLike>): MimeType {
   return getFileType(contents);
 }
+
+export function getMimeTypeExt(fileType: FileType) {
+  return MimeTypeExt[fileType];
+}
+
 export function getFileType(data: string | Uint8Array<ArrayBufferLike>): FileType {
   if (typeof data === "string") return FileTypes.MARKDOWN;
   // Check for JPEG (FF D8 FF)

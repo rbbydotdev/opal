@@ -1,11 +1,11 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
+import { ClosedChevron, OpenedChevron } from "@/components/SidebarFileMenu/Icons";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import { ComponentProps, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -64,8 +64,6 @@ export const EditableDir = ({
     <span
       {...props}
       draggable
-      data-treepath={fullPath.str}
-      data-treetype="dir"
       onClick={handleClick}
       tabIndex={0}
       onDragStart={onDragStart}
@@ -79,19 +77,19 @@ export const EditableDir = ({
       )}
       onKeyDown={handleKeyDown}
     >
-      <span className="inline-flex" style={{ marginLeft: depth * 1 + "rem" }}>
+      <span className="inline-flex" style={{ marginLeft: depth + "rem" }}>
         <span className="mr-2">
-          <ChevronDown size={18} className="group-data-[state=closed]:hidden" />
-          <ChevronRight size={18} className="group-data-[state=open]:hidden" />
+          <OpenedChevron />
+          <ClosedChevron />
         </span>
         {!isEditing ? (
-          <span onDoubleClick={() => setEditing(fullPath)}>{fileName.basename()}</span>
+          <span onDoubleClick={() => setEditing(fullPath)} className="text-xs">
+            {fileName.basename()}
+          </span>
         ) : (
           <input
-            data-treepath={fullPath.str}
-            data-treetype="dir"
             ref={inputRef}
-            className="bg-transparent outline-none border-b border-dashed border-black"
+            className="bg-transparent outline-none border-b border-dashed border-black text-xs"
             type="text"
             value={fileName.basename().str}
             onChange={(e) => setFileName(fullPath.dirname().join(e.target.value).basename())}

@@ -163,6 +163,11 @@ export class RelPath extends BasePath {
     return this.dirname().join(`${newPrefix}.${this.extname()}`);
   }
 
+  changeExt(newExt: string) {
+    // this.path = [this.dirname(), this.prefix(), "." + newExt.replace(/^\./, "")].join("/");
+    this.dirname().join(newExt);
+  }
+
   constructor(path: string) {
     let p = path.startsWith("/") ? path.slice(1) : path;
     p = p.endsWith("/") ? p.slice(0, -1) : p;
