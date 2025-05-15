@@ -9,9 +9,8 @@ import {
   VirtualDirTreeNode,
   VirtualFileTreeNode,
 } from "@/lib/FileTree/TreeNode";
-import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, BasePath, relPath, RelPath } from "@/lib/paths";
-import { Mutex } from "async-mutex";
+// import { Mutex } from "async-mutex";
 
 export class FileTree {
   initialIndex = false;
@@ -19,7 +18,6 @@ export class FileTree {
   cacheId: string;
 
   dirs: TreeList = [];
-  // nodeList: (TreeNode | null)[] = [];
   private map = new Map<string, TreeNode>();
   public root: TreeDirRoot = new TreeDirRoot();
 
@@ -29,7 +27,6 @@ export class FileTree {
 
     this.cacheId = `${this.guid}/cache/v2`;
   }
-  private mutex = new Mutex();
 
   getRootTree() {
     return this.root;
@@ -50,7 +47,6 @@ export class FileTree {
     );
     // Ensure both nodes were found
     if (startIndex === -1 || endIndex === -1) {
-      // console.warn("Start or end node not found in the directory list.");
       return null;
     }
     // Sort indices to ensure correct slice
@@ -73,18 +69,17 @@ export class FileTree {
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
     console.timeLog("Indexing file tree");
     try {
-      //acquire mutex?
+      console.log("Indexing file tree");
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
-
-      this.dirs = this.flatDirTree();
-      this.initialIndex = true;
     } catch (e) {
       console.error("Error during file tree indexing:", e);
       throw e;
     }
     console.timeEnd("Indexing file tree");
     this.root.walk((node) => this.map.set(node.path.str, node));
+    this.dirs = this.flatDirTree();
+    this.initialIndex = true;
     return this.root;
   };
 
@@ -139,7 +134,7 @@ export class FileTree {
             dirname: fullPath.dirname(),
             basename: fullPath.basename(),
             path: fullPath,
-            mimeType: getMimeType(fullPath),
+            // mimeType: getMimeType(fullPath),
             parent,
             depth: depth,
           });
@@ -262,7 +257,7 @@ function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name
       name: path.basename(),
       dirname: path.dirname(),
       basename: path.basename(),
-      mimeType: getMimeType(path.str),
+      // mimeType: getMimeType(path.str),
       path,
       parent,
       depth,

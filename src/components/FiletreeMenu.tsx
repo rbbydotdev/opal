@@ -3,14 +3,13 @@ import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
-import { getFileType } from "@/lib/fileType";
 import { absPath, AbsPath, relPath } from "@/lib/paths";
 import clsx from "clsx";
 import React from "react";
-import { isImageType } from "../lib/fileType";
 import { isAncestor } from "../lib/paths";
 
 export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
@@ -86,9 +85,9 @@ function useFileTreeDragAndDrop({
     event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${url.urlSafe()}">${url}</a>`).join("\n"));
 
     allFiles.filter(Boolean).forEach((fpath, i) => {
-      const mimeType = currentWorkspace.disk.nodeFromPath(fpath)?.mimeType;
+      // const mimeType = currentWorkspace.disk.nodeFromPath(fpath)?.mimeType;
       //using semi-colon to play nice with possible mimeType collision (hackish)
-      event.dataTransfer.setData(`${mimeType!};index=${i}`, fpath.urlSafe());
+      event.dataTransfer.setData(`${fpath.getMimeType()};index=${i}`, fpath.urlSafe());
     });
   };
 
@@ -103,12 +102,15 @@ function useFileTreeDragAndDrop({
     for (const file of files) {
       if (isAcceptedFileType(file)) {
         const fileContents = new Uint8Array(await file.arrayBuffer());
-        const fileType = getFileType(fileContents);
-        if (isImageType(fileType)) {
-          void currentWorkspace.newImageFile(targetPath, relPath(file.name), fileContents);
-        } else {
-          void currentWorkspace.newFile(targetPath, relPath(file.name), fileContents);
-        }
+        void currentWorkspace.newFile(targetPath, relPath(file.name), fileContents);
+      } else {
+        await new Promise((rs) =>
+          ErrorPopupControl.show({
+            title: "File Type Not Supported",
+            description: `The file type ${file.type} is not supported. Please use a supported file type.`,
+            onExit: () => rs(true),
+          })
+        );
       }
     }
   };

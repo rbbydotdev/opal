@@ -17,7 +17,7 @@ import * as React from "react";
 export interface ErrorPopupProps {
   title?: string;
   description?: string;
-  onConfirm?: () => void;
+  onExit?: () => void;
 }
 
 type ErrorPopupActionType = {
@@ -33,12 +33,12 @@ export function ErrorPopupProvider({ children }: { children: React.ReactNode }) 
     open: boolean;
     title: string;
     description: string;
-    onConfirm?: () => void;
+    onExit?: () => void;
   }>({
     open: false,
     title: "An error occurred",
     description: "Something went wrong. Please try again later.",
-    onConfirm: undefined,
+    onExit: undefined,
   });
 
   const errorPopup = React.useMemo(
@@ -46,13 +46,13 @@ export function ErrorPopupProvider({ children }: { children: React.ReactNode }) 
       show: ({
         title = "An error occurred",
         description = "Something went wrong. Please try again later.",
-        onConfirm,
+        onExit: onExit,
       }: ErrorPopupProps) => {
         setState({
           open: true,
           title,
           description,
-          onConfirm,
+          onExit: onExit,
         });
       },
       hide: () => setState((prev) => ({ ...prev, open: false })),
@@ -61,13 +61,16 @@ export function ErrorPopupProvider({ children }: { children: React.ReactNode }) 
   );
 
   const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      state.onExit?.();
+    }
     setState((prev) => ({ ...prev, open }));
   };
 
   useEscapeKeyClose(state.open, ErrorPopupControl.hide);
 
-  const handleConfirm = () => {
-    state.onConfirm?.();
+  const handleExit = () => {
+    state.onExit?.();
     handleOpenChange(false);
   };
 
@@ -83,7 +86,7 @@ export function ErrorPopupProvider({ children }: { children: React.ReactNode }) 
           <DialogDescription className="text-base">{state.description}</DialogDescription>
           <DialogFooter>
             {/* <Button onClick={handleConfirm} className="w-full bg-red-600 hover:bg-red-700 text-white"> */}
-            <Button variant="destructive" className="w-full" onClick={handleConfirm}>
+            <Button variant="destructive" className="w-full" onClick={handleExit}>
               OK
             </Button>
           </DialogFooter>

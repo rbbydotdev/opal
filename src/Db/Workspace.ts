@@ -225,12 +225,6 @@ export class Workspace extends WorkspaceDAO {
     if (!workspaceId) {
       return { workspaceId: null, filePath: null };
     }
-    // const workspaceRouteRegex = new RegExp(`^${Workspace.rootRoute.replace(/\//g, "\\/")}\\/([^/]+)(\\/.*)?$`);
-    // const match = pathname.match(workspaceRouteRegex);
-    // if (!match) {
-    //   return { workspaceId: null, filePath: null };
-    // }
-    // const [_, workspaceId, filePath] = match;
     return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
   }
   static async createWithSeedFiles(name: string) {
@@ -253,16 +247,20 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.newDir(dirPath.join(newDirName));
   }
   newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
+    if (newFileName.isImage()) {
+      return this.newImageFile(dirPath, newFileName, content as Uint8Array);
+    }
     return this.disk.newFile(dirPath.join(newFileName), content);
   }
-  async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
-    const path = await this.newFile(dirPath, newFileName, content);
-    await Thumbnail.fromImage(this.guid, path, content);
-    return path;
+  private async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
+    const path = await this.disk.nextPath(dirPath.join(newFileName));
+    const thumb = await Thumbnail.fromImage(this.guid, path, content);
+    const finalPath = await this.disk.newFile(dirPath.join(newFileName), content);
+    if (!finalPath.equals(path)) {
+      await thumb.move(finalPath);
+    }
+    return finalPath;
   }
-  removeImageFile = async (filePath: AbsPath) => {
-    return this.disk.removeFile(filePath);
-  };
   async getImageThumbFile(filePath: AbsPath) {
     const { content } = await ThumbnailDAO.byPath(this.guid, filePath, ThumbnailDAO.THROW);
     return content;
@@ -275,19 +273,21 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeVirtualFile(path);
   }
   removeFile = async (filePath: AbsPath) => {
-    return Promise.all([this.disk.removeFile(filePath), ThumbnailDAO.remove(this.guid, filePath)]);
-  };
-  renameImageFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    return Promise.all([
-      ThumbnailDAO.move(this.guid, oldNode.path, newFullPath),
-      this.renameFile(oldNode, newFullPath),
-    ]);
+    console.log("removing file", filePath.str);
+    if (filePath.isImage()) {
+      return Promise.all([this.disk.removeFile(filePath), ThumbnailDAO.remove(this.guid, filePath)]);
+    } else {
+      return this.disk.removeFile(filePath);
+    }
   };
 
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const { newPath } = await this.disk.renameDirFile(oldNode.path, newFullPath);
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode);
+    if (oldNode.path.isImage()) {
+      await ThumbnailDAO.move(this.guid, oldNode.path, newPath);
+    }
     return newNode;
   };
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
@@ -391,7 +391,7 @@ export class Workspace extends WorkspaceDAO {
     const result: AbsPath[] = [];
     // await this.disk.initialIndexListener(() => {});
     this.disk.fileTree.walk((node) => {
-      if (node.mimeType?.startsWith("image/")) {
+      if (node.path.isImage()) {
         result.push(node.path);
       }
     });

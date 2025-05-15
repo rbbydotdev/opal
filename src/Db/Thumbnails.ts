@@ -1,4 +1,5 @@
 import { ClientDb } from "@/Db/instance";
+import { createThumbnail } from "@/lib/createThumbnail";
 import { NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, BasePath } from "@/lib/paths";
 import { nanoid } from "nanoid";
@@ -127,8 +128,8 @@ export class Thumbnail extends ThumbnailDAO {
     super(arg as ThumbnailRecord);
     Object.assign(this, arg);
   }
-  static async fromImage(workspaceId: string, path: AbsPath, image: Uint8Array) {
-    // const content = await createThumbnail(image, 150, 150);
-    return Thumbnail.create(workspaceId, path, image);
+  static async fromImage(workspaceId: string, path: AbsPath, image: Uint8Array, size = 10) {
+    const content = await createThumbnail(image, size, size);
+    return Thumbnail.create(workspaceId, path, content);
   }
 }

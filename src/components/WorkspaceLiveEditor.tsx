@@ -25,7 +25,7 @@ export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
   return (
     <div className="p-4 border-2 m-auto flex justify-center items-center h-full w-full flex-col">
-      <img className="max-h-[500px] aspect-auto" alt={alt} src={BasePath.encode(origSrc) + "?thumb=1"} />
+      <img className="max-h-[500px] aspect-auto" alt={alt} src={BasePath.encode(origSrc)} />
     </div>
   );
 }

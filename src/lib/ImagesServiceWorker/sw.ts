@@ -76,6 +76,7 @@ const SWWStore = new (class SwWorkspace {
     if (!this.workspace) throw new Error("backgroundCache; no workspace");
     await this.workspace.awaitFirstIndex();
     const cache = await this.getCache();
+    const Promises: Promise<void>[] = [];
     for (const imgPath of this.workspace.getImages()) {
       const contents = await this.workspace.disk.readFile(imgPath);
       if (contents) {
@@ -85,9 +86,10 @@ const SWWStore = new (class SwWorkspace {
             "Cache-Control": "public, max-age=31536000, immutable",
           },
         });
-        void cache.put(new Request(imgPath.str), response.clone());
+        Promises.push(cache.put(new Request(imgPath.str), response.clone()));
       }
     }
+    await Promise.all(Promises).then(() => Date.now());
   };
   getCache() {
     return caches.open(this.cacheKey); // Open the cache
@@ -98,7 +100,8 @@ const SWWStore = new (class SwWorkspace {
     if (workspaceId !== this.workspace?.name) {
       if (this.workspace) this.workspace.teardown();
       this.setWorkspace(await Workspace.fetchFromRouteAndInit(route));
-      void this.backgroundCache();
+      //disabling bground cache for now burns too much comput imo
+      // void this.backgroundCache().then(() => console.log("Background cache updated"));
     }
     return this.workspace as Workspace;
   }

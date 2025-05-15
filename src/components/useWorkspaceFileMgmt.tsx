@@ -60,6 +60,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     }
     setFocused(null);
   };
+  //TODO FIX RANGE FOCUS
 
   const removeFocusedFile = async () => {
     if (!focused || !currentWorkspace.disk.pathExists(focused)) return;

@@ -8,7 +8,6 @@ import clsx from "clsx";
 import Link from "next/link";
 import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
-import { isImageType } from "../lib/fileType";
 
 export const EditableFile = ({
   depth,
@@ -57,6 +56,7 @@ export const EditableFile = ({
       linkRef.current?.focus();
     }
   }, [isEditing, isFocused, linkRef]);
+
   return (
     <div className="select-none">
       {!isEditing ? (
@@ -79,20 +79,18 @@ export const EditableFile = ({
           prefetch={false}
         >
           <div style={{ marginLeft: depth + "rem", width: "100%" }}>
-            <File selected={isSelected}>
-              {isImageType(treeFile.mimeType) ? (
-                <img src={treeFile.path.str} alt={""} className="w-4 h-4 rounded-sm" />
-              ) : null}
+            <File selected={isSelected} className={clsx({ ["-ml-[1.2rem]"]: treeFile.path.isImage() || isSelected })}>
+              {treeFile.path.isImage() ? <img src={treeFile.path.str} alt="️" className="w-4 h-4 rounded-sm" /> : null}
               <span className={"py-2.5 truncate w-full text-xs text-ellipsis"}>{fileName}</span>
             </File>
           </div>
         </Link>
       ) : (
         <div style={{ marginLeft: depth + "rem", width: "100%" }}>
-          <File selected={isSelected}>
+          <File selected={isSelected} className="-ml-[0.7rem] w-full">
             <input
               ref={inputRef}
-              className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs"
+              className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full"
               type="text"
               value={fileName.str}
               onChange={(e) => setFileName(relPath(e.target.value))}
@@ -106,12 +104,21 @@ export const EditableFile = ({
   );
 };
 
-export function File({ selected = false, children }: { selected?: boolean; children: React.ReactNode }) {
+export function File({
+  selected = false,
+  className,
+  children,
+}: {
+  selected?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <span
       className={clsx(
-        { "before:content-[attr(data-star)] before:text-accent2 -ml-[1.2rem]": selected },
-        "items-center flex gap-2"
+        { "before:content-[attr(data-star)] before:text-accent2": selected },
+        "items-center flex gap-2",
+        className
       )}
       data-star="✦"
     >
