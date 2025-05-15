@@ -1,14 +1,17 @@
 import { RemoteAuthRecord } from "@/Db/RemoteAuth";
 import { SettingsDbRecord, SettingsRecord } from "@/Db/Settings";
+import { ThumbnailRecord } from "@/Db/Thumbnails";
 import { WorkspaceRecord } from "@/Db/Workspace";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
-import { DiskDAO, DiskRecord } from "./Disk";
+import { DiskRecord } from "./Disk";
+
 export class ClientIndexedDb extends Dexie {
   workspaces!: EntityTable<WorkspaceRecord, "guid">;
   remoteAuths!: EntityTable<RemoteAuthRecord, "guid">;
   settings!: EntityTable<SettingsRecord, "name">;
-  disks!: EntityTable<DiskDAO, "guid">;
+  disks!: EntityTable<DiskRecord, "guid">;
+  thumbnails!: Dexie.Table<ThumbnailRecord, [string, string] | string>;
 
   constructor() {
     super("ClientIndexedDb");
@@ -18,12 +21,14 @@ export class ClientIndexedDb extends Dexie {
       remoteAuths: "guid",
       workspaces: "guid, name",
       disks: "guid",
+      thumbnails: "[workspaceId+path], guid, path, workspaceId",
     });
 
     this.remoteAuths.mapToClass(RemoteAuthRecord);
     this.workspaces.mapToClass(WorkspaceRecord);
     this.settings.mapToClass(SettingsDbRecord);
     this.disks.mapToClass(DiskRecord);
+    this.thumbnails.mapToClass(ThumbnailRecord);
     applyEncryptionMiddleware<ClientIndexedDb>(
       this as ClientIndexedDb,
       new Uint8Array(new Array(32).fill(0)),

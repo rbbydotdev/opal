@@ -1,14 +1,46 @@
+import { Thumbnail } from "@/Db/Thumbnails";
 import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath } from "@/lib/paths";
+import { AbsPath, BasePath } from "@/lib/paths";
+import { isImageType } from "../fileType";
 
 const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 
+const REMOTE_DEBUG = true;
+if (REMOTE_DEBUG) {
+  const RemoteSwLogger = (_msg: string, type = "log") => {
+    try {
+      void fetch("http://localhost:8080", {
+        method: "POST",
+        body: JSON.stringify({
+          msg: _msg,
+          type,
+        }),
+        signal: AbortSignal.timeout(500),
+      });
+    } catch (_e) {
+      //do nothing!
+    }
+  };
+
+  console.log = function (msg: string) {
+    RemoteSwLogger(msg, "log");
+  };
+
+  console.debug = function (msg: string) {
+    RemoteSwLogger(msg, "debug");
+  };
+  console.error = function (msg: string) {
+    RemoteSwLogger(msg, "error");
+  };
+  console.warn = function (msg: string) {
+    RemoteSwLogger(msg, "warn");
+  };
+}
 // Logger
-const SwLogger = (_msg: string) => console.log(_msg);
 
 self.addEventListener("activate", function (event) {
   return event.waitUntil(self.clients.claim()); // Become available to all pages
@@ -23,7 +55,7 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 self.addEventListener("fetch", async (event) => {
   const url = new URL(event.request.url);
   if (
-    event.request.destination === "image" &&
+    (event.request.destination === "image" || isImageType(url.pathname)) &&
     url.origin === self.location.origin && // Only intercept local requests
     url.pathname !== "/favicon.ico" &&
     !WHITELIST.includes(url.pathname)
@@ -76,28 +108,38 @@ const SWWStore = new (class SwWorkspace {
 })();
 
 async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response> {
-  const pathname = decodeURIComponent(url.pathname);
-  SwLogger(`Intercepted request for: ${url.pathname}`);
+  const decodedPathname = BasePath.decode(url.pathname);
+  const isThumbnail = Thumbnail.isThumbnailHref(url.href);
+  console.log(`Intercepted request for: 
+    decodedPathname: ${decodedPathname}
+    url.pathname: ${url.pathname}
+    href: ${url.href}
+    isThumbnail: ${isThumbnail}
+  `);
   const workspace = await SWWStore.tryWorkspace(new URL(event.request.referrer).pathname);
   if (!workspace) throw new Error("No workspace mounted");
   const cache = await SWWStore.getCache();
   const cachedResponse = await cache.match(event.request);
   if (cachedResponse) {
-    SwLogger(`Cache hit for: ${url.pathname}`);
+    console.log(`Cache hit for: ${decodedPathname}`);
     return cachedResponse;
   }
-  SwLogger(`Cache miss for: ${url.pathname}, fetching from workspace`);
+  console.log(`Cache miss for: ${decodedPathname}, fetching from workspace`);
   try {
     await Promise.race([
       workspace.awaitFirstIndex(),
       new Promise((_, reject) => setTimeout(() => reject(new Error("Indexing timeout")), 5000)),
     ]);
-    const contents = await workspace.disk.readFile(AbsPath.New(pathname));
+
+    // console.log(url.href, Thumbnail.isThumbnailHref(url.href), decodedPathname);
+    const contents = isThumbnail
+      ? await workspace.getImageThumbFile(AbsPath.New(decodedPathname))
+      : await workspace.readFile(AbsPath.New(decodedPathname));
 
     if (contents) {
       const response = new Response(contents, {
         headers: {
-          "Content-Type": getMimeType(pathname),
+          "Content-Type": getMimeType(decodedPathname),
           "Cache-Control": "public, max-age=31536000, immutable",
         },
       });
@@ -106,7 +148,7 @@ async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response
       return response;
     }
   } catch (error) {
-    SwLogger(errF`Error reading file from workspace: ${error}`.toString());
+    console.log(errF`Error reading file from workspace: ${error}`.toString());
   }
 
   return fetch(event.request);

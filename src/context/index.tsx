@@ -4,6 +4,7 @@ import { TreeDir, TreeDirRoot, TreeFile } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor } from "@/lib/paths";
 import { useLiveQuery } from "dexie-react-hooks";
+import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 
@@ -37,7 +38,7 @@ export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 
-export function useCurrentFilepath() {
+export function useFileContents() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
   const [contents, setContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
@@ -72,7 +73,18 @@ export function useCurrentFilepath() {
     },
     [currentWorkspace, filePath]
   );
-  return { error, filePath, contents, updateContents, mimeType };
+  return { error, filePath, contents, mimeType, updateContents };
+}
+export function useCurrentFilepath() {
+  const { currentWorkspace } = useWorkspaceContext();
+  const { path: filePath } = useWorkspaceRoute();
+
+  if (filePath === null || currentWorkspace.isNull) {
+    return { filePath: null, mimeType: null, isImage: null };
+  }
+  const mimeType = mime.lookup(filePath.str) || "";
+
+  return { filePath, mimeType, isImage: mimeType.startsWith("image/") };
 }
 
 export function useWorkspaceRoute() {
