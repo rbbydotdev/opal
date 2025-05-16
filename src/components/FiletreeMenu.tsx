@@ -3,11 +3,10 @@ import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath, relPath } from "@/lib/paths";
+import { absPath, AbsPath } from "@/lib/paths";
 import clsx from "clsx";
 import React from "react";
 import { isAncestor } from "../lib/paths";
@@ -100,17 +99,11 @@ function useFileTreeDragAndDrop({
     // console.debug("External Drop");
     const { files } = event.dataTransfer;
     for (const file of files) {
-      if (isAcceptedFileType(file)) {
-        const fileContents = new Uint8Array(await file.arrayBuffer());
-        void currentWorkspace.newFile(targetPath, relPath(file.name), fileContents);
-      } else {
-        await new Promise((rs) =>
-          ErrorPopupControl.show({
-            title: "File Type Not Supported",
-            description: `The file type ${file.type} is not supported. Please use a supported file type.`,
-            onExit: () => rs(true),
-          })
-        );
+      try {
+        await currentWorkspace.dropImageFile(file, targetPath);
+      } catch (e) {
+        //image popyp
+        console.error("Error dropping file:", e);
       }
     }
   };

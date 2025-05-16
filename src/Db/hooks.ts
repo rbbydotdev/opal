@@ -1,6 +1,6 @@
 import { ClientDb } from "@/Db/instance";
 import { useLiveQuery } from "dexie-react-hooks";
-import { SettingsRecord } from "./Settings";
+import { SettingsRecord } from "./SettingsRecord";
 
 export function useSetting<T extends SettingsRecord>(settingName: string, defaultValue?: T["value"]) {
   const result = useLiveQuery(() => ClientDb.settings.get(settingName), [settingName]);

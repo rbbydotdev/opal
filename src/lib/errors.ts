@@ -35,6 +35,24 @@ export function isErrorWithCode(error: unknown, code?: string): boolean {
   return error instanceof Error && (code ? (error as { code?: string }).code === code : true);
 }
 
+export function isError(
+  error: unknown,
+  target:
+    | typeof ApplicationError
+    | typeof NotFoundError
+    | typeof ConflictError
+    | typeof BadGatewayError
+    | typeof UnauthorizedError
+    | typeof BadRequestError
+    | typeof ForbiddenError
+    | typeof InternalServerError
+    | typeof ServiceUnavailableError
+    | typeof GatewayTimeoutError
+    | typeof NotImplementedError
+): boolean {
+  return ((error as { name: string }).name === target.name) as boolean;
+}
+
 export function errorCode(error: unknown, code?: string): ErrorWithCode {
   if (isErrorWithCode(error, code)) {
     return error as ErrorWithCode;

@@ -1,15 +1,11 @@
 // import { newImagesWorkerInstance } from "@/components/SWImages";
+// import { newImagesWorkerInstance } from "@/components/SWImages";
+
 import { ClientDb } from "@/Db/instance";
+import { ThumbnailRecord } from "@/Db/ThumbnailRecord";
 import { NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, BasePath } from "@/lib/paths";
 import { nanoid } from "nanoid";
-
-export class ThumbnailRecord {
-  guid!: string;
-  path!: string;
-  workspaceId!: string;
-  content!: Uint8Array;
-}
 
 const THROW = true;
 const NO_THROW = false;
@@ -116,10 +112,7 @@ export class ThumbnailDAO implements ThumbnailRecord {
 }
 
 export class Thumbnail extends ThumbnailDAO {
-  static isThumbnailHref(href: string) {
-    const url = new URL(String(href), "http://localhost");
-    return url.searchParams.has("thumb");
-  }
+  // private worker: ReturnType<typeof newImagesWorkerInstance> | undefined;
   static pathToThumbnailPath(path: AbsPath | string, encode: boolean = true) {
     const url = new URL(String(path), "http://localhost");
     url.searchParams.delete("thumb");
@@ -132,6 +125,7 @@ export class Thumbnail extends ThumbnailDAO {
     url.searchParams.delete("thumb");
     return absPath(url.href.replace(url.origin, ""));
   }
+
   constructor(arg: Partial<ThumbnailRecord>) {
     super(arg as ThumbnailRecord);
     Object.assign(this, arg);

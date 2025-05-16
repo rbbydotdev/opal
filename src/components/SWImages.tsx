@@ -2,7 +2,7 @@
 import { Remote } from "comlink";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
-import type { ImageWorkerApiType } from "@/lib/ImagesWorker/ImagesWorker.ww";
+import type { ImageWorkerApiType } from "@/lib/ImagesWorker/images.ww";
 import * as Comlink from "comlink";
 
 export type WorkerApi = {
@@ -10,9 +10,14 @@ export type WorkerApi = {
 } & ImageWorkerApiType;
 
 export const newImagesWorkerInstance = () => {
-  const workerInstance = new Worker(new URL("@/lib/ImagesWorker/ImagesWorker.ww.ts", import.meta.url));
-  const api = Comlink.wrap<WorkerApi>(workerInstance);
-  return { api, worker: workerInstance };
+  try {
+    const workerInstance = new Worker(new URL("@/lib/ImagesWorker/images.ww.ts", import.meta.url));
+    const api = Comlink.wrap<WorkerApi>(workerInstance);
+    return { api, worker: workerInstance };
+  } catch (e) {
+    console.error("Error creating worker instance:", e);
+    throw e;
+  }
 };
 type WorkerContextType = WorkerApi;
 

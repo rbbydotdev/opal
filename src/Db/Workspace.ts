@@ -1,9 +1,10 @@
 "use client";
-import { ErrorPopupControl } from "@/components/ui/error-popup";
+// import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { thumbnailFromImage } from "@/Db/thumbnailFromImage";
 import { ThumbnailDAO } from "@/Db/Thumbnails";
+import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { getFileType, isImageType } from "@/lib/fileType";
 import { absPath, AbsPath, isAncestor, relPath, RelPath } from "@/lib/paths";
@@ -11,14 +12,6 @@ import { nanoid } from "nanoid";
 import slugify from "slugify";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./RemoteAuth";
-export class WorkspaceRecord {
-  guid!: string;
-  name!: string;
-  disk!: DiskJType;
-  createdAt!: Date;
-  remoteAuth!: RemoteAuthJType;
-}
-
 export class WorkspaceDAO implements WorkspaceRecord {
   // static rootRoute = "/workspace";
   static guid = () => "workspace:" + nanoid();
@@ -182,6 +175,15 @@ export class Workspace extends WorkspaceDAO {
     "/ideas/ideas.md": "# Red Green Blue",
   };
 
+  get cacheKey() {
+    return this.guid + "/cache";
+  }
+  private tearDownCache = async () => {
+    const cache = await caches.open(this.cacheKey);
+    const cachedRequests = await cache.keys();
+    await Promise.all(cachedRequests.map((req) => cache.delete(req)));
+  };
+
   createdAt: Date = new Date();
   name: string;
   guid: string;
@@ -215,6 +217,11 @@ export class Workspace extends WorkspaceDAO {
 
   get id() {
     return this.guid;
+  }
+
+  static async DeleteAll() {
+    const workspaces = await Workspace.all();
+    await Promise.all(workspaces.map(async (ws) => (await ws.toModel()).delete()));
   }
 
   static parseWorkspacePath(pathname: string) {
@@ -253,10 +260,12 @@ export class Workspace extends WorkspaceDAO {
   }
   private async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
     const path = await this.disk.nextPath(dirPath.join(newFileName));
-    //TODO Clean up thumbnail logic
-    const thumbGuid = await thumbnailFromImage(this.guid, path, content);
+    const thumbGuid = await thumbnailFromImage(this.guid, path, content).catch((r) => {
+      console.error("Error creating thumbnail", r);
+      return null;
+    });
     const finalPath = await this.disk.newFile(dirPath.join(newFileName), content);
-    if (!finalPath.equals(path)) {
+    if (!finalPath.equals(path) && thumbGuid !== null) {
       await ThumbnailDAO.byGuid(thumbGuid).then((thumb) => {
         if (!thumb) throw new Error("Thumbnail not found");
         return thumb.move(finalPath);
@@ -320,11 +329,7 @@ export class Workspace extends WorkspaceDAO {
   async dropImageFile(file: File, targetPath: AbsPath) {
     const fileType = getFileType(new Uint8Array(await file.arrayBuffer()));
     if (!isImageType(fileType)) {
-      ErrorPopupControl.show({
-        title: "Not a valid image",
-        description: "Please upload a valid image file (png,gif,webp,jpg)",
-      });
-      return "";
+      throw new BadRequestError("Not a valid image");
     }
     return this.newImageFile(targetPath, relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
@@ -364,15 +369,10 @@ export class Workspace extends WorkspaceDAO {
 
   delete = async () => {
     await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
-      // ClientDb.thumbnails.delete(this.guid);
-
-      await Promise.all([
-        ClientDb.workspaces.delete(this.guid),
-        this.disk.teardown(),
-        this.disk.delete(),
-        ThumbnailDAO.removeWorkspace(this.guid),
-      ]);
+      await Promise.all([ClientDb.workspaces.delete(this.guid), this.disk.teardown(), this.disk.delete()]);
     });
+    await this.tearDownCache();
+    await ThumbnailDAO.removeWorkspace(this.guid);
   };
 
   home = () => {

@@ -1,10 +1,10 @@
-import { RemoteAuthRecord } from "@/Db/RemoteAuth";
-import { SettingsDbRecord, SettingsRecord } from "@/Db/Settings";
-import { ThumbnailRecord } from "@/Db/Thumbnails";
-import { WorkspaceRecord } from "@/Db/Workspace";
+import { SettingsRecord } from "@/Db/SettingsRecord";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
-import { DiskRecord } from "./Disk";
+import { DiskRecord } from "./DiskRecord";
+import { RemoteAuthRecord } from "./RemoteAuthRecord";
+import { ThumbnailRecord } from "./ThumbnailRecord";
+import { WorkspaceRecord } from "./WorkspaceRecord";
 
 export class ClientIndexedDb extends Dexie {
   workspaces!: EntityTable<WorkspaceRecord, "guid">;
@@ -26,7 +26,7 @@ export class ClientIndexedDb extends Dexie {
 
     this.remoteAuths.mapToClass(RemoteAuthRecord);
     this.workspaces.mapToClass(WorkspaceRecord);
-    this.settings.mapToClass(SettingsDbRecord);
+    this.settings.mapToClass(SettingsRecord);
     this.disks.mapToClass(DiskRecord);
     this.thumbnails.mapToClass(ThumbnailRecord);
     applyEncryptionMiddleware<ClientIndexedDb>(

@@ -1,10 +1,9 @@
-import { newImagesWorkerInstance } from "@/components/SWImages";
+import { ImagesWorker } from "@/lib/ImagesWorker/instance";
 import { AbsPath } from "@/lib/paths";
 
 //avoiding circular dependency for now
-export async function thumbnailFromImage(workspaceId: string, path: AbsPath, content: Uint8Array, size = 10) {
-  const thumbWw = newImagesWorkerInstance();
-  const thumbGuid = await thumbWw.api.thumbnailForWorkspace({
+export async function thumbnailFromImage(workspaceId: string, path: AbsPath, content: Uint8Array, size = 50) {
+  const thumbGuid = await ImagesWorker.api.thumbnailForWorkspace({
     workspaceId,
     path,
     content,
