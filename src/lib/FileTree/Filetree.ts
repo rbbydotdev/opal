@@ -10,7 +10,7 @@ import {
   VirtualFileTreeNode,
 } from "@/lib/FileTree/TreeNode";
 import { AbsPath, BasePath, relPath, RelPath } from "@/lib/paths";
-// import { Mutex } from "async-mutex";
+import { Mutex } from "async-mutex";
 
 export class FileTree {
   initialIndex = false;
@@ -21,6 +21,7 @@ export class FileTree {
   private map = new Map<string, TreeNode>();
   public root: TreeDirRoot = new TreeDirRoot();
 
+  private mutex = new Mutex();
   // private tree: TreeDir = this.root;
   constructor(private fs: FileSystem, guid: string) {
     this.guid = `${guid}/FileTree`;
@@ -67,20 +68,21 @@ export class FileTree {
 
     visitor,
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
-    console.timeLog("Indexing file tree");
     try {
+      // await this.mutex.acquire();
       console.log("Indexing file tree");
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
+      this.root.walk((node) => this.map.set(node.path.str, node));
+      this.dirs = this.flatDirTree();
+      this.initialIndex = true;
+      return this.root;
     } catch (e) {
       console.error("Error during file tree indexing:", e);
       throw e;
+    } finally {
+      // await this.mutex.release();
     }
-    console.timeEnd("Indexing file tree");
-    this.root.walk((node) => this.map.set(node.path.str, node));
-    this.dirs = this.flatDirTree();
-    this.initialIndex = true;
-    return this.root;
   };
 
   walk(

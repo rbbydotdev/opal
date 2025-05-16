@@ -1,5 +1,6 @@
 "use client";
 import { DexieFsDb } from "@/Db/DexieFsDb";
+import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
@@ -47,12 +48,6 @@ interface CommonFileSystem {
 // export type FileSystem = InstanceType<typeof LightningFs>["promises"] | ReturnType<typeof memfs>["fs"]["promises"];
 
 export type FileSystem = CommonFileSystem;
-
-export class DiskRecord {
-  guid!: string;
-  type!: DiskType;
-  indexCache!: TreeDirRootJType;
-}
 
 export class DiskDAO implements DiskRecord {
   guid!: string;
@@ -483,9 +478,10 @@ export abstract class Disk extends DiskDAO {
     }
   }
 
-  async delete() {
+  delete() {
     // void this.fileTree.clearCache();
-    throw new Error("Not implemented");
+    // throw new Error("Not implemented");
+    return ClientDb.disks.delete(this.guid);
   }
   teardown() {
     this.remote.tearDown();

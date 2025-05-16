@@ -1,9 +1,9 @@
 "use client";
-import { deleteIDBs } from "@/app/deleteIDBs";
 import Identicon from "@/components/Identicon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceContext } from "@/context";
+import { Workspace } from "@/Db/Workspace";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { ChevronDown, CirclePlus, DatabaseZap, Delete, Settings, Zap } from "lucide-react";
 import Link from "next/link";
@@ -78,7 +78,7 @@ export function WorkSpaceButtonBar() {
         icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}
         title={"delete_all"}
         href="#"
-        onClick={deleteIDBs}
+        onClick={() => Workspace.DeleteAll()}
       />
       <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
       <BigButton icon={<Settings stroke="current" size={32} strokeWidth={1.25} />} title="settings" href="/settings" />

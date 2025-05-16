@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Workspace } from "@/Db/Workspace";
+import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context";
+import { BadRequestError, isError } from "@/lib/errors";
 import { AbsPath } from "@/lib/paths";
 import {
   AdmonitionDirectiveDescriptor,
@@ -150,8 +152,23 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       imagePreviewHandler: async (src: string) => {
         return Promise.resolve(src);
       },
-      imageUploadHandler: (file) =>
-        currentWorkspace.dropImageFile(file, path?.dirname() ?? AbsPath.New("/")).then((path) => String(path)),
+      imageUploadHandler: async (file) => {
+        try {
+          return await currentWorkspace
+            .dropImageFile(file, path?.dirname() ?? AbsPath.New("/"))
+            .then((path) => String(path));
+        } catch (e) {
+          if (isError(e, BadRequestError)) {
+            ErrorPopupControl.show({
+              title: "Not a valid image",
+              description: "Please upload a valid image file (png,gif,webp,jpg)",
+            });
+            return Promise.resolve("");
+          } else {
+            throw e;
+          }
+        }
+      },
     }),
     tablePlugin(),
     thematicBreakPlugin(),

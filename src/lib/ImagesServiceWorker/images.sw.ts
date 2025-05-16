@@ -1,29 +1,26 @@
-import { Thumbnail } from "@/Db/Thumbnails";
+// import { Thumbnail } from "@/Db/Thumbnails";
+import { isThumbnailHref } from "@/Db/isThumbnailHref";
 import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
+import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, BasePath } from "@/lib/paths";
-import { isImageType } from "../fileType";
 
 const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 
-const REMOTE_DEBUG = true;
+const REMOTE_DEBUG = false;
 if (REMOTE_DEBUG) {
   const RemoteSwLogger = (_msg: string, type = "log") => {
-    try {
-      void fetch("http://localhost:8080", {
-        method: "POST",
-        body: JSON.stringify({
-          msg: _msg,
-          type,
-        }),
-        signal: AbortSignal.timeout(500),
-      });
-    } catch (_e) {
-      //do nothing!
-    }
+    void fetch("http://localhost:8080", {
+      method: "POST",
+      body: JSON.stringify({
+        msg: _msg,
+        type,
+      }),
+      signal: AbortSignal.timeout(500),
+    }).catch(() => {});
   };
 
   console.log = function (msg: string) {
@@ -69,10 +66,8 @@ const SWWStore = new (class SwWorkspace {
   setWorkspace(workspace: Workspace) {
     return (this.workspace = workspace);
   }
-  get cacheKey() {
-    return (this.workspace?.name ?? "unknown") + "/cache";
-  }
   backgroundCache = async () => {
+    return;
     if (!this.workspace) throw new Error("backgroundCache; no workspace");
     await this.workspace.awaitFirstIndex();
     const cache = await this.getCache();
@@ -92,7 +87,7 @@ const SWWStore = new (class SwWorkspace {
     await Promise.all(Promises).then(() => Date.now());
   };
   getCache() {
-    return caches.open(this.cacheKey); // Open the cache
+    return caches.open(this.getWorkspace()!.cacheKey);
   }
   async tryWorkspace(route: string): Promise<Workspace> {
     // this.workspace.name
@@ -101,7 +96,7 @@ const SWWStore = new (class SwWorkspace {
       if (this.workspace) this.workspace.teardown();
       this.setWorkspace(await Workspace.fetchFromRouteAndInit(route));
       //disabling bground cache for now burns too much comput imo
-      // void this.backgroundCache().then(() => console.log("Background cache updated"));
+      void this.backgroundCache().then(() => console.log("Background cache updated"));
     }
     return this.workspace as Workspace;
   }
@@ -112,7 +107,7 @@ const SWWStore = new (class SwWorkspace {
 
 async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response> {
   const decodedPathname = BasePath.decode(url.pathname);
-  const isThumbnail = Thumbnail.isThumbnailHref(url.href);
+  const isThumbnail = isThumbnailHref(url.href);
   console.log(`Intercepted request for: 
     decodedPathname: ${decodedPathname}
     url.pathname: ${url.pathname}
