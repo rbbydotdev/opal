@@ -18,8 +18,6 @@ export class TreeNode {
   name: RelPath;
   type: "dir" | "file";
   dirname: AbsPath;
-  // mimeType?: MimeType;
-  // eTag?: string;
   basename: RelPath;
   parent: TreeDir | null;
   path: AbsPath;
@@ -36,14 +34,20 @@ export class TreeNode {
     return this.toString();
   }
 
+  static FromPath(path: AbsPath, type: "dir" | "file", parent: TreeDir | null = null) {
+    const name = path.basename();
+    const dirname = path.dirname();
+    const basename = path.basename();
+    const depth = path.depth();
+    return new TreeNode({ name, type, dirname, basename, path, depth, parent });
+  }
+
   replaceWith(newNode: TreeNode) {
     this.name = newNode.name;
     this.type = newNode.type;
     this.dirname = newNode.dirname;
     this.basename = newNode.basename;
     this.path = newNode.path;
-    // this.mimeType = newNode.mimeType;
-    // this.eTag = newNode.eTag;
     this.depth = newNode.depth;
     this.parent = newNode.parent;
     this.children = newNode.children;
@@ -67,11 +71,9 @@ export class TreeNode {
     name,
     type,
     dirname,
-    // mimeType,
     basename,
     path,
     parent,
-    // eTag,
     depth,
   }: {
     name: RelPath | string;
@@ -79,19 +81,16 @@ export class TreeNode {
     dirname: AbsPath | string;
     basename: RelPath | string;
     parent: TreeDir | null;
-    // mimeType?: MimeType;
-    // eTag?: string;
+    // parent: TreeDir | null;
     path: AbsPath | string;
-    depth: number;
+    depth?: number;
   }) {
     this.name = typeof name === "string" ? relPath(name) : name;
     this.type = type;
-    // this.mimeType = mimeType;
-    // this.eTag = eTag;
     this.dirname = absPath(dirname);
     this.basename = relPath(basename);
     this.path = absPath(path);
-    this.depth = depth;
+    this.depth = typeof depth !== "undefined" ? depth : this.path.depth();
     this.parent = parent;
   }
 
@@ -261,25 +260,23 @@ export function isTreeDir(node: TreeNode): node is TreeDir {
 export class TreeFile extends TreeNode {
   type = "file" as const;
   // mimeType: MimeType = MimeTypes.MARKDOWN;
+
   constructor({
     name,
     dirname,
     basename,
-    // mimeType,
     path,
     depth,
     parent,
   }: {
     name: RelPath;
     dirname: AbsPath;
-    // mimeType: MimeType;
     basename: RelPath;
     path: AbsPath;
     depth: number;
     parent: TreeDir | null;
   }) {
     super({ name, type: "file", parent, dirname, basename, path, depth });
-    // this.mimeType = mimeType;
   }
 }
 

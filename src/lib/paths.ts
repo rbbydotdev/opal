@@ -124,6 +124,10 @@ export class AbsPath extends BasePath {
     return new AbsPath(path.dirname(this.path));
   }
 
+  depth() {
+    return this.str.split("/").length - 2;
+  }
+
   changePrefix(newPrefix: string) {
     const ext = this.extname();
     if (!ext) return this.dirname().join(newPrefix);

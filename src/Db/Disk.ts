@@ -147,24 +147,38 @@ export class RenameFileType {
     };
   }
 }
+/*
+
+  DISK LOCAL EVENTS ARE NOT TO BE USED TO TRIGGER WRITES,INDEXES ETC
+  INSTEAD THEY ARE SIGNALS THAT THESE THINGS HAVE TAKEN PLACE
+  NEVER USE THEM TO TRIGGER 'WORK' RATHER SIGNALS THAT WORK HAS BEEN DONE
+
+  FOR NOW; DISK REMOTE EVENTS, SIGNAL THAT WORK MAY NEED TO BE DONE, THIS COULD CHANGE,
+  REMOTE SIGNAL COULD TELL REMOTE TO LOOK AT STORAGE CACHES AGAIN AS THEY SHOULD BE UPDATED
+
+*/
 export class DiskRemoteEvents extends Channel<{
   [DiskRemoteEvents.RENAME]: RemoteRenameFileType;
   [DiskRemoteEvents.INDEX]: never;
   [DiskLocalEvents.WRITE]: { filePath: string };
+  [DiskRemoteEvents.UPDATE_INDEX]: { filePath: string; type: "file" | "dir" };
 }> {
   static WRITE = "write" as const;
   static INDEX = "index" as const;
   static RENAME = "rename" as const;
+  static UPDATE_INDEX = "updateIndex" as const;
 }
 
 export class DiskLocalEvents extends Emittery<{
   [DiskLocalEvents.RENAME]: RenameFileType;
   [DiskLocalEvents.INDEX]: never;
   [DiskLocalEvents.WRITE]: { filePath: string; contents: string };
+  [DiskRemoteEvents.UPDATE_INDEX]: { filePath: string; type: "file" | "dir" };
 }> {
   static WRITE = "write" as const;
   static INDEX = "index" as const;
   static RENAME = "rename" as const;
+  static UPDATE_INDEX = "updateIndex" as const;
 }
 export abstract class Disk extends DiskDAO {
   remote: DiskRemoteEvents;
@@ -184,6 +198,13 @@ export abstract class Disk extends DiskDAO {
       throw errF`Error initializing index ${e}`;
     }
     return;
+  }
+
+  updateIndex(path: AbsPath, type: "file" | "dir", writeIndexCache = true) {
+    this.fileTree.updateIndex(path, type);
+    if (writeIndexCache) {
+      /*await*/ void this.update({ indexCache: this.fileTree.root.toJSON() });
+    }
   }
 
   fileTreeIndex = async ({
@@ -235,8 +256,9 @@ export abstract class Disk extends DiskDAO {
   latestIndexListener(callback: (fileTree: TreeDir) => void) {
     if (this.fileTree.initialIndex) callback(this.fileTree.root);
     return this.local.on(DiskLocalEvents.INDEX, () => {
+      // return this.local.on([DiskLocalEvents.INDEX, DiskLocalEvents.UPDATE_INDEX], () => {
       callback(this.fileTree.root);
-      console.debug("disk index");
+      console.debug("local disk index event");
     });
   }
   // static INIT_LISTENERS = true;
@@ -268,6 +290,11 @@ export abstract class Disk extends DiskDAO {
 
       this.remote.on(DiskRemoteEvents.INDEX, async () => {
         await this.fileTreeIndex();
+        void this.local.emit(DiskLocalEvents.INDEX);
+      }),
+
+      this.remote.on(DiskRemoteEvents.UPDATE_INDEX, async ({ filePath, type }) => {
+        this.updateIndex(absPath(filePath), type);
         void this.local.emit(DiskLocalEvents.INDEX);
       }),
     ];
@@ -398,6 +425,8 @@ export abstract class Disk extends DiskDAO {
     await this.fileTreeIndex();
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskLocalEvents.INDEX);
+    // await this.local.emit(DiskLocalEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "dir" });
+    // await this.remote.emit(DiskLocalEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "dir" });
     return fullPath;
   }
   async removeFile(filePath: AbsPath) {
@@ -439,9 +468,12 @@ export abstract class Disk extends DiskDAO {
       fullPath = fullPath.inc();
     }
     await this.writeFileRecursive(fullPath, content);
-    await this.fileTreeIndex();
+
+    // await this.fileTreeIndex(); avoiding now for speed
+    this.updateIndex(fullPath, "file");
     await this.local.emit(DiskLocalEvents.INDEX);
-    await this.remote.emit(DiskLocalEvents.INDEX);
+    // await this.remote.emit(DiskLocalEvents.INDEX);
+    await this.remote.emit(DiskRemoteEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "file" });
     return fullPath;
   }
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {

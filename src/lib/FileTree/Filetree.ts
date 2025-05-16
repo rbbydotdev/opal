@@ -63,19 +63,30 @@ export class FileTree {
     return tree;
   }
 
+  updateIndex = (path: AbsPath, type: "file" | "dir") => {
+    //recursive to back fill parent nodes
+    const node = this.nodeFromPath(path);
+    if (node) return node;
+    const parent = path.dirname().str === "/" ? this.root : this.updateIndex(path.dirname(), "dir");
+    const newNode = TreeNode.FromPath(path, type, parent as TreeDir);
+    this.insertNode(newNode.parent!, newNode);
+    this.map.set(path.str, newNode);
+    return newNode;
+  };
+
   index = async ({
     tree = new TreeDirRoot(),
 
     visitor,
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
-    let release: () => void = () => {};
+    // let release: () => void = () => {};
     try {
-      if (this.mutex.isLocked()) {
-        console.debug("Indexing is already in progress, canceling previous operation");
-        this.mutex.cancel();
-      }
-      release = await this.mutex.acquire();
-      await new Promise((rs) => setTimeout(rs, 3000));
+      // if (this.mutex.isLocked()) {
+      //   console.debug("Indexing is already in progress, canceling previous operation");
+      //   this.mutex.cancel();
+      // }
+      // release = await this.mutex.acquire();
+      // await new Promise((rs) => setTimeout(rs, 3000));
       console.log("Indexing file tree");
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
@@ -87,13 +98,15 @@ export class FileTree {
       console.log(">>>");
       console.log(e);
       if (e === E_CANCELED) {
+        // this.mutex.
         console.log("Indexing was canceled");
+        return this.root;
       } else {
         console.error("Error during file tree indexing:", e);
         throw e;
       }
     } finally {
-      release();
+      // release();
     }
   };
 
