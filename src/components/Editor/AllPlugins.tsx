@@ -164,7 +164,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
               description: "Please upload a valid image file (png,gif,webp,jpg)",
             });
             */
-            return Promise.resolve("");
+            return Promise.resolve(file.name ?? "");
           } else {
             throw e;
           }

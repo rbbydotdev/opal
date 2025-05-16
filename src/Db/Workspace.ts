@@ -7,6 +7,7 @@ import { ThumbnailDAO } from "@/Db/Thumbnails";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { getFileType, isImageType } from "@/lib/fileType";
+import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, isAncestor, relPath, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
@@ -337,7 +338,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.awaitFirstIndex();
   }
   async dropImageFile(file: File, targetPath: AbsPath) {
-    const fileType = getFileType(new Uint8Array(await file.arrayBuffer()));
+    const fileType = getMimeType(file.name); //getFileType(new Uint8Array(await file.arrayBuffer()));
     if (!isImageType(fileType)) {
       throw new BadRequestError("Not a valid image");
     }

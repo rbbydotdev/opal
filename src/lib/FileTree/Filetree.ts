@@ -67,10 +67,11 @@ export class FileTree {
     //recursive to back fill parent nodes
     const node = this.nodeFromPath(path);
     if (node) return node;
-    const parent = path.dirname().str === "/" ? this.root : this.updateIndex(path.dirname(), "dir");
+    const parent = (path.dirname().str === "/" ? this.root : this.updateIndex(path.dirname(), "dir")) || this.root;
     const newNode = TreeNode.FromPath(path, type, parent as TreeDir);
     this.insertNode(newNode.parent!, newNode);
     this.map.set(path.str, newNode);
+    this.dirs = this.flatDirTree();
     return newNode;
   };
 
@@ -95,8 +96,8 @@ export class FileTree {
       this.initialIndex = true;
       return this.root;
     } catch (e) {
-      console.log(">>>");
-      console.log(e);
+      // console.log(">>>");
+      // console.log(e);
       if (e === E_CANCELED) {
         // this.mutex.
         console.log("Indexing was canceled");
