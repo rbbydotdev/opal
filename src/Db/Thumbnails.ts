@@ -1,5 +1,5 @@
+// import { newImagesWorkerInstance } from "@/components/SWImages";
 import { ClientDb } from "@/Db/instance";
-import { createThumbnail } from "@/lib/createThumbnail";
 import { NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath, BasePath } from "@/lib/paths";
 import { nanoid } from "nanoid";
@@ -53,7 +53,7 @@ export class ThumbnailDAO implements ThumbnailRecord {
     return thumbDAO;
   };
   save() {
-    return ClientDb.thumbnails.add(this.toRecord());
+    return ClientDb.thumbnails.put(this.toRecord());
   }
 
   static update = async (workspaceId: string, path: AbsPath, content: Uint8Array): Promise<ThumbnailDAO> => {
@@ -70,6 +70,14 @@ export class ThumbnailDAO implements ThumbnailRecord {
   update(properties: Omit<Partial<ThumbnailRecord>, "guid">) {
     return ClientDb.thumbnails.update(this.guid, properties);
   }
+
+  static byGuid = async (guid: string): Promise<ThumbnailDAO | null> => {
+    const thumbnail = await ClientDb.thumbnails.get(guid);
+    if (!thumbnail) {
+      return null;
+    }
+    return new ThumbnailDAO({ ...thumbnail });
+  };
 
   static exists = async (workspaceId: string, path: AbsPath | string): Promise<boolean> => {
     const record = await ClientDb.thumbnails.get([workspaceId, String(path)]);
@@ -127,9 +135,5 @@ export class Thumbnail extends ThumbnailDAO {
   constructor(arg: Partial<ThumbnailRecord>) {
     super(arg as ThumbnailRecord);
     Object.assign(this, arg);
-  }
-  static async fromImage(workspaceId: string, path: AbsPath, image: Uint8Array, size = 10) {
-    const content = await createThumbnail(image, size, size);
-    return Thumbnail.create(workspaceId, path, content);
   }
 }

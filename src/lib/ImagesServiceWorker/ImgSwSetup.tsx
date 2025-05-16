@@ -25,7 +25,7 @@ export async function setupServiceWorker(): Promise<void> {
     // await unregisterServiceWorkers();
     if (!navigator.serviceWorker.controller) {
       console.warn("Service Worker is not controlling the page.");
-      await navigator.serviceWorker.register(new URL("@/lib/ImagesServiceWorker/sw.ts", import.meta.url), {
+      await navigator.serviceWorker.register(new URL("@/lib/ImagesServiceWorker/images.sw.ts", import.meta.url), {
         scope: "/",
         updateViaCache: "none",
       });
