@@ -2,6 +2,7 @@
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
+import { thumbnailFromImage } from "@/Db/thumbnailFromImage";
 import { ThumbnailDAO } from "@/Db/Thumbnails";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { getFileType, isImageType } from "@/lib/fileType";
@@ -10,8 +11,6 @@ import { nanoid } from "nanoid";
 import slugify from "slugify";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./RemoteAuth";
-import { Thumbnail } from "./Thumbnails";
-
 export class WorkspaceRecord {
   guid!: string;
   name!: string;
@@ -254,10 +253,14 @@ export class Workspace extends WorkspaceDAO {
   }
   private async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
     const path = await this.disk.nextPath(dirPath.join(newFileName));
-    const thumb = await Thumbnail.fromImage(this.guid, path, content);
+    //TODO Clean up thumbnail logic
+    const thumbGuid = await thumbnailFromImage(this.guid, path, content);
     const finalPath = await this.disk.newFile(dirPath.join(newFileName), content);
     if (!finalPath.equals(path)) {
-      await thumb.move(finalPath);
+      await ThumbnailDAO.byGuid(thumbGuid).then((thumb) => {
+        if (!thumb) throw new Error("Thumbnail not found");
+        return thumb.move(finalPath);
+      });
     }
     return finalPath;
   }
