@@ -79,6 +79,11 @@ export class WorkspaceDAO implements WorkspaceRecord {
 
     return new Workspace({ ...workspace, remoteAuth, disk });
   }
+  static async byName(name: string) {
+    const ws = await ClientDb.workspaces.where("name").equals(name).first();
+    if (!ws) throw new NotFoundError("Workspace not found");
+    return new WorkspaceDAO(ws);
+  }
   static async byGuid(guid: string) {
     const ws = await ClientDb.workspaces.where("guid").equals(guid).first();
     if (!ws) throw new NotFoundError("Workspace not found");
@@ -111,11 +116,17 @@ export class WorkspaceDAO implements WorkspaceRecord {
     if (!remoteAuth) throw new NotFoundError("RemoteAuth not found");
     return new RemoteAuthDAO(remoteAuth);
   }
-  private async getDisk() {
+
+  async getDisk() {
     const disk = await ClientDb.disks.where("guid").equals(this.disk.guid).first();
 
     if (!disk) throw new NotFoundError("Disk not found");
     return new DiskDAO(disk);
+  }
+
+  async getImageThumbFile(filePath: AbsPath) {
+    const { content } = await ThumbnailDAO.byPath(this.guid, filePath, ThumbnailDAO.THROW);
+    return content;
   }
 
   static async fetchFromRoute(route: string) {
@@ -174,9 +185,12 @@ export class Workspace extends WorkspaceDAO {
     "/drafts/draft1.md": "# Goodbye World!",
     "/ideas/ideas.md": "# Red Green Blue",
   };
+  static cacheKey(workspaceId: string) {
+    return workspaceId + "/cache";
+  }
 
   get cacheKey() {
-    return this.guid + "/cache";
+    return Workspace.cacheKey(this.name);
   }
   private tearDownCache = async () => {
     const cache = await caches.open(this.cacheKey);
@@ -272,10 +286,6 @@ export class Workspace extends WorkspaceDAO {
       });
     }
     return finalPath;
-  }
-  async getImageThumbFile(filePath: AbsPath) {
-    const { content } = await ThumbnailDAO.byPath(this.guid, filePath, ThumbnailDAO.THROW);
-    return content;
   }
 
   addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {

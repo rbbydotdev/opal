@@ -1,42 +1,38 @@
-// import { Thumbnail } from "@/Db/Thumbnails";
 import { isThumbnailHref } from "@/Db/isThumbnailHref";
-import { Workspace } from "@/Db/Workspace";
+import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, BasePath } from "@/lib/paths";
+import { absPath, AbsPath, BasePath } from "@/lib/paths";
 
 const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 
-const REMOTE_DEBUG = false;
-if (REMOTE_DEBUG) {
-  const RemoteSwLogger = (_msg: string, type = "log") => {
-    void fetch("http://localhost:8080", {
-      method: "POST",
-      body: JSON.stringify({
-        msg: _msg,
-        type,
-      }),
-      signal: AbortSignal.timeout(500),
-    }).catch(() => {});
-  };
+const RemoteSwLogger = (_msg: string, type = "log") => {
+  void fetch("http://localhost:8080", {
+    method: "POST",
+    body: JSON.stringify({
+      msg: _msg,
+      type,
+    }),
+    signal: AbortSignal.timeout(1000),
+  }).catch(() => {});
+};
 
-  console.log = function (msg: string) {
-    RemoteSwLogger(msg, "log");
-  };
+console.log = function (msg: string) {
+  RemoteSwLogger(msg, "log");
+};
 
-  console.debug = function (msg: string) {
-    RemoteSwLogger(msg, "debug");
-  };
-  console.error = function (msg: string) {
-    RemoteSwLogger(msg, "error");
-  };
-  console.warn = function (msg: string) {
-    RemoteSwLogger(msg, "warn");
-  };
-}
+console.debug = function (msg: string) {
+  RemoteSwLogger(msg, "debug");
+};
+console.error = function (msg: string) {
+  RemoteSwLogger(msg, "error");
+};
+console.warn = function (msg: string) {
+  RemoteSwLogger(msg, "warn");
+};
 // Logger
 
 self.addEventListener("activate", function (event) {
@@ -68,44 +64,33 @@ self.addEventListener("fetch", async (event) => {
 
 const SWWStore = new (class SwWorkspace {
   private workspace: Workspace | null = null;
+  private workspaceId: string | null = null;
   setWorkspace(workspace: Workspace) {
+    this.workspaceId = workspace.name;
     return (this.workspace = workspace);
   }
-  backgroundCache = async () => {
-    return;
-    if (!this.workspace) throw new Error("backgroundCache; no workspace");
-    await this.workspace.awaitFirstIndex();
-    const cache = await this.getCache();
-    const Promises: Promise<void>[] = [];
-    for (const imgPath of this.workspace.getImages()) {
-      const contents = await this.workspace.disk.readFile(imgPath);
-      if (contents) {
-        const response = new Response(contents, {
-          headers: {
-            "Content-Type": getMimeType(imgPath.str),
-            "Cache-Control": "public, max-age=31536000, immutable",
-          },
-        });
-        Promises.push(cache.put(new Request(imgPath.str), response.clone()));
-      }
+  async readImage(path: AbsPath | string, type: "thumb" | "image") {
+    if (type === "thumb") {
+      return this.workspace?.getImageThumbFile(absPath(path));
+    } else {
+      return this.workspace?.readFile(absPath(path));
     }
-    await Promise.all(Promises).then(() => Date.now());
-  };
-  getCache() {
-    return caches.open(this.getWorkspace()!.cacheKey);
   }
-  async tryWorkspace(route: string): Promise<Workspace> {
-    // this.workspace.name
-    const { workspaceId } = Workspace.parseWorkspacePath(route);
+
+  getCache(workspaceId = this.workspaceId!): Promise<Cache> {
+    return caches.open(Workspace.cacheKey(workspaceId));
+  }
+  setWorkspaceId(workspaceId: string) {
+    this.workspaceId = workspaceId;
+    return this;
+  }
+  async tryWorkspace(workspaceId: string): Promise<Workspace> {
     if (workspaceId !== this.workspace?.name) {
-      if (this.workspace) this.workspace.teardown();
-      this.setWorkspace(await Workspace.fetchFromRouteAndInit(route));
-      //disabling bground cache for now burns too much comput imo
-      void this.backgroundCache().then(() => console.log("Background cache updated"));
+      this.setWorkspace(await WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
     }
-    return this.workspace as Workspace;
-  }
-  getWorkspace() {
+    if (!this.workspace) {
+      throw new Error("Workspace not found");
+    }
     return this.workspace;
   }
 })();
@@ -119,27 +104,18 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
     href: ${url.href}
     isThumbnail: ${isThumbnail}
   `);
-  const cache = await SWWStore.getCache();
+  const cache = await SWWStore.getCache(workspaceId);
   const cachedResponse = await cache.match(event.request);
   if (cachedResponse) {
     console.log(`Cache hit for: ${decodedPathname}`);
     return cachedResponse;
   }
-  const workspace = await SWWStore.tryWorkspace(new URL(event.request.referrer).pathname);
-  if (!workspace) throw new Error("No workspace mounted");
-
   console.log(`Cache miss for: ${decodedPathname}, fetching from workspace`);
+  const workspace = await SWWStore.tryWorkspace(workspaceId);
+  if (!workspace) throw new Error("Workspace not found");
+
   try {
-    await Promise.race([
-      workspace.awaitFirstIndex(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Indexing timeout")), 5000)),
-    ]);
-
-    // console.log(url.href, Thumbnail.isThumbnailHref(url.href), decodedPathname);
-    const contents = isThumbnail
-      ? await workspace.getImageThumbFile(AbsPath.New(decodedPathname))
-      : await workspace.readFile(AbsPath.New(decodedPathname));
-
+    const contents = await SWWStore.readImage(decodedPathname, isThumbnail ? "thumb" : "image");
     if (contents) {
       const response = new Response(contents, {
         headers: {
@@ -148,7 +124,7 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
         },
       });
 
-      void cache.put(event.request, response.clone());
+      await cache.put(event.request, response.clone());
       return response;
     }
   } catch (error) {
