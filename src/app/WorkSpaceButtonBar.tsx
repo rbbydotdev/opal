@@ -89,16 +89,17 @@ export function WorkSpaceButtonBar() {
         className="text-3xs"
       />
 
-      {!currentWorkspace.isNull ? (
-        <BigButton
-          icon={<Identicon input={currentWorkspace.guid} size={4} scale={7} />}
-          title={currentWorkspace.name}
-          href={currentWorkspace.href}
-          className="text-white big-button-active"
-        />
-      ) : (
-        <div className="bg-secondary-foreground w-[80px] h-[64px]"></div>
-      )}
+      {
+        !currentWorkspace.isNull ? (
+          <BigButton
+            icon={<Identicon input={currentWorkspace.guid} size={4} scale={7} />}
+            title={currentWorkspace.name}
+            href={currentWorkspace.href}
+            className="text-white big-button-active"
+          />
+        ) : null
+        // <div className="bg-secondary-foreground w-[80px] h-[64px]"></div>
+      }
 
       <Collapsible
         className="w-full flex flex-col justify-start overflow-scroll pb-12 scrollbar-thin items-center"

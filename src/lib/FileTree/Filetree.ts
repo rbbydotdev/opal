@@ -10,7 +10,7 @@ import {
   VirtualFileTreeNode,
 } from "@/lib/FileTree/TreeNode";
 import { AbsPath, BasePath, relPath, RelPath } from "@/lib/paths";
-import { Mutex } from "async-mutex";
+import { E_CANCELED, Mutex } from "async-mutex";
 
 export class FileTree {
   initialIndex = false;
@@ -68,8 +68,14 @@ export class FileTree {
 
     visitor,
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
+    let release: () => void = () => {};
     try {
-      // await this.mutex.acquire();
+      if (this.mutex.isLocked()) {
+        console.debug("Indexing is already in progress, canceling previous operation");
+        this.mutex.cancel();
+      }
+      release = await this.mutex.acquire();
+      await new Promise((rs) => setTimeout(rs, 3000));
       console.log("Indexing file tree");
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
@@ -78,10 +84,16 @@ export class FileTree {
       this.initialIndex = true;
       return this.root;
     } catch (e) {
-      console.error("Error during file tree indexing:", e);
-      throw e;
+      console.log(">>>");
+      console.log(e);
+      if (e === E_CANCELED) {
+        console.log("Indexing was canceled");
+      } else {
+        console.error("Error during file tree indexing:", e);
+        throw e;
+      }
     } finally {
-      // await this.mutex.release();
+      release();
     }
   };
 
