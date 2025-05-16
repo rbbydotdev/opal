@@ -102,7 +102,6 @@ function useFileTreeDragAndDrop({
       try {
         await currentWorkspace.dropImageFile(file, targetPath);
       } catch (e) {
-        //image popyp
         console.error("Error dropping file:", e);
       }
     }

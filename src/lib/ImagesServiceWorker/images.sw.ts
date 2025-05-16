@@ -51,14 +51,19 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 // Fetch Event Listener
 self.addEventListener("fetch", async (event) => {
   const url = new URL(event.request.url);
+  const referrerPath = new URL(event.request.referrer).pathname;
+  const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
   if (
+    workspaceId &&
     (event.request.destination === "image" || isImageType(url.pathname)) &&
     url.origin === self.location.origin && // Only intercept local requests
     url.pathname !== "/favicon.ico" &&
     !WHITELIST.includes(url.pathname)
   ) {
-    return event.respondWith(handleImageRequest(event, url));
+    return event.respondWith(handleImageRequest(event, url, workspaceId));
   }
+
+  return event.respondWith(fetch(event.request));
 });
 
 const SWWStore = new (class SwWorkspace {
@@ -105,7 +110,7 @@ const SWWStore = new (class SwWorkspace {
   }
 })();
 
-async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response> {
+async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: string): Promise<Response> {
   const decodedPathname = BasePath.decode(url.pathname);
   const isThumbnail = isThumbnailHref(url.href);
   console.log(`Intercepted request for: 
@@ -114,14 +119,15 @@ async function handleImageRequest(event: FetchEvent, url: URL): Promise<Response
     href: ${url.href}
     isThumbnail: ${isThumbnail}
   `);
-  const workspace = await SWWStore.tryWorkspace(new URL(event.request.referrer).pathname);
-  if (!workspace) throw new Error("No workspace mounted");
   const cache = await SWWStore.getCache();
   const cachedResponse = await cache.match(event.request);
   if (cachedResponse) {
     console.log(`Cache hit for: ${decodedPathname}`);
     return cachedResponse;
   }
+  const workspace = await SWWStore.tryWorkspace(new URL(event.request.referrer).pathname);
+  if (!workspace) throw new Error("No workspace mounted");
+
   console.log(`Cache miss for: ${decodedPathname}, fetching from workspace`);
   try {
     await Promise.race([
