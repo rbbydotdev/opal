@@ -107,15 +107,14 @@ function useFileTreeDragAndDrop({
     }
   };
 
-  const handleDrop = (event: React.DragEvent, targetNode: TreeNode) => {
+  const handleDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
     event.stopPropagation();
     const targetPath = targetNode.type === "dir" ? targetNode.path : targetNode.dirname;
     // console.log(targetNode.path, targetNode.dirname);
     try {
       if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
-        //handle external file drop
-        void handleExternalDrop(event, targetPath);
+        await handleExternalDrop(event, targetPath);
       } else {
         const { dragStart } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as DragStartJType;
 

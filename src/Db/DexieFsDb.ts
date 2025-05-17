@@ -1,9 +1,13 @@
+import { CommonFileSystem } from "@/Db/Disk";
+import { NotFoundError } from "@/lib/errors";
 import Dexie from "dexie";
+import path from "path";
 
 interface FileSystemEntry {
   path: string;
   content?: Uint8Array | string;
   type: "file" | "dir";
+  parent: string;
   size: number;
   mtimeMs: number;
   ctimeMs: number;
@@ -18,39 +22,41 @@ interface Stats {
   isDirectory(): boolean;
 }
 
-export class DexieFsDb {
+export class DexieFsDb implements CommonFileSystem {
   private db: Dexie;
   private files: Dexie.Table<FileSystemEntry, string>;
 
   constructor(name: string) {
-    // Initialize the database.
+    throw new Error("DexieFsDb imp is broken :(");
     this.db = new Dexie(name);
-    this.db.version(1).stores({
-      files: "&path, type, content, size, mtimeMs, ctimeMs",
+    this.db.version(3).stores({
+      files: "&path, parent",
     });
 
     this.files = this.db.table("files");
   }
 
   async readdir(
-    path: string,
+    dirPath: string,
     options?: { withFileTypes?: boolean }
   ): Promise<(string | { name: string; isDirectory: () => boolean; isFile: () => boolean })[]> {
-    const entries = await this.files.where("path").startsWith(`${path}/`).toArray();
+    const entries = (await this.files.where("parent").equals(dirPath).toArray()).filter((e) => e.path !== "/");
     if (options?.withFileTypes) {
       return entries.map((entry) => ({
-        name: entry.path.slice(path.length + 1), // Remove the parent directory part
+        name: path.basename(entry.path),
         isDirectory: () => entry.type === "dir",
         isFile: () => entry.type === "file",
       }));
     } else {
-      return entries.map((entry) => entry.path.slice(path.length + 1));
+      return entries.map((entry) => path.basename(entry.path));
     }
   }
 
-  async stat(path: string): Promise<Stats> {
-    const entry = await this.files.get(path);
-    if (!entry) throw new Error("File not found");
+  async stat(filePath: string): Promise<Stats> {
+    const entry = await this.files.get(filePath);
+    if (!entry) {
+      throw new NotFoundError(`ENOENT: no such file or directory, stat '${filePath}'`);
+    }
     return {
       type: entry.type,
       size: entry.size,
@@ -61,65 +67,79 @@ export class DexieFsDb {
     };
   }
 
-  async readFile(path: string, options?: { encoding?: "utf8" }): Promise<Uint8Array | string> {
-    const file = await this.files.get(path);
-    if (!file || file.type !== "file") throw new Error("File not found or path is a directory");
-    if (options?.encoding === "utf8") {
-      if (typeof file.content === "string") {
-        return file.content;
-      } else {
-        return new TextDecoder().decode(file.content);
-      }
+  async readFile(filePath: string, options?: { encoding?: "utf8" }): Promise<Uint8Array | string> {
+    const entry = await this.files.get(filePath);
+    if (!entry || entry.type !== "file") {
+      throw new NotFoundError(`ENOENT: no such file or directory, open '${filePath}'`);
     }
-    return file.content!;
+    if (options?.encoding === "utf8" && typeof entry.content === "string") {
+      return entry.content;
+    }
+    return entry.content as Uint8Array;
   }
 
-  async mkdir(path: string, _options?: { recursive?: boolean; mode: number }): Promise<string | void> {
-    const now = Date.now();
-    await this.files.add({ path, type: "dir", size: 0, mtimeMs: now, ctimeMs: now });
+  async mkdir(dirPath: string, _options?: { recursive?: boolean; mode: number }): Promise<string | void> {
+    const parentPath = path.dirname(dirPath);
+    const parentEntry = await this.files.get(parentPath);
+    if (!parentEntry && !_options?.recursive) {
+      throw new NotFoundError(`ENOENT: no such file or directory, mkdir '${dirPath}'`);
+    }
+    await this.files.put({
+      path: dirPath,
+      type: "dir",
+      parent: parentPath,
+      size: 0,
+      mtimeMs: Date.now(),
+      ctimeMs: Date.now(),
+    });
   }
 
   async rename(oldPath: string, newPath: string): Promise<void> {
     const entry = await this.files.get(oldPath);
-    if (!entry) throw new Error("File or directory not found");
-    await this.files.put({ ...entry, path: newPath });
+    if (!entry) {
+      throw new NotFoundError(`ENOENT: no such file or directory, rename '${oldPath}'`);
+    }
     await this.files.delete(oldPath);
+    entry.path = newPath;
+    entry.parent = path.dirname(newPath);
+    await this.files.put(entry);
   }
 
-  async unlink(path: string): Promise<void> {
-    const entry = await this.files.get(path);
-    if (!entry) throw new Error("File not found");
-    if (entry.type === "dir") {
-      const children = await this.files.where("path").startsWith(`${path}/`).toArray();
-      if (children.length > 0) throw new Error("Directory is not empty");
+  async unlink(filePath: string): Promise<void> {
+    const entry = await this.files.get(filePath);
+    if (!entry) {
+      throw new NotFoundError(`ENOENT: no such file or directory, unlink '${filePath}'`);
     }
-    await this.files.delete(path);
+    if (entry.type === "dir") {
+      //delete all files whose parent path starts with filePath
+      const entries = await this.files.where("parent").startsWith(filePath).toArray();
+      for (const entry of entries) {
+        await this.files.delete(entry.path);
+      }
+    }
+    await this.files.delete(filePath);
   }
 
   async writeFile(
-    path: string,
+    filePath: string,
     data: Uint8Array | string,
     options?: { encoding?: "utf8"; mode: number }
   ): Promise<void> {
-    const now = Date.now();
-    let content: Uint8Array | string;
-    let size: number;
-
-    if (typeof data === "string") {
-      if (options?.encoding === "utf8") {
-        content = data;
-        size = new TextEncoder().encode(content).length;
-      } else {
-        content = new TextEncoder().encode(data);
-        size = content.length;
-      }
-    } else {
-      content = data;
-      size = data.length;
+    const parentPath = path.dirname(filePath);
+    const parentEntry = await this.files.get(parentPath);
+    if (!parentEntry) {
+      throw new NotFoundError(`ENOENT: no such file or directory, open '${filePath}'`);
     }
-
-    await this.files.put({ path, content, type: "file", size, mtimeMs: now, ctimeMs: now });
+    const content =
+      options?.encoding === "utf8" && typeof data === "string" ? data : new Uint8Array(data as Uint8Array);
+    await this.files.put({
+      path: filePath,
+      content,
+      type: "file",
+      parent: parentPath,
+      size: content.length,
+      mtimeMs: Date.now(),
+      ctimeMs: Date.now(),
+    });
   }
 }
-
-// Usage example

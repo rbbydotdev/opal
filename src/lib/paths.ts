@@ -3,12 +3,6 @@ import { isImageType } from "@/lib/fileType";
 import path from "path";
 import { getMimeType } from "./mimeType";
 
-// Define unique symbols for branding
-// const AbsPathBrand = Symbol("AbsPath");
-// const RelPathBrand = Symbol("RelPath");
-
-// this class is a th
-
 export class BasePath extends String {
   constructor(private filePath: string) {
     super(filePath);
@@ -134,6 +128,13 @@ export class AbsPath extends BasePath {
     return this.dirname().join(`${newPrefix}${this.extname()}`);
   }
 
+  shift() {
+    const segments = this.str.split("/");
+    segments.shift();
+    segments[0] = "";
+    return new AbsPath(segments.join("/"));
+  }
+
   inc() {
     return new AbsPath(super.inc().toString());
   }
@@ -167,6 +168,11 @@ export class RelPath extends BasePath {
 
   dirname() {
     return new RelPath(path.dirname(this.path));
+  }
+  shift() {
+    const segments = this.str.split("/");
+    segments.shift();
+    return new RelPath(segments.join("/"));
   }
 
   changePrefix(newPrefix: string) {

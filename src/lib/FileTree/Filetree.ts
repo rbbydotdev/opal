@@ -26,7 +26,7 @@ export class FileTree {
   constructor(private fs: FileSystem, guid: string) {
     this.guid = `${guid}/FileTree`;
 
-    this.cacheId = `${this.guid}/cache/v2`;
+    this.cacheId = `${this.guid}/cache`;
   }
 
   getRootTree() {
@@ -192,7 +192,7 @@ export class FileTree {
       }
       return parent;
     } catch (err) {
-      console.error(`Error reading ${dir}:`, err);
+      console.error(`Error reading dir ${dir}:`, err);
       if (haltOnError) {
         throw err;
       }
@@ -262,8 +262,14 @@ function closestTreeDir(node: TreeNode): TreeDir {
 //   return insertNode(parent, newNode);
 // }
 function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
-  // const parentNode = closestTreeDir(targetNode);
   targetNode.children[newNode.name.str] = newNode;
+  targetNode.children = Object.fromEntries(
+    Object.entries(targetNode.children).sort(([keyA, nodeA], [keyB, nodeB]) => {
+      if (nodeA.type === "dir" && nodeB.type === "file") return -1;
+      if (nodeA.type === "file" && nodeB.type === "dir") return 1;
+      return keyA.localeCompare(keyB);
+    })
+  );
   return newNode;
 }
 

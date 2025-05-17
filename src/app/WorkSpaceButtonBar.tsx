@@ -1,11 +1,14 @@
 "use client";
+
+import { deleteIDBs } from "@/app/deleteIDBs";
+import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import Identicon from "@/components/Identicon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceContext } from "@/context";
 import { Workspace } from "@/Db/Workspace";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { ChevronDown, CirclePlus, DatabaseZap, Delete, Settings, Zap } from "lucide-react";
+import { BombIcon, ChevronDown, CirclePlus, DatabaseZap, Delete, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { use, useMemo } from "react";
@@ -74,9 +77,16 @@ export function WorkSpaceButtonBar() {
           }}
         ></div>
       </div>
+
+      <BigButton
+        icon={<BombIcon stroke="current" size={32} strokeWidth={1.25} />}
+        title={"Nuke All"}
+        href="#"
+        onClick={() => Promise.all([deleteIDBs(), unregisterServiceWorkers()]).then(() => (window.location = "/new"))}
+      />
       <BigButton
         icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}
-        title={"delete_all"}
+        title={"Delete All"}
         href="#"
         onClick={() => Workspace.DeleteAll()}
       />

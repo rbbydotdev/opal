@@ -157,6 +157,8 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
             .dropImageFile(file, path?.dirname() ?? AbsPath.New("/"))
             .then((path) => String(path));
         } catch (e) {
+          console.error("image upload handler error");
+          console.error(e);
           if (isError(e, BadRequestError)) {
             /*
             ErrorPopupControl.show({

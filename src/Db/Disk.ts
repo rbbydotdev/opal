@@ -21,7 +21,7 @@ export type DiskJType = { guid: string; type: DiskType };
 export const DiskTypes = ["IndexedDbDisk", "MemDisk", "DexieFsDbDisk", "NullDisk"] as const;
 export type DiskType = (typeof DiskTypes)[number];
 
-interface CommonFileSystem {
+export interface CommonFileSystem {
   readdir(path: string): Promise<
     (
       | string
@@ -44,8 +44,6 @@ interface CommonFileSystem {
     options?: { encoding?: "utf8"; mode: number }
   ): Promise<void>;
 }
-
-// export type FileSystem = InstanceType<typeof LightningFs>["promises"] | ReturnType<typeof memfs>["fs"]["promises"];
 
 export type FileSystem = CommonFileSystem;
 
@@ -94,14 +92,6 @@ export class DiskDAO implements DiskRecord {
     return Disk.from(this);
   }
 }
-
-// export type RenameFileType = {
-//   oldPath: AbsPath;
-//   oldName: RelPath;
-//   newPath: AbsPath;
-//   newName: RelPath;
-//   type: "file" | "dir";
-// };
 
 export type RemoteRenameFileType = {
   oldPath: string;
@@ -183,6 +173,7 @@ export class DiskLocalEvents extends Emittery<{
 export abstract class Disk extends DiskDAO {
   remote: DiskRemoteEvents;
   local = new DiskLocalEvents();
+  ready: Promise<void> = Promise.resolve();
 
   constructor(public readonly guid: string, public fs: FileSystem, public fileTree: FileTree, type: DiskType) {
     super({ guid, type });
@@ -469,7 +460,6 @@ export abstract class Disk extends DiskDAO {
     }
     await this.writeFileRecursive(fullPath, content);
 
-    // await this.fileTreeIndex(); avoiding now for speed
     this.updateIndex(fullPath, "file");
     await this.local.emit(DiskLocalEvents.INDEX);
     // await this.remote.emit(DiskLocalEvents.INDEX);
@@ -539,7 +529,6 @@ export class DexieFsDbDisk extends Disk {
 
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
-  ready: Promise<void>;
   constructor(public readonly guid: string) {
     const fs = new LightningFs();
     const ft = new FileTree(fs.promises, guid);

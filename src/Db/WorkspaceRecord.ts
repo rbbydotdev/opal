@@ -6,6 +6,7 @@ export class WorkspaceRecord {
   guid!: string;
   name!: string;
   disk!: DiskJType;
+  thumbs!: DiskJType;
   createdAt!: Date;
   remoteAuth!: RemoteAuthJType;
 }
