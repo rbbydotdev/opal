@@ -100,6 +100,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
           const finalName = fullPath.changePrefix(String(fileName.prefix())).basename();
           const newPath = await commitFilenameChange(treeNode, finalName);
           setFileName(finalName);
+
           //navigate to new-file path or renamed-file path
           if (fullPath.equals(workspaceRoute.path) || !workspaceRoute.path) {
             router.push(currentWorkspace.resolveFileUrl(newPath));

@@ -1,3 +1,5 @@
+import { errF } from "@/lib/errors";
+
 export const createThumbnailWW = (imageData: Uint8Array, maxWidth: number, maxHeight: number): Promise<Uint8Array> => {
   return new Promise((resolve, reject) => {
     // Create a Blob from the Uint8Array
@@ -51,8 +53,9 @@ export const createThumbnailWW = (imageData: Uint8Array, maxWidth: number, maxHe
             reject(new Error("Canvas toBlob failed"));
           });
       })
-      .catch(() => {
-        reject(new Error("Failed to create image bitmap"));
+      .catch((e) => {
+        console.error(e);
+        reject(errF`Failed to create image bitmap ${e}`);
       });
   });
 };

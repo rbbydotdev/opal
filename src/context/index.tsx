@@ -148,15 +148,20 @@ export function useWorkspaceFromRoute() {
       setCurrentWorkspace(NULL_WORKSPACE);
       return;
     }
-    const workspace = WorkspaceDAO.fetchFromNameAndInit(workspaceId).then((ws) => {
-      setCurrentWorkspace(ws);
-      console.debug("Initialize Workspace");
-      return ws;
-    });
+    const workspace = WorkspaceDAO.fetchFromNameAndInit(workspaceId)
+      .then((ws) => {
+        setCurrentWorkspace(ws);
+        console.debug("Initialize Workspace");
+        return ws;
+      })
+      .catch((e) => {
+        router.replace("/new");
+        throw e;
+      });
     return () => {
       void workspace.then((ws) => ws.teardown());
     };
-  }, [workspaceId]);
+  }, [router, workspaceId]);
 
   useEffect(() => {
     if (!currentWorkspace) return;

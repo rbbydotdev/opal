@@ -1,12 +1,10 @@
 "use client";
-// import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { thumbnailFromImage } from "@/Db/thumbnailFromImage";
-import { ThumbnailDAO } from "@/Db/Thumbnails";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
-import { getFileType, isImageType } from "@/lib/fileType";
+import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, isAncestor, relPath, RelPath } from "@/lib/paths";
 import { nanoid } from "nanoid";
@@ -20,10 +18,12 @@ export class WorkspaceDAO implements WorkspaceRecord {
   guid!: string;
   name!: string;
   disk!: DiskJType;
+  thumbs!: DiskJType;
   createdAt!: Date;
   remoteAuth!: RemoteAuthJType;
   RemoteAuth?: RemoteAuthDAO;
   Disk?: DiskDAO;
+  Thumbs?: DiskDAO;
 
   static fromJSON(json: WorkspaceRecord) {
     return new WorkspaceDAO(json);
@@ -52,13 +52,15 @@ export class WorkspaceDAO implements WorkspaceRecord {
       name: this.name,
       disk: this.disk,
       remoteAuth: this.remoteAuth,
+      thumbs: this.thumbs,
       createdAt: this.createdAt,
     });
   };
   static async create(
     name: string,
     remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
-    disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
+    disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
+    thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
   ) {
     let uniqueName = WorkspaceDAO.Slugify(name);
     let inc = 0;
@@ -69,16 +71,15 @@ export class WorkspaceDAO implements WorkspaceRecord {
       name: uniqueName,
       guid: WorkspaceDAO.guid(),
       disk: disk.toJSON(),
+      thumbs: thumbs.toJSON(),
       remoteAuth: remoteAuth.toJSON(),
       createdAt: new Date(),
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
-      //TODO will this work?
-      //mem leak?
-      return await Promise.all([disk.save(), remoteAuth.save(), workspace.save()]);
+      return await Promise.all([disk.save(), thumbs.save(), remoteAuth.save(), workspace.save()]);
     });
 
-    return new Workspace({ ...workspace, remoteAuth, disk });
+    return new Workspace({ ...workspace, remoteAuth, disk, thumbs });
   }
   static async byName(name: string) {
     const ws = await ClientDb.workspaces.where("name").equals(name).first();
@@ -91,9 +92,9 @@ export class WorkspaceDAO implements WorkspaceRecord {
 
     const wsd = new WorkspaceDAO(ws);
 
-    const [auth, disk] = await Promise.all([wsd.getRemoteAuth(), wsd.getDisk()]);
+    const [auth, disk, thumbs] = await Promise.all([wsd.getRemoteAuth(), wsd.getDisk(), wsd.getThumbs()]);
 
-    return new Workspace({ ...wsd, remoteAuth: auth, disk });
+    return new Workspace({ ...wsd, remoteAuth: auth, disk, thumbs });
   }
   async withRelations() {
     const [auth, disk] = await Promise.all([this.getRemoteAuth(), this.getDisk()]);
@@ -105,11 +106,12 @@ export class WorkspaceDAO implements WorkspaceRecord {
     return slugify(name);
   }
   async toModel() {
-    const [auth, disk] = await Promise.all([
+    const [auth, disk, thumbs] = await Promise.all([
       this.RemoteAuth ? Promise.resolve(this.RemoteAuth) : this.getRemoteAuth(),
       this.Disk ? Promise.resolve(this.Disk) : this.getDisk(),
+      this.Thumbs ? Promise.resolve(this.Thumbs) : this.getThumbs(),
     ]);
-    return new Workspace({ ...this, remoteAuth: auth, disk });
+    return new Workspace({ ...this, remoteAuth: auth, disk, thumbs });
   }
 
   private async getRemoteAuth() {
@@ -125,9 +127,11 @@ export class WorkspaceDAO implements WorkspaceRecord {
     return new DiskDAO(disk);
   }
 
-  async getImageThumbFile(filePath: AbsPath) {
-    const { content } = await ThumbnailDAO.byPath(this.guid, filePath, ThumbnailDAO.THROW);
-    return content;
+  async getThumbs() {
+    const thumbs = await ClientDb.disks.where("guid").equals(this.thumbs.guid).first();
+
+    if (!thumbs) throw new NotFoundError("Thumbs not found");
+    return new DiskDAO(thumbs);
   }
 
   static async fetchFromRoute(route: string) {
@@ -204,23 +208,27 @@ export class Workspace extends WorkspaceDAO {
   guid: string;
   remoteAuth: RemoteAuth;
   disk: Disk;
-  // thumbnails: Thumbnails;
+  thumbs: Disk;
+  _cache: Promise<Cache> | null = null;
 
   constructor({
     name,
     guid,
     disk,
+    thumbs,
     remoteAuth,
   }: {
     name: string;
     guid: string;
     disk: DiskDAO;
+    thumbs: DiskDAO;
     remoteAuth: RemoteAuthDAO;
   }) {
     super({
       name,
       guid,
       disk: disk.toJSON(),
+      thumbs: thumbs.toJSON(),
       remoteAuth: remoteAuth.toJSON(),
       createdAt: new Date(),
     });
@@ -228,6 +236,14 @@ export class Workspace extends WorkspaceDAO {
     this.guid = guid;
     this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
+    this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
+  }
+
+  get cache() {
+    if (this._cache === null) {
+      return (this._cache = caches.open(this.cacheKey));
+    }
+    return this._cache;
   }
 
   get id() {
@@ -274,18 +290,20 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.newFile(dirPath.join(newFileName), content);
   }
   private async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
-    const path = await this.disk.nextPath(dirPath.join(newFileName));
-    const thumbGuid = await thumbnailFromImage(this.guid, path, content).catch((r) => {
+    const finalPath = await this.disk.newFile(dirPath.join(newFileName), content);
+    // await RemoteLogger("new image file: " + finalPath.str);
+    await thumbnailFromImage({
+      path: finalPath.str,
+      thumbStore: this.thumbs.toJSON(),
+      content,
+      size: 50,
+    }).catch((r) => {
       console.error("Error creating thumbnail", r);
       return null;
     });
-    const finalPath = await this.disk.newFile(dirPath.join(newFileName), content);
-    if (!finalPath.equals(path) && thumbGuid !== null) {
-      await ThumbnailDAO.byGuid(thumbGuid).then((thumb) => {
-        if (!thumb) throw new Error("Thumbnail not found");
-        return thumb.move(finalPath);
-      });
-    }
+    // await RemoteLogger(`THUMBNAIL CREATED ${guid}: ` + finalPath.str);
+
+    await this.cache.then(async (cache) => await cache.put(finalPath.urlSafe(), new Response(content)));
     return finalPath;
   }
 
@@ -296,9 +314,13 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeVirtualFile(path);
   }
   removeFile = async (filePath: AbsPath) => {
-    console.log("removing file", filePath.str);
     if (filePath.isImage()) {
-      return Promise.all([this.disk.removeFile(filePath), ThumbnailDAO.remove(this.guid, filePath)]);
+      return Promise.all([
+        this.disk.removeFile(filePath),
+        this.thumbs.removeFile(filePath).catch(() => {
+          /*swallow*/
+        }),
+      ]);
     } else {
       return this.disk.removeFile(filePath);
     }
@@ -309,7 +331,7 @@ export class Workspace extends WorkspaceDAO {
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode);
     if (oldNode.path.isImage()) {
-      await ThumbnailDAO.move(this.guid, oldNode.path, newPath);
+      await this.thumbs.renameDirFile(oldNode.path, newFullPath);
     }
     return newNode;
   };
@@ -321,6 +343,10 @@ export class Workspace extends WorkspaceDAO {
   };
   readFile = (filePath: AbsPath) => {
     return this.disk.readFile(filePath);
+  };
+
+  readThumbFile = (filePath: AbsPath) => {
+    return this.thumbs.readFile(filePath);
   };
 
   onInitialIndex(callback: (fileTree: TreeDir) => void) {
@@ -375,15 +401,20 @@ export class Workspace extends WorkspaceDAO {
       createdAt: this.createdAt,
       remoteAuth: this.remoteAuth.toJSON(),
       disk: this.disk.toJSON(),
+      thumbs: this.thumbs.toJSON(),
     } satisfies WorkspaceRecord & { href: string };
   }
 
   delete = async () => {
     await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
-      await Promise.all([ClientDb.workspaces.delete(this.guid), this.disk.teardown(), this.disk.delete()]);
+      await Promise.all([
+        ClientDb.workspaces.delete(this.guid),
+        this.disk.teardown(),
+        this.disk.delete(),
+        this.thumbs.delete(),
+      ]);
     });
     await this.tearDownCache();
-    await ThumbnailDAO.removeWorkspace(this.guid);
   };
 
   home = () => {
@@ -432,7 +463,7 @@ export class NullWorkspace extends Workspace {
       guid: "",
       disk: new NullDisk(),
       remoteAuth: new NullRemoteAuth(),
-      // thumbnails: null,
+      thumbs: new NullDisk(),
     });
   }
 }

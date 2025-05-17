@@ -9,30 +9,19 @@ const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 
-const RemoteSwLogger = (_msg: string, type = "log") => {
-  void fetch("http://localhost:8080", {
-    method: "POST",
-    body: JSON.stringify({
-      msg: _msg,
-      type,
-    }),
-    signal: AbortSignal.timeout(1000),
-  }).catch(() => {});
-};
+// console.log = function (msg: string) {
+//   RemoteLogger(msg, "log");
+// };
 
-console.log = function (msg: string) {
-  RemoteSwLogger(msg, "log");
-};
-
-console.debug = function (msg: string) {
-  RemoteSwLogger(msg, "debug");
-};
-console.error = function (msg: string) {
-  RemoteSwLogger(msg, "error");
-};
-console.warn = function (msg: string) {
-  RemoteSwLogger(msg, "warn");
-};
+// console.debug = function (msg: string) {
+//   RemoteLogger(msg, "debug");
+// };
+// console.error = function (msg: string) {
+//   RemoteLogger(msg, "error");
+// };
+// console.warn = function (msg: string) {
+//   RemoteLogger(msg, "warn");
+// };
 // Logger
 
 self.addEventListener("activate", function (event) {
@@ -47,7 +36,13 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 // Fetch Event Listener
 self.addEventListener("fetch", async (event) => {
   const url = new URL(event.request.url);
-  const referrerPath = new URL(event.request.referrer).pathname;
+  let referrerPath = "";
+  try {
+    referrerPath = new URL(event.request.referrer).pathname;
+  } catch (e) {
+    console.error(errF`Error parsing referrer: ${event.request.referrer}, ${e}`.toString());
+    return event.respondWith(fetch(event.request));
+  }
   const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
   if (
     workspaceId &&
@@ -57,6 +52,8 @@ self.addEventListener("fetch", async (event) => {
     !WHITELIST.includes(url.pathname)
   ) {
     return event.respondWith(handleImageRequest(event, url, workspaceId));
+  } else {
+    // console.log(`Not intercepting request for: ${url.href}`);
   }
 
   return event.respondWith(fetch(event.request));
@@ -71,7 +68,7 @@ const SWWStore = new (class SwWorkspace {
   }
   async readImage(path: AbsPath | string, type: "thumb" | "image") {
     if (type === "thumb") {
-      return this.workspace?.getImageThumbFile(absPath(path));
+      return this.workspace?.readThumbFile(absPath(path));
     } else {
       return this.workspace?.readFile(absPath(path));
     }
@@ -85,7 +82,7 @@ const SWWStore = new (class SwWorkspace {
     return this;
   }
   async tryWorkspace(workspaceId: string): Promise<Workspace> {
-    if (workspaceId !== this.workspace?.name) {
+    if (!this.workspace || workspaceId !== this.workspace.name) {
       this.setWorkspace(await WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
     }
     if (!this.workspace) {
@@ -96,40 +93,45 @@ const SWWStore = new (class SwWorkspace {
 })();
 
 async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: string): Promise<Response> {
-  const decodedPathname = BasePath.decode(url.pathname);
-  const isThumbnail = isThumbnailHref(url.href);
-  console.log(`Intercepted request for: 
+  try {
+    const decodedPathname = BasePath.decode(url.pathname);
+    const isThumbnail = isThumbnailHref(url.href);
+    console.log(`Intercepted request for: 
     decodedPathname: ${decodedPathname}
     url.pathname: ${url.pathname}
     href: ${url.href}
     isThumbnail: ${isThumbnail}
   `);
-  const cache = await SWWStore.getCache(workspaceId);
-  const cachedResponse = await cache.match(event.request);
-  if (cachedResponse) {
-    console.log(`Cache hit for: ${decodedPathname}`);
-    return cachedResponse;
-  }
-  console.log(`Cache miss for: ${decodedPathname}, fetching from workspace`);
-  const workspace = await SWWStore.tryWorkspace(workspaceId);
-  if (!workspace) throw new Error("Workspace not found");
-
-  try {
-    const contents = await SWWStore.readImage(decodedPathname, isThumbnail ? "thumb" : "image");
-    if (contents) {
-      const response = new Response(contents, {
-        headers: {
-          "Content-Type": getMimeType(decodedPathname),
-          "Cache-Control": "public, max-age=31536000, immutable",
-        },
-      });
-
-      await cache.put(event.request, response.clone());
-      return response;
+    const cache = await SWWStore.getCache(workspaceId);
+    const cachedResponse = await cache.match(event.request);
+    if (cachedResponse) {
+      console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
+      return cachedResponse;
     }
-  } catch (error) {
-    console.log(errF`Error reading file from workspace: ${error}`.toString());
-  }
+    console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
+    const workspace = await SWWStore.tryWorkspace(workspaceId);
+    if (!workspace) throw new Error("Workspace not found");
 
-  return fetch(event.request);
+    try {
+      const contents = await SWWStore.readImage(decodedPathname, isThumbnail ? "thumb" : "image");
+      if (contents) {
+        const response = new Response(contents, {
+          headers: {
+            "Content-Type": getMimeType(decodedPathname),
+            "Cache-Control": "public, max-age=31536000, immutable",
+          },
+        });
+
+        await cache.put(event.request, response.clone());
+        return response;
+      }
+    } catch (error) {
+      console.log(errF`Error reading file from workspace: ${error}`.toString());
+    }
+
+    return fetch(event.request);
+  } catch (e) {
+    console.error(errF`Error in service worker: ${e}`.toString());
+    return new Response("Error", { status: 500 });
+  }
 }

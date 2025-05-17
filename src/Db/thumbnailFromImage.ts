@@ -1,11 +1,21 @@
+import { DiskJType } from "@/Db/Disk";
 import { ImagesWorker } from "@/lib/ImagesWorker/instance";
-import { AbsPath } from "@/lib/paths";
 
 //avoiding circular dependency for now
-export async function thumbnailFromImage(workspaceId: string, path: AbsPath, content: Uint8Array, size = 50) {
+export async function thumbnailFromImage({
+  path,
+  thumbStore,
+  content,
+  size = 50,
+}: {
+  path: string;
+  thumbStore: DiskJType;
+  content: Uint8Array;
+  size: number;
+}) {
   const thumbGuid = await ImagesWorker.api.thumbnailForWorkspace({
-    workspaceId,
     path,
+    thumbStore,
     content,
     size,
   });
