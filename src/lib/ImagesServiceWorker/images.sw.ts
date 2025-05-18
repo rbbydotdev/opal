@@ -1,7 +1,9 @@
 import { isThumbnailHref } from "@/Db/isThumbnailHref";
 import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
+import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { errF } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
+import { RemoteLogger } from "@/lib/ImagesServiceWorker/RemoteLogger";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, BasePath } from "@/lib/paths";
 
@@ -9,19 +11,19 @@ const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 
-// console.log = function (msg: string) {
-//   RemoteLogger(msg, "log");
-// };
+console.log = function (msg: string) {
+  RemoteLogger(msg, "log");
+};
 
-// console.debug = function (msg: string) {
-//   RemoteLogger(msg, "debug");
-// };
-// console.error = function (msg: string) {
-//   RemoteLogger(msg, "error");
-// };
-// console.warn = function (msg: string) {
-//   RemoteLogger(msg, "warn");
-// };
+console.debug = function (msg: string) {
+  RemoteLogger(msg, "debug");
+};
+console.error = function (msg: string) {
+  RemoteLogger(msg, "error");
+};
+console.warn = function (msg: string) {
+  RemoteLogger(msg, "warn");
+};
 // Logger
 
 self.addEventListener("activate", function (event) {
@@ -52,8 +54,6 @@ self.addEventListener("fetch", async (event) => {
     !WHITELIST.includes(url.pathname)
   ) {
     return event.respondWith(handleImageRequest(event, url, workspaceId));
-  } else {
-    // console.log(`Not intercepting request for: ${url.href}`);
   }
 
   return event.respondWith(fetch(event.request));
@@ -66,12 +66,11 @@ const SWWStore = new (class SwWorkspace {
     this.workspaceId = workspace.name;
     return (this.workspace = workspace);
   }
-  async readImage(path: AbsPath | string, type: "thumb" | "image") {
-    if (type === "thumb") {
-      return this.workspace?.readThumbFile(absPath(path));
-    } else {
-      return this.workspace?.readFile(absPath(path));
-    }
+  async readImg(path: AbsPath | string) {
+    return this.workspace?.readFile(absPath(path));
+  }
+  async readThumb(path: AbsPath | string) {
+    return this.workspace?.readThumbFile(absPath(path));
   }
 
   getCache(workspaceId = this.workspaceId!): Promise<Cache> {
@@ -112,8 +111,20 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
     const workspace = await SWWStore.tryWorkspace(workspaceId);
     if (!workspace) throw new Error("Workspace not found");
 
+    let contents: Uint8Array<ArrayBufferLike> | null = null;
     try {
-      const contents = await SWWStore.readImage(decodedPathname, isThumbnail ? "thumb" : "image");
+      contents = (await (isThumbnail ? SWWStore.readThumb(decodedPathname) : SWWStore.readImg(decodedPathname)).catch(
+        () => null
+      )) as Uint8Array<ArrayBufferLike>;
+      if (contents === null && isThumbnail && (await workspace.disk.pathExists(absPath(decodedPathname)))) {
+        console.log(`Thumbnail not found, creating thumbnail for: ${decodedPathname}`);
+        const thumbPic = await createThumbnailWW(
+          (await SWWStore.readImg(absPath(decodedPathname))) as Uint8Array<ArrayBufferLike>
+        );
+        await workspace.thumbs.writeFileRecursive(absPath(decodedPathname), thumbPic);
+        contents = thumbPic;
+      }
+
       if (contents) {
         const response = new Response(contents, {
           headers: {

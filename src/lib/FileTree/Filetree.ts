@@ -87,7 +87,6 @@ export class FileTree {
       //   this.mutex.cancel();
       // }
       // release = await this.mutex.acquire();
-      // await new Promise((rs) => setTimeout(rs, 3000));
       console.log("Indexing file tree");
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
@@ -267,6 +266,12 @@ function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
     Object.entries(targetNode.children).sort(([keyA, nodeA], [keyB, nodeB]) => {
       if (nodeA.type === "dir" && nodeB.type === "file") return -1;
       if (nodeA.type === "file" && nodeB.type === "dir") return 1;
+      if (nodeA.type === "file" && nodeB.type === "file") {
+        const extA = nodeA.path.extname() || "";
+        const extB = nodeB.path.extname() || "";
+        const extComparison = extA.localeCompare(extB);
+        if (extComparison !== 0) return extComparison;
+      }
       return keyA.localeCompare(keyB);
     })
   );

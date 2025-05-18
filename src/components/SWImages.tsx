@@ -24,9 +24,6 @@ type WorkerContextType = WorkerApi;
 // Create the context
 const WorkerContext = createContext<WorkerContextType | undefined>(undefined);
 
-// <WorkspaceProvider>
-// </WorkspaceProvider>
-
 // Create the provider component
 export const ImagesWorkerContextProvider = ({ children }: { children: ReactNode }) => {
   const [instance, setInstance] = useState<{ api: Remote<WorkerApi>; worker: Worker }>();
