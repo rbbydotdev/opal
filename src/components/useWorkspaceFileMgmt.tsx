@@ -105,17 +105,16 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     return path;
   };
   const commitChange = async (oldNode: TreeNode, fileName: RelPath) => {
-    let newPath = oldNode.path.dirname().join(fileName);
+    const origNode = oldNode.copy();
+    oldNode.remove();
+    let newPath = origNode.path.dirname().join(fileName.decode());
     if (editType === "rename") {
-      if (!oldNode.path.equals(newPath)) {
-        if (oldNode.type === "dir") newPath = await renameDir(oldNode, newPath);
-        else newPath = await renameFile(oldNode, newPath);
+      if (!origNode.path.equals(newPath)) {
+        if (origNode.type === "dir") newPath = await renameDir(origNode, newPath);
+        else newPath = await renameFile(origNode, newPath);
       }
     } else if (editType === "new") {
-      newPath = await newFileFromNode({ type: oldNode.type, path: newPath });
-    }
-    if (oldNode.isVirtual) {
-      currentWorkspace.removeVirtualfile(oldNode.path);
+      newPath = await newFileFromNode({ type: origNode.type, path: newPath });
     }
     resetEditing();
     return newPath;

@@ -2,8 +2,8 @@ import { errF } from "@/lib/errors";
 
 export const createThumbnailWW = (
   imageData: Uint8Array,
-  maxWidth: number = 50,
-  maxHeight: number = 50
+  maxWidth: number = 20,
+  maxHeight: number = 20
 ): Promise<Uint8Array> => {
   return new Promise((resolve, reject) => {
     // Create a Blob from the Uint8Array

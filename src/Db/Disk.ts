@@ -462,7 +462,6 @@ export abstract class Disk extends DiskDAO {
 
     this.updateIndex(fullPath, "file");
     await this.local.emit(DiskLocalEvents.INDEX);
-    // await this.remote.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskRemoteEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "file" });
     return fullPath;
   }

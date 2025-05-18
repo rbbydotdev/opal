@@ -94,6 +94,12 @@ export class TreeNode {
     this.parent = parent;
   }
 
+  remove() {
+    if (this.parent) {
+      delete this.parent.children[this.name.str];
+    }
+  }
+
   inc() {
     this.path = this.path.inc();
     this.dirname = this.path.dirname();
@@ -117,14 +123,13 @@ export class TreeNode {
         parent: this.parent,
         path: this.path,
         depth: this.depth,
-        children: this.children ?? {}, //TODO this is not a real copy!
+        children: this.children ?? {},
       });
     }
     return new TreeFile({
       name: this.name,
       dirname: this.dirname,
       basename: this.basename,
-      // mimeType: this.mimeType || getMimeType(this.path),
       parent: this.parent,
       path: this.path,
       depth: this.depth,
