@@ -81,7 +81,11 @@ export const EditableFile = ({
           <div style={{ marginLeft: depth + "rem", width: "100%" }}>
             <File selected={isSelected} className={clsx({ ["-ml-[1.2rem]"]: treeFile.path.isImage() || isSelected })}>
               {treeFile.path.isImage() ? (
-                <img src={treeFile.path.urlSafe() + "?thumb=1"} alt="️" className="w-4 h-4 rounded-sm" />
+                <img
+                  src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=1" : "")}
+                  alt="️"
+                  className="w-4 h-4 rounded-sm"
+                />
               ) : null}
               <span className={"py-2.5 truncate w-full text-xs text-ellipsis"}>{fileName}</span>
             </File>

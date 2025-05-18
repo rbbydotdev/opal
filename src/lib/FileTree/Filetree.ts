@@ -262,20 +262,22 @@ function closestTreeDir(node: TreeNode): TreeDir {
 // }
 function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
   targetNode.children[newNode.name.str] = newNode;
-  targetNode.children = Object.fromEntries(
-    Object.entries(targetNode.children).sort(([keyA, nodeA], [keyB, nodeB]) => {
-      if (nodeA.type === "dir" && nodeB.type === "file") return -1;
-      if (nodeA.type === "file" && nodeB.type === "dir") return 1;
-      if (nodeA.type === "file" && nodeB.type === "file") {
-        const extA = nodeA.path.extname() || "";
-        const extB = nodeB.path.extname() || "";
-        const extComparison = extA.localeCompare(extB);
-        if (extComparison !== 0) return extComparison;
-      }
-      return keyA.localeCompare(keyB);
-    })
-  );
+  targetNode.children = Object.fromEntries(Object.entries(targetNode.children));
   return newNode;
+}
+
+function _sortNodesByName(nodes: Record<string, TreeNode>) {
+  return Object.entries(nodes).sort(([keyA, nodeA], [keyB, nodeB]) => {
+    if (nodeA.type === "dir" && nodeB.type === "file") return -1;
+    if (nodeA.type === "file" && nodeB.type === "dir") return 1;
+    if (nodeA.type === "file" && nodeB.type === "file") {
+      const extA = nodeA.path.extname() || "";
+      const extB = nodeB.path.extname() || "";
+      const extComparison = extA.localeCompare(extB);
+      if (extComparison !== 0) return extComparison;
+    }
+    return keyA.localeCompare(keyB);
+  });
 }
 
 function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPath; parent: TreeDir }) {

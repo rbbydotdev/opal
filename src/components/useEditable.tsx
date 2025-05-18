@@ -96,7 +96,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
         }
       } else if (e.key === "Enter") {
         if (isEditing) {
-          // const finalName = !fileName.extname() ? RelPath.New(fileName.str + fullPath.extname()) : fileName;
           const finalName = fullPath.changePrefix(String(fileName.prefix())).basename();
           const newPath = await commitFilenameChange(treeNode, finalName);
           setFileName(finalName);
