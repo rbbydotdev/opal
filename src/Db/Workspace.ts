@@ -1,7 +1,6 @@
 "use client";
 import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
-import { thumbnailFromImage } from "@/Db/thumbnailFromImage";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
@@ -239,13 +238,32 @@ export class Workspace extends WorkspaceDAO {
     this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
   }
 
-  get cache() {
+  private get cachePromise(): Promise<Cache> {
     if (this._cache === null) {
-      return (this._cache = caches.open(this.cacheKey));
+      this._cache = caches.open(this.cacheKey);
     }
     return this._cache;
   }
 
+  get cache(): Cache {
+    return new Proxy(
+      {},
+      {
+        get: (_, prop: string) => {
+          return (...args: any[]) => {
+            return this.cachePromise.then((cache) => {
+              const method = (cache as any)[prop];
+              if (typeof method === "function") {
+                return method.apply(cache, args);
+              } else {
+                throw new Error(`Property ${prop} is not a function`);
+              }
+            });
+          };
+        },
+      }
+    ) as Cache;
+  }
   get id() {
     return this.guid;
   }
@@ -289,21 +307,30 @@ export class Workspace extends WorkspaceDAO {
     }
     return this.disk.newFile(dirPath.join(newFileName), content);
   }
-  private async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
-    const finalPath = await this.disk.newFile(dirPath.join(newFileName), content);
-    // await RemoteLogger("new image file: " + finalPath.str);
-    await thumbnailFromImage({
-      path: finalPath.str,
-      thumbStore: this.thumbs.toJSON(),
-      content,
-      size: 50,
-    }).catch((r) => {
-      console.error("Error creating thumbnail", r);
-      return null;
-    });
-    // await RemoteLogger(`THUMBNAIL CREATED ${guid}: ` + finalPath.str);
 
-    await this.cache.then(async (cache) => await cache.put(finalPath.urlSafe(), new Response(content)));
+  // async newImageThumb(path: AbsPath, content: Uint8Array) {
+  //   await ImagesWorker.api
+  //     .thumbnailForWorkspace({
+  //       path: path.str,
+  //       thumbStore: this.thumbs.toJSON(),
+  //       content,
+  //       size: 50,
+  //     })
+  //     .catch((r) => {
+  //       console.error("Error creating thumbnail", r);
+  //       return null;
+  //     });
+  // }
+  private async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
+    const path = await this.disk.nextPath(dirPath.join(newFileName));
+    //triggers an index before thumbnail is ready!
+    // void this.newImageThumb(path, content);
+    const finalPath = await this.disk.newFile(dirPath.join(newFileName), content);
+    void this.cache.put(finalPath.urlSafe(), new Response(content));
+    if (!finalPath.equals(path)) {
+      await this.thumbs.renameDirFile(path, finalPath);
+      void this.cache.delete(path.urlSafe() + "?thumb=1");
+    }
     return finalPath;
   }
 
@@ -315,8 +342,10 @@ export class Workspace extends WorkspaceDAO {
   }
   removeFile = async (filePath: AbsPath) => {
     if (filePath.isImage()) {
+      void this.cache.delete(filePath.urlSafe() + "?thumb=1");
       return Promise.all([
         this.disk.removeFile(filePath),
+
         this.thumbs.removeFile(filePath).catch(() => {
           /*swallow*/
         }),
@@ -331,6 +360,7 @@ export class Workspace extends WorkspaceDAO {
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode);
     if (oldNode.path.isImage()) {
+      void this.cache.delete(oldNode.path.urlSafe() + "?thumb=1");
       await this.thumbs.renameDirFile(oldNode.path, newFullPath);
     }
     return newNode;

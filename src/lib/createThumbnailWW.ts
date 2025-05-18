@@ -1,6 +1,10 @@
 import { errF } from "@/lib/errors";
 
-export const createThumbnailWW = (imageData: Uint8Array, maxWidth: number, maxHeight: number): Promise<Uint8Array> => {
+export const createThumbnailWW = (
+  imageData: Uint8Array,
+  maxWidth: number = 50,
+  maxHeight: number = 50
+): Promise<Uint8Array> => {
   return new Promise((resolve, reject) => {
     // Create a Blob from the Uint8Array
     const blob = new Blob([imageData], { type: "image/jpeg" }); // Adjust the MIME type as needed
