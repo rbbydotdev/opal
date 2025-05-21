@@ -2,6 +2,7 @@
 import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
+import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
@@ -10,6 +11,77 @@ import { nanoid } from "nanoid";
 import slugify from "slugify";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./RemoteAuth";
+
+export class Thumb {
+  _cache: Promise<Cache> | null = null;
+
+  constructor(
+    public workspaceId: string,
+    public thumbRepo: Disk,
+    public imgRepo: Disk,
+    public path: AbsPath,
+    public content: Uint8Array | null = null
+  ) {}
+
+  static getCache(id: string) {
+    return caches.open(`${id}/thumb`);
+  }
+
+  async getCache() {
+    return (this._cache ??= Thumb.getCache(this.workspaceId));
+  }
+
+  static isThumbURL(url: string | URL) {
+    if (typeof url === "string") {
+      try {
+        url = new URL(url);
+      } catch (_e) {
+        return false;
+      }
+    }
+    return url.searchParams.has("thumb");
+  }
+  async save() {
+    await this.thumbRepo.writeFileRecursive(this.path, this.content!);
+    return this;
+  }
+
+  async readOrMake() {
+    if (await this.exists()) {
+      return this.read();
+    }
+    return (await this.make()).read();
+  }
+
+  async make() {
+    const content = await this.imgRepo.readFile(this.path);
+    if (!content) throw new NotFoundError("Image not found for thumb" + this.path);
+    this.content = await createThumbnailWW(content as Uint8Array, 100, 100);
+    await this.save();
+    return this;
+  }
+
+  exists() {
+    return this.thumbRepo.pathExists(this.path);
+  }
+  async read() {
+    return this.content || (this.content = (await this.thumbRepo.readFile(this.path)) as Uint8Array);
+  }
+
+  url() {
+    return this.path.urlSafe() + "?thumb=1";
+  }
+  async move(oldPath: AbsPath, newPath: AbsPath) {
+    await this.getCache().then((c) => c.delete(this.url()));
+    await this.thumbRepo.mkdirRecursive(newPath.dirname());
+    return this.thumbRepo.renameDirOrFile(oldPath, newPath);
+  }
+
+  async remove() {
+    await this.getCache().then((c) => c.delete(this.url()));
+    await this.thumbRepo.removeFile(this.path);
+  }
+}
 export class WorkspaceDAO implements WorkspaceRecord {
   // static rootRoute = "/workspace";
   static guid = () => "workspace:" + nanoid();
@@ -189,15 +261,16 @@ export class Workspace extends WorkspaceDAO {
     "/drafts/draft1.md": "# Goodbye World!",
     "/ideas/ideas.md": "# Red Green Blue",
   };
-  static cacheKey(workspaceId: string) {
-    return workspaceId + "/cache";
+  static getCache(id: string) {
+    return caches.open(`${id}/img`);
   }
 
-  get cacheKey() {
-    return Workspace.cacheKey(this.name);
+  getCache() {
+    return (this._cache ??= Workspace.getCache(this.name));
   }
+
   private tearDownCache = async () => {
-    const cache = await caches.open(this.cacheKey);
+    const cache = await this.getCache();
     const cachedRequests = await cache.keys();
     await Promise.all(cachedRequests.map((req) => cache.delete(req)));
   };
@@ -238,32 +311,6 @@ export class Workspace extends WorkspaceDAO {
     this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
   }
 
-  private get cachePromise(): Promise<Cache> {
-    if (this._cache === null) {
-      this._cache = caches.open(this.cacheKey);
-    }
-    return this._cache;
-  }
-
-  get cache(): Cache {
-    return new Proxy(
-      {},
-      {
-        get: (_, prop: string) => {
-          return (...args: any[]) => {
-            return this.cachePromise.then((cache) => {
-              const method = (cache as any)[prop];
-              if (typeof method === "function") {
-                return method.apply(cache, args);
-              } else {
-                throw new Error(`Property ${prop} is not a function`);
-              }
-            });
-          };
-        },
-      }
-    ) as Cache;
-  }
   get id() {
     return this.guid;
   }
@@ -271,6 +318,16 @@ export class Workspace extends WorkspaceDAO {
   static async DeleteAll() {
     const workspaces = await Workspace.all();
     await Promise.all(workspaces.map(async (ws) => (await ws.toModel()).delete()));
+  }
+
+  NewThumb(path: AbsPath) {
+    return new Thumb(this.name, this.thumbs, this.disk, path);
+  }
+
+  async readOrMakeThumb(path: AbsPath | string) {
+    path = absPath(path);
+    const thumb = this.NewThumb(path);
+    return thumb.readOrMake();
   }
 
   static parseWorkspacePath(pathname: string) {
@@ -302,36 +359,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.newDir(dirPath.join(newDirName));
   }
   newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
-    if (newFileName.isImage()) {
-      return this.newImageFile(dirPath, newFileName, content as Uint8Array);
-    }
     return this.disk.newFile(dirPath.join(newFileName), content);
-  }
-
-  // async newImageThumb(path: AbsPath, content: Uint8Array) {
-  //   await ImagesWorker.api
-  //     .thumbnailForWorkspace({
-  //       path: path.str,
-  //       thumbStore: this.thumbs.toJSON(),
-  //       content,
-  //       size: 50,
-  //     })
-  //     .catch((r) => {
-  //       console.error("Error creating thumbnail", r);
-  //       return null;
-  //     });
-  // }
-  private async newImageFile(dirPath: AbsPath, newFileName: RelPath, content: Uint8Array): Promise<AbsPath> {
-    const path = await this.disk.nextPath(dirPath.join(newFileName));
-    //triggers an index before thumbnail is ready!
-    // void this.newImageThumb(path, content);
-    const finalPath = await this.disk.newFile(dirPath.join(newFileName), content);
-    void this.cache.put(finalPath.urlSafe(), new Response(content));
-    if (!finalPath.equals(path)) {
-      await this.thumbs.renameDirFile(path, finalPath);
-      void this.cache.delete(path.urlSafe() + "?thumb=1");
-    }
-    return finalPath;
   }
 
   addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {
@@ -342,26 +370,29 @@ export class Workspace extends WorkspaceDAO {
   }
   removeFile = async (filePath: AbsPath) => {
     if (filePath.isImage()) {
-      void this.cache.delete(filePath.urlSafe() + "?thumb=1");
-      return Promise.all([
-        this.disk.removeFile(filePath),
-
-        this.thumbs.removeFile(filePath).catch(() => {
-          /*swallow*/
-        }),
+      await Promise.all([
+        this.NewThumb(filePath)
+          .remove()
+          .catch(() => {
+            /*swallow*/
+          }),
+        this.getCache().then((c) => c.delete(filePath.urlSafe())),
       ]);
-    } else {
-      return this.disk.removeFile(filePath);
     }
+    return this.disk.removeFile(filePath);
   };
 
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { newPath } = await this.disk.renameDirFile(oldNode.path, newFullPath);
+    const { newPath } = await this.disk.renameDirOrFile(oldNode.path, newFullPath);
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode);
     if (oldNode.path.isImage()) {
-      void this.cache.delete(oldNode.path.urlSafe() + "?thumb=1");
-      await this.thumbs.renameDirFile(oldNode.path, newFullPath);
+      // await this.disk.findReplace(oldNode.path.str, newPath.str);
+      void this.NewThumb(oldNode.path)
+        .move(oldNode.path, newFullPath)
+        .catch(async (e) => {
+          console.error("Error moving thumb", e);
+        });
     }
     return newNode;
   };
@@ -375,7 +406,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.readFile(filePath);
   };
 
-  readThumbFile = (filePath: AbsPath) => {
+  readThumb = (filePath: AbsPath) => {
     return this.thumbs.readFile(filePath);
   };
 
@@ -385,6 +416,7 @@ export class Workspace extends WorkspaceDAO {
   watchDisk(callback: (fileTree: TreeDir) => void) {
     return this.disk.latestIndexListener(callback);
   }
+
   async getFirstFile() {
     //TODO dont you need to make sure its indexed first?
     await this.disk.awaitFirstIndex();
@@ -398,7 +430,7 @@ export class Workspace extends WorkspaceDAO {
     if (!isImageType(fileType)) {
       throw new BadRequestError("Not a valid image");
     }
-    return this.newImageFile(targetPath, relPath(file.name), new Uint8Array(await file.arrayBuffer()));
+    return this.newFile(targetPath, relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
 
   getFileTreeRoot() {
@@ -421,6 +453,7 @@ export class Workspace extends WorkspaceDAO {
 
   teardown = () => {
     this.disk.teardown();
+    this.thumbs.teardown();
   };
 
   toJSON() {
@@ -497,3 +530,27 @@ export class NullWorkspace extends Workspace {
     });
   }
 }
+
+// class Image {
+//   cacheId: string;
+//   private getCache() {
+//     return caches.open(this.imgRepo.guid);
+//   }
+
+//   constructor(public imgRepo: Disk, public path: AbsPath, cacheId?: string) {
+//     this.cacheId = cacheId ?? imgRepo.guid;
+//   }
+//   async create(content: Uint8Array) {
+//     this.path = await this.imgRepo.nextPath(this.path);
+//     const finalPath = await this.imgRepo.newFile(this.path, content);
+//     await this.getCache().then((c) => c.put(finalPath.urlSafe(), new Response(content)));
+//     return finalPath;
+//   }
+//   url() {
+//     return this.path.urlSafe();
+//   }
+//   async remove() {
+//     await this.getCache().then((c) => c.delete(this.url()));
+//     await this.imgRepo.removeFile(this.path);
+//   }
+// }

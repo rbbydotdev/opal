@@ -286,6 +286,10 @@ export class TreeFile extends TreeNode {
 }
 
 export type TreeList = Array<string>;
+
+export class VirtualTreeNode extends TreeNode {
+  isVirtual = true;
+}
 export class VirtualFileTreeNode extends TreeFile {
   isVirtual = true;
 }

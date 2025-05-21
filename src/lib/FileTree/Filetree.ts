@@ -8,6 +8,7 @@ import {
   TreeNodeDirJType,
   VirtualDirTreeNode,
   VirtualFileTreeNode,
+  VirtualTreeNode,
 } from "@/lib/FileTree/TreeNode";
 import { AbsPath, BasePath, relPath, RelPath } from "@/lib/paths";
 import { E_CANCELED, Mutex } from "async-mutex";
@@ -218,7 +219,7 @@ export class FileTree {
     delete selfNode?.parent?.children[path.basename().str];
     this.map.delete(path.str);
   }
-  insertNode(parent: TreeDir, newNode: TreeNode) {
+  insertNode(parent: TreeDir, newNode: TreeNode | VirtualTreeNode) {
     this.map.set(newNode.path.str, newNode);
     return spliceNode(parent, newNode);
   }

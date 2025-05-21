@@ -54,6 +54,11 @@ export const EditableFile = ({
   useEffect(() => {
     if (isFocused && !isEditing) {
       linkRef.current?.focus();
+      //TODO: 'sometimes' on load focus is lost when instead we want it, https://github.com/vercel/next.js/issues/49386
+      const timer = setTimeout(() => {
+        linkRef.current?.focus();
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [isEditing, isFocused, linkRef]);
 
@@ -78,7 +83,7 @@ export const EditableFile = ({
           onClick={handleClick}
           prefetch={false}
         >
-          <div style={{ marginLeft: depth + "rem", width: "100%" }}>
+          <div style={{ marginLeft: depth + "rem" }}>
             <File selected={isSelected} className={clsx({ ["-ml-[1.2rem]"]: treeFile.path.isImage() || isSelected })}>
               {treeFile.path.isImage() ? (
                 <img
@@ -92,18 +97,20 @@ export const EditableFile = ({
           </div>
         </Link>
       ) : (
-        <div style={{ marginLeft: depth + "rem", width: "100%" }}>
-          <File selected={isSelected} className="-ml-[0.7rem] w-full">
-            <input
-              ref={inputRef}
-              className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full"
-              type="text"
-              value={fileName.str}
-              onChange={(e) => setFileName(relPath(e.target.value))}
-              onKeyDown={handleKeyDown}
-              onBlur={handleBlur}
-            />
-          </File>
+        <div className={className}>
+          <div style={{ marginLeft: depth + "rem" }} className="overflow-x-hidden w-full">
+            <File selected={isSelected} className="w-full">
+              <input
+                ref={inputRef}
+                className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full"
+                type="text"
+                value={fileName.str}
+                onChange={(e) => setFileName(relPath(e.target.value))}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+              />
+            </File>
+          </div>
         </div>
       )}
     </div>
@@ -120,15 +127,26 @@ export function File({
   className?: string;
 }) {
   return (
-    <span
-      className={clsx(
-        { "before:content-[attr(data-star)] before:text-accent2": selected },
-        "items-center flex gap-2",
-        className
-      )}
-      data-star="✦"
-    >
-      {children}
-    </span>
+    <div className="flex items-center">
+      <div
+        className={clsx(
+          { flex: selected },
+          { hidden: !selected },
+          "absolute w-2 h-2 flex justify-center items-center text-purple-700 -ml-2 text-xs"
+        )}
+      >
+        {"✦"}
+      </div>
+      <span
+        className={clsx(
+          // { "before:content-[attr(data-star)] before:text-accent2": selected },
+          // { "ml-2": !selected },
+          "items-center flex gap-2 ml-2",
+          className
+        )}
+      >
+        {children}
+      </span>
+    </div>
   );
 }
