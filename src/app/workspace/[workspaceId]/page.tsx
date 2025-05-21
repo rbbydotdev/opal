@@ -1,22 +1,32 @@
 "use client";
 
+import { useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
 import { useWorkspaceContext } from "@/context";
+import { Opal } from "@/lib/Opal";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Page() {
+  const { currentWorkspace } = useWorkspaceContext();
+  const { handleDrop } = useFileTreeDragAndDrop({
+    currentWorkspace,
+  });
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      {/* <LoadingPanel /> */}
-
+    <div
+      className="w-full h-full flex items-center justify-center"
+      onDrop={handleDrop}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
       <FirstFileRedirectWithCurrentWorkspace />
-      {/* <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center">
+      <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center">
         <div>
           <Opal size={78} />
         </div>
-        <div className="font-thin text-2xl font-mono text-center">welcome to your workspace</div>
-      </div> */}
+        <div className="font-thin text-2xl font-mono text-center">Opal</div>
+      </div>
     </div>
   );
 }

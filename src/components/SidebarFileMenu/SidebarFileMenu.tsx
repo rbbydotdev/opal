@@ -1,6 +1,6 @@
 "use client";
 import { ConnectionsModal } from "@/components/connections-modal";
-import { FileTreeMenu } from "@/components/FiletreeMenu";
+import { FileTreeMenu, useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
 import { ClosedChevron, OpenedChevron } from "@/components/SidebarFileMenu/Icons";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -71,11 +71,25 @@ function SidebarFileMenuInternal({
   }, [addDirFileAndExpand]);
 
   const route = usePathname();
+
   const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
+  const { handleDrop } = useFileTreeDragAndDrop({
+    currentWorkspace,
+  });
+
+  //use
 
   return (
     <>
-      <SidebarGroup {...props} className={twMerge("h-full p-0 bg-secondary sidebar-group", props.className)}>
+      <SidebarGroup
+        {...props}
+        onDrop={handleDrop}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        className={twMerge("h-full p-0 bg-secondary sidebar-group", props.className)}
+      >
         <SidebarGroupContent className="flex justify-end">
           <SidebarFileMenuFilesActions
             isSettingsView={isSettingsView}
@@ -128,7 +142,7 @@ export const SidebarFileMenuFiles = ({
         </div>
       ) : (
         <FileTreeMenu
-          renameDirFile={renameFile}
+          renameDirOrFile={renameFile}
           expand={expandSingle}
           expandForNode={expandForNode}
           expanded={expanded}

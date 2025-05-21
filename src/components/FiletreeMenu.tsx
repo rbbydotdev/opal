@@ -13,19 +13,19 @@ import { isAncestor } from "../lib/paths";
 
 export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
 
-const ACCEPTED_FILE_TYPES = [
-  "text/plain",
-  "text/markdown",
-  "text/x-markdown",
-  "text/x-markdown",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/svg",
-];
+// const ACCEPTED_FILE_TYPES = [
+//   "text/plain",
+//   "text/markdown",
+//   "text/x-markdown",
+//   "text/x-markdown",
+//   "image/jpeg",
+//   "image/png",
+//   "image/webp",
+//   "image/gif",
+//   "image/svg",
+// ];
 
-const isAcceptedFileType = (file: File) => ACCEPTED_FILE_TYPES.includes(file.type);
+// const isAcceptedFileType = (file: File) => ACCEPTED_FILE_TYPES.includes(file.type);
 
 export function FileTreeContainer({
   currentWorkspace,
@@ -45,14 +45,14 @@ export function FileTreeContainer({
 
 const INTERNAL_FILE_TYPE = "application/x-opal";
 
-function useFileTreeDragAndDrop({
+export function useFileTreeDragAndDrop({
   currentWorkspace,
-  renameDirFile,
-  expand,
+  onMove,
+  onDragEnter,
 }: {
-  renameDirFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
   currentWorkspace: Workspace;
-  expand: (path: string, value: boolean) => void;
+  onMove?: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
+  onDragEnter?: (path: string) => void;
 }) {
   const { selectedRange, focused } = useFileTreeMenuContext();
   type DragStartType = { dragStart: TreeNode[] };
@@ -107,11 +107,10 @@ function useFileTreeDragAndDrop({
     }
   };
 
-  const handleDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
+  const handleDrop = async (event: React.DragEvent, targetNode: TreeNode = currentWorkspace.disk.fileTree.root) => {
     event.preventDefault();
     event.stopPropagation();
     const targetPath = targetNode.type === "dir" ? targetNode.path : targetNode.dirname;
-    // console.log(targetNode.path, targetNode.dirname);
     try {
       if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
         await handleExternalDrop(event, targetPath);
@@ -125,7 +124,8 @@ function useFileTreeDragAndDrop({
               .filter(({ type: draggedType, path: draggedPath }) => {
                 const dropPath = targetPath.join(draggedPath.basename());
                 if (draggedType !== "dir" || !isAncestor(dropPath, draggedPath.str)) {
-                  return renameDirFile(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
+                  // return {draggedPath,dropPath,draggedType};
+                  return onMove?.(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
                 }
               })
           );
@@ -139,15 +139,14 @@ function useFileTreeDragAndDrop({
 
   const handleDragEnter = (event: React.DragEvent, path: string) => {
     event.preventDefault();
-    expand(path, true);
-    // console.debug(`Drag Enter: ${path}`);
+    onDragEnter?.(path);
   };
   return { handleDragStart, handleDragOver, handleDrop, handleDragEnter };
 }
 
 function FileTreeMenuInternal({
   fileTreeDir,
-  renameDirFile,
+  renameDirOrFile,
   depth = 0,
   expand,
   expandForNode,
@@ -156,7 +155,7 @@ function FileTreeMenuInternal({
   workspaceRoute,
 }: {
   fileTreeDir: TreeDir;
-  renameDirFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
+  renameDirOrFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
   depth?: number;
   expand: (path: string, value: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
@@ -166,8 +165,8 @@ function FileTreeMenuInternal({
 }) {
   const { handleDragEnter, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragAndDrop({
     currentWorkspace,
-    renameDirFile,
-    expand,
+    onMove: renameDirOrFile,
+    onDragEnter: (path: string) => expand(path, true),
   });
 
   return (
@@ -175,7 +174,7 @@ function FileTreeMenuInternal({
       onDragOver={handleDragOver}
       onDrop={(e) => handleDrop(e, fileTreeDir)}
       onDragEnter={(e) => handleDragEnter(e, "/")}
-      className={clsx("gap-0", depth === 0 ? "pb-12 pt-2" : "")}
+      className={clsx("p-0", depth === 0 ? "pb-12 pt-2 -ml-[2px]" : "")}
     >
       {Object.values(fileTreeDir.children).map((file) => (
         <Collapsible
@@ -220,7 +219,7 @@ function FileTreeMenuInternal({
                   expand={expand}
                   expandForNode={expandForNode}
                   fileTreeDir={file as TreeDir}
-                  renameDirFile={renameDirFile}
+                  renameDirOrFile={renameDirOrFile}
                   currentWorkspace={currentWorkspace}
                   workspaceRoute={workspaceRoute}
                   depth={depth + 1}

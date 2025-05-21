@@ -1,10 +1,8 @@
-import { isThumbnailHref } from "@/Db/isThumbnailHref";
-import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
-import { createThumbnailWW } from "@/lib/createThumbnailWW";
+import { Thumb, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { absPath, AbsPath, BasePath } from "@/lib/paths";
+import { absPath, BasePath } from "@/lib/paths";
 
 const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
 
@@ -65,25 +63,10 @@ self.addEventListener("fetch", async (event) => {
 
 const SWWStore = new (class SwWorkspace {
   private workspace: Workspace | null = null;
-  private workspaceId: string | null = null;
   setWorkspace(workspace: Workspace) {
-    this.workspaceId = workspace.name;
     return (this.workspace = workspace);
   }
-  async readImg(path: AbsPath | string) {
-    return this.workspace?.readFile(absPath(path));
-  }
-  async readThumb(path: AbsPath | string) {
-    return this.workspace?.readThumbFile(absPath(path));
-  }
 
-  getCache(workspaceId = this.workspaceId!): Promise<Cache> {
-    return caches.open(Workspace.cacheKey(workspaceId));
-  }
-  setWorkspaceId(workspaceId: string) {
-    this.workspaceId = workspaceId;
-    return this;
-  }
   async tryWorkspace(workspaceId: string): Promise<Workspace> {
     if (!this.workspace || workspaceId !== this.workspace.name) {
       this.setWorkspace(await WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
@@ -98,15 +81,16 @@ const SWWStore = new (class SwWorkspace {
 async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: string): Promise<Response> {
   try {
     const decodedPathname = BasePath.decode(url.pathname);
-    const isThumbnail = isThumbnailHref(url.href);
+    const isThumbnail = Thumb.isThumbURL(url);
     console.log(`Intercepted request for: 
     decodedPathname: ${decodedPathname}
     url.pathname: ${url.pathname}
     href: ${url.href}
     isThumbnail: ${isThumbnail}
   `);
-    const cache = await SWWStore.getCache(workspaceId);
+    let cache: Cache;
     if (!decodedPathname.endsWith(".svg")) {
+      cache = isThumbnail ? await Thumb.getCache(workspaceId) : await Workspace.getCache(workspaceId);
       const cachedResponse = await cache.match(event.request);
       if (cachedResponse) {
         console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
@@ -117,37 +101,21 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
     const workspace = await SWWStore.tryWorkspace(workspaceId);
     if (!workspace) throw new Error("Workspace not found");
 
-    let contents: Uint8Array<ArrayBufferLike> | null = null;
-    contents = (await (isThumbnail ? SWWStore.readThumb(decodedPathname) : SWWStore.readImg(decodedPathname)).catch(
-      () => null
-    )) as Uint8Array<ArrayBufferLike>;
-    if (contents === null && isThumbnail) {
-      if (!(await workspace.disk.pathExists(absPath(decodedPathname)))) {
-        throw new NotFoundError("Thumbnail not found " + decodedPathname);
-      }
-      console.log(`Thumbnail not found, but image exists, creating thumbnail for: ${decodedPathname}`);
-      const thumbPic = await createThumbnailWW(
-        (await SWWStore.readImg(absPath(decodedPathname))) as Uint8Array<ArrayBufferLike>
-      );
-      await workspace.thumbs.writeFileRecursive(absPath(decodedPathname), thumbPic);
-      contents = thumbPic;
+    const contents: Uint8Array<ArrayBufferLike> = isThumbnail
+      ? ((await workspace.readOrMakeThumb(decodedPathname)) as Uint8Array<ArrayBufferLike>)
+      : ((await workspace.readFile(absPath(decodedPathname))) as Uint8Array<ArrayBufferLike>);
+
+    const response = new Response(contents, {
+      headers: {
+        "Content-Type": getMimeType(decodedPathname),
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+
+    if (!decodedPathname.endsWith(".svg")) {
+      await cache!.put(event.request, response.clone());
     }
-
-    if (contents) {
-      const response = new Response(contents, {
-        headers: {
-          "Content-Type": getMimeType(decodedPathname),
-          "Cache-Control": "public, max-age=31536000, immutable",
-        },
-      });
-
-      if (!decodedPathname.endsWith(".svg")) {
-        await cache.put(event.request, response.clone());
-      }
-      return response;
-    }
-
-    return fetch(event.request);
+    return response;
   } catch (e) {
     if (isError(e, NotFoundError)) {
       return new Response("Error", { status: 404 });

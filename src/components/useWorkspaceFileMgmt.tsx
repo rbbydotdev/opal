@@ -10,7 +10,7 @@ import { usePathname, useRouter } from "next/navigation";
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
   const router = useRouter();
   const pathname = usePathname();
-  const { setEditing, selectedRange, resetEditing, setEditType, editType, focused, setFocused, setVirtual, virtual } =
+  const { setEditing, selectedRange, resetEditing, setEditType, focused, setFocused, setVirtual, virtual } =
     useFileTreeMenuContext();
 
   const renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
@@ -21,12 +21,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     return path;
   };
 
-  const newFileFromNode = ({ path, type }: { path: AbsPath; type: TreeNode["type"] }) => {
-    if (type === "file") return currentWorkspace.newFile(path.dirname(), path.basename(), "# " + path.basename());
-    else {
-      return currentWorkspace.newDir(path.dirname(), path.basename());
-    }
-  };
   const newFile = async (path: AbsPath, content = "") => {
     const newPath = await currentWorkspace.newFile(path.dirname(), path.basename(), content);
     if (!workspaceRoute.path) {
@@ -104,20 +98,17 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     }
     return path;
   };
-  const commitChange = async (oldNode: TreeNode, fileName: RelPath) => {
-    const origNode = oldNode.copy();
-    oldNode.remove();
-    let newPath = origNode.path.dirname().join(fileName.decode());
-    if (editType === "rename") {
-      if (!origNode.path.equals(newPath)) {
-        if (origNode.type === "dir") newPath = await renameDir(origNode, newPath);
-        else newPath = await renameFile(origNode, newPath);
+
+  const commitChange = async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new") => {
+    const wantPath = origNode.path.dirname().join(fileName.decode());
+    if (type === "new") {
+      if (origNode.type === "file")
+        return currentWorkspace.newFile(wantPath.dirname(), wantPath.basename(), "# " + wantPath.basename());
+      else {
+        return currentWorkspace.newDir(wantPath.dirname(), wantPath.basename());
       }
-    } else if (editType === "new") {
-      newPath = await newFileFromNode({ type: origNode.type, path: newPath });
     }
-    resetEditing();
-    return newPath;
+    return origNode.type === "dir" ? await renameDir(origNode, wantPath) : await renameFile(origNode, wantPath);
   };
   return {
     renameFile,
@@ -126,7 +117,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     removeFocusedFile,
     removeFiles,
     newDir,
-    commitFilenameChange: commitChange,
+    commitChange,
     addDirFile,
     cancelNew,
     resetEditing,

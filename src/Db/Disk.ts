@@ -6,6 +6,7 @@ import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { isServiceWorker } from "@/lib/isServiceWorker";
+import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
 import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
@@ -162,7 +163,7 @@ export class DiskRemoteEvents extends Channel<{
 export class DiskLocalEvents extends Emittery<{
   [DiskLocalEvents.RENAME]: RenameFileType;
   [DiskLocalEvents.INDEX]: never;
-  [DiskLocalEvents.WRITE]: { filePath: string; contents: string };
+  [DiskLocalEvents.WRITE]: { filePath: string };
   [DiskRemoteEvents.UPDATE_INDEX]: { filePath: string; type: "file" | "dir" };
 }> {
   static WRITE = "write" as const;
@@ -275,8 +276,7 @@ export abstract class Disk extends DiskDAO {
         console.debug("remote rename", JSON.stringify(data, null, 4));
       }),
       this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
-        const contents = (await this.fs.readFile(absPath(filePath).encode())).toString();
-        await this.local.emit(DiskLocalEvents.WRITE, { contents: contents, filePath });
+        await this.local.emit(DiskLocalEvents.WRITE, { filePath });
       }),
 
       this.remote.on(DiskRemoteEvents.INDEX, async () => {
@@ -315,7 +315,24 @@ export abstract class Disk extends DiskDAO {
     }[type](guid);
   }
 
+  //TODO: doesnt work with multiple files
+  async findReplace(find: string, replace: string) {
+    return this.fileTree.walk(async (node) => {
+      if (getMimeType(node.path) === "text/markdown") {
+        const content = String(await this.readFile(node.path));
+        if (content.includes(find)) {
+          const newContent = content.replaceAll(find, replace);
+          await this.writeFile(node.path, newContent);
+          await this.local.emit(DiskLocalEvents.WRITE, {
+            filePath: node.path.str,
+          });
+        }
+      }
+    });
+  }
+
   async mkdirRecursive(filePath: AbsPath) {
+    //make recursive dir if or if not exists
     const segments = filePath.encode().split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
       try {
@@ -341,34 +358,20 @@ export abstract class Disk extends DiskDAO {
     return this.local.on(DiskLocalEvents.RENAME, fn);
   }
   writeFileListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-    return this.local.on(DiskLocalEvents.WRITE, ({ filePath, contents }) => {
-      if (watchFilePath.str === filePath) fn(contents);
-    });
-  }
-  /*
-  remoteWriteFileListener(watchFilePath: string, fn: (contents: string) => void) {
-    return this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
-      if (watchFilePath === filePath) {
-        try {
-          const contents = await this.readFile(absPath(filePath));
-          return fn(contents.toString());
-        } catch (e) {
-          if (errorCode(e).code === "ENOENT") {
-            throw new NotFoundError(`File not found: ${filePath}`);
-          }
-          throw e;
-        }
+    return this.local.on(DiskLocalEvents.WRITE, async ({ filePath }) => {
+      if (watchFilePath.str === filePath) {
+        fn(String(await this.readFile(absPath(filePath))));
       }
     });
   }
-  */
 
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
-    return this.renameDirFile(oldFullPath, newFullPath, "dir");
+    return this.renameDirOrFile(oldFullPath, newFullPath, "dir");
   }
-  async renameDirFile(
+  async renameDirOrFile(
     oldFullPath: AbsPath,
     newFullPath: AbsPath,
+    //type can be determined by the fs.stat no?
     type: "file" | "dir" = "file"
   ): Promise<RenameFileType> {
     const NOCHANGE: RenameFileType = new RenameFileType({
@@ -388,6 +391,7 @@ export abstract class Disk extends DiskDAO {
     }
 
     try {
+      await this.mkdirRecursive(cleanFullPath.dirname());
       await this.fs.rename(oldFullPath.encode(), cleanFullPath.encode());
     } catch (e) {
       throw e;
@@ -414,6 +418,7 @@ export abstract class Disk extends DiskDAO {
     }
     await this.mkdirRecursive(fullPath);
     await this.fileTreeIndex();
+    // this.updateIndex(fullPath, "dir");
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskLocalEvents.INDEX);
     // await this.local.emit(DiskLocalEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "dir" });
@@ -459,8 +464,8 @@ export abstract class Disk extends DiskDAO {
       fullPath = fullPath.inc();
     }
     await this.writeFileRecursive(fullPath, content);
-
-    this.updateIndex(fullPath, "file");
+    await this.fileTreeIndex();
+    // this.updateIndex(fullPath, "file");
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskRemoteEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "file" });
     return fullPath;
