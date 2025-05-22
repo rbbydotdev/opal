@@ -7,7 +7,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceContext } from "@/context";
 import { Workspace } from "@/Db/Workspace";
+import { useIsLoading } from "@/hooks/useIsLoading";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import clsx from "clsx";
 import { BombIcon, ChevronDown, CirclePlus, DatabaseZap, Delete, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -65,17 +67,20 @@ export function WorkSpaceButtonBar() {
     () => workspaces.filter((workspace) => workspace.guid !== currentWorkspace?.guid),
     [workspaces, currentWorkspace]
   );
+  const { isLoading } = useIsLoading();
   return (
     <>
       <div className="flex justify-center flex-col items-center w-full">
-        <div
-          className="h-7 w-7 rounded-sm mt-7 mb-7"
-          style={{
-            backgroundImage: "url(/opal.svg)",
-            backgroundRepeat: "repeat",
-            backgroundSize: "auto",
-          }}
-        ></div>
+        <Link href={"/"} className={clsx({ "animate-spin": isLoading })}>
+          <div
+            className="h-7 w-7 rounded-sm mt-7 mb-7"
+            style={{
+              backgroundImage: "url(/opal.svg)",
+              backgroundRepeat: "repeat",
+              backgroundSize: "auto",
+            }}
+          ></div>
+        </Link>
       </div>
 
       <BigButton

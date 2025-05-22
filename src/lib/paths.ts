@@ -209,6 +209,26 @@ export function isAncestor(path: AbsPath | string | null, root: AbsPath | string
   return pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i]);
 }
 
+/**
+ * Reduces an array of strings or TreeNode objects by removing elements that are descendants
+ * of other elements in the array, based on their string representation.
+ *
+ * The function sorts the input by length (shallow copy), then iterates through the array,
+ * removing any element that is a descendant (as determined by `isAncestor`) of another element.
+ *
+ * @typeParam T - An array type containing strings or TreeNode objects.
+ * @param range - The array of strings or TreeNode objects to reduce.
+ * @returns The reduced array with descendant elements removed.
+ *
+ * @example
+ * // Given the following paths:
+ * const paths = ["/a", "/a/b", "/a/b/c", "/d"];
+ * // reduceLineage(paths) returns ["/a", "/d"]
+ *
+ * // With TreeNode objects (assuming .toString() returns the path):
+ * const nodes = [nodeA, nodeAB, nodeABC, nodeD];
+ * // reduceLineage(nodes) returns [nodeA, nodeD]
+ */
 export function reduceLineage<T extends (string | TreeNode)[]>(range: T): T {
   [...range].sort((a, b) => a.length - b.length);
   for (let i = 0; i < range.length; i++) {

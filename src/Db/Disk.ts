@@ -248,15 +248,10 @@ export abstract class Disk extends DiskDAO {
   latestIndexListener(callback: (fileTree: TreeDir) => void) {
     if (this.fileTree.initialIndex) callback(this.fileTree.root);
     return this.local.on(DiskLocalEvents.INDEX, () => {
-      // return this.local.on([DiskLocalEvents.INDEX, DiskLocalEvents.UPDATE_INDEX], () => {
       callback(this.fileTree.root);
       console.debug("local disk index event");
     });
   }
-  // static INIT_LISTENERS = true;
-  // static NO_INIT_LISTENERS = false;
-
-  // async init(setupListeners = Disk.INIT_LISTENERS) {
   async init() {
     await this.initializeIndex();
     if (!isServiceWorker()) {
@@ -430,7 +425,7 @@ export abstract class Disk extends DiskDAO {
       await this.fs.unlink(filePath.encode());
     } catch (err) {
       if (isErrorWithCode(err, "ENOENT")) {
-        throw new NotFoundError().hint(`File not found: ${filePath}`);
+        throw new NotFoundError(`File not found: ${filePath}`);
       } else {
         throw err;
       }
@@ -498,7 +493,7 @@ export abstract class Disk extends DiskDAO {
       return await this.fs.readFile(filePath.encode());
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
-        throw new NotFoundError().hint(`File not found: ${filePath}`);
+        throw new NotFoundError(`File not found: ${filePath}`);
       }
       throw e;
     }
