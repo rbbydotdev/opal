@@ -13,6 +13,13 @@ export default function Page() {
   });
   return (
     <div
+      style={{
+        backgroundImage: "url('/opal.svg')",
+        backgroundRepeat: "repeat",
+        backgroundSize: "600px 600px",
+        // Add a white overlay with opacity to fade the SVG background
+        position: "relative",
+      }}
       className="w-full h-full flex items-center justify-center"
       onDrop={handleDrop}
       onDragOver={(e) => {
@@ -20,8 +27,18 @@ export default function Page() {
         e.stopPropagation();
       }}
     >
+      {/* Overlay for background opacity */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "white",
+          opacity: 0.9,
+          pointerEvents: "none",
+        }}
+      />
       <FirstFileRedirectWithCurrentWorkspace />
-      <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center">
+      <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center bg-white relative z-10">
         <div>
           <Opal size={78} />
         </div>

@@ -251,8 +251,8 @@ const SidebarFileMenuFilesActions = ({
   </div>
 );
 const VENDOR_ICONS = {
-  GitHub: <Github size={14} />,
-  Google: <Google size={14} />,
+  GitHub: <Github size={12} />,
+  Google: <Google size={12} />,
 };
 const MOCK_CONNECTIONS = [
   {
@@ -303,7 +303,9 @@ function SidebarFileMenuConnections() {
                   <SidebarMenuItem key={connection.name}>
                     <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
                       <div className="w-full whitespace-nowrap flex items-center space-x-1">
-                        <span>{VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}</span>
+                        <span className="rounded-full p-1 border stroke-sidebar-ring">
+                          {VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}
+                        </span>
                         <span className="overflow-hidden text-ellipsis">{connection.name}</span>
                       </div>
                     </SidebarMenuButton>

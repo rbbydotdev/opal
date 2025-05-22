@@ -54,8 +54,9 @@ self.addEventListener("fetch", async (event) => {
   try {
     referrerPath = new URL(event.request.referrer).pathname;
   } catch (e) {
-    console.error(errF`Error parsing referrer: ${event.request.referrer}, ${e}`);
-    return event.respondWith(fetch(event.request));
+    console.error(`Error parsing referrer: ${event.request.referrer}, ${e}`);
+    throw new NotFoundError(`Error parsing referrer ${event.request.referrer}`);
+    // return event.respondWith(fetch(event.request));
   }
   try {
     const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
