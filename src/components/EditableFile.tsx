@@ -88,8 +88,8 @@ export const EditableFile = ({
               {treeFile.path.isImage() ? (
                 <img
                   src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=1" : "")}
-                  alt="️"
-                  className="w-4 h-4 rounded-sm"
+                  alt=""
+                  className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white"
                 />
               ) : null}
               <span className={"py-2.5 truncate w-full text-xs text-ellipsis"}>{fileName}</span>

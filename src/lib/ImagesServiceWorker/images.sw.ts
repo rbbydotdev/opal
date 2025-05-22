@@ -1,6 +1,7 @@
 import { Thumb, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
+import { RemoteLogger } from "@/lib/ImagesServiceWorker/RemoteLogger";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, BasePath } from "@/lib/paths";
 
@@ -8,19 +9,33 @@ const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 
-// console.log = function (msg: string) {
-//   RemoteLogger(msg, "log");
-// };
+function formatConsoleMsg(msg: unknown): string {
+  if (msg instanceof Error) {
+    return `${msg.name}: ${msg.message}\n${msg.stack ?? ""}`;
+  }
+  if (typeof msg === "object") {
+    try {
+      return JSON.stringify(msg, null, 2);
+    } catch {
+      return String(msg);
+    }
+  }
+  return String(msg);
+}
 
-// console.debug = function (msg: string) {
-//   RemoteLogger(msg, "debug");
-// };
-// console.error = function (msg: string) {
-//   RemoteLogger(msg, "error");
-// };
-// console.warn = function (msg: string) {
-//   RemoteLogger(msg, "warn");
-// };
+console.log = function (msg: unknown) {
+  RemoteLogger(formatConsoleMsg(msg), "log");
+};
+
+console.debug = function (msg: unknown) {
+  RemoteLogger(formatConsoleMsg(msg), "debug");
+};
+console.error = function (msg: unknown) {
+  RemoteLogger(formatConsoleMsg(msg), "error");
+};
+console.warn = function (msg: unknown) {
+  RemoteLogger(formatConsoleMsg(msg), "warn");
+};
 // // Logger
 
 self.addEventListener("activate", function (event) {
@@ -93,11 +108,17 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
       cache = isThumbnail ? await Thumb.getCache(workspaceId) : await Workspace.getCache(workspaceId);
       const cachedResponse = await cache.match(event.request);
       if (cachedResponse) {
-        console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
+        console.log(
+          `Cache hit for: ${url.href.replace(url.origin, "")} + ${isThumbnail ? Thumb.getCacheId(workspaceId) : ""}`
+        );
         return cachedResponse;
       }
     }
-    console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
+    console.log(
+      `Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace + ${
+        isThumbnail ? Thumb.getCacheId(workspaceId) : ""
+      }`
+    );
     const workspace = await SWWStore.tryWorkspace(workspaceId);
     if (!workspace) throw new Error("Workspace not found");
 
