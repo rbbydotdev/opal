@@ -33,25 +33,35 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* <FPSStats /> */}
         {/* <Inspector /> */}
-
-        <ErrorPopper>
-          <WorkspaceProvider>
-            <JotaiProvider>
-              <SidebarProvider>
-                <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                  <div className="w-screen overflow-hidden flex ">
-                    <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
-                      <WorkSpaceButtonBar />
+        <div
+          style={{
+            backgroundImage: "url('/opal-lite.svg')",
+            backgroundRepeat: "repeat",
+            backgroundSize: "600px 600px",
+            // Add a white overlay with opacity to fade the SVG background
+            position: "relative",
+          }}
+          className="w-full h-full flex items-center justify-center"
+        >
+          <ErrorPopper>
+            <WorkspaceProvider>
+              <JotaiProvider>
+                <SidebarProvider>
+                  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                    <div className="w-screen overflow-hidden flex ">
+                      <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
+                        <WorkSpaceButtonBar />
+                      </div>
+                      <div className="flex h-screen w-[calc(100vw-5rem)]">
+                        <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>
+                      </div>
                     </div>
-                    <div className="flex h-screen w-[calc(100vw-5rem)]">
-                      <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>
-                    </div>
-                  </div>
-                </ThemeProvider>
-              </SidebarProvider>
-            </JotaiProvider>
-          </WorkspaceProvider>
-        </ErrorPopper>
+                  </ThemeProvider>
+                </SidebarProvider>
+              </JotaiProvider>
+            </WorkspaceProvider>
+          </ErrorPopper>
+        </div>
       </body>
     </html>
   );

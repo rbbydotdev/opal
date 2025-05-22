@@ -218,7 +218,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
   }
 
   static async fetchFromRoute(route: string) {
-    if (!isAncestor(route, Workspace.rootRoute)) throw new BadRequestError("Invalid route").hint(route);
+    if (!isAncestor(route, Workspace.rootRoute)) throw new BadRequestError("Invalid route " + route);
 
     const name = route.slice(Workspace.rootRoute.length + 1).split("/")[0];
 

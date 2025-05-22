@@ -5,7 +5,7 @@ import { RemoteLogger } from "@/lib/ImagesServiceWorker/RemoteLogger";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, BasePath } from "@/lib/paths";
 
-const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg"];
+const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 
