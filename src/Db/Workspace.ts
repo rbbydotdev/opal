@@ -23,8 +23,11 @@ export class Thumb {
     public content: Uint8Array | null = null
   ) {}
 
+  static getCacheId(workspaceId: string) {
+    return `${workspaceId}/thumb`;
+  }
   static getCache(id: string) {
-    return caches.open(`${id}/thumb`);
+    return caches.open(this.getCacheId(id));
   }
 
   async getCache() {
@@ -72,7 +75,16 @@ export class Thumb {
     return this.path.urlSafe() + "?thumb=1";
   }
   async move(oldPath: AbsPath, newPath: AbsPath) {
-    await this.getCache().then((c) => c.delete(this.url()));
+    const oldUrl = this.url();
+    this.path = newPath;
+    await this.getCache().then(async (c) => {
+      const res = await c.match(oldUrl);
+      if (res) {
+        // console.log(`moving thumb from ${oldUrl} to ${this.url()} for cache ${this.getCacheId(this.workspaceId)}`);
+        await c.put(this.url(), res);
+        await c.delete(oldUrl);
+      }
+    });
     await this.thumbRepo.mkdirRecursive(newPath.dirname());
     return this.thumbRepo.renameDirOrFile(oldPath, newPath);
   }
@@ -387,8 +399,14 @@ export class Workspace extends WorkspaceDAO {
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode);
     if (oldNode.path.isImage()) {
-      // await this.disk.findReplace(oldNode.path.str, newPath.str);
-      void this.NewThumb(oldNode.path)
+      await this.getCache().then(async (c) => {
+        const res = await c.match(oldNode.path.urlSafe());
+        if (res) {
+          await c.delete(oldNode.path.urlSafe());
+          await c.put(newFullPath.urlSafe(), res);
+        }
+      });
+      await this.NewThumb(oldNode.path)
         .move(oldNode.path, newFullPath)
         .catch(async (e) => {
           console.error("Error moving thumb", e);
