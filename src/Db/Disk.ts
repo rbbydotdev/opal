@@ -245,8 +245,11 @@ export abstract class Disk extends DiskDAO {
   }
 
   //race will call callback if there is already a fresh initialized index
-  latestIndexListener(callback: (fileTree: TreeDir) => void) {
-    if (this.fileTree.initialIndex) callback(this.fileTree.root);
+  latestIndexListener(
+    callback: (fileTree: TreeDir) => void,
+    { initialTrigger = true }: { initialTrigger?: boolean } = {}
+  ) {
+    if (initialTrigger && this.fileTree.initialIndex) callback(this.fileTree.root);
     return this.local.on(DiskLocalEvents.INDEX, () => {
       callback(this.fileTree.root);
       console.debug("local disk index event");

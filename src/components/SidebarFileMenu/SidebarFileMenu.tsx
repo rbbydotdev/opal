@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useFileTreeExpander } from "@/components/useFileTreeExpander";
+import { useFileTreeExpander, useSingleExpander } from "@/components/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/components/useWorkspaceFileMgmt";
 import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { Workspace } from "@/Db/Workspace";
@@ -48,7 +48,7 @@ function SidebarFileMenuInternal({
   workspaces,
   ...props
 }: WorkspaceContextType & React.ComponentProps<typeof SidebarGroup>) {
-  const { renameFile, addDirFile, removeFiles } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { renameDirOrFile, addDirFile, removeFiles } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
     currentPath: workspaceRoute.path,
@@ -104,7 +104,7 @@ function SidebarFileMenuInternal({
         <SidebarFileMenuConnections />
         <SidebarFileMenuFiles
           fileTreeDir={fileTreeDir}
-          renameFile={renameFile}
+          renameDirOrFile={renameDirOrFile}
           expandSingle={expandSingle}
           expandForNode={expandForNode}
           expanded={expanded}
@@ -116,7 +116,7 @@ function SidebarFileMenuInternal({
 
 export const SidebarFileMenuFiles = ({
   fileTreeDir,
-  renameFile,
+  renameDirOrFile,
   expandSingle,
   expandForNode,
   expanded,
@@ -125,13 +125,13 @@ export const SidebarFileMenuFiles = ({
   expandSingle: (path: string, expanded: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [key: string]: boolean };
-  renameFile: (oldNode: TreeNode, newFullPath: AbsPath) => Promise<AbsPath>;
+  renameDirOrFile: (oldNode: TreeNode, newFullPath: AbsPath, type: "file" | "dir") => Promise<AbsPath>;
 }) => (
   <SidebarGroup className="pb-12 h-full">
     <SidebarGroupLabel>
       <div className="w-full">Files</div>
     </SidebarGroupLabel>
-    <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-3 pb-16 max-w-full overflow-x-hidden">
+    <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-3 pb-16 pt-3 max-w-full overflow-x-hidden">
       {!Object.keys(fileTreeDir.children).length ? (
         <div className="w-full">
           <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
@@ -142,7 +142,7 @@ export const SidebarFileMenuFiles = ({
         </div>
       ) : (
         <FileTreeMenu
-          renameDirOrFile={renameFile}
+          renameDirOrFile={renameDirOrFile}
           expand={expandSingle}
           expandForNode={expandForNode}
           expanded={expanded}
@@ -277,10 +277,14 @@ const MOCK_CONNECTIONS = [
   },
 ];
 function SidebarFileMenuConnections() {
+  const [
+    expanded,
+    setExpand, // (state: boolean) => void
+  ] = useSingleExpander("connections");
   return (
     <>
       <SidebarGroup>
-        <Collapsible className="group">
+        <Collapsible className="group" open={expanded} onOpenChange={setExpand}>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="pl-0">
               <SidebarGroupLabel className="pl-1">

@@ -106,20 +106,16 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
   `);
     let cache: Cache;
     if (!decodedPathname.endsWith(".svg")) {
-      cache = isThumbnail ? await Thumb.getCache(workspaceId) : await Workspace.getCache(workspaceId);
+      cache = isThumbnail
+        ? await Thumb.newCache(workspaceId).getCache()
+        : await Workspace.newCache(workspaceId).getCache();
       const cachedResponse = await cache.match(event.request);
       if (cachedResponse) {
-        console.log(
-          `Cache hit for: ${url.href.replace(url.origin, "")} + ${isThumbnail ? Thumb.getCacheId(workspaceId) : ""}`
-        );
+        console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
         return cachedResponse;
       }
     }
-    console.log(
-      `Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace + ${
-        isThumbnail ? Thumb.getCacheId(workspaceId) : ""
-      }`
-    );
+    console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
     const workspace = await SWWStore.tryWorkspace(workspaceId);
     if (!workspace) throw new Error("Workspace not found");
 

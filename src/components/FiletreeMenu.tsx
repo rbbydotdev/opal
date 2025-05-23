@@ -6,9 +6,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath } from "@/lib/paths";
+import { absPath, AbsPath, reduceLineage } from "@/lib/paths";
 import clsx from "clsx";
-import React from "react";
+import React, { useEffect } from "react";
 import { isAncestor } from "../lib/paths";
 
 export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
@@ -51,7 +51,7 @@ export function useFileTreeDragAndDrop({
   onDragEnter,
 }: {
   currentWorkspace: Workspace;
-  onMove?: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
+  onMove?: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<unknown> | unknown;
   onDragEnter?: (path: string) => void;
 }) {
   const { selectedRange, focused } = useFileTreeMenuContext();
@@ -118,16 +118,14 @@ export function useFileTreeDragAndDrop({
         const { dragStart } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as DragStartJType;
 
         if (dragStart && dragStart.length) {
+          const dragNodes = reduceLineage(dragStart.map((node) => TreeNode.fromJSON(node)));
           return Promise.all(
-            dragStart
-              .map((node) => TreeNode.fromJSON(node))
-              .filter(({ type: draggedType, path: draggedPath }) => {
-                const dropPath = targetPath.join(draggedPath.basename());
-                if (draggedType !== "dir" || !isAncestor(dropPath, draggedPath.str)) {
-                  // return {draggedPath,dropPath,draggedType};
-                  return onMove?.(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
-                }
-              })
+            dragNodes.filter(({ type: draggedType, path: draggedPath }) => {
+              const dropPath = targetPath.join(draggedPath.basename());
+              if (draggedType !== "dir" || !isAncestor(dropPath, draggedPath.str)) {
+                return onMove?.(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
+              }
+            })
           );
         }
       }
@@ -163,6 +161,13 @@ function FileTreeMenuInternal({
   expanded: { [path: string]: boolean };
   workspaceRoute: WorkspaceRouteType;
 }) {
+  const { resetSelects } = useFileTreeMenuContext();
+
+  //This must be done, as old selects can stick around after a remote change or local change / move / rename
+  useEffect(() => {
+    currentWorkspace.watchDisk(resetSelects, { initialTrigger: false });
+  }, [currentWorkspace, resetSelects]);
+
   const { handleDragEnter, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragAndDrop({
     currentWorkspace,
     onMove: renameDirOrFile,

@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceContext } from "@/context";
 import { Workspace } from "@/Db/Workspace";
-import { useIsLoading } from "@/hooks/useIsLoading";
+import { useIsNavigatingWorkspace } from "@/hooks/useIsNavigatingWorkspace";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import clsx from "clsx";
 import { BombIcon, ChevronDown, CirclePlus, DatabaseZap, Delete, Settings, Zap } from "lucide-react";
@@ -67,7 +67,7 @@ export function WorkSpaceButtonBar() {
     () => workspaces.filter((workspace) => workspace.guid !== currentWorkspace?.guid),
     [workspaces, currentWorkspace]
   );
-  const { isLoading } = useIsLoading();
+  const { isLoading } = useIsNavigatingWorkspace();
   return (
     <>
       <div className="flex justify-center flex-col items-center w-full">

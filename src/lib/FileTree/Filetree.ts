@@ -11,7 +11,6 @@ import {
   VirtualTreeNode,
 } from "@/lib/FileTree/TreeNode";
 import { AbsPath, BasePath, relPath, RelPath } from "@/lib/paths";
-import { E_CANCELED, Mutex } from "async-mutex";
 
 export class FileTree {
   initialIndex = false;
@@ -22,7 +21,6 @@ export class FileTree {
   private map = new Map<string, TreeNode>();
   public root: TreeDirRoot = new TreeDirRoot();
 
-  private mutex = new Mutex();
   // private tree: TreeDir = this.root;
   constructor(private fs: FileSystem, guid: string) {
     this.guid = `${guid}/FileTree`;
@@ -81,14 +79,8 @@ export class FileTree {
 
     visitor,
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
-    // let release: () => void = () => {};
     try {
-      // if (this.mutex.isLocked()) {
-      //   console.debug("Indexing is already in progress, canceling previous operation");
-      //   this.mutex.cancel();
-      // }
-      // release = await this.mutex.acquire();
-      console.log("Indexing file tree");
+      console.debug("Indexing file tree");
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
       this.root.walk((node) => this.map.set(node.path.str, node));
@@ -96,18 +88,9 @@ export class FileTree {
       this.initialIndex = true;
       return this.root;
     } catch (e) {
-      // console.log(">>>");
-      // console.log(e);
-      if (e === E_CANCELED) {
-        // this.mutex.
-        console.log("Indexing was canceled");
-        return this.root;
-      } else {
-        console.error("Error during file tree indexing:", e);
-        throw e;
-      }
+      console.error("Error during file tree indexing:", e);
+      throw e;
     } finally {
-      // release();
     }
   };
 
@@ -162,7 +145,6 @@ export class FileTree {
             dirname: fullPath.dirname(),
             basename: fullPath.basename(),
             path: fullPath,
-            // mimeType: getMimeType(fullPath),
             parent,
             depth: depth,
           });
@@ -299,7 +281,6 @@ function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name
       name: path.basename(),
       dirname: path.dirname(),
       basename: path.basename(),
-      // mimeType: getMimeType(path.str),
       path,
       parent,
       depth,
