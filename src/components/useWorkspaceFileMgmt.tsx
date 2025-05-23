@@ -99,6 +99,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     return path;
   };
 
+  const renameDirOrFile = async (oldNode: TreeNode, newFullPath: AbsPath, type: "dir" | "file") => {
+    if (type === "file") {
+      return renameFile(oldNode, newFullPath);
+    }
+    return renameDir(oldNode, newFullPath);
+  };
+
   const commitChange = async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new") => {
     const wantPath = origNode.path.dirname().join(fileName.decode());
     if (type === "new") {
@@ -113,6 +120,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   return {
     renameFile,
     renameDir,
+    renameDirOrFile,
     newFile,
     removeFocusedFile,
     removeFiles,

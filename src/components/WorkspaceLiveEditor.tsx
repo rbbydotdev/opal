@@ -25,7 +25,7 @@ export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
 //TODO MOVE THIS OUT
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
   return (
-    <div className="p-4 border-2 m-auto flex justify-center items-center h-full w-full flex-col">
+    <div className="p-4 m-auto flex justify-center items-center h-full w-full flex-col">
       <img className="max-h-[500px] aspect-auto" alt={alt} src={BasePath.encode(origSrc)} />
     </div>
   );
@@ -59,18 +59,16 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
   const { currentWorkspace } = useWorkspaceContext();
   if (error) return <FileError error={error} />;
 
-  if (contents === null || !currentWorkspace) return null;
+  if (contents === null || !currentWorkspace) return <div className="w-full h-full bg-background"></div>;
   return (
-    <>
-      <Editor
-        {...props}
-        ref={ref}
-        currentWorkspace={currentWorkspace}
-        onChange={updateContents}
-        markdown={String(contents)}
-        className={twMerge("bg-background flex flex-col", className)}
-        contentEditableClassName="max-w-full overflow-auto content-editable prose"
-      />
-    </>
+    <Editor
+      {...props}
+      ref={ref}
+      currentWorkspace={currentWorkspace}
+      onChange={updateContents}
+      markdown={String(contents)}
+      className={twMerge("bg-background flex flex-col", className)}
+      contentEditableClassName="max-w-full overflow-auto content-editable prose"
+    />
   );
 }

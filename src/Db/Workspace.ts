@@ -13,7 +13,7 @@ import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./RemoteAuth";
 
 export class Thumb {
-  _cache: Promise<Cache> | null = null;
+  imageCache: ImageCache;
 
   constructor(
     public workspaceId: string,
@@ -21,17 +21,12 @@ export class Thumb {
     public imgRepo: Disk,
     public path: AbsPath,
     public content: Uint8Array | null = null
-  ) {}
-
-  static getCacheId(workspaceId: string) {
-    return `${workspaceId}/thumb`;
-  }
-  static getCache(id: string) {
-    return caches.open(this.getCacheId(id));
+  ) {
+    this.imageCache = new ImageCache({ guid: workspaceId, name: "thumb" });
   }
 
-  async getCache() {
-    return (this._cache ??= Thumb.getCache(this.workspaceId));
+  static newCache(id: string) {
+    return new ImageCache({ guid: id, name: "thumb" });
   }
 
   static isThumbURL(url: string | URL) {
@@ -77,7 +72,7 @@ export class Thumb {
   async move(oldPath: AbsPath, newPath: AbsPath) {
     const oldUrl = this.url();
     this.path = newPath;
-    await this.getCache().then(async (c) => {
+    await this.imageCache.getCache().then(async (c) => {
       const res = await c.match(oldUrl);
       if (res) {
         // console.log(`moving thumb from ${oldUrl} to ${this.url()} for cache ${this.getCacheId(this.workspaceId)}`);
@@ -90,7 +85,7 @@ export class Thumb {
   }
 
   async remove() {
-    await this.getCache().then((c) => c.delete(this.url()));
+    await this.imageCache.getCache().then((c) => c.delete(this.url()));
     await this.thumbRepo.removeFile(this.path);
   }
 }
@@ -262,10 +257,35 @@ export class WorkspaceDAO implements WorkspaceRecord {
     Object.assign(this, properties);
   }
 }
+
+class ImageCache {
+  name: string;
+  guid: string;
+  _cache: Promise<Cache> | null = null;
+  constructor({ guid, name }: { guid: string; name: string }) {
+    this.guid = guid;
+    this.name = name;
+  }
+  private getCacheId = () => `${this.guid}/${this.name}`;
+  static getCacheId(id: string) {
+    return `${id}/img`;
+  }
+  static getCache(id: string) {
+    return caches.open(this.getCacheId(id));
+  }
+  getCache() {
+    return (this._cache ??= ImageCache.getCache(this.getCacheId()));
+  }
+  tearDown = async () => {
+    await caches.delete(this.getCacheId());
+  };
+}
+
 //TODO: change the mututation of this class to instead have a database tied object, but when othere deps are loaded it beomces a different object
 //for exampple the diskguid
 export class Workspace extends WorkspaceDAO {
   // export class Workspace implements WorkspaceRecord {
+  imageCache: ImageCache;
   memid = nanoid();
   static seedFiles: Record<string, string> = {
     "/welcome.md": "# Welcome to your new workspace!",
@@ -273,19 +293,10 @@ export class Workspace extends WorkspaceDAO {
     "/drafts/draft1.md": "# Goodbye World!",
     "/ideas/ideas.md": "# Red Green Blue",
   };
-  static getCache(id: string) {
-    return caches.open(`${id}/img`);
-  }
 
-  getCache() {
-    return (this._cache ??= Workspace.getCache(this.name));
+  static newCache(id: string) {
+    return new ImageCache({ guid: id, name: "img" });
   }
-
-  private tearDownCache = async () => {
-    const cache = await this.getCache();
-    const cachedRequests = await cache.keys();
-    await Promise.all(cachedRequests.map((req) => cache.delete(req)));
-  };
 
   createdAt: Date = new Date();
   name: string;
@@ -321,6 +332,7 @@ export class Workspace extends WorkspaceDAO {
     this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
     this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
+    this.imageCache = Workspace.newCache(this.guid);
   }
 
   get id() {
@@ -388,7 +400,7 @@ export class Workspace extends WorkspaceDAO {
           .catch(() => {
             /*swallow*/
           }),
-        this.getCache().then((c) => c.delete(filePath.urlSafe())),
+        this.imageCache.getCache().then((c) => c.delete(filePath.urlSafe())),
       ]);
     }
     return this.disk.removeFile(filePath);
@@ -399,7 +411,7 @@ export class Workspace extends WorkspaceDAO {
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode);
     if (oldNode.path.isImage()) {
-      await this.getCache().then(async (c) => {
+      await this.imageCache.getCache().then(async (c) => {
         const res = await c.match(oldNode.path.urlSafe());
         if (res) {
           await c.delete(oldNode.path.urlSafe());
@@ -431,8 +443,8 @@ export class Workspace extends WorkspaceDAO {
   onInitialIndex(callback: (fileTree: TreeDir) => void) {
     return this.disk.initialIndexListener(callback);
   }
-  watchDisk(callback: (fileTree: TreeDir) => void) {
-    return this.disk.latestIndexListener(callback);
+  watchDisk(callback: (fileTree: TreeDir) => void, { initialTrigger = true }: { initialTrigger?: boolean } = {}) {
+    return this.disk.latestIndexListener(callback, { initialTrigger });
   }
 
   async getFirstFile() {
@@ -495,7 +507,7 @@ export class Workspace extends WorkspaceDAO {
         this.thumbs.delete(),
       ]);
     });
-    await this.tearDownCache();
+    await this.imageCache.tearDown();
   };
 
   home = () => {

@@ -2,7 +2,7 @@
 import { Workspace } from "@/Db/Workspace";
 import { AbsPath } from "@/lib/paths";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useCallback } from "react";
 
 export const FileTreeMenuContext = React.createContext<{
   editing: AbsPath | null;
@@ -13,6 +13,7 @@ export const FileTreeMenuContext = React.createContext<{
   setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
   resetEditing: () => void;
   setSelectedRange: (r: string[]) => void;
+  resetSelects: () => void;
   selectedRange: string[];
   virtual: AbsPath | null;
   setVirtual: (path: AbsPath | null) => void;
@@ -33,12 +34,19 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
   const [focused, setFocused] = React.useState<AbsPath | null>(filePath ?? null);
   const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
   const [selectedRange, setSelectedRange] = React.useState<string[]>([]);
-  const resetEditing = () => {
+
+  const resetEditing = useCallback(() => {
     setEditing(null);
     setEditType("rename");
     setFocused(null);
     setVirtual(null);
-  };
+  }, []);
+
+  const resetSelects = useCallback(() => {
+    setFocused(null);
+    setVirtual(null);
+    setSelectedRange([]);
+  }, []);
 
   React.useEffect(() => {
     const escapeKey = (e: KeyboardEvent) => {
@@ -59,6 +67,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
         editType,
         setEditType,
         focused,
+        resetSelects,
         setVirtual,
         virtual,
         editing,
