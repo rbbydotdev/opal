@@ -130,7 +130,7 @@ const Identicon = ({ input, size = 5, scale = 20 }: IdenticonProps) => {
   const grid = generateGrid();
 
   return (
-    <div className="inline-block rounded-full overflow-hidden">
+    <div className="inline-block rounded-lg overflow-hidden">
       <svg
         width={size * scale}
         height={size * scale}

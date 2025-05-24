@@ -75,7 +75,6 @@ export class Thumb {
     await this.imageCache.getCache().then(async (c) => {
       const res = await c.match(oldUrl);
       if (res) {
-        // console.log(`moving thumb from ${oldUrl} to ${this.url()} for cache ${this.getCacheId(this.workspaceId)}`);
         await c.put(this.url(), res);
         await c.delete(oldUrl);
       }
