@@ -1,7 +1,6 @@
 "use client";
 import { ConnectionsModal } from "@/components/connections-modal";
 import { FileTreeMenu, useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
-import { ClosedChevron, OpenedChevron } from "@/components/SidebarFileMenu/Icons";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -22,7 +21,11 @@ import { Workspace } from "@/Db/Workspace";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
 import {
+  Check,
+  ChevronDown,
+  ChevronRight,
   CopyMinus,
+  DotIcon,
   Download,
   FilePlus,
   Files,
@@ -34,7 +37,6 @@ import {
   Settings,
   Trash2,
   Undo,
-  UploadIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -83,40 +85,38 @@ function SidebarFileMenuInternal({
   //use
 
   return (
-    <>
-      <SidebarGroup
-        {...props}
-        onDrop={handleDrop}
-        onDragOver={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        className={twMerge("h-full p-0 bg-secondary sidebar-group", props.className)}
+    <SidebarGroup
+      {...props}
+      onDrop={handleDrop}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      className={twMerge("h-full p-0 bg-secondary sidebar-group", props.className)}
+    >
+      {/* <CustomSidebarActionButton title="Publish" Icon={UploadIcon} /> */}
+      {/* <CustomSidebarActionButton title="Sync" Icon={RefreshCw} /> */}
+      <SidebarFileMenuSync />
+      {/* <SidebarFileMenuConnections /> */}
+      <SidebarFileMenuFiles
+        fileTreeDir={fileTreeDir}
+        renameDirOrFile={renameDirOrFile}
+        expandSingle={expandSingle}
+        expandForNode={expandForNode}
+        expanded={expanded}
       >
-        <CustomSidebarActionButton title="Publish" Icon={UploadIcon} />
-        <CustomSidebarActionButton title="Sync" Icon={RefreshCw} />
-        <SidebarFileMenuSync />
-        {/* <SidebarFileMenuConnections /> */}
-        <SidebarFileMenuFiles
-          fileTreeDir={fileTreeDir}
-          renameDirOrFile={renameDirOrFile}
-          expandSingle={expandSingle}
-          expandForNode={expandForNode}
-          expanded={expanded}
-        >
-          <SidebarGroupContent className="flex justify-end">
-            <SidebarFileMenuFilesActions
-              isSettingsView={isSettingsView}
-              currentWorkspace={currentWorkspace}
-              removeFiles={removeFiles}
-              addFile={addFile}
-              addDir={addDir}
-              setExpandAll={setExpandAll}
-            />
-          </SidebarGroupContent>
-        </SidebarFileMenuFiles>
-      </SidebarGroup>
-    </>
+        <SidebarGroupContent className="flex justify-end ">
+          <SidebarFileMenuFilesActions
+            isSettingsView={isSettingsView}
+            currentWorkspace={currentWorkspace}
+            removeFiles={removeFiles}
+            addFile={addFile}
+            addDir={addDir}
+            setExpandAll={setExpandAll}
+          />
+        </SidebarGroupContent>
+      </SidebarFileMenuFiles>
+    </SidebarGroup>
   );
 }
 
@@ -139,13 +139,13 @@ export const SidebarFileMenuFiles = ({
 
   return (
     <SidebarGroup className="pl-0 pb-12 h-full w-full">
-      <Collapsible className="group" open={groupExpanded} onOpenChange={groupSetExpand}>
+      <Collapsible className="group/collapsible" open={groupExpanded} onOpenChange={groupSetExpand}>
         <SidebarGroupLabel className="relative w-full pr-0">
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="pl-0 text-xs w-full">
               <div className="w-full flex items-center">
-                <OpenedChevron className="pr-1 group:data-[state=open]:hidden" />
-                <ClosedChevron className="pr-1 group:data-[state=closed]:hidden" />
+                <ChevronDown size={14} className="group-data-[state=closed]/collapsible:hidden -ml-0.5" />
+                <ChevronRight size={14} className="group-data-[state=open]/collapsible:hidden -ml-0.5" />
                 <Files className="mr-2" size={12} />
                 Files
               </div>
@@ -155,7 +155,7 @@ export const SidebarFileMenuFiles = ({
         </SidebarGroupLabel>
 
         <CollapsibleContent>
-          <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-3 pb-16 pt-3 max-w-full overflow-x-hidden">
+          <SidebarGroupContent className=" overflow-y-scroll h-full scrollbar-thin p-0 pl-4 ml-4 pb-16 pt-3 max-w-full overflow-x-hidden border-l-2 pr-5">
             {!Object.keys(fileTreeDir.children).length ? (
               <div className="w-full">
                 <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
@@ -303,62 +303,18 @@ const MOCK_CONNECTIONS = [
     vendor: "Google",
   },
 ];
-// function SidebarFileMenuConnections() {
-//   const [expanded, setExpand] = useSingleExpander("connections");
-//   return (
-//     <>
-//       <SidebarGroup>
-//         <Collapsible className="group" open={expanded} onOpenChange={setExpand}>
-//           <CollapsibleTrigger asChild>
-//             <SidebarMenuButton className="pl-0">
-//               <SidebarGroupLabel className="pl-1">
-//                 <OpenedChevron className="pr-1 group:data-[state=open]:hidden" />
-//                 <ClosedChevron className="pr-1 group:data-[state=closed]:hidden" />
-//                 <div className="w-full">Connections</div>
-//               </SidebarGroupLabel>
-//             </SidebarMenuButton>
-//           </CollapsibleTrigger>
-
-//           {/* <ConnectionsModal>
-//             <SidebarGroupAction>
-//               <Plus />
-//             </SidebarGroupAction>
-//           </ConnectionsModal> */}
-//           <CollapsibleContent>
-//             <SidebarGroupContent>
-//               <SidebarMenu>
-//                 {MOCK_CONNECTIONS.map((connection) => (
-//                   <SidebarMenuItem key={connection.name}>
-//                     <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
-//                       <div className="w-full whitespace-nowrap flex items-center space-x-1">
-//                         <span className="rounded-full p-1 border stroke-sidebar-ring">
-//                           {VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}
-//                         </span>
-//                         <span className="overflow-hidden text-ellipsis">{connection.name}</span>
-//                       </div>
-//                     </SidebarMenuButton>
-//                   </SidebarMenuItem>
-//                 ))}
-//               </SidebarMenu>
-//             </SidebarGroupContent>
-//           </CollapsibleContent>
-//         </Collapsible>
-//       </SidebarGroup>
-//     </>
-//   );
-// }
 
 function SidebarFileMenuSync() {
   const [expanded, setExpand] = useSingleExpander("sync");
   return (
     <>
       <SidebarGroup className="pl-0">
-        <Collapsible className="group" open={expanded} onOpenChange={setExpand}>
+        <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="pl-0">
               <SidebarGroupLabel className="pl-2">
-                <OpenedChevron className="pr-1 group:data-[state=open]:hidden" />
-                <ClosedChevron className="pr-1 group:data-[state=closed]:hidden" />
+                <ChevronDown size={14} className={"group-data-[state=closed]/collapsible:hidden -ml-0.5"} />
+                <ChevronRight size={14} className={"group-data-[state=open]/collapsible:hidden -ml-0.5"} />
                 <div className="w-full">
                   <div className="flex justify-center items-center">
                     <RefreshCw size={12} className="mr-2" /> Sync
@@ -393,11 +349,22 @@ function SidebarFileMenuSync() {
                 <div className="w-full text-xs text-sidebar-foreground/70">Connections</div>
               </SidebarGroupLabel>
               <SidebarMenu>
-                {MOCK_CONNECTIONS.map((connection) => (
+                {MOCK_CONNECTIONS.map((connection, i) => (
                   <SidebarMenuItem key={connection.name}>
                     <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
                       <div className="w-full whitespace-nowrap flex items-center space-x-1">
-                        <span className="rounded-full p-1 border stroke-sidebar-ring">
+                        <div className="stroke-success">
+                          {i === 0 ? (
+                            <div className="w-4 h-4">
+                              <Check size={10} strokeWidth={4} stroke="current" />
+                            </div>
+                          ) : (
+                            <div className="w-4 h-4">
+                              <DotIcon size={14} strokeWidth={4} fill="black" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="rounded-full p-1 border">
                           {VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}
                         </span>
                         <span className="overflow-hidden text-ellipsis">{connection.name}</span>

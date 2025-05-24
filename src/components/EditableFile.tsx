@@ -80,36 +80,42 @@ export const EditableFile = ({
           onMouseUp={handleMouseUp}
           onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
-          onClick={handleClick}
           prefetch={false}
         >
-          <div style={{ marginLeft: depth + "rem" }}>
-            <File selected={isSelected} className={clsx({ ["-ml-[1.2rem]"]: treeFile.path.isImage() || isSelected })}>
-              {treeFile.path.isImage() ? (
-                <img
-                  src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=1" : "")}
-                  alt=""
-                  className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white"
-                />
-              ) : null}
-              <span className={"py-2.5 truncate w-full text-xs text-ellipsis"}>{fileName}</span>
-            </File>
+          {/* <div className={clsx("max-w-full", { ["-ml-[1.2rem]"]: treeFile.path.isImage() })}> */}
+          <div className="w-full flex items-center">
+            {treeFile.path.isImage() && (
+              <img
+                src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=1" : "")}
+                alt=""
+                className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
+              />
+            )}
+            <div className="py-2.5 text-xs truncate" style={{ paddingLeft: depth + "rem" }}>
+              {fileName}
+            </div>
           </div>
         </Link>
       ) : (
-        <div className={className}>
-          <div style={{ marginLeft: depth + "rem" }} className="overflow-x-hidden w-full">
-            <File selected={isSelected} className="w-full">
-              <input
-                ref={inputRef}
-                className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full"
-                type="text"
-                value={fileName.str}
-                onChange={(e) => setFileName(relPath(e.target.value))}
-                onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
+        <div className={twMerge(className, "w-full")}>
+          <div className="w-full">
+            {treeFile.path.isImage() && (
+              <img
+                src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=1" : "")}
+                alt=""
+                className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
               />
-            </File>
+            )}
+            <input
+              ref={inputRef}
+              className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full "
+              style={{ paddingLeft: depth + "rem" }}
+              type="text"
+              value={fileName.str}
+              onChange={(e) => setFileName(relPath(e.target.value))}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+            />
           </div>
         </div>
       )}
@@ -122,31 +128,32 @@ export function File({
   className,
   children,
 }: {
+  // depth: number;
   selected?: boolean;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className="flex items-center">
+    <div className="flex items-center w-full">
       <div
         className={clsx(
           { flex: selected },
           { hidden: !selected },
-          "absolute w-2 h-2 flex justify-center items-center text-purple-700 -ml-2 text-xs"
+          "absolute w-2 h-2 flex justify-center items-center text-purple-700 text-xs"
         )}
       >
         {"✦"}
       </div>
-      <span
+      <div
         className={clsx(
           // { "before:content-[attr(data-star)] before:text-accent2": selected },
           // { "ml-2": !selected },
-          "items-center flex gap-2 ml-2",
+          // "truncate w-full"
           className
         )}
       >
         {children}
-      </span>
+      </div>
     </div>
   );
 }

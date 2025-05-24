@@ -43,8 +43,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
   }, []);
 
   const resetSelects = useCallback(() => {
-    setFocused(null);
-    setVirtual(null);
+    // setFocused(null);
     setSelectedRange([]);
   }, []);
 
