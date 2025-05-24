@@ -39,9 +39,7 @@ export default function Page() {
       />
       <FirstFileRedirectWithCurrentWorkspace />
       <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center bg-white relative z-10">
-        <div>
-          <Opal size={78} />
-        </div>
+        <Opal size={78} />
         <div className="font-thin text-2xl font-mono text-center">Opal</div>
       </div>
     </div>
