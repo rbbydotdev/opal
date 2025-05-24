@@ -155,6 +155,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
+      (e.target as HTMLElement).focus(); ///WTF?!
       //meta key cmd click or ctrl click
       if (e.shiftKey || e.metaKey || e.ctrlKey) {
         e.preventDefault();

@@ -204,6 +204,7 @@ function FileTreeMenuInternal({
                     treeDir={file}
                     expand={expandForNode}
                     fullPath={file.path}
+                    expanded={expanded[file.path.str]}
                   />
                 ) : (
                   <EditableFile

@@ -1,11 +1,11 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
-import { ClosedChevron, OpenedChevron } from "@/components/SidebarFileMenu/Icons";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { ComponentProps, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -17,6 +17,7 @@ export const EditableDir = ({
   fullPath,
   workspaceRoute,
   currentWorkspace,
+  expanded,
   onDragStart,
   onClick,
   ...props
@@ -25,6 +26,7 @@ export const EditableDir = ({
   className?: string;
   depth: number;
   treeDir: TreeDir;
+  expanded: boolean;
   currentWorkspace: Workspace;
   workspaceRoute: WorkspaceRouteType;
   onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
@@ -73,19 +75,18 @@ export const EditableDir = ({
       className={twMerge(
         isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
         className,
-        "w-full inline-block group cursor-pointer select-none"
+        "w-full inline-block cursor-pointer select-none"
       )}
       onKeyDown={handleKeyDown}
     >
-      <span className="inline-flex" style={{ marginLeft: depth + "rem" }}>
-        <span className="mr-2">
-          <OpenedChevron />
-          <ClosedChevron />
-        </span>
+      <div className="flex" style={{ marginLeft: depth + "rem" }}>
+        <div className="mr-2">
+          {expanded ? <ChevronDown size={14} className="-ml-0.5" /> : <ChevronRight size={14} className="-ml-0.5" />}
+        </div>
         {!isEditing ? (
-          <span onDoubleClick={() => setEditing(fullPath)} className="text-xs">
+          <div onDoubleClick={() => setEditing(fullPath)} className="text-xs truncate w-full">
             {fileName.basename()}
-          </span>
+          </div>
         ) : (
           <input
             ref={inputRef}
@@ -97,7 +98,7 @@ export const EditableDir = ({
             onBlur={handleBlur}
           />
         )}
-      </span>
+      </div>
     </span>
   );
 };
