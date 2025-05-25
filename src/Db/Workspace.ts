@@ -13,21 +13,14 @@ import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./RemoteAuth";
 
 export class Thumb {
-  imageCache: ImageCache;
-
   constructor(
-    public workspaceId: string,
+    public cache: Promise<Cache>,
     public thumbRepo: Disk,
     public imgRepo: Disk,
     public path: AbsPath,
-    public content: Uint8Array | null = null
-  ) {
-    this.imageCache = new ImageCache({ guid: workspaceId, name: "thumb" });
-  }
-
-  static newCache(id: string) {
-    return new ImageCache({ guid: id, name: "thumb" });
-  }
+    public content: Uint8Array | null = null,
+    public size = 100
+  ) {}
 
   static isThumbURL(url: string | URL) {
     if (typeof url === "string") {
@@ -44,6 +37,10 @@ export class Thumb {
     return this;
   }
 
+  // toFilename(){
+  //   return absPath(`${this.path.dirname().join(this.path.prefix())}.${this.size}${this.path.extname()}`);
+  // }
+
   async readOrMake() {
     if (await this.exists()) {
       return this.read();
@@ -54,7 +51,7 @@ export class Thumb {
   async make() {
     const content = await this.imgRepo.readFile(this.path);
     if (!content) throw new NotFoundError("Image not found for thumb" + this.path);
-    this.content = await createThumbnailWW(content as Uint8Array, 100, 100);
+    this.content = await createThumbnailWW(content as Uint8Array, this.size, this.size);
     await this.save();
     return this;
   }
@@ -67,12 +64,13 @@ export class Thumb {
   }
 
   url() {
-    return this.path.urlSafe() + "?thumb=1";
+    return this.path.urlSafe() + "?thumb=" + this.size;
   }
+
   async move(oldPath: AbsPath, newPath: AbsPath) {
     const oldUrl = this.url();
     this.path = newPath;
-    await this.imageCache.getCache().then(async (c) => {
+    await this.cache.then(async (c) => {
       const res = await c.match(oldUrl);
       if (res) {
         await c.put(this.url(), res);
@@ -84,7 +82,7 @@ export class Thumb {
   }
 
   async remove() {
-    await this.imageCache.getCache().then((c) => c.delete(this.url()));
+    await this.cache.then((c) => c.delete(this.url()));
     await this.thumbRepo.removeFile(this.path);
   }
 }
@@ -267,7 +265,7 @@ class ImageCache {
   }
   private getCacheId = () => `${this.guid}/${this.name}`;
   static getCacheId(id: string) {
-    return `${id}/img`;
+    return `${id}/${this.name}`;
   }
   static getCache(id: string) {
     return caches.open(this.getCacheId(id));
@@ -331,7 +329,7 @@ export class Workspace extends WorkspaceDAO {
     this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
     this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
-    this.imageCache = Workspace.newCache(this.guid);
+    this.imageCache = Workspace.newCache(this.name);
   }
 
   get id() {
@@ -343,13 +341,13 @@ export class Workspace extends WorkspaceDAO {
     await Promise.all(workspaces.map(async (ws) => (await ws.toModel()).delete()));
   }
 
-  NewThumb(path: AbsPath) {
-    return new Thumb(this.name, this.thumbs, this.disk, path);
+  NewThumb(path: AbsPath, size = 100) {
+    return new Thumb(this.imageCache.getCache(), this.thumbs, this.disk, path, null, size);
   }
 
-  async readOrMakeThumb(path: AbsPath | string) {
+  async readOrMakeThumb(path: AbsPath | string, size = 100) {
     path = absPath(path);
-    const thumb = this.NewThumb(path);
+    const thumb = this.NewThumb(path, size);
     return thumb.readOrMake();
   }
 
@@ -406,23 +404,24 @@ export class Workspace extends WorkspaceDAO {
   };
 
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { newPath } = await this.disk.renameDirOrFile(oldNode.path, newFullPath);
-    const newNode = oldNode.copy().rename(newPath);
-    this.disk.fileTree.replaceNode(oldNode, newNode);
+    const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
     if (oldNode.path.isImage()) {
       await this.imageCache.getCache().then(async (c) => {
         const res = await c.match(oldNode.path.urlSafe());
         if (res) {
           await c.delete(oldNode.path.urlSafe());
-          await c.put(newFullPath.urlSafe(), res);
+          await c.put(nextPath.urlSafe(), res);
         }
       });
       await this.NewThumb(oldNode.path)
-        .move(oldNode.path, newFullPath)
+        .move(oldNode.path, nextPath)
         .catch(async (e) => {
           console.error("Error moving thumb", e);
         });
     }
+    const { newPath } = await this.disk.renameDirOrFile(oldNode.path, nextPath);
+    const newNode = oldNode.copy().rename(newPath);
+    this.disk.fileTree.replaceNode(oldNode, newNode);
     return newNode;
   };
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
@@ -559,27 +558,3 @@ export class NullWorkspace extends Workspace {
     });
   }
 }
-
-// class Image {
-//   cacheId: string;
-//   private getCache() {
-//     return caches.open(this.imgRepo.guid);
-//   }
-
-//   constructor(public imgRepo: Disk, public path: AbsPath, cacheId?: string) {
-//     this.cacheId = cacheId ?? imgRepo.guid;
-//   }
-//   async create(content: Uint8Array) {
-//     this.path = await this.imgRepo.nextPath(this.path);
-//     const finalPath = await this.imgRepo.newFile(this.path, content);
-//     await this.getCache().then((c) => c.put(finalPath.urlSafe(), new Response(content)));
-//     return finalPath;
-//   }
-//   url() {
-//     return this.path.urlSafe();
-//   }
-//   async remove() {
-//     await this.getCache().then((c) => c.delete(this.url()));
-//     await this.imgRepo.removeFile(this.path);
-//   }
-// }

@@ -6,7 +6,7 @@ import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, relPath } from "@/lib/paths";
 import clsx from "clsx";
 import Link from "next/link";
-import { useEffect } from "react";
+import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableFile = ({
@@ -30,12 +30,12 @@ export const EditableFile = ({
 }) => {
   const {
     isEditing,
-    isSelected,
     fileName,
     handleKeyDown,
     handleMouseDown,
     handleBlur,
     handleClick,
+    isSelected,
     handleMouseUp,
     handleFocus,
     isSelectedRange,
@@ -65,7 +65,8 @@ export const EditableFile = ({
   return (
     <div className="select-none">
       {!isEditing ? (
-        <Link
+        <ActiveLink
+          active={fullPath.equals(workspaceRoute.path)}
           draggable
           onDragStart={onDragStart}
           href={currentWorkspace.resolveFileUrl(fullPath)}
@@ -80,28 +81,30 @@ export const EditableFile = ({
           onMouseUp={handleMouseUp}
           onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
+          onClick={handleClick}
           prefetch={false}
         >
-          {/* <div className={clsx("max-w-full", { ["-ml-[1.2rem]"]: treeFile.path.isImage() })}> */}
-          <div className="w-full flex items-center">
-            {treeFile.path.isImage() && (
-              <img
-                src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=1" : "")}
-                alt=""
-                className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
-              />
-            )}
-            <div className="py-2.5 text-xs truncate" style={{ paddingLeft: depth + "rem" }}>
-              {fileName}
+          <div className="w-full">
+            <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
+              <SelectedMark selected={isSelected} />
+              {treeFile.path.isImage() && (
+                <img
+                  src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
+                  alt=""
+                  className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
+                />
+              )}
+              <div className="py-2.5 text-xs w-full truncate">{fileName}</div>
             </div>
           </div>
-        </Link>
+        </ActiveLink>
       ) : (
         <div className={twMerge(className, "w-full")}>
-          <div className="w-full">
+          <div className="w-full flex items-center truncate" style={{ paddingLeft: depth + "rem" }}>
+            <SelectedMark selected={isSelected} />
             {treeFile.path.isImage() && (
               <img
-                src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=1" : "")}
+                src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
                 alt=""
                 className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
               />
@@ -109,7 +112,6 @@ export const EditableFile = ({
             <input
               ref={inputRef}
               className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full "
-              style={{ paddingLeft: depth + "rem" }}
               type="text"
               value={fileName.str}
               onChange={(e) => setFileName(relPath(e.target.value))}
@@ -123,37 +125,28 @@ export const EditableFile = ({
   );
 };
 
-export function File({
-  selected = false,
-  className,
-  children,
-}: {
-  // depth: number;
-  selected?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}) {
+export function SelectedMark({ selected = false }: { selected?: boolean }) {
   return (
-    <div className="flex items-center w-full">
-      <div
-        className={clsx(
-          { flex: selected },
-          { hidden: !selected },
-          "absolute w-2 h-2 flex justify-center items-center text-purple-700 text-xs"
-        )}
-      >
-        {"✦"}
-      </div>
-      <div
-        className={clsx(
-          // { "before:content-[attr(data-star)] before:text-accent2": selected },
-          // { "ml-2": !selected },
-          // "truncate w-full"
-          className
-        )}
-      >
-        {children}
-      </div>
+    <div
+      className={clsx(
+        { flex: selected },
+        { hidden: !selected },
+        "absolute w-2 h-2 flex justify-center items-center text-purple-700 text-xs -ml-4"
+      )}
+    >
+      {"✦"}
     </div>
   );
 }
+
+export const ActiveLink = ({
+  active,
+  prefetch,
+  ...props
+}: { active: boolean } & (ComponentProps<typeof Link> & HTMLAttributes<HTMLDivElement>)) => {
+  if (!active) {
+    return <Link {...props} prefetch={prefetch} />;
+  }
+  // @ts-ignore
+  return <div {...props} />;
+};

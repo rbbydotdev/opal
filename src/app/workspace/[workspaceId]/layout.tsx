@@ -23,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </ResizablePanel>
               <ResizableHandle />
               <ResizablePanel id="editor" defaultSize={85}>
-                {/* {children} */}
+                {children}
               </ResizablePanel>
             </ResizablePanelGroup>
           </ImgSw>
