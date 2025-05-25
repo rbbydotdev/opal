@@ -27,7 +27,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
   const router = useRouter();
-  const { cancelNew, commitChange: commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { editing, editType, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
     useFileTreeMenuContext();
   const [fileName, setFileName] = useState<RelPath>(fullPath.basename());

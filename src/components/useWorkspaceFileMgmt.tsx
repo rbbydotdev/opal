@@ -6,6 +6,7 @@ import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath, isAncestor, reduceLineage, relPath, RelPath } from "@/lib/paths";
 import { usePathname, useRouter } from "next/navigation";
+import React from "react";
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
   const router = useRouter();
@@ -13,26 +14,36 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   const { setEditing, selectedRange, resetEditing, setEditType, focused, setFocused, setVirtual, virtual } =
     useFileTreeMenuContext();
 
-  const renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { path } = await currentWorkspace.renameFile(oldNode, newFullPath);
-    if (workspaceRoute.path?.str === oldNode.path.str) {
-      router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-    }
-    return path;
-  };
+  const renameFile = React.useCallback(
+    async (oldNode: TreeNode, newFullPath: AbsPath) => {
+      const { path } = await currentWorkspace.renameFile(oldNode, newFullPath);
+      if (workspaceRoute.path?.str === oldNode.path.str) {
+        router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
+      }
+      return path;
+    },
+    [currentWorkspace, workspaceRoute.path, router, pathname]
+  );
 
-  const newFile = async (path: AbsPath, content = "") => {
-    const newPath = await currentWorkspace.newFile(path.dirname(), path.basename(), content);
-    if (!workspaceRoute.path) {
-      router.push(currentWorkspace.resolveFileUrl(newPath));
-    }
-    return newPath;
-  };
-  const newDir = async (path: AbsPath) => {
-    return currentWorkspace.newDir(path.dirname(), path.basename());
-  };
+  const newFile = React.useCallback(
+    async (path: AbsPath, content = "") => {
+      const newPath = await currentWorkspace.newFile(path.dirname(), path.basename(), content);
+      if (!workspaceRoute.path) {
+        router.push(currentWorkspace.resolveFileUrl(newPath));
+      }
+      return newPath;
+    },
+    [currentWorkspace, workspaceRoute.path, router]
+  );
 
-  const removeFiles = async () => {
+  const newDir = React.useCallback(
+    async (path: AbsPath) => {
+      return currentWorkspace.newDir(path.dirname(), path.basename());
+    },
+    [currentWorkspace]
+  );
+
+  const removeFiles = React.useCallback(async () => {
     const range = [...selectedRange];
     if (!range.length && focused) {
       range.push(focused.str);
@@ -53,10 +64,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
       }
     }
     setFocused(null);
-  };
-  //TODO FIX RANGE FOCUS
+  }, [selectedRange, focused, currentWorkspace, workspaceRoute.path, router, setFocused]);
 
-  const removeFocusedFile = async () => {
+  const removeFocusedFile = React.useCallback(async () => {
     if (!focused || !currentWorkspace.disk.pathExists(focused)) return;
     const focusedNode = currentWorkspace.nodeFromPath(focused);
     if (!focusedNode) return;
@@ -74,50 +84,63 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     if (workspaceRoute.path?.str === focusedNode.path.str) {
       router.push(await currentWorkspace.tryFirstFileUrl());
     }
-  };
-  const cancelNew = () => {
+  }, [focused, currentWorkspace, workspaceRoute.path, router]);
+
+  const cancelNew = React.useCallback(() => {
     setVirtual(null);
     if (virtual) currentWorkspace.removeVirtualfile(virtual);
-  };
+  }, [setVirtual, virtual, currentWorkspace]);
 
-  const addDirFile = (type: TreeNode["type"]) => {
-    console.log(focused);
-    const focusedNode = currentWorkspace.nodeFromPath(focused);
-    const name = type === "dir" ? "newdir" : "newfile.md";
-    const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);
-    setFocused(newNode.path);
-    setEditing(newNode.path);
-    setVirtual(newNode.path);
-    setEditType("new");
-    return newNode;
-  };
+  const addDirFile = React.useCallback(
+    (type: TreeNode["type"]) => {
+      console.log(focused);
+      const focusedNode = currentWorkspace.nodeFromPath(focused);
+      const name = type === "dir" ? "newdir" : "newfile.md";
+      const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);
+      setFocused(newNode.path);
+      setEditing(newNode.path);
+      setVirtual(newNode.path);
+      setEditType("new");
+      return newNode;
+    },
+    [focused, currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
+  );
 
-  const renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { path } = await currentWorkspace.renameDir(oldNode, newFullPath);
-    if (isAncestor(workspaceRoute.path, oldNode.path.str) && workspaceRoute.path) {
-      router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-    }
-    return path;
-  };
-
-  const renameDirOrFile = async (oldNode: TreeNode, newFullPath: AbsPath, type: "dir" | "file") => {
-    if (type === "file") {
-      return renameFile(oldNode, newFullPath);
-    }
-    return renameDir(oldNode, newFullPath);
-  };
-
-  const commitChange = async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new") => {
-    const wantPath = origNode.path.dirname().join(fileName.decode());
-    if (type === "new") {
-      if (origNode.type === "file")
-        return currentWorkspace.newFile(wantPath.dirname(), wantPath.basename(), "# " + wantPath.basename());
-      else {
-        return currentWorkspace.newDir(wantPath.dirname(), wantPath.basename());
+  const renameDir = React.useCallback(
+    async (oldNode: TreeNode, newFullPath: AbsPath) => {
+      const { path } = await currentWorkspace.renameDir(oldNode, newFullPath);
+      if (isAncestor(workspaceRoute.path, oldNode.path.str) && workspaceRoute.path) {
+        router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
       }
-    }
-    return origNode.type === "dir" ? await renameDir(origNode, wantPath) : await renameFile(origNode, wantPath);
-  };
+      return path;
+    },
+    [currentWorkspace, workspaceRoute.path, router, pathname]
+  );
+
+  const renameDirOrFile = React.useCallback(
+    async (oldNode: TreeNode, newFullPath: AbsPath, type: "dir" | "file") => {
+      if (type === "file") {
+        return renameFile(oldNode, newFullPath);
+      }
+      return renameDir(oldNode, newFullPath);
+    },
+    [renameFile, renameDir]
+  );
+
+  const commitChange = React.useCallback(
+    async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new") => {
+      const wantPath = origNode.path.dirname().join(fileName.decode());
+      if (type === "new") {
+        if (origNode.type === "file")
+          return currentWorkspace.newFile(wantPath.dirname(), wantPath.basename(), "# " + wantPath.basename());
+        else {
+          return currentWorkspace.newDir(wantPath.dirname(), wantPath.basename());
+        }
+      }
+      return origNode.type === "dir" ? await renameDir(origNode, wantPath) : await renameFile(origNode, wantPath);
+    },
+    [currentWorkspace, renameDir, renameFile]
+  );
   return {
     renameFile,
     renameDir,

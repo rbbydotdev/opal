@@ -49,6 +49,10 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 
 // Fetch Event Listener
 self.addEventListener("fetch", async (event) => {
+  //if no referrer, just fetch the request
+  if (!event.request.referrer) {
+    return event.respondWith(fetch(event.request));
+  }
   const url = new URL(event.request.url);
   let referrerPath = "";
   try {
@@ -70,7 +74,7 @@ self.addEventListener("fetch", async (event) => {
       return event.respondWith(handleImageRequest(event, url, workspaceId));
     }
   } catch (e) {
-    console.error(errF`Error parsing workspaceId from referrer: ${referrerPath}, ${e}`);
+    console.error(errF`Error parsing workspaceId from referrer: ${referrerPath}, ${e}`.toString());
     return event.respondWith(fetch(event.request));
   }
 
@@ -106,9 +110,7 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
   `);
     let cache: Cache;
     if (!decodedPathname.endsWith(".svg")) {
-      cache = isThumbnail
-        ? await Thumb.newCache(workspaceId).getCache()
-        : await Workspace.newCache(workspaceId).getCache();
+      cache = await Workspace.newCache(workspaceId).getCache();
       const cachedResponse = await cache.match(event.request);
       if (cachedResponse) {
         console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
@@ -138,7 +140,7 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
     if (isError(e, NotFoundError)) {
       return new Response("Error", { status: 404 });
     }
-    console.error(errF`Error in service worker: ${e}`);
+    console.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Error", { status: 500 });
   }
 }

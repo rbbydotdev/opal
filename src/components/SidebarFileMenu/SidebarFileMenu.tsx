@@ -92,30 +92,31 @@ function SidebarFileMenuInternal({
         e.preventDefault();
         e.stopPropagation();
       }}
-      className={twMerge("h-full p-0 bg-secondary sidebar-group", props.className)}
+      className={twMerge("foobar h-full flex-1 p-0 bg-secondary sidebar-group", props.className)}
     >
-      {/* <CustomSidebarActionButton title="Publish" Icon={UploadIcon} /> */}
-      {/* <CustomSidebarActionButton title="Sync" Icon={RefreshCw} /> */}
-      <SidebarFileMenuSync />
-      {/* <SidebarFileMenuConnections /> */}
-      <SidebarFileMenuFiles
-        fileTreeDir={fileTreeDir}
-        renameDirOrFile={renameDirOrFile}
-        expandSingle={expandSingle}
-        expandForNode={expandForNode}
-        expanded={expanded}
-      >
-        <SidebarGroupContent className="flex justify-end ">
-          <SidebarFileMenuFilesActions
-            isSettingsView={isSettingsView}
-            currentWorkspace={currentWorkspace}
-            removeFiles={removeFiles}
-            addFile={addFile}
-            addDir={addDir}
-            setExpandAll={setExpandAll}
-          />
-        </SidebarGroupContent>
-      </SidebarFileMenuFiles>
+      <div className="flex-shrink overflow-y-auto">
+        <SidebarFileMenuSync />
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        <SidebarFileMenuFiles
+          fileTreeDir={fileTreeDir}
+          renameDirOrFile={renameDirOrFile}
+          expandSingle={expandSingle}
+          expandForNode={expandForNode}
+          expanded={expanded}
+        >
+          <SidebarGroupContent className="flex h-full overflow-scroll">
+            <SidebarFileMenuFilesActions
+              isSettingsView={isSettingsView}
+              currentWorkspace={currentWorkspace}
+              removeFiles={removeFiles}
+              addFile={addFile}
+              addDir={addDir}
+              setExpandAll={setExpandAll}
+            />
+          </SidebarGroupContent>
+        </SidebarFileMenuFiles>
+      </div>
     </SidebarGroup>
   );
 }
@@ -138,11 +139,11 @@ export const SidebarFileMenuFiles = ({
   const [groupExpanded, groupSetExpand] = useSingleExpander("files");
 
   return (
-    <SidebarGroup className="pl-0 pb-12 h-full w-full">
-      <Collapsible className="group/collapsible" open={groupExpanded} onOpenChange={groupSetExpand}>
+    <SidebarGroup className="pl-0 pb-12 w-full overflow-scroll h-full flex-1">
+      <Collapsible className="group/collapsible h-full flex-1" open={groupExpanded} onOpenChange={groupSetExpand}>
         <SidebarGroupLabel className="relative w-full pr-0">
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton className="pl-0 text-xs w-full">
+            <SidebarMenuButton className="pl-0 text-xs w-full ">
               <div className="w-full flex items-center">
                 <ChevronDown size={14} className="group-data-[state=closed]/collapsible:hidden -ml-0.5" />
                 <ChevronRight size={14} className="group-data-[state=open]/collapsible:hidden -ml-0.5" />
@@ -154,8 +155,8 @@ export const SidebarFileMenuFiles = ({
           {groupExpanded && <div className="absolute right-0">{children}</div>}
         </SidebarGroupLabel>
 
-        <CollapsibleContent>
-          <SidebarGroupContent className=" overflow-y-scroll h-full scrollbar-thin p-0 pl-4 ml-4 pb-16 pt-3 max-w-full overflow-x-hidden border-l-2 pr-5">
+        <CollapsibleContent className="h-full">
+          <SidebarGroupContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-4 pt-3 max-w-full overflow-x-hidden border-l-2 pr-5">
             {!Object.keys(fileTreeDir.children).length ? (
               <div className="w-full">
                 <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
