@@ -134,10 +134,10 @@ export class WorkspaceDAO implements WorkspaceRecord {
   static async create(
     name: string,
     remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
-    // disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
-    // thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
-    disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
-    thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
+    disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
+    thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
+    // disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
+    // thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
   ) {
     let uniqueName = WorkspaceDAO.Slugify(name);
     let inc = 0;

@@ -2,7 +2,7 @@
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
-import { NamespacedFs } from "@/Db/peekfs";
+import { NamespacedFs } from "@/Db/NamespacedFs";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
@@ -42,7 +42,7 @@ export interface CommonFileSystem {
   mkdir(path: string, options?: { recursive?: boolean; mode: number }): Promise<string | void>;
   rename(oldPath: string, newPath: string): Promise<void>;
   unlink(path: string): Promise<void>;
-  rm(path: string, options?: { force?: boolean; recursive?: boolean }): Promise<void>;
+  // rm(path: string, options?: { force?: boolean; recursive?: boolean }): Promise<void>;
   writeFile(
     path: string,
     data: Uint8Array | Buffer | string,
@@ -540,12 +540,19 @@ export class OpFsDisk extends Disk {
         return dir;
       }) as Promise<IFileSystemDirectoryHandle>
     );
+    internalFs.promises.unlink = function (path: string) {
+      return internalFs.promises.rm.bind(internalFs.promises)(path, { recursive: true, force: true }); // Monkey patch to add unlink method
+    };
     const fs = new NamespacedFs(internalFs.promises, root);
     const ft = new FileTree(fs, guid);
     super(guid, fs, ft, OpFsDisk.type);
     this.ready = promise;
     this.root = root;
     this.internalFs = internalFs;
+  }
+  async teardown() {
+    await this.internalFs.promises.rm(this.root.encode(), { force: true, recursive: true });
+    await super.teardown();
   }
 }
 

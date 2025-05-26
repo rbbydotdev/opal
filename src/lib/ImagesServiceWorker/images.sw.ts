@@ -87,16 +87,14 @@ const SWWStore = new (class SwWorkspace {
   }
   private workspace: Promise<Workspace> | null = null;
 
-  setWorkspace(workspace: Promise<Workspace>) {
-    return (this.workspace = workspace);
-  }
-
   async tryWorkspace(workspaceId: string): Promise<Workspace> {
     if (this.workspace instanceof Promise) {
+      console.log("awaiting workspace promise...");
       const ws = await this.workspace;
       if (ws.name !== workspaceId) {
         this.workspace = null;
       } else {
+        console.log(`Returning existing workspace: ${ws.name}`);
         return ws;
       }
     }
