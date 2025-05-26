@@ -2,6 +2,7 @@
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
+import { NamespacedFs } from "@/Db/peekfs";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
@@ -12,6 +13,8 @@ import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import Emittery from "emittery";
 import { memfs } from "memfs";
+import { FsaNodeFs } from "memfs/lib/fsa-to-node";
+import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
 import path from "path";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
@@ -19,7 +22,7 @@ import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../l
 // Utility type to make certain properties optional
 export type DiskJType = { guid: string; type: DiskType };
 
-export const DiskTypes = ["IndexedDbDisk", "MemDisk", "DexieFsDbDisk", "NullDisk"] as const;
+export const DiskTypes = ["IndexedDbDisk", "MemDisk", "DexieFsDbDisk", "NullDisk", "OpFsDisk"] as const;
 export type DiskType = (typeof DiskTypes)[number];
 
 export interface CommonFileSystem {
@@ -34,11 +37,12 @@ export interface CommonFileSystem {
         }
     )[]
   >;
-  stat(path: string): Promise<{ isDirectory: () => boolean }>; // Exact type can vary based on implementation details.
+  stat(path: string): Promise<{ isDirectory: () => boolean; isFile: () => boolean }>; // Exact type can vary based on implementation details.
   readFile(path: string, options?: { encoding?: "utf8" }): Promise<Uint8Array | Buffer | string>;
   mkdir(path: string, options?: { recursive?: boolean; mode: number }): Promise<string | void>;
   rename(oldPath: string, newPath: string): Promise<void>;
   unlink(path: string): Promise<void>;
+  rm(path: string, options?: { force?: boolean; recursive?: boolean }): Promise<void>;
   writeFile(
     path: string,
     data: Uint8Array | Buffer | string,
@@ -52,7 +56,7 @@ export class DiskDAO implements DiskRecord {
   guid!: string;
   type!: DiskType;
   indexCache: TreeDirRootJType = new TreeDirRoot().toJSON();
-  static guid = () => "disk:" + nanoid();
+  static guid = () => "__disk__" + nanoid();
 
   constructor(disk: Optional<DiskRecord, "indexCache">) {
     return Object.assign(this, disk);
@@ -247,6 +251,7 @@ export abstract class Disk extends DiskDAO {
     });
   }
   async init() {
+    await this.ready;
     await this.initializeIndex();
     if (!isServiceWorker()) {
       return this.setupRemoteListeners();
@@ -283,7 +288,7 @@ export abstract class Disk extends DiskDAO {
 
   static defaultDiskType: DiskType = "IndexedDbDisk";
 
-  static guid = () => "disk:" + nanoid();
+  static guid = () => "__disk__" + nanoid();
 
   // static fromURI(uriStr: string) {
   //   const [type, ...guid] = uriStr.split("@");
@@ -301,11 +306,13 @@ export abstract class Disk extends DiskDAO {
       [MemDisk.type]: MemDisk,
       [DexieFsDbDisk.type]: DexieFsDbDisk,
       [NullDisk.type]: NullDisk,
+      [OpFsDisk.type]: OpFsDisk,
     }[type](guid);
   }
 
   //TODO: doesnt work with multiple files
   async findReplace(find: string, replace: string) {
+    await this.ready;
     return this.fileTree.walk(async (node) => {
       if (getMimeType(node.path) === "text/markdown") {
         const content = String(await this.readFile(node.path));
@@ -321,6 +328,7 @@ export abstract class Disk extends DiskDAO {
   }
 
   async mkdirRecursive(filePath: AbsPath) {
+    await this.ready;
     //make recursive dir if or if not exists
     const segments = filePath.encode().split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
@@ -363,6 +371,7 @@ export abstract class Disk extends DiskDAO {
     //type can be determined by the fs.stat no?
     type: "file" | "dir" = "file"
   ): Promise<RenameFileType> {
+    await this.ready;
     const NOCHANGE: RenameFileType = new RenameFileType({
       type,
       newPath: oldFullPath,
@@ -402,6 +411,7 @@ export abstract class Disk extends DiskDAO {
   }
 
   async newDir(fullPath: AbsPath) {
+    await this.ready;
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
     }
@@ -415,6 +425,7 @@ export abstract class Disk extends DiskDAO {
     return fullPath;
   }
   async removeFile(filePath: AbsPath) {
+    await this.ready;
     try {
       await this.fs.unlink(filePath.encode());
     } catch (err) {
@@ -443,12 +454,14 @@ export abstract class Disk extends DiskDAO {
   }
 
   async nextPath(fullPath: AbsPath) {
+    await this.ready;
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
     }
     return fullPath;
   }
   async newFile(fullPath: AbsPath, content: string | Uint8Array) {
+    await this.ready;
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
     }
@@ -470,6 +483,7 @@ export abstract class Disk extends DiskDAO {
     }
   }
   async pathExists(filePath: AbsPath) {
+    await this.ready;
     try {
       await this.fs.stat(filePath.encode());
       return true;
@@ -483,6 +497,7 @@ export abstract class Disk extends DiskDAO {
     return;
   }
   async readFile(filePath: AbsPath) {
+    await this.ready;
     try {
       return await this.fs.readFile(filePath.encode());
     } catch (e) {
@@ -508,6 +523,29 @@ export abstract class Disk extends DiskDAO {
   }
   get isIndexed() {
     return this.fileTree.initialIndex;
+  }
+}
+
+export class OpFsDisk extends Disk {
+  static type: DiskType = "OpFsDisk";
+  ready: Promise<void>;
+  root: AbsPath;
+  internalFs: FsaNodeFs;
+  constructor(public readonly guid: string) {
+    const root = absPath("/" + guid);
+    const { promise, resolve } = Promise.withResolvers<void>();
+    const internalFs = new FsaNodeFs(
+      navigator.storage.getDirectory().then((dir) => {
+        resolve();
+        return dir;
+      }) as Promise<IFileSystemDirectoryHandle>
+    );
+    const fs = new NamespacedFs(internalFs.promises, root);
+    const ft = new FileTree(fs, guid);
+    super(guid, fs, ft, OpFsDisk.type);
+    this.ready = promise;
+    this.root = root;
+    this.internalFs = internalFs;
   }
 }
 

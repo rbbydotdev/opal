@@ -111,7 +111,7 @@ export class AbsPath extends BasePath {
   static New(path: string) {
     return new AbsPath(path);
   }
-  join(...paths: Array<string | RelPath>) {
+  join(...paths: Array<string | RelPath | AbsPath>) {
     return AbsPath.New(this.path + "/" + paths.map((p) => new RelPath(p.toString()).str).join("/"));
   }
   dirname() {

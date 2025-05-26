@@ -105,6 +105,25 @@ export class DexieFsDb implements CommonFileSystem {
     await this.files.put(entry);
   }
 
+  async rm(filePath: string, options?: { recursive?: boolean; force?: boolean }): Promise<void> {
+    const entry = await this.files.get(filePath);
+    if (!entry) {
+      if (options?.force) return; // If force is true, do nothing
+      throw new NotFoundError(`ENOENT: no such file or directory, rm '${filePath}'`);
+    }
+    if (entry.type === "dir" && !options?.recursive) {
+      throw new Error(`ENOTEMPTY: directory not empty, rm '${filePath}'`);
+    }
+    // If it's a directory and recursive, delete all files inside it
+    if (entry.type === "dir") {
+      const entries = await this.files.where("parent").startsWith(filePath).toArray();
+      for (const e of entries) {
+        await this.files.delete(e.path);
+      }
+    }
+    await this.files.delete(filePath);
+  }
+
   async unlink(filePath: string): Promise<void> {
     const entry = await this.files.get(filePath);
     if (!entry) {

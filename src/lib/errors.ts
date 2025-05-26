@@ -61,6 +61,7 @@ export function errorCode(error: unknown, code?: string): ErrorWithCode {
   newError.code = code ?? "unknown";
   return newError;
 }
+
 export class ApplicationError extends Error {
   name = "ApplicationError";
   code: number;
