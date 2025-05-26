@@ -1,5 +1,5 @@
 "use client";
-import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
+import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk, OpFsDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
@@ -88,7 +88,7 @@ export class Thumb {
 }
 export class WorkspaceDAO implements WorkspaceRecord {
   // static rootRoute = "/workspace";
-  static guid = () => "workspace:" + nanoid();
+  static guid = () => "__workspace__" + nanoid();
 
   guid!: string;
   name!: string;
@@ -134,6 +134,8 @@ export class WorkspaceDAO implements WorkspaceRecord {
   static async create(
     name: string,
     remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
+    // disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
+    // thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
     disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
     thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
   ) {
@@ -178,7 +180,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
     return this;
   }
   static Slugify(name: string) {
-    return slugify(name);
+    return slugify(name, { strict: true });
   }
   async toModel() {
     const [auth, disk, thumbs] = await Promise.all([
@@ -362,6 +364,7 @@ export class Workspace extends WorkspaceDAO {
   }
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
+    await ws.disk.ready;
     await Promise.all(
       Object.entries(Workspace.seedFiles).map(([filePath, content]) =>
         ws.disk.writeFileRecursive(absPath(filePath), content)

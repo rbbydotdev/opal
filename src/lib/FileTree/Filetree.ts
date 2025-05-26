@@ -1,4 +1,4 @@
-import { FileSystem } from "@/Db/Disk";
+import { CommonFileSystem } from "@/Db/Disk";
 import {
   TreeDir,
   TreeDirRoot,
@@ -22,7 +22,7 @@ export class FileTree {
   public root: TreeDirRoot = new TreeDirRoot();
 
   // private tree: TreeDir = this.root;
-  constructor(private fs: FileSystem, guid: string) {
+  constructor(private fs: CommonFileSystem, guid: string) {
     this.guid = `${guid}/FileTree`;
 
     this.cacheId = `${this.guid}/cache`;
@@ -54,7 +54,7 @@ export class FileTree {
     return this.dirs.slice(fromIndex, toIndex + 1);
   };
 
-  static fromJSON(json: TreeNodeDirJType, fs: FileSystem, guid: string) {
+  static fromJSON(json: TreeNodeDirJType, fs: CommonFileSystem, guid: string) {
     const tree = new FileTree(fs, guid);
     tree.root = TreeDirRoot.fromJSON(json);
     tree.map = new Map<string, TreeNode>();
@@ -117,6 +117,7 @@ export class FileTree {
   ): Promise<TreeDir> => {
     const dir = parent.path;
     try {
+      //getDirEntries: (dir:string) => Promise<string[]>
       const entries = (await this.fs.readdir(dir.encode())).map((e) => relPath(BasePath.decode(e.toString())));
 
       // Separate directories and files
@@ -126,6 +127,7 @@ export class FileTree {
       await Promise.all(
         entries.map(async (entry) => {
           const fullPath = dir.join(entry);
+          //statDir: (dir:string) => Promise<Stat>
           const stat = await this.fs.stat(fullPath.encode());
 
           if (stat.isDirectory()) {

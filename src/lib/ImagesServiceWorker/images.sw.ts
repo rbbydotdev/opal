@@ -82,17 +82,26 @@ self.addEventListener("fetch", async (event) => {
 });
 
 const SWWStore = new (class SwWorkspace {
-  private workspace: Workspace | null = null;
-  setWorkspace(workspace: Workspace) {
+  constructor() {
+    console.log("SWWStore initialized");
+  }
+  private workspace: Promise<Workspace> | null = null;
+
+  setWorkspace(workspace: Promise<Workspace>) {
     return (this.workspace = workspace);
   }
 
   async tryWorkspace(workspaceId: string): Promise<Workspace> {
-    if (!this.workspace || workspaceId !== this.workspace.name) {
-      this.setWorkspace(await WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
+    if (this.workspace instanceof Promise) {
+      const ws = await this.workspace;
+      if (ws.name !== workspaceId) {
+        this.workspace = null;
+      } else {
+        return ws;
+      }
     }
-    if (!this.workspace) {
-      throw new Error("Workspace not found");
+    if (this.workspace === null) {
+      return (this.workspace = WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
     }
     return this.workspace;
   }
