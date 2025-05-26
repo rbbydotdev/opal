@@ -123,7 +123,9 @@ export function useFileTreeDragAndDrop({
             dragNodes.filter(({ type: draggedType, path: draggedPath }) => {
               const dropPath = targetPath.join(draggedPath.basename());
               if (draggedType !== "dir" || !isAncestor(dropPath, draggedPath.str)) {
-                return onMove?.(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
+                if (!draggedPath.equals(dropPath)) {
+                  return onMove?.(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
+                }
               }
             })
           );

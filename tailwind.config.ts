@@ -1,3 +1,4 @@
+import containerQueries from "@tailwindcss/container-queries";
 import tailwindProse from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
 import colors from "tailwindcss/colors";
@@ -86,6 +87,7 @@ export default {
   },
   safelist: [{ pattern: /pl-.+/ }],
   plugins: [
+    containerQueries,
     function ({ addUtilities }) {
       addUtilities({
         ".scrollbar-thin": {

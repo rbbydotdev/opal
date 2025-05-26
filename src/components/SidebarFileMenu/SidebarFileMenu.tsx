@@ -37,6 +37,7 @@ import {
   Settings,
   Trash2,
   Undo,
+  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -92,12 +93,12 @@ function SidebarFileMenuInternal({
         e.preventDefault();
         e.stopPropagation();
       }}
-      className={twMerge("foobar h-full flex-1 p-0 bg-secondary sidebar-group", props.className)}
+      className={twMerge("h-full flex-1 p-0 bg-secondary sidebar-group", props.className)}
     >
       <div className="flex-shrink overflow-y-auto">
         <SidebarFileMenuSync />
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto @container">
         <SidebarFileMenuFiles
           fileTreeDir={fileTreeDir}
           renameDirOrFile={renameDirOrFile}
@@ -105,7 +106,7 @@ function SidebarFileMenuInternal({
           expandForNode={expandForNode}
           expanded={expanded}
         >
-          <SidebarGroupContent className="flex h-full overflow-scroll">
+          <SidebarGroupContent className="flex h-full overflow-scroll ">
             <SidebarFileMenuFilesActions
               isSettingsView={isSettingsView}
               currentWorkspace={currentWorkspace}
@@ -114,6 +115,7 @@ function SidebarFileMenuInternal({
               addDir={addDir}
               setExpandAll={setExpandAll}
             />
+            {/* <div className="@container foobar bg-blue-500 w-48"></div> */}
           </SidebarGroupContent>
         </SidebarFileMenuFiles>
       </div>
@@ -152,7 +154,8 @@ export const SidebarFileMenuFiles = ({
               </div>
             </SidebarMenuButton>
           </CollapsibleTrigger>
-          {groupExpanded && <div className="absolute right-0">{children}</div>}
+          {/* {groupExpanded && <div className="absolute right-0 @[200px]:bg-blue-600">{children}</div>} */}
+          {groupExpanded && <div>{children}</div>}
         </SidebarGroupLabel>
 
         <CollapsibleContent className="h-full">
@@ -314,8 +317,10 @@ function SidebarFileMenuSync() {
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="pl-0">
               <SidebarGroupLabel className="pl-2">
-                <ChevronDown size={14} className={"group-data-[state=closed]/collapsible:hidden -ml-0.5"} />
-                <ChevronRight size={14} className={"group-data-[state=open]/collapsible:hidden -ml-0.5"} />
+                <div className="w-full flex items-center">
+                  <ChevronDown size={14} className={"group-data-[state=closed]/collapsible:hidden -ml-0.5"} />
+                  <ChevronRight size={14} className={"group-data-[state=open]/collapsible:hidden -ml-0.5"} />
+                </div>
                 <div className="w-full">
                   <div className="flex justify-center items-center">
                     <RefreshCw size={12} className="mr-2" /> Sync
@@ -344,6 +349,12 @@ function SidebarFileMenuSync() {
                   Pull
                 </Button>
               </div>
+              <div className="px-4 pt-2">
+                <Button className="w-full" variant="outline">
+                  <Upload size={12} className="mr-2" />
+                  Push
+                </Button>
+              </div>
             </SidebarMenu>
             <SidebarGroup>
               <SidebarGroupLabel className="pl-1">
@@ -354,17 +365,15 @@ function SidebarFileMenuSync() {
                   <SidebarMenuItem key={connection.name}>
                     <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
                       <div className="w-full whitespace-nowrap flex items-center space-x-1">
-                        <div className="stroke-success">
-                          {i === 0 ? (
-                            <div className="w-4 h-4">
-                              <Check size={10} strokeWidth={4} stroke="current" />
-                            </div>
-                          ) : (
-                            <div className="w-4 h-4">
-                              <DotIcon size={14} strokeWidth={4} fill="black" />
-                            </div>
-                          )}
-                        </div>
+                        {i === 0 ? (
+                          <div className="w-4 h-4 stroke-success items-center justify-center flex">
+                            <Check size={10} strokeWidth={4} stroke="current" />
+                          </div>
+                        ) : (
+                          <div className="w-4 h-4 items-center justify-center flex">
+                            <DotIcon size={14} strokeWidth={4} fill="black" />
+                          </div>
+                        )}
                         <span className="rounded-full p-1 border">
                           {VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}
                         </span>
