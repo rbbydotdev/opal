@@ -230,7 +230,7 @@ export class RenameFileType {
 export class DiskRemoteEvents extends Channel<{
   [DiskRemoteEvents.RENAME]: RemoteRenameFileType;
   [DiskRemoteEvents.INDEX]: never;
-  [DiskLocalEvents.WRITE]: { filePath: string };
+  [DiskLocalEvents.WRITE]: { filePaths: string[] };
   [DiskRemoteEvents.UPDATE_INDEX]: { filePath: string; type: "file" | "dir" };
 }> {
   static WRITE = "write" as const;
@@ -242,7 +242,7 @@ export class DiskRemoteEvents extends Channel<{
 export class DiskLocalEvents extends Emittery<{
   [DiskLocalEvents.RENAME]: RenameFileType;
   [DiskLocalEvents.INDEX]: never;
-  [DiskLocalEvents.WRITE]: { filePath: string };
+  [DiskLocalEvents.WRITE]: { filePaths: string[] };
   [DiskRemoteEvents.UPDATE_INDEX]: { filePath: string; type: "file" | "dir" };
 }> {
   static WRITE = "write" as const;
@@ -354,8 +354,8 @@ export abstract class Disk extends DiskDAO {
         await this.local.emit(DiskLocalEvents.INDEX);
         console.debug("remote rename", JSON.stringify(data, null, 4));
       }),
-      this.remote.on(DiskRemoteEvents.WRITE, async ({ filePath }) => {
-        await this.local.emit(DiskLocalEvents.WRITE, { filePath });
+      this.remote.on(DiskRemoteEvents.WRITE, async ({ filePaths }) => {
+        await this.local.emit(DiskLocalEvents.WRITE, { filePaths });
       }),
 
       this.remote.on(DiskRemoteEvents.INDEX, async () => {
@@ -385,10 +385,9 @@ export abstract class Disk extends DiskDAO {
     }[type](guid);
   }
 
-  //TODO: doesnt work with multiple files
-  async findReplace(find: string, replace: string) {
+  async findReplace2(find: string, replace: string) {
     await this.ready;
-    return this.mutex.runExclusive(() =>
+    await this.mutex.runExclusive(() =>
       this.fileTree.walk(async (node) => {
         if (getMimeType(node.path) === "text/markdown") {
           await this.mutex.runExclusive(async () => {
@@ -397,13 +396,55 @@ export abstract class Disk extends DiskDAO {
               const newContent = content.replaceAll(find, replace);
               await this.writeFile(node.path, newContent);
               await this.local.emit(DiskLocalEvents.WRITE, {
-                filePath: node.path.str,
+                filePaths: [node.path.str],
               });
             }
           });
         }
       })
     );
+  }
+
+  async findsReplaces(findReplace: [string, string][]) {
+    await this.ready;
+    const filePaths: string[] = [];
+    await this.fileTree.asyncWalk(async (node) => {
+      if (getMimeType(node.path) === "text/markdown") {
+        let content = String(await this.readFile(node.path));
+        let changed = false;
+        for (const [find, replace] of findReplace) {
+          if (content.includes(find)) {
+            content = content.replaceAll(find, replace);
+            changed = true;
+          }
+        }
+        if (changed) {
+          await this.writeFile(node.path, content);
+          filePaths.push(node.path.str);
+        }
+      }
+    });
+    await this.local.emit(DiskLocalEvents.WRITE, {
+      filePaths,
+    });
+  }
+
+  async findReplace(find: string, replace: string) {
+    await this.ready;
+    const filePaths: string[] = [];
+    await this.fileTree.asyncWalk(async (node) => {
+      if (getMimeType(node.path) === "text/markdown") {
+        const content = String(await this.readFile(node.path));
+        if (content.includes(find)) {
+          const newContent = content.replaceAll(find, replace);
+          await this.writeFile(node.path, newContent);
+          filePaths.push(node.path.str);
+        }
+      }
+    });
+    await this.local.emit(DiskLocalEvents.WRITE, {
+      filePaths,
+    });
   }
 
   async mkdirRecursive(filePath: AbsPath) {
@@ -434,9 +475,9 @@ export abstract class Disk extends DiskDAO {
     return this.local.on(DiskLocalEvents.RENAME, fn);
   }
   writeFileListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-    return this.local.on(DiskLocalEvents.WRITE, async ({ filePath }) => {
-      if (watchFilePath.str === filePath) {
-        fn(String(await this.readFile(absPath(filePath))));
+    return this.local.on(DiskLocalEvents.WRITE, async ({ filePaths }) => {
+      if (filePaths.includes(watchFilePath.str)) {
+        fn(String(await this.readFile(absPath(watchFilePath.str))));
       }
     });
   }
@@ -604,7 +645,7 @@ export abstract class Disk extends DiskDAO {
 
   async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
     await this.fs.writeFile(filePath.encode(), contents, { encoding: "utf8", mode: 0o777 });
-    await this.remote.emit(DiskRemoteEvents.WRITE, { filePath: filePath.str });
+    await this.remote.emit(DiskRemoteEvents.WRITE, { filePaths: [filePath.str] });
     return;
   }
   async readFile(filePath: AbsPath) {

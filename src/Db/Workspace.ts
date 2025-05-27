@@ -408,7 +408,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeFile(filePath);
   };
 
-  private async adjustChild(oldNode: TreeNode, newPath: AbsPath) {
+  private async adjustPath(oldNode: TreeNode, newPath: AbsPath) {
     if (oldNode.path.isImage()) {
       await this.imageCache.getCache().then(async (c) => {
         const res = await c.match(oldNode.path.urlSafe());
@@ -427,7 +427,6 @@ export class Workspace extends WorkspaceDAO {
   }
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
-    await this.adjustChild(oldNode, nextPath); // Adjust the child node to the new path
     // if (oldNode.path.isImage()) {
     //   await this.imageCache.getCache().then(async (c) => {
     //     const res = await c.match(oldNode.path.urlSafe());
@@ -445,7 +444,10 @@ export class Workspace extends WorkspaceDAO {
     // }
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
-    this.disk.fileTree.replaceNode(oldNode, newNode); //????????
+    // this.disk.fileTree.replaceNode(oldNode, newNode); //????????
+    // await this.adjustChild(oldNode, nextPath); // Adjust the child node to the new path
+
+    await this.adjustPath(oldNode, absPath(oldNode.path.replace(oldNode.path.str, newNode.path.str)));
     return newNode;
   };
   //this is dumb because you do not consider the children!
@@ -455,11 +457,12 @@ export class Workspace extends WorkspaceDAO {
       throw e;
     });
     const newNode = oldNode.copy().rename(newPath);
-    this.disk.fileTree.replaceNode(oldNode, newNode); //????????????????????????????
+    // this.disk.fileTree.replaceNode(oldNode, newNode); //????????????????????????????
     // await this.disk.fileTree.index();
     // await this.disk.nodeFromPath(newNode.path)?.walk((child) => {
-    await newNode.walk(async (child) => {
-      await this.adjustChild(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
+
+    await newNode.asyncWalk(async (child) => {
+      await this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
     });
     return newNode;
   };

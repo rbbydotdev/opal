@@ -54,6 +54,20 @@ export class TreeNode {
     this.isVirtual = newNode.isVirtual;
   }
 
+  async asyncWalk(
+    cb: (node: TreeNode, depth: number, exit: () => void) => Promise<void>,
+    node: TreeNode = this,
+    depth = 0,
+    status = { exit: false }
+  ): Promise<void> {
+    const exit = () => (status.exit = true);
+    await cb(node, depth, exit);
+    for (const childNode of Object.values((node as TreeDir).children ?? {})) {
+      if (status.exit) break;
+      await this.asyncWalk(cb, childNode, depth + 1, status);
+    }
+  }
+
   walk(
     cb: (node: TreeNode, depth: number, exit: () => void) => void,
     node: TreeNode = this,
