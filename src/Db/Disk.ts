@@ -530,7 +530,8 @@ export abstract class Disk extends DiskDAO {
     void this.local.emit(DiskLocalEvents.INDEX);
   }
   addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
-    const node = this.fileTree.insertClosestNode({ type, name }, selectedNode || this.fileTree.root);
+    const parent = selectedNode || this.fileTree.root;
+    const node = this.fileTree.insertClosestNode({ type, name }, parent);
     void this.local.emit(DiskLocalEvents.INDEX);
     return node;
   }
