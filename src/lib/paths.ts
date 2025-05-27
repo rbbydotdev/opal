@@ -200,6 +200,16 @@ export function relPath(path: string | RelPath) {
 export function absPath(path: string | AbsPath) {
   return AbsPath.New(String(path));
 }
+export function replaceAncestor(root: AbsPath | string, oldPath: AbsPath | string, newPath: AbsPath | string) {
+  if (oldPath === root) return newPath;
+  if (oldPath === null || root === null) return oldPath;
+  const rootSegments = root.split("/");
+  const pathSegments = oldPath.split("/");
+  if (pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i])) {
+    return absPath(newPath).join(...pathSegments.slice(rootSegments.length));
+  }
+  return oldPath;
+}
 
 export function isAncestor(path: AbsPath | string | null, root: AbsPath | string | null) {
   if (path === root) return true;

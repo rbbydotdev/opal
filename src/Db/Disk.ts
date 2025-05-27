@@ -254,6 +254,7 @@ export abstract class Disk extends DiskDAO {
   remote: DiskRemoteEvents;
   local = new DiskLocalEvents();
   ready: Promise<void> = Promise.resolve();
+  mutex = new Mutex();
 
   constructor(public readonly guid: string, protected fs: CommonFileSystem, public fileTree: FileTree, type: DiskType) {
     super({ guid, type });
@@ -387,18 +388,22 @@ export abstract class Disk extends DiskDAO {
   //TODO: doesnt work with multiple files
   async findReplace(find: string, replace: string) {
     await this.ready;
-    return this.fileTree.walk(async (node) => {
-      if (getMimeType(node.path) === "text/markdown") {
-        const content = String(await this.readFile(node.path));
-        if (content.includes(find)) {
-          const newContent = content.replaceAll(find, replace);
-          await this.writeFile(node.path, newContent);
-          await this.local.emit(DiskLocalEvents.WRITE, {
-            filePath: node.path.str,
+    return this.mutex.runExclusive(() =>
+      this.fileTree.walk(async (node) => {
+        if (getMimeType(node.path) === "text/markdown") {
+          await this.mutex.runExclusive(async () => {
+            const content = String(await this.readFile(node.path));
+            if (content.includes(find)) {
+              const newContent = content.replaceAll(find, replace);
+              await this.writeFile(node.path, newContent);
+              await this.local.emit(DiskLocalEvents.WRITE, {
+                filePath: node.path.str,
+              });
+            }
           });
         }
-      }
-    });
+      })
+    );
   }
 
   async mkdirRecursive(filePath: AbsPath) {
