@@ -96,19 +96,8 @@ export class FileTree {
     }
   };
 
-  walk(
-    cb: (node: TreeNode, depth: number, exit: () => void) => void,
-    node: TreeNode = this.root,
-    depth = 0,
-    status = { exit: false }
-  ) {
-    const exit = () => (status.exit = true);
-    cb(node, depth, exit);
-    for (const childNode of Object.values((node as TreeDir).children ?? {})) {
-      if (status.exit) break;
-      this.walk(cb, childNode, depth + 1, status);
-    }
-  }
+  walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
+  asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
 
   //pre order traversal, recurse fs tree and apply visitor function to each node
   recurseTree = async (
