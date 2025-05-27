@@ -18,7 +18,6 @@ export class FileTree {
   initialIndex = false;
   guid: string;
   cacheId: string;
-
   dirs: TreeList = [];
   private map = new Map<string, TreeNode>();
   public root: TreeDirRoot = new TreeDirRoot();
@@ -78,7 +77,6 @@ export class FileTree {
 
   index = async ({
     tree = new TreeDirRoot(),
-
     visitor,
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
     try {
@@ -121,7 +119,6 @@ export class FileTree {
   ): Promise<TreeDir> => {
     const dir = parent.path;
     try {
-      //getDirEntries: (dir:string) => Promise<string[]>
       const entries = (await this.fs.readdir(dir.encode())).map((e) => relPath(BasePath.decode(e.toString())));
 
       // Separate directories and files
@@ -201,12 +198,15 @@ export class FileTree {
     return parent;
   };
 
-  flatTreeToNodeList = () => {
-    return this.flatDirTree().map((path) => {
-      const node = this.map.get(path);
-      if (node) return node;
-      return null;
-    });
+  // flatTreeToNodeList = () => {
+  //   return this.flatDirTree().map((path) => {
+  //     const node = this.map.get(path);
+  //     if (node) return node;
+  //     return null;
+  //   });
+  // };
+  allNodes = () => {
+    return Array.from(this.map.values());
   };
 
   removeNodeByPath(path: AbsPath) {

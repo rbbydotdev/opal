@@ -3,7 +3,7 @@ import { usePathname } from "next/navigation";
 import { useLayoutEffect, useState } from "react";
 
 //will delay the loading of the page until the service worker is ready
-export const ImgSw = ({ children }: { children: React.ReactNode }) => {
+export const ServiceWorker = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
   const [ready, setReady] = useState(false);
@@ -25,7 +25,7 @@ export async function setupServiceWorker(): Promise<void> {
     // await unregisterServiceWorkers();
     if (!navigator.serviceWorker.controller) {
       console.warn("Service Worker is not controlling the page.");
-      await navigator.serviceWorker.register(new URL("@/lib/ImagesServiceWorker/images.sw.ts", import.meta.url), {
+      await navigator.serviceWorker.register(new URL("@/lib/ServiceWorker/sw.ts", import.meta.url), {
         scope: "/",
         updateViaCache: "none",
       });

@@ -4,6 +4,7 @@ import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
 import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
 import { Channel } from "@/lib/channel";
+import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { isServiceWorker } from "@/lib/isServiceWorker";
@@ -14,7 +15,9 @@ import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import { memfs } from "memfs";
+import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
+import { IReadStream } from "memfs/lib/node/types/misc";
 import { nanoid } from "nanoid";
 import path from "path";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
@@ -26,6 +29,7 @@ export const DiskTypes = ["IndexedDbDisk", "MemDisk", "DexieFsDbDisk", "NullDisk
 export type DiskType = (typeof DiskTypes)[number];
 
 export interface CommonFileSystem {
+  // [x: string]: (path: PathLike, options?: string | IReadStreamOptions | undefined) => IReadStream;
   readdir(path: string): Promise<
     (
       | string
@@ -50,7 +54,6 @@ export interface CommonFileSystem {
   ): Promise<void>;
 }
 
-export type FileSystem = CommonFileSystem;
 export class MutexFs implements CommonFileSystem {
   // export class MutexFs implements CommonFileSystem {
   fs: CommonFileSystem;
@@ -86,6 +89,10 @@ export class MutexFs implements CommonFileSystem {
   async writeFile(path: string, data: Uint8Array | Buffer | string, options?: { encoding?: "utf8"; mode: number }) {
     return this.mutex.runExclusive(() => this.fs.writeFile(path, data, options));
   }
+  async createReadStream(path: string): Promise<IReadStream> {
+    //@ts-expect-error
+    return this.fs.createReadStream(path);
+  }
 }
 
 type OPFSFileSystem = CommonFileSystem & {
@@ -102,6 +109,11 @@ export class OPFSNamespacedFs extends NamespacedFs {
   tearDown(): Promise<void> {
     return this.fs.rm(this.namespace.encode(), { recursive: true, force: true });
   }
+  createReadStream(path: string): IReadStream {
+    //@ts-expect-error
+    return this.fs.createReadStream(this.namespace.join(path).encode());
+  }
+
   rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
     return this.fs.rm(this.namespace.join(path).encode(), options);
   }
@@ -243,7 +255,7 @@ export abstract class Disk extends DiskDAO {
   local = new DiskLocalEvents();
   ready: Promise<void> = Promise.resolve();
 
-  constructor(public readonly guid: string, protected fs: FileSystem, public fileTree: FileTree, type: DiskType) {
+  constructor(public readonly guid: string, protected fs: CommonFileSystem, public fileTree: FileTree, type: DiskType) {
     super({ guid, type });
     this.remote = new DiskRemoteEvents(this.guid);
   }
@@ -362,16 +374,6 @@ export abstract class Disk extends DiskDAO {
 
   static guid = () => "__disk__" + nanoid();
 
-  // static fromURI(uriStr: string) {
-  //   const [type, ...guid] = uriStr.split("@");
-  //   if (!DiskTypes.includes(type as DiskType)) {
-  //     throw new Error(`Invalid disk type: ${type}`);
-  //   }
-  //   return Disk.from({ guid: guid.join("@"), type: type as DiskType });
-  // }
-  // toURI() {
-  //   return `${this.type}@${this.guid}`;
-  // }
   static from({ guid, type }: { guid: string; type: DiskType }): Disk {
     return new {
       [IndexedDbDisk.type]: IndexedDbDisk,
@@ -574,6 +576,27 @@ export abstract class Disk extends DiskDAO {
       return false;
     }
   }
+  createReadStream(filePath: AbsPath): IReadStream | ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> {
+    // if (this.type === OpFsDisk.type) {
+    if (false) {
+      //@ts-expect-error
+      return (this.fs.createReadStream as FsaNodeFs["createReadStream"])(filePath.encode(), {
+        encoding: "utf8",
+        mode: 0o777,
+      });
+    } else {
+      const fakeStream = new ReadableStream<Uint8Array>({
+        start: (controller) => {
+          void this.readFile(filePath).then((contents) => {
+            controller.enqueue(coerceUint8Array(contents));
+            controller.close();
+          });
+        },
+      });
+      return fakeStream.getReader();
+    }
+  }
+
   async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
     await this.fs.writeFile(filePath.encode(), contents, { encoding: "utf8", mode: 0o777 });
     await this.remote.emit(DiskRemoteEvents.WRITE, { filePath: filePath.str });

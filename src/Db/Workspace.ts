@@ -96,9 +96,9 @@ export class WorkspaceDAO implements WorkspaceRecord {
   thumbs!: DiskJType;
   createdAt!: Date;
   remoteAuth!: RemoteAuthJType;
-  RemoteAuth?: RemoteAuthDAO;
-  Disk?: DiskDAO;
-  Thumbs?: DiskDAO;
+  protected RemoteAuth?: RemoteAuthDAO;
+  protected Disk?: DiskDAO;
+  protected Thumbs?: DiskDAO;
 
   static fromJSON(json: WorkspaceRecord) {
     return new WorkspaceDAO(json);

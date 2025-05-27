@@ -49,7 +49,6 @@ export class NamespacedFs implements CommonFileSystem {
     data: Uint8Array | Buffer | string,
     options?: { encoding?: "utf8"; mode: number }
   ): Promise<void> {
-    console.log(`Writing file to namespaced path: ${this.namespace.join(path).encode()}`);
     return this.fs.writeFile(this.namespace.join(path).encode(), data, options);
   }
 }
