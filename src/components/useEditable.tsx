@@ -79,15 +79,19 @@ export function useEditable<T extends TreeFile | TreeNode>({
     [setSelectedRange]
   );
 
+  const cancelEdit = useCallback(() => {
+    setFileName(fullPath.basename());
+    resetEditing();
+    linkRef.current?.focus();
+  }, [fullPath, resetEditing]);
+
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent) => {
       e.stopPropagation();
       if (e.key === "Escape") {
         if (isEditing) {
           if (isVirtual) cancelNew();
-          setFileName(fullPath.basename());
-          resetEditing();
-          linkRef.current?.focus();
+          cancelEdit();
         } else {
           setFocused(null);
           if (selectedRange.length) setSelectedRange([]);
@@ -95,14 +99,18 @@ export function useEditable<T extends TreeFile | TreeNode>({
         }
       } else if (e.key === "Enter") {
         if (isEditing) {
-          const wantPath = fullPath.changePrefix(String(fileName.prefix())).basename();
-          const gotPath = await commitChange(treeNode, wantPath, editType);
-          setFileName(gotPath.basename());
-          if (treeNode.type === "file" && (fullPath.equals(workspaceRoute.path) || !workspaceRoute.path)) {
-            router.push(currentWorkspace.resolveFileUrl(gotPath));
+          if (fileName.prefix()) {
+            const wantPath = fullPath.changePrefix(fileName.prefix()).basename();
+            const gotPath = await commitChange(treeNode, wantPath, editType);
+            setFileName(gotPath.basename());
+            if (treeNode.type === "file" && (fullPath.equals(workspaceRoute.path) || !workspaceRoute.path)) {
+              router.push(currentWorkspace.resolveFileUrl(gotPath));
+            }
+            setFocused(gotPath);
+          } else {
+            cancelEdit();
           }
           resetEditing();
-          setFocused(gotPath);
           e.preventDefault();
         } else {
           setEditing(fullPath);
@@ -117,12 +125,13 @@ export function useEditable<T extends TreeFile | TreeNode>({
       isEditing,
       isVirtual,
       cancelNew,
-      fullPath,
-      resetEditing,
+      cancelEdit,
       setFocused,
       selectedRange.length,
       setSelectedRange,
       fileName,
+      resetEditing,
+      fullPath,
       commitChange,
       treeNode,
       editType,
@@ -135,7 +144,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleFocus = useCallback(() => {
     if (selectedRange.includes(treeNode.str) && linkRef.current) {
-      // linkRef.current.blur();
+      linkRef.current.blur();
       return;
     }
 
@@ -146,12 +155,13 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const handleBlur = useCallback(() => {
     if (isEditing) {
       resetEditing();
+      cancelEdit();
     }
     if (isEditing && isVirtual) {
       cancelNew();
     }
     setFocused(null);
-  }, [cancelNew, isEditing, isVirtual, resetEditing, setFocused]);
+  }, [cancelEdit, cancelNew, isEditing, isVirtual, resetEditing, setFocused]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {

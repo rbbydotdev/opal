@@ -21,7 +21,7 @@ export class BasePath extends String {
 
   prefix() {
     const ext = this.extname();
-    return ext.length ? this.basename().slice(0, this.basename().length - ext.length) : this.basename();
+    return ext.length ? this.basename().slice(0, this.basename().length - ext.length) : this.basename().str;
   }
 
   toString() {

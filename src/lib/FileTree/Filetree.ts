@@ -1,4 +1,5 @@
 import { CommonFileSystem } from "@/Db/Disk";
+import { isErrorWithCode, NotFoundError } from "@/lib/errors";
 import {
   TreeDir,
   TreeDirRoot,
@@ -11,6 +12,7 @@ import {
   VirtualTreeNode,
 } from "@/lib/FileTree/TreeNode";
 import { AbsPath, BasePath, relPath, RelPath } from "@/lib/paths";
+import { Mutex } from "async-mutex";
 
 export class FileTree {
   initialIndex = false;
@@ -22,7 +24,7 @@ export class FileTree {
   public root: TreeDirRoot = new TreeDirRoot();
 
   // private tree: TreeDir = this.root;
-  constructor(private fs: CommonFileSystem, guid: string) {
+  constructor(private fs: CommonFileSystem, guid: string, private mutex = new Mutex()) {
     this.guid = `${guid}/FileTree`;
 
     this.cacheId = `${this.guid}/cache`;
@@ -80,6 +82,7 @@ export class FileTree {
     visitor,
   }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
     try {
+      await this.mutex.acquire();
       console.debug("Indexing file tree");
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
@@ -91,6 +94,7 @@ export class FileTree {
       console.error("Error during file tree indexing:", e);
       throw e;
     } finally {
+      await this.mutex.release();
     }
   };
 
@@ -108,7 +112,7 @@ export class FileTree {
     }
   }
 
-  //pre order traversal
+  //pre order traversal, recurse fs tree and apply visitor function to each node
   recurseTree = async (
     parent: TreeDir = this.root,
     visitor: (node: TreeNode) => TreeNode | Promise<TreeNode> = (node) => node,
@@ -124,22 +128,32 @@ export class FileTree {
       const directories: RelPath[] = [];
       const files: RelPath[] = [];
 
-      await Promise.all(
-        entries.map(async (entry) => {
-          const fullPath = dir.join(entry);
-          //statDir: (dir:string) => Promise<Stat>
-          const stat = await this.fs.stat(fullPath.encode()).catch((err) => {
-            console.error(`Error getting stat for ${fullPath}:`, err);
-            throw err;
-          });
-
-          if (stat.isDirectory()) {
-            directories.push(entry);
-          } else {
-            files.push(entry);
-          }
-        })
-      );
+      try {
+        await Promise.all(
+          entries.map(async (entry) => {
+            const fullPath = dir.join(entry);
+            const stat = await this.fs.stat(fullPath.encode()).catch((e) => {
+              if (isErrorWithCode(e, "ENOENT")) {
+                console.error(`stat error for file ${fullPath}`);
+                throw new NotFoundError(`File not found: ${fullPath}`, fullPath.str);
+              }
+              throw e;
+            });
+            if (stat.isDirectory()) {
+              directories.push(entry);
+            } else {
+              files.push(entry);
+            }
+          })
+        );
+      } catch (e) {
+        //sometimes the stat fails for a directory that was removed in the meantime
+        //therefore we catch and retry all over again
+        if (!haltOnError && e instanceof NotFoundError) {
+          return this.recurseTree(parent, visitor, depth, haltOnError);
+        }
+        throw e;
+      }
 
       // Process files first
       await Promise.all(

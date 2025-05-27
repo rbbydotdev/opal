@@ -1,5 +1,5 @@
 export class Store {
-  constructor(public name: string) {}
+  constructor(protected readonly name: string) {}
   set(key: string, value: unknown) {
     try {
       const store: { [key: string]: unknown } = localStorage.getItem(this.name)

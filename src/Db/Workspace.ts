@@ -1,5 +1,5 @@
 "use client";
-import { Disk, DiskDAO, DiskJType, NullDisk, OpFsDisk } from "@/Db/Disk";
+import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk, OpFsDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
@@ -14,12 +14,12 @@ import { NullRemoteAuth, RemoteAuth, RemoteAuthDAO, RemoteAuthJType } from "./Re
 
 export class Thumb {
   constructor(
-    public cache: Promise<Cache>,
-    public thumbRepo: Disk,
-    public imgRepo: Disk,
-    public path: AbsPath,
-    public content: Uint8Array | null = null,
-    public size = 100
+    protected cache: Promise<Cache>,
+    protected thumbRepo: Disk,
+    protected imgRepo: Disk,
+    protected path: AbsPath,
+    protected content: Uint8Array | null = null,
+    protected readonly size = 100
   ) {}
 
   static isThumbURL(url: string | URL) {
@@ -275,7 +275,7 @@ class ImageCache {
   getCache() {
     return (this._cache ??= ImageCache.getCache(this.getCacheId()));
   }
-  tearDown = async () => {
+  delete = async () => {
     await caches.delete(this.getCacheId());
   };
 }
@@ -434,7 +434,7 @@ export class Workspace extends WorkspaceDAO {
     });
     const newNode = oldNode.copy().rename(newPath);
     //TODO: this.disk.fileTree.replaceNode(oldNode, newNode);
-    console.log(this.disk.fileTree.removeNodeByPath(oldNode.path));
+    // console.log(this.disk.fileTree.removeNodeByPath(oldNode.path));
     return newNode;
   };
   readFile = (filePath: AbsPath) => {
@@ -486,10 +486,7 @@ export class Workspace extends WorkspaceDAO {
     return this;
   }
 
-  tearDown = () => {
-    this.disk.tearDown();
-    this.thumbs.tearDown();
-  };
+  tearDown = () => Promise.all([this.disk.tearDown(), this.thumbs.tearDown()]);
 
   toJSON() {
     return {
@@ -504,15 +501,15 @@ export class Workspace extends WorkspaceDAO {
   }
 
   delete = async () => {
+    await this.disk.tearDown();
     await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
-      await Promise.all([
+      return Promise.all([
         ClientDb.workspaces.delete(this.guid),
-        this.disk.tearDown(),
         this.disk.delete(),
         this.thumbs.delete(),
+        this.imageCache.delete(),
       ]);
     });
-    await this.imageCache.tearDown();
   };
 
   home = () => {
@@ -532,7 +529,6 @@ export class Workspace extends WorkspaceDAO {
 
   getImages() {
     const result: AbsPath[] = [];
-    // await this.disk.initialIndexListener(() => {});
     this.disk.fileTree.walk((node) => {
       if (node.path.isImage()) {
         result.push(node.path);

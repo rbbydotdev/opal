@@ -11,6 +11,7 @@ import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
 import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
+import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import { memfs } from "memfs";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
@@ -50,6 +51,78 @@ export interface CommonFileSystem {
 }
 
 export type FileSystem = CommonFileSystem;
+export class MutexFs implements CommonFileSystem {
+  // export class MutexFs implements CommonFileSystem {
+  fs: CommonFileSystem;
+
+  constructor(fs: CommonFileSystem, protected mutex = new Mutex()) {
+    this.fs = fs;
+  }
+
+  async readdir(path: string) {
+    return this.mutex.runExclusive(() => this.fs.readdir(path));
+  }
+
+  async stat(path: string) {
+    return this.mutex.runExclusive(() => this.fs.stat(path));
+  }
+
+  async readFile(path: string, options?: { encoding?: "utf8" }) {
+    return this.mutex.runExclusive(() => this.fs.readFile(path, options));
+  }
+
+  async mkdir(path: string, options?: { recursive?: boolean; mode: number }) {
+    return this.mutex.runExclusive(() => this.fs.mkdir(path, options));
+  }
+
+  async rename(oldPath: string, newPath: string) {
+    return this.mutex.runExclusive(() => this.fs.rename(oldPath, newPath));
+  }
+
+  async unlink(path: string) {
+    return this.mutex.runExclusive(() => this.fs.unlink(path));
+  }
+
+  async writeFile(path: string, data: Uint8Array | Buffer | string, options?: { encoding?: "utf8"; mode: number }) {
+    return this.mutex.runExclusive(() => this.fs.writeFile(path, data, options));
+  }
+}
+
+type OPFSFileSystem = CommonFileSystem & {
+  rm: (path: string, options?: { force?: boolean; recursive?: boolean }) => Promise<void>;
+};
+
+export class OPFSNamespacedFs extends NamespacedFs {
+  fs: OPFSFileSystem;
+  constructor(fs: OPFSFileSystem, namespace: AbsPath | string) {
+    super(fs, namespace);
+    this.fs = fs;
+  }
+
+  tearDown(): Promise<void> {
+    return this.fs.rm(this.namespace.encode(), { recursive: true, force: true });
+  }
+  rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
+    return this.fs.rm(this.namespace.join(path).encode(), options);
+  }
+}
+
+export class MutexOPFS extends MutexFs {
+  fs: OPFSNamespacedFs;
+
+  constructor(fs: OPFSNamespacedFs, protected mutex = new Mutex()) {
+    super(fs, mutex);
+    this.fs = fs;
+  }
+
+  async rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
+    return this.mutex.runExclusive(() => this.fs.rm(path, options));
+  }
+
+  async tearDown() {
+    return this.mutex.runExclusive(() => this.fs.tearDown());
+  }
+}
 
 export class DiskDAO implements DiskRecord {
   guid!: string;
@@ -170,7 +243,7 @@ export abstract class Disk extends DiskDAO {
   local = new DiskLocalEvents();
   ready: Promise<void> = Promise.resolve();
 
-  constructor(public readonly guid: string, public fs: FileSystem, public fileTree: FileTree, type: DiskType) {
+  constructor(public readonly guid: string, protected fs: FileSystem, public fileTree: FileTree, type: DiskType) {
     super({ guid, type });
     this.remote = new DiskRemoteEvents(this.guid);
   }
@@ -389,7 +462,6 @@ export abstract class Disk extends DiskDAO {
 
     try {
       await this.mkdirRecursive(cleanFullPath.dirname());
-      console.log(`Renaming ${oldFullPath.str} to ${cleanFullPath.str}`);
       await this.fs.rename(oldFullPath.encode(), cleanFullPath.encode());
     } catch (e) {
       throw e;
@@ -499,7 +571,6 @@ export abstract class Disk extends DiskDAO {
   async readFile(filePath: AbsPath) {
     await this.ready;
     try {
-      console.log(1111);
       return await this.fs.readFile(filePath.encode());
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
@@ -510,13 +581,11 @@ export abstract class Disk extends DiskDAO {
   }
 
   async delete() {
-    // void this.fileTree.clearCache();
-    // throw new Error("Not implemented");
     return ClientDb.disks.delete(this.guid);
   }
-  tearDown() {
-    this.remote.tearDown();
-    this.local.clearListeners();
+  async tearDown() {
+    await this.remote.tearDown();
+    await this.local.clearListeners();
   }
 
   get promises() {
@@ -530,21 +599,21 @@ export abstract class Disk extends DiskDAO {
 export class OpFsDisk extends Disk {
   static type: DiskType = "OpFsDisk";
   ready: Promise<void>;
-  private internalFs: NamespacedFs;
+  private internalFs: OPFSNamespacedFs;
   constructor(public readonly guid: string) {
+    const mutex = new Mutex();
     const { promise, resolve } = Promise.withResolvers<void>();
-
-    const fs = new NamespacedFs(
-      new PatchedOPFS(
-        navigator.storage.getDirectory().then(async (dir) => {
-          // await navigator.storage.persist();
-          resolve();
-          return dir;
-        }) as Promise<IFileSystemDirectoryHandle>
-      ).promises,
-      absPath("/" + guid)
+    const patchedOPFS = new PatchedOPFS(
+      navigator.storage.getDirectory().then(async (dir) => {
+        resolve();
+        return dir;
+      }) as Promise<IFileSystemDirectoryHandle>
     );
-    super(guid, fs, new FileTree(fs, guid), OpFsDisk.type);
+
+    const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
+
+    super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), OpFsDisk.type);
+
     this.ready = promise;
     this.internalFs = fs;
   }
@@ -566,9 +635,11 @@ export class DexieFsDbDisk extends Disk {
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
   constructor(public readonly guid: string) {
+    const mutex = new Mutex();
     const fs = new LightningFs();
-    const ft = new FileTree(fs.promises, guid);
-    super(guid, fs.promises, ft, IndexedDbDisk.type);
+    const mutexFs = new MutexFs(fs.promises, mutex);
+    const ft = new FileTree(fs.promises, guid, mutex);
+    super(guid, mutexFs, ft, IndexedDbDisk.type);
     this.ready = fs.init(guid) as unknown as Promise<void>;
   }
 }
