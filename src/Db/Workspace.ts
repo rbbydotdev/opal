@@ -1,5 +1,5 @@
 "use client";
-import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk, OpFsDisk } from "@/Db/Disk";
+import { Disk, DiskDAO, DiskJType, IndexedDbDisk, MemDisk, NullDisk, OpFsDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
@@ -77,8 +77,8 @@ export class Thumb {
         await c.delete(oldUrl);
       }
     });
-    await this.thumbRepo.mkdirRecursive(newPath.dirname());
-    return this.thumbRepo.renameDirOrFile(oldPath, newPath);
+    // await this.thumbRepo.mkdirRecursive(newPath.dirname());
+    return this.thumbRepo.quietMove(oldPath, newPath);
   }
 
   async remove() {
@@ -134,8 +134,10 @@ export class WorkspaceDAO implements WorkspaceRecord {
   static async create(
     name: string,
     remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
-    disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
-    thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
+    disk: DiskDAO = DiskDAO.new(MemDisk.type),
+    thumbs: DiskDAO = DiskDAO.new(MemDisk.type)
+    // disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
+    // thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
     // disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
     // thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
   ) {
@@ -422,9 +424,9 @@ export class Workspace extends WorkspaceDAO {
           console.error("Error moving thumb", e);
         });
     }
-    const { newPath } = await this.disk.renameDirOrFile(oldNode.path, nextPath);
+    const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
-    this.disk.fileTree.replaceNode(oldNode, newNode);
+    this.disk.fileTree.replaceNode(oldNode, newNode); //????????
     return newNode;
   };
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
@@ -433,8 +435,7 @@ export class Workspace extends WorkspaceDAO {
       throw e;
     });
     const newNode = oldNode.copy().rename(newPath);
-    //TODO: this.disk.fileTree.replaceNode(oldNode, newNode);
-    // console.log(this.disk.fileTree.removeNodeByPath(oldNode.path));
+    this.disk.fileTree.replaceNode(oldNode, newNode); //????????????????????????????
     return newNode;
   };
   readFile = (filePath: AbsPath) => {

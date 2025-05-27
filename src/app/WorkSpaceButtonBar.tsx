@@ -1,6 +1,5 @@
 "use client";
 
-import { deleteIDBs } from "@/app/deleteIDBs";
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import Identicon from "@/components/Identicon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -89,7 +88,7 @@ export function WorkSpaceButtonBar() {
         href="#"
         onClick={() =>
           Promise.all([
-            deleteIDBs(),
+            // deleteIDBs(),
             currentWorkspace.tearDown(),
             Workspace.all().then((wss) => Promise.all(wss.map((ws) => ws.toModel().then((ws) => ws.delete())))),
             unregisterServiceWorkers(),

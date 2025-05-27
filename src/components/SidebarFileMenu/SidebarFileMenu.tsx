@@ -391,18 +391,18 @@ function SidebarFileMenuSync() {
   );
 }
 
-function CustomSidebarActionButton({ title, Icon }: { title: string; Icon: React.ComponentType<{ size?: number }> }) {
-  return (
-    <SidebarGroup>
-      <SidebarMenuButton className="pl-0 text-xs w-full flex justify-between text-sidebar-foreground/70 hover:text-sidebar-foreground/70">
-        <div className="flex justify-center items-center">
-          <div className="ml-1">
-            <Icon size={12} />
-          </div>
-          <div className="ml-1">{title}</div>
-        </div>
-      </SidebarMenuButton>
-      <SidebarGroupContent></SidebarGroupContent>
-    </SidebarGroup>
-  );
-}
+// function CustomSidebarActionButton({ title, Icon }: { title: string; Icon: React.ComponentType<{ size?: number }> }) {
+//   return (
+//     <SidebarGroup>
+//       <SidebarMenuButton className="pl-0 text-xs w-full flex justify-between text-sidebar-foreground/70 hover:text-sidebar-foreground/70">
+//         <div className="flex justify-center items-center">
+//           <div className="ml-1">
+//             <Icon size={12} />
+//           </div>
+//           <div className="ml-1">{title}</div>
+//         </div>
+//       </SidebarMenuButton>
+//       <SidebarGroupContent></SidebarGroupContent>
+//     </SidebarGroup>
+//   );
+// }
