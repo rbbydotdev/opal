@@ -408,27 +408,47 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeFile(filePath);
   };
 
-  renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
+  private async adjustPath(oldNode: TreeNode, newPath: AbsPath) {
     if (oldNode.path.isImage()) {
       await this.imageCache.getCache().then(async (c) => {
         const res = await c.match(oldNode.path.urlSafe());
         if (res) {
           await c.delete(oldNode.path.urlSafe());
-          await c.put(nextPath.urlSafe(), res);
+          await c.put(newPath.urlSafe(), res);
         }
       });
+      await this.disk.findReplace(oldNode.path.encode(), newPath.encode()); // Update the disk's internal file tree
       await this.NewThumb(oldNode.path)
-        .move(oldNode.path, nextPath)
+        .move(oldNode.path, newPath)
         .catch(async (e) => {
           console.error("Error moving thumb", e);
         });
     }
+  }
+  renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+    const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
+    await this.adjustPath(oldNode, nextPath);
+    // if (oldNode.path.isImage()) {
+    //   await this.imageCache.getCache().then(async (c) => {
+    //     const res = await c.match(oldNode.path.urlSafe());
+    //     if (res) {
+    //       await c.delete(oldNode.path.urlSafe());
+    //       await c.put(nextPath.urlSafe(), res);
+    //     }
+    //   });
+    //   await this.disk.findReplace(oldNode.path.encode(), nextPath.encode()); // Update the disk's internal file tree
+    //   await this.NewThumb(oldNode.path)
+    //     .move(oldNode.path, nextPath)
+    //     .catch(async (e) => {
+    //       console.error("Error moving thumb", e);
+    //     });
+    // }
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode); //????????
     return newNode;
   };
+  //this is dumb because you do not consider the children!
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
       console.error("Error renaming dir", e);
@@ -436,6 +456,11 @@ export class Workspace extends WorkspaceDAO {
     });
     const newNode = oldNode.copy().rename(newPath);
     this.disk.fileTree.replaceNode(oldNode, newNode); //????????????????????????????
+    // await this.disk.fileTree.index();
+    // await this.disk.nodeFromPath(newNode.path)?.walk((child) => {
+    await newNode.walk(async (child) => {
+      await this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
+    });
     return newNode;
   };
   readFile = (filePath: AbsPath) => {
