@@ -190,7 +190,7 @@ function FileTreeMenuInternal({
       onDragOver={handleDragOver}
       onDrop={(e) => handleDrop(e, fileTreeDir)}
       onDragEnter={(e) => handleDragEnter(e, "/")}
-      className={clsx("p-0", depth === 0 ? "pb-12 pt-2 -ml-[2px]" : "")}
+      className={clsx("p-0", depth === 0 ? "pb-16 -ml-[2px]" : "")}
     >
       {Object.values(fileTreeDir.children).map((file) => (
         <Collapsible

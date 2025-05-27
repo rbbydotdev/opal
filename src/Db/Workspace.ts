@@ -136,10 +136,10 @@ export class WorkspaceDAO implements WorkspaceRecord {
     remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
     // disk: DiskDAO = DiskDAO.new(MemDisk.type),
     // thumbs: DiskDAO = DiskDAO.new(MemDisk.type)
-    disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
-    thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
-    // disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
-    // thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
+    // disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
+    // thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
+    disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
+    thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
   ) {
     let uniqueName = WorkspaceDAO.Slugify(name);
     let inc = 0;
@@ -502,15 +502,15 @@ export class Workspace extends WorkspaceDAO {
   }
 
   delete = async () => {
-    await this.disk.tearDown();
-    await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
-      return Promise.all([
-        ClientDb.workspaces.delete(this.guid),
-        this.disk.delete(),
-        this.thumbs.delete(),
-        this.imageCache.delete(),
-      ]);
-    });
+    // await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
+    // });
+    return Promise.all([
+      await this.disk.tearDown(),
+      ClientDb.workspaces.delete(this.guid),
+      this.disk.delete(),
+      this.thumbs.delete(),
+      this.imageCache.delete(),
+    ]);
   };
 
   home = () => {
