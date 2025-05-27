@@ -135,7 +135,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleFocus = useCallback(() => {
     if (selectedRange.includes(treeNode.str) && linkRef.current) {
-      linkRef.current.blur();
+      // linkRef.current.blur();
       return;
     }
 

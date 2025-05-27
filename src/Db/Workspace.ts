@@ -1,5 +1,5 @@
 "use client";
-import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk, OpFsDisk } from "@/Db/Disk";
+import { Disk, DiskDAO, DiskJType, NullDisk, OpFsDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
@@ -428,9 +428,13 @@ export class Workspace extends WorkspaceDAO {
     return newNode;
   };
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath);
+    const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
+      console.error("Error renaming dir", e);
+      throw e;
+    });
     const newNode = oldNode.copy().rename(newPath);
-    this.disk.fileTree.replaceNode(oldNode, newNode);
+    //TODO: this.disk.fileTree.replaceNode(oldNode, newNode);
+    console.log(this.disk.fileTree.removeNodeByPath(oldNode.path));
     return newNode;
   };
   readFile = (filePath: AbsPath) => {
@@ -457,7 +461,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.awaitFirstIndex();
   }
   async dropImageFile(file: File, targetPath: AbsPath) {
-    const fileType = getMimeType(file.name); //getFileType(new Uint8Array(await file.arrayBuffer()));
+    const fileType = getMimeType(file.name);
     if (!isImageType(fileType)) {
       throw new BadRequestError("Not a valid image");
     }
@@ -482,9 +486,9 @@ export class Workspace extends WorkspaceDAO {
     return this;
   }
 
-  teardown = () => {
-    this.disk.teardown();
-    this.thumbs.teardown();
+  tearDown = () => {
+    this.disk.tearDown();
+    this.thumbs.tearDown();
   };
 
   toJSON() {
@@ -503,7 +507,7 @@ export class Workspace extends WorkspaceDAO {
     await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
       await Promise.all([
         ClientDb.workspaces.delete(this.guid),
-        this.disk.teardown(),
+        this.disk.tearDown(),
         this.disk.delete(),
         this.thumbs.delete(),
       ]);

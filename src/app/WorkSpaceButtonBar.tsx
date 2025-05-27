@@ -87,7 +87,14 @@ export function WorkSpaceButtonBar() {
         icon={<BombIcon stroke="current" size={32} strokeWidth={1.25} />}
         title={"Nuke All"}
         href="#"
-        onClick={() => Promise.all([deleteIDBs(), unregisterServiceWorkers()]).then(() => (window.location = "/new"))}
+        onClick={() =>
+          Promise.all([
+            deleteIDBs(),
+            currentWorkspace.tearDown(),
+            Workspace.all().then((wss) => Promise.all(wss.map((ws) => ws.toModel().then((ws) => ws.delete())))),
+            unregisterServiceWorkers(),
+          ]).then(() => (window.location = "/new"))
+        }
       />
       <BigButton
         icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}

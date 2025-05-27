@@ -128,7 +128,10 @@ export class FileTree {
         entries.map(async (entry) => {
           const fullPath = dir.join(entry);
           //statDir: (dir:string) => Promise<Stat>
-          const stat = await this.fs.stat(fullPath.encode());
+          const stat = await this.fs.stat(fullPath.encode()).catch((err) => {
+            console.error(`Error getting stat for ${fullPath}:`, err);
+            throw err;
+          });
 
           if (stat.isDirectory()) {
             directories.push(entry);
@@ -197,7 +200,9 @@ export class FileTree {
     if (node) {
       this.removeSelfByPathFromParent(path, node);
       this.map.delete(path.str);
+      return true;
     }
+    return false;
   }
   removeSelfByPathFromParent(path: AbsPath, selfNode: TreeNode) {
     delete selfNode?.parent?.children[path.basename().str];

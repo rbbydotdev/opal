@@ -93,7 +93,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const addDirFile = React.useCallback(
     (type: TreeNode["type"]) => {
-      console.log(focused);
       const focusedNode = currentWorkspace.nodeFromPath(focused);
       const name = type === "dir" ? "newdir" : "newfile.md";
       const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);

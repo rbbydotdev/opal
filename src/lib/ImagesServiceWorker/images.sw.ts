@@ -92,16 +92,14 @@ const SWWStore = new (class SwWorkspace {
       console.log("awaiting workspace promise...");
       const ws = await this.workspace;
       if (ws.name !== workspaceId) {
+        await ws.tearDown();
         this.workspace = null;
       } else {
         console.log(`Returning existing workspace: ${ws.name}`);
         return ws;
       }
     }
-    if (this.workspace === null) {
-      return (this.workspace = WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
-    }
-    return this.workspace;
+    return (this.workspace = WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
   }
 })();
 
@@ -126,7 +124,9 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
     }
     console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
     const workspace = await SWWStore.tryWorkspace(workspaceId);
+
     if (!workspace) throw new Error("Workspace not found");
+    console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     const contents: Uint8Array<ArrayBufferLike> = isThumbnail
       ? ((await workspace.readOrMakeThumb(decodedPathname)) as Uint8Array<ArrayBufferLike>)

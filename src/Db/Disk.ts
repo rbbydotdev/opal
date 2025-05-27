@@ -2,7 +2,7 @@
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
-import { NamespacedFs } from "@/Db/NamespacedFs";
+import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
@@ -13,7 +13,6 @@ import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import Emittery from "emittery";
 import { memfs } from "memfs";
-import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
 import path from "path";
@@ -390,6 +389,7 @@ export abstract class Disk extends DiskDAO {
 
     try {
       await this.mkdirRecursive(cleanFullPath.dirname());
+      console.log(`Renaming ${oldFullPath.str} to ${cleanFullPath.str}`);
       await this.fs.rename(oldFullPath.encode(), cleanFullPath.encode());
     } catch (e) {
       throw e;
@@ -462,12 +462,12 @@ export abstract class Disk extends DiskDAO {
   }
   async newFile(fullPath: AbsPath, content: string | Uint8Array) {
     await this.ready;
+
     while (await this.pathExists(fullPath)) {
       fullPath = fullPath.inc();
     }
     await this.writeFileRecursive(fullPath, content);
     await this.fileTreeIndex();
-    // this.updateIndex(fullPath, "file");
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskRemoteEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "file" });
     return fullPath;
@@ -499,6 +499,7 @@ export abstract class Disk extends DiskDAO {
   async readFile(filePath: AbsPath) {
     await this.ready;
     try {
+      console.log(1111);
       return await this.fs.readFile(filePath.encode());
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
@@ -508,12 +509,12 @@ export abstract class Disk extends DiskDAO {
     }
   }
 
-  delete() {
+  async delete() {
     // void this.fileTree.clearCache();
     // throw new Error("Not implemented");
     return ClientDb.disks.delete(this.guid);
   }
-  teardown() {
+  tearDown() {
     this.remote.tearDown();
     this.local.clearListeners();
   }
@@ -529,30 +530,27 @@ export abstract class Disk extends DiskDAO {
 export class OpFsDisk extends Disk {
   static type: DiskType = "OpFsDisk";
   ready: Promise<void>;
-  root: AbsPath;
-  internalFs: FsaNodeFs;
+  private internalFs: NamespacedFs;
   constructor(public readonly guid: string) {
-    const root = absPath("/" + guid);
     const { promise, resolve } = Promise.withResolvers<void>();
-    const internalFs = new FsaNodeFs(
-      navigator.storage.getDirectory().then((dir) => {
-        resolve();
-        return dir;
-      }) as Promise<IFileSystemDirectoryHandle>
+
+    const fs = new NamespacedFs(
+      new PatchedOPFS(
+        navigator.storage.getDirectory().then(async (dir) => {
+          // await navigator.storage.persist();
+          resolve();
+          return dir;
+        }) as Promise<IFileSystemDirectoryHandle>
+      ).promises,
+      absPath("/" + guid)
     );
-    internalFs.promises.unlink = function (path: string) {
-      return internalFs.promises.rm.bind(internalFs.promises)(path, { recursive: true, force: true }); // Monkey patch to add unlink method
-    };
-    const fs = new NamespacedFs(internalFs.promises, root);
-    const ft = new FileTree(fs, guid);
-    super(guid, fs, ft, OpFsDisk.type);
+    super(guid, fs, new FileTree(fs, guid), OpFsDisk.type);
     this.ready = promise;
-    this.root = root;
-    this.internalFs = internalFs;
+    this.internalFs = fs;
   }
-  async teardown() {
-    await this.internalFs.promises.rm(this.root.encode(), { force: true, recursive: true });
-    await super.teardown();
+
+  async delete() {
+    await Promise.all([this.internalFs.tearDown(), ClientDb.disks.delete(this.guid)]);
   }
 }
 

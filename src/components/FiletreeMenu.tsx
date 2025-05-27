@@ -8,7 +8,7 @@ import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, reduceLineage } from "@/lib/paths";
 import clsx from "clsx";
-import React, { useEffect } from "react";
+import React from "react";
 import { isAncestor } from "../lib/paths";
 
 export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
@@ -163,12 +163,12 @@ function FileTreeMenuInternal({
   expanded: { [path: string]: boolean };
   workspaceRoute: WorkspaceRouteType;
 }) {
-  const { resetSelects } = useFileTreeMenuContext();
-
-  //This must be done, as old selects can stick around after a remote change or local change / move / rename
-  useEffect(() => {
-    currentWorkspace.watchDisk(resetSelects, { initialTrigger: false });
-  }, [currentWorkspace, resetSelects]);
+  // const { resetSelects } = useFileTreeMenuContext();
+  //TODO: this needs moved to top
+  // //This must be done, as old selects can stick around after a remote change or local change / move / rename
+  // useEffect(() => {
+  //   return currentWorkspace.watchDisk(resetSelects, { initialTrigger: false });
+  // }, [currentWorkspace, resetSelects]);
 
   const { handleDragEnter, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragAndDrop({
     currentWorkspace,

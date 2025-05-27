@@ -159,7 +159,7 @@ export function useWorkspaceFromRoute() {
         throw e;
       });
     return () => {
-      void workspace.then((ws) => ws.teardown());
+      void workspace.then((ws) => ws.tearDown());
     };
   }, [router, workspaceId]);
 
