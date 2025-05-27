@@ -19,7 +19,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
         const close = ChannelSet.get(this.channelName);
         if (close) close();
       } catch (e) {
-        console.error("Error during channel teardown:", e);
+        console.error("Error during channel tearDown:", e);
       }
       ChannelSet.delete(this.channelName);
     }

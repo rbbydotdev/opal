@@ -143,7 +143,7 @@ export const SidebarFileMenuFiles = ({
   return (
     <SidebarGroup className="pl-0 pb-12 w-full overflow-scroll h-full flex-1">
       <Collapsible className="group/collapsible h-full flex-1" open={groupExpanded} onOpenChange={groupSetExpand}>
-        <SidebarGroupLabel className="relative w-full pr-0">
+        <SidebarGroupLabel className="relative w-full pr-0 overflow-x-hidden">
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="pl-0 text-xs w-full ">
               <div className="w-full flex items-center">
