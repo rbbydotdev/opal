@@ -417,7 +417,7 @@ export class Workspace extends WorkspaceDAO {
           await c.put(newPath.urlSafe(), res);
         }
       });
-      await this.disk.findReplace(oldNode.path.encode(), newPath.encode()); // Update the disk's internal file tree
+      // await this.disk.findReplace(oldNode.path.encode(), newPath.encode()); // Update the disk's internal file tree
       await this.NewThumb(oldNode.path)
         .move(oldNode.path, newPath)
         .catch(async (e) => {
@@ -427,26 +427,12 @@ export class Workspace extends WorkspaceDAO {
   }
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
-    // if (oldNode.path.isImage()) {
-    //   await this.imageCache.getCache().then(async (c) => {
-    //     const res = await c.match(oldNode.path.urlSafe());
-    //     if (res) {
-    //       await c.delete(oldNode.path.urlSafe());
-    //       await c.put(nextPath.urlSafe(), res);
-    //     }
-    //   });
-    //   await this.disk.findReplace(oldNode.path.encode(), nextPath.encode()); // Update the disk's internal file tree
-    //   await this.NewThumb(oldNode.path)
-    //     .move(oldNode.path, nextPath)
-    //     .catch(async (e) => {
-    //       console.error("1 Error moving thumb", e);
-    //     });
-    // }
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
-    // this.disk.fileTree.replaceNode(oldNode, newNode); //????????
-    // await this.adjustChild(oldNode, nextPath); // Adjust the child node to the new path
-
+    await this.disk.findReplace(
+      oldNode.path.encode(),
+      absPath(oldNode.path.replace(oldNode.path.str, newNode.path.str)).encode()
+    ); // Update all references in the disk
     await this.adjustPath(oldNode, absPath(oldNode.path.replace(oldNode.path.str, newNode.path.str)));
     return newNode;
   };
@@ -457,13 +443,14 @@ export class Workspace extends WorkspaceDAO {
       throw e;
     });
     const newNode = oldNode.copy().rename(newPath);
-    // this.disk.fileTree.replaceNode(oldNode, newNode); //????????????????????????????
-    // await this.disk.fileTree.index();
-    // await this.disk.nodeFromPath(newNode.path)?.walk((child) => {
 
+    const fr: [string, string][] = [];
     await newNode.asyncWalk(async (child) => {
+      fr.push([child.path.encode(), absPath(child.path.replace(oldNode.path.str, newNode.path.str)).encode()]);
       await this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
     });
+    await this.disk.findReplaceBatch(fr);
+
     return newNode;
   };
   readFile = (filePath: AbsPath) => {

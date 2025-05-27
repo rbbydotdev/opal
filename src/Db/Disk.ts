@@ -385,27 +385,7 @@ export abstract class Disk extends DiskDAO {
     }[type](guid);
   }
 
-  async findReplace2(find: string, replace: string) {
-    await this.ready;
-    await this.mutex.runExclusive(() =>
-      this.fileTree.walk(async (node) => {
-        if (getMimeType(node.path) === "text/markdown") {
-          await this.mutex.runExclusive(async () => {
-            const content = String(await this.readFile(node.path));
-            if (content.includes(find)) {
-              const newContent = content.replaceAll(find, replace);
-              await this.writeFile(node.path, newContent);
-              await this.local.emit(DiskLocalEvents.WRITE, {
-                filePaths: [node.path.str],
-              });
-            }
-          });
-        }
-      })
-    );
-  }
-
-  async findsReplaces(findReplace: [string, string][]) {
+  async findReplaceBatch(findReplace: [string, string][]) {
     await this.ready;
     const filePaths: string[] = [];
     await this.fileTree.asyncWalk(async (node) => {
@@ -430,21 +410,7 @@ export abstract class Disk extends DiskDAO {
   }
 
   async findReplace(find: string, replace: string) {
-    await this.ready;
-    const filePaths: string[] = [];
-    await this.fileTree.asyncWalk(async (node) => {
-      if (getMimeType(node.path) === "text/markdown") {
-        const content = String(await this.readFile(node.path));
-        if (content.includes(find)) {
-          const newContent = content.replaceAll(find, replace);
-          await this.writeFile(node.path, newContent);
-          filePaths.push(node.path.str);
-        }
-      }
-    });
-    await this.local.emit(DiskLocalEvents.WRITE, {
-      filePaths,
-    });
+    return this.findReplaceBatch([[find, replace]]);
   }
 
   async mkdirRecursive(filePath: AbsPath) {
