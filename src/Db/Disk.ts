@@ -437,13 +437,25 @@ export abstract class Disk extends DiskDAO {
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
     return this.renameDirOrFile(oldFullPath, newFullPath, "dir");
   }
-  async renameDirOrFile(
+  async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
+    return this.renameDirOrFile(oldFullPath, newFullPath, "file");
+  }
+  //for moving files without emitting events or updating the index
+  async quietMove(oldPath: AbsPath, newPath: AbsPath) {
+    const uniquePath = await this.nextPath(newPath); // ensure the path is unique
+    await this.mkdirRecursive(uniquePath.dirname());
+    await this.fs.rename(oldPath.encode(), newPath.encode());
+  }
+  protected async renameDirOrFile(
     oldFullPath: AbsPath,
     newFullPath: AbsPath,
-    //type can be determined by the fs.stat no?
-    type: "file" | "dir" = "file"
+    type?: "file" | "dir"
   ): Promise<RenameFileType> {
     await this.ready;
+    if (!type) {
+      const stat = await this.fs.stat(oldFullPath.encode());
+      type = stat.isDirectory() ? "dir" : "file";
+    }
     const NOCHANGE: RenameFileType = new RenameFileType({
       type,
       newPath: oldFullPath,
@@ -452,30 +464,28 @@ export abstract class Disk extends DiskDAO {
       oldName: oldFullPath.basename(),
     });
     if (!newFullPath) return NOCHANGE;
-    let cleanFullPath = newFullPath.dirname().join(newFullPath.basename().replace(/\//g, ":"));
+    const cleanFullPath = newFullPath.dirname().join(newFullPath.basename());
+    // .replace(/\//g, ":")
 
     if (cleanFullPath.str === oldFullPath.str) return NOCHANGE;
 
-    while (await this.pathExists(cleanFullPath)) {
-      cleanFullPath = cleanFullPath.inc();
-    }
+    const uniquePath = await this.nextPath(cleanFullPath); // ensure the path is unique
 
     try {
-      await this.mkdirRecursive(cleanFullPath.dirname());
-      await this.fs.rename(oldFullPath.encode(), cleanFullPath.encode());
+      await this.mkdirRecursive(uniquePath.dirname());
+      await this.fs.rename(oldFullPath.encode(), uniquePath.encode());
     } catch (e) {
       throw e;
     }
-    await this.fileTreeIndex();
 
     const CHANGE = new RenameFileType({
       type,
-      newPath: cleanFullPath,
-      newName: cleanFullPath.basename(),
+      newPath: uniquePath,
+      newName: uniquePath.basename(),
       oldName: oldFullPath.basename(),
       oldPath: oldFullPath,
     });
-
+    await this.fileTreeIndex();
     void this.remote.emit(DiskRemoteEvents.RENAME, CHANGE.toJSON());
     await this.local.emit(DiskLocalEvents.RENAME, CHANGE);
     await this.local.emit(DiskLocalEvents.INDEX);
