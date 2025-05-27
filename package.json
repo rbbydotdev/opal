@@ -54,6 +54,7 @@
     "dexie-encrypted": "^2.0.0",
     "dexie-react-hooks": "^1.1.7",
     "emittery": "^1.0.3",
+    "fflate": "^0.8.2",
     "jotai": "^2.10.4",
     "lucide-react": "^0.468.0",
     "memfs": "^4.17.2",
