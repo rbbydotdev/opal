@@ -45,6 +45,8 @@ export function FileTreeContainer({
 
 const INTERNAL_FILE_TYPE = "application/x-opal";
 
+export type DragStartJType = { dragStart: TreeNodeJType[] };
+export type DragStartType = { dragStart: TreeNode[] };
 export function useFileTreeDragAndDrop({
   currentWorkspace,
   onMove,
@@ -52,11 +54,9 @@ export function useFileTreeDragAndDrop({
 }: {
   currentWorkspace: Workspace;
   onMove?: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<unknown> | unknown;
-  onDragEnter?: (path: string) => void;
+  onDragEnter?: (path: string, data?: DragStartJType) => void;
 }) {
   const { selectedRange, focused } = useFileTreeMenuContext();
-  type DragStartType = { dragStart: TreeNode[] };
-  type DragStartJType = { dragStart: TreeNodeJType[] };
   //on drag start cancel focus on key up
 
   const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
@@ -139,7 +139,12 @@ export function useFileTreeDragAndDrop({
 
   const handleDragEnter = (event: React.DragEvent, path: string) => {
     event.preventDefault();
-    onDragEnter?.(path);
+    if (event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
+      const data = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as DragStartJType;
+      onDragEnter?.(path, data);
+    } else {
+      onDragEnter?.(path);
+    }
   };
   return { handleDragStart, handleDragOver, handleDrop, handleDragEnter };
 }
@@ -173,7 +178,11 @@ function FileTreeMenuInternal({
   const { handleDragEnter, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragAndDrop({
     currentWorkspace,
     onMove: renameDirOrFile,
-    onDragEnter: (path: string) => expand(path, true),
+    onDragEnter: (path: string, data?: DragStartJType) => {
+      if (!data?.dragStart.some((node) => node.path === path)) {
+        expand(path, true);
+      }
+    }, //if the path is another directory, expand it
   });
 
   return (
@@ -193,7 +202,10 @@ function FileTreeMenuInternal({
             className={file.path.equals(workspaceRoute.path) ? "bg-sidebar-accent" : ""}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, file)}
-            onDragEnter={(e) => handleDragEnter(e, file.path.str)}
+            onDragEnter={(e) => {
+              handleDragEnter(e, file.path.str);
+            }}
+            //
           >
             <CollapsibleTrigger asChild>
               <SidebarMenuButton asChild>

@@ -41,10 +41,13 @@ export function useFileTreeExpander({
   );
   const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${id}`, local);
 
-  const isExpanded = (path: string) => stored[path] && local[path];
+  // const isExpanded = useCallback((path: string) => local[path], [local]);
+  const isExpanded = useCallback((path: string) => stored[path] && local[path], [local, stored]);
 
   const expandSingle = (path: string, expanded: boolean) => {
-    if (isExpanded(path) === expanded) return;
+    if (stored[path] === local[path] && local[path] === expanded) {
+      return;
+    }
     setLocal((prev) => ({ ...prev, [path]: expanded }));
     setStored((prev) => ({ ...prev, [path]: expanded }));
   };

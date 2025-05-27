@@ -67,6 +67,7 @@ export function WorkSpaceButtonBar() {
     [workspaces, currentWorkspace]
   );
   const { isLoading } = useIsNavigatingWorkspace();
+  const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== currentWorkspace.guid).length;
   return (
     <>
       <div className="flex justify-center flex-col items-center w-full">
@@ -127,14 +128,14 @@ export function WorkSpaceButtonBar() {
         open={expand}
         onOpenChange={setExpand}
       >
-        {workspaces.length > 1 && (
+        {otherWorkspacesCount > 0 && (
           <CollapsibleTrigger
             className="h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
   hover:text-slate-200 bg-secondary-foreground flex items-center relative"
           >
             <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
             <div className=" group-data-[state=open]:hidden text-white absolute top-0 right-2 rounded-full bg-slate-700 w-[1.25rem] p-0 flex justify-center items-center h-[1.25rem] text-xs">
-              {workspaces.length > 1 ? workspaces.length - 1 : ""}
+              {otherWorkspacesCount}
             </div>
             <DatabaseZap size={16} className="group-data-[state=open]:hidden w-full m-auto absolute r-0" />
 

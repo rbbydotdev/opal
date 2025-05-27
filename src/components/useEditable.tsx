@@ -99,18 +99,21 @@ export function useEditable<T extends TreeFile | TreeNode>({
         }
       } else if (e.key === "Enter") {
         if (isEditing) {
-          if (fileName.prefix()) {
+          if (
+            fileName.prefix() &&
+            (editType === "new" || fileName.basename().prefix() !== fullPath.basename().prefix())
+          ) {
             const wantPath = fullPath.changePrefix(fileName.prefix()).basename();
             const gotPath = await commitChange(treeNode, wantPath, editType);
+            resetEditing();
             setFileName(gotPath.basename());
+            setFocused(gotPath);
             if (treeNode.type === "file" && (fullPath.equals(workspaceRoute.path) || !workspaceRoute.path)) {
               router.push(currentWorkspace.resolveFileUrl(gotPath));
             }
-            setFocused(gotPath);
           } else {
             cancelEdit();
           }
-          resetEditing();
           e.preventDefault();
         } else {
           setEditing(fullPath);
@@ -130,7 +133,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
       selectedRange.length,
       setSelectedRange,
       fileName,
-      resetEditing,
       fullPath,
       commitChange,
       treeNode,

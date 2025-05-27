@@ -38,12 +38,13 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
   const resetEditing = useCallback(() => {
     setEditing(null);
     setEditType("rename");
-    setFocused(null);
+    // setFocused(null);
     setVirtual(null);
   }, []);
 
   const resetSelects = useCallback(() => {
     // setFocused(null);
+    console.log("resetSelects called");
     setSelectedRange([]);
   }, []);
 
