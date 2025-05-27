@@ -1,6 +1,5 @@
 "use client";
 import { WorkspaceStatus } from "@/app/workspace/[workspaceId]/WorkspaceStatus";
-import { DownloadButton } from "@/components/DownloadButton";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuContextProvider } from "@/components/FileTreeContext";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -24,7 +23,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </ResizablePanel>
               <ResizableHandle />
               <ResizablePanel id="editor" defaultSize={85}>
-                <DownloadButton />
                 {children}
               </ResizablePanel>
             </ResizablePanelGroup>

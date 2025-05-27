@@ -184,24 +184,26 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
       return new Response("No files to download", { status: 404 });
     }
 
-    for (const node of fileNodes) {
-      if (node.type === "file") {
-        try {
-          console.log(`Adding file to zip: ${node.path.str}`);
-          const fileStream = new fflate.ZipDeflate(node.path.str, { level: 9 });
-          zip.add(fileStream);
-          // fileStream.
-          void workspace.disk.readFile(node.path).then((data) => fileStream.push(coerceUint8Array(data), true)); // true = last chunk
-        } catch (e) {
-          console.error(`Failed to add file to zip: ${node.path.str}`, e);
+    await Promise.all(
+      fileNodes.map(async (node) => {
+        if (node.type === "file") {
+          try {
+            console.log(`Adding file to zip: ${node.path.str}`);
+            const fileStream = new fflate.ZipDeflate(node.path.str, { level: 9 });
+            zip.add(fileStream);
+            const data = await workspace.disk.readFile(node.path);
+            fileStream.push(coerceUint8Array(data), true); // true = last chunk
+          } catch (e) {
+            console.error(`Failed to add file to zip: ${node.path.str}`, e);
+          }
+        } else if (node.type === "dir") {
+          const dirName = node.path.str + "/";
+          const emptyDir = new fflate.ZipPassThrough(dirName);
+          zip.add(emptyDir);
+          emptyDir.push(new Uint8Array(0), true);
         }
-      } else if (node.type === "dir") {
-        const dirName = node.path.str + "/";
-        const emptyDir = new fflate.ZipPassThrough(dirName);
-        zip.add(emptyDir);
-        emptyDir.push(new Uint8Array(0), true);
-      }
-    }
+      })
+    );
 
     zip.end();
 
