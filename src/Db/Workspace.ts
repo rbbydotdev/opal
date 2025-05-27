@@ -136,10 +136,10 @@ export class WorkspaceDAO implements WorkspaceRecord {
     remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
     // disk: DiskDAO = DiskDAO.new(MemDisk.type),
     // thumbs: DiskDAO = DiskDAO.new(MemDisk.type)
-    // disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
-    // thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
-    disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
-    thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
+    disk: DiskDAO = DiskDAO.new(OpFsDisk.type),
+    thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
+    // disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
+    // thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
   ) {
     let uniqueName = WorkspaceDAO.Slugify(name);
     let inc = 0;
@@ -408,7 +408,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeFile(filePath);
   };
 
-  private async adjustPath(oldNode: TreeNode, newPath: AbsPath) {
+  private async adjustChild(oldNode: TreeNode, newPath: AbsPath) {
     if (oldNode.path.isImage()) {
       await this.imageCache.getCache().then(async (c) => {
         const res = await c.match(oldNode.path.urlSafe());
@@ -421,13 +421,13 @@ export class Workspace extends WorkspaceDAO {
       await this.NewThumb(oldNode.path)
         .move(oldNode.path, newPath)
         .catch(async (e) => {
-          console.error("Error moving thumb", e);
+          console.error("2 Error moving thumb", e);
         });
     }
   }
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
-    await this.adjustPath(oldNode, nextPath);
+    await this.adjustChild(oldNode, nextPath); // Adjust the child node to the new path
     // if (oldNode.path.isImage()) {
     //   await this.imageCache.getCache().then(async (c) => {
     //     const res = await c.match(oldNode.path.urlSafe());
@@ -440,7 +440,7 @@ export class Workspace extends WorkspaceDAO {
     //   await this.NewThumb(oldNode.path)
     //     .move(oldNode.path, nextPath)
     //     .catch(async (e) => {
-    //       console.error("Error moving thumb", e);
+    //       console.error("1 Error moving thumb", e);
     //     });
     // }
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
@@ -459,7 +459,7 @@ export class Workspace extends WorkspaceDAO {
     // await this.disk.fileTree.index();
     // await this.disk.nodeFromPath(newNode.path)?.walk((child) => {
     await newNode.walk(async (child) => {
-      await this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
+      await this.adjustChild(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
     });
     return newNode;
   };
