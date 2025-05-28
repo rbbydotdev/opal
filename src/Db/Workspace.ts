@@ -77,7 +77,6 @@ export class Thumb {
         await c.delete(oldUrl);
       }
     });
-    // await this.thumbRepo.mkdirRecursive(newPath.dirname());
     return this.thumbRepo.quietMove(oldPath, newPath);
   }
 
@@ -417,7 +416,6 @@ export class Workspace extends WorkspaceDAO {
           await c.put(newPath.urlSafe(), res);
         }
       });
-      // await this.disk.findReplace(oldNode.path.encode(), newPath.encode()); // Update the disk's internal file tree
       await this.NewThumb(oldNode.path)
         .move(oldNode.path, newPath)
         .catch(async (e) => {
@@ -429,10 +427,10 @@ export class Workspace extends WorkspaceDAO {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
-    await this.disk.findReplace(
-      oldNode.path.encode(),
-      absPath(oldNode.path.replace(oldNode.path.str, newNode.path.str)).encode()
-    ); // Update all references in the disk
+
+    await this.disk.findReplaceImgBatch([
+      [oldNode.path.str, absPath(oldNode.path.replace(oldNode.path.str, newNode.path.str)).str],
+    ]); // Update all references in the disk
     await this.adjustPath(oldNode, absPath(oldNode.path.replace(oldNode.path.str, newNode.path.str)));
     return newNode;
   };
@@ -445,11 +443,24 @@ export class Workspace extends WorkspaceDAO {
     const newNode = oldNode.copy().rename(newPath);
 
     const fr: [string, string][] = [];
+
+    // const nodes: TreeNode[] = [];
+    // newNode.walk((child) => nodes.push(child));
+    // await Promise.all(
+    //   nodes.map((child) => this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str))))
+    // );
+    // await this.disk.findReplaceBatch(
+    //   nodes.map((child) => [
+    //     child.path.encode(),
+    //     absPath(child.path.replace(oldNode.path.str, newNode.path.str)).encode(),
+    //   ])
+    // );
+
     await newNode.asyncWalk(async (child) => {
-      fr.push([child.path.encode(), absPath(child.path.replace(oldNode.path.str, newNode.path.str)).encode()]);
+      fr.push([child.path.str, absPath(child.path.replace(oldNode.path.str, newNode.path.str)).str]);
       await this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
     });
-    await this.disk.findReplaceBatch(fr);
+    await this.disk.findReplaceImgBatch(fr);
 
     return newNode;
   };
@@ -517,8 +528,6 @@ export class Workspace extends WorkspaceDAO {
   }
 
   delete = async () => {
-    // await ClientDb.transaction("rw", ClientDb.workspaces, ClientDb.disks, async () => {
-    // });
     return Promise.all([
       await this.disk.tearDown(),
       ClientDb.workspaces.delete(this.guid),

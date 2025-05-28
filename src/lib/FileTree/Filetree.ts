@@ -187,14 +187,14 @@ export class FileTree {
     return parent;
   };
 
-  // flatTreeToNodeList = () => {
-  //   return this.flatDirTree().map((path) => {
-  //     const node = this.map.get(path);
-  //     if (node) return node;
-  //     return null;
-  //   });
-  // };
-  allNodes = () => {
+  allChildrenArray = (parent: TreeDir): TreeNode[] => {
+    const result: TreeNode[] = [];
+    parent.walk((node) => {
+      result.push(node);
+    });
+    return result;
+  };
+  allNodesArray = () => {
     return Array.from(this.map.values());
   };
 
@@ -244,15 +244,6 @@ function closestTreeDir(node: TreeNode): TreeDir {
   return node as TreeDir;
 }
 
-// function removeNode(node: TreeNode) {
-//   if (!node.parent) return;
-//   delete node.parent.children[node.name.str];
-// }
-// function insertClosestNode(node: Pick<TreeNode, "path" | "type">, selectedNode: TreeNode) {
-//   const parent = closestTreeDir(selectedNode);
-//   const newNode = newTreeNode({ ...node, parent, depth: parent.depth + 1 });
-//   return insertNode(parent, newNode);
-// }
 function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
   targetNode.children[newNode.name.str] = newNode;
   targetNode.children = Object.fromEntries(Object.entries(targetNode.children));
