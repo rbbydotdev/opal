@@ -109,9 +109,11 @@ export class TreeNode {
   }
 
   remove() {
-    if (this.parent) {
+    if (this.parent && this.name.str in this.parent.children) {
       delete this.parent.children[this.name.str];
+      return true;
     }
+    return false;
   }
 
   inc() {
