@@ -177,7 +177,7 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
     const workspace = await SWWStore.tryWorkspace(workspaceId);
 
     await workspace.disk.fileTree.index();
-    const fileNodes: TreeNode[] = workspace.disk.fileTree.allNodes();
+    const fileNodes: TreeNode[] = workspace.disk.fileTree.allNodesArray();
 
     if (!fileNodes || fileNodes.length === 0) {
       console.warn("No files found in the workspace to download.");

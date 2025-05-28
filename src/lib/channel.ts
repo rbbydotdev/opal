@@ -1,4 +1,3 @@
-"use client";
 import Emittery, { type Options } from "emittery";
 import { nanoid } from "nanoid";
 

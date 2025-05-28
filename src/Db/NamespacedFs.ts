@@ -3,8 +3,6 @@ import { absPath, AbsPath } from "@/lib/paths";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
 
-//peek fs is a small shared interface between the disk fs and the filetree
-
 export class NamespacedFs implements CommonFileSystem {
   namespace: AbsPath;
   constructor(protected fs: CommonFileSystem, namespace: AbsPath | string) {

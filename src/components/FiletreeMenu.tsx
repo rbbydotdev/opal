@@ -84,9 +84,11 @@ export function useFileTreeDragAndDrop({
     event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${url.urlSafe()}">${url}</a>`).join("\n"));
 
     allFiles.filter(Boolean).forEach((fpath, i) => {
-      // const mimeType = currentWorkspace.disk.nodeFromPath(fpath)?.mimeType;
       //using semi-colon to play nice with possible mimeType collision (hackish)
-      event.dataTransfer.setData(`${fpath.getMimeType()};index=${i}`, fpath.urlSafe());
+
+      // event.dataTransfer.setData(`${fpath.getMimeType()};index=${i}`, fpath.urlSafe());
+      //TODO: Not using url safe?
+      event.dataTransfer.setData(`${fpath.getMimeType()};index=${i}`, fpath.str);
     });
   };
 
@@ -96,7 +98,6 @@ export function useFileTreeDragAndDrop({
   };
 
   const handleExternalDrop = async (event: React.DragEvent, targetPath: AbsPath) => {
-    // console.debug("External Drop");
     const { files } = event.dataTransfer;
     for (const file of files) {
       try {

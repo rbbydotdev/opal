@@ -385,16 +385,20 @@ export abstract class Disk extends DiskDAO {
     }[type](guid);
   }
 
-  async findReplaceBatch(findReplace: [string, string][]) {
+  async findReplaceImgBatch(findReplace: [string, string][]) {
     await this.ready;
     const filePaths: string[] = [];
+    await this.mutex.acquire();
     await this.fileTree.asyncWalk(async (node) => {
       if (getMimeType(node.path) === "text/markdown") {
         let content = String(await this.readFile(node.path));
         let changed = false;
         for (const [find, replace] of findReplace) {
-          if (content.includes(find)) {
-            content = content.replaceAll(find, replace);
+          // Inline escaping of regex special characters in 'find'
+          const escapedFind = find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const regex = new RegExp(`([(<])${escapedFind}`, "g");
+          if (regex.test(content)) {
+            content = content.replace(regex, (_match, p1) => `${p1}${replace}`);
             changed = true;
           }
         }
@@ -407,10 +411,11 @@ export abstract class Disk extends DiskDAO {
     await this.local.emit(DiskLocalEvents.WRITE, {
       filePaths,
     });
+    this.mutex.release();
   }
 
-  async findReplace(find: string, replace: string) {
-    return this.findReplaceBatch([[find, replace]]);
+  async findReplaceImg(find: string, replace: string) {
+    return this.findReplaceImgBatch([[find, replace]]);
   }
 
   async mkdirRecursive(filePath: AbsPath) {
@@ -456,9 +461,9 @@ export abstract class Disk extends DiskDAO {
   }
   //for moving files without emitting events or updating the index
   async quietMove(oldPath: AbsPath, newPath: AbsPath) {
-    const uniquePath = await this.nextPath(newPath); // ensure the path is unique
+    const uniquePath = await this.nextPath(newPath);
     await this.mkdirRecursive(uniquePath.dirname());
-    await this.fs.rename(oldPath.encode(), newPath.encode());
+    await this.fs.rename(oldPath.encode(), uniquePath.encode());
   }
   protected async renameDirOrFile(
     oldFullPath: AbsPath,
