@@ -6,4 +6,5 @@
 [data-editor-block-type="image"] img {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
+  outline: none;
 }

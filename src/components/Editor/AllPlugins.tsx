@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Workspace } from "@/Db/Workspace";
+import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context";
 import { BadRequestError, isError } from "@/lib/errors";
 import { AbsPath } from "@/lib/paths";
@@ -151,7 +152,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       imagePreviewHandler: async (src: string) => {
         return Promise.resolve(src);
       },
-      imageUploadHandler: async (file) => {
+      imageUploadHandler: async (file: File) => {
         try {
           return await currentWorkspace
             .dropImageFile(file, path?.dirname() ?? AbsPath.New("/"))
@@ -160,12 +161,10 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
           console.error("image upload handler error");
           console.error(e);
           if (isError(e, BadRequestError)) {
-            /*
             ErrorPopupControl.show({
               title: "Not a valid image",
               description: "Please upload a valid image file (png,gif,webp,jpg)",
             });
-            */
             return Promise.resolve(file.name ?? "");
           } else {
             throw e;
