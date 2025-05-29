@@ -376,7 +376,7 @@ function SidebarFileMenuSync() {
 }
 const DownloadToast = {
   title: "Downloading Workspace...",
-  duration: 3000,
+  duration: 6000,
   description: (
     <div className="flex items-center">
       <div className="animate-spin w-4 h-4 mr-4">

@@ -12,9 +12,6 @@ const COLLAPSED_STATE_WIDTH = 0; // Width of the sidebar when it's fully collaps
 // Snap behavior thresholds
 // If sidebar is open and dragged narrower than this, it will snap to COLLAPSED_STATE_WIDTH
 const SNAP_POINT_COLLAPSE_THRESHOLD = 100;
-// If sidebar is collapsed and dragged wider than this, it will snap open
-// (to DEFAULT_OPEN_WIDTH or MIN_RESIZABLE_WIDTH)
-const SNAP_POINT_OPEN_THRESHOLD = 50;
 
 // localStorage keys
 const LOCAL_STORAGE_KEY_OPEN_WIDTH = "resizableSidebarOpenWidth";
@@ -40,7 +37,6 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
   const dragStartInfoRef = useRef<{
     startX: number; // Mouse X position at the start of the drag
     initialDisplayWidth: number; // The sidebar's display width when dragging started
-    wasCollapsedAtDragStart: boolean; // Whether the sidebar was collapsed when dragging started
   } | null>(null);
 
   useEffect(() => {
@@ -86,65 +82,38 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
     setCurrentDisplayWidth(initialLoadedIsCollapsed ? COLLAPSED_STATE_WIDTH : initialLoadedOpenWidth);
   }, []);
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      if (sidebarRef.current) {
-        dragStartInfoRef.current = {
-          startX: e.clientX,
-          initialDisplayWidth: sidebarRef.current.offsetWidth,
-          wasCollapsedAtDragStart: isCollapsed,
-        };
-        setIsResizing(true);
-      }
-    },
-    [isCollapsed] // isCollapsed is crucial for `wasCollapsedAtDragStart`
-  );
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (sidebarRef.current) {
+      dragStartInfoRef.current = {
+        startX: e.clientX,
+        initialDisplayWidth: sidebarRef.current.offsetWidth,
+      };
+      setIsResizing(true);
+    }
+  }, []);
 
   // Effect for managing global mousemove and mouseup event listeners during resize
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing || !dragStartInfoRef.current) return;
 
-      const { startX, initialDisplayWidth, wasCollapsedAtDragStart } = dragStartInfoRef.current;
+      const { startX, initialDisplayWidth } = dragStartInfoRef.current;
       const dx = e.clientX - startX;
       const potentialNewWidth = initialDisplayWidth + dx;
 
-      if (wasCollapsedAtDragStart) {
-        // Dragging started from a collapsed state
-        if (potentialNewWidth > SNAP_POINT_OPEN_THRESHOLD) {
-          // Snap open
-          setIsCollapsed(false);
-          // Open to a sensible width: current drag, or persisted, constrained by min/max
-          let openToWidth = Math.max(persistedOpenWidth, MIN_RESIZABLE_WIDTH); // Start with last known or min
-          openToWidth = Math.max(openToWidth, potentialNewWidth); // Allow dragging to make it wider
-          openToWidth = Math.min(openToWidth, MAX_RESIZABLE_WIDTH); // Cap at max
-
-          setCurrentDisplayWidth(openToWidth);
-          setPersistedOpenWidth(openToWidth); // Update the width for open state
-        } else {
-          // Not dragged far enough to open, keep it visually collapsed
-          // (isCollapsed is still true, currentDisplayWidth remains COLLAPSED_STATE_WIDTH)
-          // Optionally, provide visual feedback for dragging from collapsed state:
-          // setCurrentDisplayWidth(Math.max(COLLAPSED_STATE_WIDTH, potentialNewWidth));
-          // But this would require snapping back on mouseUp if threshold not met.
-          // For simplicity, we'll keep it at COLLAPSED_STATE_WIDTH until snap.
-        }
+      if (potentialNewWidth < SNAP_POINT_COLLAPSE_THRESHOLD) {
+        // Snap closed
+        setIsCollapsed(true);
+        setCurrentDisplayWidth(COLLAPSED_STATE_WIDTH);
+        // `persistedOpenWidth` is intentionally not changed here;
+        // it remembers the width for the next time it opens.
       } else {
-        // Dragging started from an open state
-        if (potentialNewWidth < SNAP_POINT_COLLAPSE_THRESHOLD) {
-          // Snap closed
-          setIsCollapsed(true);
-          setCurrentDisplayWidth(COLLAPSED_STATE_WIDTH);
-          // `persistedOpenWidth` is intentionally not changed here;
-          // it remembers the width for the next time it opens.
-        } else {
-          // Resize normally (still open)
-          setIsCollapsed(false);
-          const newOpenWidth = Math.max(MIN_RESIZABLE_WIDTH, Math.min(potentialNewWidth, MAX_RESIZABLE_WIDTH));
-          setCurrentDisplayWidth(newOpenWidth);
-          setPersistedOpenWidth(newOpenWidth); // Update the persisted open width
-        }
+        // Resize normally (still open)
+        setIsCollapsed(false);
+        const newOpenWidth = Math.max(MIN_RESIZABLE_WIDTH, Math.min(potentialNewWidth, MAX_RESIZABLE_WIDTH));
+        setCurrentDisplayWidth(newOpenWidth);
+        setPersistedOpenWidth(newOpenWidth); // Update the persisted open width
       }
     };
 
