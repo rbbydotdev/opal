@@ -1,4 +1,3 @@
-"use client";
 import Identicon from "@/components/Identicon";
 
 const RANDS = new Array(999).fill(0).map(() => Math.random().toString());

@@ -442,25 +442,13 @@ export class Workspace extends WorkspaceDAO {
     });
     const newNode = oldNode.copy().rename(newPath);
 
-    const fr: [string, string][] = [];
-
-    // const nodes: TreeNode[] = [];
-    // newNode.walk((child) => nodes.push(child));
-    // await Promise.all(
-    //   nodes.map((child) => this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str))))
-    // );
-    // await this.disk.findReplaceBatch(
-    //   nodes.map((child) => [
-    //     child.path.encode(),
-    //     absPath(child.path.replace(oldNode.path.str, newNode.path.str)).encode(),
-    //   ])
-    // );
+    const findStrReplaceStr: [string, string][] = [];
 
     await newNode.asyncWalk(async (child) => {
-      fr.push([child.path.str, absPath(child.path.replace(oldNode.path.str, newNode.path.str)).str]);
+      findStrReplaceStr.push([child.path.str, absPath(child.path.replace(oldNode.path.str, newNode.path.str)).str]);
       await this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
     });
-    await this.disk.findReplaceImgBatch(fr);
+    await this.disk.findReplaceImgBatch(findStrReplaceStr);
 
     return newNode;
   };

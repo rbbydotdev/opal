@@ -1,10 +1,11 @@
 "use client";
-import { Workspace } from "@/Db/Workspace";
-import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
+import { Workspace } from "@/Db/Workspace";
+import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, relPath } from "@/lib/paths";
 import clsx from "clsx";
+import { FileText } from "lucide-react";
 import Link from "next/link";
 import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
@@ -33,6 +34,7 @@ export const EditableFile = ({
     fileName,
     handleKeyDown,
     handleMouseDown,
+    setEditing,
     handleBlur,
     handleClick,
     isSelected,
@@ -82,17 +84,20 @@ export const EditableFile = ({
           onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
+          onDoubleClick={() => setEditing(fullPath)}
           prefetch={false}
         >
           <div className="w-full">
             <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
               <SelectedMark selected={isSelected} />
-              {treeFile.path.isImage() && (
+              {treeFile.path.isImage() ? (
                 <img
                   src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
                   alt=""
-                  className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
+                  className="w-3 h-3 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
                 />
+              ) : (
+                <FileText className="w-3 h-3 flex-shrink-0 mr-2" />
               )}
               <div className="py-2.5 text-xs w-full truncate">{fileName}</div>
             </div>
@@ -102,12 +107,14 @@ export const EditableFile = ({
         <div className={twMerge(className, "w-full")}>
           <div className="w-full flex items-center truncate" style={{ paddingLeft: depth + "rem" }}>
             <SelectedMark selected={isSelected} />
-            {treeFile.path.isImage() && (
+            {treeFile.path.isImage() ? (
               <img
                 src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
                 alt=""
-                className="w-4 h-4 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
+                className="w-3 h-3 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
               />
+            ) : (
+              <FileText className="w-3 h-3 flex-shrink-0 mr-2" />
             )}
             <input
               ref={inputRef}
@@ -131,7 +138,7 @@ export function SelectedMark({ selected = false }: { selected?: boolean }) {
       className={clsx(
         { flex: selected },
         { hidden: !selected },
-        "absolute w-2 h-2 flex justify-center items-center text-purple-700 text-xs -ml-4"
+        "absolute w-2 h-2 flex justify-center items-center text-accent2 text-xs -ml-3"
       )}
     >
       {"✦"}

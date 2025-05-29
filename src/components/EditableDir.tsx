@@ -1,14 +1,13 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
-import { useEditable } from "@/components/useEditable";
 import { WorkspaceRouteType } from "@/context";
+import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, relPath } from "@/lib/paths";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronRight, Folder, FolderOpen } from "lucide-react";
 import { ComponentProps, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
-
 export const EditableDir = ({
   depth,
   className,
@@ -17,7 +16,6 @@ export const EditableDir = ({
   fullPath,
   workspaceRoute,
   currentWorkspace,
-  expanded,
   onDragStart,
   onClick,
   ...props
@@ -26,7 +24,6 @@ export const EditableDir = ({
   className?: string;
   depth: number;
   treeDir: TreeDir;
-  expanded: boolean;
   currentWorkspace: Workspace;
   workspaceRoute: WorkspaceRouteType;
   onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
@@ -75,28 +72,37 @@ export const EditableDir = ({
       className={twMerge(
         isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
         className,
-        "w-full inline-block cursor-pointer select-none"
+        "w-full flex cursor-pointer select-none group/dir"
       )}
       onKeyDown={handleKeyDown}
     >
       <div className="flex w-full items-center truncate" style={{ marginLeft: depth + "rem" }}>
-        <div className="mr-2">
-          {expanded ? <ChevronDown size={14} className="-ml-0.5" /> : <ChevronRight size={14} className="-ml-0.5" />}
+        <div className="mr-1">
+          <ChevronRight
+            size={14}
+            className={"transition-transform duration-100 rotate-0 group-data-[state=open]/dir:rotate-90 -ml-0.5"}
+          />
         </div>
         {!isEditing ? (
-          <div onDoubleClick={() => setEditing(fullPath)} className="text-xs truncate w-full">
+          <div onDoubleClick={() => setEditing(fullPath)} className="text-xs truncate w-full flex items-center">
+            <FolderOpen className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=open]/dir:block hidden" />
+            <Folder className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=closed]/dir:block hidden" />
             {fileName.basename()}
           </div>
         ) : (
-          <input
-            ref={inputRef}
-            className="bg-transparent outline-none border-b border-dashed border-black text-xs"
-            type="text"
-            value={fileName.basename().str}
-            onChange={(e) => setFileName(relPath(e.target.value))}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-          />
+          <div className="flex items-center">
+            <FolderOpen className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=open]/dir:block hidden" />
+            <Folder className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=closed]/dir:block hidden" />
+            <input
+              ref={inputRef}
+              className="bg-transparent outline-none border-b border-dashed border-black text-xs"
+              type="text"
+              value={fileName.basename().str}
+              onChange={(e) => setFileName(relPath(e.target.value))}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+            />
+          </div>
         )}
       </div>
     </span>

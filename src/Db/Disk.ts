@@ -385,6 +385,7 @@ export abstract class Disk extends DiskDAO {
     }[type](guid);
   }
 
+  //TODO: should probabably parse document then search find image nodes
   async findReplaceImgBatch(findReplace: [string, string][]) {
     await this.ready;
     const filePaths: string[] = [];
@@ -412,10 +413,6 @@ export abstract class Disk extends DiskDAO {
       filePaths,
     });
     this.mutex.release();
-  }
-
-  async findReplaceImg(find: string, replace: string) {
-    return this.findReplaceImgBatch([[find, replace]]);
   }
 
   async mkdirRecursive(filePath: AbsPath) {

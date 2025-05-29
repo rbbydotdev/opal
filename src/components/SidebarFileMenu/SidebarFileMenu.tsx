@@ -3,7 +3,6 @@ import { ConnectionsModal } from "@/components/connections-modal";
 import { FileTreeMenu, useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useDownloadWorkspace } from "@/hooks/useDownloadWorkspace";
 
 import {
   SidebarContent,
@@ -16,16 +15,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useFileTreeExpander, useSingleExpander } from "@/components/useFileTreeExpander";
-import { useWorkspaceFileMgmt } from "@/components/useWorkspaceFileMgmt";
 import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
-import { Workspace } from "@/Db/Workspace";
+import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
 import { useToast } from "@/hooks/useToast";
+import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
 import {
   Check,
-  ChevronDown,
   ChevronRight,
   CopyMinus,
   DotIcon,
@@ -38,14 +35,11 @@ import {
   Loader,
   Plus,
   RefreshCw,
-  Settings,
   Trash2,
-  Undo,
   Upload,
 } from "lucide-react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 
 function SidebarFileMenuInternal({
@@ -97,13 +91,13 @@ function SidebarFileMenuInternal({
         e.preventDefault();
         e.stopPropagation();
       }}
-      className={twMerge("h-full flex-1 p-0 bg-secondary sidebar-group", props.className)}
+      className={twMerge("h-full flex-1 p-0 bg-sidebar sidebar-group", props.className)}
     >
       <SidebarFileMenuSync />
       {/* <Separator className="border-sidebar-accent border" /> */}
       <SidebarFileMenuExport />
       {/* <Separator className="border-sidebar-accent border" /> */}
-      <div className="flex-1 overflow-hidden @container">
+      <div className="flex-1 @container border-1 border-black flex min-h-0">
         <SidebarFileMenuFiles
           fileTreeDir={fileTreeDir}
           renameDirOrFile={renameDirOrFile}
@@ -111,16 +105,13 @@ function SidebarFileMenuInternal({
           expandForNode={expandForNode}
           expanded={expanded}
         >
-          <SidebarGroupContent className="flex h-full overflow-scroll ">
+          <SidebarGroupContent className="flex h-full items-center">
             <SidebarFileMenuFilesActions
-              isSettingsView={isSettingsView}
-              currentWorkspace={currentWorkspace}
               removeFiles={removeFiles}
               addFile={addFile}
               addDir={addDir}
               setExpandAll={setExpandAll}
             />
-            {/* <div className="@container foobar bg-blue-500 w-48"></div> */}
           </SidebarGroupContent>
         </SidebarFileMenuFiles>
       </div>
@@ -147,15 +138,19 @@ export const SidebarFileMenuFiles = ({
   const [groupExpanded, groupSetExpand] = useSingleExpander("files");
 
   return (
-    <SidebarGroup className="pl-0 pb-12 py-0 w-full h-full flex-1">
+    <SidebarGroup className="pl-0 pb-12 py-0 pr-0 w-full flex-1 h-full">
       <Collapsible className="group/collapsible h-full flex-1" open={groupExpanded} onOpenChange={groupSetExpand}>
-        <SidebarGroupLabel className="relative w-full pr-0 overflow-x-hidden">
+        <SidebarGroupLabel className="relative w-full pr-0 overflow-x-hidden ">
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton className="pl-0 text-xs w-full py-0">
+            <SidebarMenuButton className="peer">
               <SidebarGroupLabel className="pl-0">
                 <div className="w-full flex items-center">
-                  <ChevronDown size={14} className={"group-data-[state=closed]/collapsible:hidden -ml-0.5"} />
-                  <ChevronRight size={14} className={"group-data-[state=open]/collapsible:hidden -ml-0.5"} />
+                  <ChevronRight
+                    size={14}
+                    className={
+                      "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                    }
+                  />
                 </div>
                 <div className="w-full">
                   <div className="flex justify-center items-center">
@@ -166,12 +161,13 @@ export const SidebarFileMenuFiles = ({
               </SidebarGroupLabel>
             </SidebarMenuButton>
           </CollapsibleTrigger>
-          {/* {groupExpanded && <div className="absolute right-0 @[200px]:bg-blue-600">{children}</div>} */}
-          {groupExpanded && <div>{children}</div>}
+          {groupExpanded && (
+            <div className="peer-hover:bg-sidebar-accent  h-full flex items-center rounded-none">{children}</div>
+          )}
         </SidebarGroupLabel>
 
         <CollapsibleContent className="h-full">
-          <SidebarContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-4 pt-3 max-w-full overflow-x-hidden border-l-2 pr-5">
+          <SidebarContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5">
             {!Object.keys(fileTreeDir.children).length ? (
               <div className="w-full">
                 <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
@@ -203,49 +199,17 @@ export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>
 };
 
 const SidebarFileMenuFilesActions = ({
-  isSettingsView,
-  currentWorkspace,
   removeFiles,
   addFile,
   addDir,
   setExpandAll,
 }: {
-  isSettingsView: boolean;
-  currentWorkspace: Workspace;
   removeFiles: () => void;
   addFile: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
 }) => (
   <div className="whitespace-nowrap">
-    {isSettingsView ? (
-      <Tooltip delayDuration={3000}>
-        <TooltipTrigger asChild>
-          <Button className="p-1 m-0 h-fit text-xs" variant="ghost" asChild>
-            <Link href={currentWorkspace.href}>
-              <Undo />
-            </Link>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="left" align="center">
-          Return to Workspace
-        </TooltipContent>
-      </Tooltip>
-    ) : (
-      <Tooltip delayDuration={3000}>
-        <TooltipTrigger asChild>
-          <Button className="p-1 m-0 h-fit" variant="ghost" asChild aria-label="Workspace Settings">
-            <Link href={currentWorkspace.subRoute("settings")}>
-              <Settings />
-            </Link>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="left" align="center">
-          Workspace Settings
-        </TooltipContent>
-      </Tooltip>
-    )}
-
     <Tooltip delayDuration={3000}>
       <TooltipTrigger asChild>
         <Button onClick={removeFiles} className="p-1 m-0 h-fit" variant="ghost" aria-label="Delete Files">
@@ -331,8 +295,12 @@ function SidebarFileMenuSync() {
             <SidebarMenuButton className="pl-0">
               <SidebarGroupLabel className="pl-2">
                 <div className="w-full flex items-center">
-                  <ChevronDown size={14} className={"group-data-[state=closed]/collapsible:hidden -ml-0.5"} />
-                  <ChevronRight size={14} className={"group-data-[state=open]/collapsible:hidden -ml-0.5"} />
+                  <ChevronRight
+                    size={14}
+                    className={
+                      "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                    }
+                  />
                 </div>
                 <div className="w-full">
                   <div className="flex justify-center items-center">
@@ -343,11 +311,13 @@ function SidebarFileMenuSync() {
             </SidebarMenuButton>
           </CollapsibleTrigger>
 
-          <ConnectionsModal>
-            <SidebarGroupAction className="top-1.5">
-              <Plus /> <span className="sr-only">Add Connection</span>
-            </SidebarGroupAction>
-          </ConnectionsModal>
+          <div className="group-data-[state=closed]/collapsible:hidden">
+            <ConnectionsModal>
+              <SidebarGroupAction className="top-1.5">
+                <Plus /> <span className="sr-only">Add Connection</span>
+              </SidebarGroupAction>
+            </ConnectionsModal>
+          </div>
 
           <CollapsibleContent>
             <SidebarMenu>
@@ -370,8 +340,8 @@ function SidebarFileMenuSync() {
                 </Button>
               </div>
             </SidebarMenu>
-            <SidebarGroup>
-              <SidebarGroupLabel className="pl-1">
+            <SidebarGroup className="pl-2">
+              <SidebarGroupLabel>
                 <div className="w-full text-xs text-sidebar-foreground/70">Connections</div>
               </SidebarGroupLabel>
               <SidebarMenu>
@@ -406,6 +376,7 @@ function SidebarFileMenuSync() {
 }
 const DownloadToast = {
   title: "Downloading Workspace...",
+  duration: 3000,
   description: (
     <div className="flex items-center">
       <div className="animate-spin w-4 h-4 mr-4">
@@ -414,29 +385,32 @@ const DownloadToast = {
       {"Please wait while we prepare your workspace for download."}
     </div>
   ),
-  duration: Infinity,
 };
 function SidebarFileMenuExport() {
   const [expanded, setExpand] = useSingleExpander("export");
-  const { toast, dismiss } = useToast();
-  const promref = useRef(Promise.resolve());
-  const download = useDownloadWorkspace({
-    onStart: () => {
-      promref.current = new Promise((rs) => setTimeout(rs, 5000));
-      toast(DownloadToast);
-    },
-    onFinish: () => promref.current.then(() => dismiss()),
-  });
+  const { toast } = useToast();
+  // const promref = useRef(Promise.resolve());
+  // const download = useDownloadWorkspace({
+  //   onStart: () => {
+  //     promref.current = new Promise((rs) => setTimeout(rs, 5000));
+  //     toast(DownloadToast);
+  //   },
+  //   onFinish: () => promref.current.then(() => dismiss()),
+  // });
   return (
     <>
-      <SidebarGroup className="pl-0 py-0">
+      <SidebarGroup>
         <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton className="pl-0">
-              <SidebarGroupLabel className="pl-2">
+            <SidebarMenuButton>
+              <SidebarGroupLabel>
                 <div className="w-full flex items-center">
-                  <ChevronDown size={14} className={"group-data-[state=closed]/collapsible:hidden -ml-0.5"} />
-                  <ChevronRight size={14} className={"group-data-[state=open]/collapsible:hidden -ml-0.5"} />
+                  <ChevronRight
+                    size={14}
+                    className={
+                      "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                    }
+                  />
                 </div>
                 <div className="w-full">
                   <div className="flex justify-center items-center">
@@ -450,9 +424,15 @@ function SidebarFileMenuExport() {
 
           <CollapsibleContent>
             <div className="px-4 pt-2 py-4">
-              <Button className="w-full text-xs" size="sm" variant="outline" onClick={download}>
-                <Download className="mr-1" />
-                Download Zip
+              <Button className="w-full text-xs" size="sm" variant="outline" asChild>
+                <a
+                  href="/download"
+                  download
+                  onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
+                >
+                  <Download className="mr-1" />
+                  Download Zip
+                </a>
               </Button>
             </div>
           </CollapsibleContent>
