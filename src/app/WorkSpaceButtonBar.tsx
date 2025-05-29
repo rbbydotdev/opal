@@ -74,14 +74,16 @@ export function WorkSpaceButtonBar() {
     <>
       <div className="flex justify-center flex-col items-center w-full">
         <Link href={"/"} className={clsx({ "animate-spin": isLoading })}>
-          <div
-            className="h-7 w-7 rounded-sm mt-4 mb-4"
-            style={{
-              backgroundImage: "url(/opal.svg)",
-              backgroundRepeat: "repeat",
-              backgroundSize: "auto",
-            }}
-          ></div>
+          <div className="rotate-12">
+            <div
+              className="h-7 w-7 rounded-sm mt-4 mb-4"
+              style={{
+                backgroundImage: "url(/opal.svg)",
+                backgroundRepeat: "repeat",
+                backgroundSize: "auto",
+              }}
+            ></div>
+          </div>
         </Link>
       </div>
 
