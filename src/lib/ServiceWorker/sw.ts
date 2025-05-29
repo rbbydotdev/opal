@@ -1,7 +1,7 @@
 import { Thumb, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
-import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, BasePath } from "@/lib/paths";
@@ -69,15 +69,15 @@ self.addEventListener("fetch", async (event) => {
   try {
     const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
     if (workspaceId && url.origin === self.location.origin) {
+      if (url.pathname === "/download") {
+        return event.respondWith(handleDownloadRequest(workspaceId));
+      }
       if (
         (event.request.destination === "image" || isImageType(url.pathname)) &&
         url.pathname !== "/favicon.ico" &&
         !WHITELIST.includes(url.pathname)
       ) {
         return event.respondWith(handleImageRequest(event, url, workspaceId));
-      }
-      if (url.pathname === "/download") {
-        return event.respondWith(handleDownloadRequest(workspaceId));
       }
     }
   } catch (e) {
@@ -204,13 +204,15 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
         }
       })
     );
+    console.log(`All files added to zip for workspace: ${workspace.name}`);
 
     zip.end();
+    console.log(`ZIP stream ended for workspace: ${workspace.name}`);
 
     return new Response(readable, {
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="workspace.zip"`,
+        "Content-Disposition": `attachment; filename="${workspace.name}.zip"`,
       },
     });
   } catch (e) {

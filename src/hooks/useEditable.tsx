@@ -2,11 +2,11 @@
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
+import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { RelPath } from "@/lib/paths";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useWorkspaceFileMgmt } from "./useWorkspaceFileMgmt";
 
 export function useEditable<T extends TreeFile | TreeNode>({
   treeNode,
@@ -133,10 +133,11 @@ export function useEditable<T extends TreeFile | TreeNode>({
       selectedRange.length,
       setSelectedRange,
       fileName,
+      editType,
       fullPath,
       commitChange,
       treeNode,
-      editType,
+      resetEditing,
       workspaceRoute.path,
       router,
       currentWorkspace,
@@ -145,8 +146,9 @@ export function useEditable<T extends TreeFile | TreeNode>({
   );
 
   const handleFocus = useCallback(() => {
-    if (selectedRange.includes(treeNode.str) && linkRef.current) {
-      linkRef.current.blur();
+    if (selectedRange.includes(treeNode.str)) {
+      //I HAVE NO IDEA WHAT THIS IS FOR!?
+      // linkRef.current?.blur();
       return;
     }
 

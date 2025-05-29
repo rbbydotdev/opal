@@ -26,7 +26,7 @@ export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
   return (
     <div className="p-4 m-auto flex justify-center items-center h-full w-full flex-col">
-      <img className="max-h-[500px] aspect-auto" alt={alt} src={BasePath.encode(origSrc)} />
+      <img className="max-h-[500px] aspect-auto bg-white" alt={alt} src={BasePath.encode(origSrc)} />
     </div>
   );
 }
@@ -67,7 +67,7 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
       currentWorkspace={currentWorkspace}
       onChange={updateContents}
       markdown={String(contents)}
-      className={twMerge("bg-background flex flex-col", className)}
+      className={twMerge("h-full bg-background flex flex-col", className)}
       contentEditableClassName="max-w-full overflow-auto content-editable prose"
     />
   );

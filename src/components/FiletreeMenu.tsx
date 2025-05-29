@@ -191,26 +191,27 @@ function FileTreeMenuInternal({
       onDragOver={handleDragOver}
       onDrop={(e) => handleDrop(e, fileTreeDir)}
       onDragEnter={(e) => handleDragEnter(e, "/")}
-      className={clsx("p-0", depth === 0 ? "pb-16 -ml-[2px]" : "")}
+      className={clsx({ "pb-16 ml-1": depth === 0 })}
     >
+      {depth === 0 && (
+        <div className="w-full text-sm" onDrop={(e) => handleDrop(e, fileTreeDir)}>
+          <div className="ml-1 p-1 text-xs"></div>
+        </div>
+      )}
       {Object.values(fileTreeDir.children).map((file) => (
-        <Collapsible
-          key={`${file.path.str}:${!!expanded[file.path.str]}`}
-          open={expanded[file.path.str]}
-          onOpenChange={(o) => expand(file.path.str, o)}
+        <SidebarMenuItem
+          key={file.path.str}
+          className={clsx("mt-1", { ["bg-sidebar-accent"]: file.path.equals(workspaceRoute.path) })}
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, file)}
+          onDragEnter={(e) => {
+            handleDragEnter(e, file.path.str);
+          }}
         >
-          <SidebarMenuItem
-            className={file.path.equals(workspaceRoute.path) ? "bg-sidebar-accent" : ""}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, file)}
-            onDragEnter={(e) => {
-              handleDragEnter(e, file.path.str);
-            }}
-            //
-          >
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton asChild>
-                {file.isTreeDir() ? (
+          {file.isTreeDir() ? (
+            <Collapsible open={expanded[file.path.str]} onOpenChange={(o) => expand(file.path.str, o)}>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton asChild>
                   <EditableDir
                     workspaceRoute={workspaceRoute}
                     currentWorkspace={currentWorkspace}
@@ -219,23 +220,10 @@ function FileTreeMenuInternal({
                     treeDir={file}
                     expand={expandForNode}
                     fullPath={file.path}
-                    expanded={expanded[file.path.str]}
                   />
-                ) : (
-                  <EditableFile
-                    workspaceRoute={workspaceRoute}
-                    currentWorkspace={currentWorkspace}
-                    depth={depth}
-                    fullPath={file.path}
-                    treeFile={file as TreeFile}
-                    expand={expandForNode}
-                    onDragStart={(e) => handleDragStart(e, file)}
-                  />
-                )}
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              {file.type === "dir" ? (
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
                 <FileTreeMenuInternal
                   expand={expand}
                   expandForNode={expandForNode}
@@ -246,10 +234,22 @@ function FileTreeMenuInternal({
                   depth={depth + 1}
                   expanded={expanded}
                 />
-              ) : null}
-            </CollapsibleContent>
-          </SidebarMenuItem>
-        </Collapsible>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <SidebarMenuButton asChild>
+              <EditableFile
+                workspaceRoute={workspaceRoute}
+                currentWorkspace={currentWorkspace}
+                depth={depth}
+                fullPath={file.path}
+                treeFile={file as TreeFile}
+                expand={expandForNode}
+                onDragStart={(e) => handleDragStart(e, file)}
+              />
+            </SidebarMenuButton>
+          )}
+        </SidebarMenuItem>
       ))}
     </SidebarMenu>
   );

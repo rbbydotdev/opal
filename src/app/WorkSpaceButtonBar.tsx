@@ -61,19 +61,21 @@ export function WorkSpaceButtonBar() {
 
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
 
+  const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
+
   //               {/* <div className="flex-shrink-1 max-w-full overflow-hidden whitespace-nowrap text-ellipsis uppercase p-1 flex items-center justify-center text-center font-mono"> */}
   const filteredWorkspaces = useMemo(
-    () => workspaces.filter((workspace) => workspace.guid !== currentWorkspace?.guid),
-    [workspaces, currentWorkspace]
+    () => workspaces.filter((workspace) => workspace.guid !== coalescedWorkspace?.guid),
+    [workspaces, coalescedWorkspace]
   );
   const { isLoading } = useIsNavigatingWorkspace();
-  const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== currentWorkspace.guid).length;
+  const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   return (
     <>
       <div className="flex justify-center flex-col items-center w-full">
         <Link href={"/"} className={clsx({ "animate-spin": isLoading })}>
           <div
-            className="h-7 w-7 rounded-sm mt-7 mb-7"
+            className="h-7 w-7 rounded-sm mt-4 mb-4"
             style={{
               backgroundImage: "url(/opal.svg)",
               backgroundRepeat: "repeat",
@@ -111,24 +113,21 @@ export function WorkSpaceButtonBar() {
         className="text-3xs"
       />
 
-      {
-        !currentWorkspace.isNull ? (
-          <BigButton
-            icon={<Identicon input={currentWorkspace.guid} size={4} scale={7} />}
-            title={currentWorkspace.name}
-            href={currentWorkspace.href}
-            className="text-white big-button-active"
-          />
-        ) : null
-        // <div className="bg-secondary-foreground w-[80px] h-[64px]"></div>
-      }
+      {coalescedWorkspace && (
+        <BigButton
+          icon={<Identicon input={coalescedWorkspace.guid} size={4} scale={7} />}
+          title={coalescedWorkspace.name}
+          href={coalescedWorkspace.href}
+          className="text-white big-button-active"
+        />
+      )}
 
-      <Collapsible
-        className="w-full flex flex-col justify-start overflow-scroll pb-12 scrollbar-thin items-center"
-        open={expand}
-        onOpenChange={setExpand}
-      >
-        {otherWorkspacesCount > 0 && (
+      {otherWorkspacesCount > 0 && (
+        <Collapsible
+          className="w-full flex flex-col justify-start overflow-scroll pb-12 scrollbar-thin items-center"
+          open={expand}
+          onOpenChange={setExpand}
+        >
           <CollapsibleTrigger
             className="h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
   hover:text-slate-200 bg-secondary-foreground flex items-center relative"
@@ -142,19 +141,19 @@ export function WorkSpaceButtonBar() {
             {/* <div className="w-full flex justify-center items-center text-xs relative">
             </div> */}
           </CollapsibleTrigger>
-        )}
 
-        <CollapsibleContent className="w-full bg-slate-800 ">
-          {filteredWorkspaces.map((workspace) => (
-            <BigButton
-              icon={<Identicon input={workspace.guid} size={4} scale={7} />}
-              href={workspace.href}
-              title={workspace.name}
-              key={workspace.guid}
-            />
-          ))}
-        </CollapsibleContent>
-      </Collapsible>
+          <CollapsibleContent className="w-full bg-slate-800 ">
+            {filteredWorkspaces.map((workspace) => (
+              <BigButton
+                icon={<Identicon input={workspace.guid} size={4} scale={7} />}
+                href={workspace.href}
+                title={workspace.name}
+                key={workspace.guid}
+              />
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
     </>
   );
 }
