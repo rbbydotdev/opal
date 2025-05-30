@@ -69,7 +69,7 @@ self.addEventListener("fetch", async (event) => {
   try {
     const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
     if (workspaceId && url.origin === self.location.origin) {
-      if (url.pathname === "/download") {
+      if (url.pathname === "/download.zip") {
         return event.respondWith(handleDownloadRequest(workspaceId));
       }
       if (
@@ -191,8 +191,7 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
             console.log(`Adding file to zip: ${node.path.str}`);
             const fileStream = new fflate.ZipDeflate(node.path.str, { level: 9 });
             zip.add(fileStream);
-            const data = await workspace.disk.readFile(node.path);
-            fileStream.push(coerceUint8Array(data), true); // true = last chunk
+            void workspace.disk.readFile(node.path).then((data) => fileStream.push(coerceUint8Array(data), true)); // true = last chunk
           } catch (e) {
             console.error(`Failed to add file to zip: ${node.path.str}`, e);
           }
@@ -212,7 +211,8 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
     return new Response(readable, {
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${workspace.name}.zip"`,
+        "Content-Disposition": `attachment; filename="download.zip"`,
+        // "Content-Disposition": `attachment; filename="${workspace.name}.zip"`,
       },
     });
   } catch (e) {
