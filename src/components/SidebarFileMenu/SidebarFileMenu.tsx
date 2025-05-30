@@ -402,7 +402,7 @@ function SidebarFileMenuExport(props) {
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
               <a
-                href="/download"
+                href="/download.zip"
                 download
                 onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
               >
