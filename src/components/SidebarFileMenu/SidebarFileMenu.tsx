@@ -3,6 +3,7 @@ import { ConnectionsModal } from "@/components/connections-modal";
 import { FileTreeMenu, useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DndList } from "@/components/ui/DnDList";
 
 import {
   SidebarContent,
@@ -20,6 +21,7 @@ import { useToast } from "@/hooks/useToast";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths";
+import clsx from "clsx";
 import {
   Check,
   ChevronRight,
@@ -38,7 +40,6 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
 import React, { useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -74,9 +75,9 @@ function SidebarFileMenuInternal({
     addDirFileAndExpand("dir");
   }, [addDirFileAndExpand]);
 
-  const route = usePathname();
+  // const route = usePathname();
 
-  const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
+  // const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
   const { handleDrop } = useFileTreeDragAndDrop({
     currentWorkspace,
   });
@@ -91,14 +92,14 @@ function SidebarFileMenuInternal({
         e.preventDefault();
         e.stopPropagation();
       }}
-      className={twMerge("h-full flex-1 p-0 bg-sidebar sidebar-group", props.className)}
+      className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
-      <SidebarFileMenuSync />
-      {/* <Separator className="border-sidebar-accent border" /> */}
-      <SidebarFileMenuExport />
-      {/* <Separator className="border-sidebar-accent border" /> */}
-      <div className="flex-1 @container border-1 border-black flex min-h-0">
+      <DndList storageKey={"sidebarMenu"}>
+        <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex" />
+        <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
         <SidebarFileMenuFiles
+          dnd-id="files"
+          className="min-h-0"
           fileTreeDir={fileTreeDir}
           renameDirOrFile={renameDirOrFile}
           expandSingle={expandSingle}
@@ -114,7 +115,7 @@ function SidebarFileMenuInternal({
             />
           </SidebarGroupContent>
         </SidebarFileMenuFiles>
-      </div>
+      </DndList>
       {/* <Separator className="border-sidebar-accent border" /> */}
     </SidebarGroup>
   );
@@ -127,8 +128,11 @@ export const SidebarFileMenuFiles = ({
   expandForNode,
   expanded,
   children,
+  className,
+  ...rest
 }: {
   fileTreeDir: TreeDirRoot;
+  className?: string;
   expandSingle: (path: string, expanded: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [key: string]: boolean };
@@ -138,8 +142,12 @@ export const SidebarFileMenuFiles = ({
   const [groupExpanded, groupSetExpand] = useSingleExpander("files");
 
   return (
-    <SidebarGroup className="pl-0 pb-12 py-0 pr-0 w-full flex-1 h-full">
-      <Collapsible className="group/collapsible h-full flex-1" open={groupExpanded} onOpenChange={groupSetExpand}>
+    <SidebarGroup className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
+      <Collapsible
+        className="group/collapsible _h-full _flex-1 flex flex-col min-h-0"
+        open={groupExpanded}
+        onOpenChange={groupSetExpand}
+      >
         <SidebarGroupLabel className="relative w-full pr-0 overflow-x-hidden ">
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="peer">
@@ -166,7 +174,7 @@ export const SidebarFileMenuFiles = ({
           )}
         </SidebarGroupLabel>
 
-        <CollapsibleContent className="h-full">
+        <CollapsibleContent className="min-h-0 flex-shrink">
           <SidebarContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5">
             {!Object.keys(fileTreeDir.children).length ? (
               <div className="w-full">
@@ -264,93 +272,91 @@ const MOCK_CONNECTIONS = [
   },
 ];
 
-function SidebarFileMenuSync() {
+function SidebarFileMenuSync(props) {
   const [expanded, setExpand] = useSingleExpander("sync");
   return (
-    <>
-      <SidebarGroup className="pl-0 py-0">
-        <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton className="pl-0">
-              <SidebarGroupLabel className="pl-2">
-                <div className="w-full flex items-center">
-                  <ChevronRight
-                    size={14}
-                    className={
-                      "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                    }
-                  />
+    <SidebarGroup className="pl-0 py-0" {...props}>
+      <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton className="pl-0">
+            <SidebarGroupLabel className="pl-2">
+              <div className="w-full flex items-center">
+                <ChevronRight
+                  size={14}
+                  className={
+                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                  }
+                />
+              </div>
+              <div className="w-full">
+                <div className="flex justify-center items-center">
+                  <RefreshCw size={12} className="mr-2" /> Sync
                 </div>
-                <div className="w-full">
-                  <div className="flex justify-center items-center">
-                    <RefreshCw size={12} className="mr-2" /> Sync
-                  </div>
-                </div>
-              </SidebarGroupLabel>
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
+              </div>
+            </SidebarGroupLabel>
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
 
-          <div className="group-data-[state=closed]/collapsible:hidden">
-            <ConnectionsModal>
-              <SidebarGroupAction className="top-1.5">
-                <Plus /> <span className="sr-only">Add Connection</span>
-              </SidebarGroupAction>
-            </ConnectionsModal>
-          </div>
+        <div className="group-data-[state=closed]/collapsible:hidden">
+          <ConnectionsModal>
+            <SidebarGroupAction className="top-1.5">
+              <Plus /> <span className="sr-only">Add Connection</span>
+            </SidebarGroupAction>
+          </ConnectionsModal>
+        </div>
 
-          <CollapsibleContent>
+        <CollapsibleContent>
+          <SidebarMenu>
+            <div className="px-4 pt-2">
+              <Button className="w-full " size="sm" variant="outline">
+                <RefreshCw className="mr-1" />
+                Sync Now
+              </Button>
+            </div>
+            <div className="px-4 pt-2">
+              <Button className="w-full " size="sm" variant="outline">
+                <Download className="mr-1" />
+                Pull
+              </Button>
+            </div>
+            <div className="px-4 pt-2">
+              <Button className="w-full " size="sm" variant="outline">
+                <Upload className="mr-1" />
+                Push
+              </Button>
+            </div>
+          </SidebarMenu>
+          <SidebarGroup className="pl-2">
+            <SidebarGroupLabel>
+              <div className="w-full text-xs text-sidebar-foreground/70">Connections</div>
+            </SidebarGroupLabel>
             <SidebarMenu>
-              <div className="px-4 pt-2">
-                <Button className="w-full " size="sm" variant="outline">
-                  <RefreshCw className="mr-1" />
-                  Sync Now
-                </Button>
-              </div>
-              <div className="px-4 pt-2">
-                <Button className="w-full " size="sm" variant="outline">
-                  <Download className="mr-1" />
-                  Pull
-                </Button>
-              </div>
-              <div className="px-4 pt-2">
-                <Button className="w-full " size="sm" variant="outline">
-                  <Upload className="mr-1" />
-                  Push
-                </Button>
-              </div>
+              {MOCK_CONNECTIONS.map((connection, i) => (
+                <SidebarMenuItem key={connection.name}>
+                  <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
+                    <div className="w-full whitespace-nowrap flex items-center space-x-1">
+                      {i === 0 ? (
+                        <div className="w-4 h-4 stroke-success items-center justify-center flex">
+                          <Check size={10} strokeWidth={4} stroke="current" />
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 items-center justify-center flex">
+                          <DotIcon size={14} strokeWidth={4} fill="black" />
+                        </div>
+                      )}
+                      <span className="rounded-full p-1 border">
+                        {VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}
+                      </span>
+                      <span className="overflow-hidden text-ellipsis">{connection.name}</span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
-            <SidebarGroup className="pl-2">
-              <SidebarGroupLabel>
-                <div className="w-full text-xs text-sidebar-foreground/70">Connections</div>
-              </SidebarGroupLabel>
-              <SidebarMenu>
-                {MOCK_CONNECTIONS.map((connection, i) => (
-                  <SidebarMenuItem key={connection.name}>
-                    <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
-                      <div className="w-full whitespace-nowrap flex items-center space-x-1">
-                        {i === 0 ? (
-                          <div className="w-4 h-4 stroke-success items-center justify-center flex">
-                            <Check size={10} strokeWidth={4} stroke="current" />
-                          </div>
-                        ) : (
-                          <div className="w-4 h-4 items-center justify-center flex">
-                            <DotIcon size={14} strokeWidth={4} fill="black" />
-                          </div>
-                        )}
-                        <span className="rounded-full p-1 border">
-                          {VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}
-                        </span>
-                        <span className="overflow-hidden text-ellipsis">{connection.name}</span>
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
-          </CollapsibleContent>
-        </Collapsible>
-      </SidebarGroup>
-    </>
+          </SidebarGroup>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarGroup>
   );
 }
 const DownloadToast = {
@@ -365,68 +371,58 @@ const DownloadToast = {
     </div>
   ),
 };
-function SidebarFileMenuExport() {
+function SidebarFileMenuExport(props) {
   const [expanded, setExpand] = useSingleExpander("export");
   const { toast } = useToast();
-  // const promref = useRef(Promise.resolve());
-  // const download = useDownloadWorkspace({
-  //   onStart: () => {
-  //     promref.current = new Promise((rs) => setTimeout(rs, 5000));
-  //     toast(DownloadToast);
-  //   },
-  //   onFinish: () => promref.current.then(() => dismiss()),
-  // });
   return (
-    <>
-      <SidebarGroup>
-        <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton>
-              <SidebarGroupLabel>
-                <div className="w-full flex items-center">
-                  <ChevronRight
-                    size={14}
-                    className={
-                      "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                    }
-                  />
+    <SidebarGroup {...props}>
+      <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton>
+            <SidebarGroupLabel>
+              <div className="w-full flex items-center">
+                <ChevronRight
+                  size={14}
+                  className={
+                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                  }
+                />
+              </div>
+              <div className="w-full">
+                <div className="flex justify-center items-center">
+                  <Download size={12} className="mr-2" />
+                  Export
                 </div>
-                <div className="w-full">
-                  <div className="flex justify-center items-center">
-                    <Download size={12} className="mr-2" />
-                    Export
-                  </div>
-                </div>
-              </SidebarGroupLabel>
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
+              </div>
+            </SidebarGroupLabel>
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
 
-          <CollapsibleContent>
-            <div className="px-4 pt-2 py-4 flex flex-col gap-2">
-              <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-                <a
-                  href="/download"
-                  download
-                  onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
-                >
-                  <Download className="mr-1" />
-                  Download Zip
-                </a>
-              </Button>
-              <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-                <a
-                  href="/download"
-                  download
-                  onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
-                >
-                  <Lock className="inline" />
-                  Download Encrypted Zip
-                </a>
-              </Button>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </SidebarGroup>
-    </>
+        <CollapsibleContent>
+          <div className="px-4 pt-2 py-4 flex flex-col gap-2">
+            <Button className="w-full text-xs" size="sm" variant="outline" asChild>
+              <a
+                href="/download"
+                download
+                onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
+              >
+                <Download className="mr-1" />
+                Download Zip
+              </a>
+            </Button>
+            <Button className="w-full text-xs" size="sm" variant="outline" asChild>
+              <a
+                href="/download"
+                download
+                onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
+              >
+                <Lock className="inline" />
+                Download Encrypted Zip
+              </a>
+            </Button>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarGroup>
   );
 }

@@ -153,7 +153,6 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
         return Promise.resolve(src);
       },
       imageUploadHandler: async (file: File) => {
-        console.log(file);
         try {
           return await currentWorkspace
             .dropImageFile(file, path?.dirname() ?? AbsPath.New("/"))
