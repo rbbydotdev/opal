@@ -4,6 +4,7 @@ import { SidebarFileMenu } from "@/components/SidebarFileMenu/SidebarFileMenu";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -18,7 +19,7 @@ export function EditorSidebar({
 }: { className?: string } & React.ComponentProps<typeof Sidebar>) {
   const { currentWorkspace } = useWorkspaceContext();
   return (
-    <Sidebar collapsible="none" className={twMerge("flex h-full w-full", className)} {...restProps}>
+    <Sidebar collapsible="none" className={twMerge("flex min-h-full w-full", className)} {...restProps}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -41,6 +42,8 @@ export function EditorSidebar({
       <SidebarContent className="overflow-hidden h-full flex-shrink">
         <SidebarFileMenu />
       </SidebarContent>
+
+      <SidebarFooter>Foo</SidebarFooter>
     </Sidebar>
   );
 }

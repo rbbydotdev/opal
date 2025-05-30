@@ -211,7 +211,7 @@ function FileTreeMenuInternal({
       onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, fileTreeDir)}
       onDragEnter={(e) => handleDragEnter(e, "/")}
-      className={clsx({ "pb-16 ml-1": depth === 0 })}
+      className={clsx({ "": depth === 0 })}
     >
       {depth === 0 && (
         <div className="w-full text-sm" onDrop={(e) => handleDrop(e, fileTreeDir)}>
@@ -221,7 +221,7 @@ function FileTreeMenuInternal({
       {Object.values(fileTreeDir.children).map((file) => (
         <SidebarMenuItem
           key={file.path.str}
-          className={clsx("mt-1", {
+          className={clsx({
             ["bg-sidebar-accent"]:
               file.path.equals(workspaceRoute.path) || (file.type === "dir" && file.path.str === dragOver?.str),
           })}
