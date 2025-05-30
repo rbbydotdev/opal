@@ -44,6 +44,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
         e.preventDefault();
+        e.stopPropagation();
         setIsCollapsed((prev) => {
           const newCollapsed = !prev;
           localStorage.setItem(LOCAL_STORAGE_KEY_IS_COLLAPSED, newCollapsed.toString());
