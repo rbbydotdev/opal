@@ -1,10 +1,12 @@
 "use client";
 
 import { Editor } from "@/components/Editor/Editor";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context";
 import { BasePath } from "@/lib/paths";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -32,6 +34,9 @@ export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; ori
 }
 
 const FileError = ({ error }: { error: Error }) => {
+  const { currentWorkspace } = useWorkspaceContext();
+  const router = useRouter();
+
   return (
     <div className="w-full h-full flex items-center justify-center font-mono">
       <Card className="border-2 border-destructive border-dashed m-8 max-w-lg min-h-48  -rotate-3">
@@ -43,6 +48,14 @@ const FileError = ({ error }: { error: Error }) => {
             <p className="text-red-500">Error: {error.message}</p>
           </div>
         </CardContent>
+        <CardFooter className="flex justify-center">
+          <Button
+            variant="destructive"
+            onClick={() => currentWorkspace.tryFirstFileUrl().then((url) => router.push(url))}
+          >
+            Sorry!
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

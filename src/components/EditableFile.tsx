@@ -94,7 +94,7 @@ export const EditableFile = ({
                 <img
                   src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
                   alt=""
-                  className="w-3 h-3 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
+                  className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
                 />
               ) : (
                 <FileText className="w-3 h-3 flex-shrink-0 mr-2" />
@@ -111,7 +111,7 @@ export const EditableFile = ({
               <img
                 src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
                 alt=""
-                className="w-3 h-3 rounded-sm border border-black flex-shrink-0 bg-white mr-2"
+                className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
               />
             ) : (
               <FileText className="w-3 h-3 flex-shrink-0 mr-2" />

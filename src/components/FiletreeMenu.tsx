@@ -3,9 +3,11 @@ import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
+import { BadRequestError, isError } from "@/lib/errors";
 import { absPath, AbsPath, reduceLineage } from "@/lib/paths";
 import clsx from "clsx";
 import React from "react";
@@ -56,18 +58,19 @@ export function useFileTreeDragAndDrop({
   onMove?: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<unknown> | unknown;
   onDragEnter?: (path: string, data?: DragStartJType) => void;
 }) {
-  const { selectedRange, focused } = useFileTreeMenuContext();
+  const { selectedRange, focused, setDragOver } = useFileTreeMenuContext();
   //on drag start cancel focus on key up
 
-  const handleDragStart = (event: React.DragEvent, file: TreeNode) => {
+  const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
+    setDragOver(null);
     // Create a set of unique file paths from the selected range, the current file, and the focused file
-    const allFiles = Array.from(new Set([...selectedRange, file.path.str, focused?.str]))
+    const allFiles = Array.from(new Set([...selectedRange, targetNode.path.str, focused?.str]))
       .filter(Boolean)
       .map((entry) => absPath(entry));
 
     // Prepare the data for the internal file type
     const data = JSON.stringify({
-      dragStart: Array.from(new Set([...selectedRange, file.path.str, focused?.str]))
+      dragStart: Array.from(new Set([...selectedRange, targetNode.path.str, focused?.str]))
         .map((path) => (path ? currentWorkspace.disk.fileTree.nodeFromPath(path) : null))
         .filter(Boolean),
     } satisfies DragStartType);
@@ -92,29 +95,44 @@ export function useFileTreeDragAndDrop({
     });
   };
 
-  const handleDragOver = (event: React.DragEvent) => {
+  const handleDragOver = (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
+    event.stopPropagation();
     event.dataTransfer.dropEffect = "move";
+    setDragOver(targetNode.path);
+  };
+  const handleDragLeave = (event: React.DragEvent) => {
+    setDragOver(null);
+    event.preventDefault();
+    event.stopPropagation();
   };
 
-  const handleExternalDrop = async (event: React.DragEvent, targetPath: AbsPath) => {
+  const handleExternalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
+    const targetPath = targetNode.type === "dir" ? targetNode.path : targetNode.dirname;
     const { files } = event.dataTransfer;
     for (const file of files) {
       try {
         await currentWorkspace.dropImageFile(file, targetPath);
       } catch (e) {
+        if (isError(e, BadRequestError)) {
+          ErrorPopupControl.show({
+            title: "Not a valid image",
+            description: "Please upload a valid image file (png,gif,webp,jpg)",
+          });
+        }
         console.error("Error dropping file:", e);
       }
     }
   };
 
   const handleDrop = async (event: React.DragEvent, targetNode: TreeNode = currentWorkspace.disk.fileTree.root) => {
+    setDragOver(null);
     event.preventDefault();
     event.stopPropagation();
     const targetPath = targetNode.type === "dir" ? targetNode.path : targetNode.dirname;
     try {
       if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
-        await handleExternalDrop(event, targetPath);
+        await handleExternalDrop(event, targetNode);
       } else {
         const { dragStart } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as DragStartJType;
 
@@ -147,7 +165,7 @@ export function useFileTreeDragAndDrop({
       onDragEnter?.(path);
     }
   };
-  return { handleDragStart, handleDragOver, handleDrop, handleDragEnter };
+  return { handleDragStart, handleDragOver, handleDrop, handleDragEnter, handleDragLeave };
 }
 
 function FileTreeMenuInternal({
@@ -176,7 +194,8 @@ function FileTreeMenuInternal({
   //   return currentWorkspace.watchDisk(resetSelects, { initialTrigger: false });
   // }, [currentWorkspace, resetSelects]);
 
-  const { handleDragEnter, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragAndDrop({
+  const { dragOver } = useFileTreeMenuContext();
+  const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragAndDrop({
     currentWorkspace,
     onMove: renameDirOrFile,
     onDragEnter: (path: string, data?: DragStartJType) => {
@@ -188,7 +207,8 @@ function FileTreeMenuInternal({
 
   return (
     <SidebarMenu
-      onDragOver={handleDragOver}
+      onDragOver={(e) => handleDragOver(e, fileTreeDir)}
+      onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, fileTreeDir)}
       onDragEnter={(e) => handleDragEnter(e, "/")}
       className={clsx({ "pb-16 ml-1": depth === 0 })}
@@ -201,9 +221,13 @@ function FileTreeMenuInternal({
       {Object.values(fileTreeDir.children).map((file) => (
         <SidebarMenuItem
           key={file.path.str}
-          className={clsx("mt-1", { ["bg-sidebar-accent"]: file.path.equals(workspaceRoute.path) })}
-          onDragOver={handleDragOver}
+          className={clsx("mt-1", {
+            ["bg-sidebar-accent"]:
+              file.path.equals(workspaceRoute.path) || (file.type === "dir" && file.path.str === dragOver?.str),
+          })}
+          onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}
+          onDragLeave={handleDragLeave}
           onDragEnter={(e) => {
             handleDragEnter(e, file.path.str);
           }}

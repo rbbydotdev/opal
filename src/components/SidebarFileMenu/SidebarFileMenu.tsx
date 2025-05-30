@@ -14,7 +14,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
 import { useToast } from "@/hooks/useToast";
@@ -33,6 +32,7 @@ import {
   Github,
   ChromeIcon as Google,
   Loader,
+  Lock,
   Plus,
   RefreshCw,
   Trash2,
@@ -210,52 +210,31 @@ const SidebarFileMenuFilesActions = ({
   setExpandAll: (expand: boolean) => void;
 }) => (
   <div className="whitespace-nowrap">
-    <Tooltip delayDuration={3000}>
-      <TooltipTrigger asChild>
-        <Button onClick={removeFiles} className="p-1 m-0 h-fit" variant="ghost" aria-label="Delete Files">
-          <Trash2 />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="left" align="center">
-        Delete File(s)
-      </TooltipContent>
-    </Tooltip>
-    <Tooltip delayDuration={3000}>
-      <TooltipTrigger asChild>
-        <Button onClick={addFile} className="p-1 m-0 h-fit" variant="ghost" aria-label="Add File">
-          <FilePlus />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="left" align="center">
-        New File
-      </TooltipContent>
-    </Tooltip>
-    <Tooltip delayDuration={3000}>
-      <TooltipTrigger asChild>
-        <Button onClick={addDir} className="p-1 m-0 h-fit" variant="ghost" aria-label="Add Folder">
-          <FolderPlus />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="left" align="center">
-        New Folder
-      </TooltipContent>
-    </Tooltip>
-    <Tooltip delayDuration={3000}>
-      <TooltipTrigger asChild>
-        <Button
-          aria-label="Expand All"
-          onDoubleClick={() => setExpandAll(true)}
-          onClick={() => setExpandAll(false)}
-          className="p-1 m-0 h-fit"
-          variant="ghost"
-        >
-          <CopyMinus />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="left" align="center">
-        Collapse All
-      </TooltipContent>
-    </Tooltip>
+    <Button
+      onClick={removeFiles}
+      className="p-1 m-0 h-fit"
+      variant="ghost"
+      aria-label="Delete Files"
+      title="Delete Files"
+    >
+      <Trash2 />
+    </Button>
+    <Button onClick={addFile} className="p-1 m-0 h-fit" variant="ghost" aria-label="Add File" title="New File">
+      <FilePlus />
+    </Button>
+    <Button onClick={addDir} className="p-1 m-0 h-fit" variant="ghost" aria-label="Add Folder" title="New Folder">
+      <FolderPlus />
+    </Button>
+    <Button
+      aria-label="Expand All"
+      onDoubleClick={() => setExpandAll(true)}
+      onClick={() => setExpandAll(false)}
+      className="p-1 m-0 h-fit"
+      variant="ghost"
+      title="Collapse All"
+    >
+      <CopyMinus />
+    </Button>
   </div>
 );
 const VENDOR_ICONS = {
@@ -423,7 +402,7 @@ function SidebarFileMenuExport() {
           </CollapsibleTrigger>
 
           <CollapsibleContent>
-            <div className="px-4 pt-2 py-4">
+            <div className="px-4 pt-2 py-4 flex flex-col gap-2">
               <Button className="w-full text-xs" size="sm" variant="outline" asChild>
                 <a
                   href="/download"
@@ -432,6 +411,16 @@ function SidebarFileMenuExport() {
                 >
                   <Download className="mr-1" />
                   Download Zip
+                </a>
+              </Button>
+              <Button className="w-full text-xs" size="sm" variant="outline" asChild>
+                <a
+                  href="/download"
+                  download
+                  onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
+                >
+                  <Lock className="inline" />
+                  Download Encrypted Zip
                 </a>
               </Button>
             </div>
