@@ -10,6 +10,7 @@ import { ImperativePanelHandle } from "react-resizable-panels";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const ref = useRef<ImperativePanelHandle>(null);
   const panel = ref.current;
+  // const { currentWorkspace } = useWorkspaceContext();
   const toggleCollapsePanel = useCallback(() => {
     if (panel?.isExpanded()) {
       panel.collapse();
@@ -17,6 +18,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       panel.expand();
     }
   }, [panel]);
+  // useEffect(() => {
+  //   if (!currentWorkspace.isNull) {
+  //     <Identicon input={currentWorkspace.guid} />;
+  //   }
+  // }, [currentWorkspace]);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {

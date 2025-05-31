@@ -3,7 +3,6 @@ import { ConnectionsModal } from "@/components/connections-modal";
 import { FileTreeMenu, useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { DndList } from "@/components/ui/DnDList";
 
 import {
   SidebarContent,
@@ -15,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
 import { useToast } from "@/hooks/useToast";
@@ -94,7 +94,7 @@ function SidebarFileMenuInternal({
       }}
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
-      <DndList storageKey={"sidebarMenu"}>
+      <SidebarDndList storageKey={"sidebarMenu"}>
         <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex flex-col min-h-8" />
         <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
         <SidebarFileMenuFiles
@@ -115,7 +115,7 @@ function SidebarFileMenuInternal({
             />
           </SidebarGroupContent>
         </SidebarFileMenuFiles>
-      </DndList>
+      </SidebarDndList>
       {/* <Separator className="border-sidebar-accent border" /> */}
     </SidebarGroup>
   );
@@ -272,7 +272,7 @@ const MOCK_CONNECTIONS = [
   },
 ];
 
-function SidebarFileMenuSync(props) {
+function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleExpander("sync");
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
@@ -375,7 +375,7 @@ const DownloadToast = {
     </div>
   ),
 };
-function SidebarFileMenuExport(props) {
+function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleExpander("export");
   const { toast } = useToast();
   return (
@@ -426,6 +426,51 @@ function SidebarFileMenuExport(props) {
             </Button>
           </div>
         </CollapsibleContent>
+      </Collapsible>
+    </SidebarGroup>
+  );
+}
+
+export function SidebarCollapseContentScroll(
+  props: React.ComponentProps<typeof SidebarGroup> & {
+    name: string;
+    action?: React.ReactNode;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    children: React.ReactNode;
+  }
+) {
+  const [expanded, setExpand] = useSingleExpander(props.name);
+  const { name, icon: Icon, action, children, ...rest } = props;
+  return (
+    <SidebarGroup className="pl-0 py-0" {...rest}>
+      <Collapsible
+        className="group/collapsible group/collapsible flex flex-col min-h-0"
+        open={expanded}
+        onOpenChange={setExpand}
+      >
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton className="pl-0">
+            <SidebarGroupLabel className="pl-2">
+              <div className="w-full flex items-center">
+                <ChevronRight
+                  size={14}
+                  className={
+                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                  }
+                />
+              </div>
+              <div className="w-full">
+                <div className="flex justify-center items-center capitalize">
+                  <Icon size={12} className="mr-2" /> {name}
+                </div>
+              </div>
+            </SidebarGroupLabel>
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+
+        {action && <div className="group-data-[state=closed]/collapsible:hidden">{action}</div>}
+
+        <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">{children}</CollapsibleContent>
       </Collapsible>
     </SidebarGroup>
   );

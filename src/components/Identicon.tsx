@@ -130,66 +130,65 @@ const Identicon = ({ input, size = 5, scale = 20 }: IdenticonProps) => {
   const grid = generateGrid();
 
   return (
-    <div className="inline-block rounded-lg overflow-hidden">
-      <svg
-        width={size * scale}
-        height={size * scale}
-        viewBox={`0 0 ${size * scale} ${size * scale}`}
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ backgroundColor: `rgb(${colors.r},${colors.g},${colors.b})` }} // Set the background color
-        stroke="none"
-      >
-        {grid.map((row, i) =>
-          row.map((cell, j) => {
-            const { color, shape, opacity, rotation, sizeModifier } = cell;
-            const x = j * scale;
-            const y = i * scale;
-            const adjustedScale = scale * sizeModifier;
+    <svg
+      width={size * scale}
+      height={size * scale}
+      viewBox={`0 0 ${size * scale} ${size * scale}`}
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ backgroundColor: `rgb(${colors.r},${colors.g},${colors.b})` }} // Set the background color
+      stroke="none"
+    >
+      {grid.map((row, i) =>
+        row.map((cell, j) => {
+          const { color, shape, opacity, rotation, sizeModifier } = cell;
+          const x = j * scale;
+          const y = i * scale;
+          const adjustedScale = scale * sizeModifier;
 
-            switch (shape) {
-              case "circle":
-                return (
-                  <circle
-                    key={`${i}-${j}`}
-                    cx={x + scale / 2}
-                    cy={y + scale / 2}
-                    r={adjustedScale / 2}
-                    fill={color}
-                    opacity={opacity}
-                  />
-                );
-              case "triangle":
-                return (
-                  <polygon
-                    key={`${i}-${j}`}
-                    points={`${x + (scale - adjustedScale) / 2},${y + adjustedScale} ${x + scale / 2},${
-                      y + (scale - adjustedScale) / 2
-                    } ${x + adjustedScale},${y + adjustedScale}`}
-                    fill={color}
-                    opacity={opacity}
-                    transform={`rotate(${rotation}, ${x + scale / 2}, ${y + scale / 2})`}
-                  />
-                );
-              case "rect":
-              default:
-                return (
-                  <rect
-                    key={`${i}-${j}`}
-                    x={x + (scale - adjustedScale) / 2}
-                    y={y + (scale - adjustedScale) / 2}
-                    width={adjustedScale}
-                    height={adjustedScale}
-                    fill={color}
-                    opacity={opacity}
-                    transform={`rotate(${rotation}, ${x + scale / 2}, ${y + scale / 2})`}
-                  />
-                );
-            }
-          })
-        )}
-      </svg>
-    </div>
+          switch (shape) {
+            case "circle":
+              return (
+                <circle
+                  key={`${i}-${j}`}
+                  cx={x + scale / 2}
+                  cy={y + scale / 2}
+                  r={adjustedScale / 2}
+                  fill={color}
+                  opacity={opacity}
+                />
+              );
+            case "triangle":
+              return (
+                <polygon
+                  key={`${i}-${j}`}
+                  points={`${x + (scale - adjustedScale) / 2},${y + adjustedScale} ${x + scale / 2},${
+                    y + (scale - adjustedScale) / 2
+                  } ${x + adjustedScale},${y + adjustedScale}`}
+                  fill={color}
+                  opacity={opacity}
+                  transform={`rotate(${rotation}, ${x + scale / 2}, ${y + scale / 2})`}
+                />
+              );
+            case "rect":
+            default:
+              return (
+                <rect
+                  key={`${i}-${j}`}
+                  x={x + (scale - adjustedScale) / 2}
+                  y={y + (scale - adjustedScale) / 2}
+                  width={adjustedScale}
+                  height={adjustedScale}
+                  fill={color}
+                  opacity={opacity}
+                  transform={`rotate(${rotation}, ${x + scale / 2}, ${y + scale / 2})`}
+                />
+              );
+          }
+        })
+      )}
+    </svg>
   );
 };
+// <div className="inline-block rounded-lg overflow-hidden">
 
 export default Identicon;

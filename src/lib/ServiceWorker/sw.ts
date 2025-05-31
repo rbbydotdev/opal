@@ -1,3 +1,4 @@
+import Identicon from "@/components/Identicon";
 import { Thumb, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
@@ -7,6 +8,8 @@ import { getMimeType } from "@/lib/mimeType";
 import { absPath, BasePath } from "@/lib/paths";
 import { RemoteLogger } from "@/lib/RemoteLogger";
 import * as fflate from "fflate";
+import React from "react";
+import { renderToString } from "react-dom/server";
 
 const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
 
@@ -72,11 +75,10 @@ self.addEventListener("fetch", async (event) => {
       if (url.pathname === "/download.zip") {
         return event.respondWith(handleDownloadRequest(workspaceId));
       }
-      if (
-        (event.request.destination === "image" || isImageType(url.pathname)) &&
-        url.pathname !== "/favicon.ico" &&
-        !WHITELIST.includes(url.pathname)
-      ) {
+      if (url.pathname === "/favicon.svg" || url.pathname === "/icon.svg") {
+        return event.respondWith(handleFaviconRequest(event));
+      }
+      if ((event.request.destination === "image" || isImageType(url.pathname)) && !WHITELIST.includes(url.pathname)) {
         return event.respondWith(handleImageRequest(event, url, workspaceId));
       }
     }
@@ -109,6 +111,33 @@ const SWWStore = new (class SwWorkspace {
     return (this.workspace = WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
   }
 })();
+
+async function handleFaviconRequest(event: FetchEvent): Promise<Response> {
+  const referrerPath = new URL(event.request.referrer).pathname;
+  Workspace.parseWorkspacePath(referrerPath);
+  const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
+  if (!workspaceId) {
+    return event.respondWith(fetch(event.request));
+  }
+  const workspace = await SWWStore.tryWorkspace(workspaceId);
+  return new Response(
+    renderToString(
+      React.createElement(Identicon, {
+        input: workspace.guid,
+        // input: "FFFZZZ333RR44411111",
+        size: 4,
+      })
+    ),
+    {
+      headers: {
+        "Content-Type": "image/svg+xml",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
+  );
+}
 
 async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: string): Promise<Response> {
   try {

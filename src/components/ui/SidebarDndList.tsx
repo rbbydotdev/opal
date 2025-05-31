@@ -1,22 +1,22 @@
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 
-type DndListChildProps = {
+type SidebarDndListChildProps = React.HTMLAttributes<HTMLDivElement> & {
   onDrop?: React.DragEventHandler;
   "dnd-id": string;
   className?: string;
 };
 
-export function DndList({
+export function SidebarDndList({
   children,
   storageKey,
 }: {
-  children: React.ReactElement<DndListChildProps> | React.ReactElement<DndListChildProps>[];
+  children: React.ReactElement<SidebarDndListChildProps> | React.ReactElement<SidebarDndListChildProps>[];
   storageKey: string;
 }) {
   const initialChildren = React.Children.toArray(children)
     .filter(React.isValidElement)
-    .map((child) => child as React.ReactElement<DndListChildProps>);
+    .map((child) => child as React.ReactElement<SidebarDndListChildProps>);
   const initialOrder = initialChildren.map((child) => child.props["dnd-id"]);
 
   const [order, setOrder] = useState<string[]>(() => {
@@ -53,16 +53,16 @@ export function DndList({
         "bg-sidebar-accent border border-black": dragOver === index,
       }),
       draggable: true,
-      onDragStart: (e: React.DragEvent) => {
+      onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
         setDragging(index);
         child.props.onDragStart?.(e);
       },
-      onDragOver: (e: React.DragEvent) => {
+      onDragOver: (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (dragging !== null) setDragOver(index);
         child.props.onDragOver?.(e);
       },
-      onDragLeave: (e: React.DragEvent) => {
+      onDragLeave: (e: React.DragEvent<HTMLDivElement>) => {
         setDragOver(null);
         child.props.onDragLeave?.(e);
       },
