@@ -95,11 +95,11 @@ function SidebarFileMenuInternal({
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
       <DndList storageKey={"sidebarMenu"}>
-        <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex" />
+        <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex flex-col min-h-8" />
         <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
         <SidebarFileMenuFiles
           dnd-id="files"
-          className="min-h-0"
+          className="min-h-8"
           fileTreeDir={fileTreeDir}
           renameDirOrFile={renameDirOrFile}
           expandSingle={expandSingle}
@@ -276,7 +276,11 @@ function SidebarFileMenuSync(props) {
   const [expanded, setExpand] = useSingleExpander("sync");
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
-      <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
+      <Collapsible
+        className="group/collapsible group/collapsible flex flex-col min-h-0"
+        open={expanded}
+        onOpenChange={setExpand}
+      >
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="pl-0">
             <SidebarGroupLabel className="pl-2">
@@ -305,7 +309,7 @@ function SidebarFileMenuSync(props) {
           </ConnectionsModal>
         </div>
 
-        <CollapsibleContent>
+        <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu>
             <div className="px-4 pt-2">
               <Button className="w-full " size="sm" variant="outline">
