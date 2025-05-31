@@ -1,9 +1,9 @@
 "use client";
 
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
-import Identicon from "@/components/Identicon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceContext } from "@/context";
 import { Workspace } from "@/Db/Workspace";
 import { useIsNavigatingWorkspace } from "@/hooks/useIsNavigatingWorkspace";
@@ -117,7 +117,7 @@ export function WorkSpaceButtonBar() {
 
       {coalescedWorkspace && (
         <BigButton
-          icon={<Identicon input={coalescedWorkspace.guid} size={4} scale={7} />}
+          icon={<WorkspaceIcon input={coalescedWorkspace.guid} />}
           title={coalescedWorkspace.name}
           href={coalescedWorkspace.href}
           className="text-white big-button-active"
@@ -147,7 +147,7 @@ export function WorkSpaceButtonBar() {
           <CollapsibleContent className="w-full bg-slate-800 ">
             {filteredWorkspaces.map((workspace) => (
               <BigButton
-                icon={<Identicon input={workspace.guid} size={4} scale={7} />}
+                icon={<WorkspaceIcon input={workspace.guid} />}
                 href={workspace.href}
                 title={workspace.name}
                 key={workspace.guid}

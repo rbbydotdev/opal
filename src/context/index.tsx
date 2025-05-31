@@ -214,3 +214,5 @@ export function withCurrentWorkspace<T extends NonNullWorkspaceContext>(Componen
 export function useWorkspaceContext() {
   return useContext(WorkspaceContext);
 }
+
+// Replace PropTypesOf<typeof Identicon> with React.ComponentProps<typeof Identicon>
