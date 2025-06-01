@@ -51,7 +51,7 @@ export function useFileContents() {
       if (currentWorkspace && filePath) {
         try {
           setContents(await currentWorkspace.disk.readFile(filePath));
-          setMimeType(getMimeType(filePath as string));
+          setMimeType(getMimeType(filePath));
           setError(null);
         } catch (error) {
           setError(error as Error);
@@ -82,7 +82,7 @@ export function useCurrentFilepath() {
   if (filePath === null || currentWorkspace.isNull) {
     return { filePath: null, mimeType: null, isImage: null };
   }
-  const mimeType = mime.lookup(filePath as string) || "";
+  const mimeType = mime.lookup(filePath) || "";
 
   return { filePath, mimeType, isImage: mimeType.startsWith("image/") };
 }
@@ -168,7 +168,7 @@ export function useWorkspaceFromRoute() {
     return currentWorkspace.disk.renameListener(({ newPath, oldPath, type }) => {
       if (
         (type === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
-        (type === "dir" && isAncestor(workspaceRoute.path, oldPath as string))
+        (type === "dir" && isAncestor(workspaceRoute.path, oldPath))
       ) {
         router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
       }

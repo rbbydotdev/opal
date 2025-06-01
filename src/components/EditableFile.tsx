@@ -92,7 +92,7 @@ export const EditableFile = ({
               <SelectedMark selected={isSelected} />
               {isImage(treeFile.path) ? (
                 <img
-                  src={encodePath(treeFile.path) + (!(treeFile.path as string).endsWith(".svg") ? "?thumb=100" : "")}
+                  src={encodePath(treeFile.path) + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
                   alt=""
                   className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
                 />
@@ -109,7 +109,7 @@ export const EditableFile = ({
             <SelectedMark selected={isSelected} />
             {isImage(treeFile.path) ? (
               <img
-                src={encodePath(treeFile.path) + (!(treeFile.path as string).endsWith(".svg") ? "?thumb=100" : "")}
+                src={encodePath(treeFile.path) + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
                 alt=""
                 className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
               />
@@ -120,7 +120,7 @@ export const EditableFile = ({
               ref={inputRef}
               className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full "
               type="text"
-              value={fileName as string}
+              value={fileName}
               onChange={(e) => setFileName(relPath(e.target.value))}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}

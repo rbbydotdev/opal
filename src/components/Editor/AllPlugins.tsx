@@ -136,7 +136,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
   const { path } = useWorkspaceRoute();
   useEffect(() => {
     return currentWorkspace.disk.latestIndexListener(() => {
-      setImgs(currentWorkspace.getImages().map((i) => i as string));
+      setImgs(currentWorkspace.getImages().map((i) => i));
     });
   }, [currentWorkspace]);
 

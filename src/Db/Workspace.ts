@@ -386,7 +386,7 @@ export class Workspace extends WorkspaceDAO {
   replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
-    return this.resolveFileUrl(absPath((filePath as string).replace(oldPath as string, newPath as string)));
+    return this.resolveFileUrl(absPath(filePath.replace(oldPath, newPath)));
   }
 
   newDir(dirPath: AbsPath, newDirName: RelPath) {
@@ -437,16 +437,8 @@ export class Workspace extends WorkspaceDAO {
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
 
-    await this.disk.findReplaceImgBatch([
-      [
-        oldNode.path as string,
-        absPath((oldNode.path as string).replace(oldNode.path as string, newNode.path as string)) as string,
-      ],
-    ]); // Update all references in the disk
-    await this.adjustPath(
-      oldNode,
-      absPath((oldNode.path as string).replace(oldNode.path as string, newNode.path as string))
-    );
+    await this.disk.findReplaceImgBatch([[oldNode.path, absPath(oldNode.path.replace(oldNode.path, newNode.path))]]); // Update all references in the disk
+    await this.adjustPath(oldNode, absPath(oldNode.path.replace(oldNode.path, newNode.path)));
     return newNode;
   };
   //this is dumb because you do not consider the children!
@@ -460,14 +452,8 @@ export class Workspace extends WorkspaceDAO {
     const findStrReplaceStr: [string, string][] = [];
 
     await newNode.asyncWalk(async (child) => {
-      findStrReplaceStr.push([
-        child.path as string,
-        absPath((child.path as string).replace(oldNode.path as string, newNode.path as string)) as string,
-      ]);
-      await this.adjustPath(
-        child,
-        absPath((child.path as string).replace(oldNode.path as string, newNode.path as string))
-      );
+      findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
+      await this.adjustPath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
     });
     await this.disk.findReplaceImgBatch(findStrReplaceStr);
 
@@ -551,9 +537,6 @@ export class Workspace extends WorkspaceDAO {
   };
   resolveFileUrl = (filePath: AbsPath) => {
     return this.href + encodePath(filePath);
-  };
-  subRoute = (path: string) => {
-    return `${this.href.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
   };
   async tryFirstFileUrl() {
     const ff = await this.getFirstFile();
