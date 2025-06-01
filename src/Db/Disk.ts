@@ -9,7 +9,17 @@ import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { isServiceWorker } from "@/lib/isServiceWorker";
 import { getMimeType } from "@/lib/mimeType";
-import { absPath, AbsPath, relPath, RelPath } from "@/lib/paths";
+import {
+  AbsolutePath2,
+  absPath2,
+  basename,
+  dirname,
+  encodePath,
+  incPath,
+  joinAbsolutePath,
+  RelativePath2,
+  relPath2,
+} from "@/lib/paths2";
 import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
@@ -19,7 +29,6 @@ import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { IReadStream } from "memfs/lib/node/types/misc";
 import { nanoid } from "nanoid";
-import path from "path";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
 
 // Utility type to make certain properties optional
@@ -101,21 +110,21 @@ type OPFSFileSystem = CommonFileSystem & {
 
 export class OPFSNamespacedFs extends NamespacedFs {
   fs: OPFSFileSystem;
-  constructor(fs: OPFSFileSystem, namespace: AbsPath | string) {
+  constructor(fs: OPFSFileSystem, namespace: AbsolutePath2 | string) {
     super(fs, namespace);
     this.fs = fs;
   }
 
   tearDown(): Promise<void> {
-    return this.fs.rm(this.namespace.encode(), { recursive: true, force: true });
+    return this.fs.rm(encodePath(this.namespace), { recursive: true, force: true });
   }
   createReadStream(path: string): IReadStream {
     //@ts-expect-error
-    return this.fs.createReadStream(this.namespace.join(path).encode());
+    return this.fs.createReadStream(encodePath(joinAbsolutePath(this.namespace, path)));
   }
 
   rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
-    return this.fs.rm(this.namespace.join(path).encode(), options);
+    return this.fs.rm(encodePath(joinAbsolutePath(this.namespace, path)), options);
   }
 }
 
@@ -191,10 +200,10 @@ export type RemoteRenameFileType = {
 };
 
 export class RenameFileType {
-  oldPath: AbsPath;
-  oldName: RelPath;
-  newPath: AbsPath;
-  newName: RelPath;
+  oldPath: AbsolutePath2;
+  oldName: RelativePath2;
+  newPath: AbsolutePath2;
+  newName: RelativePath2;
   type: "file" | "dir";
 
   constructor({
@@ -204,24 +213,24 @@ export class RenameFileType {
     newName,
     type,
   }: {
-    oldPath: string | AbsPath;
-    oldName: string | RelPath;
-    newPath: string | AbsPath;
-    newName: string | RelPath;
+    oldPath: string | AbsolutePath2;
+    oldName: string | RelativePath2;
+    newPath: string | AbsolutePath2;
+    newName: string | RelativePath2;
     type: "file" | "dir";
   }) {
-    this.oldPath = oldPath instanceof AbsPath ? oldPath : absPath(oldPath);
-    this.oldName = oldName instanceof RelPath ? oldName : relPath(oldName);
-    this.newPath = newPath instanceof AbsPath ? newPath : absPath(newPath);
-    this.newName = newName instanceof RelPath ? newName : relPath(newName);
+    this.oldPath = typeof oldPath === "string" ? absPath2(oldPath) : oldPath;
+    this.oldName = typeof oldName === "string" ? relPath2(oldName) : oldName;
+    this.newPath = typeof newPath === "string" ? absPath2(newPath) : newPath;
+    this.newName = typeof newName === "string" ? relPath2(newName) : newName;
     this.type = type;
   }
   toJSON() {
     return {
-      oldPath: this.oldPath.str,
-      oldName: this.oldName.str,
-      newPath: this.newPath.str,
-      newName: this.newName.str,
+      oldPath: this.oldPath,
+      oldName: this.oldName,
+      newPath: this.newPath,
+      newName: this.newName,
       type: this.type,
     };
   }
@@ -272,7 +281,7 @@ export abstract class Disk extends DiskDAO {
     return;
   }
 
-  updateIndex(path: AbsPath, type: "file" | "dir", writeIndexCache = true) {
+  updateIndex(path: AbsolutePath2, type: "file" | "dir", writeIndexCache = true) {
     this.fileTree.updateIndex(path, type);
     if (writeIndexCache) {
       /*await*/ void this.update({ indexCache: this.fileTree.root.toJSON() });
@@ -364,7 +373,7 @@ export abstract class Disk extends DiskDAO {
       }),
 
       this.remote.on(DiskRemoteEvents.UPDATE_INDEX, async ({ filePath, type }) => {
-        this.updateIndex(absPath(filePath), type);
+        this.updateIndex(absPath2(filePath), type);
         void this.local.emit(DiskLocalEvents.INDEX);
       }),
     ];
@@ -405,7 +414,7 @@ export abstract class Disk extends DiskDAO {
         }
         if (changed) {
           await this.writeFile(node.path, content);
-          filePaths.push(node.path.str);
+          filePaths.push(node.path);
         }
       }
     });
@@ -415,16 +424,16 @@ export abstract class Disk extends DiskDAO {
     this.mutex.release();
   }
 
-  async mkdirRecursive(filePath: AbsPath) {
+  async mkdirRecursive(filePath: AbsolutePath2) {
     await this.ready;
     //make recursive dir if or if not exists
-    const segments = filePath.encode().split("/").slice(1);
+    const segments = encodePath(filePath).split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
       try {
         await this.fs.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
       } catch (err) {
         if (errorCode(err).code !== "EEXIST") {
-          console.error(`Error creating directory ${path.dirname(filePath.str)}:`, err);
+          console.error(`Error creating directory ${dirname(filePath)}:`, err);
         }
       }
     }
@@ -442,54 +451,54 @@ export abstract class Disk extends DiskDAO {
   renameListener(fn: (props: RenameFileType) => void) {
     return this.local.on(DiskLocalEvents.RENAME, fn);
   }
-  writeFileListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
+  writeFileListener(watchFilePath: AbsolutePath2, fn: (contents: string) => void) {
     return this.local.on(DiskLocalEvents.WRITE, async ({ filePaths }) => {
-      if (filePaths.includes(watchFilePath.str)) {
-        fn(String(await this.readFile(absPath(watchFilePath.str))));
+      if (filePaths.includes(watchFilePath)) {
+        fn(String(await this.readFile(absPath2(watchFilePath))));
       }
     });
   }
 
-  async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
+  async renameDir(oldFullPath: AbsolutePath2, newFullPath: AbsolutePath2): Promise<RenameFileType> {
     return this.renameDirOrFile(oldFullPath, newFullPath, "dir");
   }
-  async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
+  async renameFile(oldFullPath: AbsolutePath2, newFullPath: AbsolutePath2): Promise<RenameFileType> {
     return this.renameDirOrFile(oldFullPath, newFullPath, "file");
   }
   //for moving files without emitting events or updating the index
-  async quietMove(oldPath: AbsPath, newPath: AbsPath) {
+  async quietMove(oldPath: AbsolutePath2, newPath: AbsolutePath2) {
     const uniquePath = await this.nextPath(newPath);
-    await this.mkdirRecursive(uniquePath.dirname());
-    await this.fs.rename(oldPath.encode(), uniquePath.encode());
+    await this.mkdirRecursive(absPath2(dirname(uniquePath)));
+    await this.fs.rename(encodePath(oldPath), encodePath(uniquePath));
   }
   protected async renameDirOrFile(
-    oldFullPath: AbsPath,
-    newFullPath: AbsPath,
+    oldFullPath: AbsolutePath2,
+    newFullPath: AbsolutePath2,
     type?: "file" | "dir"
   ): Promise<RenameFileType> {
     await this.ready;
     if (!type) {
-      const stat = await this.fs.stat(oldFullPath.encode());
+      const stat = await this.fs.stat(encodePath(oldFullPath));
       type = stat.isDirectory() ? "dir" : "file";
     }
     const NOCHANGE: RenameFileType = new RenameFileType({
       type,
       newPath: oldFullPath,
-      newName: oldFullPath.basename(),
+      newName: relPath2(basename(oldFullPath)),
       oldPath: oldFullPath,
-      oldName: oldFullPath.basename(),
+      oldName: relPath2(basename(oldFullPath)),
     });
     if (!newFullPath) return NOCHANGE;
-    const cleanFullPath = newFullPath.dirname().join(newFullPath.basename());
+    const cleanFullPath = joinAbsolutePath(absPath2(dirname(newFullPath)), basename(newFullPath));
     // .replace(/\//g, ":")
 
-    if (cleanFullPath.str === oldFullPath.str) return NOCHANGE;
+    if (cleanFullPath === oldFullPath) return NOCHANGE;
 
     const uniquePath = await this.nextPath(cleanFullPath); // ensure the path is unique
 
     try {
-      await this.mkdirRecursive(uniquePath.dirname());
-      await this.fs.rename(oldFullPath.encode(), uniquePath.encode());
+      await this.mkdirRecursive(absPath2(dirname(uniquePath)));
+      await this.fs.rename(encodePath(oldFullPath), encodePath(uniquePath));
     } catch (e) {
       throw e;
     }
@@ -497,8 +506,8 @@ export abstract class Disk extends DiskDAO {
     const CHANGE = new RenameFileType({
       type,
       newPath: uniquePath,
-      newName: uniquePath.basename(),
-      oldName: oldFullPath.basename(),
+      newName: relPath2(basename(uniquePath)),
+      oldName: relPath2(basename(oldFullPath)),
       oldPath: oldFullPath,
     });
     await this.fileTreeIndex();
@@ -508,10 +517,10 @@ export abstract class Disk extends DiskDAO {
     return CHANGE;
   }
 
-  async newDir(fullPath: AbsPath) {
+  async newDir(fullPath: AbsolutePath2) {
     await this.ready;
     while (await this.pathExists(fullPath)) {
-      fullPath = fullPath.inc();
+      fullPath = incPath(fullPath);
     }
     await this.mkdirRecursive(fullPath);
     await this.fileTreeIndex();
@@ -522,10 +531,10 @@ export abstract class Disk extends DiskDAO {
     // await this.remote.emit(DiskLocalEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "dir" });
     return fullPath;
   }
-  async removeFile(filePath: AbsPath) {
+  async removeFile(filePath: AbsolutePath2) {
     await this.ready;
     try {
-      await this.fs.unlink(filePath.encode());
+      await this.fs.unlink(encodePath(filePath));
     } catch (err) {
       if (isErrorWithCode(err, "ENOENT")) {
         throw new NotFoundError(`File not found: ${filePath}`);
@@ -537,11 +546,11 @@ export abstract class Disk extends DiskDAO {
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskLocalEvents.INDEX);
   }
-  nodeFromPath(path: AbsPath) {
+  nodeFromPath(path: AbsolutePath2) {
     return this.fileTree.nodeFromPath(path);
   }
 
-  removeVirtualFile(path: AbsPath) {
+  removeVirtualFile(path: AbsolutePath2) {
     this.fileTree.removeNodeByPath(path);
     void this.local.emit(DiskLocalEvents.INDEX);
   }
@@ -552,49 +561,49 @@ export abstract class Disk extends DiskDAO {
     return node;
   }
 
-  async nextPath(fullPath: AbsPath) {
+  async nextPath(fullPath: AbsolutePath2) {
     await this.ready;
     while (await this.pathExists(fullPath)) {
-      fullPath = fullPath.inc();
+      fullPath = incPath(fullPath);
     }
     return fullPath;
   }
-  async newFile(fullPath: AbsPath, content: string | Uint8Array) {
+  async newFile(fullPath: AbsolutePath2, content: string | Uint8Array) {
     await this.ready;
 
     while (await this.pathExists(fullPath)) {
-      fullPath = fullPath.inc();
+      fullPath = incPath(fullPath);
     }
     await this.writeFileRecursive(fullPath, content);
     await this.fileTreeIndex();
     await this.local.emit(DiskLocalEvents.INDEX);
-    await this.remote.emit(DiskRemoteEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "file" });
+    await this.remote.emit(DiskRemoteEvents.UPDATE_INDEX, { filePath: fullPath, type: "file" });
     return fullPath;
   }
-  async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
-    await this.mkdirRecursive(filePath.dirname());
+  async writeFileRecursive(filePath: AbsolutePath2, content: string | Uint8Array) {
+    await this.mkdirRecursive(absPath2(dirname(filePath)));
     try {
-      return this.fs.writeFile(filePath.encode(), content, { encoding: "utf8", mode: 0o777 });
+      return this.fs.writeFile(encodePath(filePath), content, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error writing file ${filePath}:`, err);
       }
     }
   }
-  async pathExists(filePath: AbsPath) {
+  async pathExists(filePath: AbsolutePath2) {
     await this.ready;
     try {
-      await this.fs.stat(filePath.encode());
+      await this.fs.stat(encodePath(filePath));
       return true;
     } catch (_e) {
       return false;
     }
   }
-  createReadStream(filePath: AbsPath): IReadStream | ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> {
+  createReadStream(filePath: AbsolutePath2): IReadStream | ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> {
     // if (this.type === OpFsDisk.type) {
     if (false) {
       //@ts-expect-error
-      return (this.fs.createReadStream as FsaNodeFs["createReadStream"])(filePath.encode(), {
+      return (this.fs.createReadStream as FsaNodeFs["createReadStream"])(encodePath(filePath), {
         encoding: "utf8",
         mode: 0o777,
       });
@@ -611,15 +620,15 @@ export abstract class Disk extends DiskDAO {
     }
   }
 
-  async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
-    await this.fs.writeFile(filePath.encode(), contents, { encoding: "utf8", mode: 0o777 });
-    await this.remote.emit(DiskRemoteEvents.WRITE, { filePaths: [filePath.str] });
+  async writeFile(filePath: AbsolutePath2, contents: string | Uint8Array) {
+    await this.fs.writeFile(encodePath(filePath), contents, { encoding: "utf8", mode: 0o777 });
+    await this.remote.emit(DiskRemoteEvents.WRITE, { filePaths: [filePath] });
     return;
   }
-  async readFile(filePath: AbsPath) {
+  async readFile(filePath: AbsolutePath2) {
     await this.ready;
     try {
-      return await this.fs.readFile(filePath.encode());
+      return await this.fs.readFile(encodePath(filePath));
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
         throw new NotFoundError(`File not found: ${filePath}`);
@@ -658,7 +667,7 @@ export class OpFsDisk extends Disk {
       }) as Promise<IFileSystemDirectoryHandle>
     );
 
-    const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
+    const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath2("/" + guid));
 
     super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), OpFsDisk.type);
 

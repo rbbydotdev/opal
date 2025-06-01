@@ -11,7 +11,19 @@ import {
   VirtualFileTreeNode,
   VirtualTreeNode,
 } from "@/lib/FileTree/TreeNode";
-import { AbsPath, BasePath, relPath, RelPath } from "@/lib/paths";
+import {
+  AbsolutePath2,
+  RelativePath2,
+  absPath2,
+  relPath2,
+  toString,
+  encodePath,
+  decodePath,
+  basename,
+  dirname,
+  joinAbsolutePath,
+  extname,
+} from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 
 export class FileTree {
@@ -40,8 +52,8 @@ export class FileTree {
   findRange = (startNode: TreeNode, endNode: TreeNode) => {
     const [startIndex, endIndex] = this.dirs.reduce(
       (indices, path, index) => {
-        if (path === startNode.path.str) indices[0] = index;
-        if (path === endNode.path.str) indices[1] = index;
+        if (path === toString(startNode.path)) indices[0] = index;
+        if (path === toString(endNode.path)) indices[1] = index;
         return indices;
       },
       [-1, -1] // Initial indices
@@ -59,18 +71,18 @@ export class FileTree {
     const tree = new FileTree(fs, guid);
     tree.root = TreeDirRoot.fromJSON(json);
     tree.map = new Map<string, TreeNode>();
-    tree.root.walk((node) => tree.map.set(node.path.str, node));
+    tree.root.walk((node) => tree.map.set(toString(node.path), node));
     return tree;
   }
 
-  updateIndex = (path: AbsPath, type: "file" | "dir") => {
+  updateIndex = (path: AbsolutePath2, type: "file" | "dir") => {
     //recursive to back fill parent nodes
     const node = this.nodeFromPath(path);
     if (node) return node;
-    const parent = (path.dirname().str === "/" ? this.root : this.updateIndex(path.dirname(), "dir")) || this.root;
+    const parent = (dirname(path) === "/" ? this.root : this.updateIndex(absPath2(dirname(path)), "dir")) || this.root;
     const newNode = TreeNode.FromPath(path, type, parent as TreeDir);
     this.insertNode(newNode.parent!, newNode);
-    this.map.set(path.str, newNode);
+    this.map.set(toString(path), newNode);
     this.dirs = this.flatDirTree();
     return newNode;
   };
@@ -84,7 +96,7 @@ export class FileTree {
       console.debug("Indexing file tree");
       this.map = new Map<string, TreeNode>();
       this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
-      this.root.walk((node) => this.map.set(node.path.str, node));
+      this.root.walk((node) => this.map.set(toString(node.path), node));
       this.dirs = this.flatDirTree();
       this.initialIndex = true;
       return this.root;
@@ -108,20 +120,20 @@ export class FileTree {
   ): Promise<TreeDir> => {
     const dir = parent.path;
     try {
-      const entries = (await this.fs.readdir(dir.encode())).map((e) => relPath(BasePath.decode(e.toString())));
+      const entries = (await this.fs.readdir(encodePath(dir))).map((e) => relPath2(decodePath(e.toString())));
 
       // Separate directories and files
-      const directories: RelPath[] = [];
-      const files: RelPath[] = [];
+      const directories: RelativePath2[] = [];
+      const files: RelativePath2[] = [];
 
       try {
         await Promise.all(
           entries.map(async (entry) => {
-            const fullPath = dir.join(entry);
-            const stat = await this.fs.stat(fullPath.encode()).catch((e) => {
+            const fullPath = joinAbsolutePath(dir, entry);
+            const stat = await this.fs.stat(encodePath(fullPath)).catch((e) => {
               if (isErrorWithCode(e, "ENOENT")) {
                 console.error(`stat error for file ${fullPath}`);
-                throw new NotFoundError(`File not found: ${fullPath}`, fullPath.str);
+                throw new NotFoundError(`File not found: ${fullPath}`, toString(fullPath));
               }
               throw e;
             });
@@ -144,11 +156,11 @@ export class FileTree {
       // Process files first
       await Promise.all(
         files.map(async (entry) => {
-          const fullPath = dir.join(entry);
+          const fullPath = joinAbsolutePath(dir, entry);
           const treeEntry = new TreeFile({
-            name: relPath(entry),
-            dirname: fullPath.dirname(),
-            basename: fullPath.basename(),
+            name: relPath2(toString(entry)),
+            dirname: absPath2(dirname(fullPath)),
+            basename: relPath2(basename(fullPath)),
             path: fullPath,
             parent,
             depth: depth,
@@ -160,11 +172,11 @@ export class FileTree {
 
       // Process directories in order
       for (const entry of directories) {
-        const fullPath = dir.join(entry);
+        const fullPath = joinAbsolutePath(dir, entry);
         const treeEntry = new TreeDir({
           name: entry,
-          dirname: fullPath.dirname(),
-          basename: fullPath.basename(),
+          dirname: absPath2(dirname(fullPath)),
+          basename: relPath2(basename(fullPath)),
           path: fullPath,
           parent,
           depth: depth,
@@ -198,32 +210,32 @@ export class FileTree {
     return Array.from(this.map.values());
   };
 
-  removeNodeByPath(path: AbsPath) {
-    const node = this.map.get(path.str);
+  removeNodeByPath(path: AbsolutePath2) {
+    const node = this.map.get(toString(path));
     if (node) {
       this.removeSelfByPathFromParent(path, node);
-      this.map.delete(path.str);
+      this.map.delete(toString(path));
       return true;
     }
     return false;
   }
-  removeSelfByPathFromParent(path: AbsPath, selfNode: TreeNode) {
-    delete selfNode?.parent?.children[path.basename().str];
-    this.map.delete(path.str);
+  removeSelfByPathFromParent(path: AbsolutePath2, selfNode: TreeNode) {
+    delete selfNode?.parent?.children[basename(path)];
+    this.map.delete(toString(path));
   }
   insertNode(parent: TreeDir, newNode: TreeNode | VirtualTreeNode) {
-    this.map.set(newNode.path.str, newNode);
+    this.map.set(toString(newNode.path), newNode);
     return spliceNode(parent, newNode);
   }
-  nodeWithPathExists(path: AbsPath) {
-    return this.map.has(path.str);
+  nodeWithPathExists(path: AbsolutePath2) {
+    return this.map.has(toString(path));
   }
   replaceNode(oldNode: TreeNode, newNode: TreeNode) {
     const parent = oldNode.parent;
     if (!parent) return;
-    parent.children[newNode.name.str] = newNode;
-    this.map.delete(oldNode.path.str);
-    this.map.set(newNode.path.str, newNode);
+    parent.children[toString(newNode.name)] = newNode;
+    this.map.delete(toString(oldNode.path));
+    this.map.set(toString(newNode.path), newNode);
   }
   insertClosestNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
     const parent = closestTreeDir(selectedNode);
@@ -233,7 +245,7 @@ export class FileTree {
     return this.insertNode(parent, newNode);
   }
 
-  nodeFromPath(path: AbsPath | string): TreeNode | null {
+  nodeFromPath(path: AbsolutePath2 | string): TreeNode | null {
     return this.map.get(path + "") ?? null;
   }
 }
@@ -245,7 +257,7 @@ function closestTreeDir(node: TreeNode): TreeDir {
 }
 
 function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
-  targetNode.children[newNode.name.str] = newNode;
+  targetNode.children[toString(newNode.name)] = newNode;
   targetNode.children = Object.fromEntries(Object.entries(targetNode.children));
   return newNode;
 }
@@ -255,8 +267,8 @@ function _sortNodesByName(nodes: Record<string, TreeNode>) {
     if (nodeA.type === "dir" && nodeB.type === "file") return -1;
     if (nodeA.type === "file" && nodeB.type === "dir") return 1;
     if (nodeA.type === "file" && nodeB.type === "file") {
-      const extA = nodeA.path.extname() || "";
-      const extB = nodeB.path.extname() || "";
+      const extA = extname(nodeA.path) || "";
+      const extB = extname(nodeB.path) || "";
       const extComparison = extA.localeCompare(extB);
       if (extComparison !== 0) return extComparison;
     }
@@ -264,14 +276,14 @@ function _sortNodesByName(nodes: Record<string, TreeNode>) {
   });
 }
 
-function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPath; parent: TreeDir }) {
-  const path = parent.path.join(name);
+function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelativePath2; parent: TreeDir }) {
+  const path = joinAbsolutePath(parent.path, name);
   const depth = parent.depth + 1;
   if (type === "dir") {
     return new VirtualDirTreeNode({
-      name: path.basename(),
-      dirname: path.dirname(),
-      basename: path.basename(),
+      name: relPath2(basename(path)),
+      dirname: absPath2(dirname(path)),
+      basename: relPath2(basename(path)),
       path,
       parent,
       depth,
@@ -279,9 +291,9 @@ function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name
     });
   } else {
     return new VirtualFileTreeNode({
-      name: path.basename(),
-      dirname: path.dirname(),
-      basename: path.basename(),
+      name: relPath2(basename(path)),
+      dirname: absPath2(dirname(path)),
+      basename: relPath2(basename(path)),
       path,
       parent,
       depth,

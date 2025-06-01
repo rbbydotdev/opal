@@ -1,24 +1,24 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
-import { AbsPath } from "@/lib/paths";
+import { AbsolutePath2 } from "@/lib/paths2";
 import { usePathname } from "next/navigation";
 import React, { useCallback } from "react";
 
 export const FileTreeMenuContext = React.createContext<{
-  editing: AbsPath | null;
-  setEditing: React.Dispatch<React.SetStateAction<AbsPath | null>>;
+  editing: AbsolutePath2 | null;
+  setEditing: React.Dispatch<React.SetStateAction<AbsolutePath2 | null>>;
   editType: "rename" | "new";
-  setFocused: (path: AbsPath | null) => void;
-  focused: AbsPath | null;
+  setFocused: (path: AbsolutePath2 | null) => void;
+  focused: AbsolutePath2 | null;
   setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
   resetEditing: () => void;
   setSelectedRange: (r: string[]) => void;
   resetSelects: () => void;
-  setDragOver: (path: AbsPath | null) => void;
-  dragOver: AbsPath | null;
+  setDragOver: (path: AbsolutePath2 | null) => void;
+  dragOver: AbsolutePath2 | null;
   selectedRange: string[];
-  virtual: AbsPath | null;
-  setVirtual: (path: AbsPath | null) => void;
+  virtual: AbsolutePath2 | null;
+  setVirtual: (path: AbsolutePath2 | null) => void;
 } | null>(null);
 
 export function useFileTreeMenuContext() {
@@ -31,11 +31,11 @@ export function useFileTreeMenuContext() {
 export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const { filePath } = Workspace.parseWorkspacePath(pathname);
-  const [editing, setEditing] = React.useState<AbsPath | null>(null);
+  const [editing, setEditing] = React.useState<AbsolutePath2 | null>(null);
   const [editType, setEditType] = React.useState<"rename" | "new">("rename");
-  const [focused, setFocused] = React.useState<AbsPath | null>(filePath ?? null);
-  const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
-  const [dragOver, setDragOver] = React.useState<AbsPath | null>(null);
+  const [focused, setFocused] = React.useState<AbsolutePath2 | null>(filePath ?? null);
+  const [virtual, setVirtual] = React.useState<AbsolutePath2 | null>(null);
+  const [dragOver, setDragOver] = React.useState<AbsolutePath2 | null>(null);
   const [selectedRange, setSelectedRange] = React.useState<string[]>([]);
 
   const resetEditing = useCallback(() => {

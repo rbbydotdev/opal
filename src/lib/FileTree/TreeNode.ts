@@ -1,6 +1,16 @@
 // import { MimeType, MimeTypes } from "@/lib/fileType";
 // import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, absPath, RelPath, relPath } from "@/lib/paths";
+import {
+  AbsolutePath2,
+  RelativePath2,
+  absPath2,
+  basename,
+  dirname,
+  depth as getDepth,
+  incPath,
+  relPath2,
+  toString,
+} from "@/lib/paths2";
 
 export type TreeNodeJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
@@ -15,31 +25,31 @@ export type TreeNodeDirJType = ReturnType<TreeNode["toJSON"]> & {
 
 export class TreeNode {
   isVirtual = false;
-  name: RelPath;
+  name: RelativePath2;
   type: "dir" | "file";
-  dirname: AbsPath;
-  basename: RelPath;
+  dirname: AbsolutePath2;
+  basename: RelativePath2;
   parent: TreeDir | null;
-  path: AbsPath;
+  path: AbsolutePath2;
   depth: number;
   children?: Record<string, TreeNode>;
 
   get length() {
-    return this.path.str.length;
+    return toString(this.path).length;
   }
   toString() {
-    return this.path.str;
+    return toString(this.path);
   }
   get str() {
     return this.toString();
   }
 
-  static FromPath(path: AbsPath, type: "dir" | "file", parent: TreeDir | null = null) {
-    const name = path.basename();
-    const dirname = path.dirname();
-    const basename = path.basename();
-    const depth = path.depth();
-    return new TreeNode({ name, type, dirname, basename, path, depth, parent });
+  static FromPath(path: AbsolutePath2, type: "dir" | "file", parent: TreeDir | null = null) {
+    const name = relPath2(basename(path));
+    const pathDirname = absPath2(dirname(path));
+    const pathBasename = relPath2(basename(path));
+    const pathDepth = getDepth(path);
+    return new TreeNode({ name, type, dirname: pathDirname, basename: pathBasename, path, depth: pathDepth, parent });
   }
 
   replaceWith(newNode: TreeNode) {
@@ -90,44 +100,44 @@ export class TreeNode {
     parent,
     depth,
   }: {
-    name: RelPath | string;
+    name: RelativePath2 | string;
     type: "dir" | "file";
-    dirname: AbsPath | string;
-    basename: RelPath | string;
+    dirname: AbsolutePath2 | string;
+    basename: RelativePath2 | string;
     parent: TreeDir | null;
     // parent: TreeDir | null;
-    path: AbsPath | string;
+    path: AbsolutePath2 | string;
     depth?: number;
   }) {
-    this.name = typeof name === "string" ? relPath(name) : name;
+    this.name = typeof name === "string" ? relPath2(name) : name;
     this.type = type;
-    this.dirname = absPath(dirname);
-    this.basename = relPath(basename);
-    this.path = absPath(path);
-    this.depth = typeof depth !== "undefined" ? depth : this.path.depth();
+    this.dirname = typeof dirname === "string" ? absPath2(dirname) : dirname;
+    this.basename = typeof basename === "string" ? relPath2(basename) : basename;
+    this.path = typeof path === "string" ? absPath2(path) : path;
+    this.depth = typeof depth !== "undefined" ? depth : getDepth(this.path);
     this.parent = parent;
   }
 
   remove() {
-    if (this.parent && this.name.str in this.parent.children) {
-      delete this.parent.children[this.name.str];
+    if (this.parent && toString(this.name) in this.parent.children) {
+      delete this.parent.children[toString(this.name)];
       return true;
     }
     return false;
   }
 
   inc() {
-    this.path = this.path.inc();
-    this.dirname = this.path.dirname();
-    this.name = this.path.basename();
-    this.basename = this.path.basename();
+    this.path = incPath(this.path);
+    this.dirname = absPath2(dirname(this.path));
+    this.name = relPath2(basename(this.path));
+    this.basename = relPath2(basename(this.path));
     return this;
   }
-  rename(path: AbsPath) {
+  rename(path: AbsolutePath2) {
     this.path = path;
-    this.dirname = this.path.dirname();
-    this.name = this.path.basename();
-    this.basename = this.path.basename();
+    this.dirname = absPath2(dirname(this.path));
+    this.name = relPath2(basename(this.path));
+    this.basename = relPath2(basename(this.path));
     return this;
   }
   copy() {
@@ -180,11 +190,11 @@ export class TreeNode {
     // eTag?: string;
   } {
     return {
-      name: this.name.str,
+      name: toString(this.name),
       type: this.type,
-      dirname: this.dirname.str,
-      basename: this.basename.str,
-      path: this.path.str,
+      dirname: toString(this.dirname),
+      basename: toString(this.basename),
+      path: toString(this.path),
       depth: this.depth,
       // mimeType: this.mimeType,
       // parent: this.parent,
@@ -206,11 +216,11 @@ export class TreeDir extends TreeNode {
     children = {},
     parent,
   }: {
-    name: RelPath;
-    dirname: AbsPath;
-    basename: RelPath;
+    name: RelativePath2;
+    dirname: AbsolutePath2;
+    basename: RelativePath2;
     parent: TreeDir | null;
-    path: AbsPath;
+    path: AbsolutePath2;
     depth: number;
     children: TreeDir["children"];
   }) {
@@ -247,10 +257,10 @@ export class TreeDirRoot extends TreeDir {
   type = "dir" as const;
   constructor({ children = {} }: { children: TreeDir["children"] } = { children: {} }) {
     super({
-      name: relPath(":root"),
-      dirname: absPath("/"),
-      basename: relPath(":root"),
-      path: absPath("/"),
+      name: relPath2(":root"),
+      dirname: absPath2("/"),
+      basename: relPath2(":root"),
+      path: absPath2("/"),
       depth: 0,
       children,
       parent: null,
@@ -290,10 +300,10 @@ export class TreeFile extends TreeNode {
     depth,
     parent,
   }: {
-    name: RelPath;
-    dirname: AbsPath;
-    basename: RelPath;
-    path: AbsPath;
+    name: RelativePath2;
+    dirname: AbsolutePath2;
+    basename: RelativePath2;
+    path: AbsolutePath2;
     depth: number;
     parent: TreeDir | null;
   }) {

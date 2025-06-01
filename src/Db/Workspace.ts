@@ -1,12 +1,23 @@
 "use client";
-import { Disk, DiskDAO, DiskJType, IndexedDbDisk, MemDisk, NullDisk, OpFsDisk } from "@/Db/Disk";
+import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { absPath, AbsPath, isAncestor, relPath, RelPath } from "@/lib/paths";
+import {
+  AbsolutePath2,
+  absPath2,
+  decodePath,
+  encodePath,
+  isAncestor,
+  isImage,
+  joinAbsolutePath,
+  RelativePath2,
+  relPath2,
+  toString,
+} from "@/lib/paths2";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
@@ -17,7 +28,7 @@ export class Thumb {
     protected cache: Promise<Cache>,
     protected thumbRepo: Disk,
     protected imgRepo: Disk,
-    protected path: AbsPath,
+    protected path: AbsolutePath2,
     protected content: Uint8Array | null = null,
     protected readonly size = 100
   ) {}
@@ -64,10 +75,10 @@ export class Thumb {
   }
 
   url() {
-    return this.path.urlSafe() + "?thumb=" + this.size;
+    return encodePath(this.path) + "?thumb=" + this.size;
   }
 
-  async move(oldPath: AbsPath, newPath: AbsPath) {
+  async move(oldPath: AbsolutePath2, newPath: AbsolutePath2) {
     const oldUrl = this.url();
     this.path = newPath;
     await this.cache.then(async (c) => {
@@ -344,76 +355,79 @@ export class Workspace extends WorkspaceDAO {
     await Promise.all(workspaces.map(async (ws) => (await ws.toModel()).delete()));
   }
 
-  NewThumb(path: AbsPath, size = 100) {
+  NewThumb(path: AbsolutePath2, size = 100) {
     return new Thumb(this.imageCache.getCache(), this.thumbs, this.disk, path, null, size);
   }
 
-  async readOrMakeThumb(path: AbsPath | string, size = 100) {
-    path = absPath(path);
-    const thumb = this.NewThumb(path, size);
+  async readOrMakeThumb(path: AbsolutePath2 | string, size = 100) {
+    const thumb = this.NewThumb(absPath2(path), size);
     return thumb.readOrMake();
   }
 
   static parseWorkspacePath(pathname: string) {
     if (!pathname.startsWith(Workspace.rootRoute)) return { workspaceId: null, filePath: null };
-    const [workspaceId, ...filePathRest] = relPath(pathname.replace(this.rootRoute, "")).decode().split("/");
+    const [workspaceId, ...filePathRest] = decodePath(relPath2(pathname.replace(this.rootRoute, ""))).split("/");
     const filePath = filePathRest.join("/");
     if (!workspaceId) {
       return { workspaceId: null, filePath: null };
     }
-    return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
+    return { workspaceId, filePath: filePath ? absPath2(filePath) : undefined };
   }
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
     await ws.disk.ready;
     await Promise.all(
       Object.entries(Workspace.seedFiles).map(([filePath, content]) =>
-        ws.disk.writeFileRecursive(absPath(filePath), content)
+        ws.disk.writeFileRecursive(absPath2(filePath), content)
       )
     );
     return ws;
   }
 
-  replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
+  replaceUrlPath(pathname: string, oldPath: AbsolutePath2, newPath: AbsolutePath2) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
-    return this.resolveFileUrl(absPath(filePath.replace(oldPath.str, newPath.str)));
+    return this.resolveFileUrl(absPath2(toString(filePath).replace(toString(oldPath), toString(newPath))));
   }
 
-  newDir(dirPath: AbsPath, newDirName: RelPath) {
-    return this.disk.newDir(dirPath.join(newDirName));
+  newDir(dirPath: AbsolutePath2, newDirName: RelativePath2) {
+    return this.disk.newDir(joinAbsolutePath(dirPath, newDirName));
   }
-  newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
-    return this.disk.newFile(dirPath.join(newFileName), content);
+  newFile(
+    dirPath: AbsolutePath2,
+    newFileName: RelativePath2,
+    content: string | Uint8Array = ""
+  ): Promise<AbsolutePath2> {
+    return this.disk.newFile(joinAbsolutePath(dirPath, newFileName), content);
   }
 
   addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {
     return this.disk.addVirtualFile({ type, name }, selectedNode);
   }
-  removeVirtualfile(path: AbsPath) {
+  removeVirtualfile(path: AbsolutePath2) {
     return this.disk.removeVirtualFile(path);
   }
-  removeFile = async (filePath: AbsPath) => {
-    if (filePath.isImage()) {
+  removeFile = async (filePath: AbsolutePath2) => {
+    if (isImage(filePath)) {
       await Promise.all([
         this.NewThumb(filePath)
           .remove()
           .catch(() => {
             /*swallow*/
           }),
-        this.imageCache.getCache().then((c) => c.delete(filePath.urlSafe())),
+        this.imageCache.getCache().then((c) => c.delete(encodePath(filePath))),
       ]);
     }
     return this.disk.removeFile(filePath);
   };
 
-  private async adjustPath(oldNode: TreeNode, newPath: AbsPath) {
-    if (oldNode.path.isImage()) {
+  private async adjustPath(oldNode: TreeNode, newPath: AbsolutePath2) {
+    if (isImage(oldNode.path)) {
       await this.imageCache.getCache().then(async (c) => {
-        const res = await c.match(oldNode.path.urlSafe());
+        const res = await c.match(encodePath(oldNode.path));
         if (res) {
-          await c.delete(oldNode.path.urlSafe());
-          await c.put(newPath.urlSafe(), res);
+          await c.delete(encodePath(oldNode.path));
+          await c.put(encodePath(newPath), res);
         }
       });
       await this.NewThumb(oldNode.path)
@@ -423,19 +437,25 @@ export class Workspace extends WorkspaceDAO {
         });
     }
   }
-  renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+  renameFile = async (oldNode: TreeNode, newFullPath: AbsolutePath2) => {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
 
     await this.disk.findReplaceImgBatch([
-      [oldNode.path.str, absPath(oldNode.path.replace(oldNode.path.str, newNode.path.str)).str],
+      [
+        toString(oldNode.path),
+        toString(absPath2(toString(oldNode.path).replace(toString(oldNode.path), toString(newNode.path)))),
+      ],
     ]); // Update all references in the disk
-    await this.adjustPath(oldNode, absPath(oldNode.path.replace(oldNode.path.str, newNode.path.str)));
+    await this.adjustPath(
+      oldNode,
+      absPath2(toString(oldNode.path).replace(toString(oldNode.path), toString(newNode.path)))
+    );
     return newNode;
   };
   //this is dumb because you do not consider the children!
-  renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+  renameDir = async (oldNode: TreeNode, newFullPath: AbsolutePath2) => {
     const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
       console.error("Error renaming dir", e);
       throw e;
@@ -445,18 +465,24 @@ export class Workspace extends WorkspaceDAO {
     const findStrReplaceStr: [string, string][] = [];
 
     await newNode.asyncWalk(async (child) => {
-      findStrReplaceStr.push([child.path.str, absPath(child.path.replace(oldNode.path.str, newNode.path.str)).str]);
-      await this.adjustPath(child, absPath(child.path.replace(oldNode.path.str, newNode.path.str)));
+      findStrReplaceStr.push([
+        toString(child.path),
+        toString(absPath2(toString(child.path).replace(toString(oldNode.path), toString(newNode.path)))),
+      ]);
+      await this.adjustPath(
+        child,
+        absPath2(toString(child.path).replace(toString(oldNode.path), toString(newNode.path)))
+      );
     });
     await this.disk.findReplaceImgBatch(findStrReplaceStr);
 
     return newNode;
   };
-  readFile = (filePath: AbsPath) => {
+  readFile = (filePath: AbsolutePath2) => {
     return this.disk.readFile(filePath);
   };
 
-  readThumb = (filePath: AbsPath) => {
+  readThumb = (filePath: AbsolutePath2) => {
     return this.thumbs.readFile(filePath);
   };
 
@@ -475,12 +501,12 @@ export class Workspace extends WorkspaceDAO {
   async awaitFirstIndex() {
     return this.disk.awaitFirstIndex();
   }
-  async dropImageFile(file: File, targetPath: AbsPath) {
+  async dropImageFile(file: File, targetPath: AbsolutePath2) {
     const fileType = getMimeType(file.name);
     if (!isImageType(fileType)) {
       throw new BadRequestError("Not a valid image");
     }
-    return this.newFile(targetPath, relPath(file.name), new Uint8Array(await file.arrayBuffer()));
+    return this.newFile(targetPath, relPath2(file.name), new Uint8Array(await file.arrayBuffer()));
   }
 
   getFileTreeRoot() {
@@ -489,7 +515,7 @@ export class Workspace extends WorkspaceDAO {
   getFlatDirTree() {
     return this.disk.fileTree.dirs;
   }
-  nodeFromPath(path: AbsPath | string | null) {
+  nodeFromPath(path: AbsolutePath2 | string | null) {
     if (path === null) return null;
     return this.disk.fileTree.nodeFromPath(path);
   }
@@ -528,8 +554,8 @@ export class Workspace extends WorkspaceDAO {
   home = () => {
     return this.href;
   };
-  resolveFileUrl = (filePath: AbsPath) => {
-    return this.href + filePath.urlSafe();
+  resolveFileUrl = (filePath: AbsolutePath2) => {
+    return this.href + encodePath(filePath);
   };
   subRoute = (path: string) => {
     return `${this.href.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
@@ -541,9 +567,9 @@ export class Workspace extends WorkspaceDAO {
   }
 
   getImages() {
-    const result: AbsPath[] = [];
+    const result: AbsolutePath2[] = [];
     this.disk.fileTree.walk((node) => {
-      if (node.path.isImage()) {
+      if (isImage(node.path)) {
         result.push(node.path);
       }
     });

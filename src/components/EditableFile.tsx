@@ -3,7 +3,7 @@ import { WorkspaceRouteType } from "@/context";
 import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, relPath } from "@/lib/paths";
+import { AbsolutePath2, relPath2, toString, isImage, encodePath, equals } from "@/lib/paths2";
 import clsx from "clsx";
 import { FileText } from "lucide-react";
 import Link from "next/link";
@@ -25,7 +25,7 @@ export const EditableFile = ({
   workspaceRoute: WorkspaceRouteType;
   className?: string;
   treeFile: TreeFile;
-  fullPath: AbsPath;
+  fullPath: AbsolutePath2;
   expand: (node: TreeNode, value: boolean) => void;
   depth: number;
 }) => {
@@ -68,7 +68,7 @@ export const EditableFile = ({
     <div className="select-none">
       {!isEditing ? (
         <ActiveLink
-          active={fullPath.equals(workspaceRoute.path)}
+          active={equals(fullPath, workspaceRoute.path)}
           draggable
           onDragStart={onDragStart}
           href={currentWorkspace.resolveFileUrl(fullPath)}
@@ -90,9 +90,9 @@ export const EditableFile = ({
           <div className="w-full">
             <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
               <SelectedMark selected={isSelected} />
-              {treeFile.path.isImage() ? (
+              {isImage(treeFile.path) ? (
                 <img
-                  src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
+                  src={encodePath(treeFile.path) + (!toString(treeFile.path).endsWith(".svg") ? "?thumb=100" : "")}
                   alt=""
                   className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
                 />
@@ -107,9 +107,9 @@ export const EditableFile = ({
         <div className={twMerge(className, "w-full")}>
           <div className="w-full flex items-center truncate" style={{ paddingLeft: depth + "rem" }}>
             <SelectedMark selected={isSelected} />
-            {treeFile.path.isImage() ? (
+            {isImage(treeFile.path) ? (
               <img
-                src={treeFile.path.urlSafe() + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
+                src={encodePath(treeFile.path) + (!toString(treeFile.path).endsWith(".svg") ? "?thumb=100" : "")}
                 alt=""
                 className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
               />
@@ -120,8 +120,8 @@ export const EditableFile = ({
               ref={inputRef}
               className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full "
               type="text"
-              value={fileName.str}
-              onChange={(e) => setFileName(relPath(e.target.value))}
+              value={toString(fileName)}
+              onChange={(e) => setFileName(relPath2(e.target.value))}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
             />

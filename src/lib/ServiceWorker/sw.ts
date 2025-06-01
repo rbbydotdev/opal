@@ -5,7 +5,7 @@ import { errF, isError, NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { absPath, BasePath } from "@/lib/paths";
+import { absPath2, decodePath, toString } from "@/lib/paths2";
 import { RemoteLogger } from "@/lib/RemoteLogger";
 import * as fflate from "fflate";
 import React from "react";
@@ -141,7 +141,7 @@ async function handleFaviconRequest(event: FetchEvent): Promise<Response> {
 
 async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: string): Promise<Response> {
   try {
-    const decodedPathname = BasePath.decode(url.pathname);
+    const decodedPathname = decodePath(url.pathname);
     const isThumbnail = Thumb.isThumbURL(url);
     console.log(`Intercepted request for: 
     decodedPathname: ${decodedPathname}
@@ -166,7 +166,7 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
 
     const contents: Uint8Array<ArrayBufferLike> = isThumbnail
       ? ((await workspace.readOrMakeThumb(decodedPathname)) as Uint8Array<ArrayBufferLike>)
-      : ((await workspace.readFile(absPath(decodedPathname))) as Uint8Array<ArrayBufferLike>);
+      : ((await workspace.readFile(absPath2(decodedPathname))) as Uint8Array<ArrayBufferLike>);
 
     const response = new Response(contents, {
       headers: {
@@ -217,15 +217,15 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
       fileNodes.map(async (node) => {
         if (node.type === "file") {
           try {
-            console.log(`Adding file to zip: ${node.path.str}`);
-            const fileStream = new fflate.ZipDeflate(node.path.str, { level: 9 });
+            console.log(`Adding file to zip: ${toString(node.path)}`);
+            const fileStream = new fflate.ZipDeflate(toString(node.path), { level: 9 });
             zip.add(fileStream);
             void workspace.disk.readFile(node.path).then((data) => fileStream.push(coerceUint8Array(data), true)); // true = last chunk
           } catch (e) {
-            console.error(`Failed to add file to zip: ${node.path.str}`, e);
+            console.error(`Failed to add file to zip: ${toString(node.path)}`, e);
           }
         } else if (node.type === "dir") {
-          const dirName = node.path.str + "/";
+          const dirName = toString(node.path) + "/";
           const emptyDir = new fflate.ZipPassThrough(dirName);
           zip.add(emptyDir);
           emptyDir.push(new Uint8Array(0), true);
