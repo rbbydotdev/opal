@@ -161,12 +161,12 @@ export class WorkspaceDAO implements WorkspaceRecord {
   }
   static async byName(name: string) {
     const ws = await ClientDb.workspaces.where("name").equals(name).first();
-    if (!ws) throw new NotFoundError("Workspace not found");
+    if (!ws) throw new NotFoundError("Workspace not found: " + name);
     return new WorkspaceDAO(ws);
   }
   static async byGuid(guid: string) {
     const ws = await ClientDb.workspaces.where("guid").equals(guid).first();
-    if (!ws) throw new NotFoundError("Workspace not found");
+    if (!ws) throw new NotFoundError("Workspace not found: " + guid);
 
     const wsd = new WorkspaceDAO(ws);
 

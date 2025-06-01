@@ -1,6 +1,14 @@
 "use client";
 import { WorkspaceLiveEditor } from "@/components/WorkspaceLiveEditor";
+import { useWorkspaceRoute } from "@/context";
+import useFavicon from "@/hooks/useFavicon";
 
 export default function Page() {
-  return <WorkspaceLiveEditor />;
+  const { id } = useWorkspaceRoute();
+  useFavicon("/favicon.svg" + "?" + id, "image/svg+xml");
+  return (
+    <>
+      <WorkspaceLiveEditor />;
+    </>
+  );
 }

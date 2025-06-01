@@ -405,21 +405,13 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
         <CollapsibleContent>
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a
-                href="/download.zip"
-                download
-                onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
-              >
+              <a href="/download.zip" onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}>
                 <Download className="mr-1" />
                 Download Zip
               </a>
             </Button>
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a
-                href="/download"
-                download
-                onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}
-              >
+              <a href="/download.zip" onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}>
                 <Lock className="inline" />
                 Download Encrypted Zip
               </a>
