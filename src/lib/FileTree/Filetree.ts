@@ -13,15 +13,15 @@ import {
 } from "@/lib/FileTree/TreeNode";
 import {
   AbsolutePath2,
-  RelativePath2,
-  absPath2,
-  relPath2,
-  encodePath,
-  decodePath,
+  absPath,
   basename,
+  decodePath,
   dirname,
-  joinAbsolutePath,
+  encodePath,
   extname,
+  joinPath,
+  RelativePath2,
+  relPath,
 } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 
@@ -78,7 +78,7 @@ export class FileTree {
     //recursive to back fill parent nodes
     const node = this.nodeFromPath(path);
     if (node) return node;
-    const parent = (dirname(path) === "/" ? this.root : this.updateIndex(absPath2(dirname(path)), "dir")) || this.root;
+    const parent = (dirname(path) === "/" ? this.root : this.updateIndex(absPath(dirname(path)), "dir")) || this.root;
     const newNode = TreeNode.FromPath(path, type, parent as TreeDir);
     this.insertNode(newNode.parent!, newNode);
     this.map.set(path as string, newNode);
@@ -119,7 +119,7 @@ export class FileTree {
   ): Promise<TreeDir> => {
     const dir = parent.path;
     try {
-      const entries = (await this.fs.readdir(encodePath(dir))).map((e) => relPath2(decodePath(e.toString())));
+      const entries = (await this.fs.readdir(encodePath(dir))).map((e) => relPath(decodePath(e.toString())));
 
       // Separate directories and files
       const directories: RelativePath2[] = [];
@@ -128,7 +128,7 @@ export class FileTree {
       try {
         await Promise.all(
           entries.map(async (entry) => {
-            const fullPath = joinAbsolutePath(dir, entry);
+            const fullPath = joinPath(dir, entry);
             const stat = await this.fs.stat(encodePath(fullPath)).catch((e) => {
               if (isErrorWithCode(e, "ENOENT")) {
                 console.error(`stat error for file ${fullPath}`);
@@ -155,11 +155,11 @@ export class FileTree {
       // Process files first
       await Promise.all(
         files.map(async (entry) => {
-          const fullPath = joinAbsolutePath(dir, entry);
+          const fullPath = joinPath(dir, entry);
           const treeEntry = new TreeFile({
-            name: relPath2(entry as string),
-            dirname: absPath2(dirname(fullPath)),
-            basename: relPath2(basename(fullPath)),
+            name: relPath(entry as string),
+            dirname: absPath(dirname(fullPath)),
+            basename: relPath(basename(fullPath)),
             path: fullPath,
             parent,
             depth: depth,
@@ -171,11 +171,11 @@ export class FileTree {
 
       // Process directories in order
       for (const entry of directories) {
-        const fullPath = joinAbsolutePath(dir, entry);
+        const fullPath = joinPath(dir, entry);
         const treeEntry = new TreeDir({
           name: entry,
-          dirname: absPath2(dirname(fullPath)),
-          basename: relPath2(basename(fullPath)),
+          dirname: absPath(dirname(fullPath)),
+          basename: relPath(basename(fullPath)),
           path: fullPath,
           parent,
           depth: depth,
@@ -276,13 +276,13 @@ function _sortNodesByName(nodes: Record<string, TreeNode>) {
 }
 
 function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelativePath2; parent: TreeDir }) {
-  const path = joinAbsolutePath(parent.path, name);
+  const path = joinPath(parent.path, name);
   const depth = parent.depth + 1;
   if (type === "dir") {
     return new VirtualDirTreeNode({
-      name: relPath2(basename(path)),
-      dirname: absPath2(dirname(path)),
-      basename: relPath2(basename(path)),
+      name: relPath(basename(path)),
+      dirname: absPath(dirname(path)),
+      basename: relPath(basename(path)),
       path,
       parent,
       depth,
@@ -290,9 +290,9 @@ function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name
     });
   } else {
     return new VirtualFileTreeNode({
-      name: relPath2(basename(path)),
-      dirname: absPath2(dirname(path)),
-      basename: relPath2(basename(path)),
+      name: relPath(basename(path)),
+      dirname: absPath(dirname(path)),
+      basename: relPath(basename(path)),
       path,
       parent,
       depth,

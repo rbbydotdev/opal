@@ -4,14 +4,7 @@ import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import {
-  RelativePath2,
-  relPath2,
-  basename,
-  equals,
-  prefix,
-  changePrefixRel,
-} from "@/lib/paths2";
+import { basename, changePrefixRel, equals, prefix, RelativePath2, relPath } from "@/lib/paths2";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -37,13 +30,16 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { editing, editType, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
     useFileTreeMenuContext();
-  const [fileName, setFileName] = useState<RelativePath2>(relPath2(basename(fullPath)));
+  const [fileName, setFileName] = useState<RelativePath2>(relPath(basename(fullPath)));
 
   const isSelected = equals(fullPath, currentFile);
   const isEditing = equals(fullPath, editing);
   const isFocused = equals(fullPath, focused);
   const isVirtual = equals(fullPath, virtual);
-  const isSelectedRange = useMemo(() => selectedRange.includes(treeNode.path as string), [selectedRange, treeNode.path]);
+  const isSelectedRange = useMemo(
+    () => selectedRange.includes(treeNode.path as string),
+    [selectedRange, treeNode.path]
+  );
 
   //assuring focus on the input when editing
   useEffect(() => {
@@ -87,7 +83,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   );
 
   const cancelEdit = useCallback(() => {
-    setFileName(relPath2(basename(fullPath)));
+    setFileName(relPath(basename(fullPath)));
     resetEditing();
     linkRef.current?.focus();
   }, [fullPath, resetEditing]);
@@ -106,14 +102,11 @@ export function useEditable<T extends TreeFile | TreeNode>({
         }
       } else if (e.key === "Enter") {
         if (isEditing) {
-          if (
-            prefix(fileName) &&
-            (editType === "new" || prefix(fileName) !== prefix(relPath2(basename(fullPath))))
-          ) {
-            const wantPath = relPath2(basename(changePrefixRel(relPath2(basename(fullPath)), prefix(fileName))));
+          if (prefix(fileName) && (editType === "new" || prefix(fileName) !== prefix(relPath(basename(fullPath))))) {
+            const wantPath = relPath(basename(changePrefixRel(relPath(basename(fullPath)), prefix(fileName))));
             const gotPath = await commitChange(treeNode, wantPath, editType);
             resetEditing();
-            setFileName(relPath2(basename(gotPath)));
+            setFileName(relPath(basename(gotPath)));
             setFocused(gotPath);
             if (treeNode.type === "file" && (equals(fullPath, workspaceRoute.path) || !workspaceRoute.path)) {
               router.push(currentWorkspace.resolveFileUrl(gotPath));

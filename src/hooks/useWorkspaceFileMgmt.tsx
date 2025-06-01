@@ -7,14 +7,14 @@ import { TreeNode } from "@/lib/FileTree/TreeNode";
 import {
   AbsolutePath2,
   RelativePath2,
-  absPath2,
-  relPath2,
-  isAncestor,
-  reduceLineage,
+  absPath,
   basename,
-  dirname,
-  joinAbsolutePath,
   decodePath,
+  dirname,
+  isAncestor,
+  joinPath,
+  reduceLineage,
+  relPath,
 } from "@/lib/paths2";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
@@ -27,7 +27,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const newFile = React.useCallback(
     async (path: AbsolutePath2, content = "") => {
-      const newPath = await currentWorkspace.newFile(absPath2(dirname(path)), relPath2(basename(path)), content);
+      const newPath = await currentWorkspace.newFile(absPath(dirname(path)), relPath(basename(path)), content);
       if (!workspaceRoute.path) {
         router.push(currentWorkspace.resolveFileUrl(newPath));
       }
@@ -38,7 +38,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const newDir = React.useCallback(
     async (path: AbsolutePath2) => {
-      return currentWorkspace.newDir(absPath2(dirname(path)), relPath2(basename(path)));
+      return currentWorkspace.newDir(absPath(dirname(path)), relPath(basename(path)));
     },
     [currentWorkspace]
   );
@@ -50,7 +50,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     }
     if (!range.length) return;
 
-    const paths = reduceLineage(range).map((pathStr) => absPath2(pathStr));
+    const paths = reduceLineage(range).map((pathStr) => absPath(pathStr));
     try {
       await Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
       if (workspaceRoute.path && range.includes(workspaceRoute.path as string)) {
@@ -70,7 +70,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     if (!focused || !currentWorkspace.disk.pathExists(focused)) return;
     const focusedNode = currentWorkspace.nodeFromPath(focused as string);
     if (!focusedNode) return;
-    if (focusedNode.path as string === "/") return;
+    if ((focusedNode.path as string) === "/") return;
 
     try {
       await currentWorkspace.removeFile(focusedNode.path);
@@ -95,7 +95,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     (type: TreeNode["type"]) => {
       const focusedNode = focused ? currentWorkspace.nodeFromPath(focused as string) : null;
       const name = type === "dir" ? "newdir" : "newfile.md";
-      const newNode = currentWorkspace.addVirtualFile({ type, name: relPath2(name) }, focusedNode);
+      const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);
       setFocused(newNode.path);
       setEditing(newNode.path);
       setVirtual(newNode.path);
@@ -113,8 +113,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
           : await currentWorkspace.renameFile(oldNode, newFullPath);
 
       if (
-        workspaceRoute.path && (isAncestor(workspaceRoute.path as string, oldNode.path as string) ||
-        (workspaceRoute.path as string) === (oldNode.path as string))
+        workspaceRoute.path &&
+        (isAncestor(workspaceRoute.path as string, oldNode.path as string) ||
+          (workspaceRoute.path as string) === (oldNode.path as string))
       ) {
         router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
       }
@@ -157,12 +158,16 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const commitChange = React.useCallback(
     async (origNode: TreeNode, fileName: RelativePath2, type: "rename" | "new") => {
-      const wantPath = joinAbsolutePath(absPath2(dirname(origNode.path)), relPath2(decodePath(fileName)));
+      const wantPath = joinPath(absPath(dirname(origNode.path)), relPath(decodePath(fileName)));
       if (type === "new") {
         if (origNode.type === "file")
-          return currentWorkspace.newFile(absPath2(dirname(wantPath)), relPath2(basename(wantPath)), "# " + basename(wantPath));
+          return currentWorkspace.newFile(
+            absPath(dirname(wantPath)),
+            relPath(basename(wantPath)),
+            "# " + basename(wantPath)
+          );
         else {
-          return currentWorkspace.newDir(absPath2(dirname(wantPath)), relPath2(basename(wantPath)));
+          return currentWorkspace.newDir(absPath(dirname(wantPath)), relPath(basename(wantPath)));
         }
       }
       // return origNode.type === "dir" ? await renameDir(origNode, wantPath) : await renameFile(origNode, wantPath);

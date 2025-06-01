@@ -1,5 +1,5 @@
 import { CommonFileSystem } from "@/Db/Disk";
-import { AbsolutePath2, absPath2, decodePath, joinAbsolutePath, encodePath } from "@/lib/paths2";
+import { AbsolutePath2, absPath, decodePath, encodePath, joinPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
 
@@ -7,7 +7,7 @@ export class NamespacedFs implements CommonFileSystem {
   namespace: AbsolutePath2;
   constructor(protected fs: CommonFileSystem, namespace: AbsolutePath2 | string) {
     if (typeof namespace === "string") {
-      this.namespace = absPath2(decodePath(namespace));
+      this.namespace = absPath(decodePath(namespace));
     } else {
       this.namespace = namespace;
     }
@@ -24,30 +24,30 @@ export class NamespacedFs implements CommonFileSystem {
         }
     )[]
   > {
-    return this.fs.readdir(encodePath(joinAbsolutePath(this.namespace, path)));
+    return this.fs.readdir(encodePath(joinPath(this.namespace, path)));
   }
 
   stat(path: string): Promise<{ isDirectory: () => boolean; isFile: () => boolean }> {
-    return this.fs.stat(encodePath(joinAbsolutePath(this.namespace, path)));
+    return this.fs.stat(encodePath(joinPath(this.namespace, path)));
   }
   readFile(path: string, options?: { encoding?: "utf8" }): Promise<Uint8Array | Buffer | string> {
-    return this.fs.readFile(encodePath(joinAbsolutePath(this.namespace, path)), options);
+    return this.fs.readFile(encodePath(joinPath(this.namespace, path)), options);
   }
   mkdir(path: string, options?: { recursive?: boolean; mode: number }): Promise<string | void> {
-    return this.fs.mkdir(encodePath(joinAbsolutePath(this.namespace, path)), options);
+    return this.fs.mkdir(encodePath(joinPath(this.namespace, path)), options);
   }
   rename(oldPath: string, newPath: string): Promise<void> {
-    return this.fs.rename(encodePath(joinAbsolutePath(this.namespace, oldPath)), encodePath(joinAbsolutePath(this.namespace, newPath)));
+    return this.fs.rename(encodePath(joinPath(this.namespace, oldPath)), encodePath(joinPath(this.namespace, newPath)));
   }
   unlink(path: string): Promise<void> {
-    return this.fs.unlink(encodePath(joinAbsolutePath(this.namespace, path)));
+    return this.fs.unlink(encodePath(joinPath(this.namespace, path)));
   }
   writeFile(
     path: string,
     data: Uint8Array | Buffer | string,
     options?: { encoding?: "utf8"; mode: number }
   ): Promise<void> {
-    return this.fs.writeFile(encodePath(joinAbsolutePath(this.namespace, path)), data, options);
+    return this.fs.writeFile(encodePath(joinPath(this.namespace, path)), data, options);
   }
 }
 

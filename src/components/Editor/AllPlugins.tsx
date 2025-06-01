@@ -3,7 +3,7 @@ import { Workspace } from "@/Db/Workspace";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context";
 import { BadRequestError, isError } from "@/lib/errors";
-import { absPath2, dirname } from "@/lib/paths2";
+import { absPath, dirname } from "@/lib/paths2";
 import {
   AdmonitionDirectiveDescriptor,
   KitchenSinkToolbar,
@@ -155,7 +155,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       imageUploadHandler: async (file: File) => {
         try {
           return await currentWorkspace
-            .dropImageFile(file, path ? absPath2(dirname(path)) : absPath2("/"))
+            .dropImageFile(file, path ? absPath(dirname(path)) : absPath("/"))
             .then((path) => String(path));
         } catch (e) {
           console.error("image upload handler error");

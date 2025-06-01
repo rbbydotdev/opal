@@ -4,7 +4,7 @@ import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { WorkspaceRouteType } from "@/context";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsolutePath2, relPath2, basename } from "@/lib/paths2";
+import { AbsolutePath2, basename, relPath } from "@/lib/paths2";
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
 import { ComponentProps, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
@@ -100,12 +100,12 @@ export const EditableDir = ({
                 className={"bg-transparent outline-none border-b border-dashed border-black w-full"}
                 type="text"
                 value={basename(fileName) as string}
-                onChange={(e) => setFileName(relPath2(e.target.value))}
+                onChange={(e) => setFileName(relPath(e.target.value))}
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
               />
             ) : (
-(basename(fullPath) as string)
+              (basename(fullPath) as string)
             )}
           </div>
         </div>

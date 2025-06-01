@@ -8,14 +8,14 @@ import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import {
   AbsolutePath2,
-  absPath2,
+  absPath,
   decodePath,
   encodePath,
   isAncestor,
   isImage,
-  joinAbsolutePath,
+  joinPath,
   RelativePath2,
-  relPath2,
+  relPath,
 } from "@/lib/paths2";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
@@ -359,25 +359,25 @@ export class Workspace extends WorkspaceDAO {
   }
 
   async readOrMakeThumb(path: AbsolutePath2 | string, size = 100) {
-    const thumb = this.NewThumb(absPath2(path), size);
+    const thumb = this.NewThumb(absPath(path), size);
     return thumb.readOrMake();
   }
 
   static parseWorkspacePath(pathname: string) {
     if (!pathname.startsWith(Workspace.rootRoute)) return { workspaceId: null, filePath: null };
-    const [workspaceId, ...filePathRest] = decodePath(relPath2(pathname.replace(this.rootRoute, ""))).split("/");
+    const [workspaceId, ...filePathRest] = decodePath(relPath(pathname.replace(this.rootRoute, ""))).split("/");
     const filePath = filePathRest.join("/");
     if (!workspaceId) {
       return { workspaceId: null, filePath: null };
     }
-    return { workspaceId, filePath: filePath ? absPath2(filePath) : undefined };
+    return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
   }
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
     await ws.disk.ready;
     await Promise.all(
       Object.entries(Workspace.seedFiles).map(([filePath, content]) =>
-        ws.disk.writeFileRecursive(absPath2(filePath), content)
+        ws.disk.writeFileRecursive(absPath(filePath), content)
       )
     );
     return ws;
@@ -386,18 +386,18 @@ export class Workspace extends WorkspaceDAO {
   replaceUrlPath(pathname: string, oldPath: AbsolutePath2, newPath: AbsolutePath2) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
-    return this.resolveFileUrl(absPath2((filePath as string).replace(oldPath as string, newPath as string)));
+    return this.resolveFileUrl(absPath((filePath as string).replace(oldPath as string, newPath as string)));
   }
 
   newDir(dirPath: AbsolutePath2, newDirName: RelativePath2) {
-    return this.disk.newDir(joinAbsolutePath(dirPath, newDirName));
+    return this.disk.newDir(joinPath(dirPath, newDirName));
   }
   newFile(
     dirPath: AbsolutePath2,
     newFileName: RelativePath2,
     content: string | Uint8Array = ""
   ): Promise<AbsolutePath2> {
-    return this.disk.newFile(joinAbsolutePath(dirPath, newFileName), content);
+    return this.disk.newFile(joinPath(dirPath, newFileName), content);
   }
 
   addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {
@@ -444,12 +444,12 @@ export class Workspace extends WorkspaceDAO {
     await this.disk.findReplaceImgBatch([
       [
         oldNode.path as string,
-        absPath2((oldNode.path as string).replace(oldNode.path as string, newNode.path as string)) as string,
+        absPath((oldNode.path as string).replace(oldNode.path as string, newNode.path as string)) as string,
       ],
     ]); // Update all references in the disk
     await this.adjustPath(
       oldNode,
-      absPath2((oldNode.path as string).replace(oldNode.path as string, newNode.path as string))
+      absPath((oldNode.path as string).replace(oldNode.path as string, newNode.path as string))
     );
     return newNode;
   };
@@ -466,11 +466,11 @@ export class Workspace extends WorkspaceDAO {
     await newNode.asyncWalk(async (child) => {
       findStrReplaceStr.push([
         child.path as string,
-        absPath2((child.path as string).replace(oldNode.path as string, newNode.path as string)) as string,
+        absPath((child.path as string).replace(oldNode.path as string, newNode.path as string)) as string,
       ]);
       await this.adjustPath(
         child,
-        absPath2((child.path as string).replace(oldNode.path as string, newNode.path as string))
+        absPath((child.path as string).replace(oldNode.path as string, newNode.path as string))
       );
     });
     await this.disk.findReplaceImgBatch(findStrReplaceStr);
@@ -505,7 +505,7 @@ export class Workspace extends WorkspaceDAO {
     if (!isImageType(fileType)) {
       throw new BadRequestError("Not a valid image");
     }
-    return this.newFile(targetPath, relPath2(file.name), new Uint8Array(await file.arrayBuffer()));
+    return this.newFile(targetPath, relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
 
   getFileTreeRoot() {
