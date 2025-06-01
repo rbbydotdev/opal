@@ -77,12 +77,12 @@ export function decodePath(path: AbsolutePath2 | RelativePath2 | string): string
 
 // --- Join ---
 export function joinAbsolutePath(base: AbsolutePath2, ...parts: (string | RelativePath2)[]): AbsolutePath2 {
-  const joined = [base as string, ...parts.map(p => p as string)].join("/");
+  const joined = [base === "/" ? "" : (base as string), ...parts.map((p) => p as string)].join("/");
   return absPath2(joined);
 }
 
 export function joinRelativePath2(base: RelativePath2, ...parts: (string | RelativePath2)[]): RelativePath2 {
-  const joined = [base as string, ...parts.map(p => p as string)].join("/");
+  const joined = [base as string, ...parts.map((p) => p as string)].join("/");
   return relPath2(joined);
 }
 
