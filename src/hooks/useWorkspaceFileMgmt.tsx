@@ -46,14 +46,14 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   const removeFiles = React.useCallback(async () => {
     const range = [...selectedRange];
     if (!range.length && focused) {
-      range.push(focused as string);
+      range.push(focused);
     }
     if (!range.length) return;
 
     const paths = reduceLineage(range).map((pathStr) => absPath(pathStr));
     try {
       await Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
-      if (workspaceRoute.path && range.includes(workspaceRoute.path as string)) {
+      if (workspaceRoute.path && range.includes(workspaceRoute.path)) {
         router.push(await currentWorkspace.tryFirstFileUrl());
       }
     } catch (e) {
@@ -68,9 +68,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const removeFocusedFile = React.useCallback(async () => {
     if (!focused || !currentWorkspace.disk.pathExists(focused)) return;
-    const focusedNode = currentWorkspace.nodeFromPath(focused as string);
+    const focusedNode = currentWorkspace.nodeFromPath(focused);
     if (!focusedNode) return;
-    if ((focusedNode.path as string) === "/") return;
+    if (focusedNode.path === "/") return;
 
     try {
       await currentWorkspace.removeFile(focusedNode.path);
@@ -81,7 +81,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
         throw e;
       }
     }
-    if (workspaceRoute.path && (workspaceRoute.path as string) === (focusedNode.path as string)) {
+    if (workspaceRoute.path && workspaceRoute.path === focusedNode.path) {
       router.push(await currentWorkspace.tryFirstFileUrl());
     }
   }, [focused, currentWorkspace, workspaceRoute.path, router]);
@@ -93,7 +93,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const addDirFile = React.useCallback(
     (type: TreeNode["type"]) => {
-      const focusedNode = focused ? currentWorkspace.nodeFromPath(focused as string) : null;
+      const focusedNode = focused ? currentWorkspace.nodeFromPath(focused) : null;
       const name = type === "dir" ? "newdir" : "newfile.md";
       const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);
       setFocused(newNode.path);
@@ -114,8 +114,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
       if (
         workspaceRoute.path &&
-        (isAncestor(workspaceRoute.path as string, oldNode.path as string) ||
-          (workspaceRoute.path as string) === (oldNode.path as string))
+        (isAncestor(workspaceRoute.path, oldNode.path) || workspaceRoute.path === oldNode.path)
       ) {
         router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
       }

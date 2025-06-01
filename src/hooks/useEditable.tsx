@@ -36,10 +36,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const isEditing = equals(fullPath, editing);
   const isFocused = equals(fullPath, focused);
   const isVirtual = equals(fullPath, virtual);
-  const isSelectedRange = useMemo(
-    () => selectedRange.includes(treeNode.path as string),
-    [selectedRange, treeNode.path]
-  );
+  const isSelectedRange = useMemo(() => selectedRange.includes(treeNode.path), [selectedRange, treeNode.path]);
 
   //assuring focus on the input when editing
   useEffect(() => {
@@ -55,7 +52,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
         e.preventDefault();
         e.stopPropagation();
         setFocused(treeNode.path);
-        setSelectedRange(Array.from(new Set([...selectedRange, treeNode.path as string])));
+        setSelectedRange(Array.from(new Set([...selectedRange, treeNode.path])));
         return;
       }
       if (e.shiftKey && focused) {

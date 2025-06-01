@@ -25,10 +25,10 @@ export class TreeNode {
   children?: Record<string, TreeNode>;
 
   get length() {
-    return (this.path as string).length;
+    return this.path.length;
   }
   toString() {
-    return this.path as string;
+    return this.path;
   }
   get str() {
     return this.toString();
@@ -109,8 +109,8 @@ export class TreeNode {
   }
 
   remove() {
-    if (this.parent && (this.name as string) in this.parent.children) {
-      delete this.parent.children[this.name as string];
+    if (this.parent && this.name in this.parent.children) {
+      delete this.parent.children[this.name];
       return true;
     }
     return false;
@@ -180,11 +180,11 @@ export class TreeNode {
     // eTag?: string;
   } {
     return {
-      name: this.name as string,
+      name: this.name,
       type: this.type,
-      dirname: this.dirname as string,
-      basename: this.basename as string,
-      path: this.path as string,
+      dirname: this.dirname,
+      basename: this.basename,
+      path: this.path,
       depth: this.depth,
       // mimeType: this.mimeType,
       // parent: this.parent,

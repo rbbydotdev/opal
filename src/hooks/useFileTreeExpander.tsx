@@ -50,7 +50,7 @@ export function useFileTreeExpander({
   const expandForNode = (node: TreeNode, state: boolean) => {
     let n: TreeNode | null = node;
     while (n?.parent) {
-      expandSingle(n.path as string, state);
+      expandSingle(n.path, state);
       n = n.parent;
     }
   };

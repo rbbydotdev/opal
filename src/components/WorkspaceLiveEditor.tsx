@@ -20,7 +20,7 @@ export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
   if (filePath === null) return null;
 
   if (isImage) {
-    return <ImageViewer alt={filePath as string} origSrc={filePath as string} />;
+    return <ImageViewer alt={filePath} origSrc={filePath} />;
   }
   return <WorkspaceLiveEditorInternal {...props} />;
 }

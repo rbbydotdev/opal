@@ -99,13 +99,13 @@ export const EditableDir = ({
                 ref={inputRef}
                 className={"bg-transparent outline-none border-b border-dashed border-black w-full"}
                 type="text"
-                value={basename(fileName) as string}
+                value={basename(fileName)}
                 onChange={(e) => setFileName(relPath(e.target.value))}
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
               />
             ) : (
-              (basename(fullPath) as string)
+              basename(fullPath)
             )}
           </div>
         </div>

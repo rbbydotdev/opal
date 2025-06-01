@@ -217,15 +217,15 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
       fileNodes.map(async (node) => {
         if (node.type === "file") {
           try {
-            console.log(`Adding file to zip: ${node.path as string}`);
-            const fileStream = new fflate.ZipDeflate(node.path as string, { level: 9 });
+            console.log(`Adding file to zip: ${node.path}`);
+            const fileStream = new fflate.ZipDeflate(node.path, { level: 9 });
             zip.add(fileStream);
             void workspace.disk.readFile(node.path).then((data) => fileStream.push(coerceUint8Array(data), true)); // true = last chunk
           } catch (e) {
-            console.error(`Failed to add file to zip: ${node.path as string}`, e);
+            console.error(`Failed to add file to zip: ${node.path}`, e);
           }
         } else if (node.type === "dir") {
-          const dirName = (node.path as string) + "/";
+          const dirName = node.path + "/";
           const emptyDir = new fflate.ZipPassThrough(dirName);
           zip.add(emptyDir);
           emptyDir.push(new Uint8Array(0), true);
