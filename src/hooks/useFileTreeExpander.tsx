@@ -1,7 +1,7 @@
 "use client";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsolutePath2, toString } from "@/lib/paths2";
+import { AbsolutePath2 } from "@/lib/paths2";
 import { useCallback, useEffect, useState } from "react";
 import { isAncestor } from "@/lib/paths2";
 
@@ -51,7 +51,7 @@ export function useFileTreeExpander({
   const expandForNode = (node: TreeNode, state: boolean) => {
     let n: TreeNode | null = node;
     while (n?.parent) {
-      expandSingle(toString(n.path), state);
+      expandSingle(n.path as string, state);
       n = n.parent;
     }
   };

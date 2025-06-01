@@ -4,7 +4,7 @@ import { Editor } from "@/components/Editor/Editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context";
-import { toString, encodePath } from "@/lib/paths2";
+import { encodePath } from "@/lib/paths2";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -20,7 +20,7 @@ export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
   if (filePath === null) return null;
 
   if (isImage) {
-    return <ImageViewer alt={toString(filePath)} origSrc={toString(filePath)} />;
+    return <ImageViewer alt={filePath as string} origSrc={filePath as string} />;
   }
   return <WorkspaceLiveEditorInternal {...props} />;
 }

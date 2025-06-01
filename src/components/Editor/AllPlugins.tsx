@@ -3,7 +3,7 @@ import { Workspace } from "@/Db/Workspace";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context";
 import { BadRequestError, isError } from "@/lib/errors";
-import { absPath2, dirname, toString } from "@/lib/paths2";
+import { absPath2, dirname } from "@/lib/paths2";
 import {
   AdmonitionDirectiveDescriptor,
   KitchenSinkToolbar,
@@ -136,7 +136,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
   const { path } = useWorkspaceRoute();
   useEffect(() => {
     return currentWorkspace.disk.latestIndexListener(() => {
-      setImgs(currentWorkspace.getImages().map((i) => toString(i)));
+      setImgs(currentWorkspace.getImages().map((i) => i as string));
     });
   }, [currentWorkspace]);
 

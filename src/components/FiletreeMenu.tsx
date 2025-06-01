@@ -11,7 +11,7 @@ import { BadRequestError, isError } from "@/lib/errors";
 import { absPath2, AbsolutePath2, reduceLineage } from "@/lib/paths2";
 import clsx from "clsx";
 import React from "react";
-import { isAncestor, toString, joinAbsolutePath, basename, equals, encodePath, getPathMimeType } from "@/lib/paths2";
+import { isAncestor, joinAbsolutePath, basename, equals, encodePath, getPathMimeType } from "@/lib/paths2";
 
 export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
 
@@ -64,13 +64,13 @@ export function useFileTreeDragAndDrop({
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
     setDragOver(null);
     // Create a set of unique file paths from the selected range, the current file, and the focused file
-    const allFiles = Array.from(new Set([...selectedRange, toString(targetNode.path), focused ? toString(focused) : null]))
+    const allFiles = Array.from(new Set([...selectedRange, targetNode.path as string, focused ? (focused as string) : null]))
       .filter(Boolean)
       .map((entry) => absPath2(entry!));
 
     // Prepare the data for the internal file type
     const data = JSON.stringify({
-      dragStart: Array.from(new Set([...selectedRange, toString(targetNode.path), focused ? toString(focused) : ""]))
+      dragStart: Array.from(new Set([...selectedRange, targetNode.path as string, focused ? (focused as string) : ""]))
         .map((path) => (path ? currentWorkspace.disk.fileTree.nodeFromPath(path) : null))
         .filter(Boolean),
     } satisfies DragStartType);
@@ -84,14 +84,14 @@ export function useFileTreeDragAndDrop({
     // Set the internal file type data
     event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
 
-    event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${encodePath(url)}">${toString(url)}</a>`).join("\n"));
+    event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${encodePath(url)}">${url as string}</a>`).join("\n"));
 
     allFiles.filter(Boolean).forEach((fpath, i) => {
       //using semi-colon to play nice with possible mimeType collision (hackish)
 
       // event.dataTransfer.setData(`${fpath.getMimeType()};index=${i}`, encodePath(fpath));
       //TODO: Not using url safe?
-      event.dataTransfer.setData(`${getPathMimeType(fpath)};index=${i}`, toString(fpath));
+      event.dataTransfer.setData(`${getPathMimeType(fpath)};index=${i}`, fpath as string);
     });
   };
 
@@ -141,7 +141,7 @@ export function useFileTreeDragAndDrop({
           return Promise.all(
             dragNodes.filter(({ type: draggedType, path: draggedPath }) => {
               const dropPath = joinAbsolutePath(targetPath, basename(draggedPath));
-              if (draggedType !== "dir" || !isAncestor(dropPath, toString(draggedPath))) {
+              if (draggedType !== "dir" || !isAncestor(dropPath, draggedPath as string)) {
                 if (!equals(draggedPath, dropPath)) {
                   return onMove?.(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
                 }
@@ -220,20 +220,20 @@ function FileTreeMenuInternal({
       )}
       {Object.values(fileTreeDir.children).map((file) => (
         <SidebarMenuItem
-          key={toString(file.path)}
+          key={file.path as string}
           className={clsx({
             ["bg-sidebar-accent"]:
-              equals(file.path, workspaceRoute.path) || (file.type === "dir" && toString(file.path) === (dragOver ? toString(dragOver) : null)),
+              equals(file.path, workspaceRoute.path) || (file.type === "dir" && (file.path as string) === (dragOver ? (dragOver as string) : null)),
           })}
           onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}
           onDragLeave={handleDragLeave}
           onDragEnter={(e) => {
-            handleDragEnter(e, toString(file.path));
+            handleDragEnter(e, file.path as string);
           }}
         >
           {file.isTreeDir() ? (
-            <Collapsible open={expanded[toString(file.path)]} onOpenChange={(o) => expand(toString(file.path), o)}>
+            <Collapsible open={expanded[file.path as string]} onOpenChange={(o) => expand(file.path as string, o)}>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton asChild>
                   <EditableDir

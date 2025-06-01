@@ -21,11 +21,6 @@ export function relPath2(path: string): RelativePath2 {
   return path as RelativePath2;
 }
 
-// --- String Conversion ---
-export function toString(path: AbsolutePath2 | RelativePath2 | string): string {
-  return path as string;
-}
-
 // --- Path Utilities ---
 export function extname(path: AbsolutePath2 | RelativePath2): string {
   return pathModule.extname(basename(path));
@@ -38,11 +33,11 @@ export function prefix(path: AbsolutePath2 | RelativePath2): string {
 }
 
 export function basename(path: AbsolutePath2 | RelativePath2): string {
-  return pathModule.basename(toString(path));
+  return pathModule.basename(path as string);
 }
 
 export function dirname(path: AbsolutePath2 | RelativePath2): string {
-  return pathModule.dirname(toString(path));
+  return pathModule.dirname(path as string);
 }
 
 export function equals(
@@ -50,12 +45,12 @@ export function equals(
   b: AbsolutePath2 | RelativePath2 | null | undefined
 ): boolean {
   if (!a || !b) return false;
-  return toString(a) === toString(b);
+  return (a as string) === (b as string);
 }
 
 // --- Encoding/Decoding ---
 export function encodePath(path: AbsolutePath2 | RelativePath2 | string): string {
-  return toString(path)
+  return (path as string)
     .split("/")
     .map((part) => {
       try {
@@ -68,7 +63,7 @@ export function encodePath(path: AbsolutePath2 | RelativePath2 | string): string
 }
 
 export function decodePath(path: AbsolutePath2 | RelativePath2 | string): string {
-  return toString(path)
+  return (path as string)
     .split("/")
     .map((part) => {
       try {
@@ -82,25 +77,25 @@ export function decodePath(path: AbsolutePath2 | RelativePath2 | string): string
 
 // --- Join ---
 export function joinAbsolutePath(base: AbsolutePath2, ...parts: (string | RelativePath2)[]): AbsolutePath2 {
-  const joined = [toString(base), ...parts.map(toString)].join("/");
+  const joined = [base as string, ...parts.map(p => p as string)].join("/");
   return absPath2(joined);
 }
 
 export function joinRelativePath2(base: RelativePath2, ...parts: (string | RelativePath2)[]): RelativePath2 {
-  const joined = [toString(base), ...parts.map(toString)].join("/");
+  const joined = [base as string, ...parts.map(p => p as string)].join("/");
   return relPath2(joined);
 }
 
 // --- Shift ---
 export function shiftAbsolutePath(path: AbsolutePath2): AbsolutePath2 {
-  const segments = toString(path).split("/");
+  const segments = (path as string).split("/");
   segments.shift();
   segments[0] = "";
   return absPath2(segments.join("/"));
 }
 
 export function shiftRelativePath2(path: RelativePath2): RelativePath2 {
-  const segments = toString(path).split("/");
+  const segments = (path as string).split("/");
   segments.shift();
   return relPath2(segments.join("/"));
 }
@@ -108,7 +103,7 @@ export function shiftRelativePath2(path: RelativePath2): RelativePath2 {
 // --- Increment Path ---
 export function incPath<T extends AbsolutePath2 | RelativePath2>(path: T): T {
   const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;
-  const match = toString(path).match(regex);
+  const match = (path as string).match(regex);
 
   let newPath: string;
   if (match) {
@@ -116,14 +111,14 @@ export function incPath<T extends AbsolutePath2 | RelativePath2>(path: T): T {
     const incrementedNumber = number ? parseInt(number, 10) + 1 : 1;
     newPath = `${prefix}${incrementedNumber}${suffix}`;
   } else {
-    newPath = `${toString(path)}-1`;
+    newPath = `${path as string}-1`;
   }
-  return (toString(path).startsWith("/") ? absPath2(newPath) : relPath2(newPath)) as T;
+  return ((path as string).startsWith("/") ? absPath2(newPath) : relPath2(newPath)) as T;
 }
 
 // --- Depth ---
 export function depth(path: AbsolutePath2): number {
-  return toString(path).split("/").length - 2;
+  return (path as string).split("/").length - 2;
 }
 
 // --- Change Prefix ---
@@ -143,7 +138,7 @@ export function changePrefixRel(path: RelativePath2, newPrefix: string): Relativ
 
 // --- MIME and Image ---
 export function getPathMimeType(path: AbsolutePath2 | RelativePath2): string {
-  return getMimeType(toString(path));
+  return getMimeType(path as string);
 }
 
 export function isImage(path: AbsolutePath2 | RelativePath2): boolean {
@@ -154,8 +149,8 @@ export function isImage(path: AbsolutePath2 | RelativePath2): boolean {
 export function isAncestor(path: AbsolutePath2 | string | null, root: AbsolutePath2 | string | null): boolean {
   if (path === root) return true;
   if (path === null || root === null) return false;
-  const rootSegments = toString(root).split("/");
-  const pathSegments = toString(path).split("/");
+  const rootSegments = (root as string).split("/");
+  const pathSegments = (path as string).split("/");
   return pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i]);
 }
 
@@ -166,10 +161,10 @@ export function replaceAncestor(
 ): AbsolutePath2 | string {
   if (oldPath === root) return newPath;
   if (oldPath === null || root === null) return oldPath;
-  const rootSegments = toString(root).split("/");
-  const pathSegments = toString(oldPath).split("/");
+  const rootSegments = (root as string).split("/");
+  const pathSegments = (oldPath as string).split("/");
   if (pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i])) {
-    return joinAbsolutePath(absPath2(newPath), ...pathSegments.slice(rootSegments.length));
+    return joinAbsolutePath(absPath2(newPath as string), ...pathSegments.slice(rootSegments.length));
   }
   return oldPath;
 }
