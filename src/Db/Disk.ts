@@ -9,17 +9,7 @@ import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { isServiceWorker } from "@/lib/isServiceWorker";
 import { getMimeType } from "@/lib/mimeType";
-import {
-  AbsolutePath2,
-  absPath,
-  basename,
-  dirname,
-  encodePath,
-  incPath,
-  joinPath,
-  RelativePath2,
-  relPath,
-} from "@/lib/paths2";
+import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
 import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
@@ -83,23 +73,19 @@ export class MutexFs implements CommonFileSystem {
     return this.mutex.runExclusive(() => this.fs.readFile(path, options));
   }
 
-  async mkdir(path: AbsolutePath2, options?: { recursive?: boolean; mode: number }) {
+  async mkdir(path: AbsPath, options?: { recursive?: boolean; mode: number }) {
     return this.mutex.runExclusive(() => this.fs.mkdir(path, options));
   }
 
-  async rename(oldPath: AbsolutePath2, newPath: AbsolutePath2) {
+  async rename(oldPath: AbsPath, newPath: AbsPath) {
     return this.mutex.runExclusive(() => this.fs.rename(oldPath, newPath));
   }
 
-  async unlink(path: AbsolutePath2) {
+  async unlink(path: AbsPath) {
     return this.mutex.runExclusive(() => this.fs.unlink(path));
   }
 
-  async writeFile(
-    path: AbsolutePath2,
-    data: Uint8Array | Buffer | string,
-    options?: { encoding?: "utf8"; mode: number }
-  ) {
+  async writeFile(path: AbsPath, data: Uint8Array | Buffer | string, options?: { encoding?: "utf8"; mode: number }) {
     return this.mutex.runExclusive(() => this.fs.writeFile(path, data, options));
   }
   async createReadStream(path: string): Promise<IReadStream> {
@@ -114,7 +100,7 @@ type OPFSFileSystem = CommonFileSystem & {
 
 export class OPFSNamespacedFs extends NamespacedFs {
   fs: OPFSFileSystem;
-  constructor(fs: OPFSFileSystem, namespace: AbsolutePath2 | string) {
+  constructor(fs: OPFSFileSystem, namespace: AbsPath | string) {
     super(fs, namespace);
     this.fs = fs;
   }
@@ -204,10 +190,10 @@ export type RemoteRenameFileType = {
 };
 
 export class RenameFileType {
-  oldPath: AbsolutePath2;
-  oldName: RelativePath2;
-  newPath: AbsolutePath2;
-  newName: RelativePath2;
+  oldPath: AbsPath;
+  oldName: RelPath;
+  newPath: AbsPath;
+  newName: RelPath;
   type: "file" | "dir";
 
   constructor({
@@ -217,10 +203,10 @@ export class RenameFileType {
     newName,
     type,
   }: {
-    oldPath: string | AbsolutePath2;
-    oldName: string | RelativePath2;
-    newPath: string | AbsolutePath2;
-    newName: string | RelativePath2;
+    oldPath: string | AbsPath;
+    oldName: string | RelPath;
+    newPath: string | AbsPath;
+    newName: string | RelPath;
     type: "file" | "dir";
   }) {
     this.oldPath = typeof oldPath === "string" ? absPath(oldPath) : oldPath;
@@ -285,7 +271,7 @@ export abstract class Disk extends DiskDAO {
     return;
   }
 
-  updateIndex(path: AbsolutePath2, type: "file" | "dir", writeIndexCache = true) {
+  updateIndex(path: AbsPath, type: "file" | "dir", writeIndexCache = true) {
     this.fileTree.updateIndex(path, type);
     if (writeIndexCache) {
       /*await*/ void this.update({ indexCache: this.fileTree.root.toJSON() });
@@ -428,7 +414,7 @@ export abstract class Disk extends DiskDAO {
     this.mutex.release();
   }
 
-  async mkdirRecursive(filePath: AbsolutePath2) {
+  async mkdirRecursive(filePath: AbsPath) {
     await this.ready;
     //make recursive dir if or if not exists
     const segments = encodePath(filePath).split("/").slice(1);
@@ -455,7 +441,7 @@ export abstract class Disk extends DiskDAO {
   renameListener(fn: (props: RenameFileType) => void) {
     return this.local.on(DiskLocalEvents.RENAME, fn);
   }
-  writeFileListener(watchFilePath: AbsolutePath2, fn: (contents: string) => void) {
+  writeFileListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
     return this.local.on(DiskLocalEvents.WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
         fn(String(await this.readFile(absPath(watchFilePath))));
@@ -463,21 +449,21 @@ export abstract class Disk extends DiskDAO {
     });
   }
 
-  async renameDir(oldFullPath: AbsolutePath2, newFullPath: AbsolutePath2): Promise<RenameFileType> {
+  async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
     return this.renameDirOrFile(oldFullPath, newFullPath, "dir");
   }
-  async renameFile(oldFullPath: AbsolutePath2, newFullPath: AbsolutePath2): Promise<RenameFileType> {
+  async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
     return this.renameDirOrFile(oldFullPath, newFullPath, "file");
   }
   //for moving files without emitting events or updating the index
-  async quietMove(oldPath: AbsolutePath2, newPath: AbsolutePath2) {
+  async quietMove(oldPath: AbsPath, newPath: AbsPath) {
     const uniquePath = await this.nextPath(newPath);
     await this.mkdirRecursive(absPath(dirname(uniquePath)));
     await this.fs.rename(encodePath(oldPath), encodePath(uniquePath));
   }
   protected async renameDirOrFile(
-    oldFullPath: AbsolutePath2,
-    newFullPath: AbsolutePath2,
+    oldFullPath: AbsPath,
+    newFullPath: AbsPath,
     type?: "file" | "dir"
   ): Promise<RenameFileType> {
     await this.ready;
@@ -521,7 +507,7 @@ export abstract class Disk extends DiskDAO {
     return CHANGE;
   }
 
-  async newDir(fullPath: AbsolutePath2) {
+  async newDir(fullPath: AbsPath) {
     await this.ready;
     while (await this.pathExists(fullPath)) {
       fullPath = incPath(fullPath);
@@ -535,7 +521,7 @@ export abstract class Disk extends DiskDAO {
     // await this.remote.emit(DiskLocalEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "dir" });
     return fullPath;
   }
-  async removeFile(filePath: AbsolutePath2) {
+  async removeFile(filePath: AbsPath) {
     await this.ready;
     try {
       await this.fs.unlink(encodePath(filePath));
@@ -550,11 +536,11 @@ export abstract class Disk extends DiskDAO {
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskLocalEvents.INDEX);
   }
-  nodeFromPath(path: AbsolutePath2) {
+  nodeFromPath(path: AbsPath) {
     return this.fileTree.nodeFromPath(path);
   }
 
-  removeVirtualFile(path: AbsolutePath2) {
+  removeVirtualFile(path: AbsPath) {
     this.fileTree.removeNodeByPath(path);
     void this.local.emit(DiskLocalEvents.INDEX);
   }
@@ -565,14 +551,14 @@ export abstract class Disk extends DiskDAO {
     return node;
   }
 
-  async nextPath(fullPath: AbsolutePath2) {
+  async nextPath(fullPath: AbsPath) {
     await this.ready;
     while (await this.pathExists(fullPath)) {
       fullPath = incPath(fullPath);
     }
     return fullPath;
   }
-  async newFile(fullPath: AbsolutePath2, content: string | Uint8Array) {
+  async newFile(fullPath: AbsPath, content: string | Uint8Array) {
     await this.ready;
 
     while (await this.pathExists(fullPath)) {
@@ -584,7 +570,7 @@ export abstract class Disk extends DiskDAO {
     await this.remote.emit(DiskRemoteEvents.UPDATE_INDEX, { filePath: fullPath, type: "file" });
     return fullPath;
   }
-  async writeFileRecursive(filePath: AbsolutePath2, content: string | Uint8Array) {
+  async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
     await this.mkdirRecursive(absPath(dirname(filePath)));
     try {
       return this.fs.writeFile(encodePath(filePath), content, { encoding: "utf8", mode: 0o777 });
@@ -594,7 +580,7 @@ export abstract class Disk extends DiskDAO {
       }
     }
   }
-  async pathExists(filePath: AbsolutePath2) {
+  async pathExists(filePath: AbsPath) {
     await this.ready;
     try {
       await this.fs.stat(encodePath(filePath));
@@ -603,7 +589,7 @@ export abstract class Disk extends DiskDAO {
       return false;
     }
   }
-  createReadStream(filePath: AbsolutePath2): IReadStream | ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> {
+  createReadStream(filePath: AbsPath): IReadStream | ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> {
     // if (this.type === OpFsDisk.type) {
     if (false) {
       //@ts-expect-error
@@ -624,12 +610,12 @@ export abstract class Disk extends DiskDAO {
     }
   }
 
-  async writeFile(filePath: AbsolutePath2, contents: string | Uint8Array) {
+  async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
     await this.fs.writeFile(encodePath(filePath), contents, { encoding: "utf8", mode: 0o777 });
     await this.remote.emit(DiskRemoteEvents.WRITE, { filePaths: [filePath] });
     return;
   }
-  async readFile(filePath: AbsolutePath2) {
+  async readFile(filePath: AbsPath) {
     await this.ready;
     try {
       return await this.fs.readFile(encodePath(filePath));

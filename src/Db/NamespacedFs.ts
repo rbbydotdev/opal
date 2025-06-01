@@ -1,11 +1,11 @@
 import { CommonFileSystem } from "@/Db/Disk";
-import { AbsolutePath2, absPath, decodePath, encodePath, joinPath } from "@/lib/paths2";
+import { AbsPath, absPath, decodePath, encodePath, joinPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
 
 export class NamespacedFs implements CommonFileSystem {
-  namespace: AbsolutePath2;
-  constructor(protected fs: CommonFileSystem, namespace: AbsolutePath2 | string) {
+  namespace: AbsPath;
+  constructor(protected fs: CommonFileSystem, namespace: AbsPath | string) {
     if (typeof namespace === "string") {
       this.namespace = absPath(decodePath(namespace));
     } else {

@@ -1,55 +1,59 @@
 declare const brand: unique symbol;
 export type Brand<T, B extends string> = T & { [brand]: B };
 
-export type AbsolutePath2 = Brand<string, "AbsolutePath">;
-export type RelativePath2 = Brand<string, "RelativePath">;
+export type AbsPath = Brand<string, "AbsolutePath">;
+export type RelPath = Brand<string, "RelativePath">;
 
 import { isImageType } from "@/lib/fileType";
 import pathModule from "path";
 import { getMimeType } from "./mimeType";
 
 // --- Constructors ---
-export function absPath(path: string): AbsolutePath2 {
+export function absPath(path: string): AbsPath {
   if (!path.startsWith("/")) path = "/" + path;
   if (path !== "/" && path.endsWith("/")) path = path.slice(0, -1);
-  return path as AbsolutePath2;
+  return path as AbsPath;
 }
 
-export function relPath(path: string): RelativePath2 {
+export function relPath(path: string): RelPath {
   if (path.startsWith("/")) path = path.slice(1);
   if (path !== "" && path.endsWith("/")) path = path.slice(0, -1);
-  return path as RelativePath2;
+  return path as RelPath;
+}
+
+export function isAbsPath(path: AbsPath | RelPath): path is AbsPath {
+  return typeof path === "string" && path.startsWith("/");
+}
+export function isRelPath(path: AbsPath | RelPath): path is RelPath {
+  return typeof path === "string" && !path.startsWith("/");
 }
 
 // --- Path Utilities ---
-export function extname(path: AbsolutePath2 | RelativePath2): string {
+export function extname(path: AbsPath | RelPath): string {
   return pathModule.extname(basename(path));
 }
 
-export function prefix(path: AbsolutePath2 | RelativePath2): string {
+export function prefix(path: AbsPath | RelPath): string {
   const ext = extname(path);
   const base = basename(path);
   return ext.length ? base.slice(0, base.length - ext.length) : base;
 }
 
-export function basename(path: AbsolutePath2 | RelativePath2): string {
+export function basename(path: AbsPath | RelPath): string {
   return pathModule.basename(path as string);
 }
 
-export function dirname(path: AbsolutePath2 | RelativePath2): string {
+export function dirname(path: AbsPath | RelPath): string {
   return pathModule.dirname(path as string);
 }
 
-export function equals(
-  a: AbsolutePath2 | RelativePath2 | null | undefined,
-  b: AbsolutePath2 | RelativePath2 | null | undefined
-): boolean {
+export function equals(a: AbsPath | RelPath | null | undefined, b: AbsPath | RelPath | null | undefined): boolean {
   if (!a || !b) return false;
   return (a as string) === (b as string);
 }
 
 // --- Encoding/Decoding ---
-export function encodePath(path: AbsolutePath2 | RelativePath2 | string): string {
+export function encodePath(path: AbsPath | RelPath | string): string {
   return (path as string)
     .split("/")
     .map((part) => {
@@ -62,7 +66,7 @@ export function encodePath(path: AbsolutePath2 | RelativePath2 | string): string
     .join("/");
 }
 
-export function decodePath(path: AbsolutePath2 | RelativePath2 | string): string {
+export function decodePath(path: AbsPath | RelPath | string): string {
   return (path as string)
     .split("/")
     .map((part) => {
@@ -76,34 +80,31 @@ export function decodePath(path: AbsolutePath2 | RelativePath2 | string): string
 }
 
 // --- Join ---
-export function joinPath(
-  base: AbsolutePath2 | RelativePath2,
-  ...parts: (string | RelativePath2)[]
-): AbsolutePath2 | RelativePath2 {
+export function joinPath<T extends AbsPath | RelPath>(base: T, ...parts: (string | RelPath)[]): T {
   if (!base.startsWith("/")) {
     const joined = [base as string, ...parts.map((p) => p as string)].join("/");
-    return relPath(joined);
+    return relPath(joined) as T;
   }
   const joined = [base === "/" ? "" : (base as string), ...parts.map((p) => p as string)].join("/");
-  return absPath(joined);
+  return absPath(joined) as T;
 }
 
 // --- Shift ---
-export function shiftAbsolutePath(path: AbsolutePath2): AbsolutePath2 {
+export function shiftAbsolutePath(path: AbsPath): AbsPath {
   const segments = (path as string).split("/");
   segments.shift();
   segments[0] = "";
   return absPath(segments.join("/"));
 }
 
-export function shiftRelativePath2(path: RelativePath2): RelativePath2 {
+export function shiftRelativePath2(path: RelPath): RelPath {
   const segments = (path as string).split("/");
   segments.shift();
   return relPath(segments.join("/"));
 }
 
 // --- Increment Path ---
-export function incPath<T extends AbsolutePath2 | RelativePath2>(path: T): T {
+export function incPath<T extends AbsPath | RelPath>(path: T): T {
   const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;
   const match = (path as string).match(regex);
 
@@ -119,19 +120,19 @@ export function incPath<T extends AbsolutePath2 | RelativePath2>(path: T): T {
 }
 
 // --- Depth ---
-export function depth(path: AbsolutePath2): number {
+export function depth(path: AbsPath): number {
   return (path as string).split("/").length - 2;
 }
 
 // --- Change Prefix ---
-export function changePrefixAbs(path: AbsolutePath2, newPrefix: string): AbsolutePath2 {
+export function changePrefixAbs(path: AbsPath, newPrefix: string): AbsPath {
   const ext = extname(path);
   const dir = dirname(path);
   if (!ext) return absPath(pathModule.join(dir, newPrefix));
   return absPath(pathModule.join(dir, `${newPrefix}${ext}`));
 }
 
-export function changePrefixRel(path: RelativePath2, newPrefix: string): RelativePath2 {
+export function changePrefixRel(path: RelPath, newPrefix: string): RelPath {
   const ext = extname(path);
   const dir = dirname(path);
   if (!ext) return relPath(pathModule.join(dir, newPrefix));
@@ -139,16 +140,16 @@ export function changePrefixRel(path: RelativePath2, newPrefix: string): Relativ
 }
 
 // --- MIME and Image ---
-export function getPathMimeType(path: AbsolutePath2 | RelativePath2): string {
+export function getPathMimeType(path: AbsPath | RelPath): string {
   return getMimeType(path as string);
 }
 
-export function isImage(path: AbsolutePath2 | RelativePath2): boolean {
+export function isImage(path: AbsPath | RelPath): boolean {
   return isImageType(getPathMimeType(path));
 }
 
 // --- Ancestor/Lineage Utilities ---
-export function isAncestor(path: AbsolutePath2 | string | null, root: AbsolutePath2 | string | null): boolean {
+export function isAncestor(path: AbsPath | string | null, root: AbsPath | string | null): boolean {
   if (path === root) return true;
   if (path === null || root === null) return false;
   const rootSegments = (root as string).split("/");
@@ -157,10 +158,10 @@ export function isAncestor(path: AbsolutePath2 | string | null, root: AbsolutePa
 }
 
 export function replaceAncestor(
-  root: AbsolutePath2 | string,
-  oldPath: AbsolutePath2 | string,
-  newPath: AbsolutePath2 | string
-): AbsolutePath2 | string {
+  root: AbsPath | string,
+  oldPath: AbsPath | string,
+  newPath: AbsPath | string
+): AbsPath | string {
   if (oldPath === root) return newPath;
   if (oldPath === null || root === null) return oldPath;
   const rootSegments = (root as string).split("/");

@@ -7,14 +7,14 @@ import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import {
-  AbsolutePath2,
+  AbsPath,
   absPath,
   decodePath,
   encodePath,
   isAncestor,
   isImage,
   joinPath,
-  RelativePath2,
+  RelPath,
   relPath,
 } from "@/lib/paths2";
 import { nanoid } from "nanoid";
@@ -27,7 +27,7 @@ export class Thumb {
     protected cache: Promise<Cache>,
     protected thumbRepo: Disk,
     protected imgRepo: Disk,
-    protected path: AbsolutePath2,
+    protected path: AbsPath,
     protected content: Uint8Array | null = null,
     protected readonly size = 100
   ) {}
@@ -77,7 +77,7 @@ export class Thumb {
     return encodePath(this.path) + "?thumb=" + this.size;
   }
 
-  async move(oldPath: AbsolutePath2, newPath: AbsolutePath2) {
+  async move(oldPath: AbsPath, newPath: AbsPath) {
     const oldUrl = this.url();
     this.path = newPath;
     await this.cache.then(async (c) => {
@@ -354,11 +354,11 @@ export class Workspace extends WorkspaceDAO {
     await Promise.all(workspaces.map(async (ws) => (await ws.toModel()).delete()));
   }
 
-  NewThumb(path: AbsolutePath2, size = 100) {
+  NewThumb(path: AbsPath, size = 100) {
     return new Thumb(this.imageCache.getCache(), this.thumbs, this.disk, path, null, size);
   }
 
-  async readOrMakeThumb(path: AbsolutePath2 | string, size = 100) {
+  async readOrMakeThumb(path: AbsPath | string, size = 100) {
     const thumb = this.NewThumb(absPath(path), size);
     return thumb.readOrMake();
   }
@@ -383,30 +383,26 @@ export class Workspace extends WorkspaceDAO {
     return ws;
   }
 
-  replaceUrlPath(pathname: string, oldPath: AbsolutePath2, newPath: AbsolutePath2) {
+  replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
     return this.resolveFileUrl(absPath((filePath as string).replace(oldPath as string, newPath as string)));
   }
 
-  newDir(dirPath: AbsolutePath2, newDirName: RelativePath2) {
+  newDir(dirPath: AbsPath, newDirName: RelPath) {
     return this.disk.newDir(joinPath(dirPath, newDirName));
   }
-  newFile(
-    dirPath: AbsolutePath2,
-    newFileName: RelativePath2,
-    content: string | Uint8Array = ""
-  ): Promise<AbsolutePath2> {
+  newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
     return this.disk.newFile(joinPath(dirPath, newFileName), content);
   }
 
   addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {
     return this.disk.addVirtualFile({ type, name }, selectedNode);
   }
-  removeVirtualfile(path: AbsolutePath2) {
+  removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
   }
-  removeFile = async (filePath: AbsolutePath2) => {
+  removeFile = async (filePath: AbsPath) => {
     if (isImage(filePath)) {
       await Promise.all([
         this.NewThumb(filePath)
@@ -420,7 +416,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeFile(filePath);
   };
 
-  private async adjustPath(oldNode: TreeNode, newPath: AbsolutePath2) {
+  private async adjustPath(oldNode: TreeNode, newPath: AbsPath) {
     if (isImage(oldNode.path)) {
       await this.imageCache.getCache().then(async (c) => {
         const res = await c.match(encodePath(oldNode.path));
@@ -436,7 +432,7 @@ export class Workspace extends WorkspaceDAO {
         });
     }
   }
-  renameFile = async (oldNode: TreeNode, newFullPath: AbsolutePath2) => {
+  renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
@@ -454,7 +450,7 @@ export class Workspace extends WorkspaceDAO {
     return newNode;
   };
   //this is dumb because you do not consider the children!
-  renameDir = async (oldNode: TreeNode, newFullPath: AbsolutePath2) => {
+  renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
       console.error("Error renaming dir", e);
       throw e;
@@ -477,11 +473,11 @@ export class Workspace extends WorkspaceDAO {
 
     return newNode;
   };
-  readFile = (filePath: AbsolutePath2) => {
+  readFile = (filePath: AbsPath) => {
     return this.disk.readFile(filePath);
   };
 
-  readThumb = (filePath: AbsolutePath2) => {
+  readThumb = (filePath: AbsPath) => {
     return this.thumbs.readFile(filePath);
   };
 
@@ -500,7 +496,7 @@ export class Workspace extends WorkspaceDAO {
   async awaitFirstIndex() {
     return this.disk.awaitFirstIndex();
   }
-  async dropImageFile(file: File, targetPath: AbsolutePath2) {
+  async dropImageFile(file: File, targetPath: AbsPath) {
     const fileType = getMimeType(file.name);
     if (!isImageType(fileType)) {
       throw new BadRequestError("Not a valid image");
@@ -514,7 +510,7 @@ export class Workspace extends WorkspaceDAO {
   getFlatDirTree() {
     return this.disk.fileTree.dirs;
   }
-  nodeFromPath(path: AbsolutePath2 | string | null) {
+  nodeFromPath(path: AbsPath | string | null) {
     if (path === null) return null;
     return this.disk.fileTree.nodeFromPath(path);
   }
@@ -553,7 +549,7 @@ export class Workspace extends WorkspaceDAO {
   home = () => {
     return this.href;
   };
-  resolveFileUrl = (filePath: AbsolutePath2) => {
+  resolveFileUrl = (filePath: AbsPath) => {
     return this.href + encodePath(filePath);
   };
   subRoute = (path: string) => {
@@ -566,7 +562,7 @@ export class Workspace extends WorkspaceDAO {
   }
 
   getImages() {
-    const result: AbsolutePath2[] = [];
+    const result: AbsPath[] = [];
     this.disk.fileTree.walk((node) => {
       if (isImage(node.path)) {
         result.push(node.path);

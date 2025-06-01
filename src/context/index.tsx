@@ -2,7 +2,7 @@
 import { NullWorkspace, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { TreeDir, TreeDirRoot, TreeFile } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsolutePath2, isAncestor } from "@/lib/paths2";
+import { AbsPath, isAncestor } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
@@ -34,7 +34,7 @@ export type WorkspaceContextType = typeof defaultWorkspaceContext;
 
 export const WorkspaceContext = React.createContext<WorkspaceContextType>(defaultWorkspaceContext);
 
-export type WorkspaceRouteType = { id: string | null; path: AbsolutePath2 | null };
+export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 

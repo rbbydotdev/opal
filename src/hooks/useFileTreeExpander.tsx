@@ -1,11 +1,10 @@
 "use client";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsolutePath2 } from "@/lib/paths2";
+import { AbsPath, isAncestor } from "@/lib/paths2";
 import { useCallback, useEffect, useState } from "react";
-import { isAncestor } from "@/lib/paths2";
 
-function expandForFile(dirTree: string[], file: AbsolutePath2 | null, exp: ExpandMap) {
+function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) {
   if (!file) return exp;
   dirTree.filter((dir) => isAncestor(file, dir)).forEach((d) => (exp[d] = true));
   return exp;
@@ -31,7 +30,7 @@ export function useFileTreeExpander({
   id,
 }: {
   fileDirTree: string[];
-  currentPath: AbsolutePath2 | null;
+  currentPath: AbsPath | null;
   id: string;
 }) {
   const [local, setLocal] = useState<ExpandMap>({});
