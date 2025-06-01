@@ -37,14 +37,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
   }, [toggleCollapsePanel]);
   return (
-    <ServiceWorker>
-      <FileTreeMenuContextProvider>
-        <Toaster />
-        <div className="h-full flex w-full">
-          <EditorSidebarLayout sidebar={<EditorSidebar />} main={children} />
-        </div>
-      </FileTreeMenuContextProvider>
-    </ServiceWorker>
+    <>
+      <ServiceWorker>
+        <FileTreeMenuContextProvider>
+          <Toaster />
+          <div className="h-full flex w-full">
+            <EditorSidebarLayout sidebar={<EditorSidebar />} main={children} />
+          </div>
+        </FileTreeMenuContextProvider>
+      </ServiceWorker>
+    </>
   );
 }
 

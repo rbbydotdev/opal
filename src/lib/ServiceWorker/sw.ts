@@ -161,7 +161,7 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
     console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
     const workspace = await SWWStore.tryWorkspace(workspaceId);
 
-    if (!workspace) throw new Error("Workspace not found");
+    if (!workspace) throw new Error("Workspace not found " + workspaceId);
     console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     const contents: Uint8Array<ArrayBufferLike> = isThumbnail
@@ -240,8 +240,8 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
     return new Response(readable, {
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="download.zip"`,
-        // "Content-Disposition": `attachment; filename="${workspace.name}.zip"`,
+        // "Content-Disposition": `attachment; filename="download.zip"`,
+        "Content-Disposition": `attachment; filename="${workspace.name}.zip"`,
       },
     });
   } catch (e) {
