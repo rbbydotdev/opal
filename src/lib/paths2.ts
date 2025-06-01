@@ -9,13 +9,13 @@ import pathModule from "path";
 import { getMimeType } from "./mimeType";
 
 // --- Constructors ---
-export function absPath2(path: string): AbsolutePath2 {
+export function absPath(path: string): AbsolutePath2 {
   if (!path.startsWith("/")) path = "/" + path;
   if (path !== "/" && path.endsWith("/")) path = path.slice(0, -1);
   return path as AbsolutePath2;
 }
 
-export function relPath2(path: string): RelativePath2 {
+export function relPath(path: string): RelativePath2 {
   if (path.startsWith("/")) path = path.slice(1);
   if (path !== "" && path.endsWith("/")) path = path.slice(0, -1);
   return path as RelativePath2;
@@ -76,14 +76,16 @@ export function decodePath(path: AbsolutePath2 | RelativePath2 | string): string
 }
 
 // --- Join ---
-export function joinAbsolutePath(base: AbsolutePath2, ...parts: (string | RelativePath2)[]): AbsolutePath2 {
+export function joinPath(
+  base: AbsolutePath2 | RelativePath2,
+  ...parts: (string | RelativePath2)[]
+): AbsolutePath2 | RelativePath2 {
+  if (!base.startsWith("/")) {
+    const joined = [base as string, ...parts.map((p) => p as string)].join("/");
+    return relPath(joined);
+  }
   const joined = [base === "/" ? "" : (base as string), ...parts.map((p) => p as string)].join("/");
-  return absPath2(joined);
-}
-
-export function joinRelativePath2(base: RelativePath2, ...parts: (string | RelativePath2)[]): RelativePath2 {
-  const joined = [base as string, ...parts.map((p) => p as string)].join("/");
-  return relPath2(joined);
+  return absPath(joined);
 }
 
 // --- Shift ---
@@ -91,13 +93,13 @@ export function shiftAbsolutePath(path: AbsolutePath2): AbsolutePath2 {
   const segments = (path as string).split("/");
   segments.shift();
   segments[0] = "";
-  return absPath2(segments.join("/"));
+  return absPath(segments.join("/"));
 }
 
 export function shiftRelativePath2(path: RelativePath2): RelativePath2 {
   const segments = (path as string).split("/");
   segments.shift();
-  return relPath2(segments.join("/"));
+  return relPath(segments.join("/"));
 }
 
 // --- Increment Path ---
@@ -113,7 +115,7 @@ export function incPath<T extends AbsolutePath2 | RelativePath2>(path: T): T {
   } else {
     newPath = `${path as string}-1`;
   }
-  return ((path as string).startsWith("/") ? absPath2(newPath) : relPath2(newPath)) as T;
+  return ((path as string).startsWith("/") ? absPath(newPath) : relPath(newPath)) as T;
 }
 
 // --- Depth ---
@@ -125,15 +127,15 @@ export function depth(path: AbsolutePath2): number {
 export function changePrefixAbs(path: AbsolutePath2, newPrefix: string): AbsolutePath2 {
   const ext = extname(path);
   const dir = dirname(path);
-  if (!ext) return absPath2(pathModule.join(dir, newPrefix));
-  return absPath2(pathModule.join(dir, `${newPrefix}${ext}`));
+  if (!ext) return absPath(pathModule.join(dir, newPrefix));
+  return absPath(pathModule.join(dir, `${newPrefix}${ext}`));
 }
 
 export function changePrefixRel(path: RelativePath2, newPrefix: string): RelativePath2 {
   const ext = extname(path);
   const dir = dirname(path);
-  if (!ext) return relPath2(pathModule.join(dir, newPrefix));
-  return relPath2(pathModule.join(dir, `${newPrefix}${ext}`));
+  if (!ext) return relPath(pathModule.join(dir, newPrefix));
+  return relPath(pathModule.join(dir, `${newPrefix}${ext}`));
 }
 
 // --- MIME and Image ---
@@ -164,7 +166,7 @@ export function replaceAncestor(
   const rootSegments = (root as string).split("/");
   const pathSegments = (oldPath as string).split("/");
   if (pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i])) {
-    return joinAbsolutePath(absPath2(newPath as string), ...pathSegments.slice(rootSegments.length));
+    return joinPath(absPath(newPath as string), ...pathSegments.slice(rootSegments.length));
   }
   return oldPath;
 }

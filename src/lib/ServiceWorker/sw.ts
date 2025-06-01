@@ -5,7 +5,7 @@ import { errF, isError, NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { absPath2, decodePath } from "@/lib/paths2";
+import { absPath, decodePath } from "@/lib/paths2";
 import { RemoteLogger } from "@/lib/RemoteLogger";
 import * as fflate from "fflate";
 import React from "react";
@@ -166,7 +166,7 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
 
     const contents: Uint8Array<ArrayBufferLike> = isThumbnail
       ? ((await workspace.readOrMakeThumb(decodedPathname)) as Uint8Array<ArrayBufferLike>)
-      : ((await workspace.readFile(absPath2(decodedPathname))) as Uint8Array<ArrayBufferLike>);
+      : ((await workspace.readFile(absPath(decodedPathname))) as Uint8Array<ArrayBufferLike>);
 
     const response = new Response(contents, {
       headers: {

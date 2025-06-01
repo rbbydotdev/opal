@@ -11,14 +11,14 @@ import { isServiceWorker } from "@/lib/isServiceWorker";
 import { getMimeType } from "@/lib/mimeType";
 import {
   AbsolutePath2,
-  absPath2,
+  absPath,
   basename,
   dirname,
   encodePath,
   incPath,
-  joinAbsolutePath,
+  joinPath,
   RelativePath2,
-  relPath2,
+  relPath,
 } from "@/lib/paths2";
 import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
@@ -83,19 +83,23 @@ export class MutexFs implements CommonFileSystem {
     return this.mutex.runExclusive(() => this.fs.readFile(path, options));
   }
 
-  async mkdir(path: string, options?: { recursive?: boolean; mode: number }) {
+  async mkdir(path: AbsolutePath2, options?: { recursive?: boolean; mode: number }) {
     return this.mutex.runExclusive(() => this.fs.mkdir(path, options));
   }
 
-  async rename(oldPath: string, newPath: string) {
+  async rename(oldPath: AbsolutePath2, newPath: AbsolutePath2) {
     return this.mutex.runExclusive(() => this.fs.rename(oldPath, newPath));
   }
 
-  async unlink(path: string) {
+  async unlink(path: AbsolutePath2) {
     return this.mutex.runExclusive(() => this.fs.unlink(path));
   }
 
-  async writeFile(path: string, data: Uint8Array | Buffer | string, options?: { encoding?: "utf8"; mode: number }) {
+  async writeFile(
+    path: AbsolutePath2,
+    data: Uint8Array | Buffer | string,
+    options?: { encoding?: "utf8"; mode: number }
+  ) {
     return this.mutex.runExclusive(() => this.fs.writeFile(path, data, options));
   }
   async createReadStream(path: string): Promise<IReadStream> {
@@ -120,11 +124,11 @@ export class OPFSNamespacedFs extends NamespacedFs {
   }
   createReadStream(path: string): IReadStream {
     //@ts-expect-error
-    return this.fs.createReadStream(encodePath(joinAbsolutePath(this.namespace, path)));
+    return this.fs.createReadStream(encodePath(joinPath(this.namespace, path)));
   }
 
   rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
-    return this.fs.rm(encodePath(joinAbsolutePath(this.namespace, path)), options);
+    return this.fs.rm(encodePath(joinPath(this.namespace, path)), options);
   }
 }
 
@@ -219,10 +223,10 @@ export class RenameFileType {
     newName: string | RelativePath2;
     type: "file" | "dir";
   }) {
-    this.oldPath = typeof oldPath === "string" ? absPath2(oldPath) : oldPath;
-    this.oldName = typeof oldName === "string" ? relPath2(oldName) : oldName;
-    this.newPath = typeof newPath === "string" ? absPath2(newPath) : newPath;
-    this.newName = typeof newName === "string" ? relPath2(newName) : newName;
+    this.oldPath = typeof oldPath === "string" ? absPath(oldPath) : oldPath;
+    this.oldName = typeof oldName === "string" ? relPath(oldName) : oldName;
+    this.newPath = typeof newPath === "string" ? absPath(newPath) : newPath;
+    this.newName = typeof newName === "string" ? relPath(newName) : newName;
     this.type = type;
   }
   toJSON() {
@@ -373,7 +377,7 @@ export abstract class Disk extends DiskDAO {
       }),
 
       this.remote.on(DiskRemoteEvents.UPDATE_INDEX, async ({ filePath, type }) => {
-        this.updateIndex(absPath2(filePath), type);
+        this.updateIndex(absPath(filePath), type);
         void this.local.emit(DiskLocalEvents.INDEX);
       }),
     ];
@@ -454,7 +458,7 @@ export abstract class Disk extends DiskDAO {
   writeFileListener(watchFilePath: AbsolutePath2, fn: (contents: string) => void) {
     return this.local.on(DiskLocalEvents.WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
-        fn(String(await this.readFile(absPath2(watchFilePath))));
+        fn(String(await this.readFile(absPath(watchFilePath))));
       }
     });
   }
@@ -468,7 +472,7 @@ export abstract class Disk extends DiskDAO {
   //for moving files without emitting events or updating the index
   async quietMove(oldPath: AbsolutePath2, newPath: AbsolutePath2) {
     const uniquePath = await this.nextPath(newPath);
-    await this.mkdirRecursive(absPath2(dirname(uniquePath)));
+    await this.mkdirRecursive(absPath(dirname(uniquePath)));
     await this.fs.rename(encodePath(oldPath), encodePath(uniquePath));
   }
   protected async renameDirOrFile(
@@ -484,12 +488,12 @@ export abstract class Disk extends DiskDAO {
     const NOCHANGE: RenameFileType = new RenameFileType({
       type,
       newPath: oldFullPath,
-      newName: relPath2(basename(oldFullPath)),
+      newName: relPath(basename(oldFullPath)),
       oldPath: oldFullPath,
-      oldName: relPath2(basename(oldFullPath)),
+      oldName: relPath(basename(oldFullPath)),
     });
     if (!newFullPath) return NOCHANGE;
-    const cleanFullPath = joinAbsolutePath(absPath2(dirname(newFullPath)), basename(newFullPath));
+    const cleanFullPath = joinPath(absPath(dirname(newFullPath)), basename(newFullPath));
     // .replace(/\//g, ":")
 
     if (cleanFullPath === oldFullPath) return NOCHANGE;
@@ -497,7 +501,7 @@ export abstract class Disk extends DiskDAO {
     const uniquePath = await this.nextPath(cleanFullPath); // ensure the path is unique
 
     try {
-      await this.mkdirRecursive(absPath2(dirname(uniquePath)));
+      await this.mkdirRecursive(absPath(dirname(uniquePath)));
       await this.fs.rename(encodePath(oldFullPath), encodePath(uniquePath));
     } catch (e) {
       throw e;
@@ -506,8 +510,8 @@ export abstract class Disk extends DiskDAO {
     const CHANGE = new RenameFileType({
       type,
       newPath: uniquePath,
-      newName: relPath2(basename(uniquePath)),
-      oldName: relPath2(basename(oldFullPath)),
+      newName: relPath(basename(uniquePath)),
+      oldName: relPath(basename(oldFullPath)),
       oldPath: oldFullPath,
     });
     await this.fileTreeIndex();
@@ -581,7 +585,7 @@ export abstract class Disk extends DiskDAO {
     return fullPath;
   }
   async writeFileRecursive(filePath: AbsolutePath2, content: string | Uint8Array) {
-    await this.mkdirRecursive(absPath2(dirname(filePath)));
+    await this.mkdirRecursive(absPath(dirname(filePath)));
     try {
       return this.fs.writeFile(encodePath(filePath), content, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
@@ -667,7 +671,7 @@ export class OpFsDisk extends Disk {
       }) as Promise<IFileSystemDirectoryHandle>
     );
 
-    const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath2("/" + guid));
+    const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
 
     super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), OpFsDisk.type);
 

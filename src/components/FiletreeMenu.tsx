@@ -8,10 +8,19 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { BadRequestError, isError } from "@/lib/errors";
-import { absPath2, AbsolutePath2, reduceLineage } from "@/lib/paths2";
+import {
+  AbsolutePath2,
+  absPath,
+  basename,
+  encodePath,
+  equals,
+  getPathMimeType,
+  isAncestor,
+  joinPath,
+  reduceLineage,
+} from "@/lib/paths2";
 import clsx from "clsx";
 import React from "react";
-import { isAncestor, joinAbsolutePath, basename, equals, encodePath, getPathMimeType } from "@/lib/paths2";
 
 export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
 
@@ -64,9 +73,11 @@ export function useFileTreeDragAndDrop({
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
     setDragOver(null);
     // Create a set of unique file paths from the selected range, the current file, and the focused file
-    const allFiles = Array.from(new Set([...selectedRange, targetNode.path as string, focused ? (focused as string) : null]))
+    const allFiles = Array.from(
+      new Set([...selectedRange, targetNode.path as string, focused ? (focused as string) : null])
+    )
       .filter(Boolean)
-      .map((entry) => absPath2(entry!));
+      .map((entry) => absPath(entry!));
 
     // Prepare the data for the internal file type
     const data = JSON.stringify({
@@ -84,7 +95,10 @@ export function useFileTreeDragAndDrop({
     // Set the internal file type data
     event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
 
-    event.dataTransfer.setData("text/html", allFiles.map((url) => `<a href="${encodePath(url)}">${url as string}</a>`).join("\n"));
+    event.dataTransfer.setData(
+      "text/html",
+      allFiles.map((url) => `<a href="${encodePath(url)}">${url as string}</a>`).join("\n")
+    );
 
     allFiles.filter(Boolean).forEach((fpath, i) => {
       //using semi-colon to play nice with possible mimeType collision (hackish)
@@ -140,7 +154,7 @@ export function useFileTreeDragAndDrop({
           const dragNodes = reduceLineage(dragStart.map((node) => TreeNode.fromJSON(node)));
           return Promise.all(
             dragNodes.filter(({ type: draggedType, path: draggedPath }) => {
-              const dropPath = joinAbsolutePath(targetPath, basename(draggedPath));
+              const dropPath = joinPath(targetPath, basename(draggedPath));
               if (draggedType !== "dir" || !isAncestor(dropPath, draggedPath as string)) {
                 if (!equals(draggedPath, dropPath)) {
                   return onMove?.(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
@@ -223,7 +237,8 @@ function FileTreeMenuInternal({
           key={file.path as string}
           className={clsx({
             ["bg-sidebar-accent"]:
-              equals(file.path, workspaceRoute.path) || (file.type === "dir" && (file.path as string) === (dragOver ? (dragOver as string) : null)),
+              equals(file.path, workspaceRoute.path) ||
+              (file.type === "dir" && (file.path as string) === (dragOver ? (dragOver as string) : null)),
           })}
           onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}
