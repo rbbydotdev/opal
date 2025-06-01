@@ -4,7 +4,7 @@ import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { basename, changePrefixRel, equals, prefix, RelativePath2, relPath } from "@/lib/paths2";
+import { basename, changePrefixRel, equals, prefix, RelPath, relPath } from "@/lib/paths2";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -30,7 +30,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { editing, editType, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
     useFileTreeMenuContext();
-  const [fileName, setFileName] = useState<RelativePath2>(relPath(basename(fullPath)));
+  const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
 
   const isSelected = equals(fullPath, currentFile);
   const isEditing = equals(fullPath, editing);

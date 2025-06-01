@@ -3,7 +3,7 @@ import { WorkspaceRouteType } from "@/context";
 import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsolutePath2, encodePath, equals, isImage, relPath } from "@/lib/paths2";
+import { AbsPath, encodePath, equals, isImage, relPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { FileText } from "lucide-react";
 import Link from "next/link";
@@ -25,7 +25,7 @@ export const EditableFile = ({
   workspaceRoute: WorkspaceRouteType;
   className?: string;
   treeFile: TreeFile;
-  fullPath: AbsolutePath2;
+  fullPath: AbsPath;
   expand: (node: TreeNode, value: boolean) => void;
   depth: number;
 }) => {

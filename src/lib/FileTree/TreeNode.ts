@@ -1,15 +1,6 @@
 // import { MimeType, MimeTypes } from "@/lib/fileType";
 // import { getMimeType } from "@/lib/mimeType";
-import {
-  AbsolutePath2,
-  RelativePath2,
-  absPath,
-  basename,
-  dirname,
-  depth as getDepth,
-  incPath,
-  relPath,
-} from "@/lib/paths2";
+import { AbsPath, RelPath, absPath, basename, dirname, depth as getDepth, incPath, relPath } from "@/lib/paths2";
 
 export type TreeNodeJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
@@ -24,12 +15,12 @@ export type TreeNodeDirJType = ReturnType<TreeNode["toJSON"]> & {
 
 export class TreeNode {
   isVirtual = false;
-  name: RelativePath2;
+  name: RelPath;
   type: "dir" | "file";
-  dirname: AbsolutePath2;
-  basename: RelativePath2;
+  dirname: AbsPath;
+  basename: RelPath;
   parent: TreeDir | null;
-  path: AbsolutePath2;
+  path: AbsPath;
   depth: number;
   children?: Record<string, TreeNode>;
 
@@ -43,7 +34,7 @@ export class TreeNode {
     return this.toString();
   }
 
-  static FromPath(path: AbsolutePath2, type: "dir" | "file", parent: TreeDir | null = null) {
+  static FromPath(path: AbsPath, type: "dir" | "file", parent: TreeDir | null = null) {
     const name = relPath(basename(path));
     const pathDirname = absPath(dirname(path));
     const pathBasename = relPath(basename(path));
@@ -99,13 +90,13 @@ export class TreeNode {
     parent,
     depth,
   }: {
-    name: RelativePath2 | string;
+    name: RelPath | string;
     type: "dir" | "file";
-    dirname: AbsolutePath2 | string;
-    basename: RelativePath2 | string;
+    dirname: AbsPath | string;
+    basename: RelPath | string;
     parent: TreeDir | null;
     // parent: TreeDir | null;
-    path: AbsolutePath2 | string;
+    path: AbsPath | string;
     depth?: number;
   }) {
     this.name = typeof name === "string" ? relPath(name) : name;
@@ -132,7 +123,7 @@ export class TreeNode {
     this.basename = relPath(basename(this.path));
     return this;
   }
-  rename(path: AbsolutePath2) {
+  rename(path: AbsPath) {
     this.path = path;
     this.dirname = absPath(dirname(this.path));
     this.name = relPath(basename(this.path));
@@ -215,11 +206,11 @@ export class TreeDir extends TreeNode {
     children = {},
     parent,
   }: {
-    name: RelativePath2;
-    dirname: AbsolutePath2;
-    basename: RelativePath2;
+    name: RelPath;
+    dirname: AbsPath;
+    basename: RelPath;
     parent: TreeDir | null;
-    path: AbsolutePath2;
+    path: AbsPath;
     depth: number;
     children: TreeDir["children"];
   }) {
@@ -299,10 +290,10 @@ export class TreeFile extends TreeNode {
     depth,
     parent,
   }: {
-    name: RelativePath2;
-    dirname: AbsolutePath2;
-    basename: RelativePath2;
-    path: AbsolutePath2;
+    name: RelPath;
+    dirname: AbsPath;
+    basename: RelPath;
+    path: AbsPath;
     depth: number;
     parent: TreeDir | null;
   }) {

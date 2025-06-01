@@ -4,7 +4,7 @@ import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { WorkspaceRouteType } from "@/context";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsolutePath2, basename, relPath } from "@/lib/paths2";
+import { AbsPath, basename, relPath } from "@/lib/paths2";
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
 import { ComponentProps, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
@@ -29,7 +29,7 @@ export const EditableDir = ({
   onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
   expand: (node: TreeNode, value: boolean) => void;
 
-  fullPath: AbsolutePath2;
+  fullPath: AbsPath;
 } & ComponentProps<typeof SidebarMenuButton>) => {
   const {
     isFocused,

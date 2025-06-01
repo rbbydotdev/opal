@@ -5,8 +5,8 @@ import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import {
-  AbsolutePath2,
-  RelativePath2,
+  AbsPath,
+  RelPath,
   absPath,
   basename,
   decodePath,
@@ -26,7 +26,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     useFileTreeMenuContext();
 
   const newFile = React.useCallback(
-    async (path: AbsolutePath2, content = "") => {
+    async (path: AbsPath, content = "") => {
       const newPath = await currentWorkspace.newFile(absPath(dirname(path)), relPath(basename(path)), content);
       if (!workspaceRoute.path) {
         router.push(currentWorkspace.resolveFileUrl(newPath));
@@ -37,7 +37,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   );
 
   const newDir = React.useCallback(
-    async (path: AbsolutePath2) => {
+    async (path: AbsPath) => {
       return currentWorkspace.newDir(absPath(dirname(path)), relPath(basename(path)));
     },
     [currentWorkspace]
@@ -106,7 +106,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   );
 
   const renameDirOrFile = React.useCallback(
-    async (oldNode: TreeNode, newFullPath: AbsolutePath2) => {
+    async (oldNode: TreeNode, newFullPath: AbsPath) => {
       const { path } =
         oldNode.type === "dir"
           ? await currentWorkspace.renameDir(oldNode, newFullPath)
@@ -157,7 +157,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
   // );
 
   const commitChange = React.useCallback(
-    async (origNode: TreeNode, fileName: RelativePath2, type: "rename" | "new") => {
+    async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new") => {
       const wantPath = joinPath(absPath(dirname(origNode.path)), relPath(decodePath(fileName)));
       if (type === "new") {
         if (origNode.type === "file")

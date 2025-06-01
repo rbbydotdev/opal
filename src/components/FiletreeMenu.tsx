@@ -9,7 +9,7 @@ import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { BadRequestError, isError } from "@/lib/errors";
 import {
-  AbsolutePath2,
+  AbsPath,
   absPath,
   basename,
   encodePath,
@@ -64,7 +64,7 @@ export function useFileTreeDragAndDrop({
   onDragEnter,
 }: {
   currentWorkspace: Workspace;
-  onMove?: (oldNode: TreeNode, newPath: AbsolutePath2, type: "dir" | "file") => Promise<unknown> | unknown;
+  onMove?: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<unknown> | unknown;
   onDragEnter?: (path: string, data?: DragStartJType) => void;
 }) {
   const { selectedRange, focused, setDragOver } = useFileTreeMenuContext();
@@ -193,7 +193,7 @@ function FileTreeMenuInternal({
   workspaceRoute,
 }: {
   fileTreeDir: TreeDir;
-  renameDirOrFile: (oldNode: TreeNode, newPath: AbsolutePath2, type: "dir" | "file") => Promise<AbsolutePath2>;
+  renameDirOrFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
   depth?: number;
   expand: (path: string, value: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
