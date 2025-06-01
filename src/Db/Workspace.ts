@@ -16,7 +16,6 @@ import {
   joinAbsolutePath,
   RelativePath2,
   relPath2,
-  toString,
 } from "@/lib/paths2";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
@@ -387,7 +386,7 @@ export class Workspace extends WorkspaceDAO {
   replaceUrlPath(pathname: string, oldPath: AbsolutePath2, newPath: AbsolutePath2) {
     const { filePath } = Workspace.parseWorkspacePath(pathname);
     if (!filePath) return pathname;
-    return this.resolveFileUrl(absPath2(toString(filePath).replace(toString(oldPath), toString(newPath))));
+    return this.resolveFileUrl(absPath2((filePath as string).replace(oldPath as string, newPath as string)));
   }
 
   newDir(dirPath: AbsolutePath2, newDirName: RelativePath2) {
@@ -444,13 +443,13 @@ export class Workspace extends WorkspaceDAO {
 
     await this.disk.findReplaceImgBatch([
       [
-        toString(oldNode.path),
-        toString(absPath2(toString(oldNode.path).replace(toString(oldNode.path), toString(newNode.path)))),
+        oldNode.path as string,
+        absPath2((oldNode.path as string).replace(oldNode.path as string, newNode.path as string)) as string,
       ],
     ]); // Update all references in the disk
     await this.adjustPath(
       oldNode,
-      absPath2(toString(oldNode.path).replace(toString(oldNode.path), toString(newNode.path)))
+      absPath2((oldNode.path as string).replace(oldNode.path as string, newNode.path as string))
     );
     return newNode;
   };
@@ -466,12 +465,12 @@ export class Workspace extends WorkspaceDAO {
 
     await newNode.asyncWalk(async (child) => {
       findStrReplaceStr.push([
-        toString(child.path),
-        toString(absPath2(toString(child.path).replace(toString(oldNode.path), toString(newNode.path)))),
+        child.path as string,
+        absPath2((child.path as string).replace(oldNode.path as string, newNode.path as string)) as string,
       ]);
       await this.adjustPath(
         child,
-        absPath2(toString(child.path).replace(toString(oldNode.path), toString(newNode.path)))
+        absPath2((child.path as string).replace(oldNode.path as string, newNode.path as string))
       );
     });
     await this.disk.findReplaceImgBatch(findStrReplaceStr);

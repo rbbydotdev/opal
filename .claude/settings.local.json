@@ -4,7 +4,9 @@
       "Bash(rg:*)",
       "Bash(npm run dev:tsc:*)",
       "Bash(grep:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

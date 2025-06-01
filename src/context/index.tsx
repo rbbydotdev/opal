@@ -2,7 +2,7 @@
 import { NullWorkspace, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { TreeDir, TreeDirRoot, TreeFile } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsolutePath2, isAncestor, toString } from "@/lib/paths2";
+import { AbsolutePath2, isAncestor } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
@@ -51,7 +51,7 @@ export function useFileContents() {
       if (currentWorkspace && filePath) {
         try {
           setContents(await currentWorkspace.disk.readFile(filePath));
-          setMimeType(getMimeType(toString(filePath)));
+          setMimeType(getMimeType(filePath as string));
           setError(null);
         } catch (error) {
           setError(error as Error);
@@ -82,7 +82,7 @@ export function useCurrentFilepath() {
   if (filePath === null || currentWorkspace.isNull) {
     return { filePath: null, mimeType: null, isImage: null };
   }
-  const mimeType = mime.lookup(toString(filePath)) || "";
+  const mimeType = mime.lookup(filePath as string) || "";
 
   return { filePath, mimeType, isImage: mimeType.startsWith("image/") };
 }
@@ -168,7 +168,7 @@ export function useWorkspaceFromRoute() {
     return currentWorkspace.disk.renameListener(({ newPath, oldPath, type }) => {
       if (
         (type === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
-        (type === "dir" && isAncestor(workspaceRoute.path, toString(oldPath)))
+        (type === "dir" && isAncestor(workspaceRoute.path, oldPath as string))
       ) {
         router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
       }

@@ -7,7 +7,6 @@ import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import {
   RelativePath2,
   relPath2,
-  toString,
   basename,
   equals,
   prefix,
@@ -44,7 +43,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const isEditing = equals(fullPath, editing);
   const isFocused = equals(fullPath, focused);
   const isVirtual = equals(fullPath, virtual);
-  const isSelectedRange = useMemo(() => selectedRange.includes(toString(treeNode.path)), [selectedRange, toString(treeNode.path)]);
+  const isSelectedRange = useMemo(() => selectedRange.includes(treeNode.path as string), [selectedRange, treeNode.path]);
 
   //assuring focus on the input when editing
   useEffect(() => {
@@ -52,7 +51,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [expand, fullPath, toString(fullPath), isEditing, setFocused]);
+  }, [expand, fullPath, isEditing, setFocused]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -60,7 +59,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
         e.preventDefault();
         e.stopPropagation();
         setFocused(treeNode.path);
-        setSelectedRange(Array.from(new Set([...selectedRange, toString(treeNode.path)])));
+        setSelectedRange(Array.from(new Set([...selectedRange, treeNode.path as string])));
         return;
       }
       if (e.shiftKey && focused) {

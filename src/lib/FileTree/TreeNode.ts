@@ -9,7 +9,6 @@ import {
   depth as getDepth,
   incPath,
   relPath2,
-  toString,
 } from "@/lib/paths2";
 
 export type TreeNodeJType = ReturnType<TreeNode["toJSON"]> & {
@@ -35,10 +34,10 @@ export class TreeNode {
   children?: Record<string, TreeNode>;
 
   get length() {
-    return toString(this.path).length;
+    return (this.path as string).length;
   }
   toString() {
-    return toString(this.path);
+    return this.path as string;
   }
   get str() {
     return this.toString();
@@ -119,8 +118,8 @@ export class TreeNode {
   }
 
   remove() {
-    if (this.parent && toString(this.name) in this.parent.children) {
-      delete this.parent.children[toString(this.name)];
+    if (this.parent && (this.name as string) in this.parent.children) {
+      delete this.parent.children[this.name as string];
       return true;
     }
     return false;
@@ -190,11 +189,11 @@ export class TreeNode {
     // eTag?: string;
   } {
     return {
-      name: toString(this.name),
+      name: this.name as string,
       type: this.type,
-      dirname: toString(this.dirname),
-      basename: toString(this.basename),
-      path: toString(this.path),
+      dirname: this.dirname as string,
+      basename: this.basename as string,
+      path: this.path as string,
       depth: this.depth,
       // mimeType: this.mimeType,
       // parent: this.parent,
