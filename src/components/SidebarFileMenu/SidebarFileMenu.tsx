@@ -20,7 +20,7 @@ import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpan
 import { useToast } from "@/hooks/useToast";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath } from "@/lib/paths";
+import { AbsolutePath2 } from "@/lib/paths2";
 import clsx from "clsx";
 import {
   Check,
@@ -136,7 +136,7 @@ export const SidebarFileMenuFiles = ({
   expandSingle: (path: string, expanded: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [key: string]: boolean };
-  renameDirOrFile: (oldNode: TreeNode, newFullPath: AbsPath, type: "file" | "dir") => Promise<AbsPath>;
+  renameDirOrFile: (oldNode: TreeNode, newFullPath: AbsolutePath2) => Promise<AbsolutePath2>;
   children: React.ReactNode;
 }) => {
   const [groupExpanded, groupSetExpand] = useSingleExpander("files");

@@ -4,7 +4,7 @@ import { Editor } from "@/components/Editor/Editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context";
-import { BasePath } from "@/lib/paths";
+import { toString, encodePath } from "@/lib/paths2";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -20,7 +20,7 @@ export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
   if (filePath === null) return null;
 
   if (isImage) {
-    return <ImageViewer alt={filePath.str} origSrc={filePath.str} />;
+    return <ImageViewer alt={toString(filePath)} origSrc={toString(filePath)} />;
   }
   return <WorkspaceLiveEditorInternal {...props} />;
 }
@@ -28,7 +28,7 @@ export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
   return (
     <div className="p-4 m-auto flex justify-center items-center h-full w-full flex-col">
-      <img className="max-h-[500px] aspect-auto bg-white" alt={alt} src={BasePath.encode(origSrc)} />
+      <img className="max-h-[500px] aspect-auto bg-white" alt={alt} src={encodePath(origSrc)} />
     </div>
   );
 }

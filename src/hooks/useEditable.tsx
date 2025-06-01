@@ -4,7 +4,15 @@ import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { RelPath } from "@/lib/paths";
+import {
+  RelativePath2,
+  relPath2,
+  toString,
+  basename,
+  equals,
+  prefix,
+  changePrefixRel,
+} from "@/lib/paths2";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -30,13 +38,13 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { editing, editType, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
     useFileTreeMenuContext();
-  const [fileName, setFileName] = useState<RelPath>(fullPath.basename());
+  const [fileName, setFileName] = useState<RelativePath2>(relPath2(basename(fullPath)));
 
-  const isSelected = fullPath.equals(currentFile);
-  const isEditing = fullPath.equals(editing);
-  const isFocused = fullPath.equals(focused);
-  const isVirtual = fullPath.equals(virtual);
-  const isSelectedRange = useMemo(() => selectedRange.includes(treeNode.path.str), [selectedRange, treeNode.path.str]);
+  const isSelected = equals(fullPath, currentFile);
+  const isEditing = equals(fullPath, editing);
+  const isFocused = equals(fullPath, focused);
+  const isVirtual = equals(fullPath, virtual);
+  const isSelectedRange = useMemo(() => selectedRange.includes(toString(treeNode.path)), [selectedRange, toString(treeNode.path)]);
 
   //assuring focus on the input when editing
   useEffect(() => {
@@ -44,7 +52,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [expand, fullPath, fullPath.str, isEditing, setFocused]);
+  }, [expand, fullPath, toString(fullPath), isEditing, setFocused]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -52,7 +60,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
         e.preventDefault();
         e.stopPropagation();
         setFocused(treeNode.path);
-        setSelectedRange(Array.from(new Set([...selectedRange, treeNode.path.str])));
+        setSelectedRange(Array.from(new Set([...selectedRange, toString(treeNode.path)])));
         return;
       }
       if (e.shiftKey && focused) {
@@ -80,7 +88,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   );
 
   const cancelEdit = useCallback(() => {
-    setFileName(fullPath.basename());
+    setFileName(relPath2(basename(fullPath)));
     resetEditing();
     linkRef.current?.focus();
   }, [fullPath, resetEditing]);
@@ -100,15 +108,15 @@ export function useEditable<T extends TreeFile | TreeNode>({
       } else if (e.key === "Enter") {
         if (isEditing) {
           if (
-            fileName.prefix() &&
-            (editType === "new" || fileName.basename().prefix() !== fullPath.basename().prefix())
+            prefix(fileName) &&
+            (editType === "new" || prefix(fileName) !== prefix(relPath2(basename(fullPath))))
           ) {
-            const wantPath = fullPath.changePrefix(fileName.prefix()).basename();
+            const wantPath = relPath2(basename(changePrefixRel(relPath2(basename(fullPath)), prefix(fileName))));
             const gotPath = await commitChange(treeNode, wantPath, editType);
             resetEditing();
-            setFileName(gotPath.basename());
+            setFileName(relPath2(basename(gotPath)));
             setFocused(gotPath);
-            if (treeNode.type === "file" && (fullPath.equals(workspaceRoute.path) || !workspaceRoute.path)) {
+            if (treeNode.type === "file" && (equals(fullPath, workspaceRoute.path) || !workspaceRoute.path)) {
               router.push(currentWorkspace.resolveFileUrl(gotPath));
             }
           } else {
