@@ -18,7 +18,6 @@ import {
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
-import { useToast } from "@/hooks/useToast";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
@@ -37,7 +36,6 @@ import {
   Github,
   GitMerge,
   ChromeIcon as Google,
-  Loader,
   Lock,
   Plus,
   RefreshCw,
@@ -375,18 +373,18 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
     </SidebarGroup>
   );
 }
-const DownloadToast = {
-  title: "Downloading Workspace...",
-  duration: 6000,
-  description: (
-    <div className="flex items-center">
-      <div className="animate-spin w-4 h-4 mr-4">
-        <Loader size={12} className="w-4 h-4" />
-      </div>
-      {"Please wait while we prepare your workspace for download."}
-    </div>
-  ),
-};
+// const DownloadToast = {
+//   title: "Downloading Workspace...",
+//   duration: 6000,
+//   description: (
+//     <div className="flex items-center">
+//       <div className="animate-spin w-4 h-4 mr-4">
+//         <Loader size={12} className="w-4 h-4" />
+//       </div>
+//       {"Please wait while we prepare your workspace for download."}
+//     </div>
+//   ),
+// };
 function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleExpander("publish");
   return (
@@ -441,7 +439,7 @@ function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>
 
 function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleExpander("export");
-  const { toast } = useToast();
+  // const { toast } = useToast();
   return (
     <SidebarGroup {...props}>
       <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
@@ -469,13 +467,15 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
         <CollapsibleContent>
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a href="/download.zip" onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}>
+              <a href="/download.zip">
+                {/* <a href="/download.zip" onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}> */}
                 <Download className="mr-1" />
                 Download Zip
               </a>
             </Button>
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a href="/download.zip" onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}>
+              <a href="/download.zip">
+                {/* <a href="/download.zip" onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}> */}
                 <Lock className="inline" />
                 Download Encrypted Zip
               </a>

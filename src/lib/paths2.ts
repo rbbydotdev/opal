@@ -81,7 +81,6 @@ export function decodePath(path: AbsPath | RelPath | string): string {
 
 // --- Join ---
 export function joinPath<T extends AbsPath | RelPath>(base: T, ...parts: (string | RelPath)[]): T {
-  console.log({ base, parts });
   if (!base.startsWith("/")) {
     const joined = [base, ...parts.map(relPath)].join("/");
     return relPath(joined) as T;

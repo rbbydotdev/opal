@@ -1,6 +1,6 @@
 import { SettingsRecord } from "@/Db/SettingsRecord";
 import { default as Dexie, type EntityTable } from "dexie";
-import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
+// import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 import { DiskRecord } from "./DiskRecord";
 import { RemoteAuthRecord } from "./RemoteAuthRecord";
 import { WorkspaceRecord } from "./WorkspaceRecord";
@@ -27,14 +27,13 @@ export class ClientIndexedDb extends Dexie {
     this.workspaces.mapToClass(WorkspaceRecord);
     this.settings.mapToClass(SettingsRecord);
     this.disks.mapToClass(DiskRecord);
-    // this.thumbnails.mapToClass(ThumbnailRecord);
-    applyEncryptionMiddleware<ClientIndexedDb>(
-      this as ClientIndexedDb,
-      new Uint8Array(new Array(32).fill(0)),
-      {
-        remoteAuths: cryptoOptions.NON_INDEXED_FIELDS,
-      },
-      clearAllTables
-    );
+    // applyEncryptionMiddleware<ClientIndexedDb>(
+    //   this as ClientIndexedDb,
+    //   new Uint8Array(new Array(32).fill(0)),
+    //   {
+    //     remoteAuths: cryptoOptions.NON_INDEXED_FIELDS,
+    //   },
+    //   clearAllTables
+    // );
   }
 }

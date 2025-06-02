@@ -10,6 +10,7 @@ import { WorkspaceProvider } from "@/context";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { ErrorPopper } from "@/components/ui/error-popup";
+import { PendingRequestsProvider } from "@/lib/PendingRequestsProvider";
 import React from "react";
 import "./globals.css";
 
@@ -50,7 +51,9 @@ export default function RootLayout({
                   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                     <div className="w-screen overflow-hidden flex ">
                       <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
-                        <WorkSpaceButtonBar />
+                        <PendingRequestsProvider>
+                          <WorkSpaceButtonBar />
+                        </PendingRequestsProvider>
                       </div>
                       <div className="flex h-screen w-[calc(100vw-5rem)]">
                         <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>

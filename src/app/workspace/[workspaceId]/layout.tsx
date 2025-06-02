@@ -3,6 +3,7 @@ import { EditorSidebarLayout } from "@/app/workspace/[workspaceId]/EditorSidebar
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuContextProvider } from "@/components/FileTreeContext";
 import { Toaster } from "@/components/ui/toaster";
+import { PendingRequestsProvider } from "@/lib/PendingRequestsProvider";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import React, { useCallback, useEffect, useRef } from "react";
 import { ImperativePanelHandle } from "react-resizable-panels";
@@ -39,12 +40,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ServiceWorker>
-        <FileTreeMenuContextProvider>
-          <Toaster />
-          <div className="h-full flex w-full">
-            <EditorSidebarLayout sidebar={<EditorSidebar />} main={children} />
-          </div>
-        </FileTreeMenuContextProvider>
+        <PendingRequestsProvider>
+          <FileTreeMenuContextProvider>
+            <Toaster />
+            <div className="h-full flex w-full">
+              <EditorSidebarLayout sidebar={<EditorSidebar />} main={children} />
+            </div>
+          </FileTreeMenuContextProvider>
+        </PendingRequestsProvider>
       </ServiceWorker>
     </>
   );
