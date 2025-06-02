@@ -24,7 +24,7 @@ export function EditorSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton className="cursor-pointer" size="lg" asChild>
-              <div className="flex items-center gap-2 border-2 border-secondary-foreground rounded-md p-2 shadow-md">
+              <div className="flex items-center gap-2 border-2 border-secondary-foreground rounded p-2 shadow-md">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
                   <CurrentWorkspaceIcon size={4} scale={7} />
                 </div>
@@ -43,7 +43,7 @@ export function EditorSidebar({
         <SidebarFileMenu />
       </SidebarContent>
 
-      <SidebarFooter className="text-xs to-sidebar-accent">opal editor v0.1 beta</SidebarFooter>
+      <SidebarFooter className="text-3xs to-sidebar-accent uppercase font-mono">opal editor v0.1 beta</SidebarFooter>
     </Sidebar>
   );
 }

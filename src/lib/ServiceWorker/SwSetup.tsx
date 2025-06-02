@@ -39,3 +39,31 @@ export async function setupServiceWorker(): Promise<void> {
     throw error;
   }
 }
+/*
+async function initializeComlink() {
+  if (!navigator.serviceWorker.controller) {
+    console.warn("Service Worker is not controlling the page.");
+    return;
+  }
+
+  const { port1, port2 } = new MessageChannel();
+  const msg = {
+    comlinkInit: true,
+    port: port1,
+  };
+
+  navigator.serviceWorker.controller.postMessage(msg, [port1]);
+
+  return Comlink.wrap<RemoteObj>(port2);
+}
+
+
+// Service Worker Installation and Activation
+self.addEventListener("install", (event: ExtendableEvent) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+*/

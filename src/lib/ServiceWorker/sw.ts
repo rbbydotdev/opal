@@ -1,4 +1,5 @@
 import Identicon from "@/components/Identicon";
+
 import { Thumb, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
@@ -10,6 +11,7 @@ import { RemoteLogger } from "@/lib/RemoteLogger";
 import * as fflate from "fflate";
 import React from "react";
 import { renderToString } from "react-dom/server";
+import { REQ_SIGNAL, ReqSignal } from "./request-signal";
 
 const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
 
@@ -54,11 +56,35 @@ self.addEventListener("install", (event: ExtendableEvent) => {
   return event.waitUntil(self.skipWaiting());
 });
 
-// Fetch Event Listener
+// --- Request Signaling Helper Functions ---
+
+function signalRequest(type: ReqSignal) {
+  void self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({ type });
+      // console.log(`Signaling request ${type} to client: ${client.id}`);
+    });
+  });
+}
+
+function withRequestSignal<T extends (...args: never[]) => Promise<Response>>(handler: T) {
+  return async function (...args: Parameters<T>): Promise<Response> {
+    signalRequest(REQ_SIGNAL.START);
+    try {
+      const result = await handler(...args);
+      return result;
+    } finally {
+      signalRequest(REQ_SIGNAL.END);
+    }
+  };
+}
+
+// --- Fetch Event Listener ---
+
 self.addEventListener("fetch", async (event) => {
-  //if no referrer, just fetch the request
+  // If no referrer, just fetch the request
   if (!event.request.referrer) {
-    return event.respondWith(fetch(event.request));
+    return event.respondWith(withRequestSignal(fetch)(event.request));
   }
   const url = new URL(event.request.url);
   let referrerPath = "";
@@ -67,7 +93,6 @@ self.addEventListener("fetch", async (event) => {
   } catch (e) {
     console.error(`Error parsing referrer: ${event.request.referrer}, ${e}`);
     throw new NotFoundError(`Error parsing referrer ${event.request.referrer}`);
-    // return event.respondWith(fetch(event.request));
   }
   try {
     const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
@@ -76,18 +101,18 @@ self.addEventListener("fetch", async (event) => {
         return event.respondWith(handleDownloadRequest(workspaceId));
       }
       if (url.pathname === "/favicon.svg" || url.pathname === "/icon.svg") {
-        return event.respondWith(handleFaviconRequest(event));
+        return event.respondWith(withRequestSignal(handleFaviconRequest)(event));
       }
       if ((event.request.destination === "image" || isImageType(url.pathname)) && !WHITELIST.includes(url.pathname)) {
-        return event.respondWith(handleImageRequest(event, url, workspaceId));
+        return event.respondWith(withRequestSignal(handleImageRequest)(event, url, workspaceId));
       }
     }
   } catch (e) {
     console.error(errF`Error parsing workspaceId from referrer: ${referrerPath}, ${e}`.toString());
-    return event.respondWith(fetch(event.request));
+    return event.respondWith(withRequestSignal(fetch)(event.request));
   }
 
-  return event.respondWith(fetch(event.request));
+  return event.respondWith(withRequestSignal(fetch)(event.request));
 });
 
 const SWWStore = new (class SwWorkspace {
@@ -117,14 +142,13 @@ async function handleFaviconRequest(event: FetchEvent): Promise<Response> {
   Workspace.parseWorkspacePath(referrerPath);
   const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
   if (!workspaceId) {
-    return event.respondWith(fetch(event.request));
+    return fetch(event.request);
   }
   const workspace = await SWWStore.tryWorkspace(workspaceId);
   return new Response(
     renderToString(
       React.createElement(Identicon, {
         input: workspace.guid,
-        // input: "FFFZZZ333RR44411111",
         size: 4,
       })
     ),
@@ -212,7 +236,9 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
       console.warn("No files found in the workspace to download.");
       return new Response("No files to download", { status: 404 });
     }
+    let fileCount = fileNodes.filter((node) => node.type === "file").length;
 
+    signalRequest(REQ_SIGNAL.START);
     await Promise.all(
       fileNodes.map(async (node) => {
         if (node.type === "file") {
@@ -220,7 +246,18 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
             console.log(`Adding file to zip: ${node.path}`);
             const fileStream = new fflate.ZipDeflate(node.path, { level: 9 });
             zip.add(fileStream);
-            void workspace.disk.readFile(node.path).then((data) => fileStream.push(coerceUint8Array(data), true)); // true = last chunk
+            void workspace.disk
+              .readFile(node.path)
+              .then((data) => {
+                fileStream.push(coerceUint8Array(data), true);
+              })
+              .finally(() => {
+                fileCount--;
+                if (fileCount === 0) {
+                  console.log(`All files processed for workspace: ${workspace.name}`);
+                  signalRequest(REQ_SIGNAL.END);
+                }
+              }); // true = last chunk
           } catch (e) {
             console.error(`Failed to add file to zip: ${node.path}`, e);
           }
@@ -240,7 +277,6 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
     return new Response(readable, {
       headers: {
         "Content-Type": "application/zip",
-        // "Content-Disposition": `attachment; filename="download.zip"`,
         "Content-Disposition": `attachment; filename="${workspace.name}.zip"`,
       },
     });

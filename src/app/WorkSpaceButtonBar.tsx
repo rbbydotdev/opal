@@ -7,8 +7,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceContext } from "@/context";
 import { Workspace } from "@/Db/Workspace";
-import { useIsNavigatingWorkspace } from "@/hooks/useIsNavigatingWorkspace";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { usePendingRequests } from "@/lib/PendingRequestsProvider";
 import clsx from "clsx";
 import { BombIcon, ChevronDown, CirclePlus, DatabaseZap, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
@@ -69,12 +69,13 @@ export function WorkSpaceButtonBar() {
     () => workspaces.filter((workspace) => workspace.guid !== coalescedWorkspace?.guid),
     [workspaces, coalescedWorkspace]
   );
-  const { isLoading } = useIsNavigatingWorkspace();
+  // const { isLoading } = useIsNavigatingWorkspace();
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
+  const { loadingDebounce } = usePendingRequests();
   return (
     <>
       <div className="flex justify-center flex-col items-center w-full">
-        <Link href={"/"} className={clsx({ "animate-spin": isLoading })}>
+        <Link href={"/"} className={clsx({ "animate-spin": loadingDebounce })}>
           <div className="rotate-12">
             <div
               className="h-7 w-7 rounded-sm mt-4 mb-4"
