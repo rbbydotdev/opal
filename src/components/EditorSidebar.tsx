@@ -43,7 +43,7 @@ export function EditorSidebar({
         <SidebarFileMenu />
       </SidebarContent>
 
-      <SidebarFooter>Foo</SidebarFooter>
+      <SidebarFooter className="text-xs to-sidebar-accent">opal editor v0.1 beta</SidebarFooter>
     </Sidebar>
   );
 }
