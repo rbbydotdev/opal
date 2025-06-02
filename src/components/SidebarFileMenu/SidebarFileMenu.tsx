@@ -3,6 +3,7 @@ import { ConnectionsModal } from "@/components/connections-modal";
 import { FileTreeMenu, useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
 
 import {
   SidebarContent,
@@ -34,6 +35,7 @@ import {
   FileTextIcon,
   FolderPlus,
   Github,
+  GitMerge,
   ChromeIcon as Google,
   Loader,
   Lock,
@@ -317,6 +319,12 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
           <SidebarMenu>
             <div className="px-4 pt-2">
               <Button className="w-full " size="sm" variant="outline">
+                <GitMerge className="mr-1" />
+                Commit
+              </Button>
+            </div>
+            <div className="px-4 pt-2">
+              <Button className="w-full " size="sm" variant="outline">
                 <RefreshCw className="mr-1" />
                 Sync Now
               </Button>
@@ -414,6 +422,15 @@ function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>
             <Button className="w-full text-xs" size="sm" variant="outline">
               <FileTextIcon className="mr-1" />
               Publish to PDF
+            </Button>
+            <Separator />
+            <Button className="w-full text-xs" size="sm" variant="outline">
+              <Code2 className="mr-1" />
+              Publish Single to HTML
+            </Button>
+            <Button className="w-full text-xs" size="sm" variant="outline">
+              <FileTextIcon className="mr-1" />
+              Publish Single to PDF
             </Button>
           </div>
         </CollapsibleContent>
