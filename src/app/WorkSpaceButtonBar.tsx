@@ -9,7 +9,7 @@ import { Workspace } from "@/Db/Workspace";
 import { useIsNavigatingWorkspace } from "@/hooks/useIsNavigatingWorkspace";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import clsx from "clsx";
-import { BombIcon, ChevronDown, CirclePlus, DatabaseZap, Delete, Settings, Zap } from "lucide-react";
+import { BombIcon, ChevronDown, CirclePlus, DatabaseZap, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { use, useMemo } from "react";
@@ -105,6 +105,12 @@ export function WorkSpaceButtonBar() {
         title={"Delete All"}
         href="#"
         onClick={() => Workspace.DeleteAll()}
+      />
+      <BigButton
+        icon={<SearchIcon stroke="current" size={32} strokeWidth={1.25} />}
+        title="search"
+        href="#"
+        className="text-3xs"
       />
       <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
       <BigButton icon={<Settings stroke="current" size={32} strokeWidth={1.25} />} title="settings" href="/settings" />
