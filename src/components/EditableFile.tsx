@@ -138,7 +138,7 @@ export function SelectedMark({ selected = false }: { selected?: boolean }) {
       className={clsx(
         { flex: selected },
         { hidden: !selected },
-        "absolute w-2 h-2 flex justify-center items-center text-accent2 text-xs -ml-3"
+        "absolute w-2 h-2 flex justify-center items-center text-ring text-xs -ml-3"
       )}
     >
       {"✦"}

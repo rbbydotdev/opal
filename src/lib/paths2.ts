@@ -40,21 +40,21 @@ export function prefix(path: AbsPath | RelPath): string {
 }
 
 export function basename(path: AbsPath | RelPath): string {
-  return pathModule.basename(path as string);
+  return pathModule.basename(path);
 }
 
 export function dirname(path: AbsPath | RelPath): string {
-  return pathModule.dirname(path as string);
+  return pathModule.dirname(path);
 }
 
 export function equals(a: AbsPath | RelPath | null | undefined, b: AbsPath | RelPath | null | undefined): boolean {
   if (!a || !b) return false;
-  return (a as string) === (b as string);
+  return a === b;
 }
 
 // --- Encoding/Decoding ---
 export function encodePath(path: AbsPath | RelPath | string): string {
-  return (path as string)
+  return path
     .split("/")
     .map((part) => {
       try {
@@ -67,7 +67,7 @@ export function encodePath(path: AbsPath | RelPath | string): string {
 }
 
 export function decodePath(path: AbsPath | RelPath | string): string {
-  return (path as string)
+  return path
     .split("/")
     .map((part) => {
       try {
@@ -81,24 +81,25 @@ export function decodePath(path: AbsPath | RelPath | string): string {
 
 // --- Join ---
 export function joinPath<T extends AbsPath | RelPath>(base: T, ...parts: (string | RelPath)[]): T {
+  console.log({ base, parts });
   if (!base.startsWith("/")) {
-    const joined = [base as string, ...parts.map((p) => p as string)].join("/");
+    const joined = [base, ...parts.map(relPath)].join("/");
     return relPath(joined) as T;
   }
-  const joined = [base === "/" ? "" : (base as string), ...parts.map((p) => p as string)].join("/");
+  const joined = [base === "/" ? "" : base, ...parts.map(relPath)].join("/");
   return absPath(joined) as T;
 }
 
 // --- Shift ---
 export function shiftAbsolutePath(path: AbsPath): AbsPath {
-  const segments = (path as string).split("/");
+  const segments = path.split("/");
   segments.shift();
   segments[0] = "";
   return absPath(segments.join("/"));
 }
 
 export function shiftRelativePath2(path: RelPath): RelPath {
-  const segments = (path as string).split("/");
+  const segments = path.split("/");
   segments.shift();
   return relPath(segments.join("/"));
 }
@@ -106,7 +107,7 @@ export function shiftRelativePath2(path: RelPath): RelPath {
 // --- Increment Path ---
 export function incPath<T extends AbsPath | RelPath>(path: T): T {
   const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;
-  const match = (path as string).match(regex);
+  const match = path.match(regex);
 
   let newPath: string;
   if (match) {
@@ -114,14 +115,14 @@ export function incPath<T extends AbsPath | RelPath>(path: T): T {
     const incrementedNumber = number ? parseInt(number, 10) + 1 : 1;
     newPath = `${prefix}${incrementedNumber}${suffix}`;
   } else {
-    newPath = `${path as string}-1`;
+    newPath = `${path}-1`;
   }
-  return ((path as string).startsWith("/") ? absPath(newPath) : relPath(newPath)) as T;
+  return (path.startsWith("/") ? absPath(newPath) : relPath(newPath)) as T;
 }
 
 // --- Depth ---
 export function depth(path: AbsPath): number {
-  return (path as string).split("/").length - 2;
+  return path.split("/").length - 2;
 }
 
 // --- Change Prefix ---
@@ -141,7 +142,7 @@ export function changePrefixRel(path: RelPath, newPrefix: string): RelPath {
 
 // --- MIME and Image ---
 export function getPathMimeType(path: AbsPath | RelPath): string {
-  return getMimeType(path as string);
+  return getMimeType(path);
 }
 
 export function isImage(path: AbsPath | RelPath): boolean {
@@ -152,8 +153,8 @@ export function isImage(path: AbsPath | RelPath): boolean {
 export function isAncestor(path: AbsPath | string | null, root: AbsPath | string | null): boolean {
   if (path === root) return true;
   if (path === null || root === null) return false;
-  const rootSegments = (root as string).split("/");
-  const pathSegments = (path as string).split("/");
+  const rootSegments = root.split("/");
+  const pathSegments = path.split("/");
   return pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i]);
 }
 
@@ -164,10 +165,10 @@ export function replaceAncestor(
 ): AbsPath | string {
   if (oldPath === root) return newPath;
   if (oldPath === null || root === null) return oldPath;
-  const rootSegments = (root as string).split("/");
-  const pathSegments = (oldPath as string).split("/");
+  const rootSegments = root.split("/");
+  const pathSegments = oldPath.split("/");
   if (pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i])) {
-    return joinPath(absPath(newPath as string), ...pathSegments.slice(rootSegments.length));
+    return joinPath(absPath(newPath), ...pathSegments.slice(rootSegments.length));
   }
   return oldPath;
 }

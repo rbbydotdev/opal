@@ -1,5 +1,5 @@
 "use client";
-import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
+import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk, OpFsDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
@@ -301,7 +301,7 @@ export class Workspace extends WorkspaceDAO {
     "/welcome.md": "# Welcome to your new workspace!",
     "/home/drafts/post1.md": "# Hello World!",
     "/drafts/draft1.md": "# Goodbye World!",
-    "/ideas/ideas.md": "# Red Green Blue",
+    "/ideas/ideas.md": "# Foobar bizz bazz",
   };
 
   static newCache(id: string) {

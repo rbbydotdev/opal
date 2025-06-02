@@ -23,7 +23,7 @@ export function ConnectionsCard() {
   return (
     <div className="w-full">
       <div className="relative flex justify-center items-center h-full w-full">
-        <Card className="w-96 max-h-[32rem] flex flex-col border-2 border-accent2 shadow-lg">
+        <Card className="w-96 max-h-[32rem] flex flex-col border-2 border-ring shadow-lg">
           <CardHeader className="flex-grow">
             <CardTitle>Connections</CardTitle>
             <CardDescription>connect a remote account</CardDescription>
@@ -31,8 +31,8 @@ export function ConnectionsCard() {
           <CardContent className="flex-grow card-content min-h-0 flex flex-col">
             {/* <CardContent className="flex flex-col flex-grow"> */}
             <CardDescription className="font-mono flex-grow flex flex-col min-h-0 gap-4 ">
-              <VendorButton icon={<SiGoogledrive stroke="current" fill="current" />}>Google Drive</VendorButton>
-              <VendorButton icon={<SiGithub stroke="current" fill="current" />}>Github</VendorButton>
+              <VendorButton icon={<SiGoogledrive />}>Google Drive</VendorButton>
+              <VendorButton icon={<SiGithub />}>Github</VendorButton>
             </CardDescription>
           </CardContent>
         </Card>

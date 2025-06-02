@@ -2,6 +2,7 @@
 
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { SearchModal } from "@/components/ui/search-modal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceContext } from "@/context";
@@ -97,6 +98,7 @@ export function WorkSpaceButtonBar() {
             currentWorkspace.tearDown(),
             Workspace.all().then((wss) => Promise.all(wss.map((ws) => ws.toModel().then((ws) => ws.delete())))),
             unregisterServiceWorkers(),
+            //@ts-expect-error
           ]).then(() => (window.location = "/new"))
         }
       />
@@ -106,14 +108,27 @@ export function WorkSpaceButtonBar() {
         href="#"
         onClick={() => Workspace.DeleteAll()}
       />
+
+      <SearchModal>
+        <BigButton
+          icon={<SearchIcon stroke="current" size={32} strokeWidth={1.25} />}
+          title="search"
+          href="#"
+          className="text-3xs"
+        />
+      </SearchModal>
       <BigButton
-        icon={<SearchIcon stroke="current" size={32} strokeWidth={1.25} />}
-        title="search"
-        href="#"
-        className="text-3xs"
+        className="hidden"
+        icon={<Zap stroke="current" size={32} strokeWidth={1.25} />}
+        title="connections"
+        href="/connections"
       />
-      <BigButton icon={<Zap stroke="current" size={32} strokeWidth={1.25} />} title="connections" href="/connections" />
-      <BigButton icon={<Settings stroke="current" size={32} strokeWidth={1.25} />} title="settings" href="/settings" />
+      <BigButton
+        className="hidden"
+        icon={<Settings stroke="current" size={32} strokeWidth={1.25} />}
+        title="settings"
+        href="/settings"
+      />
       <BigButton
         icon={<CirclePlus stroke="current" size={32} strokeWidth={1.25} />}
         title="new workspace"

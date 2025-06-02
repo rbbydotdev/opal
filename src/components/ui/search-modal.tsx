@@ -1,11 +1,13 @@
 "use client";
 
+import Identicon from "@/components/Identicon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, FileText, Search, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, ChevronRight, FileText, Globe, Search, X } from "lucide-react";
 import { useState } from "react";
 
 // Dummy search results data
@@ -53,11 +55,11 @@ const searchResults = [
   },
 ];
 
-export default function Component({ children }: { children: React.ReactNode }) {
+export function SearchModal({ children }: { children: React.ReactNode }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [collapsedFiles, setCollapsedFiles] = useState<Set<string>>(new Set());
   const [dismissedFiles, setDismissedFiles] = useState<Set<string>>(new Set());
-
+  const [selectedWorkspace, setSelectedWorkspace] = useState("all");
   const toggleFileCollapse = (file: string) => {
     const newCollapsed = new Set(collapsedFiles);
     if (newCollapsed.has(file)) {
@@ -76,100 +78,180 @@ export default function Component({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Dialog onOpenChange={(set) => setOpen(set)} open={open}>
-        <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[80vh] bg-[#1e1e1e] border-[#3c3c3c] text-white">
-          <DialogHeader className="border-b border-[#3c3c3c] pb-4">
-            <DialogTitle className="text-white flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              Search
-            </DialogTitle>
-          </DialogHeader>
+    <Dialog onOpenChange={(set) => setOpen(set)} open={open}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="h-full flex flex-col max-w-4xl max-h-[80vh] bg-[hsl(var(--search-bg))] border-[hsl(var(--search-border))] text-[hsl(var(--primary-foreground))]">
+        <DialogHeader className="border-b border-[hsl(var(--search-border))] pb-4">
+          <DialogTitle className="text-[hsl(var(--primary-foreground))] flex items-center gap-2">
+            <Search className="w-4 h-4" />
+            Search
+          </DialogTitle>
+        </DialogHeader>
 
-          <div className="space-y-4">
-            {/* Search Input */}
-            <div className="space-y-2">
-              <Input
-                placeholder="Search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-[#3c3c3c] border-[#3c3c3c] text-white placeholder:text-gray-400 focus:border-[#007acc] focus:ring-[#007acc]"
-              />
-            </div>
-
-            {/* Results */}
-            <div className="max-h-[50vh] overflow-y-auto space-y-1">
-              {filteredResults.length > 0 ? (
-                <>
-                  <div className="text-sm text-gray-400 mb-3">
-                    {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in{" "}
-                    {filteredResults.length} files
-                  </div>
-                  {filteredResults.map((result) => (
-                    <div key={result.file} className="border border-[#3c3c3c] rounded">
-                      <Collapsible open={!collapsedFiles.has(result.file)}>
-                        <div className="flex items-center justify-between bg-[#2d2d30] px-3 py-2 hover:bg-[#37373d] transition-colors">
-                          <CollapsibleTrigger
-                            className="flex items-center gap-2 flex-1 text-left"
-                            onClick={() => toggleFileCollapse(result.file)}
-                          >
-                            {collapsedFiles.has(result.file) ? (
-                              <ChevronRight className="w-4 h-4 text-gray-400" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4 text-gray-400" />
-                            )}
-                            <FileText className="w-4 h-4 text-blue-400" />
-                            <span className="text-white font-medium">{result.file}</span>
-                            <Badge variant="secondary" className="bg-[#3c3c3c] text-gray-300 text-xs">
-                              {result.matches.length}
-                            </Badge>
-                          </CollapsibleTrigger>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 hover:bg-[#3c3c3c] text-gray-400 hover:text-white"
-                            onClick={() => dismissFile(result.file)}
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </div>
-                        <CollapsibleContent>
-                          <div className="bg-[#1e1e1e]">
-                            {result.matches.map((match, index) => (
-                              <div
-                                key={index}
-                                className="flex items-start gap-3 px-6 py-1 hover:bg-[#2a2d2e] cursor-pointer border-l-2 border-transparent hover:border-[#007acc] transition-colors"
-                              >
-                                <span className="text-gray-500 text-sm font-mono min-w-[3rem] text-right">
-                                  {match.line}
-                                </span>
-                                <span className="text-gray-300 text-sm font-mono flex-1">
-                                  {match.content.split(new RegExp(`(${match.match})`, "gi")).map((part, i) =>
-                                    part.toLowerCase() === match.match.toLowerCase() ? (
-                                      <span key={i} className="bg-[#613a00] text-[#ffcc02] px-1">
-                                        {part}
-                                      </span>
-                                    ) : (
-                                      part
-                                    )
-                                  )}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <div className="text-center text-gray-400 py-8">No results found</div>
-              )}
-            </div>
+        <div className="space-y-4 flex flex-col min-h-0">
+          {/* Search Input */}
+          <div className="space-y-2">
+            <Input
+              placeholder="Search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-[hsl(var(--search-border))] border-[hsl(var(--search-border))] text-[hsl(var(--primary-foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:border-ring"
+            />
           </div>
-        </DialogContent>
-      </Dialog>
+          <WorkspaceSelector value={selectedWorkspace} onValueChange={setSelectedWorkspace} />
+          <div className="text-sm text-[hsl(var(--muted-foreground))] mb-3">
+            {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in{" "}
+            {filteredResults.length} files
+          </div>
+
+          {/* Results */}
+          <div className="max-h-[50vh] overflow-y-auto space-y-1">
+            {filteredResults.length > 0 ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="pb-8">
+                    <div className="bg-[hsl(var(--search-header-bg))]/80 backdrop-blur-sm gap-2 flex items-center justify-start px-3 py-2 sticky top-0 z-10 text-xs font-mono">
+                      <div className="rounded-md overflow-hidden">
+                        <Identicon input={i + "xxxx"} scale={4} size={5} />
+                      </div>
+                      {`wrkspc-${i}x${i}x${i}`}
+                    </div>
+                    {filteredResults.map((result) => (
+                      <div key={result.file} className="border border-[hsl(var(--search-border))] ">
+                        <Collapsible open={!collapsedFiles.has(result.file)}>
+                          <div className="flex items-center justify-between bg-[hsl(var(--search-header-bg))] px-3 py-2 hover:bg-[hsl(var(--search-row-hover))] transition-colors">
+                            <CollapsibleTrigger
+                              className="flex items-center gap-2 flex-1 text-left"
+                              onClick={() => toggleFileCollapse(result.file)}
+                            >
+                              {collapsedFiles.has(result.file) ? (
+                                <ChevronRight className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+                              )}
+                              <FileText className="w-4 h-4 text-[hsl(var(--search-icon))]" />
+                              <span className="text-[hsl(var(--primary-foreground))] font-medium">{result.file}</span>
+                              <Badge
+                                variant="secondary"
+                                className="bg-[hsl(var(--search-border))] text-[hsl(var(--search-muted))] text-xs"
+                              >
+                                {result.matches.length}
+                              </Badge>
+                            </CollapsibleTrigger>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 hover:bg-[hsl(var(--search-border))] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary-foreground))]"
+                              onClick={() => dismissFile(result.file)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <CollapsibleContent>
+                            <div className="bg-[hsl(var(--search-bg))]">
+                              {result.matches.map((match, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-start gap-3 px-6 py-1 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
+                                >
+                                  <span className="text-[hsl(var(--search-muted-2))] text-sm font-mono min-w-[3rem] text-right">
+                                    {match.line}
+                                  </span>
+                                  <span className="text-[hsl(var(--search-muted))] text-sm font-mono flex-1">
+                                    {match.content.split(new RegExp(`(${match.match})`, "gi")).map((part, i) =>
+                                      part.toLowerCase() === match.match.toLowerCase() ? (
+                                        <span
+                                          key={i}
+                                          className="bg-[hsl(var(--search-highlight-bg))] text-[hsl(var(--search-highlight-fg))] px-1"
+                                        >
+                                          {part}
+                                        </span>
+                                      ) : (
+                                        part
+                                      )
+                                    )}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="text-center text-[hsl(var(--muted-foreground))] py-8">No results found</div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Dummy workspaces data
+const workspaces = [
+  { id: "frontend", name: "Frontend App" },
+  { id: "backend", name: "Backend API" },
+  { id: "docs", name: "Documentation" },
+  { id: "config", name: "Configuration" },
+  { id: "frontend", name: "Frontend App" },
+  { id: "backend", name: "Backend API" },
+  { id: "docs", name: "Documentation" },
+  { id: "config", name: "Configuration" },
+  { id: "frontend", name: "Frontend App" },
+  { id: "backend", name: "Backend API" },
+  { id: "docs", name: "Documentation" },
+  { id: "config", name: "Configuration" },
+  { id: "frontend", name: "Frontend App" },
+  { id: "backend", name: "Backend API" },
+  { id: "docs", name: "Documentation" },
+  { id: "config", name: "Configuration" },
+  { id: "frontend", name: "Frontend App" },
+  { id: "backend", name: "Backend API" },
+  { id: "docs", name: "Documentation" },
+  { id: "config", name: "Configuration" },
+];
+
+interface WorkspaceSelectorProps {
+  value: string;
+  onValueChange: (value: string) => void;
+}
+
+function WorkspaceSelector({ value, onValueChange }: WorkspaceSelectorProps) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm text-search-muted">Workspace</label>
+      <Select value={value} onValueChange={onValueChange}>
+        <SelectTrigger className="bg-search-border border-search-border text-primary-foreground focus:border-ring focus:ring-ring">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="bg-search-header border-search-border text-primary-foreground">
+          <SelectItem value="all" className="focus:bg-search-row-hover focus:text-primary-foreground">
+            <div className="flex items-center gap-2">
+              <Globe className="w-5 h-5 text-search-icon" />
+              All Workspaces
+            </div>
+          </SelectItem>
+          {workspaces.map((workspace, i) => (
+            <SelectItem
+              key={workspace.id + "" + i}
+              value={workspace.id + "" + i}
+              className="focus:bg-search-row-hover focus:text-primary-foreground"
+            >
+              <div className="flex items-center gap-2">
+                {/* <workspace.icon className="w-4 h-4 text-orange-400" /> */}
+                <div className="rounded-md overflow-hidden">
+                  <Identicon input={workspace.name} scale={4} size={5} />
+                </div>
+                {workspace.name}
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

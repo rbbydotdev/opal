@@ -23,6 +23,12 @@
       "react-dom": "19.0.0"
     }
   },
+  "resolutions": {
+    "@radix-ui/react-focus-scope": "1.1.7",
+    "react-dom": "19.0.0",
+    "dexie": "^4.0.10",
+    "react": "^19.0.0"
+  },
   "dependencies": {
     "@autoform/react": "^3.1.0",
     "@hookform/resolvers": "^4.1.3",

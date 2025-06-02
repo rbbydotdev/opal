@@ -46,9 +46,6 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
-        accent2: {
-          DEFAULT: colors.purple[700],
-        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
@@ -66,6 +63,18 @@ export default {
           "3": "hsl(var(--chart-3))",
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
+        },
+        search: {
+          DEFAULT: "hsl(var(--search-bg))",
+          border: "hsl(var(--search-border))",
+          header: "hsl(var(--search-header-bg))",
+          "row-hover": "hsl(var(--search-row-hover))",
+          "match-hover": "hsl(var(--search-match-hover))",
+          "highlight-bg": "hsl(var(--search-highlight-bg))",
+          "highlight-fg": "hsl(var(--search-highlight-fg))",
+          muted: "hsl(var(--search-muted))",
+          "muted-2": "hsl(var(--search-muted-2))",
+          icon: "hsl(var(--search-icon))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
