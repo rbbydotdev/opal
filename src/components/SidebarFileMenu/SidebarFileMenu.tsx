@@ -25,11 +25,13 @@ import clsx from "clsx";
 import {
   Check,
   ChevronRight,
+  Code2,
   CopyMinus,
   DotIcon,
   Download,
   FilePlus,
   Files,
+  FileTextIcon,
   FolderPlus,
   Github,
   ChromeIcon as Google,
@@ -39,6 +41,7 @@ import {
   RefreshCw,
   Trash2,
   Upload,
+  UploadCloudIcon,
 } from "lucide-react";
 import React, { useCallback } from "react";
 import { twMerge } from "tailwind-merge";
@@ -95,6 +98,7 @@ function SidebarFileMenuInternal({
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
       <SidebarDndList storageKey={"sidebarMenu"}>
+        <SidebarFileMenuPublish dnd-id="publish" className="flex-shrink flex" />
         <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex flex-col min-h-8" />
         <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
         <SidebarFileMenuFiles
@@ -340,8 +344,8 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
                   <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
                     <div className="w-full whitespace-nowrap flex items-center space-x-1">
                       {i === 0 ? (
-                        <div className="w-4 h-4 stroke-success items-center justify-center flex">
-                          <Check size={10} strokeWidth={4} stroke="current" />
+                        <div className="w-4 h-4 text-success items-center justify-center flex">
+                          <Check size={10} strokeWidth={4} />
                         </div>
                       ) : (
                         <div className="w-4 h-4 items-center justify-center flex">
@@ -375,6 +379,49 @@ const DownloadToast = {
     </div>
   ),
 };
+function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>) {
+  const [expanded, setExpand] = useSingleExpander("publish");
+  return (
+    <SidebarGroup {...props}>
+      <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton>
+            <SidebarGroupLabel>
+              <div className="w-full flex items-center">
+                <ChevronRight
+                  size={14}
+                  className={
+                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                  }
+                />
+              </div>
+              <div className="w-full">
+                <div className="flex justify-center items-center">
+                  <UploadCloudIcon size={12} className="mr-2" />
+                  Publish
+                </div>
+              </div>
+            </SidebarGroupLabel>
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+
+        <CollapsibleContent>
+          <div className="px-4 pt-2 py-4 flex flex-col gap-2">
+            <Button className="w-full text-xs" size="sm" variant="outline">
+              <Code2 className="mr-1" />
+              Publish to HTML
+            </Button>
+            <Button className="w-full text-xs" size="sm" variant="outline">
+              <FileTextIcon className="mr-1" />
+              Publish to PDF
+            </Button>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarGroup>
+  );
+}
+
 function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleExpander("export");
   const { toast } = useToast();

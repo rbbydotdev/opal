@@ -262,7 +262,7 @@ export abstract class Disk extends DiskDAO {
 
   async initializeIndex() {
     try {
-      await this.hydrate(); //TODO: this should go from DAO to Disk may need to re-work workspace to do so as well
+      await this.hydrate(); //I think this is unnecessary now that we are using the DAO
       await this.firstIndex();
       await this.local.emit(DiskLocalEvents.INDEX);
     } catch (e) {
