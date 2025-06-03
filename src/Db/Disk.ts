@@ -4,7 +4,7 @@ import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
 import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
 import { Channel } from "@/lib/channel";
-import { coerceUint8Array } from "@/lib/coerceUint8Array";
+// import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { isServiceWorker } from "@/lib/isServiceWorker";
@@ -15,9 +15,10 @@ import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import { memfs } from "memfs";
-import { FsaNodeFs } from "memfs/lib/fsa-to-node";
+// import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
-import { IReadStream } from "memfs/lib/node/types/misc";
+// import { IReadStream } from "memfs/lib/node/types/misc";
+import { ExclusifyInstance, MutexFs } from "@/Db/MutexFs";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
 
@@ -53,47 +54,6 @@ export interface CommonFileSystem {
   ): Promise<void>;
 }
 
-export class MutexFs implements CommonFileSystem {
-  // export class MutexFs implements CommonFileSystem {
-  fs: CommonFileSystem;
-
-  constructor(fs: CommonFileSystem, protected mutex = new Mutex()) {
-    this.fs = fs;
-  }
-
-  async readdir(path: string) {
-    return this.mutex.runExclusive(() => this.fs.readdir(path));
-  }
-
-  async stat(path: string) {
-    return this.mutex.runExclusive(() => this.fs.stat(path));
-  }
-
-  async readFile(path: string, options?: { encoding?: "utf8" }) {
-    return this.mutex.runExclusive(() => this.fs.readFile(path, options));
-  }
-
-  async mkdir(path: AbsPath, options?: { recursive?: boolean; mode: number }) {
-    return this.mutex.runExclusive(() => this.fs.mkdir(path, options));
-  }
-
-  async rename(oldPath: AbsPath, newPath: AbsPath) {
-    return this.mutex.runExclusive(() => this.fs.rename(oldPath, newPath));
-  }
-
-  async unlink(path: AbsPath) {
-    return this.mutex.runExclusive(() => this.fs.unlink(path));
-  }
-
-  async writeFile(path: AbsPath, data: Uint8Array | Buffer | string, options?: { encoding?: "utf8"; mode: number }) {
-    return this.mutex.runExclusive(() => this.fs.writeFile(path, data, options));
-  }
-  async createReadStream(path: string): Promise<IReadStream> {
-    //@ts-expect-error
-    return this.fs.createReadStream(path);
-  }
-}
-
 type OPFSFileSystem = CommonFileSystem & {
   rm: (path: string, options?: { force?: boolean; recursive?: boolean }) => Promise<void>;
 };
@@ -108,30 +68,9 @@ export class OPFSNamespacedFs extends NamespacedFs {
   tearDown(): Promise<void> {
     return this.fs.rm(encodePath(this.namespace), { recursive: true, force: true });
   }
-  createReadStream(path: string): IReadStream {
-    //@ts-expect-error
-    return this.fs.createReadStream(encodePath(joinPath(this.namespace, path)));
-  }
 
   rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
     return this.fs.rm(encodePath(joinPath(this.namespace, path)), options);
-  }
-}
-
-export class MutexOPFS extends MutexFs {
-  fs: OPFSNamespacedFs;
-
-  constructor(fs: OPFSNamespacedFs, protected mutex = new Mutex()) {
-    super(fs, mutex);
-    this.fs = fs;
-  }
-
-  async rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
-    return this.mutex.runExclusive(() => this.fs.rm(path, options));
-  }
-
-  async tearDown() {
-    return this.mutex.runExclusive(() => this.fs.tearDown());
   }
 }
 
@@ -589,26 +528,6 @@ export abstract class Disk extends DiskDAO {
       return false;
     }
   }
-  createReadStream(filePath: AbsPath): IReadStream | ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> {
-    // if (this.type === OpFsDisk.type) {
-    if (false) {
-      //@ts-expect-error
-      return (this.fs.createReadStream as FsaNodeFs["createReadStream"])(encodePath(filePath), {
-        encoding: "utf8",
-        mode: 0o777,
-      });
-    } else {
-      const fakeStream = new ReadableStream<Uint8Array>({
-        start: (controller) => {
-          void this.readFile(filePath).then((contents) => {
-            controller.enqueue(coerceUint8Array(contents));
-            controller.close();
-          });
-        },
-      });
-      return fakeStream.getReader();
-    }
-  }
 
   async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
     await this.fs.writeFile(encodePath(filePath), contents, { encoding: "utf8", mode: 0o777 });
@@ -684,6 +603,7 @@ export class IndexedDbDisk extends Disk {
   constructor(public readonly guid: string) {
     const mutex = new Mutex();
     const fs = new LightningFs();
+    // const mutexFs = ExclusifyInstance(fs.promises, mutex);
     const mutexFs = new MutexFs(fs.promises, mutex);
     const ft = new FileTree(fs.promises, guid, mutex);
     super(guid, mutexFs, ft, IndexedDbDisk.type);
@@ -708,3 +628,20 @@ export class NullDisk extends Disk {
     super("null", fs.promises, ft, NullDisk.type);
   }
 }
+
+// export class MutexOPFS extends MutexFs {
+//   fs: OPFSNamespacedFs;
+
+//   constructor(fs: OPFSNamespacedFs, protected mutex = new Mutex()) {
+//     super(fs, mutex);
+//     this.fs = fs;
+//   }
+
+//   async rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
+//     return this.mutex.runExclusive(() => this.fs.rm(path, options));
+//   }
+
+//   async tearDown() {
+//     return this.mutex.runExclusive(() => this.fs.tearDown());
+//   }
+// }
