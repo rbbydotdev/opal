@@ -432,6 +432,8 @@ export class Workspace extends WorkspaceDAO {
         });
     }
   }
+  // renameMultiple = async (oldNodes: TreeNode[], newFullPaths: AbsPath[]) => {
+  // }
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);

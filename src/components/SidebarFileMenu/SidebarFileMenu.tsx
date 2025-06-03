@@ -3,6 +3,7 @@ import { ConnectionsModal } from "@/components/connections-modal";
 import { FileTreeMenu, useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
 import { Separator } from "@/components/ui/separator";
 
 import {
@@ -16,11 +17,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
-import { withCurrentWorkspace, WorkspaceContextType } from "@/context";
+import { useWorkspaceContext, withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
+import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import clsx from "clsx";
 import {
   Check,
@@ -41,6 +43,7 @@ import {
   RefreshCw,
   Trash2,
   Upload,
+  UploadCloud,
   UploadCloudIcon,
 } from "lucide-react";
 import React, { useCallback } from "react";
@@ -412,24 +415,22 @@ function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-4 pt-2 py-4 flex flex-col gap-2">
-            <Button className="w-full text-xs" size="sm" variant="outline">
-              <Code2 className="mr-1" />
-              Publish to HTML
-            </Button>
-            <Button className="w-full text-xs" size="sm" variant="outline">
-              <FileTextIcon className="mr-1" />
-              Publish to PDF
-            </Button>
-            <Separator />
-            <Button className="w-full text-xs" size="sm" variant="outline">
-              <Code2 className="mr-1" />
-              Publish Single to HTML
-            </Button>
-            <Button className="w-full text-xs" size="sm" variant="outline">
-              <FileTextIcon className="mr-1" />
-              Publish Single to PDF
-            </Button>
+          <div className="px-4 pt-2 py-4 flex flex-col gap-4">
+            <SidebarGroup className="gap-2 flex flex-col">
+              <SidebarGroupLabel>Workspace Actions</SidebarGroupLabel>
+              <Button className="w-full text-xs" size="sm" variant="outline">
+                <UploadCloud className="mr-1" />
+                Publish to Web
+              </Button>
+              <Button className="w-full text-xs" size="sm" variant="outline">
+                <Code2 className="mr-1" />
+                Publish to HTML
+              </Button>
+              <Button className="w-full text-xs" size="sm" variant="outline">
+                <FileTextIcon className="mr-1" />
+                Publish to PDF
+              </Button>
+            </SidebarGroup>
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -439,7 +440,7 @@ function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>
 
 function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleExpander("export");
-  // const { toast } = useToast();
+  const { currentWorkspace } = useWorkspaceContext();
   return (
     <SidebarGroup {...props}>
       <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
@@ -457,7 +458,7 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
               <div className="w-full">
                 <div className="flex justify-center items-center">
                   <Download size={12} className="mr-2" />
-                  Export
+                  Download
                 </div>
               </div>
             </SidebarGroupLabel>
@@ -467,19 +468,23 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
         <CollapsibleContent>
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a href="/download.zip">
-                {/* <a href="/download.zip" onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}> */}
+              <a href="/download.zip" download={`${currentWorkspace.name}.zip`}>
                 <Download className="mr-1" />
                 Download Zip
               </a>
             </Button>
-            <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a href="/download.zip">
-                {/* <a href="/download.zip" onClick={() => setTimeout(toast(DownloadToast).dismiss, DownloadToast.duration)}> */}
-                <Lock className="inline" />
-                Download Encrypted Zip
-              </a>
-            </Button>
+            <EncryptedZipDialog
+              onSubmit={(password) =>
+                downloadEncryptedZipHelper({ password, encryption: "zipcrypto", name: currentWorkspace.name })
+              }
+            >
+              <Button className="w-full text-xs" size="sm" variant="outline" asChild>
+                <div>
+                  <Lock className="inline" />
+                  Download Encrypted Zip
+                </div>
+              </Button>
+            </EncryptedZipDialog>
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -529,5 +534,47 @@ export function SidebarCollapseContentScroll(
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">{children}</CollapsibleContent>
       </Collapsible>
     </SidebarGroup>
+  );
+}
+
+function PublishMenu() {
+  return (
+    <>
+      <SidebarGroup className="gap-2 flex flex-col">
+        <SidebarGroupLabel>Cloud Actions</SidebarGroupLabel>
+        <Button className="w-full text-xs" size="sm" variant="outline">
+          <Code2 className="mr-1" />
+          Publish to Cloud, HTML
+        </Button>
+        <Button className="w-full text-xs" size="sm" variant="outline">
+          <Code2 className="mr-1" />
+          Publish to Cloud, PDF
+        </Button>
+      </SidebarGroup>
+      <Separator />
+      <SidebarGroup className="gap-2 flex flex-col">
+        <SidebarGroupLabel>Workspace Actions</SidebarGroupLabel>
+        <Button className="w-full text-xs" size="sm" variant="outline">
+          <Code2 className="mr-1" />
+          Publish to HTML
+        </Button>
+        <Button className="w-full text-xs" size="sm" variant="outline">
+          <FileTextIcon className="mr-1" />
+          Publish to PDF
+        </Button>
+      </SidebarGroup>
+      <Separator />
+      <SidebarGroup className="gap-2 flex flex-col">
+        <SidebarGroupLabel>Single File Actions</SidebarGroupLabel>
+        <Button className="w-full text-xs" size="sm" variant="outline">
+          <Code2 className="mr-1" />
+          Publish Single to HTML
+        </Button>
+        <Button className="w-full text-xs" size="sm" variant="outline">
+          <FileTextIcon className="mr-1" />
+          Publish Single to PDF
+        </Button>
+      </SidebarGroup>
+    </>
   );
 }
