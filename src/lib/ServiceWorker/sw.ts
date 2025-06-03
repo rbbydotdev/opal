@@ -1,5 +1,4 @@
 import Identicon from "@/components/Identicon";
-
 import { Thumb, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
@@ -8,10 +7,10 @@ import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, decodePath } from "@/lib/paths2";
 import { RemoteLogger } from "@/lib/RemoteLogger";
+import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
 import * as fflate from "fflate";
 import React from "react";
 import { renderToString } from "react-dom/server";
-import { REQ_SIGNAL, ReqSignal } from "./request-signal";
 
 const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
 
@@ -35,7 +34,6 @@ const RL = RemoteLogger("ServiceWorker");
 console.log = function (msg: unknown) {
   RL(formatConsoleMsg(msg), "log");
 };
-
 console.debug = function (msg: unknown) {
   RL(formatConsoleMsg(msg), "debug");
 };
@@ -45,36 +43,35 @@ console.error = function (msg: unknown) {
 console.warn = function (msg: unknown) {
   RL(formatConsoleMsg(msg), "warn");
 };
-// // Logger
+
+// --- Service Worker Installation and Activation ---
 
 self.addEventListener("activate", function (event) {
-  return event.waitUntil(self.clients.claim()); // Become available to all pages
+  return event.waitUntil(self.clients.claim());
 });
 
-// Service Worker Installation and Activation
 self.addEventListener("install", (event: ExtendableEvent) => {
   return event.waitUntil(self.skipWaiting());
 });
 
 // --- Request Signaling Helper Functions ---
 
-function signalRequest(type: ReqSignal) {
+function signalRequest(detail: RequestEventDetail) {
   void self.clients.matchAll().then((clients) => {
     clients.forEach((client) => {
-      client.postMessage({ type });
-      // console.log(`Signaling request ${type} to client: ${client.id}`);
+      client.postMessage(detail);
     });
   });
 }
 
 function withRequestSignal<T extends (...args: never[]) => Promise<Response>>(handler: T) {
   return async function (...args: Parameters<T>): Promise<Response> {
-    signalRequest(REQ_SIGNAL.START);
+    signalRequest({ type: REQ_SIGNAL.START });
     try {
       const result = await handler(...args);
       return result;
     } finally {
-      signalRequest(REQ_SIGNAL.END);
+      signalRequest({ type: REQ_SIGNAL.END });
     }
   };
 }
@@ -188,11 +185,11 @@ async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: stri
     if (!workspace) throw new Error("Workspace not found " + workspaceId);
     console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
-    const contents: Uint8Array<ArrayBufferLike> = isThumbnail
-      ? ((await workspace.readOrMakeThumb(decodedPathname)) as Uint8Array<ArrayBufferLike>)
-      : ((await workspace.readFile(absPath(decodedPathname))) as Uint8Array<ArrayBufferLike>);
+    const contents = isThumbnail
+      ? await workspace.readOrMakeThumb(decodedPathname)
+      : await workspace.readFile(absPath(decodedPathname));
 
-    const response = new Response(contents, {
+    const response = new Response(coerceUint8Array(contents) as BodyInit, {
       headers: {
         "Content-Type": getMimeType(decodedPathname),
         "Cache-Control": "public, max-age=31536000, immutable",
@@ -238,7 +235,7 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
     }
     let fileCount = fileNodes.filter((node) => node.type === "file").length;
 
-    signalRequest(REQ_SIGNAL.START);
+    signalRequest({ type: REQ_SIGNAL.START });
     await Promise.all(
       fileNodes.map(async (node) => {
         if (node.type === "file") {
@@ -246,6 +243,7 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
             console.log(`Adding file to zip: ${node.path}`);
             const fileStream = new fflate.ZipDeflate(node.path, { level: 9 });
             zip.add(fileStream);
+            //'stream' file by file
             void workspace.disk
               .readFile(node.path)
               .then((data) => {
@@ -255,7 +253,7 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
                 fileCount--;
                 if (fileCount === 0) {
                   console.log(`All files processed for workspace: ${workspace.name}`);
-                  signalRequest(REQ_SIGNAL.END);
+                  signalRequest({ type: REQ_SIGNAL.END });
                 }
               }); // true = last chunk
           } catch (e) {
