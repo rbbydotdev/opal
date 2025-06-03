@@ -10,7 +10,7 @@ import { WorkspaceProvider } from "@/context";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { ErrorPopper } from "@/components/ui/error-popup";
-import { RequestSignals } from "@/lib/PendingRequestsProvider";
+import { RequestSignalsInstance } from "@/lib/RequestSignals";
 import React, { useEffect } from "react";
 import "./globals.css";
 
@@ -30,9 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   useEffect(() => {
-    return new RequestSignals().initAndWatch((count) => {
-      console.log("Request count:", count);
-    });
+    return RequestSignalsInstance.initAndWatch((_count) => {});
   }, []);
   return (
     <html lang="en" suppressHydrationWarning>

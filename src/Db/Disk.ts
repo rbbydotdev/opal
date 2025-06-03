@@ -21,6 +21,7 @@ import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { ExclusifyInstance, MutexFs } from "@/Db/MutexFs";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
+import { RequestSignalsInstance } from "../lib/RequestSignals";
 
 // Utility type to make certain properties optional
 export type DiskJType = { guid: string; type: DiskType };
@@ -604,8 +605,9 @@ export class IndexedDbDisk extends Disk {
     const mutex = new Mutex();
     const fs = new LightningFs();
     // const mutexFs = ExclusifyInstance(fs.promises, mutex);
+    // RequestSignalsInstance.initAndWatch(() => {});
     const mutexFs = new MutexFs(fs.promises, mutex);
-    const ft = new FileTree(fs.promises, guid, mutex);
+    const ft = new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
     super(guid, mutexFs, ft, IndexedDbDisk.type);
     this.ready = fs.init(guid) as unknown as Promise<void>;
   }

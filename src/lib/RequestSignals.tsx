@@ -1,5 +1,6 @@
 "use client";
 import { REQ_NAME, REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
+import { useEffect, useRef, useState } from "react";
 
 // Strongly-typed CustomEvent for request signals
 class RequestEvent extends CustomEvent<RequestEventDetail> {
@@ -9,6 +10,7 @@ class RequestEvent extends CustomEvent<RequestEventDetail> {
 }
 
 export class RequestSignals {
+  initListeners = false;
   RequestEventBus = new EventTarget();
   count = 0;
 
@@ -24,14 +26,14 @@ export class RequestSignals {
     this.RequestEventBus.dispatchEvent(new RequestEvent({ type: REQ_SIGNAL.COUNT, count }));
   };
 
-  constructor() {}
-
-  init() {
-    const unsubs = [this.initListeners(), this.initSW()];
-    return () => unsubs.forEach((unsub) => unsub());
+  constructor() {
+    console.log("RequestSignals initialized");
   }
+
   initAndWatch(cb: (count: number) => void) {
-    const unsubs = [this.initListeners(), this.initSW(), this.onRequest(cb)];
+    const unsubs = [this.onRequest(cb)];
+    unsubs.push(this.initSignalListeners());
+    unsubs.push(this.initSWSignalListener());
     return () => unsubs.forEach((unsub) => unsub());
   }
 
@@ -46,13 +48,15 @@ export class RequestSignals {
     return () => this.RequestEventBus.removeEventListener(REQ_NAME, handler);
   };
 
-  private initListeners() {
+  private initSignalListeners() {
     const handler = (event: Event) => {
       const detail = (event as RequestEvent).detail;
       if (detail.type === REQ_SIGNAL.START) {
-        this.Count(++this.count);
+        this.count = this.count + 1;
+        this.Count(this.count);
       } else if (detail.type === REQ_SIGNAL.END) {
-        this.Count(--this.count);
+        this.count = this.count - 1;
+        this.Count(this.count);
       }
     };
     this.RequestEventBus.addEventListener(REQ_NAME, handler);
@@ -61,7 +65,7 @@ export class RequestSignals {
     };
   }
 
-  private initSW() {
+  private initSWSignalListener() {
     const handler = (event: MessageEvent<RequestEventDetail>) => {
       // Type-safe: event.data is RequestEventDetail
       this.RequestEventBus.dispatchEvent(new RequestEvent(event.data));
@@ -82,21 +86,20 @@ export class RequestSignals {
   }
 
   // Wraps an instance so that all its methods are automatically signaled
-  wrapInstance<T extends object>(instance: T): T {
+  watchPromiseMembers<T extends object>(instance: T): T {
     return new Proxy(instance, {
       get: (target, prop, receiver) => {
         const value = Reflect.get(target, prop, receiver);
         if (typeof value === "function") {
           return (...args: unknown[]) => {
-            this.Start();
             try {
               const result = value.apply(target, args);
               if (result && typeof result.then === "function") {
+                this.Start();
                 return result.finally(() => this.End());
               }
               return result;
             } finally {
-              this.End();
             }
           };
         }
@@ -105,3 +108,24 @@ export class RequestSignals {
     });
   }
 }
+export const RequestSignalsInstance = new RequestSignals();
+
+export const useRequestSignals = () => {
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pending, setPending] = useState(false);
+  useEffect(() => {
+    return RequestSignalsInstance.initAndWatch((count) => {
+      if (count <= 0) {
+        if (debounceTimer.current) {
+          clearTimeout(debounceTimer.current);
+        }
+        debounceTimer.current = setTimeout(() => {
+          setPending(false);
+        }, 1000);
+      } else if (!pending) {
+        setPending(true);
+      }
+    });
+  }, [pending]);
+  return { pending };
+};
