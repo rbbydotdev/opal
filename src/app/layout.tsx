@@ -10,8 +10,8 @@ import { WorkspaceProvider } from "@/context";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { ErrorPopper } from "@/components/ui/error-popup";
-import { PendingRequestsProvider } from "@/lib/PendingRequestsProvider";
-import React from "react";
+import { RequestSignalsInstance } from "@/lib/RequestSignals";
+import React, { useEffect } from "react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +29,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  useEffect(() => {
+    return RequestSignalsInstance.initAndWatch((_count) => {});
+  }, []);
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
@@ -51,9 +54,7 @@ export default function RootLayout({
                   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                     <div className="w-screen overflow-hidden flex ">
                       <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
-                        <PendingRequestsProvider>
-                          <WorkSpaceButtonBar />
-                        </PendingRequestsProvider>
+                        <WorkSpaceButtonBar />
                       </div>
                       <div className="flex h-screen w-[calc(100vw-5rem)]">
                         <AsyncWindowErrorBoundary>{children}</AsyncWindowErrorBoundary>
