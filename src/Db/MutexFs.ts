@@ -75,8 +75,6 @@ export function ExclusifyInstanceAsyncFn<T extends object>(instance: T, mutex = 
     },
   });
 }
-// RequestEmitter.Start();
-// RequestEmitter.End();
 
 // ExclusifyInstance: No 'any' used, works for all Promise-returning functions
 export function ExclusifyInstance<T extends object>(instance: T, mutex = new Mutex()): T {

@@ -18,7 +18,7 @@ import { memfs } from "memfs";
 // import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 // import { IReadStream } from "memfs/lib/node/types/misc";
-import { ExclusifyInstance, MutexFs } from "@/Db/MutexFs";
+import { MutexFs } from "@/Db/MutexFs";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
 import { RequestSignalsInstance } from "../lib/RequestSignals";
@@ -604,9 +604,10 @@ export class IndexedDbDisk extends Disk {
   constructor(public readonly guid: string) {
     const mutex = new Mutex();
     const fs = new LightningFs();
-    // const mutexFs = ExclusifyInstance(fs.promises, mutex);
-    // RequestSignalsInstance.initAndWatch(() => {});
+    // const mutexFs = ExclusifyInstance(fs.promises, mutex); //BUGGY! try again soon
     const mutexFs = new MutexFs(fs.promises, mutex);
+    //watchPromiseMembers is an enhancement which emits start and end for request signals
+    //here i am only using it on FileTree operations NOT file operations
     const ft = new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
     super(guid, mutexFs, ft, IndexedDbDisk.type);
     this.ready = fs.init(guid) as unknown as Promise<void>;
