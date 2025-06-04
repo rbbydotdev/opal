@@ -1,5 +1,5 @@
 "use client";
-import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk, OpFsDisk } from "@/Db/Disk";
+import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk, OpFsDisk, ZenWebstorageFSDbDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
@@ -149,6 +149,8 @@ export class WorkspaceDAO implements WorkspaceRecord {
     // thumbs: DiskDAO = DiskDAO.new(OpFsDisk.type)
     disk: DiskDAO = DiskDAO.new(IndexedDbDisk.type),
     thumbs: DiskDAO = DiskDAO.new(IndexedDbDisk.type)
+    // disk: DiskDAO = DiskDAO.new(ZenWebstorageFSDbDisk.type),
+    // thumbs: DiskDAO = DiskDAO.new(ZenWebstorageFSDbDisk.type)
   ) {
     let uniqueName = WorkspaceDAO.Slugify(name);
     let inc = 0;

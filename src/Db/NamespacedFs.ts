@@ -52,6 +52,8 @@ export class NamespacedFs implements CommonFileSystem {
 }
 
 export class PatchedOPFS extends FsaNodeFs {
+  //hacky patch since move isn't quite implimented yet
+  //and unlink doesn't work as expected, like node:fs
   constructor(...args: ConstructorParameters<typeof FsaNodeFs>) {
     super(...args);
     this.promises.unlink = async (path: string) => {

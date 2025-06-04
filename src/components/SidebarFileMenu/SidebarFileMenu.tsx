@@ -17,12 +17,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
+import { TooltipContent } from "@/components/ui/tooltip";
 import { useWorkspaceContext, withCurrentWorkspace, WorkspaceContextType } from "@/context";
 import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
+import { Tooltip, TooltipTrigger } from "@radix-ui/react-tooltip";
 import clsx from "clsx";
 import {
   Check,
@@ -38,6 +40,7 @@ import {
   Github,
   GitMerge,
   ChromeIcon as Google,
+  Info,
   Lock,
   Plus,
   RefreshCw,
@@ -475,12 +478,22 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
             </Button>
             <EncryptedZipDialog
               onSubmit={(password) =>
-                downloadEncryptedZipHelper({ password, encryption: "zipcrypto", name: currentWorkspace.name })
+                downloadEncryptedZipHelper({ password, encryption: "aes", name: currentWorkspace.name })
               }
             >
-              <Button className="w-full text-xs" size="sm" variant="outline" asChild>
+              <Button className="w-full text-xs relative group" size="sm" variant="outline" asChild>
                 <div>
                   <Lock className="inline" />
+                  <div className="absolute -top-0 right-0 group-hover:block hiddes">
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>AES, probably not secure, but its a cool idea!</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   Download Encrypted Zip
                 </div>
               </Button>

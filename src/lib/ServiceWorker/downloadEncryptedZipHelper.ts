@@ -18,10 +18,6 @@ export const downloadEncryptedZipHelper = async ({
       [EncHeader]: encryption, // Custom header to indicate encryption type
       [PassHeader]: password, // Custom header to pass the password
     },
-    body: JSON.stringify({
-      password,
-      encryption,
-    }),
   });
 
   if (!response.ok) {
