@@ -5,6 +5,7 @@ import { ClientDb } from "@/Db/instance";
 import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
 import { Channel } from "@/lib/channel";
 // import { coerceUint8Array } from "@/lib/coerceUint8Array";
+import { MutexFs } from "@/Db/MutexFs";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { isServiceWorker } from "@/lib/isServiceWorker";
@@ -12,21 +13,32 @@ import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
 import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
+import { configureSingle } from "@zenfs/core";
+import * as zenFsPromises from "@zenfs/core/promises";
+import { WebStorage } from "@zenfs/dom";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import { memfs } from "memfs";
-// import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
-// import { IReadStream } from "memfs/lib/node/types/misc";
-import { MutexFs } from "@/Db/MutexFs";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
 import { RequestSignalsInstance } from "../lib/RequestSignals";
 
+// const { configureSingle, fs: zenFs } = ZenFs;
+
+//TODO Lazy load modules based on disk
+
 // Utility type to make certain properties optional
 export type DiskJType = { guid: string; type: DiskType };
 
-export const DiskTypes = ["IndexedDbDisk", "MemDisk", "DexieFsDbDisk", "NullDisk", "OpFsDisk"] as const;
+export const DiskTypes = [
+  "IndexedDbDisk",
+  "MemDisk",
+  "DexieFsDbDisk",
+  "NullDisk",
+  "OpFsDisk",
+  "ZenWebstorageFSDbDisk",
+] as const;
 export type DiskType = (typeof DiskTypes)[number];
 
 export interface CommonFileSystem {
@@ -321,6 +333,7 @@ export abstract class Disk extends DiskDAO {
       [DexieFsDbDisk.type]: DexieFsDbDisk,
       [NullDisk.type]: NullDisk,
       [OpFsDisk.type]: OpFsDisk,
+      [ZenWebstorageFSDbDisk.type]: ZenWebstorageFSDbDisk,
     }[type](guid);
   }
 
@@ -389,6 +402,14 @@ export abstract class Disk extends DiskDAO {
     });
   }
 
+  async trash(filePath: AbsPath, type: "dir" | "file") {
+    return this.renameDirOrFile(filePath, joinPath(absPath(".trash"), filePath), type);
+  }
+  async untrash(filePath: AbsPath, type: "dir" | "file") {
+    const newPath = absPath(filePath.replace(/\.trash\//, "/")); // remove .trash prefix
+    return this.renameDirOrFile(filePath, newPath, type);
+  }
+
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
     return this.renameDirOrFile(oldFullPath, newFullPath, "dir");
   }
@@ -420,7 +441,6 @@ export abstract class Disk extends DiskDAO {
     });
     if (!newFullPath) return NOCHANGE;
     const cleanFullPath = joinPath(absPath(dirname(newFullPath)), basename(newFullPath));
-    // .replace(/\//g, ":")
 
     if (cleanFullPath === oldFullPath) return NOCHANGE;
 
@@ -599,6 +619,17 @@ export class DexieFsDbDisk extends Disk {
   }
 }
 
+export class ZenWebstorageFSDbDisk extends Disk {
+  static type: DiskType = "ZenWebstorageFSDbDisk";
+  constructor(public readonly guid: string) {
+    throw new Error("Buggy, not implimented yet");
+    const mutex = new Mutex();
+    const ready = configureSingle({ backend: WebStorage });
+    const ft = new FileTree(zenFsPromises, guid, mutex);
+    super(guid, new MutexFs(zenFsPromises, mutex), ft, ZenWebstorageFSDbDisk.type);
+    this.ready = ready;
+  }
+}
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
   constructor(public readonly guid: string) {
