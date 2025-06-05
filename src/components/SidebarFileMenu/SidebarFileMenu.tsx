@@ -484,13 +484,13 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
               <Button className="w-full text-xs relative group" size="sm" variant="outline" asChild>
                 <div>
                   <Lock className="inline" />
-                  <div className="absolute -top-0 right-0 group-hover:block hiddes">
+                  <div className="absolute -top-0 right-0 group-hover:block hidden">
                     <Tooltip>
                       <TooltipTrigger>
                         <Info />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>AES, probably not secure, but its a cool idea!</p>
+                        <p>AES, probably not secure - but its a cool idea!</p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
