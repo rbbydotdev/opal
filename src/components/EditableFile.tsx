@@ -19,9 +19,11 @@ export const EditableFile = ({
   workspaceRoute,
   expand,
   onDragStart,
+  onCopy,
 }: {
   currentWorkspace: Workspace;
   onDragStart: (e: React.DragEvent) => void;
+  onCopy: (e: React.ClipboardEvent) => void;
   workspaceRoute: WorkspaceRouteType;
   className?: string;
   treeFile: TreeFile;
@@ -71,6 +73,7 @@ export const EditableFile = ({
           active={equals(fullPath, workspaceRoute.path)}
           draggable
           onDragStart={onDragStart}
+          onCopy={onCopy}
           href={currentWorkspace.resolveFileUrl(fullPath)}
           className={twMerge(
             className,

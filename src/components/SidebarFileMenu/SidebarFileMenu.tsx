@@ -1,6 +1,6 @@
 "use client";
 import { ConnectionsModal } from "@/components/connections-modal";
-import { FileTreeMenu, useFileTreeDragAndDrop } from "@/components/FiletreeMenu";
+import { FileTreeMenu, useFileTreeDragDropCopy } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
@@ -87,7 +87,7 @@ function SidebarFileMenuInternal({
   // const route = usePathname();
 
   // const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
-  const { handleDrop } = useFileTreeDragAndDrop({
+  const { handleDrop } = useFileTreeDragDropCopy({
     currentWorkspace,
   });
 

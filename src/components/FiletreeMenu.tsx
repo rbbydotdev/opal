@@ -56,55 +56,50 @@ export function FileTreeContainer({
 
 const INTERNAL_FILE_TYPE = "application/x-opal";
 
-export type DragStartJType = { dragStart: TreeNodeJType[] };
-export type DragStartType = { dragStart: TreeNode[] };
-export function useFileTreeDragAndDrop({
+export type NodeDataJType = { nodeData: TreeNodeJType[] };
+export type NodeDataType = { nodeData: TreeNode[] };
+export function useFileTreeDragDropCopy({
   currentWorkspace,
   onMove,
   onDragEnter,
 }: {
   currentWorkspace: Workspace;
   onMove?: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<unknown> | unknown;
-  onDragEnter?: (path: string, data?: DragStartJType) => void;
+  onDragEnter?: (path: string, data?: NodeDataJType) => void;
 }) {
   const { selectedRange, focused, setDragOver } = useFileTreeMenuContext();
   //on drag start cancel focus on key up
 
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
     setDragOver(null);
-    // Create a set of unique file paths from the selected range, the current file, and the focused file
-    const allFiles = Array.from(new Set([...selectedRange, targetNode.path, focused ? focused : null]))
+    prepareNodeDataTransfer(event.dataTransfer, targetNode);
+  };
+
+  const prepareNodeDataTransfer = (dataTransfer: DataTransfer, targetNode: TreeNode) => {
+    const allFileNodes = Array.from(new Set([...selectedRange, targetNode.path, focused ? focused : null]))
       .filter(Boolean)
-      .map((entry) => absPath(entry!));
+      .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
+      .filter(Boolean);
 
-    // Prepare the data for the internal file type
     const data = JSON.stringify({
-      dragStart: Array.from(new Set([...selectedRange, targetNode.path, focused ? focused : ""]))
-        .map((path) => (path ? currentWorkspace.disk.fileTree.nodeFromPath(path) : null))
-        .filter(Boolean),
-    } satisfies DragStartType);
+      nodeData: allFileNodes,
+    } satisfies NodeDataType);
 
-    // Set the effect allowed for the drag operation
-    event.dataTransfer.effectAllowed = "all";
-
-    //log event.dataTransfer items
-    event.dataTransfer.clearData();
-
-    // Set the internal file type data
-    event.dataTransfer.setData(INTERNAL_FILE_TYPE, data);
-
-    event.dataTransfer.setData(
-      "text/html",
-      allFiles.map((url) => `<a href="${encodePath(url)}">${url}</a>`).join("\n")
-    );
-
-    allFiles.filter(Boolean).forEach((fpath, i) => {
-      //using semi-colon to play nice with possible mimeType collision (hackish)
-
-      // event.dataTransfer.setData(`${fpath.getMimeType()};index=${i}`, encodePath(fpath));
-      //TODO: Not using url safe?
-      event.dataTransfer.setData(`${getPathMimeType(fpath)};index=${i}`, fpath);
+    dataTransfer.clearData();
+    dataTransfer.effectAllowed = "all";
+    dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+    dataTransfer.setData("text/html", `<a href="${encodePath(targetNode.path)}">${targetNode.path}</a>`);
+    allFileNodes.forEach((node, i) => {
+      dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
     });
+    console.log(allFileNodes);
+  };
+
+  const handleCopy = (event: React.ClipboardEvent, targetNode: TreeNode) => {
+    console.log("1234");
+    event.preventDefault();
+    event.stopPropagation();
+    prepareNodeDataTransfer(event.clipboardData, targetNode);
   };
 
   const handleDragOver = (event: React.DragEvent, targetNode: TreeNode) => {
@@ -146,10 +141,10 @@ export function useFileTreeDragAndDrop({
       if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
         await handleExternalDrop(event, targetNode);
       } else {
-        const { dragStart } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as DragStartJType;
+        const { nodeData } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
 
-        if (dragStart && dragStart.length) {
-          const dragNodes = reduceLineage(dragStart.map((node) => TreeNode.fromJSON(node)));
+        if (nodeData && nodeData.length) {
+          const dragNodes = reduceLineage(nodeData.map((node) => TreeNode.fromJSON(node)));
           return Promise.all(
             dragNodes.filter(({ type: draggedType, path: draggedPath }) => {
               const dropPath = joinPath(targetPath, basename(draggedPath));
@@ -171,13 +166,13 @@ export function useFileTreeDragAndDrop({
   const handleDragEnter = (event: React.DragEvent, path: string) => {
     event.preventDefault();
     if (event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
-      const data = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as DragStartJType;
+      const data = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
       onDragEnter?.(path, data);
     } else {
       onDragEnter?.(path);
     }
   };
-  return { handleDragStart, handleDragOver, handleDrop, handleDragEnter, handleDragLeave };
+  return { handleDragStart, handleDragOver, handleDrop, handleDragEnter, handleDragLeave, handleCopy };
 }
 
 function FileTreeMenuInternal({
@@ -207,15 +202,16 @@ function FileTreeMenuInternal({
   // }, [currentWorkspace, resetSelects]);
 
   const { dragOver } = useFileTreeMenuContext();
-  const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragAndDrop({
-    currentWorkspace,
-    onMove: renameDirOrFile,
-    onDragEnter: (path: string, data?: DragStartJType) => {
-      if (!data?.dragStart.some((node) => node.path === path)) {
-        expand(path, true);
-      }
-    }, //if the path is another directory, expand it
-  });
+  const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop, handleCopy } =
+    useFileTreeDragDropCopy({
+      currentWorkspace,
+      onMove: renameDirOrFile,
+      onDragEnter: (path: string, data?: NodeDataJType) => {
+        if (!data?.nodeData.some((node) => node.path === path)) {
+          expand(path, true);
+        }
+      }, //if the path is another directory, expand it
+    });
 
   return (
     <SidebarMenu
@@ -283,6 +279,7 @@ function FileTreeMenuInternal({
                 treeFile={file as TreeFile}
                 expand={expandForNode}
                 onDragStart={(e) => handleDragStart(e, file)}
+                onCopy={(e) => handleCopy(e, file)}
               />
             </SidebarMenuButton>
           )}
