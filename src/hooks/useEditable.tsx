@@ -105,7 +105,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
             resetEditing();
             setFileName(relPath(basename(gotPath)));
             setFocused(gotPath);
-            if (treeNode.type === "file" && (equals(fullPath, workspaceRoute.path) || !workspaceRoute.path)) {
+            if (treeNode.isTreeFile() && (equals(fullPath, workspaceRoute.path) || !workspaceRoute.path)) {
               router.push(currentWorkspace.resolveFileUrl(gotPath));
             }
           } else {

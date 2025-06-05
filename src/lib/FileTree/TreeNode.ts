@@ -1,5 +1,6 @@
 // import { MimeType, MimeTypes } from "@/lib/fileType";
 // import { getMimeType } from "@/lib/mimeType";
+import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, RelPath, absPath, basename, dirname, depth as getDepth, incPath, relPath } from "@/lib/paths2";
 
 export type TreeNodeJType = ReturnType<TreeNode["toJSON"]> & {
@@ -27,6 +28,12 @@ export class TreeNode {
   get length() {
     return this.path.length;
   }
+  getMimeType() {
+    return this.type === "dir" ? "dir" : getMimeType(this.path);
+  }
+  isMarkdownFile() {
+    return this.getMimeType() === "text/markdown";
+  }
   toString() {
     return this.path;
   }
@@ -39,7 +46,17 @@ export class TreeNode {
     const pathDirname = absPath(dirname(path));
     const pathBasename = relPath(basename(path));
     const pathDepth = getDepth(path);
-    return new TreeNode({ name, type, dirname: pathDirname, basename: pathBasename, path, depth: pathDepth, parent });
+    return type === "dir"
+      ? new TreeDir({
+          name,
+          dirname: pathDirname,
+          basename: pathBasename,
+          path,
+          depth: pathDepth,
+          parent,
+          children: {},
+        })
+      : new TreeFile({ name, dirname: pathDirname, basename: pathBasename, path, depth: pathDepth, parent });
   }
 
   replaceWith(newNode: TreeNode) {
@@ -66,6 +83,16 @@ export class TreeNode {
       if (status.exit) break;
       await this.asyncWalk(cb, childNode, depth + 1, status);
     }
+  }
+
+  iterator(filter?: (n: TreeNode) => boolean): IterableIterator<TreeNode> {
+    function* gen(node: TreeNode): IterableIterator<TreeNode> {
+      if (!filter || filter(node)) yield node;
+      for (const childNode of Object.values((node as TreeDir).children ?? {})) {
+        yield* gen.bind(node)(childNode);
+      }
+    }
+    return gen.bind(this)(this);
   }
 
   walk(
@@ -194,7 +221,10 @@ export class TreeNode {
 }
 
 export class TreeDir extends TreeNode {
-  children: Record<string, TreeNode>;
+  children: Record<string, TreeNode> = {};
+
+  // type = TreeDir.type;
+  // static type = "type" as const;
   type = "dir" as const;
 
   constructor({
@@ -280,7 +310,6 @@ export function isTreeDir(node: TreeNode): node is TreeDir {
 }
 export class TreeFile extends TreeNode {
   type = "file" as const;
-  // mimeType: MimeType = MimeTypes.MARKDOWN;
 
   constructor({
     name,

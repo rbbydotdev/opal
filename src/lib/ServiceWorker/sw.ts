@@ -1,5 +1,6 @@
 import Identicon from "@/components/Identicon";
-import { Thumb, Workspace, WorkspaceDAO } from "@/Db/Workspace";
+import { Thumb } from "@/Db/Thumb";
+import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
@@ -244,12 +245,12 @@ async function handleDownloadRequest(workspaceId: string): Promise<Response> {
       console.warn("No files found in the workspace to download.");
       return new Response("No files to download", { status: 404 });
     }
-    let fileCount = fileNodes.filter((node) => node.type === "file").length;
+    let fileCount = fileNodes.filter((node) => node.isTreeFile()).length;
 
     signalRequest({ type: REQ_SIGNAL.START });
     await Promise.all(
       fileNodes.map(async (node) => {
-        if (node.type === "file") {
+        if (node.isTreeFile()) {
           try {
             console.log(`Adding file to zip: ${node.path}`);
             const fileStream = new fflate.ZipDeflate(node.path, { level: 9 });
@@ -344,7 +345,7 @@ async function handleDownloadRequestEncrypted(workspaceId: string, event: FetchE
     signalRequest({ type: REQ_SIGNAL.START });
 
     const addFilePromises = fileNodes
-      .filter((node) => node.type === "file")
+      .filter((node) => node.isTreeFile())
       .map(async (node) => {
         try {
           const data = await workspace.disk.readFile(node.path);

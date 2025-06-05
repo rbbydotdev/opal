@@ -1,11 +1,17 @@
 // worker.ts
 import { Disk, DiskJType } from "@/Db/Disk";
+import { WorkspaceDAO } from "@/Db/Workspace";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { errF } from "@/lib/errors";
 import { absPath } from "@/lib/paths2";
 import * as Comlink from "comlink";
-const workerApi = {
-  searchWorkspace: async ({ searchStr, workspace }: { searchStr: string; workspace: string }) => {},
+const WorkerApi = {
+  searchWorkspace: async ({ searchStr, workspaceName }: { searchStr: string; workspaceName: string }) => {
+    const workspace = await WorkspaceDAO.fetchFromName(workspaceName);
+    if (!workspace) {
+      throw new Error(`Workspace not found: ${workspaceName}`);
+    }
+  },
   searchAllWorkspaces: async ({ searchStr }: { searchStr: string }) => {},
   thumbnailForWorkspace: async ({
     content,
@@ -34,7 +40,7 @@ const workerApi = {
     }
   },
 };
-export type ImageWorkerApiType = typeof workerApi;
+export type ImageWorkerApiType = typeof WorkerApi;
 
 // Expose the API via Comlink
-Comlink.expose(workerApi);
+Comlink.expose(WorkerApi);

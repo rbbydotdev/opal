@@ -107,10 +107,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
 
   const renameDirOrFile = React.useCallback(
     async (oldNode: TreeNode, newFullPath: AbsPath) => {
-      const { path } =
-        oldNode.type === "dir"
-          ? await currentWorkspace.renameDir(oldNode, newFullPath)
-          : await currentWorkspace.renameFile(oldNode, newFullPath);
+      const { path } = oldNode.isTreeDir()
+        ? await currentWorkspace.renameDir(oldNode, newFullPath)
+        : await currentWorkspace.renameFile(oldNode, newFullPath);
 
       if (
         workspaceRoute.path &&
@@ -159,7 +158,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new") => {
       const wantPath = joinPath(absPath(dirname(origNode.path)), relPath(decodePath(fileName)));
       if (type === "new") {
-        if (origNode.type === "file")
+        if (origNode.isTreeFile())
           return currentWorkspace.newFile(
             absPath(dirname(wantPath)),
             relPath(basename(wantPath)),
