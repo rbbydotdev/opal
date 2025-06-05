@@ -120,7 +120,7 @@ export function useFileTreeDragAndDrop({
   };
 
   const handleExternalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
-    const targetPath = targetNode.type === "dir" ? targetNode.path : targetNode.dirname;
+    const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
     const { files } = event.dataTransfer;
     for (const file of files) {
       try {
@@ -141,7 +141,7 @@ export function useFileTreeDragAndDrop({
     setDragOver(null);
     event.preventDefault();
     event.stopPropagation();
-    const targetPath = targetNode.type === "dir" ? targetNode.path : targetNode.dirname;
+    const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
     try {
       if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
         await handleExternalDrop(event, targetNode);
@@ -236,7 +236,7 @@ function FileTreeMenuInternal({
           className={clsx({
             ["bg-sidebar-accent"]:
               equals(file.path, workspaceRoute.path) ||
-              (file.type === "dir" && file.path === (dragOver ? dragOver : null)),
+              (file.isTreeDir() && file.path === (dragOver ? dragOver : null)),
           })}
           onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}

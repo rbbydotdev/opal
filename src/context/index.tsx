@@ -118,8 +118,8 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace) {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
         const newTree = new TreeDirRoot(fileTreeDir);
         setFileTree(newTree);
-        void currentWorkspace.getFirstFile().then((ff) => setFirstFile(ff));
-        setFlatTree(currentWorkspace.getFlatDirTree());
+        void currentWorkspace.getFirstFile().then(setFirstFile);
+        setFlatTree(currentWorkspace.getFlatTree());
       });
     }
   }, [currentWorkspace, isIndexed]);

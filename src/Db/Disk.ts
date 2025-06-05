@@ -8,20 +8,17 @@ import { Channel } from "@/lib/channel";
 import { MutexFs } from "@/Db/MutexFs";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
-import { isServiceWorker } from "@/lib/isServiceWorker";
-import { getMimeType } from "@/lib/mimeType";
+import { TreeFile, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
+import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
 import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
-import { configureSingle } from "@zenfs/core";
-import * as zenFsPromises from "@zenfs/core/promises";
-import { WebStorage } from "@zenfs/dom";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import { memfs } from "memfs";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
-import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeFile, TreeNode } from "../lib/FileTree/TreeNode";
+import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeNode } from "../lib/FileTree/TreeNode";
 import { RequestSignalsInstance } from "../lib/RequestSignals";
 
 // const { configureSingle, fs: zenFs } = ZenFs;
@@ -182,100 +179,77 @@ export class DiskRemoteEvents extends Channel<{
   [DiskRemoteEvents.RENAME]: RemoteRenameFileType;
   [DiskRemoteEvents.INDEX]: never;
   [DiskLocalEvents.WRITE]: { filePaths: string[] };
-  [DiskRemoteEvents.UPDATE_INDEX]: { filePath: string; type: "file" | "dir" };
 }> {
   static WRITE = "write" as const;
   static INDEX = "index" as const;
   static RENAME = "rename" as const;
-  static UPDATE_INDEX = "updateIndex" as const;
 }
 
 export class DiskLocalEvents extends Emittery<{
   [DiskLocalEvents.RENAME]: RenameFileType;
   [DiskLocalEvents.INDEX]: never;
   [DiskLocalEvents.WRITE]: { filePaths: string[] };
-  [DiskRemoteEvents.UPDATE_INDEX]: { filePath: string; type: "file" | "dir" };
 }> {
   static WRITE = "write" as const;
   static INDEX = "index" as const;
   static RENAME = "rename" as const;
-  static UPDATE_INDEX = "updateIndex" as const;
 }
 export abstract class Disk extends DiskDAO {
   remote: DiskRemoteEvents;
   local = new DiskLocalEvents();
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
+  // indexed: Promise<unknown>;
+  // setIndexed: (value?: unknown) => void;
 
   constructor(public readonly guid: string, protected fs: CommonFileSystem, public fileTree: FileTree, type: DiskType) {
     super({ guid, type });
+    // const { promise, resolve } = Promise.withResolvers();
+    // this.indexed = promise;
+    // this.setIndexed = resolve;
     this.remote = new DiskRemoteEvents(this.guid);
   }
 
-  async initializeIndex() {
+  async initializeIndex(cache: TreeNodeDirJType = new TreeDirRoot().toJSON()) {
     try {
-      await this.hydrate(); //I think this is unnecessary now that we are using the DAO
-      await this.firstIndex();
+      await this.fileTreeIndex({
+        tree: TreeDirRoot.fromJSON(cache),
+        writeIndexCache: false,
+      });
       await this.local.emit(DiskLocalEvents.INDEX);
+      // this.setIndexed();
     } catch (e) {
       throw errF`Error initializing index ${e}`;
     }
     return;
   }
 
-  updateIndex(path: AbsPath, type: "file" | "dir", writeIndexCache = true) {
-    this.fileTree.updateIndex(path, type);
-    if (writeIndexCache) {
-      /*await*/ void this.update({ indexCache: this.fileTree.root.toJSON() });
-    }
-  }
-
   fileTreeIndex = async ({
     tree,
-    visitor,
     writeIndexCache = true,
   }: {
     tree?: TreeDirRoot;
-    visitor?: (node: TreeNode) => Promise<TreeNode> | TreeNode;
     writeIndexCache?: boolean;
   } = {}) => {
-    const newIndex = await this.fileTree.index({ tree, visitor });
+    const newIndex = await this.fileTree.index({ tree });
     if (writeIndexCache) {
       /*await*/ void this.update({ indexCache: newIndex.toJSON() });
     }
     return newIndex;
   };
 
-  getFirstFile(): TreeFile | null {
-    let first = null;
-    this.fileTree.root.walk((file, _, exit) => {
-      if (file.type === "file" && !file.isVirtual) {
-        first = file;
-        exit();
-      }
-    });
-    return first;
-  }
-
-  initialIndexListener(callback: (fileTreeDir: TreeDir) => void) {
-    if (this.fileTree.initialIndex) {
-      callback(this.fileTree.getRootTree());
-    } else {
-      void this.local.once(DiskLocalEvents.INDEX).then(() => {
-        callback(this.fileTree.getRootTree());
-      });
+  getFirstFile() {
+    let node = null;
+    for (node of this.fileTree.iterator()) {
+      if (node.isTreeFile()) break;
     }
+    return node as TreeFile | null;
   }
 
-  awaitFirstIndex() {
-    return new Promise((rs) =>
-      this.initialIndexListener((fileTreeDir: TreeDir) => {
-        rs(fileTreeDir);
-      })
-    );
+  tryFirstIndex() {
+    return this.fileTree.tryFirstIndex();
   }
 
-  //race will call callback if there is already a fresh initialized index
   latestIndexListener(
     callback: (fileTree: TreeDir) => void,
     { initialTrigger = true }: { initialTrigger?: boolean } = {}
@@ -288,8 +262,11 @@ export abstract class Disk extends DiskDAO {
   }
   async init() {
     await this.ready;
-    await this.initializeIndex();
-    if (!isServiceWorker()) {
+    const { indexCache } = await this.hydrate(); //I think this is unnecessary now that we are using the DAO
+    await this.initializeIndex(indexCache);
+    //TODO: this is a code smell, maybe make 2 workspace classes like a workerclass which does not do this
+    //OR workspace has a initForWorker and init method which differentiates
+    if (!isServiceWorker() || !isWebWorker()) {
       return this.setupRemoteListeners();
     } else {
       console.debug("skipping remote listeners in service worker");
@@ -313,11 +290,6 @@ export abstract class Disk extends DiskDAO {
         await this.fileTreeIndex();
         void this.local.emit(DiskLocalEvents.INDEX);
       }),
-
-      this.remote.on(DiskRemoteEvents.UPDATE_INDEX, async ({ filePath, type }) => {
-        this.updateIndex(absPath(filePath), type);
-        void this.local.emit(DiskLocalEvents.INDEX);
-      }),
     ];
     return () => listeners.forEach((p) => p());
   }
@@ -333,38 +305,42 @@ export abstract class Disk extends DiskDAO {
       [DexieFsDbDisk.type]: DexieFsDbDisk,
       [NullDisk.type]: NullDisk,
       [OpFsDisk.type]: OpFsDisk,
-      [ZenWebstorageFSDbDisk.type]: ZenWebstorageFSDbDisk,
     }[type](guid);
   }
 
-  //TODO: should probabably parse document then search find image nodes
-  async findReplaceImgBatch(findReplace: [string, string][]) {
+  async *iteratorMutex(filter?: (node: TreeNode) => boolean): AsyncIterableIterator<TreeNode> {
     await this.ready;
-    const filePaths: string[] = [];
     await this.mutex.acquire();
-    await this.fileTree.asyncWalk(async (node) => {
-      if (getMimeType(node.path) === "text/markdown") {
-        let content = String(await this.readFile(node.path));
-        let changed = false;
-        for (const [find, replace] of findReplace) {
-          // Inline escaping of regex special characters in 'find'
-          const escapedFind = find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const regex = new RegExp(`([(<])${escapedFind}`, "g");
-          if (regex.test(content)) {
-            content = content.replace(regex, (_match, p1) => `${p1}${replace}`);
-            changed = true;
-          }
-        }
-        if (changed) {
-          await this.writeFile(node.path, content);
-          filePaths.push(node.path);
+    for (const node of this.fileTree.iterator(filter)) {
+      yield node;
+    }
+    this.mutex.release();
+  }
+
+  //TODO: should probabably parse document then search find image nodes
+  //Also this function is a little beefy, service object?
+  async findReplaceImgBatch(findReplace: [string, string][]) {
+    const filePaths = [];
+    for await (const node of this.iteratorMutex((node) => node.isMarkdownFile())) {
+      let content = String(await this.readFile(node.path));
+      let changed = false;
+      for (const [find, replace] of findReplace) {
+        // Inline escaping of regex special characters in 'find'
+        const escapedFind = find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`([(<])${escapedFind}`, "g");
+        if (regex.test(content)) {
+          content = content.replace(regex, (_match, p1) => `${p1}${replace}`);
+          changed = true;
         }
       }
-    });
+      if (changed) {
+        await this.writeFile(node.path, content);
+        filePaths.push(node.path);
+      }
+    }
     await this.local.emit(DiskLocalEvents.WRITE, {
       filePaths,
     });
-    this.mutex.release();
   }
 
   async mkdirRecursive(filePath: AbsPath) {
@@ -381,15 +357,15 @@ export abstract class Disk extends DiskDAO {
       }
     }
   }
-  async firstIndex() {
-    if (!this.fileTree.initialIndex) {
-      if (!this.indexCache) await this.hydrate(); //defensive check should already be present - TODO should be going from DAO.hydrate to Disk
-      return this.fileTreeIndex({ tree: TreeDirRoot.fromJSON(this.indexCache), writeIndexCache: false });
-    } else {
-      console.debug("disk index skipped");
-      return this.fileTree.root;
-    }
-  }
+  // async firstIndex() {
+  //   if (!this.fileTree.initialIndex) {
+  //     if (!this.indexCache) await this.hydrate(); //defensive check should already be present - TODO should be going from DAO.hydrate to Disk
+  //     return this.fileTreeIndex({ tree: TreeDirRoot.fromJSON(this.indexCache), writeIndexCache: false });
+  //   } else {
+  //     console.debug("disk index skipped");
+  //     return this.fileTree.root;
+  //   }
+  // }
 
   renameListener(fn: (props: RenameFileType) => void) {
     return this.local.on(DiskLocalEvents.RENAME, fn);
@@ -474,11 +450,8 @@ export abstract class Disk extends DiskDAO {
     }
     await this.mkdirRecursive(fullPath);
     await this.fileTreeIndex();
-    // this.updateIndex(fullPath, "dir");
     await this.local.emit(DiskLocalEvents.INDEX);
     await this.remote.emit(DiskLocalEvents.INDEX);
-    // await this.local.emit(DiskLocalEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "dir" });
-    // await this.remote.emit(DiskLocalEvents.UPDATE_INDEX, { filePath: fullPath.str, type: "dir" });
     return fullPath;
   }
   async removeFile(filePath: AbsPath) {
@@ -527,7 +500,6 @@ export abstract class Disk extends DiskDAO {
     await this.writeFileRecursive(fullPath, content);
     await this.fileTreeIndex();
     await this.local.emit(DiskLocalEvents.INDEX);
-    await this.remote.emit(DiskRemoteEvents.UPDATE_INDEX, { filePath: fullPath, type: "file" });
     return fullPath;
   }
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
@@ -581,6 +553,18 @@ export abstract class Disk extends DiskDAO {
   get isIndexed() {
     return this.fileTree.initialIndex;
   }
+
+  async search(searchStr: string) {
+    console.log(searchStr);
+    // await this.ready;
+    // const results: TreeFile[] = [];
+    // for await (const node of this.iteratorMutex((node) => node.isTreeFile())) {
+    //   if (node.name.includes(searchStr)) {
+    //     results.push(node);
+    //   }
+    // }
+    // return results;
+  }
 }
 
 export class OpFsDisk extends Disk {
@@ -619,17 +603,6 @@ export class DexieFsDbDisk extends Disk {
   }
 }
 
-export class ZenWebstorageFSDbDisk extends Disk {
-  static type: DiskType = "ZenWebstorageFSDbDisk";
-  constructor(public readonly guid: string) {
-    throw new Error("Buggy, not implimented yet");
-    const mutex = new Mutex();
-    const ready = configureSingle({ backend: WebStorage });
-    const ft = new FileTree(zenFsPromises, guid, mutex);
-    super(guid, new MutexFs(zenFsPromises, mutex), ft, ZenWebstorageFSDbDisk.type);
-    this.ready = ready;
-  }
-}
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
   constructor(public readonly guid: string) {
@@ -663,19 +636,6 @@ export class NullDisk extends Disk {
   }
 }
 
-// export class MutexOPFS extends MutexFs {
-//   fs: OPFSNamespacedFs;
-
-//   constructor(fs: OPFSNamespacedFs, protected mutex = new Mutex()) {
-//     super(fs, mutex);
-//     this.fs = fs;
-//   }
-
-//   async rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
-//     return this.mutex.runExclusive(() => this.fs.rm(path, options));
-//   }
-
-//   async tearDown() {
-//     return this.mutex.runExclusive(() => this.fs.tearDown());
-//   }
-// }
+class DiskService {
+  constructor(private disk: Disk) {}
+}

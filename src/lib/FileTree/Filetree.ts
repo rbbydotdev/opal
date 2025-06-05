@@ -1,10 +1,9 @@
 import { CommonFileSystem } from "@/Db/Disk";
 import { isErrorWithCode, NotFoundError } from "@/lib/errors";
+import { exhaustAsyncGenerator } from "@/lib/exhaustAsyncGenerator";
 import {
   TreeDir,
   TreeDirRoot,
-  TreeFile,
-  TreeList,
   TreeNode,
   TreeNodeDirJType,
   VirtualDirTreeNode,
@@ -18,7 +17,7 @@ import {
   decodePath,
   dirname,
   encodePath,
-  extname,
+  // extname,
   joinPath,
   RelPath,
   relPath,
@@ -29,30 +28,48 @@ export class FileTree {
   initialIndex = false;
   guid: string;
   cacheId: string;
-  dirs: TreeList = [];
   private map = new Map<string, TreeNode>();
-  public root: TreeDirRoot = new TreeDirRoot();
+  private _root: TreeDirRoot = new TreeDirRoot();
+  set root(root: TreeDirRoot) {
+    this._root = root;
+    this.updateMap();
+  }
+  get root() {
+    return this._root;
+  }
+  indexMutex = new Mutex();
 
-  // private tree: TreeDir = this.root;
-  constructor(private fs: CommonFileSystem, guid: string, private mutex = new Mutex()) {
+  constructor(private fs: CommonFileSystem, guid: string, private fsMutex = new Mutex()) {
     this.guid = `${guid}/FileTree`;
-
     this.cacheId = `${this.guid}/cache`;
   }
+
+  walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
+  asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
 
   getRootTree() {
     return this.root;
   }
 
-  flatDirTree = () => {
-    return [...this.map.keys()];
-  };
+  iterator(...args: Parameters<TreeDirRoot["iterator"]>) {
+    return this.root.iterator(...args);
+  }
+  files() {
+    return this.root.iterator((node) => node.isTreeFile());
+  }
+
+  dirs() {
+    return Array.from(this.root.iterator((node) => node.isTreeDir()));
+  }
+  all() {
+    return Array.from(this.root.iterator());
+  }
 
   findRange = (startNode: TreeNode, endNode: TreeNode) => {
-    const [startIndex, endIndex] = this.dirs.reduce(
-      (indices, path, index) => {
-        if (path === startNode.path) indices[0] = index;
-        if (path === endNode.path) indices[1] = index;
+    const [startIndex, endIndex] = this.all().reduce(
+      (indices, node, index) => {
+        if (node.path === startNode.path) indices[0] = index;
+        if (node.path === endNode.path) indices[1] = index;
         return indices;
       },
       [-1, -1] // Initial indices
@@ -63,140 +80,85 @@ export class FileTree {
     }
     // Sort indices to ensure correct slice
     const [fromIndex, toIndex] = [startIndex, endIndex].sort((a, b) => a - b);
-    return this.dirs.slice(fromIndex, toIndex + 1);
+    return this.all()
+      .slice(fromIndex, toIndex + 1)
+      .map((node) => node.path);
   };
 
   static fromJSON(json: TreeNodeDirJType, fs: CommonFileSystem, guid: string) {
     const tree = new FileTree(fs, guid);
     tree.root = TreeDirRoot.fromJSON(json);
-    tree.map = new Map<string, TreeNode>();
-    tree.root.walk((node) => tree.map.set(node.path, node));
     return tree;
   }
 
-  updateIndex = (path: AbsPath, type: "file" | "dir") => {
-    //recursive to back fill parent nodes
-    const node = this.nodeFromPath(path);
-    if (node) return node;
-    const parent = (dirname(path) === "/" ? this.root : this.updateIndex(absPath(dirname(path)), "dir")) || this.root;
-    const newNode = TreeNode.FromPath(path, type, parent as TreeDir);
-    this.insertNode(newNode.parent!, newNode);
-    this.map.set(path, newNode);
-    this.dirs = this.flatDirTree();
-    return newNode;
-  };
+  updateMap() {
+    this.map = new Map([...this.iterator()].map((node) => [node.path, node]));
+  }
 
-  index = async ({
-    tree = new TreeDirRoot(),
-    visitor,
-  }: { tree?: TreeDirRoot; visitor?: (node: TreeNode) => TreeNode | Promise<TreeNode> } = {}) => {
-    try {
-      await this.mutex.acquire();
-      console.debug("Indexing file tree");
-      this.map = new Map<string, TreeNode>();
-      this.root = tree?.isEmpty?.() ? ((await this.recurseTree(tree, visitor)) as TreeDirRoot) : tree;
-      this.root.walk((node) => this.map.set(node.path, node));
-      this.dirs = this.flatDirTree();
-      this.initialIndex = true;
+  async index(...args: { tree: TreeDirRoot | undefined }[]) {
+    await exhaustAsyncGenerator(this.indexIter(...args));
+    return this.root;
+  }
+  async *indexIter({ tree = this.root ?? new TreeDirRoot() }: { tree?: TreeDirRoot } = {}) {
+    if (this.indexMutex.isLocked()) {
+      await this.indexMutex.waitForUnlock();
       return this.root;
+    }
+    try {
+      await Promise.all([this.fsMutex.acquire(), this.indexMutex.acquire()]);
+      console.debug("Indexing file tree");
+      for await (const node of this.recurseTree(tree)) {
+        yield node;
+      }
+      this.initialIndex = true;
+      return (this.root = tree);
     } catch (e) {
       console.error("Error during file tree indexing:", e);
       throw e;
     } finally {
-      await this.mutex.release();
+      await Promise.all([this.fsMutex.release(), this.indexMutex.release()]);
     }
-  };
+  }
 
-  walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
-  asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
+  async tryFirstIndex() {
+    if (this.initialIndex) return this.root;
+    await this.indexIter();
+  }
 
-  //pre order traversal, recurse fs tree and apply visitor function to each node
-  recurseTree = async (
+  async *recurseTree(
     parent: TreeDir = this.root,
-    visitor: (node: TreeNode) => TreeNode | Promise<TreeNode> = (node) => node,
     depth = 0,
     haltOnError = false
-  ): Promise<TreeDir> => {
+  ): AsyncGenerator<TreeNode, void, unknown> {
     const dir = parent.path;
     try {
       const entries = (await this.fs.readdir(encodePath(dir))).map((e) => relPath(decodePath(e.toString())));
-
-      // Separate directories and files
-      const directories: RelPath[] = [];
-      const files: RelPath[] = [];
-
-      try {
-        await Promise.all(
-          entries.map(async (entry) => {
-            const fullPath = joinPath(dir, entry);
-            const stat = await this.fs.stat(encodePath(fullPath)).catch((e) => {
-              if (isErrorWithCode(e, "ENOENT")) {
-                console.error(`stat error for file ${fullPath}`);
-                throw new NotFoundError(`File not found: ${fullPath}`, fullPath);
-              }
-              throw e;
-            });
-            if (stat.isDirectory()) {
-              directories.push(entry);
-            } else {
-              files.push(entry);
-            }
-          })
-        );
-      } catch (e) {
-        //sometimes the stat fails for a directory that was removed in the meantime
-        //therefore we catch and retry all over again
-        if (!haltOnError && e instanceof NotFoundError) {
-          return this.recurseTree(parent, visitor, depth, haltOnError);
-        }
-        throw e;
-      }
-
-      // Process files first
-      await Promise.all(
-        files.map(async (entry) => {
-          const fullPath = joinPath(dir, entry);
-          const treeEntry = new TreeFile({
-            name: relPath(entry),
-            dirname: absPath(dirname(fullPath)),
-            basename: relPath(basename(fullPath)),
-            path: fullPath,
-            parent,
-            depth: depth,
-          });
-          const result = visitor(treeEntry);
-          this.insertNode(parent, result instanceof Promise ? await result : result);
-        })
-      );
-
-      // Process directories in order
-      for (const entry of directories) {
+      for (const entry of entries) {
         const fullPath = joinPath(dir, entry);
-        const treeEntry = new TreeDir({
-          name: entry,
-          dirname: absPath(dirname(fullPath)),
-          basename: relPath(basename(fullPath)),
-          path: fullPath,
-          parent,
-          depth: depth,
-          children: {},
-        });
-
-        const result = visitor(treeEntry);
-        this.insertNode(parent, result instanceof Promise ? await result : result);
-
-        // Recurse into the directory
-        await this.recurseTree(treeEntry, visitor, depth + 1, haltOnError);
+        try {
+          const stat = await this.fs.stat(encodePath(fullPath));
+          const node = TreeNode.FromPath(fullPath, stat.isDirectory() ? "dir" : "file", parent);
+          yield this.insertNode(parent, node);
+          if (node.isTreeDir()) {
+            yield* this.recurseTree(node, depth + 1, haltOnError);
+          }
+        } catch (e) {
+          if (isErrorWithCode(e, "ENOENT")) {
+            console.error(`stat error for file ${fullPath}`);
+            throw new NotFoundError(`File not found: ${fullPath}`, fullPath);
+          }
+          throw e;
+        }
       }
-      return parent;
-    } catch (err) {
-      console.error(`Error reading dir ${dir}:`, err);
-      if (haltOnError) {
-        throw err;
+    } catch (e) {
+      if (!haltOnError && e instanceof NotFoundError) {
+        console.error(e);
+        yield* this.recurseTree(parent, depth, haltOnError);
+        return;
       }
+      throw e;
     }
-    return parent;
-  };
+  }
 
   allChildrenArray = (parent: TreeDir): TreeNode[] => {
     const result: TreeNode[] = [];
@@ -251,7 +213,7 @@ export class FileTree {
 
 function closestTreeDir(node: TreeNode): TreeDir {
   if (!node.parent) return node as TreeDir; //assumes root
-  if (node.type === "file") return closestTreeDir(node.parent!);
+  if (node.isTreeFile()) return closestTreeDir(node.parent!);
   return node as TreeDir;
 }
 
@@ -261,19 +223,19 @@ function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
   return newNode;
 }
 
-function _sortNodesByName(nodes: Record<string, TreeNode>) {
-  return Object.entries(nodes).sort(([keyA, nodeA], [keyB, nodeB]) => {
-    if (nodeA.type === "dir" && nodeB.type === "file") return -1;
-    if (nodeA.type === "file" && nodeB.type === "dir") return 1;
-    if (nodeA.type === "file" && nodeB.type === "file") {
-      const extA = extname(nodeA.path) || "";
-      const extB = extname(nodeB.path) || "";
-      const extComparison = extA.localeCompare(extB);
-      if (extComparison !== 0) return extComparison;
-    }
-    return keyA.localeCompare(keyB);
-  });
-}
+// function _sortNodesByName(nodes: Record<string, TreeNode>) {
+//   return Object.entries(nodes).sort(([keyA, nodeA], [keyB, nodeB]) => {
+//     if (nodeA.type === "dir" && nodeB.type === "file") return -1;
+//     if (nodeA.type === "file" && nodeB.type === "dir") return 1;
+//     if (nodeA.type === "file" && nodeB.type === "file") {
+//       const extA = extname(nodeA.path) || "";
+//       const extB = extname(nodeB.path) || "";
+//       const extComparison = extA.localeCompare(extB);
+//       if (extComparison !== 0) return extComparison;
+//     }
+//     return keyA.localeCompare(keyB);
+//   });
+// }
 
 function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPath; parent: TreeDir }) {
   const path = joinPath(parent.path, name);

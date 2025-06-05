@@ -52,7 +52,7 @@ export default function RootLayout({
               <JotaiProvider>
                 <SidebarProvider>
                   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                    <div className="w-screen overflow-hidden flex" onDrop={() => console.log("drop")}>
+                    <div className="w-screen overflow-hidden flex" onDrop={() => console.debug("layout drop")}>
                       <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
                         <WorkSpaceButtonBar />
                       </div>
