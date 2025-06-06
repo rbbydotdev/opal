@@ -1,4 +1,5 @@
 "use client";
+import { useCopyKeydown } from "@/components/FiletreeMenu";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
@@ -13,23 +14,23 @@ import { twMerge } from "tailwind-merge";
 export const EditableFile = ({
   depth,
   fullPath,
-  treeFile,
+  treeNode,
   currentWorkspace,
   className,
   workspaceRoute,
   expand,
   onDragStart,
-  onCopy,
-}: {
+}: // onCopy,
+{
   currentWorkspace: Workspace;
   workspaceRoute: WorkspaceRouteType;
   className?: string;
-  treeFile: TreeFile;
+  treeNode: TreeFile;
   fullPath: AbsPath;
   expand: (node: TreeNode, value: boolean) => void;
   depth: number;
   onDragStart: (e: React.DragEvent) => void;
-  onCopy: (e: React.ClipboardEvent) => void;
+  // onCopy: (e: React.ClipboardEvent) => void;
 }) => {
   const {
     isEditing,
@@ -48,10 +49,11 @@ export const EditableFile = ({
     linkRef,
     inputRef,
   } = useEditable({
-    treeNode: treeFile,
+    treeNode,
     expand,
     currentWorkspace,
   });
+  const { handleCopyKeyDown } = useCopyKeydown(currentWorkspace);
 
   //
   useEffect(() => {
@@ -73,7 +75,6 @@ export const EditableFile = ({
           draggable
           onDragStart={onDragStart}
           href={currentWorkspace.resolveFileUrl(fullPath)}
-          onCopy={onCopy}
           className={twMerge(
             className,
 
@@ -85,7 +86,7 @@ export const EditableFile = ({
           onFocus={handleFocus}
           onMouseUp={handleMouseUp}
           onMouseDown={handleMouseDown}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
           onClick={handleClick}
           onDoubleClick={() => setEditing(fullPath)}
           prefetch={false}
@@ -93,9 +94,9 @@ export const EditableFile = ({
           <div className="w-full">
             <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
               <SelectedMark selected={isSelected} />
-              {isImage(treeFile.path) ? (
+              {isImage(treeNode.path) ? (
                 <img
-                  src={encodePath(treeFile.path) + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
+                  src={encodePath(treeNode.path) + (!treeNode.path.endsWith(".svg") ? "?thumb=100" : "")}
                   alt=""
                   className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
                 />
@@ -110,9 +111,9 @@ export const EditableFile = ({
         <div className={twMerge(className, "w-full")}>
           <div className="w-full flex items-center truncate" style={{ paddingLeft: depth + "rem" }}>
             <SelectedMark selected={isSelected} />
-            {isImage(treeFile.path) ? (
+            {isImage(treeNode.path) ? (
               <img
-                src={encodePath(treeFile.path) + (!treeFile.path.endsWith(".svg") ? "?thumb=100" : "")}
+                src={encodePath(treeNode.path) + (!treeNode.path.endsWith(".svg") ? "?thumb=100" : "")}
                 alt=""
                 className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
               />

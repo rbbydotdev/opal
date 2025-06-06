@@ -16,7 +16,81 @@ const INTERNAL_FILE_TYPE = "application/x-opal";
 
 export type NodeDataJType = { nodeData: TreeNodeJType[] };
 export type NodeDataType = { nodeData: TreeNode[] };
-export function useFileTreeDragDropCopy({
+
+const prepareNodeDataTransfer = ({
+  dataTransfer,
+  selectedRange,
+  focused,
+  currentWorkspace,
+  targetNode,
+}: {
+  currentWorkspace: Workspace;
+  selectedRange: AbsPath[] | string[];
+  focused?: AbsPath | null;
+  dataTransfer: DataTransfer;
+  targetNode?: TreeNode;
+}) => {
+  const allFileNodes = Array.from(new Set([...selectedRange, targetNode?.path, focused ? focused : null]))
+    .filter(Boolean)
+    .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
+    .filter(Boolean);
+
+  try {
+    const data = JSON.stringify({
+      nodeData: allFileNodes,
+    } satisfies NodeDataType);
+    dataTransfer.clearData();
+    dataTransfer.effectAllowed = "all";
+    dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+    dataTransfer.setData(
+      "text/html",
+      allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" ")
+    );
+    // // dataTransfer.setData("text/html", `<a href="${encodePath(targetNode.path)}">${targetNode.path}</a>`);
+    // allFileNodes.forEach((node, i) => {
+    //   dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
+    // });
+    // dataTransfer.setData("text/plain", allFileNodes.map((node) => encodePath(node.path || "")).join(" "));
+  } catch (e) {
+    console.error("Error preparing node data for drag and drop:", e);
+    return;
+  }
+};
+
+async function copyHtmlToClipboard(htmlString: string) {
+  try {
+    const blob = new Blob([htmlString], { type: "text/html" });
+    const data = [new ClipboardItem({ "text/html": blob })];
+    await navigator.clipboard.write(data);
+  } catch (err) {
+    console.error("Failed to copy HTML to clipboard:", err);
+  }
+}
+export function useCopyKeydown(currentWorkspace: Workspace) {
+  const { selectedRange, focused } = useFileTreeMenuContext();
+  function handleCopyKeyDown(origFn: (e: React.KeyboardEvent) => void) {
+    return function (e: React.KeyboardEvent, fullPath?: AbsPath) {
+      if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        const allFileNodes = Array.from(new Set([...selectedRange, fullPath, focused ? focused : null]))
+          .filter(Boolean)
+          .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
+          .filter(Boolean);
+        void copyHtmlToClipboard(allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" "));
+        console.debug("copy keydown");
+      } else {
+        origFn(e);
+      }
+    };
+  }
+
+  return {
+    handleCopyKeyDown,
+  };
+}
+
+export function useFileTreeDragDrop({
   currentWorkspace,
   onMove,
   onDragEnter,
@@ -26,20 +100,15 @@ export function useFileTreeDragDropCopy({
   onDragEnter?: (path: string, data?: NodeDataJType) => void;
 }) {
   const { selectedRange, focused, setDragOver } = useFileTreeMenuContext();
-  //on drag start cancel focus on key up
-
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
     setDragOver(null);
-    prepareNodeDataTransfer(event.dataTransfer, targetNode);
-  };
-
-  const prepareNodeDataTransfer = (dataTransfer: DataTransfer, targetNode?: TreeNode) => {
     const allFileNodes = Array.from(new Set([...selectedRange, targetNode?.path, focused ? focused : null]))
       .filter(Boolean)
       .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
       .filter(Boolean);
 
     try {
+      const dataTransfer = event.dataTransfer;
       const data = JSON.stringify({
         nodeData: allFileNodes,
       } satisfies NodeDataType);
@@ -65,7 +134,13 @@ export function useFileTreeDragDropCopy({
     console.debug("copy");
     event.preventDefault();
     event.stopPropagation();
-    prepareNodeDataTransfer(event.clipboardData, targetNode);
+    prepareNodeDataTransfer({
+      dataTransfer: event.clipboardData,
+      selectedRange,
+      focused,
+      currentWorkspace,
+      targetNode,
+    });
   };
 
   const handleDragOver = (event: React.DragEvent, targetNode: TreeNode) => {
@@ -159,16 +234,15 @@ export function FileTreeMenu({
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
 
   const { dragOver } = useFileTreeMenuContext();
-  const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop, handleCopy } =
-    useFileTreeDragDropCopy({
-      currentWorkspace,
-      onMove: renameDirOrFile,
-      onDragEnter: (path: string, data?: NodeDataJType) => {
-        if (!data?.nodeData.some((node) => node.path === path)) {
-          expand(path, true);
-        }
-      }, //if the path is another directory, expand it
-    });
+  const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
+    currentWorkspace,
+    onMove: renameDirOrFile,
+    onDragEnter: (path: string, data?: NodeDataJType) => {
+      if (!data?.nodeData.some((node) => node.path === path)) {
+        expand(path, true);
+      }
+    },
+  });
 
   return (
     <SidebarMenu
@@ -177,7 +251,7 @@ export function FileTreeMenu({
       onDrop={(e) => handleDrop(e, fileTreeDir)}
       onDragEnter={(e) => handleDragEnter(e, "/")}
       className={clsx({ "": depth === 0 })}
-      onCopy={handleCopy}
+      // onCopy={handleCopy}
     >
       {depth === 0 && (
         <div className="w-full text-sm" onDrop={(e) => handleDrop(e, fileTreeDir)}>
@@ -195,7 +269,7 @@ export function FileTreeMenu({
           onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}
           onDragLeave={handleDragLeave}
-          onCopy={(e) => handleCopy(e, file)}
+          // onCopy={(e) => handleCopy(e, file)}
           onDragEnter={(e) => {
             handleDragEnter(e, file.path);
           }}
@@ -205,7 +279,7 @@ export function FileTreeMenu({
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton asChild>
                   <EditableDir
-                    onCopy={(e) => handleCopy(e, file)}
+                    // onCopy={(e) => handleCopy(e, file)}
                     workspaceRoute={workspaceRoute}
                     currentWorkspace={currentWorkspace}
                     depth={depth}
@@ -234,7 +308,7 @@ export function FileTreeMenu({
                 currentWorkspace={currentWorkspace}
                 depth={depth}
                 fullPath={file.path}
-                treeFile={file as TreeFile}
+                treeNode={file as TreeFile}
                 expand={expandForNode}
                 onDragStart={(e) => handleDragStart(e, file)}
               />

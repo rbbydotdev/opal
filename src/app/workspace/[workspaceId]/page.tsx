@@ -1,6 +1,6 @@
 "use client";
 
-import { useFileTreeDragDropCopy } from "@/components/FiletreeMenu";
+import { useFileTreeDragDrop } from "@/components/FiletreeMenu";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import useFavicon from "@/hooks/useFavicon";
 import { Opal } from "@/lib/Opal";
@@ -10,7 +10,7 @@ import { useEffect } from "react";
 export default function Page() {
   const { currentWorkspace } = useWorkspaceContext();
 
-  const { handleDrop } = useFileTreeDragDropCopy({
+  const { handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
   });
   const { id } = useWorkspaceRoute();
