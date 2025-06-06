@@ -49,7 +49,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   ): Promise<void> {
     if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
-    console.debug("bcast outgoing:", eventName);
+    console.debug("broadcast outgoing:", eventName);
     try {
       //TODO:
       if (this.channel) {

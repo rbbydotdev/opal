@@ -1,5 +1,5 @@
 import Identicon from "@/components/Identicon";
-import { useWorkspaceContext } from "@/context";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 
 export function CurrentWorkspaceIcon(props: Omit<React.ComponentProps<typeof Identicon>, "input">) {
   const { currentWorkspace } = useWorkspaceContext();

@@ -5,7 +5,7 @@ import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useWorkspaceContext } from "@/context";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { BadRequestError, isError } from "@/lib/errors";
 import {

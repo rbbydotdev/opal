@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Workspace } from "@/Db/Workspace";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
-import { useWorkspaceRoute } from "@/context";
+import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { BadRequestError, isError } from "@/lib/errors";
 import { absPath, dirname } from "@/lib/paths2";
 import {
@@ -135,7 +135,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
 
   const { path } = useWorkspaceRoute();
   useEffect(() => {
-    return currentWorkspace.disk.latestIndexListener(() => {
+    return currentWorkspace.watchDisk(() => {
       setImgs(currentWorkspace.getImages().map((i) => i));
     });
   }, [currentWorkspace]);

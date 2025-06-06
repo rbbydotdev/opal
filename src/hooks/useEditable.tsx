@@ -1,7 +1,7 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
-import { useWorkspaceRoute, WorkspaceRouteType } from "@/context";
+import { useWorkspaceRoute, WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, changePrefixRel, equals, prefix, RelPath, relPath } from "@/lib/paths2";
@@ -27,7 +27,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
   const router = useRouter();
-  const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
+  const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
     useFileTreeMenuContext();
   const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
