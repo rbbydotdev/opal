@@ -1,6 +1,6 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
-import { useCopyKeydown } from "@/components/FiletreeMenu";
+import { useCopyKeydownImages } from "@/components/FiletreeMenu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { useEditable } from "@/hooks/useEditable";
@@ -53,7 +53,7 @@ export const EditableDir = ({
     expand,
   });
 
-  const { handleCopyKeyDown } = useCopyKeydown(currentWorkspace);
+  const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace);
 
   useEffect(() => {
     if (isFocused && !isEditing) {

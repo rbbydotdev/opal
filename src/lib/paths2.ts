@@ -144,8 +144,8 @@ export function getPathMimeType(path: AbsPath | RelPath): string {
   return getMimeType(path);
 }
 
-export function isImage(path: AbsPath | RelPath): boolean {
-  return isImageType(getPathMimeType(path));
+export function isImage(path: AbsPath | RelPath | string): boolean {
+  return isImageType(getPathMimeType(relPath(path)));
 }
 
 // --- Ancestor/Lineage Utilities ---

@@ -8,7 +8,17 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { BadRequestError, isError } from "@/lib/errors";
-import { AbsPath, absPath, basename, encodePath, equals, isAncestor, joinPath, reduceLineage } from "@/lib/paths2";
+import {
+  AbsPath,
+  absPath,
+  basename,
+  encodePath,
+  equals,
+  isAncestor,
+  isImage,
+  joinPath,
+  reduceLineage,
+} from "@/lib/paths2";
 import clsx from "clsx";
 import React from "react";
 
@@ -16,47 +26,6 @@ const INTERNAL_FILE_TYPE = "application/x-opal";
 
 export type NodeDataJType = { nodeData: TreeNodeJType[] };
 export type NodeDataType = { nodeData: TreeNode[] };
-
-const prepareNodeDataTransfer = ({
-  dataTransfer,
-  selectedRange,
-  focused,
-  currentWorkspace,
-  targetNode,
-}: {
-  currentWorkspace: Workspace;
-  selectedRange: AbsPath[] | string[];
-  focused?: AbsPath | null;
-  dataTransfer: DataTransfer;
-  targetNode?: TreeNode;
-}) => {
-  const allFileNodes = Array.from(new Set([...selectedRange, targetNode?.path, focused ? focused : null]))
-    .filter(Boolean)
-    .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
-    .filter(Boolean);
-
-  try {
-    const data = JSON.stringify({
-      nodeData: allFileNodes,
-    } satisfies NodeDataType);
-    dataTransfer.clearData();
-    dataTransfer.effectAllowed = "all";
-    dataTransfer.setData(INTERNAL_FILE_TYPE, data);
-    dataTransfer.setData(
-      "text/html",
-      allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" ")
-    );
-    // // dataTransfer.setData("text/html", `<a href="${encodePath(targetNode.path)}">${targetNode.path}</a>`);
-    // allFileNodes.forEach((node, i) => {
-    //   dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
-    // });
-    // dataTransfer.setData("text/plain", allFileNodes.map((node) => encodePath(node.path || "")).join(" "));
-  } catch (e) {
-    console.error("Error preparing node data for drag and drop:", e);
-    return;
-  }
-};
-
 async function copyHtmlToClipboard(htmlString: string) {
   try {
     const blob = new Blob([htmlString], { type: "text/html" });
@@ -66,7 +35,7 @@ async function copyHtmlToClipboard(htmlString: string) {
     console.error("Failed to copy HTML to clipboard:", err);
   }
 }
-export function useCopyKeydown(currentWorkspace: Workspace) {
+export function useCopyKeydownImages(currentWorkspace: Workspace) {
   const { selectedRange, focused } = useFileTreeMenuContext();
   function handleCopyKeyDown(origFn: (e: React.KeyboardEvent) => void) {
     return function (e: React.KeyboardEvent, fullPath?: AbsPath) {
@@ -75,6 +44,7 @@ export function useCopyKeydown(currentWorkspace: Workspace) {
         e.stopPropagation();
         const allFileNodes = Array.from(new Set([...selectedRange, fullPath, focused ? focused : null]))
           .filter(Boolean)
+          .filter(isImage)
           .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
           .filter(Boolean);
         void copyHtmlToClipboard(allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" "));
@@ -130,18 +100,18 @@ export function useFileTreeDragDrop({
     }
   };
 
-  const handleCopy = (event: React.ClipboardEvent, targetNode?: TreeNode) => {
-    console.debug("copy");
-    event.preventDefault();
-    event.stopPropagation();
-    prepareNodeDataTransfer({
-      dataTransfer: event.clipboardData,
-      selectedRange,
-      focused,
-      currentWorkspace,
-      targetNode,
-    });
-  };
+  // const handleCopy = (event: React.ClipboardEvent, targetNode?: TreeNode) => {
+  //   console.debug("copy");
+  //   event.preventDefault();
+  //   event.stopPropagation();
+  //   prepareNodeDataTransfer({
+  //     dataTransfer: event.clipboardData,
+  //     selectedRange,
+  //     focused,
+  //     currentWorkspace,
+  //     targetNode,
+  //   });
+  // };
 
   const handleDragOver = (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
@@ -213,7 +183,7 @@ export function useFileTreeDragDrop({
       onDragEnter?.(path);
     }
   };
-  return { handleDragStart, handleDragOver, handleDrop, handleDragEnter, handleDragLeave, handleCopy };
+  return { handleDragStart, handleDragOver, handleDrop, handleDragEnter, handleDragLeave };
 }
 
 export function FileTreeMenu({
@@ -319,3 +289,43 @@ export function FileTreeMenu({
     </SidebarMenu>
   );
 }
+
+// const prepareNodeDataTransfer = ({
+//   dataTransfer,
+//   selectedRange,
+//   focused,
+//   currentWorkspace,
+//   targetNode,
+// }: {
+//   currentWorkspace: Workspace;
+//   selectedRange: AbsPath[] | string[];
+//   focused?: AbsPath | null;
+//   dataTransfer: DataTransfer;
+//   targetNode?: TreeNode;
+// }) => {
+//   const allFileNodes = Array.from(new Set([...selectedRange, targetNode?.path, focused ? focused : null]))
+//     .filter(Boolean)
+//     .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
+//     .filter(Boolean);
+
+//   try {
+//     const data = JSON.stringify({
+//       nodeData: allFileNodes,
+//     } satisfies NodeDataType);
+//     dataTransfer.clearData();
+//     dataTransfer.effectAllowed = "all";
+//     dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+//     dataTransfer.setData(
+//       "text/html",
+//       allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" ")
+//     );
+//     // // dataTransfer.setData("text/html", `<a href="${encodePath(targetNode.path)}">${targetNode.path}</a>`);
+//     // allFileNodes.forEach((node, i) => {
+//     //   dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
+//     // });
+//     // dataTransfer.setData("text/plain", allFileNodes.map((node) => encodePath(node.path || "")).join(" "));
+//   } catch (e) {
+//     console.error("Error preparing node data for drag and drop:", e);
+//     return;
+//   }
+// };

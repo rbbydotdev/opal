@@ -1,5 +1,5 @@
 "use client";
-import { useCopyKeydown } from "@/components/FiletreeMenu";
+import { useCopyKeydownImages } from "@/components/FiletreeMenu";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
@@ -53,7 +53,7 @@ export const EditableFile = ({
     expand,
     currentWorkspace,
   });
-  const { handleCopyKeyDown } = useCopyKeydown(currentWorkspace);
+  const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace);
 
   //
   useEffect(() => {
