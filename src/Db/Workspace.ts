@@ -490,7 +490,9 @@ export class Workspace extends WorkspaceDAO {
   };
   async tryFirstFileUrl() {
     const ff = await this.getFirstFile();
-    if (!ff) return this.href;
+    if (!ff) {
+      return this.href;
+    }
     return this.resolveFileUrl(ff.path);
   }
 

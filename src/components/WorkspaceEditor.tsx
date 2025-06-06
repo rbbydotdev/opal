@@ -4,17 +4,19 @@ import { Editor } from "@/components/Editor/Editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
+import { withSuspense } from "@/lib/hoc/withSuspense";
 import { encodePath } from "@/lib/paths2";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
 import { Suspense, use, useEffect, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
-interface WorkspaceLiveEditorProps extends Partial<MDXEditorProps> {
+interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
   className?: string;
 }
 
-export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
+export function WorkspaceView(props: WorkspaceEditorProps) {
   const { isImage, filePath } = useCurrentFilepath();
 
   if (filePath === null) return null;
@@ -22,7 +24,7 @@ export function WorkspaceLiveEditor(props: WorkspaceLiveEditorProps) {
   if (isImage) {
     return <ImageViewer alt={filePath} origSrc={filePath} />;
   }
-  return <WorkspaceLiveEditorInternal {...props} />;
+  return <WorkspaceEditor {...props} />;
 }
 //TODO MOVE THIS OUT
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
@@ -33,7 +35,7 @@ export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; ori
   );
 }
 
-const FileError = ({ error }: { error: Error }) => {
+const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationError> }) => {
   const { currentWorkspace } = useWorkspaceContext();
   const tryFirstFile = use(useMemo(() => currentWorkspace.tryFirstFileUrl(), [currentWorkspace]));
 
@@ -41,7 +43,7 @@ const FileError = ({ error }: { error: Error }) => {
     <div className="w-full h-full flex items-center justify-center font-mono">
       <Card className="border-2 border-destructive border-dashed m-8 max-w-lg min-h-48  -rotate-3">
         <CardHeader>
-          <h2 className="text-red-500 font-bold text-lg">⚠️ Error</h2>
+          <h2 className="text-red-500 font-bold text-lg">⚠️ {error.code} Error</h2>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center break-words break-all whitespace-pre-wrap">
@@ -56,9 +58,9 @@ const FileError = ({ error }: { error: Error }) => {
       </Card>
     </div>
   );
-};
+});
 
-export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLiveEditorProps) {
+export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
   const ref = useRef<MDXEditorMethods>(null);
   const { contents, updateContents, error } = useFileContents();
   useEffect(() => {
@@ -67,14 +69,19 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
     }
   }, [contents]);
   const { currentWorkspace } = useWorkspaceContext();
-  if (error)
-    return (
-      <Suspense fallback={null}>
-        <FileError error={error} />
-      </Suspense>
-    );
+  if (error) {
+    if (isError(error, NotFoundError)) {
+      return (
+        <Suspense fallback={null}>
+          <FileError error={error} />
+        </Suspense>
+      );
+    } else {
+      throw error; // rethrow other errors to be caught by the nearest error boundary
+    }
+  }
 
-  if (contents === null || !currentWorkspace) return <div className="w-full h-full bg-background"></div>;
+  if (contents === null || !currentWorkspace) return null;
   return (
     <Editor
       {...props}
