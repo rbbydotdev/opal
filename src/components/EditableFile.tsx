@@ -1,5 +1,5 @@
 "use client";
-import { WorkspaceRouteType } from "@/context";
+import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";

@@ -1,7 +1,7 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
-import { WorkspaceRouteType } from "@/context";
+import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, relPath } from "@/lib/paths2";

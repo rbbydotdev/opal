@@ -135,26 +135,26 @@ export class RenameFileType {
   oldName: RelPath;
   newPath: AbsPath;
   newName: RelPath;
-  type: "file" | "dir";
+  fileType: "file" | "dir";
 
   constructor({
     oldPath,
     oldName,
     newPath,
     newName,
-    type,
+    fileType,
   }: {
     oldPath: string | AbsPath;
     oldName: string | RelPath;
     newPath: string | AbsPath;
     newName: string | RelPath;
-    type: "file" | "dir";
+    fileType: "file" | "dir";
   }) {
     this.oldPath = typeof oldPath === "string" ? absPath(oldPath) : oldPath;
     this.oldName = typeof oldName === "string" ? relPath(oldName) : oldName;
     this.newPath = typeof newPath === "string" ? absPath(newPath) : newPath;
     this.newName = typeof newName === "string" ? relPath(newName) : newName;
-    this.type = type;
+    this.fileType = fileType;
   }
   toJSON() {
     return {
@@ -162,36 +162,46 @@ export class RenameFileType {
       oldName: this.oldName,
       newPath: this.newPath,
       newName: this.newName,
-      type: this.type,
+      fileType: this.fileType,
     };
   }
 }
 
 export type RemoteRenameFileType = {
-  oldPath: string;
-  oldName: string;
-  newPath: string;
-  newName: string;
-  type: "file" | "dir";
+  oldPath: AbsPath;
+  oldName: RelPath;
+  newPath: AbsPath;
+  newName: RelPath;
+  fileType: "file" | "dir";
 };
 
 export type FilePathsType = {
   filePaths: string[];
 };
 
+export type CreateDetails = FilePathsType;
+export type DeleteDetails = FilePathsType;
+export type RenameDetails = RemoteRenameFileType;
+
 export type IndexTrigger =
   | {
-      type: "create" | "delete";
-      details: FilePathsType;
+      type: "create";
+      details: CreateDetails;
     }
   | {
       type: "rename";
-      details: RemoteRenameFileType;
+      details: RenameDetails;
+    }
+  | {
+      type: "delete";
+      details: DeleteDetails;
     };
+
+export type ListenerCallback<T extends "create" | "rename" | "delete"> = Parameters<Disk[`${T}Listener`]>[0];
 
 export class DiskEventsRemote extends Channel<{
   [DiskEvents.RENAME]: RemoteRenameFileType;
-  [DiskEvents.INDEX]: never;
+  [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.WRITE]: FilePathsType;
   [DiskEvents.CREATE]: FilePathsType;
   [DiskEvents.DELETE]: FilePathsType;
@@ -207,7 +217,7 @@ export const DiskEvents = {
 
 export class DiskEventsLocal extends Emittery<{
   [DiskEvents.RENAME]: RenameFileType;
-  [DiskEvents.INDEX]: never;
+  [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.WRITE]: FilePathsType;
   [DiskEvents.CREATE]: FilePathsType;
   [DiskEvents.DELETE]: FilePathsType;
@@ -234,7 +244,10 @@ export abstract class Disk extends DiskDAO {
         tree: TreeDirRoot.fromJSON(cache),
         writeIndexCache: false,
       });
-      await this.local.emit(DiskEvents.INDEX);
+      await this.local.emit(DiskEvents.INDEX, {
+        type: "create",
+        details: { filePaths: [] },
+      });
     } catch (e) {
       throw errF`Error initializing index ${e}`;
     }
@@ -267,13 +280,10 @@ export abstract class Disk extends DiskDAO {
     return this.fileTree.tryFirstIndex();
   }
 
-  latestIndexListener(
-    callback: (fileTree: TreeDir) => void,
-    { initialTrigger = true }: { initialTrigger?: boolean } = {}
-  ) {
-    if (initialTrigger && this.fileTree.initialIndex) callback(this.fileTree.root);
-    return this.local.on(DiskEvents.INDEX, () => {
-      callback(this.fileTree.root);
+  latestIndexListener(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
+    if (this.fileTree.initialIndex) callback(this.fileTree.root);
+    return this.local.on(DiskEvents.INDEX, (trigger) => {
+      callback(this.fileTree.root, trigger);
       console.debug("local disk index event");
     });
   }
@@ -296,16 +306,19 @@ export abstract class Disk extends DiskDAO {
       this.remote.on(DiskEvents.RENAME, async (data) => {
         await this.local.emit(DiskEvents.RENAME, new RenameFileType(data));
         await this.fileTreeIndex();
-        await this.local.emit(DiskEvents.INDEX);
+        await this.local.emit(DiskEvents.INDEX, {
+          type: "rename",
+          details: data,
+        });
         console.debug("remote rename", JSON.stringify(data, null, 4));
       }),
       this.remote.on(DiskEvents.WRITE, async ({ filePaths }) => {
         await this.local.emit(DiskEvents.WRITE, { filePaths });
       }),
 
-      this.remote.on(DiskEvents.INDEX, async () => {
+      this.remote.on(DiskEvents.INDEX, async (data) => {
         await this.fileTreeIndex();
-        void this.local.emit(DiskEvents.INDEX);
+        void this.local.emit(DiskEvents.INDEX, data);
       }),
     ];
     return () => listeners.forEach((p) => p());
@@ -374,20 +387,30 @@ export abstract class Disk extends DiskDAO {
       }
     }
   }
-  // async firstIndex() {
-  //   if (!this.fileTree.initialIndex) {
-  //     if (!this.indexCache) await this.hydrate(); //defensive check should already be present - TODO should be going from DAO.hydrate to Disk
-  //     return this.fileTreeIndex({ tree: TreeDirRoot.fromJSON(this.indexCache), writeIndexCache: false });
-  //   } else {
-  //     console.debug("disk index skipped");
-  //     return this.fileTree.root;
-  //   }
-  // }
 
-  renameListener(fn: (props: RenameFileType) => void) {
-    return this.local.on(DiskEvents.RENAME, fn);
+  renameListener(fn: (props: Extract<IndexTrigger, { type: "rename" }>["details"]) => void) {
+    return this.local.on(DiskEvents.INDEX, (trigger) => {
+      if (trigger && trigger.type === "rename") {
+        fn(trigger.details);
+      }
+    });
   }
-  writeFileListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
+  deleteListener(fn: (props: Extract<IndexTrigger, { type: "delete" }>["details"]) => void) {
+    return this.local.on(DiskEvents.INDEX, (trigger) => {
+      if (trigger && trigger.type === "delete") {
+        fn(trigger.details);
+      }
+    });
+  }
+  createListener(fn: (props: Extract<IndexTrigger, { type: "create" }>["details"]) => void) {
+    return this.local.on(DiskEvents.INDEX, (trigger) => {
+      if (trigger && trigger.type === "create") {
+        fn(trigger.details);
+      }
+    });
+  }
+
+  updateListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
     return this.local.on(DiskEvents.WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
         fn(String(await this.readFile(absPath(watchFilePath))));
@@ -418,15 +441,15 @@ export abstract class Disk extends DiskDAO {
   protected async renameDirOrFile(
     oldFullPath: AbsPath,
     newFullPath: AbsPath,
-    type?: "file" | "dir"
+    fileType?: "file" | "dir"
   ): Promise<RenameFileType> {
     await this.ready;
-    if (!type) {
+    if (!fileType) {
       const stat = await this.fs.stat(encodePath(oldFullPath));
-      type = stat.isDirectory() ? "dir" : "file";
+      fileType = stat.isDirectory() ? "dir" : "file";
     }
     const NOCHANGE: RenameFileType = new RenameFileType({
-      type,
+      fileType: fileType,
       newPath: oldFullPath,
       newName: relPath(basename(oldFullPath)),
       oldPath: oldFullPath,
@@ -447,16 +470,19 @@ export abstract class Disk extends DiskDAO {
     }
 
     const CHANGE = new RenameFileType({
-      type,
+      fileType,
       newPath: uniquePath,
       newName: relPath(basename(uniquePath)),
       oldName: relPath(basename(oldFullPath)),
       oldPath: oldFullPath,
     });
     await this.fileTreeIndex();
-    void this.remote.emit(DiskEvents.RENAME, CHANGE.toJSON());
+    void this.remote.emit(DiskEvents.RENAME, CHANGE);
     await this.local.emit(DiskEvents.RENAME, CHANGE);
-    await this.local.emit(DiskEvents.INDEX);
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "rename",
+      details: CHANGE,
+    });
     return CHANGE;
   }
 
@@ -467,8 +493,16 @@ export abstract class Disk extends DiskDAO {
     }
     await this.mkdirRecursive(fullPath);
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX);
-    await this.remote.emit(DiskEvents.INDEX);
+
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [fullPath] },
+    });
+    await this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [fullPath] },
+    });
+
     return fullPath;
   }
   async removeFile(filePath: AbsPath) {
@@ -483,8 +517,14 @@ export abstract class Disk extends DiskDAO {
       }
     }
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX);
-    await this.remote.emit(DiskEvents.INDEX);
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "delete",
+      details: { filePaths: [filePath] },
+    });
+    await this.remote.emit(DiskEvents.INDEX, {
+      type: "delete",
+      details: { filePaths: [filePath] },
+    });
 
     await this.local.emit(DiskEvents.DELETE, { filePaths: [filePath] });
     await this.remote.emit(DiskEvents.DELETE, { filePaths: [filePath] });
@@ -495,12 +535,12 @@ export abstract class Disk extends DiskDAO {
 
   removeVirtualFile(path: AbsPath) {
     this.fileTree.removeNodeByPath(path);
-    void this.local.emit(DiskEvents.INDEX);
+    void this.local.emit(DiskEvents.INDEX, undefined);
   }
   addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
     const parent = selectedNode || this.fileTree.root;
     const node = this.fileTree.insertClosestNode({ type, name }, parent);
-    void this.local.emit(DiskEvents.INDEX);
+    void this.local.emit(DiskEvents.INDEX, undefined);
     return node;
   }
 
@@ -519,8 +559,14 @@ export abstract class Disk extends DiskDAO {
     }
     await this.writeFileRecursive(fullPath, content);
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX);
-    await this.remote.emit(DiskEvents.INDEX);
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [fullPath] },
+    });
+    await this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [fullPath] },
+    });
 
     // await this.local.emit(DiskLocalEvents.DELETE, { filePaths: [filePath] });
     // await this.remote.emit(DiskLocalEvents.DELETE, { filePaths: [filePath] });

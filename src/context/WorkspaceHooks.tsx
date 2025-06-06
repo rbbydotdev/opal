@@ -2,13 +2,13 @@
 import { NullWorkspace, Workspace, WorkspaceDAO } from "@/Db/Workspace";
 import { TreeDir, TreeDirRoot, TreeFile } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, isAncestor } from "@/lib/paths2";
+import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 
-const NULL_WORKSPACE = new NullWorkspace();
+export const NULL_WORKSPACE = new NullWorkspace();
 const NULL_TREE_ROOT = new TreeDirRoot();
 
 const defaultWorkspaceContext = {
@@ -28,8 +28,6 @@ export type DeepNonNullable<T extends object, K extends keyof T = never> = {
     ? DeepNonNullable<NonNullable<T[P]>, K>
     : NonNullable<T[P]>;
 };
-// type NonNullWorkspaceContext = DeepNonNullable<typeof defaultWorkspaceContext, "firstFile">;
-
 export type WorkspaceContextType = typeof defaultWorkspaceContext;
 
 export const WorkspaceContext = React.createContext<WorkspaceContextType>(defaultWorkspaceContext);
@@ -58,7 +56,7 @@ export function useFileContents() {
         }
         //listener is currently only used with remote, since a local write will not trigger
         //a local write event, this is because the common update kind of borks mdx editor
-        return currentWorkspace.disk.writeFileListener(filePath, setContents);
+        return currentWorkspace.disk.updateListener(filePath, setContents);
       }
     };
 
@@ -134,67 +132,6 @@ export function useLiveWorkspaces() {
   }, [setWorkspaces]);
   return workspaces;
 }
-
-export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
-  const workspaces = useLiveWorkspaces();
-  const workspaceRoute = useWorkspaceRoute();
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
-  // do i need this still? if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return new NullWorkspace();
-  const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
-  const pathname = usePathname();
-  const router = useRouter();
-  const { workspaceId } = Workspace.parseWorkspacePath(pathname);
-
-  useEffect(() => {
-    if (workspaceId === "new" || !workspaceId) {
-      setCurrentWorkspace(NULL_WORKSPACE);
-      return;
-    }
-    const workspace = WorkspaceDAO.fetchFromNameAndInit(workspaceId)
-      .then((ws) => {
-        setCurrentWorkspace(ws);
-        console.debug("Initialize Workspace:" + ws.name);
-        return ws;
-      })
-      .catch((e) => {
-        router.replace("/new"); //attempt recovery
-        throw e;
-      });
-    return () => {
-      void workspace.then((ws) => ws.tearDown());
-    };
-  }, [router, workspaceId]);
-
-  useEffect(() => {
-    if (!currentWorkspace) return;
-    return currentWorkspace.disk.renameListener(({ newPath, oldPath, type }) => {
-      if (
-        (type === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
-        (type === "dir" && isAncestor(workspaceRoute.path, oldPath))
-      ) {
-        //redirect to the new path
-        console.debug("Redirecting to new file:", newPath);
-        router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
-      }
-    });
-  }, [currentWorkspace, pathname, router, workspaceRoute.path]);
-
-  return (
-    <WorkspaceContext.Provider
-      value={{
-        workspaces,
-        firstFile,
-        currentWorkspace,
-        workspaceRoute,
-        flatTree,
-        fileTreeDir,
-        isIndexed,
-      }}
-    >
-      {children}
-    </WorkspaceContext.Provider>
-  );
-};
 
 export function useWorkspaceContext() {
   return useContext(WorkspaceContext);

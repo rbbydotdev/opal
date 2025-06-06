@@ -1,5 +1,15 @@
 "use client";
-import { Disk, DiskDAO, DiskJType, IndexedDbDisk, NullDisk } from "@/Db/Disk";
+import {
+  CreateDetails,
+  DeleteDetails,
+  Disk,
+  DiskDAO,
+  DiskJType,
+  IndexedDbDisk,
+  IndexTrigger,
+  NullDisk,
+  RenameDetails,
+} from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
@@ -399,15 +409,20 @@ export class Workspace extends WorkspaceDAO {
     return this.thumbs.readFile(filePath);
   };
 
-  // //TODO: extraneous methods not used in workers,
-  // //look at Disk.init and see
-  // onInitialIndex(callback: (fileTree: TreeDir) => void) {
-  //   void this.disk.tryFirstIndex().then(() => {
-  //     callback(this.disk.fileTree.root);
-  //   });
-  // }
-  watchDisk(callback: (fileTree: TreeDir) => void, { initialTrigger = true }: { initialTrigger?: boolean } = {}) {
-    return this.disk.latestIndexListener(callback, { initialTrigger });
+  watchDisk(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
+    return this.disk.latestIndexListener(callback);
+  }
+
+  renameListener(callback: (details: RenameDetails) => void) {
+    return this.disk.renameListener(callback);
+  }
+
+  createListener(callback: (details: CreateDetails) => void) {
+    return this.disk.createListener(callback);
+  }
+
+  deleteListener(callback: (details: DeleteDetails) => void) {
+    return this.disk.deleteListener(callback);
   }
 
   async getFirstFile() {

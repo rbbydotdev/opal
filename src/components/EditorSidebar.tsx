@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { CurrentWorkspaceIcon } from "@/components/WorkspaceIcon";
-import { useWorkspaceContext } from "@/context";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 export function EditorSidebar({

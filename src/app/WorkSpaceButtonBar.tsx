@@ -5,7 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SearchModal } from "@/components/ui/search-modal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
-import { WorkspaceContext } from "@/context";
+import { WorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRequestSignals } from "@/lib/RequestSignals";

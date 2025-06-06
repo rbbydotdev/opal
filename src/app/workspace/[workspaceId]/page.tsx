@@ -1,7 +1,7 @@
 "use client";
 
 import { useFileTreeDragDropCopy } from "@/components/FiletreeMenu";
-import { useWorkspaceContext, useWorkspaceRoute } from "@/context";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import useFavicon from "@/hooks/useFavicon";
 import { Opal } from "@/lib/Opal";
 import { useRouter } from "next/navigation";
@@ -54,7 +54,9 @@ function FirstFileRedirect() {
   const router = useRouter();
   const { currentWorkspace } = useWorkspaceContext();
   useEffect(() => {
-    if (!currentWorkspace.isNull) void currentWorkspace.tryFirstFileUrl().then((ff) => router.push(ff));
+    if (!currentWorkspace.isNull) {
+      void currentWorkspace.tryFirstFileUrl().then((ff) => router.push(ff));
+    }
   }, [currentWorkspace, router]);
   return null;
 }

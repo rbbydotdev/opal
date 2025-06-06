@@ -1,6 +1,5 @@
 "use client";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
-import { WorkspaceRouteType } from "@/context";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
@@ -15,11 +14,9 @@ import {
   reduceLineage,
   relPath,
 } from "@/lib/paths2";
-import { useRouter } from "next/navigation";
 import React from "react";
 
-export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
-  const router = useRouter();
+export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   const { setEditing, selectedRange, resetEditing, setEditType, focused, setFocused, setVirtual, virtual } =
     useFileTreeMenuContext();
 
@@ -51,9 +48,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     const paths = reduceLineage(range).map((pathStr) => absPath(pathStr));
     try {
       await Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
-      // if (workspaceRoute.path && range.includes(workspaceRoute.path)) {
-      //   router.push(await currentWorkspace.tryFirstFileUrl());
-      // }
     } catch (e) {
       if (e instanceof NotFoundError) {
         console.error(e); //???

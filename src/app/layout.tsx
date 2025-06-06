@@ -6,7 +6,7 @@ import { WorkSpaceButtonBar } from "@/app/WorkSpaceButtonBar";
 
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
-import { WorkspaceProvider } from "@/context";
+import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { ErrorPopper } from "@/components/ui/error-popup";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useWorkspaceContext } from "@/context";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 
 export const WorkspaceStatus = () => {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
