@@ -77,21 +77,13 @@ export function ErrorPopupProvider({ children }: { children: React.ReactNode }) 
   return (
     <ErrorPopupContext.Provider value={errorPopup}>
       {children}
-      <Dialog open={state.open} onOpenChange={handleOpenChange}>
-        <DialogContent className="border-2 border-red-500 sm:max-w-md">
-          <DialogHeader className="flex flex-row items-center gap-2 text-red-600">
-            <AlertCircle className="h-6 w-6" />
-            <DialogTitle>{state.title}</DialogTitle>
-          </DialogHeader>
-          <DialogDescription className="text-base">{state.description}</DialogDescription>
-          <DialogFooter>
-            {/* <Button onClick={handleConfirm} className="w-full bg-red-600 hover:bg-red-700 text-white"> */}
-            <Button variant="destructive" className="w-full" onClick={handleExit}>
-              OK
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog
+        open={state.open}
+        title={state.title}
+        description={state.description}
+        handleOpenChange={handleOpenChange}
+        handleExit={handleExit}
+      />
     </ErrorPopupContext.Provider>
   );
 }
@@ -127,6 +119,59 @@ export const ErrorPopupControl = {
     errorPopupInstance = instance;
   },
 };
+
+export function ShowErrorDialog({
+  title,
+  description,
+  handleExit,
+}: {
+  title: string;
+  description: string;
+  handleExit?: () => void;
+}) {
+  const [open, setOpen] = React.useState(true);
+  return (
+    <ErrorDialog
+      open={open}
+      title={title}
+      description={description}
+      handleOpenChange={setOpen}
+      handleExit={handleExit}
+    />
+  );
+}
+
+function ErrorDialog({
+  open,
+  title,
+  description,
+  handleOpenChange,
+  handleExit,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  handleOpenChange: (open: boolean) => void;
+  handleExit?: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="border-2 border-red-500 sm:max-w-md">
+        <DialogHeader className="flex flex-row items-center gap-2 text-red-600">
+          <AlertCircle className="h-6 w-6" />
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <DialogDescription className="text-base">{description}</DialogDescription>
+        <DialogFooter>
+          {/* <Button onClick={handleConfirm} className="w-full bg-red-600 hover:bg-red-700 text-white"> */}
+          <Button variant="destructive" className="w-full" onClick={handleExit}>
+            OK
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // Component to register the instance
 export function ErrorPopupInstanceSetter() {

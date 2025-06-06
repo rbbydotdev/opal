@@ -16,7 +16,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaceRoute = useWorkspaceRoute();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
   // do i need this still? if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return new NullWorkspace();
-  const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
+  const { fileTreeDir, isIndexed, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
   const pathname = usePathname();
   const router = useRouter();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
@@ -64,7 +64,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     <WorkspaceContext.Provider
       value={{
         workspaces,
-        firstFile,
         currentWorkspace,
         workspaceRoute,
         flatTree,

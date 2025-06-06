@@ -1,6 +1,6 @@
 "use client";
 import { NullWorkspace, Workspace, WorkspaceDAO } from "@/Db/Workspace";
-import { TreeDir, TreeDirRoot, TreeFile } from "@/lib/FileTree/TreeNode";
+import { TreeDir, TreeDirRoot } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -13,7 +13,6 @@ const NULL_TREE_ROOT = new TreeDirRoot();
 
 const defaultWorkspaceContext = {
   fileTreeDir: NULL_TREE_ROOT,
-  firstFile: null as TreeFile | null,
   workspaces: [] as WorkspaceDAO[],
   flatTree: [] as string[],
   isIndexed: false,
@@ -107,7 +106,6 @@ export function useWorkspaceRoute() {
 export function useWatchWorkspaceFileTree(currentWorkspace: Workspace) {
   const [isIndexed, setIsIndexed] = useState(currentWorkspace?.isIndexed ?? false);
   const [fileTreeDir, setFileTree] = useState<TreeDirRoot>(NULL_TREE_ROOT);
-  const [firstFile, setFirstFile] = useState<TreeFile | null>(null);
   const [flatTree, setFlatTree] = useState<string[]>([]);
 
   useEffect(() => {
@@ -116,12 +114,11 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace) {
         if (!isIndexed) setIsIndexed(currentWorkspace.isIndexed);
         const newTree = new TreeDirRoot(fileTreeDir);
         setFileTree(newTree);
-        void currentWorkspace.getFirstFile().then(setFirstFile);
         setFlatTree(currentWorkspace.getFlatTree());
       });
     }
   }, [currentWorkspace, isIndexed]);
-  return { fileTreeDir, flatTree, isIndexed, firstFile };
+  return { fileTreeDir, flatTree, isIndexed };
 }
 
 export function useLiveWorkspaces() {

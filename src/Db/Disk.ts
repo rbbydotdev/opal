@@ -269,11 +269,10 @@ export abstract class Disk extends DiskDAO {
   };
 
   getFirstFile() {
-    let node = null;
-    for (node of this.fileTree.iterator()) {
-      if (node.isTreeFile()) break;
+    for (const node of this.fileTree.iterator()) {
+      if (node.isTreeFile()) return node;
     }
-    return node as TreeFile | null;
+    return null;
   }
 
   tryFirstIndex() {
@@ -455,10 +454,9 @@ export abstract class Disk extends DiskDAO {
       oldPath: oldFullPath,
       oldName: relPath(basename(oldFullPath)),
     });
-    if (!newFullPath) return NOCHANGE;
-    const cleanFullPath = joinPath(absPath(dirname(newFullPath)), basename(newFullPath));
 
-    if (cleanFullPath === oldFullPath) return NOCHANGE;
+    const cleanFullPath = joinPath(absPath(dirname(newFullPath)), basename(newFullPath));
+    if (!newFullPath || cleanFullPath === oldFullPath) return NOCHANGE;
 
     const uniquePath = await this.nextPath(cleanFullPath); // ensure the path is unique
 
