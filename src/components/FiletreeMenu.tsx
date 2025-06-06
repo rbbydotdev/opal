@@ -8,17 +8,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { BadRequestError, isError } from "@/lib/errors";
-import {
-  AbsPath,
-  absPath,
-  basename,
-  encodePath,
-  equals,
-  getPathMimeType,
-  isAncestor,
-  joinPath,
-  reduceLineage,
-} from "@/lib/paths2";
+import { AbsPath, absPath, basename, encodePath, equals, isAncestor, joinPath, reduceLineage } from "@/lib/paths2";
 import clsx from "clsx";
 import React from "react";
 
@@ -43,28 +33,36 @@ export function useFileTreeDragDropCopy({
     prepareNodeDataTransfer(event.dataTransfer, targetNode);
   };
 
-  const prepareNodeDataTransfer = (dataTransfer: DataTransfer, targetNode: TreeNode) => {
-    const allFileNodes = Array.from(new Set([...selectedRange, targetNode.path, focused ? focused : null]))
+  const prepareNodeDataTransfer = (dataTransfer: DataTransfer, targetNode?: TreeNode) => {
+    const allFileNodes = Array.from(new Set([...selectedRange, targetNode?.path, focused ? focused : null]))
       .filter(Boolean)
       .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
       .filter(Boolean);
 
-    const data = JSON.stringify({
-      nodeData: allFileNodes,
-    } satisfies NodeDataType);
-
-    dataTransfer.clearData();
-    dataTransfer.effectAllowed = "all";
-    dataTransfer.setData(INTERNAL_FILE_TYPE, data);
-    dataTransfer.setData("text/html", `<a href="${encodePath(targetNode.path)}">${targetNode.path}</a>`);
-    allFileNodes.forEach((node, i) => {
-      dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
-    });
-    // console.log(allFileNodes);
+    try {
+      const data = JSON.stringify({
+        nodeData: allFileNodes,
+      } satisfies NodeDataType);
+      dataTransfer.clearData();
+      dataTransfer.effectAllowed = "all";
+      dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+      dataTransfer.setData(
+        "text/html",
+        allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" ")
+      );
+      // // dataTransfer.setData("text/html", `<a href="${encodePath(targetNode.path)}">${targetNode.path}</a>`);
+      // allFileNodes.forEach((node, i) => {
+      //   dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
+      // });
+      // dataTransfer.setData("text/plain", allFileNodes.map((node) => encodePath(node.path || "")).join(" "));
+    } catch (e) {
+      console.error("Error preparing node data for drag and drop:", e);
+      return;
+    }
   };
 
-  const handleCopy = (event: React.ClipboardEvent, targetNode: TreeNode) => {
-    console.log("1234");
+  const handleCopy = (event: React.ClipboardEvent, targetNode?: TreeNode) => {
+    console.debug("copy");
     event.preventDefault();
     event.stopPropagation();
     prepareNodeDataTransfer(event.clipboardData, targetNode);
@@ -179,6 +177,7 @@ export function FileTreeMenu({
       onDrop={(e) => handleDrop(e, fileTreeDir)}
       onDragEnter={(e) => handleDragEnter(e, "/")}
       className={clsx({ "": depth === 0 })}
+      onCopy={handleCopy}
     >
       {depth === 0 && (
         <div className="w-full text-sm" onDrop={(e) => handleDrop(e, fileTreeDir)}>
@@ -196,6 +195,7 @@ export function FileTreeMenu({
           onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}
           onDragLeave={handleDragLeave}
+          onCopy={(e) => handleCopy(e, file)}
           onDragEnter={(e) => {
             handleDragEnter(e, file.path);
           }}
@@ -205,6 +205,7 @@ export function FileTreeMenu({
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton asChild>
                   <EditableDir
+                    onCopy={(e) => handleCopy(e, file)}
                     workspaceRoute={workspaceRoute}
                     currentWorkspace={currentWorkspace}
                     depth={depth}
@@ -236,7 +237,6 @@ export function FileTreeMenu({
                 treeFile={file as TreeFile}
                 expand={expandForNode}
                 onDragStart={(e) => handleDragStart(e, file)}
-                onCopy={(e) => handleCopy(e, file)}
               />
             </SidebarMenuButton>
           )}

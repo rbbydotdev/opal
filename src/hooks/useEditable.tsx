@@ -1,11 +1,10 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuContext } from "@/components/FileTreeContext";
-import { useWorkspaceRoute, WorkspaceRouteType } from "@/context/WorkspaceHooks";
+import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, changePrefixRel, equals, prefix, RelPath, relPath } from "@/lib/paths2";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export function useEditable<T extends TreeFile | TreeNode>({
@@ -13,10 +12,8 @@ export function useEditable<T extends TreeFile | TreeNode>({
   expand,
   currentWorkspace,
   onClick,
-  workspaceRoute,
 }: {
   currentWorkspace: Workspace;
-  workspaceRoute: WorkspaceRouteType;
   treeNode: T;
   onClick?: (e: React.MouseEvent) => void;
   href?: string;
@@ -26,7 +23,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
-  const router = useRouter();
   const { cancelNew, commitChange } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, resetEditing, setEditing, setFocused, focused, virtual, setSelectedRange, selectedRange } =
     useFileTreeMenuContext();
@@ -48,6 +44,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      console.debug("mouse down");
       if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
@@ -71,6 +68,8 @@ export function useEditable<T extends TreeFile | TreeNode>({
   );
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
+      console.debug("mouse up", window.document.activeElement);
+      setTimeout(() => console.debug("mouse up", window.document.activeElement), 1000);
       if (!e.shiftKey) {
         setSelectedRange([]);
         linkRef.current?.focus();
@@ -88,6 +87,11 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent) => {
       e.stopPropagation();
+      //cmd+c or ctrl+c
+      // if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
+      //   e.preventDefault();
+      //   e.stopPropagation();
+      // }
       if (e.key === "Escape") {
         if (isEditing) {
           if (isVirtual) cancelNew();
@@ -138,9 +142,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
       commitChange,
       treeNode,
       resetEditing,
-      workspaceRoute.path,
-      router,
-      currentWorkspace,
       setEditing,
     ]
   );
