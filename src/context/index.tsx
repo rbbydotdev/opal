@@ -203,16 +203,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   );
 };
 
-// Helper to delay rendering of child components until the current workspace is loaded
-export function withCurrentWorkspace<T extends NonNullWorkspaceContext>(Component: React.ComponentType<T>) {
-  return function WrappedComponent(props: Omit<T, keyof NonNullWorkspaceContext>) {
-    const context = useWorkspaceContext();
-    return <Component {...(props as T)} {...context} />;
-  };
-}
-
 export function useWorkspaceContext() {
   return useContext(WorkspaceContext);
 }
-
-// Replace PropTypesOf<typeof Identicon> with React.ComponentProps<typeof Identicon>

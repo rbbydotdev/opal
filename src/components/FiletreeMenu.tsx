@@ -5,7 +5,7 @@ import { useFileTreeMenuContext } from "@/components/FileTreeContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { withCurrentWorkspace, WorkspaceContextType, WorkspaceRouteType } from "@/context";
+import { useWorkspaceContext } from "@/context";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { BadRequestError, isError } from "@/lib/errors";
 import {
@@ -21,38 +21,6 @@ import {
 } from "@/lib/paths2";
 import clsx from "clsx";
 import React from "react";
-
-export const FileTreeMenu = withCurrentWorkspace(FileTreeContainer);
-
-// const ACCEPTED_FILE_TYPES = [
-//   "text/plain",
-//   "text/markdown",
-//   "text/x-markdown",
-//   "text/x-markdown",
-//   "image/jpeg",
-//   "image/png",
-//   "image/webp",
-//   "image/gif",
-//   "image/svg",
-// ];
-
-// const isAcceptedFileType = (file: File) => ACCEPTED_FILE_TYPES.includes(file.type);
-
-export function FileTreeContainer({
-  currentWorkspace,
-  fileTreeDir,
-  workspaceRoute,
-  ...props
-}: WorkspaceContextType & React.ComponentProps<typeof FileTreeMenuInternal>) {
-  return (
-    <FileTreeMenuInternal
-      {...props}
-      fileTreeDir={fileTreeDir}
-      currentWorkspace={currentWorkspace}
-      workspaceRoute={workspaceRoute}
-    />
-  );
-}
 
 const INTERNAL_FILE_TYPE = "application/x-opal";
 
@@ -92,7 +60,7 @@ export function useFileTreeDragDropCopy({
     allFileNodes.forEach((node, i) => {
       dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
     });
-    console.log(allFileNodes);
+    // console.log(allFileNodes);
   };
 
   const handleCopy = (event: React.ClipboardEvent, targetNode: TreeNode) => {
@@ -175,31 +143,22 @@ export function useFileTreeDragDropCopy({
   return { handleDragStart, handleDragOver, handleDrop, handleDragEnter, handleDragLeave, handleCopy };
 }
 
-function FileTreeMenuInternal({
+export function FileTreeMenu({
   fileTreeDir,
   renameDirOrFile,
   depth = 0,
   expand,
   expandForNode,
-  currentWorkspace,
   expanded,
-  workspaceRoute,
 }: {
   fileTreeDir: TreeDir;
   renameDirOrFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
   depth?: number;
   expand: (path: string, value: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
-  currentWorkspace: Workspace;
   expanded: { [path: string]: boolean };
-  workspaceRoute: WorkspaceRouteType;
 }) {
-  // const { resetSelects } = useFileTreeMenuContext();
-  //TODO: this needs moved to top
-  // //This must be done, as old selects can stick around after a remote change or local change / move / rename
-  // useEffect(() => {
-  //   return currentWorkspace.watchDisk(resetSelects, { initialTrigger: false });
-  // }, [currentWorkspace, resetSelects]);
+  const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
 
   const { dragOver } = useFileTreeMenuContext();
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop, handleCopy } =
@@ -257,13 +216,11 @@ function FileTreeMenuInternal({
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <FileTreeMenuInternal
+                <FileTreeMenu
                   expand={expand}
                   expandForNode={expandForNode}
                   fileTreeDir={file as TreeDir}
                   renameDirOrFile={renameDirOrFile}
-                  currentWorkspace={currentWorkspace}
-                  workspaceRoute={workspaceRoute}
                   depth={depth + 1}
                   expanded={expanded}
                 />

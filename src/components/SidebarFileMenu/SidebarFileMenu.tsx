@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { TooltipContent } from "@/components/ui/tooltip";
-import { useWorkspaceContext, withCurrentWorkspace, WorkspaceContextType } from "@/context";
+import { useWorkspaceContext, WorkspaceContextType } from "@/context";
 import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -52,16 +52,9 @@ import {
 import React, { useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 
-function SidebarFileMenuInternal({
-  currentWorkspace,
-  fileTreeDir,
-  workspaceRoute,
-  isIndexed,
-  flatTree,
-  firstFile,
-  workspaces,
-  ...props
-}: WorkspaceContextType & React.ComponentProps<typeof SidebarGroup>) {
+export function SidebarFileMenu({ ...props }: WorkspaceContextType & React.ComponentProps<typeof SidebarGroup>) {
+  const { fileTreeDir, flatTree, currentWorkspace, workspaceRoute } = useWorkspaceContext();
+
   const { renameDirOrFile, addDirFile, removeFiles } = useWorkspaceFileMgmt(currentWorkspace, workspaceRoute);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
@@ -196,6 +189,7 @@ export const SidebarFileMenuFiles = ({
               </div>
             ) : (
               <FileTreeMenu
+                fileTreeDir={fileTreeDir}
                 renameDirOrFile={renameDirOrFile}
                 expand={expandSingle}
                 expandForNode={expandForNode}
@@ -208,12 +202,6 @@ export const SidebarFileMenuFiles = ({
       </Collapsible>
     </SidebarGroup>
   );
-};
-
-const SidebarFileMenuWithWorkspace = withCurrentWorkspace(SidebarFileMenuInternal);
-
-export const SidebarFileMenu = (props: React.ComponentProps<typeof SidebarGroup>) => {
-  return <SidebarFileMenuWithWorkspace {...props} />;
 };
 
 const SidebarFileMenuFilesActions = ({
