@@ -95,11 +95,11 @@ export class FileTree {
     this.map = new Map([...this.iterator()].map((node) => [node.path, node]));
   }
 
-  async index(...args: { tree: TreeDirRoot | undefined }[]) {
-    await exhaustAsyncGenerator(this.indexIter(...args));
+  async index(tree?: TreeDirRoot) {
+    await exhaustAsyncGenerator(this.indexIter(tree));
     return this.root;
   }
-  async *indexIter({ tree = this.root ?? new TreeDirRoot() }: { tree?: TreeDirRoot } = {}) {
+  async *indexIter(tree = new TreeDirRoot()) {
     if (this.indexMutex.isLocked()) {
       await this.indexMutex.waitForUnlock();
       return this.root;
@@ -107,6 +107,7 @@ export class FileTree {
     try {
       await Promise.all([this.fsMutex.acquire(), this.indexMutex.acquire()]);
       console.debug("Indexing file tree");
+
       for await (const node of this.recurseTree(tree)) {
         yield node;
       }
@@ -122,7 +123,7 @@ export class FileTree {
 
   async tryFirstIndex() {
     if (this.initialIndex) return this.root;
-    await this.indexIter();
+    await this.index();
   }
 
   async *recurseTree(
@@ -140,7 +141,7 @@ export class FileTree {
           const node = TreeNode.FromPath(fullPath, stat.isDirectory() ? "dir" : "file", parent);
           yield this.insertNode(parent, node);
           if (node.isTreeDir()) {
-            yield* this.recurseTree(node, depth + 1, haltOnError);
+            yield* await this.recurseTree(node, depth + 1, haltOnError);
           }
         } catch (e) {
           if (isErrorWithCode(e, "ENOENT")) {
@@ -153,7 +154,7 @@ export class FileTree {
     } catch (e) {
       if (!haltOnError && e instanceof NotFoundError) {
         console.error(e);
-        yield* this.recurseTree(parent, depth, haltOnError);
+        yield* await this.recurseTree(parent, depth, haltOnError);
         return;
       }
       throw e;
