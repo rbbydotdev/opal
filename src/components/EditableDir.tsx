@@ -1,5 +1,6 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
+import { useCopyKeydown } from "@/components/FiletreeMenu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { useEditable } from "@/hooks/useEditable";
@@ -52,6 +53,8 @@ export const EditableDir = ({
     expand,
   });
 
+  const { handleCopyKeyDown } = useCopyKeydown(currentWorkspace);
+
   useEffect(() => {
     if (isFocused && !isEditing) {
       linkRef.current?.focus();
@@ -73,7 +76,7 @@ export const EditableDir = ({
         className,
         "w-full flex cursor-pointer __select-none group/dir"
       )}
-      onKeyDown={handleKeyDown}
+      onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
       style={{ paddingLeft: depth + "rem" }}
     >
       <div className="flex w-full items-center truncate">

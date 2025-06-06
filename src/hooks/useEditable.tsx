@@ -6,7 +6,6 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, changePrefixRel, equals, prefix, RelPath, relPath } from "@/lib/paths2";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
 export function useEditable<T extends TreeFile | TreeNode>({
   treeNode,
   expand,
@@ -68,8 +67,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
   );
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
-      console.debug("mouse up", window.document.activeElement);
-      setTimeout(() => console.debug("mouse up", window.document.activeElement), 1000);
       if (!e.shiftKey) {
         setSelectedRange([]);
         linkRef.current?.focus();

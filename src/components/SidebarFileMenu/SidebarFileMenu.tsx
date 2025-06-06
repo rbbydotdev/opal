@@ -1,6 +1,6 @@
 "use client";
 import { ConnectionsModal } from "@/components/connections-modal";
-import { FileTreeMenu, useFileTreeDragDropCopy } from "@/components/FiletreeMenu";
+import { FileTreeMenu, useFileTreeDragDrop } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
@@ -80,7 +80,7 @@ export function SidebarFileMenu({ ...props }: WorkspaceContextType & React.Compo
   // const route = usePathname();
 
   // const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
-  const { handleDrop } = useFileTreeDragDropCopy({
+  const { handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
   });
 
