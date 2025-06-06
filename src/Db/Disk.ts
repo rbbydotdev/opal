@@ -130,14 +130,6 @@ export class DiskDAO implements DiskRecord {
   }
 }
 
-export type RemoteRenameFileType = {
-  oldPath: string;
-  oldName: string;
-  newPath: string;
-  newName: string;
-  type: "file" | "dir";
-};
-
 export class RenameFileType {
   oldPath: AbsPath;
   oldName: RelPath;
@@ -175,28 +167,54 @@ export class RenameFileType {
   }
 }
 
-export class DiskRemoteEvents extends Channel<{
-  [DiskRemoteEvents.RENAME]: RemoteRenameFileType;
-  [DiskRemoteEvents.INDEX]: never;
-  [DiskLocalEvents.WRITE]: { filePaths: string[] };
-}> {
-  static WRITE = "write" as const;
-  static INDEX = "index" as const;
-  static RENAME = "rename" as const;
-}
+export type RemoteRenameFileType = {
+  oldPath: string;
+  oldName: string;
+  newPath: string;
+  newName: string;
+  type: "file" | "dir";
+};
 
-export class DiskLocalEvents extends Emittery<{
-  [DiskLocalEvents.RENAME]: RenameFileType;
-  [DiskLocalEvents.INDEX]: never;
-  [DiskLocalEvents.WRITE]: { filePaths: string[] };
-}> {
-  static WRITE = "write" as const;
-  static INDEX = "index" as const;
-  static RENAME = "rename" as const;
-}
+export type FilePathsType = {
+  filePaths: string[];
+};
+
+export type IndexTrigger =
+  | {
+      type: "create" | "delete";
+      details: FilePathsType;
+    }
+  | {
+      type: "rename";
+      details: RemoteRenameFileType;
+    };
+
+export class DiskEventsRemote extends Channel<{
+  [DiskEvents.RENAME]: RemoteRenameFileType;
+  [DiskEvents.INDEX]: never;
+  [DiskEvents.WRITE]: FilePathsType;
+  [DiskEvents.CREATE]: FilePathsType;
+  [DiskEvents.DELETE]: FilePathsType;
+}> {}
+
+export const DiskEvents = {
+  WRITE: "write" as const,
+  INDEX: "index" as const,
+  RENAME: "rename" as const,
+  CREATE: "create" as const,
+  DELETE: "delete" as const,
+};
+
+export class DiskEventsLocal extends Emittery<{
+  [DiskEvents.RENAME]: RenameFileType;
+  [DiskEvents.INDEX]: never;
+  [DiskEvents.WRITE]: FilePathsType;
+  [DiskEvents.CREATE]: FilePathsType;
+  [DiskEvents.DELETE]: FilePathsType;
+}> {}
 export abstract class Disk extends DiskDAO {
-  remote: DiskRemoteEvents;
-  local = new DiskLocalEvents();
+  remote: DiskEventsRemote;
+  local = new DiskEventsLocal();
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
   // indexed: Promise<unknown>;
@@ -207,7 +225,7 @@ export abstract class Disk extends DiskDAO {
     // const { promise, resolve } = Promise.withResolvers();
     // this.indexed = promise;
     // this.setIndexed = resolve;
-    this.remote = new DiskRemoteEvents(this.guid);
+    this.remote = new DiskEventsRemote(this.guid);
   }
 
   async initializeIndex(cache: TreeNodeDirJType = new TreeDirRoot().toJSON()) {
@@ -216,8 +234,7 @@ export abstract class Disk extends DiskDAO {
         tree: TreeDirRoot.fromJSON(cache),
         writeIndexCache: false,
       });
-      await this.local.emit(DiskLocalEvents.INDEX);
-      // this.setIndexed();
+      await this.local.emit(DiskEvents.INDEX);
     } catch (e) {
       throw errF`Error initializing index ${e}`;
     }
@@ -231,7 +248,7 @@ export abstract class Disk extends DiskDAO {
     tree?: TreeDirRoot;
     writeIndexCache?: boolean;
   } = {}) => {
-    const newIndex = await this.fileTree.index({ tree });
+    const newIndex = await this.fileTree.index(tree);
     if (writeIndexCache) {
       /*await*/ void this.update({ indexCache: newIndex.toJSON() });
     }
@@ -255,7 +272,7 @@ export abstract class Disk extends DiskDAO {
     { initialTrigger = true }: { initialTrigger?: boolean } = {}
   ) {
     if (initialTrigger && this.fileTree.initialIndex) callback(this.fileTree.root);
-    return this.local.on(DiskLocalEvents.INDEX, () => {
+    return this.local.on(DiskEvents.INDEX, () => {
       callback(this.fileTree.root);
       console.debug("local disk index event");
     });
@@ -276,19 +293,19 @@ export abstract class Disk extends DiskDAO {
   async setupRemoteListeners() {
     const listeners = [
       this.remote.init(),
-      this.remote.on(DiskRemoteEvents.RENAME, async (data) => {
-        await this.local.emit(DiskRemoteEvents.RENAME, new RenameFileType(data));
+      this.remote.on(DiskEvents.RENAME, async (data) => {
+        await this.local.emit(DiskEvents.RENAME, new RenameFileType(data));
         await this.fileTreeIndex();
-        await this.local.emit(DiskLocalEvents.INDEX);
+        await this.local.emit(DiskEvents.INDEX);
         console.debug("remote rename", JSON.stringify(data, null, 4));
       }),
-      this.remote.on(DiskRemoteEvents.WRITE, async ({ filePaths }) => {
-        await this.local.emit(DiskLocalEvents.WRITE, { filePaths });
+      this.remote.on(DiskEvents.WRITE, async ({ filePaths }) => {
+        await this.local.emit(DiskEvents.WRITE, { filePaths });
       }),
 
-      this.remote.on(DiskRemoteEvents.INDEX, async () => {
+      this.remote.on(DiskEvents.INDEX, async () => {
         await this.fileTreeIndex();
-        void this.local.emit(DiskLocalEvents.INDEX);
+        void this.local.emit(DiskEvents.INDEX);
       }),
     ];
     return () => listeners.forEach((p) => p());
@@ -338,7 +355,7 @@ export abstract class Disk extends DiskDAO {
         filePaths.push(node.path);
       }
     }
-    await this.local.emit(DiskLocalEvents.WRITE, {
+    await this.local.emit(DiskEvents.WRITE, {
       filePaths,
     });
   }
@@ -368,10 +385,10 @@ export abstract class Disk extends DiskDAO {
   // }
 
   renameListener(fn: (props: RenameFileType) => void) {
-    return this.local.on(DiskLocalEvents.RENAME, fn);
+    return this.local.on(DiskEvents.RENAME, fn);
   }
   writeFileListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-    return this.local.on(DiskLocalEvents.WRITE, async ({ filePaths }) => {
+    return this.local.on(DiskEvents.WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
         fn(String(await this.readFile(absPath(watchFilePath))));
       }
@@ -437,9 +454,9 @@ export abstract class Disk extends DiskDAO {
       oldPath: oldFullPath,
     });
     await this.fileTreeIndex();
-    void this.remote.emit(DiskRemoteEvents.RENAME, CHANGE.toJSON());
-    await this.local.emit(DiskLocalEvents.RENAME, CHANGE);
-    await this.local.emit(DiskLocalEvents.INDEX);
+    void this.remote.emit(DiskEvents.RENAME, CHANGE.toJSON());
+    await this.local.emit(DiskEvents.RENAME, CHANGE);
+    await this.local.emit(DiskEvents.INDEX);
     return CHANGE;
   }
 
@@ -450,8 +467,8 @@ export abstract class Disk extends DiskDAO {
     }
     await this.mkdirRecursive(fullPath);
     await this.fileTreeIndex();
-    await this.local.emit(DiskLocalEvents.INDEX);
-    await this.remote.emit(DiskLocalEvents.INDEX);
+    await this.local.emit(DiskEvents.INDEX);
+    await this.remote.emit(DiskEvents.INDEX);
     return fullPath;
   }
   async removeFile(filePath: AbsPath) {
@@ -466,8 +483,11 @@ export abstract class Disk extends DiskDAO {
       }
     }
     await this.fileTreeIndex();
-    await this.local.emit(DiskLocalEvents.INDEX);
-    await this.remote.emit(DiskLocalEvents.INDEX);
+    await this.local.emit(DiskEvents.INDEX);
+    await this.remote.emit(DiskEvents.INDEX);
+
+    await this.local.emit(DiskEvents.DELETE, { filePaths: [filePath] });
+    await this.remote.emit(DiskEvents.DELETE, { filePaths: [filePath] });
   }
   nodeFromPath(path: AbsPath) {
     return this.fileTree.nodeFromPath(path);
@@ -475,12 +495,12 @@ export abstract class Disk extends DiskDAO {
 
   removeVirtualFile(path: AbsPath) {
     this.fileTree.removeNodeByPath(path);
-    void this.local.emit(DiskLocalEvents.INDEX);
+    void this.local.emit(DiskEvents.INDEX);
   }
   addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
     const parent = selectedNode || this.fileTree.root;
     const node = this.fileTree.insertClosestNode({ type, name }, parent);
-    void this.local.emit(DiskLocalEvents.INDEX);
+    void this.local.emit(DiskEvents.INDEX);
     return node;
   }
 
@@ -499,7 +519,12 @@ export abstract class Disk extends DiskDAO {
     }
     await this.writeFileRecursive(fullPath, content);
     await this.fileTreeIndex();
-    await this.local.emit(DiskLocalEvents.INDEX);
+    await this.local.emit(DiskEvents.INDEX);
+    await this.remote.emit(DiskEvents.INDEX);
+
+    // await this.local.emit(DiskLocalEvents.DELETE, { filePaths: [filePath] });
+    // await this.remote.emit(DiskLocalEvents.DELETE, { filePaths: [filePath] });
+
     return fullPath;
   }
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
@@ -524,7 +549,7 @@ export abstract class Disk extends DiskDAO {
 
   async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
     await this.fs.writeFile(encodePath(filePath), contents, { encoding: "utf8", mode: 0o777 });
-    await this.remote.emit(DiskRemoteEvents.WRITE, { filePaths: [filePath] });
+    await this.remote.emit(DiskEvents.WRITE, { filePaths: [filePath] });
     return;
   }
   async readFile(filePath: AbsPath) {
@@ -634,8 +659,4 @@ export class NullDisk extends Disk {
     const ft = new FileTree(fs.promises, "null");
     super("null", fs.promises, ft, NullDisk.type);
   }
-}
-
-class DiskService {
-  constructor(private disk: Disk) {}
 }

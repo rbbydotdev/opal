@@ -78,7 +78,7 @@ export const EditableFile = ({
           className={twMerge(
             className,
             isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
-            "group cursor-pointer"
+            "group cursor-pointer h-full"
           )}
           ref={linkRef}
           tabIndex={0}

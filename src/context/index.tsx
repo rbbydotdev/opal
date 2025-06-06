@@ -28,7 +28,7 @@ export type DeepNonNullable<T extends object, K extends keyof T = never> = {
     ? DeepNonNullable<NonNullable<T[P]>, K>
     : NonNullable<T[P]>;
 };
-type NonNullWorkspaceContext = DeepNonNullable<typeof defaultWorkspaceContext, "firstFile">;
+// type NonNullWorkspaceContext = DeepNonNullable<typeof defaultWorkspaceContext, "firstFile">;
 
 export type WorkspaceContextType = typeof defaultWorkspaceContext;
 
@@ -135,12 +135,14 @@ export function useLiveWorkspaces() {
   return workspaces;
 }
 
-//There can be only one!
-export function useWorkspaceFromRoute() {
+export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
+  const workspaces = useLiveWorkspaces();
+  const workspaceRoute = useWorkspaceRoute();
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
+  // do i need this still? if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return new NullWorkspace();
+  const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
   const pathname = usePathname();
   const router = useRouter();
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
-  const workspaceRoute = useWorkspaceRoute();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
 
   useEffect(() => {
@@ -151,11 +153,11 @@ export function useWorkspaceFromRoute() {
     const workspace = WorkspaceDAO.fetchFromNameAndInit(workspaceId)
       .then((ws) => {
         setCurrentWorkspace(ws);
-        console.debug("Initialize Workspace");
+        console.debug("Initialize Workspace:" + ws.name);
         return ws;
       })
       .catch((e) => {
-        router.replace("/new");
+        router.replace("/new"); //attempt recovery
         throw e;
       });
     return () => {
@@ -170,21 +172,12 @@ export function useWorkspaceFromRoute() {
         (type === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
         (type === "dir" && isAncestor(workspaceRoute.path, oldPath))
       ) {
+        //redirect to the new path
+        console.debug("Redirecting to new file:", newPath);
         router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
       }
     });
   }, [currentWorkspace, pathname, router, workspaceRoute.path]);
-
-  //pathname is sync current workspace is async update therefor if out of sync return null
-  if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return new NullWorkspace();
-  return currentWorkspace;
-}
-
-export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
-  const workspaces = useLiveWorkspaces();
-  const workspaceRoute = useWorkspaceRoute();
-  const currentWorkspace = useWorkspaceFromRoute();
-  const { fileTreeDir, isIndexed, firstFile, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
 
   return (
     <WorkspaceContext.Provider

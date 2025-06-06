@@ -6,8 +6,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context";
 import { encodePath } from "@/lib/paths2";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import Link from "next/link";
+import { Suspense, use, useEffect, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface WorkspaceLiveEditorProps extends Partial<MDXEditorProps> {
@@ -35,7 +35,7 @@ export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; ori
 
 const FileError = ({ error }: { error: Error }) => {
   const { currentWorkspace } = useWorkspaceContext();
-  const router = useRouter();
+  const tryFirstFile = use(useMemo(() => currentWorkspace.tryFirstFileUrl(), [currentWorkspace]));
 
   return (
     <div className="w-full h-full flex items-center justify-center font-mono">
@@ -49,11 +49,8 @@ const FileError = ({ error }: { error: Error }) => {
           </div>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button
-            variant="destructive"
-            onClick={() => currentWorkspace.tryFirstFileUrl().then((url) => router.push(url))}
-          >
-            Sorry!
+          <Button asChild variant="destructive">
+            <Link href={tryFirstFile}>Sorry!</Link>
           </Button>
         </CardFooter>
       </Card>
@@ -70,7 +67,12 @@ export function WorkspaceLiveEditorInternal({ className, ...props }: WorkspaceLi
     }
   }, [contents]);
   const { currentWorkspace } = useWorkspaceContext();
-  if (error) return <FileError error={error} />;
+  if (error)
+    return (
+      <Suspense fallback={null}>
+        <FileError error={error} />
+      </Suspense>
+    );
 
   if (contents === null || !currentWorkspace) return <div className="w-full h-full bg-background"></div>;
   return (

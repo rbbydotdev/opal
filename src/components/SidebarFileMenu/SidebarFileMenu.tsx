@@ -178,7 +178,7 @@ export const SidebarFileMenuFiles = ({
         </SidebarGroupLabel>
 
         <CollapsibleContent className="min-h-0 flex-shrink">
-          <SidebarContent className="overflow-y-scroll h-full scrollbar-thin p-0 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5">
+          <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5">
             {!Object.keys(fileTreeDir.children).length ? (
               <div className="w-full">
                 <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
