@@ -11,29 +11,27 @@ import {
   basename,
   decodePath,
   dirname,
-  isAncestor,
   joinPath,
   reduceLineage,
   relPath,
 } from "@/lib/paths2";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute: WorkspaceRouteType) {
   const router = useRouter();
-  const pathname = usePathname();
   const { setEditing, selectedRange, resetEditing, setEditType, focused, setFocused, setVirtual, virtual } =
     useFileTreeMenuContext();
 
   const newFile = React.useCallback(
     async (path: AbsPath, content = "") => {
       const newPath = await currentWorkspace.newFile(absPath(dirname(path)), relPath(basename(path)), content);
-      if (!workspaceRoute.path) {
-        router.push(currentWorkspace.resolveFileUrl(newPath));
-      }
+      // if (!workspaceRoute.path) {
+      //   router.push(currentWorkspace.resolveFileUrl(newPath));
+      // }
       return newPath;
     },
-    [currentWorkspace, workspaceRoute.path, router]
+    [currentWorkspace]
   );
 
   const newDir = React.useCallback(
@@ -53,9 +51,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
     const paths = reduceLineage(range).map((pathStr) => absPath(pathStr));
     try {
       await Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
-      if (workspaceRoute.path && range.includes(workspaceRoute.path)) {
-        router.push(await currentWorkspace.tryFirstFileUrl());
-      }
+      // if (workspaceRoute.path && range.includes(workspaceRoute.path)) {
+      //   router.push(await currentWorkspace.tryFirstFileUrl());
+      // }
     } catch (e) {
       if (e instanceof NotFoundError) {
         console.error(e); //???
@@ -64,7 +62,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
       }
     }
     setFocused(null);
-  }, [selectedRange, focused, currentWorkspace, workspaceRoute.path, router, setFocused]);
+  }, [selectedRange, focused, currentWorkspace, setFocused]);
 
   const removeFocusedFile = React.useCallback(async () => {
     if (!focused || !currentWorkspace.disk.pathExists(focused)) return;
@@ -81,10 +79,10 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
         throw e;
       }
     }
-    if (workspaceRoute.path && workspaceRoute.path === focusedNode.path) {
-      router.push(await currentWorkspace.tryFirstFileUrl());
-    }
-  }, [focused, currentWorkspace, workspaceRoute.path, router]);
+    // if (workspaceRoute.path && workspaceRoute.path === focusedNode.path) {
+    //   router.push(await currentWorkspace.tryFirstFileUrl());
+    // }
+  }, [focused, currentWorkspace]);
 
   const cancelNew = React.useCallback(() => {
     setVirtual(null);
@@ -111,48 +109,16 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, workspaceRoute
         ? await currentWorkspace.renameDir(oldNode, newFullPath)
         : await currentWorkspace.renameFile(oldNode, newFullPath);
 
-      if (
-        workspaceRoute.path &&
-        (isAncestor(workspaceRoute.path, oldNode.path) || workspaceRoute.path === oldNode.path)
-      ) {
-        router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-      }
+      // if (
+      //   workspaceRoute.path &&
+      //   (isAncestor(workspaceRoute.path, oldNode.path) || workspaceRoute.path === oldNode.path)
+      // ) {
+      //   router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
+      // }
       return path;
     },
-    [currentWorkspace, workspaceRoute.path, router, pathname]
+    [currentWorkspace]
   );
-
-  // const renameDir = React.useCallback(
-  //   async (oldNode: TreeNode, newFullPath: AbsPath) => {
-  //     const { path } = await currentWorkspace.renameDir(oldNode, newFullPath);
-  //     if (isAncestor(workspaceRoute.path, oldNode.path.str) && workspaceRoute.path) {
-  //       router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-  //     }
-  //     return path;
-  //   },
-  //   [currentWorkspace, workspaceRoute.path, router, pathname]
-  // );
-
-  // const renameFile = React.useCallback(
-  //   async (oldNode: TreeNode, newFullPath: AbsPath) => {
-  //     const { path } = await currentWorkspace.renameFile(oldNode, newFullPath);
-  //     if (workspaceRoute.path?.str === oldNode.path.str) {
-  //       router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-  //     }
-  //     return path;
-  //   },
-  //   [currentWorkspace, workspaceRoute.path, router, pathname]
-  // );
-
-  // const renameDirOrFile = React.useCallback(
-  //   async (oldNode: TreeNode, newFullPath: AbsPath, type: "dir" | "file") => {
-  //     if (type === "file") {
-  //       return renameFile(oldNode, newFullPath);
-  //     }
-  //     return renameDir(oldNode, newFullPath);
-  //   },
-  //   [renameFile, renameDir]
-  // );
 
   const commitChange = React.useCallback(
     async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new") => {

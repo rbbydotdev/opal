@@ -105,9 +105,12 @@ export function useEditable<T extends TreeFile | TreeNode>({
             resetEditing();
             setFileName(relPath(basename(gotPath)));
             setFocused(gotPath);
-            if (treeNode.isTreeFile() && (equals(fullPath, workspaceRoute.path) || !workspaceRoute.path)) {
-              router.push(currentWorkspace.resolveFileUrl(gotPath));
-            }
+            // SEE useWorkspaceFromRoute
+            // if (treeNode.isTreeFile() && (equals(fullPath, workspaceRoute.path) || !workspaceRoute.path)) {
+            //   //redirect to the new file
+            //   console.debug("Redirecting to new file:", gotPath);
+            //   router.push(currentWorkspace.resolveFileUrl(gotPath));
+            // }
           } else {
             cancelEdit();
           }
