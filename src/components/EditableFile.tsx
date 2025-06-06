@@ -22,14 +22,14 @@ export const EditableFile = ({
   onCopy,
 }: {
   currentWorkspace: Workspace;
-  onDragStart: (e: React.DragEvent) => void;
-  onCopy: (e: React.ClipboardEvent) => void;
   workspaceRoute: WorkspaceRouteType;
   className?: string;
   treeFile: TreeFile;
   fullPath: AbsPath;
   expand: (node: TreeNode, value: boolean) => void;
   depth: number;
+  onDragStart: (e: React.DragEvent) => void;
+  onCopy: (e: React.ClipboardEvent) => void;
 }) => {
   const {
     isEditing,
@@ -51,7 +51,6 @@ export const EditableFile = ({
     treeNode: treeFile,
     expand,
     currentWorkspace,
-    workspaceRoute,
   });
 
   //
@@ -67,16 +66,17 @@ export const EditableFile = ({
   }, [isEditing, isFocused, linkRef]);
 
   return (
-    <div className="select-none">
+    <div className="__select-none">
       {!isEditing ? (
         <ActiveLink
           active={equals(fullPath, workspaceRoute.path)}
           draggable
           onDragStart={onDragStart}
-          onCopy={onCopy}
           href={currentWorkspace.resolveFileUrl(fullPath)}
+          onCopy={onCopy}
           className={twMerge(
             className,
+
             isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
             "group cursor-pointer h-full"
           )}

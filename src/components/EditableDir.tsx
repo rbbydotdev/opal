@@ -48,7 +48,6 @@ export const EditableDir = ({
   } = useEditable({
     currentWorkspace,
     onClick,
-    workspaceRoute,
     treeNode: treeDir,
     expand,
   });
@@ -72,7 +71,7 @@ export const EditableDir = ({
       className={twMerge(
         isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
         className,
-        "w-full flex cursor-pointer select-none group/dir"
+        "w-full flex cursor-pointer __select-none group/dir"
       )}
       onKeyDown={handleKeyDown}
       style={{ paddingLeft: depth + "rem" }}
