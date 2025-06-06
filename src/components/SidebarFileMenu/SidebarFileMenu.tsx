@@ -367,18 +367,6 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
     </SidebarGroup>
   );
 }
-// const DownloadToast = {
-//   title: "Downloading Workspace...",
-//   duration: 6000,
-//   description: (
-//     <div className="flex items-center">
-//       <div className="animate-spin w-4 h-4 mr-4">
-//         <Loader size={12} className="w-4 h-4" />
-//       </div>
-//       {"Please wait while we prepare your workspace for download."}
-//     </div>
-//   ),
-// };
 function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleExpander("publish");
   return (
