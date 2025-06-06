@@ -41,7 +41,7 @@ export default function Page() {
           pointerEvents: "none",
         }}
       />
-      <FirstFileRedirectWithCurrentWorkspace />
+      <FirstFileRedirect />
       <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center bg-white relative z-10">
         <Opal size={78} />
         <div className="font-thin text-2xl font-mono text-center">Opal</div>
@@ -51,15 +51,10 @@ export default function Page() {
 }
 
 function FirstFileRedirect() {
-  // function FirstFileRedirect({ currentWorkspace }: { currentWorkspace: Workspace; fileTreeDir: TreeDir }) {
   const router = useRouter();
-
   const { currentWorkspace } = useWorkspaceContext();
   useEffect(() => {
     if (currentWorkspace) void currentWorkspace.tryFirstFileUrl().then((ff) => router.push(ff));
   }, [currentWorkspace, router]);
   return null;
 }
-
-// const FirstFileRedirectWithCurrentWorkspace = withCurrentWorkspace(FirstFileRedirect);
-const FirstFileRedirectWithCurrentWorkspace = FirstFileRedirect;
