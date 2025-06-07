@@ -55,7 +55,7 @@ import { twMerge } from "tailwind-merge";
 export function SidebarFileMenu({ ...props }: WorkspaceContextType & React.ComponentProps<typeof SidebarGroup>) {
   const { fileTreeDir, flatTree, currentWorkspace, workspaceRoute } = useWorkspaceContext();
 
-  const { renameDirOrFile, addDirFile, removeFiles } = useWorkspaceFileMgmt(currentWorkspace);
+  const { renameDirOrFile, addDirFile, removeSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
     currentPath: workspaceRoute.path,
@@ -106,7 +106,7 @@ export function SidebarFileMenu({ ...props }: WorkspaceContextType & React.Compo
         >
           <SidebarGroupContent className="flex h-full items-center">
             <SidebarFileMenuFilesActions
-              removeFiles={removeFiles}
+              removeSelectedFiles={removeSelectedFiles}
               addFile={addFile}
               addDir={addDir}
               setExpandAll={setExpandAll}
@@ -200,19 +200,19 @@ export const SidebarFileMenuFiles = ({
 };
 
 const SidebarFileMenuFilesActions = ({
-  removeFiles,
+  removeSelectedFiles,
   addFile,
   addDir,
   setExpandAll,
 }: {
-  removeFiles: () => void;
+  removeSelectedFiles: () => void;
   addFile: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
 }) => (
   <div className="whitespace-nowrap">
     <Button
-      onClick={removeFiles}
+      onClick={removeSelectedFiles}
       className="p-1 m-0 h-fit"
       variant="ghost"
       aria-label="Delete Files"

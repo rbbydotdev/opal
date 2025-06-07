@@ -92,8 +92,8 @@ export class FileTree {
       .map((node) => node.path);
   };
 
-  static FromJSON(json: TreeNodeDirJType, fs: CommonFileSystem, guid: string) {
-    const tree = new FileTree(fs, guid);
+  static FromJSON(json: TreeNodeDirJType, fs: CommonFileSystem, guid: string, mutex: Mutex) {
+    const tree = new FileTree(fs, guid, mutex);
     tree.root = TreeDirRoot.FromJSON(json);
     return tree;
   }
@@ -106,20 +106,20 @@ export class FileTree {
     await exhaustAsyncGenerator(this.indexIter(tree));
     return this.root;
   }
-  async *indexIter(tree = new TreeDirRoot()) {
+  async *indexIter(tree = new TreeDirRoot()): AsyncGenerator<TreeNode, unknown, unknown> {
     if (this.indexMutex.isLocked()) {
       await this.indexMutex.waitForUnlock();
-      return this.root;
+      return this.root.iterator();
     }
     try {
       await Promise.all([this.fsMutex.acquire(), this.indexMutex.acquire()]);
       console.debug("Indexing file tree");
-
       for await (const node of this.recurseTree(tree)) {
         yield node;
       }
       this.initialIndex = true;
-      return (this.root = tree);
+      this.root = tree;
+      return;
     } catch (e) {
       console.error("Error during file tree indexing:", e);
       throw e;
@@ -152,8 +152,8 @@ export class FileTree {
           }
         } catch (e) {
           if (isErrorWithCode(e, "ENOENT")) {
-            console.error(`stat error for file ${fullPath}`);
-            throw new NotFoundError(`File not found: ${fullPath}`, fullPath);
+            console.error(`stat error for file ${fullPath} in ${dir}`);
+            throw new NotFoundError(`File not found: ${fullPath} in ${dir}`, fullPath);
           }
           throw e;
         }

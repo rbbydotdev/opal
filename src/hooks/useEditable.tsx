@@ -43,7 +43,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      console.debug("mouse down");
       if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();

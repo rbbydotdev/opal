@@ -349,14 +349,13 @@ export abstract class Disk extends DiskDAO {
 
   //TODO: should probabably parse document then search find image nodes
   //Also this function is a little beefy, service object?
+  //TODO use search ?
   async findReplaceImgBatch(findReplace: [string, string][]) {
-    console.log(findReplace);
     const filePaths = [];
-    for await (const node of this.iteratorMutex((node) => node.isMarkdownFile())) {
+    for await (const node of await this.iteratorMutex((node) => node.isMarkdownFile())) {
       let content = String(await this.readFile(node.path));
       let changed = false;
       for (const [find, replace] of findReplace) {
-        // Inline escaping of regex special characters in 'find'
         const escapedFind = find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const regex = new RegExp(`([(<])${escapedFind}`, "g");
         if (regex.test(content)) {
@@ -513,7 +512,22 @@ export abstract class Disk extends DiskDAO {
 
     return fullPath;
   }
-  async removeFile(filePath: AbsPath) {
+  async removeMultipleFiles(filePaths: AbsPath[]) {
+    await this.ready;
+    for (const filePath of filePaths) {
+      await this.quietRemove(filePath);
+    }
+    await this.fileTreeIndex();
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "delete",
+      details: { filePaths },
+    });
+    await this.remote.emit(DiskEvents.INDEX, {
+      type: "delete",
+      details: { filePaths },
+    });
+  }
+  private async quietRemove(filePath: AbsPath) {
     await this.ready;
     try {
       await this.fs.unlink(encodePath(filePath));
@@ -524,6 +538,9 @@ export abstract class Disk extends DiskDAO {
         throw err;
       }
     }
+  }
+  async removeFile(filePath: AbsPath) {
+    await this.quietRemove(filePath);
     await this.fileTreeIndex();
     await this.local.emit(DiskEvents.INDEX, {
       type: "delete",
@@ -533,9 +550,6 @@ export abstract class Disk extends DiskDAO {
       type: "delete",
       details: { filePaths: [filePath] },
     });
-
-    await this.local.emit(DiskEvents.DELETE, { filePaths: [filePath] });
-    await this.remote.emit(DiskEvents.DELETE, { filePaths: [filePath] });
   }
   nodeFromPath(path: AbsPath) {
     return this.fileTree.nodeFromPath(path);
@@ -677,7 +691,7 @@ export class IndexedDbDisk extends Disk {
     //watchPromiseMembers is an enhancement which emits start and end for request signals
     //here i am only using it on FileTree operations NOT file operations
     const ft = indexCache
-      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid)
+      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex)
       : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
     console.log("NEW INDEXEDDB", indexCache, JSON.stringify(ft.root.children));
     super(guid, mutexFs, ft, IndexedDbDisk.type);
@@ -693,7 +707,7 @@ export class MemDisk extends Disk {
     // const ft = new FileTree(fs.promises, guid);
 
     const ft = indexCache
-      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid)
+      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex)
       : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
     super(guid, fs.promises, ft, MemDisk.type);
   }

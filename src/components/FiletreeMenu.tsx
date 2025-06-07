@@ -2,12 +2,13 @@ import { Workspace } from "@/Db/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
+import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
-import { BadRequestError, isError } from "@/lib/errors";
+import { BadRequestError, errF, isError } from "@/lib/errors";
 import {
   AbsPath,
   absPath,
@@ -42,6 +43,7 @@ export function useCopyKeydownImages(currentWorkspace: Workspace) {
       if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         e.stopPropagation();
+
         const allFileNodes = Array.from(new Set([...selectedRange, fullPath, focused ? focused : null]))
           .filter(Boolean)
           .filter(isImage)
@@ -72,26 +74,16 @@ export function useFileTreeDragDrop({
   const { selectedRange, focused, setDragOver } = useFileTreeMenuContext();
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
     setDragOver(null);
-    const allFileNodes = Array.from(new Set([...selectedRange, targetNode?.path, focused ? focused : null]))
-      .filter(Boolean)
-      .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
-      .filter(Boolean);
-
     try {
-      const dataTransfer = event.dataTransfer;
-      const data = JSON.stringify({
-        nodeData: allFileNodes,
-      } satisfies NodeDataType);
-      dataTransfer.clearData();
-      dataTransfer.effectAllowed = "all";
-      dataTransfer.setData(INTERNAL_FILE_TYPE, data);
-      dataTransfer.setData(
-        "text/html",
-        allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" ")
-      );
+      prepareNodeDataTransfer({
+        dataTransfer: event.dataTransfer,
+        selectedRange,
+        focused,
+        currentWorkspace,
+        targetNode,
+      });
     } catch (e) {
-      console.error("Error preparing node data for drag and drop:", e);
-      return;
+      console.error(errF`Error preparing node data for drag and drop: ${e}`);
     }
   };
 
