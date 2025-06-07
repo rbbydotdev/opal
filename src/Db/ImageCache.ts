@@ -1,4 +1,3 @@
-"use client";
 export class ImageCache {
   name: string;
   guid: string;

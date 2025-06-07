@@ -1,4 +1,3 @@
-"use client";
 import { CreateDetails, DeleteDetails, Disk, DiskDAO, IndexTrigger, RenameDetails } from "@/Db/Disk";
 import { ImageCache } from "@/Db/ImageCache";
 import { ClientDb } from "@/Db/instance";

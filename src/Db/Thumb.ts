@@ -1,4 +1,3 @@
-"use client";
 import { Disk } from "@/Db/Disk";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { NotFoundError } from "@/lib/errors";

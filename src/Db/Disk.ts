@@ -1,4 +1,3 @@
-"use client";
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
@@ -356,10 +355,23 @@ export abstract class Disk extends DiskDAO {
       let content = String(await this.readFile(node.path));
       let changed = false;
       for (const [find, replace] of findReplace) {
+        // Match either the find string or window.location.origin + find, preceded by (< or [
+        const encodedFind = encodePath(find);
+        const originFind = window.location.origin + find;
+        const encodedOriginFind = window.location.origin + encodedFind;
+
+        const escapedOriginFind = originFind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const encodedEscapedOriginFind = encodedOriginFind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
         const escapedFind = find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const regex = new RegExp(`([(<])${escapedFind}`, "g");
+        const encodedEscapedFind = encodedFind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+        const regex = new RegExp(
+          `([(<])(${escapedOriginFind}|${escapedFind}|${encodedEscapedOriginFind}|${encodedEscapedFind})`,
+          "g"
+        );
         if (regex.test(content)) {
-          content = content.replace(regex, (_match, p1) => `${p1}${replace}`);
+          content = content.replace(regex, (_match, p1, _p2) => `${p1}${encodePath(replace)}`);
           changed = true;
         }
       }

@@ -1,5 +1,3 @@
-"use client";
-
 import { Workspace } from "@/Db/Workspace";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
