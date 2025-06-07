@@ -57,7 +57,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
     return workspaceRecords.map((ws) => new WorkspaceDAO(ws));
   }
   static async nameExists(name: string) {
-    const result = await WorkspaceDAO.fetchFromName(name, {
+    const result = await WorkspaceDAO.FetchFromName(name, {
       throwNotFound: false,
     });
     return result !== null;
@@ -145,7 +145,6 @@ export class WorkspaceDAO implements WorkspaceRecord {
 
   async getDisk() {
     const disk = await ClientDb.disks.where("guid").equals(this.disk.guid).first();
-
     if (!disk) throw new NotFoundError("Disk not found");
     return new DiskDAO(disk);
   }
@@ -168,14 +167,14 @@ export class WorkspaceDAO implements WorkspaceRecord {
     if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}, guid:${name}`);
     return (await new WorkspaceDAO(ws).withRelations()).toModel();
   }
-  static async fetchFromGuid(guid: string) {
+  static async FetchFromGuid(guid: string) {
     const ws = await ClientDb.workspaces.where("guid").equals(guid).first();
     if (!ws) throw new NotFoundError(errF`Workspace not found guid:${guid}`);
     return (await new WorkspaceDAO(ws).withRelations()).toModel();
   }
-  static async fetchFromName(name: string): Promise<Workspace>;
-  static async fetchFromName(name: string, options: { throwNotFound: boolean }): Promise<Workspace | null>;
-  static async fetchFromName(
+  static async FetchFromName(name: string): Promise<Workspace>;
+  static async FetchFromName(name: string, options: { throwNotFound: boolean }): Promise<Workspace | null>;
+  static async FetchFromName(
     name: string,
     options: { throwNotFound: boolean } = { throwNotFound: true }
   ): Promise<Workspace | null> {
@@ -187,15 +186,15 @@ export class WorkspaceDAO implements WorkspaceRecord {
     return (await new WorkspaceDAO(ws).withRelations()).toModel();
   }
 
-  static async fetchFromGuidAndInit(guid: string) {
-    return (await WorkspaceDAO.fetchFromGuid(guid)).init();
+  static async FetchFromGuidAndInit(guid: string) {
+    return await WorkspaceDAO.FetchFromGuid(guid);
   }
-  static async fetchFromNameAndInit(name: string) {
-    return (await WorkspaceDAO.fetchFromName(name)).init();
+  static async FetchFromNameAndInit(name: string) {
+    return await WorkspaceDAO.FetchFromName(name);
   }
 
-  static async fetchFromRouteAndInit(route: string) {
-    return (await WorkspaceDAO.fetchFromRoute(route)).init();
+  static async FetchFromRouteAndInit(route: string) {
+    return await WorkspaceDAO.fetchFromRoute(route);
   }
 
   constructor(properties: WorkspaceRecord) {

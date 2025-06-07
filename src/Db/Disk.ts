@@ -87,23 +87,18 @@ export class DiskDAO implements DiskRecord {
   static guid = () => "__disk__" + nanoid();
 
   constructor(disk: Optional<DiskRecord, "indexCache">) {
-    if (!disk.indexCache) console.log("DiskDAO: No indexCache provided, initializing with empty TreeDirRoot");
     this.indexCache = disk.indexCache ?? new TreeDirRoot().toJSON();
-    const result = Object.assign(this, disk);
-    return result;
+    return Object.assign(this, disk);
   }
 
   static FromJSON(json: DiskJType) {
-    const d = new DiskDAO(json);
-    console.log("from json", d.indexCache.children);
-    return d;
+    return new DiskDAO(json);
   }
 
   toJSON({ includeIndexCache = true }: { includeIndexCache?: boolean } = {}) {
     return {
       guid: this.guid,
       type: this.type,
-      //this.index is possibly empty even if filetree is not, its a cache not a representation
       ...(includeIndexCache ? { indexCache: this.indexCache } : {}),
     };
   }
@@ -285,7 +280,7 @@ export abstract class Disk extends DiskDAO {
   }
   async init() {
     await this.ready;
-    const { indexCache } = await this.hydrate(); //I think this is unnecessary now that we are using the DAO
+    const { indexCache } = await this.hydrate();
     await this.initializeIndex(indexCache);
     //TODO: this is a code smell, maybe make 2 workspace classes like a workerclass which does not do this
     //OR workspace has a initForWorker and init method which differentiates
@@ -401,7 +396,6 @@ export abstract class Disk extends DiskDAO {
   }
 
   async *scan() {
-    console.log(Array.from(this.fileTree.all()).map((n) => n.toString()));
     const textNodes = this.fileTree.all().filter((node) => node.getMimeType().startsWith("text"));
     for (const node of textNodes) {
       yield { path: node.path, text: String(await this.readFile(node.path)) };
@@ -585,6 +579,28 @@ export abstract class Disk extends DiskDAO {
     }
     return fullPath;
   }
+  async newFiles(files: [AbsPath, string | Uint8Array][]) {
+    await this.ready;
+    const result: AbsPath[] = [];
+    // eslint-disable-next-line prefer-const
+    for (let [fullPath, content] of files) {
+      while (await this.pathExists(fullPath)) {
+        fullPath = incPath(fullPath);
+      }
+      result.push(fullPath);
+      await this.writeFileRecursive(fullPath, content);
+      await this.fileTreeIndex();
+    }
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: result },
+    });
+    await this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: result },
+    });
+  }
+
   async newFile(fullPath: AbsPath, content: string | Uint8Array) {
     await this.ready;
 
@@ -602,12 +618,10 @@ export abstract class Disk extends DiskDAO {
       details: { filePaths: [fullPath] },
     });
 
-    // await this.local.emit(DiskLocalEvents.DELETE, { filePaths: [filePath] });
-    // await this.remote.emit(DiskLocalEvents.DELETE, { filePaths: [filePath] });
-
     return fullPath;
   }
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
+    await this.ready;
     await this.mkdirRecursive(absPath(dirname(filePath)));
     try {
       return this.fs.writeFile(encodePath(filePath), content, { encoding: "utf8", mode: 0o777 });
@@ -675,8 +689,8 @@ export class OpFsDisk extends Disk {
 
     super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), OpFsDisk.type);
 
-    this.ready = promise;
     this.internalFs = fs;
+    this.ready = promise;
   }
 
   async delete() {
@@ -688,7 +702,8 @@ export class DexieFsDbDisk extends Disk {
   static type: DiskType = "DexieFsDbDisk";
   constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
     const fs = new DexieFsDb(guid);
-    const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid) : new FileTree(fs, guid);
+    const mt = new Mutex();
+    const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
     super(guid, fs, ft, DexieFsDbDisk.type);
   }
 }
@@ -698,14 +713,10 @@ export class IndexedDbDisk extends Disk {
   constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
     const mutex = new Mutex();
     const fs = new LightningFs();
-    // const mutexFs = ExclusifyInstance(fs.promises, mutex); //BUGGY! try again soon
     const mutexFs = new MutexFs(fs.promises, mutex);
-    //watchPromiseMembers is an enhancement which emits start and end for request signals
-    //here i am only using it on FileTree operations NOT file operations
     const ft = indexCache
       ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex)
       : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
-    console.log("NEW INDEXEDDB", indexCache, JSON.stringify(ft.root.children));
     super(guid, mutexFs, ft, IndexedDbDisk.type);
     this.ready = fs.init(guid) as unknown as Promise<void>;
   }
@@ -714,13 +725,11 @@ export class IndexedDbDisk extends Disk {
 export class MemDisk extends Disk {
   static type: DiskType = "MemDisk";
   constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
-    const mutex = new Mutex();
+    const mt = new Mutex();
     const fs = memfs().fs;
-    // const ft = new FileTree(fs.promises, guid);
-
     const ft = indexCache
-      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex)
-      : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
+      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mt)
+      : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mt);
     super(guid, fs.promises, ft, MemDisk.type);
   }
 }
@@ -729,7 +738,8 @@ export class NullDisk extends Disk {
   static type: DiskType = "NullDisk";
   constructor(public readonly guid = "null", _indexCache?: TreeDirRootJType) {
     const fs = memfs().fs;
-    const ft = new FileTree(fs.promises, guid);
+    const mt = new Mutex();
+    const ft = new FileTree(fs.promises, guid, mt);
     super("null", fs.promises, ft, NullDisk.type);
   }
 }
