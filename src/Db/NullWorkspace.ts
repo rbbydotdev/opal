@@ -1,4 +1,3 @@
-"use client";
 import { NullDisk } from "@/Db/Disk";
 import { NullRemoteAuth } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";

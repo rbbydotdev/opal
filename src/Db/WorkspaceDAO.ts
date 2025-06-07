@@ -1,4 +1,3 @@
-"use client";
 import { DiskDAO, DiskJType, IndexedDbDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";

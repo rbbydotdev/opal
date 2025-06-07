@@ -1,4 +1,3 @@
-"use client";
 import { REQ_NAME, REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
 import { useEffect, useRef, useState } from "react";
 

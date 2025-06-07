@@ -1,4 +1,3 @@
-"use client";
 import { DiskJType } from "@/Db/Disk";
 import { RemoteAuthJType } from "@/Db/RemoteAuth";
 
