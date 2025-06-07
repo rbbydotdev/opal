@@ -115,6 +115,9 @@ export class DiskDAO implements DiskRecord {
     return Object.assign(this, await DiskDAO.FromGuid(this.guid)).toModel();
   }
   update(properties: Partial<DiskRecord>) {
+    this.indexCache = properties.indexCache ?? this.indexCache;
+    //this.guid cannot update
+    //this.type cannot update
     return ClientDb.disks.update(this.guid, properties);
   }
 
@@ -246,6 +249,13 @@ export abstract class Disk extends DiskDAO {
     return;
   }
 
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      fileTree: this.fileTree.root.toJSON(),
+    };
+  }
+
   fileTreeIndex = async ({
     tree,
     writeIndexCache = true,
@@ -254,8 +264,10 @@ export abstract class Disk extends DiskDAO {
     writeIndexCache?: boolean;
   } = {}) => {
     const newIndex = await this.fileTree.index(tree);
+    const indexCache = (this.indexCache = newIndex.toJSON());
     if (writeIndexCache) {
-      /*await*/ void this.update({ indexCache: newIndex.toJSON() });
+      console.debug(`Writing index cache with ${Object.keys(newIndex.children).length} children`);
+      /*await*/ void this.update({ indexCache });
     }
     return newIndex;
   };

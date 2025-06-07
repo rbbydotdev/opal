@@ -109,9 +109,7 @@ export class SearchResult {
 }
 
 export class SearchScannable<T extends { text: string }> {
-  constructor(private scannable: Scannable<T>) {
-    console.log(JSON.stringify(scannable.fileTree.root));
-  }
+  constructor(private scannable: Scannable<T>) {}
 
   private computeLineBreaks(text: string): number[] {
     const breaks = [-1];
@@ -140,7 +138,6 @@ export class SearchScannable<T extends { text: string }> {
   }
 
   async *search(needle: string): AsyncGenerator<{ results: SearchResultData[]; meta: Omit<T, "text"> }> {
-    // console.log(`Searching for "${needle}" in scannable items...`);
     for await (const item of await this.scannable.scan()) {
       const { text: haystack, ...rest } = item;
       const lineBreaks = this.computeLineBreaks(haystack);
