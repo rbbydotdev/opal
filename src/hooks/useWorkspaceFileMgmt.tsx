@@ -1,5 +1,5 @@
 "use client";
-import { useFileTreeMenuContext } from "@/components/FileTreeContext";
+import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
@@ -17,16 +17,21 @@ import {
 import React from "react";
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
-  const { setEditing, selectedRange, resetEditing, setEditType, focused, setFocused, setVirtual, virtual } =
-    useFileTreeMenuContext();
+  const {
+    setEditing,
+    selectedRange,
+    resetSelects,
+    resetEditing,
+    setEditType,
+    focused,
+    setFocused,
+    setVirtual,
+    virtual,
+  } = useFileTreeMenuContext();
 
   const newFile = React.useCallback(
-    async (path: AbsPath, content = "") => {
-      const newPath = await currentWorkspace.newFile(absPath(dirname(path)), relPath(basename(path)), content);
-      // if (!workspaceRoute.path) {
-      //   router.push(currentWorkspace.resolveFileUrl(newPath));
-      // }
-      return newPath;
+    (path: AbsPath, content = "") => {
+      return currentWorkspace.newFile(absPath(dirname(path)), relPath(basename(path)), content);
     },
     [currentWorkspace]
   );
@@ -38,8 +43,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [currentWorkspace]
   );
 
-  const removeFiles = React.useCallback(async () => {
-    const range = [...selectedRange];
+  const removeSelectedFiles = React.useCallback(async () => {
+    const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
     if (!range.length && focused) {
       range.push(focused);
     }
@@ -50,13 +55,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       await Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
     } catch (e) {
       if (e instanceof NotFoundError) {
-        console.error(e); //???
+        console.error(e);
       } else {
         throw e;
       }
     }
-    setFocused(null);
-  }, [selectedRange, focused, currentWorkspace, setFocused]);
+    resetSelects();
+  }, [currentWorkspace, focused, resetSelects, selectedRange]);
 
   const removeFocusedFile = React.useCallback(async () => {
     if (!focused || !currentWorkspace.disk.pathExists(focused)) return;
@@ -68,14 +73,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       await currentWorkspace.removeFile(focusedNode.path);
     } catch (e) {
       if (e instanceof NotFoundError) {
-        //do nothing its okay
+        console.error(e);
       } else {
         throw e;
       }
     }
-    // if (workspaceRoute.path && workspaceRoute.path === focusedNode.path) {
-    //   router.push(await currentWorkspace.tryFirstFileUrl());
-    // }
   }, [focused, currentWorkspace]);
 
   const cancelNew = React.useCallback(() => {
@@ -103,15 +105,10 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         ? await currentWorkspace.renameDir(oldNode, newFullPath)
         : await currentWorkspace.renameFile(oldNode, newFullPath);
 
-      // if (
-      //   workspaceRoute.path &&
-      //   (isAncestor(workspaceRoute.path, oldNode.path) || workspaceRoute.path === oldNode.path)
-      // ) {
-      //   router.push(currentWorkspace.replaceUrlPath(pathname, oldNode.path, path));
-      // }
+      resetSelects();
       return path;
     },
-    [currentWorkspace]
+    [currentWorkspace, resetSelects]
   );
 
   const commitChange = React.useCallback(
@@ -128,18 +125,15 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
           return currentWorkspace.newDir(absPath(dirname(wantPath)), relPath(basename(wantPath)));
         }
       }
-      // return origNode.type === "dir" ? await renameDir(origNode, wantPath) : await renameFile(origNode, wantPath);
       return renameDirOrFile(origNode, wantPath);
     },
     [currentWorkspace, renameDirOrFile]
   );
   return {
-    // renameFile,
-    // renameDir,
     renameDirOrFile,
     newFile,
     removeFocusedFile,
-    removeFiles,
+    removeFiles: removeSelectedFiles,
     newDir,
     commitChange,
     addDirFile,

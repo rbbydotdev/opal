@@ -12,7 +12,7 @@ transferHandlers.set("Workspace", {
     ];
   },
   deserialize: (serialized: { value: WorkspaceJType }) => {
-    console.log("!!!!", serialized.value.disk.indexCache?.children);
+    console.log(">>>>>>>>>>incoming workspace " + serialized.value.name, serialized.value.disk.indexCache?.children);
     const ws = Workspace.FromJSON(serialized.value);
     console.log("??????", ws.disk.fileTree.root.children);
     return ws;

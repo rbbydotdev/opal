@@ -12,11 +12,11 @@ export const FileTreeMenuContext = React.createContext<{
   focused: AbsPath | null;
   setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
   resetEditing: () => void;
-  setSelectedRange: (r: string[]) => void;
+  setSelectedRange: (path: AbsPath[]) => void;
   resetSelects: () => void;
   setDragOver: (path: AbsPath | null) => void;
   dragOver: AbsPath | null;
-  selectedRange: string[];
+  selectedRange: AbsPath[];
   virtual: AbsPath | null;
   setVirtual: (path: AbsPath | null) => void;
 } | null>(null);
@@ -36,30 +36,25 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
   const [focused, setFocused] = React.useState<AbsPath | null>(filePath ?? null);
   const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
   const [dragOver, setDragOver] = React.useState<AbsPath | null>(null);
-  const [selectedRange, setSelectedRange] = React.useState<string[]>([]);
+  const [selectedRange, setSelectedRange] = React.useState<AbsPath[]>([]);
 
   const resetEditing = useCallback(() => {
     setEditing(null);
     setEditType("rename");
-    // setFocused(null);
     setVirtual(null);
   }, []);
 
   const resetSelects = useCallback(() => {
-    // setFocused(null);
-    console.log("resetSelects called");
     setSelectedRange([]);
+    setFocused(null);
   }, []);
   React.useEffect(() => {
     const escapeKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setFocused(null);
-        setSelectedRange([]);
-      }
+      if (e.key === "Escape") resetSelects();
     };
     window.addEventListener("keydown", escapeKey);
     return () => window.removeEventListener("keydown", escapeKey);
-  }, [setFocused]);
+  }, [resetSelects]);
   return (
     <FileTreeMenuContext.Provider
       value={{

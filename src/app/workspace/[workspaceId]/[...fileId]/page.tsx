@@ -6,7 +6,5 @@ import useFavicon from "@/hooks/useFavicon";
 export default function Page() {
   const { id } = useWorkspaceRoute();
   useFavicon("/favicon.svg" + "?" + id, "image/svg+xml");
-
-  //     <FileError error={error} />
   return <WorkspaceView />;
 }

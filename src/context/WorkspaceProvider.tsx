@@ -16,7 +16,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaces = useLiveWorkspaces();
   const workspaceRoute = useWorkspaceRoute();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
-  // do i need this still? if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return new NullWorkspace();
   const { fileTreeDir, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
   const pathname = usePathname();
   const router = useRouter();
@@ -34,7 +33,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         return ws;
       })
       .catch((e) => {
-        router.replace("/new"); //attempt recovery
+        router.replace("/new");
         throw e;
       });
     return () => {
@@ -49,7 +48,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
         (fileType === "dir" && isAncestor(workspaceRoute.path, oldPath))
       ) {
-        //redirect to the new path
         console.debug("Redirecting to new file:", newPath);
         router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
       }

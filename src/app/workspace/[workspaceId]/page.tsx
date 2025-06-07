@@ -21,7 +21,6 @@ export default function Page() {
         backgroundImage: "url('/opal.svg')",
         backgroundRepeat: "repeat",
         backgroundSize: "600px 600px",
-        // Add a white overlay with opacity to fade the SVG background
         position: "relative",
       }}
       className="w-full h-full flex items-center justify-center"

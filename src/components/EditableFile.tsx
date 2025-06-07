@@ -20,8 +20,7 @@ export const EditableFile = ({
   workspaceRoute,
   expand,
   onDragStart,
-}: // onCopy,
-{
+}: {
   currentWorkspace: Workspace;
   workspaceRoute: WorkspaceRouteType;
   className?: string;
@@ -30,7 +29,6 @@ export const EditableFile = ({
   expand: (node: TreeNode, value: boolean) => void;
   depth: number;
   onDragStart: (e: React.DragEvent) => void;
-  // onCopy: (e: React.ClipboardEvent) => void;
 }) => {
   const {
     isEditing,

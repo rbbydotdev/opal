@@ -77,14 +77,9 @@ export function SidebarFileMenu({ ...props }: WorkspaceContextType & React.Compo
     addDirFileAndExpand("dir");
   }, [addDirFileAndExpand]);
 
-  // const route = usePathname();
-
-  // const isSettingsView = route.endsWith("/settings"); //TODO may need to make a resuable hook to consolidate this logic
   const { handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
   });
-
-  //use
 
   return (
     <SidebarGroup

@@ -10,7 +10,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-// Define the form schema with zod
 const workspaceFormSchema = z.object({
   workspaceName: z
     .string()
@@ -21,7 +20,6 @@ const workspaceFormSchema = z.object({
 
 type WorkspaceFormValues = z.infer<typeof workspaceFormSchema>;
 
-// // Default values for the form
 const defaultValues: Partial<WorkspaceFormValues> = {
   workspaceName: "",
 };
@@ -41,7 +39,6 @@ export default function Page() {
     }
   }, [currentWorkspace, form]);
 
-  // Form submission handler
   function onSubmit(data: WorkspaceFormValues) {
     toast({
       title: "Workspace updated",
@@ -50,9 +47,7 @@ export default function Page() {
     console.log(data);
   }
 
-  // Delete workspace handler
   function handleDeleteWorkspace() {
-    // Show confirmation dialog or directly handle deletion
     toast({
       variant: "destructive",
       title: "Workspace deletion requested",
@@ -82,21 +77,6 @@ export default function Page() {
                   </FormItem>
                 )}
               />
-
-              {/* <FormField
-                control={form.control}
-                name="workspaceDescription"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-bold">Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Describe your workspace" className="resize-none" {...field} />
-                    </FormControl>
-                    <FormDescription>Brief description of your workspace&apos;s purpose.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
 
               <Button type="submit">Save Changes</Button>
             </form>

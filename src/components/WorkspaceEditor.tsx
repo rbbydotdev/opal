@@ -26,7 +26,6 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
   }
   return <WorkspaceEditor {...props} />;
 }
-//TODO MOVE THIS OUT
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
   return (
     <div className="p-4 m-auto flex justify-center items-center h-full w-full flex-col">

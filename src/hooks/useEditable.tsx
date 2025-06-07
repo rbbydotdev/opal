@@ -1,6 +1,6 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
-import { useFileTreeMenuContext } from "@/components/FileTreeContext";
+import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -55,12 +55,10 @@ export function useEditable<T extends TreeFile | TreeNode>({
         const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
         if (focusedNode) {
           const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode) ?? [];
-
           setSelectedRange(range);
         }
-
-        e.preventDefault(); ///////////
-        e.stopPropagation(); ///// the goal here is to prevent a focus on a select range
+        e.preventDefault();
+        e.stopPropagation();
       }
     },
     [currentWorkspace.disk.fileTree, focused, selectedRange, setFocused, setSelectedRange, treeNode]
@@ -84,11 +82,6 @@ export function useEditable<T extends TreeFile | TreeNode>({
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent) => {
       e.stopPropagation();
-      //cmd+c or ctrl+c
-      // if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
-      //   e.preventDefault();
-      //   e.stopPropagation();
-      // }
       if (e.key === "Escape") {
         if (isEditing) {
           if (isVirtual) cancelNew();

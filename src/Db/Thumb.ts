@@ -28,10 +28,6 @@ export class Thumb {
     await this.thumbRepo.writeFileRecursive(this.path, this.content!);
     return this;
   }
-
-  // toFilename(){
-  //   return absPath(`${this.path.dirname().join(this.path.prefix())}.${this.size}${this.path.extname()}`);
-  // }
   async readOrMake() {
     if (await this.exists()) {
       return this.read();

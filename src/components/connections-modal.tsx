@@ -50,13 +50,7 @@ const connectionTypes: ConnectionType[] = [
   },
 ];
 
-// interface ConnectionsModalProps {
-//   open: boolean;
-//   onOpenChange: (open: boolean) => void;
-// }
-
 export function ConnectionsModal({ children }: { children: React.ReactNode }) {
-  // export function ConnectionsModal({ open, onOpenChange }: ConnectionsModalProps) {
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>("");
   const [apiName, setApiName] = useState("");
   const [apiKey, setApiKey] = useState("");
@@ -67,13 +61,11 @@ export function ConnectionsModal({ children }: { children: React.ReactNode }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle API key submission
     console.log("Submitting API connection:", {
       connectionType: selectedConnection,
       name: apiName,
       key: apiKey,
     });
-    // Reset form and close modal
     resetForm();
     setOpen(false);
   };

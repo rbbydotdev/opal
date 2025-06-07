@@ -64,7 +64,6 @@ export class Workspace extends WorkspaceDAO {
     this.name = Workspace.Slugify(name);
     this.guid = guid;
     this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
-    //TODO HERE SOMEHOW HAVE TO DO THINK HOW TO SATURATE OBJECT
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
     this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
     this.imageCache = Workspace.newCache(this.name);
@@ -85,7 +84,7 @@ export class Workspace extends WorkspaceDAO {
       href: this.href,
       createdAt: this.createdAt,
       remoteAuth: this.remoteAuth.toJSON(),
-      disk: this.disk.toJSON({ includeIndexCache: true }),
+      disk: this.disk.toJSON(),
       thumbs: this.thumbs.toJSON(),
     };
   }
@@ -119,7 +118,6 @@ export class Workspace extends WorkspaceDAO {
   }
   static async createWithSeedFiles(name: string) {
     const ws = await WorkspaceDAO.create(name);
-    //TODO code smell
     await ws.disk.ready;
     await Promise.all(
       Object.entries(Workspace.seedFiles).map(([filePath, content]) =>
@@ -162,7 +160,7 @@ export class Workspace extends WorkspaceDAO {
     return this.disk.removeFile(filePath);
   };
 
-  private async adjustPath(oldNode: TreeNode, newPath: AbsPath) {
+  private async adjustThumbAndCachePath(oldNode: TreeNode, newPath: AbsPath) {
     if (isImage(oldNode.path)) {
       await this.imageCache.getCache().then(async (c) => {
         const res = await c.match(encodePath(oldNode.path));
@@ -174,19 +172,17 @@ export class Workspace extends WorkspaceDAO {
       await this.NewThumb(oldNode.path)
         .move(oldNode.path, newPath)
         .catch(async (e) => {
-          console.error("2 Error moving thumb", e);
+          console.error("Error moving thumb", e);
         });
     }
   }
-  // renameMultiple = async (oldNodes: TreeNode[], newFullPaths: AbsPath[]) => {
-  // }
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
 
     await this.disk.findReplaceImgBatch([[oldNode.path, absPath(oldNode.path.replace(oldNode.path, newNode.path))]]); // Update all references in the disk
-    await this.adjustPath(oldNode, absPath(oldNode.path.replace(oldNode.path, newNode.path)));
+    await this.adjustThumbAndCachePath(oldNode, absPath(oldNode.path.replace(oldNode.path, newNode.path)));
     return newNode;
   };
   //this is dumb because you do not consider the children!
@@ -201,7 +197,7 @@ export class Workspace extends WorkspaceDAO {
 
     await newNode.asyncWalk(async (child) => {
       findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
-      await this.adjustPath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
+      await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
     });
     await this.disk.findReplaceImgBatch(findStrReplaceStr);
 
@@ -300,9 +296,6 @@ export class Workspace extends WorkspaceDAO {
     });
     return result;
   }
-  // get href() {
-  //   return `${Workspace.rootRoute}/${this.name}`;
-  // }
 
   NewScannable() {
     return new SearchScannable(this.disk);

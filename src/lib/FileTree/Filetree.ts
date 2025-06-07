@@ -231,20 +231,6 @@ function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
   return newNode;
 }
 
-// function _sortNodesByName(nodes: Record<string, TreeNode>) {
-//   return Object.entries(nodes).sort(([keyA, nodeA], [keyB, nodeB]) => {
-//     if (nodeA.type === "dir" && nodeB.type === "file") return -1;
-//     if (nodeA.type === "file" && nodeB.type === "dir") return 1;
-//     if (nodeA.type === "file" && nodeB.type === "file") {
-//       const extA = extname(nodeA.path) || "";
-//       const extB = extname(nodeB.path) || "";
-//       const extComparison = extA.localeCompare(extB);
-//       if (extComparison !== 0) return extComparison;
-//     }
-//     return keyA.localeCompare(keyB);
-//   });
-// }
-
 function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPath; parent: TreeDir }) {
   const path = joinPath(parent.path, name);
   const depth = parent.depth + 1;
