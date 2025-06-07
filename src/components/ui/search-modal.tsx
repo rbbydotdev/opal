@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { SearchWorkspace } from "@/workers/SearchWorker/SearchWorkspace";
+import { useSearchWorkspace } from "@/workers/SearchWorker/useSearchWorkspace";
 import { ChevronDown, ChevronRight, FileText, Globe, Search, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 // Dummy search results data
 const searchResults = [
@@ -76,20 +76,11 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
     setDismissedFiles((prev) => new Set([...prev, file]));
   };
 
+  const { currentWorkspace } = useWorkspaceContext();
+  const { search } = useSearchWorkspace(currentWorkspace);
+
   const filteredResults = searchResults.filter((result) => !dismissedFiles.has(result.file));
   const [open, setOpen] = useState(false);
-
-  const { currentWorkspace } = useWorkspaceContext();
-  const search = useCallback(
-    async (term: string) => {
-      const scanner = SearchWorkspace(currentWorkspace, term);
-      console.log(currentWorkspace.disk.fileTree.root.children);
-      for await (const result of scanner) {
-        console.log(result);
-      }
-    },
-    [currentWorkspace]
-  );
 
   return (
     <Dialog onOpenChange={(set) => setOpen(set)} open={open}>
@@ -104,17 +95,17 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
 
         <div className="space-y-4 flex flex-col min-h-0">
           {/* Search Input */}
-          <div className="flex justify-center items-center gap-2">
+          <form onSubmit={() => search(searchTerm)} className="flex justify-center items-center gap-2">
             <Input
               placeholder="Search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-search-border border-[hsl(var(--search-border))] text-[hsl(var(--primary-foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:border-ring"
             />
-            <Button variant={"default"} className="text-ring" onClick={() => search(searchTerm)}>
+            <Button type="submit" variant={"default"} className="text-ring">
               Search
             </Button>
-          </div>
+          </form>
           <WorkspaceSelector value={selectedWorkspace} onValueChange={setSelectedWorkspace} />
           <div className="text-sm text-[hsl(var(--muted-foreground))] mb-3">
             {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in{" "}

@@ -1,16 +1,21 @@
 import { Workspace } from "@/Db/Workspace";
 import { SearchApiType } from "@/workers/SearchWorker/search.ww";
-import { wrap } from "comlink";
+import { Remote, wrap } from "comlink";
 import "../transferHandlers";
 
-export async function* SearchWorkspace(workspace: Workspace, searchTerm: string) {
-  const worker = new Worker(new URL("./search.ww.ts", import.meta.url));
-  const searcher = wrap<SearchApiType>(worker);
-  try {
-    for await (const results of await searcher.searchWorkspace(workspace, searchTerm)) {
-      yield results;
+export class SearchWorkspaceWorker {
+  private worker: Worker;
+  private api: Remote<SearchApiType>;
+  constructor() {
+    this.worker = new Worker(new URL("./search.ww.ts", import.meta.url));
+    this.api = wrap<SearchApiType>(this.worker);
+  }
+  async *searchWorkspace(workspace: Workspace, searchTerm: string) {
+    for await (const scan of await this.api.searchWorkspace(workspace, searchTerm)) {
+      if (scan.results.length) yield scan;
     }
-  } finally {
-    worker.terminate();
+  }
+  teardown() {
+    this.worker.terminate();
   }
 }
