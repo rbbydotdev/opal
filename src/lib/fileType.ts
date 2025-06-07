@@ -31,10 +31,10 @@ export type MimeType = (typeof MimeTypes)[keyof typeof MimeTypes];
 export const isImageType = (type: FileType | string): boolean => {
   return type.startsWith("image/");
 };
-export const isMarkdownType = (type: FileType): boolean => {
+export const isMarkdownType = (type: FileType | string): boolean => {
   return type === FileTypes.MARKDOWN;
 };
-export const isBinaryType = (type: FileType): boolean => {
+export const isBinaryType = (type: FileType | string): boolean => {
   return type === FileTypes.BIN;
 };
 export function contentsToMimeType(contents: Uint8Array<ArrayBufferLike>): MimeType {

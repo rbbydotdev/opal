@@ -8,6 +8,7 @@ import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
+import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { BadRequestError, errF, isError } from "@/lib/errors";
 import {
   AbsPath,
@@ -17,7 +18,9 @@ import {
   equals,
   isAncestor,
   isImage,
+  isMarkdown,
   joinPath,
+  prefix,
   reduceLineage,
 } from "@/lib/paths2";
 import clsx from "clsx";
@@ -44,12 +47,25 @@ export function useCopyKeydownImages(currentWorkspace: Workspace) {
         e.preventDefault();
         e.stopPropagation();
 
+        //TODO: probably reconcile this hyper object handling with prepareNodeDataTransfer
         const allFileNodes = Array.from(new Set([...selectedRange, fullPath, focused ? focused : null]))
           .filter(Boolean)
-          .filter(isImage)
           .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
           .filter(Boolean);
-        void copyHtmlToClipboard(allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" "));
+        void copyHtmlToClipboard(
+          allFileNodes
+            .map((node) => node.path)
+            .filter(isMarkdown)
+            //TODO: BROKEN, mdx-editor does not include href
+            .map((path) => `<a href="${encodePath(path || "")}">${capitalizeFirst(prefix(path))}</a>`)
+            .join(" ") +
+            allFileNodes
+              .map((node) => node.path)
+              .filter(isImage)
+              .map((path) => `<img src="${encodePath(path || "")}" />`)
+              .join(" ")
+        );
+
         console.debug("copy keydown");
       } else {
         origFn(e);
@@ -213,7 +229,6 @@ export function FileTreeMenu({
           onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}
           onDragLeave={handleDragLeave}
-          // onCopy={(e) => handleCopy(e, file)}
           onDragEnter={(e) => {
             handleDragEnter(e, file.path);
           }}
