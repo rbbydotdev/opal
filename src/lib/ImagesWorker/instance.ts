@@ -1,5 +1,3 @@
-// import { ClientIndexedDb } from "@/Db";
-
 import { newImagesWorkerInstance, WorkerApi } from "@/components/SWImages";
 import { Remote } from "comlink";
 

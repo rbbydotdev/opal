@@ -2,10 +2,9 @@
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
+import { MutexFs } from "@/Db/MutexFs";
 import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
 import { Channel } from "@/lib/channel";
-// import { coerceUint8Array } from "@/lib/coerceUint8Array";
-import { MutexFs } from "@/Db/MutexFs";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
@@ -18,13 +17,10 @@ import Emittery from "emittery";
 import { memfs } from "memfs";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
-import { unknown } from "zod";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeNode } from "../lib/FileTree/TreeNode";
 import { RequestSignalsInstance } from "../lib/RequestSignals";
 
-// const { configureSingle, fs: zenFs } = ZenFs;
-
-//TODO Lazy load modules based on disk
+// TODO: Lazy load modules based on disk
 
 // Utility type to make certain properties optional
 export type DiskJType = { guid: string; type: DiskType };
@@ -104,10 +100,11 @@ export class DiskDAO implements DiskRecord {
     return d;
   }
 
-  toJSON({ includeIndexCache = false }: { includeIndexCache?: boolean } = {}) {
+  toJSON({ includeIndexCache = true }: { includeIndexCache?: boolean } = {}) {
     return {
       guid: this.guid,
       type: this.type,
+      //this.index is possibly empty even if filetree is not, its a cache not a representation
       ...(includeIndexCache ? { indexCache: this.indexCache } : {}),
     };
   }
@@ -353,6 +350,7 @@ export abstract class Disk extends DiskDAO {
   //TODO: should probabably parse document then search find image nodes
   //Also this function is a little beefy, service object?
   async findReplaceImgBatch(findReplace: [string, string][]) {
+    console.log(findReplace);
     const filePaths = [];
     for await (const node of this.iteratorMutex((node) => node.isMarkdownFile())) {
       let content = String(await this.readFile(node.path));
@@ -681,6 +679,7 @@ export class IndexedDbDisk extends Disk {
     const ft = indexCache
       ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid)
       : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
+    console.log("NEW INDEXEDDB", indexCache, JSON.stringify(ft.root.children));
     super(guid, mutexFs, ft, IndexedDbDisk.type);
     this.ready = fs.init(guid) as unknown as Promise<void>;
   }

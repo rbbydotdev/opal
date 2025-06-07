@@ -1,7 +1,7 @@
 import { Workspace } from "@/Db/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
-import { useFileTreeMenuContext } from "@/components/FileTreeContext";
+import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -22,7 +22,7 @@ import {
 import clsx from "clsx";
 import React from "react";
 
-const INTERNAL_FILE_TYPE = "application/x-opal";
+export const INTERNAL_FILE_TYPE = "application/x-opal";
 
 export type NodeDataJType = { nodeData: TreeNodeJType[] };
 export type NodeDataType = { nodeData: TreeNode[] };
@@ -89,29 +89,11 @@ export function useFileTreeDragDrop({
         "text/html",
         allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" ")
       );
-      // // dataTransfer.setData("text/html", `<a href="${encodePath(targetNode.path)}">${targetNode.path}</a>`);
-      // allFileNodes.forEach((node, i) => {
-      //   dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
-      // });
-      // dataTransfer.setData("text/plain", allFileNodes.map((node) => encodePath(node.path || "")).join(" "));
     } catch (e) {
       console.error("Error preparing node data for drag and drop:", e);
       return;
     }
   };
-
-  // const handleCopy = (event: React.ClipboardEvent, targetNode?: TreeNode) => {
-  //   console.debug("copy");
-  //   event.preventDefault();
-  //   event.stopPropagation();
-  //   prepareNodeDataTransfer({
-  //     dataTransfer: event.clipboardData,
-  //     selectedRange,
-  //     focused,
-  //     currentWorkspace,
-  //     targetNode,
-  //   });
-  // };
 
   const handleDragOver = (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
@@ -289,43 +271,3 @@ export function FileTreeMenu({
     </SidebarMenu>
   );
 }
-
-// const prepareNodeDataTransfer = ({
-//   dataTransfer,
-//   selectedRange,
-//   focused,
-//   currentWorkspace,
-//   targetNode,
-// }: {
-//   currentWorkspace: Workspace;
-//   selectedRange: AbsPath[] | string[];
-//   focused?: AbsPath | null;
-//   dataTransfer: DataTransfer;
-//   targetNode?: TreeNode;
-// }) => {
-//   const allFileNodes = Array.from(new Set([...selectedRange, targetNode?.path, focused ? focused : null]))
-//     .filter(Boolean)
-//     .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
-//     .filter(Boolean);
-
-//   try {
-//     const data = JSON.stringify({
-//       nodeData: allFileNodes,
-//     } satisfies NodeDataType);
-//     dataTransfer.clearData();
-//     dataTransfer.effectAllowed = "all";
-//     dataTransfer.setData(INTERNAL_FILE_TYPE, data);
-//     dataTransfer.setData(
-//       "text/html",
-//       allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" ")
-//     );
-//     // // dataTransfer.setData("text/html", `<a href="${encodePath(targetNode.path)}">${targetNode.path}</a>`);
-//     // allFileNodes.forEach((node, i) => {
-//     //   dataTransfer.setData(`${getPathMimeType(node.path)};index=${i}`, node.path);
-//     // });
-//     // dataTransfer.setData("text/plain", allFileNodes.map((node) => encodePath(node.path || "")).join(" "));
-//   } catch (e) {
-//     console.error("Error preparing node data for drag and drop:", e);
-//     return;
-//   }
-// };

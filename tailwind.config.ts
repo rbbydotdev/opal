@@ -1,7 +1,5 @@
-import containerQueries from "@tailwindcss/container-queries";
 import tailwindProse from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
-import colors from "tailwindcss/colors";
 export default {
   darkMode: ["class"],
   content: [
@@ -96,7 +94,6 @@ export default {
   },
   safelist: [{ pattern: /pl-.+/ }],
   plugins: [
-    containerQueries,
     function ({ addUtilities }) {
       addUtilities({
         ".scrollbar-thin": {
@@ -108,7 +105,3 @@ export default {
     require("tailwindcss-animate"),
   ],
 } satisfies Config;
-
-// DEFAULT: "",
-
-// DEFAULT: colors.purple[700],

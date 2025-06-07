@@ -116,17 +116,3 @@ export const EditableDir = ({
   );
 };
 EditableDir.displayName = "EditableDir";
-
-// <div className={twMerge(className, "w-full")}>
-//   <div className="w-full flex items-center truncate" style={{ paddingLeft: depth + "rem" }}>
-//     <input
-//       ref={inputRef}
-//       className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full "
-//       type="text"
-//       value={fileName.str}
-//       onChange={(e) => setFileName(relPath(e.target.value))}
-//       onKeyDown={handleKeyDown}
-//       onBlur={handleBlur}
-//     />
-//   </div>
-// </div>

@@ -1,5 +1,3 @@
-// import { MimeType, MimeTypes } from "@/lib/fileType";
-// import { getMimeType } from "@/lib/mimeType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, RelPath, absPath, basename, dirname, depth as getDepth, incPath, relPath } from "@/lib/paths2";
 
@@ -7,7 +5,7 @@ export type TreeNodeJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
 };
 
-export type TreeDirRootJType = TreeNodeDirJType; //ReturnType<TreeDirRoot["toJSON"]>;
+export type TreeDirRootJType = TreeNodeDirJType;
 
 export type TreeNodeDirJType = ReturnType<TreeNode["toJSON"]> & {
   children: Record<string, TreeNodeJType | TreeNodeDirJType>;
@@ -122,7 +120,6 @@ export class TreeNode {
     dirname: AbsPath | string;
     basename: RelPath | string;
     parent: TreeDir | null;
-    // parent: TreeDir | null;
     path: AbsPath | string;
     depth?: number;
   }) {
@@ -185,11 +182,9 @@ export class TreeNode {
     return new TreeNode({
       ...json,
       parent,
-      // mimeType: json.mimeType ? getMimeType(absPath(json.path)) : undefined,
     });
   }
   isTreeDir(): this is TreeDir {
-    // return isTreeDir(this);
     return this.type === "dir";
   }
   isTreeFile(): this is TreeFile {
@@ -202,9 +197,6 @@ export class TreeNode {
     basename: string;
     path: string;
     depth: number;
-    // mimeType?: string;
-    // parent: TreeNode["parent"];
-    // eTag?: string;
   } {
     return {
       name: this.name,
@@ -213,18 +205,12 @@ export class TreeNode {
       basename: this.basename,
       path: this.path,
       depth: this.depth,
-      // mimeType: this.mimeType,
-      // parent: this.parent,
-      // eTag: this.eTag,
     };
   }
 }
 
 export class TreeDir extends TreeNode {
   children: Record<string, TreeNode> = {};
-
-  // type = TreeDir.type;
-  // static type = "type" as const;
   type = "dir" as const;
 
   constructor({

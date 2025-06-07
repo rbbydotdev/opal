@@ -8,7 +8,6 @@ export const createThumbnailWW = (
   return new Promise((resolve, reject) => {
     // Create a Blob from the Uint8Array
     const blob = new Blob([imageData], { type: "image/jpeg" }); // Adjust the MIME type as needed
-
     // Use createImageBitmap to load the image
     createImageBitmap(blob)
       .then((imgBitmap) => {

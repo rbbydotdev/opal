@@ -1,21 +1,4 @@
-// import withSerwistInit from "@serwist/next";
-
-// const withSerwist = withSerwistInit({
-//   swSrc: "src/app/sw.ts",
-//   swDest: "public/sw.js",
-//   reloadOnOnline: false,
-//   maximumFileSizeToCacheInBytes: 15000000,
-//   include: [/^(?!.*\/icons\/(android|ios)\/).*/],
-// });
-
 const config = {
-  // webpack(config: { devtool: string }, { dev }: unknown) {
-  //   if (dev) {
-  //     config.devtool = "source-map";
-  //   }
-  //   return config;
-  // },
-  /* config options here */
   eslint: {
     ignoreDuringBuilds: true,
   },

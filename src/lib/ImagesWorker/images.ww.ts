@@ -1,4 +1,3 @@
-// worker.ts
 import { Disk, DiskJType } from "@/Db/Disk";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { errF } from "@/lib/errors";
@@ -18,7 +17,6 @@ const workerApi = {
   }) => {
     // Simulate a thumbnail creation process
     try {
-      // await new Promise((rs) => setTimeout(rs, 5_000));
       const thumbPic = await createThumbnailWW(content, size, size);
       const thumbDisk = Disk.FromJSON(thumbStore).toModel();
       await thumbDisk.ready;
