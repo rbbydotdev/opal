@@ -20,7 +20,7 @@ class OAuthProvider {
       obtainedAt: this.obtainedAt,
     };
   }
-  static fromJSON({
+  static FromJSON({
     accessToken,
     tokenType,
     scope,

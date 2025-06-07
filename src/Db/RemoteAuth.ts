@@ -36,7 +36,7 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
       return this;
     });
   }
-  static fromJSON(json: RemoteAuthJType) {
+  static FromJSON(json: RemoteAuthJType) {
     return new RemoteAuthDAO({
       guid: json.guid,
       type: json.type,

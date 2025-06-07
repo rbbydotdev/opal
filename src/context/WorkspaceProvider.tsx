@@ -6,7 +6,8 @@ import {
   useWorkspaceRoute,
   WorkspaceContext,
 } from "@/context/WorkspaceHooks";
-import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
+import { Workspace } from "@/Db/Workspace";
+import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { isAncestor } from "@/lib/paths2";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -16,7 +17,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaceRoute = useWorkspaceRoute();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
   // do i need this still? if (currentWorkspace?.href && !pathname.startsWith(currentWorkspace?.href)) return new NullWorkspace();
-  const { fileTreeDir, isIndexed, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
+  const { fileTreeDir, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
   const pathname = usePathname();
   const router = useRouter();
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
@@ -68,7 +69,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         workspaceRoute,
         flatTree,
         fileTreeDir,
-        isIndexed,
       }}
     >
       {children}

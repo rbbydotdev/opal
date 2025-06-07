@@ -155,7 +155,7 @@ export function useFileTreeDragDrop({
         const { nodeData } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
 
         if (nodeData && nodeData.length) {
-          const dragNodes = reduceLineage(nodeData.map((node) => TreeNode.fromJSON(node)));
+          const dragNodes = reduceLineage(nodeData.map((node) => TreeNode.FromJSON(node)));
           return Promise.all(
             dragNodes.filter(({ type: draggedType, path: draggedPath }) => {
               const dropPath = joinPath(targetPath, basename(draggedPath));

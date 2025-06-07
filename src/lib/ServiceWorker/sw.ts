@@ -1,6 +1,7 @@
 import Identicon from "@/components/Identicon";
 import { Thumb } from "@/Db/Thumb";
-import { Workspace, WorkspaceDAO } from "@/Db/Workspace";
+import { Workspace } from "@/Db/Workspace";
+import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
