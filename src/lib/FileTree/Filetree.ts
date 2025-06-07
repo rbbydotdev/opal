@@ -39,6 +39,13 @@ export class FileTree {
   }
   indexMutex = new Mutex();
 
+  /* 
+  
+  TODO: What if disk is injected so nodes code easily do TreeNode.read ? or TreeNode.delete?
+
+
+  */
+
   constructor(private fs: CommonFileSystem, guid: string, private fsMutex = new Mutex()) {
     this.guid = `${guid}/FileTree`;
     this.cacheId = `${this.guid}/cache`;
@@ -85,9 +92,9 @@ export class FileTree {
       .map((node) => node.path);
   };
 
-  static fromJSON(json: TreeNodeDirJType, fs: CommonFileSystem, guid: string) {
+  static FromJSON(json: TreeNodeDirJType, fs: CommonFileSystem, guid: string) {
     const tree = new FileTree(fs, guid);
-    tree.root = TreeDirRoot.fromJSON(json);
+    tree.root = TreeDirRoot.FromJSON(json);
     return tree;
   }
 

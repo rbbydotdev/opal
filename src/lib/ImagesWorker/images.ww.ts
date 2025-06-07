@@ -20,7 +20,7 @@ const workerApi = {
     try {
       // await new Promise((rs) => setTimeout(rs, 5_000));
       const thumbPic = await createThumbnailWW(content, size, size);
-      const thumbDisk = Disk.fromJSON(thumbStore).toModel();
+      const thumbDisk = Disk.FromJSON(thumbStore).toModel();
       await thumbDisk.ready;
       await thumbDisk.writeFileRecursive(absPath(path), thumbPic);
       console.log(

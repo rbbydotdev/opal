@@ -178,9 +178,9 @@ export class TreeNode {
       depth: this.depth,
     });
   }
-  static fromJSON(json: TreeNodeJType | TreeNodeDirJType, parent: TreeDir | null = null): TreeNode {
+  static FromJSON(json: TreeNodeJType | TreeNodeDirJType, parent: TreeDir | null = null): TreeNode {
     if (json.type === "dir") {
-      return TreeDir.fromJSON(json as TreeNodeDirJType, parent);
+      return TreeDir.FromJSON(json as TreeNodeDirJType, parent);
     }
     return new TreeNode({
       ...json,
@@ -258,14 +258,14 @@ export class TreeDir extends TreeNode {
     };
   }
 
-  static fromJSON(json: TreeNodeDirJType, parent: TreeDir | null = null): TreeDir {
+  static FromJSON(json: TreeNodeDirJType, parent: TreeDir | null = null): TreeDir {
     const parentNode = new TreeDir({
-      ...TreeNode.fromJSON({ ...json, type: "file" }),
+      ...TreeNode.FromJSON({ ...json, type: "file" }),
       parent,
       children: {},
     });
     parentNode.children = Object.fromEntries(
-      Object.entries(json.children).map(([key, child]) => [key, TreeNode.fromJSON(child, parentNode)])
+      Object.entries(json.children).map(([key, child]) => [key, TreeNode.FromJSON(child, parentNode)])
     );
 
     return parentNode;
@@ -297,8 +297,8 @@ export class TreeDirRoot extends TreeDir {
     };
   }
 
-  static fromJSON(json: TreeNodeDirJType): TreeDirRoot {
-    return new TreeDirRoot(TreeDir.fromJSON(json));
+  static FromJSON(json: TreeNodeDirJType): TreeDirRoot {
+    return new TreeDirRoot(TreeDir.FromJSON(json));
   }
 }
 

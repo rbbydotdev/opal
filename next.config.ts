@@ -9,6 +9,12 @@
 // });
 
 const config = {
+  // webpack(config: { devtool: string }, { dev }: unknown) {
+  //   if (dev) {
+  //     config.devtool = "source-map";
+  //   }
+  //   return config;
+  // },
   /* config options here */
   eslint: {
     ignoreDuringBuilds: true,
