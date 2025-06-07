@@ -18,8 +18,8 @@ export default function Page() {
         <Input placeholder="Workspace Name" value={name} onChange={(e) => setName(e.target.value)} />
         <Button
           onClick={async () => {
-            const ws = await Workspace.createWithSeedFiles(name);
-            router.push(ws.home());
+            const workspace = await Workspace.CreateNewWithSeedFiles(name);
+            router.push(workspace.home());
           }}
         >
           Create

@@ -16,7 +16,6 @@ import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
 //for exampple the diskguid
 export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;
 export class Workspace extends WorkspaceDAO {
-  // export class Workspace implements WorkspaceRecord {
   imageCache: ImageCache;
   memid = nanoid();
   isNull = false;
@@ -37,7 +36,7 @@ export class Workspace extends WorkspaceDAO {
   remoteAuth: RemoteAuth;
   disk: Disk;
   thumbs: Disk;
-  _cache: Promise<Cache> | null = null;
+  ready: Promise<Workspace>;
 
   constructor({
     name,
@@ -66,6 +65,7 @@ export class Workspace extends WorkspaceDAO {
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
     this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
     this.imageCache = Workspace.newCache(this.name);
+    this.ready = this.init();
   }
 
   get id() {
@@ -115,15 +115,15 @@ export class Workspace extends WorkspaceDAO {
     }
     return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
   }
-  static async createWithSeedFiles(name: string) {
-    const ws = await WorkspaceDAO.create(name);
-    await ws.disk.ready;
-    await Promise.all(
-      Object.entries(Workspace.seedFiles).map(([filePath, content]) =>
-        ws.disk.writeFileRecursive(absPath(filePath), content)
-      )
-    );
-    return ws;
+
+  static async CreateNew(name: string, files: Record<string, string> = {}) {
+    const workspace = await WorkspaceDAO.create(name).then((wsDao) => wsDao.toModel());
+    await workspace.newFiles(Object.entries(files).map(([path, content]) => [absPath(path), content]));
+    return workspace;
+  }
+
+  static async CreateNewWithSeedFiles(name: string) {
+    return Workspace.CreateNew(name, Workspace.seedFiles);
   }
 
   replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
@@ -135,8 +135,12 @@ export class Workspace extends WorkspaceDAO {
   newDir(dirPath: AbsPath, newDirName: RelPath) {
     return this.disk.newDir(joinPath(dirPath, newDirName));
   }
+  //this func sig is wack
   newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
     return this.disk.newFile(joinPath(dirPath, newFileName), content);
+  }
+  newFiles(files: [AbsPath, string | Uint8Array][]) {
+    return this.disk.newFiles(files);
   }
 
   addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {

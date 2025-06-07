@@ -40,12 +40,12 @@ export function prefix(path: AbsPath | RelPath): string {
   return ext.length ? base.slice(0, base.length - ext.length) : base;
 }
 
-export function basename(path: AbsPath | RelPath): string {
-  return pathModule.basename(path);
+export function basename(path: AbsPath | RelPath | string): RelPath {
+  return relPath(pathModule.basename(path));
 }
 
-export function dirname(path: AbsPath | RelPath): string {
-  return pathModule.dirname(path);
+export function dirname(path: AbsPath | RelPath | string): AbsPath {
+  return absPath(pathModule.dirname(path));
 }
 
 export function equals(a: AbsPath | RelPath | null | undefined, b: AbsPath | RelPath | null | undefined): boolean {
