@@ -146,6 +146,20 @@ export class Workspace extends WorkspaceDAO {
   removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
   }
+  removeMultipleFiles = async (filePaths: AbsPath[]) => {
+    await Promise.all(
+      filePaths.filter(isImage).flatMap((imagePath) => [
+        this.NewThumb(imagePath)
+          .remove()
+          .catch((e) => {
+            console.error(e);
+          }),
+        this.imageCache.getCache().then((c) => c.delete(encodePath(imagePath))),
+      ])
+    );
+    return this.disk.removeMultipleFiles(filePaths);
+  };
+  //change removeMultipleFiles to removeFiles and singularly pass this to it
   removeFile = async (filePath: AbsPath) => {
     if (isImage(filePath)) {
       await Promise.all([

@@ -49,6 +49,7 @@ export function isError(
     | typeof ServiceUnavailableError
     | typeof GatewayTimeoutError
     | typeof NotImplementedError
+    | typeof AggregateApplicationError // <-- Updated
 ): boolean {
   return ((error as { name: string }).name === target.name) as boolean;
 }
@@ -137,7 +138,8 @@ export class BadRequestError extends ApplicationError {
   name = "BadRequestError";
   constructor(errorOrMessage: Error | string = "bad request") {
     super(errorOrMessage, 400);
-    // Object.setPrototypeOf(this, ApplicationError.prototype);
+    // Minor suggestion applied: added setPrototypeOf for consistency
+    Object.setPrototypeOf(this, BadRequestError.prototype);
   }
 }
 
@@ -178,6 +180,29 @@ export class NotImplementedError extends ApplicationError {
   constructor(errorOrMessage: Error | string = "Not Implemented") {
     super(errorOrMessage, 501);
     Object.setPrototypeOf(this, NotImplementedError.prototype);
+  }
+}
+
+/**
+ * New AggregateApplicationError class to handle multiple errors at once.
+ * It extends ApplicationError to integrate seamlessly with the existing helpers.
+ */
+export class AggregateApplicationError extends ApplicationError {
+  name = "AggregateApplicationError";
+  public readonly errors: Error[];
+
+  constructor(
+    errors: Error[],
+    message: string = "Multiple errors occurred",
+    code: number = 400 // Often a 400 Bad Request if from user input
+  ) {
+    // Create a detailed message that summarizes the sub-errors
+    const combinedMessage = `${message}: \n${errors.map((e, i) => `  ${i + 1}. ${e.message}`).join("\n")}`;
+
+    super(combinedMessage, code);
+    this.errors = errors;
+
+    Object.setPrototypeOf(this, AggregateApplicationError.prototype);
   }
 }
 

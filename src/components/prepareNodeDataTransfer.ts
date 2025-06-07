@@ -28,15 +28,15 @@ export const prepareNodeDataTransfer = ({
     dataTransfer.clearData();
     dataTransfer.effectAllowed = "all";
     dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+    allFileNodes.forEach((node, i) => {
+      dataTransfer.setData(`${node.getMimeType()};index=${i}`, node.path);
+    });
     dataTransfer.setData(
       "text/html",
       allFileNodes.map((node) => `<img src="${encodePath(node.path || "")}" />`).join(" ")
     );
-    allFileNodes.forEach((node, i) => {
-      dataTransfer.setData(`${node.getMimeType()};index=${i}`, node.path);
-    });
   } catch (e) {
     console.error("Error preparing node data for drag and drop:", e);
-    return;
   }
+  return dataTransfer;
 };

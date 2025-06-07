@@ -52,7 +52,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
 
     const paths = reduceLineage(range).map((pathStr) => absPath(pathStr));
     try {
-      await Promise.all(paths.map((path) => currentWorkspace.removeFile(path)));
+      await currentWorkspace.removeMultipleFiles(paths);
     } catch (e) {
       if (e instanceof NotFoundError) {
         console.error(e);
@@ -133,7 +133,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     renameDirOrFile,
     newFile,
     removeFocusedFile,
-    removeFiles: removeSelectedFiles,
+    removeSelectedFiles,
     newDir,
     commitChange,
     addDirFile,
