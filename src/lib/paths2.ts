@@ -6,6 +6,7 @@ export type RelPath = Brand<string, "RelativePath">;
 
 import { isImageType } from "@/lib/fileType";
 import pathModule from "path";
+import { isMarkdownType } from "./fileType";
 import { getMimeType } from "./mimeType";
 
 // --- Constructors ---
@@ -146,6 +147,10 @@ export function getPathMimeType(path: AbsPath | RelPath): string {
 
 export function isImage(path: AbsPath | RelPath | string): boolean {
   return isImageType(getPathMimeType(relPath(path)));
+}
+
+export function isMarkdown(path: AbsPath | RelPath | string): boolean {
+  return isMarkdownType(getPathMimeType(relPath(path)));
 }
 
 // --- Ancestor/Lineage Utilities ---

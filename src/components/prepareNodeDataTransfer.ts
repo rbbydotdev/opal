@@ -1,7 +1,8 @@
 import { INTERNAL_FILE_TYPE, NodeDataType } from "@/components/FiletreeMenu";
 import { Workspace } from "@/Db/Workspace";
+import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, absPath, encodePath } from "@/lib/paths2";
+import { AbsPath, absPath, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
 
 export const prepareNodeDataTransfer = ({
   dataTransfer,
@@ -28,13 +29,25 @@ export const prepareNodeDataTransfer = ({
     dataTransfer.clearData();
     dataTransfer.effectAllowed = "all";
     dataTransfer.setData(INTERNAL_FILE_TYPE, data);
+    dataTransfer.setData(
+      "text/html",
+      allFileNodes
+        .map((node) => node.path)
+        .filter(isImage)
+        .map((path) => `<img src="${encodePath(path) || ""}" />`)
+        .join(" ")
+    );
+    dataTransfer.setData(
+      "text/html",
+      allFileNodes
+        .map((node) => node.path)
+        .filter(isMarkdown)
+        .map((path) => `<a href="${encodePath(path) || ""}">${capitalizeFirst(prefix(path))}</a>`)
+        .join(" ")
+    );
     allFileNodes.forEach((node, i) => {
       dataTransfer.setData(`${node.getMimeType()};index=${i}`, encodePath(node.path));
     });
-    dataTransfer.setData(
-      "text/html",
-      allFileNodes.map((node) => `<img src="${encodePath(node.path) || ""}" />`).join(" ")
-    );
   } catch (e) {
     console.error("Error preparing node data for drag and drop:", e);
   }
