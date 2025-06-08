@@ -17,9 +17,11 @@ export interface SearchResultData {
 }
 
 export class SearchResults implements Iterable<SearchResult> {
-  private results: SearchResultData[];
+  public readonly results: SearchResultData[];
+  public readonly length: number;
   constructor(results: SearchResultData[]) {
     this.results = results;
+    this.length = results.length;
   }
   [Symbol.iterator](): Iterator<SearchResult> {
     let index = 0;
@@ -46,12 +48,10 @@ export class SearchResults implements Iterable<SearchResult> {
       },
     };
   }
-  get length(): number {
-    return this.results.length;
-  }
   toJSON(): SearchResultData[] {
     return this.results;
   }
+
   static FromJSON(data: SearchResultData[]): SearchResults {
     return new SearchResults(data);
   }
@@ -66,6 +66,9 @@ export class SearchResults implements Iterable<SearchResult> {
 
 // Class for highlighting and other helpers
 export class SearchResult {
+  startText: string;
+  middleText: string;
+  endText: string;
   constructor(
     public lineNumber: number,
     public lineStart: number,
@@ -75,7 +78,11 @@ export class SearchResult {
     public lineText: string,
     public relStart: number,
     public relEnd: number
-  ) {}
+  ) {
+    this.startText = this.lineText.slice(0, this.relStart);
+    this.middleText = this.lineText.slice(this.relStart, this.relEnd);
+    this.endText = this.lineText.slice(this.relEnd);
+  }
 
   static FromJSON(data: SearchResultData): SearchResult {
     return new SearchResult(
@@ -90,20 +97,12 @@ export class SearchResult {
     );
   }
 
-  startMiddleEnd() {
-    return {
-      start: this.lineText.slice(0, this.relStart),
-      middle: this.lineText.slice(this.relStart, this.relEnd),
-      end: this.lineText.slice(this.relEnd),
-    };
-  }
-
   // Highlight the match in the lineText
   usingComponent(HighlightComponent: JSX.ElementType) {
     return [
-      this.lineText.slice(0, this.relStart),
-      React.createElement(HighlightComponent, { key: "highlight" }, this.lineText.slice(this.relStart, this.relEnd)),
-      this.lineText.slice(this.relEnd),
+      this.startText,
+      React.createElement(HighlightComponent, { key: "highlight" }, this.middleText),
+      this.endText,
     ];
   }
 }
@@ -137,12 +136,19 @@ export class SearchScannable<T extends { text: string }> {
     return { lineStart: 0, lineEnd: text.length, lineNumber: 1 };
   }
 
-  async *search(needle: string): AsyncGenerator<{ results: SearchResultData[]; meta: Omit<T, "text"> }> {
+  async *search(
+    needle: string,
+    options: {
+      caseSensitive?: boolean;
+      wholeWord?: boolean;
+      regex?: boolean;
+    } = { caseSensitive: false, wholeWord: false, regex: false }
+  ): AsyncGenerator<{ matches: SearchResultData[]; meta: Omit<T, "text"> }> {
     for await (const item of await this.scannable.scan()) {
       const { text: haystack, ...rest } = item;
       const lineBreaks = this.computeLineBreaks(haystack);
       const results: SearchResultData[] = [];
-      const re = new RegExp(needle, "g");
+      const re = new RegExp(needle, "gi");
       let match: RegExpExecArray | null;
 
       while ((match = re.exec(haystack)) !== null) {
@@ -160,7 +166,7 @@ export class SearchScannable<T extends { text: string }> {
           relEnd,
         });
       }
-      yield { results, meta: rest };
+      yield { matches: results, meta: rest };
     }
   }
 }

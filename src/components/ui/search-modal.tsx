@@ -8,16 +8,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { TextSearchResultType } from "@/Db/SearchScan";
-import { useSearchWorkspace } from "@/workers/SearchWorker/useSearchWorkspace";
+import { SearchResult } from "@/Db/SearchScan";
+import { DiskSearchResultData, useSearchWorkspace } from "@/workers/SearchWorker/useSearchWorkspace";
 import { ChevronDown, ChevronRight, FileText, Globe, Search, X } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { relPath } from "../../lib/paths2";
 
 export function SearchModal({ children }: { children: React.ReactNode }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [collapsedFiles, setCollapsedFiles] = useState<Set<string>>(new Set());
   const [dismissedFiles, setDismissedFiles] = useState<Set<string>>(new Set());
-  const [selectedWorkspace, setSelectedWorkspace] = useState("all");
+
+  // const [selectedWorkspace, setSelectedWorkspace] = useState("all");
   const toggleFileCollapse = (file: string) => {
     const newCollapsed = new Set(collapsedFiles);
     if (newCollapsed.has(file)) {
@@ -33,24 +35,39 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
   };
 
   const { currentWorkspace } = useWorkspaceContext();
-  const { search } = useSearchWorkspace(currentWorkspace);
+  const { results, submit, reset: resetSearch } = useSearchWorkspace(currentWorkspace);
 
-  const filteredResults = searchResults.filter((result) => !dismissedFiles.has(result.details.path));
+  const reset = useCallback(() => {
+    setSearchTerm("");
+    setCollapsedFiles(new Set());
+    setDismissedFiles(new Set());
+    resetSearch();
+  }, []);
   const [open, setOpen] = useState(false);
+  const toggleOpen = useCallback(
+    (open: boolean) => {
+      if (open) {
+        reset();
+      }
+      setOpen(open);
+    },
+    [reset]
+  );
 
-  const [appendedResults, setAppendResults] = useState<TextSearchResultType[]>([]);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setAppendResults([]);
-    for await (const res of search(searchTerm)) {
-      setAppendResults((prev) => [...prev, res]);
-    }
+    void submit(searchTerm);
   };
 
+  const filteredResults = useMemo(
+    () => results.filter((result) => !dismissedFiles.has(result.meta.path)),
+    [results, dismissedFiles]
+  );
+
   return (
-    <Dialog onOpenChange={(set) => setOpen(set)} open={open}>
+    <Dialog onOpenChange={toggleOpen} open={open}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="h-full flex flex-col max-w-4xl max-h-[80vh] bg-search border-search-border text-primary-foreground">
+      <DialogContent className="flex flex-col max-w-4xl max-h-[80vh] bg-search border-search-border text-primary-foreground">
         <DialogHeader className="border-b border-search pb-4">
           <DialogTitle className="text-primary-foreground flex items-center gap-2">
             <Search className="w-4 h-4" />
@@ -73,20 +90,20 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
           </form>
           {/* <WorkspaceSelector value={selectedWorkspace} onValueChange={setSelectedWorkspace} /> */}
           <div className="text-sm text-muted-foreground mb-3">
-            {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in{" "}
-            {filteredResults.length} files
+            {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in {results.length}{" "}
+            files
           </div>
 
           {/* Results */}
           <div className="max-h-[50vh] overflow-y-auto space-y-1">
-            {filteredResults.length > 0 ? (
-              appendedResults.map((result) => (
+            {results.length > 0 ? (
+              results.map((result) => (
                 <SearchResultsScroll
-                  result={result}
+                  searchResult={result}
                   collapsedFiles={collapsedFiles}
                   toggleFileCollapse={toggleFileCollapse}
                   dismissFile={dismissFile}
-                  key={result.details.path}
+                  key={result.meta.path}
                 />
               ))
             ) : (
@@ -99,103 +116,82 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Dummy workspaces data
-const workspaces = [
-  { id: "frontend", name: "Frontend App" },
-  { id: "backend", name: "Backend API" },
-  { id: "docs", name: "Documentation" },
-  { id: "config", name: "Configuration" },
-  { id: "frontend", name: "Frontend App" },
-  { id: "backend", name: "Backend API" },
-  { id: "docs", name: "Documentation" },
-  { id: "config", name: "Configuration" },
-  { id: "frontend", name: "Frontend App" },
-  { id: "backend", name: "Backend API" },
-  { id: "docs", name: "Documentation" },
-  { id: "config", name: "Configuration" },
-  { id: "frontend", name: "Frontend App" },
-  { id: "backend", name: "Backend API" },
-  { id: "docs", name: "Documentation" },
-  { id: "config", name: "Configuration" },
-  { id: "frontend", name: "Frontend App" },
-  { id: "backend", name: "Backend API" },
-  { id: "docs", name: "Documentation" },
-  { id: "config", name: "Configuration" },
-];
-
 interface WorkspaceSelectorProps {
   value: string;
   onValueChange: (value: string) => void;
 }
 
 function SearchResultsScroll({
-  result,
+  searchResult,
   collapsedFiles,
   toggleFileCollapse,
   dismissFile,
 }: {
-  result: TextSearchResultType;
+  searchResult: DiskSearchResultData;
   collapsedFiles: Set<string>;
   toggleFileCollapse: (file: string) => void;
   dismissFile: (file: string) => void;
 }) {
+  const matches = searchResult.matches.map((sr) => SearchResult.FromJSON(sr));
+  const lineNumWidth = useMemo(() => (Math.max(...matches.map(({ lineNumber }) => lineNumber)) + "").length, [matches]);
   return (
-    <div className="pb-8">
-      <div className="bg-search-header-bg/80 backdrop-blur-sm gap-2 flex items-center justify-start px-3 py-2 sticky top-0 z-10 text-xs font-mono">
+    <div className="_pb-8 pb-4">
+      {/* <div className="bg-search-header-bg/80 backdrop-blur-sm gap-2 flex items-center justify-start px-3 py-2 sticky top-0 z-10 text-xs font-mono">
         <div className="rounded-md overflow-hidden">
           <Identicon input={"xxxx"} scale={4} size={5} />
         </div>
         {`wrkspc-`}
-      </div>
+      </div> */}
       <div className="border border-search-border ">
-        <Collapsible open={!collapsedFiles.has(result.details.path)}>
+        <Collapsible open={!collapsedFiles.has(searchResult.meta.path)}>
           <div className="flex items-center justify-between bg-search-header-bg px-3 py-2 hover:bg-search-row-hover transition-colors">
             <CollapsibleTrigger
               className="flex items-center gap-2 flex-1 text-left"
-              onClick={() => toggleFileCollapse(result.details.path)}
+              onClick={() => toggleFileCollapse(searchResult.meta.path)}
             >
-              {collapsedFiles.has(result.details.path) ? (
+              {collapsedFiles.has(searchResult.meta.path) ? (
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               ) : (
                 <ChevronDown className="w-4 h-4 text-muted-foreground" />
               )}
               <FileText className="w-4 h-4 text-search-icon" />
-              <span className="text-primary-foreground font-medium">{result.details.path}</span>
+              <span className="text-primary-foreground font-medium">{relPath(searchResult.meta.path)}</span>
               <Badge variant="secondary" className="bg-search-border text-search-muted text-xs">
-                {result.matches.length}
+                {searchResult.matches.length}
               </Badge>
             </CollapsibleTrigger>
             <Button
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 hover:bg-search-border text-muted-foreground hover:text-primary-foreground"
-              onClick={() => dismissFile(result.details.path)}
+              onClick={() => dismissFile(searchResult.meta.path)}
             >
               <X className="w-3 h-3" />
             </Button>
           </div>
+
           <CollapsibleContent>
-            <div className="bg-search-bg">
-              {result.matches.map((match, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 px-6 py-1 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
-                >
-                  <span className="text-search-muted-2 text-sm font-mono min-w-[3rem] text-right">{match.line}</span>
-                  <span className="text-search-muted text-sm font-mono flex-1">
-                    {match.content.split(new RegExp(`(${match.match})`, "gi")).map((part, i) =>
-                      part.toLowerCase() === match.match.toLowerCase() ? (
-                        <span key={i} className="bg-search-highlight-bg text-search-highlight-fg px-1">
-                          {part}
-                        </span>
-                      ) : (
-                        part
-                      )
-                    )}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {
+              <div className="bg-search-bg">
+                {matches.map(({ startText, middleText, endText, lineNumber }, index) => (
+                  <div
+                    key={index}
+                    className="pl-3 flex items-start gap-1 px-6 py-1 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
+                  >
+                    <span className="text-search-muted-2 text-sm font-mono mr-2" style={{ width: lineNumWidth + "ch" }}>
+                      {lineNumber}:
+                    </span>
+                    <span className="text-search-muted-2 text-sm font-mono min-w-[3rem] text-right">
+                      <span className="text-search-muted text-sm font-mono flex-1">
+                        {startText}
+                        <span className="bg-search-highlight-bg text-search-highlight-fg">{middleText}</span>
+                        {endText}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            }
           </CollapsibleContent>
         </Collapsible>
       </div>
@@ -218,21 +214,23 @@ function WorkspaceSelector({ value, onValueChange }: WorkspaceSelectorProps) {
               All Workspaces
             </div>
           </SelectItem>
-          {workspaces.map((workspace, i) => (
-            <SelectItem
-              key={workspace.id + "" + i}
-              value={workspace.id + "" + i}
-              className="focus:bg-search-row-hover focus:text-primary-foreground"
-            >
-              <div className="flex items-center gap-2">
-                {/* <workspace.icon className="w-4 h-4 text-orange-400" /> */}
-                <div className="rounded-md overflow-hidden">
-                  <Identicon input={workspace.name} scale={4} size={5} />
+          {
+            /*workspaces*/ [].map((workspace, i) => (
+              <SelectItem
+                key={workspace.id + "" + i}
+                value={workspace.id + "" + i}
+                className="focus:bg-search-row-hover focus:text-primary-foreground"
+              >
+                <div className="flex items-center gap-2">
+                  {/* <workspace.icon className="w-4 h-4 text-orange-400" /> */}
+                  <div className="rounded-md overflow-hidden">
+                    <Identicon input={workspace.name} scale={4} size={5} />
+                  </div>
+                  {workspace.name}
                 </div>
-                {workspace.name}
-              </div>
-            </SelectItem>
-          ))}
+              </SelectItem>
+            ))
+          }
         </SelectContent>
       </Select>
     </div>

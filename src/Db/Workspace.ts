@@ -41,6 +41,12 @@ export class Workspace {
     "/home/drafts/post1.md": "# Hello World!",
     "/drafts/draft1.md": "# Goodbye World!",
     "/ideas/ideas.md": "# Foobar bizz bazz",
+    "/lorems-ipsum.md": `
+    # Lorem Ipsum Lorem needle ipsum dolor sit amet, 
+    consectetur adipiscing needle elit. Sed do eiusmod tempor
+    incididunt ut labore et dolore magna aliqua. Ut enim
+    ad minim veniam, quis needle nostrud exercitation ullamco
+    laboris nisi ut aliquip ex ea commodo consequat.`,
   };
 
   static newCache(id: string) {

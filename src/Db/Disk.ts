@@ -172,6 +172,8 @@ export class DiskEventsLocal extends Emittery<{
   [DiskEvents.CREATE]: FilePathsType;
   [DiskEvents.DELETE]: FilePathsType;
 }> {}
+
+export type DiskScanTextSearchResultType = { path: AbsPath; text: string };
 export abstract class Disk {
   remote: DiskEventsRemote;
   local = new DiskEventsLocal();
@@ -366,7 +368,10 @@ export abstract class Disk {
     }
   }
 
-  async *scan() {
+  async *scan(): AsyncGenerator<{
+    path: AbsPath;
+    text: string;
+  }> {
     const textNodes = this.fileTree.all().filter((node) => node.getMimeType().startsWith("text"));
     for (const node of textNodes) {
       yield { path: node.path, text: String(await this.readFile(node.path)) };
