@@ -1,4 +1,4 @@
-import { CreateDetails, DeleteDetails, Disk, DiskDAO, IndexTrigger, RenameDetails } from "@/Db/Disk";
+import { CreateDetails, DeleteDetails, Disk, IndexTrigger, RenameDetails } from "@/Db/Disk";
 import { ImageCache } from "@/Db/ImageCache";
 import { ClientDb } from "@/Db/instance";
 import { SearchScannable } from "@/Db/SearchScan";
@@ -10,12 +10,29 @@ import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, absPath, decodePath, encodePath, isImage, joinPath, RelPath, relPath } from "@/lib/paths2";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
-import { RemoteAuth, RemoteAuthDAO } from "./RemoteAuth";
+import { RemoteAuth } from "./RemoteAuth";
+
+/*
+
+
+Workspace_Dao
+  Disk_Dao
+  Thumbs_Dao
+  Remote_auth_Dao
+
+
+  Workspace_Dao_FromJSON - guid
+    Disk_DAO - guid, type
+    Remote_auth_DAO - guid
+    Thumbs_DAO - guid
+
+
+*/
 
 //TODO: change the mututation of this class to instead have a database tied object, but when othere deps are loaded it beomces a different object
 //for exampple the diskguid
 export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;
-export class Workspace extends WorkspaceDAO {
+export class Workspace {
   imageCache: ImageCache;
   memid = nanoid();
   isNull = false;
@@ -30,39 +47,33 @@ export class Workspace extends WorkspaceDAO {
     return new ImageCache({ guid: id, name: "img" });
   }
 
-  createdAt: Date = new Date();
   name: string;
   guid: string;
   remoteAuth: RemoteAuth;
   disk: Disk;
   thumbs: Disk;
 
-  constructor({
-    name,
-    guid,
-    disk,
-    thumbs,
-    remoteAuth,
-  }: {
-    name: string;
-    guid: string;
-    disk: DiskDAO;
-    thumbs: DiskDAO;
-    remoteAuth: RemoteAuthDAO;
-  }) {
-    super({
+  constructor(
+    {
       name,
       guid,
-      disk: disk.toJSON(),
-      thumbs: thumbs.toJSON(),
-      remoteAuth: remoteAuth.toJSON(),
-      createdAt: new Date(),
-    });
-    this.name = Workspace.Slugify(name);
+      disk,
+      thumbs,
+      remoteAuth,
+    }: {
+      name: string;
+      guid: string;
+      disk: Disk;
+      thumbs: Disk;
+      remoteAuth: RemoteAuth;
+    },
+    private connector: WorkspaceDAO
+  ) {
+    this.name = WorkspaceDAO.Slugify(name);
     this.guid = guid;
-    this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth.toModel() : remoteAuth;
-    this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
-    this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
+    this.remoteAuth = remoteAuth;
+    this.disk = disk;
+    this.thumbs = thumbs;
     this.imageCache = Workspace.newCache(this.name);
   }
 
@@ -71,28 +82,35 @@ export class Workspace extends WorkspaceDAO {
   }
 
   static async DeleteAll() {
-    const workspaces = await Workspace.all();
-    await Promise.all(workspaces.map(async (ws) => (await ws.toModel()).delete()));
+    const workspaces = await WorkspaceDAO.all();
+    return Promise.all(workspaces.map((workspace) => workspace.toModel().delete()));
+  }
+
+  get href() {
+    return `${WorkspaceDAO.rootRoute}/${this.name}`;
   }
   toJSON() {
     return {
       name: this.name,
       guid: this.guid,
       href: this.href,
-      createdAt: this.createdAt,
       remoteAuth: this.remoteAuth.toJSON(),
       disk: this.disk.toJSON(),
       thumbs: this.thumbs.toJSON(),
     };
   }
   static FromJSON(json: WorkspaceJType) {
-    return new Workspace({
-      name: json.name,
-      guid: json.guid,
-      disk: Disk.FromJSON(json.disk),
-      thumbs: Disk.FromJSON(json.thumbs),
-      remoteAuth: RemoteAuth.FromJSON(json.remoteAuth),
-    });
+    const connector = WorkspaceDAO.FromJSON(json);
+    return new Workspace(
+      {
+        name: json.name,
+        guid: json.guid,
+        disk: Disk.FromJSON(json.disk),
+        thumbs: Disk.FromJSON(json.thumbs),
+        remoteAuth: RemoteAuth.FromJSON(json.remoteAuth),
+      },
+      connector
+    );
   }
 
   NewThumb(path: AbsPath, size = 100) {
@@ -105,8 +123,8 @@ export class Workspace extends WorkspaceDAO {
   }
 
   static parseWorkspacePath(pathname: string) {
-    if (!pathname.startsWith(Workspace.rootRoute)) return { workspaceId: null, filePath: null };
-    const [workspaceId, ...filePathRest] = decodePath(relPath(pathname.replace(this.rootRoute, ""))).split("/");
+    if (!pathname.startsWith(WorkspaceDAO.rootRoute)) return { workspaceId: null, filePath: null };
+    const [workspaceId, ...filePathRest] = decodePath(relPath(pathname.replace(WorkspaceDAO.rootRoute, ""))).split("/");
     const filePath = filePathRest.join("/");
     if (!workspaceId) {
       return { workspaceId: null, filePath: null };
@@ -115,7 +133,7 @@ export class Workspace extends WorkspaceDAO {
   }
 
   static async CreateNew(name: string, files: Record<string, string> = {}) {
-    const workspace = await WorkspaceDAO.create(name).then((wsDao) => wsDao.toModel());
+    const workspace = (await WorkspaceDAO.create(name)).toModel();
     await workspace.newFiles(Object.entries(files).map(([path, content]) => [absPath(path), content]));
     return workspace;
   }

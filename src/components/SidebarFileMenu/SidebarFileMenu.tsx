@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { TooltipContent } from "@/components/ui/tooltip";
-import { useWorkspaceContext, WorkspaceContextType } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -52,7 +52,7 @@ import {
 import React, { useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 
-export function SidebarFileMenu({ ...props }: WorkspaceContextType & React.ComponentProps<typeof SidebarGroup>) {
+export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { fileTreeDir, flatTree, currentWorkspace, workspaceRoute } = useWorkspaceContext();
 
   const { renameDirOrFile, addDirFile, removeSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);

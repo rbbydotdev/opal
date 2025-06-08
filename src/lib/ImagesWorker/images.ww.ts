@@ -1,4 +1,5 @@
-import { Disk, DiskJType } from "@/Db/Disk";
+import { DiskJType } from "@/Db/Disk";
+import { DiskDAO } from "@/Db/DiskDAO";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { errF } from "@/lib/errors";
 import { absPath } from "@/lib/paths2";
@@ -18,7 +19,7 @@ const workerApi = {
     // Simulate a thumbnail creation process
     try {
       const thumbPic = await createThumbnailWW(content, size, size);
-      const thumbDisk = Disk.FromJSON(thumbStore).toModel();
+      const thumbDisk = DiskDAO.FromJSON(thumbStore).toModel();
       await thumbDisk.ready;
       await thumbDisk.writeFileRecursive(absPath(path), thumbPic);
       console.log(

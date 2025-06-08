@@ -1,5 +1,5 @@
 import { DexieFsDb } from "@/Db/DexieFsDb";
-import { DiskRecord } from "@/Db/DiskRecord";
+import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
 import { MutexFs } from "@/Db/MutexFs";
 import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
@@ -9,7 +9,6 @@ import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
-import { Optional } from "@/types";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
@@ -77,56 +76,6 @@ export class OPFSNamespacedFs extends NamespacedFs {
 
   rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
     return this.fs.rm(encodePath(joinPath(this.namespace, path)), options);
-  }
-}
-
-export class DiskDAO implements DiskRecord {
-  guid!: string;
-  type!: DiskType;
-  indexCache: TreeDirRootJType;
-  static guid = () => "__disk__" + nanoid();
-
-  constructor(disk: Optional<DiskRecord, "indexCache">) {
-    this.indexCache = disk.indexCache ?? new TreeDirRoot().toJSON();
-    return Object.assign(this, disk);
-  }
-
-  static FromJSON(json: DiskJType) {
-    return new DiskDAO(json);
-  }
-
-  toJSON({ includeIndexCache = true }: { includeIndexCache?: boolean } = {}) {
-    return {
-      guid: this.guid,
-      type: this.type,
-      ...(includeIndexCache ? { indexCache: this.indexCache } : {}),
-    };
-  }
-
-  static New(type: DiskType = Disk.defaultDiskType) {
-    return new DiskDAO({ type: type, guid: DiskDAO.guid() });
-  }
-
-  static FromGuid(guid: string) {
-    return ClientDb.disks.where("guid").equals(guid).first();
-  }
-
-  async hydrate() {
-    return Object.assign(this, await DiskDAO.FromGuid(this.guid)).toModel();
-  }
-  update(properties: Partial<DiskRecord>) {
-    this.indexCache = properties.indexCache ?? this.indexCache;
-    //this.guid cannot update
-    //this.type cannot update
-    return ClientDb.disks.update(this.guid, properties);
-  }
-
-  save() {
-    return ClientDb.disks.put(this);
-  }
-
-  toModel() {
-    return Disk.From(this);
   }
 }
 
@@ -222,15 +171,23 @@ export class DiskEventsLocal extends Emittery<{
   [DiskEvents.CREATE]: FilePathsType;
   [DiskEvents.DELETE]: FilePathsType;
 }> {}
-export abstract class Disk extends DiskDAO {
+export abstract class Disk {
   remote: DiskEventsRemote;
   local = new DiskEventsLocal();
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
 
-  constructor(public readonly guid: string, protected fs: CommonFileSystem, public fileTree: FileTree, type: DiskType) {
-    super({ guid, type });
+  constructor(
+    public readonly guid: string,
+    protected fs: CommonFileSystem,
+    public fileTree: FileTree,
+    private connector: DiskDAO
+  ) {
     this.remote = new DiskEventsRemote(this.guid);
+  }
+
+  static FromJSON(json: DiskJType): Disk {
+    return Disk.From({ guid: json.guid, type: json.type });
   }
 
   async initializeIndex(cache: TreeNodeDirJType = new TreeDirRoot().toJSON()) {
@@ -251,8 +208,9 @@ export abstract class Disk extends DiskDAO {
 
   toJSON() {
     return {
-      ...super.toJSON(),
-      fileTree: this.fileTree.root.toJSON(),
+      guid: this.guid,
+      type: this.constructor.name as DiskType,
+      // fileTree: this.fileTree.root.toJSON(),
     };
   }
 
@@ -264,10 +222,10 @@ export abstract class Disk extends DiskDAO {
     writeIndexCache?: boolean;
   } = {}) => {
     const newIndex = await this.fileTree.index(tree);
-    const indexCache = (this.indexCache = newIndex.toJSON());
+    this.connector.updateIndexCache(newIndex);
     if (writeIndexCache) {
       console.debug(`Writing index cache with ${Object.keys(newIndex.children).length} children`);
-      /*await*/ void this.update({ indexCache });
+      /*await*/ void this.connector.save();
     }
     return newIndex;
   };
@@ -292,10 +250,10 @@ export abstract class Disk extends DiskDAO {
   }
   async init() {
     await this.ready;
-    const { indexCache } = await this.hydrate();
+    //#hydrate?
+    const { indexCache } = await this.connector.hydrate();
     await this.initializeIndex(indexCache);
     //TODO: this is a code smell, maybe make 2 workspace classes like a workerclass which does not do this
-    //OR workspace has a initForWorker and init method which differentiates
     if (!isServiceWorker() || !isWebWorker()) {
       return this.setupRemoteListeners();
     } else {
@@ -331,7 +289,7 @@ export abstract class Disk extends DiskDAO {
 
   static guid = () => "__disk__" + nanoid();
 
-  static From({ guid, type, indexCache }: { guid: string; type: DiskType; indexCache?: TreeDirRootJType }): Disk {
+  static From({ guid, type }: { guid: string; type: DiskType }): Disk {
     const DiskConstructor = {
       [IndexedDbDisk.type]: IndexedDbDisk,
       [MemDisk.type]: MemDisk,
@@ -339,9 +297,9 @@ export abstract class Disk extends DiskDAO {
       [NullDisk.type]: NullDisk,
       [OpFsDisk.type]: OpFsDisk,
     }[type] satisfies {
-      new (guid: string, indexCache?: TreeDirRootJType): Disk; //TODO interface somewhere?
+      new (guid: string): Disk; //TODO interface somewhere?
     };
-    return new DiskConstructor(guid, indexCache);
+    return new DiskConstructor(guid);
   }
 
   async *iteratorMutex(filter?: (node: TreeNode) => boolean): AsyncIterableIterator<TreeNode> {
@@ -699,7 +657,7 @@ export class OpFsDisk extends Disk {
 
     const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
 
-    super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), OpFsDisk.type);
+    super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), DiskDAO.New(OpFsDisk.type, guid));
 
     this.internalFs = fs;
     this.ready = promise;
@@ -716,7 +674,7 @@ export class DexieFsDbDisk extends Disk {
     const fs = new DexieFsDb(guid);
     const mt = new Mutex();
     const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
-    super(guid, fs, ft, DexieFsDbDisk.type);
+    super(guid, fs, ft, DiskDAO.New(DexieFsDbDisk.type, guid));
   }
 }
 
@@ -729,7 +687,8 @@ export class IndexedDbDisk extends Disk {
     const ft = indexCache
       ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex)
       : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
-    super(guid, mutexFs, ft, IndexedDbDisk.type);
+
+    super(guid, mutexFs, ft, DiskDAO.New(IndexedDbDisk.type, guid));
     this.ready = fs.init(guid) as unknown as Promise<void>;
   }
 }
@@ -742,7 +701,8 @@ export class MemDisk extends Disk {
     const ft = indexCache
       ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mt)
       : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mt);
-    super(guid, fs.promises, ft, MemDisk.type);
+
+    super(guid, fs.promises, ft, DiskDAO.New(MemDisk.type, guid));
   }
 }
 
@@ -752,6 +712,6 @@ export class NullDisk extends Disk {
     const fs = memfs().fs;
     const mt = new Mutex();
     const ft = new FileTree(fs.promises, guid, mt);
-    super("null", fs.promises, ft, NullDisk.type);
+    super("null", fs.promises, ft, DiskDAO.New(NullDisk.type, guid));
   }
 }
