@@ -43,13 +43,15 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     if (!currentWorkspace) return;
-    currentWorkspace.renameListener(({ oldPath, newPath, fileType }) => {
-      if (
-        (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
-        (fileType === "dir" && isAncestor(workspaceRoute.path, oldPath))
-      ) {
-        console.debug("Redirecting to new file:", newPath);
-        router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+    currentWorkspace.renameListener((CHANGES) => {
+      for (const { oldPath, newPath, fileType } of CHANGES) {
+        if (
+          (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
+          (fileType === "dir" && isAncestor(workspaceRoute.path, oldPath))
+        ) {
+          console.debug("Redirecting to new file:", newPath);
+          router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+        }
       }
     });
     currentWorkspace.deleteListener(async (details) => {

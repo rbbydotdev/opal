@@ -1,5 +1,6 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import { usePathname } from "next/navigation";
 import React, { useCallback } from "react";
@@ -14,8 +15,8 @@ export const FileTreeMenuContext = React.createContext<{
   resetEditing: () => void;
   setSelectedRange: (path: AbsPath[]) => void;
   resetSelects: () => void;
-  setDragOver: (path: AbsPath | null) => void;
-  dragOver: AbsPath | null;
+  setDragOver: (node: TreeNode | null) => void;
+  dragOver: TreeNode | null;
   selectedRange: AbsPath[];
   virtual: AbsPath | null;
   setVirtual: (path: AbsPath | null) => void;
@@ -35,7 +36,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
   const [editType, setEditType] = React.useState<"rename" | "new">("rename");
   const [focused, setFocused] = React.useState<AbsPath | null>(filePath ?? null);
   const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
-  const [dragOver, setDragOver] = React.useState<AbsPath | null>(null);
+  const [dragOver, setDragOver] = React.useState<TreeNode | null>(null);
   const [selectedRange, setSelectedRange] = React.useState<AbsPath[]>([]);
 
   const resetEditing = useCallback(() => {

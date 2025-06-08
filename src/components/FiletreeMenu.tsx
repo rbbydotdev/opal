@@ -14,9 +14,8 @@ import {
   AbsPath,
   absPath,
   basename,
+  dirname,
   encodePath,
-  equals,
-  isAncestor,
   isImage,
   isMarkdown,
   joinPath,
@@ -24,7 +23,7 @@ import {
   reduceLineage,
 } from "@/lib/paths2";
 import clsx from "clsx";
-import React from "react";
+import React, { useCallback } from "react";
 
 export const INTERNAL_FILE_TYPE = "application/x-opal";
 
@@ -80,13 +79,36 @@ export function useCopyKeydownImages(currentWorkspace: Workspace) {
 
 export function useFileTreeDragDrop({
   currentWorkspace,
-  onMove,
+  onMoveMultiple,
   onDragEnter,
 }: {
   currentWorkspace: Workspace;
-  onMove?: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<unknown> | unknown;
+  onMoveMultiple?: (nodes: [oldNode: TreeNode, newNode: TreeNode][]) => Promise<unknown>;
   onDragEnter?: (path: string, data?: NodeDataJType) => void;
 }) {
+  function dropPath(targetPath: AbsPath, node: TreeNode) {
+    return joinPath(targetPath, basename(node.path));
+  }
+  function dropNode(targetPath: AbsPath, node: TreeNode) {
+    return TreeNode.FromPath(dropPath(targetPath, node), node.type);
+  }
+  function allowedMove(targetPath: AbsPath, node: TreeNode) {
+    // Prevent moving node to its current directory (no-op)
+    if (dirname(node.path) === targetPath) {
+      // No-op: trying to move node to its current directory
+      return false;
+    }
+    // Prevent moving node into itself
+    if (node.path === targetPath) {
+      // Invalid move: trying to move node into itself
+      return false;
+    }
+    if (targetPath.startsWith(node.path + "/")) {
+      // Invalid move: trying to move node into its own descendant
+      return false;
+    }
+    return true;
+  }
   const { selectedRange, focused, setDragOver } = useFileTreeMenuContext();
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
     setDragOver(null);
@@ -107,7 +129,8 @@ export function useFileTreeDragDrop({
     event.preventDefault();
     event.stopPropagation();
     event.dataTransfer.dropEffect = "move";
-    setDragOver(targetNode.path);
+    setDragOver(targetNode);
+    return false;
   };
   const handleDragLeave = (event: React.DragEvent) => {
     setDragOver(null);
@@ -145,14 +168,11 @@ export function useFileTreeDragDrop({
         const { nodeData } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
 
         if (nodeData && nodeData.length) {
-          return Promise.all(
-            reduceLineage(nodeData.map((node) => TreeNode.FromJSON(node))).filter(({ type, path }) => {
-              const dropPath = joinPath(targetPath, basename(path));
-              if (!equals(path, dropPath) && (type !== "dir" || !isAncestor(dropPath, path))) {
-                return onMove?.(currentWorkspace.nodeFromPath(path)!, dropPath, type);
-              }
-            })
-          );
+          const moveNodes = reduceLineage(nodeData.map((node) => TreeNode.FromJSON(node)))
+            .filter((node) => allowedMove(targetPath, node))
+            .map((node) => [node, dropNode(targetPath, node)]) as [TreeNode, TreeNode][];
+
+          await onMoveMultiple?.(moveNodes);
         }
       }
     } catch (e) {
@@ -175,16 +195,17 @@ export function useFileTreeDragDrop({
 
 export function FileTreeMenu({
   fileTreeDir,
-  renameDirOrFile,
+  renameDirOrFileMultiple,
   depth = 0,
   expand,
   expandForNode,
   expanded,
 }: {
   fileTreeDir: TreeDir;
-  renameDirOrFile: (oldNode: TreeNode, newPath: AbsPath, type: "dir" | "file") => Promise<AbsPath>;
+
   depth?: number;
   expand: (path: string, value: boolean) => void;
+  renameDirOrFileMultiple: (nodes: [oldNode: TreeNode, newNode: TreeNode][]) => Promise<unknown>;
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
 }) {
@@ -193,13 +214,23 @@ export function FileTreeMenu({
   const { dragOver } = useFileTreeMenuContext();
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
-    onMove: renameDirOrFile,
+    onMoveMultiple: renameDirOrFileMultiple,
     onDragEnter: (path: string, data?: NodeDataJType) => {
       if (!data?.nodeData.some((node) => node.path === path)) {
         expand(path, true);
       }
     },
   });
+
+  const isHighlighted = useCallback(
+    (menuItem: TreeNode) => {
+      if (menuItem.path === workspaceRoute.path) return true;
+      if (!dragOver) return false;
+      if (dragOver.path === menuItem.path) return true;
+      return false;
+    },
+    [dragOver, workspaceRoute.path]
+  );
 
   return (
     <SidebarMenu
@@ -208,20 +239,26 @@ export function FileTreeMenu({
       onDrop={(e) => handleDrop(e, fileTreeDir)}
       onDragEnter={(e) => handleDragEnter(e, "/")}
       className={clsx({ "": depth === 0 })}
-      // onCopy={handleCopy}
     >
       {depth === 0 && (
-        <div className="w-full text-sm" onDrop={(e) => handleDrop(e, fileTreeDir)}>
-          <div className="ml-1 p-1 text-xs"></div>
+        <div
+          onDragOver={(e) => handleDragOver(e, fileTreeDir)}
+          onDragStart={(e) => handleDragStart(e, fileTreeDir)}
+          className={clsx("w-full text-sm", {
+            ["bg-sidebar-accent"]: isHighlighted(fileTreeDir),
+          })}
+          onDrop={(e) => handleDrop(e, fileTreeDir)}
+        >
+          <div className="font-bold ml-1 p-1 text-3xs border-b border-dashed border-sidebar-foreground font-mono text-sidebar-foreground">
+            /
+          </div>
         </div>
       )}
       {Object.values(fileTreeDir.children).map((file) => (
         <SidebarMenuItem
           key={file.path}
           className={clsx({
-            ["bg-sidebar-accent"]:
-              equals(file.path, workspaceRoute.path) ||
-              (file.isTreeDir() && file.path === (dragOver ? dragOver : null)),
+            ["bg-sidebar-accent"]: isHighlighted(file),
           })}
           onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}
@@ -235,7 +272,6 @@ export function FileTreeMenu({
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton asChild>
                   <EditableDir
-                    // onCopy={(e) => handleCopy(e, file)}
                     workspaceRoute={workspaceRoute}
                     currentWorkspace={currentWorkspace}
                     depth={depth}
@@ -251,7 +287,7 @@ export function FileTreeMenu({
                   expand={expand}
                   expandForNode={expandForNode}
                   fileTreeDir={file as TreeDir}
-                  renameDirOrFile={renameDirOrFile}
+                  renameDirOrFileMultiple={renameDirOrFileMultiple}
                   depth={depth + 1}
                   expanded={expanded}
                 />

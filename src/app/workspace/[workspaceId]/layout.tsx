@@ -35,7 +35,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <ServiceWorker>
         <FileTreeMenuContextProvider>
           <Toaster />
-          <div className="h-full flex w-full">
+          <div className="min-w-0 h-full flex w-full">
             <EditorSidebarLayout sidebar={<EditorSidebar />} main={children} />
           </div>
         </FileTreeMenuContextProvider>
