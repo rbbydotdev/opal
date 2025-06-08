@@ -77,6 +77,24 @@ export function useCopyKeydownImages(currentWorkspace: Workspace) {
   };
 }
 
+export function allowedMove(targetPath: AbsPath, node: TreeNode) {
+  // Prevent moving node to its current directory (no-op)
+  if (dirname(node.path) === targetPath) {
+    // No-op: trying to move node to its current directory
+    return false;
+  }
+  // Prevent moving node into itself
+  if (node.path === targetPath) {
+    // Invalid move: trying to move node into itself
+    return false;
+  }
+  if (targetPath.startsWith(node.path + "/")) {
+    // Invalid move: trying to move node into its own descendant
+    return false;
+  }
+  return true;
+}
+
 export function useFileTreeDragDrop({
   currentWorkspace,
   onMoveMultiple,
@@ -91,23 +109,6 @@ export function useFileTreeDragDrop({
   }
   function dropNode(targetPath: AbsPath, node: TreeNode) {
     return TreeNode.FromPath(dropPath(targetPath, node), node.type);
-  }
-  function allowedMove(targetPath: AbsPath, node: TreeNode) {
-    // Prevent moving node to its current directory (no-op)
-    if (dirname(node.path) === targetPath) {
-      // No-op: trying to move node to its current directory
-      return false;
-    }
-    // Prevent moving node into itself
-    if (node.path === targetPath) {
-      // Invalid move: trying to move node into itself
-      return false;
-    }
-    if (targetPath.startsWith(node.path + "/")) {
-      // Invalid move: trying to move node into its own descendant
-      return false;
-    }
-    return true;
   }
   const { selectedRange, focused, setDragOver } = useFileTreeMenuContext();
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
@@ -225,6 +226,7 @@ export function FileTreeMenu({
   const isHighlighted = useCallback(
     (menuItem: TreeNode) => {
       if (menuItem.path === workspaceRoute.path) return true;
+
       if (!dragOver) return false;
       if (dragOver.path === menuItem.path) return true;
       return false;

@@ -5,10 +5,10 @@ import { useCallback, useEffect, useMemo } from "react";
 export function useSearchWorkspace(workspace: Workspace) {
   const searchWorker = useMemo(() => new SearchWorkspaceWorker(), []);
   const search = useCallback(
-    async (term: string) => {
+    async function* scan(term: string) {
       const scanner = searchWorker.searchWorkspace(workspace, term);
       for await (const result of scanner) {
-        console.log(result);
+        yield result;
       }
     },
     [searchWorker, workspace]
