@@ -165,12 +165,12 @@ export class WorkspaceDAO implements WorkspaceRecord {
       (await ClientDb.workspaces.where("name").equals(name).first()) ??
       (await ClientDb.workspaces.where("guid").equals(name).first());
     if (!ws) throw new NotFoundError(errF`Workspace not found name:${name}, guid:${name}`);
-    return (await new WorkspaceDAO(ws).withRelations()).toModel();
+    return (await (await new WorkspaceDAO(ws).withRelations()).toModel()).init();
   }
   static async FetchFromGuid(guid: string) {
     const ws = await ClientDb.workspaces.where("guid").equals(guid).first();
     if (!ws) throw new NotFoundError(errF`Workspace not found guid:${guid}`);
-    return (await new WorkspaceDAO(ws).withRelations()).toModel();
+    return (await (await new WorkspaceDAO(ws).withRelations()).toModel()).init();
   }
   static async FetchFromName(name: string): Promise<Workspace>;
   static async FetchFromName(name: string, options: { throwNotFound: boolean }): Promise<Workspace | null>;
@@ -183,7 +183,7 @@ export class WorkspaceDAO implements WorkspaceRecord {
       if (!options.throwNotFound) return null;
       throw new NotFoundError(errF`Workspace not found name:${name}`);
     }
-    return (await new WorkspaceDAO(ws).withRelations()).toModel();
+    return (await (await new WorkspaceDAO(ws).withRelations()).toModel()).init();
   }
 
   static async FetchFromGuidAndInit(guid: string) {

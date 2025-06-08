@@ -145,14 +145,11 @@ export function useFileTreeDragDrop({
         const { nodeData } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
 
         if (nodeData && nodeData.length) {
-          const dragNodes = reduceLineage(nodeData.map((node) => TreeNode.FromJSON(node)));
           return Promise.all(
-            dragNodes.filter(({ type: draggedType, path: draggedPath }) => {
-              const dropPath = joinPath(targetPath, basename(draggedPath));
-              if (draggedType !== "dir" || !isAncestor(dropPath, draggedPath)) {
-                if (!equals(draggedPath, dropPath)) {
-                  return onMove?.(currentWorkspace.nodeFromPath(draggedPath)!, dropPath, draggedType);
-                }
+            reduceLineage(nodeData.map((node) => TreeNode.FromJSON(node))).filter(({ type, path }) => {
+              const dropPath = joinPath(targetPath, basename(path));
+              if (!equals(path, dropPath) && (type !== "dir" || !isAncestor(dropPath, path))) {
+                return onMove?.(currentWorkspace.nodeFromPath(path)!, dropPath, type);
               }
             })
           );
