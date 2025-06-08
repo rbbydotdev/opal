@@ -96,8 +96,12 @@ export function useEditable<T extends TreeFile | TreeNode>({
             const wantPath = relPath(basename(changePrefixRel(relPath(basename(fullPath)), prefix(fileName))));
             const gotPath = await commitChange(treeNode, wantPath, editType);
             resetEditing();
-            setFileName(relPath(basename(gotPath)));
-            setFocused(gotPath);
+            if (gotPath !== null) {
+              setFileName(relPath(basename(gotPath)));
+              setFocused(gotPath);
+            } else {
+              setFocused(treeNode.path);
+            }
             // SEE useWorkspaceFromRoute
             // if (treeNode.isTreeFile() && (equals(fullPath, workspaceRoute.path) || !workspaceRoute.path)) {
             //   //redirect to the new file

@@ -34,7 +34,6 @@ export const DiskTypes = [
 export type DiskType = (typeof DiskTypes)[number];
 
 export interface CommonFileSystem {
-  // [x: string]: (path: PathLike, options?: string | IReadStreamOptions | undefined) => IReadStream;
   readdir(path: string): Promise<
     (
       | string
@@ -51,7 +50,6 @@ export interface CommonFileSystem {
   mkdir(path: string, options?: { recursive?: boolean; mode: number }): Promise<string | void>;
   rename(oldPath: string, newPath: string): Promise<void>;
   unlink(path: string): Promise<void>;
-  // rm(path: string, options?: { force?: boolean; recursive?: boolean }): Promise<void>;
   writeFile(
     path: string,
     data: Uint8Array | Buffer | string,
@@ -114,6 +112,9 @@ export class RenameFileType {
       fileType: this.fileType,
     };
   }
+  static New(properties: RemoteRenameFileType): RenameFileType {
+    return new RenameFileType(properties);
+  }
 }
 
 export type RemoteRenameFileType = {
@@ -139,7 +140,7 @@ export type IndexTrigger =
     }
   | {
       type: "rename";
-      details: RenameDetails;
+      details: RenameDetails[];
     }
   | {
       type: "delete";
@@ -149,7 +150,7 @@ export type IndexTrigger =
 export type ListenerCallback<T extends "create" | "rename" | "delete"> = Parameters<Disk[`${T}Listener`]>[0];
 
 export class DiskEventsRemote extends Channel<{
-  [DiskEvents.RENAME]: RemoteRenameFileType;
+  [DiskEvents.RENAME]: RemoteRenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.WRITE]: FilePathsType;
   [DiskEvents.CREATE]: FilePathsType;
@@ -165,7 +166,7 @@ export const DiskEvents = {
 };
 
 export class DiskEventsLocal extends Emittery<{
-  [DiskEvents.RENAME]: RenameFileType;
+  [DiskEvents.RENAME]: RenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.WRITE]: FilePathsType;
   [DiskEvents.CREATE]: FilePathsType;
@@ -252,10 +253,8 @@ export abstract class Disk {
   }
   async init() {
     await this.ready;
-    //#hydrate?
     const { indexCache } = await this.connector.hydrate();
     await this.initializeIndex(indexCache);
-    //TODO: this is a code smell, maybe make 2 workspace classes like a workerclass which does not do this
     if (!isServiceWorker() || !isWebWorker()) {
       return this.setupRemoteListeners();
     } else {
@@ -267,7 +266,7 @@ export abstract class Disk {
     const listeners = [
       this.remote.init(),
       this.remote.on(DiskEvents.RENAME, async (data) => {
-        await this.local.emit(DiskEvents.RENAME, new RenameFileType(data));
+        await this.local.emit(DiskEvents.RENAME, data.map(RenameFileType.New));
         await this.fileTreeIndex();
         await this.local.emit(DiskEvents.INDEX, {
           type: "rename",
@@ -405,26 +404,44 @@ export abstract class Disk {
   }
 
   async trash(filePath: AbsPath, type: "dir" | "file") {
-    return this.renameDirOrFile(filePath, joinPath(absPath(".trash"), filePath), type);
+    return this.renameDirOrFileDiskMethodQUIET(filePath, joinPath(absPath(".trash"), filePath), type);
   }
   async untrash(filePath: AbsPath, type: "dir" | "file") {
     const newPath = absPath(filePath.replace(/\.trash\//, "/")); // remove .trash prefix
-    return this.renameDirOrFile(filePath, newPath, type);
+    return this.renameDirOrFileDiskMethodQUIET(filePath, newPath, type);
   }
 
+  async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
+    if (nodes.length === 0) return [];
+    const results = await Promise.all(
+      nodes.map(([oldNode, newNode]) =>
+        this.renameDirOrFileDiskMethodQUIET(
+          oldNode.path,
+          newNode instanceof TreeNode ? newNode.path : newNode,
+          oldNode.type
+        )
+      )
+    );
+    return this.broadcastRename(results);
+  }
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
-    return this.renameDirOrFile(oldFullPath, newFullPath, "dir");
+    return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "dir"))[0];
   }
   async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
-    return this.renameDirOrFile(oldFullPath, newFullPath, "file");
+    return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "file"))[0];
   }
   //for moving files without emitting events or updating the index
   async quietMove(oldPath: AbsPath, newPath: AbsPath) {
     const uniquePath = await this.nextPath(newPath);
     await this.mkdirRecursive(absPath(dirname(uniquePath)));
     await this.fs.rename(encodePath(oldPath), encodePath(uniquePath));
+    return uniquePath;
   }
-  protected async renameDirOrFile(
+
+  protected async renameDirOrFileDiskMethod(...properties: Parameters<typeof this.renameDirOrFileDiskMethodQUIET>) {
+    return this.broadcastRename([await this.renameDirOrFileDiskMethodQUIET(...properties)]);
+  }
+  protected async renameDirOrFileDiskMethodQUIET(
     oldFullPath: AbsPath,
     newFullPath: AbsPath,
     fileType?: "file" | "dir"
@@ -461,14 +478,31 @@ export abstract class Disk {
       oldName: relPath(basename(oldFullPath)),
       oldPath: oldFullPath,
     });
+
+    return CHANGE;
+  }
+
+  private async broadcastDelete(filePaths: AbsPath[]) {
     await this.fileTreeIndex();
-    void this.remote.emit(DiskEvents.RENAME, CHANGE);
-    await this.local.emit(DiskEvents.RENAME, CHANGE);
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "delete",
+      details: { filePaths },
+    });
+    await this.remote.emit(DiskEvents.INDEX, {
+      type: "delete",
+      details: { filePaths },
+    });
+  }
+
+  private async broadcastRename(change: RenameFileType[]) {
+    await this.fileTreeIndex();
+    void this.remote.emit(DiskEvents.RENAME, change);
+    await this.local.emit(DiskEvents.RENAME, change);
     await this.local.emit(DiskEvents.INDEX, {
       type: "rename",
-      details: CHANGE,
+      details: change,
     });
-    return CHANGE;
+    return change;
   }
 
   async newDir(fullPath: AbsPath) {
@@ -495,15 +529,7 @@ export abstract class Disk {
     for (const filePath of filePaths) {
       await this.quietRemove(filePath);
     }
-    await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX, {
-      type: "delete",
-      details: { filePaths },
-    });
-    await this.remote.emit(DiskEvents.INDEX, {
-      type: "delete",
-      details: { filePaths },
-    });
+    return this.broadcastDelete(filePaths);
   }
   private async quietRemove(filePath: AbsPath) {
     await this.ready;

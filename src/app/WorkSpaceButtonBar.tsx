@@ -97,7 +97,14 @@ export function WorkSpaceButtonBar() {
           Promise.all([
             // deleteIDBs(),
             currentWorkspace.tearDown(),
-            WorkspaceDAO.all().then((wss) => Promise.all(wss.map((ws) => ws.delete()))),
+            WorkspaceDAO.all().then((workspaces) =>
+              workspaces.map((ws) =>
+                ws
+                  .toModel()
+                  .tearDown()
+                  .then((ws) => ws.delete())
+              )
+            ),
             unregisterServiceWorkers(),
             //@ts-expect-error
           ]).then(() => (window.location = "/new"))

@@ -99,16 +99,23 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [focused, currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
   );
 
-  const renameDirOrFile = React.useCallback(
-    async (oldNode: TreeNode, newFullPath: AbsPath) => {
-      const { path } = oldNode.isTreeDir()
-        ? await currentWorkspace.renameDir(oldNode, newFullPath)
-        : await currentWorkspace.renameFile(oldNode, newFullPath);
-
+  const renameDirOrFileMultiple = React.useCallback(
+    async (nodes: [oldNode: TreeNode, newFullPath: TreeNode | AbsPath][]) => {
+      const result = await currentWorkspace.renameMultiple(nodes);
+      if (result.length === 0) return [];
       resetSelects();
-      return path;
+      return result;
     },
     [currentWorkspace, resetSelects]
+  );
+
+  const renameDirOrFile = React.useCallback(
+    async (origNode: TreeNode, newFullPath: TreeNode | AbsPath) => {
+      const result = await renameDirOrFileMultiple([[origNode, newFullPath]] as [TreeNode, TreeNode | AbsPath][]);
+      if (result.length === 0) return null;
+      return result[0].newPath;
+    },
+    [renameDirOrFileMultiple]
   );
 
   const commitChange = React.useCallback(
@@ -130,6 +137,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [currentWorkspace, renameDirOrFile]
   );
   return {
+    renameDirOrFileMultiple,
     renameDirOrFile,
     newFile,
     removeFocusedFile,

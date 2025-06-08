@@ -133,7 +133,7 @@ export class Workspace {
   }
 
   static async CreateNew(name: string, files: Record<string, string> = {}) {
-    const workspace = (await WorkspaceDAO.create(name)).toModel();
+    const workspace = (await WorkspaceDAO.CreateNew(name)).toModel();
     await workspace.newFiles(Object.entries(files).map(([path, content]) => [absPath(path), content]));
     return workspace;
   }
@@ -178,7 +178,6 @@ export class Workspace {
     );
     return this.disk.removeMultipleFiles(filePaths);
   };
-  //change removeMultipleFiles to removeFiles and singularly pass this to it
   removeFile = async (filePath: AbsPath) => {
     if (isImage(filePath)) {
       await Promise.all([
@@ -209,6 +208,15 @@ export class Workspace {
         });
     }
   }
+  renameMultiple = async (nodes: [from: TreeNode, to: TreeNode | AbsPath][]) => {
+    const result = await this.disk.renameMultiple(nodes);
+    await this.disk.findReplaceImgBatch(
+      result
+        .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
+        .map(({ oldPath, newPath }) => [oldPath, newPath])
+    );
+    return result;
+  };
   renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
@@ -244,7 +252,7 @@ export class Workspace {
     return this.disk.latestIndexListener(callback);
   }
 
-  renameListener(callback: (details: RenameDetails) => void) {
+  renameListener(callback: (details: RenameDetails[]) => void) {
     return this.disk.renameListener(callback);
   }
 
@@ -294,7 +302,10 @@ export class Workspace {
     return this;
   }
 
-  tearDown = () => Promise.all([this.disk.tearDown(), this.thumbs.tearDown()]);
+  tearDown = async () => {
+    await Promise.all([this.disk.tearDown(), this.thumbs.tearDown()]);
+    return this;
+  };
 
   delete = async () => {
     return Promise.all([

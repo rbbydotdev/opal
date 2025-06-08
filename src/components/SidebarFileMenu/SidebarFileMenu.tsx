@@ -55,7 +55,7 @@ import { twMerge } from "tailwind-merge";
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { fileTreeDir, flatTree, currentWorkspace, workspaceRoute } = useWorkspaceContext();
 
-  const { renameDirOrFile, addDirFile, removeSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
+  const { renameDirOrFileMultiple, addDirFile, removeSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
     fileDirTree: flatTree,
     currentPath: workspaceRoute.path,
@@ -99,7 +99,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
           dnd-id="files"
           className="min-h-8"
           fileTreeDir={fileTreeDir}
-          renameDirOrFile={renameDirOrFile}
+          renameDirOrFileMultiple={renameDirOrFileMultiple}
           expandSingle={expandSingle}
           expandForNode={expandForNode}
           expanded={expanded}
@@ -121,7 +121,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
 
 export const SidebarFileMenuFiles = ({
   fileTreeDir,
-  renameDirOrFile,
+  renameDirOrFileMultiple,
   expandSingle,
   expandForNode,
   expanded,
@@ -134,7 +134,7 @@ export const SidebarFileMenuFiles = ({
   expandSingle: (path: string, expanded: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [key: string]: boolean };
-  renameDirOrFile: (oldNode: TreeNode, newFullPath: AbsPath) => Promise<AbsPath>;
+  renameDirOrFileMultiple: (nodes: [TreeNode, TreeNode | AbsPath][]) => Promise<unknown>;
   children: React.ReactNode;
 }) => {
   const [groupExpanded, groupSetExpand] = useSingleExpander("files");
@@ -185,8 +185,8 @@ export const SidebarFileMenuFiles = ({
             ) : (
               <FileTreeMenu
                 fileTreeDir={fileTreeDir}
-                renameDirOrFile={renameDirOrFile}
                 expand={expandSingle}
+                renameDirOrFileMultiple={renameDirOrFileMultiple}
                 expandForNode={expandForNode}
                 expanded={expanded}
                 depth={0}
