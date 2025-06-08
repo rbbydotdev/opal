@@ -77,10 +77,17 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
   };
 
   const { currentWorkspace } = useWorkspaceContext();
+  //need to be wise about useSearchWorkspace only init on when modal is showing
+  //otherwise will trigger every page load
   const { search } = useSearchWorkspace(currentWorkspace);
 
   const filteredResults = searchResults.filter((result) => !dismissedFiles.has(result.file));
   const [open, setOpen] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    void search(searchTerm);
+  };
 
   return (
     <Dialog onOpenChange={(set) => setOpen(set)} open={open}>
@@ -95,7 +102,7 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
 
         <div className="space-y-4 flex flex-col min-h-0">
           {/* Search Input */}
-          <form onSubmit={() => search(searchTerm)} className="flex justify-center items-center gap-2">
+          <form onSubmit={handleSubmit} className="flex justify-center items-center gap-2">
             <Input
               placeholder="Search"
               value={searchTerm}
