@@ -49,9 +49,10 @@ export function isError(
     | typeof ServiceUnavailableError
     | typeof GatewayTimeoutError
     | typeof NotImplementedError
-    | typeof AggregateApplicationError // <-- Updated
+    | typeof AggregateApplicationError
+    | string
 ): boolean {
-  return ((error as { name: string }).name === target.name) as boolean;
+  return (error as { name?: string }).name === (typeof target === "string" ? target : target?.name);
 }
 
 export function errorCode(error: unknown, code?: string): ErrorWithCode {

@@ -4,7 +4,6 @@ import "../transferHandlers";
 
 const WorkerApi = {
   async *searchWorkspace(workspace: Workspace, searchStr: string) {
-    console.log("deserialized workspace", workspace.disk.fileTree.root.children);
     yield* workspace.NewScannable().search(searchStr);
   },
 };
