@@ -8,54 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { TextSearchResultType } from "@/Db/SearchScan";
 import { useSearchWorkspace } from "@/workers/SearchWorker/useSearchWorkspace";
 import { ChevronDown, ChevronRight, FileText, Globe, Search, X } from "lucide-react";
 import { useState } from "react";
-
-// Dummy search results data
-const searchResults = [
-  {
-    file: "src/components/ui/button.tsx",
-    matches: [
-      { line: 12, content: "export const Button = React.forwardRef<", match: "Button" },
-      {
-        line: 25,
-        content: "  return <button className={cn(buttonVariants({ variant, size }), className)}",
-        match: "button",
-      },
-      { line: 45, content: 'Button.displayName = "Button"', match: "Button" },
-    ],
-  },
-  {
-    file: "src/app/page.tsx",
-    matches: [
-      { line: 8, content: '        <Button variant="default">Click me</Button>', match: "Button" },
-      { line: 12, content: '        <Button variant="outline">Secondary</Button>', match: "Button" },
-    ],
-  },
-  {
-    file: "src/lib/utils.ts",
-    matches: [
-      { line: 15, content: "export function cn(...inputs: ClassValue[]) {", match: "function" },
-      { line: 20, content: "// Helper function for merging classes", match: "function" },
-    ],
-  },
-  {
-    file: "README.md",
-    matches: [
-      { line: 1, content: "# My Project", match: "Project" },
-      { line: 5, content: "This project uses Next.js and TypeScript", match: "project" },
-      { line: 12, content: "## Getting Started with the project", match: "project" },
-    ],
-  },
-  {
-    file: "package.json",
-    matches: [
-      { line: 2, content: '  "name": "my-project",', match: "project" },
-      { line: 15, content: '    "@types/node": "^20.0.0",', match: "node" },
-    ],
-  },
-];
 
 export function SearchModal({ children }: { children: React.ReactNode }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,12 +35,16 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { search } = useSearchWorkspace(currentWorkspace);
 
-  const filteredResults = searchResults.filter((result) => !dismissedFiles.has(result.file));
+  const filteredResults = searchResults.filter((result) => !dismissedFiles.has(result.details.path));
   const [open, setOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const [appendedResults, setAppendResults] = useState<TextSearchResultType[]>([]);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    void search(searchTerm);
+    setAppendResults([]);
+    for await (const res of search(searchTerm)) {
+      setAppendResults((prev) => [...prev, res]);
+    }
   };
 
   return (
@@ -105,14 +65,14 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
               placeholder="Search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-search-border border-[hsl(var(--search-border))] text-[hsl(var(--primary-foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:border-ring"
+              className="bg-search-border border-search-border text-primary-foreground placeholder:text-muted-foreground focus:border-ring"
             />
             <Button type="submit" variant={"default"} className="text-ring">
               Search
             </Button>
           </form>
-          <WorkspaceSelector value={selectedWorkspace} onValueChange={setSelectedWorkspace} />
-          <div className="text-sm text-[hsl(var(--muted-foreground))] mb-3">
+          {/* <WorkspaceSelector value={selectedWorkspace} onValueChange={setSelectedWorkspace} /> */}
+          <div className="text-sm text-muted-foreground mb-3">
             {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in{" "}
             {filteredResults.length} files
           </div>
@@ -120,82 +80,17 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
           {/* Results */}
           <div className="max-h-[50vh] overflow-y-auto space-y-1">
             {filteredResults.length > 0 ? (
-              <>
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="pb-8">
-                    <div className="bg-[hsl(var(--search-header-bg))]/80 backdrop-blur-sm gap-2 flex items-center justify-start px-3 py-2 sticky top-0 z-10 text-xs font-mono">
-                      <div className="rounded-md overflow-hidden">
-                        <Identicon input={i + "xxxx"} scale={4} size={5} />
-                      </div>
-                      {`wrkspc-${i}x${i}x${i}`}
-                    </div>
-                    {filteredResults.map((result) => (
-                      <div key={result.file} className="border border-[hsl(var(--search-border))] ">
-                        <Collapsible open={!collapsedFiles.has(result.file)}>
-                          <div className="flex items-center justify-between bg-[hsl(var(--search-header-bg))] px-3 py-2 hover:bg-[hsl(var(--search-row-hover))] transition-colors">
-                            <CollapsibleTrigger
-                              className="flex items-center gap-2 flex-1 text-left"
-                              onClick={() => toggleFileCollapse(result.file)}
-                            >
-                              {collapsedFiles.has(result.file) ? (
-                                <ChevronRight className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
-                              )}
-                              <FileText className="w-4 h-4 text-[hsl(var(--search-icon))]" />
-                              <span className="text-[hsl(var(--primary-foreground))] font-medium">{result.file}</span>
-                              <Badge
-                                variant="secondary"
-                                className="bg-[hsl(var(--search-border))] text-[hsl(var(--search-muted))] text-xs"
-                              >
-                                {result.matches.length}
-                              </Badge>
-                            </CollapsibleTrigger>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 hover:bg-[hsl(var(--search-border))] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary-foreground))]"
-                              onClick={() => dismissFile(result.file)}
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          <CollapsibleContent>
-                            <div className="bg-[hsl(var(--search-bg))]">
-                              {result.matches.map((match, index) => (
-                                <div
-                                  key={index}
-                                  className="flex items-start gap-3 px-6 py-1 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
-                                >
-                                  <span className="text-[hsl(var(--search-muted-2))] text-sm font-mono min-w-[3rem] text-right">
-                                    {match.line}
-                                  </span>
-                                  <span className="text-[hsl(var(--search-muted))] text-sm font-mono flex-1">
-                                    {match.content.split(new RegExp(`(${match.match})`, "gi")).map((part, i) =>
-                                      part.toLowerCase() === match.match.toLowerCase() ? (
-                                        <span
-                                          key={i}
-                                          className="bg-[hsl(var(--search-highlight-bg))] text-[hsl(var(--search-highlight-fg))] px-1"
-                                        >
-                                          {part}
-                                        </span>
-                                      ) : (
-                                        part
-                                      )
-                                    )}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </>
+              appendedResults.map((result) => (
+                <SearchResultsScroll
+                  result={result}
+                  collapsedFiles={collapsedFiles}
+                  toggleFileCollapse={toggleFileCollapse}
+                  dismissFile={dismissFile}
+                  key={result.details.path}
+                />
+              ))
             ) : (
-              <div className="text-center text-[hsl(var(--muted-foreground))] py-8">No results found</div>
+              <div className="text-center text-muted-foreground py-8">No results found</div>
             )}
           </div>
         </div>
@@ -231,6 +126,81 @@ const workspaces = [
 interface WorkspaceSelectorProps {
   value: string;
   onValueChange: (value: string) => void;
+}
+
+function SearchResultsScroll({
+  result,
+  collapsedFiles,
+  toggleFileCollapse,
+  dismissFile,
+}: {
+  result: TextSearchResultType;
+  collapsedFiles: Set<string>;
+  toggleFileCollapse: (file: string) => void;
+  dismissFile: (file: string) => void;
+}) {
+  return (
+    <div className="pb-8">
+      <div className="bg-search-header-bg/80 backdrop-blur-sm gap-2 flex items-center justify-start px-3 py-2 sticky top-0 z-10 text-xs font-mono">
+        <div className="rounded-md overflow-hidden">
+          <Identicon input={"xxxx"} scale={4} size={5} />
+        </div>
+        {`wrkspc-`}
+      </div>
+      <div className="border border-search-border ">
+        <Collapsible open={!collapsedFiles.has(result.details.path)}>
+          <div className="flex items-center justify-between bg-search-header-bg px-3 py-2 hover:bg-search-row-hover transition-colors">
+            <CollapsibleTrigger
+              className="flex items-center gap-2 flex-1 text-left"
+              onClick={() => toggleFileCollapse(result.details.path)}
+            >
+              {collapsedFiles.has(result.details.path) ? (
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              )}
+              <FileText className="w-4 h-4 text-search-icon" />
+              <span className="text-primary-foreground font-medium">{result.details.path}</span>
+              <Badge variant="secondary" className="bg-search-border text-search-muted text-xs">
+                {result.matches.length}
+              </Badge>
+            </CollapsibleTrigger>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 hover:bg-search-border text-muted-foreground hover:text-primary-foreground"
+              onClick={() => dismissFile(result.details.path)}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+          <CollapsibleContent>
+            <div className="bg-search-bg">
+              {result.matches.map((match, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 px-6 py-1 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
+                >
+                  <span className="text-search-muted-2 text-sm font-mono min-w-[3rem] text-right">{match.line}</span>
+                  <span className="text-search-muted text-sm font-mono flex-1">
+                    {match.content.split(new RegExp(`(${match.match})`, "gi")).map((part, i) =>
+                      part.toLowerCase() === match.match.toLowerCase() ? (
+                        <span key={i} className="bg-search-highlight-bg text-search-highlight-fg px-1">
+                          {part}
+                        </span>
+                      ) : (
+                        part
+                      )
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    </div>
+  );
 }
 
 function WorkspaceSelector({ value, onValueChange }: WorkspaceSelectorProps) {
