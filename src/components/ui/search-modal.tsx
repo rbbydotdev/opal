@@ -77,8 +77,6 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
   };
 
   const { currentWorkspace } = useWorkspaceContext();
-  //need to be wise about useSearchWorkspace only init on when modal is showing
-  //otherwise will trigger every page load
   const { search } = useSearchWorkspace(currentWorkspace);
 
   const filteredResults = searchResults.filter((result) => !dismissedFiles.has(result.file));

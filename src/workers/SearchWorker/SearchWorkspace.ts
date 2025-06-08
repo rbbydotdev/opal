@@ -20,6 +20,12 @@ export class SearchWorkspaceWorker {
       if (scan.results.length) yield scan;
     }
   }
+  async *searchWorkspaces(workspaces: Workspace[], searchTerm: string) {
+    console.log("Searching workspaces:", workspaces.length, "for term:", searchTerm);
+    for await (const scan of await this.api.searchWorkspaces(workspaces, searchTerm)) {
+      if (scan.results.length) yield scan;
+    }
+  }
   teardown() {
     this.worker?.terminate?.();
   }
