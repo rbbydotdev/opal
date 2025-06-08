@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
+import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import clsx from "clsx";
@@ -96,7 +97,7 @@ export function WorkSpaceButtonBar() {
           Promise.all([
             // deleteIDBs(),
             currentWorkspace.tearDown(),
-            Workspace.all().then((wss) => Promise.all(wss.map((ws) => ws.toModel().then((ws) => ws.delete())))),
+            WorkspaceDAO.all().then((wss) => Promise.all(wss.map((ws) => ws.delete()))),
             unregisterServiceWorkers(),
             //@ts-expect-error
           ]).then(() => (window.location = "/new"))

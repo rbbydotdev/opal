@@ -26,7 +26,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setCurrentWorkspace(NULL_WORKSPACE);
       return;
     }
-    const workspace = WorkspaceDAO.FetchFromNameAndInit(workspaceId)
+    const workspace = WorkspaceDAO.FetchModelFromNameAndInit(workspaceId)
       .then((ws) => {
         setCurrentWorkspace(ws);
         console.debug("Initialize Workspace:" + ws.name);

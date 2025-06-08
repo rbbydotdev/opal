@@ -143,7 +143,7 @@ const SWWStore = new (class SwWorkspace {
         return ws;
       }
     }
-    return (this.workspace = WorkspaceDAO.byName(workspaceId).then((wsd) => wsd.toModel()));
+    return (this.workspace = WorkspaceDAO.FetchByName(workspaceId).then((wsd) => wsd.toModel()));
   }
 })();
 
