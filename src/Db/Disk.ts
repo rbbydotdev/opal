@@ -21,7 +21,7 @@ import { RequestSignalsInstance } from "../lib/RequestSignals";
 // TODO: Lazy load modules based on disk
 
 // Utility type to make certain properties optional
-export type DiskJType = { guid: string; type: DiskType };
+export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType };
 
 export const DiskTypes = [
   "IndexedDbDisk",
@@ -177,6 +177,8 @@ export abstract class Disk {
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
 
+  abstract type: DiskType;
+
   constructor(
     public readonly guid: string,
     protected fs: CommonFileSystem,
@@ -187,7 +189,7 @@ export abstract class Disk {
   }
 
   static FromJSON(json: DiskJType): Disk {
-    return Disk.From({ guid: json.guid, type: json.type });
+    return Disk.From({ guid: json.guid, type: json.type, indexCache: json.indexCache });
   }
 
   async initializeIndex(cache: TreeNodeDirJType = new TreeDirRoot().toJSON()) {
@@ -209,8 +211,8 @@ export abstract class Disk {
   toJSON() {
     return {
       guid: this.guid,
-      type: this.constructor.name as DiskType,
-      // fileTree: this.fileTree.root.toJSON(),
+      type: this.type,
+      indexCache: this.connector.indexCache,
     };
   }
 
@@ -289,7 +291,7 @@ export abstract class Disk {
 
   static guid = () => "__disk__" + nanoid();
 
-  static From({ guid, type }: { guid: string; type: DiskType }): Disk {
+  static From({ guid, type, indexCache }: DiskJType): Disk {
     const DiskConstructor = {
       [IndexedDbDisk.type]: IndexedDbDisk,
       [MemDisk.type]: MemDisk,
@@ -299,7 +301,7 @@ export abstract class Disk {
     }[type] satisfies {
       new (guid: string): Disk; //TODO interface somewhere?
     };
-    return new DiskConstructor(guid);
+    return new DiskConstructor(guid, indexCache);
   }
 
   async *iteratorMutex(filter?: (node: TreeNode) => boolean): AsyncIterableIterator<TreeNode> {
@@ -643,9 +645,10 @@ export abstract class Disk {
 
 export class OpFsDisk extends Disk {
   static type: DiskType = "OpFsDisk";
+  type = OpFsDisk.type;
   ready: Promise<void>;
   private internalFs: OPFSNamespacedFs;
-  constructor(public readonly guid: string) {
+  constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
     const mutex = new Mutex();
     const { promise, resolve } = Promise.withResolvers<void>();
     const patchedOPFS = new PatchedOPFS(
@@ -657,7 +660,7 @@ export class OpFsDisk extends Disk {
 
     const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
 
-    super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), DiskDAO.New(OpFsDisk.type, guid));
+    super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), DiskDAO.New(OpFsDisk.type, guid, indexCache));
 
     this.internalFs = fs;
     this.ready = promise;
@@ -670,16 +673,18 @@ export class OpFsDisk extends Disk {
 
 export class DexieFsDbDisk extends Disk {
   static type: DiskType = "DexieFsDbDisk";
+  type = DexieFsDbDisk.type;
   constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
     const fs = new DexieFsDb(guid);
     const mt = new Mutex();
     const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
-    super(guid, fs, ft, DiskDAO.New(DexieFsDbDisk.type, guid));
+    super(guid, fs, ft, DiskDAO.New(DexieFsDbDisk.type, guid, indexCache));
   }
 }
 
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
+  type = IndexedDbDisk.type;
   constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
     const mutex = new Mutex();
     const fs = new LightningFs();
@@ -688,13 +693,14 @@ export class IndexedDbDisk extends Disk {
       ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex)
       : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
 
-    super(guid, mutexFs, ft, DiskDAO.New(IndexedDbDisk.type, guid));
+    super(guid, mutexFs, ft, DiskDAO.New(IndexedDbDisk.type, guid, indexCache));
     this.ready = fs.init(guid) as unknown as Promise<void>;
   }
 }
 
 export class MemDisk extends Disk {
   static type: DiskType = "MemDisk";
+  type = MemDisk.type;
   constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
     const mt = new Mutex();
     const fs = memfs().fs;
@@ -702,12 +708,13 @@ export class MemDisk extends Disk {
       ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mt)
       : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mt);
 
-    super(guid, fs.promises, ft, DiskDAO.New(MemDisk.type, guid));
+    super(guid, fs.promises, ft, DiskDAO.New(MemDisk.type, guid, indexCache));
   }
 }
 
 export class NullDisk extends Disk {
   static type: DiskType = "NullDisk";
+  type = NullDisk.type;
   constructor(public readonly guid = "null", _indexCache?: TreeDirRootJType) {
     const fs = memfs().fs;
     const mt = new Mutex();

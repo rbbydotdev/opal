@@ -33,8 +33,8 @@ export class DiskDAO {
     return new DiskDAO({ type: type, guid: DiskDAO.guid() });
   }
 
-  static New(type: DiskType, guid: string) {
-    return new DiskDAO({ type, guid });
+  static New(type: DiskType, guid: string, indexCache?: TreeDirRootJType) {
+    return new DiskDAO({ type, guid, indexCache });
   }
 
   static FetchFromGuid(guid: string) {
@@ -65,6 +65,6 @@ export class DiskDAO {
   }
 
   toModel() {
-    return Disk.From(this);
+    return Disk.FromJSON(this);
   }
 }
