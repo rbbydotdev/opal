@@ -1,5 +1,5 @@
 import { Workspace } from "@/Db/Workspace";
-import { isError } from "@/lib/errors";
+import { errF } from "@/lib/errors";
 import { SearchApiType } from "@/workers/SearchWorker/search.ww";
 import { Remote, wrap } from "comlink";
 import "../transferHandlers";

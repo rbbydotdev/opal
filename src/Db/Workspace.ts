@@ -36,7 +36,6 @@ export class Workspace extends WorkspaceDAO {
   remoteAuth: RemoteAuth;
   disk: Disk;
   thumbs: Disk;
-  ready: Promise<Workspace>;
 
   constructor({
     name,
@@ -65,7 +64,6 @@ export class Workspace extends WorkspaceDAO {
     this.disk = disk instanceof DiskDAO ? disk.toModel() : disk;
     this.thumbs = thumbs instanceof DiskDAO ? thumbs.toModel() : thumbs;
     this.imageCache = Workspace.newCache(this.name);
-    this.ready = this.init();
   }
 
   get id() {
