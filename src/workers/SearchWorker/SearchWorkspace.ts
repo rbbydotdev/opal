@@ -17,13 +17,14 @@ export class SearchWorkspaceWorker {
   }
   async *searchWorkspace(workspace: Workspace, searchTerm: string) {
     for await (const scan of await this.api.searchWorkspace(workspace, searchTerm)) {
-      if (scan.results.length) yield scan;
+      if (scan.matches.length) {
+        yield scan;
+      }
     }
   }
   async *searchWorkspaces(workspaces: Workspace[], searchTerm: string) {
-    console.log("Searching workspaces:", workspaces.length, "for term:", searchTerm);
     for await (const scan of await this.api.searchWorkspaces(workspaces, searchTerm)) {
-      if (scan.results.length) yield scan;
+      if (scan.matches.length) yield scan;
     }
   }
   teardown() {
