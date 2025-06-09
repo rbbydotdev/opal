@@ -595,8 +595,8 @@ export abstract class Disk {
       }
       result.push(fullPath);
       await this.writeFileRecursive(fullPath, content);
-      await this.fileTreeIndex();
     }
+    await this.fileTreeIndex();
     await this.local.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: result },
