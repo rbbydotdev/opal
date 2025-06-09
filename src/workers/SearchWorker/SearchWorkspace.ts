@@ -8,13 +8,15 @@ export class SearchWorkspaceWorker {
   private worker!: Worker;
   private api: Remote<SearchApiType> | SearchApiType = WorkerApi;
   constructor() {
+    /*
+    DISABLED: Worker API is not yet implemented in the new search system.
     try {
-      // throw new Error("Forcing worker creation");
       this.worker = new Worker(new URL("./search.ww.ts", import.meta.url));
       this.api = wrap<SearchApiType>(this.worker);
     } catch (error) {
       console.warn("Could not create worker, falling back to direct API calls", error);
     }
+    */
   }
   async *searchWorkspace(workspace: Workspace, searchTerm: string, abortSignal?: AbortSignal) {
     for await (const scan of await this.api.searchWorkspace(workspace, searchTerm, abortSignal)) {

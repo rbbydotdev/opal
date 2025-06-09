@@ -69,11 +69,11 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
         reset();
       } else {
         setSearchTerm(searchTerm);
-        if (searchAbortCntrl.current) {
-          searchAbortCntrl.current.abort();
-        }
-        searchAbortCntrl.current = new AbortController();
-        void submit(searchTerm, searchAbortCntrl.current.signal);
+        // if (searchAbortCntrl.current) {
+        //   searchAbortCntrl.current.abort();
+        // }
+        // searchAbortCntrl.current = new AbortController();
+        // void submit(searchTerm, searchAbortCntrl.current.signal);
       }
     },
     [submit, reset]

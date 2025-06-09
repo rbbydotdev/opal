@@ -32,17 +32,19 @@ Workspace_Dao
 //TODO: change the mututation of this class to instead have a database tied object, but when othere deps are loaded it beomces a different object
 //for exampple the diskguid
 export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;
+
 export class Workspace {
   imageCache: ImageCache;
   memid = nanoid();
   isNull = false;
   static seedFiles: Record<string, string> = {
+    // ...Object.fromEntries(new Array(100).fill(0).map((_, x) => [`/file-${x}.md`, ` needle ${x}`.repeat(1000)])),
     "/welcome.md": "# Welcome to your new workspace!",
     "/home/drafts/post1.md": "# Hello World!",
     "/drafts/draft1.md": "# Goodbye World!",
     "/ideas/ideas.md": "# Foobar bizz bazz",
     "/lorems-ipsum.md": `
-    # Lorem Ipsum Lorem needle ipsum dolor sit amet, 
+    # Lorem Ipsum Lorem needle ipsum dolor sit amet,
     consectetur adipiscing needle elit. Sed do eiusmod tempor
     incididunt ut labore et dolore magna aliqua. Ut enim
     ad minim veniam, quis needle nostrud exercitation ullamco
