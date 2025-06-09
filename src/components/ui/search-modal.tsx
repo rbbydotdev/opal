@@ -1,17 +1,15 @@
 "use client";
 
-import Identicon from "@/components/Identicon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { SearchResult } from "@/Db/SearchScan";
-import { DiskSearchResultData, useSearchWorkspace } from "@/workers/SearchWorker/useSearchWorkspace";
-import { ChevronDown, ChevronRight, FileText, Globe, Search, X } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { SearchResult } from "@/features/SearchResults";
+import { DiskSearchResultData, useSearchWorkspace } from "@/features/useSearchWorkspace";
+import { ChevronDown, ChevronRight, FileText, Search, X } from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { relPath } from "../../lib/paths2";
 
 export function SearchModal({ children }: { children: React.ReactNode }) {
@@ -19,7 +17,6 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
   const [collapsedFiles, setCollapsedFiles] = useState<Set<string>>(new Set());
   const [dismissedFiles, setDismissedFiles] = useState<Set<string>>(new Set());
 
-  // const [selectedWorkspace, setSelectedWorkspace] = useState("all");
   const toggleFileCollapse = (file: string) => {
     const newCollapsed = new Set(collapsedFiles);
     if (newCollapsed.has(file)) {
@@ -42,7 +39,7 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
     setCollapsedFiles(new Set());
     setDismissedFiles(new Set());
     resetSearch();
-  }, []);
+  }, [resetSearch]);
   const [open, setOpen] = useState(false);
   const toggleOpen = useCallback(
     (open: boolean) => {
@@ -64,10 +61,28 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
     [results, dismissedFiles]
   );
 
+  const searchAbortCntrl = useRef<AbortController>(null);
+  // const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const updateSearchTerm = useCallback(
+    (searchTerm: string) => {
+      if (searchTerm.trim() === "") {
+        reset();
+      } else {
+        setSearchTerm(searchTerm);
+        if (searchAbortCntrl.current) {
+          searchAbortCntrl.current.abort();
+        }
+        searchAbortCntrl.current = new AbortController();
+        void submit(searchTerm, searchAbortCntrl.current.signal);
+      }
+    },
+    [submit, reset]
+  );
+
   return (
     <Dialog onOpenChange={toggleOpen} open={open}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="flex flex-col max-w-4xl max-h-[80vh] bg-search border-search-border text-primary-foreground">
+      <DialogContent className="top-[25vh] translate-y-0 fixed flex flex-col max-w-4xl max-h-[80vh] bg-search border-search-border text-primary-foreground">
         <DialogHeader className="border-b border-search pb-4">
           <DialogTitle className="text-primary-foreground flex items-center gap-2">
             <Search className="w-4 h-4" />
@@ -81,7 +96,7 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
             <Input
               placeholder="Search"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => updateSearchTerm(e.target.value)}
               className="bg-search-border border-search-border text-primary-foreground placeholder:text-muted-foreground focus:border-ring"
             />
             <Button type="submit" variant={"default"} className="text-ring">
@@ -90,13 +105,13 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
           </form>
           {/* <WorkspaceSelector value={selectedWorkspace} onValueChange={setSelectedWorkspace} /> */}
           <div className="text-sm text-muted-foreground mb-3">
-            {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in {results.length}{" "}
-            files
+            {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in{" "}
+            {filteredResults.length} files
           </div>
 
           {/* Results */}
           <div className="max-h-[50vh] overflow-y-auto space-y-1">
-            {results.length > 0 ? (
+            {filteredResults.length > 0 ? (
               results.map((result) => (
                 <SearchResultsScroll
                   searchResult={result}
@@ -116,7 +131,7 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
   );
 }
 
-interface WorkspaceSelectorProps {
+interface WorkspaceSelVectorProps {
   value: string;
   onValueChange: (value: string) => void;
 }
@@ -172,16 +187,16 @@ function SearchResultsScroll({
 
           <CollapsibleContent>
             {
-              <div className="bg-search-bg">
+              <div className="bg-search-bg truncate">
                 {matches.map(({ startText, middleText, endText, lineNumber }, index) => (
                   <div
                     key={index}
-                    className="pl-3 flex items-start gap-1 px-6 py-1 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
+                    className="pl-3 truncate flex items-start gap-1 px-6 py-1 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
                   >
                     <span className="text-search-muted-2 text-sm font-mono mr-2" style={{ width: lineNumWidth + "ch" }}>
                       {lineNumber}:
                     </span>
-                    <span className="text-search-muted-2 text-sm font-mono min-w-[3rem] text-right">
+                    <span className="truncate text-search-muted-2 text-sm font-mono min-w-[3rem] text-right">
                       <span className="text-search-muted text-sm font-mono flex-1">
                         {startText}
                         <span className="bg-search-highlight-bg text-search-highlight-fg">{middleText}</span>
@@ -199,40 +214,40 @@ function SearchResultsScroll({
   );
 }
 
-function WorkspaceSelector({ value, onValueChange }: WorkspaceSelectorProps) {
-  return (
-    <div className="space-y-2">
-      <label className="text-sm text-search-muted">Workspace</label>
-      <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className="bg-search-border border-search-border text-primary-foreground focus:border-ring focus:ring-ring">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="bg-search-header border-search-border text-primary-foreground">
-          <SelectItem value="all" className="focus:bg-search-row-hover focus:text-primary-foreground">
-            <div className="flex items-center gap-2">
-              <Globe className="w-5 h-5 text-search-icon" />
-              All Workspaces
-            </div>
-          </SelectItem>
-          {
-            /*workspaces*/ [].map((workspace, i) => (
-              <SelectItem
-                key={workspace.id + "" + i}
-                value={workspace.id + "" + i}
-                className="focus:bg-search-row-hover focus:text-primary-foreground"
-              >
-                <div className="flex items-center gap-2">
-                  {/* <workspace.icon className="w-4 h-4 text-orange-400" /> */}
-                  <div className="rounded-md overflow-hidden">
-                    <Identicon input={workspace.name} scale={4} size={5} />
-                  </div>
-                  {workspace.name}
-                </div>
-              </SelectItem>
-            ))
-          }
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
+// function WorkspaceSelector({ value, onValueChange }: WorkspaceSelectorProps) {
+//   return (
+//     <div className="space-y-2">
+//       <label className="text-sm text-search-muted">Workspace</label>
+//       <Select value={value} onValueChange={onValueChange}>
+//         <SelectTrigger className="bg-search-border border-search-border text-primary-foreground focus:border-ring focus:ring-ring">
+//           <SelectValue />
+//         </SelectTrigger>
+//         <SelectContent className="bg-search-header border-search-border text-primary-foreground">
+//           <SelectItem value="all" className="focus:bg-search-row-hover focus:text-primary-foreground">
+//             <div className="flex items-center gap-2">
+//               <Globe className="w-5 h-5 text-search-icon" />
+//               All Workspaces
+//             </div>
+//           </SelectItem>
+//           {
+//             /*workspaces*/ [].map((workspace, i) => (
+//               <SelectItem
+//                 key={workspace.id + "" + i}
+//                 value={workspace.id + "" + i}
+//                 className="focus:bg-search-row-hover focus:text-primary-foreground"
+//               >
+//                 <div className="flex items-center gap-2">
+//                   {/* <workspace.icon className="w-4 h-4 text-orange-400" /> */}
+//                   <div className="rounded-md overflow-hidden">
+//                     <Identicon input={workspace.name} scale={4} size={5} />
+//                   </div>
+//                   {workspace.name}
+//                 </div>
+//               </SelectItem>
+//             ))
+//           }
+//         </SelectContent>
+//       </Select>
+//     </div>
+//   );
+// }
