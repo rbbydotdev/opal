@@ -14,9 +14,12 @@ export const FileTreeMenuContext = React.createContext<{
   setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
   resetEditing: () => void;
   setSelectedRange: (path: AbsPath[]) => void;
+  highlightDragover: (menuItem: TreeNode) => boolean;
   resetSelects: () => void;
   setDragOver: (node: TreeNode | null) => void;
   dragOver: TreeNode | null;
+  draggingNode: TreeNode | null;
+  setDraggingNode: (node: TreeNode | null) => void;
   selectedRange: AbsPath[];
   virtual: AbsPath | null;
   setVirtual: (path: AbsPath | null) => void;
@@ -38,6 +41,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
   const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
   const [dragOver, setDragOver] = React.useState<TreeNode | null>(null);
   const [selectedRange, setSelectedRange] = React.useState<AbsPath[]>([]);
+  const [draggingNode, setDraggingNode] = React.useState<TreeNode | null>(null);
 
   const resetEditing = useCallback(() => {
     setEditing(null);
@@ -49,6 +53,24 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
     setSelectedRange([]);
     setFocused(null);
   }, []);
+
+  const highlightDragover = useCallback(
+    (menuItem: TreeNode) => {
+      if (!dragOver || !draggingNode) return false;
+      if (dragOver.isTreeDir()) {
+        if (draggingNode.dirname === dragOver.path) return false;
+      }
+      if (dragOver.isTreeFile()) {
+        if (draggingNode.dirname === menuItem.path) return false;
+
+        if (dragOver.dirname === menuItem.path) return true;
+      }
+      if (dragOver.path === menuItem.path) return true;
+      return false;
+    },
+    [draggingNode, dragOver]
+  );
+
   React.useEffect(() => {
     const escapeKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") resetSelects();
@@ -63,7 +85,9 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
         setSelectedRange,
         dragOver,
         setDragOver,
-
+        setDraggingNode: setDraggingNode,
+        draggingNode: draggingNode,
+        highlightDragover,
         setFocused,
         editType,
         setEditType,

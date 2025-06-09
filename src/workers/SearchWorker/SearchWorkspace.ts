@@ -9,14 +9,20 @@ export class SearchWorkspaceWorker {
   private api: Remote<SearchApiType> | SearchApiType = WorkerApi;
   constructor() {
     try {
+      // throw new Error("Forcing worker creation");
       this.worker = new Worker(new URL("./search.ww.ts", import.meta.url));
       this.api = wrap<SearchApiType>(this.worker);
     } catch (error) {
       console.warn("Could not create worker, falling back to direct API calls", error);
     }
   }
-  async *searchWorkspace(workspace: Workspace, searchTerm: string) {
-    for await (const scan of await this.api.searchWorkspace(workspace, searchTerm)) {
+  async *searchWorkspace(workspace: Workspace, searchTerm: string, abortSignal?: AbortSignal) {
+    for await (const scan of await this.api.searchWorkspace(workspace, searchTerm, abortSignal)) {
+      if (abortSignal?.aborted) {
+        console.log("Search aborted in generator 2");
+        return;
+      }
+      console.log("Search result:", scan);
       if (scan.matches.length) {
         yield scan;
       }

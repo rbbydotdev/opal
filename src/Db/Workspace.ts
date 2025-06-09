@@ -1,9 +1,9 @@
 import { CreateDetails, DeleteDetails, Disk, IndexTrigger, RenameDetails } from "@/Db/Disk";
 import { ImageCache } from "@/Db/ImageCache";
 import { ClientDb } from "@/Db/instance";
-import { SearchScannable } from "@/Db/SearchScan";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { SearchScannable } from "@/features/SearchScan";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";

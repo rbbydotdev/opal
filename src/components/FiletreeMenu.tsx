@@ -23,7 +23,7 @@ import {
   reduceLineage,
 } from "@/lib/paths2";
 import clsx from "clsx";
-import React, { useCallback } from "react";
+import React from "react";
 
 export const INTERNAL_FILE_TYPE = "application/x-opal";
 
@@ -110,9 +110,18 @@ export function useFileTreeDragDrop({
   function dropNode(targetPath: AbsPath, node: TreeNode) {
     return TreeNode.FromPath(dropPath(targetPath, node), node.type);
   }
-  const { selectedRange, focused, setDragOver } = useFileTreeMenuContext();
+  const { selectedRange, focused, setDragOver, setDraggingNode: setDragNode } = useFileTreeMenuContext();
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
     setDragOver(null);
+    setDragNode(targetNode);
+    window.addEventListener(
+      "dragend",
+      () => {
+        setDragNode(null);
+      },
+      { once: true }
+    );
+
     try {
       prepareNodeDataTransfer({
         dataTransfer: event.dataTransfer,
@@ -212,7 +221,7 @@ export function FileTreeMenu({
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
 
-  const { dragOver } = useFileTreeMenuContext();
+  const { highlightDragover } = useFileTreeMenuContext();
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
     onMoveMultiple: renameDirOrFileMultiple,
@@ -222,17 +231,6 @@ export function FileTreeMenu({
       }
     },
   });
-
-  const isHighlighted = useCallback(
-    (menuItem: TreeNode) => {
-      if (menuItem.path === workspaceRoute.path) return true;
-
-      if (!dragOver) return false;
-      if (dragOver.path === menuItem.path) return true;
-      return false;
-    },
-    [dragOver, workspaceRoute.path]
-  );
 
   return (
     <SidebarMenu
@@ -247,7 +245,7 @@ export function FileTreeMenu({
           onDragOver={(e) => handleDragOver(e, fileTreeDir)}
           onDragStart={(e) => handleDragStart(e, fileTreeDir)}
           className={clsx("w-full text-sm", {
-            ["bg-sidebar-accent"]: isHighlighted(fileTreeDir),
+            ["bg-sidebar-accent"]: fileTreeDir.path === workspaceRoute.path || highlightDragover(fileTreeDir),
           })}
           onDrop={(e) => handleDrop(e, fileTreeDir)}
         >
@@ -260,7 +258,7 @@ export function FileTreeMenu({
         <SidebarMenuItem
           key={file.path}
           className={clsx({
-            ["bg-sidebar-accent"]: isHighlighted(file),
+            ["bg-sidebar-accent"]: file.path === workspaceRoute.path || highlightDragover(file),
           })}
           onDragOver={(e) => handleDragOver(e, file)}
           onDrop={(e) => handleDrop(e, file)}
