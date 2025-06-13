@@ -29,6 +29,9 @@ export class TreeNode {
   getMimeType() {
     return this.type === "dir" ? "dir" : getMimeType(this.path);
   }
+  isHidden() {
+    return this.basename.startsWith(".");
+  }
   isMarkdownFile() {
     return this.getMimeType() === "text/markdown";
   }
