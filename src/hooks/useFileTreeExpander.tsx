@@ -12,7 +12,7 @@ function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) 
 type ExpandMap = { [path: string]: boolean };
 
 // For a single item, just store a boolean for the id
-export function useSingleExpander(id: string, defaultValue = false) {
+export function useSidebarItemExpander(id: string, defaultValue = false) {
   const [expanded, setExpanded] = useLocalStorage<boolean>(id, defaultValue);
 
   // Toggle or set expanded state
@@ -40,14 +40,14 @@ export function useFileTreeExpander({
   );
   const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${id}`, local);
 
-  // const isExpanded = useCallback((path: string) => stored[path] && local[path], [local, stored]);
-
   const expandSingle = (path: string, expanded: boolean) => {
+    // console.log("expanding single for path", path, "state:", expanded);
     setLocal((prev) => ({ ...prev, [path]: expanded }));
     setStored((prev) => ({ ...prev, [path]: expanded }));
   };
 
   const expandForNode = (node: TreeNode, state: boolean) => {
+    // console.log("expanding for node", node.path, "state:", state);
     let n: TreeNode | null = node;
     while (n?.parent) {
       expandSingle(n.path, state);
@@ -67,5 +67,6 @@ export function useFileTreeExpander({
   }, [currentPath, fileDirTree]);
 
   const all = { ...stored, ...local };
+  // console.log(all);
   return { expandSingle, expanded: all, setExpandAll, expandForNode };
 }

@@ -173,7 +173,7 @@ export class Workspace {
   removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
   }
-  removeMultipleFiles = async (filePaths: AbsPath[]) => {
+  async removeMultipleFiles(filePaths: AbsPath[]) {
     await Promise.all(
       filePaths.filter(isImage).flatMap((imagePath) => [
         this.NewThumb(imagePath)
@@ -185,8 +185,8 @@ export class Workspace {
       ])
     );
     return this.disk.removeMultipleFiles(filePaths);
-  };
-  removeFile = async (filePath: AbsPath) => {
+  }
+  async removeFile(filePath: AbsPath) {
     if (isImage(filePath)) {
       await Promise.all([
         this.NewThumb(filePath)
@@ -198,7 +198,7 @@ export class Workspace {
       ]);
     }
     return this.disk.removeFile(filePath);
-  };
+  }
 
   private async adjustThumbAndCachePath(oldNode: TreeNode, newPath: AbsPath) {
     if (isImage(oldNode.path)) {
@@ -216,7 +216,7 @@ export class Workspace {
         });
     }
   }
-  renameMultiple = async (nodes: [from: TreeNode, to: TreeNode | AbsPath][]) => {
+  async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]) {
     const result = await this.disk.renameMultiple(nodes);
     await this.disk.findReplaceImgBatch(
       result
@@ -224,8 +224,8 @@ export class Workspace {
         .map(({ oldPath, newPath }) => [oldPath, newPath])
     );
     return result;
-  };
-  renameFile = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+  }
+  async renameFile(oldNode: TreeNode, newFullPath: AbsPath) {
     const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
     const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
     const newNode = oldNode.copy().rename(newPath);
@@ -233,7 +233,7 @@ export class Workspace {
     await this.disk.findReplaceImgBatch([[oldNode.path, absPath(oldNode.path.replace(oldNode.path, newNode.path))]]); // Update all references in the disk
     await this.adjustThumbAndCachePath(oldNode, absPath(oldNode.path.replace(oldNode.path, newNode.path)));
     return newNode;
-  };
+  }
   //this is dumb because you do not consider the children!
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
@@ -310,12 +310,12 @@ export class Workspace {
     return this;
   }
 
-  tearDown = async () => {
+  async tearDown() {
     await Promise.all([this.disk.tearDown(), this.thumbs.tearDown()]);
     return this;
-  };
+  }
 
-  delete = async () => {
+  async delete() {
     return Promise.all([
       await this.disk.tearDown(),
       ClientDb.workspaces.delete(this.guid),
@@ -323,11 +323,11 @@ export class Workspace {
       this.thumbs.delete(),
       this.imageCache.delete(),
     ]);
-  };
+  }
 
-  home = () => {
+  home() {
     return this.href;
-  };
+  }
   resolveFileUrl = (filePath: AbsPath) => {
     return this.href + encodePath(filePath);
   };

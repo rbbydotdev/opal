@@ -19,7 +19,7 @@ import {
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { TooltipContent } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { useFileTreeExpander, useSingleExpander } from "@/hooks/useFileTreeExpander";
+import { useFileTreeExpander, useSidebarItemExpander } from "@/hooks/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
@@ -137,7 +137,7 @@ export const SidebarFileMenuFiles = ({
   renameDirOrFileMultiple: (nodes: [TreeNode, TreeNode | AbsPath][]) => Promise<unknown>;
   children: React.ReactNode;
 }) => {
-  const [groupExpanded, groupSetExpand] = useSingleExpander("files");
+  const [groupExpanded, groupSetExpand] = useSidebarItemExpander("files");
 
   return (
     <SidebarGroup className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
@@ -266,7 +266,7 @@ const MOCK_CONNECTIONS = [
 ];
 
 function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
-  const [expanded, setExpand] = useSingleExpander("sync");
+  const [expanded, setExpand] = useSidebarItemExpander("sync");
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
       <Collapsible
@@ -363,7 +363,7 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   );
 }
 function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>) {
-  const [expanded, setExpand] = useSingleExpander("publish");
+  const [expanded, setExpand] = useSidebarItemExpander("publish");
   return (
     <SidebarGroup {...props}>
       <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
@@ -413,7 +413,7 @@ function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>
 }
 
 function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>) {
-  const [expanded, setExpand] = useSingleExpander("export");
+  const [expanded, setExpand] = useSidebarItemExpander("export");
   const { currentWorkspace } = useWorkspaceContext();
   return (
     <SidebarGroup {...props}>
@@ -484,7 +484,7 @@ export function SidebarCollapseContentScroll(
     children: React.ReactNode;
   }
 ) {
-  const [expanded, setExpand] = useSingleExpander(props.name);
+  const [expanded, setExpand] = useSidebarItemExpander(props.name);
   const { name, icon: Icon, action, children, ...rest } = props;
   return (
     <SidebarGroup className="pl-0 py-0" {...rest}>

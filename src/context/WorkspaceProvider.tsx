@@ -43,22 +43,35 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     if (!currentWorkspace) return;
-    currentWorkspace.renameListener((CHANGES) => {
-      for (const { oldPath, newPath, fileType } of CHANGES) {
-        if (
-          (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
-          (fileType === "dir" && isAncestor(workspaceRoute.path, oldPath))
-        ) {
-          console.debug("Redirecting to new file:", newPath);
-          router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+    const listeners = [
+      currentWorkspace.renameListener((CHANGES) => {
+        for (const { oldPath, newPath, fileType } of CHANGES) {
+          if (
+            (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
+            (fileType === "dir" && isAncestor(workspaceRoute.path, oldPath))
+          ) {
+            console.debug("Redirecting to new file:", newPath);
+            router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+          }
         }
-      }
-    });
-    currentWorkspace.deleteListener(async (details) => {
-      if (workspaceRoute.path && details.filePaths.some((path) => isAncestor(workspaceRoute.path, path))) {
-        router.push(await currentWorkspace.tryFirstFileUrl());
-      }
-    });
+      }),
+      currentWorkspace.createListener(async (details) => {
+        if (workspaceRoute.path === null) {
+          const navPath = details.filePaths
+            .map((path) => currentWorkspace.nodeFromPath(path))
+            .find((n) => n?.isTreeFile())?.path;
+          if (navPath) router.push(currentWorkspace.resolveFileUrl(navPath));
+        }
+      }),
+      currentWorkspace.deleteListener(async (details) => {
+        if (workspaceRoute.path && details.filePaths.some((path) => isAncestor(workspaceRoute.path, path))) {
+          router.push(await currentWorkspace.tryFirstFileUrl());
+        }
+      }),
+    ];
+    return () => {
+      listeners.forEach((listener) => listener());
+    };
   }, [currentWorkspace, pathname, router, workspaceRoute.path]);
 
   return (

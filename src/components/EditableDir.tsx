@@ -74,7 +74,7 @@ export const EditableDir = ({
       className={twMerge(
         isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
         className,
-        "w-full flex cursor-pointer __select-none group/dir"
+        "w-full flex cursor-pointer select-none group/dir my-0.5"
       )}
       onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
       style={{ paddingLeft: depth + "rem" }}
