@@ -66,7 +66,7 @@ export const EditableFile = ({
   }, [isEditing, isFocused, linkRef]);
 
   return (
-    <div className="__select-none">
+    <div className="select-none">
       {!isEditing ? (
         <ActiveLink
           active={equals(fullPath, workspaceRoute.path)}
@@ -77,7 +77,7 @@ export const EditableFile = ({
             className,
 
             isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
-            "group cursor-pointer h-full"
+            "group cursor-pointer my-0.5"
           )}
           ref={linkRef}
           tabIndex={0}

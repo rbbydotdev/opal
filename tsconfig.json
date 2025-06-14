@@ -1,12 +1,18 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "webworker"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "types": ["@serwist/next/typings"],
-
+    "types": [
+      "@serwist/next/typings"
+    ],
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -23,16 +29,18 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
     "**/types.d.ts",
-    "src/lib/ImagesServiceWorker/ImgSw.tsx"
+    "next-env.d.ts",
+    "src/lib/ImagesServiceWorker/ImgSw.tsx",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     ".next",

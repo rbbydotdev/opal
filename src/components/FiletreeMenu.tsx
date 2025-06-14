@@ -23,6 +23,7 @@ import {
   reduceLineage,
 } from "@/lib/paths2";
 import clsx from "clsx";
+import { Folders, Trash2 } from "lucide-react";
 import React from "react";
 
 export const INTERNAL_FILE_TYPE = "application/x-opal";
@@ -203,6 +204,8 @@ export function useFileTreeDragDrop({
   return { handleDragStart, handleDragOver, handleDrop, handleDragEnter, handleDragLeave };
 }
 
+const TrashDir = TreeNode.FromPath(absPath("/.trash"), "dir");
+
 export function FileTreeMenu({
   fileTreeDir,
   renameDirOrFileMultiple,
@@ -210,6 +213,7 @@ export function FileTreeMenu({
   expand,
   expandForNode,
   expanded,
+  showHidden,
 }: {
   fileTreeDir: TreeDir;
 
@@ -218,7 +222,9 @@ export function FileTreeMenu({
   renameDirOrFileMultiple: (nodes: [oldNode: TreeNode, newNode: TreeNode][]) => Promise<unknown>;
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
+  showHidden?: boolean;
 }) {
+  showHidden = showHidden ?? true;
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
 
   const { highlightDragover } = useFileTreeMenuContext();
@@ -241,73 +247,93 @@ export function FileTreeMenu({
       className={clsx({ "": depth === 0 })}
     >
       {depth === 0 && (
-        <div
-          onDragOver={(e) => handleDragOver(e, fileTreeDir)}
-          onDragStart={(e) => handleDragStart(e, fileTreeDir)}
-          className={clsx("w-full text-sm", {
-            ["bg-sidebar-accent"]: fileTreeDir.path === workspaceRoute.path || highlightDragover(fileTreeDir),
-          })}
-          onDrop={(e) => handleDrop(e, fileTreeDir)}
-        >
-          <div className="font-bold ml-1 p-1 text-3xs border-b border-dashed border-sidebar-foreground font-mono text-sidebar-foreground">
-            /
+        <>
+          <div
+            onDragOver={(e) => handleDragOver(e, TrashDir)}
+            onDragStart={(e) => handleDragStart(e, TrashDir)}
+            className={clsx("w-full text-sm", {
+              ["bg-sidebar-accent"]: TrashDir.path === workspaceRoute.path || highlightDragover(TrashDir),
+            })}
+            onDrop={(e) => handleDrop(e, TrashDir)}
+          >
+            <div className="font-bold text-3xs font-mono text-sidebar-foreground">
+              <div className="flex items-center gap-2 py-2">
+                <Trash2 size={12} /> Trash
+              </div>
+            </div>
           </div>
-        </div>
+          <div
+            onDragOver={(e) => handleDragOver(e, fileTreeDir)}
+            onDragStart={(e) => handleDragStart(e, fileTreeDir)}
+            className={clsx("w-full text-sm", {
+              ["bg-sidebar-accent"]: fileTreeDir.path === workspaceRoute.path || highlightDragover(fileTreeDir),
+            })}
+            onDrop={(e) => handleDrop(e, fileTreeDir)}
+          >
+            <div className="font-bold text-3xs font-mono text-sidebar-foreground border-b border-dashed border-sidebar-foreground">
+              <div className="flex items-center gap-2 py-2">
+                <Folders size={12} />/
+              </div>
+            </div>
+          </div>
+        </>
       )}
-      {Object.values(fileTreeDir.children).map((file) => (
-        <SidebarMenuItem
-          key={file.path}
-          className={clsx({
-            ["bg-sidebar-accent"]: file.path === workspaceRoute.path || highlightDragover(file),
-          })}
-          onDragOver={(e) => handleDragOver(e, file)}
-          onDrop={(e) => handleDrop(e, file)}
-          onDragLeave={handleDragLeave}
-          onDragEnter={(e) => {
-            handleDragEnter(e, file.path);
-          }}
-        >
-          {file.isTreeDir() ? (
-            <Collapsible open={expanded[file.path]} onOpenChange={(o) => expand(file.path, o)}>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton asChild>
-                  <EditableDir
-                    workspaceRoute={workspaceRoute}
-                    currentWorkspace={currentWorkspace}
-                    depth={depth}
-                    onDragStart={(e) => handleDragStart(e, file)}
-                    treeDir={file}
-                    expand={expandForNode}
-                    fullPath={file.path}
+      {Object.values(fileTreeDir.children)
+        .filter((fileNode) => showHidden || !fileNode.isHidden())
+        .map((fileNode) => (
+          <SidebarMenuItem
+            key={fileNode.path}
+            className={clsx({
+              ["bg-sidebar-accent"]: fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
+            })}
+            onDragOver={(e) => handleDragOver(e, fileNode)}
+            onDrop={(e) => handleDrop(e, fileNode)}
+            onDragLeave={handleDragLeave}
+            onDragEnter={(e) => {
+              handleDragEnter(e, fileNode.path);
+            }}
+          >
+            {fileNode.isTreeDir() ? (
+              <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton asChild>
+                    <EditableDir
+                      workspaceRoute={workspaceRoute}
+                      currentWorkspace={currentWorkspace}
+                      depth={depth}
+                      onDragStart={(e) => handleDragStart(e, fileNode)}
+                      treeDir={fileNode}
+                      expand={expandForNode}
+                      fullPath={fileNode.path}
+                    />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <FileTreeMenu
+                    expand={expand}
+                    expandForNode={expandForNode}
+                    fileTreeDir={fileNode as TreeDir}
+                    renameDirOrFileMultiple={renameDirOrFileMultiple}
+                    depth={depth + 1}
+                    expanded={expanded}
                   />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <FileTreeMenu
-                  expand={expand}
-                  expandForNode={expandForNode}
-                  fileTreeDir={file as TreeDir}
-                  renameDirOrFileMultiple={renameDirOrFileMultiple}
-                  depth={depth + 1}
-                  expanded={expanded}
+                </CollapsibleContent>
+              </Collapsible>
+            ) : (
+              <SidebarMenuButton asChild>
+                <EditableFile
+                  workspaceRoute={workspaceRoute}
+                  currentWorkspace={currentWorkspace}
+                  depth={depth}
+                  fullPath={fileNode.path}
+                  treeNode={fileNode as TreeFile}
+                  expand={expandForNode}
+                  onDragStart={(e) => handleDragStart(e, fileNode)}
                 />
-              </CollapsibleContent>
-            </Collapsible>
-          ) : (
-            <SidebarMenuButton asChild>
-              <EditableFile
-                workspaceRoute={workspaceRoute}
-                currentWorkspace={currentWorkspace}
-                depth={depth}
-                fullPath={file.path}
-                treeNode={file as TreeFile}
-                expand={expandForNode}
-                onDragStart={(e) => handleDragStart(e, file)}
-              />
-            </SidebarMenuButton>
-          )}
-        </SidebarMenuItem>
-      ))}
+              </SidebarMenuButton>
+            )}
+          </SidebarMenuItem>
+        ))}
     </SidebarMenu>
   );
 }

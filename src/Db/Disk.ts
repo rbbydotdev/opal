@@ -126,7 +126,7 @@ export type RemoteRenameFileType = {
 };
 
 export type FilePathsType = {
-  filePaths: string[];
+  filePaths: AbsPath[];
 };
 
 export type CreateDetails = FilePathsType;
@@ -229,7 +229,6 @@ export abstract class Disk {
     const newIndex = await this.fileTree.index(tree);
     this.connector.updateIndexCache(newIndex);
     if (writeIndexCache) {
-      console.debug(`Writing index cache with ${Object.keys(newIndex.children).length} children`);
       /*await*/ void this.connector.save();
     }
     return newIndex;

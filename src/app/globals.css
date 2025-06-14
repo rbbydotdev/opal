@@ -133,6 +133,9 @@ body {
 .mdxeditor {
   overflow: scroll;
   max-height: 100%;
+  .mark {
+    background-color: var(--search-highlight-bg) !important;
+  }
 }
 
 .mdxeditor-popup-container [class^="_dialogContent_"] {
