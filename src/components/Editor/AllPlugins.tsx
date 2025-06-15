@@ -4,6 +4,8 @@ import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { BadRequestError, isError } from "@/lib/errors";
 import { absPath, dirname } from "@/lib/paths2";
+import { ListNode } from "@lexical/list";
+import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import {
   AdmonitionDirectiveDescriptor,
   KitchenSinkToolbar,
@@ -34,6 +36,8 @@ import {
   $isRangeSelection,
   $setSelection,
   ElementNode,
+  // HeadingNode,
+  ParagraphNode,
   TextNode,
 } from "lexical";
 import { useEffect, useState } from "react";
@@ -127,21 +131,21 @@ function spliceNode(node: TextNode, matchStartsIndex: number, matchEndsIndex: nu
   }
   // middle
   if (matchStartsIndex < matchEndsIndex) {
-    const middleTextNode = new TextNode(str.slice(matchStartsIndex, matchEndsIndex));
+    const middleTextNode = new TextNode(str.slice(matchStartsIndex, matchEndsIndex + 1));
     middleTextNode.setFormat(node.getFormat());
     spliced.push(middleTextNode);
     nodes.m = middleTextNode;
   }
   // end
   if (matchEndsIndex < str.length) {
-    const endTextNode = new TextNode(str.slice(matchEndsIndex));
+    const endTextNode = new TextNode(str.slice(matchEndsIndex + 1));
     endTextNode.setFormat(node.getFormat());
     spliced.push(endTextNode);
     nodes.e = endTextNode;
   }
 
   if (!$isElementNode(parent)) {
-    console.error("Parent is not an ElementNode", parent);
+    console.error("Parent is not an ElementNode", parent, node);
     return nodes;
   } else {
     const targetIndex = node.getIndexWithinParent();
@@ -185,7 +189,19 @@ export const searchPlugin = realmPlugin({
 
         // const contentMap = WeakMap<ParagraphNode, Map<string, [number, number][]>>();
         const contentMap: WeakMap<ElementNode, string> = new WeakMap();
-        editor.registerNodeTransform(TextNode, (textNode) => {
+
+        const searchQuery = "needle";
+        [ParagraphNode, HeadingNode, QuoteNode, ListNode].forEach((NodeClass) =>
+          //@ts-expect-error
+          editor.registerNodeTransform(NodeClass, (transformNode) => {
+            if (transformNode.getTextContent().indexOf("needle") === -1) {
+              for (const node of transformNode.getAllTextNodes()) {
+                if (node.hasFormat("highlight")) node.toggleFormat("highlight");
+              }
+            }
+          })
+        );
+        editor.registerNodeTransform(TextNode, (transformNode) => {
           // if (overflow > 500) {
           //   console.log(overflow, textNode);
           //   return;
@@ -193,7 +209,7 @@ export const searchPlugin = realmPlugin({
           // overflow++;
           // console.log(textNode.getTextContent());
           // Find the closest parent ParagraphNode
-          const parent = textNode.getParent();
+          const parent = transformNode.getParent();
 
           if (!parent || !$isElementNode(parent)) return;
 
@@ -208,11 +224,14 @@ export const searchPlugin = realmPlugin({
           const textNodeIndex: ReadonlyArray<TextNode> = [];
           const offsetIndex: ReadonlyArray<number> = [];
 
+          // if (!bodyMatchIndexRanges.length) {
+          //   if (transformedNode.hasFormat("highlight")) {
+          //     transformedNode.toggleFormat("highlight");
+          //     return;
+          //   }
+          // }
+
           for (const textNode of textNodes) {
-            if (textNode.hasFormat("highlight")) {
-              textNode.toggleFormat("highlight");
-              return;
-            }
             const nodeText = textNode.getTextContent();
             for (let offset = 0; offset < nodeText.length; offset++) {
               (offsetIndex as Array<unknown>).push(offset);
@@ -221,7 +240,6 @@ export const searchPlugin = realmPlugin({
           }
 
           //get all indices of the search query
-          const searchQuery = "needle";
           const bodyMatchIndexRanges: [number, number][] = [];
           let index = body.indexOf(searchQuery);
 
@@ -231,17 +249,27 @@ export const searchPlugin = realmPlugin({
             bodyMatchIndexRanges.push([start, end]);
             index = body.indexOf(searchQuery, index + 1);
           }
+          if (!bodyMatchIndexRanges.length) {
+            textNodes
+              .filter((textNode) => textNode.hasFormat("highlight"))
+              .forEach((textNode) => textNode.toggleFormat("highlight"));
+          } else {
+          }
 
           //nodes.length === groupedOffsets.length
           const groupedOffsets: number[][] = [];
-          let nodes: TextNode[] = [];
+          let matchedTextNodes: TextNode[] = [];
 
           //each match
           for (const [startsInBody, endsInBody] of bodyMatchIndexRanges) {
-            nodes = nodes.concat(Array.from(new Set([...textNodeIndex.slice(startsInBody, endsInBody + 1)])));
-            const allOffsets = offsetIndex.slice(startsInBody, endsInBody + 1); //[0,1,2] or [1,2,0] or [3,1,2] etc ...
+            //get all the nodes for the match
+            matchedTextNodes = matchedTextNodes.concat(
+              Array.from(new Set([...textNodeIndex.slice(startsInBody, endsInBody + 1)]))
+            );
+            //each match offset can be [0,1,2] or [1,2,0] or [3,1,2] etc ... these will then be grouped by ascending below
+            const allOffsets = offsetIndex.slice(startsInBody, endsInBody + 1);
+            //reminder, offset can span multiple nodes so need to group like[1/2-match][1/2-match]
             let currList: number[] = [];
-            //offset can span nodes so need to group like [1/2-match][1/2-match]
             for (let i = 0; i < allOffsets.length; i++) {
               if ((allOffsets[i - 1] ?? Infinity) < allOffsets[i]) {
                 currList.push(allOffsets[i]);
@@ -251,37 +279,38 @@ export const searchPlugin = realmPlugin({
               }
             }
           }
-          console.log(">>>", groupedOffsets);
-          console.log(nodes);
-          for (const [startsInBody, endsInBody] of bodyMatchIndexRanges) {
-            for (let bodyIndex = startsInBody; bodyIndex <= endsInBody; bodyIndex++) {
-              const node = textNodeIndex[bodyIndex];
 
-              const offsets = [offsetIndex[bodyIndex]];
-              for (let index = bodyIndex + 1; offsetIndex[index] ?? -Infinity >= offsets.at(-1)!; index++) {
-                offsets.push(index);
-              }
-              console.log(offsets.slice().map((idx) => node.getTextContent()[idx]));
-              const startOffset = Math.min(...offsets);
-              const endOffset = Math.max(...offsets);
+          //Remove highlight from non matching
+          const matchedNodesSet = new WeakSet([...matchedTextNodes]);
+          textNodes
+            .filter((node) => !matchedNodesSet.has(node) && node.hasFormat("highlight"))
+            .forEach((textNode) => textNode.toggleFormat("highlight"));
 
-              if (node.getTextContentSize() - 1 === endOffset) {
-                //already cut
-                if (!node.hasFormat("highlight")) {
-                  // console.log(`highlighting node ${node.getKey()} : ${node.getTextContent()}`);
-                  node.toggleFormat("highlight");
-                } else {
-                  // console.log(`skipping highlighting node ${node.getKey()} : ${node.getTextContent()}`);
-                }
-              } else {
-                // console.log(`splitting node ${node.getKey()} : ${node.getTextContent()}`);
-                //cut node wait for next cycle to draw higlights
-                const { m: middleNode } = spliceNode(node, startOffset, endOffset);
-                if (middleNode && !middleNode.hasFormat("highlight")) {
-                  middleNode.toggleFormat("highlight");
-                }
+          for (let i = 0; i < matchedTextNodes.length; i++) {
+            const node = matchedTextNodes[i];
+            const offsetMatch = groupedOffsets[i];
+            //node is already cut up for our highlighting
+            if (offsetMatch.length === node.getTextContentSize()) {
+              if (!node.hasFormat("highlight")) {
+                node.toggleFormat("highlight");
               }
-              bodyIndex += endOffset;
+            } else {
+              const start = offsetMatch.shift()!;
+              const end = offsetMatch.pop() ?? start;
+              const { s: startNode, m: matchNode, e: endNode } = spliceNode(node, start, end);
+              if (!matchNode) {
+                console.error("unexpected non matching node");
+                return;
+              }
+              if (startNode && startNode.hasFormat("highlight")) {
+                // startNode.toggleFormat("highlight");
+              }
+              if (endNode && endNode.hasFormat("highlight")) {
+                // endNode.toggleFormat("highlight");
+              }
+              if (!matchNode.hasFormat("highlight")) {
+                matchNode.toggleFormat("highlight");
+              }
             }
           }
         });
