@@ -6,8 +6,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { SearchResult } from "@/features/SearchResults";
-import { DiskSearchResultData, useSearchWorkspace } from "@/features/useSearchWorkspace";
+import { SearchResult } from "@/features/search/SearchResults";
+import { DiskSearchResultData, useSearchWorkspace } from "@/features/search/useSearchWorkspace";
 import { ChevronDown, ChevronRight, FileText, Search, X } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { relPath } from "../../lib/paths2";

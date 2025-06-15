@@ -1,7 +1,7 @@
 "use client";
 
-import { useFileTreeDragDrop } from "@/components/FiletreeMenu";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useFavicon from "@/hooks/useFavicon";
 import { Opal } from "@/lib/Opal";
 import { useRouter } from "next/navigation";

@@ -111,7 +111,7 @@ class HighlightTransform {
     if (!parent || !$isElementNode(parent)) return;
     const body = parent.getTextContent();
     this.contentMap.set(parent, body);
-    console.log(transformNode.getKey(), transformNode.getTextContent(), Date.now());
+    // console.log(transformNode.getKey(), transformNode.getTextContent());
 
     const textNodes = parent.getAllTextNodes();
 
