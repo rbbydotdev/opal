@@ -64,12 +64,10 @@ export function WorkSpaceButtonBar() {
 
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
 
-  //               {/* <div className="flex-shrink-1 max-w-full overflow-hidden whitespace-nowrap text-ellipsis uppercase p-1 flex items-center justify-center text-center font-mono"> */}
   const filteredWorkspaces = useMemo(
     () => workspaces.filter((workspace) => workspace.guid !== coalescedWorkspace?.guid),
     [workspaces, coalescedWorkspace]
   );
-  // const { isLoading } = useIsNavigatingWorkspace();
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const { pending } = useRequestSignals();
   return (
