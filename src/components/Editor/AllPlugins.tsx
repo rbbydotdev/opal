@@ -29,6 +29,7 @@ import {
 } from "@mdxeditor/editor";
 import {
   $createRangeSelection,
+  $getRoot,
   $getSelection,
   $isElementNode,
   $isRangeSelection,
@@ -117,6 +118,7 @@ function spliceNode(
     return nodes;
   }
   const str = node.getTextContent();
+  console.log(str, matchStartsIndex, matchEndsIndex, node.getKey(), parent.getKey());
 
   // --- 1. Capture selection info before splicing ---
   const selection = $getSelection();
@@ -136,7 +138,7 @@ function spliceNode(
     nodes.s = startTextNode;
   }
   // match
-  if (matchStartsIndex < matchEndsIndex) {
+  if (matchStartsIndex <= matchEndsIndex) {
     const middleTextNode = new TextNode(str.slice(matchStartsIndex, matchEndsIndex + 1));
     if (!middleTextNode.isUnmergeable()) middleTextNode.toggleUnmergeable();
     middleTextNode.setFormat(node.getFormat());
@@ -150,6 +152,7 @@ function spliceNode(
     spliced.push(endTextNode);
     nodes.e = endTextNode;
   }
+  console.log(nodes);
 
   if (!$isElementNode(parent)) {
     console.log("Parent is not an ElementNode", "textnode key =", node.getKey());
@@ -186,8 +189,34 @@ function spliceNode(
 
 export const searchPlugin = realmPlugin({
   postInit(realm) {
-    // realm.pub(addImportVisitor$, MdastTextVisitor);
+    //add cmd+f shortcut to open search
     const editor = realm.getValue(activeEditor$);
+    let searchQuery = "edde";
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        const editor = realm.getValue(activeEditor$);
+        if (editor) {
+          searchQuery = prompt("Enter search query:", searchQuery) ?? searchQuery;
+          editor.update(() => {
+            // No-op: just read the root node
+            $getRoot()
+              .getAllTextNodes()
+              .forEach((textNode) => {
+                // This will trigger the TextTransform registered above
+                textNode.setTextContent(textNode.getTextContent() + "1");
+              });
+          });
+          editor.focus();
+          // Open search dialog or perform search
+          // This is a placeholder for your search logic
+          console.log("Search triggered");
+        }
+      }
+    });
+
+    // realm.pub(addImportVisitor$, MdastTextVisitor);
     if (editor) {
       editor.update(() => {
         // Register the highlight transform for TextNode.
@@ -195,20 +224,9 @@ export const searchPlugin = realmPlugin({
         // const contentMap = WeakMap<ParagraphNode, Map<string, [number, number][]>>();
         const contentMap: WeakMap<ElementNode, string> = new WeakMap();
 
-        const searchQuery = "needle";
-        // [ParagraphNode, HeadingNode, QuoteNode, ListNode].forEach((NodeClass) =>
-        //   //@ts-expect-error
-        //   editor.registerNodeTransform(NodeClass, (transformNode) => {
-        //     if (transformNode.getTextContent().indexOf("needle") === -1) {
-        //       for (const node of transformNode.getAllTextNodes()) {
-        //         if (node.hasFormat("highlight")) node.toggleFormat("highlight");
-        //       }
-        //     }
-        //   })
-        // );
-        editor.registerNodeTransform(TextNode, (transformNode) => {
+        editor.registerNodeTransform(TextNode, function HighlightTransform(transformNode) {
           // Traverse up until we find a ParagraphNode, HeadingNode, QuoteNode, or ListNode
-          let parent = transformNode.getParent()?.getLatest();
+          const parent = transformNode.getParent()?.getLatest();
           if (!parent || !$isElementNode(parent)) return;
           const body = parent.getTextContent();
           contentMap.set(parent, body);
@@ -234,7 +252,7 @@ export const searchPlugin = realmPlugin({
             const start = index;
             const end = index + searchQuery.length - 1;
             bodyMatchIndexRanges.push([start, end]);
-            index = body.indexOf(searchQuery, index + 1);
+            index = body.indexOf(searchQuery, end + 1);
           }
 
           const groupedOffsets: number[][] = [];
@@ -246,7 +264,7 @@ export const searchPlugin = realmPlugin({
             matchedTextNodes = matchedTextNodes.concat(
               Array.from(new Set([...textNodeIndex.slice(startsInBody, endsInBody + 1)]))
             );
-            //each match offset can be [0,1,2] or [1,2,0] or [3,1,2] etc ... these will then be grouped by ascending below
+            //each match offset can be 0,1,2,3 or 1,2,0,1,2 or 3,0,1,2,3 etc ... these will then be grouped by ascending below
             const allOffsets = offsetIndex.slice(startsInBody, endsInBody + 1);
             //reminder, offset can span multiple nodes so need to group like[1/2-match][1/2-match]
             let currList: number[] = [];
@@ -267,11 +285,8 @@ export const searchPlugin = realmPlugin({
             .filter((node) => !matchedNodesSet.has(node) && node.hasFormat("highlight"))
             .forEach((textNode) => textNode.toggleFormat("highlight"));
 
-          // console.log(matchedTextNodes.length, groupedOffsets.length);
-          // console.log(matchedTextNodes, JSON.stringify(groupedOffsets));
-
           for (let i = 0; i < matchedTextNodes.length; i++) {
-            const node = matchedTextNodes[i].getLatest();
+            const node = matchedTextNodes[i];
             const offsetMatch = groupedOffsets[i];
             //node is already cut up for our highlighting
             if (offsetMatch.length === node.getTextContentSize()) {
