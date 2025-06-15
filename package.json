@@ -66,6 +66,7 @@
     "dexie-react-hooks": "^1.1.7",
     "emittery": "^1.0.3",
     "fflate": "^0.8.2",
+    "install": "^0.13.0",
     "jotai": "^2.10.4",
     "lexical": "^0.27.2",
     "lucide-react": "^0.468.0",
