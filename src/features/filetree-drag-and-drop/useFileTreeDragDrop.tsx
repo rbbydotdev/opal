@@ -6,7 +6,7 @@ import { Workspace } from "@/Db/Workspace";
 import { BadRequestError, errF, isError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
-import React from "react";
+import React, { useCallback } from "react";
 
 export function useFileTreeDragDrop({
   currentWorkspace,
@@ -24,29 +24,35 @@ export function useFileTreeDragDrop({
     return TreeNode.FromPath(dropPath(targetPath, node), node.type);
   }
 
-  const { selectedRange, focused, setDragOver, setDraggingNode, setDraggingNodes } = useFileTreeMenuContext();
-  const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
-    setDragOver(null);
-    setDraggingNode(targetNode);
-    window.addEventListener(
-      "dragend",
-      () => {
-        setDraggingNode(null);
-      },
-      { once: true }
-    );
-    try {
-      prepareNodeDataTransfer({
-        dataTransfer: event.dataTransfer,
-        selectedRange,
-        focused,
-        currentWorkspace,
-        targetNode,
-      });
-    } catch (e) {
-      console.error(errF`Error preparing node data for drag and drop: ${e}`);
-    }
-  };
+  const { selectedRange, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
+    useFileTreeMenuContext();
+  const handleDragStart = useCallback(
+    (event: React.DragEvent, targetNode: TreeNode) => {
+      setDragOver(null);
+      setDraggingNode(targetNode);
+      setDraggingNodes(selectedRange.map((path) => currentWorkspace.nodeFromPath(path)).filter(Boolean));
+      window.addEventListener(
+        "dragend",
+        () => {
+          setDraggingNode(null);
+          setDraggingNodes([]);
+        },
+        { once: true }
+      );
+      try {
+        prepareNodeDataTransfer({
+          dataTransfer: event.dataTransfer,
+          selectedRange,
+          focused,
+          currentWorkspace,
+          targetNode,
+        });
+      } catch (e) {
+        console.error(errF`Error preparing node data for drag and drop: ${e}`);
+      }
+    },
+    [currentWorkspace, focused, selectedRange, setDragOver, setDraggingNode, setDraggingNodes]
+  );
 
   const handleDragOver = (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
@@ -88,10 +94,8 @@ export function useFileTreeDragDrop({
       if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
         await handleExternalDrop(event, targetNode);
       } else {
-        const { nodeData } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
-
-        if (nodeData && nodeData.length) {
-          const moveNodes = reduceLineage(nodeData.map((node) => TreeNode.FromJSON(node)))
+        if (draggingNodes.length) {
+          const moveNodes = reduceLineage(draggingNodes)
             .filter((node) => allowedMove(targetPath, node))
             .map((node) => [node, dropNode(targetPath, node)]) as [TreeNode, TreeNode][];
 

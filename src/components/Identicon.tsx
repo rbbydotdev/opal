@@ -189,6 +189,5 @@ const Identicon = ({ input, size = 5, scale = 20 }: IdenticonProps) => {
     </svg>
   );
 };
-// <div className="inline-block rounded-lg overflow-hidden">
 
 export default Identicon;

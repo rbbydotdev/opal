@@ -1,18 +1,18 @@
 import { Workspace } from "@/Db/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
+import { FileTreeDragPreview } from "@/components/FileTreeDragPreview";
 import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { DragPreviewNode } from "@/features/filetree-drag-and-drop/DragPreviewNode";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { AbsPath, absPath, dirname, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
 import clsx from "clsx";
-import { FolderDownIcon, Folders, Trash2 } from "lucide-react";
+import { Folders, Trash2 } from "lucide-react";
 import React, { useCallback } from "react";
 
 export const INTERNAL_FILE_TYPE = "application/x-opal";
@@ -30,7 +30,6 @@ async function copyHtmlToClipboard(htmlString: string) {
 }
 export function useCopyKeydownImages(currentWorkspace: Workspace) {
   const { selectedRange, focused } = useFileTreeMenuContext();
-
   function handleCopyKeyDown(origFn: (e: React.KeyboardEvent) => void) {
     return function (e: React.KeyboardEvent, fullPath?: AbsPath) {
       if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
@@ -108,8 +107,8 @@ export function FileTreeMenu({
 }) {
   showHidden = showHidden ?? true;
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
-  const { setReactDragImage, DragImagePortal } = useDragImage();
 
+  const { setReactDragImage, DragImagePortal } = useDragImage();
   const { highlightDragover } = useFileTreeMenuContext();
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
@@ -122,13 +121,8 @@ export function FileTreeMenu({
   });
   const handleDragStartWithImg = useCallback(
     (node: TreeNode) => (e: React.DragEvent) => {
-      setReactDragImage(
-        e,
-        <DragPreviewNode className="w-20 h-20 rotate-12">
-          {node.isTreeDir() ? <FolderDownIcon size={24} className="text-white" /> : <img src={node.path} alt="" />}
-        </DragPreviewNode>
-      );
       handleDragStart(e, node);
+      setReactDragImage(e, <FileTreeDragPreview />);
     },
     [handleDragStart, setReactDragImage]
   );
