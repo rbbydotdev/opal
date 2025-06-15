@@ -4,8 +4,6 @@ import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { BadRequestError, isError } from "@/lib/errors";
 import { absPath, dirname } from "@/lib/paths2";
-import { ListNode } from "@lexical/list";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import {
   AdmonitionDirectiveDescriptor,
   KitchenSinkToolbar,
@@ -36,8 +34,7 @@ import {
   $isRangeSelection,
   $setSelection,
   ElementNode,
-  // HeadingNode,
-  ParagraphNode,
+  LexicalNode,
   TextNode,
 } from "lexical";
 import { useEffect, useState } from "react";
@@ -104,12 +101,22 @@ export async function expressImageUploadHandler(image: File) {
 }
 
 //splices out text range of choice into seperate node: <TextNode?><TextNode_Match><TextNode?>
-function spliceNode(node: TextNode, matchStartsIndex: number, matchEndsIndex: number) {
+function spliceNode(
+  node: TextNode,
+  parent: LexicalNode,
+  matchStartsIndex: number,
+  matchEndsIndex: number
+): typeof nodes {
   // offsets[0] is the theoretical start and offsets[1] is the end
-  const parent = node.getParent()!;
-  const str = node.getTextContent();
-
+  // const parent = node.getParent()!;
   const spliced: TextNode[] = [];
+  const nodes = { s: null as TextNode | null, m: null as TextNode | null, e: null as TextNode | null };
+
+  if (!$isElementNode(parent) || !node?.getParent()) {
+    // console.log("Parent is not an ElementNode", "textnode key =", node.getKey());
+    return nodes;
+  }
+  const str = node.getTextContent();
 
   // --- 1. Capture selection info before splicing ---
   const selection = $getSelection();
@@ -122,14 +129,13 @@ function spliceNode(node: TextNode, matchStartsIndex: number, matchEndsIndex: nu
 
   // --- 2. Splice the node as before ---
   // start
-  const nodes = { s: null as TextNode | null, m: null as TextNode | null, e: null as TextNode | null };
   if (matchStartsIndex > 0) {
     const startTextNode = new TextNode(str.slice(0, matchStartsIndex));
     startTextNode.setFormat(node.getFormat());
     spliced.push(startTextNode);
     nodes.s = startTextNode;
   }
-  // middle
+  // match
   if (matchStartsIndex < matchEndsIndex) {
     const middleTextNode = new TextNode(str.slice(matchStartsIndex, matchEndsIndex + 1));
     middleTextNode.setFormat(node.getFormat());
@@ -145,12 +151,10 @@ function spliceNode(node: TextNode, matchStartsIndex: number, matchEndsIndex: nu
   }
 
   if (!$isElementNode(parent)) {
-    console.error("Parent is not an ElementNode", parent, node);
+    console.log("Parent is not an ElementNode", "textnode key =", node.getKey());
     return nodes;
   } else {
     const targetIndex = node.getIndexWithinParent();
-    // console.log(spliced.map((n) => n.getTextContent()).join("|"));
-
     parent.splice(targetIndex, 1, spliced); // Remove the original node
   }
 
@@ -191,45 +195,27 @@ export const searchPlugin = realmPlugin({
         const contentMap: WeakMap<ElementNode, string> = new WeakMap();
 
         const searchQuery = "needle";
-        [ParagraphNode, HeadingNode, QuoteNode, ListNode].forEach((NodeClass) =>
-          //@ts-expect-error
-          editor.registerNodeTransform(NodeClass, (transformNode) => {
-            if (transformNode.getTextContent().indexOf("needle") === -1) {
-              for (const node of transformNode.getAllTextNodes()) {
-                if (node.hasFormat("highlight")) node.toggleFormat("highlight");
-              }
-            }
-          })
-        );
+        // [ParagraphNode, HeadingNode, QuoteNode, ListNode].forEach((NodeClass) =>
+        //   //@ts-expect-error
+        //   editor.registerNodeTransform(NodeClass, (transformNode) => {
+        //     if (transformNode.getTextContent().indexOf("needle") === -1) {
+        //       for (const node of transformNode.getAllTextNodes()) {
+        //         if (node.hasFormat("highlight")) node.toggleFormat("highlight");
+        //       }
+        //     }
+        //   })
+        // );
         editor.registerNodeTransform(TextNode, (transformNode) => {
-          // if (overflow > 500) {
-          //   console.log(overflow, textNode);
-          //   return;
-          // }
-          // overflow++;
-          // console.log(textNode.getTextContent());
-          // Find the closest parent ParagraphNode
-          const parent = transformNode.getParent();
-
+          // Traverse up until we find a ParagraphNode, HeadingNode, QuoteNode, or ListNode
+          let parent = transformNode.getParent()?.getLatest();
           if (!parent || !$isElementNode(parent)) return;
-
           const body = parent.getTextContent();
-
-          if (contentMap.get(parent) === body) return; // No change in content, skip processing
           contentMap.set(parent, body);
 
           const textNodes = parent.getAllTextNodes();
 
-          //should i store the textnode id instead of the node?
           const textNodeIndex: ReadonlyArray<TextNode> = [];
           const offsetIndex: ReadonlyArray<number> = [];
-
-          // if (!bodyMatchIndexRanges.length) {
-          //   if (transformedNode.hasFormat("highlight")) {
-          //     transformedNode.toggleFormat("highlight");
-          //     return;
-          //   }
-          // }
 
           for (const textNode of textNodes) {
             const nodeText = textNode.getTextContent();
@@ -249,14 +235,7 @@ export const searchPlugin = realmPlugin({
             bodyMatchIndexRanges.push([start, end]);
             index = body.indexOf(searchQuery, index + 1);
           }
-          if (!bodyMatchIndexRanges.length) {
-            textNodes
-              .filter((textNode) => textNode.hasFormat("highlight"))
-              .forEach((textNode) => textNode.toggleFormat("highlight"));
-          } else {
-          }
 
-          //nodes.length === groupedOffsets.length
           const groupedOffsets: number[][] = [];
           let matchedTextNodes: TextNode[] = [];
 
@@ -286,8 +265,11 @@ export const searchPlugin = realmPlugin({
             .filter((node) => !matchedNodesSet.has(node) && node.hasFormat("highlight"))
             .forEach((textNode) => textNode.toggleFormat("highlight"));
 
+          console.log(matchedTextNodes.length, groupedOffsets.length);
+          console.log(matchedTextNodes, JSON.stringify(groupedOffsets));
+
           for (let i = 0; i < matchedTextNodes.length; i++) {
-            const node = matchedTextNodes[i];
+            const node = matchedTextNodes[i].getLatest();
             const offsetMatch = groupedOffsets[i];
             //node is already cut up for our highlighting
             if (offsetMatch.length === node.getTextContentSize()) {
@@ -297,19 +279,10 @@ export const searchPlugin = realmPlugin({
             } else {
               const start = offsetMatch.shift()!;
               const end = offsetMatch.pop() ?? start;
-              const { s: startNode, m: matchNode, e: endNode } = spliceNode(node, start, end);
-              if (!matchNode) {
-                console.error("unexpected non matching node");
-                return;
-              }
-              if (startNode && startNode.hasFormat("highlight")) {
-                // startNode.toggleFormat("highlight");
-              }
-              if (endNode && endNode.hasFormat("highlight")) {
-                // endNode.toggleFormat("highlight");
-              }
-              if (!matchNode.hasFormat("highlight")) {
-                matchNode.toggleFormat("highlight");
+              const { m, s, e } = spliceNode(node.getLatest(), node.getParent()!, start, end);
+              console.log({ m, s, e });
+              if (m && !m.hasFormat("highlight")) {
+                m.toggleFormat("highlight");
               }
             }
           }
@@ -377,3 +350,17 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
     markdownShortcutPlugin(),
   ];
 }
+
+// while (
+//   parent &&
+//   !$isElementNode(parent) &&
+//   !(
+//     parent instanceof ParagraphNode ||
+//     parent instanceof HeadingNode ||
+//     parent instanceof QuoteNode ||
+//     parent instanceof ListNode ||
+//     parent instanceof RootNode
+//   )
+// ) {
+//   parent = parent.getParent();
+// }
