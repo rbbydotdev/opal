@@ -438,11 +438,18 @@ export abstract class Disk {
     return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "file"))[0];
   }
   //for moving files without emitting events or updating the index
-  async quietMove(oldPath: AbsPath, newPath: AbsPath) {
-    const uniquePath = await this.nextPath(newPath);
-    await this.mkdirRecursive(absPath(dirname(uniquePath)));
-    await this.fs.rename(encodePath(oldPath), encodePath(uniquePath));
-    return uniquePath;
+  async quietMove(oldPath: AbsPath, newPath: AbsPath, options?: { overWrite?: boolean }): Promise<AbsPath> {
+    let finalPath = newPath;
+    if (await this.pathExists(oldPath)) {
+      if (!options?.overWrite !== true) {
+        finalPath = await this.nextPath(newPath);
+      } else {
+        await this.quietRemove(newPath);
+      }
+    }
+    await this.mkdirRecursive(absPath(dirname(finalPath)));
+    await this.fs.rename(encodePath(oldPath), encodePath(finalPath));
+    return finalPath;
   }
 
   protected async renameDirOrFileDiskMethod(...properties: Parameters<typeof this.renameDirOrFileDiskMethodQUIET>) {

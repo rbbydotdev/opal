@@ -1,5 +1,5 @@
 import { Workspace } from "@/Db/Workspace";
-import { SearchResultData } from "@/features/SearchResults";
+import { SearchResultData } from "@/features/search/SearchResults";
 import { SearchWorkspaceWorker } from "@/workers/SearchWorker/SearchWorkspace";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 
@@ -11,7 +11,7 @@ export type DiskSearchResultData = {
 };
 export function useSearchWorkspace(workspace: Workspace) {
   const searchWorker = useMemo(() => new SearchWorkspaceWorker(), []);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
 
   const search = useCallback(
     async function* scan(term: string, abortSignal?: AbortSignal) {

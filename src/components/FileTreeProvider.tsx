@@ -19,7 +19,9 @@ export const FileTreeMenuContext = React.createContext<{
   setDragOver: (node: TreeNode | null) => void;
   dragOver: TreeNode | null;
   draggingNode: TreeNode | null;
+  draggingNodes: TreeNode[];
   setDraggingNode: (node: TreeNode | null) => void;
+  setDraggingNodes: (node: TreeNode[]) => void;
   selectedRange: AbsPath[];
   virtual: AbsPath | null;
   setVirtual: (path: AbsPath | null) => void;
@@ -42,6 +44,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
   const [dragOver, setDragOver] = React.useState<TreeNode | null>(null);
   const [selectedRange, setSelectedRange] = React.useState<AbsPath[]>([]);
   const [draggingNode, setDraggingNode] = React.useState<TreeNode | null>(null);
+  const [draggingNodes, setDraggingNodes] = React.useState<TreeNode[]>([]);
 
   const resetEditing = useCallback(() => {
     setEditing(null);
@@ -85,7 +88,9 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
         setSelectedRange,
         dragOver,
         setDragOver,
-        setDraggingNode: setDraggingNode,
+        setDraggingNode,
+        setDraggingNodes,
+        draggingNodes,
         draggingNode: draggingNode,
         highlightDragover,
         setFocused,

@@ -59,11 +59,11 @@ export class Thumb {
     await this.cache.then(async (c) => {
       const res = await c.match(oldUrl);
       if (res) {
-        await c.put(this.url(), res);
-        await c.delete(oldUrl);
+        void c.put(this.url(), res);
+        void c.delete(oldUrl);
       }
     });
-    return this.thumbRepo.quietMove(oldPath, newPath);
+    return this.thumbRepo.quietMove(oldPath, newPath, { overWrite: true });
   }
 
   async remove() {

@@ -167,9 +167,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
         onMouseDown={handleMouseDown}
         className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-hidden bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
         title="Resize sidebar"
-      >
-        {/* <div className="h-[30px] w-1 rounded-sm bg-sidebar-foreground/50" /> */}
-      </div>
+      ></div>
 
       <main className="min-w-0 flex-grow overflow-y-auto">{main}</main>
     </div>

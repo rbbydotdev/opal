@@ -3,7 +3,7 @@ import { ImageCache } from "@/Db/ImageCache";
 import { ClientDb } from "@/Db/instance";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { SearchScannable } from "@/features/SearchScan";
+import { SearchScannable } from "@/features/search/SearchScan";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
@@ -211,12 +211,24 @@ export class Workspace {
       });
       await this.NewThumb(oldNode.path)
         .move(oldNode.path, newPath)
-        .catch(async (e) => {
-          console.error("Error moving thumb", e);
+        .catch(async (_e) => {
+          console.debug(`error moving thumb from ${oldNode.path} to ${newPath}`);
         });
     }
   }
+  async renameSingle(from: TreeNode, to: TreeNode | AbsPath) {
+    return this.renameMultiple([[from, to]] as [TreeNode, TreeNode | AbsPath][]).then((result) => {
+      if (result.length === 0) return null;
+      return result[0];
+    });
+  }
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]) {
+    //adjust thumbs first so rename index trigger allows for them to easily display
+    await Promise.all(
+      nodes.map(([oldNode, newNode]) =>
+        this.adjustThumbAndCachePath(oldNode, absPath(String(newNode).replace(oldNode.path, String(newNode))))
+      )
+    );
     const result = await this.disk.renameMultiple(nodes);
     await this.disk.findReplaceImgBatch(
       result
@@ -224,15 +236,6 @@ export class Workspace {
         .map(({ oldPath, newPath }) => [oldPath, newPath])
     );
     return result;
-  }
-  async renameFile(oldNode: TreeNode, newFullPath: AbsPath) {
-    const nextPath = await this.disk.nextPath(newFullPath); // Set the next path to the new full path
-    const { newPath } = await this.disk.renameDir(oldNode.path, nextPath);
-    const newNode = oldNode.copy().rename(newPath);
-
-    await this.disk.findReplaceImgBatch([[oldNode.path, absPath(oldNode.path.replace(oldNode.path, newNode.path))]]); // Update all references in the disk
-    await this.adjustThumbAndCachePath(oldNode, absPath(oldNode.path.replace(oldNode.path, newNode.path)));
-    return newNode;
   }
   //this is dumb because you do not consider the children!
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
@@ -246,6 +249,7 @@ export class Workspace {
 
     await newNode.asyncWalk(async (child) => {
       findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
+      //huhhhhh?
       await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
     });
     await this.disk.findReplaceImgBatch(findStrReplaceStr);

@@ -2,29 +2,18 @@ import { Workspace } from "@/Db/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
 import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
-import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { DragPreviewNode } from "@/features/filetree-drag-and-drop/DragPreviewNode";
+import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
+import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
-import { BadRequestError, errF, isError } from "@/lib/errors";
-import {
-  AbsPath,
-  absPath,
-  basename,
-  dirname,
-  encodePath,
-  isImage,
-  isMarkdown,
-  joinPath,
-  prefix,
-  reduceLineage,
-} from "@/lib/paths2";
+import { AbsPath, absPath, dirname, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
 import clsx from "clsx";
-import { Folders, Trash2 } from "lucide-react";
-import React from "react";
+import { FolderDownIcon, Folders, Trash2 } from "lucide-react";
+import React, { useCallback } from "react";
 
 export const INTERNAL_FILE_TYPE = "application/x-opal";
 
@@ -41,6 +30,7 @@ async function copyHtmlToClipboard(htmlString: string) {
 }
 export function useCopyKeydownImages(currentWorkspace: Workspace) {
   const { selectedRange, focused } = useFileTreeMenuContext();
+
   function handleCopyKeyDown(origFn: (e: React.KeyboardEvent) => void) {
     return function (e: React.KeyboardEvent, fullPath?: AbsPath) {
       if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
@@ -96,114 +86,6 @@ export function allowedMove(targetPath: AbsPath, node: TreeNode) {
   return true;
 }
 
-export function useFileTreeDragDrop({
-  currentWorkspace,
-  onMoveMultiple,
-  onDragEnter,
-}: {
-  currentWorkspace: Workspace;
-  onMoveMultiple?: (nodes: [oldNode: TreeNode, newNode: TreeNode][]) => Promise<unknown>;
-  onDragEnter?: (path: string, data?: NodeDataJType) => void;
-}) {
-  function dropPath(targetPath: AbsPath, node: TreeNode) {
-    return joinPath(targetPath, basename(node.path));
-  }
-  function dropNode(targetPath: AbsPath, node: TreeNode) {
-    return TreeNode.FromPath(dropPath(targetPath, node), node.type);
-  }
-  const { selectedRange, focused, setDragOver, setDraggingNode: setDragNode } = useFileTreeMenuContext();
-  const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
-    setDragOver(null);
-    setDragNode(targetNode);
-    window.addEventListener(
-      "dragend",
-      () => {
-        setDragNode(null);
-      },
-      { once: true }
-    );
-
-    try {
-      prepareNodeDataTransfer({
-        dataTransfer: event.dataTransfer,
-        selectedRange,
-        focused,
-        currentWorkspace,
-        targetNode,
-      });
-    } catch (e) {
-      console.error(errF`Error preparing node data for drag and drop: ${e}`);
-    }
-  };
-
-  const handleDragOver = (event: React.DragEvent, targetNode: TreeNode) => {
-    event.preventDefault();
-    event.stopPropagation();
-    event.dataTransfer.dropEffect = "move";
-    setDragOver(targetNode);
-    return false;
-  };
-  const handleDragLeave = (event: React.DragEvent) => {
-    setDragOver(null);
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  const handleExternalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
-    const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
-    const { files } = event.dataTransfer;
-    for (const file of files) {
-      try {
-        await currentWorkspace.dropImageFile(file, targetPath);
-      } catch (e) {
-        if (isError(e, BadRequestError)) {
-          ErrorPopupControl.show({
-            title: "Not a valid image",
-            description: "Please upload a valid image file (png,gif,webp,jpg)",
-          });
-        }
-        console.error("Error dropping file:", e);
-      }
-    }
-  };
-
-  const handleDrop = async (event: React.DragEvent, targetNode: TreeNode = currentWorkspace.disk.fileTree.root) => {
-    setDragOver(null);
-    event.preventDefault();
-    event.stopPropagation();
-    const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
-    try {
-      if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
-        await handleExternalDrop(event, targetNode);
-      } else {
-        const { nodeData } = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
-
-        if (nodeData && nodeData.length) {
-          const moveNodes = reduceLineage(nodeData.map((node) => TreeNode.FromJSON(node)))
-            .filter((node) => allowedMove(targetPath, node))
-            .map((node) => [node, dropNode(targetPath, node)]) as [TreeNode, TreeNode][];
-
-          await onMoveMultiple?.(moveNodes);
-        }
-      }
-    } catch (e) {
-      console.error("Error parsing dragged data:", e);
-      return;
-    }
-  };
-
-  const handleDragEnter = (event: React.DragEvent, path: string) => {
-    event.preventDefault();
-    if (event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
-      const data = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
-      onDragEnter?.(path, data);
-    } else {
-      onDragEnter?.(path);
-    }
-  };
-  return { handleDragStart, handleDragOver, handleDrop, handleDragEnter, handleDragLeave };
-}
-
 const TrashDir = TreeNode.FromPath(absPath("/.trash"), "dir");
 
 export function FileTreeMenu({
@@ -226,6 +108,7 @@ export function FileTreeMenu({
 }) {
   showHidden = showHidden ?? true;
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
+  const { setReactDragImage, DragImagePortal } = useDragImage();
 
   const { highlightDragover } = useFileTreeMenuContext();
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
@@ -237,103 +120,118 @@ export function FileTreeMenu({
       }
     },
   });
+  const handleDragStartWithImg = useCallback(
+    (node: TreeNode) => (e: React.DragEvent) => {
+      setReactDragImage(
+        e,
+        <DragPreviewNode className="w-20 h-20 rotate-12">
+          {node.isTreeDir() ? <FolderDownIcon size={24} className="text-white" /> : <img src={node.path} alt="" />}
+        </DragPreviewNode>
+      );
+      handleDragStart(e, node);
+    },
+    [handleDragStart, setReactDragImage]
+  );
 
   return (
-    <SidebarMenu
-      onDragOver={(e) => handleDragOver(e, fileTreeDir)}
-      onDragLeave={handleDragLeave}
-      onDrop={(e) => handleDrop(e, fileTreeDir)}
-      onDragEnter={(e) => handleDragEnter(e, "/")}
-      className={clsx({ "": depth === 0 })}
-    >
-      {depth === 0 && (
-        <>
-          <div
-            onDragOver={(e) => handleDragOver(e, TrashDir)}
-            onDragStart={(e) => handleDragStart(e, TrashDir)}
-            className={clsx("w-full text-sm", {
-              ["bg-sidebar-accent"]: TrashDir.path === workspaceRoute.path || highlightDragover(TrashDir),
-            })}
-            onDrop={(e) => handleDrop(e, TrashDir)}
-          >
-            <div className="font-bold text-3xs font-mono text-sidebar-foreground">
-              <div className="flex items-center gap-2 py-2">
-                <Trash2 size={12} /> Trash
+    <>
+      {DragImagePortal}
+      <SidebarMenu
+        onDragOver={(e) => handleDragOver(e, fileTreeDir)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, fileTreeDir)}
+        onDragEnter={(e) => handleDragEnter(e, "/")}
+        className={clsx({ "": depth === 0 })}
+      >
+        {depth === 0 && (
+          <>
+            <div
+              onDragOver={(e) => handleDragOver(e, TrashDir)}
+              onDragStart={handleDragStartWithImg(TrashDir)}
+              className={clsx("w-full text-sm", {
+                ["bg-sidebar-accent"]: TrashDir.path === workspaceRoute.path || highlightDragover(TrashDir),
+              })}
+              onDrop={(e) => handleDrop(e, TrashDir)}
+            >
+              <div className="font-bold text-3xs font-mono text-sidebar-foreground">
+                <div className="flex items-center gap-2 py-2">
+                  <Trash2 size={12} /> Trash
+                </div>
               </div>
             </div>
-          </div>
-          <div
-            onDragOver={(e) => handleDragOver(e, fileTreeDir)}
-            onDragStart={(e) => handleDragStart(e, fileTreeDir)}
-            className={clsx("w-full text-sm", {
-              ["bg-sidebar-accent"]: fileTreeDir.path === workspaceRoute.path || highlightDragover(fileTreeDir),
-            })}
-            onDrop={(e) => handleDrop(e, fileTreeDir)}
-          >
-            <div className="font-bold text-3xs font-mono text-sidebar-foreground border-b border-dashed border-sidebar-foreground">
-              <div className="flex items-center gap-2 py-2">
-                <Folders size={12} />/
+            <div
+              onDragOver={(e) => handleDragOver(e, fileTreeDir)}
+              onDragStart={handleDragStartWithImg(fileTreeDir)}
+              className={clsx("w-full text-sm", {
+                ["bg-sidebar-accent"]: fileTreeDir.path === workspaceRoute.path || highlightDragover(fileTreeDir),
+              })}
+              onDrop={(e) => handleDrop(e, fileTreeDir)}
+            >
+              <div className="font-bold text-3xs font-mono text-sidebar-foreground border-b border-dashed border-sidebar-foreground">
+                <div className="flex items-center gap-2 py-2">
+                  <Folders size={12} />/
+                </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
-      {Object.values(fileTreeDir.children)
-        .filter((fileNode) => showHidden || !fileNode.isHidden())
-        .map((fileNode) => (
-          <SidebarMenuItem
-            key={fileNode.path}
-            className={clsx({
-              ["bg-sidebar-accent"]: fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
-            })}
-            onDragOver={(e) => handleDragOver(e, fileNode)}
-            onDrop={(e) => handleDrop(e, fileNode)}
-            onDragLeave={handleDragLeave}
-            onDragEnter={(e) => {
-              handleDragEnter(e, fileNode.path);
-            }}
-          >
-            {fileNode.isTreeDir() ? (
-              <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton asChild>
-                    <EditableDir
-                      workspaceRoute={workspaceRoute}
-                      currentWorkspace={currentWorkspace}
-                      depth={depth}
-                      onDragStart={(e) => handleDragStart(e, fileNode)}
-                      treeDir={fileNode}
-                      expand={expandForNode}
-                      fullPath={fileNode.path}
+          </>
+        )}
+        {Object.values(fileTreeDir.children)
+          .filter((fileNode) => showHidden || !fileNode.isHidden())
+          .map((fileNode) => (
+            <SidebarMenuItem
+              key={fileNode.path}
+              className={clsx({
+                ["bg-sidebar-accent"]: fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
+              })}
+              onDragOver={(e) => handleDragOver(e, fileNode)}
+              onDrop={(e) => handleDrop(e, fileNode)}
+              onDragLeave={handleDragLeave}
+              onDragEnter={(e) => {
+                handleDragEnter(e, fileNode.path);
+              }}
+            >
+              {fileNode.isTreeDir() ? (
+                <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton asChild>
+                      <EditableDir
+                        workspaceRoute={workspaceRoute}
+                        currentWorkspace={currentWorkspace}
+                        depth={depth}
+                        onDragStart={handleDragStartWithImg(fileNode)}
+                        treeDir={fileNode}
+                        expand={expandForNode}
+                        fullPath={fileNode.path}
+                      />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <FileTreeMenu
+                      expand={expand}
+                      expandForNode={expandForNode}
+                      fileTreeDir={fileNode as TreeDir}
+                      renameDirOrFileMultiple={renameDirOrFileMultiple}
+                      depth={depth + 1}
+                      expanded={expanded}
                     />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <FileTreeMenu
-                    expand={expand}
-                    expandForNode={expandForNode}
-                    fileTreeDir={fileNode as TreeDir}
-                    renameDirOrFileMultiple={renameDirOrFileMultiple}
-                    depth={depth + 1}
-                    expanded={expanded}
+                  </CollapsibleContent>
+                </Collapsible>
+              ) : (
+                <SidebarMenuButton asChild>
+                  <EditableFile
+                    workspaceRoute={workspaceRoute}
+                    currentWorkspace={currentWorkspace}
+                    depth={depth}
+                    fullPath={fileNode.path}
+                    treeNode={fileNode as TreeFile}
+                    expand={expandForNode}
+                    onDragStart={handleDragStartWithImg(fileNode)}
                   />
-                </CollapsibleContent>
-              </Collapsible>
-            ) : (
-              <SidebarMenuButton asChild>
-                <EditableFile
-                  workspaceRoute={workspaceRoute}
-                  currentWorkspace={currentWorkspace}
-                  depth={depth}
-                  fullPath={fileNode.path}
-                  treeNode={fileNode as TreeFile}
-                  expand={expandForNode}
-                  onDragStart={(e) => handleDragStart(e, fileNode)}
-                />
-              </SidebarMenuButton>
-            )}
-          </SidebarMenuItem>
-        ))}
-    </SidebarMenu>
+                </SidebarMenuButton>
+              )}
+            </SidebarMenuItem>
+          ))}
+      </SidebarMenu>
+    </>
   );
 }

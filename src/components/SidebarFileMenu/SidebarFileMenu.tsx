@@ -1,10 +1,11 @@
 "use client";
 import { ConnectionsModal } from "@/components/connections-modal";
-import { FileTreeMenu, useFileTreeDragDrop } from "@/components/FiletreeMenu";
+import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
 import { Separator } from "@/components/ui/separator";
+import { useFileTreeDragDrop } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
 
 import {
   SidebarContent,
