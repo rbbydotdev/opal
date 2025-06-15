@@ -11,7 +11,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
     super(options);
   }
   init() {
-    console.log("channel setup");
+    console.debug("channel setup");
     if (ChannelSet.has(this.channelName)) {
       console.warn("Channel already exists:" + this.channelName + " ... removing");
       try {
