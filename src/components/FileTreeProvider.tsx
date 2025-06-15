@@ -81,6 +81,12 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
     window.addEventListener("keydown", escapeKey);
     return () => window.removeEventListener("keydown", escapeKey);
   }, [resetSelects]);
+  const setFocusedAndRange = (path: AbsPath | null) => {
+    //currently a hack to set focused and selectedRange
+    //if sh!t breaks undo this
+    setFocused(path);
+    setSelectedRange(path ? [path] : []);
+  };
   return (
     <FileTreeMenuContext.Provider
       value={{
@@ -93,7 +99,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
         draggingNodes,
         draggingNode: draggingNode,
         highlightDragover,
-        setFocused,
+        setFocused: setFocusedAndRange,
         editType,
         setEditType,
         focused,
