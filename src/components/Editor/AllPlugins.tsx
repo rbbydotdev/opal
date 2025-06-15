@@ -138,6 +138,7 @@ function spliceNode(
   // match
   if (matchStartsIndex < matchEndsIndex) {
     const middleTextNode = new TextNode(str.slice(matchStartsIndex, matchEndsIndex + 1));
+    if (!middleTextNode.isUnmergeable()) middleTextNode.toggleUnmergeable();
     middleTextNode.setFormat(node.getFormat());
     spliced.push(middleTextNode);
     nodes.m = middleTextNode;
@@ -249,6 +250,7 @@ export const searchPlugin = realmPlugin({
             const allOffsets = offsetIndex.slice(startsInBody, endsInBody + 1);
             //reminder, offset can span multiple nodes so need to group like[1/2-match][1/2-match]
             let currList: number[] = [];
+
             for (let i = 0; i < allOffsets.length; i++) {
               if ((allOffsets[i - 1] ?? Infinity) < allOffsets[i]) {
                 currList.push(allOffsets[i]);
@@ -265,8 +267,8 @@ export const searchPlugin = realmPlugin({
             .filter((node) => !matchedNodesSet.has(node) && node.hasFormat("highlight"))
             .forEach((textNode) => textNode.toggleFormat("highlight"));
 
-          console.log(matchedTextNodes.length, groupedOffsets.length);
-          console.log(matchedTextNodes, JSON.stringify(groupedOffsets));
+          // console.log(matchedTextNodes.length, groupedOffsets.length);
+          // console.log(matchedTextNodes, JSON.stringify(groupedOffsets));
 
           for (let i = 0; i < matchedTextNodes.length; i++) {
             const node = matchedTextNodes[i].getLatest();
@@ -279,8 +281,7 @@ export const searchPlugin = realmPlugin({
             } else {
               const start = offsetMatch.shift()!;
               const end = offsetMatch.pop() ?? start;
-              const { m, s, e } = spliceNode(node.getLatest(), node.getParent()!, start, end);
-              console.log({ m, s, e });
+              const { m } = spliceNode(node.getLatest(), node.getParent()!, start, end);
               if (m && !m.hasFormat("highlight")) {
                 m.toggleFormat("highlight");
               }
