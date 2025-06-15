@@ -26,7 +26,7 @@ export class RequestSignals {
   };
 
   constructor() {
-    console.log("RequestSignals initialized");
+    console.debug("RequestSignals initialized");
   }
 
   initAndWatch(cb: (count: number) => void) {
