@@ -1,6 +1,7 @@
 "use client";
 import { useCopyKeydownImages } from "@/components/FiletreeMenu";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
+import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -94,7 +95,7 @@ export const EditableFile = ({
               <SelectedMark selected={isSelected} />
               {isImage(treeNode.path) ? (
                 <img
-                  src={encodePath(treeNode.path) + (!treeNode.path.endsWith(".svg") ? "?thumb=100" : "")}
+                  src={Thumb.pathToURL(treeNode.path)}
                   alt=""
                   className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
                 />
