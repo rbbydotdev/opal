@@ -97,7 +97,7 @@ export const EditableFile = ({
                 <img
                   src={Thumb.pathToURL(treeNode.path)}
                   alt=""
-                  className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
+                  className="w-3 h-3 border border-white flex-shrink-0 bg-white mr-2"
                 />
               ) : (
                 <FileText className="w-3 h-3 flex-shrink-0 mr-2" />

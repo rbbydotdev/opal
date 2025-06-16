@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Workspace } from "@/Db/Workspace";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
@@ -117,16 +116,13 @@ class HighlightTransform {
 
     const textNodeIndex: ReadonlyArray<TextNode> = [];
     const offsetIndex: ReadonlyArray<number> = [];
-    // const offsetNodeMap: ReadonlyWeakMap<TextNode, number[]> = new WeakMap<TextNode, number[]>();
 
     for (const textNode of textNodes) {
       const nodeText = textNode.getTextContent();
 
-      // (offsetNodeMap as WeakMap<TextNode, number[]>).set(textNode, [...(offsetNodeMap.get(textNode) ?? []), offset]);
       for (let offset = 0; offset < nodeText.length; offset++) {
         (offsetIndex as Array<unknown>).push(offset);
         (textNodeIndex as Array<unknown>).push(textNode);
-        // (offsetNodeMap as WeakMap<TextNode, number[]>).set(textNode, [...(offsetNodeMap.get(textNode) ?? []), offset]);
       }
     }
 
@@ -141,12 +137,26 @@ class HighlightTransform {
       index = body.indexOf(this.searchQuery, end + 1);
     }
 
+    //each match
     const groupedOffsets: number[][] = [];
     let matchedTextNodes: TextNode[] = [];
-
-    //each match
     for (const [startsInBody, endsInBody] of bodyMatchIndexRanges) {
-      //get all the nodes for the match
+      // let lastNode = null;
+      // let offsets: number[] = [];
+      // for (let i = startsInBody; i <= endsInBody + 1; i++) {
+      //   const node = textNodeIndex[i];
+      //   const offset = offsetIndex[i];
+      //   if (i > endsInBody || node !== lastNode) {
+      //     groupedOffsets.push(offsets);
+      //     lastNode = node;
+      //     offsets = [];
+      //     if (i <= endsInBody) matchedTextNodes.push(node);
+      //   } else {
+      //     offsets.push(offset);
+      //   }
+      // }
+
+      // //get all the nodes for the match
       matchedTextNodes = matchedTextNodes.concat(
         Array.from(new Set(textNodeIndex.slice(startsInBody, endsInBody + 1)))
       );

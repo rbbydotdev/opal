@@ -19,8 +19,6 @@ interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
 export function WorkspaceView(props: WorkspaceEditorProps) {
   const { isImage, filePath } = useCurrentFilepath();
 
-  if (filePath === null) return null;
-
   if (isImage) {
     return <ImageViewer alt={filePath} origSrc={filePath} />;
   }

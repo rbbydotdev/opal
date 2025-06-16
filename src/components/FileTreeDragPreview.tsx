@@ -2,7 +2,7 @@ import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import { Thumb } from "@/Db/Thumb";
 import { DragPreviewNode } from "@/features/filetree-drag-and-drop/DragPreviewNode";
 import { isImage } from "@/lib/paths2";
-import { FileIcon, FolderDownIcon } from "lucide-react";
+import { FileTextIcon, FolderDownIcon } from "lucide-react";
 import { forwardRef } from "react";
 
 export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
@@ -18,12 +18,12 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
 
   return (
     <DragPreviewNode ref={ref} className="grid place-items-center" style={{ gridTemplateAreas: "'stack'" }}>
-      {draggingNodes.map((n, index) => {
+      {draggingNodes.slice(0, 8).map((n, index) => {
         // This is the key calculation for the fan effect.
         // It calculates a rotation centered around 0.
         // For 3 items, rotations will be: -5deg, 0deg, 5deg.
         // For 4 items: -7.5deg, -2.5deg, 2.5deg, 7.5deg.
-        const rotation = (index - (totalNodes - 1) / 2) * ROTATION_PER_ITEM;
+        const rotation = totalNodes <= 2 ? 20 + index * 8 : (index - (totalNodes - 1) / 2) * ROTATION_PER_ITEM;
 
         const yOffset = index * Y_OFFSET_PER_ITEM;
 
@@ -38,7 +38,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <FolderDownIcon
               key={n.path}
-              size={48}
+              size={96}
               strokeWidth={1}
               className="text-ring rounded"
               fill="white"
@@ -48,24 +48,34 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
         }
         if (isImage(n.path)) {
           return (
-            <img
+            <div
               key={n.path}
-              src={Thumb.pathToURL(n.path)}
-              alt=""
-              className="w-12 h-12 object-cover rounded border border-black"
-              style={transformStyle}
-            />
+              className="p-1 border-2 border-foreground/80 bg-background"
+              style={{
+                ...transformStyle,
+                boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
+              }}
+            >
+              <img
+                src={Thumb.pathToURL(n.path)}
+                alt=""
+                className="w-24 h-24 object-cover rounded border border-black bg-background"
+              />
+            </div>
           );
         }
 
         return (
-          <FileIcon
+          <div
             key={n.path}
-            size={48}
-            strokeWidth={1}
-            className="text-ring rounded bg-white"
-            style={transformStyle}
-          />
+            className="p-1 border-2 border-foreground/80 bg-background"
+            style={{
+              ...transformStyle,
+              boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
+            }}
+          >
+            <FileTextIcon key={n.path} size={96} strokeWidth={1} fill="white" className="text-ring rounded bg-white" />
+          </div>
         );
       })}
     </DragPreviewNode>
