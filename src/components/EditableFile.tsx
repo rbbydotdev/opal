@@ -1,5 +1,6 @@
 "use client";
 import { useCopyKeydownImages } from "@/components/FiletreeMenu";
+import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
@@ -94,11 +95,13 @@ export const EditableFile = ({
             <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
               <SelectedMark selected={isSelected} />
               {isImage(treeNode.path) ? (
-                <img
-                  src={Thumb.pathToURL(treeNode.path)}
-                  alt=""
-                  className="w-3 h-3 border border-white flex-shrink-0 bg-white mr-2"
-                />
+                <ImageFileHoverCard>
+                  <img
+                    src={Thumb.pathToURL(treeNode.path)}
+                    alt=""
+                    className="w-3 h-3 border border-white flex-shrink-0 bg-white mr-2"
+                  />
+                </ImageFileHoverCard>
               ) : (
                 <FileText className="w-3 h-3 flex-shrink-0 mr-2" />
               )}

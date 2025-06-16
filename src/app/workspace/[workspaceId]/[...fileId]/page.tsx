@@ -17,5 +17,6 @@ export default function Page() {
       void currentWorkspace.tryFirstFileUrl().then((path) => router.push(path));
     }
   }, [currentWorkspace, filePath, router]);
+  if (!filePath) return null;
   return <WorkspaceView />;
 }
