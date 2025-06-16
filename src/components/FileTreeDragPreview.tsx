@@ -5,28 +5,44 @@ import { isImage } from "@/lib/paths2";
 import { FileIcon, FolderDownIcon } from "lucide-react";
 import { forwardRef } from "react";
 
-// {draggingNodes.map((n, index) =>{
-
-// }}
 export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
   const { draggingNodes } = useFileTreeMenuContext();
+  const totalNodes = draggingNodes.length;
+
+  // --- Tuning Knobs for the "Solitaire" Effect ---
+  // How much each subsequent card rotates. Higher = wider fan.
+  const ROTATION_PER_ITEM = 5;
+  // How much each subsequent card moves down. Higher = longer stack.
+  const Y_OFFSET_PER_ITEM = 4;
+  // ---
 
   return (
-    // The parent needs to define the grid area(s).
-    // We define a single area called "stack".
-    <DragPreviewNode ref={ref} className="_w-28 _h-20 grid place-items-center" style={{ gridTemplateAreas: "'stack'" }}>
+    <DragPreviewNode ref={ref} className="grid place-items-center" style={{ gridTemplateAreas: "'stack'" }}>
       {draggingNodes.map((n, index) => {
+        // This is the key calculation for the fan effect.
+        // It calculates a rotation centered around 0.
+        // For 3 items, rotations will be: -5deg, 0deg, 5deg.
+        // For 4 items: -7.5deg, -2.5deg, 2.5deg, 7.5deg.
+        const rotation = (index - (totalNodes - 1) / 2) * ROTATION_PER_ITEM;
+
+        const yOffset = index * Y_OFFSET_PER_ITEM;
+
+        const transformStyle = {
+          gridArea: "stack",
+          // The order is important: rotate first, then translate.
+          // This moves the item outwards along its new rotated axis, creating an arc.
+          transform: `rotate(${rotation}deg) translateY(${yOffset}px)`,
+        };
+
         if (n.isTreeDir()) {
           return (
             <FolderDownIcon
               key={n.path}
               size={48}
               strokeWidth={1}
-              className="text-ring rounded bg-white"
-              style={{
-                gridArea: "stack",
-                transform: `rotate(${(index * 6) % 32}deg) translateX(${index * 6}px)`,
-              }}
+              className="text-ring rounded"
+              fill="white"
+              style={transformStyle}
             />
           );
         }
@@ -37,10 +53,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               src={Thumb.pathToURL(n.path)}
               alt=""
               className="w-12 h-12 object-cover rounded border border-black"
-              style={{
-                gridArea: "stack",
-                transform: `rotate(${(index * 6) % 32}deg) translateX(${index * 6}px)`,
-              }}
+              style={transformStyle}
             />
           );
         }
@@ -51,10 +64,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
             size={48}
             strokeWidth={1}
             className="text-ring rounded bg-white"
-            style={{
-              gridArea: "stack",
-              transform: `rotate(${(index * 6) % 32}deg) translateX(${index * 6}px)`,
-            }}
+            style={transformStyle}
           />
         );
       })}
@@ -63,41 +73,3 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
 });
 
 FileTreeDragPreview.displayName = "FileTreeDragPreview";
-// {
-//   draggingNodes.map((n, index) =>
-//     n.isTreeDir() ? (
-//       <FolderDownIcon
-//         key={n.path}
-//         size={48}
-//         strokeWidth={1}
-//         className="text-ring rounded bg-white"
-//         style={{
-//           gridArea: "stack",
-//           transform: `rotate(${(index * 6) % 32}deg) translateX(${index * 6}px)`,
-//         }}
-//       />
-//     ) : isImage(n.path) ? (
-//       <FileIcon
-//         key={n.path}
-//         size={48}
-//         strokeWidth={1}
-//         className="text-ring rounded bg-white"
-//         style={{
-//           gridArea: "stack",
-//           transform: `rotate(${(index * 6) % 32}deg) translateX(${index * 6}px)`,
-//         }}
-//       />
-//     ) : (
-//       <img
-//         key={n.path}
-//         src={n.path}
-//         alt=""
-//         className="w-12 h-12 object-cover rounded border border-black"
-//         style={{
-//           gridArea: "stack",
-//           transform: `rotate(${(index * 6) % 32}deg) translateX(${index * 6}px)`,
-//         }}
-//       />
-//     )
-//   );
-// }
