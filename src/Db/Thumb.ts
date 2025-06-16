@@ -23,6 +23,12 @@ export class Thumb {
     }
     return url.searchParams.has("thumb");
   }
+  static pathToURL(path: AbsPath, size = 100) {
+    if (path.endsWith(".svg")) {
+      return encodePath(path);
+    }
+    return encodePath(path) + "?thumb=" + size;
+  }
   async save() {
     await this.thumbRepo.writeFileRecursive(this.path, this.content!);
     return this;
