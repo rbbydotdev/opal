@@ -95,14 +95,16 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
 
   if (contents === null || !currentWorkspace) return null;
   return (
-    <Editor
-      {...props}
-      ref={ref}
-      currentWorkspace={currentWorkspace}
-      onChange={debouncedUpdate}
-      markdown={String(contents)}
-      className={twMerge("h-full bg-background flex flex-col", className)}
-      contentEditableClassName="max-w-full overflow-auto content-editable prose"
-    />
+    <>
+      <Editor
+        {...props}
+        ref={ref}
+        currentWorkspace={currentWorkspace}
+        onChange={debouncedUpdate}
+        markdown={String(contents)}
+        className={twMerge("h-full bg-background flex flex-col", className)}
+        contentEditableClassName="max-w-full overflow-auto content-editable prose"
+      />
+    </>
   );
 }

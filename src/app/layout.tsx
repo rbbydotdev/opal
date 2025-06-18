@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <style>{`
-          ::highlight(search) {
+          ::highlight(EditorSearch) {
             background-color: yellow;
             color: black;
           }
