@@ -88,7 +88,7 @@ export function WorkSpaceButtonBar() {
       </div>
 
       <BigButton
-        icon={<BombIcon stroke="current" size={32} strokeWidth={1.25} />}
+        icon={<BombIcon stroke="current" size={24} strokeWidth={1.25} />}
         title={"Nuke All"}
         href="#"
         onClick={() =>
@@ -109,7 +109,7 @@ export function WorkSpaceButtonBar() {
         }
       />
       <BigButton
-        icon={<Delete stroke="current" size={32} strokeWidth={1.25} />}
+        icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
         title={"Delete All"}
         href="#"
         onClick={() => Workspace.DeleteAll()}
@@ -117,7 +117,7 @@ export function WorkSpaceButtonBar() {
 
       <SearchModal>
         <BigButton
-          icon={<SearchIcon stroke="current" size={32} strokeWidth={1.25} />}
+          icon={<SearchIcon stroke="current" size={24} strokeWidth={1.25} />}
           title="search"
           href="#"
           className="text-3xs"
@@ -125,18 +125,18 @@ export function WorkSpaceButtonBar() {
       </SearchModal>
       <BigButton
         className="hidden"
-        icon={<Zap stroke="current" size={32} strokeWidth={1.25} />}
+        icon={<Zap stroke="current" size={24} strokeWidth={1.25} />}
         title="connections"
         href="/connections"
       />
       <BigButton
         className="hidden"
-        icon={<Settings stroke="current" size={32} strokeWidth={1.25} />}
+        icon={<Settings stroke="current" size={24} strokeWidth={1.25} />}
         title="settings"
         href="/settings"
       />
       <BigButton
-        icon={<CirclePlus stroke="current" size={32} strokeWidth={1.25} />}
+        icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
         title="new workspace"
         href="/new"
         className="text-3xs"

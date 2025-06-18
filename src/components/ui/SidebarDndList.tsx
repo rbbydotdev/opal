@@ -58,16 +58,17 @@ export function SidebarDndList({
         child.props.onDragStart?.(e);
       },
       onDragOver: (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        if (dragging !== null) setDragOver(index);
+        if (dragging === null || dragging === index) return;
+        setDragOver(index);
         child.props.onDragOver?.(e);
       },
       onDragLeave: (e: React.DragEvent<HTMLDivElement>) => {
-        setDragOver(null);
+        // setDragOver(null);
         child.props.onDragLeave?.(e);
       },
       onDrop: (e: React.DragEvent) => {
-        e.preventDefault();
+        setDragging(null);
+        setDragOver(null);
         if (dragging === null || dragging === index) return;
         setOrder((prev) => {
           const newOrder = [...prev];
@@ -75,8 +76,6 @@ export function SidebarDndList({
           newOrder.splice(index, 0, removed);
           return newOrder;
         });
-        setDragging(null);
-        setDragOver(null);
         child.props.onDrop?.(e);
       },
     });
