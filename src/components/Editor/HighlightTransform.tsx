@@ -5,28 +5,40 @@ import {
   $isRangeSelection,
   $setSelection,
   ElementNode,
-  LexicalNode,
+  IS_HIGHLIGHT,
   TextNode,
 } from "lexical";
 
+function groupRange(range: number[]): number[][] {
+  let currList: number[] = [];
+
+  const groupedRange: number[][] = [];
+  for (let i = 0; i < range.length; i++) {
+    if ((range[i - 1] ?? Infinity) === range[i] - 1) {
+      currList.push(range[i]);
+    } else {
+      currList = [range[i]];
+      groupedRange.push(currList);
+    }
+  }
+  return groupedRange;
+}
+
 //splices out text range of choice into seperate node: <TextNode?><TextNode_Match><TextNode?>
 export class HighlightTransform {
-  offsetMap = new WeakMap<ElementNode, number[]>();
-  parentText = new WeakMap<ElementNode, string>();
-  hnodeText = new WeakMap<TextNode, string>();
-  constructor(public searchQuery: string, private contentMap: WeakMap<ElementNode, string> = new WeakMap()) {}
+  private parent: ElementNode | null = null;
+  private content: WeakMap<ElementNode, string> = new WeakMap();
+  constructor() {}
 
-  paragraphNodeTransform = (transformNode: ElementNode) => {};
-  textNodeTransform = (transformNode: TextNode) => {
-    // Traverse up until we find a ParagraphNode, HeadingNode, QuoteNode, or ListNode
-    const parent = transformNode.getParent()?.getLatest();
+  searchIndex(searchQuery: string, parent: ElementNode) {
     if (!parent || !$isElementNode(parent)) return;
     const body = parent.getTextContent();
 
     const textNodes = parent.getAllTextNodes();
-
     const textNodeIndex: Array<TextNode> = [];
     const offsetIndex: Array<number> = [];
+    if (this.content.get(parent) === body) return;
+    this.content.set(parent, body);
 
     for (const textNode of textNodes) {
       const nodeText = textNode.getTextContent();
@@ -39,99 +51,76 @@ export class HighlightTransform {
 
     //get all indices of the search query
     const bodyMatchIndexRanges: [number, number][] = [];
-    let index = body.indexOf(this.searchQuery);
+    let index = body.indexOf(searchQuery);
 
     while (index !== -1) {
       const start = index;
-      const end = index + this.searchQuery.length - 1;
+      const end = index + searchQuery.length - 1;
       bodyMatchIndexRanges.push([start, end]);
-      index = body.indexOf(this.searchQuery, end + 1);
+      index = body.indexOf(searchQuery, end + 1);
     }
 
-    //each match
-    const groupedOffsets: number[][] = [];
-    let matchedTextNodes: TextNode[] = [];
-
-    //find indexes of body transformNode occupies
-    //reduce bodyMatchIndexRanges to just the intersecting ranges
-    // const transformNodeIndex = textNodeIndex.indexOf(transformNode);
-    // if (transformNodeIndex === -1) {
-    //   console.error("Transform node not found in textNodeIndex");
-    //   return;
-    // }
-    // bodyMatchIndexRanges = bodyMatchIndexRanges.filter(([start, end]) => {
-    // return start <= transformNodeIndex && end >= transformNodeIndex;
-    // });
-    // console.log(bodyMatchIndexRanges);
-
+    const map = new Map<TextNode, number[]>();
     for (const [startsInBody, endsInBody] of bodyMatchIndexRanges) {
       // //get all the nodes for the match
-      matchedTextNodes = matchedTextNodes.concat(
-        Array.from(new Set(textNodeIndex.slice(startsInBody, endsInBody + 1)))
-      );
-      //each match offset can be 0,1,2,3 or 1,2,0,1,2 or 3,0,1,2,3 etc ... these will then be grouped by ascending below
-      const allOffsets = offsetIndex.slice(startsInBody, endsInBody + 1);
-      //reminder, offset can span multiple nodes so need to group like [1/2-match][1/2-match]
-      let currList: number[] = [];
-
-      for (let i = 0; i < allOffsets.length; i++) {
-        if ((allOffsets[i - 1] ?? Infinity) < allOffsets[i]) {
-          currList.push(allOffsets[i]);
-        } else {
-          currList = [allOffsets[i]];
-          groupedOffsets.push(currList);
+      for (let i = startsInBody; i <= endsInBody; i++) {
+        if (!textNodeIndex[i]) {
+          continue;
         }
+        const prev = map.get(textNodeIndex[i]) ?? [];
+        map.set(textNodeIndex[i], prev.concat(i));
       }
     }
-
-    //Remove highlight from non matching
-    const matchedNodesSet = new WeakSet(matchedTextNodes);
-    textNodeIndex
-      .filter((node) => !matchedNodesSet.has(node) && node.hasFormat("highlight"))
-      .forEach((textNode) => textNode.toggleFormat("highlight"));
-
-    for (let i = 0; i < matchedTextNodes.length; i++) {
-      const node = matchedTextNodes[i];
-      const offsetMatch = groupedOffsets[i];
-      //node is already cut up for our highlighting
-      if (offsetMatch.length === node.getTextContentSize()) {
+    for (const [node, offsets] of map.entries()) {
+      if (node.getTextContentSize() === 0) continue;
+      if (offsets.length === node.getTextContentSize()) {
         if (!node.hasFormat("highlight")) {
           node.toggleFormat("highlight");
         }
-      } else {
-        const start = offsetMatch.shift()!;
-        const end = offsetMatch.pop() ?? start;
-        const matchNode = HighlightTransform.spliceNode(node.getLatest(), node.getParent()!, start, end).m;
-        if (matchNode) {
-          this.hnodeText.set(matchNode, matchNode.getTextContent());
-          if (!matchNode.hasFormat("highlight")) {
-            matchNode.toggleFormat("highlight");
-          }
-          //makes node unmergeable to prevent infinite loops
-          if (!matchNode.isUnmergeable()) matchNode.toggleUnmergeable();
-          matchNode.setFormat(node.getFormat());
-        }
+        continue;
+      }
+      HighlightTransform.spliceHighlightNodes(node.getLatest(), offsets);
+    }
+  }
+
+  static spliceHighlightNodes(node: TextNode, offsetRange: number[]): TextNode[] {
+    const format = node.getFormat();
+    const parent = node.getParent();
+    if (!$isElementNode(parent) || !node?.getParent()) {
+      return [];
+    }
+    const contentMap = node.getTextContent().split("");
+    let splice = new Array(contentMap.length).fill(0);
+    const HighlightNode = (text: string) => {
+      const t = new TextNode(text);
+      t.setFormat(format | IS_HIGHLIGHT);
+      t.toggleUnmergeable();
+      return t;
+    };
+    const RegularNode = (text: string) => {
+      const t = new TextNode(text);
+      t.setFormat(format);
+      t.toggleUnmergeable();
+      return t;
+    };
+    const offsetsSet = new Set(offsetRange);
+    const nonHighlights = groupRange(contentMap.reduce((p, _n, i) => (!offsetsSet.has(i) ? p.concat(i) : p), []));
+    for (const group of nonHighlights) {
+      const text = group.map((i) => contentMap[i]).join("");
+      if (text.length > 0) {
+        const node = RegularNode(text);
+        splice.splice(group[0], group.length, node);
       }
     }
-  };
-  static spliceNode(
-    node: TextNode,
-    parent: LexicalNode,
-    matchStartsIndex: number,
-    matchEndsIndex: number
-  ): typeof nodes {
-    // offsets[0] is the theoretical start and offsets[1] is the end
-    // const parent = node.getParent()!;
-    const spliced: TextNode[] = [];
-    const nodes = { s: null as TextNode | null, m: null as TextNode | null, e: null as TextNode | null };
-    // return nodes;
-    if (!$isElementNode(parent) || !node?.getParent()) {
-      // console.log("Parent is not an ElementNode", "textnode key =", node.getKey());
-      return nodes;
+    for (const group of groupRange(offsetRange)) {
+      const text = group.map((i) => contentMap[i]).join("");
+      if (text.length > 0) {
+        const node = HighlightNode(text);
+        splice.splice(group[0], group.length, node);
+      }
     }
-    const str = node.getTextContent();
+    splice = splice.filter(Boolean);
 
-    // --- 1. Capture selection info before splicing ---
     const selection = $getSelection();
     let selectionOffsetInNode: number | null = null;
     let selectionIsInNode = false;
@@ -147,42 +136,15 @@ export class HighlightTransform {
 
     // --- 2. Splice the node as before ---
     // start
-    const startText = str.slice(0, matchStartsIndex);
-    const matchText = str.slice(matchStartsIndex, matchEndsIndex + 1);
-    const endText = str.slice(matchEndsIndex + 1);
-    if (matchStartsIndex > 0) {
-      const startTextNode = new TextNode(startText);
-      startTextNode.setFormat(node.getFormat());
-      spliced.push(startTextNode);
-      nodes.s = startTextNode;
-    }
-    // match
-    if (matchStartsIndex <= matchEndsIndex) {
-      const middleTextNode = new TextNode(matchText);
-      spliced.push(middleTextNode);
-      nodes.m = middleTextNode;
-    }
-    // end
-    if (matchEndsIndex < str.length) {
-      const endTextNode = new TextNode(endText);
-      endTextNode.setFormat(node.getFormat());
-      spliced.push(endTextNode);
-      nodes.e = endTextNode;
-    }
+    const targetIndex = node.getIndexWithinParent();
+    parent.splice(targetIndex, 1, splice); // Remove the original node
 
-    if (!$isElementNode(parent)) {
-      return nodes;
-    } else {
-      const targetIndex = node.getIndexWithinParent();
-      parent.splice(targetIndex, 1, spliced); // Remove the original node
-    }
-
-    // --- 3. Restore selection if it was in the spliced node ---
+    // // --- 3. Restore selection if it was in the spliced node ---
     if (selectionIsInNode && selectionOffsetInNode !== null) {
       // Figure out which new node and offset the selection should be in
       let runningLength = 0;
-      for (let i = 0; i < spliced.length; i++) {
-        const n = spliced[i];
+      for (let i = 0; i < splice.length; i++) {
+        const n = splice[i];
         const nodeLength = n.getTextContentSize();
         if (selectionOffsetInNode <= runningLength + nodeLength) {
           // The selection offset falls within this node
@@ -197,6 +159,6 @@ export class HighlightTransform {
         runningLength += nodeLength;
       }
     }
-    return nodes;
+    return splice;
   }
 }
