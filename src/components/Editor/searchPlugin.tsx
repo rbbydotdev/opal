@@ -17,9 +17,7 @@ const highlightSearch = (rootNode: RootNode, searchQuery: string) => {
       while (currentNode) {
         allTextNodes.push(currentNode);
         allText += currentNode.textContent ?? "";
-        offsetMap = offsetMap.concat((currentNode.textContent ?? "").split("").map((_, i) => i));
-        offsetMap.concat(new Array((currentNode.textContent ?? "").length).fill(0).map((_, i) => i));
-
+        offsetMap = offsetMap.concat(new Array((currentNode.textContent ?? "").length).fill(0).map((_, i) => i));
         textNodeMap = textNodeMap.concat(new Array(currentNode.textContent?.length ?? 0).fill(currentNode));
         currentNode = treeWalker.nextNode();
       }
