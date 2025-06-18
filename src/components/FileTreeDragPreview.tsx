@@ -17,7 +17,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
   // ---
 
   return (
-    <DragPreviewNode ref={ref} className="grid place-items-center" style={{ gridTemplateAreas: "'stack'" }}>
+    <DragPreviewNode ref={ref} className="grid place-items-center w-24 h-24" style={{ gridTemplateAreas: "'stack'" }}>
       {draggingNodes.slice(0, 8).map((n, index) => {
         // This is the key calculation for the fan effect.
         // It calculates a rotation centered around 0.
@@ -38,7 +38,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <FolderDownIcon
               key={n.path}
-              size={96}
+              size={48}
               strokeWidth={1}
               className="text-ring rounded"
               fill="white"
@@ -59,7 +59,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               <img
                 src={Thumb.pathToURL(n.path)}
                 alt=""
-                className="w-24 h-24 object-cover rounded border border-black bg-background"
+                className="w-12 h-12 object-cover rounded border border-black bg-background"
               />
             </div>
           );
@@ -74,7 +74,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
             }}
           >
-            <FileTextIcon key={n.path} size={96} strokeWidth={1} fill="white" className="text-ring rounded bg-white" />
+            <FileTextIcon key={n.path} size={48} strokeWidth={1} fill="white" className="text-ring rounded bg-white" />
           </div>
         );
       })}

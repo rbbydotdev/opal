@@ -3,8 +3,9 @@ import { isError, NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { EncHeader, PassHeader } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
-import { signalRequest, SWWStore } from "@/lib/ServiceWorker/sw";
+import { signalRequest } from "@/lib/ServiceWorker/sw";
 import { BlobWriter, Uint8ArrayReader, ZipWriter, ZipWriterConstructorOptions } from "@zip.js/zip.js";
+import { SWWStore } from "./SWWStore";
 
 export interface DownloadOptions {
   password: string;

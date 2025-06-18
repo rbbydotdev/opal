@@ -1,4 +1,5 @@
 "use client";
+import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Workspace } from "@/Db/Workspace";
 // ForwardRefEditor.tsx
 import { type MDXEditorMethods, type MDXEditorProps } from "@mdxeditor/editor";
@@ -19,9 +20,16 @@ const InitializedMDXEditor = dynamic(() => import("./InitializedMDXEditor"), {
 
 // This is what is imported by other components. Pre-initialized with plugins, and ready
 // to accept other props, including a ref.
-export const Editor = forwardRef<MDXEditorMethods, MDXEditorProps & { currentWorkspace: Workspace }>((props, ref) => (
-  <InitializedMDXEditor {...props} currentWorkspace={props.currentWorkspace} editorRef={ref} />
-));
+export const Editor = forwardRef<MDXEditorMethods, MDXEditorProps & { currentWorkspace: Workspace }>(
+  ({ currentWorkspace, ...props }, ref) => {
+    const plugins = useAllPlugins({ currentWorkspace });
+    return (
+      <>
+        <InitializedMDXEditor {...props} plugins={plugins} editorRef={ref} />
+      </>
+    );
+  }
+);
 
 // TS complains without the following line
 Editor.displayName = "Editor";

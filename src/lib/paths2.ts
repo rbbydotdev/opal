@@ -133,6 +133,14 @@ export function changePrefixAbs(path: AbsPath, newPrefix: string): AbsPath {
   return absPath(pathModule.join(dir, `${newPrefix}${ext}`));
 }
 
+export function changePrefix(path: AbsPath | RelPath, newPrefix: string): RelPath | AbsPath {
+  if (isAbsPath(path)) return changePrefixAbs(path, newPrefix);
+  if (isRelPath(path)) return changePrefixRel(path, newPrefix);
+  else {
+    throw new Error("Invalid path type. Expected AbsPath or RelPath.");
+  }
+}
+
 export function changePrefixRel(path: RelPath, newPrefix: string): RelPath {
   const ext = extname(path);
   const dir = dirname(path);

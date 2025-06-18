@@ -1,87 +1,116 @@
-import { activeEditor$, realmPlugin } from "@mdxeditor/editor";
-import { $getEditor, $getRoot, $isElementNode, RootNode } from "lexical";
-const highlightSearch = (rootNode: RootNode, searchQuery: string) => {
-  if (typeof Highlight !== "undefined") {
-    const parent = rootNode;
-    CSS.highlights.delete("editor-search");
-    if (!parent || !$isElementNode(rootNode)) return;
-    const containers = $getEditor().getElementByKey(parent.getLatest().getKey());
-    const ranges: Range[] = [];
-    for (const container of containers?.querySelectorAll("ul,p,h1,h2,h3,h4,span") ?? []) {
-      const allTextNodes = [];
-      let map: Array<[Node, number]> = [];
-      let allText = "";
-      const treeWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-      let currentNode = treeWalker.nextNode();
-      while (currentNode) {
-        allTextNodes.push(currentNode);
-        allText += currentNode.textContent ?? "";
-        map = map.concat(
-          currentNode
-            ? new Array((currentNode.textContent ?? "").length)
-                .fill(0)
-                .map((_, i) => [currentNode, i] as [Node, number])
-            : []
-        );
-        currentNode = treeWalker.nextNode();
-      }
+import { activeEditor$, Cell, realmPlugin, useCellValue, useRealm } from "@mdxeditor/editor";
+import { RootNode } from "lexical";
 
-      const indices = [];
-      let startPos = 0;
-      while (startPos < allText.length) {
-        const index = allText.indexOf(searchQuery, startPos);
-        if (index === -1) break;
-        indices.push(index);
-        startPos = index + searchQuery.length;
+export const MDX_SEARCH_NAME = "MdxSearch";
+
+function* searchText(allText: string, searchQuery: string): Generator<[start: number, end: number]> {
+  if (searchQuery === null) return [];
+  let startPos = 0;
+  while (startPos < allText.length) {
+    const index = allText.toLowerCase().indexOf(searchQuery, startPos);
+    if (index === -1) break;
+    yield [index, index + searchQuery.length - 1];
+    startPos = index + searchQuery.length;
+  }
+}
+function* indexTextNodes(containerList: NodeListOf<Element>): Generator<{
+  allText: string;
+  nodeMap: Array<[node: Node, offset: number]>;
+}> {
+  const nodes = new Set<Node>();
+
+  for (const container of containerList ?? []) {
+    const treeWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    let currentNode = treeWalker.nextNode();
+    while (currentNode) {
+      if (currentNode.textContent) {
+        nodes.add(currentNode);
       }
-      for (const index of indices) {
-        const range = new Range();
-        const [startNode, startOffset] = map[index];
-        const [endNode, endOffset] = map[index + searchQuery.length - 1];
-        range.setStart(startNode, startOffset);
-        range.setEnd(endNode, endOffset + 1);
-        ranges.push(range);
-      }
-      const highlight = new Highlight(...ranges.flat());
-      CSS.highlights.set("EditorSearch", highlight);
+      currentNode = treeWalker.nextNode();
     }
+  }
+  for (const node of nodes) {
+    yield {
+      allText: node.textContent ?? "",
+      nodeMap: node
+        ? new Array((node.textContent ?? "").length).fill(0).map((_, i) => [node, i] as [Node, number])
+        : [],
+    };
+  }
+}
+export function* rangeSearchScan(parent: HTMLElement, searchQuery: string) {
+  for (const { allText, nodeMap } of indexTextNodes(parent.querySelectorAll("ul,p,h1,h2,h3,h4"))) {
+    for (const [start, end] of searchText(allText, searchQuery)) {
+      const [startNode, startOffset] = nodeMap[start];
+      const [endNode, endOffset] = nodeMap[end];
+      const range = new Range();
+
+      range.setStart(startNode, startOffset);
+      range.setEnd(endNode, endOffset + 1);
+      yield range;
+    }
+  }
+}
+const highlightRanges = (ranges: Range[] | Iterable<Range>) => {
+  if (typeof Highlight !== "undefined") {
+    const highlight = new Highlight(...ranges);
+    CSS.highlights.set(MDX_SEARCH_NAME, highlight);
   }
 };
 
+export const editorSearchTerm$ = Cell<string>("");
+export const editorSearchRanges$ = Cell<Range[]>([]);
+export const editorSearchCursor$ = Cell<number>(0);
+
+export function useEditorSearch() {
+  const realm = useRealm();
+  const ranges = useCellValue(editorSearchRanges$);
+  const cursor = useCellValue(editorSearchCursor$);
+  const search = useCellValue(editorSearchTerm$);
+  function setSearch(term: string | null) {
+    realm.pub(editorSearchTerm$, term ?? "");
+  }
+
+  const rangeCount = ranges.length;
+  const normalizedCursor = rangeCount > 0 ? Math.max(1, cursor) : 0;
+  function next() {
+    realm.pub(editorSearchCursor$, (cursor + 1) % (ranges.length + 1));
+  }
+
+  function prev() {
+    realm.pub(editorSearchCursor$, cursor <= 1 ? ranges.length : cursor - 1);
+  }
+  return { next, prev, total: rangeCount, cursor: normalizedCursor, setSearch, search, ranges };
+}
 export const searchPlugin = realmPlugin({
   postInit(realm) {
-    //add cmd+f shortcut to open search
     const editor = realm.getValue(activeEditor$);
-    let searchQuery: string | null = "foobar";
-
-    // const HighlightTransformer = new HighlightTransform("foobar");
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        const editor = realm.getValue(activeEditor$);
-        if (editor) {
-          // HighlightTransformer.searchQuery =
-          searchQuery = prompt("Enter search query:", searchQuery ?? "") ?? null;
-          editor.update(() => {
-            // No-op: just read the root node
-            if (searchQuery) highlightSearch($getRoot(), searchQuery);
-          });
-          editor.focus();
-          // // Open search dialog or perform search
-          // // This is a placeholder for your search logic
-          console.log("Search triggered");
-        }
+    realm.sub(editorSearchTerm$, (searchQuery) => {
+      if (editor) {
+        const rootNode = editor.getRootElement();
+        editor.update(() => {
+          if (rootNode) {
+            CSS.highlights.delete(MDX_SEARCH_NAME);
+            const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery));
+            realm.pub(editorSearchRanges$, ranges);
+            highlightRanges(ranges);
+          }
+        });
       }
     });
-    let debounceRef: ReturnType<typeof setTimeout> | null = null;
     if (editor) {
-      editor.registerNodeTransform(RootNode, (rootNode) => {
-        if (debounceRef) clearTimeout(debounceRef);
-        debounceRef = setTimeout(() => {
+      editor.registerNodeTransform(RootNode, () => {
+        queueMicrotask(() => {
           editor.update(() => {
-            if (searchQuery) highlightSearch(rootNode.getLatest(), searchQuery);
+            const searchQuery = realm.getValue(editorSearchTerm$);
+            const rootNode = editor.getRootElement();
+            if (searchQuery) {
+              const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery));
+              realm.pub(editorSearchRanges$, ranges);
+              highlightRanges(ranges);
+            }
           });
-        }, 0);
+        });
       });
     } else {
       console.log("No active editor found when initializing search plugin");

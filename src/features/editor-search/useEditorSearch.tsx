@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export function useEditorSearch() {
+export function useEditorSearchTool() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { basename, changePrefixRel, equals, prefix, RelPath, relPath } from "@/lib/paths2";
+import { basename, changePrefix, equals, prefix, RelPath, relPath } from "@/lib/paths2";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 export function useEditable<T extends TreeFile | TreeNode>({
   treeNode,
@@ -93,7 +93,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
       } else if (e.key === "Enter") {
         if (isEditing) {
           if (prefix(fileName) && (editType === "new" || prefix(fileName) !== prefix(relPath(basename(fullPath))))) {
-            const wantPath = relPath(basename(changePrefixRel(relPath(basename(fullPath)), prefix(fileName))));
+            const wantPath = basename(changePrefix(fullPath, prefix(fileName)));
             const gotPath = await commitChange(treeNode, wantPath, editType);
             resetEditing();
             if (gotPath !== null) {

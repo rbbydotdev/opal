@@ -2,8 +2,9 @@ import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
-import { signalRequest, SWWStore } from "@/lib/ServiceWorker/sw";
+import { signalRequest } from "@/lib/ServiceWorker/sw";
 import * as fflate from "fflate";
+import { SWWStore } from "./SWWStore";
 
 export async function handleDownloadRequest(workspaceId: string): Promise<Response> {
   try {
