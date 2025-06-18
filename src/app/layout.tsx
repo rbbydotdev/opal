@@ -34,6 +34,14 @@ export default function RootLayout({
   }, []);
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <style>{`
+          ::highlight(search) {
+            background-color: yellow;
+            color: black;
+          }
+        `}</style>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* <FPSStats /> */}
         {/* <Inspector /> */}
