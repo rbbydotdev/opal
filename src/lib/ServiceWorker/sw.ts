@@ -1,18 +1,12 @@
-import Identicon from "@/components/Identicon";
-import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { coerceUint8Array } from "@/lib/coerceUint8Array";
-import { errF, isError, NotFoundError } from "@/lib/errors";
+import { errF, NotFoundError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
-import { getMimeType } from "@/lib/mimeType";
-import { absPath, decodePath } from "@/lib/paths2";
 import { RemoteLogger } from "@/lib/RemoteLogger";
 import { handleDownloadRequest } from "@/lib/ServiceWorker/handleDownloadRequest";
 import { handleDownloadRequestEncrypted } from "@/lib/ServiceWorker/handleDownloadRequestEncrypted";
+import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
+import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
-import React from "react";
-import { renderToString } from "react-dom/server";
 
 const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
 
@@ -116,106 +110,8 @@ self.addEventListener("fetch", async (event) => {
       }
     }
   } catch (e) {
-    // const stack = e && typeof e === "object" && "stack" in e ? String((e as Error).stack) : String(e);
     console.error(errF`Error handling fetch event: ${event.request.url}, ${e}`.toString());
   }
 
   return event.respondWith(withRequestSignal(fetch)(event.request));
 });
-
-export const SWWStore = new (class SwWorkspace {
-  constructor() {
-    console.log("SWWStore initialized");
-  }
-  private workspace: Promise<Workspace> | null = null;
-
-  async tryWorkspace(workspaceId: string): Promise<Workspace> {
-    if (this.workspace instanceof Promise) {
-      console.log("awaiting workspace promise...");
-      const ws = await this.workspace;
-      if (ws.name !== workspaceId) {
-        await ws.tearDown();
-        this.workspace = null;
-      } else {
-        console.log(`Returning existing workspace: ${ws.name}`);
-        return ws;
-      }
-    }
-    return (this.workspace = WorkspaceDAO.FetchByName(workspaceId).then((wsd) => wsd.toModel()));
-  }
-})();
-
-async function handleFaviconRequest(event: FetchEvent): Promise<Response> {
-  const referrerPath = new URL(event.request.referrer).pathname;
-  Workspace.parseWorkspacePath(referrerPath);
-  const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
-  if (!workspaceId) {
-    return fetch(event.request);
-  }
-  const workspace = await SWWStore.tryWorkspace(workspaceId);
-  return new Response(
-    renderToString(
-      React.createElement(Identicon, {
-        input: workspace.guid,
-        size: 4,
-      })
-    ),
-    {
-      headers: {
-        "Content-Type": "image/svg+xml",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-    }
-  );
-}
-
-async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: string): Promise<Response> {
-  try {
-    const decodedPathname = decodePath(url.pathname);
-    const isThumbnail = Thumb.isThumbURL(url);
-    console.log(`Intercepted request for: 
-    decodedPathname: ${decodedPathname}
-    url.pathname: ${url.pathname}
-    href: ${url.href}
-    isThumbnail: ${isThumbnail}
-  `);
-    let cache: Cache;
-    if (!decodedPathname.endsWith(".svg")) {
-      cache = await Workspace.newCache(workspaceId).getCache();
-      const cachedResponse = await cache.match(event.request);
-      if (cachedResponse) {
-        console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
-        return cachedResponse;
-      }
-    }
-    console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
-    const workspace = await SWWStore.tryWorkspace(workspaceId);
-
-    if (!workspace) throw new Error("Workspace not found " + workspaceId);
-    console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
-
-    const contents = isThumbnail
-      ? await workspace.readOrMakeThumb(decodedPathname)
-      : await workspace.readFile(absPath(decodedPathname));
-
-    const response = new Response(coerceUint8Array(contents) as BodyInit, {
-      headers: {
-        "Content-Type": getMimeType(decodedPathname),
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
-
-    if (!decodedPathname.endsWith(".svg")) {
-      await cache!.put(event.request, response.clone());
-    }
-    return response;
-  } catch (e) {
-    if (isError(e, NotFoundError)) {
-      return new Response("Error", { status: 404 });
-    }
-    console.error(errF`Error in service worker: ${e}`.toString());
-    return new Response("Error", { status: 500 });
-  }
-}

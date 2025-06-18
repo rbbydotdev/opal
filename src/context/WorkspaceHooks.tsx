@@ -8,7 +8,7 @@ import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 export const NULL_WORKSPACE = new NullWorkspace();
 const NULL_TREE_ROOT = new TreeDirRoot();
@@ -44,6 +44,34 @@ export function useFileContents() {
   const [error, setError] = useState<null | Error>(null);
   const router = useRouter();
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => clearTimeout(debounceRef.current!);
+  }, []);
+
+  const updateContents = useCallback(
+    (updates: string) => {
+      if (filePath && currentWorkspace) {
+        void currentWorkspace?.disk.writeFile(filePath, updates);
+      }
+    },
+    [currentWorkspace, filePath]
+  );
+
+  const debouncedUpdate = useCallback(
+    (content: string | null) => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+      debounceRef.current = setTimeout(() => {
+        if (content !== null) {
+          updateContents(String(content));
+        }
+      }, 250);
+    },
+    [updateContents]
+  );
+
   useEffect(() => {
     const fetchFileContents = async () => {
       if (currentWorkspace && filePath) {
@@ -63,15 +91,7 @@ export function useFileContents() {
     void fetchFileContents();
   }, [currentWorkspace, filePath, router]);
 
-  const updateContents = useCallback(
-    (updates: string) => {
-      if (filePath && currentWorkspace) {
-        void currentWorkspace?.disk.writeFile(filePath, updates);
-      }
-    },
-    [currentWorkspace, filePath]
-  );
-  return { error, filePath, contents, mimeType, updateContents };
+  return { error, filePath, contents: String(contents), mimeType, updateContents, debouncedUpdate };
 }
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();

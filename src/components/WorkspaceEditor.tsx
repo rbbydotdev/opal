@@ -9,7 +9,7 @@ import { withSuspense } from "@/lib/hoc/withSuspense";
 import { encodePath } from "@/lib/paths2";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
-import { Suspense, use, useCallback, useEffect, useMemo, useRef } from "react";
+import { Suspense, use, useEffect, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
@@ -58,35 +58,16 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
 });
 
 export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
-  const ref = useRef<MDXEditorMethods>(null);
-  const { contents, updateContents, error } = useFileContents();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const editorRef = useRef<MDXEditorMethods>(null);
+  const { contents, debouncedUpdate, error } = useFileContents();
   useEffect(() => {
-    return () => clearTimeout(debounceRef.current!);
-  }, []);
-
-  useEffect(() => {
-    if (ref.current && contents !== null) {
-      ref.current?.setMarkdown(String(contents));
+    if (editorRef.current && contents !== null) {
+      editorRef.current?.setMarkdown(contents);
     }
   }, [contents]);
 
-  const debouncedUpdate = useCallback(
-    (content: string | null) => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-      debounceRef.current = setTimeout(() => {
-        if (content !== null) {
-          updateContents(String(content));
-        }
-      }, 250);
-    },
-    [updateContents]
-  );
-
   const { currentWorkspace } = useWorkspaceContext();
+
   if (error) {
     if (isError(error, NotFoundError)) {
       return (
@@ -98,19 +79,19 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
       throw error; // rethrow other errors to be caught by the nearest error boundary
     }
   }
-
   if (contents === null || !currentWorkspace) return null;
   return (
     <>
       <Editor
         {...props}
-        ref={ref}
+        ref={editorRef}
         currentWorkspace={currentWorkspace}
         onChange={debouncedUpdate}
         markdown={String(contents)}
         className={twMerge("h-full bg-background flex flex-col", className)}
         contentEditableClassName="max-w-full overflow-auto content-editable prose"
       />
+      {/* Floating Search Bar */}
     </>
   );
 }
