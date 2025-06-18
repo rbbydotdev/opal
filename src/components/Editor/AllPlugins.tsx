@@ -99,7 +99,9 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
   }, [currentWorkspace]);
 
   return [
-    toolbarPlugin({ toolbarContents: () => <KitchenSinkToolbar /> }),
+    toolbarPlugin({
+      toolbarContents: () => <KitchenSinkToolbar />,
+    }),
     listsPlugin(),
     quotePlugin(),
     headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),

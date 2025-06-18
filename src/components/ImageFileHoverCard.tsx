@@ -14,12 +14,12 @@ export function ImageFileHoverCard({ children }: { children: React.ReactNode }) 
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
       <HoverCardContent
         side="right"
-        sideOffset={20}
-        className="p-2 bg-white border border-gray-200 shadow-lg rounded w-32 h-32 relative -rotate-6"
+        // sideOffset={20}
+        className="p-2 bg-white border border-gray-200 shadow-lg rounded w-32 h-32 relative "
         style={{ boxShadow: "0 4px 12px 0 hsl(var(--foreground))" }}
       >
         {/* Triangle edge pointing left */}
-        <span
+        {/* <span
           style={{
             position: "absolute",
             left: "-22px",
@@ -31,7 +31,7 @@ export function ImageFileHoverCard({ children }: { children: React.ReactNode }) 
             borderBottom: "20px solid transparent",
             borderRight: "22px solid white",
           }}
-        />
+        /> */}
         <img src={src} alt="Image preview" className="object-cover w-full h-full" />
       </HoverCardContent>
     </HoverCard>
