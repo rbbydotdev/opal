@@ -66,6 +66,12 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
     return () => clearTimeout(debounceRef.current!);
   }, []);
 
+  useEffect(() => {
+    if (ref.current && contents !== null) {
+      ref.current?.setMarkdown(String(contents));
+    }
+  }, [contents]);
+
   const debouncedUpdate = useCallback(
     (content: string | null) => {
       if (debounceRef.current) {
