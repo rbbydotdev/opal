@@ -76,7 +76,7 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
         // void submit(searchTerm, searchAbortCntrl.current.signal);
       }
     },
-    [submit, reset]
+    [reset]
   );
 
   return (
