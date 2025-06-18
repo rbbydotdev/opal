@@ -3,22 +3,26 @@ import { $getEditor, $getRoot, $isElementNode, RootNode } from "lexical";
 const highlightSearch = (rootNode: RootNode, searchQuery: string) => {
   if (typeof Highlight !== "undefined") {
     const parent = rootNode;
-    CSS.highlights.delete("search");
+    CSS.highlights.delete("editor-search");
     if (!parent || !$isElementNode(rootNode)) return;
-    const parentHTMLNodes = $getEditor().getElementByKey(parent.getLatest().getKey());
+    const containers = $getEditor().getElementByKey(parent.getLatest().getKey());
     const ranges: Range[] = [];
-    for (const pHTMLNode of parentHTMLNodes?.querySelectorAll("p,h1,h2,h3,h4") ?? []) {
+    for (const container of containers?.querySelectorAll("ul,p,h1,h2,h3,h4,span") ?? []) {
       const allTextNodes = [];
-      let textNodeMap: Node[] = [];
-      let offsetMap: number[] = [];
+      let map: Array<[Node, number]> = [];
       let allText = "";
-      const treeWalker = document.createTreeWalker(pHTMLNode, NodeFilter.SHOW_TEXT);
+      const treeWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
       let currentNode = treeWalker.nextNode();
       while (currentNode) {
         allTextNodes.push(currentNode);
         allText += currentNode.textContent ?? "";
-        offsetMap = offsetMap.concat(new Array((currentNode.textContent ?? "").length).fill(0).map((_, i) => i));
-        textNodeMap = textNodeMap.concat(new Array(currentNode.textContent?.length ?? 0).fill(currentNode));
+        map = map.concat(
+          currentNode
+            ? new Array((currentNode.textContent ?? "").length)
+                .fill(0)
+                .map((_, i) => [currentNode, i] as [Node, number])
+            : []
+        );
         currentNode = treeWalker.nextNode();
       }
 
@@ -32,15 +36,14 @@ const highlightSearch = (rootNode: RootNode, searchQuery: string) => {
       }
       for (const index of indices) {
         const range = new Range();
-        // textNodeMap[index]._htext = 1;
-        const startNode = textNodeMap[index];
-        const endNode = textNodeMap[index + searchQuery.length - 1];
-        range.setStart(startNode, offsetMap[index]);
-        range.setEnd(endNode, offsetMap[index + searchQuery.length - 1] + 1);
+        const [startNode, startOffset] = map[index];
+        const [endNode, endOffset] = map[index + searchQuery.length - 1];
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset + 1);
         ranges.push(range);
       }
       const highlight = new Highlight(...ranges.flat());
-      CSS.highlights.set("search", highlight);
+      CSS.highlights.set("EditorSearch", highlight);
     }
   }
 };
