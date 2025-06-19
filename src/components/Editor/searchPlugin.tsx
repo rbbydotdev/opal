@@ -20,7 +20,10 @@ type TextNodeIndex = {
   allText: string;
   nodeMap: Array<[node: Node, offset: number]>;
 };
-function* indexTextNodes(containerList: NodeListOf<Element>): Generator<TextNodeIndex> {
+function* indexTextNodes(containerList?: NodeListOf<Element>): Iterable<TextNodeIndex> {
+  if (!containerList || containerList.length === 0) {
+    return [];
+  }
   console.log("indexing for search");
   const nodes = new Set<Node>();
 
@@ -130,7 +133,7 @@ export const searchPlugin = realmPlugin({
     const editor = realm.getValue(activeEditor$);
     if (editor && typeof CSS.highlights !== "undefined") {
       let textNodeIndex: Iterable<TextNodeIndex>;
-      const getTextNodeIndex = (root: HTMLElement) => indexTextNodes(root.querySelectorAll("ul,p,h1,h2,h3,h4"));
+      const getTextNodeIndex = (root: HTMLElement) => indexTextNodes(root?.querySelectorAll("ul,p,h1,h2,h3,h4"));
       const backgroundIndex = backgroundRefresh(
         (root: HTMLElement) => (textNodeIndex = [...getTextNodeIndex(root)]),
         1000

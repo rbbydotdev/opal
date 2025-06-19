@@ -36,21 +36,30 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
 
         if (n.isTreeDir()) {
           return (
-            <FolderDownIcon
+            <div
               key={n.path}
-              size={48}
-              strokeWidth={1}
-              className="text-ring rounded"
-              fill="white"
-              style={transformStyle}
-            />
+              className="p-1 border-2 border-foreground/80 bg-background"
+              style={{
+                ...transformStyle,
+                boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
+              }}
+            >
+              <FolderDownIcon
+                key={n.path}
+                size={48}
+                strokeWidth={1}
+                className="text-ring rounded"
+                fill="white"
+                style={transformStyle}
+              />
+            </div>
           );
         }
         if (isImage(n.path)) {
           return (
             <div
               key={n.path}
-              className="p-1 border-2 border-foreground/80 bg-background"
+              className="p-1 border-2 border-foreground/80 bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",

@@ -23,7 +23,7 @@ export function EditorSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="cursor-pointer" size="lg" asChild>
+            <SidebarMenuButton className="_cursor-pointer" size="lg" asChild>
               <div className="flex items-center gap-2 border-2 border-secondary-foreground rounded p-2 shadow-md">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
                   <CurrentWorkspaceIcon size={4} scale={7} />
