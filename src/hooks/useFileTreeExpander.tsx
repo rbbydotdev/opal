@@ -25,20 +25,20 @@ export function useSidebarItemExpander(id: string, defaultValue = false) {
 }
 
 export function useFileTreeExpander({
-  fileDirTree,
-  currentPath,
-  id,
+  flatTree,
+  activePath,
+  workspaceId,
 }: {
-  fileDirTree: string[];
-  currentPath: AbsPath | null;
-  id: string;
+  flatTree: string[];
+  activePath?: AbsPath | null;
+  workspaceId: string;
 }) {
   const [local, setLocal] = useState<ExpandMap>({});
   const setAllStates = useCallback(
-    (state: boolean) => fileDirTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),
-    [fileDirTree]
+    (state: boolean) => flatTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),
+    [flatTree]
   );
-  const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${id}`, local);
+  const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${workspaceId}`, local);
 
   const expandSingle = (path: string, expanded: boolean) => {
     // console.log("expanding single for path", path, "state:", expanded);
@@ -61,10 +61,10 @@ export function useFileTreeExpander({
   };
 
   useEffect(() => {
-    if (currentPath) {
-      setLocal((prev) => ({ ...expandForFile(fileDirTree, currentPath, prev) }));
+    if (activePath) {
+      setLocal((prev) => ({ ...expandForFile(flatTree, activePath, prev) }));
     }
-  }, [currentPath, fileDirTree]);
+  }, [activePath, flatTree]);
 
   const all = { ...stored, ...local };
   // console.log(all);

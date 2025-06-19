@@ -31,16 +31,53 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
 
   const newFile = React.useCallback(
     (path: AbsPath, content = "") => {
-      return currentWorkspace.newFile(absPath(dirname(path)), relPath(basename(path)), content);
+      return currentWorkspace.newFile(dirname(path), basename(path), content);
     },
     [currentWorkspace]
+  );
+  const duplicateFile = React.useCallback(
+    (treeNode: TreeNode) => {
+      const type = treeNode.type;
+      const focusedNode = focused ? currentWorkspace.nodeFromPath(focused) : null;
+      const name = type === "dir" ? "newdir" : "newfile.md";
+      const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);
+      setFocused(newNode.path);
+      setEditing(newNode.path);
+      setVirtual(newNode.path);
+      setEditType("new");
+      return newNode;
+    },
+    [focused, currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
   );
 
   const newDir = React.useCallback(
     async (path: AbsPath) => {
-      return currentWorkspace.newDir(absPath(dirname(path)), relPath(basename(path)));
+      return currentWorkspace.newDir(dirname(path), basename(path));
     },
     [currentWorkspace]
+  );
+
+  const removeFiles = React.useCallback(
+    async (paths: AbsPath[]) => {
+      if (!paths.length) return;
+      try {
+        await currentWorkspace.removeMultipleFiles(reduceLineage(paths).map((pathStr) => absPath(pathStr)));
+      } catch (e) {
+        if (e instanceof NotFoundError) {
+          console.error(e);
+        } else {
+          throw e;
+        }
+      }
+      resetSelects();
+    },
+    [currentWorkspace, resetSelects]
+  );
+  const removeFile = React.useCallback(
+    (path: AbsPath) => {
+      return removeFiles([path]);
+    },
+    [removeFiles]
   );
 
   const removeSelectedFiles = React.useCallback(async () => {
@@ -48,37 +85,15 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     if (!range.length && focused) {
       range.push(focused);
     }
-    if (!range.length) return;
-
-    const paths = reduceLineage(range).map((pathStr) => absPath(pathStr));
-    try {
-      await currentWorkspace.removeMultipleFiles(paths);
-    } catch (e) {
-      if (e instanceof NotFoundError) {
-        console.error(e);
-      } else {
-        throw e;
-      }
-    }
-    resetSelects();
-  }, [currentWorkspace, focused, resetSelects, selectedRange]);
+    await removeFiles(range);
+  }, [focused, removeFiles, selectedRange]);
 
   const removeFocusedFile = React.useCallback(async () => {
-    if (!focused || !currentWorkspace.disk.pathExists(focused)) return;
-    const focusedNode = currentWorkspace.nodeFromPath(focused);
-    if (!focusedNode) return;
-    if (focusedNode.path === "/") return;
-
-    try {
-      await currentWorkspace.removeFile(focusedNode.path);
-    } catch (e) {
-      if (e instanceof NotFoundError) {
-        console.error(e);
-      } else {
-        throw e;
-      }
+    if (!focused) {
+      return;
     }
-  }, [focused, currentWorkspace]);
+    await removeFiles([focused]);
+  }, [focused, removeFiles]);
 
   const cancelNew = React.useCallback(() => {
     setVirtual(null);
@@ -119,8 +134,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   );
 
   const commitChange = React.useCallback(
-    async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new") => {
-      const wantPath = joinPath(absPath(dirname(origNode.path)), relPath(decodePath(fileName)));
+    async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new" | "duplicate"): Promise<AbsPath | null> => {
+      const wantPath = joinPath(dirname(origNode.path), relPath(decodePath(fileName)));
       if (type === "new") {
         if (origNode.isTreeFile())
           return currentWorkspace.newFile(
@@ -132,7 +147,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
           return currentWorkspace.newDir(absPath(dirname(wantPath)), relPath(basename(wantPath)));
         }
       }
-      return renameDirOrFile(origNode, wantPath);
+      if (type === "duplicate") {
+        return wantPath;
+      }
+      if (type === "rename") {
+        return renameDirOrFile(origNode, wantPath);
+      }
+      throw new Error("invalid commit type");
     },
     [currentWorkspace, renameDirOrFile]
   );
@@ -145,6 +166,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     newDir,
     commitChange,
     addDirFile,
+    duplicateFile,
+    removeFiles,
+    removeFile,
     cancelNew,
     resetEditing,
     setEditing,

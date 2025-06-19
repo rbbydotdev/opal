@@ -22,6 +22,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const { workspaceId } = Workspace.parseWorkspacePath(pathname);
 
   useEffect(() => {
+    //todo hackish
     if (workspaceId === "new" || !workspaceId) {
       setCurrentWorkspace(NULL_WORKSPACE);
       return;
