@@ -57,7 +57,8 @@ export const EditableDir = ({
 
   useEffect(() => {
     if (isFocused && !isEditing) {
-      linkRef.current?.focus();
+      //TODO HERE
+      // linkRef.current?.focus();
     }
   }, [isEditing, isFocused, linkRef]);
 

@@ -109,6 +109,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       setEditing(newNode.path);
       setVirtual(newNode.path);
       setEditType("new");
+      console.log("addDirFile", newNode.path, focusedNode?.path);
       return newNode;
     },
     [focused, currentWorkspace, setFocused, setEditing, setVirtual, setEditType]

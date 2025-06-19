@@ -10,7 +10,7 @@ import { AbsPath, encodePath, equals, isImage, relPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { FileText } from "lucide-react";
 import Link from "next/link";
-import { ComponentProps, HTMLAttributes, useEffect } from "react";
+import { ComponentProps, HTMLAttributes } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableFile = ({
@@ -55,17 +55,17 @@ export const EditableFile = ({
   });
   const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace);
 
-  //
-  useEffect(() => {
-    if (isFocused && !isEditing) {
-      linkRef.current?.focus();
-      //TODO: 'sometimes' on load focus is lost when instead we want it, https://github.com/vercel/next.js/issues/49386
-      const timer = setTimeout(() => {
-        linkRef.current?.focus();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isEditing, isFocused, linkRef]);
+  // this breaks everything and i friggin hate it
+  // useEffect(() => {
+  //   if (isFocused && !isEditing) {
+  //     linkRef.current?.focus();
+  //     //TODO: 'sometimes' on load focus is lost when instead we want it, https://github.com/vercel/next.js/issues/49386
+  //     const timer = setTimeout(() => {
+  //       linkRef.current?.focus();
+  //     }, 500);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [isEditing, isFocused, linkRef]);
 
   return (
     <div className="select-none">

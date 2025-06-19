@@ -2,7 +2,7 @@ import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import { Thumb } from "@/Db/Thumb";
 import { DragPreviewNode } from "@/features/filetree-drag-and-drop/DragPreviewNode";
 import { isImage } from "@/lib/paths2";
-import { FileTextIcon, FolderDownIcon } from "lucide-react";
+import { FileTextIcon, Folder } from "lucide-react";
 import { forwardRef } from "react";
 
 export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
@@ -44,7 +44,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
               }}
             >
-              <FolderDownIcon
+              <Folder
                 key={n.path}
                 size={48}
                 strokeWidth={1}
