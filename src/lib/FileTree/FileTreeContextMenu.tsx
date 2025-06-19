@@ -1,7 +1,7 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 export const FileTreeContextMenu = ({
   children,
   fileNode,
@@ -19,41 +19,36 @@ export const FileTreeContextMenu = ({
   children: React.ReactNode;
   fileNode: TreeNode;
 }) => {
-  const execOnCloseRef = useRef<null | (() => void)>(null);
-  const execOnClose = useCallback((fn: () => void) => {
-    execOnCloseRef.current = fn;
-  }, []);
-  const handleOpenChange = useCallback((state: boolean) => {
-    if (state === false) {
-      queueMicrotask(() => {
-        execOnCloseRef.current?.();
-        execOnCloseRef.current = null;
-      });
-    }
-  }, []);
-
-  // addFile={() => expandForNode(addDirFile("file"), true)}
-  // addDir={() => expandForNode(addDirFile("dir"), true)}
-
+  const fnRef = useRef<null | (() => void)>(null);
+  const deferredFn = (fn: () => void) => {
+    fnRef.current = fn;
+  };
   return (
-    <ContextMenu onOpenChange={handleOpenChange}>
+    <ContextMenu>
       <ContextMenuTrigger>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-52">
-        {/* addFile={() => expandForNode(addDirFile("file"), true)}
-              addDir={() => expandForNode(addDirFile("dir"), true)} */}
-        <ContextMenuItem inset onClick={addFile}>
+      <ContextMenuContent
+        className="w-52"
+        onCloseAutoFocus={(event) => {
+          if (fnRef.current) {
+            event.preventDefault();
+            fnRef.current();
+            fnRef.current = null;
+          }
+        }}
+      >
+        <ContextMenuItem inset onClick={() => deferredFn(() => addFile())}>
           New File
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={addDir}>
+        <ContextMenuItem inset onClick={() => deferredFn(() => addDir())}>
           New Dir
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={() => execOnClose(() => setEditing(fileNode.path))}>
+        <ContextMenuItem inset onClick={() => deferredFn(() => setEditing(fileNode.path))}>
           Rename
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={() => execOnClose(() => duplicateFile(fileNode))}>
+        <ContextMenuItem inset onClick={() => deferredFn(() => duplicateFile(fileNode))}>
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={() => removeFile(fileNode.path)}>
+        <ContextMenuItem inset onClick={() => deferredFn(() => removeFile(fileNode.path))}>
           Delete
         </ContextMenuItem>
       </ContextMenuContent>

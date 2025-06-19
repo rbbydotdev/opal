@@ -214,7 +214,10 @@ export function FileTreeMenu({
                 </Collapsible>
               ) : (
                 <FileTreeContextMenu
-                  addFile={() => expandForNode(addDirFile("file"), true)}
+                  addFile={() => {
+                    //TODO HERE
+                    expandForNode(addDirFile("file"), true);
+                  }}
                   addDir={() => expandForNode(addDirFile("dir"), true)}
                   removeFile={() => removeFile(fileNode.path)}
                   duplicateFile={() => {}}
