@@ -3,7 +3,7 @@ import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import { usePathname } from "next/navigation";
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 
 export const FileTreeMenuContext = React.createContext<{
   editing: AbsPath | null;
@@ -18,6 +18,7 @@ export const FileTreeMenuContext = React.createContext<{
   resetSelects: () => void;
   setDragOver: (node: TreeNode | null) => void;
   dragOver: TreeNode | null;
+  selectedFocused: AbsPath[];
   draggingNode: TreeNode | null;
   draggingNodes: TreeNode[];
   setDraggingNode: (node: TreeNode | null) => void;
@@ -87,6 +88,10 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
     setFocused(path);
     setSelectedRange(path ? [path] : []);
   };
+  const selectedFocused = useMemo(
+    () => Array.from(new Set([focused, ...selectedRange].filter(Boolean) as AbsPath[])),
+    [focused, selectedRange]
+  );
   return (
     <FileTreeMenuContext.Provider
       value={{
@@ -96,6 +101,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
         setDragOver,
         setDraggingNode,
         setDraggingNodes,
+        selectedFocused,
         draggingNodes,
         draggingNode: draggingNode,
         highlightDragover,

@@ -51,6 +51,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
         return;
       }
       if (e.shiftKey && focused) {
+        //todo this might help somehwere else!
         const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
         if (focusedNode) {
           const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode) ?? [];
@@ -92,7 +93,10 @@ export function useEditable<T extends TreeFile | TreeNode>({
         }
       } else if (e.key === "Enter") {
         if (isEditing) {
-          if (prefix(fileName) && (editType === "new" || prefix(fileName) !== prefix(relPath(basename(fullPath))))) {
+          if (
+            prefix(fileName) &&
+            (["new", "duplicate"].includes(editType) || prefix(fileName) !== prefix(relPath(basename(fullPath))))
+          ) {
             const wantPath = basename(changePrefix(fullPath, prefix(fileName)));
             const gotPath = await commitChange(treeNode, wantPath, editType);
             resetEditing();

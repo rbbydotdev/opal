@@ -1,23 +1,21 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath } from "@/lib/paths2";
 import { useRef } from "react";
 export const FileTreeContextMenu = ({
   children,
-  fileNode,
   removeFile,
-  duplicateFile,
-  setEditing,
+  copyFile,
+  duplicate,
+  rename,
   addFile,
   addDir,
 }: {
-  removeFile: (filePath: string) => void;
-  duplicateFile: (fileNode: TreeNode) => void;
-  setEditing: (filePath: AbsPath) => void;
+  removeFile: () => void;
+  duplicate: () => void;
+  rename: () => void;
   addFile: () => void;
+  copyFile: () => void;
   addDir: () => void;
   children: React.ReactNode;
-  fileNode: TreeNode;
 }) => {
   const fnRef = useRef<null | (() => void)>(null);
   const deferredFn = (fn: () => void) => {
@@ -36,19 +34,25 @@ export const FileTreeContextMenu = ({
           }
         }}
       >
+        {/* < */}
+        {/* copyFileNodesToClipboard */}
+
         <ContextMenuItem inset onClick={deferredFn(() => addFile())}>
           New File
         </ContextMenuItem>
         <ContextMenuItem inset onClick={deferredFn(() => addDir())}>
           New Dir
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => setEditing(fileNode.path))}>
+        <ContextMenuItem inset onClick={deferredFn(() => rename())}>
           Rename
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => duplicateFile(fileNode))}>
+        <ContextMenuItem inset onClick={deferredFn(() => copyFile())}>
+          Copy
+        </ContextMenuItem>
+        <ContextMenuItem inset onClick={deferredFn(() => duplicate())}>
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => removeFile(fileNode.path))}>
+        <ContextMenuItem inset onClick={deferredFn(() => removeFile())}>
           Delete
         </ContextMenuItem>
       </ContextMenuContent>

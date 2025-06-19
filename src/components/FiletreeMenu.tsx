@@ -30,6 +30,20 @@ async function copyHtmlToClipboard(htmlString: string) {
     console.error("Failed to copy HTML to clipboard:", err);
   }
 }
+export function copyFileNodesToClipboard(fileNodes: TreeNode[]) {
+  const htmlString =
+    fileNodes
+      .map((node) => node.path)
+      .filter(isMarkdown)
+      .map((path) => `<a href="${encodePath(path || "")}">${capitalizeFirst(prefix(path))}</a>`)
+      .join(" ") +
+    fileNodes
+      .map((node) => node.path)
+      .filter(isImage)
+      .map((path) => `<img src="${encodePath(path || "")}" />`)
+      .join(" ");
+  return copyHtmlToClipboard(htmlString);
+}
 export function useCopyKeydownImages(currentWorkspace: Workspace) {
   const { selectedRange, focused } = useFileTreeMenuContext();
   function handleCopyKeyDown(origFn: (e: React.KeyboardEvent) => void) {
@@ -43,19 +57,7 @@ export function useCopyKeydownImages(currentWorkspace: Workspace) {
           .filter(Boolean)
           .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
           .filter(Boolean);
-        void copyHtmlToClipboard(
-          allFileNodes
-            .map((node) => node.path)
-            .filter(isMarkdown)
-            //TODO: BROKEN, mdx-editor does not include href
-            .map((path) => `<a href="${encodePath(path || "")}">${capitalizeFirst(prefix(path))}</a>`)
-            .join(" ") +
-            allFileNodes
-              .map((node) => node.path)
-              .filter(isImage)
-              .map((path) => `<img src="${encodePath(path || "")}" />`)
-              .join(" ")
-        );
+        void copyFileNodesToClipboard(allFileNodes);
 
         console.debug("copy keydown");
       } else {
@@ -109,8 +111,8 @@ export function FileTreeMenu({
   showHidden = showHidden ?? true;
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
-  const { highlightDragover, setEditing } = useFileTreeMenuContext();
-  const { addDirFile, removeFile } = useWorkspaceFileMgmt(currentWorkspace);
+  const { highlightDragover, setEditing, selectedFocused } = useFileTreeMenuContext();
+  const { addDirFile, removeFiles, duplicateDirFile } = useWorkspaceFileMgmt(currentWorkspace);
 
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
@@ -214,15 +216,14 @@ export function FileTreeMenu({
                 </Collapsible>
               ) : (
                 <FileTreeContextMenu
-                  addFile={() => {
-                    //TODO HERE
-                    expandForNode(addDirFile("file"), true);
+                  addFile={() => addDirFile("file", fileNode.closestDir()!)}
+                  addDir={() => addDirFile("dir", fileNode.closestDir()!)}
+                  removeFile={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
+                  copyFile={() => copyFileNodesToClipboard([fileNode])}
+                  duplicate={() => {
+                    duplicateDirFile(fileNode.type, fileNode);
                   }}
-                  addDir={() => expandForNode(addDirFile("dir"), true)}
-                  removeFile={() => removeFile(fileNode.path)}
-                  duplicateFile={() => {}}
-                  fileNode={fileNode}
-                  setEditing={setEditing}
+                  rename={() => setEditing(fileNode.path)}
                 >
                   <SidebarMenuButton asChild>
                     <EditableFile

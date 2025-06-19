@@ -13,7 +13,8 @@ export type TreeNodeDirJType = ReturnType<TreeNode["toJSON"]> & {
 };
 
 export class TreeNode {
-  isVirtual = false;
+  isVirtual?: boolean;
+  source?: AbsPath; // For virtual nodes, this is the source path of the original file
   name: RelPath;
   type: "dir" | "file";
   dirname: AbsPath;
@@ -26,11 +27,17 @@ export class TreeNode {
   get length() {
     return this.path.length;
   }
+  isDupNode(): this is VirtualDupTreeNode {
+    return isVirtualDupNode(this);
+  }
   getMimeType() {
     return this.type === "dir" ? "dir" : getMimeType(this.path);
   }
   isHidden() {
     return this.basename.startsWith(".");
+  }
+  closestDir(inclusive: boolean = true): TreeDir | null {
+    return this.isTreeDir() ? this : this.parent?.closestDir(inclusive) ?? null;
   }
   isMarkdownFile() {
     return this.getMimeType() === "text/markdown";
@@ -323,10 +330,35 @@ export type TreeList = Array<string>;
 
 export class VirtualTreeNode extends TreeNode {
   isVirtual = true;
+  tagSource(sourceNode: TreeNode) {
+    this.source = sourceNode.path;
+    return this as VirtualDupTreeNode;
+  }
 }
 export class VirtualFileTreeNode extends TreeFile {
   isVirtual = true;
+  tagSource(sourceNode: TreeNode) {
+    this.source = sourceNode.path;
+    // replaceNde/
+    return this as VirtualDupTreeNode;
+  }
 }
 export class VirtualDirTreeNode extends TreeDir {
   isVirtual = true;
+  tagSource(sourceNode: TreeNode) {
+    this.source = sourceNode.path;
+    return this as VirtualDupTreeNode;
+  }
+}
+
+export function isVirtualNode(node: TreeNode): node is VirtualTreeNode {
+  return typeof node.isVirtual === "boolean" && node.isVirtual !== false;
+}
+
+export class VirtualDupTreeNode extends VirtualTreeNode {
+  source!: AbsPath;
+}
+
+export function isVirtualDupNode(node: TreeNode): node is VirtualDupTreeNode {
+  return isVirtualNode(node) && typeof node.source !== "undefined";
 }

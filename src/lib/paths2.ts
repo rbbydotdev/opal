@@ -104,7 +104,11 @@ export function shiftRelativePath2(path: RelPath): RelPath {
   return relPath(segments.join("/"));
 }
 
+export function duplicatePath(path: AbsPath) {
+  return changePrefix(path, prefix(path) + "-duplicate");
+}
 // --- Increment Path ---
+
 export function incPath<T extends AbsPath | RelPath>(path: T): T {
   const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;
   const match = path.match(regex);
