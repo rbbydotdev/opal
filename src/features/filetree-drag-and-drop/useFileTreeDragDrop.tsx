@@ -28,6 +28,7 @@ export function useFileTreeDragDrop({
     useFileTreeMenuContext();
   const handleDragStart = useCallback(
     (event: React.DragEvent, targetNode: TreeNode) => {
+      event.stopPropagation();
       setDragOver(null);
       setDraggingNode(targetNode);
       setDraggingNodes(selectedRange.map((path) => currentWorkspace.nodeFromPath(path)).filter(Boolean));

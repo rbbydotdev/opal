@@ -194,7 +194,7 @@ export class FileTree {
     delete selfNode?.parent?.children[basename(path)];
     this.map.delete(path);
   }
-  insertNode(parent: TreeDir, newNode: TreeNode | VirtualTreeNode) {
+  insertNode<T extends VirtualTreeNode | TreeNode>(parent: TreeDir, newNode: T) {
     this.map.set(newNode.path, newNode);
     return spliceNode(parent, newNode);
   }
@@ -208,10 +208,9 @@ export class FileTree {
     this.map.delete(oldNode.path);
     this.map.set(newNode.path, newNode);
   }
-  insertClosestNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
+  insertClosestVirtualNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
     const parent = closestTreeDir(selectedNode);
-
-    const newNode = newVirtualTreeNode({ ...node, parent });
+    const newNode = newVirtualTreeNode({ name: node.name, type: node.type, parent });
     while (this.nodeWithPathExists(newNode.path)) newNode.inc();
     return this.insertNode(parent, newNode);
   }
@@ -227,7 +226,7 @@ function closestTreeDir(node: TreeNode): TreeDir {
   return node as TreeDir;
 }
 
-function spliceNode(targetNode: TreeDir, newNode: TreeNode) {
+function spliceNode<T extends VirtualTreeNode | TreeNode>(targetNode: TreeDir, newNode: T) {
   targetNode.children[newNode.name] = newNode;
   targetNode.children = Object.fromEntries(Object.entries(targetNode.children));
   return newNode;

@@ -44,14 +44,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
               }}
             >
-              <Folder
-                key={n.path}
-                size={48}
-                strokeWidth={1}
-                className="text-ring rounded"
-                fill="white"
-                style={transformStyle}
-              />
+              <Folder key={n.path} size={48} strokeWidth={1} className="text-ring rounded" fill="white" />
             </div>
           );
         }

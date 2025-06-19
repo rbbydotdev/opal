@@ -53,7 +53,7 @@ export const EditableFile = ({
     expand,
     currentWorkspace,
   });
-  const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace);
+  const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace); //TODO, make for a copy of other files possible too
 
   // this breaks everything and i friggin hate it
   // useEffect(() => {
@@ -97,7 +97,7 @@ export const EditableFile = ({
               {isImage(treeNode.path) ? (
                 <ImageFileHoverCard>
                   <img
-                    src={Thumb.pathToURL(treeNode.path)}
+                    src={treeNode.isDupNode() ? Thumb.pathToURL(treeNode.source) : Thumb.pathToURL(treeNode.path)}
                     alt=""
                     className="w-3 h-3 border border-white flex-shrink-0 bg-white mr-2"
                   />

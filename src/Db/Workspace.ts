@@ -170,6 +170,13 @@ export class Workspace {
   addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
     return this.disk.addVirtualFile({ type, name }, selectedNode);
   }
+
+  addVirtualFileFromSource(
+    { type, name, sourceNode }: Pick<TreeNode, "type" | "name"> & { sourceNode: TreeNode },
+    selectedNode: TreeNode | null
+  ) {
+    return this.disk.addVirtualFileFromSource({ type, name, sourceNode }, selectedNode);
+  }
   removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
   }
@@ -263,6 +270,17 @@ export class Workspace {
 
   watchDisk(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
     return this.disk.latestIndexListener(callback);
+  }
+  copyFile(source: AbsPath | TreeNode, targetPath: AbsPath, overWrite = false) {
+    const sourceNode = this.nodeFromPath(String(source));
+    if (sourceNode === null) {
+      throw new BadRequestError(`Source file does not exist: ${source}`);
+    }
+    if (sourceNode.isTreeFile()) {
+      return this.disk.copyFile(sourceNode.path, targetPath, overWrite);
+    } else {
+      return this.disk.copyDir(sourceNode.path, targetPath, overWrite);
+    }
   }
 
   renameListener(callback: (details: RenameDetails[]) => void) {

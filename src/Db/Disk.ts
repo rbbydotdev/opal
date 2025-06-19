@@ -6,7 +6,7 @@ import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
-import { TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
+import { TreeNodeDirJType, VirtualDupTreeNode } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
 import LightningFs from "@isomorphic-git/lightning-fs";
@@ -574,10 +574,21 @@ export abstract class Disk {
     //TODO donno why indexing
     void this.local.emit(DiskEvents.INDEX, undefined);
   }
-  addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
+  addVirtualFileFromSource(
+    props: Pick<TreeNode, "type" | "name"> & { sourceNode: TreeNode },
+    selectedNode: TreeNode | null
+  ): VirtualDupTreeNode {
     const parent = selectedNode || this.fileTree.root;
-    const node = this.fileTree.insertClosestNode({ type, name }, parent);
-    //TODO WHY AM I INDEXING ON VIRTUAL?
+    const node = this.fileTree
+      .insertClosestVirtualNode({ type: props.type, name: props.name }, parent)
+      .tagSource(props.sourceNode);
+    void this.local.emit(DiskEvents.INDEX, undefined);
+    return node;
+  }
+
+  addVirtualFile(props: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null): TreeNode {
+    const parent = selectedNode || this.fileTree.root;
+    const node = this.fileTree.insertClosestVirtualNode({ type: props.type, name: props.name }, parent);
     void this.local.emit(DiskEvents.INDEX, undefined);
     return node;
   }
@@ -608,6 +619,89 @@ export abstract class Disk {
       type: "create",
       details: { filePaths: result },
     });
+  }
+
+  private async copyDirQuiet(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
+    await this.ready;
+    if (await this.pathExists(newFullPath)) {
+      if (!overWrite) {
+        newFullPath = await this.nextPath(newFullPath);
+      } else {
+        await this.quietRemove(newFullPath);
+      }
+    }
+    await this.mkdirRecursive(absPath(dirname(newFullPath)));
+    const entries = await this.fs.readdir(encodePath(oldFullPath));
+    for (const entry of entries) {
+      const oldEntryPath = joinPath(oldFullPath, String(entry));
+      const newEntryPath = joinPath(newFullPath, String(entry));
+      if (typeof entry === "string" || entry instanceof String) {
+        if ((await this.fs.stat(encodePath(oldEntryPath))).isDirectory()) {
+          await this.copyDirQuiet(oldEntryPath, newEntryPath, overWrite);
+        } else {
+          await this.copyFileQuiet(oldEntryPath, newEntryPath, overWrite);
+        }
+      } else {
+        console.warn(`Skipping non-string entry: ${entry}`);
+      }
+    }
+    await this.fileTreeIndex();
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [newFullPath] },
+    });
+    await this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [newFullPath] },
+    });
+    return newFullPath;
+  }
+
+  async copyDir(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
+    const fullPath = await this.copyDirQuiet(oldFullPath, newFullPath, overWrite);
+    await this.fileTreeIndex();
+    //TODO events are weird for copy idk how to do them
+    void this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [fullPath] },
+    });
+    void this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [fullPath] },
+    });
+    return newFullPath;
+  }
+  private async copyFileQuiet(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
+    await this.ready;
+    const oldContent = await this.readFile(oldFullPath); //yeeesh wish i could pipe this!
+    //alternatively if have access to pipes, mv old file to tmp first then copy then
+    //remove tmp
+    if (await this.pathExists(newFullPath)) {
+      if (!overWrite) {
+        newFullPath = await this.nextPath(newFullPath);
+      } else {
+        await this.quietRemove(newFullPath);
+      }
+    }
+    await this.mkdirRecursive(absPath(dirname(newFullPath)));
+    await this.fs.writeFile(encodePath(newFullPath), oldContent, {
+      encoding: "utf8",
+      mode: 0o777,
+    });
+    return newFullPath;
+  }
+  async copyFile(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
+    const fullPath = await this.copyFileQuiet(oldFullPath, newFullPath, overWrite);
+    //TODO events are weird for copy idk how to do them
+    void this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [fullPath] },
+    });
+    void this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: [fullPath] },
+    });
+    return fullPath;
   }
 
   async newFile(fullPath: AbsPath, content: string | Uint8Array) {

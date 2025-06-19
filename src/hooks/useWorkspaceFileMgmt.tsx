@@ -2,7 +2,7 @@
 import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import {
   AbsPath,
   RelPath,
@@ -10,11 +10,13 @@ import {
   basename,
   decodePath,
   dirname,
+  duplicatePath,
   joinPath,
   reduceLineage,
   relPath,
 } from "@/lib/paths2";
 import React from "react";
+import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   const {
@@ -35,21 +37,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     },
     [currentWorkspace]
   );
-  const duplicateFile = React.useCallback(
-    (treeNode: TreeNode) => {
-      const type = treeNode.type;
-      const focusedNode = focused ? currentWorkspace.nodeFromPath(focused) : null;
-      const name = type === "dir" ? "newdir" : "newfile.md";
-      const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);
-      setFocused(newNode.path);
-      setEditing(newNode.path);
-      setVirtual(newNode.path);
-      setEditType("new");
-      return newNode;
-    },
-    [focused, currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
-  );
-
   const newDir = React.useCallback(
     async (path: AbsPath) => {
       return currentWorkspace.newDir(dirname(path), basename(path));
@@ -82,6 +69,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
 
   const removeSelectedFiles = React.useCallback(async () => {
     const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
+
     if (!range.length && focused) {
       range.push(focused);
     }
@@ -100,19 +88,40 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     if (virtual) currentWorkspace.removeVirtualfile(virtual);
   }, [setVirtual, virtual, currentWorkspace]);
 
+  const duplicateDirFile = React.useCallback(
+    (type: TreeNode["type"], from: AbsPath | TreeNode) => {
+      const fromNode = currentWorkspace.nodeFromPath(String(from));
+      if (!fromNode) {
+        throw new Error("Parent node not found");
+      }
+
+      const newNode = currentWorkspace.addVirtualFileFromSource(
+        { type, name: relPath(duplicatePath(fromNode.path)), sourceNode: fromNode },
+        fromNode
+      );
+      setFocused(newNode.path);
+      setEditing(newNode.path);
+      setVirtual(newNode.path);
+      setEditType("duplicate");
+      return newNode;
+    },
+    [currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
+  );
   const addDirFile = React.useCallback(
-    (type: TreeNode["type"]) => {
-      const focusedNode = focused ? currentWorkspace.nodeFromPath(focused) : null;
+    (type: TreeNode["type"], parent: TreeDir | AbsPath) => {
+      const parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
+      if (!parentNode) {
+        throw new Error("Parent node not found");
+      }
       const name = type === "dir" ? "newdir" : "newfile.md";
-      const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, focusedNode);
+      const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, parentNode);
       setFocused(newNode.path);
       setEditing(newNode.path);
       setVirtual(newNode.path);
       setEditType("new");
-      console.log("addDirFile", newNode.path, focusedNode?.path);
       return newNode;
     },
-    [focused, currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
+    [currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
   );
 
   const renameDirOrFileMultiple = React.useCallback(
@@ -147,14 +156,17 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         else {
           return currentWorkspace.newDir(absPath(dirname(wantPath)), relPath(basename(wantPath)));
         }
-      }
-      if (type === "duplicate") {
-        return wantPath;
-      }
-      if (type === "rename") {
+      } else if (type === "duplicate") {
+        if (isVirtualDupNode(origNode)) {
+          return currentWorkspace.copyFile(origNode.source, wantPath);
+        } else {
+          throw new Error("Cannot duplicate a non-virtual node");
+        }
+      } else if (type === "rename") {
         return renameDirOrFile(origNode, wantPath);
+      } else {
+        throw new Error("invalid commit type");
       }
-      throw new Error("invalid commit type");
     },
     [currentWorkspace, renameDirOrFile]
   );
@@ -167,12 +179,12 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     newDir,
     commitChange,
     addDirFile,
-    duplicateFile,
     removeFiles,
     removeFile,
     cancelNew,
     resetEditing,
     setEditing,
     setFocused,
+    duplicateDirFile,
   };
 }

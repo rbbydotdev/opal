@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
 import { useFileTreeDragDrop } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
 
+import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
 import {
   SidebarContent,
   SidebarGroup,
@@ -22,7 +23,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useFileTreeExpander, useSidebarItemExpander } from "@/hooks/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath } from "@/lib/paths2";
+import { absPath, AbsPath } from "@/lib/paths2";
 import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import { Tooltip, TooltipTrigger } from "@radix-ui/react-tooltip";
 import clsx from "clsx";
@@ -61,6 +62,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
     workspaceId: currentWorkspace.id,
   });
 
+  const { focused } = useFileTreeMenuContext();
   const { handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
   });
@@ -91,8 +93,8 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
           <SidebarGroupContent className="flex h-full items-center">
             <SidebarFileMenuFilesActions
               removeSelectedFiles={removeSelectedFiles}
-              addFile={() => expandForNode(addDirFile("file"), true)}
-              addDir={() => expandForNode(addDirFile("dir"), true)}
+              addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
+              addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
             />
           </SidebarGroupContent>
