@@ -167,12 +167,13 @@ export class Workspace {
     return this.disk.newFiles(files);
   }
 
-  addVirtualFile({ type, name }: { type: TreeNode["type"]; name: TreeNode["name"] }, selectedNode: TreeNode | null) {
+  addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
     return this.disk.addVirtualFile({ type, name }, selectedNode);
   }
   removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
   }
+
   async removeMultipleFiles(filePaths: AbsPath[]) {
     await Promise.all(
       filePaths.filter(isImage).flatMap((imagePath) => [

@@ -411,22 +411,18 @@ export abstract class Disk {
   }
 
   async trash(filePath: AbsPath, type: "dir" | "file") {
-    return this.renameDirOrFileDiskMethodQUIET(filePath, joinPath(absPath(".trash"), filePath), type);
+    return this.quietlyRenameDirOrFile(filePath, joinPath(absPath(".trash"), filePath), type);
   }
   async untrash(filePath: AbsPath, type: "dir" | "file") {
     const newPath = absPath(filePath.replace(/\.trash\//, "/")); // remove .trash prefix
-    return this.renameDirOrFileDiskMethodQUIET(filePath, newPath, type);
+    return this.quietlyRenameDirOrFile(filePath, newPath, type);
   }
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
     if (nodes.length === 0) return [];
     const results = await Promise.all(
       nodes.map(([oldNode, newNode]) =>
-        this.renameDirOrFileDiskMethodQUIET(
-          oldNode.path,
-          newNode instanceof TreeNode ? newNode.path : newNode,
-          oldNode.type
-        )
+        this.quietlyRenameDirOrFile(oldNode.path, newNode instanceof TreeNode ? newNode.path : newNode, oldNode.type)
       )
     );
     return this.broadcastRename(results);
@@ -452,10 +448,10 @@ export abstract class Disk {
     return finalPath;
   }
 
-  protected async renameDirOrFileDiskMethod(...properties: Parameters<typeof this.renameDirOrFileDiskMethodQUIET>) {
-    return this.broadcastRename([await this.renameDirOrFileDiskMethodQUIET(...properties)]);
+  protected async renameDirOrFileDiskMethod(...properties: Parameters<typeof this.quietlyRenameDirOrFile>) {
+    return this.broadcastRename([await this.quietlyRenameDirOrFile(...properties)]);
   }
-  protected async renameDirOrFileDiskMethodQUIET(
+  protected async quietlyRenameDirOrFile(
     oldFullPath: AbsPath,
     newFullPath: AbsPath,
     fileType?: "file" | "dir"
@@ -575,15 +571,16 @@ export abstract class Disk {
 
   removeVirtualFile(path: AbsPath) {
     this.fileTree.removeNodeByPath(path);
+    //TODO donno why indexing
     void this.local.emit(DiskEvents.INDEX, undefined);
   }
   addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
     const parent = selectedNode || this.fileTree.root;
     const node = this.fileTree.insertClosestNode({ type, name }, parent);
+    //TODO WHY AM I INDEXING ON VIRTUAL?
     void this.local.emit(DiskEvents.INDEX, undefined);
     return node;
   }
-
   async nextPath(fullPath: AbsPath) {
     await this.ready;
     while (await this.pathExists(fullPath)) {

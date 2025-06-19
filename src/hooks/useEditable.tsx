@@ -150,16 +150,20 @@ export function useEditable<T extends TreeFile | TreeNode>({
     setFocused(treeNode.path);
   }, [selectedRange, setFocused, treeNode.path, treeNode.str]);
 
-  const handleBlur = useCallback(() => {
-    if (isEditing) {
-      resetEditing();
-      cancelEdit();
-    }
-    if (isEditing && isVirtual) {
-      cancelNew();
-    }
-    setFocused(null);
-  }, [cancelEdit, cancelNew, isEditing, isVirtual, resetEditing, setFocused]);
+  const handleBlur = useCallback(
+    (_e: React.FocusEvent<HTMLInputElement | HTMLAnchorElement>) => {
+      //get the target element
+      if (isEditing) {
+        resetEditing();
+        cancelEdit();
+      }
+      if (isEditing && isVirtual) {
+        cancelNew();
+      }
+      setFocused(null);
+    },
+    [cancelEdit, cancelNew, isEditing, isVirtual, resetEditing, setFocused]
+  );
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {

@@ -52,10 +52,8 @@ export function* rangeSearchScan(parent: HTMLElement, searchQuery: string) {
   }
 }
 const highlightRanges = (ranges: Range[] | Iterable<Range>) => {
-  if (typeof Highlight !== "undefined") {
-    const highlight = new Highlight(...ranges);
-    CSS.highlights.set(MDX_SEARCH_NAME, highlight);
-  }
+  const highlight = new Highlight(...ranges);
+  CSS.highlights.set(MDX_SEARCH_NAME, highlight);
 };
 
 export const editorSearchTerm$ = Cell<string>("");
@@ -85,20 +83,21 @@ export function useEditorSearch() {
 export const searchPlugin = realmPlugin({
   postInit(realm) {
     const editor = realm.getValue(activeEditor$);
-    realm.sub(editorSearchTerm$, (searchQuery) => {
-      if (editor) {
-        const rootNode = editor.getRootElement();
-        editor.update(() => {
-          if (rootNode) {
-            CSS.highlights.delete(MDX_SEARCH_NAME);
-            const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery));
-            realm.pub(editorSearchRanges$, ranges);
-            highlightRanges(ranges);
-          }
-        });
-      }
-    });
-    if (editor) {
+
+    if (editor && typeof CSS.highlights !== "undefined") {
+      realm.sub(editorSearchTerm$, (searchQuery) => {
+        if (editor) {
+          const rootNode = editor.getRootElement();
+          editor.update(() => {
+            if (rootNode) {
+              CSS.highlights.delete(MDX_SEARCH_NAME);
+              const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery));
+              realm.pub(editorSearchRanges$, ranges);
+              highlightRanges(ranges);
+            }
+          });
+        }
+      });
       editor.registerNodeTransform(RootNode, () => {
         queueMicrotask(() => {
           editor.update(() => {

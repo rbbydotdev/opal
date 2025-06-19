@@ -4,7 +4,6 @@ import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
-import { Separator } from "@/components/ui/separator";
 import { useFileTreeDragDrop } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
 
 import {
@@ -50,33 +49,17 @@ import {
   UploadCloud,
   UploadCloudIcon,
 } from "lucide-react";
-import React, { useCallback } from "react";
+import React from "react";
 import { twMerge } from "tailwind-merge";
 
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { fileTreeDir, flatTree, currentWorkspace, workspaceRoute } = useWorkspaceContext();
-
   const { renameDirOrFileMultiple, addDirFile, removeSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
-    fileDirTree: flatTree,
-    currentPath: workspaceRoute.path,
-    id: currentWorkspace.id,
+    flatTree,
+    activePath: workspaceRoute.path,
+    workspaceId: currentWorkspace.id,
   });
-
-  const addDirFileAndExpand = useCallback(
-    (type: TreeNode["type"]) => {
-      const newNode = addDirFile(type);
-      expandForNode(newNode, true);
-      return newNode;
-    },
-    [addDirFile, expandForNode]
-  );
-  const addFile = useCallback(() => {
-    addDirFileAndExpand("file");
-  }, [addDirFileAndExpand]);
-  const addDir = useCallback(() => {
-    addDirFileAndExpand("dir");
-  }, [addDirFileAndExpand]);
 
   const { handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
@@ -108,8 +91,8 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
           <SidebarGroupContent className="flex h-full items-center">
             <SidebarFileMenuFilesActions
               removeSelectedFiles={removeSelectedFiles}
-              addFile={addFile}
-              addDir={addDir}
+              addFile={() => expandForNode(addDirFile("file"), true)}
+              addDir={() => expandForNode(addDirFile("dir"), true)}
               setExpandAll={setExpandAll}
             />
           </SidebarGroupContent>
@@ -519,47 +502,5 @@ export function SidebarCollapseContentScroll(
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">{children}</CollapsibleContent>
       </Collapsible>
     </SidebarGroup>
-  );
-}
-
-function PublishMenu() {
-  return (
-    <>
-      <SidebarGroup className="gap-2 flex flex-col">
-        <SidebarGroupLabel>Cloud Actions</SidebarGroupLabel>
-        <Button className="w-full text-xs" size="sm" variant="outline">
-          <Code2 className="mr-1" />
-          Publish to Cloud, HTML
-        </Button>
-        <Button className="w-full text-xs" size="sm" variant="outline">
-          <Code2 className="mr-1" />
-          Publish to Cloud, PDF
-        </Button>
-      </SidebarGroup>
-      <Separator />
-      <SidebarGroup className="gap-2 flex flex-col">
-        <SidebarGroupLabel>Workspace Actions</SidebarGroupLabel>
-        <Button className="w-full text-xs" size="sm" variant="outline">
-          <Code2 className="mr-1" />
-          Publish to HTML
-        </Button>
-        <Button className="w-full text-xs" size="sm" variant="outline">
-          <FileTextIcon className="mr-1" />
-          Publish to PDF
-        </Button>
-      </SidebarGroup>
-      <Separator />
-      <SidebarGroup className="gap-2 flex flex-col">
-        <SidebarGroupLabel>Single File Actions</SidebarGroupLabel>
-        <Button className="w-full text-xs" size="sm" variant="outline">
-          <Code2 className="mr-1" />
-          Publish Single to HTML
-        </Button>
-        <Button className="w-full text-xs" size="sm" variant="outline">
-          <FileTextIcon className="mr-1" />
-          Publish Single to PDF
-        </Button>
-      </SidebarGroup>
-    </>
   );
 }

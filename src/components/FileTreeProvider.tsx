@@ -8,10 +8,10 @@ import React, { useCallback } from "react";
 export const FileTreeMenuContext = React.createContext<{
   editing: AbsPath | null;
   setEditing: React.Dispatch<React.SetStateAction<AbsPath | null>>;
-  editType: "rename" | "new";
+  editType: "rename" | "new" | "duplicate";
   setFocused: (path: AbsPath | null) => void;
   focused: AbsPath | null;
-  setEditType: React.Dispatch<React.SetStateAction<"rename" | "new">>;
+  setEditType: React.Dispatch<React.SetStateAction<"rename" | "new" | "duplicate">>;
   resetEditing: () => void;
   setSelectedRange: (path: AbsPath[]) => void;
   highlightDragover: (menuItem: TreeNode) => boolean;
@@ -38,7 +38,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
   const pathname = usePathname();
   const { filePath } = Workspace.parseWorkspacePath(pathname);
   const [editing, setEditing] = React.useState<AbsPath | null>(null);
-  const [editType, setEditType] = React.useState<"rename" | "new">("rename");
+  const [editType, setEditType] = React.useState<"rename" | "new" | "duplicate">("rename");
   const [focused, setFocused] = React.useState<AbsPath | null>(filePath ?? null);
   const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
   const [dragOver, setDragOver] = React.useState<TreeNode | null>(null);

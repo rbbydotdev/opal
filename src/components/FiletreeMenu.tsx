@@ -8,6 +8,8 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { FileTreeContextMenu } from "@/lib/FileTree/FileTreeContextMenu";
 import { TreeDir, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { AbsPath, absPath, dirname, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
@@ -97,7 +99,6 @@ export function FileTreeMenu({
   showHidden,
 }: {
   fileTreeDir: TreeDir;
-
   depth?: number;
   expand: (path: string, value: boolean) => void;
   renameDirOrFileMultiple: (nodes: [oldNode: TreeNode, newNode: TreeNode][]) => Promise<unknown>;
@@ -107,9 +108,10 @@ export function FileTreeMenu({
 }) {
   showHidden = showHidden ?? true;
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
-
   const { setReactDragImage, DragImagePortal } = useDragImage();
-  const { highlightDragover } = useFileTreeMenuContext();
+  const { highlightDragover, setEditing } = useFileTreeMenuContext();
+  const { addDirFile, removeFile } = useWorkspaceFileMgmt(currentWorkspace);
+
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
     onMoveMultiple: renameDirOrFileMultiple,
@@ -211,17 +213,26 @@ export function FileTreeMenu({
                   </CollapsibleContent>
                 </Collapsible>
               ) : (
-                <SidebarMenuButton asChild>
-                  <EditableFile
-                    workspaceRoute={workspaceRoute}
-                    currentWorkspace={currentWorkspace}
-                    depth={depth}
-                    fullPath={fileNode.path}
-                    treeNode={fileNode as TreeFile}
-                    expand={expandForNode}
-                    onDragStart={handleDragStartWithImg(fileNode)}
-                  />
-                </SidebarMenuButton>
+                <FileTreeContextMenu
+                  addFile={() => expandForNode(addDirFile("file"), true)}
+                  addDir={() => expandForNode(addDirFile("dir"), true)}
+                  removeFile={() => removeFile(fileNode.path)}
+                  duplicateFile={() => {}}
+                  fileNode={fileNode}
+                  setEditing={setEditing}
+                >
+                  <SidebarMenuButton asChild>
+                    <EditableFile
+                      workspaceRoute={workspaceRoute}
+                      currentWorkspace={currentWorkspace}
+                      depth={depth}
+                      fullPath={fileNode.path}
+                      treeNode={fileNode as TreeFile}
+                      expand={expandForNode}
+                      onDragStart={handleDragStartWithImg(fileNode)}
+                    />
+                  </SidebarMenuButton>
+                </FileTreeContextMenu>
               )}
             </SidebarMenuItem>
           ))}
