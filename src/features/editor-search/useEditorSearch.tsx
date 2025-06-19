@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+export function canUseSearchTool() {
+  return typeof Highlight !== "undefined" && typeof CSS.highlights !== "undefined";
+}
 export function useEditorSearchTool() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+      if (canUseSearchTool() && (e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
         setIsSearchOpen(true);
       }
