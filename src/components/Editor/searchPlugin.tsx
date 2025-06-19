@@ -1,3 +1,4 @@
+import { backgroundRefresh } from "@/lib/backgroundRefresh";
 import { activeEditor$, Cell, realmPlugin, useCellValue, useRealm } from "@mdxeditor/editor";
 import { RootNode } from "lexical";
 
@@ -13,10 +14,12 @@ function* searchText(allText: string, searchQuery: string): Generator<[start: nu
     startPos = index + searchQuery.length;
   }
 }
-function* indexTextNodes(containerList: NodeListOf<Element>): Generator<{
+type TextNodeIndex = {
   allText: string;
   nodeMap: Array<[node: Node, offset: number]>;
-}> {
+};
+function* indexTextNodes(containerList: NodeListOf<Element>): Generator<TextNodeIndex> {
+  console.log("indexing search");
   const nodes = new Set<Node>();
 
   for (const container of containerList ?? []) {
@@ -38,8 +41,8 @@ function* indexTextNodes(containerList: NodeListOf<Element>): Generator<{
     };
   }
 }
-export function* rangeSearchScan(parent: HTMLElement, searchQuery: string) {
-  for (const { allText, nodeMap } of indexTextNodes(parent.querySelectorAll("ul,p,h1,h2,h3,h4"))) {
+export function* rangeSearchScan(parent: HTMLElement, searchQuery: string, textNodeIndex?: Iterable<TextNodeIndex>) {
+  for (const { allText, nodeMap } of textNodeIndex ?? indexTextNodes(parent.querySelectorAll("ul,p,h1,h2,h3,h4"))) {
     for (const [start, end] of searchText(allText, searchQuery)) {
       const [startNode, startOffset] = nodeMap[start];
       const [endNode, endOffset] = nodeMap[end];
@@ -80,9 +83,16 @@ export function useEditorSearch() {
   }
   return { next, prev, total: rangeCount, cursor: normalizedCursor, setSearch, search, ranges };
 }
+
 export const searchPlugin = realmPlugin({
   postInit(realm) {
     const editor = realm.getValue(activeEditor$);
+    let textNodeIndex: Iterable<TextNodeIndex>;
+    const getTextNodeIndex = (root: HTMLElement) => indexTextNodes(root.querySelectorAll("ul,p,h1,h2,h3,h4"));
+    const backgroundIndex = backgroundRefresh(
+      (root: HTMLElement) => (textNodeIndex = [...getTextNodeIndex(root)]),
+      1000
+    );
 
     if (editor && typeof CSS.highlights !== "undefined") {
       realm.sub(editorSearchTerm$, (searchQuery) => {
@@ -91,7 +101,8 @@ export const searchPlugin = realmPlugin({
           editor.update(() => {
             if (rootNode) {
               CSS.highlights.delete(MDX_SEARCH_NAME);
-              const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery));
+              if (!textNodeIndex) textNodeIndex = backgroundIndex(rootNode!);
+              const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery, textNodeIndex));
               realm.pub(editorSearchRanges$, ranges);
               highlightRanges(ranges);
             }
@@ -103,8 +114,9 @@ export const searchPlugin = realmPlugin({
           editor.update(() => {
             const searchQuery = realm.getValue(editorSearchTerm$);
             const rootNode = editor.getRootElement();
+            textNodeIndex = backgroundIndex(rootNode!);
             if (searchQuery) {
-              const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery));
+              const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery, textNodeIndex));
               realm.pub(editorSearchRanges$, ranges);
               highlightRanges(ranges);
             }
