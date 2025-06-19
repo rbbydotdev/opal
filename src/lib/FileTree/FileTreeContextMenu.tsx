@@ -21,7 +21,7 @@ export const FileTreeContextMenu = ({
 }) => {
   const fnRef = useRef<null | (() => void)>(null);
   const deferredFn = (fn: () => void) => {
-    fnRef.current = fn;
+    return () => (fnRef.current = fn);
   };
   return (
     <ContextMenu>
@@ -36,19 +36,19 @@ export const FileTreeContextMenu = ({
           }
         }}
       >
-        <ContextMenuItem inset onClick={() => deferredFn(() => addFile())}>
+        <ContextMenuItem inset onClick={deferredFn(() => addFile())}>
           New File
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={() => deferredFn(() => addDir())}>
+        <ContextMenuItem inset onClick={deferredFn(() => addDir())}>
           New Dir
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={() => deferredFn(() => setEditing(fileNode.path))}>
+        <ContextMenuItem inset onClick={deferredFn(() => setEditing(fileNode.path))}>
           Rename
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={() => deferredFn(() => duplicateFile(fileNode))}>
+        <ContextMenuItem inset onClick={deferredFn(() => duplicateFile(fileNode))}>
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={() => deferredFn(() => removeFile(fileNode.path))}>
+        <ContextMenuItem inset onClick={deferredFn(() => removeFile(fileNode.path))}>
           Delete
         </ContextMenuItem>
       </ContextMenuContent>
