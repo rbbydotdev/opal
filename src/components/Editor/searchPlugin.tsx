@@ -1,8 +1,10 @@
 import { backgroundRefresh } from "@/lib/backgroundRefresh";
 import { activeEditor$, Cell, realmPlugin, useCellValue, useRealm } from "@mdxeditor/editor";
 import { RootNode } from "lexical";
+import { useCallback } from "react";
 
 export const MDX_SEARCH_NAME = "MdxSearch";
+export const MDX_FOCUS_SEARCH_NAME = "MdxFocusSearch";
 
 function* searchText(allText: string, searchQuery: string): Generator<[start: number, end: number]> {
   if (searchQuery === null) return [];
@@ -19,7 +21,7 @@ type TextNodeIndex = {
   nodeMap: Array<[node: Node, offset: number]>;
 };
 function* indexTextNodes(containerList: NodeListOf<Element>): Generator<TextNodeIndex> {
-  console.log("indexing search");
+  console.log("indexing for search");
   const nodes = new Set<Node>();
 
   for (const container of containerList ?? []) {
@@ -54,14 +56,39 @@ export function* rangeSearchScan(parent: HTMLElement, searchQuery: string, textN
     }
   }
 }
+const focusHighlightRange = (range?: Range | null) => {
+  CSS.highlights.delete(MDX_FOCUS_SEARCH_NAME);
+  if (range) CSS.highlights.set(MDX_FOCUS_SEARCH_NAME, new Highlight(range));
+};
+
 const highlightRanges = (ranges: Range[] | Iterable<Range>) => {
-  const highlight = new Highlight(...ranges);
-  CSS.highlights.set(MDX_SEARCH_NAME, highlight);
+  CSS.highlights.set(MDX_SEARCH_NAME, new Highlight(...ranges));
+};
+
+const resetHighlights = () => {
+  CSS.highlights.delete(MDX_SEARCH_NAME);
+  CSS.highlights.delete(MDX_FOCUS_SEARCH_NAME);
 };
 
 export const editorSearchTerm$ = Cell<string>("");
 export const editorSearchRanges$ = Cell<Range[]>([]);
 export const editorSearchCursor$ = Cell<number>(0);
+
+const scrollToRange = (range: Range, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
+  const el = range.startContainer.parentElement as HTMLElement;
+  const ignoreIfInView = options?.ignoreIfInView ?? false;
+  const behavior = options?.behavior ?? "smooth";
+  if (ignoreIfInView) {
+    const rect = el.getBoundingClientRect();
+    const inView =
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+    if (inView) return;
+  }
+  el.scrollIntoView({ behavior });
+};
 
 export function useEditorSearch() {
   const realm = useRealm();
@@ -73,28 +100,47 @@ export function useEditorSearch() {
   }
 
   const rangeCount = ranges.length;
-  const normalizedCursor = rangeCount > 0 ? Math.max(1, cursor) : 0;
+
+  const scrollToRangeOrIndex = useCallback(
+    (range: Range | number, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
+      return scrollToRange(typeof range === "number" ? ranges[range - 1] : range, options);
+    },
+    [ranges]
+  );
+
   function next() {
-    realm.pub(editorSearchCursor$, (cursor + 1) % (ranges.length + 1));
+    if (!ranges.length) return;
+    // range.startContainer.parentElement.scrollIntoView({ behavior: 'smooth' });
+    const newVal = (cursor % ranges.length) + 1;
+    scrollToRangeOrIndex(newVal);
+    realm.pub(editorSearchCursor$, newVal);
+  }
+  function prev() {
+    if (!ranges.length) return;
+    const newVal = cursor <= 1 ? ranges.length : cursor - 1;
+    scrollToRangeOrIndex(newVal);
+    realm.pub(editorSearchCursor$, newVal);
   }
 
-  function prev() {
-    realm.pub(editorSearchCursor$, cursor <= 1 ? ranges.length : cursor - 1);
-  }
-  return { next, prev, total: rangeCount, cursor: normalizedCursor, setSearch, search, ranges };
+  return { next, prev, total: rangeCount, cursor, setSearch, search, ranges, scrollToRangeOrIndex };
 }
 
 export const searchPlugin = realmPlugin({
   postInit(realm) {
     const editor = realm.getValue(activeEditor$);
-    let textNodeIndex: Iterable<TextNodeIndex>;
-    const getTextNodeIndex = (root: HTMLElement) => indexTextNodes(root.querySelectorAll("ul,p,h1,h2,h3,h4"));
-    const backgroundIndex = backgroundRefresh(
-      (root: HTMLElement) => (textNodeIndex = [...getTextNodeIndex(root)]),
-      1000
-    );
-
     if (editor && typeof CSS.highlights !== "undefined") {
+      let textNodeIndex: Iterable<TextNodeIndex>;
+      const getTextNodeIndex = (root: HTMLElement) => indexTextNodes(root.querySelectorAll("ul,p,h1,h2,h3,h4"));
+      const backgroundIndex = backgroundRefresh(
+        (root: HTMLElement) => (textNodeIndex = [...getTextNodeIndex(root)]),
+        1000
+      );
+
+      // focusHighlightRange
+      realm.sub(editorSearchCursor$, (cursor) => {
+        const ranges = realm.getValue(editorSearchRanges$);
+        focusHighlightRange(ranges[cursor - 1]);
+      });
       realm.sub(editorSearchTerm$, (searchQuery) => {
         if (editor) {
           const rootNode = editor.getRootElement();
@@ -102,9 +148,18 @@ export const searchPlugin = realmPlugin({
             if (rootNode) {
               CSS.highlights.delete(MDX_SEARCH_NAME);
               if (!textNodeIndex) textNodeIndex = backgroundIndex(rootNode!);
+
               const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery, textNodeIndex));
               realm.pub(editorSearchRanges$, ranges);
               highlightRanges(ranges);
+
+              if (ranges.length) {
+                focusHighlightRange(ranges[0]);
+                realm.pub(editorSearchCursor$, 1);
+                scrollToRange(ranges[0], { ignoreIfInView: true });
+              } else {
+                resetHighlights();
+              }
             }
           });
         }
@@ -115,10 +170,14 @@ export const searchPlugin = realmPlugin({
             const searchQuery = realm.getValue(editorSearchTerm$);
             const rootNode = editor.getRootElement();
             textNodeIndex = backgroundIndex(rootNode!);
+
             if (searchQuery) {
               const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery, textNodeIndex));
               realm.pub(editorSearchRanges$, ranges);
+
               highlightRanges(ranges);
+            } else {
+              resetHighlights();
             }
           });
         });

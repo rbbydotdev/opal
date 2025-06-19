@@ -9,7 +9,7 @@ import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary"
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
+import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { RequestSignalsInstance } from "@/lib/RequestSignals";
 import React, { useEffect } from "react";
@@ -39,6 +39,10 @@ export default function RootLayout({
         <style>{`
           ::highlight(${MDX_SEARCH_NAME}) {
             background-color: hsl(var(--highlight));
+            color: hsl(var(--background));
+          }
+          ::highlight(${MDX_FOCUS_SEARCH_NAME}) {
+            background-color: hsl(var(--highlight-focus));
             color: hsl(var(--background));
           }
         `}</style>
