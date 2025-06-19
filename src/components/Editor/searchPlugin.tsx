@@ -20,7 +20,7 @@ type TextNodeIndex = {
   allText: string;
   nodeMap: Array<[node: Node, offset: number]>;
 };
-function* indexTextNodes(containerList?: NodeListOf<Element>): Iterable<TextNodeIndex> {
+function* indexTextNodes(containerList?: NodeListOf<HTMLElement>): Iterable<TextNodeIndex> {
   if (!containerList || containerList.length === 0) {
     return [];
   }
@@ -28,22 +28,22 @@ function* indexTextNodes(containerList?: NodeListOf<Element>): Iterable<TextNode
   const nodes = new Set<Node>();
 
   for (const container of containerList ?? []) {
+    let containerText = "";
+    const containerNodes = [];
     const treeWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
     let currentNode = treeWalker.nextNode();
     while (currentNode) {
+      const nodeContent = currentNode.textContent ?? "";
+      for (let i = 0; i < nodeContent.length; i++) {
+        containerNodes.push([currentNode, i] as [Node, number]);
+        containerText += nodeContent[i];
+      }
       if (currentNode.textContent) {
         nodes.add(currentNode);
       }
       currentNode = treeWalker.nextNode();
     }
-  }
-  for (const node of nodes) {
-    yield {
-      allText: node.textContent ?? "",
-      nodeMap: node
-        ? new Array((node.textContent ?? "").length).fill(0).map((_, i) => [node, i] as [Node, number])
-        : [],
-    };
+    yield { nodeMap: containerNodes, allText: containerText };
   }
 }
 export function* rangeSearchScan(parent: HTMLElement, searchQuery: string, textNodeIndex?: Iterable<TextNodeIndex>) {
@@ -177,6 +177,7 @@ export const searchPlugin = realmPlugin({
             if (searchQuery) {
               const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery, textNodeIndex));
               realm.pub(editorSearchRanges$, ranges);
+              console.log(ranges);
 
               highlightRanges(ranges);
             } else {

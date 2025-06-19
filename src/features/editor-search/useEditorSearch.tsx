@@ -9,15 +9,18 @@ export function useEditorSearchTool() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (canUseSearchTool() && (e.ctrlKey || e.metaKey) && e.key === "f") {
+    if (!canUseSearchTool()) return;
+    const handleSearchKeyboardShortcut = (e: KeyboardEvent) => {
+      //cmd+f
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
         setIsSearchOpen(true);
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    //TODO, need a gobal store  so these dont interfere with each other
+    document.addEventListener("keydown", handleSearchKeyboardShortcut);
+    return () => document.removeEventListener("keydown", handleSearchKeyboardShortcut);
   }, []);
 
   const openSearch = () => setIsSearchOpen(true);

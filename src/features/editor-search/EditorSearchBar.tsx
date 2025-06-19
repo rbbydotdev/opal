@@ -35,8 +35,27 @@ export function EditorSearchBar({
     onChange(null);
   }, [onChange, onClose]);
 
+  const handleSearchChange = (value: string) => {
+    onChange?.(value || null);
+    setSearch(value || null);
+  };
+
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const selectSearchText = useCallback(() => {
+    if (inputRef.current && isOpen) {
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(0, inputRef.current.value.length);
+    }
+  }, [isOpen]);
+  useEffect(() => {
+    selectSearchText();
+  }, [isOpen, selectSearchText]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        selectSearchText();
+      }
       if (e.key === "Escape" && isOpen) {
         handleClose();
       }
@@ -52,20 +71,7 @@ export function EditorSearchBar({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, handleClose, matchTotal, prev, next]);
-
-  const handleSearchChange = (value: string) => {
-    onChange?.(value || null);
-    setSearch(value || null);
-  };
-
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  useEffect(() => {
-    if (inputRef.current && isOpen) {
-      inputRef.current.focus();
-      inputRef.current.setSelectionRange(0, inputRef.current.value.length);
-    }
-  }, [isOpen]);
+  }, [isOpen, handleClose, matchTotal, prev, next, selectSearchText]);
 
   if (!isOpen) return null;
   return (
