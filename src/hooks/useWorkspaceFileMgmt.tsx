@@ -97,7 +97,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
 
       const newNode = currentWorkspace.addVirtualFileFromSource(
         { type, name: relPath(duplicatePath(fromNode.path)), sourceNode: fromNode },
-        fromNode
+        fromNode.parent ?? fromNode
       );
       setFocused(newNode.path);
       setEditing(newNode.path);
