@@ -6,7 +6,7 @@ import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, encodePath, equals, isImage, relPath } from "@/lib/paths2";
+import { AbsPath, equals, isImage, relPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { FileText } from "lucide-react";
 import Link from "next/link";
@@ -97,7 +97,8 @@ export const EditableFile = ({
               {isImage(treeNode.path) ? (
                 <ImageFileHoverCard>
                   <img
-                    src={treeNode.isDupNode() ? Thumb.pathToURL(treeNode.source) : Thumb.pathToURL(treeNode.path)}
+                    // src={treeNode.isDupNode() ? Thumb.pathToURL(treeNode.source) : Thumb.pathToURL(treeNode.path)}
+                    src={Thumb.resolveURLFromNode(treeNode)}
                     alt=""
                     className="w-3 h-3 border border-white flex-shrink-0 bg-white mr-2"
                   />
@@ -115,11 +116,7 @@ export const EditableFile = ({
             <SelectedMark selected={isSelected} />
             {isImage(treeNode.path) ? (
               <img
-                src={
-                  (treeNode.isDupNode() ? encodePath(treeNode.source) : encodePath(treeNode.path)) +
-                  (!treeNode.path.endsWith(".svg") ? "?thumb=100" : "")
-                }
-                // src={treeNode.isDupNode() ? Thumb.pathToURL(treeNode.source) : Thumb.pathToURL(treeNode.path)}
+                src={Thumb.resolveURLFromNode(treeNode)}
                 alt=""
                 className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
               />

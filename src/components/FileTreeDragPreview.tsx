@@ -18,7 +18,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
 
   return (
     <DragPreviewNode ref={ref} className="grid place-items-center w-24 h-24" style={{ gridTemplateAreas: "'stack'" }}>
-      {draggingNodes.slice(0, 8).map((n, index) => {
+      {draggingNodes.slice(0, 8).map((treeNode, index) => {
         // This is the key calculation for the fan effect.
         // It calculates a rotation centered around 0.
         // For 3 items, rotations will be: -5deg, 0deg, 5deg.
@@ -34,24 +34,24 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           transform: `rotate(${rotation}deg) translateY(${yOffset}px)`,
         };
 
-        if (n.isTreeDir()) {
+        if (treeNode.isTreeDir()) {
           return (
             <div
-              key={n.path}
+              key={treeNode.path}
               className="p-1 border-2 border-foreground/80 bg-background"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
               }}
             >
-              <Folder key={n.path} size={48} strokeWidth={1} className="text-ring rounded" fill="white" />
+              <Folder key={treeNode.path} size={48} strokeWidth={1} className="text-ring rounded" fill="white" />
             </div>
           );
         }
-        if (isImage(n.path)) {
+        if (isImage(treeNode.path)) {
           return (
             <div
-              key={n.path}
+              key={treeNode.path}
               className="p-1 border-2 border-foreground/80 bg-background rounded-lg"
               style={{
                 ...transformStyle,
@@ -59,7 +59,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               }}
             >
               <img
-                src={Thumb.pathToURL(n.path)}
+                src={Thumb.resolveURLFromNode(treeNode)}
                 alt=""
                 className="w-12 h-12 object-cover rounded border border-black bg-background"
               />
@@ -69,14 +69,20 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
 
         return (
           <div
-            key={n.path}
+            key={treeNode.path}
             className="p-1 border-2 border-foreground/80 bg-background"
             style={{
               ...transformStyle,
               boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
             }}
           >
-            <FileTextIcon key={n.path} size={48} strokeWidth={1} fill="white" className="text-ring rounded bg-white" />
+            <FileTextIcon
+              key={treeNode.path}
+              size={48}
+              strokeWidth={1}
+              fill="white"
+              className="text-ring rounded bg-white"
+            />
           </div>
         );
       })}

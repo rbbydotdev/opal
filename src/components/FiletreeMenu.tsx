@@ -98,7 +98,6 @@ export function FileTreeMenu({
   expand,
   expandForNode,
   expanded,
-  showHidden,
 }: {
   fileTreeDir: TreeDir;
   depth?: number;
@@ -106,9 +105,7 @@ export function FileTreeMenu({
   renameDirOrFileMultiple: (nodes: [oldNode: TreeNode, newNode: TreeNode][]) => Promise<unknown>;
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
-  showHidden?: boolean;
 }) {
-  showHidden = showHidden ?? true;
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
   const { highlightDragover, setEditing, selectedFocused } = useFileTreeMenuContext();
@@ -173,20 +170,28 @@ export function FileTreeMenu({
             </div>
           </>
         )}
-        {Object.values(fileTreeDir.children)
-          .filter((fileNode) => showHidden || !fileNode.isHidden())
-          .map((fileNode) => (
-            <SidebarMenuItem
-              key={fileNode.path}
-              className={clsx({
-                ["bg-sidebar-accent"]: fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
-              })}
-              onDragOver={(e) => handleDragOver(e, fileNode)}
-              onDrop={(e) => handleDrop(e, fileNode)}
-              onDragLeave={handleDragLeave}
-              onDragEnter={(e) => {
-                handleDragEnter(e, fileNode.path);
+        {Object.values(fileTreeDir.children).map((fileNode) => (
+          <SidebarMenuItem
+            key={fileNode.path}
+            className={clsx({
+              ["bg-sidebar-accent"]: fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
+            })}
+            onDragOver={(e) => handleDragOver(e, fileNode)}
+            onDrop={(e) => handleDrop(e, fileNode)}
+            onDragLeave={handleDragLeave}
+            onDragEnter={(e) => {
+              handleDragEnter(e, fileNode.path);
+            }}
+          >
+            <FileTreeContextMenu
+              addFile={() => addDirFile("file", fileNode.closestDir()!)}
+              addDir={() => addDirFile("dir", fileNode.closestDir()!)}
+              removeFile={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
+              copyFile={() => copyFileNodesToClipboard([fileNode])}
+              duplicate={() => {
+                duplicateDirFile(fileNode.type, fileNode);
               }}
+              rename={() => setEditing(fileNode.path)}
             >
               {fileNode.isTreeDir() ? (
                 <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
@@ -215,31 +220,21 @@ export function FileTreeMenu({
                   </CollapsibleContent>
                 </Collapsible>
               ) : (
-                <FileTreeContextMenu
-                  addFile={() => addDirFile("file", fileNode.closestDir()!)}
-                  addDir={() => addDirFile("dir", fileNode.closestDir()!)}
-                  removeFile={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
-                  copyFile={() => copyFileNodesToClipboard([fileNode])}
-                  duplicate={() => {
-                    duplicateDirFile(fileNode.type, fileNode);
-                  }}
-                  rename={() => setEditing(fileNode.path)}
-                >
-                  <SidebarMenuButton asChild>
-                    <EditableFile
-                      workspaceRoute={workspaceRoute}
-                      currentWorkspace={currentWorkspace}
-                      depth={depth}
-                      fullPath={fileNode.path}
-                      treeNode={fileNode as TreeFile}
-                      expand={expandForNode}
-                      onDragStart={handleDragStartWithImg(fileNode)}
-                    />
-                  </SidebarMenuButton>
-                </FileTreeContextMenu>
+                <SidebarMenuButton asChild>
+                  <EditableFile
+                    workspaceRoute={workspaceRoute}
+                    currentWorkspace={currentWorkspace}
+                    depth={depth}
+                    fullPath={fileNode.path}
+                    treeNode={fileNode as TreeFile}
+                    expand={expandForNode}
+                    onDragStart={handleDragStartWithImg(fileNode)}
+                  />
+                </SidebarMenuButton>
               )}
-            </SidebarMenuItem>
-          ))}
+            </FileTreeContextMenu>
+          </SidebarMenuItem>
+        ))}
       </SidebarMenu>
     </>
   );
