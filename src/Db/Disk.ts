@@ -576,9 +576,9 @@ export abstract class Disk {
   }
   addVirtualFileFromSource(
     props: Pick<TreeNode, "type" | "name"> & { sourceNode: TreeNode },
-    selectedNode: TreeNode | null
+    parentNode: TreeNode | null
   ): VirtualDupTreeNode {
-    const parent = selectedNode || this.fileTree.root;
+    const parent = parentNode || this.fileTree.root;
     const node = this.fileTree
       .insertClosestVirtualNode({ type: props.type, name: props.name }, parent)
       .tagSource(props.sourceNode);

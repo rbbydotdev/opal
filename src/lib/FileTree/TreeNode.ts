@@ -33,8 +33,8 @@ export class TreeNode {
   getMimeType() {
     return this.type === "dir" ? "dir" : getMimeType(this.path);
   }
-  isHidden() {
-    return this.basename.startsWith(".");
+  isHidden(): boolean {
+    return this.parent?.isHidden() || this.basename.startsWith(".");
   }
   closestDir(inclusive: boolean = true): TreeDir | null {
     return this.isTreeDir() ? this : this.parent?.closestDir(inclusive) ?? null;

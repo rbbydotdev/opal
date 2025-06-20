@@ -24,7 +24,7 @@ function* indexTextNodes(containerList?: NodeListOf<HTMLElement>): Iterable<Text
   if (!containerList || containerList.length === 0) {
     return [];
   }
-  console.log("indexing for search");
+  console.debug("indexing for search");
   const nodes = new Set<Node>();
 
   for (const container of containerList ?? []) {
@@ -113,7 +113,6 @@ export function useEditorSearch() {
 
   function next() {
     if (!ranges.length) return;
-    // range.startContainer.parentElement.scrollIntoView({ behavior: 'smooth' });
     const newVal = (cursor % ranges.length) + 1;
     scrollToRangeOrIndex(newVal);
     realm.pub(editorSearchCursor$, newVal);
@@ -138,8 +137,6 @@ export const searchPlugin = realmPlugin({
         (root: HTMLElement) => (textNodeIndex = [...getTextNodeIndex(root)]),
         1000
       );
-
-      // focusHighlightRange
       realm.sub(editorSearchCursor$, (cursor) => {
         const ranges = realm.getValue(editorSearchRanges$);
         focusHighlightRange(ranges[cursor - 1]);
@@ -187,7 +184,7 @@ export const searchPlugin = realmPlugin({
         });
       });
     } else {
-      console.log("No active editor found when initializing search plugin");
+      console.debug("No active editor found when initializing search plugin");
     }
   },
 });

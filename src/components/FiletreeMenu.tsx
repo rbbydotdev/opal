@@ -187,10 +187,8 @@ export function FileTreeMenu({
               addFile={() => addDirFile("file", fileNode.closestDir()!)}
               addDir={() => addDirFile("dir", fileNode.closestDir()!)}
               removeFile={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
-              copyFile={() => copyFileNodesToClipboard([fileNode])}
-              duplicate={() => {
-                duplicateDirFile(fileNode.type, fileNode);
-              }}
+              copyFile={() => copyFileNodesToClipboard([fileNode])} //TODO I DONT THINK I WIRED THIS UP
+              duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
               rename={() => setEditing(fileNode.path)}
             >
               {fileNode.isTreeDir() ? (

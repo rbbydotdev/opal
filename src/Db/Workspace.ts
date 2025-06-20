@@ -173,9 +173,9 @@ export class Workspace {
 
   addVirtualFileFromSource(
     { type, name, sourceNode }: Pick<TreeNode, "type" | "name"> & { sourceNode: TreeNode },
-    selectedNode: TreeNode | null
+    parentNode: TreeNode | null
   ) {
-    return this.disk.addVirtualFileFromSource({ type, name, sourceNode }, selectedNode);
+    return this.disk.addVirtualFileFromSource({ type, name, sourceNode }, parentNode);
   }
   removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
