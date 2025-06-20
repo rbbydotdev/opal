@@ -1,6 +1,7 @@
 import { Disk } from "@/Db/Disk";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { NotFoundError } from "@/lib/errors";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, encodePath } from "@/lib/paths2";
 
 export class Thumb {
@@ -28,6 +29,9 @@ export class Thumb {
       return encodePath(path);
     }
     return encodePath(path) + "?thumb=" + size;
+  }
+  static resolveURLFromNode(node: TreeNode) {
+    return Thumb.pathToURL(node.isDupNode() ? node.source : node.path);
   }
   async save() {
     await this.thumbRepo.writeFileRecursive(this.path, this.content!);
