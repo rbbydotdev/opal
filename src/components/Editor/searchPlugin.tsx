@@ -1,10 +1,19 @@
-import { backgroundRefresh } from "@/lib/backgroundRefresh";
-import { activeEditor$, Cell, realmPlugin, useCellValue, useRealm } from "@mdxeditor/editor";
-import { RootNode } from "lexical";
+import { activeEditor$, Cell, debounceTime, map, realmPlugin, useCellValue, useRealm } from "@mdxeditor/editor";
 import { useCallback } from "react";
 
 export const MDX_SEARCH_NAME = "MdxSearch";
 export const MDX_FOCUS_SEARCH_NAME = "MdxFocusSearch";
+
+type TextNodeIndex = {
+  allText: string;
+  nodeIndex: Node[];
+  offsetIndex: number[];
+};
+
+export const editorSearchTerm$ = Cell<string>("");
+export const editorSearchRanges$ = Cell<Range[]>([]);
+export const editorSearchCursor$ = Cell<number>(0);
+export const editorTextNodeIndex$ = Cell<TextNodeIndex[]>([]);
 
 function* searchText(allText: string, searchQuery: string): Generator<[start: number, end: number]> {
   if (searchQuery === null) return [];
@@ -16,41 +25,35 @@ function* searchText(allText: string, searchQuery: string): Generator<[start: nu
     startPos = index + searchQuery.length;
   }
 }
-type TextNodeIndex = {
-  allText: string;
-  nodeMap: Array<[node: Node, offset: number]>;
-};
 function* indexTextNodes(containerList?: NodeListOf<HTMLElement>): Iterable<TextNodeIndex> {
   if (!containerList || containerList.length === 0) {
     return [];
   }
-  console.debug("indexing for search");
-  const nodes = new Set<Node>();
-
   for (const container of containerList ?? []) {
-    let containerText = "";
-    const containerNodes = [];
+    let allText = "";
     const treeWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
     let currentNode = treeWalker.nextNode();
+    const offsetIndex: number[] = [];
+    const nodeIndex: Node[] = [];
     while (currentNode) {
       const nodeContent = currentNode.textContent ?? "";
       for (let i = 0; i < nodeContent.length; i++) {
-        containerNodes.push([currentNode, i] as [Node, number]);
-        containerText += nodeContent[i];
-      }
-      if (currentNode.textContent) {
-        nodes.add(currentNode);
+        nodeIndex.push(currentNode);
+        offsetIndex.push(i);
+        allText += nodeContent[i];
       }
       currentNode = treeWalker.nextNode();
     }
-    yield { nodeMap: containerNodes, allText: containerText };
+    yield { offsetIndex, nodeIndex, allText };
   }
 }
-export function* rangeSearchScan(parent: HTMLElement, searchQuery: string, textNodeIndex?: Iterable<TextNodeIndex>) {
-  for (const { allText, nodeMap } of textNodeIndex ?? indexTextNodes(parent.querySelectorAll("ul,p,h1,h2,h3,h4"))) {
+export function* rangeSearchScan(searchQuery: string, textNodeIndex: Iterable<TextNodeIndex>) {
+  for (const { allText, offsetIndex, nodeIndex } of textNodeIndex) {
     for (const [start, end] of searchText(allText, searchQuery)) {
-      const [startNode, startOffset] = nodeMap[start];
-      const [endNode, endOffset] = nodeMap[end];
+      const startOffset = offsetIndex[start];
+      const endOffset = offsetIndex[end];
+      const startNode = nodeIndex[start];
+      const endNode = nodeIndex[end];
       const range = new Range();
 
       range.setStart(startNode, startOffset);
@@ -72,11 +75,6 @@ const resetHighlights = () => {
   CSS.highlights.delete(MDX_SEARCH_NAME);
   CSS.highlights.delete(MDX_FOCUS_SEARCH_NAME);
 };
-
-export const editorSearchTerm$ = Cell<string>("");
-export const editorSearchRanges$ = Cell<Range[]>([]);
-export const editorSearchCursor$ = Cell<number>(0);
-
 const scrollToRange = (range: Range, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
   const el = range.startContainer.parentElement as HTMLElement;
   const ignoreIfInView = options?.ignoreIfInView ?? false;
@@ -131,57 +129,67 @@ export const searchPlugin = realmPlugin({
   postInit(realm) {
     const editor = realm.getValue(activeEditor$);
     if (editor && typeof CSS.highlights !== "undefined") {
-      let textNodeIndex: Iterable<TextNodeIndex>;
-      const getTextNodeIndex = (root: HTMLElement) => indexTextNodes(root?.querySelectorAll("ul,p,h1,h2,h3,h4"));
-      const backgroundIndex = backgroundRefresh(
-        (root: HTMLElement) => (textNodeIndex = [...getTextNodeIndex(root)]),
-        1000
-      );
+      const getTextNodeIndex = (root: HTMLElement) =>
+        indexTextNodes(root?.querySelectorAll("ul,p,h1,h2,h3,h4,h5,h6,code,pre") ?? []);
       realm.sub(editorSearchCursor$, (cursor) => {
         const ranges = realm.getValue(editorSearchRanges$);
         focusHighlightRange(ranges[cursor - 1]);
       });
-      realm.sub(editorSearchTerm$, (searchQuery) => {
-        if (editor) {
-          const rootNode = editor.getRootElement();
-          editor.update(() => {
-            if (rootNode) {
-              CSS.highlights.delete(MDX_SEARCH_NAME);
-              if (!textNodeIndex) textNodeIndex = backgroundIndex(rootNode!);
-
-              const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery, textNodeIndex));
-              realm.pub(editorSearchRanges$, ranges);
-              highlightRanges(ranges);
-
-              if (ranges.length) {
-                focusHighlightRange(ranges[0]);
-                realm.pub(editorSearchCursor$, 1);
-                scrollToRange(ranges[0], { ignoreIfInView: true });
-              } else {
-                resetHighlights();
-              }
-            }
-          });
+      function updateHighlights(searchQuery: string, textNodeIndex: Iterable<TextNodeIndex>) {
+        if (!searchQuery) {
+          realm.pub(editorSearchCursor$, 0);
+          realm.pub(editorSearchRanges$, []);
+          return resetHighlights();
         }
+        const ranges = Array.from(rangeSearchScan(searchQuery, textNodeIndex));
+        realm.pub(editorSearchRanges$, ranges);
+        highlightRanges(ranges);
+        if (ranges.length) {
+          focusHighlightRange(ranges[0]);
+          realm.pub(editorSearchCursor$, 1);
+          scrollToRange(ranges[0], { ignoreIfInView: true });
+        } else {
+          resetHighlights();
+        }
+      }
+      realm.sub(editorTextNodeIndex$, (textNodeIndex) => {
+        updateHighlights(realm.getValue(editorSearchTerm$), textNodeIndex);
       });
-      editor.registerNodeTransform(RootNode, () => {
-        queueMicrotask(() => {
-          editor.update(() => {
-            const searchQuery = realm.getValue(editorSearchTerm$);
-            const rootNode = editor.getRootElement();
-            textNodeIndex = backgroundIndex(rootNode!);
 
-            if (searchQuery) {
-              const ranges = Array.from(rangeSearchScan(rootNode!, searchQuery, textNodeIndex));
-              realm.pub(editorSearchRanges$, ranges);
-              console.log(ranges);
+      realm.sub(editorSearchTerm$, (searchQuery) => {
+        updateHighlights(searchQuery, realm.getValue(editorTextNodeIndex$));
+      });
 
-              highlightRanges(ranges);
-            } else {
-              resetHighlights();
-            }
+      const debouncedIndexer$ = realm.pipe(
+        realm.pipe(
+          editorTextNodeIndex$,
+          realm.transformer(
+            debounceTime(1000),
+            map((index) => {
+              return Array.from(index as Iterable<TextNodeIndex>);
+            })
+          )
+        )
+      );
+      let observer: MutationObserver | null = null;
+      //post init should take a clean up function but it does not
+      return editor.registerRootListener((rootElement) => {
+        if (observer) {
+          observer.disconnect();
+          observer = null;
+        }
+        if (rootElement) {
+          realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
+          observer = new MutationObserver(() => {
+            realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
           });
-        });
+          observer.observe(rootElement, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+          });
+          return () => observer?.disconnect();
+        }
       });
     } else {
       console.debug("No active editor found when initializing search plugin");
