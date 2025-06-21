@@ -2,7 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { IS_MAC } from "@/lib/isMac";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
+import { ChevronDown, ChevronRight, ChevronUp, Replace, ReplaceAll, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -14,6 +16,8 @@ interface FloatingSearchBarProps {
   next: () => void;
   cursor: number;
   onChange: (searchTerm: string | null) => void;
+  replace: (str: string, onUpdate?: () => void) => void;
+  replaceAll: (str: string, onUpdate?: () => void) => void;
   matchTotal: number;
   onSubmit?: () => void;
   className?: string;
@@ -24,13 +28,19 @@ export function EditorSearchBar({
   next,
   cursor,
   isOpen,
+  replace,
+  replaceAll,
   onClose,
   onChange,
   matchTotal,
   className = "",
 }: FloatingSearchBarProps) {
   const [search, setSearch] = useState<string | null>(null);
+  const [replaceTerm, setReplaceTerm] = useState<string>("");
+  const [isReplaceExpanded, setIsReplaceExpanded] = useState<boolean>(false);
+  const pauseBlurClose = useRef(false);
   const handleClose = useCallback(() => {
+    // if (pauseBlurClose.current) return; // Prevent closing during replace operations
     onClose?.();
     onChange(null);
   }, [onChange, onClose]);
@@ -40,11 +50,12 @@ export function EditorSearchBar({
     setSearch(value || null);
   };
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const selectSearchText = useCallback(() => {
-    if (inputRef.current && isOpen) {
-      inputRef.current.focus();
-      inputRef.current.setSelectionRange(0, inputRef.current.value.length);
+    if (searchInputRef.current && isOpen) {
+      searchInputRef.current.focus();
+      searchInputRef.current.setSelectionRange(0, searchInputRef.current.value.length);
     }
   }, [isOpen]);
   useEffect(() => {
@@ -73,64 +84,153 @@ export function EditorSearchBar({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, handleClose, matchTotal, prev, next, selectSearchText]);
 
+  //this is a work around replacing text node in the lexical way requires a selection range
+  //which when used will trigger a blur of the search bar thus triggering a close
+  function pauseBlurCallback() {
+    pauseBlurClose.current = true;
+    return () => {
+      replaceInputRef.current?.addEventListener(
+        "focus",
+        () => {
+          pauseBlurClose.current = false;
+        },
+        { once: true }
+      );
+      replaceInputRef.current?.focus();
+    };
+  }
+  //when re-opened, if search is not empty, call onChange with the current search term
+  useEffect(() => {
+    if (isOpen && search) {
+      setSearch(search);
+      onChange(search);
+    }
+  }, [isOpen, onChange, search]);
+
   if (!isOpen) return null;
+
   return (
     <div
-      tabIndex={0}
+      tabIndex={5}
       className={twMerge(
-        "bg-background border rounded-lg shadow-lg p-2 flex items-center gap-1 min-w-[300px]",
+        "w-[500px] bg-background border rounded-lg shadow-lg p-2 flex flex-col items-center gap-1 ",
         className
       )}
       onBlur={(e) => {
         // Only close if focus moves outside the search bar and its children
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+        // also ignore blur events triggered by the replace input
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && !pauseBlurClose.current) {
           handleClose();
         }
       }}
     >
-      <div className="flex-1">
-        <Input
-          ref={inputRef}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          defaultValue={search ?? ""}
-          placeholder="Search"
-          className="h-8 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-        />
-      </div>
+      <Collapsible className="group/collapsible" defaultOpen={true}>
+        <div className="flex items-center gap-1 w-full">
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-6 w-6 flex p-0 flex-shrink-0"
+              onClick={() => setIsReplaceExpanded(!isReplaceExpanded)}
+              title={isReplaceExpanded ? "Hide Replace" : "Show Replace"}
+            >
+              {/* <ChevronDown className={`transition-transform ${isReplaceExpanded ? "rotate-0" : "-rotate-90"}`} /> */}
 
-      <div className="flex items-center gap-1">
-        {/* Match Counter */}
-        <div className="text-xs text-muted-foreground px-2 py-1 min-w-[60px] text-center">
-          {matchTotal > 0 ? `${cursor}/${matchTotal}` : search ? "0/0" : ""}
+              <ChevronRight
+                size={14}
+                className={
+                  "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                }
+              />
+            </Button>
+          </CollapsibleTrigger>
+
+          <div className="flex-1">
+            <Input
+              ref={searchInputRef}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              defaultValue={search ?? ""}
+              placeholder="Search"
+              className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+          </div>
+
+          <div className="w-full gap-1 flex">
+            <div className="text-xs text-muted-foreground px-2 py-1 text-center w-20 flex items-start">
+              {matchTotal > 0 ? `${cursor}/${matchTotal}` : search ? "0/0" : ""}
+            </div>
+
+            <Button
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              onClick={prev}
+              disabled={matchTotal === 0}
+              title="Previous match (Shift+Enter)"
+            >
+              <ChevronUp />
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              onClick={next}
+              disabled={matchTotal === 0}
+              title="Next match (Enter)"
+            >
+              <ChevronDown />
+            </Button>
+
+            {/* Close Button */}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              onClick={handleClose}
+              title="Close (Escape)"
+              tabIndex={6}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
-
-        {/* Navigation Buttons */}
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-6 w-6 p-0"
-          onClick={prev}
-          disabled={matchTotal === 0}
-          title="Previous match (Shift+Enter)"
-        >
-          <ChevronUp className="h-3 w-3" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-6 w-6 p-0"
-          onClick={next}
-          disabled={matchTotal === 0}
-          title="Next match (Enter)"
-        >
-          <ChevronDown className="h-3 w-3" />
-        </Button>
-
-        {/* Close Button */}
-        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={handleClose} title="Close (Escape)">
-          <X className="h-3 w-3" />
-        </Button>
-      </div>
+        <CollapsibleContent>
+          <div className="flex items-center mt-2 w-full">
+            <div className="pl-7">
+              <Input
+                tabIndex={2}
+                ref={replaceInputRef}
+                value={replaceTerm}
+                onChange={(e) => setReplaceTerm(e.target.value)}
+                placeholder="Replace"
+                className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    replace(replaceTerm, pauseBlurCallback());
+                  }
+                }}
+              />
+            </div>
+            <div className="px-2 flex gap-4">
+              <Button
+                variant="outline"
+                className="w-6 h-6 p-0"
+                title="Replace (Enter)"
+                onClick={() => replace(replaceTerm, pauseBlurCallback())}
+              >
+                <Replace />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-6 h-6 p-0"
+                title={`Replace All (${IS_MAC ? "⌘" : "Ctrl"}+Enter)`}
+                onClick={() => replaceAll(replaceTerm, pauseBlurCallback())}
+              >
+                <ReplaceAll />
+              </Button>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

@@ -21,7 +21,7 @@ export const MdxSearchToolbar = () => {
     },
     [realm]
   );
-  const { prev, next, cursor, ranges } = useEditorSearch();
+  const { prev, next, cursor, ranges, replace, replaceAll } = useEditorSearch();
 
   return createPortal(
     <EditorSearchBar
@@ -29,6 +29,9 @@ export const MdxSearchToolbar = () => {
       next={next}
       cursor={cursor}
       isOpen={isSearchOpen}
+      replace={replace}
+      replaceAll={replaceAll}
+      // isOpen={true}
       onClose={handleSearchClose}
       className="absolute top-16 right-4 z-50"
       onChange={(searchTerm) => {
