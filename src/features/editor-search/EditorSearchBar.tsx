@@ -40,7 +40,6 @@ export function EditorSearchBar({
   const [isReplaceExpanded, setIsReplaceExpanded] = useState<boolean>(false);
   const pauseBlurClose = useRef(false);
   const handleClose = useCallback(() => {
-    // if (pauseBlurClose.current) return; // Prevent closing during replace operations
     onClose?.();
     onChange(null);
   }, [onChange, onClose]);
@@ -109,13 +108,16 @@ export function EditorSearchBar({
 
   if (!isOpen) return null;
 
+  // className=""
   return (
     <div
-      tabIndex={5}
-      className={twMerge(
-        "w-[500px] bg-background border rounded-lg shadow-lg p-2 flex flex-col items-center gap-1 ",
-        className
-      )}
+      onMouseDown={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName !== "INPUT" && target.tagName !== "BUTTON") {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
       onBlur={(e) => {
         // Only close if focus moves outside the search bar and its children
         // also ignore blur events triggered by the replace input
@@ -123,114 +125,112 @@ export function EditorSearchBar({
           handleClose();
         }
       }}
+      className={twMerge("bg-background border rounded-lg shadow-lg flex absolute top-16 right-4 z-50", className)}
     >
-      <Collapsible className="group/collapsible" defaultOpen={true}>
-        <div className="flex items-center gap-1 w-full">
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-6 w-6 flex p-0 flex-shrink-0"
-              onClick={() => setIsReplaceExpanded(!isReplaceExpanded)}
-              title={isReplaceExpanded ? "Hide Replace" : "Show Replace"}
-            >
-              {/* <ChevronDown className={`transition-transform ${isReplaceExpanded ? "rotate-0" : "-rotate-90"}`} /> */}
+      <div className={"p-2 flex flex-col items-center gap-1"}>
+        <Collapsible className="group/collapsible" defaultOpen={true}>
+          <div className="flex items-center gap-1 w-full">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-6 w-6 flex p-0 flex-shrink-0"
+                onClick={() => setIsReplaceExpanded(!isReplaceExpanded)}
+                title={isReplaceExpanded ? "Hide Replace" : "Show Replace"}
+              >
+                {/* <ChevronDown className={`transition-transform ${isReplaceExpanded ? "rotate-0" : "-rotate-90"}`} /> */}
 
-              <ChevronRight
-                size={14}
-                className={
-                  "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                }
-              />
-            </Button>
-          </CollapsibleTrigger>
-
-          <div className="flex-1">
-            <Input
-              ref={searchInputRef}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              defaultValue={search ?? ""}
-              placeholder="Search"
-              className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
-          </div>
-
-          <div className="w-full gap-1 flex">
-            <div className="text-xs text-muted-foreground px-2 py-1 text-center w-20 flex items-start">
-              {matchTotal > 0 ? `${cursor}/${matchTotal}` : search ? "0/0" : ""}
-            </div>
-
-            <Button
-              variant="ghost"
-              className="h-6 w-6 p-0"
-              onClick={prev}
-              disabled={matchTotal === 0}
-              title="Previous match (Shift+Enter)"
-            >
-              <ChevronUp />
-            </Button>
-            <Button
-              variant="ghost"
-              className="h-6 w-6 p-0"
-              onClick={next}
-              disabled={matchTotal === 0}
-              title="Next match (Enter)"
-            >
-              <ChevronDown />
-            </Button>
-
-            {/* Close Button */}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0"
-              onClick={handleClose}
-              title="Close (Escape)"
-              tabIndex={6}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-        <CollapsibleContent>
-          <div className="flex items-center mt-2 w-full">
-            <div className="pl-7">
-              <Input
-                tabIndex={2}
-                ref={replaceInputRef}
-                value={replaceTerm}
-                onChange={(e) => setReplaceTerm(e.target.value)}
-                placeholder="Replace"
-                className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    replace(replaceTerm, pauseBlurCallback());
+                <ChevronRight
+                  size={14}
+                  className={
+                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
                   }
-                }}
+                />
+              </Button>
+            </CollapsibleTrigger>
+
+            <div className="flex-1">
+              <Input
+                ref={searchInputRef}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                defaultValue={search ?? ""}
+                placeholder="Search"
+                className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
-            <div className="px-2 flex gap-4">
-              <Button
-                variant="outline"
-                className="w-6 h-6 p-0"
-                title="Replace (Enter)"
-                onClick={() => replace(replaceTerm, pauseBlurCallback())}
-              >
-                <Replace />
-              </Button>
-              <Button
-                variant="outline"
-                className="w-6 h-6 p-0"
-                title={`Replace All (${IS_MAC ? "⌘" : "Ctrl"}+Enter)`}
-                onClick={() => replaceAll(replaceTerm, pauseBlurCallback())}
-              >
-                <ReplaceAll />
-              </Button>
+            <div>
+              <div className="text-xs text-muted-foreground px-2 py-1 text-center w-20 flex items-start">
+                {matchTotal > 0 ? `${cursor}/${matchTotal}` : search ? "0/0" : ""}
+              </div>
             </div>
           </div>
-        </CollapsibleContent>
-      </Collapsible>
+          <CollapsibleContent>
+            <div className="flex items-center mt-2 w-full">
+              <div className="pl-7">
+                <Input
+                  ref={replaceInputRef}
+                  value={replaceTerm}
+                  onChange={(e) => setReplaceTerm(e.target.value)}
+                  placeholder="Replace"
+                  className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      replace(replaceTerm, pauseBlurCallback());
+                      return false;
+                    }
+                  }}
+                />
+              </div>
+              <div className="px-2 flex gap-4">
+                <Button
+                  variant="outline"
+                  className="w-6 h-6 p-0"
+                  title="Replace (Enter)"
+                  onClick={() => replace(replaceTerm, pauseBlurCallback())}
+                >
+                  <Replace />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-6 h-6 p-0"
+                  title={`Replace All (${IS_MAC ? "⌘" : "Ctrl"}+Enter)`}
+                  onClick={() => replaceAll(replaceTerm, pauseBlurCallback())}
+                >
+                  <ReplaceAll />
+                </Button>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+      <div className="flex w-full p-2 justify-start">
+        <div className="w-full gap-1 flex justify-start">
+          <Button
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={prev}
+            disabled={matchTotal === 0}
+            title="Previous match (Shift+Enter)"
+          >
+            <ChevronUp />
+          </Button>
+          <Button
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={next}
+            disabled={matchTotal === 0}
+            title="Next match (Enter)"
+          >
+            <ChevronDown />
+          </Button>
+        </div>
+        <div>
+          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={handleClose} title="Close (Escape)">
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

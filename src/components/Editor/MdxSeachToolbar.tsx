@@ -2,7 +2,7 @@ import { editorSearchTerm$, useEditorSearch } from "@/components/Editor/searchPl
 import { EditorSearchBar } from "@/features/editor-search/EditorSearchBar";
 import { useEditorSearchTool } from "@/features/editor-search/useEditorSearch";
 import { editorRootElementRef$, useRealm } from "@mdxeditor/editor";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 export const MdxSearchToolbar = () => {
@@ -21,7 +21,14 @@ export const MdxSearchToolbar = () => {
     },
     [realm]
   );
-  const { prev, next, cursor, ranges, replace, replaceAll } = useEditorSearch();
+  const { prev, next, cursor, ranges, replace, replaceAll, setMode } = useEditorSearch();
+  useEffect(() => {
+    if (!isSearchOpen) {
+      setMode("typing");
+    } else {
+      setMode("replace");
+    }
+  }, [isSearchOpen, setMode]);
 
   return createPortal(
     <EditorSearchBar
@@ -31,9 +38,7 @@ export const MdxSearchToolbar = () => {
       isOpen={isSearchOpen}
       replace={replace}
       replaceAll={replaceAll}
-      // isOpen={true}
       onClose={handleSearchClose}
-      className="absolute top-16 right-4 z-50"
       onChange={(searchTerm) => {
         handleSearchChange(searchTerm);
       }}
