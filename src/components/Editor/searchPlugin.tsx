@@ -1,5 +1,5 @@
-import { activeEditor$, Cell, debounceTime, map, realmPlugin, useCellValue, useRealm } from "@mdxeditor/editor";
-import { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode } from "lexical";
+import { Cell, debounceTime, map, realmPlugin, rootEditor$, useCellValue, useRealm } from "@mdxeditor/editor";
+import { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, getNearestEditorFromDOMNode } from "lexical";
 import { useCallback } from "react";
 
 export const MDX_SEARCH_NAME = "MdxSearch";
@@ -14,7 +14,9 @@ type TextNodeIndex = {
 export const editorSearchTerm$ = Cell<string>("");
 export const editorSearchRanges$ = Cell<Range[]>([]);
 export const editorSearchCursor$ = Cell<number>(0);
-export const editorTextNodeIndex$ = Cell<TextNodeIndex[]>([]);
+export const editorSearchTextNodeIndex$ = Cell<TextNodeIndex[]>([]);
+export const editorSearchMode$ = Cell<"typing" | "replace">("typing");
+// export const editor
 
 /* 
 
@@ -102,14 +104,57 @@ const scrollToRange = (range: Range, options?: { ignoreIfInView?: boolean; behav
   el.scrollIntoView({ behavior });
 };
 
+function replaceTextInRange(range: Range, str: string, onUpdate?: () => void) {
+  const startDomNode = range.startContainer;
+  const endDomNode = range.endContainer;
+  const startOffset = range.startOffset;
+  const endOffset = range.endOffset;
+
+  const editor = getNearestEditorFromDOMNode(startDomNode);
+  if (!editor) {
+    console.warn("No editor found for the provided DOM node.");
+    return;
+  }
+  editor.update(
+    () => {
+      // 1. Find the Lexical nodes corresponding to the DOM nodes in your range.
+      const startLexicalNode = $getNearestNodeFromDOMNode(startDomNode);
+      const endLexicalNode = $getNearestNodeFromDOMNode(endDomNode);
+
+      // 2. Safety check: Ensure they are valid TextNodes.
+      if (!$isTextNode(startLexicalNode) || !$isTextNode(endLexicalNode)) {
+        return;
+      }
+
+      // 3. Create a Lexical RangeSelection that mirrors your DOM Range.
+      try {
+        const selection = $createRangeSelection();
+        selection.anchor.set(startLexicalNode.getKey(), startOffset, "text");
+        selection.focus.set(endLexicalNode.getKey(), endOffset, "text");
+
+        // 4. Perform the replacement. This deletes the selected content
+        // and inserts the new string.
+        selection.insertText(str);
+      } catch (e) {
+        console.warn("Error replacing text in the editor:", e);
+        if (onUpdate) {
+          onUpdate();
+        }
+        // Optionally, you can throw an error or handle it gracefully.
+        // throw new Error("Failed to replace text in the editor");
+      }
+    },
+    {
+      onUpdate,
+    }
+  );
+}
+
 export function useEditorSearch() {
   const realm = useRealm();
   const ranges = useCellValue(editorSearchRanges$);
   const cursor = useCellValue(editorSearchCursor$);
   const search = useCellValue(editorSearchTerm$);
-  function setSearch(term: string | null) {
-    realm.pub(editorSearchTerm$, term ?? "");
-  }
 
   const rangeCount = ranges.length;
 
@@ -120,106 +165,70 @@ export function useEditorSearch() {
     [ranges]
   );
 
-  function next() {
+  const setSearch = useCallback(
+    (term: string | null) => {
+      realm.pub(editorSearchTerm$, term ?? "");
+    },
+    [realm]
+  );
+
+  const setMode = useCallback(
+    (mode: "replace" | "typing") => {
+      realm.pub(editorSearchMode$, mode);
+    },
+    [realm]
+  );
+
+  const next = useCallback(() => {
     if (!ranges.length) return;
     const newVal = (cursor % ranges.length) + 1;
     scrollToRangeOrIndex(newVal);
     realm.pub(editorSearchCursor$, newVal);
-  }
-  function prev() {
+  }, [ranges, cursor, scrollToRangeOrIndex, realm]);
+
+  const prev = useCallback(() => {
     if (!ranges.length) return;
     const newVal = cursor <= 1 ? ranges.length : cursor - 1;
     scrollToRangeOrIndex(newVal);
     realm.pub(editorSearchCursor$, newVal);
-  }
+  }, [ranges, cursor, scrollToRangeOrIndex, realm]);
 
-  // ... inside your useEditorSearch hook
+  const replace = useCallback(
+    (str: string, onUpdate?: () => void) => {
+      const currentRange = ranges[cursor - 1];
+      const nextRange = ranges[cursor % ranges.length];
+      return replaceTextInRange(currentRange, str, () => {
+        //restore cursor to the next range after replacement
+        // const nextIndex = cursor % ranges.length;
+        // realm.pub(editorSearchCursor$, nextIndex === 0 ? ranges.length : nextIndex + 1);
+        realm.pub(editorSearchCursor$, ranges.indexOf(nextRange) + 1);
+        onUpdate?.();
+      });
+    },
+    [ranges, cursor, realm]
+  );
 
-  function replace(str: string, onUpdate?: () => void) {
-    const editor = realm.getValue(activeEditor$);
-    // The currently focused range from your search results
-    const currentRange = ranges[cursor - 1];
-
-    if (currentRange && editor) {
-      editor.update(
-        () => {
-          const startDomNode = currentRange.startContainer;
-          const endDomNode = currentRange.endContainer;
-          const startOffset = currentRange.startOffset;
-          const endOffset = currentRange.endOffset;
-
-          // 1. Find the Lexical nodes corresponding to the DOM nodes in your range.
-          const startLexicalNode = $getNearestNodeFromDOMNode(startDomNode);
-          const endLexicalNode = $getNearestNodeFromDOMNode(endDomNode);
-
-          // 2. Safety check: Ensure they are valid TextNodes.
-          if (!$isTextNode(startLexicalNode) || !$isTextNode(endLexicalNode)) {
-            return;
+  const replaceAll = useCallback(
+    (str: string, onUpdate?: () => void) => {
+      let ticks = 0;
+      for (let i = ranges.length - 1; i >= 0; i--) {
+        replaceTextInRange(ranges[i], str, () => {
+          ticks++;
+          if (ticks >= ranges.length) {
+            onUpdate?.();
           }
-
-          // 3. Create a Lexical RangeSelection that mirrors your DOM Range.
-          try {
-            const selection = $createRangeSelection();
-            selection.anchor.set(startLexicalNode.getKey(), startOffset, "text");
-            selection.focus.set(endLexicalNode.getKey(), endOffset, "text");
-
-            // 4. Perform the replacement. This deletes the selected content
-            // and inserts the new string.
-            selection.insertText(str);
-          } catch (e) {
-            console.warn("Error replacing text in the editor:", e);
-            // Optionally, you can throw an error or handle it gracefully.
-            // throw new Error("Failed to replace text in the editor");
-          }
-        },
-        { onUpdate }
-      );
-    }
-  }
-
-  function replaceAll(str: string, onUpdate?: () => void) {
-    const editor = realm.getValue(activeEditor$);
-
-    if (!ranges.length || !editor) {
-      return;
-    }
-
-    editor.update(
-      () => {
-        // Iterate backwards to avoid offset issues after replacement.
-        for (let i = ranges.length - 1; i >= 0; i--) {
-          const range = ranges[i];
-          const startDomNode = range.startContainer;
-          const endDomNode = range.endContainer;
-          const startOffset = range.startOffset;
-          const endOffset = range.endOffset;
-
-          const startLexicalNode = $getNearestNodeFromDOMNode(startDomNode);
-          const endLexicalNode = $getNearestNodeFromDOMNode(endDomNode);
-
-          if ($isTextNode(startLexicalNode) && $isTextNode(endLexicalNode)) {
-            try {
-              const selection = $createRangeSelection();
-              selection.anchor.set(startLexicalNode.getKey(), startOffset, "text");
-              selection.focus.set(endLexicalNode.getKey(), endOffset, "text");
-              selection.insertText(str);
-            } catch (e) {
-              console.warn(e);
-            }
-          } else {
-            console.warn("Invalid range for replacement", range);
-          }
-        }
-      },
-      { onUpdate }
-    );
-  }
+        });
+      }
+    },
+    [ranges]
+  );
 
   return {
     next,
     prev,
     total: rangeCount,
     cursor,
+    setMode,
     setSearch,
     search,
     ranges,
@@ -231,7 +240,7 @@ export function useEditorSearch() {
 
 export const searchPlugin = realmPlugin({
   postInit(realm) {
-    const editor = realm.getValue(activeEditor$);
+    const editor = realm.getValue(rootEditor$);
     if (editor && typeof CSS.highlights !== "undefined") {
       const getTextNodeIndex = (root: HTMLElement) =>
         indexTextNodes(root?.querySelectorAll("ul,p,h1,h2,h3,h4,h5,h6,code,pre") ?? []);
@@ -249,24 +258,30 @@ export const searchPlugin = realmPlugin({
         realm.pub(editorSearchRanges$, ranges);
         highlightRanges(ranges);
         if (ranges.length) {
-          focusHighlightRange(ranges[0]);
-          realm.pub(editorSearchCursor$, 1);
+          const currentCursor = realm.getValue(editorSearchCursor$);
+          if (currentCursor === 0) {
+            //going to be buggy!
+            focusHighlightRange(ranges[0]);
+            realm.pub(editorSearchCursor$, 1);
+          } else {
+            focusHighlightRange(ranges[currentCursor - 1]);
+          }
           scrollToRange(ranges[0], { ignoreIfInView: true });
         } else {
           resetHighlights();
         }
       }
-      realm.sub(editorTextNodeIndex$, (textNodeIndex) => {
+      realm.sub(editorSearchTextNodeIndex$, (textNodeIndex) => {
         updateHighlights(realm.getValue(editorSearchTerm$), textNodeIndex);
       });
 
       realm.sub(editorSearchTerm$, (searchQuery) => {
-        updateHighlights(searchQuery, realm.getValue(editorTextNodeIndex$));
+        updateHighlights(searchQuery, realm.getValue(editorSearchTextNodeIndex$));
       });
 
       const debouncedIndexer$ = realm.pipe(
         realm.pipe(
-          editorTextNodeIndex$,
+          editorSearchTextNodeIndex$,
           realm.transformer(
             //TODO: on typing this is good, but when operating search replace it is annoying
             //some how adjust this when in different modes
@@ -274,7 +289,6 @@ export const searchPlugin = realmPlugin({
             //use a flag via to determine if the search bar is open
             debounceTime(250),
             map((index) => {
-              console.log("index " + Date.now());
               return Array.from(index as Iterable<TextNodeIndex>);
             })
           )
@@ -290,7 +304,11 @@ export const searchPlugin = realmPlugin({
         if (rootElement) {
           realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
           observer = new MutationObserver(() => {
-            realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
+            if (realm.getValue(editorSearchMode$) === "replace") {
+              realm.pub(editorSearchTextNodeIndex$, [...getTextNodeIndex(rootElement)]);
+            } else {
+              realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
+            }
           });
           observer.observe(rootElement, {
             childList: true,
