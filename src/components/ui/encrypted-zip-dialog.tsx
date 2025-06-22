@@ -86,12 +86,12 @@ export function EncryptedZipDialog({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="sr-only">
+            <Label htmlFor="enc-zip-password" className="sr-only">
               Password
             </Label>
             <div className="relative">
               <Input
-                id="password"
+                id="enc-zip-password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter password"
                 value={password}

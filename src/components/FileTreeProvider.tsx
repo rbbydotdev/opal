@@ -1,11 +1,11 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath } from "@/lib/paths2";
+import { AbsPath, dirname } from "@/lib/paths2";
 import { usePathname } from "next/navigation";
 import React, { useCallback, useMemo } from "react";
 
-export const FileTreeMenuContext = React.createContext<{
+export const FileTreeMenuCtx = React.createContext<{
   editing: AbsPath | null;
   setEditing: React.Dispatch<React.SetStateAction<AbsPath | null>>;
   editType: "rename" | "new" | "duplicate";
@@ -28,14 +28,14 @@ export const FileTreeMenuContext = React.createContext<{
   setVirtual: (path: AbsPath | null) => void;
 } | null>(null);
 
-export function useFileTreeMenuContext() {
-  const ctx = React.useContext(FileTreeMenuContext);
+export function useFileTreeMenuCtx() {
+  const ctx = React.useContext(FileTreeMenuCtx);
   if (!ctx) {
     throw new Error("useFileTreeMenuContext must be used within a FileTreeMenuContextProvider");
   }
   return ctx;
 }
-export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const { filePath } = Workspace.parseWorkspacePath(pathname);
   const [editing, setEditing] = React.useState<AbsPath | null>(null);
@@ -51,7 +51,8 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
     setEditing(null);
     setEditType("rename");
     setVirtual(null);
-  }, []);
+    setFocused(dirname(focused ?? "/")); //TODO
+  }, [focused]);
 
   const resetSelects = useCallback(() => {
     setSelectedRange([]);
@@ -83,8 +84,6 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
     return () => window.removeEventListener("keydown", escapeKey);
   }, [resetSelects]);
   const setFocusedAndRange = (path: AbsPath | null) => {
-    //currently a hack to set focused and selectedRange
-    //if sh!t breaks undo this
     setFocused(path);
     setSelectedRange(path ? [path] : []);
   };
@@ -93,7 +92,7 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
     [focused, selectedRange]
   );
   return (
-    <FileTreeMenuContext.Provider
+    <FileTreeMenuCtx.Provider
       value={{
         selectedRange,
         setSelectedRange,
@@ -118,6 +117,6 @@ export const FileTreeMenuContextProvider: React.FC<{ children: React.ReactNode }
       }}
     >
       {children}
-    </FileTreeMenuContext.Provider>
+    </FileTreeMenuCtx.Provider>
   );
 };

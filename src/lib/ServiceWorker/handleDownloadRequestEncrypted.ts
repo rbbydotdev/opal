@@ -1,11 +1,38 @@
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { EncHeader, PassHeader } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
 import { signalRequest } from "@/lib/ServiceWorker/sw";
 import { BlobWriter, Uint8ArrayReader, ZipWriter, ZipWriterConstructorOptions } from "@zip.js/zip.js";
 import { SWWStore } from "./SWWStore";
+
+// function formatConsoleMsg(msg: unknown): string {
+//   if (msg instanceof Error) {
+//     return `${msg.name}: ${msg.message}\n${msg.stack ?? ""}`;
+//   }
+//   if (typeof msg === "object") {
+//     try {
+//       return JSON.stringify(msg, null, 2);
+//     } catch {
+//       return String(msg);
+//     }
+//   }
+//   return String(msg);
+// }
+
+// const RL = RemoteLogger("ServiceWorker");
+// console.log = function (msg: unknown) {
+//   RL(formatConsoleMsg(msg), "log");
+// };
+// console.debug = function (msg: unknown) {
+//   RL(formatConsoleMsg(msg), "debug");
+// };
+// console.error = function (msg: unknown) {
+//   RL(formatConsoleMsg(msg), "error");
+// };
+// console.warn = function (msg: unknown) {
+//   RL(formatConsoleMsg(msg), "warn");
+// };
 
 export interface DownloadOptions {
   password: string;
@@ -37,10 +64,10 @@ export async function handleDownloadRequestEncrypted(workspaceId: string, event:
     const zipWriter = new ZipWriter(new BlobWriter("application/zip"), zipWriterOptions);
 
     await workspace.disk.fileTree.index();
-    const fileNodes: TreeNode[] = workspace.disk.fileTree.allNodesArray();
+    const fileNodes = [...workspace.disk.fileTree.iterator((node) => !node.path.startsWith("/.trash"))];
 
     if (!fileNodes || fileNodes.length === 0) {
-      console.warn("{EncZip}: No files found in the workspace to download.");
+      console.log("{EncZip}: No files found in the workspace to download.");
       // Ensure the zipWriter is closed even if no files, to prevent hanging the stream
       await zipWriter.close();
       return new Response("No files to download", { status: 404 });

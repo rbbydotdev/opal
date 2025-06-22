@@ -1,18 +1,17 @@
 "use client";
 
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
-import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useFavicon from "@/hooks/useFavicon";
 import { Opal } from "@/lib/Opal";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Page() {
-  const { currentWorkspace } = useWorkspaceContext();
-
-  const { handleDrop } = useFileTreeDragDrop({
-    currentWorkspace,
-  });
+  // const { currentWorkspace } = useWorkspaceContext();
+  // hold on
+  // const { handleDrop } = useFileTreeDragDrop({
+  //   currentWorkspace,
+  // });
   const { id } = useWorkspaceRoute();
   useFavicon("/favicon.svg" + "?" + id, "image/svg+xml");
   return (
@@ -24,7 +23,7 @@ export default function Page() {
         position: "relative",
       }}
       className="w-full h-full flex items-center justify-center"
-      onDrop={handleDrop}
+      // onDrop={handleDrop}
       onDragOver={(e) => {
         e.preventDefault();
         e.stopPropagation();

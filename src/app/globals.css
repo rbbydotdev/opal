@@ -119,7 +119,7 @@ body {
 }
 .content-editable {
   max-width: 100%;
-  height: calc(100vh - var(--editor-toolbar-height) - var(--navbar-height));
+  height: calc(100vh - var(--editor-toolbar-height));
 }
 .mdxeditor-toolbar {
   height: var(--editor-toolbar-height);

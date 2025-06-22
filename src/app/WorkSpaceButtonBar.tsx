@@ -11,7 +11,7 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import clsx from "clsx";
-import { BombIcon, ChevronDown, CirclePlus, DatabaseZap, Delete, SearchIcon, Settings, Zap } from "lucide-react";
+import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { use, useMemo } from "react";
@@ -158,14 +158,17 @@ export function WorkSpaceButtonBar() {
           onOpenChange={setExpand}
         >
           <CollapsibleTrigger
-            className="h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
+            className="mt-2 h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
   hover:text-slate-200 bg-secondary-foreground flex items-center relative"
           >
             <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
             <div className=" group-data-[state=open]:hidden text-white absolute top-0 right-2 rounded-full bg-slate-700 w-[1.25rem] p-0 flex justify-center items-center h-[1.25rem] text-xs">
               {otherWorkspacesCount}
             </div>
-            <DatabaseZap size={16} className="group-data-[state=open]:hidden w-full m-auto absolute r-0" />
+            <div className="absolute group-data-[state=open]:hidden flex w-full justify-center ">
+              {/* <DatabaseZap size={16} className="w-full m-auto absolute r-0" /> */}
+              <img src="/opal-blank.svg" className="w-6 h-6 rounded overflow-hidden rotate-12" alt="Opal Icon" />
+            </div>
 
             {/* <div className="w-full flex justify-center items-center text-xs relative">
             </div> */}

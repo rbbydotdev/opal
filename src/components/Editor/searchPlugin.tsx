@@ -98,6 +98,8 @@ function isSimilarRange(
   range2: Pick<Range, "startContainer" | "startOffset">
 ) {
   if (!range1 || !range2) return false;
+  if (!range1.startContainer || !range2.startContainer) return false;
+  if (!range1.startOffset || !range2.startOffset) return false;
   return range1.startContainer === range2.startContainer && range1.startOffset === range2.startOffset;
 }
 
@@ -193,8 +195,10 @@ export function useEditorSearch() {
   const replace = useCallback(
     (str: string, onUpdate?: () => void) => {
       const currentRange = ranges[cursor - 1];
+      if (!currentRange) {
+        return;
+      }
       const { startContainer, startOffset } = currentRange ?? {};
-
       return replaceTextInRange(currentRange, str, () => {
         //when the replaced text continues to match the search term
         //cursor must be incremented to the next match

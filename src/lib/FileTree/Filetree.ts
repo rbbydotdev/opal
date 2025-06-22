@@ -10,18 +10,7 @@ import {
   VirtualFileTreeNode,
   VirtualTreeNode,
 } from "@/lib/FileTree/TreeNode";
-import {
-  AbsPath,
-  absPath,
-  basename,
-  decodePath,
-  dirname,
-  encodePath,
-  // extname,
-  joinPath,
-  RelPath,
-  relPath,
-} from "@/lib/paths2";
+import { AbsPath, absPath, basename, decodePath, dirname, encodePath, joinPath, RelPath, relPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 
 export class FileTree {
@@ -176,9 +165,6 @@ export class FileTree {
       result.push(node);
     });
     return result;
-  };
-  allNodesArray = () => {
-    return Array.from(this.map.values());
   };
 
   removeNodeByPath(path: AbsPath) {

@@ -51,8 +51,14 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
             (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
             (fileType === "dir" && isAncestor(workspaceRoute.path, oldPath))
           ) {
-            // console.debug("Redirecting to new file:", newPath);
-            router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+            if (newPath.startsWith("/.trash")) {
+              router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+              void currentWorkspace.tryFirstFileUrl().then((firstFileUrl) => {
+                router.push(firstFileUrl);
+              });
+            } else {
+              router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+            }
           }
         }
       }),

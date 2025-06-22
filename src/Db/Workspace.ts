@@ -182,6 +182,7 @@ export class Workspace {
   }
 
   async removeMultipleFiles(filePaths: AbsPath[]) {
+    //reduceLineage probably
     await Promise.all(
       filePaths.filter(isImage).flatMap((imagePath) => [
         this.NewThumb(imagePath)
@@ -230,7 +231,24 @@ export class Workspace {
       return result[0];
     });
   }
+
+  async trashMultiple(paths: AbsPath[]) {
+    //reduceLineage probably
+    const nodes = paths.map((path) => {
+      const node = this.nodeFromPath(path);
+      if (!node) {
+        throw new BadRequestError(`Node not found for path: ${path}`);
+      }
+      return node;
+    });
+    const trashedNodes = nodes.map(
+      (node) => [node, TreeNode.FromPath(joinPath(absPath("/.trash"), node.path), node.type)] as [TreeNode, TreeDir]
+    );
+    return await this.renameMultiple(trashedNodes);
+  }
+
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]) {
+    //reduceLineage probably
     //adjust thumbs first so rename index trigger allows for them to easily display
     await Promise.all(
       nodes.map(([oldNode, newNode]) =>
@@ -245,8 +263,10 @@ export class Workspace {
     );
     return result;
   }
+
   //this is dumb because you do not consider the children!
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+    //reduceLineage probably
     const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
       console.error("Error renaming dir", e);
       throw e;

@@ -1,5 +1,5 @@
 "use client";
-import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -29,7 +29,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     setFocused,
     setVirtual,
     virtual,
-  } = useFileTreeMenuContext();
+  } = useFileTreeMenuCtx();
 
   const newFile = React.useCallback(
     (path: AbsPath, content = "") => {
@@ -76,6 +76,15 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     await removeFiles(range);
   }, [focused, removeFiles, selectedRange]);
 
+  const trashSelectedFiles = React.useCallback(async () => {
+    const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
+
+    if (!range.length && focused) {
+      range.push(focused);
+    }
+    await currentWorkspace.trashMultiple(reduceLineage(range));
+  }, [currentWorkspace, focused, selectedRange]);
+
   const removeFocusedFile = React.useCallback(async () => {
     if (!focused) {
       return;
@@ -109,10 +118,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   );
   const addDirFile = React.useCallback(
     (type: TreeNode["type"], parent: TreeDir | AbsPath) => {
-      const parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
+      let parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
       if (!parentNode) {
-        throw new Error("Parent node not found");
+        console.warn("Parent node not found for adding new file or directory");
       }
+      parentNode = parentNode ?? currentWorkspace.getFileTreeRoot();
       const name = type === "dir" ? "newdir" : "newfile.md";
       const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, parentNode);
       setFocused(newNode.path);
@@ -179,6 +189,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     newDir,
     commitChange,
     addDirFile,
+    trashSelectedFiles,
     removeFiles,
     removeFile,
     cancelNew,

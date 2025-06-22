@@ -1,6 +1,5 @@
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
 import { signalRequest } from "@/lib/ServiceWorker/sw";
 import * as fflate from "fflate";
@@ -24,7 +23,8 @@ export async function handleDownloadRequest(workspaceId: string): Promise<Respon
     const workspace = await SWWStore.tryWorkspace(workspaceId);
 
     await workspace.disk.fileTree.index();
-    const fileNodes: TreeNode[] = workspace.disk.fileTree.allNodesArray();
+
+    const fileNodes = [...workspace.disk.fileTree.iterator((node) => !node.path.startsWith("/.trash"))];
 
     if (!fileNodes || fileNodes.length === 0) {
       console.warn("No files found in the workspace to download.");

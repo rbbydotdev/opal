@@ -98,7 +98,14 @@ export function EditorSearchBar({
       replaceInputRef.current?.focus();
     };
   }
-  //when re-opened, if search is not empty, call onChange with the current search term
+  //watch for 'submit'
+  const handleReplaceInputKeydown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      replace(replaceTerm, pauseBlurCallback());
+    }
+  };
   useEffect(() => {
     if (isOpen && search) {
       setSearch(search);
@@ -108,7 +115,6 @@ export function EditorSearchBar({
 
   if (!isOpen) return null;
 
-  // className=""
   return (
     <div
       onMouseDown={(e) => {
@@ -172,14 +178,7 @@ export function EditorSearchBar({
                   onChange={(e) => setReplaceTerm(e.target.value)}
                   placeholder="Replace"
                   className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      replace(replaceTerm, pauseBlurCallback());
-                      return false;
-                    }
-                  }}
+                  onKeyDown={handleReplaceInputKeydown}
                 />
               </div>
               <div className="px-2 flex gap-4">

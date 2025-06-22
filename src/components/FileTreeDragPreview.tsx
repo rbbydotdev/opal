@@ -1,4 +1,4 @@
-import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { Thumb } from "@/Db/Thumb";
 import { DragPreviewNode } from "@/features/filetree-drag-and-drop/DragPreviewNode";
 import { isImage } from "@/lib/paths2";
@@ -6,7 +6,7 @@ import { FileTextIcon, Folder } from "lucide-react";
 import { forwardRef } from "react";
 
 export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
-  const { draggingNodes } = useFileTreeMenuContext();
+  const { draggingNodes } = useFileTreeMenuCtx();
   const totalNodes = draggingNodes.length;
 
   // --- Tuning Knobs for the "Solitaire" Effect ---
