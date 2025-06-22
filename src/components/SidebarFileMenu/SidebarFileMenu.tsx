@@ -4,9 +4,8 @@ import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
-import { useFileTreeDragDrop } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
 
-import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
+import { FileTreeMenuCtxProvider, useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import {
   SidebarContent,
   SidebarGroup,
@@ -22,7 +21,7 @@ import { TooltipContent } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useFileTreeExpander, useSidebarItemExpander } from "@/hooks/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
+import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath } from "@/lib/paths2";
 import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import { Tooltip, TooltipTrigger } from "@radix-ui/react-tooltip";
@@ -50,27 +49,18 @@ import {
   UploadCloud,
   UploadCloudIcon,
 } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
-  const { fileTreeDir, flatTree, currentWorkspace, workspaceRoute } = useWorkspaceContext();
-  const { renameDirOrFileMultiple, addDirFile, removeSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
-  const { setExpandAll, expandSingle, expanded, expandForNode } = useFileTreeExpander({
-    flatTree,
-    activePath: workspaceRoute.path,
-    workspaceId: currentWorkspace.id,
-  });
-
-  const { focused } = useFileTreeMenuContext();
-  const { handleDrop } = useFileTreeDragDrop({
-    currentWorkspace,
-  });
-
+  // const { currentWorkspace } = useWorkspaceContext();
+  // const { handleDrop } = useFileTreeDragDrop({
+  //   currentWorkspace,
+  // });
   return (
     <SidebarGroup
       {...props}
-      onDrop={handleDrop}
+      // onDrop={handleDrop}
       onDragOver={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -81,27 +71,105 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         <SidebarFileMenuPublish dnd-id="publish" className="flex-shrink flex" />
         <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex flex-col min-h-8" />
         <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
-        <SidebarFileMenuFiles
-          dnd-id="files"
-          className="min-h-8"
-          fileTreeDir={fileTreeDir}
-          renameDirOrFileMultiple={renameDirOrFileMultiple}
-          expandSingle={expandSingle}
-          expandForNode={expandForNode}
-          expanded={expanded}
-        >
-          <SidebarGroupContent className="flex h-full items-center">
-            <SidebarFileMenuFilesActions
-              removeSelectedFiles={removeSelectedFiles}
-              addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
-              addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
-              setExpandAll={setExpandAll}
-            />
-          </SidebarGroupContent>
-        </SidebarFileMenuFiles>
+
+        <div dnd-id="trash" className="min-h-8">
+          <TrashSidebarFileMenuFileSection />
+        </div>
+
+        <div className="min-h-8" dnd-id="files">
+          <FileTreeMenuCtxProvider>
+            <MainSidebarFileMenuFileSection />
+          </FileTreeMenuCtxProvider>
+        </div>
       </SidebarDndList>
+
       {/* <Separator className="border-sidebar-accent border" /> */}
     </SidebarGroup>
+  );
+}
+
+function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
+  const { currentWorkspace } = useWorkspaceContext();
+  const expanderId = currentWorkspace.id + "/trash";
+  return (
+    <FileTreeMenuCtxProvider>
+      <SidebarFileMenuFileSectionInternal
+        title={"Trash"}
+        className={className}
+        scope={absPath("/.trash")}
+        expanderId={expanderId}
+      ></SidebarFileMenuFileSectionInternal>
+    </FileTreeMenuCtxProvider>
+  );
+}
+
+function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
+  const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
+  const expanderId = currentWorkspace.id + "/main-files";
+  const { focused } = useFileTreeMenuCtx();
+  const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
+  const { setExpandAll, expandForNode } = useFileTreeExpander({
+    flatTree,
+    activePath: workspaceRoute.path,
+    expanderId,
+  });
+  return (
+    <SidebarFileMenuFileSectionInternal
+      title={"Files"}
+      className={className}
+      expanderId={expanderId}
+      filter={[absPath("/.trash")]}
+    >
+      <SidebarFileMenuFilesActions
+        trashSelectedFiles={trashSelectedFiles}
+        addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
+        addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
+        setExpandAll={setExpandAll}
+      />
+    </SidebarFileMenuFileSectionInternal>
+  );
+}
+
+function SidebarFileMenuFileSectionInternal({
+  title,
+  className,
+  scope,
+  filter,
+  children,
+  expanderId,
+}: {
+  title: string;
+  className?: string;
+  scope?: AbsPath;
+  filter?: ((node: TreeNode) => boolean) | AbsPath[];
+  children?: React.ReactNode;
+  expanderId: string;
+}) {
+  const { fileTreeDir, flatTree, workspaceRoute, currentWorkspace } = useWorkspaceContext();
+  const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
+
+  const { expandSingle, expanded, expandForNode } = useFileTreeExpander({
+    flatTree,
+    activePath: workspaceRoute.path,
+    expanderId,
+  });
+  const treeNode = useMemo(
+    () => (typeof scope === "undefined" ? fileTreeDir : currentWorkspace.nodeFromPath(scope ?? null)),
+    [currentWorkspace, fileTreeDir, scope]
+  );
+  return (
+    <SidebarFileMenuFiles
+      title={title}
+      className={twMerge("min-h-8", className)}
+      filter={filter}
+      fileTreeDir={treeNode as TreeDirRoot}
+      renameDirOrFileMultiple={renameDirOrFileMultiple}
+      expandSingle={expandSingle}
+      expandForNode={expandForNode}
+      expanded={expanded}
+    >
+      <SidebarGroupContent className="flex h-full items-center">{children}</SidebarGroupContent>
+    </SidebarFileMenuFiles>
   );
 }
 
@@ -113,6 +181,8 @@ export const SidebarFileMenuFiles = ({
   expanded,
   children,
   className,
+  filter,
+  title,
   ...rest
 }: {
   fileTreeDir: TreeDirRoot;
@@ -121,7 +191,9 @@ export const SidebarFileMenuFiles = ({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [key: string]: boolean };
   renameDirOrFileMultiple: (nodes: [TreeNode, TreeNode | AbsPath][]) => Promise<unknown>;
+  title: string;
   children: React.ReactNode;
+  filter?: ((node: TreeNode) => boolean) | AbsPath[];
 }) => {
   const [groupExpanded, groupSetExpand] = useSidebarItemExpander("files");
 
@@ -147,7 +219,7 @@ export const SidebarFileMenuFiles = ({
                 <div className="w-full">
                   <div className="flex justify-center items-center">
                     <Files className="mr-2" size={12} />
-                    Files
+                    {title}
                   </div>
                 </div>
               </SidebarGroupLabel>
@@ -160,18 +232,20 @@ export const SidebarFileMenuFiles = ({
 
         <CollapsibleContent className="min-h-0 flex-shrink">
           <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5">
-            {!Object.keys(fileTreeDir.children).length ? (
+            {!Object.keys(fileTreeDir?.filterOutChildren?.(filter) ?? {}).length ? (
               <div className="w-full">
-                <SidebarGroupLabel className="text-center m-2 p-4 italic border-dashed border h-full">
+                <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full">
                   <div className="w-full">
-                    No Files, Click <FilePlus className={"inline"} size={12} /> to get started
+                    {/* No Files, Click <FilePlus className={"inline"} size={12} /> to get started */}
+                    <span className="text-3xs">empty</span>
                   </div>
                 </SidebarGroupLabel>
               </div>
             ) : (
               <FileTreeMenu
-                fileTreeDir={fileTreeDir}
+                fileTreeDir={fileTreeDir as TreeDir}
                 expand={expandSingle}
+                filter={filter}
                 renameDirOrFileMultiple={renameDirOrFileMultiple}
                 expandForNode={expandForNode}
                 expanded={expanded}
@@ -186,19 +260,19 @@ export const SidebarFileMenuFiles = ({
 };
 
 const SidebarFileMenuFilesActions = ({
-  removeSelectedFiles,
+  trashSelectedFiles,
   addFile,
   addDir,
   setExpandAll,
 }: {
-  removeSelectedFiles: () => void;
+  trashSelectedFiles: () => void;
   addFile: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
 }) => (
   <div className="whitespace-nowrap">
     <Button
-      onClick={removeSelectedFiles}
+      onClick={trashSelectedFiles}
       className="p-1 m-0 h-fit"
       variant="ghost"
       aria-label="Delete Files"
@@ -255,11 +329,7 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSidebarItemExpander("sync");
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
-      <Collapsible
-        className="group/collapsible group/collapsible flex flex-col min-h-0"
-        open={expanded}
-        onOpenChange={setExpand}
-      >
+      <Collapsible className="group/collapsible flex flex-col min-h-0" open={expanded} onOpenChange={setExpand}>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="pl-0">
             <SidebarGroupLabel className="pl-2">
@@ -428,7 +498,7 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
         <CollapsibleContent>
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a href="/download.zip" download={`${currentWorkspace.name}.zip`}>
+              <a href="/download.zip">
                 <Download className="mr-1" />
                 Download Zip
               </a>
@@ -506,3 +576,43 @@ export function SidebarCollapseContentScroll(
     </SidebarGroup>
   );
 }
+
+// function SidebarFileMenuFileSection({
+//   menuId,
+//   title,
+//   scope,
+//   filter,
+//   className,
+// }: {
+//   menuId: string;
+//   title: string;
+//   className?: string;
+//   scope?: AbsPath;
+//   filter?: ((node: TreeNode) => boolean) | AbsPath[];
+// }) {
+//   const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
+//   const expanderId = currentWorkspace.id + "/" + menuId;
+//   const { focused } = useFileTreeMenuCtx();
+//   const { removeSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
+//   const { setExpandAll, expandForNode } = useFileTreeExpander({
+//     flatTree,
+//     activePath: workspaceRoute.path,
+//     expanderId,
+//   });
+//   return (
+//     <SidebarFileMenuFileSectionInternal
+//       title={title}
+//       className={className}
+//       scope={scope}
+//       filter={filter}
+//       expanderId={expanderId}
+//     >
+//       <SidebarFileMenuFilesActions
+//         removeSelectedFiles={removeSelectedFiles}
+//         addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
+//         addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
+//         setExpandAll={setExpandAll}
+//       />
+//     </SidebarFileMenuFileSectionInternal>
+//   );
+// }

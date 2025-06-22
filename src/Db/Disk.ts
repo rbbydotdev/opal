@@ -16,6 +16,7 @@ import { memfs } from "memfs";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeNode } from "../lib/FileTree/TreeNode";
+import { reduceLineage } from "../lib/paths2";
 import { RequestSignalsInstance } from "../lib/RequestSignals";
 
 // TODO: Lazy load modules based on disk
@@ -235,7 +236,7 @@ export abstract class Disk {
   };
 
   getFirstFile() {
-    for (const node of this.fileTree.iterator()) {
+    for (const node of this.fileTree.iterator((node) => !node.isHidden())) {
       if (node.isTreeFile()) return node;
     }
     return null;
@@ -410,13 +411,13 @@ export abstract class Disk {
     });
   }
 
-  async trash(filePath: AbsPath, type: "dir" | "file") {
-    return this.quietlyRenameDirOrFile(filePath, joinPath(absPath(".trash"), filePath), type);
-  }
-  async untrash(filePath: AbsPath, type: "dir" | "file") {
-    const newPath = absPath(filePath.replace(/\.trash\//, "/")); // remove .trash prefix
-    return this.quietlyRenameDirOrFile(filePath, newPath, type);
-  }
+  // async trash(filePath: AbsPath, type: "dir" | "file") {
+  //   return this.quietlyRenameDirOrFile(filePath, joinPath(absPath(".trash"), filePath), type);
+  // }
+  // async untrash(filePath: AbsPath, type: "dir" | "file") {
+  //   const newPath = absPath(filePath.replace(/\.trash\//, "/")); // remove .trash prefix
+  //   return this.quietlyRenameDirOrFile(filePath, newPath, type);
+  // }
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
     if (nodes.length === 0) return [];
@@ -536,7 +537,7 @@ export abstract class Disk {
   }
   async removeMultipleFiles(filePaths: AbsPath[]) {
     await this.ready;
-    for (const filePath of filePaths) {
+    for (const filePath of reduceLineage(filePaths)) {
       await this.quietRemove(filePath);
     }
     return this.broadcastDelete(filePaths);

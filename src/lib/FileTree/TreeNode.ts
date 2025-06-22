@@ -27,6 +27,27 @@ export class TreeNode {
   get length() {
     return this.path.length;
   }
+  scope(path: AbsPath | string): TreeNode | null {
+    if (this.path.startsWith(path) || path.startsWith(this.path)) {
+      if (this.isTreeDir()) {
+        return new TreeDir({
+          ...this,
+          children:
+            Object.fromEntries(
+              Object.entries(this.children ?? {})
+                .map(([key, child]) => {
+                  const scoped = child.scope(path);
+                  return scoped ? [key, scoped] : null;
+                })
+                .filter((entry): entry is [string, TreeNode] => entry !== null)
+            ) ?? {},
+        });
+      }
+      return this;
+    } else {
+      return null;
+    }
+  }
   isDupNode(): this is VirtualDupTreeNode {
     return isVirtualDupNode(this);
   }
@@ -244,6 +265,25 @@ export class TreeDir extends TreeNode {
     this.children = children;
   }
 
+  filterOutChildren(filter?: ((node: TreeNode) => boolean) | AbsPath[]): Record<string, TreeNode> {
+    if (!filter) {
+      return this.children ?? {};
+    }
+    if (Array.isArray(filter)) {
+      return (
+        Object.fromEntries(Object.entries(this.children).filter(([_, child]) => !filter.includes(child.path))) ?? {}
+      );
+    }
+    return Object.fromEntries(Object.entries(this.children).filter(([_, child]) => filter(child))) ?? {};
+  }
+
+  withFilterOutChildren(filter?: ((node: TreeNode) => boolean) | AbsPath[]): TreeDir {
+    return new TreeDir({
+      ...this,
+      children: this.filterOutChildren(filter),
+    });
+  }
+
   toJSON(): TreeNodeDirJType {
     return {
       ...super.toJSON(),
@@ -280,6 +320,18 @@ export class TreeDirRoot extends TreeDir {
       depth: 0,
       children,
       parent: null,
+    });
+  }
+  trash() {
+    return new TreeDirRoot({
+      ...this,
+      children: Object.fromEntries(Object.entries(this.children).filter(([_, child]) => child.path === "/.trash")),
+    });
+  }
+  excludeHidden() {
+    return new TreeDirRoot({
+      ...this,
+      children: Object.fromEntries(Object.entries(this.children).filter(([_, child]) => !child.isHidden())),
     });
   }
 

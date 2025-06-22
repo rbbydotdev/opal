@@ -1,7 +1,6 @@
 "use client";
 import { EditorSidebarLayout } from "@/app/workspace/[workspaceId]/EditorSidebarLayout";
 import { EditorSidebar } from "@/components/EditorSidebar";
-import { FileTreeMenuContextProvider } from "@/components/FileTreeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import React, { useCallback, useEffect, useRef } from "react";
@@ -33,12 +32,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <ServiceWorker>
-        <FileTreeMenuContextProvider>
-          <Toaster />
-          <div className="min-w-0 h-full flex w-full">
-            <EditorSidebarLayout sidebar={<EditorSidebar />} main={children} />
-          </div>
-        </FileTreeMenuContextProvider>
+        <Toaster />
+        <div className="min-w-0 h-full flex w-full">
+          <EditorSidebarLayout sidebar={<EditorSidebar />} main={children} />
+        </div>
       </ServiceWorker>
     </>
   );

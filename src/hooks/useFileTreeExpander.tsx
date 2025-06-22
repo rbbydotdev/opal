@@ -27,18 +27,18 @@ export function useSidebarItemExpander(id: string, defaultValue = false) {
 export function useFileTreeExpander({
   flatTree,
   activePath,
-  workspaceId,
+  expanderId,
 }: {
   flatTree: string[];
   activePath?: AbsPath | null;
-  workspaceId: string;
+  expanderId: string;
 }) {
   const [local, setLocal] = useState<ExpandMap>({});
   const setAllStates = useCallback(
     (state: boolean) => flatTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),
     [flatTree]
   );
-  const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${workspaceId}`, local);
+  const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${expanderId}`, local);
 
   const expandSingle = (path: string, expanded: boolean) => {
     // console.log("expanding single for path", path, "state:", expanded);

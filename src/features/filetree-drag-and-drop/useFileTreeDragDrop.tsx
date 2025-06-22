@@ -1,5 +1,5 @@
 import { INTERNAL_FILE_TYPE, NodeDataJType, allowedMove } from "@/components/FiletreeMenu";
-import { useFileTreeMenuContext } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { Workspace } from "@/Db/Workspace";
@@ -25,7 +25,7 @@ export function useFileTreeDragDrop({
   }
 
   const { selectedRange, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
-    useFileTreeMenuContext();
+    useFileTreeMenuCtx();
   const handleDragStart = useCallback(
     (event: React.DragEvent, targetNode: TreeNode) => {
       event.stopPropagation();
@@ -96,6 +96,7 @@ export function useFileTreeDragDrop({
         await handleExternalDrop(event, targetNode);
       } else {
         if (draggingNodes.length) {
+          //should reduce lineage go inside the lower level moveMultiple fn !??!
           const moveNodes = reduceLineage(draggingNodes)
             .filter((node) => allowedMove(targetPath, node))
             .map((node) => [node, dropNode(targetPath, node)]) as [TreeNode, TreeNode][];

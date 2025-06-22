@@ -8,7 +8,7 @@ import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
 import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
 
-const WHITELIST = ["/opal.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
+const WHITELIST = ["/opal.svg", "/opal-blank.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
 
 declare const self: ServiceWorkerGlobalScope;
 

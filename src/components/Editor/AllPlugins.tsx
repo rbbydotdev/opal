@@ -2,7 +2,7 @@ import { Workspace } from "@/Db/Workspace";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
-import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { BadRequestError, isError } from "@/lib/errors";
 import { absPath, dirname } from "@/lib/paths2";
 import {
@@ -84,6 +84,7 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
 
 export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const [imgs, setImgs] = useState<string[]>([]);
+  const { contents } = useFileContents();
 
   const { path } = useWorkspaceRoute();
   useEffect(() => {
@@ -141,9 +142,9 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
         codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
       }),
       directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
-      diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: "<ORIGINAL_MARKDOWN_HERE>" }),
+      diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: contents }),
       markdownShortcutPlugin(),
     ],
-    [currentWorkspace, imgs, path]
+    [contents, currentWorkspace, imgs, path]
   );
 }
