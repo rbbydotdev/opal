@@ -16,17 +16,6 @@ export const editorSearchRanges$ = Cell<Range[]>([]);
 export const editorSearchCursor$ = Cell<number>(0);
 export const editorSearchTextNodeIndex$ = Cell<TextNodeIndex[]>([]);
 export const editorSearchMode$ = Cell<"typing" | "replace">("typing");
-// export const editor
-
-/* 
-
-Notes 
-
-  - chokes on embedded editors!
-
-
-
-*/
 
 function* searchText(allText: string, searchQuery: string): Generator<[start: number, end: number]> {
   if (searchQuery === null) return [];
@@ -103,6 +92,14 @@ const scrollToRange = (range: Range, options?: { ignoreIfInView?: boolean; behav
   }
   el.scrollIntoView({ behavior });
 };
+
+function isSimilarRange(
+  range1: Pick<Range, "startContainer" | "startOffset">,
+  range2: Pick<Range, "startContainer" | "startOffset">
+) {
+  if (!range1 || !range2) return false;
+  return range1.startContainer === range2.startContainer && range1.startOffset === range2.startOffset;
+}
 
 function replaceTextInRange(range: Range, str: string, onUpdate?: () => void) {
   const startDomNode = range.startContainer;
@@ -196,12 +193,17 @@ export function useEditorSearch() {
   const replace = useCallback(
     (str: string, onUpdate?: () => void) => {
       const currentRange = ranges[cursor - 1];
-      const nextRange = ranges[cursor % ranges.length];
+      const { startContainer, startOffset } = currentRange ?? {};
+
       return replaceTextInRange(currentRange, str, () => {
-        //restore cursor to the next range after replacement
-        // const nextIndex = cursor % ranges.length;
-        // realm.pub(editorSearchCursor$, nextIndex === 0 ? ranges.length : nextIndex + 1);
-        realm.pub(editorSearchCursor$, ranges.indexOf(nextRange) + 1);
+        //when the replaced text continues to match the search term
+        //cursor must be incremented to the next match
+        const unsub = realm.sub(editorSearchRanges$, (newRanges) => {
+          unsub();
+          if (isSimilarRange(newRanges[cursor - 1], { startOffset, startContainer })) {
+            realm.pub(editorSearchCursor$, (cursor + 1) % (newRanges.length + 1) || 1);
+          }
+        });
         onUpdate?.();
       });
     },
@@ -238,12 +240,12 @@ export function useEditorSearch() {
   };
 }
 
+const getTextNodeIndex = (root: HTMLElement) =>
+  indexTextNodes(root?.querySelectorAll("ul,p,h1,h2,h3,h4,h5,h6,code,pre") ?? []);
 export const searchPlugin = realmPlugin({
   postInit(realm) {
     const editor = realm.getValue(rootEditor$);
     if (editor && typeof CSS.highlights !== "undefined") {
-      const getTextNodeIndex = (root: HTMLElement) =>
-        indexTextNodes(root?.querySelectorAll("ul,p,h1,h2,h3,h4,h5,h6,code,pre") ?? []);
       realm.sub(editorSearchCursor$, (cursor) => {
         const ranges = realm.getValue(editorSearchRanges$);
         focusHighlightRange(ranges[cursor - 1]);
@@ -256,17 +258,16 @@ export const searchPlugin = realmPlugin({
         }
         const ranges = Array.from(rangeSearchScan(searchQuery, textNodeIndex));
         realm.pub(editorSearchRanges$, ranges);
+        // replace will be triggered here via a once sub
+        // SEE: const unsub = realm.sub(editorSearchRanges$, (newRanges) => { ....
+        // to determine if the replaced text continues to match the search term
+        // if it does it will increment the cursor
         highlightRanges(ranges);
         if (ranges.length) {
-          const currentCursor = realm.getValue(editorSearchCursor$);
-          if (currentCursor === 0) {
-            //going to be buggy!
-            focusHighlightRange(ranges[0]);
-            realm.pub(editorSearchCursor$, 1);
-          } else {
-            focusHighlightRange(ranges[currentCursor - 1]);
-          }
-          scrollToRange(ranges[0], { ignoreIfInView: true });
+          const currentCursor = realm.getValue(editorSearchCursor$) || 1;
+          focusHighlightRange(ranges[currentCursor - 1]);
+          realm.pub(editorSearchCursor$, currentCursor);
+          scrollToRange(ranges[currentCursor - 1], { ignoreIfInView: true });
         } else {
           resetHighlights();
         }
@@ -283,10 +284,6 @@ export const searchPlugin = realmPlugin({
         realm.pipe(
           editorSearchTextNodeIndex$,
           realm.transformer(
-            //TODO: on typing this is good, but when operating search replace it is annoying
-            //some how adjust this when in different modes
-            //even the indexing is not needed when the search bar is not open
-            //use a flag via to determine if the search bar is open
             debounceTime(250),
             map((index) => {
               return Array.from(index as Iterable<TextNodeIndex>);
@@ -302,7 +299,7 @@ export const searchPlugin = realmPlugin({
           observer = null;
         }
         if (rootElement) {
-          realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
+          realm.pub(editorSearchTextNodeIndex$, [...getTextNodeIndex(rootElement)]);
           observer = new MutationObserver(() => {
             if (realm.getValue(editorSearchMode$) === "replace") {
               realm.pub(editorSearchTextNodeIndex$, [...getTextNodeIndex(rootElement)]);
