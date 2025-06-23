@@ -78,7 +78,7 @@ export class FileTree {
     // Sort indices to ensure correct slice
     const [fromIndex, toIndex] = [startIndex, endIndex].sort((a, b) => a - b);
     return this.all()
-      .slice(fromIndex, toIndex + 1)
+      .slice(fromIndex, toIndex! + 1)
       .map((node) => node.path);
   };
 

@@ -9,7 +9,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { SearchResult } from "@/features/search/SearchResults";
 import { DiskSearchResultData, useSearchWorkspace } from "@/features/search/useSearchWorkspace";
 import { ChevronDown, ChevronRight, FileText, Search, X } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { relPath } from "../../lib/paths2";
 
 export function SearchModal({ children }: { children: React.ReactNode }) {
@@ -61,7 +61,7 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
     [results, dismissedFiles]
   );
 
-  const searchAbortCntrl = useRef<AbortController>(null);
+  // const searchAbortCntrl = useRef<AbortController>(null);
   // const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const updateSearchTerm = useCallback(
     (searchTerm: string) => {
@@ -103,7 +103,6 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
               Search
             </Button>
           </form>
-          {/* <WorkspaceSelector value={selectedWorkspace} onValueChange={setSelectedWorkspace} /> */}
           <div className="text-sm text-muted-foreground mb-3">
             {filteredResults.reduce((total, result) => total + result.matches.length, 0)} results in{" "}
             {filteredResults.length} files
@@ -131,10 +130,10 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
   );
 }
 
-interface WorkspaceSelVectorProps {
-  value: string;
-  onValueChange: (value: string) => void;
-}
+// interface WorkspaceSelVectorProps {
+//   value: string;
+//   onValueChange: (value: string) => void;
+// }
 
 function SearchResultsScroll({
   searchResult,

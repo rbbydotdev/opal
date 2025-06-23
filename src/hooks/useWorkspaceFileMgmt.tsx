@@ -19,17 +19,7 @@ import React from "react";
 import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
-  const {
-    setEditing,
-    selectedRange,
-    resetSelects,
-    resetEditing,
-    setEditType,
-    focused,
-    setFocused,
-    setVirtual,
-    virtual,
-  } = useFileTreeMenuCtx();
+  const { setFileTreeCtx, selectedRange, resetEditing, focused } = useFileTreeMenuCtx();
 
   const newFile = React.useCallback(
     (path: AbsPath, content = "") => {
@@ -56,9 +46,15 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
           throw e;
         }
       }
-      resetSelects();
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        focused: null,
+        virtual: null,
+        selectedRange: [],
+      });
     },
-    [currentWorkspace, resetSelects]
+    [currentWorkspace, setFileTreeCtx]
   );
   const removeFile = React.useCallback(
     (path: AbsPath) => {
@@ -86,16 +82,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   }, [currentWorkspace, focused, selectedRange]);
 
   const removeFocusedFile = React.useCallback(async () => {
-    if (!focused) {
-      return;
-    }
-    await removeFiles([focused]);
+    if (focused) await removeFiles([focused]);
   }, [focused, removeFiles]);
-
-  const cancelNew = React.useCallback(() => {
-    setVirtual(null);
-    if (virtual) currentWorkspace.removeVirtualfile(virtual);
-  }, [setVirtual, virtual, currentWorkspace]);
 
   const duplicateDirFile = React.useCallback(
     (type: TreeNode["type"], from: AbsPath | TreeNode) => {
@@ -108,13 +96,18 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         { type, name: relPath(duplicatePath(fromNode.path)), sourceNode: fromNode },
         fromNode.parent ?? fromNode
       );
-      setFocused(newNode.path);
-      setEditing(newNode.path);
-      setVirtual(newNode.path);
-      setEditType("duplicate");
+
+      setFileTreeCtx({
+        editing: newNode.path,
+        editType: "duplicate",
+        focused: newNode.path,
+        virtual: newNode.path,
+        selectedRange: [],
+      });
+
       return newNode;
     },
-    [currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
+    [currentWorkspace, setFileTreeCtx]
   );
   const addDirFile = React.useCallback(
     (type: TreeNode["type"], parent: TreeDir | AbsPath) => {
@@ -129,30 +122,40 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       /** --------- end ------ */
       const name = type === "dir" ? "newdir" : "newfile.md";
       const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, parentNode);
-      setFocused(newNode.path);
-      setEditing(newNode.path);
-      setVirtual(newNode.path);
-      setEditType("new");
+      setFileTreeCtx({
+        editing: newNode.path,
+        editType: "new",
+        focused: newNode.path,
+        virtual: newNode.path,
+        selectedRange: [],
+      });
       return newNode;
     },
-    [currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
+    [currentWorkspace, setFileTreeCtx]
   );
 
   const renameDirOrFileMultiple = React.useCallback(
     async (nodes: [oldNode: TreeNode, newFullPath: TreeNode | AbsPath][]) => {
       const result = await currentWorkspace.renameMultiple(nodes);
       if (result.length === 0) return [];
-      resetSelects();
+
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        focused: null,
+        virtual: null,
+        selectedRange: [],
+      });
       return result;
     },
-    [currentWorkspace, resetSelects]
+    [currentWorkspace, setFileTreeCtx]
   );
 
   const renameDirOrFile = React.useCallback(
     async (origNode: TreeNode, newFullPath: TreeNode | AbsPath) => {
       const result = await renameDirOrFileMultiple([[origNode, newFullPath]] as [TreeNode, TreeNode | AbsPath][]);
-      if (result.length === 0) return null;
-      return result[0].newPath;
+      if (result.length <= 0) return null;
+      return result[0]!.newPath;
     },
     [renameDirOrFileMultiple]
   );
@@ -162,13 +165,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       const wantPath = joinPath(dirname(origNode.path), relPath(decodePath(fileName)));
       if (type === "new") {
         if (origNode.isTreeFile())
-          return currentWorkspace.newFile(
-            absPath(dirname(wantPath)),
-            relPath(basename(wantPath)),
-            "# " + basename(wantPath)
-          );
+          return currentWorkspace.newFile(dirname(wantPath), basename(wantPath), "# " + basename(wantPath));
         else {
-          return currentWorkspace.newDir(absPath(dirname(wantPath)), relPath(basename(wantPath)));
+          return currentWorkspace.newDir(dirname(wantPath), basename(wantPath));
         }
       } else if (type === "duplicate") {
         if (isVirtualDupNode(origNode)) {
@@ -196,10 +195,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     trashSelectedFiles,
     removeFiles,
     removeFile,
-    cancelNew,
     resetEditing,
-    setEditing,
-    setFocused,
     duplicateDirFile,
   };
 }

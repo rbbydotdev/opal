@@ -7,26 +7,33 @@ import React, { useCallback, useMemo } from "react";
 
 export const FileTreeMenuCtx = React.createContext<{
   editing: AbsPath | null;
-  setEditing: React.Dispatch<React.SetStateAction<AbsPath | null>>;
-  editType: "rename" | "new" | "duplicate";
-  setFocused: (path: AbsPath | null) => void;
+  editType: "rename" | "new" | "duplicate" | null;
   focused: AbsPath | null;
-  setEditType: React.Dispatch<React.SetStateAction<"rename" | "new" | "duplicate">>;
   resetEditing: () => void;
-  setSelectedRange: (path: AbsPath[]) => void;
   highlightDragover: (menuItem: TreeNode) => boolean;
-  resetSelects: () => void;
   setDragOver: (node: TreeNode | null) => void;
   dragOver: TreeNode | null;
   selectedFocused: AbsPath[];
   draggingNode: TreeNode | null;
   draggingNodes: TreeNode[];
   fileTreeCtxNode: (treeNode: TreeNode) => FileTreeCtxNode;
+  setFileTreeCtx: ({
+    editing,
+    editType,
+    focused,
+    virtual,
+    selectedRange,
+  }: {
+    editing: AbsPath | null;
+    editType: "rename" | "new" | "duplicate" | null;
+    focused: AbsPath | null;
+    virtual: AbsPath | null;
+    selectedRange: AbsPath[];
+  }) => void;
   setDraggingNode: (node: TreeNode | null) => void;
   setDraggingNodes: (node: TreeNode[]) => void;
   selectedRange: AbsPath[];
   virtual: AbsPath | null;
-  setVirtual: (path: AbsPath | null) => void;
 } | null>(null);
 
 export function useFileTreeMenuCtx() {
@@ -52,7 +59,7 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
   const pathname = usePathname();
   const { filePath } = Workspace.parseWorkspacePath(pathname);
   const [editing, setEditing] = React.useState<AbsPath | null>(null);
-  const [editType, setEditType] = React.useState<"rename" | "new" | "duplicate">("rename");
+  const [editType, setEditType] = React.useState<"rename" | "new" | "duplicate" | null>("rename");
   const [focused, setFocused] = React.useState<AbsPath | null>(filePath ?? null);
   const [virtual, setVirtual] = React.useState<AbsPath | null>(null);
   const [dragOver, setDragOver] = React.useState<TreeNode | null>(null);
@@ -85,16 +92,19 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
       editType,
       focused,
       virtual,
+      selectedRange,
     }: {
       editing: AbsPath | null;
       editType: EditType | null;
       focused: AbsPath | null;
       virtual: AbsPath | null;
+      selectedRange: AbsPath[];
     }) => {
       setEditing(editing);
-      setEditType(editType ?? "rename");
+      setEditType(editType);
       setFocused(focused);
       setVirtual(virtual);
+      setSelectedRange(selectedRange);
     },
     []
   );
@@ -105,18 +115,19 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
       editType: "rename",
       focused: dirname(focused ?? "/"),
       virtual: null,
+      selectedRange: [],
     });
+  }, [focused, setFileTreeCtx]);
 
-    setEditing(null);
-    setEditType("rename");
-    setVirtual(null);
-    setFocused(dirname(focused ?? "/")); //TODO
-  }, [focused]);
-
-  const resetSelects = useCallback(() => {
-    setSelectedRange([]);
-    setFocused(null);
-  }, []);
+  // const resetSelects = useCallback(() => {
+  //   setFileTreeCtx({
+  //     editing: null,
+  //     editType: "rename",
+  //     focused: null,
+  //     virtual: null,
+  //     selectedRange: [],
+  //   });
+  // }, [setFileTreeCtx]);
 
   const highlightDragover = useCallback(
     (menuItem: TreeNode) => {
@@ -137,15 +148,19 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
 
   React.useEffect(() => {
     const escapeKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") resetSelects();
+      if (e.key === "Escape") {
+        setFileTreeCtx({
+          editing: null,
+          editType: null,
+          focused: null,
+          virtual: null,
+          selectedRange: [],
+        });
+      }
     };
     window.addEventListener("keydown", escapeKey);
     return () => window.removeEventListener("keydown", escapeKey);
-  }, [resetSelects]);
-  const setFocusedAndRange = (path: AbsPath | null) => {
-    setFocused(path);
-    setSelectedRange(path ? [path] : []);
-  };
+  }, [setFileTreeCtx]);
   const selectedFocused = useMemo(
     () => Array.from(new Set([focused, ...selectedRange].filter(Boolean) as AbsPath[])),
     [focused, selectedRange]
@@ -154,7 +169,7 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
     <FileTreeMenuCtx.Provider
       value={{
         selectedRange,
-        setSelectedRange,
+        setFileTreeCtx,
         dragOver,
         setDragOver,
         setDraggingNode,
@@ -164,15 +179,10 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
         fileTreeCtxNode,
         draggingNode: draggingNode,
         highlightDragover,
-        setFocused: setFocusedAndRange,
         editType,
-        setEditType,
         focused,
-        resetSelects,
-        setVirtual,
         virtual,
         editing,
-        setEditing,
         resetEditing,
       }}
     >

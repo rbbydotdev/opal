@@ -293,13 +293,15 @@ export abstract class Disk {
   static guid = () => "__disk__" + nanoid();
 
   static From({ guid, type, indexCache }: DiskJType): Disk {
-    const DiskConstructor = {
+    const DiskMap = {
       [IndexedDbDisk.type]: IndexedDbDisk,
       [MemDisk.type]: MemDisk,
       [DexieFsDbDisk.type]: DexieFsDbDisk,
       [NullDisk.type]: NullDisk,
       [OpFsDisk.type]: OpFsDisk,
-    }[type] satisfies {
+    };
+    if (!DiskMap[type]) throw new Error("invalid disk type " + type);
+    const DiskConstructor = DiskMap[type] satisfies {
       new (guid: string): Disk; //TODO interface somewhere?
     };
     return new DiskConstructor(guid, indexCache);
@@ -421,10 +423,10 @@ export abstract class Disk {
     return this.broadcastRename(results);
   }
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
-    return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "dir"))[0];
+    return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "dir"))[0]!;
   }
   async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
-    return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "file"))[0];
+    return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "file"))[0]!;
   }
   //for moving files without emitting events or updating the index
   async quietMove(oldPath: AbsPath, newPath: AbsPath, options?: { overWrite?: boolean }): Promise<AbsPath> {

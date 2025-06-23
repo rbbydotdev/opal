@@ -73,7 +73,7 @@ export function SidebarDndList({
         setOrder((prev) => {
           const newOrder = [...prev];
           const [removed] = newOrder.splice(dragging, 1);
-          newOrder.splice(index, 0, removed);
+          newOrder.splice(index, 0, removed!);
           return newOrder;
         });
         child.props.onDrop?.(e);

@@ -109,7 +109,7 @@ export function FileTreeMenu({
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
-  const { highlightDragover, setEditing, selectedFocused } = useFileTreeMenuCtx();
+  const { highlightDragover, selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
   const { addDirFile, removeFiles, duplicateDirFile } = useWorkspaceFileMgmt(currentWorkspace);
 
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
@@ -158,7 +158,15 @@ export function FileTreeMenu({
               removeFile={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
               copyFile={() => copyFileNodesToClipboard([fileNode])} //TODO I DONT THINK I WIRED THIS UP
               duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
-              rename={() => setEditing(fileNode.path)}
+              rename={() =>
+                setFileTreeCtx({
+                  editing: fileNode.path,
+                  editType: "rename",
+                  focused: fileNode.path,
+                  virtual: null,
+                  selectedRange: [fileNode.path],
+                })
+              }
             >
               {fileNode.isTreeDir() ? (
                 <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>

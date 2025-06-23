@@ -204,7 +204,7 @@ export function reduceLineage<T extends (string | { toString(): string })[]>(ran
     const a = range[i];
     for (let j = i + 1; j < range.length; j++) {
       const b = range[j];
-      if (isAncestor(b.toString(), a.toString())) range.splice(j--, 1);
+      if (isAncestor(b!.toString(), a!.toString())) range.splice(j--, 1);
     }
   }
   return range;

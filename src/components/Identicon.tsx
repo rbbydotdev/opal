@@ -1,6 +1,7 @@
+// @ts-nocheck
 import crypto from "crypto";
-
 // Helper function to convert RGB to HSL
+
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   r /= 255;
   g /= 255;

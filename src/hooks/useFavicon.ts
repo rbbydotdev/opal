@@ -10,8 +10,8 @@ const useFavicon = (href: string, type: string = "image/x-icon") => {
     const link: HTMLLinkElement = document.querySelector("link[rel*='icon']") || document.createElement("link");
     link.type = type;
     link.href = href;
-    document.getElementsByTagName("head")[0].appendChild(link);
-  }, [href]);
+    document.getElementsByTagName("head")[0]!.appendChild(link);
+  }, [href, type]);
 };
 
 export default useFavicon;
