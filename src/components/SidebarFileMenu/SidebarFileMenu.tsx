@@ -19,11 +19,9 @@ import {
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { TooltipContent } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import {
-  FileTreeExpanderProvider,
-  useFileTreeExpanderContext,
-  useSidebarItemExpander,
-} from "@/hooks/useFileTreeExpander";
+import { FileTreeExpanderProvider } from "@/features/filetree-expander/FileTreeExpanderContext";
+import { useFileTreeExpanderContext } from "@/features/filetree-expander/useFileTreeExpander";
+import { useSidebarItemExpander } from "@/features/filetree-expander/useSidebarItemExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath } from "@/lib/paths2";
@@ -76,9 +74,9 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex flex-col min-h-8" />
         <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
 
-        {/* <div dnd-id="trash" className="min-h-8">
+        <div dnd-id="trash" className="min-h-8">
           <TrashSidebarFileMenuFileSection />
-        </div> */}
+        </div>
 
         <div className="min-h-8" dnd-id="files">
           <FileTreeMenuCtxProvider>

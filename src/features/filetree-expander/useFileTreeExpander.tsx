@@ -1,9 +1,9 @@
 "use client";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { FileTreeExpanderContext } from "@/features/filetree-expander/FileTreeExpanderContext";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, isAncestor } from "@/lib/paths2";
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
 function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) {
   if (!file) return exp;
@@ -11,30 +11,6 @@ function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) 
   return exp;
 }
 type ExpandMap = { [path: string]: boolean };
-
-// For a single item, just store a boolean for the id
-export function useSidebarItemExpander(id: string, defaultValue = false) {
-  const [expanded, setExpanded] = useLocalStorage<boolean>(id, defaultValue);
-
-  // Toggle or set expanded state
-  const setExpand = useCallback((state: boolean) => setExpanded(state), [setExpanded]);
-
-  return [
-    expanded, // boolean
-    setExpand, // (state: boolean) => void
-  ] as const;
-}
-
-type FileTreeExpanderContextType = ReturnType<typeof useFileTreeExpander>;
-
-const FileTreeExpanderContext = createContext<FileTreeExpanderContextType | undefined>(undefined);
-
-export function FileTreeExpanderProvider({ children, id }: { children: ReactNode; id: string }) {
-  const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
-  const expanderId = currentWorkspace.id + "/" + id;
-  const value = useFileTreeExpander({ flatTree, activePath: workspaceRoute.path, expanderId });
-  return <FileTreeExpanderContext.Provider value={value}>{children}</FileTreeExpanderContext.Provider>;
-}
 
 export function useFileTreeExpanderContext() {
   const context = useContext(FileTreeExpanderContext);
@@ -85,6 +61,5 @@ export function useFileTreeExpander({
   }, [activePath, flatTree]);
 
   const all = { ...stored, ...local };
-  // console.log(all);
   return { expandSingle, expanded: all, setExpandAll, expandForNode };
 }
