@@ -97,9 +97,6 @@ function isSimilarRange(
   range1: Pick<Range, "startContainer" | "startOffset">,
   range2: Pick<Range, "startContainer" | "startOffset">
 ) {
-  if (!range1 || !range2) return false;
-  if (!range1.startContainer || !range2.startContainer) return false;
-  if (!range1.startOffset || !range2.startOffset) return false;
   return range1.startContainer === range2.startContainer && range1.startOffset === range2.startOffset;
 }
 
