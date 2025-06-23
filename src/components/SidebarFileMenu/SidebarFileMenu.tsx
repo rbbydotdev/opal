@@ -19,7 +19,11 @@ import {
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { TooltipContent } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { useFileTreeExpander, useSidebarItemExpander } from "@/hooks/useFileTreeExpander";
+import {
+  FileTreeExpanderProvider,
+  useFileTreeExpanderContext,
+  useSidebarItemExpander,
+} from "@/hooks/useFileTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath } from "@/lib/paths2";
@@ -72,13 +76,15 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex flex-col min-h-8" />
         <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
 
-        <div dnd-id="trash" className="min-h-8">
+        {/* <div dnd-id="trash" className="min-h-8">
           <TrashSidebarFileMenuFileSection />
-        </div>
+        </div> */}
 
         <div className="min-h-8" dnd-id="files">
           <FileTreeMenuCtxProvider>
-            <MainSidebarFileMenuFileSection />
+            <FileTreeExpanderProvider id="main-files">
+              <MainSidebarFileMenuFileSection />
+            </FileTreeExpanderProvider>
           </FileTreeMenuCtxProvider>
         </div>
       </SidebarDndList>
@@ -89,37 +95,26 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
 }
 
 function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
-  const { currentWorkspace } = useWorkspaceContext();
-  const expanderId = currentWorkspace.id + "/trash";
   return (
     <FileTreeMenuCtxProvider>
-      <SidebarFileMenuFileSectionInternal
-        title={"Trash"}
-        className={className}
-        scope={absPath("/.trash")}
-        expanderId={expanderId}
-      ></SidebarFileMenuFileSectionInternal>
+      <FileTreeExpanderProvider id="trash-files">
+        <SidebarFileMenuFileSectionInternal
+          title={"Trash"}
+          className={className}
+          scope={absPath("/.trash")}
+        ></SidebarFileMenuFileSectionInternal>
+      </FileTreeExpanderProvider>
     </FileTreeMenuCtxProvider>
   );
 }
 
 function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
-  const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
-  const expanderId = currentWorkspace.id + "/main-files";
+  const { currentWorkspace } = useWorkspaceContext();
   const { focused } = useFileTreeMenuCtx();
   const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
-  const { setExpandAll, expandForNode } = useFileTreeExpander({
-    flatTree,
-    activePath: workspaceRoute.path,
-    expanderId,
-  });
+  const { setExpandAll, expandForNode } = useFileTreeExpanderContext();
   return (
-    <SidebarFileMenuFileSectionInternal
-      title={"Files"}
-      className={className}
-      expanderId={expanderId}
-      filter={[absPath("/.trash")]}
-    >
+    <SidebarFileMenuFileSectionInternal title={"Files"} className={className} filter={[absPath("/.trash")]}>
       <SidebarFileMenuFilesActions
         trashSelectedFiles={trashSelectedFiles}
         addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
@@ -136,23 +131,23 @@ function SidebarFileMenuFileSectionInternal({
   scope,
   filter,
   children,
-  expanderId,
-}: {
+}: // expanded,
+// expandSingle,
+// expandForNode,
+{
   title: string;
+  // expandSingle: (path: string, expanded: boolean) => void;
+  // expandForNode: (node: TreeNode, state: boolean) => void;
+  // expanded: { [key: string]: boolean };
   className?: string;
   scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   children?: React.ReactNode;
-  expanderId: string;
 }) {
-  const { fileTreeDir, flatTree, workspaceRoute, currentWorkspace } = useWorkspaceContext();
+  const { expandSingle, expanded, expandForNode } = useFileTreeExpanderContext();
+  const { fileTreeDir, currentWorkspace } = useWorkspaceContext();
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
 
-  const { expandSingle, expanded, expandForNode } = useFileTreeExpander({
-    flatTree,
-    activePath: workspaceRoute.path,
-    expanderId,
-  });
   const treeNode = useMemo(
     () => (typeof scope === "undefined" ? fileTreeDir : currentWorkspace.nodeFromPath(scope ?? null)),
     [currentWorkspace, fileTreeDir, scope]

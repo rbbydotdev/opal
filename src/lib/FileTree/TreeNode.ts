@@ -1,16 +1,18 @@
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, RelPath, absPath, basename, dirname, depth as getDepth, incPath, relPath } from "@/lib/paths2";
 
-export type TreeNodeJType = ReturnType<TreeNode["toJSON"]> & {
+export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
 };
 
 export type TreeDirRootJType = TreeNodeDirJType;
 
 export type TreeNodeDirJType = ReturnType<TreeNode["toJSON"]> & {
-  children: Record<string, TreeNodeJType | TreeNodeDirJType>;
+  children: Record<string, TreeFileJType | TreeNodeDirJType>;
   type: "dir";
 };
+
+export type TreeNodeType = TreeFile | TreeDir;
 
 export class TreeNode {
   isVirtual?: boolean;
@@ -39,7 +41,7 @@ export class TreeNode {
                   const scoped = child.scope(path);
                   return scoped ? [key, scoped] : null;
                 })
-                .filter((entry): entry is [string, TreeNode] => entry !== null)
+                .filter((entry): entry is [string, TreeFile | TreeDir] => entry !== null)
             ) ?? {},
         });
       }
@@ -161,6 +163,8 @@ export class TreeNode {
     this.path = typeof path === "string" ? absPath(path) : path;
     this.depth = typeof depth !== "undefined" ? depth : getDepth(this.path);
     this.parent = parent;
+    if (isTreeFile(this)) return this;
+    if (isTreeDir(this)) return this;
   }
 
   remove() {
@@ -206,14 +210,14 @@ export class TreeNode {
       depth: this.depth,
     });
   }
-  static FromJSON(json: TreeNodeJType | TreeNodeDirJType, parent: TreeDir | null = null): TreeNode {
+  static FromJSON(json: TreeFileJType | TreeNodeDirJType, parent: TreeDir | null = null): TreeFile | TreeDir {
     if (json.type === "dir") {
       return TreeDir.FromJSON(json as TreeNodeDirJType, parent);
     }
-    return new TreeNode({
-      ...json,
-      parent,
-    });
+    if (json.type === "file") {
+      return TreeFile.FromJSON(json as TreeFileJType, parent);
+    }
+    throw new Error(`Unknown TreeNode type`);
   }
   isTreeDir(): this is TreeDir {
     return this.type === "dir";
@@ -241,7 +245,7 @@ export class TreeNode {
 }
 
 export class TreeDir extends TreeNode {
-  children: Record<string, TreeNode> = {};
+  children: Record<string, TreeFile | TreeDir> = {};
   type = "dir" as const;
 
   constructor({
@@ -265,7 +269,7 @@ export class TreeDir extends TreeNode {
     this.children = children;
   }
 
-  filterOutChildren(filter?: ((node: TreeNode) => boolean) | AbsPath[]): Record<string, TreeNode> {
+  filterOutChildren(filter?: ((node: TreeNode) => boolean) | AbsPath[]): Record<string, TreeFile | TreeDir> {
     if (!filter) {
       return this.children ?? {};
     }
@@ -289,7 +293,7 @@ export class TreeDir extends TreeNode {
       ...super.toJSON(),
       type: "dir",
       children: Object.fromEntries(
-        Object.entries(this.children).map(([key, child]) => [key, child.toJSON() as TreeNodeDirJType | TreeNodeJType])
+        Object.entries(this.children).map(([key, child]) => [key, child.toJSON() as TreeNodeDirJType | TreeFileJType])
       ),
     };
   }
@@ -376,6 +380,9 @@ export class TreeFile extends TreeNode {
   }) {
     super({ name, type: "file", parent, dirname, basename, path, depth });
   }
+  static FromJSON(json: TreeFileJType, parent: TreeDir | null = null): TreeFile {
+    return new TreeNode({ ...json, parent: parent }) as TreeFile;
+  }
 }
 
 export type TreeList = Array<string>;
@@ -414,3 +421,5 @@ export class VirtualDupTreeNode extends VirtualTreeNode {
 export function isVirtualDupNode(node: TreeNode): node is VirtualDupTreeNode {
   return isVirtualNode(node) && typeof node.source !== "undefined";
 }
+
+// expor
