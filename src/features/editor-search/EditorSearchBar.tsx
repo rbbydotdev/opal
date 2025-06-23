@@ -103,6 +103,11 @@ export function EditorSearchBar({
     if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();
+      // if cmd or ctrl is pressed, replace all
+      if (e.ctrlKey || e.metaKey) {
+        replaceAll(replaceTerm, pauseBlurCallback());
+        return;
+      }
       replace(replaceTerm, pauseBlurCallback());
     }
   };

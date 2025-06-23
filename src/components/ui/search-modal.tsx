@@ -84,7 +84,7 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="top-[25vh] translate-y-0 fixed flex flex-col max-w-4xl max-h-[80vh] bg-search border-search-border text-primary-foreground">
         <DialogHeader className="border-b border-search pb-4">
-          <DialogTitle className="text-primary-foreground flex items-center gap-2">
+          <DialogTitle className="text-primary-foreground flex items-center gap-2 ">
             <Search className="w-4 h-4" />
             Search
           </DialogTitle>
@@ -99,7 +99,7 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
               onChange={(e) => updateSearchTerm(e.target.value)}
               className="bg-search-border border-search-border text-primary-foreground placeholder:text-muted-foreground focus:border-ring"
             />
-            <Button type="submit" variant={"default"} className="text-ring">
+            <Button type="submit" variant={"default"} className="text-ring border border-ring">
               Search
             </Button>
           </form>

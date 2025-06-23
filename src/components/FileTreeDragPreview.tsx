@@ -17,7 +17,16 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
   // ---
 
   return (
-    <DragPreviewNode ref={ref} className="grid place-items-center w-24 h-24" style={{ gridTemplateAreas: "'stack'" }}>
+    <DragPreviewNode
+      ref={ref}
+      className="grid place-items-center relative w-24 h-24"
+      style={{ gridTemplateAreas: "'stack'" }}
+    >
+      {draggingNodes.length > 1 && (
+        <div className="rounded-full flex justify-center z-10 w-6 h-6 bg-red-500 text-white absolute right-1 top-3">
+          {draggingNodes.length}
+        </div>
+      )}
       {draggingNodes.slice(0, 8).map((treeNode, index) => {
         // This is the key calculation for the fan effect.
         // It calculates a rotation centered around 0.

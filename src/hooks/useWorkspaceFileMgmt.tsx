@@ -118,17 +118,22 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   );
   const addDirFile = React.useCallback(
     (type: TreeNode["type"], parent: TreeDir | AbsPath) => {
+      /** --------- TODO: move me somewhere more appropriate start ------ */
       let parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
       if (!parentNode) {
         console.warn("Parent node not found for adding new file or directory");
       }
-      parentNode = parentNode ?? currentWorkspace.getFileTreeRoot();
+      if ((parentNode && parentNode?.isVirtual) || !parentNode) {
+        parentNode = parentNode?.parent ?? currentWorkspace.getFileTreeRoot();
+      }
+      /** --------- end ------ */
       const name = type === "dir" ? "newdir" : "newfile.md";
       const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, parentNode);
       setFocused(newNode.path);
       setEditing(newNode.path);
       setVirtual(newNode.path);
       setEditType("new");
+      console.log("newNode", newNode);
       return newNode;
     },
     [currentWorkspace, setFocused, setEditing, setVirtual, setEditType]
