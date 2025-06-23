@@ -1,4 +1,4 @@
-import { DiskJType, IndexedDbDisk, MemDisk } from "@/Db/Disk";
+import { DiskJType, IndexedDbDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
@@ -124,6 +124,10 @@ export class WorkspaceDAO {
     if (!isAncestor(route, WorkspaceDAO.rootRoute)) throw new BadRequestError("Invalid route " + route);
 
     const name = route.slice(WorkspaceDAO.rootRoute.length + 1).split("/")[0];
+
+    if (!name) {
+      throw new Error("could not parse workspace route, invalid route");
+    }
 
     const ws =
       (await ClientDb.workspaces.where("name").equals(name).first()) ??

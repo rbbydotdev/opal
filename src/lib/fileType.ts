@@ -94,7 +94,7 @@ export function getFileType(data: string | Uint8Array<ArrayBufferLike>): FileTyp
 }
 export function isBinary(buffer: Uint8Array<ArrayBufferLike>, maxLength = 128): boolean {
   for (let i = 0; i <= Math.min(maxLength, buffer.length); i++) {
-    if (buffer[i] > 127) {
+    if (buffer[i]! ?? 0 > 127) {
       return true; // Non-ASCII character found, likely binary
     }
   }

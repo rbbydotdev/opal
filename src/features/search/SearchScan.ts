@@ -22,10 +22,10 @@ export class SearchScannable<T extends { text: string }> {
     lineBreaks: number[]
   ): { lineStart: number; lineEnd: number; lineNumber: number } {
     for (let i = 0; i < lineBreaks.length - 1; i++) {
-      if (pos > lineBreaks[i] && pos <= lineBreaks[i + 1]) {
+      if (pos > lineBreaks[i]! && pos <= lineBreaks[i + 1]!) {
         return {
-          lineStart: lineBreaks[i] + 1,
-          lineEnd: lineBreaks[i + 1],
+          lineStart: lineBreaks[i]! + 1,
+          lineEnd: lineBreaks[i + 1]!,
           lineNumber: i + 1, // 1-based
         };
       }

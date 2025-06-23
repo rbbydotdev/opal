@@ -58,6 +58,10 @@ export function* rangeSearchScan(searchQuery: string, textNodeIndex: Iterable<Te
       const endNode = nodeIndex[end];
       const range = new Range();
 
+      if (startNode === undefined || endNode === undefined || startOffset === undefined || endOffset === undefined) {
+        throw new Error("Invalid range: startNode, endNode, startOffset, or endOffset is undefined.");
+      }
+
       range.setStart(startNode, startOffset);
       range.setEnd(endNode, endOffset + 1);
       yield range;
@@ -156,7 +160,11 @@ export function useEditorSearch() {
 
   const scrollToRangeOrIndex = useCallback(
     (range: Range | number, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
-      return scrollToRange(typeof range === "number" ? ranges[range - 1] : range, options);
+      const scrollRange = typeof range === "number" ? ranges[range - 1] : range;
+      if (!scrollRange) {
+        throw new Error("Error scrolling to range, range does not exist");
+      }
+      return scrollToRange(scrollRange, options);
     },
     [ranges]
   );
@@ -201,7 +209,7 @@ export function useEditorSearch() {
         //cursor must be incremented to the next match
         const unsub = realm.sub(editorSearchRanges$, (newRanges) => {
           unsub();
-          if (isSimilarRange(newRanges[cursor - 1], { startOffset, startContainer })) {
+          if (isSimilarRange(newRanges[cursor - 1]! ?? {}, { startOffset, startContainer })) {
             realm.pub(editorSearchCursor$, (cursor + 1) % (newRanges.length + 1) || 1);
           }
         });
@@ -215,7 +223,11 @@ export function useEditorSearch() {
     (str: string, onUpdate?: () => void) => {
       let ticks = 0;
       for (let i = ranges.length - 1; i >= 0; i--) {
-        replaceTextInRange(ranges[i], str, () => {
+        const textReplaceRange = ranges[i];
+        if (!textReplaceRange) {
+          throw new Error("error replacing all text range does not exist");
+        }
+        replaceTextInRange(textReplaceRange, str, () => {
           ticks++;
           if (ticks >= ranges.length) {
             onUpdate?.();
@@ -268,7 +280,9 @@ export const searchPlugin = realmPlugin({
           const currentCursor = realm.getValue(editorSearchCursor$) || 1;
           focusHighlightRange(ranges[currentCursor - 1]);
           realm.pub(editorSearchCursor$, currentCursor);
-          scrollToRange(ranges[currentCursor - 1], { ignoreIfInView: true });
+          const scrollRange = ranges[currentCursor - 1];
+          if (!scrollRange) throw new Error("error updating highlights, scroll range does not exist");
+          scrollToRange(scrollRange, { ignoreIfInView: true });
         } else {
           resetHighlights();
         }

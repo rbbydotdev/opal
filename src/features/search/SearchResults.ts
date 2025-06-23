@@ -110,6 +110,9 @@ export class SearchResults implements Iterable<SearchResult> {
       next: (): IteratorResult<SearchResult> => {
         if (index < this.results.length) {
           const data = this.results[index++];
+          if (!data) {
+            throw new Error("unexpected end of results");
+          }
           return {
             value: new SearchResult(
               data.lineNumber,

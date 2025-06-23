@@ -1,5 +1,6 @@
 "use client";
 import { useCopyKeydownImages } from "@/components/FiletreeMenu";
+import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { Thumb } from "@/Db/Thumb";
@@ -37,7 +38,6 @@ export const EditableFile = ({
     fileName,
     handleKeyDown,
     handleMouseDown,
-    setEditing,
     handleBlur,
     handleClick,
     isSelected,
@@ -53,6 +53,7 @@ export const EditableFile = ({
     expand,
     currentWorkspace,
   });
+  const { setFileTreeCtx } = useFileTreeMenuCtx();
   const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace); //TODO, make for a copy of other files possible too
 
   // this breaks everything and i friggin hate it
@@ -88,7 +89,16 @@ export const EditableFile = ({
           onMouseDown={handleMouseDown}
           onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
           onClick={handleClick}
-          onDoubleClick={() => setEditing(fullPath)}
+          // onDoubleClick={() => setEditing(fullPath)}
+          onDoubleClick={() =>
+            setFileTreeCtx({
+              editing: fullPath,
+              editType: "rename",
+              focused: fullPath,
+              virtual: null,
+              selectedRange: [],
+            })
+          }
           prefetch={false}
         >
           <div className="w-full">

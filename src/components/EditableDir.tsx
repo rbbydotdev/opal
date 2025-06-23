@@ -1,5 +1,6 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
+import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { useCopyKeydownImages } from "@/components/FiletreeMenu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
@@ -7,7 +8,7 @@ import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, relPath } from "@/lib/paths2";
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
-import { ComponentProps, useEffect } from "react";
+import { ComponentProps } from "react";
 import { twMerge } from "tailwind-merge";
 export const EditableDir = ({
   depth,
@@ -36,7 +37,6 @@ export const EditableDir = ({
     isFocused,
     isSelectedRange,
     isEditing,
-    setEditing,
     setFileName,
     handleKeyDown,
     handleFocus,
@@ -54,13 +54,7 @@ export const EditableDir = ({
   });
 
   const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace);
-
-  useEffect(() => {
-    if (isFocused && !isEditing) {
-      //TODO HERE
-      // linkRef.current?.focus();
-    }
-  }, [isEditing, isFocused, linkRef]);
+  const { setFileTreeCtx } = useFileTreeMenuCtx();
 
   return (
     <span
@@ -94,7 +88,13 @@ export const EditableDir = ({
             className="truncate text-xs"
             onDoubleClick={() => {
               if (isEditing) return;
-              setEditing(fullPath);
+              setFileTreeCtx({
+                editing: fullPath,
+                editType: "rename",
+                virtual: null,
+                focused: fullPath,
+                selectedRange: [],
+              });
             }}
           >
             {isEditing ? (
