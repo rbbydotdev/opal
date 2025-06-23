@@ -133,7 +133,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       setEditing(newNode.path);
       setVirtual(newNode.path);
       setEditType("new");
-      console.log("newNode", newNode);
       return newNode;
     },
     [currentWorkspace, setFocused, setEditing, setVirtual, setEditType]

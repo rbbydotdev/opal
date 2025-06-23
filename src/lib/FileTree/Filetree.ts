@@ -6,6 +6,7 @@ import {
   TreeDirRoot,
   TreeNode,
   TreeNodeDirJType,
+  TreeNodeType,
   VirtualDirTreeNode,
   VirtualFileTreeNode,
   VirtualTreeNode,
@@ -190,7 +191,7 @@ export class FileTree {
   replaceNode(oldNode: TreeNode, newNode: TreeNode) {
     const parent = oldNode.parent;
     if (!parent) return;
-    parent.children[newNode.name] = newNode;
+    parent.children[newNode.name] = newNode as TreeNodeType;
     this.map.delete(oldNode.path);
     this.map.set(newNode.path, newNode);
   }
@@ -213,8 +214,7 @@ function closestTreeDir(node: TreeNode): TreeDir {
 }
 
 function spliceNode<T extends VirtualTreeNode | TreeNode>(targetNode: TreeDir, newNode: T) {
-  targetNode.children[newNode.name] = newNode;
-  targetNode.children = Object.fromEntries(Object.entries(targetNode.children));
+  targetNode.children = Object.fromEntries([...Object.entries(targetNode.children), [newNode.name, newNode]]);
   return newNode;
 }
 

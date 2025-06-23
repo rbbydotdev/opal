@@ -3,10 +3,10 @@ import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { basename, changePrefix, equals, prefix, RelPath, relPath } from "@/lib/paths2";
+import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
+import { basename, changePrefix, equals, prefix, RelPath, relPath, sanitizeUserInputFilePath } from "@/lib/paths2";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-export function useEditable<T extends TreeFile | TreeNode>({
+export function useEditable<T extends TreeFile | TreeDir>({
   treeNode,
   expand,
   currentWorkspace,
@@ -97,7 +97,7 @@ export function useEditable<T extends TreeFile | TreeNode>({
             prefix(fileName) &&
             (["new", "duplicate"].includes(editType) || prefix(fileName) !== prefix(relPath(basename(fullPath))))
           ) {
-            const wantPath = basename(changePrefix(fullPath, prefix(fileName)));
+            const wantPath = basename(changePrefix(fullPath, sanitizeUserInputFilePath(prefix(fileName))));
             const gotPath = await commitChange(treeNode, wantPath, editType);
             resetEditing();
             if (gotPath !== null) {

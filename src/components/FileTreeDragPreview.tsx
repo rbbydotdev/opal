@@ -47,7 +47,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <div
               key={treeNode.path}
-              className="p-1 border-2 border-foreground/80 bg-background"
+              className="p-1 border-2 border-foreground/80 bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
@@ -79,7 +79,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
         return (
           <div
             key={treeNode.path}
-            className="p-1 border-2 border-foreground/80 bg-background"
+            className="p-1 border-2 border-foreground/80 bg-background rounded-lg"
             style={{
               ...transformStyle,
               boxShadow: "0 4px 12px 0 hsl(var(--foreground))",

@@ -1,8 +1,9 @@
 "use client";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, isAncestor } from "@/lib/paths2";
-import { useCallback, useEffect, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
 function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) {
   if (!file) return exp;
@@ -22,6 +23,25 @@ export function useSidebarItemExpander(id: string, defaultValue = false) {
     expanded, // boolean
     setExpand, // (state: boolean) => void
   ] as const;
+}
+
+type FileTreeExpanderContextType = ReturnType<typeof useFileTreeExpander>;
+
+const FileTreeExpanderContext = createContext<FileTreeExpanderContextType | undefined>(undefined);
+
+export function FileTreeExpanderProvider({ children, id }: { children: ReactNode; id: string }) {
+  const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
+  const expanderId = currentWorkspace.id + "/" + id;
+  const value = useFileTreeExpander({ flatTree, activePath: workspaceRoute.path, expanderId });
+  return <FileTreeExpanderContext.Provider value={value}>{children}</FileTreeExpanderContext.Provider>;
+}
+
+export function useFileTreeExpanderContext() {
+  const context = useContext(FileTreeExpanderContext);
+  if (!context) {
+    throw new Error("useFileTreeExpanderContext must be used within a FileTreeExpanderProvider");
+  }
+  return context;
 }
 
 export function useFileTreeExpander({
@@ -46,8 +66,6 @@ export function useFileTreeExpander({
   };
 
   const expandForNode = (node: TreeNode, state: boolean) => {
-    // console.log("expanding for node", node.path, "state:", state);
-    // console.log(node);
     let n: TreeNode | null = node;
     while (n?.parent) {
       expandSingle(n.path, state);

@@ -10,7 +10,7 @@ import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { FileTreeContextMenu } from "@/lib/FileTree/FileTreeContextMenu";
-import { TreeDir, TreeDirRoot, TreeFile, TreeNode, TreeNodeJType } from "@/lib/FileTree/TreeNode";
+import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { AbsPath, absPath, dirname, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
 import clsx from "clsx";
@@ -18,7 +18,7 @@ import React, { useCallback } from "react";
 
 export const INTERNAL_FILE_TYPE = "application/x-opal";
 
-export type NodeDataJType = { nodeData: TreeNodeJType[] };
+export type NodeDataJType = { nodeData: TreeFileJType[] };
 export type NodeDataType = { nodeData: TreeNode[] };
 async function copyHtmlToClipboard(htmlString: string) {
   try {
@@ -99,7 +99,7 @@ export function FileTreeMenu({
   expanded,
   filter,
 }: {
-  fileTreeDir: TreeDir | TreeDirRoot | null;
+  fileTreeDir: TreeDir | TreeDirRoot;
   depth?: number;
   expand: (path: string, value: boolean) => void;
   renameDirOrFileMultiple: (nodes: [oldNode: TreeNode, newNode: TreeNode][]) => Promise<unknown>;
@@ -139,25 +139,7 @@ export function FileTreeMenu({
         onDragEnter={(e) => handleDragEnter(e, "/")}
         className={clsx({ "": depth === 0 })}
       >
-        {depth === 0 && (
-          <>
-            {/* <div
-              onDragOver={(e) => handleDragOver(e, fileTreeDir)}
-              onDragStart={handleDragStartWithImg(fileTreeDir)}
-              className={clsx("w-full text-sm", {
-                ["bg-sidebar-accent"]: fileTreeDir.path === workspaceRoute.path || highlightDragover(fileTreeDir),
-              })}
-              onDrop={(e) => handleDrop(e, fileTreeDir)}
-            >
-              <div className="font-bold text-3xs font-mono text-sidebar-foreground border-b border-dashed border-sidebar-foreground">
-                <div className="flex items-center gap-2 py-2">
-                  <Folders size={12} />/
-                </div>
-              </div>
-            </div> */}
-          </>
-        )}
-        {Object.values(fileTreeDir?.filterOutChildren(filter) ?? {}).map((fileNode) => (
+        {Object.values(fileTreeDir.filterOutChildren(filter)).map((fileNode) => (
           <SidebarMenuItem
             key={fileNode.path}
             className={clsx({
@@ -205,19 +187,19 @@ export function FileTreeMenu({
                     />
                   </CollapsibleContent>
                 </Collapsible>
-              ) : (
+              ) : fileNode.isTreeFile() ? (
                 <SidebarMenuButton asChild>
                   <EditableFile
                     workspaceRoute={workspaceRoute}
                     currentWorkspace={currentWorkspace}
                     depth={depth}
                     fullPath={fileNode.path}
-                    treeNode={fileNode as TreeFile}
+                    treeNode={fileNode}
                     expand={expandForNode}
                     onDragStart={handleDragStartWithImg(fileNode)}
                   />
                 </SidebarMenuButton>
-              )}
+              ) : null}
             </FileTreeContextMenu>
           </SidebarMenuItem>
         ))}
@@ -225,46 +207,3 @@ export function FileTreeMenu({
     </>
   );
 }
-
-/*
-
-            <div
-              onDragOver={(e) => handleDragOver(e, TrashDirNode)}
-              onDragStart={handleDragStartWithImg(TrashDirNode)}
-              className={clsx("w-full text-sm", {
-                ["bg-sidebar-accent"]: TrashDirNode.path === workspaceRoute.path || highlightDragover(TrashDirNode),
-              })}
-              onDrop={(e) => handleDrop(e, TrashDirNode)}
-            >
-                            <div className="font-bold text-3xs font-mono text-sidebar-foreground">
-                <Collapsible className="group/collapsible-trash">
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>
-                      <div className="w-full flex items-center text-2xs">
-                        <ChevronRight
-                          size={14}
-                          className={
-                            "transition-transform duration-100 group-data-[state=open]/collapsible-trash:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                          }
-                        />
-                        <div className="flex items-center gap-2 py-2">
-                          <Trash2 size={12} /> trash
-                        </div>
-                      </div>
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <FileTreeMenu
-                      expand={expand}
-                      expandForNode={expandForNode}
-                      fileTreeDir={TrashDirNode as TreeDir}
-                      renameDirOrFileMultiple={renameDirOrFileMultiple}
-                      depth={1}
-                      expanded={expanded}
-                    />
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
-            </div>
-
-            */

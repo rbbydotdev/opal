@@ -110,18 +110,26 @@ export function duplicatePath(path: AbsPath) {
 // --- Increment Path ---
 
 export function incPath<T extends AbsPath | RelPath>(path: T): T {
-  const regex = /^(.*?)(\d*)(\.[^.]*$|$)/;
-  const match = path.match(regex);
+  // Split path into directory and filename
+  const dir = dirname(path);
+  const base = basename(path);
 
-  let newPath: string;
+  // Handle filenames that start with "."
+  // e.g. ".file", ".file1", ".file.txt", ".file1.txt"
+  const regex = /^(\.?[^.]*?)(\d*)(\.[^.]*$|$)/;
+  const match = base.match(regex);
+
+  let newBase: string;
   if (match) {
     const [, prefix, number, suffix] = match;
     const incrementedNumber = number ? parseInt(number, 10) + 1 : 1;
-    newPath = `${prefix}${incrementedNumber}${suffix}`;
+    newBase = `${prefix}${incrementedNumber}${suffix}`;
   } else {
-    newPath = `${path}-1`;
+    newBase = `${base}-1`;
   }
-  return (path.startsWith("/") ? absPath(newPath) : relPath(newPath)) as T;
+
+  const joined = dir === absPath("/") ? `/${newBase}` : `${dir}/${newBase}`;
+  return (isAbsPath(path) ? absPath(joined) : relPath(joined)) as T;
 }
 
 // --- Depth ---
@@ -200,4 +208,13 @@ export function reduceLineage<T extends (string | { toString(): string })[]>(ran
     }
   }
   return range;
+}
+
+export function sanitizeUserInputFilePath(str: string): string {
+  let sanitized = str.toString().replace(/[^a-zA-Z0-9_\-\/\.]/g, "_");
+  // Prevent path from starting with a dot
+  sanitized = sanitized.replace(/^\.*/, "");
+  // path cannot contain slashes
+  sanitized = sanitized.replace(/\/+/g, "/");
+  return relPath(sanitized);
 }

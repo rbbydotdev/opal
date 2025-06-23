@@ -420,6 +420,7 @@ export abstract class Disk {
   // }
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
+    // console.log(JSON.stringify({ nodes }, null, 4));
     if (nodes.length === 0) return [];
     const results = await Promise.all(
       nodes.map(([oldNode, newNode]) =>
@@ -474,6 +475,7 @@ export abstract class Disk {
     if (!newFullPath || cleanFullPath === oldFullPath) return NOCHANGE;
 
     const uniquePath = await this.nextPath(cleanFullPath); // ensure the path is unique
+    console.log({ uniquePath, cleanFullPath });
 
     try {
       await this.mkdirRecursive(absPath(dirname(uniquePath)));
