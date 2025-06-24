@@ -218,3 +218,16 @@ export function sanitizeUserInputFilePath(str: string): string {
   sanitized = sanitized.replace(/\/+/g, "/");
   return relPath(sanitized);
 }
+
+//removes the root path from the given path
+export function resolveFromRoot(rootPath: AbsPath, path: AbsPath): AbsPath;
+export function resolveFromRoot(rootPath: RelPath, path: RelPath): RelPath;
+export function resolveFromRoot(rootPath: AbsPath | RelPath, path: AbsPath | RelPath): AbsPath | RelPath {
+  if (isAbsPath(path) && isAbsPath(rootPath)) {
+    return relPath(pathModule.relative(rootPath, path));
+  }
+  if (isRelPath(path) && isRelPath(rootPath)) {
+    return relPath(pathModule.relative(rootPath, path));
+  }
+  throw new Error("Both paths must be of the same type (AbsPath or RelPath).");
+}

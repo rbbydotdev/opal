@@ -9,7 +9,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { FileTreeContextMenu } from "@/lib/FileTree/FileTreeContextMenu";
+import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { AbsPath, absPath, dirname, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
@@ -98,7 +98,8 @@ export function FileTreeMenu({
   expandForNode,
   expanded,
   filter,
-}: {
+}: // children,
+{
   fileTreeDir: TreeDir | TreeDirRoot;
   depth?: number;
   expand: (path: string, value: boolean) => void;
@@ -106,11 +107,12 @@ export function FileTreeMenu({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
+  // children: React.ReactNode;
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
-  const { highlightDragover, selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
-  const { addDirFile, removeFiles, duplicateDirFile } = useWorkspaceFileMgmt(currentWorkspace);
+  const { highlightDragover, selectedFocused, setFileTreeCtx, id: FileTreeMenuId } = useFileTreeMenuCtx();
+  const { addDirFile, duplicateDirFile, trashFiles } = useWorkspaceFileMgmt(currentWorkspace);
 
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
@@ -152,11 +154,11 @@ export function FileTreeMenu({
               handleDragEnter(e, fileNode.path);
             }}
           >
-            <FileTreeContextMenu
+            <MainFileTreeContextMenu
               addFile={() => addDirFile("file", fileNode.closestDir()!)}
               addDir={() => addDirFile("dir", fileNode.closestDir()!)}
-              removeFile={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
-              copyFile={() => copyFileNodesToClipboard([fileNode])} //TODO I DONT THINK I WIRED THIS UP
+              trash={() => trashFiles([...new Set(selectedFocused).add(fileNode.path)])}
+              copy={() => copyFileNodesToClipboard([fileNode])} //TODO I DONT THINK I WIRED THIS UP
               duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
               rename={() =>
                 setFileTreeCtx({
@@ -208,7 +210,7 @@ export function FileTreeMenu({
                   />
                 </SidebarMenuButton>
               ) : null}
-            </FileTreeContextMenu>
+            </MainFileTreeContextMenu>
           </SidebarMenuItem>
         ))}
       </SidebarMenu>

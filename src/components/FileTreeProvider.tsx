@@ -16,6 +16,7 @@ export const FileTreeMenuCtx = React.createContext<{
   selectedFocused: AbsPath[];
   draggingNode: TreeNode | null;
   draggingNodes: TreeNode[];
+  id: FILE_TREE_MENUS_TYPE;
   setFileTreeCtx: ({
     editing,
     editType,
@@ -44,7 +45,15 @@ export function useFileTreeMenuCtx() {
 }
 type EditType = "rename" | "new" | "duplicate";
 
-export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const FILE_TREE_MENUS = ["TrashFiles", "MainFiles"] as const;
+export type FILE_TREE_MENUS_TYPE = (typeof FILE_TREE_MENUS)[number];
+export const FileTreeMenuCtxProvider = ({
+  children,
+  id,
+}: {
+  id: (typeof FILE_TREE_MENUS)[number];
+  children: React.ReactNode;
+}) => {
   const pathname = usePathname();
   const { filePath } = Workspace.parseWorkspacePath(pathname);
   const [editing, setEditing] = React.useState<AbsPath | null>(null);
@@ -89,16 +98,6 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
     });
   }, [focused, setFileTreeCtx]);
 
-  // const resetSelects = useCallback(() => {
-  //   setFileTreeCtx({
-  //     editing: null,
-  //     editType: "rename",
-  //     focused: null,
-  //     virtual: null,
-  //     selectedRange: [],
-  //   });
-  // }, [setFileTreeCtx]);
-
   const highlightDragover = useCallback(
     (menuItem: TreeNode) => {
       if (!dragOver || !draggingNode) return false;
@@ -138,13 +137,9 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
   return (
     <FileTreeMenuCtx.Provider
       value={{
+        id,
         selectedRange,
-        setFileTreeCtx: (properties) => {
-          console.log(">> properties:", properties);
-          console.log(">> callstack:");
-          console.trace();
-          setFileTreeCtx(properties);
-        },
+        setFileTreeCtx,
         dragOver,
         setDragOver,
         setDraggingNode,
