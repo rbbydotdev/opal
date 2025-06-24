@@ -1,6 +1,7 @@
 import { Workspace } from "@/Db/Workspace";
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
+import { FileTreeContextMenu } from "@/components/FileTreeContextMenus";
 import { FileTreeDragPreview } from "@/components/FileTreeDragPreview";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -9,7 +10,6 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { AbsPath, absPath, dirname, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
@@ -88,8 +88,6 @@ export function allowedMove(targetPath: AbsPath, node: TreeNode) {
   return true;
 }
 
-// const TrashDir = TreeNode.FromPath(absPath("/.trash"), "dir");
-
 export function FileTreeMenu({
   fileTreeDir,
   renameDirOrFileMultiple,
@@ -98,8 +96,7 @@ export function FileTreeMenu({
   expandForNode,
   expanded,
   filter,
-}: // children,
-{
+}: {
   fileTreeDir: TreeDir | TreeDirRoot;
   depth?: number;
   expand: (path: string, value: boolean) => void;
@@ -107,12 +104,12 @@ export function FileTreeMenu({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
-  // children: React.ReactNode;
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
-  const { highlightDragover, selectedFocused, setFileTreeCtx, id: FileTreeMenuId } = useFileTreeMenuCtx();
-  const { addDirFile, duplicateDirFile, trashFiles } = useWorkspaceFileMgmt(currentWorkspace);
+  const { highlightDragover, selectedFocused, setFileTreeCtx, id: fileTreeId } = useFileTreeMenuCtx();
+  const { addDirFile, duplicateDirFile, trashFiles, untrashFiles, removeFiles } =
+    useWorkspaceFileMgmt(currentWorkspace);
 
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
@@ -154,11 +151,12 @@ export function FileTreeMenu({
               handleDragEnter(e, fileNode.path);
             }}
           >
-            <MainFileTreeContextMenu
+            <FileTreeContextMenu
+              fileTreeId={fileTreeId}
               addFile={() => addDirFile("file", fileNode.closestDir()!)}
               addDir={() => addDirFile("dir", fileNode.closestDir()!)}
               trash={() => trashFiles([...new Set(selectedFocused).add(fileNode.path)])}
-              copy={() => copyFileNodesToClipboard([fileNode])} //TODO I DONT THINK I WIRED THIS UP
+              copy={() => copyFileNodesToClipboard([fileNode])}
               duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
               rename={() =>
                 setFileTreeCtx({
@@ -169,6 +167,8 @@ export function FileTreeMenu({
                   selectedRange: [fileNode.path],
                 })
               }
+              untrash={() => untrashFiles([...new Set(selectedFocused).add(fileNode.path)])}
+              remove={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
             >
               {fileNode.isTreeDir() ? (
                 <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
@@ -210,7 +210,7 @@ export function FileTreeMenu({
                   />
                 </SidebarMenuButton>
               ) : null}
-            </MainFileTreeContextMenu>
+            </FileTreeContextMenu>
           </SidebarMenuItem>
         ))}
       </SidebarMenu>

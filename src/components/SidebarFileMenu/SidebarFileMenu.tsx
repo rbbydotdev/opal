@@ -19,6 +19,7 @@ import {
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { TooltipContent } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useExternalDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { FileTreeExpanderProvider } from "@/features/filetree-expander/FileTreeExpanderContext";
 import { useFileTreeExpanderContext } from "@/features/filetree-expander/useFileTreeExpander";
 import { useSidebarItemExpander } from "@/features/filetree-expander/useSidebarItemExpander";
@@ -55,6 +56,8 @@ import React, { JSX, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
+  const { currentWorkspace } = useWorkspaceContext();
+  const { externalDrop } = useExternalDrop({ currentWorkspace });
   return (
     <SidebarGroup
       {...props}
@@ -62,6 +65,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         e.preventDefault();
         e.stopPropagation();
       }}
+      onDrop={(e) => externalDrop(e, absPath("/"))}
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
       <SidebarDndList storageKey={"sidebarMenu"}>
@@ -87,13 +91,14 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
   );
 }
 
-const TinyNotice = () => <div className="ml-1 mb-2 bg-sidebar-primary w-1 h-1 rounded-full"></div>;
+const TinyNotice = () => <div className="ml-1 mb-2 bg-ring w-1 h-1 rounded-full"></div>;
 function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
   return (
     <FileTreeMenuCtxProvider id="TrashFiles">
       <FileTreeExpanderProvider>
         <SidebarFileMenuFileSectionInternal
+          Icon={Trash2}
           title={
             <>
               Trash
@@ -131,12 +136,15 @@ function SidebarFileMenuFileSectionInternal({
   scope,
   filter,
   children,
+  Icon = Files,
+  ...rest
 }: {
   title: JSX.Element | string;
   className?: string;
   scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   children?: React.ReactNode;
+  Icon?: React.ComponentType<{ size?: number; className?: string }>;
 }) {
   const { expandSingle, expanded, expandForNode } = useFileTreeExpanderContext();
   const { fileTreeDir, currentWorkspace } = useWorkspaceContext();
@@ -148,7 +156,9 @@ function SidebarFileMenuFileSectionInternal({
   );
   return (
     <SidebarFileMenuFiles
+      {...rest}
       title={title}
+      Icon={Icon}
       className={twMerge("min-h-8", className)}
       filter={filter}
       fileTreeDir={treeNode as TreeDirRoot}
@@ -172,6 +182,7 @@ export const SidebarFileMenuFiles = ({
   className,
   filter,
   title,
+  Icon = Files,
   ...rest
 }: {
   fileTreeDir: TreeDirRoot;
@@ -183,8 +194,12 @@ export const SidebarFileMenuFiles = ({
   title: JSX.Element | string;
   children: React.ReactNode;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
+  Icon?: React.ComponentType<{ size?: number; className?: string }>;
 }) => {
-  const [groupExpanded, groupSetExpand] = useSidebarItemExpander("files");
+  const { id } = useFileTreeMenuCtx();
+  const [groupExpanded, groupSetExpand] = useSidebarItemExpander("SidebarFileMenuFiles/" + id);
+  const { currentWorkspace } = useWorkspaceContext();
+  const { externalDrop } = useExternalDrop({ currentWorkspace });
 
   return (
     <SidebarGroup className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
@@ -207,7 +222,7 @@ export const SidebarFileMenuFiles = ({
                 </div>
                 <div className="w-full">
                   <div className="flex justify-center items-center">
-                    <Files className="mr-2" size={12} />
+                    <Icon className="mr-2" size={12} />
                     {title}
                   </div>
                 </div>
@@ -220,11 +235,11 @@ export const SidebarFileMenuFiles = ({
         </SidebarGroupLabel>
 
         <CollapsibleContent className="min-h-0 flex-shrink">
-          <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5">
+          <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
             {!Object.keys(fileTreeDir?.filterOutChildren?.(filter) ?? {}).length ? (
-              <div className="w-full">
-                <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full">
-                  <div className="w-full">
+              <div className="w-full" onDrop={(e) => externalDrop(e, absPath("/"))}>
+                <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full group-hover:bg-sidebar-accent">
+                  <div className="w-full ">
                     {/* No Files, Click <FilePlus className={"inline"} size={12} /> to get started */}
                     <span className="text-3xs">empty</span>
                   </div>
@@ -264,8 +279,8 @@ const SidebarFileMenuFilesActions = ({
       onClick={trashSelectedFiles}
       className="p-1 m-0 h-fit"
       variant="ghost"
-      aria-label="Delete Files"
-      title="Delete Files"
+      aria-label="Trash Files"
+      title="Trash Files"
     >
       <Trash2 />
     </Button>
@@ -565,43 +580,3 @@ export function SidebarCollapseContentScroll(
     </SidebarGroup>
   );
 }
-
-// function SidebarFileMenuFileSection({
-//   menuId,
-//   title,
-//   scope,
-//   filter,
-//   className,
-// }: {
-//   menuId: string;
-//   title: string;
-//   className?: string;
-//   scope?: AbsPath;
-//   filter?: ((node: TreeNode) => boolean) | AbsPath[];
-// }) {
-//   const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
-//   const expanderId = currentWorkspace.id + "/" + menuId;
-//   const { focused } = useFileTreeMenuCtx();
-//   const { removeSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
-//   const { setExpandAll, expandForNode } = useFileTreeExpander({
-//     flatTree,
-//     activePath: workspaceRoute.path,
-//     expanderId,
-//   });
-//   return (
-//     <SidebarFileMenuFileSectionInternal
-//       title={title}
-//       className={className}
-//       scope={scope}
-//       filter={filter}
-//       expanderId={expanderId}
-//     >
-//       <SidebarFileMenuFilesActions
-//         removeSelectedFiles={removeSelectedFiles}
-//         addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
-//         addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
-//         setExpandAll={setExpandAll}
-//       />
-//     </SidebarFileMenuFileSectionInternal>
-//   );
-// }

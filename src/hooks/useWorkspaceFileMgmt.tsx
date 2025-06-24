@@ -101,41 +101,34 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     await removeFiles(range);
   }, [focused, removeFiles, selectedRange]);
 
-  // const trashFiles = React.useCallback(
-  //   async (range: AbsPath[]) => {
-  //     return currentWorkspace.trashMultiple(reduceLineage(range));
-  //   },
-  //   [currentWorkspace]
-  // );
-  // const trashFile = React.useCallback(
-  //   async (filePath: AbsPath) => {
-  //     return currentWorkspace.trashSingle(filePath);
-  //   },
-  //   [currentWorkspace]
-  // );
-
-  // const untrashFile = React.useCallback(
-  //   async (filePath: AbsPath) => {
-  //     return currentWorkspace.untrashSingle(filePath);
-  //   },
-  //   [currentWorkspace]
-  // );
-
   const untrashFiles = React.useCallback(
     async (filePaths: AbsPath[]) => {
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        focused: null,
+        virtual: null,
+        selectedRange: [],
+      });
       return currentWorkspace.untrashMultiple(filePaths);
     },
-    [currentWorkspace]
+    [currentWorkspace, setFileTreeCtx]
   );
 
   const trashSelectedFiles = React.useCallback(async () => {
     const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
-
     if (!range.length && focused) {
       range.push(focused);
     }
+    setFileTreeCtx({
+      editing: null,
+      editType: null,
+      focused: null,
+      virtual: null,
+      selectedRange: [],
+    });
     await currentWorkspace.trashMultiple(reduceLineage(range));
-  }, [currentWorkspace, focused, selectedRange]);
+  }, [currentWorkspace, focused, selectedRange, setFileTreeCtx]);
 
   const removeFocusedFile = React.useCallback(async () => {
     if (focused) await removeFiles([focused]);
