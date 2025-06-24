@@ -8,7 +8,7 @@ import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, relPath } from "@/lib/paths2";
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
-import { ComponentProps } from "react";
+import { ComponentProps, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 export const EditableDir = ({
   depth,
@@ -55,6 +55,13 @@ export const EditableDir = ({
 
   const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace);
   const { setFileTreeCtx } = useFileTreeMenuCtx();
+
+  useEffect(() => {
+    //weird edge case hmmmmmmm keeps focus after editing
+    if (linkRef.current && isFocused && !isEditing) {
+      linkRef.current.focus();
+    }
+  }, [isFocused, isEditing, linkRef, treeDir]);
 
   return (
     <span

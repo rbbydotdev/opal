@@ -13,7 +13,7 @@ import { useRequestSignals } from "@/lib/RequestSignals";
 import clsx from "clsx";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { use, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -70,6 +70,7 @@ export function WorkSpaceButtonBar() {
   );
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const { pending } = useRequestSignals();
+  const router = useRouter();
   return (
     <>
       <div className="flex justify-center flex-col items-center w-full">
@@ -112,7 +113,7 @@ export function WorkSpaceButtonBar() {
         icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
         title={"Delete All"}
         href="#"
-        onClick={() => Workspace.DeleteAll()}
+        onClick={() => Workspace.DeleteAll().then(() => router.push("/new"))}
       />
 
       <SearchModal>

@@ -16,7 +16,6 @@ export const FileTreeMenuCtx = React.createContext<{
   selectedFocused: AbsPath[];
   draggingNode: TreeNode | null;
   draggingNodes: TreeNode[];
-  fileTreeCtxNode: (treeNode: TreeNode) => FileTreeCtxNode;
   setFileTreeCtx: ({
     editing,
     editType,
@@ -45,16 +44,6 @@ export function useFileTreeMenuCtx() {
 }
 type EditType = "rename" | "new" | "duplicate";
 
-interface FileTreeCtxNode extends TreeNode {
-  virtual: boolean;
-  editing: boolean;
-  focused: boolean;
-  editType: EditType | null;
-  setVirtual: (path: string | null) => void;
-  setEditing: (path: string | null) => void;
-  setFocused: (path: string | null) => void;
-  setEditType: (type: EditType) => void;
-}
 export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const { filePath } = Workspace.parseWorkspacePath(pathname);
@@ -66,25 +55,6 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
   const [selectedRange, setSelectedRange] = React.useState<AbsPath[]>([]);
   const [draggingNode, setDraggingNode] = React.useState<TreeNode | null>(null);
   const [draggingNodes, setDraggingNodes] = React.useState<TreeNode[]>([]);
-
-  const fileTreeCtxNode = useCallback(
-    (treeNode: TreeNode) => {
-      return new Proxy(treeNode, {
-        get(target, prop, receiver) {
-          if (prop === "virtual") return virtual === target.path;
-          if (prop === "editing") return editing === target.path;
-          if (prop === "focused") return focused === target.path;
-          if (prop === "editType") return editing === target.path ? editType : null;
-          if (prop === "setVirtual") return (path: AbsPath | null) => setVirtual(path);
-          if (prop === "setEditing") return (path: AbsPath | null) => setEditing(path);
-          if (prop === "setFocused") return (path: AbsPath | null) => setFocused(path);
-          if (prop === "setEditType") return (type: "rename" | "new" | "duplicate") => setEditType(type);
-          return Reflect.get(target, prop, receiver);
-        },
-      }) as FileTreeCtxNode;
-    },
-    [virtual, editing, focused, editType, setVirtual, setEditing, setFocused, setEditType]
-  );
 
   const setFileTreeCtx = useCallback(
     ({
@@ -169,14 +139,18 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
     <FileTreeMenuCtx.Provider
       value={{
         selectedRange,
-        setFileTreeCtx,
+        setFileTreeCtx: (properties) => {
+          console.log(">> properties:", properties);
+          console.log(">> callstack:");
+          console.trace();
+          setFileTreeCtx(properties);
+        },
         dragOver,
         setDragOver,
         setDraggingNode,
         setDraggingNodes,
         selectedFocused,
         draggingNodes,
-        fileTreeCtxNode,
         draggingNode: draggingNode,
         highlightDragover,
         editType,
@@ -190,3 +164,33 @@ export const FileTreeMenuCtxProvider: React.FC<{ children: React.ReactNode }> = 
     </FileTreeMenuCtx.Provider>
   );
 };
+
+// const fileTreeCtxNode = useCallback(
+//   (treeNode: TreeNode) => {
+//     return new Proxy(treeNode, {
+//       get(target, prop, receiver) {
+//         if (prop === "virtual") return virtual === target.path;
+//         if (prop === "editing") return editing === target.path;
+//         if (prop === "focused") return focused === target.path;
+//         if (prop === "editType") return editing === target.path ? editType : null;
+//         if (prop === "setVirtual") return (path: AbsPath | null) => setVirtual(path);
+//         if (prop === "setEditing") return (path: AbsPath | null) => setEditing(path);
+//         if (prop === "setFocused") return (path: AbsPath | null) => setFocused(path);
+//         if (prop === "setEditType") return (type: "rename" | "new" | "duplicate") => setEditType(type);
+//         return Reflect.get(target, prop, receiver);
+//       },
+//     }) as FileTreeCtxNode;
+//   },
+//   [virtual, editing, focused, editType, setVirtual, setEditing, setFocused, setEditType]
+// );
+
+// interface FileTreeCtxNode extends TreeNode {
+//   virtual: boolean;
+//   editing: boolean;
+//   focused: boolean;
+//   editType: EditType | null;
+//   setVirtual: (path: string | null) => void;
+//   setEditing: (path: string | null) => void;
+//   setFocused: (path: string | null) => void;
+//   setEditType: (type: EditType) => void;
+// }
