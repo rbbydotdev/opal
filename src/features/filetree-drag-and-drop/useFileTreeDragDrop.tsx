@@ -8,6 +8,40 @@ import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
 import React, { useCallback } from "react";
 
+export function isExternalFileDrop(event: React.DragEvent) {
+  return (
+    event.dataTransfer &&
+    event.dataTransfer.files &&
+    event.dataTransfer.files.length > 0 &&
+    !event.dataTransfer.getData(INTERNAL_FILE_TYPE)
+  );
+}
+
+export function useExternalDrop({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  const externalDrop = async (event: React.DragEvent, targetPath: AbsPath) => {
+    if (!isExternalFileDrop(event)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    const { files } = event.dataTransfer;
+    for (const file of files) {
+      try {
+        await currentWorkspace.dropImageFile(file, targetPath);
+      } catch (e) {
+        if (isError(e, BadRequestError)) {
+          ErrorPopupControl.show({
+            title: "Not a valid image",
+            description: "Please upload a valid image file (png,gif,webp,jpg)",
+          });
+        }
+        console.error("Error dropping file:", e);
+      }
+    }
+  };
+  return { externalDrop };
+}
+
 export function useFileTreeDragDrop({
   currentWorkspace,
   onMoveMultiple,
@@ -23,6 +57,8 @@ export function useFileTreeDragDrop({
   function dropNode(targetPath: AbsPath, node: TreeNode) {
     return TreeNode.FromPath(dropPath(targetPath, node), node.type);
   }
+
+  const { externalDrop } = useExternalDrop({ currentWorkspace });
 
   const { selectedRange, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
     useFileTreeMenuCtx();
@@ -70,20 +106,7 @@ export function useFileTreeDragDrop({
 
   const handleExternalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
     const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
-    const { files } = event.dataTransfer;
-    for (const file of files) {
-      try {
-        await currentWorkspace.dropImageFile(file, targetPath);
-      } catch (e) {
-        if (isError(e, BadRequestError)) {
-          ErrorPopupControl.show({
-            title: "Not a valid image",
-            description: "Please upload a valid image file (png,gif,webp,jpg)",
-          });
-        }
-        console.error("Error dropping file:", e);
-      }
-    }
+    return externalDrop(event, targetPath);
   };
 
   const handleDrop = async (event: React.DragEvent, targetNode: TreeNode = currentWorkspace.disk.fileTree.root) => {

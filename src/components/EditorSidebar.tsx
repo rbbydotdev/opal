@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import { CurrentWorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { Opal } from "@/lib/Opal";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 export function EditorSidebar({
@@ -43,7 +44,15 @@ export function EditorSidebar({
         <SidebarFileMenu />
       </SidebarContent>
 
-      <SidebarFooter className="text-3xs to-sidebar-accent uppercase font-mono">opal editor v0.1 beta</SidebarFooter>
+      <SidebarFooter className="text-3xs to-sidebar-accent uppercase font-mono w-full flex content-center">
+        <div className="w-full flex items-center justify-start gap-1">
+          <Opal size={12} />
+          opal editor by{" "}
+          <a href="https://github.com/rbbydotdev" className="inline">
+            @rbbydotdev
+          </a>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
