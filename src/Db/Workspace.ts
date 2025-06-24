@@ -7,9 +7,20 @@ import { SearchScannable } from "@/features/search/SearchScan";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, absPath, decodePath, encodePath, isImage, joinPath, RelPath, relPath } from "@/lib/paths2";
+import {
+  AbsPath,
+  absPath,
+  decodePath,
+  encodePath,
+  isImage,
+  joinPath,
+  RelPath,
+  relPath,
+  resolveFromRoot,
+} from "@/lib/paths2";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
+import { reduceLineage } from "../lib/paths2";
 import { RemoteAuth } from "./RemoteAuth";
 
 /*
@@ -181,7 +192,7 @@ export class Workspace {
     return this.disk.removeVirtualFile(path);
   }
 
-  async removeMultipleFiles(filePaths: AbsPath[]) {
+  async removeMultiple(filePaths: AbsPath[]) {
     //reduceLineage probably
     await Promise.all(
       filePaths.filter(isImage).flatMap((imagePath) => [
@@ -195,7 +206,7 @@ export class Workspace {
     );
     return this.disk.removeMultipleFiles(filePaths);
   }
-  async removeFile(filePath: AbsPath) {
+  async removeSingle(filePath: AbsPath) {
     if (isImage(filePath)) {
       await Promise.all([
         this.NewThumb(filePath)
@@ -232,18 +243,49 @@ export class Workspace {
     });
   }
 
-  async trashMultiple(paths: AbsPath[]) {
-    //reduceLineage probably
-    const nodes = paths.map((path) => {
+  async untrashMultiple(paths: AbsPath[]) {
+    const nodes = reduceLineage(paths).map((path) => {
       const node = this.nodeFromPath(path);
       if (!node) {
         throw new BadRequestError(`Node not found for path: ${path}`);
       }
       return node;
     });
-    const trashedNodes = nodes.map(
-      (node) => [node, TreeNode.FromPath(joinPath(absPath("/.trash"), node.path), node.type)] as [TreeNode, TreeDir]
-    );
+
+    const untrashedNodes = nodes.map((node) => {
+      const fromNode = node;
+      const toNode = TreeNode.FromPath(resolveFromRoot(absPath("/.trash"), node.path), node.type);
+      return [fromNode, toNode] as [TreeDir, TreeNode];
+    });
+
+    return await this.renameMultiple(untrashedNodes);
+  }
+
+  hasTrash() {
+    return Boolean(Object.keys(this.disk.fileTree.nodeFromPath(absPath("/.trash"))?.children ?? {}).length);
+  }
+
+  async untrashSingle(path: AbsPath) {
+    const fromNode = this.nodeFromPath(path);
+    if (!fromNode) {
+      throw new BadRequestError(`Node not found for path: ${path}`);
+    }
+    const toNode = TreeNode.FromPath(resolveFromRoot(absPath("/.trash"), fromNode.path), fromNode.type);
+    return this.renameSingle(fromNode, toNode);
+  }
+
+  async trashMultiple(paths: AbsPath[]) {
+    const nodes = reduceLineage(paths).map((path) => {
+      const fromNode = this.nodeFromPath(path);
+      if (!fromNode) {
+        throw new BadRequestError(`Node not found for path: ${path}`);
+      }
+      return fromNode;
+    });
+    const trashedNodes = nodes.map((fromNode) => {
+      const toNode = TreeNode.FromPath(joinPath(absPath("/.trash"), fromNode.path), fromNode.type);
+      return [fromNode, toNode] as [TreeNode, TreeDir];
+    });
     return await this.renameMultiple(trashedNodes);
   }
 

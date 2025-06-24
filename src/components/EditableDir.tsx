@@ -41,6 +41,7 @@ export const EditableDir = ({
     handleKeyDown,
     handleFocus,
     handleMouseDown,
+    handleMouseUp,
     handleBlur,
     handleClick,
     linkRef,
@@ -72,6 +73,7 @@ export const EditableDir = ({
       onDragStart={onDragStart}
       ref={linkRef}
       onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       onFocus={handleFocus}
       className={twMerge(
         isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",

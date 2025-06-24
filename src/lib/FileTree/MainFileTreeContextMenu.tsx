@@ -1,20 +1,20 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { Delete, FilePlusIcon, FolderPlusIcon, SquarePen } from "lucide-react";
+import { FilePlusIcon, FolderPlusIcon, SquarePen, Trash2 } from "lucide-react";
 import { useRef } from "react";
-export const FileTreeContextMenu = ({
+export const MainFileTreeContextMenu = ({
   children,
-  removeFile,
-  copyFile,
+  copy,
   duplicate,
   rename,
+  trash,
   addFile,
   addDir,
 }: {
-  removeFile: () => void;
+  trash: () => void;
   duplicate: () => void;
   rename: () => void;
   addFile: () => void;
-  copyFile: () => void;
+  copy: () => void;
   addDir: () => void;
   children: React.ReactNode;
 }) => {
@@ -35,9 +35,6 @@ export const FileTreeContextMenu = ({
           }
         }}
       >
-        {/* < */}
-        {/* copyFileNodesToClipboard */}
-
         <ContextMenuItem inset onClick={deferredFn(() => addFile())} className="w-full flex justify-start">
           <FilePlusIcon className="mr-3 h-4 w-4" />
           New File
@@ -50,7 +47,7 @@ export const FileTreeContextMenu = ({
           <SquarePen className="mr-3 h-4 w-4" />
           Rename
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => copyFile())}>
+        <ContextMenuItem inset onClick={deferredFn(() => copy())}>
           <FilePlusIcon className="mr-3 h-4 w-4" />
           Copy
         </ContextMenuItem>
@@ -58,9 +55,9 @@ export const FileTreeContextMenu = ({
           <FilePlusIcon className="mr-3 h-4 w-4" />
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => removeFile())}>
-          <Delete className="mr-3 h-4 w-4" />
-          Delete
+        <ContextMenuItem inset onClick={deferredFn(() => trash())}>
+          <Trash2 className="mr-3 h-4 w-4" />
+          Trash
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

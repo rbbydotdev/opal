@@ -51,18 +51,13 @@ import {
   UploadCloud,
   UploadCloudIcon,
 } from "lucide-react";
-import React, { useMemo } from "react";
+import React, { JSX, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
-  // const { currentWorkspace } = useWorkspaceContext();
-  // const { handleDrop } = useFileTreeDragDrop({
-  //   currentWorkspace,
-  // });
   return (
     <SidebarGroup
       {...props}
-      // onDrop={handleDrop}
       onDragOver={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -79,8 +74,8 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         </div>
 
         <div className="min-h-8" dnd-id="files">
-          <FileTreeMenuCtxProvider>
-            <FileTreeExpanderProvider id="main-files">
+          <FileTreeMenuCtxProvider id="MainFiles">
+            <FileTreeExpanderProvider>
               <MainSidebarFileMenuFileSection />
             </FileTreeExpanderProvider>
           </FileTreeMenuCtxProvider>
@@ -92,15 +87,22 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
   );
 }
 
+const TinyNotice = () => <div className="ml-1 mb-2 bg-sidebar-primary w-1 h-1 rounded-full"></div>;
 function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
+  const { currentWorkspace } = useWorkspaceContext();
   return (
-    <FileTreeMenuCtxProvider>
-      <FileTreeExpanderProvider id="trash-files">
+    <FileTreeMenuCtxProvider id="TrashFiles">
+      <FileTreeExpanderProvider>
         <SidebarFileMenuFileSectionInternal
-          title={"Trash"}
+          title={
+            <>
+              Trash
+              {currentWorkspace.hasTrash() && <TinyNotice />}
+            </>
+          }
           className={className}
           scope={absPath("/.trash")}
-        ></SidebarFileMenuFileSectionInternal>
+        />
       </FileTreeExpanderProvider>
     </FileTreeMenuCtxProvider>
   );
@@ -129,14 +131,8 @@ function SidebarFileMenuFileSectionInternal({
   scope,
   filter,
   children,
-}: // expanded,
-// expandSingle,
-// expandForNode,
-{
-  title: string;
-  // expandSingle: (path: string, expanded: boolean) => void;
-  // expandForNode: (node: TreeNode, state: boolean) => void;
-  // expanded: { [key: string]: boolean };
+}: {
+  title: JSX.Element | string;
   className?: string;
   scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
@@ -184,7 +180,7 @@ export const SidebarFileMenuFiles = ({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [key: string]: boolean };
   renameDirOrFileMultiple: (nodes: [TreeNode, TreeNode | AbsPath][]) => Promise<unknown>;
-  title: string;
+  title: JSX.Element | string;
   children: React.ReactNode;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
 }) => {
@@ -201,7 +197,7 @@ export const SidebarFileMenuFiles = ({
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="peer">
               <SidebarGroupLabel className="pl-0">
-                <div className="w-full flex items-center">
+                <div className="flex items-center">
                   <ChevronRight
                     size={14}
                     className={
@@ -326,7 +322,7 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="pl-0">
             <SidebarGroupLabel className="pl-2">
-              <div className="w-full flex items-center">
+              <div className="flex items-center">
                 <ChevronRight
                   size={14}
                   className={
@@ -419,7 +415,7 @@ function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton>
             <SidebarGroupLabel>
-              <div className="w-full flex items-center">
+              <div className="flex items-center">
                 <ChevronRight
                   size={14}
                   className={
@@ -470,7 +466,7 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
         <CollapsibleTrigger asChild>
           <SidebarMenuButton>
             <SidebarGroupLabel>
-              <div className="w-full flex items-center">
+              <div className="flex items-center">
                 <ChevronRight
                   size={14}
                   className={
@@ -545,7 +541,7 @@ export function SidebarCollapseContentScroll(
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="pl-0">
             <SidebarGroupLabel className="pl-2">
-              <div className="w-full flex items-center">
+              <div className="flex items-center">
                 <ChevronRight
                   size={14}
                   className={

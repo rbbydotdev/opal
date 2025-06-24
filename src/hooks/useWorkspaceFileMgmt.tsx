@@ -34,11 +34,34 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [currentWorkspace]
   );
 
+  const trashFiles = React.useCallback(
+    async (paths: AbsPath[]) => {
+      if (!paths.length) return;
+      try {
+        await currentWorkspace.trashMultiple(reduceLineage(paths));
+      } catch (e) {
+        if (e instanceof NotFoundError) {
+          console.error(e);
+        } else {
+          throw e;
+        }
+      }
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        focused: null,
+        virtual: null,
+        selectedRange: [],
+      });
+    },
+    [currentWorkspace, setFileTreeCtx]
+  );
+
   const removeFiles = React.useCallback(
     async (paths: AbsPath[]) => {
       if (!paths.length) return;
       try {
-        await currentWorkspace.removeMultipleFiles(reduceLineage(paths).map((pathStr) => absPath(pathStr)));
+        await currentWorkspace.removeMultiple(reduceLineage(paths).map((pathStr) => absPath(pathStr)));
       } catch (e) {
         if (e instanceof NotFoundError) {
           console.error(e);
@@ -62,6 +85,12 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     },
     [removeFiles]
   );
+  const trashFile = React.useCallback(
+    async (path: AbsPath) => {
+      return trashFiles([path]);
+    },
+    [trashFiles]
+  );
 
   const removeSelectedFiles = React.useCallback(async () => {
     const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
@@ -71,6 +100,33 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     }
     await removeFiles(range);
   }, [focused, removeFiles, selectedRange]);
+
+  // const trashFiles = React.useCallback(
+  //   async (range: AbsPath[]) => {
+  //     return currentWorkspace.trashMultiple(reduceLineage(range));
+  //   },
+  //   [currentWorkspace]
+  // );
+  // const trashFile = React.useCallback(
+  //   async (filePath: AbsPath) => {
+  //     return currentWorkspace.trashSingle(filePath);
+  //   },
+  //   [currentWorkspace]
+  // );
+
+  // const untrashFile = React.useCallback(
+  //   async (filePath: AbsPath) => {
+  //     return currentWorkspace.untrashSingle(filePath);
+  //   },
+  //   [currentWorkspace]
+  // );
+
+  const untrashFiles = React.useCallback(
+    async (filePaths: AbsPath[]) => {
+      return currentWorkspace.untrashMultiple(filePaths);
+    },
+    [currentWorkspace]
+  );
 
   const trashSelectedFiles = React.useCallback(async () => {
     const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
@@ -197,5 +253,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     removeFile,
     resetEditing,
     duplicateDirFile,
+    untrashFiles,
+    // untrashFile,
+    trashFile,
+    trashFiles,
   };
 }

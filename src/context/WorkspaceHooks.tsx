@@ -102,7 +102,7 @@ export function useCurrentFilepath() {
   }
   const mimeType = mime.lookup(filePath) || "";
 
-  return { filePath, mimeType, isImage: mimeType.startsWith("image/") };
+  return { filePath, mimeType, isImage: mimeType.startsWith("image/"), inTrash: filePath.startsWith("/.trash") };
 }
 
 export function useWorkspaceRoute() {
