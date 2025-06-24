@@ -11,7 +11,7 @@ import { AbsPath, equals, isImage, relPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { FileText } from "lucide-react";
 import Link from "next/link";
-import { ComponentProps, HTMLAttributes } from "react";
+import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const EditableFile = ({
@@ -68,6 +68,13 @@ export const EditableFile = ({
   //   }
   // }, [isEditing, isFocused, linkRef]);
 
+  useEffect(() => {
+    //weird edge case hmmmmmmm keeps focus after editing
+    if (linkRef.current && isFocused && !isEditing) {
+      linkRef.current.focus();
+    }
+  }, [isFocused, isEditing, linkRef]);
+
   return (
     <div className="select-none">
       {!isEditing ? (
@@ -89,7 +96,6 @@ export const EditableFile = ({
           onMouseDown={handleMouseDown}
           onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
           onClick={handleClick}
-          // onDoubleClick={() => setEditing(fullPath)}
           onDoubleClick={() =>
             setFileTreeCtx({
               editing: fullPath,

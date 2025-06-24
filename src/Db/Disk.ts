@@ -758,6 +758,7 @@ export abstract class Disk {
   async delete() {
     return ClientDb.disks.delete(this.guid);
   }
+
   async tearDown() {
     await this.remote.tearDown();
     await this.local.clearListeners();
