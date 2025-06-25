@@ -94,7 +94,6 @@ export class FileTree {
 
   async index(tree?: TreeDirRoot) {
     //log call stack
-    // console.log("Indexing file tree", new Error().stack);
     await exhaustAsyncGenerator(this.indexIter(tree));
     return this.root;
   }

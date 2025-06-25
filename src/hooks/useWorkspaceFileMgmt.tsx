@@ -115,7 +115,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [currentWorkspace, setFileTreeCtx]
   );
 
-  const trashSelectedFiles = React.useCallback(async () => {
+  const trashSelectedFiles = React.useCallback(() => {
     const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
     if (!range.length && focused) {
       range.push(focused);
@@ -127,7 +127,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       virtual: null,
       selectedRange: [],
     });
-    await currentWorkspace.trashMultiple(reduceLineage(range));
+    return currentWorkspace.trashMultiple(reduceLineage(range));
   }, [currentWorkspace, focused, selectedRange, setFileTreeCtx]);
 
   const removeFocusedFile = React.useCallback(async () => {

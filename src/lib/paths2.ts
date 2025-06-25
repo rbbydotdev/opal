@@ -13,13 +13,13 @@ import { getMimeType } from "./mimeType";
 export function absPath(path: string): AbsPath {
   if (!path.startsWith("/")) path = "/" + path;
   if (path !== "/" && path.endsWith("/")) path = path.slice(0, -1);
-  return path as AbsPath;
+  return pathModule.normalize(path) as AbsPath;
 }
 
 export function relPath(path: string): RelPath {
   if (path.startsWith("/")) path = path.slice(1);
   if (path !== "" && path.endsWith("/")) path = path.slice(0, -1);
-  return path as RelPath;
+  return pathModule.normalize(path) as RelPath;
 }
 
 export function isAbsPath(path: AbsPath | RelPath): path is AbsPath {
