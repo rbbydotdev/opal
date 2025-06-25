@@ -10,11 +10,13 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { closestTreeDir } from "@/lib/FileTree/Filetree";
 import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
-import { AbsPath, absPath, dirname, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
+import { AbsPath, absPath, basename, dirname, encodePath, isImage, isMarkdown, joinPath, prefix } from "@/lib/paths2";
 import clsx from "clsx";
 import React, { useCallback } from "react";
+import { decodePath } from "../lib/paths2";
 
 export const INTERNAL_FILE_TYPE = "application/x-opal";
 
@@ -29,19 +31,23 @@ async function copyHtmlToClipboard(htmlString: string) {
     console.error("Failed to copy HTML to clipboard:", err);
   }
 }
-export function copyFileNodesToClipboard(fileNodes: TreeNode[]) {
+export async function copyFileNodesToClipboard(fileNodes: TreeNode[] | AbsPath[]) {
   const htmlString =
     fileNodes
-      .map((node) => node.path)
       .filter(isMarkdown)
-      .map((path) => `<a href="${encodePath(path || "")}">${capitalizeFirst(prefix(path))}</a>`)
+      .map((path) => `<a href="${window.location.origin}${path}">${capitalizeFirst(prefix(path))}</a>`)
       .join(" ") +
     fileNodes
-      .map((node) => node.path)
       .filter(isImage)
       .map((path) => `<img src="${encodePath(path || "")}" />`)
       .join(" ");
-  return copyHtmlToClipboard(htmlString);
+  try {
+    const blob = new Blob([htmlString], { type: "text/html" });
+    const data = [new ClipboardItem({ "text/html": blob })];
+    await navigator.clipboard.write(data);
+  } catch (err) {
+    console.error("Failed to copy HTML to clipboard:", err);
+  }
 }
 export function useCopyKeydownImages(currentWorkspace: Workspace) {
   const { selectedRange, focused } = useFileTreeMenuCtx();
@@ -156,7 +162,55 @@ export function FileTreeMenu({
               addFile={() => addDirFile("file", fileNode.closestDir()!)}
               addDir={() => addDirFile("dir", fileNode.closestDir()!)}
               trash={() => trashFiles([...new Set(selectedFocused).add(fileNode.path)])}
-              copy={() => copyFileNodesToClipboard([fileNode])}
+              copy={() => copyFileNodesToClipboard(selectedFocused)}
+              paste={async () => {
+                //log clipboard objects/contents to console
+                // if (navigator.clipboard) {
+                // na
+                // navigator.clipboard.
+                const items = await navigator.clipboard.read();
+                for (const item of items) {
+                  if (item.types.includes("text/html")) {
+                    const blob = await item.getType("text/html");
+                    const htmlString = await blob.text();
+                    //parse html string from blob
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlString, "text/html");
+                    if (
+                      Workspace.parseWorkspacePath(URL.parse(doc.URL)?.pathname ?? "").workspaceId ===
+                      currentWorkspace.name
+                    ) {
+                      console.log("Parsed HTML document:", doc);
+                      const selectedNode = currentWorkspace.nodeFromPath(selectedFocused[0]);
+                      const destDir = selectedNode ? closestTreeDir(selectedNode).path : absPath("/");
+                      const copyNodes: [from: TreeNode, to: AbsPath][] = [];
+                      const links = Array.from(doc.querySelectorAll("a")).forEach(async (a) => {
+                        const node = currentWorkspace.nodeFromPath(decodePath(URL.parse(a.href)?.pathname ?? ""));
+                        if (node) copyNodes.push([node, joinPath(destDir, basename(node))]);
+                      });
+                      const images = Array.from(doc.querySelectorAll("img")).forEach(async (img) => {
+                        const node = currentWorkspace.nodeFromPath(decodePath(URL.parse(img.src)?.pathname ?? ""));
+                        if (node) copyNodes.push([node, joinPath(destDir, basename(node))]);
+                      });
+                      await currentWorkspace.copyMultipleFiles(copyNodes);
+                      console.log("Links:", links);
+                      console.log("Images:", images);
+                    }
+
+                    // await copyHtmlToClipboard(htmlString);
+                  }
+                }
+                // void navigator.clipboard.read().then((items) => {
+                //   items.forEach((item) => {
+                //     if (item.types.includes("text/html")) {
+                //       void item.getType("texthml").then(async (blob) => {
+                //         console.log(await blob.text());
+                //       });
+                //     }
+                //   });
+                // });
+                //
+              }}
               duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
               rename={() =>
                 setFileTreeCtx({
