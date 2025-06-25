@@ -4,7 +4,7 @@ import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { BadRequestError, isError } from "@/lib/errors";
-import { absPath } from "@/lib/paths2";
+import { dirname } from "@/lib/paths2";
 import {
   AdmonitionDirectiveDescriptor,
   KitchenSinkToolbar,
@@ -115,7 +115,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
         },
         imageUploadHandler: async (file: File) => {
           try {
-            return currentWorkspace.uploadImageFile(file, path ?? absPath("/"));
+            return currentWorkspace.uploadImageFile(file, dirname(path ?? "/"));
           } catch (e) {
             console.error("image upload handler error");
             console.error(e);

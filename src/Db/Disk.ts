@@ -688,11 +688,17 @@ export abstract class Disk {
         await this.quietRemove(newFullPath);
       }
     }
+
+    // if (isFile) {
     await this.mkdirRecursive(absPath(dirname(newFullPath)));
     await this.fs.writeFile(encodePath(newFullPath), oldContent, {
       encoding: "utf8",
       mode: 0o777,
     });
+    // } else {
+    //mkdir
+    // }
+
     return newFullPath;
   }
   async copyFile(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
@@ -709,15 +715,17 @@ export abstract class Disk {
     return fullPath;
   }
   async copyMultiple(
-    copyPaths: [from: AbsPath | TreeNode, to: AbsPath | TreeNode][],
+    copyPaths: [from: TreeNode, to: AbsPath | TreeNode][],
     options?: { overWrite?: boolean }
   ): Promise<AbsPath[]> {
     await this.ready;
     const result: AbsPath[] = [];
     for (const [from, to] of copyPaths) {
       let fullPath = to;
-      if (await this.pathExists(absPath(from))) {
-        fullPath = await this.copyFileQuiet(absPath(from), absPath(to), options?.overWrite);
+      if (await this.pathExists(from)) {
+        fullPath = from.isTreeFile()
+          ? await this.copyFileQuiet(absPath(from), absPath(to), options?.overWrite)
+          : await this.copyDirQuiet(absPath(from), absPath(to), options?.overWrite);
       }
       result.push(absPath(fullPath));
     }
@@ -763,7 +771,7 @@ export abstract class Disk {
       }
     }
   }
-  async pathExists(filePath: AbsPath) {
+  async pathExists(filePath: AbsPath | TreeNode) {
     await this.ready;
     try {
       await this.fs.stat(encodePath(filePath));

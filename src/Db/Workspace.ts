@@ -11,7 +11,6 @@ import {
   AbsPath,
   absPath,
   decodePath,
-  dirname,
   encodePath,
   isImage,
   joinPath,
@@ -185,7 +184,7 @@ export class Workspace {
   newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
     return this.disk.newFile(joinPath(dirPath, newFileName), content);
   }
-  newFiles(files: [AbsPath, string | Uint8Array][]) {
+  newFiles(files: [name: AbsPath, content: string | Uint8Array][]) {
     return this.disk.newFiles(files);
   }
 
@@ -203,11 +202,11 @@ export class Workspace {
     return this.disk.removeVirtualFile(path);
   }
 
-  async removeMultiple(filePaths: AbsPath[]) {
+  async removeMultiple(filePaths: AbsPath[] | TreeNode[]) {
     //reduceLineage probably
     await Promise.all(
       filePaths.filter(isImage).flatMap((imagePath) => [
-        this.NewThumb(imagePath)
+        this.NewThumb(absPath(imagePath))
           .remove()
           .catch((e) => {
             console.error(e);
@@ -215,7 +214,7 @@ export class Workspace {
         this.imageCache.getCache().then((c) => c.delete(encodePath(imagePath))),
       ])
     );
-    return this.disk.removeMultipleFiles(filePaths);
+    return this.disk.removeMultipleFiles(filePaths.map((path) => absPath(path)));
   }
   async removeSingle(filePath: AbsPath) {
     if (isImage(filePath)) {
@@ -344,7 +343,7 @@ export class Workspace {
   watchDisk(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
     return this.disk.latestIndexListener(callback);
   }
-  copyMultipleFiles(copyNodes: [from: AbsPath | TreeNode, to: AbsPath | TreeNode][]) {
+  copyMultipleFiles(copyNodes: [from: TreeNode, to: AbsPath | TreeNode][]) {
     return this.disk.copyMultiple(copyNodes);
   }
   copyFile(source: AbsPath | TreeNode, targetPath: AbsPath, overWrite = false) {
@@ -378,11 +377,11 @@ export class Workspace {
   async awaitFirstIndex() {
     return this.disk.tryFirstIndex();
   }
-  async uploadImageFile(file: File, targetPath: AbsPath) {
-    return (await this.uploadMultiple([file], targetPath))[0]!;
+  async uploadImageFile(file: File, targetDir: AbsPath) {
+    return (await this.uploadMultipleImages([file], targetDir))[0]!;
   }
 
-  async uploadMultiple(files: Iterable<File>, targetPath: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+  async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
     const filesArr = Array.from(files);
@@ -391,16 +390,13 @@ export class Workspace {
       if (index >= filesArr.length) return;
       const current = index++;
       const file = filesArr[current];
-      const res = await fetch(
-        joinPath(absPath("/upload-image"), targetPath ? absPath(dirname(targetPath)) : absPath("/"), file!.name),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": file!.type,
-          },
-          body: file,
-        }
-      );
+      const res = await fetch(joinPath(absPath("/upload-image"), targetDir, file!.name), {
+        method: "POST",
+        headers: {
+          "Content-Type": file!.type,
+        },
+        body: file,
+      });
       results[current] = absPath(await res.text());
       await uploadNext();
     };

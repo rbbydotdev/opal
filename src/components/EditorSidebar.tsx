@@ -19,6 +19,7 @@ export function EditorSidebar({
   ...restProps
 }: { className?: string } & React.ComponentProps<typeof Sidebar>) {
   const { currentWorkspace } = useWorkspaceContext();
+
   return (
     <Sidebar collapsible="none" className={twMerge("flex min-h-full w-full", className)} {...restProps}>
       <SidebarHeader>

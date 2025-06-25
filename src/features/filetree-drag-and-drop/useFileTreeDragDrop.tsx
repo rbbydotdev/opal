@@ -1,4 +1,5 @@
-import { INTERNAL_FILE_TYPE, NodeDataJType, allowedMove } from "@/components/FiletreeMenu";
+import { allowedFiletreePathMove } from "@/components/allowedFiletreePathMove";
+import { INTERNAL_FILE_TYPE, NodeDataJType } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
 import { Workspace } from "@/Db/Workspace";
@@ -17,14 +18,17 @@ export function isExternalFileDrop(event: React.DragEvent) {
 }
 
 export function useExternalDrop({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const externalDrop = async (event: React.DragEvent, targetPath: AbsPath) => {
+  const externalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
     if (!isExternalFileDrop(event)) {
       return;
     }
     event.preventDefault();
     event.stopPropagation();
     const { files } = event.dataTransfer;
-    return currentWorkspace.uploadMultiple(files, targetPath);
+    const images = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    if (images.length > 0) {
+      return currentWorkspace.uploadMultipleImages(images, targetNode.closestDirPath());
+    }
   };
   return { externalDrop };
 }
@@ -92,8 +96,7 @@ export function useFileTreeDragDrop({
   };
 
   const handleExternalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
-    const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
-    return externalDrop(event, targetPath);
+    return externalDrop(event, targetNode);
   };
 
   const handleDrop = async (event: React.DragEvent, targetNode: TreeNode = currentWorkspace.disk.fileTree.root) => {
@@ -108,7 +111,7 @@ export function useFileTreeDragDrop({
         if (draggingNodes.length) {
           //should reduce lineage go inside the lower level moveMultiple fn !??!
           const moveNodes = reduceLineage(draggingNodes)
-            .filter((node) => allowedMove(targetPath, node))
+            .filter((node) => allowedFiletreePathMove(targetPath, node))
             .map((node) => [node, dropNode(targetPath, node)]) as [TreeNode, TreeNode][];
 
           await onMoveMultiple?.(moveNodes);

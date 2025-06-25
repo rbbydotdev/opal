@@ -134,6 +134,7 @@ export const FileTreeMenuCtxProvider = ({
     () => Array.from(new Set([focused, ...selectedRange].filter(Boolean) as AbsPath[])),
     [focused, selectedRange]
   );
+
   return (
     <FileTreeMenuCtx.Provider
       value={{

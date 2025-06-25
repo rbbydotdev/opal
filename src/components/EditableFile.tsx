@@ -1,5 +1,4 @@
 "use client";
-import { useCopyKeydownImages } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
@@ -54,7 +53,7 @@ export const EditableFile = ({
     currentWorkspace,
   });
   const { setFileTreeCtx } = useFileTreeMenuCtx();
-  const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace); //TODO, make for a copy of other files possible too
+  // const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace); //TODO, make for a copy of other files possible too
 
   // this breaks everything and i friggin hate it
   // useEffect(() => {
@@ -94,7 +93,8 @@ export const EditableFile = ({
           onFocus={handleFocus}
           onMouseUp={handleMouseUp}
           onMouseDown={handleMouseDown}
-          onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
+          // onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
+          onKeyDown={(e) => handleKeyDown(e)}
           onClick={handleClick}
           onDoubleClick={() =>
             setFileTreeCtx({

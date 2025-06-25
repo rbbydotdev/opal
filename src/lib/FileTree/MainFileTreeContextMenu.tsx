@@ -1,8 +1,17 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { ClipboardCopy, ClipboardPasteIcon, FilePlusIcon, FolderPlusIcon, SquarePen, Trash2 } from "lucide-react";
+import {
+  ClipboardCopy,
+  ClipboardPasteIcon,
+  FilePlusIcon,
+  FolderPlusIcon,
+  Scissors,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 import { useRef } from "react";
 export const MainFileTreeContextMenu = ({
   children,
+  cut,
   copy,
   duplicate,
   rename,
@@ -16,6 +25,7 @@ export const MainFileTreeContextMenu = ({
   rename: () => void;
   addFile: () => void;
   copy: () => void;
+  cut: () => void;
   paste: () => void;
   addDir: () => void;
   children: React.ReactNode;
@@ -52,6 +62,10 @@ export const MainFileTreeContextMenu = ({
         <ContextMenuItem inset onClick={deferredFn(() => copy())}>
           <ClipboardCopy className="mr-3 h-4 w-4" />
           Copy
+        </ContextMenuItem>
+        <ContextMenuItem inset onClick={deferredFn(() => cut())}>
+          <Scissors className="mr-3 h-4 w-4" />
+          Cut
         </ContextMenuItem>
         <ContextMenuItem inset onClick={deferredFn(() => paste())}>
           <ClipboardPasteIcon className="mr-3 h-4 w-4" />

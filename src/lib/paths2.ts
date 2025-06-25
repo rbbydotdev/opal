@@ -25,10 +25,10 @@ export function relPath(path: string | TreeNode): RelPath {
   return pathModule.normalize(pathStr) as RelPath;
 }
 
-export function isAbsPath(path: AbsPath | RelPath): path is AbsPath {
+export function isAbsPath(path: AbsPath | RelPath | string): path is AbsPath {
   return typeof path === "string" && path.startsWith("/");
 }
-export function isRelPath(path: AbsPath | RelPath): path is RelPath {
+export function isRelPath(path: AbsPath | RelPath | string): path is RelPath {
   return typeof path === "string" && !path.startsWith("/");
 }
 
