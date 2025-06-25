@@ -4,22 +4,25 @@ export type Brand<T, B extends string> = T & { [brand]: B };
 export type AbsPath = Brand<string, "AbsolutePath">;
 export type RelPath = Brand<string, "RelativePath">;
 
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isImageType } from "@/lib/fileType";
 import pathModule from "path";
 import { isMarkdownType } from "./fileType";
 import { getMimeType } from "./mimeType";
 
 // --- Constructors ---
-export function absPath(path: string): AbsPath {
-  if (!path.startsWith("/")) path = "/" + path;
-  if (path !== "/" && path.endsWith("/")) path = path.slice(0, -1);
-  return pathModule.normalize(path) as AbsPath;
+export function absPath(path: string | TreeNode): AbsPath {
+  let pathStr = String(path);
+  if (!pathStr.startsWith("/")) pathStr = "/" + pathStr;
+  if (pathStr !== "/" && pathStr.endsWith("/")) pathStr = pathStr.slice(0, -1);
+  return pathModule.normalize(pathStr) as AbsPath;
 }
 
-export function relPath(path: string): RelPath {
-  if (path.startsWith("/")) path = path.slice(1);
-  if (path !== "" && path.endsWith("/")) path = path.slice(0, -1);
-  return pathModule.normalize(path) as RelPath;
+export function relPath(path: string | TreeNode): RelPath {
+  let pathStr = String(path);
+  if (pathStr.startsWith("/")) pathStr = pathStr.slice(1);
+  if (pathStr !== "" && pathStr.endsWith("/")) pathStr = pathStr.slice(0, -1);
+  return pathModule.normalize(pathStr) as RelPath;
 }
 
 export function isAbsPath(path: AbsPath | RelPath): path is AbsPath {
@@ -30,22 +33,22 @@ export function isRelPath(path: AbsPath | RelPath): path is RelPath {
 }
 
 // --- Path Utilities ---
-export function extname(path: AbsPath | RelPath | string): string {
-  return pathModule.extname(basename(path));
+export function extname(path: AbsPath | RelPath | TreeNode | string): string {
+  return pathModule.extname(basename(String(path)));
 }
 
-export function prefix(path: AbsPath | RelPath | string): string {
+export function prefix(path: AbsPath | RelPath | TreeNode | string): string {
   const ext = extname(path);
   const base = basename(path);
   return ext.length ? base.slice(0, base.length - ext.length) : base;
 }
 
-export function basename(path: AbsPath | RelPath | string): RelPath {
-  return relPath(pathModule.basename(path));
+export function basename(path: AbsPath | RelPath | TreeNode | string): RelPath {
+  return relPath(pathModule.basename(String(path)));
 }
 
-export function dirname(path: AbsPath | RelPath | string): AbsPath {
-  return absPath(pathModule.dirname(path));
+export function dirname(path: AbsPath | RelPath | TreeNode | string): AbsPath {
+  return absPath(pathModule.dirname(String(path)));
 }
 
 export function equals(a: AbsPath | RelPath | null | undefined, b: AbsPath | RelPath | null | undefined): boolean {
@@ -54,8 +57,8 @@ export function equals(a: AbsPath | RelPath | null | undefined, b: AbsPath | Rel
 }
 
 // --- Encoding/Decoding ---
-export function encodePath(path: AbsPath | RelPath | string): string {
-  return path
+export function encodePath(path: AbsPath | RelPath | TreeNode | string): string {
+  return String(path)
     .split("/")
     .map((part) => {
       try {
@@ -164,12 +167,12 @@ export function getPathMimeType(path: AbsPath | RelPath): string {
   return getMimeType(path);
 }
 
-export function isImage(path: AbsPath | RelPath | string): boolean {
-  return isImageType(getPathMimeType(relPath(path)));
+export function isImage(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return isImageType(getPathMimeType(relPath(String(path))));
 }
 
-export function isMarkdown(path: AbsPath | RelPath | string): boolean {
-  return isMarkdownType(getPathMimeType(relPath(path)));
+export function isMarkdown(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return isMarkdownType(getPathMimeType(relPath(String(path))));
 }
 
 // --- Ancestor/Lineage Utilities ---

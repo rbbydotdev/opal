@@ -206,7 +206,7 @@ export class FileTree {
   }
 }
 
-function closestTreeDir(node: TreeNode): TreeDir {
+export function closestTreeDir(node: TreeNode): TreeDir {
   if (!node.parent) return node as TreeDir; //assumes root
   if (node.isTreeFile()) return closestTreeDir(node.parent!);
   return node as TreeDir;

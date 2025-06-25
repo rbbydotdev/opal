@@ -142,6 +142,16 @@ export class Workspace {
     return thumb.readOrMake();
   }
 
+  // static originPathForNode(node: TreeNode | AbsPath) {
+  //   const path = String(node);
+  //   const { workspaceId } = Workspace.parseWorkspacePath(window?.location?.pathname ?? "");
+  //   return `${window.location.origin}${joinPath(
+  //     absPath(WorkspaceDAO.rootRoute),
+  //     absPath(workspaceId ?? "<no-workspace>"),
+  //     path ?? ""
+  //   )}`;
+  // }
+
   static parseWorkspacePath(pathname: string) {
     if (!pathname.startsWith(WorkspaceDAO.rootRoute)) return { workspaceId: null, filePath: null };
     const [workspaceId, ...filePathRest] = decodePath(relPath(pathname.replace(WorkspaceDAO.rootRoute, ""))).split("/");
@@ -334,6 +344,9 @@ export class Workspace {
   watchDisk(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
     return this.disk.latestIndexListener(callback);
   }
+  copyMultipleFiles(copyNodes: [from: AbsPath | TreeNode, to: AbsPath | TreeNode][]) {
+    return this.disk.copyMultiple(copyNodes);
+  }
   copyFile(source: AbsPath | TreeNode, targetPath: AbsPath, overWrite = false) {
     const sourceNode = this.nodeFromPath(String(source));
     if (sourceNode === null) {
@@ -418,8 +431,8 @@ export class Workspace {
     return this.disk.fileTree.all().map((node) => node.path);
   }
 
-  nodeFromPath(path: AbsPath | string | null) {
-    if (path === null) return null;
+  nodeFromPath(path?: AbsPath | string | null) {
+    if (path === null || path === undefined) return null;
     return this.disk.fileTree.nodeFromPath(path);
   }
 

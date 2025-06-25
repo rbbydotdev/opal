@@ -697,7 +697,7 @@ export abstract class Disk {
   }
   async copyFile(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
     const fullPath = await this.copyFileQuiet(oldFullPath, newFullPath, overWrite);
-    //TODO events are weird for copy idk how to do them
+    await this.fileTreeIndex();
     void this.local.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: [fullPath] },
@@ -707,6 +707,30 @@ export abstract class Disk {
       details: { filePaths: [fullPath] },
     });
     return fullPath;
+  }
+  async copyMultiple(
+    copyPaths: [from: AbsPath | TreeNode, to: AbsPath | TreeNode][],
+    options?: { overWrite?: boolean }
+  ): Promise<AbsPath[]> {
+    await this.ready;
+    const result: AbsPath[] = [];
+    for (const [from, to] of copyPaths) {
+      let fullPath = to;
+      if (await this.pathExists(absPath(from))) {
+        fullPath = await this.copyFileQuiet(absPath(from), absPath(to), options?.overWrite);
+      }
+      result.push(absPath(fullPath));
+    }
+    await this.fileTreeIndex();
+    void this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: result },
+    });
+    void this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: result },
+    });
+    return result;
   }
 
   async newFile(fullPath: AbsPath, content: string | Uint8Array) {
