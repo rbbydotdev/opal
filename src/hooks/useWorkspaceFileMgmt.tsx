@@ -247,7 +247,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     resetEditing,
     duplicateDirFile,
     untrashFiles,
-    // untrashFile,
     trashFile,
     trashFiles,
   };

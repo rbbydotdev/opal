@@ -1,9 +1,8 @@
 import { INTERNAL_FILE_TYPE, NodeDataJType, allowedMove } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
-import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { Workspace } from "@/Db/Workspace";
-import { BadRequestError, errF, isError } from "@/lib/errors";
+import { errF } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
 import React, { useCallback } from "react";
@@ -25,19 +24,7 @@ export function useExternalDrop({ currentWorkspace }: { currentWorkspace: Worksp
     event.preventDefault();
     event.stopPropagation();
     const { files } = event.dataTransfer;
-    for (const file of files) {
-      try {
-        await currentWorkspace.dropImageFile(file, targetPath);
-      } catch (e) {
-        if (isError(e, BadRequestError)) {
-          ErrorPopupControl.show({
-            title: "Not a valid image",
-            description: "Please upload a valid image file (png,gif,webp,jpg)",
-          });
-        }
-        console.error("Error dropping file:", e);
-      }
-    }
+    return currentWorkspace.uploadMultiple(files, targetPath);
   };
   return { externalDrop };
 }

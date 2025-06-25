@@ -30,11 +30,11 @@ export function isRelPath(path: AbsPath | RelPath): path is RelPath {
 }
 
 // --- Path Utilities ---
-export function extname(path: AbsPath | RelPath): string {
+export function extname(path: AbsPath | RelPath | string): string {
   return pathModule.extname(basename(path));
 }
 
-export function prefix(path: AbsPath | RelPath): string {
+export function prefix(path: AbsPath | RelPath | string): string {
   const ext = extname(path);
   const base = basename(path);
   return ext.length ? base.slice(0, base.length - ext.length) : base;
@@ -87,7 +87,7 @@ export function joinPath<T extends AbsPath | RelPath>(base: T, ...parts: (string
     return relPath(joined) as T;
   }
   const joined = [base === "/" ? "" : base, ...parts.map(relPath)].join("/");
-  return absPath(joined) as T;
+  return absPath(pathModule.normalize(joined)) as T;
 }
 
 // --- Shift ---
@@ -112,24 +112,23 @@ export function duplicatePath(path: AbsPath) {
 export function incPath<T extends AbsPath | RelPath>(path: T): T {
   // Split path into directory and filename
   const dir = dirname(path);
-  const base = basename(path);
+  const ext = extname(path);
+  const pre = prefix(path);
 
-  // Handle filenames that start with "."
-  // e.g. ".file", ".file1", ".file.txt", ".file1.txt"
-  const regex = /^(\.?[^.]*?)(\d*)(\.[^.]*$|$)/;
-  const match = base.match(regex);
-
-  let newBase: string;
-  if (match) {
-    const [, prefix, number, suffix] = match;
-    const incrementedNumber = number ? parseInt(number, 10) + 1 : 1;
-    newBase = `${prefix}${incrementedNumber}${suffix}`;
+  if (/\d+$/.test(pre)) {
+    //capture and parse digits
+    const match = pre.match(/\d+$/);
+    const digits = match ? parseInt(match[0], 10) : 0;
+    const newPre = pre.replace(/\d+$/, "") + (digits + 1);
+    return (isAbsPath(path) ? absPath(`${dir}/${newPre}${ext}`) : relPath(`${dir}/${newPre}${ext}`)) as T;
   } else {
-    newBase = `${base}-1`;
+    // If no digits at the end, append "-1" or "-1.ext"
+    const newPre = pre + "-1";
+    if (ext) {
+      return (isAbsPath(path) ? absPath(`${dir}/${newPre}${ext}`) : relPath(`${dir}/${newPre}${ext}`)) as T;
+    }
+    return (isAbsPath(path) ? absPath(`${dir}/${newPre}`) : relPath(`${dir}/${newPre}`)) as T;
   }
-
-  const joined = dir === absPath("/") ? `/${newBase}` : `${dir}/${newBase}`;
-  return (isAbsPath(path) ? absPath(joined) : relPath(joined)) as T;
 }
 
 // --- Depth ---

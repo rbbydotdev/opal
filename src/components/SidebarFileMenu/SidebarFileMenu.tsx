@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
 
 import { FileTreeMenuCtxProvider, useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   SidebarContent,
   SidebarGroup,
@@ -17,7 +18,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
-import { TooltipContent } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useExternalDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { FileTreeExpanderProvider } from "@/features/filetree-expander/FileTreeExpanderContext";
@@ -27,13 +28,13 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath } from "@/lib/paths2";
 import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
-import { Tooltip, TooltipTrigger } from "@radix-ui/react-tooltip";
 import clsx from "clsx";
 import {
   Check,
   ChevronRight,
   Code2,
   CopyMinus,
+  Delete,
   DotIcon,
   Download,
   FilePlus,
@@ -74,7 +75,9 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
 
         <div dnd-id="trash" className="min-h-8">
-          <TrashSidebarFileMenuFileSection />
+          <FileTreeMenuCtxProvider id="TrashFiles">
+            <TrashSidebarFileMenuFileSection />
+          </FileTreeMenuCtxProvider>
         </div>
 
         <div className="min-h-8" dnd-id="files">
@@ -92,24 +95,34 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
 }
 
 const TinyNotice = () => <div className="ml-1 mb-2 bg-ring w-1 h-1 rounded-full"></div>;
+
 function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
+  const { removeFile } = useWorkspaceFileMgmt(currentWorkspace);
   return (
-    <FileTreeMenuCtxProvider id="TrashFiles">
-      <FileTreeExpanderProvider>
-        <SidebarFileMenuFileSectionInternal
-          Icon={Trash2}
-          title={
-            <>
-              Trash
-              {currentWorkspace.hasTrash() && <TinyNotice />}
-            </>
-          }
-          className={className}
-          scope={absPath("/.trash")}
-        />
-      </FileTreeExpanderProvider>
-    </FileTreeMenuCtxProvider>
+    <FileTreeExpanderProvider>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <SidebarFileMenuFileSectionInternal
+            Icon={Trash2}
+            title={
+              <>
+                Trash
+                {currentWorkspace.hasTrash() && <TinyNotice />}
+              </>
+            }
+            className={className}
+            scope={absPath("/.trash")}
+          />
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem className="flex gap-2" onClick={() => removeFile(absPath("/.trash"))}>
+            <Delete className="mr-3 h-4 w-4" />
+            Empty
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </FileTreeExpanderProvider>
   );
 }
 

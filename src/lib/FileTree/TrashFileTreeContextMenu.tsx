@@ -1,5 +1,5 @@
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { Trash2, Undo } from "lucide-react";
+import { Delete, Undo } from "lucide-react";
 import { useRef } from "react";
 export const TrashFileTreeContextMenu = ({
   children,
@@ -32,7 +32,7 @@ export const TrashFileTreeContextMenu = ({
           Put Back
         </ContextMenuItem>
         <ContextMenuItem inset onClick={deferredFn(() => remove())}>
-          <Trash2 className="mr-3 h-4 w-4" />
+          <Delete className="mr-3 h-4 w-4" />
           Delete
         </ContextMenuItem>
       </ContextMenuContent>

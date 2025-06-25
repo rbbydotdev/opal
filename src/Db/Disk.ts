@@ -614,6 +614,17 @@ export abstract class Disk {
       details: { filePaths: result },
     });
   }
+  async newFilesNotice(filePaths: AbsPath[]) {
+    await this.fileTreeIndex();
+    await this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths },
+    });
+    await this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths },
+    });
+  }
 
   private async copyDirQuiet(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
     await this.ready;
