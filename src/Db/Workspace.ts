@@ -182,6 +182,7 @@ export class Workspace {
   }
   //this func sig is wack
   newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
+    // return this.disk.newFiles(files);
     return this.disk.newFile(joinPath(dirPath, newFileName), content);
   }
   newFiles(files: [name: AbsPath, content: string | Uint8Array][]) {

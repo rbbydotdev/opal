@@ -29,8 +29,7 @@ export async function handleFileTreePaste(currentWorkspace: Workspace, destDir: 
       const clipboardText = String(await item.getType("text/plain").then((blob) => blob.text()));
       const payload = parseCopyNodesPayload(clipboardText);
       if (!payload || payload.workspaceId !== currentWorkspace.name) continue;
-      const { fileNodes, action, workspaceId } = payload;
-      // const fromWorkspace = await WorkspaceDAO.FetchByName(workspaceId);
+      const { fileNodes, action } = payload;
       const copyNodes: [TreeNode, AbsPath][] = fileNodes
         .map((path) => [currentWorkspace.nodeFromPath(path)!, joinPath(destDir, basename(path))])
         .filter(([from, to]) => String(from) !== to) as [TreeNode, AbsPath][];
