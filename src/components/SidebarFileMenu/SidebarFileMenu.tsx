@@ -136,59 +136,70 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   //attach paste listeners
   useEffect(() => {
     const handlePasteEvent = async (event: ClipboardEvent) => {
-      //handlefiles
-      const files = event.clipboardData?.files;
-      if (files && files.length > 0) {
-        const images = Array.from([...(files ?? [])]).filter((file) => file.type.startsWith("image/")); //TODO isImage
-        const markdowns = Array.from([...(files ?? [])]).filter((file) => file.type === "text/markdown");
-        if (images.length || markdowns.length) {
-          event.preventDefault();
-          event.stopPropagation();
-          const selectedNode = currentWorkspace.nodeFromPath(focused);
-          const destPath = (selectedNode ?? TreeNode.FromPath(absPath("/"), "dir")).closestDirPath();
-          if (images && images.length > 0) {
-            console.debug("FileTreeMenu window paste event capture for files:" + images.length);
-            await currentWorkspace.uploadMultipleImages(images, destPath);
+      // const target = event.target as HTMLElement | null;
+      // if (target?.closest?.("[data-sidebar-file-menu]")) {
+      if (true) {
+        const files = event.clipboardData?.files;
+        if (files && files.length > 0) {
+          const images = Array.from([...(files ?? [])]).filter((file) => file.type.startsWith("image/")); //TODO isImage
+          const markdowns = Array.from([...(files ?? [])]).filter((file) => file.type === "text/markdown");
+          if (images.length || markdowns.length) {
+            event.preventDefault();
+            event.stopPropagation();
+            const selectedNode = currentWorkspace.nodeFromPath(focused);
+            const destPath = (selectedNode ?? TreeNode.FromPath(absPath("/"), "dir")).closestDirPath();
+            if (images && images.length > 0) {
+              console.debug("FileTreeMenu window paste event capture for files:" + images.length);
+              await currentWorkspace.uploadMultipleImages(images, destPath);
+            }
+            if (markdowns && markdowns.length > 0) {
+              console.debug("FileTreeMenu window paste event capture for markdown files:" + markdowns.length);
+              await currentWorkspace.newFiles(
+                await Promise.all(markdowns.map(async (file) => [joinPath(destPath, file.name), await file.text()]))
+              );
+            }
           }
-          if (markdowns && markdowns.length > 0) {
-            console.debug("FileTreeMenu window paste event capture for markdown files:" + markdowns.length);
-            await currentWorkspace.newFiles(
-              await Promise.all(markdowns.map(async (file) => [joinPath(destPath, file.name), await file.text()]))
+        }
+        if (event.clipboardData?.getData("text/plain")) {
+          const text = event.clipboardData.getData("text/plain");
+          if (text) {
+            await handleFileTreePaste(
+              currentWorkspace,
+              currentWorkspace.nodeFromPath(selectedFocused[0])?.closestDirPath() || absPath("/")
             );
           }
         }
+        void navigator.clipboard.writeText("").catch(() => {});
+        setFileTreeCtx({
+          editing: null,
+          editType: null,
+          focused: null,
+          virtual: null,
+          selectedRange: [],
+        });
       }
-      if (event.clipboardData?.getData("text/plain")) {
-        const text = event.clipboardData.getData("text/plain");
-        if (text) {
-          await handleFileTreePaste(
-            currentWorkspace,
-            currentWorkspace.nodeFromPath(selectedFocused[0])?.closestDirPath() || absPath("/")
-          );
-        }
+    };
+    const handleCutEvent = (event: ClipboardEvent) => {
+      // const target = event.target as HTMLElement | null;
+      // if (target?.closest?.("[data-sidebar-file-menu]")) {
+      if (true) {
+        void copyFileNodesToClipboard({
+          fileNodes: selectedFocused,
+          action: "cut",
+          workspaceId: currentWorkspace.name,
+        });
       }
-      void navigator.clipboard.writeText("");
-      setFileTreeCtx({
-        editing: null,
-        editType: null,
-        focused: null,
-        virtual: null,
-        selectedRange: [],
-      });
     };
-    const handleCutEvent = () => {
-      void copyFileNodesToClipboard({
-        fileNodes: selectedFocused,
-        action: "cut",
-        workspaceId: currentWorkspace.name,
-      });
-    };
-    const handleCopyEvent = () => {
-      void copyFileNodesToClipboard({
-        fileNodes: selectedFocused,
-        action: "copy",
-        workspaceId: currentWorkspace.name,
-      });
+    const handleCopyEvent = (event: ClipboardEvent) => {
+      // const target = event.target as HTMLElement | null;
+      // if (target?.closest?.("[data-sidebar-file-menu]")) {
+      if (true) {
+        return copyFileNodesToClipboard({
+          fileNodes: selectedFocused,
+          action: "copy",
+          workspaceId: currentWorkspace.name,
+        });
+      }
     };
     window.addEventListener("paste", handlePasteEvent);
     window.addEventListener("cut", handleCutEvent);
@@ -283,7 +294,7 @@ export const SidebarFileMenuFiles = ({
   const { externalDrop } = useExternalDrop({ currentWorkspace });
 
   return (
-    <SidebarGroup className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
+    <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
       <Collapsible
         className="group/collapsible _h-full _flex-1 flex flex-col min-h-0"
         open={groupExpanded}
@@ -319,7 +330,7 @@ export const SidebarFileMenuFiles = ({
           <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
             {!Object.keys(fileTreeDir?.filterOutChildren?.(filter) ?? {}).length ? (
               <div className="w-full" onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}>
-                <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full group-hover:bg-sidebar-accent">
+                <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full _group-hover:bg-sidebar-accent">
                   <div className="w-full ">
                     {/* No Files, Click <FilePlus className={"inline"} size={12} /> to get started */}
                     <span className="text-3xs">empty</span>

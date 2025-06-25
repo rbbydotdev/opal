@@ -695,9 +695,6 @@ export abstract class Disk {
       encoding: "utf8",
       mode: 0o777,
     });
-    // } else {
-    //mkdir
-    // }
 
     return newFullPath;
   }

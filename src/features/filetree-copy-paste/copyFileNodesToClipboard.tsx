@@ -68,7 +68,7 @@ export function copyFileNodesToClipboard({
         "text/plain": JSON.stringify(copyNodesPayload({ fileNodes, action, workspaceId })),
       }),
     ];
-    return navigator.clipboard.write(data);
+    return navigator.clipboard.write(data).catch(() => {});
   } catch (err) {
     console.error("Failed to copy HTML to clipboard:", err);
   }
