@@ -22,7 +22,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { path: currentFile } = useWorkspaceRoute();
-  const { commitChange } = useWorkspaceFileMgmt(currentWorkspace);
+  const { commitChange, trashSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
   const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
   const isSelected = fullPath === currentFile;
@@ -100,7 +100,9 @@ export function useEditable<T extends TreeFile | TreeDir>({
     async (e: React.KeyboardEvent) => {
       e.stopPropagation();
       if (e.key === "Escape") {
-        if (virtual) currentWorkspace.removeVirtualfile(virtual);
+        if (virtual) {
+          currentWorkspace.removeVirtualfile(virtual);
+        }
         setFileTreeCtx({
           editing: null,
           editType: null,
@@ -149,19 +151,23 @@ export function useEditable<T extends TreeFile | TreeDir>({
       } else if (e.key === " " && !isEditing) {
         e.preventDefault();
         linkRef.current?.click();
+      } else if (!isEditing && focused && (e.key === "Delete" || e.key === "Backspace") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        void trashSelectedFiles();
       }
     },
     [
       isEditing,
       virtual,
-      currentWorkspace,
       setFileTreeCtx,
       focused,
+      currentWorkspace,
       editType,
       fileName,
       fullPath,
       commitChange,
       treeNode,
+      trashSelectedFiles,
     ]
   );
 
@@ -173,11 +179,11 @@ export function useEditable<T extends TreeFile | TreeDir>({
     setFileTreeCtx({
       editing,
       editType,
-      virtual: null,
+      virtual,
       focused: treeNode.path,
       selectedRange: [treeNode.path],
     });
-  }, [editType, editing, selectedRange, setFileTreeCtx, treeNode.path]);
+  }, [editType, editing, selectedRange, setFileTreeCtx, treeNode.path, virtual]);
 
   const handleBlur = useCallback(
     (_e: React.FocusEvent<HTMLInputElement | HTMLAnchorElement>) => {

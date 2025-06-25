@@ -129,7 +129,7 @@ export const FileTreeMenuCtxProvider = ({
     };
     window.addEventListener("keydown", escapeKey);
     return () => window.removeEventListener("keydown", escapeKey);
-  }, [setFileTreeCtx]);
+  }, [focused, setFileTreeCtx]);
   const selectedFocused = useMemo(
     () => Array.from(new Set([focused, ...selectedRange].filter(Boolean) as AbsPath[])),
     [focused, selectedRange]
@@ -139,7 +139,10 @@ export const FileTreeMenuCtxProvider = ({
       value={{
         id,
         selectedRange,
-        setFileTreeCtx,
+        setFileTreeCtx: (props) => {
+          //DEBUG
+          return setFileTreeCtx(props);
+        },
         dragOver,
         setDragOver,
         setDraggingNode,
