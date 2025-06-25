@@ -138,7 +138,7 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
     const handlePasteEvent = async (event: ClipboardEvent) => {
       //handlefiles
       const files = event.clipboardData?.files;
-      if (files) {
+      if (files && files.length > 0) {
         const images = Array.from([...(files ?? [])]).filter((file) => file.type.startsWith("image/")); //TODO isImage
         const markdowns = Array.from([...(files ?? [])]).filter((file) => file.type === "text/markdown");
         if (images.length || markdowns.length) {

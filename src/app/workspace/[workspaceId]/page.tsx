@@ -3,6 +3,7 @@
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useExternalDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useFavicon from "@/hooks/useFavicon";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { Opal } from "@/lib/Opal";
 import { absPath } from "@/lib/paths2";
 import { useRouter } from "next/navigation";
@@ -23,7 +24,7 @@ export default function Page() {
         position: "relative",
       }}
       className="w-full h-full flex items-center justify-center"
-      onDrop={(e) => externalDrop(e, absPath("/"))}
+      onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}
       onDragOver={(e) => {
         e.preventDefault();
         e.stopPropagation();
