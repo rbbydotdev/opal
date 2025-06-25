@@ -11,6 +11,7 @@ import {
   AbsPath,
   absPath,
   decodePath,
+  dirname,
   encodePath,
   isImage,
   joinPath,
@@ -364,10 +365,42 @@ export class Workspace {
   async awaitFirstIndex() {
     return this.disk.tryFirstIndex();
   }
+  async uploadImageFile(file: File, targetPath: AbsPath) {
+    return (await this.uploadMultiple([file], targetPath))[0]!;
+  }
+
+  async uploadMultiple(files: Iterable<File>, targetPath: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+    const results: AbsPath[] = [];
+    let index = 0;
+    const filesArr = Array.from(files);
+
+    const uploadNext = async () => {
+      if (index >= filesArr.length) return;
+      const current = index++;
+      const file = filesArr[current];
+      const res = await fetch(
+        joinPath(absPath("/upload-image"), targetPath ? absPath(dirname(targetPath)) : absPath("/"), file!.name),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": file!.type,
+          },
+          body: file,
+        }
+      );
+      results[current] = absPath(await res.text());
+      await uploadNext();
+    };
+
+    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
+    await Promise.all(workers);
+    await this.disk.newFilesNotice(results);
+    return results;
+  }
   async dropImageFile(file: File, targetPath: AbsPath) {
     const fileType = getMimeType(file.name);
     if (!isImageType(fileType)) {
-      throw new BadRequestError("Not a valid image");
+      throw new BadRequestError("Not a valid image, got " + fileType);
     }
     return this.newFile(targetPath, relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }

@@ -1,11 +1,13 @@
 import { Workspace } from "@/Db/Workspace";
 import { errF, NotFoundError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
+import { absPath, decodePath } from "@/lib/paths2";
 import { RemoteLogger } from "@/lib/RemoteLogger";
 import { handleDownloadRequest } from "@/lib/ServiceWorker/handleDownloadRequest";
 import { handleDownloadRequestEncrypted } from "@/lib/ServiceWorker/handleDownloadRequestEncrypted";
 import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
 import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
+import { handleImageUpload } from "@/lib/ServiceWorker/handleImageUpload";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
 
 const WHITELIST = ["/opal.svg", "/opal-blank.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
@@ -95,6 +97,12 @@ self.addEventListener("fetch", async (event) => {
   }
   try {
     if (workspaceId && url.origin === self.location.origin) {
+      //handle post to /upload-image with handleImageUpload
+      if (event.request.method === "POST" && url.pathname.startsWith("/upload-image")) {
+        console.log(`Fetch event for: ${event.request.url}, referrer: ${event.request.referrer}`);
+        const filePath = absPath(decodePath(url.pathname).replace("/upload-image", ""));
+        return event.respondWith(withRequestSignal(handleImageUpload)(event, url, filePath, workspaceId));
+      }
       if (url.pathname === "/download-encrypted.zip") {
         console.log(`Fetch event for: ${event.request.url}, referrer: ${event.request.referrer}`);
         return event.respondWith(handleDownloadRequestEncrypted(workspaceId, event));

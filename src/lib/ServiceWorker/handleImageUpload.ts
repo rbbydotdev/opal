@@ -1,4 +1,3 @@
-import { Workspace } from "@/Db/Workspace";
 import { createImage } from "@/lib/createImage";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { AbsPath, basename, dirname, extname } from "@/lib/paths2";
@@ -19,16 +18,6 @@ export async function handleImageUpload(
     href: ${url.href}
     filePath: ${filePath}
   `);
-    let cache: Cache;
-    if (IS_NOT_SVG) {
-      cache = await Workspace.newCache(workspaceId).getCache();
-      const cachedResponse = await cache.match(event.request);
-      if (cachedResponse) {
-        console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
-        return cachedResponse;
-      }
-    }
-    console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
     const workspace = await SWWStore.tryWorkspace(workspaceId);
 
     if (!workspace) throw new Error("Workspace not found " + workspaceId);

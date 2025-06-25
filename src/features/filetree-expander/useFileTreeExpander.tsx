@@ -47,6 +47,13 @@ export function useFileTreeExpander({
       expandSingle(n.path, state);
       n = n.parent;
     }
+
+    // const segments = String(node).split("/").slice(1);
+    // const parent = "/";
+    // while (segments.length > 0) {
+    //   const path = parent + segments.shift();
+    //   expandSingle(path, state);
+    // }
   };
 
   const setExpandAll = (state: boolean) => {
