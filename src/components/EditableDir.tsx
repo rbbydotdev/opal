@@ -1,7 +1,6 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
-import { useCopyKeydownImages } from "@/components/FiletreeMenu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { useEditable } from "@/hooks/useEditable";
@@ -54,7 +53,7 @@ export const EditableDir = ({
     expand,
   });
 
-  const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace);
+  // const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace);
   const { setFileTreeCtx } = useFileTreeMenuCtx();
 
   useEffect(() => {
@@ -80,7 +79,7 @@ export const EditableDir = ({
         className,
         "w-full flex cursor-pointer select-none group/dir my-0.5"
       )}
-      onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
+      onKeyDown={(e) => handleKeyDown(e)}
       style={{ paddingLeft: depth + "rem" }}
     >
       <div className="flex w-full items-center truncate">

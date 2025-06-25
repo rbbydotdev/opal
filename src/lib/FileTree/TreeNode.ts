@@ -59,8 +59,11 @@ export class TreeNode {
   isHidden(): boolean {
     return this.parent?.isHidden() || this.basename.startsWith(".");
   }
-  closestDir(inclusive: boolean = true): TreeDir | null {
-    return this.isTreeDir() ? this : this.parent?.closestDir(inclusive) ?? null;
+  closestDir(): TreeDir | null {
+    return this.isTreeDir() ? this : this.parent?.closestDir() ?? null;
+  }
+  closestDirPath(): AbsPath {
+    return this.isTreeDir() ? this.path : dirname(this.path);
   }
   isMarkdownFile() {
     return this.getMimeType() === "text/markdown";

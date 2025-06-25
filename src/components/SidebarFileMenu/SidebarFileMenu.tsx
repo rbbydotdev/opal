@@ -1,6 +1,6 @@
 "use client";
 import { ConnectionsModal } from "@/components/connections-modal";
-import { FileTreeMenu } from "@/components/FiletreeMenu";
+import { FileTreeMenu, handleFileTreePaste } from "@/components/FiletreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
@@ -20,13 +20,14 @@ import {
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { useExternalDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { FileTreeExpanderProvider } from "@/features/filetree-expander/FileTreeExpanderContext";
 import { useFileTreeExpanderContext } from "@/features/filetree-expander/useFileTreeExpander";
 import { useSidebarItemExpander } from "@/features/filetree-expander/useSidebarItemExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath } from "@/lib/paths2";
+import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import clsx from "clsx";
 import {
@@ -53,7 +54,7 @@ import {
   UploadCloud,
   UploadCloudIcon,
 } from "lucide-react";
-import React, { JSX, useMemo } from "react";
+import React, { JSX, useEffect, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
@@ -66,7 +67,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         e.preventDefault();
         e.stopPropagation();
       }}
-      onDrop={(e) => externalDrop(e, absPath("/"))}
+      onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
       <SidebarDndList storageKey={"sidebarMenu"}>
@@ -128,9 +129,76 @@ function TrashSidebarFileMenuFileSection({ className }: { className?: string }) 
 
 function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { focused } = useFileTreeMenuCtx();
+  const { focused, selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
   const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
   const { setExpandAll, expandForNode } = useFileTreeExpanderContext();
+
+  //attach paste listeners
+  useEffect(() => {
+    const handlePasteEvent = async (event: ClipboardEvent) => {
+      //handlefiles
+      const files = event.clipboardData?.files;
+      if (files) {
+        const images = Array.from([...(files ?? [])]).filter((file) => file.type.startsWith("image/")); //TODO isImage
+        const markdowns = Array.from([...(files ?? [])]).filter((file) => file.type === "text/markdown");
+        if (images.length || markdowns.length) {
+          event.preventDefault();
+          event.stopPropagation();
+          const selectedNode = currentWorkspace.nodeFromPath(focused);
+          const destPath = (selectedNode ?? TreeNode.FromPath(absPath("/"), "dir")).closestDirPath();
+          if (images && images.length > 0) {
+            console.debug("FileTreeMenu window paste event capture for files:" + images.length);
+            await currentWorkspace.uploadMultipleImages(images, destPath);
+          }
+          if (markdowns && markdowns.length > 0) {
+            console.debug("FileTreeMenu window paste event capture for markdown files:" + markdowns.length);
+            await currentWorkspace.newFiles(
+              await Promise.all(markdowns.map(async (file) => [joinPath(destPath, file.name), await file.text()]))
+            );
+          }
+        }
+      }
+      if (event.clipboardData?.getData("text/plain")) {
+        const text = event.clipboardData.getData("text/plain");
+        if (text) {
+          await handleFileTreePaste(
+            currentWorkspace,
+            currentWorkspace.nodeFromPath(selectedFocused[0])?.closestDirPath() || absPath("/")
+          );
+        }
+      }
+      void navigator.clipboard.writeText("");
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        focused: null,
+        virtual: null,
+        selectedRange: [],
+      });
+    };
+    const handleCutEvent = () => {
+      void copyFileNodesToClipboard({
+        fileNodes: selectedFocused,
+        action: "cut",
+        workspaceId: currentWorkspace.name,
+      });
+    };
+    const handleCopyEvent = () => {
+      void copyFileNodesToClipboard({
+        fileNodes: selectedFocused,
+        action: "copy",
+        workspaceId: currentWorkspace.name,
+      });
+    };
+    window.addEventListener("paste", handlePasteEvent);
+    window.addEventListener("cut", handleCutEvent);
+    window.addEventListener("copy", handleCopyEvent);
+    return () => {
+      window.removeEventListener("paste", handlePasteEvent);
+      window.removeEventListener("cut", handleCutEvent);
+      window.removeEventListener("copy", handleCopyEvent);
+    };
+  }, [currentWorkspace, focused, selectedFocused, setFileTreeCtx]);
   return (
     <SidebarFileMenuFileSectionInternal title={"Files"} className={className} filter={[absPath("/.trash")]}>
       <SidebarFileMenuFilesActions
@@ -250,7 +318,7 @@ export const SidebarFileMenuFiles = ({
         <CollapsibleContent className="min-h-0 flex-shrink">
           <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
             {!Object.keys(fileTreeDir?.filterOutChildren?.(filter) ?? {}).length ? (
-              <div className="w-full" onDrop={(e) => externalDrop(e, absPath("/"))}>
+              <div className="w-full" onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}>
                 <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full group-hover:bg-sidebar-accent">
                   <div className="w-full ">
                     {/* No Files, Click <FilePlus className={"inline"} size={12} /> to get started */}

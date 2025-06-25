@@ -195,7 +195,7 @@ export class FileTree {
     this.map.set(newNode.path, newNode);
   }
   insertClosestVirtualNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
-    const parent = closestTreeDir(selectedNode);
+    const parent = selectedNode.closestDir() ?? this.root;
     const newNode = newVirtualTreeNode({ name: node.name, type: node.type, parent });
     while (this.nodeWithPathExists(newNode.path)) newNode.inc();
     return this.insertNode(parent, newNode);
@@ -204,12 +204,6 @@ export class FileTree {
   nodeFromPath(path: AbsPath | string): TreeNode | null {
     return this.map.get(path + "") ?? null;
   }
-}
-
-export function closestTreeDir(node: TreeNode): TreeDir {
-  if (!node.parent) return node as TreeDir; //assumes root
-  if (node.isTreeFile()) return closestTreeDir(node.parent!);
-  return node as TreeDir;
 }
 
 function spliceNode<T extends VirtualTreeNode | TreeNode>(targetNode: TreeDir, newNode: T) {
