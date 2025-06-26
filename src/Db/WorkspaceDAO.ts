@@ -4,7 +4,7 @@ import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
-import { isAncestor } from "@/lib/paths2";
+import { AbsPath, isAncestor } from "@/lib/paths2";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import { DiskDAO } from "./DiskDAO";
@@ -28,7 +28,7 @@ export class WorkspaceDAO {
     };
   }
 
-  static rootRoute = "/workspace";
+  static rootRoute = "/workspace" as AbsPath;
 
   static FromJSON(json: WorkspaceRecord) {
     return new WorkspaceDAO({

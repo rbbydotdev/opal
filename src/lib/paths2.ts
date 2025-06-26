@@ -13,6 +13,7 @@ import { getMimeType } from "./mimeType";
 // --- Constructors ---
 export function absPath(path: string | TreeNode): AbsPath {
   let pathStr = String(path);
+  if (isAbsPath(pathStr)) return path as AbsPath;
   if (!pathStr.startsWith("/")) pathStr = "/" + pathStr;
   if (pathStr !== "/" && pathStr.endsWith("/")) pathStr = pathStr.slice(0, -1);
   return pathModule.normalize(pathStr) as AbsPath;
@@ -85,6 +86,7 @@ export function decodePath(path: AbsPath | RelPath | string): string {
 
 // --- Join ---
 export function joinPath<T extends AbsPath | RelPath>(base: T, ...parts: (string | RelPath)[]): T {
+  // if (isRelPath(base)) {
   if (!base.startsWith("/")) {
     const joined = [base, ...parts.map(relPath)].join("/");
     return relPath(joined) as T;
@@ -232,4 +234,19 @@ export function resolveFromRoot(rootPath: AbsPath | RelPath, path: AbsPath | Rel
     return relPath(pathModule.relative(rootPath, path));
   }
   throw new Error("Both paths must be of the same type (AbsPath or RelPath).");
+}
+
+export function absPathname(path: string) {
+  //in the case we get a url then just get the path from the url parse
+  //other wise just return the string
+  //we can be faster by first looking for http
+  if (!path.startsWith("http")) {
+    return absPath(path);
+  }
+  try {
+    const url = new URL(path);
+    return absPath(url.pathname);
+  } catch (_e) {
+    return absPath(path);
+  }
 }

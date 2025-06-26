@@ -149,7 +149,7 @@ function SearchResultsScroll({
   const matches = searchResult.matches.map((sr) => SearchResult.FromJSON(sr));
   const lineNumWidth = useMemo(() => (Math.max(...matches.map(({ lineNumber }) => lineNumber)) + "").length, [matches]);
   return (
-    <div className="_pb-8 pb-4">
+    <div className="pb-4">
       {/* <div className="bg-search-header-bg/80 backdrop-blur-sm gap-2 flex items-center justify-start px-3 py-2 sticky top-0 z-10 text-xs font-mono">
         <div className="rounded-md overflow-hidden">
           <Identicon input={"xxxx"} scale={4} size={5} />
