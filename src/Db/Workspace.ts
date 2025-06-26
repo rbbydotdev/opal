@@ -191,11 +191,11 @@ export class Workspace {
     return this.disk.newDir(joinPath(dirPath, newDirName));
   }
   //this func sig is wack
-  newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Uint8Array = ""): Promise<AbsPath> {
+  newFile(dirPath: AbsPath, newFileName: RelPath, content: string | Blob | Uint8Array = ""): Promise<AbsPath> {
     // return this.disk.newFiles(files);
     return this.disk.newFile(joinPath(dirPath, newFileName), content);
   }
-  newFiles(files: [name: AbsPath, content: string | Uint8Array][]) {
+  newFiles(files: [name: AbsPath, content: string | Uint8Array | Blob][]) {
     return this.disk.newFiles(files);
   }
 

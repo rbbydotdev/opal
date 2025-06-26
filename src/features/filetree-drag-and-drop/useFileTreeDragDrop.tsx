@@ -17,20 +17,34 @@ export function isExternalFileDrop(event: React.DragEvent) {
   );
 }
 
-export function useExternalDrop({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const externalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
-    if (!isExternalFileDrop(event)) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    const { files } = event.dataTransfer;
+export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  return function ({ files, targetNode }: { files: FileList; targetNode: TreeNode }) {
     const images = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    const targetDir = targetNode.closestDirPath();
+    const promises: Promise<unknown>[] = [];
     if (images.length > 0) {
-      return currentWorkspace.uploadMultipleImages(images, targetNode.closestDirPath());
+      promises.push(currentWorkspace.uploadMultipleImages(images, targetDir));
     }
+    const markdowns = Array.from(files).filter((file) => file.type === "text/markdown");
+    if (markdowns.length > 0) {
+      promises.push(currentWorkspace.newFiles(markdowns.map((file) => [joinPath(targetDir, file.name), file])));
+    }
+    return Promise.all(promises);
   };
-  return { externalDrop };
+}
+
+export function useHandleDropFilesEventForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  const dropFilesHandler = useHandleDropFilesForNode({ currentWorkspace });
+  return useCallback(
+    (event: React.DragEvent, targetNode: TreeNode) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer?.files) {
+        return dropFilesHandler({ files: event.dataTransfer.files, targetNode });
+      }
+    },
+    [dropFilesHandler]
+  );
 }
 
 export function useFileTreeDragDrop({
@@ -49,8 +63,7 @@ export function useFileTreeDragDrop({
     return TreeNode.FromPath(dropPath(targetPath, node), node.type);
   }
 
-  const { externalDrop } = useExternalDrop({ currentWorkspace });
-
+  const dropFilesHandler = useHandleDropFilesForNode({ currentWorkspace });
   const { selectedRange, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
     useFileTreeMenuCtx();
   const handleDragStart = useCallback(
@@ -96,7 +109,11 @@ export function useFileTreeDragDrop({
   };
 
   const handleExternalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
-    return externalDrop(event, targetNode);
+    event.preventDefault();
+    if (!isExternalFileDrop(event)) {
+      return;
+    }
+    return dropFilesHandler({ files: event.dataTransfer.files, targetNode });
   };
 
   const handleDrop = async (event: React.DragEvent, targetNode: TreeNode = currentWorkspace.disk.fileTree.root) => {

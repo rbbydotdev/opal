@@ -21,7 +21,7 @@ import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
-import { useExternalDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useHandleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { FileTreeExpanderProvider } from "@/features/filetree-expander/FileTreeExpanderContext";
 import { useFileTreeExpanderContext } from "@/features/filetree-expander/useFileTreeExpander";
 import { useSidebarItemExpander } from "@/features/filetree-expander/useSidebarItemExpander";
@@ -59,7 +59,7 @@ import { twMerge } from "tailwind-merge";
 
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { externalDrop } = useExternalDrop({ currentWorkspace });
+  const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
   return (
     <SidebarGroup
       {...props}
@@ -67,7 +67,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         e.preventDefault();
         e.stopPropagation();
       }}
-      onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}
+      onDrop={(e) => handleExternalDropEvent(e, TreeNode.FromPath(absPath("/"), "dir"))}
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
       <SidebarDndList storageKey={"sidebarMenu"}>
@@ -139,6 +139,7 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
       const target = event.target as HTMLElement | null;
       if (target?.closest?.("[data-sidebar-file-menu]")) {
         const files = event.clipboardData?.files;
+        // handleFilesForNode();
         if (files && files.length > 0) {
           const images = Array.from([...(files ?? [])]).filter((file) => file.type.startsWith("image/")); //TODO isImage
           const markdowns = Array.from([...(files ?? [])]).filter((file) => file.type === "text/markdown");
@@ -288,7 +289,8 @@ export const SidebarFileMenuFiles = ({
   const { id } = useFileTreeMenuCtx();
   const [groupExpanded, groupSetExpand] = useSidebarItemExpander("SidebarFileMenuFiles/" + id);
   const { currentWorkspace } = useWorkspaceContext();
-  const { externalDrop } = useExternalDrop({ currentWorkspace });
+  const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
+  // const { externalDrop } = useExternalDrop({ currentWorkspace });
 
   return (
     <>
@@ -327,7 +329,10 @@ export const SidebarFileMenuFiles = ({
           <CollapsibleContent className="min-h-0 flex-shrink">
             <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
               {!Object.keys(fileTreeDir?.filterOutChildren?.(filter) ?? {}).length ? (
-                <div className="w-full" onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}>
+                <div
+                  className="w-full"
+                  onDrop={(e) => handleExternalDropEvent(e, TreeNode.FromPath(absPath("/"), "dir"))}
+                >
                   <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full _group-hover:bg-sidebar-accent">
                     <div className="w-full ">
                       {/* No Files, Click <FilePlus className={"inline"} size={12} /> to get started */}

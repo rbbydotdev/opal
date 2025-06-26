@@ -106,7 +106,6 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        // inputRef.current?.blur();
         handleBlur();
       }
     };
@@ -143,12 +142,10 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
         "translate-y-12",
         { "animate-in": open }
       )}
-      // style={{
-      //   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
-      // }}
       onKeyDown={(e) => {
         if (e.key === "Enter" && sortedList.length > 0) {
           router.push(joinPath(currentWorkspace.href, sortedList[0]!.href));
+          handleBlur();
         }
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           handleArrowNavigation(e);

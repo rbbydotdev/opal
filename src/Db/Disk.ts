@@ -593,7 +593,7 @@ export abstract class Disk {
     }
     return fullPath;
   }
-  async newFiles(files: [AbsPath, string | Uint8Array][]) {
+  async newFiles(files: [AbsPath, string | Uint8Array | Blob][]) {
     await this.ready;
     const result: AbsPath[] = [];
     // eslint-disable-next-line prefer-const
@@ -738,7 +738,7 @@ export abstract class Disk {
     return result;
   }
 
-  async newFile(fullPath: AbsPath, content: string | Uint8Array) {
+  async newFile(fullPath: AbsPath, content: string | Uint8Array | Blob) {
     await this.ready;
 
     while (await this.pathExists(fullPath)) {
@@ -757,11 +757,17 @@ export abstract class Disk {
 
     return fullPath;
   }
-  async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array) {
+  async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array | Blob) {
     await this.ready;
     await this.mkdirRecursive(absPath(dirname(filePath)));
     try {
-      return this.fs.writeFile(encodePath(filePath), content, { encoding: "utf8", mode: 0o777 });
+      let data: string | Uint8Array;
+      if (content instanceof Blob) {
+        data = new Uint8Array(await content.arrayBuffer());
+      } else {
+        data = content;
+      }
+      return this.fs.writeFile(encodePath(filePath), data, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error writing file ${filePath}:`, err);
