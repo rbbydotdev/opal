@@ -2,7 +2,7 @@
 
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
-import { useExternalDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useHandleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useFavicon from "@/hooks/useFavicon";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { Opal } from "@/lib/Opal";
@@ -12,8 +12,7 @@ import { useEffect } from "react";
 
 export default function Page() {
   const { currentWorkspace } = useWorkspaceContext();
-  // hold on
-  const { externalDrop } = useExternalDrop({ currentWorkspace });
+  const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
   const { id } = useWorkspaceRoute();
   useFavicon("/favicon.svg" + "?" + id, "image/svg+xml");
 
@@ -28,7 +27,7 @@ export default function Page() {
           position: "relative",
         }}
         className="w-full h-full flex items-center justify-center"
-        onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}
+        onDrop={(e) => handleExternalDropEvent(e, TreeNode.FromPath(absPath("/"), "dir"))}
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
