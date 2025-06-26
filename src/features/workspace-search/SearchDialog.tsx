@@ -1,25 +1,126 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { useState } from "react";
+import { Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+const lines = new Array(100).fill(0);
 export function WorkspaceSearchDialog({ children }: { children: React.ReactNode }) {
   const [isOpen, setOpen] = useState(false);
+  useEffect(() => {
+    //high priority window listener for cmd/ctr + shift + f
+    const handleKeyDown = (e: KeyboardEvent) => {
+      //TODO i need to move these keyboard short cuts to a central place so they can be configured!
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        setOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] h-[425px]">
-        <DialogHeader>
-          <DialogTitle>Search Workspace</DialogTitle>
-          {/* <DialogDescription>Make changes to your profile here. Click save when you&apos;re done.</DialogDescription> */}
-        </DialogHeader>
-        <DialogFooter className="bg-blue-500">
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
-          <Button type="submit">Save changes</Button>
-        </DialogFooter>
+      <DialogContent
+        className="sm:max-w-[425px] h-[425px] flex-col flex"
+        onEscapeKeyDown={(event) => {
+          // if (document.activeElement?.hasAttribute("data-search-file-expand")) {
+          if ((document.activeElement as HTMLElement | null)?.dataset?.searchFileExpand) {
+            event.preventDefault();
+          }
+        }}
+      >
+        <DialogTitle className="font-mono font-thin text-xs flex items-center gap-2">
+          <Search size={16} /> search
+        </DialogTitle>
+        <Input className="outline-ring border bg-sidebar font-mono" placeholder="search workspace..." />
+        <div className="bg-sidebar h-full overflow-y-scroll no-scrollbar">
+          <SearchResults />
+        </div>
       </DialogContent>
     </Dialog>
+  );
+}
+const MAX_HEIGHT = 5;
+function SearchFile({ closeFile, title }: { closeFile: () => void; title: string }) {
+  const [expanded, setExpanded] = useState(() => !(lines.length > MAX_HEIGHT));
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const filteredLines = useMemo(() => lines.filter((_, i) => i < MAX_HEIGHT || expanded), [expanded]);
+  return (
+    <>
+      <div className="w-full flex items-center border rounded-t text-2xs font-mono bg-accent h-8 sticky top-0 z-10">
+        <div className="flex-1 min-w-0 truncate px-2 py-2">{title}</div>
+        <Button variant="ghost" className="flex-shrink-0 h-5 w-5 p-0 mr-2 ml-2" onClick={closeFile}>
+          <X size={14} />
+        </Button>
+      </div>
+      <div className="border mt-1">
+        {filteredLines.map((_, i) => (
+          <SearchLine key={i} />
+        ))}
+        <Button
+          variant="ghost"
+          size="sm"
+          tabIndex={0}
+          data-search-file-expand
+          className="w-full flex justify-center h-4 items-center bg-primary/5 mt-1 rounded-none"
+          onClick={() => {
+            setExpanded(!expanded);
+          }}
+          onMouseUp={() => buttonRef.current?.focus()}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === "Escape") {
+              setExpanded(false);
+              buttonRef.current?.blur();
+            }
+          }}
+          onBlur={() => {
+            if (expanded) setExpanded(false);
+          }}
+          ref={buttonRef}
+        >
+          <span className="p-0.5 text-primary/80 text-3xs font-mono">expand</span>
+        </Button>
+      </div>
+    </>
+  );
+}
+
+function SearchResults() {
+  const [files, setFiles] = useState(() => new Array(10).fill(0));
+  return (
+    <ul className="block">
+      <li className="block">
+        {files.map((_, i) => (
+          <div key={i} className="mb-4">
+            <SearchFile
+              closeFile={() => setFiles((prev) => prev.slice(1))}
+              title={`/some/file${i}${i}${i}.md/some/file.md/some/file.md/some/file.md/some/END`}
+            />
+          </div>
+        ))}
+      </li>
+    </ul>
+  );
+}
+function SearchLine() {
+  return (
+    <div
+      data-line="1:"
+      className="before:min-w-6 before:inline-block  before:font-bold whitespace-nowrap truncate p-1 bg-primary-foreground font-mono text-2xs before:content-[attr(data-line)] before:mr-1"
+    >
+      Lorem <span className="bg-highlight">ipsum</span> dolor sit amet, <span className="bg-highlight">ipsum</span>{" "}
+      <span className="bg-highlight">ipsum</span> consectetur adipiscing elit. Sed do eiusmod tempor{" "}
+      <span className="bg-highlight">ipsum</span> incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+      quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+    </div>
   );
 }

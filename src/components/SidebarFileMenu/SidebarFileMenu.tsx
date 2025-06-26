@@ -95,7 +95,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
   );
 }
 
-const TinyNotice = () => <div className="ml-1 mb-2 bg-ring w-1 h-1 rounded-full"></div>;
+const TinyNotice = () => <div className="ml-1 mb-2 bg-ring w-[5px] h-[5px] rounded-full"></div>;
 
 function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
