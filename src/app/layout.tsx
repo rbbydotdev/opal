@@ -66,7 +66,7 @@ export default function RootLayout({
                   <SidebarProvider>
                     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                       <div className="w-full flex">
-                        <div className="h-screen w-20 flex flex-col flex-shrink-0 bg-secondary-foreground">
+                        <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-hidden  flex-grow-0 max-h-screen">
                           <WorkSpaceButtonBar />
                         </div>
                         {children}

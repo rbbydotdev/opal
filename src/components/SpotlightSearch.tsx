@@ -33,6 +33,7 @@ function SpotlightSearchItem({
           router.push(href);
         }}
         tabIndex={0}
+        onFocus={(e) => e.stopPropagation()}
         className="group min-w-0 flex outline-none justify-start items-center bg-sidebar px-2 py-5 rounded-md h-8 border-sidebar border-2 group-hover:border-ring focus:border-ring"
         onKeyDown={(e) => {
           if (e.key === " " || e.key === "Spacebar") {
@@ -168,6 +169,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
           ref={inputRef}
           autoFocus
           value={search}
+          tabIndex={0}
           onChange={(e) => setSearch(e.target.value)}
           id="spotlight-search"
           type="text"
@@ -176,22 +178,32 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
           className="p-2 border focus:outline-none border-none w-full rounded-lg text-sm bg-background"
         />
       </div>
-      <ul
-        tabIndex={-1}
-        className="w-full flex-col justify-center mt-2 max-h-48 overflow-scroll rounded-lg bg-background"
-        role="menu"
-        aria-label="Spotlight search results"
-      >
-        {sortedList.map((file, index) => (
-          <SpotlightSearchItem
-            // onNavigate={() => router.push(joinPath(currentWorkspace.href, file.href))}
-            onNavigate={handleBlur}
-            key={index}
-            href={joinPath(currentWorkspace.href, file.href)}
-            title={file.element}
-          />
-        ))}
-      </ul>
+      {Boolean(sortedList.length) && (
+        <ul
+          tabIndex={-1}
+          className="w-full flex-col justify-center mt-2 max-h-48 overflow-scroll rounded-lg bg-background"
+          role="menu"
+          aria-label="Spotlight search results"
+        >
+          {sortedList.map((file, index) => (
+            <SpotlightSearchItem
+              // onNavigate={() => router.push(joinPath(currentWorkspace.href, file.href))}
+              onNavigate={handleBlur}
+              key={index}
+              href={joinPath(currentWorkspace.href, file.href)}
+              title={file.element}
+            />
+          ))}
+
+          <li
+            aria-hidden
+            tabIndex={0}
+            onFocus={() => {
+              inputRef.current?.select();
+            }}
+          ></li>
+        </ul>
+      )}
     </div>
   );
 }

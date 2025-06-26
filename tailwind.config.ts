@@ -103,6 +103,13 @@ export default {
         ".scrollbar-thin": {
           "scrollbar-width": "thin",
         },
+        ".no-scrollbar": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+        },
+        ".no-scrollbar::-webkit-scrollbar": {
+          display: "none",
+        },
       });
     },
     tailwindProse,
