@@ -26,14 +26,18 @@ export function EncryptedZipDialog({
   children: React.ReactNode;
 }) {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   const reset = useCallback(() => {
     setPassword("");
+    setConfirmPassword("");
     setShowPassword(false);
+    setShowConfirmPassword(false);
     setIsSubmitting(false);
     setError(null);
     setIsOpen(false);
@@ -44,6 +48,10 @@ export function EncryptedZipDialog({
 
     if (!password.trim()) {
       setError("Password is required");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
       return;
     }
 
@@ -60,6 +68,8 @@ export function EncryptedZipDialog({
     }
   };
 
+  const passwordsMismatch = password && confirmPassword && password !== confirmPassword;
+
   return (
     <Dialog
       open={isOpen}
@@ -75,13 +85,15 @@ export function EncryptedZipDialog({
             <LockIcon className="h-5 w-5 text-amber-500" />
             Encrypted File
           </DialogTitle>
-          <DialogDescription>Enter the password to encrypt</DialogDescription>
+          <DialogDescription>Enter and confirm your password to encrypt</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={(e) => handleSubmit(e)} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive" className="py-2">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                <span className="font-mono text-red-600">{error}</span>
+              </AlertDescription>
             </Alert>
           )}
 
@@ -106,6 +118,7 @@ export function EncryptedZipDialog({
                 size="icon"
                 className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
                 onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
               >
                 {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                 <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
@@ -113,11 +126,42 @@ export function EncryptedZipDialog({
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="enc-zip-confirm-password" className="sr-only">
+              Confirm Password
+            </Label>
+            <div className="relative">
+              <Input
+                id="enc-zip-confirm-password"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`pr-10 ${passwordsMismatch ? "border-red-500 focus:border-red-500" : ""}`}
+                autoComplete="off"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+              </Button>
+            </div>
+            {passwordsMismatch && (
+              <span className="block text-xs font-mono text-red-600 mt-1">Passwords do not match</span>
+            )}
+          </div>
+
           <DialogFooter className="sm:justify-between">
-            <Button type="button" variant="outline" disabled={isSubmitting}>
+            <Button type="button" variant="outline" disabled={isSubmitting} onClick={reset}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !password || !confirmPassword || passwordsMismatch}>
               {isSubmitting ? "Encrypting..." : "Download"}
             </Button>
           </DialogFooter>

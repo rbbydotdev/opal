@@ -4,6 +4,7 @@ import { EncHeader, PassHeader } from "@/lib/ServiceWorker/downloadEncryptedZipH
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
 import { signalRequest } from "@/lib/ServiceWorker/sw";
 import { BlobWriter, Uint8ArrayReader, ZipWriter, ZipWriterConstructorOptions } from "@zip.js/zip.js";
+import path from "path";
 import { SWWStore } from "./SWWStore";
 
 // function formatConsoleMsg(msg: unknown): string {
@@ -103,10 +104,9 @@ export async function handleDownloadRequestEncrypted(workspaceId: string, event:
     const addDirPromises = fileNodes
       .filter((node) => node.type === "dir")
       .map(async (node) => {
-        const dirName = node.path.endsWith("/") ? node.path : node.path + "/";
         try {
           // Add a 0-byte entry with a trailing slash to represent an empty directory
-          await zipWriter.add(dirName, new Uint8ArrayReader(new Uint8Array(0)));
+          await zipWriter.add(path.normalize(node + "/"), new Uint8ArrayReader(new Uint8Array(0)));
 
           return { status: "fulfilled", path: node.path };
         } catch (e) {

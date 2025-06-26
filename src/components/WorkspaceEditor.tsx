@@ -1,13 +1,13 @@
 "use client";
 
 import { Editor } from "@/components/Editor/Editor";
+import { ImageViewer } from "@/components/ImageViewer";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { withSuspense } from "@/lib/hoc/withSuspense";
-import { encodePath } from "@/lib/paths2";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
 import { Suspense, use, useEffect, useMemo, useRef } from "react";
@@ -26,14 +26,6 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
     </>
   );
 }
-export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
-  return (
-    <div className="p-4 m-auto flex justify-center items-center h-full w-full flex-col">
-      <img className="max-h-[500px] aspect-auto bg-white" alt={alt} src={encodePath(origSrc)} />
-    </div>
-  );
-}
-
 const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationError> }) => {
   const { currentWorkspace } = useWorkspaceContext();
   const tryFirstFile = use(useMemo(() => currentWorkspace.tryFirstFileUrl(), [currentWorkspace]));
@@ -64,7 +56,7 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
   const { contents, debouncedUpdate, error } = useFileContents();
   useEffect(() => {
     if (editorRef.current && contents !== null) {
-      editorRef.current?.setMarkdown(contents);
+      editorRef.current?.setMarkdown(contents ?? "");
     }
   }, [contents]);
 

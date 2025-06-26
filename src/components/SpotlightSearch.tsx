@@ -24,7 +24,7 @@ function SpotlightSearchItem({
   const router = useRouter();
   const { filePath } = Workspace.parseWorkspacePath(absPathname(href));
   return (
-    <li className="rounded flex-col inline-flex w-full p-1">
+    <li className="rounded flex-col flex w-full p-1">
       <a
         href={href}
         onClick={(e) => {
@@ -145,8 +145,10 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
       )}
       onKeyDown={(e) => {
         if (e.key === "Enter" && sortedList.length > 0) {
-          router.push(joinPath(currentWorkspace.href, sortedList[0]!.href));
-          handleBlur();
+          if (!document.activeElement) {
+            router.push(joinPath(currentWorkspace.href, sortedList[0]!.href));
+            handleBlur();
+          }
         }
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           handleArrowNavigation(e);
@@ -181,7 +183,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
       {Boolean(sortedList.length) && (
         <ul
           tabIndex={-1}
-          className="w-full flex-col justify-center mt-2 max-h-48 overflow-scroll rounded-lg bg-background"
+          className="w-full justify-center mt-2 max-h-48 overflow-scroll rounded-lg bg-background block"
           role="menu"
           aria-label="Spotlight search results"
         >
