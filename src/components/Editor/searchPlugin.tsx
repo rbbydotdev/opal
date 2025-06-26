@@ -15,7 +15,24 @@ export const editorSearchTerm$ = Cell<string>("");
 export const editorSearchRanges$ = Cell<Range[]>([]);
 export const editorSearchCursor$ = Cell<number>(0);
 export const editorSearchTextNodeIndex$ = Cell<TextNodeIndex[]>([]);
-export const editorSearchMode$ = Cell<"typing" | "replace">("typing");
+export const debouncedSearch$ = Cell<"typing" | "replace">("typing");
+export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
+  realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(1000))));
+});
+export const debouncedIndexer2$ = Cell<TextNodeIndex[]>([], (realm) =>
+  realm.link(
+    debouncedIndexer2$,
+    realm.pipe(
+      editorSearchTextNodeIndex$,
+      realm.transformer(
+        debounceTime(250),
+        map((index) => {
+          return Array.from(index as Iterable<TextNodeIndex>);
+        })
+      )
+    )
+  )
+);
 
 function* searchText(allText: string, searchQuery: string): Generator<[start: number, end: number]> {
   if (searchQuery === null) return [];
@@ -157,7 +174,6 @@ export function useEditorSearch() {
   const search = useCellValue(editorSearchTerm$);
 
   const rangeCount = ranges.length;
-
   const scrollToRangeOrIndex = useCallback(
     (range: Range | number, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
       const scrollRange = typeof range === "number" ? ranges[range - 1] : range;
@@ -171,14 +187,14 @@ export function useEditorSearch() {
 
   const setSearch = useCallback(
     (term: string | null) => {
-      realm.pub(editorSearchTerm$, term ?? "");
+      realm.pub(editorSearchTermDebounced$, term ?? "");
     },
     [realm]
   );
 
   const setMode = useCallback(
     (mode: "replace" | "typing") => {
-      realm.pub(editorSearchMode$, mode);
+      realm.pub(debouncedSearch$, mode);
     },
     [realm]
   );
@@ -221,18 +237,25 @@ export function useEditorSearch() {
 
   const replaceAll = useCallback(
     (str: string, onUpdate?: () => void) => {
-      let ticks = 0;
-      for (let i = ranges.length - 1; i >= 0; i--) {
-        const textReplaceRange = ranges[i];
-        if (!textReplaceRange) {
-          throw new Error("error replacing all text range does not exist");
-        }
-        replaceTextInRange(textReplaceRange, str, () => {
-          ticks++;
-          if (ticks >= ranges.length) {
-            onUpdate?.();
+      const runReplaceAll = () => {
+        let ticks = 0;
+        for (let i = ranges.length - 1; i >= 0; i--) {
+          const textReplaceRange = ranges[i];
+          if (!textReplaceRange) {
+            throw new Error("error replacing all text range does not exist");
           }
-        });
+          replaceTextInRange(textReplaceRange, str, () => {
+            ticks++;
+            if (ticks >= ranges.length) {
+              onUpdate?.();
+            }
+          });
+        }
+      };
+      if (typeof requestIdleCallback === "function") {
+        requestIdleCallback(runReplaceAll);
+      } else {
+        setTimeout(runReplaceAll, 0);
       }
     },
     [ranges]
@@ -295,17 +318,6 @@ export const searchPlugin = realmPlugin({
         updateHighlights(searchQuery, realm.getValue(editorSearchTextNodeIndex$));
       });
 
-      const debouncedIndexer$ = realm.pipe(
-        realm.pipe(
-          editorSearchTextNodeIndex$,
-          realm.transformer(
-            debounceTime(250),
-            map((index) => {
-              return Array.from(index as Iterable<TextNodeIndex>);
-            })
-          )
-        )
-      );
       let observer: MutationObserver | null = null;
       //post init should take a clean up function but it does not
       return editor.registerRootListener((rootElement) => {
@@ -316,10 +328,10 @@ export const searchPlugin = realmPlugin({
         if (rootElement) {
           realm.pub(editorSearchTextNodeIndex$, [...getTextNodeIndex(rootElement)]);
           observer = new MutationObserver(() => {
-            if (realm.getValue(editorSearchMode$) === "replace") {
+            if (realm.getValue(debouncedSearch$) === "replace") {
               realm.pub(editorSearchTextNodeIndex$, [...getTextNodeIndex(rootElement)]);
             } else {
-              realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
+              realm.pub(debouncedIndexer2$, getTextNodeIndex(rootElement));
             }
           });
           observer.observe(rootElement, {

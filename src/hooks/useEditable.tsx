@@ -5,6 +5,7 @@ import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, changePrefix, prefix, RelPath, relPath, sanitizeUserInputFilePath } from "@/lib/paths2";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 export function useEditable<T extends TreeFile | TreeDir>({
   treeNode,
@@ -30,6 +31,11 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const isFocused = fullPath === focused;
   const isVirtual = fullPath === virtual;
   const isSelectedRange = useMemo(() => selectedRange.includes(treeNode.path), [selectedRange, treeNode.path]);
+  const pathname = usePathname();
+  const isCurrentPath = useMemo(
+    () => Workspace.parseWorkspacePath(pathname).filePath === fullPath,
+    [pathname, fullPath]
+  );
 
   //assuring focus on the input when editing
   useEffect(() => {
@@ -37,10 +43,24 @@ export function useEditable<T extends TreeFile | TreeDir>({
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [expand, fullPath, isEditing, isFocused]);
+  }, [expand, fullPath, isCurrentPath, isEditing, isFocused]);
+
+  useEffect(() => {
+    if (isCurrentPath && !isEditing && linkRef.current) {
+      setTimeout(() => {
+        if (linkRef.current && document.activeElement !== linkRef.current) {
+          // console.log(document.activeElement, "focus on linkRef");
+          linkRef.current?.focus();
+        }
+      }, 0);
+    }
+  }, [isCurrentPath, isEditing]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      if (e.button === 2) {
+        return;
+      }
       if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
@@ -68,6 +88,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
           });
         }
       } else if (!isEditing) {
+        //check if there was a right click
         setFileTreeCtx({
           editing: null,
           editType: null,
@@ -81,7 +102,11 @@ export function useEditable<T extends TreeFile | TreeDir>({
   );
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
+      if (e.button === 2) {
+        return;
+      }
       if (!e.shiftKey) {
+        console.log(2);
         linkRef.current?.focus();
         // const newRange = [...new Set(selectedRange).add(treeNode.path)];
         setFileTreeCtx({
@@ -98,8 +123,8 @@ export function useEditable<T extends TreeFile | TreeDir>({
 
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent) => {
-      e.stopPropagation();
       if (e.key === "Escape") {
+        // e.stopPropagation();
         if (virtual) {
           currentWorkspace.removeVirtualfile(virtual);
         }
@@ -117,6 +142,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
             prefix(fileName) &&
             (["new", "duplicate"].includes(editType) || prefix(fileName) !== prefix(basename(fullPath)))
           ) {
+            e.stopPropagation();
             const wantPath = basename(changePrefix(fullPath, sanitizeUserInputFilePath(prefix(fileName))));
             const gotPath = await commitChange(treeNode, wantPath, editType);
             const newFocused = gotPath ?? fullPath;
@@ -202,7 +228,11 @@ export function useEditable<T extends TreeFile | TreeDir>({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      (e.target as HTMLElement).focus();
+      if (e.button === 2) {
+        return;
+      }
+      console.log(3);
+      // (e.target as HTMLElement).closest("a")?.focus();
       //meta key cmd click or ctrl click
       if (e.shiftKey || e.metaKey || e.ctrlKey) {
         e.preventDefault();
@@ -218,6 +248,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
     currentFile,
     fileName,
     isSelected,
+    isCurrentPath,
     isSelectedRange,
     isFocused,
     isVirtual,

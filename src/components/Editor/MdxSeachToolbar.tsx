@@ -1,4 +1,4 @@
-import { editorSearchTerm$, useEditorSearch } from "@/components/Editor/searchPlugin";
+import { useEditorSearch } from "@/components/Editor/searchPlugin";
 import { EditorSearchBar } from "@/features/editor-search/EditorSearchBar";
 import { useEditorSearchTool } from "@/features/editor-search/useEditorSearch";
 import { editorRootElementRef$, useRealm } from "@mdxeditor/editor";
@@ -9,6 +9,7 @@ export const MdxSearchToolbar = () => {
   const { isSearchOpen, closeSearch } = useEditorSearchTool();
   const realm = useRealm();
   const editorRootEl = realm.getValue(editorRootElementRef$);
+  const { prev, next, cursor, setSearch, ranges, replace, replaceAll, setMode } = useEditorSearch();
 
   const handleSearchClose = useCallback(() => {
     closeSearch();
@@ -17,11 +18,10 @@ export const MdxSearchToolbar = () => {
 
   const handleSearchChange = useCallback(
     (searchTerm: string | null) => {
-      realm.pub(editorSearchTerm$, searchTerm);
+      setSearch(searchTerm);
     },
-    [realm]
+    [setSearch]
   );
-  const { prev, next, cursor, ranges, replace, replaceAll, setMode } = useEditorSearch();
   useEffect(() => {
     if (!isSearchOpen) {
       setMode("typing");

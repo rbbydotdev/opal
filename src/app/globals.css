@@ -54,7 +54,8 @@ body {
     --sidebar-ring: var(--ring);
     --navbar-height: 2.5rem;
     --editor-toolbar-height: 3.5rem;
-    --search-bg: 240 6% 12%; /* #1e1e1e */
+    --search-bg: 240 6% 12%; /*#1e1e1e*/
+    /* --search-bg: var(--background); */
     --search-border: 240 4% 24%; /* #3c3c3c */
     --search-header-bg: 240 4% 18%; /* #2d2d30 */
     --search-row-hover: 240 6% 22%; /* #37373d */

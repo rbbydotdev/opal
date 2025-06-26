@@ -2,7 +2,7 @@ import { Disk } from "@/Db/Disk";
 import { createThumbnailWW } from "@/lib/createThumbnailWW";
 import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, encodePath } from "@/lib/paths2";
+import { absPath, AbsPath, encodePath } from "@/lib/paths2";
 
 export class Thumb {
   constructor(
@@ -26,12 +26,12 @@ export class Thumb {
   }
   static pathToURL(path: AbsPath, size = 100) {
     if (path.endsWith(".svg")) {
-      return encodePath(path);
+      return absPath(encodePath(path));
     }
-    return encodePath(path) + "?thumb=" + size;
+    return absPath(encodePath(path) + "?thumb=" + size);
   }
   static resolveURLFromNode(node: TreeNode) {
-    return Thumb.pathToURL(node.isDupNode() ? node.source : node.path);
+    return absPath(Thumb.pathToURL(node.isDupNode() ? node.source : node.path));
   }
   async save() {
     await this.thumbRepo.writeFileRecursive(this.path, this.content!);

@@ -70,7 +70,8 @@ export const EditableFile = ({
   useEffect(() => {
     //weird edge case hmmmmmmm keeps focus after editing
     if (linkRef.current && isFocused && !isEditing) {
-      linkRef.current.focus();
+      linkRef?.current?.focus();
+      // console.log(linkRef);
     }
   }, [isFocused, isEditing, linkRef]);
 

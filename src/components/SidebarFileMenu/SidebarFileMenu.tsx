@@ -136,9 +136,8 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   //attach paste listeners
   useEffect(() => {
     const handlePasteEvent = async (event: ClipboardEvent) => {
-      // const target = event.target as HTMLElement | null;
-      // if (target?.closest?.("[data-sidebar-file-menu]")) {
-      if (true) {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest?.("[data-sidebar-file-menu]")) {
         const files = event.clipboardData?.files;
         if (files && files.length > 0) {
           const images = Array.from([...(files ?? [])]).filter((file) => file.type.startsWith("image/")); //TODO isImage
@@ -180,9 +179,9 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
       }
     };
     const handleCutEvent = (event: ClipboardEvent) => {
-      // const target = event.target as HTMLElement | null;
-      // if (target?.closest?.("[data-sidebar-file-menu]")) {
-      if (true) {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest?.("[data-sidebar-file-menu]")) {
+        // if (true) {
         void copyFileNodesToClipboard({
           fileNodes: selectedFocused,
           action: "cut",
@@ -191,9 +190,8 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
       }
     };
     const handleCopyEvent = (event: ClipboardEvent) => {
-      // const target = event.target as HTMLElement | null;
-      // if (target?.closest?.("[data-sidebar-file-menu]")) {
-      if (true) {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest?.("[data-sidebar-file-menu]")) {
         return copyFileNodesToClipboard({
           fileNodes: selectedFocused,
           action: "copy",

@@ -2,7 +2,7 @@
 import { NullWorkspace } from "@/Db/NullWorkspace";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { TreeDir, TreeDirRoot } from "@/lib/FileTree/TreeNode";
+import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -124,7 +124,7 @@ export function useWorkspaceRoute() {
   return workspaceRoute;
 }
 
-export function useWatchWorkspaceFileTree(currentWorkspace: Workspace) {
+export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: (node: TreeNode) => boolean) {
   const [fileTreeDir, setFileTree] = useState<TreeDirRoot>(NULL_TREE_ROOT);
   const [flatTree, setFlatTree] = useState<string[]>([]);
 
@@ -132,11 +132,12 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace) {
     if (currentWorkspace) {
       return currentWorkspace.watchDisk((fileTreeDir: TreeDir) => {
         const newTree = new TreeDirRoot(fileTreeDir);
+        //if getFlateTree() === flatTree [they are the same] do not update
         setFileTree(newTree);
-        setFlatTree(currentWorkspace.getFlatTree());
+        setFlatTree(currentWorkspace.getFlatTree(filter));
       });
     }
-  }, [currentWorkspace]);
+  }, [currentWorkspace, filter]);
   return { fileTreeDir, flatTree };
 }
 

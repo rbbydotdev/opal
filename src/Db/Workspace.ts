@@ -10,6 +10,7 @@ import { getMimeType } from "@/lib/mimeType";
 import {
   AbsPath,
   absPath,
+  absPathname,
   decodePath,
   encodePath,
   isImage,
@@ -60,6 +61,13 @@ export class Workspace {
     incididunt ut labore et dolore magna aliqua. Ut enim
     ad minim veniam, quis needle nostrud exercitation ullamco
     laboris nisi ut aliquip ex ea commodo consequat.`,
+    // ...new Array(100).fill(0).reduce(
+    //   (p, n, i) => ({
+    //     ...p,
+    //     ["file" + i + ".md"]: "# file \n\n\n" + `file ${i} content with needle ${i}`.repeat(1000),
+    //   }),
+    //   {}
+    // ),
   };
 
   static newCache(id: string) {
@@ -106,7 +114,8 @@ export class Workspace {
   }
 
   get href() {
-    return `${WorkspaceDAO.rootRoute}/${this.name}`;
+    return joinPath(WorkspaceDAO.rootRoute, this.name);
+    // return `${WorkspaceDAO.rootRoute}/${this.name}` as AbsPath;
   }
   toJSON() {
     return {
@@ -151,7 +160,8 @@ export class Workspace {
   //   )}`;
   // }
 
-  static parseWorkspacePath(pathname: string) {
+  static parseWorkspacePath(pathOrUrl: string) {
+    const pathname = absPathname(pathOrUrl);
     if (!pathname.startsWith(WorkspaceDAO.rootRoute)) return { workspaceId: null, filePath: null };
     const [workspaceId, ...filePathRest] = decodePath(relPath(pathname.replace(WorkspaceDAO.rootRoute, ""))).split("/");
     const filePath = filePathRest.join("/");
