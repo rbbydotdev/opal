@@ -2,12 +2,13 @@
 
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { SearchModal } from "@/components/ui/search-modal";
+// import { SearchModal } from "@/components/ui/search-modal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import clsx from "clsx";
@@ -72,9 +73,9 @@ export function WorkSpaceButtonBar() {
   const { pending } = useRequestSignals();
   const router = useRouter();
   return (
-    <>
-      <div className="flex justify-center flex-col items-center w-full">
-        <Link href={"/"} className={clsx({ "animate-spin": pending })}>
+    <div className="[&>*]:outline-none">
+      <div className="flex justify-center flex-col items-center w-full ">
+        <Link href={"/"} className={clsx("outline-none", { "animate-spin": pending })}>
           <div className="rotate-12">
             <div
               className="h-7 w-7 rounded-sm mt-4 mb-4"
@@ -116,14 +117,14 @@ export function WorkSpaceButtonBar() {
         onClick={() => Workspace.DeleteAll().then(() => router.push("/new"))}
       />
 
-      <SearchModal>
+      <WorkspaceSearchDialog>
         <BigButton
           icon={<SearchIcon stroke="current" size={24} strokeWidth={1.25} />}
           title="search"
           href="#"
           className="text-3xs"
         />
-      </SearchModal>
+      </WorkspaceSearchDialog>
       <BigButton
         className="hidden"
         icon={<Zap stroke="current" size={24} strokeWidth={1.25} />}
@@ -187,6 +188,6 @@ export function WorkSpaceButtonBar() {
           </CollapsibleContent>
         </Collapsible>
       )}
-    </>
+    </div>
   );
 }

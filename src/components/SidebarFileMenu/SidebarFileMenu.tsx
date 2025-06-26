@@ -181,7 +181,6 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
     const handleCutEvent = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest?.("[data-sidebar-file-menu]")) {
-        // if (true) {
         void copyFileNodesToClipboard({
           fileNodes: selectedFocused,
           action: "cut",
@@ -292,64 +291,66 @@ export const SidebarFileMenuFiles = ({
   const { externalDrop } = useExternalDrop({ currentWorkspace });
 
   return (
-    <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
-      <Collapsible
-        className="group/collapsible _h-full _flex-1 flex flex-col min-h-0"
-        open={groupExpanded}
-        onOpenChange={groupSetExpand}
-      >
-        <SidebarGroupLabel className="relative w-full pr-0 overflow-x-hidden ">
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton className="peer">
-              <SidebarGroupLabel className="pl-0">
-                <div className="flex items-center">
-                  <ChevronRight
-                    size={14}
-                    className={
-                      "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                    }
-                  />
-                </div>
-                <div className="w-full">
-                  <div className="flex justify-center items-center">
-                    <Icon className="mr-2" size={12} />
-                    {title}
+    <>
+      <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
+        <Collapsible
+          className="group/collapsible _h-full _flex-1 flex flex-col min-h-0"
+          open={groupExpanded}
+          onOpenChange={groupSetExpand}
+        >
+          <SidebarGroupLabel className="relative w-full pr-0 overflow-x-hidden ">
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton className="peer">
+                <SidebarGroupLabel className="pl-0">
+                  <div className="flex items-center">
+                    <ChevronRight
+                      size={14}
+                      className={
+                        "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
+                      }
+                    />
                   </div>
-                </div>
-              </SidebarGroupLabel>
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          {groupExpanded && (
-            <div className="peer-hover:bg-sidebar-accent  h-full flex items-center rounded-none">{children}</div>
-          )}
-        </SidebarGroupLabel>
-
-        <CollapsibleContent className="min-h-0 flex-shrink">
-          <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
-            {!Object.keys(fileTreeDir?.filterOutChildren?.(filter) ?? {}).length ? (
-              <div className="w-full" onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}>
-                <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full _group-hover:bg-sidebar-accent">
-                  <div className="w-full ">
-                    {/* No Files, Click <FilePlus className={"inline"} size={12} /> to get started */}
-                    <span className="text-3xs">empty</span>
+                  <div className="w-full">
+                    <div className="flex justify-center items-center">
+                      <Icon className="mr-2" size={12} />
+                      {title}
+                    </div>
                   </div>
                 </SidebarGroupLabel>
-              </div>
-            ) : (
-              <FileTreeMenu
-                fileTreeDir={fileTreeDir as TreeDir}
-                expand={expandSingle}
-                filter={filter}
-                renameDirOrFileMultiple={renameDirOrFileMultiple}
-                expandForNode={expandForNode}
-                expanded={expanded}
-                depth={0}
-              />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            {groupExpanded && (
+              <div className="peer-hover:bg-sidebar-accent  h-full flex items-center rounded-none">{children}</div>
             )}
-          </SidebarContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </SidebarGroup>
+          </SidebarGroupLabel>
+
+          <CollapsibleContent className="min-h-0 flex-shrink">
+            <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
+              {!Object.keys(fileTreeDir?.filterOutChildren?.(filter) ?? {}).length ? (
+                <div className="w-full" onDrop={(e) => externalDrop(e, TreeNode.FromPath(absPath("/"), "dir"))}>
+                  <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full _group-hover:bg-sidebar-accent">
+                    <div className="w-full ">
+                      {/* No Files, Click <FilePlus className={"inline"} size={12} /> to get started */}
+                      <span className="text-3xs">empty</span>
+                    </div>
+                  </SidebarGroupLabel>
+                </div>
+              ) : (
+                <FileTreeMenu
+                  fileTreeDir={fileTreeDir as TreeDir}
+                  expand={expandSingle}
+                  filter={filter}
+                  renameDirOrFileMultiple={renameDirOrFileMultiple}
+                  expandForNode={expandForNode}
+                  expanded={expanded}
+                  depth={0}
+                />
+              )}
+            </SidebarContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </SidebarGroup>
+    </>
   );
 };
 

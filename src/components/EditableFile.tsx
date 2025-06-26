@@ -71,7 +71,6 @@ export const EditableFile = ({
     //weird edge case hmmmmmmm keeps focus after editing
     if (linkRef.current && isFocused && !isEditing) {
       linkRef?.current?.focus();
-      // console.log(linkRef);
     }
   }, [isFocused, isEditing, linkRef]);
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { Editor } from "@/components/Editor/Editor";
-import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
@@ -55,10 +54,8 @@ const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
 
 export function WorkspaceView(props: WorkspaceEditorProps) {
   const { isImage, filePath, inTrash } = useCurrentFilepath();
-  const { currentWorkspace } = useWorkspaceContext();
   return (
     <>
-      <SpotlightSearch currentWorkspace={currentWorkspace} />
       {inTrash && <TrashBanner filePath={filePath} />}
       {isImage ? <ImageViewer alt={filePath} origSrc={filePath} /> : <WorkspaceEditor {...props} />}
     </>

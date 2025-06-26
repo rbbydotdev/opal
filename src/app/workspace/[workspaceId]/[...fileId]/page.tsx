@@ -1,4 +1,5 @@
 "use client";
+import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { WorkspaceView } from "@/components/WorkspaceEditor";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import useFavicon from "@/hooks/useFavicon";
@@ -18,5 +19,10 @@ export default function Page() {
     }
   }, [currentWorkspace, filePath, router]);
   if (!filePath) return null;
-  return <WorkspaceView />;
+  return (
+    <>
+      <SpotlightSearch currentWorkspace={currentWorkspace} />
+      <WorkspaceView />
+    </>
+  );
 }
