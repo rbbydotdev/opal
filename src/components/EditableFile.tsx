@@ -92,6 +92,7 @@ export const EditableFile = ({
           tabIndex={0}
           onFocus={handleFocus}
           onMouseUp={handleMouseUp}
+          title={fullPath}
           onMouseDown={handleMouseDown}
           // onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
           onKeyDown={(e) => handleKeyDown(e)}
