@@ -73,7 +73,7 @@ export function WorkSpaceButtonBar() {
   const { pending } = useRequestSignals();
   const router = useRouter();
   return (
-    <div className="[&>*]:outline-none">
+    <div className="[&>*]:outline-none  max-h-full flex flex-col">
       <div className="flex justify-center flex-col items-center w-full ">
         <Link href={"/"} className={clsx("outline-none", { "animate-spin": pending })}>
           <div className="rotate-12">
@@ -155,13 +155,13 @@ export function WorkSpaceButtonBar() {
 
       {otherWorkspacesCount > 0 && (
         <Collapsible
-          className="w-full flex flex-col justify-start overflow-scroll pb-12 scrollbar-thin items-center"
+          className="w-full flex flex-col justify-start pb-0 scrollbar-thin items-center min-h-0 "
           open={expand}
           onOpenChange={setExpand}
         >
           <CollapsibleTrigger
             className="mt-2 h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
-  hover:text-slate-200 bg-secondary-foreground flex items-center relative"
+  hover:text-slate-200 bg-secondary-foreground flex items-center relative "
           >
             <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
             <div className=" group-data-[state=open]:hidden text-white absolute top-0 right-2 rounded-full bg-slate-700 w-[1.25rem] p-0 flex justify-center items-center h-[1.25rem] text-xs">
@@ -176,7 +176,7 @@ export function WorkSpaceButtonBar() {
             </div> */}
           </CollapsibleTrigger>
 
-          <CollapsibleContent className="w-full bg-slate-800 ">
+          <CollapsibleContent className="w-full min-h-0  max-h-full overflow-y-scroll no-scrollbar">
             {filteredWorkspaces.map((workspace) => (
               <BigButton
                 icon={<WorkspaceIcon input={workspace.guid} />}

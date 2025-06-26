@@ -49,7 +49,7 @@ export function EditorSidebar({
         <div className="w-full flex items-center justify-start gap-1">
           <Opal size={12} />
           opal editor by{" "}
-          <a href="https://github.com/rbbydotdev" className="inline">
+          <a href="https://github.com/rbbydotdev" className="inline" tabIndex={-1}>
             @rbbydotdev
           </a>
         </div>
