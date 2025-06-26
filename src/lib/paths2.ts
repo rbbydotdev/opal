@@ -13,7 +13,7 @@ import { getMimeType } from "./mimeType";
 // --- Constructors ---
 export function absPath(path: string | TreeNode): AbsPath {
   let pathStr = String(path);
-  if (isAbsPath(pathStr)) return path as AbsPath;
+  if (isAbsPath(pathStr)) return pathStr as AbsPath;
   if (!pathStr.startsWith("/")) pathStr = "/" + pathStr;
   if (pathStr !== "/" && pathStr.endsWith("/")) pathStr = pathStr.slice(0, -1);
   return pathModule.normalize(pathStr) as AbsPath;
