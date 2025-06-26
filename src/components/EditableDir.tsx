@@ -127,7 +127,7 @@ export const EditableDir = ({
                 onBlur={handleBlur}
               />
             ) : (
-              basename(fullPath)
+              <span title={fullPath}>{basename(fullPath)}</span>
             )}
           </div>
         </div>

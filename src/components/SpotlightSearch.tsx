@@ -176,7 +176,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
           id="spotlight-search"
           type="text"
           autoComplete="off"
-          placeholder="Search Files..."
+          placeholder="Spotlight Search..."
           className="p-2 border focus:outline-none border-none w-full rounded-lg text-sm bg-background"
         />
       </div>

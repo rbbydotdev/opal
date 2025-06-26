@@ -1,8 +1,12 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CollapsibleContent } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { Search, X } from "lucide-react";
+import { ChevronRight, FileTextIcon, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const lines = new Array(100).fill(0);
@@ -37,10 +41,32 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
           }
         }}
       >
-        <DialogTitle className="font-mono font-thin text-xs flex items-center gap-2">
+        <DialogTitle className="font-mono font-thin text-xs flex items-center gap-2 -mt-4 -ml-4 mb-2">
           <Search size={16} /> search
         </DialogTitle>
-        <Input className="outline-ring border bg-sidebar font-mono" placeholder="search workspace..." />
+        <Collapsible className="group/collapsible">
+          <div className="flex">
+            <CollapsibleTrigger className="text-2xs flex items-center -ml-3 mr-1 outline-none" asChild>
+              <button className="ouline-none">
+                <ChevronRight
+                  size={14}
+                  className={
+                    "outline-none w-4 transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-2"
+                  }
+                />
+              </button>
+            </CollapsibleTrigger>
+            <Input className="outline-ring border bg-sidebar font-mono" placeholder="search workspace..." />
+          </div>
+          <CollapsibleContent>
+            <div className="flex items-center gap-2 mt-4">
+              <Checkbox id="all_workspaces" />
+              <Label className="text-2xs font-mono text-primary flex items-center gap-1" htmlFor="all_workspaces">
+                <span>all workspaces</span>
+              </Label>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
         <div className="bg-sidebar h-full overflow-y-scroll no-scrollbar">
           <SearchResults />
         </div>
@@ -56,7 +82,12 @@ function SearchFile({ closeFile, title }: { closeFile: () => void; title: string
   return (
     <>
       <div className="w-full flex items-center border rounded-t text-2xs font-mono bg-accent h-8 sticky top-0 z-10">
-        <div className="flex-1 min-w-0 truncate px-2 py-2">{title}</div>
+        <div className="ml-1 text-ring">
+          <FileTextIcon size={12} />
+        </div>
+        <div title={title} className="flex-1 min-w-0 truncate px-2 py-2">
+          {title}
+        </div>
         <Button variant="ghost" className="flex-shrink-0 h-5 w-5 p-0 mr-2 ml-2" onClick={closeFile}>
           <X size={14} />
         </Button>
