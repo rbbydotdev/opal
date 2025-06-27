@@ -17,76 +17,30 @@ export function isExternalFileDrop(event: React.DragEvent) {
   );
 }
 
-export function useHandleDropFilesForNode2({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  // The returned function is now async to handle clipboard items
-  return async function ({ data, targetNode }: { data: FileList | ClipboardItems; targetNode: TreeNode }) {
-    let imageFiles: File[] = [];
-    let markdownFiles: File[] = [];
-
-    const targetDir = targetNode.closestDirPath();
-
-    // Type guard: FileList is not a true array, ClipboardItem[] is.
-    if (!Array.isArray(data)) {
-      // if (false) {
-      // --- Handle FileList (from drag-and-drop) ---
-      const fileArray = Array.from(data);
+export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  return useCallback(
+    async function ({ files, targetNode }: { files: FileList | []; targetNode: TreeNode }) {
+      let imageFiles: File[] = [];
+      let markdownFiles: File[] = [];
+      const targetDir = targetNode.closestDirPath();
+      const fileArray = Array.from(files);
       imageFiles = fileArray.filter((file) => file.type.startsWith("image/"));
       markdownFiles = fileArray.filter((file) => file.type === "text/markdown" || file.name.endsWith(".md"));
-    } else {
-      // --- Handle ClipboardItem[] (from paste) ---
-      for (const item of data) {
-        const imageType = item.types.find((type) => type.startsWith("image/"));
-        const markdownType = item.types.find((type) => type === "text/markdown");
+      const promises: Promise<unknown>[] = [];
 
-        // Prioritize images over markdown if both exist on one item
-        if (imageType) {
-          const blob = await item.getType(imageType);
-          // Create a File object since blobs from clipboard have no name
-          const extension = imageType.split("/")[1] || "png";
-          const fileName = `pasted-image-${Date.now()}.${extension}`;
-          const imageFile = new File([blob], fileName, { type: imageType });
-          imageFiles.push(imageFile);
-        } else if (markdownType) {
-          const blob = await item.getType(markdownType);
-          const fileName = `pasted-markdown-${Date.now()}.md`;
-          const markdownFile = new File([blob], fileName, {
-            type: markdownType,
-          });
-          markdownFiles.push(markdownFile);
-        }
+      if (imageFiles.length > 0) {
+        promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
       }
-    }
 
-    // --- Unified processing logic ---
-    const promises: Promise<unknown>[] = [];
+      if (markdownFiles.length > 0) {
+        const newFilesData = markdownFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
+        promises.push(currentWorkspace.newFiles(newFilesData));
+      }
 
-    if (imageFiles.length > 0) {
-      promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
-    }
-
-    if (markdownFiles.length > 0) {
-      const newFilesData = markdownFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
-      promises.push(currentWorkspace.newFiles(newFilesData));
-    }
-
-    return Promise.all(promises);
-  };
-}
-
-export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  return function ({ files, targetNode }: { files: FileList; targetNode: TreeNode }) {
-    const images = Array.from(files).filter((file) => file.type.startsWith("image/"));
-    const targetDir = targetNode.closestDirPath();
-    const promises: Promise<unknown>[] = [];
-    if (images.length > 0) {
-      promises.push(currentWorkspace.uploadMultipleImages(images, targetDir));
-    }
-    const markdowns = Array.from(files).filter((file) => file.type === "text/markdown");
-    if (markdowns.length > 0) {
-      promises.push(currentWorkspace.newFiles(markdowns.map((file) => [joinPath(targetDir, file.name), file])));
-    }
-    return Promise.all(promises);
-  };
+      return Promise.all(promises);
+    },
+    [currentWorkspace]
+  );
 }
 
 export function useHandleDropFilesEventForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
@@ -139,10 +93,10 @@ export function useFileTreeDragDrop({
       try {
         prepareNodeDataTransfer({
           dataTransfer: event.dataTransfer,
-          selectedRange,
-          focused,
-          currentWorkspace,
-          targetNode,
+          nodes: currentWorkspace.nodesFromPaths(
+            selectedRange.slice().concat(targetNode.path, selectedRange, focused ?? [])
+          ),
+          workspaceId: currentWorkspace.name,
           action: "move",
         });
       } catch (e) {

@@ -1,16 +1,16 @@
-import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { MetaDataTransfer } from "@/components/MetaDataTransfer";
+import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
 import { Workspace } from "@/Db/Workspace";
 import {
+  TreeNodeDataTransferJType,
   TreeNodeDataTransferType,
-  treeNodeDataTransfer,
 } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
-import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, absPath, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
+import { AbsPath, absPath } from "@/lib/paths2";
 import React from "react";
 
-export function parseCopyNodesPayload(data: string): (TreeNodeDataTransferType & { fileNodes: AbsPath[] }) | null {
+export function tryParseCopyNodesPayload(data: string): TreeNodeDataTransferJType | null {
   try {
     const parsed = JSON.parse(data) as TreeNodeDataTransferType & { fileNodes: AbsPath[] };
     if (parsed && parsed.workspaceId && Array.isArray(parsed.fileNodes) && parsed.action) {
@@ -20,41 +20,32 @@ export function parseCopyNodesPayload(data: string): (TreeNodeDataTransferType &
         action: parsed.action,
       };
     }
-  } catch (_error) {
-    //swallow
-    // console.warn("Failed to parse copy nodes payload");
+  } catch (error) {
+    if (!(error instanceof SyntaxError)) {
+      throw error;
+    }
   }
   return null;
 }
-export function copyFileNodesToClipboard({
+
+// prepareNodeDataTransfer
+export async function copyFileNodesToClipboard({
   fileNodes,
   action,
   workspaceId,
 }: {
-  fileNodes: TreeNode[] | AbsPath[];
+  fileNodes: TreeNode[];
   workspaceId: string;
   action: "copy" | "cut";
 }) {
-  const htmlString =
-    fileNodes
-      .filter(isMarkdown)
-      .map(
-        (path) => `<a data-action="copy" href="${window.location.origin}${path}">${capitalizeFirst(prefix(path))}</a>`
-      )
-      .join(" ") +
-    fileNodes
-      .filter(isImage)
-      .map((path) => `<img data-action="copy" src="${encodePath(path || "")}" />`)
-      .join(" ");
   try {
-    const data = [
-      new ClipboardItem({
-        "text/html": htmlString,
-        // "text/plain": JSON.stringify(copyNodesPayload({ fileNodes, action, workspaceId })),
-        [INTERNAL_NODE_FILE_TYPE]: JSON.stringify(treeNodeDataTransfer({ fileNodes, action, workspaceId })),
-      }),
-    ];
-    return navigator.clipboard.write(data).catch(() => {});
+    const metaDataTransfer = prepareNodeDataTransfer({
+      dataTransfer: new MetaDataTransfer(),
+      nodes: fileNodes,
+      workspaceId,
+      action,
+    });
+    return navigator.clipboard.write([await metaDataTransfer.toClipboardItem()]);
   } catch (err) {
     console.error("Failed to copy HTML to clipboard:", err);
   }
