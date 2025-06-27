@@ -45,7 +45,7 @@ function BigButton({
             <div className="flex flex-col items-center justify-center">
               {icon}
               {title && (
-                <div className="uppercase text-ellipsis px-2 pt-2 text-center overflow-hidden w-full">{title}</div>
+                <div className="uppercase text-ellipsis px-2 pt-2 text-center overflow-clip w-full">{title}</div>
               )}
             </div>
           </div>
@@ -169,7 +169,7 @@ export function WorkSpaceButtonBar() {
             </div>
             <div className="absolute group-data-[state=open]:hidden flex w-full justify-center ">
               {/* <DatabaseZap size={16} className="w-full m-auto absolute r-0" /> */}
-              <img src="/opal-blank.svg" className="w-6 h-6 rounded overflow-hidden rotate-12" alt="Opal Icon" />
+              <img src="/opal-blank.svg" className="w-6 h-6 rounded overflow-clip rotate-12" alt="Opal Icon" />
             </div>
 
             {/* <div className="w-full flex justify-center items-center text-xs relative">
