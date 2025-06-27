@@ -6,7 +6,16 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
 
 import { FileTreeMenuCtxProvider, useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { useDndList } from "@/components/SidebarFileMenu/useDndList";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarContent,
   SidebarGroup,
@@ -21,13 +30,18 @@ import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
-import { useHandleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import {
+  useHandleDropFilesEventForNode,
+  useHandleDropFilesForNode2,
+} from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { FileTreeExpanderProvider } from "@/features/filetree-expander/FileTreeExpanderContext";
 import { useFileTreeExpanderContext } from "@/features/filetree-expander/useFileTreeExpander";
 import { useSidebarItemExpander } from "@/features/filetree-expander/useSidebarItemExpander";
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath, joinPath } from "@/lib/paths2";
+import { absPath, AbsPath } from "@/lib/paths2";
 import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import clsx from "clsx";
 import {
@@ -38,6 +52,7 @@ import {
   Delete,
   DotIcon,
   Download,
+  Ellipsis,
   FilePlus,
   Files,
   FileTextIcon,
@@ -46,6 +61,7 @@ import {
   GitMerge,
   ChromeIcon as Google,
   Info,
+  List,
   Lock,
   Plus,
   RefreshCw,
@@ -60,6 +76,14 @@ import { twMerge } from "tailwind-merge";
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
+  const { setValue, storedValue, defaultValues } = useLocalStorage2("SidebarFileMenu/Dnd", [
+    "publish",
+    "sync",
+    "export",
+    "trash",
+    "files",
+  ] as const);
+  const { dnds, setDnds, toggleDnd, dndId } = useDndList(defaultValues, storedValue, setValue);
   return (
     <SidebarGroup
       {...props}
@@ -70,18 +94,49 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
       onDrop={(e) => handleExternalDropEvent(e, TreeNode.FromPath(absPath("/"), "dir"))}
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
-      <SidebarDndList storageKey={"sidebarMenu"}>
-        <SidebarFileMenuPublish dnd-id="publish" className="flex-shrink flex" />
-        <SidebarFileMenuSync dnd-id="sync" className="flex-shrink flex flex-col min-h-8" />
-        <SidebarFileMenuExport dnd-id="export" className="flex-shrink flex" />
+      <DropdownMenu>
+        <DropdownMenuContent>
+          {defaultValues.map((id) => (
+            <DropdownMenuCheckboxItem
+              key={id}
+              className="flex gap-2"
+              checked={dnds.includes(id)}
+              onCheckedChange={() => toggleDnd(id)}
+            >
+              <span className="text-xs">{capitalizeFirst(id)}</span>
+            </DropdownMenuCheckboxItem>
+          ))}
+          <Separator />
+          <DropdownMenuItem
+            className="text-xs flex justify-start"
+            onClick={() => {
+              setDnds([...defaultValues]);
+            }}
+          >
+            <List />
+            Show All
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+        <SidebarGroupLabel className="mb-2">
+          <DropdownMenuTrigger asChild>
+            <SidebarGroupAction className="mr-2">
+              <Ellipsis />
+            </SidebarGroupAction>
+          </DropdownMenuTrigger>
+        </SidebarGroupLabel>
+      </DropdownMenu>
+      <SidebarDndList storageKey={"sidebarMenu"} show={Array.from(dnds)}>
+        <SidebarFileMenuPublish dnd-id={dndId("publish")} className="flex-shrink flex" />
+        <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col min-h-8" />
+        <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
 
-        <div dnd-id="trash" className="min-h-8">
+        <div dnd-id={dndId("trash")} className="min-h-8">
           <FileTreeMenuCtxProvider id="TrashFiles">
             <TrashSidebarFileMenuFileSection />
           </FileTreeMenuCtxProvider>
         </div>
 
-        <div className="min-h-8" dnd-id="files">
+        <div className="min-h-8" dnd-id={dndId("files")}>
           <FileTreeMenuCtxProvider id="MainFiles">
             <FileTreeExpanderProvider>
               <MainSidebarFileMenuFileSection />
@@ -103,7 +158,7 @@ function TrashSidebarFileMenuFileSection({ className }: { className?: string }) 
   return (
     <FileTreeExpanderProvider>
       <ContextMenu>
-        <ContextMenuTrigger asChild>
+        <ContextMenuTrigger disabled={!currentWorkspace.hasTrash()} asChild>
           <SidebarFileMenuFileSectionInternal
             Icon={Trash2}
             title={
@@ -131,45 +186,63 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { focused, selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
   const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
+
   const { setExpandAll, expandForNode } = useFileTreeExpanderContext();
+  const dothething = useHandleDropFilesForNode2({ currentWorkspace });
 
   //attach paste listeners
   useEffect(() => {
     const handlePasteEvent = async (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest?.("[data-sidebar-file-menu]")) {
-        const files = event.clipboardData?.files;
-        // handleFilesForNode();
-        if (files && files.length > 0) {
-          const images = Array.from([...(files ?? [])]).filter((file) => file.type.startsWith("image/")); //TODO isImage
-          const markdowns = Array.from([...(files ?? [])]).filter((file) => file.type === "text/markdown");
-          if (images.length || markdowns.length) {
-            event.preventDefault();
-            event.stopPropagation();
-            const selectedNode = currentWorkspace.nodeFromPath(focused);
-            const destPath = (selectedNode ?? TreeNode.FromPath(absPath("/"), "dir")).closestDirPath();
-            if (images && images.length > 0) {
-              console.debug("FileTreeMenu window paste event capture for files:" + images.length);
-              await currentWorkspace.uploadMultipleImages(images, destPath);
-            }
-            if (markdowns && markdowns.length > 0) {
-              console.debug("FileTreeMenu window paste event capture for markdown files:" + markdowns.length);
-              await currentWorkspace.newFiles(
-                await Promise.all(markdowns.map(async (file) => [joinPath(destPath, file.name), await file.text()]))
-              );
-            }
-          }
-        }
         if (event.clipboardData?.getData("text/plain")) {
           const text = event.clipboardData.getData("text/plain");
           if (text) {
             await handleFileTreePaste(
               currentWorkspace,
-              currentWorkspace.nodeFromPath(selectedFocused[0])?.closestDirPath() || absPath("/")
+              await navigator.clipboard.read(),
+              currentWorkspace.tryNodeFromPath(selectedFocused[0])
             );
           }
         }
-        void navigator.clipboard.writeText("").catch(() => {});
+
+        const data = event.clipboardData?.files;
+        const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]);
+        if (!data?.length) return;
+        await dothething({ data, targetNode });
+        // const files = event.clipboardData?.files;
+        // // handleFilesForNode();
+        // if (files && files.length > 0) {
+        //   const images = Array.from([...(files ?? [])]).filter((file) => file.type.startsWith("image/")); //TODO isImage
+        //   const markdowns = Array.from([...(files ?? [])]).filter((file) => file.type === "text/markdown");
+        //   if (images.length || markdowns.length) {
+        //     event.preventDefault();
+        //     event.stopPropagation();
+        //     const selectedNode = currentWorkspace.nodeFromPath(focused);
+        //     const destPath = (selectedNode ?? TreeNode.FromPath(absPath("/"), "dir")).closestDirPath();
+        //     if (images && images.length > 0) {
+        //       console.debug("FileTreeMenu window paste event capture for files:" + images.length);
+        //       await currentWorkspace.uploadMultipleImages(images, destPath);
+        //     }
+        //     if (markdowns && markdowns.length > 0) {
+        //       console.debug("FileTreeMenu window paste event capture for markdown files:" + markdowns.length);
+        //       await currentWorkspace.newFiles(
+        //         await Promise.all(markdowns.map(async (file) => [joinPath(destPath, file.name), await file.text()]))
+        //       );
+        //     }
+        //   }
+        // }
+        // if (event.clipboardData?.getData("text/plain")) {
+        //   const text = event.clipboardData.getData("text/plain");
+        //   if (text) {
+        //     await handleFileTreePaste(
+        //       currentWorkspace,
+        //       await navigator.clipboard.read(),
+        //       currentWorkspace.nodeFromPath(selectedFocused[0])?.closestDirPath() || absPath("/")
+        //     );
+        //   }
+        // }
+        void navigator.clipboard.writeText("");
         setFileTreeCtx({
           editing: null,
           editType: null,
@@ -207,7 +280,7 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
       window.removeEventListener("cut", handleCutEvent);
       window.removeEventListener("copy", handleCopyEvent);
     };
-  }, [currentWorkspace, focused, selectedFocused, setFileTreeCtx]);
+  }, [currentWorkspace, dothething, focused, selectedFocused, setFileTreeCtx]);
   return (
     <SidebarFileMenuFileSectionInternal title={"Files"} className={className} filter={[absPath("/.trash")]}>
       <SidebarFileMenuFilesActions

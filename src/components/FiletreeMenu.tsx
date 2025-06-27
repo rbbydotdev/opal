@@ -12,26 +12,34 @@ import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath, basename, joinPath } from "@/lib/paths2";
+import { AbsPath, basename, joinPath } from "@/lib/paths2";
 import clsx from "clsx";
 import React, { useCallback } from "react";
 import { parseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
 
-export const INTERNAL_FILE_TYPE = "application/x-opal";
+export const INTERNAL_NODE_FILE_TYPE = "web application/opal+json";
 
-export type NodeDataJType = { nodeData: TreeFileJType[] };
-export type NodeDataType = { nodeData: TreeNode[] };
+export type NodeDataJType = { nodes: TreeFileJType[] };
+export type NodeDataType = { nodes: TreeNode[] };
 
-export async function handleFileTreePaste(currentWorkspace: Workspace, destDir: AbsPath) {
-  const items = await navigator.clipboard.read();
+// // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// function isNodeDataJType(data: any): data is NodeDataJType {
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   return data && Array.isArray(data.nodes) && data.nodes.every((node: any) => node.path);
+// }
+
+export async function handleFileTreePaste(currentWorkspace: Workspace, items: ClipboardItems, targetNode: TreeNode) {
   for (const item of items) {
-    if (item.types.includes("text/plain")) {
-      const clipboardText = String(await item.getType("text/plain").then((blob) => blob.text()));
+    // if (item.types.includes("text/plain")) {
+    if (item.types.includes(INTERNAL_NODE_FILE_TYPE)) {
+      // const clipboardText = String(await item.getType("text/plain").then((blob) => blob.text()));
+      const clipboardText = String(await item.getType(INTERNAL_NODE_FILE_TYPE).then((blob) => blob.text()));
+
       const payload = parseCopyNodesPayload(clipboardText);
       if (!payload || payload.workspaceId !== currentWorkspace.name) continue;
       const { fileNodes, action } = payload;
       const copyNodes: [TreeNode, AbsPath][] = fileNodes
-        .map((path) => [currentWorkspace.nodeFromPath(path)!, joinPath(destDir, basename(path))])
+        .map((path) => [currentWorkspace.nodeFromPath(path)!, joinPath(targetNode.closestDirPath(), basename(path))])
         .filter(([from, to]) => String(from) !== to) as [TreeNode, AbsPath][];
       await currentWorkspace.copyMultipleFiles(copyNodes);
       if (action === "cut") {
@@ -61,7 +69,7 @@ export function FileTreeMenu({
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
   const sidebarMenuRef = React.useRef<HTMLUListElement>(null);
-  const { highlightDragover, selectedFocused, setFileTreeCtx, id: fileTreeId } = useFileTreeMenuCtx();
+  const { highlightDragover, selectedFocused, setFileTreeCtx, id: fileTreeId, draggingNodes } = useFileTreeMenuCtx();
   const { addDirFile, duplicateDirFile, trashFiles, untrashFiles, removeFiles } =
     useWorkspaceFileMgmt(currentWorkspace);
 
@@ -69,7 +77,7 @@ export function FileTreeMenu({
     currentWorkspace,
     onMoveMultiple: renameDirOrFileMultiple,
     onDragEnter: (path: string, data?: NodeDataJType) => {
-      if (!data?.nodeData.some((node) => node.path === path)) {
+      if (!data?.nodes?.some((node) => node.path === path) || draggingNodes.some((node) => node.path === path)) {
         expand(path, true);
       }
     },
@@ -133,20 +141,20 @@ export function FileTreeMenu({
                   });
                 })
               }
-              paste={() =>
-                handleFileTreePaste(
+              paste={async () => {
+                await handleFileTreePaste(
                   currentWorkspace,
-                  currentWorkspace.nodeFromPath(selectedFocused[0])?.closestDirPath() ?? absPath("/")
-                ).then(() => {
-                  setFileTreeCtx({
-                    editing: null,
-                    editType: null,
-                    focused: null,
-                    virtual: null,
-                    selectedRange: [],
-                  });
-                })
-              }
+                  await navigator.clipboard.read(),
+                  currentWorkspace.tryNodeFromPath(selectedFocused[0])
+                );
+                return setFileTreeCtx({
+                  editing: null,
+                  editType: null,
+                  focused: null,
+                  virtual: null,
+                  selectedRange: [],
+                });
+              }}
               duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
               rename={() =>
                 setFileTreeCtx({
