@@ -4,6 +4,7 @@ import { CollapsibleContent } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Collapsible, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { ChevronRight, FileTextIcon, Search, X } from "lucide-react";
@@ -36,8 +37,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       <DialogContent
         className="sm:max-w-[720px]  max-h-[90svh] flex-col flex"
         onEscapeKeyDown={(event) => {
-          // if (document.activeElement?.hasAttribute("data-search-file-expand")) {
-          if ((document.activeElement as HTMLElement | null)?.dataset?.searchFileExpand) {
+          if (document.activeElement?.hasAttribute("data-search-file-expand")) {
             event.preventDefault();
           }
         }}
@@ -65,10 +65,23 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
           </div>
           <CollapsibleContent>
             <div className="flex items-center gap-2 mt-4">
-              <Checkbox id="all_workspaces" className="scale-75" />
-              <Label className="text-2xs font-mono text-primary flex items-center gap-1" htmlFor="all_workspaces">
+              <Checkbox id="all_workspaces_option" className="scale-75" />
+              <Label
+                className="text-2xs font-mono text-primary flex items-center gap-1"
+                htmlFor="all_workspaces_option"
+              >
                 <span>all workspaces</span>
               </Label>
+              <RadioGroup className="flex items-center gap-2 ml-4" defaultValue="markdown_option">
+                <RadioGroupItem id="markdown_option" value="markdown_option" className="scale-75" />
+                <Label className="text-2xs font-mono text-primary flex items-center gap-1" htmlFor="markdown_option">
+                  <span>markdown</span>
+                </Label>
+                <RadioGroupItem id="rich_text_option" value="rich_text_option" className="scale-75" />
+                <Label className="text-2xs font-mono text-primary flex items-center gap-1" htmlFor="rich_text_option">
+                  <span>rich text</span>
+                </Label>
+              </RadioGroup>
             </div>
           </CollapsibleContent>
         </Collapsible>
