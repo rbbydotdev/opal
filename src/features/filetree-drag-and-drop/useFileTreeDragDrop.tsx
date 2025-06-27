@@ -1,5 +1,5 @@
 import { allowedFiletreePathMove } from "@/components/allowedFiletreePathMove";
-import { INTERNAL_FILE_TYPE, NodeDataJType } from "@/components/FiletreeMenu";
+import { INTERNAL_NODE_FILE_TYPE, NodeDataJType } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
 import { Workspace } from "@/Db/Workspace";
@@ -13,8 +13,64 @@ export function isExternalFileDrop(event: React.DragEvent) {
     event.dataTransfer &&
     event.dataTransfer.files &&
     event.dataTransfer.files.length > 0 &&
-    !event.dataTransfer.getData(INTERNAL_FILE_TYPE)
+    !event.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)
   );
+}
+
+export function useHandleDropFilesForNode2({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  // The returned function is now async to handle clipboard items
+  return async function ({ data, targetNode }: { data: FileList | ClipboardItems; targetNode: TreeNode }) {
+    let imageFiles: File[] = [];
+    let markdownFiles: File[] = [];
+
+    const targetDir = targetNode.closestDirPath();
+
+    // Type guard: FileList is not a true array, ClipboardItem[] is.
+    if (!Array.isArray(data)) {
+      // if (false) {
+      // --- Handle FileList (from drag-and-drop) ---
+      const fileArray = Array.from(data);
+      imageFiles = fileArray.filter((file) => file.type.startsWith("image/"));
+      markdownFiles = fileArray.filter((file) => file.type === "text/markdown" || file.name.endsWith(".md"));
+    } else {
+      // --- Handle ClipboardItem[] (from paste) ---
+      for (const item of data) {
+        const imageType = item.types.find((type) => type.startsWith("image/"));
+        const markdownType = item.types.find((type) => type === "text/markdown");
+
+        // Prioritize images over markdown if both exist on one item
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          // Create a File object since blobs from clipboard have no name
+          const extension = imageType.split("/")[1] || "png";
+          const fileName = `pasted-image-${Date.now()}.${extension}`;
+          const imageFile = new File([blob], fileName, { type: imageType });
+          imageFiles.push(imageFile);
+        } else if (markdownType) {
+          const blob = await item.getType(markdownType);
+          const fileName = `pasted-markdown-${Date.now()}.md`;
+          const markdownFile = new File([blob], fileName, {
+            type: markdownType,
+          });
+          markdownFiles.push(markdownFile);
+        }
+      }
+    }
+
+    // --- Unified processing logic ---
+    const promises: Promise<unknown>[] = [];
+
+    if (imageFiles.length > 0) {
+      promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
+    }
+
+    if (markdownFiles.length > 0) {
+      const newFilesData = markdownFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
+      promises.push(currentWorkspace.newFiles(newFilesData));
+    }
+
+    return Promise.all(promises);
+  };
 }
 
 export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
@@ -87,6 +143,7 @@ export function useFileTreeDragDrop({
           focused,
           currentWorkspace,
           targetNode,
+          action: "move",
         });
       } catch (e) {
         console.error(errF`Error preparing node data for drag and drop: ${e}`);
@@ -122,7 +179,7 @@ export function useFileTreeDragDrop({
     event.stopPropagation();
     const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
     try {
-      if (!event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
+      if (!event.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)) {
         await handleExternalDrop(event, targetNode);
       } else {
         if (draggingNodes.length) {
@@ -142,8 +199,8 @@ export function useFileTreeDragDrop({
 
   const handleDragEnter = (event: React.DragEvent, path: string) => {
     event.preventDefault();
-    if (event.dataTransfer.getData(INTERNAL_FILE_TYPE)) {
-      const data = JSON.parse(event.dataTransfer.getData(INTERNAL_FILE_TYPE)) as NodeDataJType;
+    if (event.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)) {
+      const data = JSON.parse(event.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)) as NodeDataJType;
       onDragEnter?.(path, data);
     } else {
       onDragEnter?.(path);

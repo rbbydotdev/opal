@@ -161,7 +161,10 @@ export function EncryptedZipDialog({
             <Button type="button" variant="outline" disabled={isSubmitting} onClick={reset}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !password || !confirmPassword || passwordsMismatch}>
+            <Button
+              type="submit"
+              disabled={Boolean(isSubmitting || !password || !confirmPassword || passwordsMismatch)}
+            >
               {isSubmitting ? "Encrypting..." : "Download"}
             </Button>
           </DialogFooter>

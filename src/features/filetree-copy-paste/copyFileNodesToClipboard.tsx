@@ -1,33 +1,18 @@
+import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { Workspace } from "@/Db/Workspace";
+import {
+  TreeNodeDataTransferType,
+  treeNodeDataTransfer,
+} from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
 import React from "react";
 
-export type CopyNodePayloadType = {
-  workspaceId: string;
-  fileNodes: AbsPath[] | TreeNode[];
-  action: "copy" | "cut";
-};
-export function copyNodesPayload({
-  workspaceId,
-  fileNodes,
-  action,
-}: {
-  workspaceId: string;
-  fileNodes: TreeNode[] | AbsPath[];
-  action: "copy" | "cut";
-}): CopyNodePayloadType {
-  return {
-    workspaceId,
-    fileNodes: fileNodes.map((node) => String(node) as AbsPath),
-    action,
-  };
-}
-export function parseCopyNodesPayload(data: string): (CopyNodePayloadType & { fileNodes: AbsPath[] }) | null {
+export function parseCopyNodesPayload(data: string): (TreeNodeDataTransferType & { fileNodes: AbsPath[] }) | null {
   try {
-    const parsed = JSON.parse(data) as CopyNodePayloadType & { fileNodes: AbsPath[] };
+    const parsed = JSON.parse(data) as TreeNodeDataTransferType & { fileNodes: AbsPath[] };
     if (parsed && parsed.workspaceId && Array.isArray(parsed.fileNodes) && parsed.action) {
       return {
         workspaceId: parsed.workspaceId,
@@ -65,7 +50,8 @@ export function copyFileNodesToClipboard({
     const data = [
       new ClipboardItem({
         "text/html": htmlString,
-        "text/plain": JSON.stringify(copyNodesPayload({ fileNodes, action, workspaceId })),
+        // "text/plain": JSON.stringify(copyNodesPayload({ fileNodes, action, workspaceId })),
+        [INTERNAL_NODE_FILE_TYPE]: JSON.stringify(treeNodeDataTransfer({ fileNodes, action, workspaceId })),
       }),
     ];
     return navigator.clipboard.write(data).catch(() => {});
