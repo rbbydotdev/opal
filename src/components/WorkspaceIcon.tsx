@@ -6,7 +6,7 @@ export function CurrentWorkspaceIcon(props: Omit<React.ComponentProps<typeof Ide
   if (currentWorkspace.isNull) return null;
 
   return (
-    <div className="inline-block rounded-sm overflow-hidden">
+    <div className="inline-block rounded-sm overflow-clip">
       <Identicon input={currentWorkspace.guid} {...props} size={props.size ?? 4} scale={props.scale ?? 7} />
     </div>
   );
@@ -19,7 +19,7 @@ type WorkspaceIconProps = Omit<React.ComponentProps<typeof Identicon>, "size" | 
 
 export function WorkspaceIcon(props: WorkspaceIconProps) {
   return (
-    <div className="inline-block rounded-sm overflow-hidden">
+    <div className="inline-block rounded-sm overflow-clip">
       <Identicon {...props} size={props.size ?? 4} scale={props.scale ?? 7} />
     </div>
   );

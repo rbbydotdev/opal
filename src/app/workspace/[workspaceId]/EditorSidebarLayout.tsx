@@ -148,7 +148,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
   }, [isResizing, isCollapsed, persistedOpenWidth]); // Add isCollapsed and persistedOpenWidth as they are used in handlers
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-screen w-full overflow-clip">
       <aside
         ref={sidebarRef}
         style={{ width: `${currentDisplayWidth}px` }}
@@ -165,7 +165,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
         aria-valuemin={COLLAPSED_STATE_WIDTH}
         aria-valuemax={MAX_RESIZABLE_WIDTH}
         onMouseDown={handleMouseDown}
-        className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-hidden bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
+        className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
         title="Resize sidebar"
       ></div>
 

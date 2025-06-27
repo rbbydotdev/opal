@@ -41,7 +41,7 @@ export function EditorSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="overflow-hidden h-full flex-shrink">
+      <SidebarContent className="overflow-clip h-full flex-shrink">
         <SidebarFileMenu />
       </SidebarContent>
 

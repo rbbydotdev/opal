@@ -2,7 +2,7 @@ import clsx from "clsx";
 
 export const OpalBlank = ({ className, size = 28 }: { className?: string; size?: number }) => (
   <div
-    className={clsx("rounded-full overflow-hidden", className)}
+    className={clsx("rounded-full overflow-clip", className)}
     style={{
       width: size,
       height: size,

@@ -506,7 +506,7 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
                       <span className="rounded-full p-1 border">
                         {VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}
                       </span>
-                      <span className="overflow-hidden text-ellipsis">{connection.name}</span>
+                      <span className="overflow-clip text-ellipsis">{connection.name}</span>
                     </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
