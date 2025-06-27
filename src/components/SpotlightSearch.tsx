@@ -8,202 +8,220 @@ import clsx from "clsx";
 import fuzzysort from "fuzzysort";
 import { FileTextIcon } from "lucide-react";
 import mime from "mime-types";
-import { useRouter } from "next/navigation";
-import { JSX, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import React, { forwardRef, JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { basename } from "../lib/paths2";
 
-function SpotlightSearchItem({
-  title,
-  onNavigate,
-  href,
-}: {
-  href: string | AbsPath;
-  title: string | JSX.Element;
-  onNavigate?: () => void;
-}) {
-  const router = useRouter();
+const SpotlightSearchItem = forwardRef<
+  HTMLAnchorElement,
+  {
+    id: string;
+    href: string | AbsPath;
+    title: string | JSX.Element;
+    isActive: boolean;
+    onClick: () => void;
+  }
+>(({ id, href, title, isActive, onClick }, ref) => {
   const { filePath } = Workspace.parseWorkspacePath(absPathname(href));
+
   return (
-    <li className="rounded flex-col flex w-full p-1">
-      <a
+    // The `li` is for presentation only; the `a` tag is the menu item.
+    <li role="presentation" className="flex w-full flex-col rounded p-1">
+      <Link
+        id={id}
+        ref={ref}
         href={href}
-        onClick={(e) => {
-          e.preventDefault();
-          onNavigate?.();
-          router.push(href);
-        }}
-        tabIndex={0}
-        onFocus={(e) => e.stopPropagation()}
-        className="group min-w-0 flex outline-none justify-start items-center bg-sidebar px-2 py-5 rounded-md h-8 border-sidebar border-2 group-hover:border-ring focus:border-ring"
+        role="menuitem"
+        tabIndex={isActive ? 0 : -1} // Roving tabindex implementation
+        onClick={onClick}
         onKeyDown={(e) => {
+          // `a` tags don't activate on Space by default, so we add it.
           if (e.key === " " || e.key === "Spacebar") {
             e.preventDefault();
-            onNavigate?.();
-            router.push(href);
+            onClick();
           }
         }}
+        className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 border-sidebar bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
       >
         {(mime.lookup(basename(href)) || "").startsWith("image/") ? (
           <img
             src={Thumb.pathToURL(absPath(filePath || "/"))}
             alt=""
-            className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
+            className="mr-2 h-3 w-3 flex-shrink-0 border border-black bg-white"
           />
         ) : (
-          <FileTextIcon className="mr-1 flex-grow-0 w-3 h-3 text-ring flex-shrink-0" />
+          <FileTextIcon className="mr-1 h-3 w-3 flex-shrink-0 flex-grow-0 text-ring" />
         )}
         <div className="min-w-0 truncate text-xs font-mono text-sidebar-foreground/70">{title}</div>
-      </a>
+      </Link>
     </li>
   );
-}
+});
+SpotlightSearchItem.displayName = "SpotlightSearchItem";
 
 export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const filesOnlyFilter = useRef((node: TreeNode) => node.isTreeFile());
   const { flatTree: fileList } = useWatchWorkspaceFileTree(currentWorkspace, filesOnlyFilter.current!);
-  const [sortedList, setSortedList] = useState<{ element: JSX.Element | string; href: AbsPath | string }[]>(() =>
-    currentWorkspace.getFlatTree().map((text) => ({ element: text, href: text }))
-  );
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [activeIndex, setActiveIndex] = useState(-1); // -1 means input is active
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const menuRef = useRef<HTMLUListElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<Element | null>(null); // To store what element triggered the dialog
 
-  const router = useRouter();
-
-  const handleBlur = useCallback(() => {
+  const handleClose = useCallback(() => {
     setOpen(false);
     setSearch("");
-  }, []);
-
-  const handleArrowNavigation = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
-    e.preventDefault();
-    const items = Array.from(e.currentTarget.querySelectorAll<HTMLAnchorElement>("a[tabindex='0']"));
-    const active = document.activeElement;
-    let idx = items.findIndex((el) => el === active);
-    if (e.key === "ArrowDown") {
-      idx = idx < items.length - 1 ? idx + 1 : 0;
-    } else if (e.key === "ArrowUp") {
-      idx = idx > 0 ? idx - 1 : items.length - 1;
+    setActiveIndex(-1);
+    // Restore focus to the element that opened the dialog
+    if (triggerRef.current instanceof HTMLElement) {
+      triggerRef.current.focus();
     }
-    items[idx]?.focus();
   }, []);
 
-  useEffect(() => {
-    return setSortedList(
-      fuzzysort.go(search, fileList).map((result) => ({
-        element: (
-          <>
-            {result.highlight((m, i) => (
-              <b key={i}>{m}</b>
-            ))}
-          </>
-        ),
-        href: result.target,
-      }))
-    );
-  }, [currentWorkspace, fileList, search]);
+  const sortedList = useMemo(() => {
+    setActiveIndex(-1); // Reset index on new search results
+    if (!search) {
+      return fileList.slice(0, 10).map((file) => ({
+        element: <>{file}</>,
+        href: file,
+      }));
+    }
+    const results = fuzzysort.go(search, fileList, {
+      // To prevent slow performance on large file lists
+      limit: 50,
+    });
+    return results.map((result) => ({
+      element: (
+        <>
+          {result.highlight((m, i) => (
+            <b key={i}>{m}</b>
+          ))}
+        </>
+      ),
+      href: result.target,
+    }));
+  }, [fileList, search]);
 
-  useEffect(() => {
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        handleBlur();
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
+      if (!menuItems || menuItems.length === 0) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setActiveIndex((prev) => (prev < menuItems.length - 1 ? prev + 1 : 0));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setActiveIndex((prev) => (prev > 0 ? prev - 1 : menuItems.length - 1));
+          break;
+        case "Home":
+          e.preventDefault();
+          setActiveIndex(0);
+          break;
+        case "End":
+          e.preventDefault();
+          setActiveIndex(menuItems.length - 1);
+          break;
+        case "Enter":
+          // This allows submitting the form if the input is focused
+          if (activeIndex === -1) return;
+          e.preventDefault();
+          (menuItems[activeIndex] as HTMLAnchorElement)?.click();
+          break;
+        case "Escape":
+          e.preventDefault();
+          handleClose();
+          break;
       }
-    };
-    if (open) {
-      window.addEventListener("keydown", handleKeydown);
-      const inputElem = inputRef.current;
-      inputElem!.focus();
-      return () => {
-        window.removeEventListener("keydown", handleKeydown);
-      };
-    } else {
-      window.removeEventListener("keydown", handleKeydown);
-    }
-  }, [handleBlur, open]);
+    },
+    [activeIndex, handleClose]
+  );
 
+  // Effect to handle opening the search palette
   useEffect(() => {
-    function handleOpenKeydown(e: KeyboardEvent) {
+    const handleOpenKeydown = (e: KeyboardEvent) => {
       if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         e.stopImmediatePropagation();
+        triggerRef.current = document.activeElement; // Store focus
         setOpen(true);
       }
-    }
-    window.addEventListener("keydown", handleOpenKeydown);
-    return () => {
-      window.removeEventListener("keydown", handleOpenKeydown);
     };
+    window.addEventListener("keydown", handleOpenKeydown);
+    return () => window.removeEventListener("keydown", handleOpenKeydown);
   }, []);
-  if (!open) return false;
+
+  // Effect to manage focus when the component opens or activeIndex changes
+  useEffect(() => {
+    if (!open) return;
+
+    if (activeIndex === -1) {
+      inputRef.current?.focus();
+    } else {
+      const menuItem = menuRef.current?.querySelector<HTMLAnchorElement>(`#spotlight-item-${activeIndex}`);
+      menuItem?.focus();
+    }
+  }, [open, activeIndex]);
+
+  if (!open) return null;
+
   return (
     <div
+      ref={containerRef}
       className={clsx(
-        "absolute left-0 right-0 flex-col justify-center items-center m-auto w-96 z-20 top-4",
+        "absolute left-0 right-0 top-4 z-20 m-auto flex w-96 flex-col items-center justify-center",
         "translate-y-12",
         { "animate-in": open }
       )}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && sortedList.length > 0) {
-          if (!document.activeElement) {
-            router.push(joinPath(currentWorkspace.href, sortedList[0]!.href));
-            handleBlur();
-          }
-        }
-        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-          handleArrowNavigation(e);
-        }
-      }}
-      onMouseDown={(e) => e.preventDefault()} //preventblur
+      onKeyDown={handleKeyDown}
       onBlur={(e) => {
-        // Only run handleBlur if the next focused element is outside this container
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-          handleBlur();
+        // Close if focus moves outside the component
+        if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+          handleClose();
         }
       }}
     >
-      <div
-        className={clsx(
-          "p-2 border w-full h-12 text-sidebar-foreground/70 shadow-lg bg-background rounded-lg flex justify-center items-center"
-        )}
-      >
+      <div className="flex h-12 w-full items-center justify-center rounded-lg border bg-background p-2 text-sidebar-foreground/70 shadow-lg">
         <input
           ref={inputRef}
-          autoFocus
           value={search}
-          tabIndex={0}
           onChange={(e) => setSearch(e.target.value)}
           id="spotlight-search"
           type="text"
           autoComplete="off"
           placeholder="Spotlight Search..."
-          className="p-2 border focus:outline-none border-none w-full rounded-lg text-sm bg-background"
+          className="w-full rounded-lg border-none bg-background p-2 text-sm focus:outline-none"
+          aria-controls="spotlight-menu"
+          // aria-expanded={open}
+          aria-haspopup="true"
+          // Points to the active item for screen readers while focus remains on input
+          aria-activedescendant={activeIndex > -1 ? `spotlight-item-${activeIndex}` : undefined}
         />
       </div>
       {Boolean(sortedList.length) && (
         <ul
-          tabIndex={-1}
-          className="w-full justify-center mt-2 max-h-48 overflow-scroll rounded-lg bg-background block"
+          ref={menuRef}
+          id="spotlight-menu"
           role="menu"
-          aria-label="Spotlight search results"
+          aria-labelledby="spotlight-search"
+          className="mt-2 block max-h-48 w-full justify-center overflow-scroll rounded-lg bg-background"
         >
-          {sortedList.map((file, index) => (
-            <SpotlightSearchItem
-              // onNavigate={() => router.push(joinPath(currentWorkspace.href, file.href))}
-              onNavigate={handleBlur}
-              key={index}
-              href={joinPath(currentWorkspace.href, file.href)}
-              title={file.element}
-            />
-          ))}
-
-          <li
-            aria-hidden
-            tabIndex={0}
-            onFocus={() => {
-              inputRef.current?.select();
-            }}
-          ></li>
+          {sortedList.map((file, index) => {
+            return (
+              <SpotlightSearchItem
+                key={file.href}
+                id={`spotlight-item-${index}`}
+                isActive={index === activeIndex}
+                onClick={handleClose}
+                href={joinPath(currentWorkspace.href, file.href)}
+                title={file.element}
+              />
+            );
+          })}
         </ul>
       )}
     </div>

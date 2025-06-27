@@ -106,7 +106,6 @@ export function useEditable<T extends TreeFile | TreeDir>({
         return;
       }
       if (!e.shiftKey) {
-        console.log(2);
         linkRef.current?.focus();
         // const newRange = [...new Set(selectedRange).add(treeNode.path)];
         setFileTreeCtx({
@@ -231,7 +230,6 @@ export function useEditable<T extends TreeFile | TreeDir>({
       if (e.button === 2) {
         return;
       }
-      console.log(3);
       // (e.target as HTMLElement).closest("a")?.focus();
       //meta key cmd click or ctrl click
       if (e.shiftKey || e.metaKey || e.ctrlKey) {

@@ -25,11 +25,12 @@ const IS_SERVER = typeof window === "undefined";
  * @param {UseLocalStorageOptions<T>} options - Options for the hook.
  * @returns A tuple of [storedValue, setValue, removeValue].
  */
-export default function useLocalStorage2<T>(
+export default function useLocalStorage2<T, U = T | (() => T)>(
   key: string,
-  initialValue: T | (() => T),
+  initialValue: U,
   options: UseLocalStorageOptions<T> = {}
-): [T, Dispatch<SetStateAction<T>>, () => void] {
+) {
+  //  { storedValue: T; initialValue: T | (() => T); setValue: Dispatch<SetStateAction<T>>; removeValue: () => void }
   const { initializeWithValue = true } = options;
 
   const serializer = useCallback<(value: T) => string>(
@@ -139,7 +140,7 @@ export default function useLocalStorage2<T>(
 
     // We dispatch a custom event so every similar useLocalStorage hook is notified
     window.dispatchEvent(new StorageEvent("local-storage", { key }));
-  }, [key]);
+  }, [initialValue, key]);
 
   useEffect(() => {
     setStoredValue(readValue());
@@ -164,7 +165,7 @@ export default function useLocalStorage2<T>(
       removeEventListener("storage", handleStorageChange);
       removeEventListener("local-storage", handleStorageChange);
     };
-  }, []);
+  }, [handleStorageChange]);
 
-  return [storedValue, setValue, removeValue];
+  return { storedValue, defaultValues: initialValue, setValue, removeValue };
 }
