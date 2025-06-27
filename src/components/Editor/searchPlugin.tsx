@@ -19,9 +19,9 @@ export const debouncedSearch$ = Cell<"typing" | "replace">("typing");
 export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
   realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(1000))));
 });
-export const debouncedIndexer2$ = Cell<TextNodeIndex[]>([], (realm) =>
+export const debouncedIndexer$ = Cell<TextNodeIndex[]>([], (realm) =>
   realm.link(
-    debouncedIndexer2$,
+    debouncedIndexer$,
     realm.pipe(
       editorSearchTextNodeIndex$,
       realm.transformer(
@@ -55,7 +55,7 @@ function* indexTextNodes(containerList?: NodeListOf<HTMLElement>): Iterable<Text
     const offsetIndex: number[] = [];
     const nodeIndex: Node[] = [];
     while (currentNode) {
-      const nodeContent = currentNode.textContent ?? "";
+      const nodeContent = currentNode.textContent?.normalize("NFKD") ?? currentNode.textContent ?? "";
       for (let i = 0; i < nodeContent.length; i++) {
         nodeIndex.push(currentNode);
         offsetIndex.push(i);
@@ -68,7 +68,7 @@ function* indexTextNodes(containerList?: NodeListOf<HTMLElement>): Iterable<Text
 }
 export function* rangeSearchScan(searchQuery: string, textNodeIndex: Iterable<TextNodeIndex>) {
   for (const { allText, offsetIndex, nodeIndex } of textNodeIndex) {
-    for (const [start, end] of searchText(allText, searchQuery)) {
+    for (const [start, end] of searchText(allText, searchQuery?.normalize("NFKD") ?? searchQuery)) {
       const startOffset = offsetIndex[start];
       const endOffset = offsetIndex[end];
       const startNode = nodeIndex[start];
@@ -331,7 +331,7 @@ export const searchPlugin = realmPlugin({
             if (realm.getValue(debouncedSearch$) === "replace") {
               realm.pub(editorSearchTextNodeIndex$, [...getTextNodeIndex(rootElement)]);
             } else {
-              realm.pub(debouncedIndexer2$, getTextNodeIndex(rootElement));
+              realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
             }
           });
           observer.observe(rootElement, {
