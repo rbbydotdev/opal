@@ -15,7 +15,7 @@ import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/Tr
 import { AbsPath, basename, joinPath } from "@/lib/paths2";
 import clsx from "clsx";
 import React, { useCallback } from "react";
-import { parseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
+import { tryParseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
 
 export const INTERNAL_NODE_FILE_TYPE = "web application/opal+json";
 
@@ -28,18 +28,25 @@ export type NodeDataType = { nodes: TreeNode[] };
 //   return data && Array.isArray(data.nodes) && data.nodes.every((node: any) => node.path);
 // }
 
-export async function handleFileTreePaste(currentWorkspace: Workspace, items: ClipboardItems, targetNode: TreeNode) {
+export async function handleFileTreeNodePaste(
+  currentWorkspace: Workspace,
+  items: ClipboardItems,
+  targetNode: TreeNode
+) {
   for (const item of items) {
     // if (item.types.includes("text/plain")) {
     if (item.types.includes(INTERNAL_NODE_FILE_TYPE)) {
       // const clipboardText = String(await item.getType("text/plain").then((blob) => blob.text()));
       const clipboardText = String(await item.getType(INTERNAL_NODE_FILE_TYPE).then((blob) => blob.text()));
 
-      const payload = parseCopyNodesPayload(clipboardText);
+      const payload = tryParseCopyNodesPayload(clipboardText);
       if (!payload || payload.workspaceId !== currentWorkspace.name) continue;
       const { fileNodes, action } = payload;
       const copyNodes: [TreeNode, AbsPath][] = fileNodes
-        .map((path) => [currentWorkspace.nodeFromPath(path)!, joinPath(targetNode.closestDirPath(), basename(path))])
+        .map((path) => [
+          currentWorkspace.nodeFromPath(String(path))!,
+          joinPath(targetNode.closestDirPath(), basename(path)),
+        ])
         .filter(([from, to]) => String(from) !== to) as [TreeNode, AbsPath][];
       await currentWorkspace.copyMultipleFiles(copyNodes);
       if (action === "cut") {
@@ -121,14 +128,14 @@ export function FileTreeMenu({
               trash={() => trashFiles([...new Set(selectedFocused).add(fileNode.path)])}
               copy={() =>
                 copyFileNodesToClipboard({
-                  fileNodes: selectedFocused,
+                  fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
                   action: "copy",
                   workspaceId: currentWorkspace.name,
                 })
               }
               cut={() =>
                 copyFileNodesToClipboard({
-                  fileNodes: selectedFocused,
+                  fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
                   action: "cut",
                   workspaceId: currentWorkspace.name,
                 }).then(() => {
@@ -142,7 +149,7 @@ export function FileTreeMenu({
                 })
               }
               paste={async () => {
-                await handleFileTreePaste(
+                await handleFileTreeNodePaste(
                   currentWorkspace,
                   await navigator.clipboard.read(),
                   currentWorkspace.tryNodeFromPath(selectedFocused[0])

@@ -3,10 +3,18 @@ import { AbsPath } from "@/lib/paths2";
 
 export type TreeNodeDataTransferType = {
   workspaceId: string;
-  fileNodes: AbsPath[] | TreeNode[];
+  fileNodes: (AbsPath | TreeNode)[];
   action: "copy" | "cut" | "move";
 };
-export type TreeNodeDataTransferJType = TreeNodeDataTransferType & { fileNodes: AbsPath[] };
+export type TreeNodeDataTransferJType = {
+  workspaceId: string;
+  fileNodes: AbsPath[];
+  action: "copy" | "cut" | "move";
+};
+export function stringHasTreeNodeDataTransferType(str: string) {
+  return str.includes(TreeNodeDataTransferTypeMagicString);
+}
+const TreeNodeDataTransferTypeMagicString = "@TreeNodeDataTransferType@";
 export function treeNodeDataTransfer({
   workspaceId,
   fileNodes,
@@ -16,5 +24,6 @@ export function treeNodeDataTransfer({
     workspaceId,
     fileNodes: fileNodes.map((node) => String(node) as AbsPath),
     action,
-  };
+    [TreeNodeDataTransferTypeMagicString]: 1,
+  } as TreeNodeDataTransferJType;
 }

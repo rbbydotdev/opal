@@ -1,67 +1,53 @@
 import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
-import { Workspace } from "@/Db/Workspace";
+import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { treeNodeDataTransfer } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, absPath, encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
+import { encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
 
-// function isInternalFileTreeNode(item: ClipboardItem | DataTransferItem) {
-//   if (item instanceof ClipboardItem) {
-//     return item.types.includes(INTERNAL_NODE_FILE_TYPE);
-//   }
-//   if (item instanceof DataTransferItem) {
-//     return item.type === INTERNAL_NODE_FILE_TYPE || item.type.includes(INTERNAL_NODE_FILE_TYPE);
-//   }
-// }
-
-export const prepareNodeDataTransfer = ({
+export const prepareNodeDataTransfer = <T extends MetaDataTransfer | DataTransfer>({
   dataTransfer,
-  selectedRange,
-  focused,
-  currentWorkspace,
-  targetNode,
+  nodes,
   action,
+  workspaceId,
 }: {
-  currentWorkspace: Workspace;
-  selectedRange: AbsPath[] | string[];
-  focused?: AbsPath | null;
-  dataTransfer: DataTransfer;
-  targetNode?: TreeNode;
+  nodes: TreeNode[];
+  dataTransfer?: T;
   action: "copy" | "cut" | "move";
+  workspaceId: string;
 }) => {
-  const fileNodes = Array.from(new Set([...selectedRange, targetNode?.path, focused ? focused : null]))
-    .filter(Boolean)
-    .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
-    .filter(Boolean);
+  const dt: T = dataTransfer ?? (new MetaDataTransfer() as T);
 
   try {
-    const data = JSON.stringify(treeNodeDataTransfer({ fileNodes, action, workspaceId: currentWorkspace.name }));
-
-    dataTransfer.clearData();
-    dataTransfer.effectAllowed = "all";
-    dataTransfer.setData(INTERNAL_NODE_FILE_TYPE, data);
-    dataTransfer.setData(
-      "text/html",
-      fileNodes
-        .map((node) => node.path)
+    dt.clearData();
+    dt.effectAllowed = "all";
+    dt.setData(
+      INTERNAL_NODE_FILE_TYPE,
+      JSON.stringify(treeNodeDataTransfer({ fileNodes: nodes, action, workspaceId }))
+    );
+    const paths = [...new Set(nodes)].map((node) => String(node));
+    //origin will be included httsp://example.com/path/to/file
+    //path needs to be considered on publish ???
+    const HTML =
+      paths
         .filter(isImage)
         .map((path) => `<img src="${encodePath(path) || ""}" />`)
-        .join(" ")
-    );
-    dataTransfer.setData(
-      "text/html",
-      fileNodes
-        .map((node) => node.path)
+        .join(" ") +
+      paths
         .filter(isMarkdown)
         .map((path) => `<a href="${encodePath(path) || ""}">${capitalizeFirst(prefix(path))}</a>`)
-        .join(" ")
-    );
-    fileNodes.forEach((node, i) => {
-      dataTransfer.setData(`${node.getMimeType()};index=${i}`, encodePath(node.path));
-    });
-    dataTransfer.setData(INTERNAL_NODE_FILE_TYPE, data);
+        .join(" ");
+    dt.setData("text/html", HTML);
+    if (action === "move") {
+      //makes for a better path result in editor otherwise the origin is included
+      //which is not as fun
+      //origin will NOT BE included /path/to/file
+      new Set(nodes).forEach((node, i) => {
+        dt.setData(`${node.getMimeType()};index=${i}`, encodePath(node.path));
+      });
+    }
   } catch (e) {
     console.error("Error preparing node data for drag and drop:", e);
   }
-  return dataTransfer;
+  return dt;
 };
