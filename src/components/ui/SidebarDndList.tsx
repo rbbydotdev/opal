@@ -10,10 +10,13 @@ type SidebarDndListChildProps = React.HTMLAttributes<HTMLDivElement> & {
 export function SidebarDndList({
   children,
   storageKey,
+  show,
 }: {
   children: React.ReactElement<SidebarDndListChildProps> | React.ReactElement<SidebarDndListChildProps>[];
   storageKey: string;
+  show?: string[] | null;
 }) {
+  // const showSet = show ? null : new Set(show);
   const initialChildren = React.Children.toArray(children)
     .filter(React.isValidElement)
     .map((child) => child as React.ReactElement<SidebarDndListChildProps>);
@@ -46,6 +49,7 @@ export function SidebarDndList({
 
   return order.map((id, index) => {
     const child = idToChild[id];
+    if (show && !show.includes(id)) return null;
     if (!child) return null;
     return React.cloneElement(child, {
       key: id,

@@ -442,6 +442,10 @@ export class Workspace {
     if (path === null || path === undefined) return null;
     return this.disk.fileTree.nodeFromPath(path);
   }
+  //defaults to path "/" if not found
+  tryNodeFromPath(path?: AbsPath | string | null) {
+    return this.nodeFromPath(path) ?? this.nodeFromPath(absPath("/"))!;
+  }
 
   async init() {
     await this.disk.init();
