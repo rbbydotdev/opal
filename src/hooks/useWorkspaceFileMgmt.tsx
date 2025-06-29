@@ -142,7 +142,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       }
 
       const newNode = currentWorkspace.addVirtualFileFromSource(
-        { type, name: relPath(duplicatePath(fromNode.path)), sourceNode: fromNode },
+        { type, name: basename(duplicatePath(fromNode.path)), sourceNode: fromNode },
         fromNode.parent ?? fromNode
       );
 

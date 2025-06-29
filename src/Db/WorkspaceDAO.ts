@@ -170,6 +170,10 @@ export class WorkspaceDAO {
     );
   }
 
+  delete() {
+    return ClientDb.workspaces.delete(this.guid);
+  }
+
   static async FetchModelFromNameAndInit(name: string) {
     const workspaceDAO = await WorkspaceDAO.FetchFromName(name);
     return workspaceDAO.toModel().init();
