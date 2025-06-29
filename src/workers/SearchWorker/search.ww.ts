@@ -1,5 +1,4 @@
-import { WorkerApi } from "@/workers/SearchWorker/WorkerApi";
+import { SearchWorkerApi } from "@/workers/SearchWorker/SearchWorkerApi";
 import * as Comlink from "comlink";
 import "../transferHandlers";
-Comlink.expose(WorkerApi);
-export type SearchApiType = typeof WorkerApi;
+Comlink.expose(SearchWorkerApi);
