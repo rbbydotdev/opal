@@ -4,6 +4,7 @@ import { exhaustAsyncGenerator } from "@/lib/exhaustAsyncGenerator";
 import {
   TreeDir,
   TreeDirRoot,
+  TreeDirRootJType,
   TreeNode,
   TreeNodeDirJType,
   TreeNodeType,
@@ -25,6 +26,7 @@ export class FileTree {
     this.updateMap();
   }
   get root() {
+    if (!this.initialIndex) this.initialIndex = true;
     return this._root;
   }
   indexMutex = new Mutex();
@@ -93,9 +95,16 @@ export class FileTree {
   }
 
   async index(tree?: TreeDirRoot) {
-    //log call stack
     await exhaustAsyncGenerator(this.indexIter(tree));
     return this.root;
+  }
+  //forces the index, for the case of loading from cache
+  forceIndex(tree: TreeDirRoot | TreeDirRootJType) {
+    if (tree instanceof TreeDirRoot) {
+      this.root = tree;
+    } else {
+      this.root = TreeDirRoot.FromJSON(tree);
+    }
   }
   async *indexIter(tree = new TreeDirRoot()): AsyncGenerator<TreeNode, unknown, unknown> {
     if (this.indexMutex.isLocked()) {
@@ -108,7 +117,7 @@ export class FileTree {
       for await (const node of this.recurseTree(tree)) {
         yield node;
       }
-      this.initialIndex = true;
+      //happens already in the setter() this.initialIndex = true;
       this.root = tree;
       return;
     } catch (e) {

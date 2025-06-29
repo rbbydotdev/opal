@@ -15,7 +15,7 @@ import Emittery from "emittery";
 import { memfs } from "memfs";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
-import { TreeDir, TreeDirRoot, TreeDirRootJType, TreeNode } from "../lib/FileTree/TreeNode";
+import { TreeDir, TreeDirRootJType, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage } from "../lib/paths2";
 import { RequestSignalsInstance } from "../lib/RequestSignals";
 
@@ -158,6 +158,7 @@ export class DiskEventsRemote extends Channel<{
   [DiskEvents.DELETE]: FilePathsType;
 }> {}
 
+export const SIGNAL_ONLY = undefined;
 export const DiskEvents = {
   WRITE: "write" as const,
   INDEX: "index" as const,
@@ -196,16 +197,17 @@ export abstract class Disk {
     return Disk.From({ guid: json.guid, type: json.type, indexCache: json.indexCache });
   }
 
-  async initializeIndex(cache: TreeNodeDirJType = new TreeDirRoot().toJSON()) {
+  initialIndexFromCache(cache: TreeNodeDirJType) {
+    this.fileTree.forceIndex(cache);
+    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+    return;
+  }
+  async hydrateIndexFromDisk() {
     try {
       await this.fileTreeIndex({
-        tree: TreeDirRoot.FromJSON(cache),
         writeIndexCache: false,
       });
-      await this.local.emit(DiskEvents.INDEX, {
-        type: "create",
-        details: { filePaths: [] },
-      });
+      await this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     } catch (e) {
       throw errF`Error initializing index ${e}`;
     }
@@ -221,13 +223,11 @@ export abstract class Disk {
   }
 
   fileTreeIndex = async ({
-    tree,
     writeIndexCache = true,
   }: {
-    tree?: TreeDirRoot;
     writeIndexCache?: boolean;
   } = {}) => {
-    const newIndex = await this.fileTree.index(tree);
+    const newIndex = await this.fileTree.index();
     this.connector.updateIndexCache(newIndex);
     if (writeIndexCache) {
       /*await*/ void this.connector.save();
@@ -256,7 +256,8 @@ export abstract class Disk {
   async init() {
     await this.ready;
     const { indexCache } = await this.connector.hydrate();
-    await this.initializeIndex(indexCache);
+    this.initialIndexFromCache(indexCache); //load first from cache
+    void this.hydrateIndexFromDisk(); //load first from cache
     if (!isServiceWorker() || !isWebWorker()) {
       return this.setupRemoteListeners();
     } else {
@@ -566,7 +567,7 @@ export abstract class Disk {
   removeVirtualFile(path: AbsPath) {
     this.fileTree.removeNodeByPath(path);
     //TODO donno why indexing
-    void this.local.emit(DiskEvents.INDEX, undefined);
+    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
   }
   addVirtualFileFromSource(
     props: Pick<TreeNode, "type" | "name"> & { sourceNode: TreeNode },
@@ -576,14 +577,14 @@ export abstract class Disk {
     const node = this.fileTree
       .insertClosestVirtualNode({ type: props.type, name: props.name }, parent)
       .tagSource(props.sourceNode);
-    void this.local.emit(DiskEvents.INDEX, undefined);
+    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return node;
   }
 
   addVirtualFile(props: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null): TreeNode {
     const parent = selectedNode || this.fileTree.root;
     const node = this.fileTree.insertClosestVirtualNode({ type: props.type, name: props.name }, parent);
-    void this.local.emit(DiskEvents.INDEX, undefined);
+    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return node;
   }
   async nextPath(fullPath: AbsPath) {
@@ -614,7 +615,7 @@ export abstract class Disk {
       details: { filePaths: result },
     });
   }
-  async newFilesNotice(filePaths: AbsPath[]) {
+  async indexAndEmitNewFiles(filePaths: AbsPath[]) {
     await this.fileTreeIndex();
     await this.local.emit(DiskEvents.INDEX, {
       type: "create",

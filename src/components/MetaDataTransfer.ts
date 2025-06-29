@@ -1,14 +1,25 @@
 import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { tryParseCopyNodesPayload } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { stringHasTreeNodeDataTransferType } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
-
 export class MetaDataTransfer {
   private dataTransfer: DataTransfer;
   readonly allowedClipboardTypes: string[] = ["text/plain", "text/html", "image/"];
-  constructor(dataTransfer: DataTransfer | ClipboardItems = new DataTransfer()) {
-    if (dataTransfer instanceof ClipboardItems) {
-      throw new Error("MetaDataTransfer cannot be initialized with ClipboardItems. Use DataTransfer instead.");
-    }
+
+  static async FromClipboardItems(clipboardItems: ClipboardItems): Promise<MetaDataTransfer> {
+    const mdt = new MetaDataTransfer();
+    clipboardItems.forEach(async (item) => {
+      for (const type of item.types) {
+        const blob = await item.getType(type);
+        if (blob) {
+          mdt.dataTransfer.setData(type, String(await blob.text()));
+        } else {
+          console.warn(`No data found for type: ${type}`);
+        }
+      }
+    });
+    return mdt;
+  }
+  constructor(dataTransfer: DataTransfer = new DataTransfer()) {
     this.dataTransfer = dataTransfer;
   }
   presentationStyle = "inline";

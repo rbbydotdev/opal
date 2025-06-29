@@ -17,6 +17,7 @@ export class SearchResult {
   startText: string;
   middleText: string;
   endText: string;
+
   constructor(
     public lineNumber: number,
     public lineStart: number,
@@ -29,37 +30,69 @@ export class SearchResult {
     public linesSpanned: number,
     public maxWidth: number = 90 // Default max width for display
   ) {
-    // Calculate windowed start, middle, and end text, prioritizing the match (middle)
+    // The goal of this constructor is to create a "windowed" view of the line
+    // containing the search result. It splits the line into three parts:
+    // `startText`: The text before the match.
+    // `middleText`: The matched text itself (which will be highlighted).
+    // `endText`: The text after the match.
+    // This is done to ensure the result fits within a specified `maxWidth`.
+
+    // Get the total character length of the original line of text.
     const totalLen = this.lineText.length;
+    // Calculate the length of the matched text using its relative start/end positions.
     const matchLen = this.relEnd - this.relStart;
 
-    // If the line fits, no need to window
+    // Check if the entire line is shorter than or equal to the maximum display width.
     if (totalLen <= maxWidth) {
+      // If the line fits, no truncation is needed.
+      // `startText` is everything from the beginning of the line up to the match.
       this.startText = this.lineText.slice(0, this.relStart);
+      // `middleText` is the matched text itself.
       this.middleText = this.lineText.slice(this.relStart, this.relEnd);
+      // `endText` is everything from the end of the match to the end of the line.
       this.endText = this.lineText.slice(this.relEnd);
     } else {
-      // Always show the match, window around it
-      // Reserve at least 10 chars for start/end if possible
+      // This block handles cases where the line is too long and must be truncated.
+      // The logic prioritizes showing the full match (`middleText`) and then
+      // showing as much context around it as possible.
+
+      // Define a minimum desired length for the text shown before and after the match.
       const minSide = 10;
+      // Calculate the total available character space for the text surrounding the match.
       const available = maxWidth - matchLen;
+      // Tentatively assign half of the available space to the text before the match (`startLen`),
+      // but ensure it's at least `minSide` characters long if possible.
       let startLen = Math.max(minSide, Math.floor(available / 2));
+      // Assign the remaining available space to the text that will come after the match (`endLen`).
       let endLen = available - startLen;
 
-      // Adjust if match is near start or end
+      // This section adjusts the lengths if the match is too close to the start or end of the line.
+      // Check if the match starts too close to the beginning of the line for the calculated `startLen`.
       if (this.relStart < startLen) {
+        // If so, the actual length of the preceding text can only be what's available.
         startLen = this.relStart;
+        // Recalculate `endLen` to give the extra space to the text after the match.
         endLen = maxWidth - matchLen - startLen;
       } else if (totalLen - this.relEnd < endLen) {
+        // Check if the match ends too close to the end of the line for the calculated `endLen`.
+        // If so, the actual length of the following text is just the number of characters left.
         endLen = totalLen - this.relEnd;
+        // Recalculate `startLen` to give the extra space to the text before the match.
         startLen = maxWidth - matchLen - endLen;
       }
 
+      // Calculate the index from which to start slicing the `startText`.
+      // This is the match's start position minus the calculated space for the preceding text.
+      // `Math.max` ensures the index is not negative.
       const startIdx = Math.max(0, this.relStart - startLen);
-      // const endIdx = Math.min(totalLen, this.relEnd + endLen);
+      // Create the `startText`. Prepend an ellipsis "…" if the text was truncated at the beginning (i.e., `startIdx` is not 0).
       this.startText = (startIdx > 0 ? "…" : "") + this.lineText.slice(startIdx, this.relStart);
+      // The `middleText` is always the full, untruncated matched text.
       this.middleText = this.lineText.slice(this.relStart, this.relEnd);
-      this.endText = this.lineText.slice(this.relEnd); //, endIdx) + (endIdx < totalLen ? "…" : "");
+      // The `endText` is assigned the rest of the line's text, from the end of the match onwards.
+      // Note: This part is not truncated based on `endLen` and may cause the total displayed
+      // text to exceed `maxWidth`. It should likely be truncated for a correct implementation.
+      this.endText = this.lineText.slice(this.relEnd);
     }
   }
 
