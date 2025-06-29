@@ -156,21 +156,16 @@ export function FileTreeMenu({
               paste={async () => {
                 void handleFileMenuPaste({
                   targetNode: fileNode,
-                  data: new MetaDataTransfer(await navigator.clipboard.read()),
+                  data: await MetaDataTransfer.FromClipboardItems(await navigator.clipboard.read()),
                 });
 
-                // await handleFileTreeNodePaste(
-                //   currentWorkspace,
-                //   await navigator.clipboard.read(),
-                //   currentWorkspace.tryNodeFromPath(selectedFocused[0])
-                // );
-                // return setFileTreeCtx({
-                //   editing: null,
-                //   editType: null,
-                //   focused: null,
-                //   virtual: null,
-                //   selectedRange: [],
-                // });
+                return setFileTreeCtx({
+                  editing: null,
+                  editType: null,
+                  focused: null,
+                  virtual: null,
+                  selectedRange: [],
+                });
               }}
               duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
               rename={() =>

@@ -414,7 +414,7 @@ export class Workspace {
 
     const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
     await Promise.all(workers);
-    await this.disk.newFilesNotice(results);
+    await this.disk.indexAndEmitNewFiles(results);
     return results;
   }
   async dropImageFile(file: File, targetPath: AbsPath) {
@@ -496,5 +496,14 @@ export class Workspace {
 
   NewScannable() {
     return new SearchScannable(this.disk);
+  }
+
+  async NewImage(arrayBuffer: ArrayBuffer, filePath: AbsPath): Promise<AbsPath> {
+    const file =
+      (mime.lookup(filePath) || "").startsWith("image/svg") || (mime.lookup(filePath) || "").startsWith("image/webp")
+        ? new File([arrayBuffer], basename(filePath))
+        : await createImage({ file: new File([arrayBuffer], basename(filePath)) });
+    const newImageLocation = await this.dropImageFile(file, dirname(filePath));
+    return newImageLocation;
   }
 }

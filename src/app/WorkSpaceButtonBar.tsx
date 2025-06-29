@@ -117,7 +117,6 @@ export function WorkSpaceButtonBar() {
         onClick={() => Workspace.DeleteAll().then(() => router.push("/new"))}
       />
 
-      {/* <WorkspaceSearchDialog> */}
       <WorkspaceSearchDialog>
         <BigButton
           icon={<SearchIcon stroke="current" size={24} strokeWidth={1.25} />}
@@ -126,7 +125,6 @@ export function WorkSpaceButtonBar() {
           className="text-3xs"
         />
       </WorkspaceSearchDialog>
-      {/* </WorkspaceSearchDialog> */}
       <BigButton
         className="hidden"
         icon={<Zap stroke="current" size={24} strokeWidth={1.25} />}
