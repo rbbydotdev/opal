@@ -401,7 +401,7 @@ export class Workspace {
   async uploadMultipleImages(
     files: Iterable<File>,
     targetDir: AbsPath,
-    concurrency = navigator.hardwareConcurrency ?? 2
+    concurrency = window.navigator.hardwareConcurrency ?? 2
   ): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
@@ -412,9 +412,18 @@ export class Workspace {
       const current = index++;
       const file = filesArr[current];
       const worker = new Worker(new URL("@/workers/ImageWorker/image.ww.ts", import.meta.url));
-      const imgWorker = wrap<ImageWorkerApiType>(worker);
-      results[current] = await imgWorker.createImage(this, joinPath(targetDir, file!.name), file!);
-      await uploadNext();
+      try {
+        const api = wrap<ImageWorkerApiType>(worker);
+        const arrayBuffer = await file!.arrayBuffer();
+        results[current] = await await api.createImage(this, joinPath(targetDir, file!.name), arrayBuffer);
+        await uploadNext();
+      } catch (e) {
+        console.error(`Error uploading image ${file?.name}:`, e);
+      } finally {
+        if (worker) {
+          worker.terminate();
+        }
+      }
     };
 
     const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
