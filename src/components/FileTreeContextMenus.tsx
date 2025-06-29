@@ -4,8 +4,8 @@ import { TrashFileTreeContextMenu } from "@/lib/FileTree/TrashFileTreeContextMen
 import React from "react";
 
 const FileTreeContextMenus = {
-  MainFiles: MainFileTreeContextMenu,
-  TrashFiles: TrashFileTreeContextMenu,
+  MainFiles: MainFileTreeContextMenu, //<MainFileTreeContextMenu>
+  TrashFiles: TrashFileTreeContextMenu, //<TrashFileTreeContextMenu>
 } satisfies {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [K in FILE_TREE_MENUS_TYPE]: React.ComponentType<any>;

@@ -3,6 +3,8 @@ import { EditableFile } from "@/components/EditableFile";
 import { FileTreeContextMenu } from "@/components/FileTreeContextMenus";
 import { FileTreeDragPreview } from "@/components/FileTreeDragPreview";
 import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { MetaDataTransfer } from "@/components/MetaDataTransfer";
+import { useFileMenuPaste } from "@/components/SidebarFileMenu/useFileMenuPaste";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
@@ -96,6 +98,7 @@ export function FileTreeMenu({
     },
     [handleDragStart, setReactDragImage]
   );
+  const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });
 
   return (
     <>
@@ -122,6 +125,8 @@ export function FileTreeMenu({
             }}
           >
             <FileTreeContextMenu
+              // <MainFileTreeContextMenu
+              // <TrashFileTreeContextMenu
               fileTreeId={fileTreeId}
               addFile={() => addDirFile("file", fileNode.closestDir()!)}
               addDir={() => addDirFile("dir", fileNode.closestDir()!)}
@@ -149,18 +154,23 @@ export function FileTreeMenu({
                 })
               }
               paste={async () => {
-                await handleFileTreeNodePaste(
-                  currentWorkspace,
-                  await navigator.clipboard.read(),
-                  currentWorkspace.tryNodeFromPath(selectedFocused[0])
-                );
-                return setFileTreeCtx({
-                  editing: null,
-                  editType: null,
-                  focused: null,
-                  virtual: null,
-                  selectedRange: [],
+                void handleFileMenuPaste({
+                  targetNode: fileNode,
+                  data: new MetaDataTransfer(await navigator.clipboard.read()),
                 });
+
+                // await handleFileTreeNodePaste(
+                //   currentWorkspace,
+                //   await navigator.clipboard.read(),
+                //   currentWorkspace.tryNodeFromPath(selectedFocused[0])
+                // );
+                // return setFileTreeCtx({
+                //   editing: null,
+                //   editType: null,
+                //   focused: null,
+                //   virtual: null,
+                //   selectedRange: [],
+                // });
               }}
               duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
               rename={() =>

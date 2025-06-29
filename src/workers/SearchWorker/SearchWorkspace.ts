@@ -1,7 +1,7 @@
 import { Workspace } from "@/Db/Workspace";
 import { SearchApiType } from "@/workers/SearchWorker/search.ww";
 import { WorkerApi } from "@/workers/SearchWorker/WorkerApi";
-import { Remote, wrap } from "comlink";
+import { Remote } from "comlink";
 import "../transferHandlers";
 
 export class SearchWorkspaceWorker {
@@ -18,13 +18,8 @@ export class SearchWorkspaceWorker {
     }
     */
   }
-  async *searchWorkspace(workspace: Workspace, searchTerm: string, abortSignal?: AbortSignal) {
-    for await (const scan of await this.api.searchWorkspace(workspace, searchTerm, abortSignal)) {
-      if (abortSignal?.aborted) {
-        console.log("Search aborted in generator 2");
-        return;
-      }
-      console.log("Search result:", scan);
+  async *searchWorkspace(workspace: Workspace, searchTerm: string) {
+    for await (const scan of await this.api.searchWorkspace(workspace, searchTerm)) {
       if (scan.matches.length) {
         yield scan;
       }

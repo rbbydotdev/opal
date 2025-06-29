@@ -15,7 +15,7 @@ export function useSearchWorkspace(workspace: Workspace) {
 
   const search = useCallback(
     async function* scan(term: string, abortSignal?: AbortSignal) {
-      for await (const result of searchWorker.searchWorkspace(workspace, term, abortSignal)) {
+      for await (const result of searchWorker.searchWorkspace(workspace, term)) {
         if (abortSignal?.aborted) {
           console.log("Search aborted in generator");
           return;

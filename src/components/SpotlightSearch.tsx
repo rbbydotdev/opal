@@ -107,30 +107,37 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
-      if (!menuItems || menuItems.length === 0) return;
+      const itemsLength = menuItems?.length ?? 0;
 
       switch (e.key) {
+        case "Tab":
+          e.preventDefault();
+          if (e.shiftKey) {
+            setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
+          } else {
+            setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
+          }
+          break;
         case "ArrowDown":
           e.preventDefault();
-          setActiveIndex((prev) => (prev < menuItems.length - 1 ? prev + 1 : 0));
+          setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
           break;
         case "ArrowUp":
           e.preventDefault();
-          setActiveIndex((prev) => (prev > 0 ? prev - 1 : menuItems.length - 1));
+          setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
           break;
         case "Home":
           e.preventDefault();
-          setActiveIndex(0);
+          setActiveIndex(-1);
           break;
         case "End":
           e.preventDefault();
-          setActiveIndex(menuItems.length - 1);
+          setActiveIndex(itemsLength - 1);
           break;
         case "Enter":
-          // This allows submitting the form if the input is focused
           if (activeIndex === -1) return;
           e.preventDefault();
-          (menuItems[activeIndex] as HTMLAnchorElement)?.click();
+          (menuItems?.[activeIndex] as HTMLAnchorElement)?.click();
           break;
         case "Escape":
           e.preventDefault();
@@ -160,13 +167,12 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
     if (!open) return;
 
     if (activeIndex === -1) {
-      inputRef.current?.focus();
+      inputRef.current?.select();
     } else {
       const menuItem = menuRef.current?.querySelector<HTMLAnchorElement>(`#spotlight-item-${activeIndex}`);
       menuItem?.focus();
     }
   }, [open, activeIndex]);
-
   if (!open) return null;
 
   return (
@@ -194,6 +200,12 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
           type="text"
           autoComplete="off"
           placeholder="Spotlight Search..."
+          // onKeyDown={(e) => {
+          //   if (e.key === "Tab" && !e.shiftKey) {
+          //     e.preventDefault();
+          //     goToFirstItem();
+          //   }
+          // }}
           className="w-full rounded-lg border-none bg-background p-2 text-sm focus:outline-none"
           aria-controls="spotlight-menu"
           // aria-expanded={open}
@@ -208,7 +220,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
           id="spotlight-menu"
           role="menu"
           aria-labelledby="spotlight-search"
-          className="mt-2 block max-h-48 w-full justify-center overflow-scroll rounded-lg bg-background"
+          className="mt-2 block max-h-48 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
         >
           {sortedList.map((file, index) => {
             return (

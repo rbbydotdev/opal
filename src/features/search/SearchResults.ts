@@ -54,7 +54,6 @@ export class SearchResult {
       }
 
       const startIdx = Math.max(0, this.relStart - startLen);
-      // const endIdx = Math.min(totalLen, this.relEnd + endLen);
       this.startText = (startIdx > 0 ? "…" : "") + this.lineText.slice(startIdx, this.relStart);
       this.middleText = this.lineText.slice(this.relStart, this.relEnd);
       this.endText = this.lineText.slice(this.relEnd); //, endIdx) + (endIdx < totalLen ? "…" : "");

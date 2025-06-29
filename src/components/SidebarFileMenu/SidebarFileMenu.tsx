@@ -7,6 +7,7 @@ import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
 
 import { FileTreeMenuCtxProvider, useFileTreeMenuCtx } from "@/components/FileTreeProvider";
 import { useDndList } from "@/components/SidebarFileMenu/useDndList";
+import { useFileMenuPaste } from "@/components/SidebarFileMenu/useFileMenuPaste";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   DropdownMenu,
@@ -29,6 +30,7 @@ import {
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { Workspace } from "@/Db/Workspace";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import {
   useHandleDropFilesEventForNode,
@@ -41,7 +43,7 @@ import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath, basename, joinPath } from "@/lib/paths2";
+import { absPath, AbsPath } from "@/lib/paths2";
 import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import clsx from "clsx";
 import {
@@ -118,9 +120,9 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
             Show All
           </DropdownMenuItem>
         </DropdownMenuContent>
-        <SidebarGroupLabel className="mb-2">
+        <SidebarGroupLabel className=" h-6">
           <DropdownMenuTrigger asChild>
-            <SidebarGroupAction className="mr-2">
+            <SidebarGroupAction className="mr-2 -mt-2">
               <Ellipsis />
             </SidebarGroupAction>
           </DropdownMenuTrigger>
@@ -183,39 +185,17 @@ function TrashSidebarFileMenuFileSection({ className }: { className?: string }) 
   );
 }
 
-function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
-  const { currentWorkspace } = useWorkspaceContext();
+function useFileTreeClipboardEventListeners({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { focused, selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
-  const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
-
-  const { setExpandAll, expandForNode } = useFileTreeExpanderContext();
   const uploadFilesToWorkspace = useHandleDropFilesForNode({ currentWorkspace });
+  const handlePaste = useFileMenuPaste({ currentWorkspace });
 
-  //attach paste listeners
   useEffect(() => {
     const handlePasteEvent = async (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
       const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]);
       if (target?.closest?.("[data-sidebar-file-menu]")) {
-        const data = new MetaDataTransfer(event.clipboardData!);
-        if (data.hasInternalDataType()) {
-          const { fileNodes, action } = data.toInternalDataTransfer()!;
-          const copyNodes = fileNodes
-            .map((path) => [
-              currentWorkspace.nodeFromPath(path)!,
-              joinPath(targetNode.closestDirPath(), basename(path)),
-            ])
-            .filter(([from, to]) => String(from) !== to) as [TreeNode, AbsPath][];
-          await currentWorkspace.copyMultipleFiles(copyNodes);
-          if (action === "cut") {
-            return currentWorkspace.removeMultiple(copyNodes.map(([from]) => from));
-          }
-        } else {
-          //is external file paste
-          await uploadFilesToWorkspace({ files: event.clipboardData?.files ?? [], targetNode });
-        }
-        void navigator.clipboard.writeText("");
-
+        await handlePaste({ targetNode, data: new MetaDataTransfer(event.clipboardData!) });
         setFileTreeCtx({
           editing: null,
           editType: null,
@@ -228,7 +208,7 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
     const handleCutEvent = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest?.("[data-sidebar-file-menu]")) {
-        void copyFileNodesToClipboard({
+        return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
           action: "cut",
           workspaceId: currentWorkspace.name,
@@ -245,6 +225,7 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
         });
       }
     };
+    //should i just listen on "[data-sidebar-file-menu] ???
     window.addEventListener("paste", handlePasteEvent);
     window.addEventListener("cut", handleCutEvent);
     window.addEventListener("copy", handleCopyEvent);
@@ -253,7 +234,17 @@ function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
       window.removeEventListener("cut", handleCutEvent);
       window.removeEventListener("copy", handleCopyEvent);
     };
-  }, [currentWorkspace, uploadFilesToWorkspace, focused, selectedFocused, setFileTreeCtx]);
+  }, [currentWorkspace, uploadFilesToWorkspace, focused, selectedFocused, setFileTreeCtx, handlePaste]);
+}
+
+function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
+  const { currentWorkspace } = useWorkspaceContext();
+  const { focused } = useFileTreeMenuCtx();
+  const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
+  const { setExpandAll, expandForNode } = useFileTreeExpanderContext();
+
+  useFileTreeClipboardEventListeners({ currentWorkspace });
+
   return (
     <SidebarFileMenuFileSectionInternal title={"Files"} className={className} filter={[absPath("/.trash")]}>
       <SidebarFileMenuFilesActions
