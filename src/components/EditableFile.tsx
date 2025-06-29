@@ -6,7 +6,7 @@ import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, equals, isImage, relPath } from "@/lib/paths2";
+import { AbsPath, equals, isImage, prefix, relPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { FileText } from "lucide-react";
 import Link from "next/link";
@@ -123,7 +123,7 @@ export const EditableFile = ({
               ) : (
                 <FileText className="w-3 h-3 flex-shrink-0 mr-2" />
               )}
-              <div className="py-2.5 text-xs w-full truncate">{fileName}</div>
+              <div className="py-2.5 text-xs w-full truncate">{prefix(fileName)}</div>
             </div>
           </div>
         </ActiveLink>

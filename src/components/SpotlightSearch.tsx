@@ -83,10 +83,11 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
   const sortedList = useMemo(() => {
     setActiveIndex(-1); // Reset index on new search results
     if (!search) {
-      return fileList.slice(0, 10).map((file) => ({
-        element: <>{file}</>,
-        href: file,
-      }));
+      return [];
+      // return fileList.slice(0, 10).map((file) => ({
+      //   element: <>{file}</>,
+      //   href: file,
+      // }));
     }
     const results = fuzzysort.go(search, fileList, {
       // To prevent slow performance on large file lists
