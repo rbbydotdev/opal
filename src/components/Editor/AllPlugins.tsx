@@ -115,7 +115,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
         },
         imageUploadHandler: async (file: File) => {
           try {
-            return currentWorkspace.uploadImageFile(file, dirname(path ?? "/"));
+            return currentWorkspace.uploadSingleImage(file, dirname(path ?? "/"));
           } catch (e) {
             console.error("image upload handler error");
             console.error(e);

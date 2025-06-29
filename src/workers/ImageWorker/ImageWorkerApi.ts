@@ -1,9 +1,8 @@
-import { Workspace } from "@/Db/Workspace";
+import { type Workspace } from "@/Db/Workspace";
 import { AbsPath } from "@/lib/paths2";
 
 export const ImageWorkerApi = {
   async createImage(workspace: Workspace, filePath: AbsPath, buffer: ArrayBuffer | File) {
-    console.log(workspace);
     return workspace.NewImage(buffer, filePath);
   },
 };

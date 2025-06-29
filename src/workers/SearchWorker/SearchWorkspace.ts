@@ -1,7 +1,6 @@
 "use client";
-import { Workspace } from "@/Db/Workspace";
+import { type Workspace } from "@/Db/Workspace";
 import { SearchWorkerApi, SearchWorkerApiType } from "@/workers/SearchWorker/SearchWorkerApi";
-// import { SearchWorkerApi } from "@/workers/SearchWorker/WorkerApi";
 import { Remote, wrap } from "comlink";
 import "../transferHandlers";
 

@@ -1,12 +1,9 @@
-import { Workspace } from "@/Db/Workspace";
+import { type Workspace } from "@/Db/Workspace";
 import { AbsPath, joinPath } from "@/lib/paths2";
+import { type ImageWorkerApiType } from "@/workers/ImageWorker/ImageWorkerApi";
 import { wrap } from "comlink";
 
-type ImageWorkerApiType = {
-  createImage(workspace: Workspace, filePath: AbsPath, buffer: ArrayBuffer | File): Promise<AbsPath>;
-};
-
-export async function processWorkspaceImagesWW(
+export async function uploadImages(
   workspace: Workspace,
   files: Iterable<File>,
   targetDir: AbsPath,
@@ -25,15 +22,14 @@ export async function processWorkspaceImagesWW(
       const api = wrap<ImageWorkerApiType>(worker);
       const arrayBuffer = await file!.arrayBuffer();
       results[current] = await api.createImage(workspace, joinPath(targetDir, file!.name), arrayBuffer);
-
       await uploadNext();
     } catch (e) {
       console.error(`Error uploading image ${file?.name}:`, e);
     } finally {
       if (worker) {
-        //wait for the worker to finish before terminating
-        //terminate the worker
-        // worker.terminate();
+        await new Promise((rs) => (worker.onmessage = rs));
+        console.log("terminate worker");
+        worker.terminate();
       }
     }
   };
@@ -42,4 +38,8 @@ export async function processWorkspaceImagesWW(
   await Promise.all(workers);
   await workspace.disk.indexAndEmitNewFiles(results);
   return results;
+}
+
+export async function uploadSingleImage(currentWorkspace: Workspace, file: File, targetDir: AbsPath) {
+  return (await uploadImages(currentWorkspace, [file], targetDir))[0]!;
 }
