@@ -625,7 +625,7 @@ function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>)
               <div className="w-full">
                 <div className="flex justify-center items-center">
                   <Download size={12} className="mr-2" />
-                  Download
+                  Export
                 </div>
               </div>
             </SidebarGroupLabel>

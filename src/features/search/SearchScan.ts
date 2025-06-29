@@ -59,7 +59,7 @@ export class SearchScannable<T extends { text: string }> {
       caseSensitive?: boolean;
       wholeWord?: boolean;
       regex?: boolean;
-    } = { caseSensitive: false, wholeWord: false, regex: false }
+    } = { caseSensitive: false, wholeWord: false, regex: true }
   ): AsyncGenerator<{ matches: SearchResultData[]; meta: Omit<T, "text"> }> {
     for await (const item of this.scannable.scan()) {
       const { text: haystack, ...rest } = item;
@@ -100,7 +100,6 @@ export class SearchScannable<T extends { text: string }> {
         const endLineInfo = this.findLine(haystack, matchEndIndex > 0 ? matchEndIndex - 1 : 0, lineBreaks);
 
         const linesSpanned = endLineInfo.lineNumber - startLineInfo.lineNumber;
-
         // The relative start is based on the first line
         const relStart = matchStartIndex - startLineInfo.lineStart;
 

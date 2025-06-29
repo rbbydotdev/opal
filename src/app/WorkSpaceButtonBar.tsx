@@ -2,13 +2,13 @@
 
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { SearchModal } from "@/components/ui/search-modal";
 // import { SearchModal } from "@/components/ui/search-modal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import clsx from "clsx";
@@ -118,14 +118,14 @@ export function WorkSpaceButtonBar() {
       />
 
       {/* <WorkspaceSearchDialog> */}
-      <SearchModal>
+      <WorkspaceSearchDialog>
         <BigButton
           icon={<SearchIcon stroke="current" size={24} strokeWidth={1.25} />}
           title="search"
           href="#"
           className="text-3xs"
         />
-      </SearchModal>
+      </WorkspaceSearchDialog>
       {/* </WorkspaceSearchDialog> */}
       <BigButton
         className="hidden"

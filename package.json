@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "sw-logger": "tsx ./src/sw-logger",
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "dev:tsc": "tsc --noEmit",
     "build": "next build",
     "start": "next start",

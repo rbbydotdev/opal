@@ -26,6 +26,7 @@ export class SearchResult {
     public lineText: string,
     public relStart: number,
     public relEnd: number,
+    public linesSpanned: number,
     public maxWidth: number = 90 // Default max width for display
   ) {
     // Calculate windowed start, middle, and end text, prioritizing the match (middle)
@@ -71,7 +72,8 @@ export class SearchResult {
       data.end,
       data.lineText,
       data.relStart,
-      data.relEnd
+      data.relEnd,
+      data.linesSpanned
     );
   }
   static New(
@@ -123,7 +125,8 @@ export class SearchResults implements Iterable<SearchResult> {
               data.end,
               data.lineText,
               data.relStart,
-              data.relEnd
+              data.relEnd,
+              data.linesSpanned
             ),
             done: false,
           };
