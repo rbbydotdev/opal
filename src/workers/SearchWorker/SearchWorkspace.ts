@@ -1,17 +1,18 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
-import { SearchApiType } from "@/workers/SearchWorker/search.ww";
-import { WorkerApi } from "@/workers/SearchWorker/WorkerApi";
+import { SearchWorkerApi, SearchWorkerApiType } from "@/workers/SearchWorker/SearchWorkerApi";
+// import { SearchWorkerApi } from "@/workers/SearchWorker/WorkerApi";
 import { Remote, wrap } from "comlink";
 import "../transferHandlers";
 
 export class SearchWorkspaceWorker {
   private worker!: Worker;
-  private api: Remote<SearchApiType> | SearchApiType = WorkerApi;
+  private api: Remote<SearchWorkerApiType> | SearchWorkerApiType = SearchWorkerApi;
   constructor(worker?: Worker) {
     try {
+      if (typeof Worker === "undefined") return;
       this.worker = worker ?? new Worker(new URL("./search.ww.ts", import.meta.url));
-      this.api = wrap<SearchApiType>(this.worker);
+      this.api = wrap<SearchWorkerApiType>(this.worker);
       console.log("search worker ready");
     } catch (error) {
       console.warn("Could not create worker, falling back to direct API calls", error);

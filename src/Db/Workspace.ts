@@ -4,6 +4,7 @@ import { ClientDb } from "@/Db/instance";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { SearchScannable } from "@/features/search/SearchScan";
+import { createImage } from "@/lib/createImage";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
@@ -11,7 +12,9 @@ import {
   AbsPath,
   absPath,
   absPathname,
+  basename,
   decodePath,
+  dirname,
   encodePath,
   isImage,
   joinPath,
@@ -19,6 +22,9 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
+import { ImageWorkerApiType } from "@/workers/ImageWorker/ImageWorkerApi";
+import { wrap } from "comlink";
+import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage } from "../lib/paths2";
@@ -392,7 +398,31 @@ export class Workspace {
     return (await this.uploadMultipleImages([file], targetDir))[0]!;
   }
 
-  async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+  async uploadMultipleImages(
+    files: Iterable<File>,
+    targetDir: AbsPath,
+    concurrency = navigator.hardwareConcurrency ?? 2
+  ): Promise<AbsPath[]> {
+    const results: AbsPath[] = [];
+    let index = 0;
+    const filesArr = Array.from(files);
+
+    const uploadNext = async () => {
+      if (index >= filesArr.length) return;
+      const current = index++;
+      const file = filesArr[current];
+      const worker = new Worker(new URL("@/workers/ImageWorker/image.ww.ts", import.meta.url));
+      const imgWorker = wrap<ImageWorkerApiType>(worker);
+      results[current] = await imgWorker.createImage(this, joinPath(targetDir, file!.name), file!);
+      await uploadNext();
+    };
+
+    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
+    await Promise.all(workers);
+    await this.disk.indexAndEmitNewFiles(results);
+    return results;
+  }
+  async uploadMultipleImages___OLD(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
     const filesArr = Array.from(files);
@@ -498,7 +528,7 @@ export class Workspace {
     return new SearchScannable(this.disk);
   }
 
-  async NewImage(arrayBuffer: ArrayBuffer, filePath: AbsPath): Promise<AbsPath> {
+  async NewImage(arrayBuffer: ArrayBuffer | File, filePath: AbsPath): Promise<AbsPath> {
     const file =
       (mime.lookup(filePath) || "").startsWith("image/svg") || (mime.lookup(filePath) || "").startsWith("image/webp")
         ? new File([arrayBuffer], basename(filePath))

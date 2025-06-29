@@ -1,6 +1,7 @@
-import { Workspace } from "@/Db/Workspace";
+import { type Workspace } from "@/Db/Workspace";
 
-export const WorkerApi = {
+import "@/workers/transferHandlers";
+export const SearchWorkerApi = {
   async *searchWorkspace(workspace: Workspace, searchTerm: string) {
     yield* workspace.NewScannable().search(searchTerm);
   },
@@ -10,3 +11,5 @@ export const WorkerApi = {
     }
   },
 };
+
+export type SearchWorkerApiType = typeof SearchWorkerApi;
