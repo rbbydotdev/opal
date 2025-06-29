@@ -803,7 +803,7 @@ export abstract class Disk {
   }
 
   async delete() {
-    return ClientDb.disks.delete(this.guid);
+    return this.connector.delete();
   }
 
   async tearDown() {

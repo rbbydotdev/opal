@@ -67,4 +67,7 @@ export class DiskDAO {
   toModel() {
     return Disk.FromJSON(this);
   }
+  delete() {
+    return ClientDb.disks.delete(this.guid);
+  }
 }
