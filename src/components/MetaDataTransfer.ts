@@ -5,7 +5,10 @@ import { stringHasTreeNodeDataTransferType } from "@/features/filetree-copy-past
 export class MetaDataTransfer {
   private dataTransfer: DataTransfer;
   readonly allowedClipboardTypes: string[] = ["text/plain", "text/html", "image/"];
-  constructor(dataTransfer: DataTransfer = new DataTransfer()) {
+  constructor(dataTransfer: DataTransfer | ClipboardItems = new DataTransfer()) {
+    if (dataTransfer instanceof ClipboardItems) {
+      throw new Error("MetaDataTransfer cannot be initialized with ClipboardItems. Use DataTransfer instead.");
+    }
     this.dataTransfer = dataTransfer;
   }
   presentationStyle = "inline";
@@ -46,6 +49,12 @@ export class MetaDataTransfer {
     value: "none" | "copy" | "copyLink" | "copyMove" | "link" | "linkMove" | "move" | "all" | "uninitialized"
   ) {
     this.dataTransfer.effectAllowed = value;
+  }
+  hasFiles() {
+    return this.dataTransfer.files && this.dataTransfer.files.length > 0;
+  }
+  getFiles() {
+    return this.dataTransfer.files || [];
   }
   hasInternalDataType() {
     return stringHasTreeNodeDataTransferType(

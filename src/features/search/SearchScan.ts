@@ -36,18 +36,12 @@ export class SearchScannable<T extends { text: string }> {
   async *search(
     needle: string,
     options: {
-      abortSignal?: AbortSignal;
       caseSensitive?: boolean;
       wholeWord?: boolean;
       regex?: boolean;
     } = { caseSensitive: false, wholeWord: false, regex: false }
   ): AsyncGenerator<{ matches: SearchResultData[]; meta: Omit<T, "text"> }> {
     for await (const item of this.scannable.scan()) {
-      if (options.abortSignal?.aborted) {
-        console.log("Search aborted in search");
-        // throw new Error("Search aborted");
-        return;
-      }
       const { text: haystack, ...rest } = item;
       const lineBreaks = this.computeLineBreaks(haystack);
       const results: SearchResultData[] = [];
