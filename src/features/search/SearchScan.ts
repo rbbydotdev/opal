@@ -1,4 +1,4 @@
-import { SearchResultData } from "@/features/search/SearchResults";
+import { type SearchResultData } from "@/features/search/SearchResults";
 
 interface Scannable<T> {
   scan(): AsyncGenerator<T>;

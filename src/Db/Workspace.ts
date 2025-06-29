@@ -1,6 +1,5 @@
 import { CreateDetails, DeleteDetails, Disk, IndexTrigger, RenameDetails } from "@/Db/Disk";
 import { ImageCache } from "@/Db/ImageCache";
-import { ClientDb } from "@/Db/instance";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { SearchScannable } from "@/features/search/SearchScan";
@@ -22,33 +21,12 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
-import { ImageWorkerApiType } from "@/workers/ImageWorker/ImageWorkerApi";
-import { wrap } from "comlink";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage } from "../lib/paths2";
 import { RemoteAuth } from "./RemoteAuth";
 
-/*
-
-
-Workspace_Dao
-  Disk_Dao
-  Thumbs_Dao
-  Remote_auth_Dao
-
-
-  Workspace_Dao_FromJSON - guid
-    Disk_DAO - guid, type
-    Remote_auth_DAO - guid
-    Thumbs_DAO - guid
-
-
-*/
-
-//TODO: change the mututation of this class to instead have a database tied object, but when othere deps are loaded it beomces a different object
-//for exampple the diskguid
 export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;
 
 export class Workspace {
@@ -394,44 +372,12 @@ export class Workspace {
   async awaitFirstIndex() {
     return this.disk.tryFirstIndex();
   }
-  async uploadImageFile(file: File, targetDir: AbsPath) {
+
+  async uploadSingleImage(file: File, targetDir: AbsPath) {
     return (await this.uploadMultipleImages([file], targetDir))[0]!;
   }
 
-  async uploadMultipleImages(
-    files: Iterable<File>,
-    targetDir: AbsPath,
-    concurrency = window.navigator.hardwareConcurrency ?? 2
-  ): Promise<AbsPath[]> {
-    const results: AbsPath[] = [];
-    let index = 0;
-    const filesArr = Array.from(files);
-
-    const uploadNext = async () => {
-      if (index >= filesArr.length) return;
-      const current = index++;
-      const file = filesArr[current];
-      const worker = new Worker(new URL("@/workers/ImageWorker/image.ww.ts", import.meta.url));
-      try {
-        const api = wrap<ImageWorkerApiType>(worker);
-        const arrayBuffer = await file!.arrayBuffer();
-        results[current] = await await api.createImage(this, joinPath(targetDir, file!.name), arrayBuffer);
-        await uploadNext();
-      } catch (e) {
-        console.error(`Error uploading image ${file?.name}:`, e);
-      } finally {
-        if (worker) {
-          worker.terminate();
-        }
-      }
-    };
-
-    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
-    await Promise.all(workers);
-    await this.disk.indexAndEmitNewFiles(results);
-    return results;
-  }
-  async uploadMultipleImages___OLD(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+  async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
     const filesArr = Array.from(files);
@@ -502,7 +448,7 @@ export class Workspace {
   async delete() {
     return Promise.all([
       await this.disk.tearDown(),
-      ClientDb.workspaces.delete(this.guid),
+      this.connector.delete(),
       this.disk.delete(),
       this.thumbs.delete(),
       this.imageCache.delete(),
