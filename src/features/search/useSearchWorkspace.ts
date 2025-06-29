@@ -14,12 +14,8 @@ export function useSearchWorkspace(workspace: Workspace) {
   const [_isPending, startTransition] = useTransition();
 
   const search = useCallback(
-    async function* scan(term: string, abortSignal?: AbortSignal) {
+    async function* scan(term: string) {
       for await (const result of searchWorker.searchWorkspace(workspace, term)) {
-        if (abortSignal?.aborted) {
-          console.log("Search aborted in generator");
-          return;
-        }
         yield result;
       }
     },
@@ -29,15 +25,11 @@ export function useSearchWorkspace(workspace: Workspace) {
 
   const [appendedResults, setAppendResults] = useState<DiskSearchResultData[]>([]);
   const submit = useCallback(
-    async (searchTerm: string, abortSignal?: AbortSignal) => {
+    async (searchTerm: string) => {
       console.log("Submitting search term:", searchTerm);
       startTransition(async () => {
         setAppendResults([]);
-        for await (const res of search(searchTerm, abortSignal)) {
-          if (abortSignal?.aborted) {
-            console.log("Search aborted in submit");
-            return;
-          }
+        for await (const res of search(searchTerm)) {
           startTransition(async () => {
             setAppendResults((prev) => [...prev, res]);
           });

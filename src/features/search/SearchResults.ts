@@ -1,14 +1,15 @@
 import React, { JSX } from "react";
 
 export interface SearchResultData {
-  lineNumber: number; // 1-based line number
+  lineNumber: number;
   lineStart: number;
   lineEnd: number;
-  start: number;
-  end: number;
-  lineText: string; // Only the matching line
-  relStart: number; // Start of match within lineText
-  relEnd: number; // End of match within lineText
+  start: number; // Absolute start index in the full text
+  end: number; // Absolute end index in the full text
+  lineText: string; // Text of the first line of the match
+  relStart: number; // Start index relative to the first line
+  relEnd: number; // End index relative to the first line (clamped)
+  linesSpanned: number; // Number of *additional* lines the match covers
 }
 
 // Class for highlighting and other helpers
@@ -54,6 +55,7 @@ export class SearchResult {
       }
 
       const startIdx = Math.max(0, this.relStart - startLen);
+      // const endIdx = Math.min(totalLen, this.relEnd + endLen);
       this.startText = (startIdx > 0 ? "…" : "") + this.lineText.slice(startIdx, this.relStart);
       this.middleText = this.lineText.slice(this.relStart, this.relEnd);
       this.endText = this.lineText.slice(this.relEnd); //, endIdx) + (endIdx < totalLen ? "…" : "");

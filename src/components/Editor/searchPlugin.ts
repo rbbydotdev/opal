@@ -17,7 +17,7 @@ export const editorSearchCursor$ = Cell<number>(0);
 export const editorSearchTextNodeIndex$ = Cell<TextNodeIndex[]>([]);
 export const debouncedSearch$ = Cell<"typing" | "replace">("typing");
 export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
-  realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(1000))));
+  realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(250))));
 });
 export const debouncedIndexer$ = Cell<TextNodeIndex[]>([], (realm) =>
   realm.link(
@@ -98,20 +98,44 @@ const resetHighlights = () => {
   CSS.highlights.delete(MDX_SEARCH_NAME);
   CSS.highlights.delete(MDX_FOCUS_SEARCH_NAME);
 };
-const scrollToRange = (range: Range, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
-  const el = range.startContainer.parentElement as HTMLElement;
+const scrollToRange = (
+  range: Range,
+  options?: {
+    contentEditable?: HTMLElement;
+    ignoreIfInView?: boolean;
+    behavior?: ScrollBehavior;
+  }
+) => {
+  // Set defaults if options or any property is undefined
+  const contentEditable = options?.contentEditable ?? document.querySelector(".content-editable");
   const ignoreIfInView = options?.ignoreIfInView ?? false;
   const behavior = options?.behavior ?? "smooth";
+
+  const [first] = range.getClientRects();
+
+  if (!contentEditable) {
+    return console.warn("No content-editable element found for scrolling.");
+  }
+  if (!first) {
+    return console.warn("No client rect found for the range, cannot scroll.");
+  }
+
+  // Get bounding rects relative to the scroll container
+  const containerRect = contentEditable.getBoundingClientRect();
+  const topRelativeToContainer = first.top - containerRect.top;
+
+  // Optionally ignore if already in view
   if (ignoreIfInView) {
-    const rect = el.getBoundingClientRect();
     const inView =
-      rect.top >= 0 &&
-      rect.left >= 0 &&
-      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+      topRelativeToContainer >= contentEditable.scrollTop &&
+      topRelativeToContainer + first.height <= contentEditable.scrollTop + contentEditable.clientHeight;
     if (inView) return;
   }
-  el.scrollIntoView({ behavior });
+
+  // Scroll so the range is near the top, with some offset if desired
+  const top = topRelativeToContainer + contentEditable.scrollTop - first.height; // adjust this offset as needed
+
+  contentEditable.scrollTo({ top, behavior });
 };
 
 function isSimilarRange(
@@ -187,9 +211,13 @@ export function useEditorSearch() {
 
   const setSearch = useCallback(
     (term: string | null) => {
+      if ((term ?? "") !== search) {
+        realm.pub(editorSearchCursor$, 0);
+      }
       realm.pub(editorSearchTermDebounced$, term ?? "");
+      //reset cursor
     },
-    [realm]
+    [realm, search]
   );
 
   const setMode = useCallback(
