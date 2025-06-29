@@ -33,13 +33,15 @@ export async function processWorkspaceImagesWW(
       if (worker) {
         //wait for the worker to finish before terminating
         //terminate the worker
-        // worker.terminate();
+        await new Promise((rs) => setTimeout(rs, 500));
+        worker.terminate();
       }
     }
   };
 
   const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
   await Promise.all(workers);
+  console.log(results);
   await workspace.disk.indexAndEmitNewFiles(results);
   return results;
 }

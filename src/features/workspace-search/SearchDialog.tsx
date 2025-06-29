@@ -117,7 +117,11 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
               className="md:text-xs text-xs outline-ring border bg-sidebar font-mono"
               placeholder="search workspace..."
               value={searchTerm}
-              onChange={(e) => updateSearchTerm(e.target.value)}
+              // onChange={(e) => updateSearchTerm(e.target.value)}
+              onChange={(e) => {
+                // void submitSearch(searchTerm);
+                updateSearchTerm(e.target.value);
+              }}
             />
           </form>
           <CollapsibleContent>
