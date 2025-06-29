@@ -108,7 +108,7 @@ const scrollToRange = (
 ) => {
   // Set defaults if options or any property is undefined
   const contentEditable = options?.contentEditable ?? document.querySelector(".content-editable");
-  const ignoreIfInView = options?.ignoreIfInView ?? false;
+  const ignoreIfInView = options?.ignoreIfInView ?? true;
   const behavior = options?.behavior ?? "smooth";
 
   const [first] = range.getClientRects();
@@ -123,12 +123,18 @@ const scrollToRange = (
   // Get bounding rects relative to the scroll container
   const containerRect = contentEditable.getBoundingClientRect();
   const topRelativeToContainer = first.top - containerRect.top;
-
+  const bottomRelativeToContainer = first.bottom - containerRect.top;
   // Optionally ignore if already in view
   if (ignoreIfInView) {
-    const inView =
-      topRelativeToContainer >= contentEditable.scrollTop &&
-      topRelativeToContainer + first.height <= contentEditable.scrollTop + contentEditable.clientHeight;
+    // The visible area is [scrollTop, scrollTop + clientHeight]
+    // The range is in view if its top and bottom are within this area
+    const rangeTop = topRelativeToContainer + contentEditable.scrollTop;
+    const rangeBottom = bottomRelativeToContainer + contentEditable.scrollTop;
+    const visibleTop = contentEditable.scrollTop;
+    const visibleBottom = visibleTop + contentEditable.clientHeight;
+
+    const inView = rangeTop >= visibleTop && rangeBottom <= visibleBottom;
+
     if (inView) return;
   }
 

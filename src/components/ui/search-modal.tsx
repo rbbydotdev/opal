@@ -61,19 +61,12 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
     [results, dismissedFiles]
   );
 
-  // const searchAbortCntrl = useRef<AbortController>(null);
-  // const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const updateSearchTerm = useCallback(
     (searchTerm: string) => {
       if (searchTerm.trim() === "") {
         reset();
       } else {
         setSearchTerm(searchTerm);
-        // if (searchAbortCntrl.current) {
-        //   searchAbortCntrl.current.abort();
-        // }
-        // searchAbortCntrl.current = new AbortController();
-        // void submit(searchTerm, searchAbortCntrl.current.signal);
       }
     },
     [reset]
@@ -150,12 +143,6 @@ function SearchResultsScroll({
   const lineNumWidth = useMemo(() => (Math.max(...matches.map(({ lineNumber }) => lineNumber)) + "").length, [matches]);
   return (
     <div className="pb-4">
-      {/* <div className="bg-search-header-bg/80 backdrop-blur-sm gap-2 flex items-center justify-start px-3 py-2 sticky top-0 z-10 text-xs font-mono">
-        <div className="rounded-md overflow-hidden">
-          <Identicon input={"xxxx"} scale={4} size={5} />
-        </div>
-        {`wrkspc-`}
-      </div> */}
       <div className="border border-search-border ">
         <Collapsible open={!collapsedFiles.has(searchResult.meta.path)}>
           <div className="flex items-center justify-between bg-search-header-bg px-3 py-2 hover:bg-search-row-hover transition-colors">
@@ -187,14 +174,24 @@ function SearchResultsScroll({
           <CollapsibleContent>
             {
               <div className="bg-search-bg truncate">
-                {matches.map(({ startText, middleText, endText, lineNumber }, index) => (
+                {matches.map(({ startText, middleText, endText, lineNumber, linesSpanned }, index) => (
                   <div
                     key={index}
-                    className="pl-3 truncate flex items-start gap-1 px-6 py-1 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
+                    className="pl-3 truncate flex items-start gap-1 px-6 py-1 pt-2 cursor-pointer border-l-2 border-transparent hover:bg-ring transition-colors"
                   >
-                    <span className="text-search-muted-2 text-sm font-mono mr-2" style={{ width: lineNumWidth + "ch" }}>
-                      {lineNumber}:
-                    </span>
+                    <div
+                      className="block text-search-muted-2 text-sm font-mono mr-2 relative"
+                      style={{ width: lineNumWidth + "ch" }}
+                    >
+                      <div className="relative">
+                        {linesSpanned > 0 && (
+                          <div className="text-search-muted scale-75 -top-2 font-bold -right-4 rounded-full flex justify-center items-center text-xs absolute z-10">
+                            +{linesSpanned}
+                          </div>
+                        )}
+                        <div className="inline-block">{lineNumber}:</div>
+                      </div>
+                    </div>
                     <span className="truncate text-search-muted-2 text-sm font-mono min-w-[3rem] text-right">
                       <span className="text-search-muted text-sm font-mono flex-1">
                         {startText}
@@ -212,41 +209,3 @@ function SearchResultsScroll({
     </div>
   );
 }
-
-// function WorkspaceSelector({ value, onValueChange }: WorkspaceSelectorProps) {
-//   return (
-//     <div className="space-y-2">
-//       <label className="text-sm text-search-muted">Workspace</label>
-//       <Select value={value} onValueChange={onValueChange}>
-//         <SelectTrigger className="bg-search-border border-search-border text-primary-foreground focus:border-ring focus:ring-ring">
-//           <SelectValue />
-//         </SelectTrigger>
-//         <SelectContent className="bg-search-header border-search-border text-primary-foreground">
-//           <SelectItem value="all" className="focus:bg-search-row-hover focus:text-primary-foreground">
-//             <div className="flex items-center gap-2">
-//               <Globe className="w-5 h-5 text-search-icon" />
-//               All Workspaces
-//             </div>
-//           </SelectItem>
-//           {
-//             /*workspaces*/ [].map((workspace, i) => (
-//               <SelectItem
-//                 key={workspace.id + "" + i}
-//                 value={workspace.id + "" + i}
-//                 className="focus:bg-search-row-hover focus:text-primary-foreground"
-//               >
-//                 <div className="flex items-center gap-2">
-//                   {/* <workspace.icon className="w-4 h-4 text-orange-400" /> */}
-//                   <div className="rounded-md overflow-hidden">
-//                     <Identicon input={workspace.name} scale={4} size={5} />
-//                   </div>
-//                   {workspace.name}
-//                 </div>
-//               </SelectItem>
-//             ))
-//           }
-//         </SelectContent>
-//       </Select>
-//     </div>
-//   );
-// }

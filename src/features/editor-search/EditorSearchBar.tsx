@@ -154,7 +154,7 @@ export function EditorSearchBar({
       }}
       className={twMerge(
         clsx({ "animate-in": open }),
-        "bg-background border rounded-lg shadow-lg flex absolute top-12 translate-y-4 right-4 z-50",
+        "bg-transparent backdrop-blur-md border rounded-lg shadow-lg flex absolute top-12 translate-y-4 right-4 z-50",
         className
       )}
     >
@@ -185,7 +185,7 @@ export function EditorSearchBar({
                 onChange={(e) => handleSearchChange(e.target.value)}
                 defaultValue={search ?? ""}
                 placeholder="Search"
-                className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
               />
             </div>
             <div>
@@ -200,7 +200,7 @@ export function EditorSearchBar({
                 <Input
                   ref={replaceInputRef}
                   placeholder="Replace"
-                  className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
                   onKeyDown={handleReplaceInputKeydown}
                 />
               </div>
