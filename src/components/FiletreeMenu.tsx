@@ -154,7 +154,7 @@ export function FileTreeMenu({
                 })
               }
               paste={async () => {
-                const data = await MetaDataTransfer.FromClipboardItems(await navigator.clipboard.read());
+                const data = await MetaDataTransfer.fromClipboard(await navigator.clipboard.read());
 
                 void handleFileMenuPaste({
                   targetNode: fileNode,
