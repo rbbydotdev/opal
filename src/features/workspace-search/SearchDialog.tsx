@@ -119,7 +119,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     [queryResults, dismissedFiles]
   );
 
-  const renderSearchResults = () => {
+  const renderSearchResults = useMemo(() => {
     if (isSearching) {
       return (
         <div className="flex justify-center items-center text-muted-foreground py-8 text-sm font-mono w-full h-full">
@@ -139,7 +139,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     }
 
     return null;
-  };
+  }, [error, filteredResults, isSearching, queryResults]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -198,7 +198,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
             </div>
           </CollapsibleContent>
         </Collapsible>
-        <div className="h-full overflow-y-scroll no-scrollbar mt-2">{renderSearchResults()}</div>
+        <div className="h-full overflow-y-scroll no-scrollbar mt-2">{renderSearchResults}</div>
       </DialogContent>
     </Dialog>
   );
