@@ -28,34 +28,6 @@ export const debouncedSearch$ = Cell<"typing" | "replace">("typing");
 export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
   realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(250))));
 });
-// export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (realm) =>
-//   realm.link(
-//     editorSearchScollableContent$,
-//     realm.pipe(
-//       contentEditableRef$,
-//       map((ceRef) => {
-//         console.log(ceRef);
-//         console.log("HHHH", realm.getValue(contentEditableRef$));
-//         return ceRef?.current?.children?.[0] ?? null;
-//       })
-//     )
-//   )
-// );
-
-// export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (realm) =>
-//   realm.link(
-//     contentEditableRef$,
-//     realm.pipe(
-//       editorSearchScollableContent$,
-//       map((ceRef) => {
-//         console.log(ceRef);
-//         console.log("HHHH", realm.getValue(contentEditableRef$));
-//         return ceRef?.current?.children?.[0] ?? null;
-//       })
-//     )
-//   )
-// );
-
 export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (r) =>
   r.sub(contentEditableRef$, (cref) => r.pub(editorSearchScollableContent$, cref?.current?.children?.[0] ?? null))
 );
@@ -76,40 +48,78 @@ export const debouncedIndexer$ = Cell<TextNodeIndex[]>([], (realm) =>
 );
 
 function* searchText(allText: string, searchQuery: string): Generator<[start: number, end: number]> {
-  if (searchQuery === null) return [];
-  let startPos = 0;
-  while (startPos < allText.length) {
-    const index = allText.toLowerCase().indexOf(searchQuery.toLowerCase(), startPos);
-    if (index === -1) break;
-    yield [index, index + searchQuery.length - 1];
-    startPos = index + searchQuery.length;
+  if (!searchQuery) {
+    return;
   }
-}
-function* indexTextNodes(containerList?: NodeListOf<HTMLElement>): Iterable<TextNodeIndex> {
-  if (!containerList || containerList.length === 0) {
-    return [];
+
+  let regex: RegExp;
+  try {
+    regex = new RegExp(searchQuery, "gi");
+  } catch (e) {
+    console.error("Invalid search pattern:", e);
+    return;
   }
-  for (const container of containerList ?? []) {
-    let allText = "";
-    const treeWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-    let currentNode = treeWalker.nextNode();
-    const offsetIndex: number[] = [];
-    const nodeIndex: Node[] = [];
-    while (currentNode) {
-      const nodeContent = currentNode.textContent?.normalize("NFKD") ?? currentNode.textContent ?? "";
-      for (let i = 0; i < nodeContent.length; i++) {
-        nodeIndex.push(currentNode);
-        offsetIndex.push(i);
-        allText += nodeContent[i];
+
+  let match;
+  while ((match = regex.exec(allText)) !== null) {
+    if (match[0].length === 0) {
+      if (regex.lastIndex === match.index) {
+        regex.lastIndex++;
       }
-      currentNode = treeWalker.nextNode();
+      continue;
     }
-    yield { offsetIndex, nodeIndex, allText };
+
+    const start = match.index;
+    const end = start + match[0].length - 1;
+    yield [start, end];
   }
 }
+
+/**
+ * Creates a single, unified index of all text nodes within valid content containers.
+ * This allows matches to span across different block-level elements.
+ */
+function indexAllTextNodes(root: HTMLElement | null): TextNodeIndex {
+  const allText: string[] = [];
+  const nodeIndex: Node[] = [];
+  const offsetIndex: number[] = [];
+
+  if (!root) {
+    return { allText: "", nodeIndex, offsetIndex };
+  }
+
+  // A CSS selector for all valid content-hosting elements.
+  const contentSelector = "p, h1, h2, h3, h4, h5, h6, li, code, pre";
+
+  const treeWalker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_TEXT,
+    // The corrected heuristic: accept any text node that is a descendant of a valid content container.
+    (node) => {
+      // Use `closest()` on the parent to see if it's inside a valid container.
+      if (node.parentElement?.closest(contentSelector)) {
+        return NodeFilter.FILTER_ACCEPT;
+      }
+      return NodeFilter.FILTER_REJECT;
+    }
+  );
+
+  let currentNode: Node | null;
+  while ((currentNode = treeWalker.nextNode())) {
+    const nodeContent = currentNode.textContent?.normalize("NFKD") ?? currentNode.textContent ?? "";
+    for (let i = 0; i < nodeContent.length; i++) {
+      nodeIndex.push(currentNode);
+      offsetIndex.push(i);
+      allText.push(nodeContent[i]);
+    }
+  }
+
+  return { allText: allText.join(""), nodeIndex, offsetIndex };
+}
+
 export function* rangeSearchScan(searchQuery: string, textNodeIndex: Iterable<TextNodeIndex>) {
   for (const { allText, offsetIndex, nodeIndex } of textNodeIndex) {
-    for (const [start, end] of searchText(allText, searchQuery?.normalize("NFKD") ?? searchQuery)) {
+    for (const [start, end] of searchText(allText, searchQuery)) {
       const startOffset = offsetIndex[start];
       const endOffset = offsetIndex[end];
       const startNode = nodeIndex[start];
@@ -300,7 +310,12 @@ export function useEditorSearch() {
         //cursor must be incremented to the next match
         const unsub = realm.sub(editorSearchRanges$, (newRanges) => {
           unsub();
-          if (isSimilarRange(newRanges[cursor - 1]! ?? {}, { startOffset, startContainer })) {
+          if (
+            isSimilarRange(newRanges[cursor - 1]! ?? {}, {
+              startOffset,
+              startContainer,
+            })
+          ) {
             realm.pub(editorSearchCursor$, (cursor + 1) % (newRanges.length + 1) || 1);
           }
         });
@@ -351,8 +366,6 @@ export function useEditorSearch() {
   };
 }
 
-const getTextNodeIndex = (root: HTMLElement) =>
-  indexTextNodes(root?.querySelectorAll("ul,p,h1,h2,h3,h4,h5,h6,code,pre") ?? []);
 export const searchPlugin = realmPlugin({
   postInit(realm) {
     const editor = realm.getValue(rootEditor$);
@@ -369,10 +382,6 @@ export const searchPlugin = realmPlugin({
         }
         const ranges = Array.from(rangeSearchScan(searchQuery, textNodeIndex));
         realm.pub(editorSearchRanges$, ranges);
-        // replace will be triggered here via a once sub
-        // SEE: const unsub = realm.sub(editorSearchRanges$, (newRanges) => { ....
-        // to determine if the replaced text continues to match the search term
-        // if it does it will increment the cursor
         highlightRanges(ranges);
         if (ranges.length) {
           const currentCursor = realm.getValue(editorSearchCursor$) || 1;
@@ -381,7 +390,9 @@ export const searchPlugin = realmPlugin({
           const scrollRange = ranges[currentCursor - 1];
           if (!scrollRange) throw new Error("error updating highlights, scroll range does not exist");
           const contentEditable = realm.getValue(editorSearchScollableContent$);
-          scrollToRange(scrollRange, contentEditable as HTMLElement, { ignoreIfInView: true });
+          scrollToRange(scrollRange, contentEditable as HTMLElement, {
+            ignoreIfInView: true,
+          });
         } else {
           resetHighlights();
         }
@@ -395,19 +406,21 @@ export const searchPlugin = realmPlugin({
       });
 
       let observer: MutationObserver | null = null;
-      //post init should take a clean up function but it does not
       return editor.registerRootListener((rootElement) => {
         if (observer) {
           observer.disconnect();
           observer = null;
         }
         if (rootElement) {
-          realm.pub(editorSearchTextNodeIndex$, [...getTextNodeIndex(rootElement)]);
+          const initialIndex = [indexAllTextNodes(rootElement)];
+          realm.pub(editorSearchTextNodeIndex$, initialIndex);
+
           observer = new MutationObserver(() => {
+            const newIndex = [indexAllTextNodes(rootElement)];
             if (realm.getValue(debouncedSearch$) === "replace") {
-              realm.pub(editorSearchTextNodeIndex$, [...getTextNodeIndex(rootElement)]);
+              realm.pub(editorSearchTextNodeIndex$, newIndex);
             } else {
-              realm.pub(debouncedIndexer$, getTextNodeIndex(rootElement));
+              realm.pub(debouncedIndexer$, newIndex);
             }
           });
           observer.observe(rootElement, {

@@ -12,6 +12,9 @@ export const SWWStore = new (class SwWorkspace {
     if (!this.workspaces.has(workspaceId)) {
       const ws = WorkspaceDAO.FetchByName(workspaceId).then((wsd) => wsd.toModel().init());
       this.workspaces.set(workspaceId, ws);
+      setTimeout(() => {
+        this.workspaces.delete(workspaceId);
+      }, 5_000);
       return ws;
     }
     return this.workspaces.get(workspaceId)!;
