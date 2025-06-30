@@ -11,10 +11,10 @@ export type TreeNodeDataTransferJType = {
   fileNodes: AbsPath[];
   action: "copy" | "cut" | "move";
 };
-export function stringHasTreeNodeDataTransferType(str: string) {
-  return str.includes(TreeNodeDataTransferTypeMagicString);
-}
-const TreeNodeDataTransferTypeMagicString = "@TreeNodeDataTransferType@";
+// export function stringHasTreeNodeDataTransferType(str: string) {
+//   return str.includes(TreeNodeDataTransferTypeMagicString);
+// }
+// const TreeNodeDataTransferTypeMagicString = "@TreeNodeDataTransferType@";
 export function treeNodeDataTransfer({
   workspaceId,
   fileNodes,
@@ -24,6 +24,6 @@ export function treeNodeDataTransfer({
     workspaceId,
     fileNodes: fileNodes.map((node) => String(node) as AbsPath),
     action,
-    [TreeNodeDataTransferTypeMagicString]: 1,
+    // [TreeNodeDataTransferTypeMagicString]: 1,
   } as TreeNodeDataTransferJType;
 }
