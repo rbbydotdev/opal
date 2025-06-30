@@ -12,7 +12,6 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { SearchResult } from "@/features/search/SearchResults";
 import { DiskSearchResultData } from "@/features/search/useSearchWorkspace";
 import { absPath, joinPath, relPath } from "@/lib/paths2";
-import { WorkspaceSearchResponse } from "@/lib/ServiceWorker/handleWorkspaceSearch";
 import { ChevronRight, FileTextIcon, Loader, Search, X } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -41,15 +40,20 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
 
   // --- Refactored Search Logic with useEffect ---
   useEffect(() => {
+    // 1. If the search term is empty, reset to the initial state.
     if (!searchTerm.trim()) {
       resetSearchState();
       return;
     }
 
+    // 2. An AbortController for this specific search effect.
     const controller = new AbortController();
+
+    // 3. Debounce the search request.
     const searchTimeout = setTimeout(async () => {
+      // 4. Set initial state for a new streaming search.
       setIsSearching(true);
-      setQueryResults(null);
+      setQueryResults([]); // IMPORTANT: Initialize with an empty array to append results.
       setError(null);
 
       const url = new URL(`/workspace-search/${currentWorkspace.name}`, window.location.origin);
@@ -58,29 +62,68 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       try {
         const res = await fetch(url.toString(), { signal: controller.signal });
 
+        // The service worker returns 204 for aborted or empty-term searches.
         if (res.status === 204) {
+          setIsSearching(false); // Search is over.
           return;
         }
+
         if (!res.ok) {
           throw new Error(`Search failed: ${res.statusText}`);
         }
 
-        const { results } = (await res.json()) as WorkspaceSearchResponse;
-        setQueryResults(results);
+        if (!res.body) {
+          throw new Error("Response has no body to read.");
+        }
+
+        // --- 5. Consume the NDJSON Stream ---
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            // The stream has finished.
+            break;
+          }
+
+          // Add the new chunk to our buffer.
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+
+          // The last line might be incomplete, so we keep it in the buffer.
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            // Skip any empty lines.
+            if (line.trim() === "") continue;
+
+            const result = JSON.parse(line) as DiskSearchResultData;
+
+            // Append each new result to our state as it arrives.
+            setQueryResults((prevResults) => [...(prevResults || []), result]);
+          }
+        }
       } catch (err) {
+        // Ignore abort errors, which are expected when a new search starts.
         if (err instanceof DOMException && err.name === "AbortError") {
           return;
         }
         console.error("Search error:", err);
         setError("Search failed. Please try again.");
+        setQueryResults(null); // Clear results on error
       } finally {
+        // 6. Once the stream is done or has failed, stop the loading indicator.
         setIsSearching(false);
       }
     }, SEARCH_DEBOUNCE_MS);
 
+    // 7. Cleanup function: This runs when the component unmounts
+    //    OR when a dependency (searchTerm) changes.
     return () => {
-      clearTimeout(searchTimeout);
-      controller.abort();
+      clearTimeout(searchTimeout); // Cancel the scheduled search
+      controller.abort(); // Abort any in-flight fetch request
     };
   }, [searchTerm, currentWorkspace.name, resetSearchState]);
 

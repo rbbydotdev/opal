@@ -91,7 +91,7 @@ export function useFileContents() {
     void fetchFileContents();
   }, [currentWorkspace, filePath, router]);
 
-  return { error, filePath, contents: String(contents), mimeType, updateContents, debouncedUpdate };
+  return { error, filePath, contents: String(contents ?? ""), mimeType, updateContents, debouncedUpdate };
 }
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
