@@ -1,4 +1,13 @@
-import { Cell, debounceTime, map, realmPlugin, rootEditor$, useCellValue, useRealm } from "@mdxeditor/editor";
+import {
+  Cell,
+  contentEditableRef$,
+  debounceTime,
+  map,
+  realmPlugin,
+  rootEditor$,
+  useCellValue,
+  useRealm,
+} from "@mdxeditor/editor";
 import { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, getNearestEditorFromDOMNode } from "lexical";
 import { useCallback } from "react";
 
@@ -19,6 +28,38 @@ export const debouncedSearch$ = Cell<"typing" | "replace">("typing");
 export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
   realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(250))));
 });
+// export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (realm) =>
+//   realm.link(
+//     editorSearchScollableContent$,
+//     realm.pipe(
+//       contentEditableRef$,
+//       map((ceRef) => {
+//         console.log(ceRef);
+//         console.log("HHHH", realm.getValue(contentEditableRef$));
+//         return ceRef?.current?.children?.[0] ?? null;
+//       })
+//     )
+//   )
+// );
+
+// export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (realm) =>
+//   realm.link(
+//     contentEditableRef$,
+//     realm.pipe(
+//       editorSearchScollableContent$,
+//       map((ceRef) => {
+//         console.log(ceRef);
+//         console.log("HHHH", realm.getValue(contentEditableRef$));
+//         return ceRef?.current?.children?.[0] ?? null;
+//       })
+//     )
+//   )
+// );
+
+export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (r) =>
+  r.sub(contentEditableRef$, (cref) => r.pub(editorSearchScollableContent$, cref?.current?.children?.[0] ?? null))
+);
+
 export const debouncedIndexer$ = Cell<TextNodeIndex[]>([], (realm) =>
   realm.link(
     debouncedIndexer$,
@@ -100,14 +141,13 @@ const resetHighlights = () => {
 };
 const scrollToRange = (
   range: Range,
+  contentEditable: HTMLElement,
   options?: {
-    contentEditable?: HTMLElement;
     ignoreIfInView?: boolean;
     behavior?: ScrollBehavior;
   }
 ) => {
   // Set defaults if options or any property is undefined
-  const contentEditable = options?.contentEditable ?? document.querySelector(".content-editable");
   const ignoreIfInView = options?.ignoreIfInView ?? true;
   const behavior = options?.behavior ?? "smooth";
 
@@ -202,6 +242,7 @@ export function useEditorSearch() {
   const ranges = useCellValue(editorSearchRanges$);
   const cursor = useCellValue(editorSearchCursor$);
   const search = useCellValue(editorSearchTerm$);
+  const contentEditable = useCellValue(editorSearchScollableContent$);
 
   const rangeCount = ranges.length;
   const scrollToRangeOrIndex = useCallback(
@@ -210,9 +251,9 @@ export function useEditorSearch() {
       if (!scrollRange) {
         throw new Error("Error scrolling to range, range does not exist");
       }
-      return scrollToRange(scrollRange, options);
+      return scrollToRange(scrollRange, contentEditable as HTMLElement, options);
     },
-    [ranges]
+    [contentEditable, ranges]
   );
 
   const setSearch = useCallback(
@@ -339,7 +380,8 @@ export const searchPlugin = realmPlugin({
           realm.pub(editorSearchCursor$, currentCursor);
           const scrollRange = ranges[currentCursor - 1];
           if (!scrollRange) throw new Error("error updating highlights, scroll range does not exist");
-          scrollToRange(scrollRange, { ignoreIfInView: true });
+          const contentEditable = realm.getValue(editorSearchScollableContent$);
+          scrollToRange(scrollRange, contentEditable as HTMLElement, { ignoreIfInView: true });
         } else {
           resetHighlights();
         }
