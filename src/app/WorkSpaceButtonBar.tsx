@@ -116,6 +116,22 @@ export function WorkSpaceButtonBar() {
         href="#"
         onClick={() => Workspace.DeleteAll().then(() => router.push("/new"))}
       />
+      <BigButton
+        icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
+        title={"Unregister Services"}
+        href="#"
+        onClick={() => {
+          // Unregister all service workers for this origin
+          const promises: Promise<boolean>[] = [];
+          void navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+            for (const registration of registrations) {
+              promises.push(registration.unregister());
+            }
+            await Promise.all(promises);
+            alert("All service workers unregistered!");
+          });
+        }}
+      />
 
       <WorkspaceSearchDialog>
         <BigButton

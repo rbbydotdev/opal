@@ -10,8 +10,6 @@ export async function handleImageUpload(
 ): Promise<Response> {
   try {
     const { request } = event;
-    // const IS_NOT_WEBP = extname(filePath) !== ".webp";
-    // const IS_NOT_SVG = extname(filePath) !== ".svg";
     console.log(`Intercepted UPLOAD request for: 
     url.pathname: ${url.pathname}
     href: ${url.href}
