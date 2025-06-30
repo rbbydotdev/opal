@@ -8,83 +8,90 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { SearchResult } from "@/features/search/SearchResults";
-import { DiskSearchResultData, useSearchWorkspace } from "@/features/search/useSearchWorkspace";
-import { relPath } from "@/lib/paths2";
+import { DiskSearchResultData } from "@/features/search/useSearchWorkspace";
+import { absPath, joinPath, relPath } from "@/lib/paths2";
 import { WorkspaceSearchResponse } from "@/lib/ServiceWorker/handleWorkspaceSearch";
 import { ChevronRight, FileTextIcon, Loader, Search, X } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const MAX_MATCHES_SHOWN = 5;
+const SEARCH_DEBOUNCE_MS = 250; // 250ms debounce delay
 
 export function WorkspaceSearchDialog({ children }: { children: React.ReactNode }) {
   const [isOpen, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [dismissedFiles, setDismissedFiles] = useState<Set<string>>(new Set());
-
   const { currentWorkspace } = useWorkspaceContext();
 
-  const { results, submit: submitSearch, reset: resetSearch } = useSearchWorkspace(currentWorkspace);
-
+  // --- Refactored State Management ---
+  const [isSearching, setIsSearching] = useState(false);
   const [queryResults, setQueryResults] = useState<DiskSearchResultData[] | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const [pending, setPending] = useState(false);
-  const resetDoSearch = useCallback(() => {
-    setQueryResults([]);
-  }, []);
-  const doSearch = useCallback(
-    async function (st: string) {
-      setPending(true);
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      abortControllerRef.current = new AbortController();
-      if (!st) {
-        setPending(false);
-        return resetDoSearch();
-      }
+  const [error, setError] = useState<string | null>(null);
 
-      const url = new URL(`/workspace-search/${currentWorkspace.name}`, window.location.origin);
-      url.searchParams.set("searchTerm", st);
-
-      try {
-        const res = await fetch(url.toString(), {
-          signal: abortControllerRef.current?.signal,
-        });
-        if (!res.ok) {
-          throw new Error(`Search failed with status ${res.status}`);
-        }
-        const { results } = (await res.json()) as WorkspaceSearchResponse;
-        setQueryResults(results);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        if (err.name === "AbortError") {
-          // Aborted fetch, do nothing (this is expected)
-          return;
-        }
-        // Handle other errors (optional: show error to user, etc.)
-        console.error("Search error:", err);
-      } finally {
-        setPending(false);
-      }
-    },
-    [currentWorkspace.name, resetDoSearch]
-  );
-  const reset = useCallback(() => {
+  const resetSearchState = useCallback(() => {
     setSearchTerm("");
     setDismissedFiles(new Set());
-    resetSearch();
-  }, [resetSearch]);
+    setQueryResults(null);
+    setIsSearching(false);
+    setError(null);
+  }, []);
+
+  // --- Refactored Search Logic with useEffect ---
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      resetSearchState();
+      return;
+    }
+
+    const controller = new AbortController();
+    const searchTimeout = setTimeout(async () => {
+      setIsSearching(true);
+      setQueryResults(null);
+      setError(null);
+
+      const url = new URL(`/workspace-search/${currentWorkspace.name}`, window.location.origin);
+      url.searchParams.set("searchTerm", searchTerm);
+
+      try {
+        const res = await fetch(url.toString(), { signal: controller.signal });
+
+        if (res.status === 204) {
+          return;
+        }
+        if (!res.ok) {
+          throw new Error(`Search failed: ${res.statusText}`);
+        }
+
+        const { results } = (await res.json()) as WorkspaceSearchResponse;
+        setQueryResults(results);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+        console.error("Search error:", err);
+        setError("Search failed. Please try again.");
+      } finally {
+        setIsSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(searchTimeout);
+      controller.abort();
+    };
+  }, [searchTerm, currentWorkspace.name, resetSearchState]);
 
   const onOpenChange = useCallback(
     (open: boolean) => {
       if (open) {
-        reset();
+        resetSearchState();
       }
       setOpen(open);
     },
-    [reset]
+    [resetSearchState]
   );
 
   useEffect(() => {
@@ -92,54 +99,52 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") {
         e.preventDefault();
         e.stopImmediatePropagation();
-        e.stopPropagation();
         onOpenChange(true);
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onOpenChange]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      // void submitSearch(searchTerm);
-      void doSearch(searchTerm);
-    }
   };
-
-  const updateSearchTerm = useCallback(
-    (term: string) => {
-      if (term.trim() === "") {
-        reset();
-      } else {
-        setSearchTerm(term);
-      }
-    },
-    [reset]
-  );
 
   const dismissFile = (file: string) => {
     setDismissedFiles((prev) => new Set(prev).add(file));
   };
 
-  // const filteredResults = useMemo(
-  //   () => results.filter((result) => !dismissedFiles.has(result.meta.path)),
-  //   [results, dismissedFiles]
-  // );
   const filteredResults = useMemo(
-    () => (!queryResults ? null : queryResults.filter((result) => !dismissedFiles.has(result.meta.path))),
+    () => (!queryResults ? null : queryResults.filter((result) => !dismissedFiles.has(result.meta.filePath))),
     [queryResults, dismissedFiles]
   );
+
+  const renderSearchResults = () => {
+    if (isSearching) {
+      return (
+        <div className="flex justify-center items-center text-muted-foreground py-8 text-sm font-mono w-full h-full">
+          <div className="animate-spin">
+            <Loader className="w-6 h-6" />
+          </div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return <div className="text-center text-destructive py-8 text-sm font-mono">{error}</div>;
+    }
+
+    if (queryResults !== null) {
+      return <SearchResults results={filteredResults} dismissFile={dismissFile} />;
+    }
+
+    return null;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
-        // UPDATED: Set max-height, a fixed top position, and reset the vertical transform.
         className="sm:max-w-[720px] max-h-[80svh] flex flex-col top-[15vh] translate-y-0"
         onEscapeKeyDown={(event) => {
           if (document.activeElement?.hasAttribute("data-search-file-expand")) {
@@ -167,14 +172,10 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
               className="md:text-xs text-xs outline-ring border bg-sidebar font-mono"
               placeholder="search workspace..."
               value={searchTerm}
-              // onChange={(e) => updateSearchTerm(e.target.value)}
-              onChange={(e) => {
-                // void submitSearch(searchTerm);
-                void doSearch(e.target.value);
-                updateSearchTerm(e.target.value);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </form>
+          {/* --- THIS SECTION IS NOW RESTORED --- */}
           <CollapsibleContent>
             <div className="flex items-center gap-2 mt-4">
               <Checkbox id="all_workspaces_option" className="scale-75" />
@@ -197,33 +198,25 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
             </div>
           </CollapsibleContent>
         </Collapsible>
-        <div className="h-full overflow-y-scroll no-scrollbar mt-2">
-          {searchTerm && <SearchResults isPending={pending} results={filteredResults} dismissFile={dismissFile} />}
-        </div>
+        <div className="h-full overflow-y-scroll no-scrollbar mt-2">{renderSearchResults()}</div>
       </DialogContent>
     </Dialog>
   );
 }
-
+// --- Updated SearchResults Component ---
 function SearchResults({
   results,
   dismissFile,
-  isPending,
 }: {
   results: DiskSearchResultData[] | null;
   dismissFile: (path: string) => void;
-  isPending: boolean;
 }) {
-  if (isPending) {
-    return (
-      <div className="flex justify-center items-center text-muted-foreground py-8 text-sm font-mono w-full h-full">
-        <div className="animate-spin">
-          <Loader className="w-6 h-6" />
-        </div>
-      </div>
-    );
+  // Note: The pending/spinner state is now handled by the parent.
+  if (!results) {
+    // This case should ideally not be hit if parent logic is correct,
+    // but it's safe to keep.
+    return null;
   }
-  if (!results) return;
   if (results.length === 0) {
     return <div className="text-center text-muted-foreground py-8 text-sm font-mono">No results found</div>;
   }
@@ -231,8 +224,8 @@ function SearchResults({
   return (
     <ul className="block">
       {results.map((result) => (
-        <li className="block" key={result.meta.path}>
-          <SearchFile searchResult={result} closeFile={() => dismissFile(result.meta.path)} />
+        <li className="block" key={result.meta.filePath}>
+          <SearchFile searchResult={result} closeFile={() => dismissFile(result.meta.filePath)} />
         </li>
       ))}
     </ul>
@@ -251,14 +244,14 @@ function SearchFile({ searchResult, closeFile }: { searchResult: DiskSearchResul
   return (
     <div className="mb-4 rounded-b-lg">
       <Link
-        title={searchResult.meta.path}
-        href={searchResult.meta.path}
+        title={searchResult.meta.filePath}
+        href={searchResult.meta.filePath}
         className="w-full flex items-center border rounded-t text-xs font-mono h-8 sticky top-0 z-10 bg-accent hover:bg-primary-foreground"
       >
         <div className="ml-1 text-ring">
           <FileTextIcon size={12} />
         </div>
-        <div className="flex-1 min-w-0 truncate px-2 py-2">{relPath(searchResult.meta.path)}</div>
+        <div className="flex-1 min-w-0 truncate px-2 py-2">{relPath(searchResult.meta.filePath)}</div>
         <Button
           variant="ghost"
           className="flex-shrink-0 h-5 w-5 p-0 mr-1 ml-2 scale-150 rounded-none"
@@ -274,7 +267,11 @@ function SearchFile({ searchResult, closeFile }: { searchResult: DiskSearchResul
       <div className="mt-1">
         <div>
           {visibleMatches.map((match, i) => (
-            <SearchLine key={`${match.lineNumber}-${i}`} match={match} />
+            <SearchLine
+              href={`${joinPath(WorkspaceDAO.rootRoute, absPath(searchResult.meta.filePath))}`}
+              key={`${match.lineNumber}-${i}`}
+              match={match}
+            />
           ))}
         </div>
         {showExpandButton && (
@@ -308,28 +305,30 @@ function SearchFile({ searchResult, closeFile }: { searchResult: DiskSearchResul
   );
 }
 
-function SearchLine({ match }: { match: SearchResult }) {
+function SearchLine({ match, href }: { match: SearchResult; href: string }) {
   return (
     // 1. Use flexbox to align the line number and the text content
-    <div className="border-b-4 last-of-type:border-none border-background flex items-start p-1 py-1 bg-primary-foreground font-mono text-xs hover:bg-ring/80 cursor-pointer hover:text-primary-foreground">
-      {/* 2. Create a container for the line number and badge */}
-      <div className="relative min-w-8 text-right font-bold mr-2">
-        {/* 3. Conditionally render the linesSpanned badge */}
-        {match.linesSpanned > 0 && (
-          <div className="absolute -top-2.5 -right-2 z-10 w-4 flex items-center justify-center rounded-full text-ring scale-75 text-[10px] font-bold">
-            +{match.linesSpanned}
-          </div>
-        )}
-        {/* 4. The line number is now a real span */}
-        <span>{match.lineNumber}:</span>
-      </div>
+    <Link href={href}>
+      <div className="border-b-4 last-of-type:border-none border-background flex items-start p-1 py-1 bg-primary-foreground font-mono text-xs group hover:bg-ring/80 cursor-pointer hover:text-primary-foreground">
+        {/* 2. Create a container for the line number and badge */}
+        <div className="relative min-w-8 text-right font-bold mr-2">
+          {/* 3. Conditionally render the linesSpanned badge */}
+          {match.linesSpanned > 0 && (
+            <div className="group-hover:text-white group-hover:bg-ring bg-primary-foreground w-8 left-4 absolute -top-2.5 -right-2 flex items-center justify-center rounded-full text-ring scale-75 text-[10px] font-bold">
+              +{match.linesSpanned}
+            </div>
+          )}
+          {/* 4. The line number is now a real span */}
+          <span>{match.lineNumber}:</span>
+        </div>
 
-      {/* 5. The text content is in its own div to handle truncation */}
-      <div className="truncate whitespace-nowrap">
-        {match.startText}
-        <span className="bg-highlight">{match.middleText}</span>
-        {match.endText}
+        {/* 5. The text content is in its own div to handle truncation */}
+        <div className="truncate whitespace-nowrap ml-2">
+          {match.startText}
+          <span className="bg-highlight">{match.middleText}</span>
+          {match.endText}
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
