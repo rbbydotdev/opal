@@ -3,65 +3,77 @@ import { errF, isError, NotFoundError } from "@/lib/errors";
 import { wrapGeneratorWithSignal } from "@/lib/ServiceWorker/wrapGeneratorWithSignal";
 import { SWWStore } from "./SWWStore";
 
-// Use a Map for better performance and API.
-// This still lives at the module level to track searches across requests.
 const activeSearches = new Map<string, AbortController>();
 
-function makeResponse(results: DiskSearchResultData[]) {
-  return new Response(JSON.stringify({ results } satisfies WorkspaceSearchResponse), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-}
-
 export async function handleWorkspaceSearch(workspaceId: string, searchTerm: string): Promise<Response> {
-  // 1. Cancel any previous search for this workspace
+  // 1. Cancel any previous search for this workspace. This logic remains the same.
   activeSearches.get(workspaceId)?.abort("A new search was started.");
   const searchController = new AbortController();
   activeSearches.set(workspaceId, searchController);
 
   try {
     if (!searchTerm) {
-      return makeResponse([]);
+      // For an empty search, we can just return an empty successful response.
+      return new Response(null, { status: 204 });
     }
 
-    // 2. Combine signals for timeout and cancellation
-    const timeoutSignal = AbortSignal.timeout(10_000); // 10-second timeout
+    const timeoutSignal = AbortSignal.timeout(10_000);
     const combinedSignal = AbortSignal.any([searchController.signal, timeoutSignal]);
 
+    // We must find the workspace before starting the stream.
     const workspace = await SWWStore.tryWorkspace(workspaceId);
     if (!workspace) {
       throw new NotFoundError(`Workspace not found: ${workspaceId}`);
     }
-
-    // TODO: Consider if `init()` is always necessary.
-    // If it's expensive, you might check a 'lastIndexed' timestamp
-    // and only re-initialize if data is stale.
     await workspace.init();
 
-    const results: DiskSearchResultData[] = [];
+    const encoder = new TextEncoder();
     const scannable = workspace.NewScannable();
 
-    // 3. Pass the signal to the search logic
-    // If `search` accepts a signal, you can pass it directly:
-    // const searchGenerator = scannable.search(searchTerm, { signal: combinedSignal });
+    // 2. Create a ReadableStream to wrap the async generator.
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm), combinedSignal);
 
-    // If not, wrap the generator to make it abort-aware:
-    const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm), combinedSignal);
+          for await (const result of searchGenerator) {
+            // 3. For each result, stringify it and enqueue it as a chunk.
+            // We add a newline to create a Newline Delimited JSON (NDJSON) stream.
+            const chunk = encoder.encode(JSON.stringify(result) + "\n");
+            controller.enqueue(chunk);
+          }
+          // When the generator is done, close the stream.
+          controller.close();
+        } catch (e) {
+          // If the generator errors (e.g., from an abort), error the stream.
+          controller.error(e);
+        } finally {
+          // 4. The search is complete (or failed), so we can clean up.
+          activeSearches.delete(workspaceId);
+        }
+      },
+      cancel(reason) {
+        // This is called if the client aborts the fetch request.
+        console.log("Stream canceled by client:", reason);
+        searchController.abort("The client closed the connection.");
+      },
+    });
 
-    for await (const result of searchGenerator) {
-      results.push(result);
-    }
-
-    return makeResponse(results);
+    // 5. Return the stream immediately.
+    return new Response(stream, {
+      status: 200,
+      headers: {
+        // Use the standard MIME type for NDJSON.
+        "Content-Type": "application/x-ndjson",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch (e) {
-    // 4. Gracefully handle aborts vs. other errors
+    // This outer catch now handles errors that occur *before* the stream starts.
+    activeSearches.delete(workspaceId); // Clean up on pre-stream failure.
+
     if (e instanceof DOMException && e.name === "AbortError") {
       console.log(`Search aborted for workspace: ${workspaceId}`);
-      // Return "204 No Content". The client should just ignore this
-      // response, as a new search has likely already been initiated.
       return new Response(null, { status: 204 });
     }
     if (isError(e, NotFoundError)) {
@@ -69,14 +81,11 @@ export async function handleWorkspaceSearch(workspaceId: string, searchTerm: str
     }
     console.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Internal Server Error", { status: 500 });
-  } finally {
-    // 5. Robust cleanup
-    // This ensures we remove the controller from the map
-    // whether the search succeeds, fails, or is aborted.
-    activeSearches.delete(workspaceId);
   }
+  // The `finally` block is no longer needed here, as cleanup is handled
+  // inside the stream's lifecycle for the success path.
 }
 
-export type WorkspaceSearchResponse = {
-  results: DiskSearchResultData[];
-};
+// The response type is no longer a single object, but you might keep this
+// type to represent a single item in the stream.
+export type WorkspaceSearchResponseItem = DiskSearchResultData;
