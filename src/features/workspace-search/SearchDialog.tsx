@@ -38,19 +38,28 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     setError(null);
   }, []);
 
-  // --- Refactored Search Logic with useEffect ---
+  //cleanup stuff
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const cleanUp = useCallback(() => {
+    clearTimeout(timeoutRef.current ?? 0); // Cancel the scheduled search
+    abortControllerRef.current?.abort(); // Abort any in-flight fetch request
+  }, []);
+  useEffect(() => {
+    if (!isOpen) cleanUp();
+  }, [cleanUp, isOpen]);
+
   useEffect(() => {
     // 1. If the search term is empty, reset to the initial state.
     if (!searchTerm.trim()) {
       resetSearchState();
       return;
     }
-
     // 2. An AbortController for this specific search effect.
-    const controller = new AbortController();
-
+    abortControllerRef.current = new AbortController();
     // 3. Debounce the search request.
-    const searchTimeout = setTimeout(async () => {
+
+    timeoutRef.current = setTimeout(async () => {
       // 4. Set initial state for a new streaming search.
       setIsSearching(true);
       setQueryResults([]); // IMPORTANT: Initialize with an empty array to append results.
@@ -60,7 +69,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       url.searchParams.set("searchTerm", searchTerm);
 
       try {
-        const res = await fetch(url.toString(), { signal: controller.signal });
+        const res = await fetch(url.toString(), { signal: abortControllerRef.current!.signal });
 
         // The service worker returns 204 for aborted or empty-term searches.
         if (res.status === 204) {
@@ -121,11 +130,8 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
 
     // 7. Cleanup function: This runs when the component unmounts
     //    OR when a dependency (searchTerm) changes.
-    return () => {
-      clearTimeout(searchTimeout); // Cancel the scheduled search
-      controller.abort(); // Abort any in-flight fetch request
-    };
-  }, [searchTerm, currentWorkspace.name, resetSearchState]);
+    return cleanUp;
+  }, [searchTerm, currentWorkspace.name, resetSearchState, cleanUp]);
 
   const onOpenChange = useCallback(
     (open: boolean) => {
