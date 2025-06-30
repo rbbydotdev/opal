@@ -317,7 +317,11 @@ function SearchFile({ searchResult, closeFile }: { searchResult: DiskSearchResul
         <div>
           {visibleMatches.map((match, i) => (
             <SearchLine
-              href={`${joinPath(WorkspaceDAO.rootRoute, absPath(searchResult.meta.filePath))}`}
+              href={`${joinPath(
+                WorkspaceDAO.rootRoute,
+                absPath(searchResult.meta.workspaceId),
+                absPath(searchResult.meta.filePath)
+              )}`}
               key={`${match.lineNumber}-${i}`}
               match={match}
             />

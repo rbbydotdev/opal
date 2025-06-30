@@ -4,17 +4,13 @@ interface Scannable<T> {
   scan(): AsyncGenerator<T>;
 }
 
-interface Scannable<T> {
-  scan(): AsyncGenerator<T>;
-}
-
 // Helper function to escape strings for literal regex matching
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export class SearchScannable<T extends { text: string }> {
-  constructor(private scannable: Scannable<T>) {}
+export class SearchScannable<T extends { text: string }, MetaExtType extends object> {
+  constructor(private scannable: Scannable<T>, private metaExt: MetaExtType = {} as MetaExtType) {}
 
   private computeLineBreaks(text: string): number[] {
     const breaks = [-1];
@@ -60,7 +56,7 @@ export class SearchScannable<T extends { text: string }> {
       wholeWord?: boolean;
       regex?: boolean;
     } = { caseSensitive: false, wholeWord: false, regex: true }
-  ): AsyncGenerator<{ matches: SearchResultData[]; meta: Omit<T, "text"> }> {
+  ): AsyncGenerator<{ matches: SearchResultData[]; meta: Omit<T, "text"> & MetaExtType }> {
     for await (const item of this.scannable.scan()) {
       const { text: haystack, ...rest } = item;
       if (!haystack) continue;
@@ -119,7 +115,8 @@ export class SearchScannable<T extends { text: string }> {
         });
       }
       if (results.length > 0) {
-        yield { matches: results, meta: rest };
+        // ...this.meta,
+        yield { matches: results, meta: { ...this.metaExt, ...rest } };
       }
     }
   }

@@ -480,7 +480,7 @@ export class Workspace {
   }
 
   NewScannable() {
-    return new SearchScannable(this.disk);
+    return new SearchScannable(this.disk, { workspaceId: this.name });
   }
 
   async NewImage(arrayBuffer: ArrayBuffer | File, filePath: AbsPath): Promise<AbsPath> {

@@ -7,6 +7,7 @@ import React, { createContext, useCallback, useEffect, useMemo, useRef, useState
 export type DiskSearchResultData = {
   meta: {
     filePath: string;
+    workspaceId: string;
   };
   matches: SearchResultData[];
 };
