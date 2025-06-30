@@ -11,7 +11,8 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { SearchResult } from "@/features/search/SearchResults";
 import { DiskSearchResultData, useSearchWorkspace } from "@/features/search/useSearchWorkspace";
 import { relPath } from "@/lib/paths2";
-import { ChevronRight, FileTextIcon, Search, X } from "lucide-react";
+import { WorkspaceSearchResponse } from "@/lib/ServiceWorker/handleWorkspaceSearch";
+import { ChevronRight, FileTextIcon, Loader, Search, X } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -26,6 +27,50 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
 
   const { results, submit: submitSearch, reset: resetSearch } = useSearchWorkspace(currentWorkspace);
 
+  const [queryResults, setQueryResults] = useState<DiskSearchResultData[] | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const [pending, setPending] = useState(false);
+  const resetDoSearch = useCallback(() => {
+    setQueryResults([]);
+  }, []);
+  const doSearch = useCallback(
+    async function (st: string) {
+      setPending(true);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      if (!st) {
+        setPending(false);
+        return resetDoSearch();
+      }
+
+      const url = new URL(`/workspace-search/${currentWorkspace.name}`, window.location.origin);
+      url.searchParams.set("searchTerm", st);
+
+      try {
+        const res = await fetch(url.toString(), {
+          signal: abortControllerRef.current?.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`Search failed with status ${res.status}`);
+        }
+        const { results } = (await res.json()) as WorkspaceSearchResponse;
+        setQueryResults(results);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          // Aborted fetch, do nothing (this is expected)
+          return;
+        }
+        // Handle other errors (optional: show error to user, etc.)
+        console.error("Search error:", err);
+      } finally {
+        setPending(false);
+      }
+    },
+    [currentWorkspace.name, resetDoSearch]
+  );
   const reset = useCallback(() => {
     setSearchTerm("");
     setDismissedFiles(new Set());
@@ -61,7 +106,8 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      void submitSearch(searchTerm);
+      // void submitSearch(searchTerm);
+      void doSearch(searchTerm);
     }
   };
 
@@ -80,9 +126,13 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     setDismissedFiles((prev) => new Set(prev).add(file));
   };
 
+  // const filteredResults = useMemo(
+  //   () => results.filter((result) => !dismissedFiles.has(result.meta.path)),
+  //   [results, dismissedFiles]
+  // );
   const filteredResults = useMemo(
-    () => results.filter((result) => !dismissedFiles.has(result.meta.path)),
-    [results, dismissedFiles]
+    () => (!queryResults ? null : queryResults.filter((result) => !dismissedFiles.has(result.meta.path))),
+    [queryResults, dismissedFiles]
   );
 
   return (
@@ -120,6 +170,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
               // onChange={(e) => updateSearchTerm(e.target.value)}
               onChange={(e) => {
                 // void submitSearch(searchTerm);
+                void doSearch(e.target.value);
                 updateSearchTerm(e.target.value);
               }}
             />
@@ -147,7 +198,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
           </CollapsibleContent>
         </Collapsible>
         <div className="h-full overflow-y-scroll no-scrollbar mt-2">
-          {searchTerm && <SearchResults results={filteredResults} dismissFile={dismissFile} />}
+          {searchTerm && <SearchResults isPending={pending} results={filteredResults} dismissFile={dismissFile} />}
         </div>
       </DialogContent>
     </Dialog>
@@ -157,10 +208,22 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
 function SearchResults({
   results,
   dismissFile,
+  isPending,
 }: {
-  results: DiskSearchResultData[];
+  results: DiskSearchResultData[] | null;
   dismissFile: (path: string) => void;
+  isPending: boolean;
 }) {
+  if (isPending) {
+    return (
+      <div className="flex justify-center items-center text-muted-foreground py-8 text-sm font-mono w-full h-full">
+        <div className="animate-spin">
+          <Loader className="w-6 h-6" />
+        </div>
+      </div>
+    );
+  }
+  if (!results) return;
   if (results.length === 0) {
     return <div className="text-center text-muted-foreground py-8 text-sm font-mono">No results found</div>;
   }

@@ -8,6 +8,7 @@ import { handleDownloadRequestEncrypted } from "@/lib/ServiceWorker/handleDownlo
 import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
 import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
 import { handleImageUpload } from "@/lib/ServiceWorker/handleImageUpload";
+import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
 
 const WHITELIST = ["/opal.svg", "/opal-blank.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
@@ -102,6 +103,30 @@ self.addEventListener("fetch", async (event) => {
         console.log(`Fetch event for: ${event.request.url}, referrer: ${event.request.referrer}`);
         const filePath = absPath(decodePath(url.pathname).replace("/upload-image", ""));
         return event.respondWith(withRequestSignal(handleImageUpload)(event, url, filePath, workspaceId));
+      }
+      if (url.pathname.startsWith("/workspace-search")) {
+        const segments = url.pathname.replace("/workspace-search", "").split("/").filter(Boolean);
+        //get query param searchTerm
+        const searchParams = new URLSearchParams(url.search);
+        const searchTerm = searchParams.get("searchTerm");
+        const [workspaceId, ..._restPath] = segments;
+        if (!workspaceId) {
+          return event.respondWith(
+            new Response("Workspace ID is required", { status: 400, statusText: "Workspace ID Required" })
+          );
+        }
+        if (typeof searchTerm === "undefined" || searchTerm === null) {
+          return event.respondWith(
+            new Response("Search term is required", { status: 400, statusText: "Search Term Required" }) //zod and such maybe from now on
+          );
+        }
+        console.log(`Intercepted SEARCH request for: 
+          url.pathname: ${url.pathname}
+          href: ${url.href}
+          workspaceId: ${workspaceId}
+          searchTerm: ${searchTerm}
+        `);
+        return event.respondWith(withRequestSignal(handleWorkspaceSearch)(workspaceId!, searchTerm));
       }
       if (url.pathname === "/download-encrypted.zip") {
         console.log(`Fetch event for: ${event.request.url}, referrer: ${event.request.referrer}`);
