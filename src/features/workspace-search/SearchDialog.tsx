@@ -46,7 +46,11 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     abortControllerRef.current?.abort(); // Abort any in-flight fetch request
   }, []);
   useEffect(() => {
-    if (!isOpen) cleanUp();
+    //todo ???
+    if (!isOpen) {
+      cleanUp();
+    }
+    return () => cleanUp();
   }, [cleanUp, isOpen]);
 
   useEffect(() => {
@@ -60,11 +64,11 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     // 3. Debounce the search request.
 
     timeoutRef.current = setTimeout(async () => {
+      if (!currentWorkspace.name) return; //TODO idk why cleanup functions do not work?!
       // 4. Set initial state for a new streaming search.
       setIsSearching(true);
       setQueryResults([]); // IMPORTANT: Initialize with an empty array to append results.
       setError(null);
-
       const url = new URL(`/workspace-search/${currentWorkspace.name}`, window.location.origin);
       url.searchParams.set("searchTerm", searchTerm);
 
@@ -184,11 +188,13 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     }
 
     if (queryResults !== null) {
-      return <SearchResults results={filteredResults} dismissFile={dismissFile} />;
+      return (
+        <SearchResults results={filteredResults} dismissFile={dismissFile} onNavigate={() => onOpenChange(false)} />
+      );
     }
 
     return null;
-  }, [error, filteredResults, isSearching, queryResults]);
+  }, [error, filteredResults, isSearching, onOpenChange, queryResults]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -256,9 +262,11 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
 function SearchResults({
   results,
   dismissFile,
+  onNavigate,
 }: {
   results: DiskSearchResultData[] | null;
   dismissFile: (path: string) => void;
+  onNavigate?: () => void;
 }) {
   // Note: The pending/spinner state is now handled by the parent.
   if (!results) {
@@ -274,14 +282,26 @@ function SearchResults({
     <ul className="block">
       {results.map((result) => (
         <li className="block" key={result.meta.filePath}>
-          <SearchFile searchResult={result} closeFile={() => dismissFile(result.meta.filePath)} />
+          <SearchFile
+            searchResult={result}
+            closeFile={() => dismissFile(result.meta.filePath)}
+            onNavigate={onNavigate}
+          />
         </li>
       ))}
     </ul>
   );
 }
 
-function SearchFile({ searchResult, closeFile }: { searchResult: DiskSearchResultData; closeFile: () => void }) {
+function SearchFile({
+  searchResult,
+  closeFile,
+  onNavigate,
+}: {
+  searchResult: DiskSearchResultData;
+  closeFile: () => void;
+  onNavigate?: () => void;
+}) {
   const matches = useMemo(() => searchResult.matches.map((sr) => SearchResult.FromJSON(sr)), [searchResult.matches]);
   const [expanded, setExpanded] = useState(() => !(matches.length > MAX_MATCHES_SHOWN));
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -293,6 +313,7 @@ function SearchFile({ searchResult, closeFile }: { searchResult: DiskSearchResul
   return (
     <div className="mb-4 rounded-b-lg">
       <Link
+        onClick={onNavigate}
         title={searchResult.meta.filePath}
         href={searchResult.meta.filePath}
         className="w-full flex items-center border rounded-t text-xs font-mono h-8 sticky top-0 z-10 bg-accent hover:bg-primary-foreground"
@@ -322,6 +343,7 @@ function SearchFile({ searchResult, closeFile }: { searchResult: DiskSearchResul
                 absPath(searchResult.meta.workspaceId),
                 absPath(searchResult.meta.filePath)
               )}`}
+              onClick={onNavigate}
               key={`${match.lineNumber}-${i}`}
               match={match}
             />
@@ -358,10 +380,10 @@ function SearchFile({ searchResult, closeFile }: { searchResult: DiskSearchResul
   );
 }
 
-function SearchLine({ match, href }: { match: SearchResult; href: string }) {
+function SearchLine({ match, href, onClick }: { match: SearchResult; href: string; onClick?: () => void }) {
   return (
     // 1. Use flexbox to align the line number and the text content
-    <Link href={href}>
+    <Link href={href} onClick={onClick}>
       <div className="border-b-4 last-of-type:border-none border-background flex items-start p-1 py-1 bg-primary-foreground font-mono text-xs group hover:bg-ring/80 cursor-pointer hover:text-primary-foreground">
         {/* 2. Create a container for the line number and badge */}
         <div className="relative min-w-8 text-right font-bold mr-2">
