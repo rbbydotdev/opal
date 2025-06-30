@@ -11,7 +11,13 @@ export class MetaDataTransfer {
       for (const type of item.types) {
         const blob = await item.getType(type);
         if (blob) {
-          mdt.dataTransfer.setData(type, String(await blob.text()));
+          const contents = String(await blob.text());
+          if (stringHasTreeNodeDataTransferType(contents)) {
+            mdt.setData(INTERNAL_NODE_FILE_TYPE, contents);
+            console.log(mdt.getData(INTERNAL_NODE_FILE_TYPE));
+          } else {
+            mdt.setData(type, contents);
+          }
         } else {
           console.warn(`No data found for type: ${type}`);
         }
@@ -68,9 +74,13 @@ export class MetaDataTransfer {
     return this.dataTransfer.files || [];
   }
   hasInternalDataType() {
-    return stringHasTreeNodeDataTransferType(
-      this.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE) || this.dataTransfer.getData("text/plain") || ""
-    );
+    if (this.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)) {
+      return true;
+    } else {
+      // Check if the data transfer contains a JSON string that can be parsed as TreeNodeDataTransferType
+      const data = this.dataTransfer.getData("text/plain") || "";
+      return stringHasTreeNodeDataTransferType(data);
+    }
   }
   toInternalDataTransfer() {
     if (!this.hasInternalDataType()) return null;
