@@ -5,6 +5,18 @@ import { wrap } from "comlink";
 type ImageWorkerApiType = {
   createImage(workspace: Workspace, filePath: AbsPath, buffer: ArrayBuffer | File): Promise<AbsPath>;
 };
+/**
+ * Processes a collection of image files by uploading them to a target directory within a workspace,
+ * utilizing web workers for concurrent processing.
+ *
+ * @deprecated This function is deprecated and may be removed in future versions.
+ *
+ * @param {Workspace} workspace - The workspace instance where images will be processed and stored.
+ * @param {Iterable<File>} files - An iterable collection of File objects to be processed.
+ * @param {AbsPath} targetDir - The absolute path of the target directory where images will be saved.
+ * @param {number} [concurrency=window.navigator.hardwareConcurrency ?? 2] - The number of concurrent workers to use for processing.
+ * @returns {Promise<AbsPath[]>} A promise that resolves to an array of absolute paths for the processed images.
+ */
 
 export async function processWorkspaceImagesWW(
   workspace: Workspace,
