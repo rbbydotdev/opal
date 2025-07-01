@@ -2,7 +2,7 @@ import { CreateDetails, DeleteDetails, Disk, IndexTrigger, RenameDetails } from 
 import { ImageCache } from "@/Db/ImageCache";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { SearchScannable } from "@/features/search/SearchScan";
+import { SearchScannable } from "@/features/search/SearchScannable";
 import { createImage } from "@/lib/createImage";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
@@ -460,9 +460,10 @@ export class Workspace {
   }
 
   NewScannable() {
-    return new SearchScannable(this.disk, { workspaceId: this.name });
+    return new SearchScannable(this.disk, { workspaceId: this.id, workspaceName: this.name });
   }
 
+  //TODO: move to service object with along with search
   async NewImage(arrayBuffer: ArrayBuffer | File, filePath: AbsPath): Promise<AbsPath> {
     const file =
       (mime.lookup(filePath) || "").startsWith("image/svg") || (mime.lookup(filePath) || "").startsWith("image/webp")

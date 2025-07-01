@@ -7,17 +7,17 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { SearchResult } from "@/features/search/SearchResults";
-import { DiskSearchResultData } from "@/features/search/useSearchWorkspace";
+import { DiskSearchResultData, SearchResult } from "@/features/search/SearchResults";
+import { useWorkspaceSearch } from "@/features/workspace-search/useWorkspaceSearch";
 import { absPath, joinPath, relPath } from "@/lib/paths2";
 import { ChevronRight, FileTextIcon, Loader, Search, X } from "lucide-react";
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const MAX_MATCHES_SHOWN = 5;
-const SEARCH_DEBOUNCE_MS = 250; // 250ms debounce delay
 
 export function WorkspaceSearchDialog({ children }: { children: React.ReactNode }) {
   const [isOpen, setOpen] = useState(false);
@@ -25,128 +25,33 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const [dismissedFiles, setDismissedFiles] = useState<Set<string>>(new Set());
   const { currentWorkspace } = useWorkspaceContext();
 
-  // --- Refactored State Management ---
-  const [isSearching, setIsSearching] = useState(false);
-  const [queryResults, setQueryResults] = useState<DiskSearchResultData[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // --- Encapsulated Search Logic ---
+  const { isSearching, queryResults, error, tearDownSearch } = useWorkspaceSearch({
+    searchTerm,
+    workspaceName: currentWorkspace.name,
+  });
 
-  const resetSearchState = useCallback(() => {
+  // This function now only resets state directly owned by the component.
+  // The hook resets its own state automatically when the search term is cleared.
+  const resetComponentState = useCallback(() => {
     setSearchTerm("");
     setDismissedFiles(new Set());
-    setQueryResults(null);
-    setIsSearching(false);
-    setError(null);
   }, []);
-
-  //cleanup stuff
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const cleanUp = useCallback(() => {
-    clearTimeout(timeoutRef.current ?? 0); // Cancel the scheduled search
-    abortControllerRef.current?.abort(); // Abort any in-flight fetch request
-  }, []);
-  useEffect(() => {
-    //todo ???
-    if (!isOpen) {
-      cleanUp();
-    }
-    return () => cleanUp();
-  }, [cleanUp, isOpen]);
-
-  useEffect(() => {
-    // 1. If the search term is empty, reset to the initial state.
-    if (!searchTerm.trim()) {
-      resetSearchState();
-      return;
-    }
-    // 2. An AbortController for this specific search effect.
-    abortControllerRef.current = new AbortController();
-    // 3. Debounce the search request.
-
-    timeoutRef.current = setTimeout(async () => {
-      if (!currentWorkspace.name) return; //TODO idk why cleanup functions do not work?!
-      // 4. Set initial state for a new streaming search.
-      setIsSearching(true);
-      setQueryResults([]); // IMPORTANT: Initialize with an empty array to append results.
-      setError(null);
-      const url = new URL(`/workspace-search/${currentWorkspace.name}`, window.location.origin);
-      url.searchParams.set("searchTerm", searchTerm);
-
-      try {
-        const res = await fetch(url.toString(), { signal: abortControllerRef.current!.signal });
-
-        // The service worker returns 204 for aborted or empty-term searches.
-        if (res.status === 204) {
-          setIsSearching(false); // Search is over.
-          return;
-        }
-
-        if (!res.ok) {
-          throw new Error(`Search failed: ${res.statusText}`);
-        }
-
-        if (!res.body) {
-          throw new Error("Response has no body to read.");
-        }
-
-        // --- 5. Consume the NDJSON Stream ---
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            // The stream has finished.
-            break;
-          }
-
-          // Add the new chunk to our buffer.
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-
-          // The last line might be incomplete, so we keep it in the buffer.
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            // Skip any empty lines.
-            if (line.trim() === "") continue;
-
-            const result = JSON.parse(line) as DiskSearchResultData;
-
-            // Append each new result to our state as it arrives.
-            setQueryResults((prevResults) => [...(prevResults || []), result]);
-          }
-        }
-      } catch (err) {
-        // Ignore abort errors, which are expected when a new search starts.
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return;
-        }
-        console.error("Search error:", err);
-        setError("Search failed. Please try again.");
-        setQueryResults(null); // Clear results on error
-      } finally {
-        // 6. Once the stream is done or has failed, stop the loading indicator.
-        setIsSearching(false);
-      }
-    }, SEARCH_DEBOUNCE_MS);
-
-    // 7. Cleanup function: This runs when the component unmounts
-    //    OR when a dependency (searchTerm) changes.
-    return cleanUp;
-  }, [searchTerm, currentWorkspace.name, resetSearchState, cleanUp]);
 
   const onOpenChange = useCallback(
     (open: boolean) => {
       if (open) {
-        resetSearchState();
+        // When the dialog opens, reset its state.
+        resetComponentState();
+      } else {
+        tearDownSearch();
       }
       setOpen(open);
     },
-    [resetSearchState]
+    [resetComponentState, tearDownSearch]
   );
 
+  // --- Keyboard shortcut effect (no changes) ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") {
@@ -159,21 +64,19 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onOpenChange]);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-  };
-
-  const dismissFile = (file: string) => {
+  const dismissFile = useCallback((file: string) => {
     setDismissedFiles((prev) => new Set(prev).add(file));
-  };
+  }, []);
 
   const filteredResults = useMemo(
     () => (!queryResults ? null : queryResults.filter((result) => !dismissedFiles.has(result.meta.filePath))),
     [queryResults, dismissedFiles]
   );
 
+  // This memoized renderer is now simpler, as it just consumes the hook's state.
   const renderSearchResults = useMemo(() => {
-    if (isSearching) {
+    // Show spinner if searching, even if there are partial results
+    if (isSearching && (!filteredResults || filteredResults.length === 0)) {
       return (
         <div className="flex justify-center items-center text-muted-foreground py-8 text-sm font-mono w-full h-full">
           <div className="animate-spin">
@@ -187,17 +90,19 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       return <div className="text-center text-destructive py-8 text-sm font-mono">{error}</div>;
     }
 
-    if (queryResults !== null) {
+    // Render results if they exist (even during a subsequent search)
+    if (filteredResults) {
       return (
         <SearchResults results={filteredResults} dismissFile={dismissFile} onNavigate={() => onOpenChange(false)} />
       );
     }
 
     return null;
-  }, [error, filteredResults, isSearching, onOpenChange, queryResults]);
+  }, [error, filteredResults, isSearching, onOpenChange, dismissFile]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      {/* ... The rest of your JSX remains the same ... */}
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="sm:max-w-[720px] max-h-[80svh] flex flex-col top-[15vh] translate-y-0"
@@ -211,7 +116,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
           <Search size={16} /> search
         </DialogTitle>
         <Collapsible className="group/collapsible">
-          <form onSubmit={handleSubmit} className="flex">
+          <div className="flex">
             <CollapsibleTrigger className="text-xs flex items-center -ml-3 mr-1 outline-none" asChild>
               <button className="ouline-none" type="button">
                 <ChevronRight
@@ -229,8 +134,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </form>
-          {/* --- THIS SECTION IS NOW RESTORED --- */}
+          </div>
           <CollapsibleContent>
             <div className="flex items-center gap-2 mt-4">
               <Checkbox id="all_workspaces_option" className="scale-75" />
@@ -318,8 +222,17 @@ function SearchFile({
         href={searchResult.meta.filePath}
         className="w-full flex items-center border rounded-t text-xs font-mono h-8 sticky top-0 z-10 bg-accent hover:bg-primary-foreground"
       >
-        <div className="ml-1 text-ring">
-          <FileTextIcon size={12} />
+        <div className="ml-1 flex items-center justify-center h-full gap-2 ">
+          <div className="justify-center items-center flex ">
+            <WorkspaceIcon
+              variant="round"
+              size={6}
+              scale={2}
+              input={searchResult.meta.workspaceId}
+              className="border border-primary-foreground"
+            />
+          </div>
+          <FileTextIcon size={12} className="text-ring h-4" />
         </div>
         <div className="flex-1 min-w-0 truncate px-2 py-2">{relPath(searchResult.meta.filePath)}</div>
         <Button

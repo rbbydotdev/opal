@@ -1,16 +1,8 @@
 import { Workspace } from "@/Db/Workspace";
-import { SearchResultData } from "@/features/search/SearchResults";
+import { DiskSearchResultData } from "@/features/search/SearchResults";
 import { SearchWorkspaceWorker } from "@/workers/SearchWorker/SearchWorkspace";
 import { Semaphore } from "async-mutex";
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-export type DiskSearchResultData = {
-  meta: {
-    filePath: string;
-    workspaceId: string;
-  };
-  matches: SearchResultData[];
-};
 
 export function useSearchWorkspace(workspace: Workspace) {
   const searchWorker = useMemo(() => {

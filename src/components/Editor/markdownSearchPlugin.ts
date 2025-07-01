@@ -4,8 +4,6 @@ export const LexicalNodeVisitor: LexicalVisitor = {
   // testLexicalNode: (lexicalNode): lexicalNode is typeof lexicalNode => true,
   testLexicalNode: (lexicalNode): lexicalNode is typeof lexicalNode => true,
   visitLexicalNode: ({ lexicalNode, actions, mdastParent }) => {
-    // console.log(">>>>", lexicalNode);
-    console.log(">>", lexicalNode.getKey(), mdastParent);
     actions.nextVisitor();
   },
   priority: Infinity,

@@ -1,4 +1,4 @@
-import { DiskSearchResultData } from "@/features/search/useSearchWorkspace";
+import { DiskSearchResultData } from "@/features/search/SearchResults";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { wrapGeneratorWithSignal } from "@/lib/ServiceWorker/wrapGeneratorWithSignal";
 import { SWWStore } from "./SWWStore";
