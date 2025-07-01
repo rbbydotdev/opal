@@ -29,6 +29,7 @@ import { RemoteAuth } from "./RemoteAuth";
 
 export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;
 
+// type DiskScan = UnwrapScannable<Disk>;
 export class Workspace {
   imageCache: ImageCache;
   memid = nanoid();
@@ -460,8 +461,10 @@ export class Workspace {
   }
 
   NewScannable() {
-    return new SearchScannable(this.disk, { workspaceId: this.id, workspaceName: this.name });
+    return new SearchScannable(this.disk, { workspaceId: this.id, workspaceName: this.name, foop: 1123 });
   }
+
+  // To get the return type of NewScannable:
 
   //TODO: move to service object with along with search
   async NewImage(arrayBuffer: ArrayBuffer | File, filePath: AbsPath): Promise<AbsPath> {

@@ -3,170 +3,143 @@ import { DiskSearchResultData } from "@/features/search/SearchResults";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
-interface UseWorkspaceSearchProps {
-  /** The search query string. */
-  searchTerm: string;
-  /** The name of the workspace to search within. */
-  workspaceName: string | undefined;
-}
 
-async function QuerySearchEndpoint({
+/**
+ * Performs a streaming search and yields results as they arrive.
+ * This function is not meant to be called directly by components.
+ */
+async function* fetchQuerySearch({
   workspaceName,
   searchTerm,
   signal,
-  onData,
-  onError,
-  onComplete,
 }: {
   workspaceName: string;
   searchTerm: string;
   signal: AbortSignal;
-  onError?: (err: Error) => void;
-  onData: (result: DiskSearchResultData) => void;
-  onComplete?: (error?: Error | null) => void;
-}) {
-  //Fetcher
+}): AsyncGenerator<DiskSearchResultData, void, unknown> {
   const url = new URL(`/workspace-search/${workspaceName}`, window.location.origin);
   url.searchParams.set("searchTerm", searchTerm);
 
+  const res = await fetch(url.toString(), { signal });
+
+  if (res.status === 204) {
+    return; // No content, successful but empty stream
+  }
+  if (!res.ok) throw new Error(`Search failed: ${res.statusText}`);
+  if (!res.body) throw new Error("Response has no body to read.");
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
   try {
-    const res = await fetch(url.toString(), { signal });
-
-    if (res.status === 204) {
-      // setIsSearching(false);
-      return onComplete?.();
-    }
-    if (!res.ok) throw new Error(`Search failed: ${res.statusText}`);
-    if (!res.body) throw new Error("Response has no body to read.");
-
-    // Consume the NDJSON stream
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
+      buffer = lines.pop() || ""; // Keep the last, possibly incomplete line
 
       for (const line of lines) {
         if (line.trim() === "") continue;
         const result = JSON.parse(line) as DiskSearchResultData;
-        onData(result);
+        yield result;
       }
     }
   } catch (err) {
+    // Don't throw an error if the request was intentionally aborted
     if (err instanceof DOMException && err.name === "AbortError") {
-      // This is an expected error when a search is cancelled.
       return;
     }
-    // console.error("Search error:", err);
-    err = err as Error;
-    onError?.(err as Error);
-    return onComplete?.(err as Error);
+    throw err;
   }
-  onComplete?.();
 }
 
 /**
  * A custom hook to perform a debounced, streaming search within a workspace.
  * It handles loading states, errors, and aborting previous requests.
  *
- * @returns The search state including results, loading status, and any errors.
+ * @returns The search state including results, loading status, error, and a submit function.
  */
-
-export function useWorkspaceSearch({ searchTerm, workspaceName }: UseWorkspaceSearchProps) {
+export function useWorkspaceSearch({
+  workspaceName,
+  debounceMs = SEARCH_DEBOUNCE_MS,
+}: {
+  workspaceName: string;
+  debounceMs?: number;
+}) {
   const [isSearching, setIsSearching] = useState(false);
   const [queryResults, setQueryResults] = useState<DiskSearchResultData[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Resets the internal state of the hook
-  const reset = useCallback(() => {
-    setIsSearching(false);
-    setQueryResults(null);
-    setError(null);
-  }, []);
+  const query = useCallback(
+    async (searchTerm: string) => {
+      if (!workspaceName || !searchTerm.trim()) {
+        setIsSearching(false);
+        setQueryResults(null);
+        setError(null);
+        return;
+      }
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-  // Cleanup function to abort in-flight requests and timers
-  const tearDownSearch = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    abortControllerRef.current?.abort();
-  }, []);
-
-  useEffect(() => {
-    if (!workspaceName || !searchTerm.trim()) {
-      reset();
-      tearDownSearch(); // Ensure any lingering requests are cancelled
-      return;
-    }
-
-    // Set up for a new search
-    abortControllerRef.current = new AbortController();
-    const { signal } = abortControllerRef.current;
-
-    // Debounce the search execution
-    timeoutRef.current = setTimeout(async () => {
       setIsSearching(true);
-      setQueryResults([]); // Initialize with empty array for streaming
+      setQueryResults([]);
       setError(null);
 
-      //Fetcher
-      const url = new URL(`/workspace-search/${workspaceName}`, window.location.origin);
-      url.searchParams.set("searchTerm", searchTerm);
-
       try {
-        const res = await fetch(url.toString(), { signal });
+        const searchGenerator = fetchQuerySearch({
+          workspaceName,
+          searchTerm,
+          signal: controller.signal,
+        });
 
-        if (res.status === 204) {
-          setIsSearching(false);
-          return;
-        }
-        if (!res.ok) throw new Error(`Search failed: ${res.statusText}`);
-        if (!res.body) throw new Error("Response has no body to read.");
-
-        // Consume the NDJSON stream
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (line.trim() === "") continue;
-            const result = JSON.parse(line) as DiskSearchResultData;
-            setQueryResults((prev) => [...(prev || []), result]);
-          }
+        for await (const result of searchGenerator) {
+          if (controller.signal.aborted) break;
+          setQueryResults((prev) => [...(prev || []), result]);
         }
       } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") {
-          // This is an expected error when a search is cancelled.
-          return;
-        }
         console.error("Search error:", err);
         setError("Search failed. Please try again.");
         setQueryResults(null);
       } finally {
-        setIsSearching(false);
+        if (!controller.signal.aborted) {
+          setIsSearching(false);
+        }
       }
-    }, SEARCH_DEBOUNCE_MS);
+    },
+    [workspaceName]
+  );
 
-    // Cleanup function for the effect
-    return () => tearDownSearch();
-  }, [searchTerm, workspaceName, reset, tearDownSearch]);
+  const submit = useCallback(
+    (searchTerm: string) => {
+      if (debounceMs === 0) {
+        void query(searchTerm);
+      } else {
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = setTimeout(() => {
+          void query(searchTerm);
+        }, debounceMs);
+      }
+    },
+    [debounceMs, query]
+  );
 
-  return { isSearching, queryResults, error, tearDownSearch };
+  // Cleanup on unmount
+  const tearDown = useCallback(() => {
+    abortControllerRef.current?.abort();
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+  }, []);
+
+  useEffect(() => tearDown(), [tearDown]);
+  return { isSearching, queryResults, error, tearDown, submit };
 }

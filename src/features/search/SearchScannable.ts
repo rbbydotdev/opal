@@ -1,8 +1,11 @@
 import { type SearchResultData } from "@/features/search/SearchResults";
 
-interface Scannable<T> {
+export interface Scannable<T> {
   scan(): AsyncGenerator<T>;
 }
+
+export type UnwrapScannable<T extends Scannable<unknown>> = T extends Scannable<infer U> ? U : never;
+
 // Helper function to escape strings for literal regex matching
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

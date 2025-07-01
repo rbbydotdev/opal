@@ -1,5 +1,6 @@
+import { DiskScanResult } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
-import { DiskSearchResultData } from "@/features/search/SearchResults";
+// import { DiskSearchResultData } from "@/features/search/SearchResults";
 import { SearchWorkspaceWorker } from "@/workers/SearchWorker/SearchWorkspace";
 import { Semaphore } from "async-mutex";
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -23,7 +24,7 @@ export function useSearchWorkspace(workspace: Workspace) {
     };
   }, [searchWorker]);
 
-  const [appendedResults, setAppendResults] = useState<DiskSearchResultData[]>([]);
+  const [appendedResults, setAppendResults] = useState<DiskScanResult[]>([]);
   const submit = useCallback(
     async (searchTerm: string) => {
       setAppendResults([]);
