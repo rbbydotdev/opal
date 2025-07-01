@@ -3,6 +3,7 @@ import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
 import { MutexFs } from "@/Db/MutexFs";
 import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
+import { UnwrapScannable } from "@/features/search/SearchScannable";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
@@ -175,7 +176,9 @@ export class DiskEventsLocal extends Emittery<{
   [DiskEvents.DELETE]: FilePathsType;
 }> {}
 
-export type DiskScanTextSearchResultType = { path: AbsPath; text: string };
+// export type DiskScanTextSearchResultType = { path: AbsPath; text: string };
+
+export type DiskScanResult = UnwrapScannable<Disk>;
 export abstract class Disk {
   remote: DiskEventsRemote;
   local = new DiskEventsLocal();

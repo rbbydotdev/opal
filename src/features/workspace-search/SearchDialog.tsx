@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { DiskScanResult } from "@/Db/Disk";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { DiskSearchResultData, SearchResult } from "@/features/search/SearchResults";
+import { SearchResult } from "@/features/search/SearchResults";
 import { useWorkspaceSearch } from "@/features/workspace-search/useWorkspaceSearch";
 import { absPath, joinPath, relPath } from "@/lib/paths2";
 import { ChevronRight, FileTextIcon, Loader, Search, X } from "lucide-react";
@@ -26,8 +27,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const { currentWorkspace } = useWorkspaceContext();
 
   // --- Encapsulated Search Logic ---
-  const { isSearching, queryResults, error, tearDownSearch } = useWorkspaceSearch({
-    searchTerm,
+  const { isSearching, queryResults, error, tearDown, submit } = useWorkspaceSearch({
     workspaceName: currentWorkspace.name,
   });
 
@@ -38,17 +38,25 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     setDismissedFiles(new Set());
   }, []);
 
-  const onOpenChange = useCallback(
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setSearchTerm(value);
+      submit(value);
+    },
+    [submit]
+  );
+
+  const handleOpenChange = useCallback(
     (open: boolean) => {
       if (open) {
         // When the dialog opens, reset its state.
         resetComponentState();
       } else {
-        tearDownSearch();
+        tearDown();
       }
       setOpen(open);
     },
-    [resetComponentState, tearDownSearch]
+    [resetComponentState, tearDown]
   );
 
   // --- Keyboard shortcut effect (no changes) ---
@@ -57,12 +65,12 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") {
         e.preventDefault();
         e.stopImmediatePropagation();
-        onOpenChange(true);
+        handleOpenChange(true);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onOpenChange]);
+  }, [handleOpenChange]);
 
   const dismissFile = useCallback((file: string) => {
     setDismissedFiles((prev) => new Set(prev).add(file));
@@ -93,15 +101,15 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     // Render results if they exist (even during a subsequent search)
     if (filteredResults) {
       return (
-        <SearchResults results={filteredResults} dismissFile={dismissFile} onNavigate={() => onOpenChange(false)} />
+        <SearchResults results={filteredResults} dismissFile={dismissFile} onNavigate={() => handleOpenChange(false)} />
       );
     }
 
     return null;
-  }, [error, filteredResults, isSearching, onOpenChange, dismissFile]);
+  }, [error, filteredResults, isSearching, handleOpenChange, dismissFile]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* ... The rest of your JSX remains the same ... */}
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
@@ -132,7 +140,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
               className="md:text-xs text-xs outline-ring border bg-sidebar font-mono"
               placeholder="search workspace..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleInputChange(e.target.value)}
             />
           </div>
           <CollapsibleContent>
@@ -202,7 +210,7 @@ function SearchFile({
   closeFile,
   onNavigate,
 }: {
-  searchResult: DiskSearchResultData;
+  searchResult: DiskScanResult;
   closeFile: () => void;
   onNavigate?: () => void;
 }) {
@@ -253,7 +261,7 @@ function SearchFile({
             <SearchLine
               href={`${joinPath(
                 WorkspaceDAO.rootRoute,
-                absPath(searchResult.meta.workspaceId),
+                absPath(searchResult.meta.workspaceName),
                 absPath(searchResult.meta.filePath)
               )}`}
               onClick={onNavigate}
