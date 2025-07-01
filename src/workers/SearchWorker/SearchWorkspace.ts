@@ -24,11 +24,6 @@ export class SearchWorkspaceWorker {
       }
     }
   }
-  async *searchWorkspaces(workspaces: Workspace[], searchTerm: string) {
-    for await (const scan of await this.api.searchWorkspaces(workspaces, searchTerm)) {
-      if (scan.matches.length) yield scan;
-    }
-  }
   teardown() {
     return this.worker?.terminate?.();
   }

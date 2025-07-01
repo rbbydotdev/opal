@@ -1,5 +1,6 @@
 import { Workspace } from "@/Db/Workspace";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
+import { searchMarkdownPlugin } from "@/components/Editor/markdownSearchPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
@@ -102,6 +103,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
           </>
         ),
       }),
+      searchMarkdownPlugin(),
       listsPlugin(),
       quotePlugin(),
       headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),

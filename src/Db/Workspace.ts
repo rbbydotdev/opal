@@ -374,32 +374,12 @@ export class Workspace {
   }
 
   async uploadSingleImage(file: File, targetDir: AbsPath) {
-    return (await this.uploadMultipleImages([file], targetDir))[0]!;
+    return (await Workspace.UploadMultipleImages([file], targetDir))[0]!;
   }
 
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    const results: AbsPath[] = [];
-    let index = 0;
-    const filesArr = Array.from(files);
-
-    const uploadNext = async () => {
-      if (index >= filesArr.length) return;
-      const current = index++;
-      const file = filesArr[current];
-      const res = await fetch(joinPath(absPath("/upload-image"), targetDir, file!.name), {
-        method: "POST",
-        headers: {
-          "Content-Type": file!.type,
-        },
-        body: file,
-      });
-      results[current] = absPath(await res.text());
-      await uploadNext();
-    };
-
-    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
-    await Promise.all(workers);
-    await this.disk.indexAndEmitNewFiles(results);
+    const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
+    await this.disk.hydrateIndexFromDisk();
     return results;
   }
   async dropImageFile(file: File, targetPath: AbsPath) {
@@ -490,5 +470,32 @@ export class Workspace {
         : await createImage({ file: new File([arrayBuffer], basename(filePath)) });
     const newImageLocation = await this.dropImageFile(file, dirname(filePath));
     return newImageLocation;
+  }
+  static async UploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+    const results: AbsPath[] = [];
+    let index = 0;
+    const filesArr = Array.from(files);
+
+    const uploadNext = async () => {
+      if (index >= filesArr.length) return;
+      const current = index++;
+      const file = filesArr[current];
+      const res = await fetch(joinPath(absPath("/upload-image"), targetDir, file!.name), {
+        method: "POST",
+        headers: {
+          "Content-Type": file!.type,
+        },
+        body: file,
+      });
+      results[current] = absPath(await res.text());
+      await uploadNext();
+    };
+
+    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
+    await Promise.all(workers);
+    //TODO: leaking concerns
+    // await this.disk.hydrateIndexFromDisk();
+    //TODO: i dont think i need this await this.disk.indexAndEmitNewFiles(results);
+    return results;
   }
 }
