@@ -3,10 +3,6 @@ import { type SearchResultData } from "@/features/search/SearchResults";
 interface Scannable<T> {
   scan(): AsyncGenerator<T>;
 }
-interface ScannableSlurp<T> {
-  scanSlurp(): Promise<T>;
-}
-
 // Helper function to escape strings for literal regex matching
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

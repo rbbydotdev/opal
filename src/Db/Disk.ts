@@ -371,16 +371,19 @@ export abstract class Disk {
     }
   }
 
-  async *scan(abortSignal?: AbortSignal): AsyncGenerator<{
+  async *scan(): AsyncGenerator<{
     filePath: AbsPath;
     text: string;
   }> {
     const textNodes = this.fileTree.all().filter((node) => node.getMimeType().startsWith("text"));
-    for (const node of textNodes) {
-      if (abortSignal?.aborted) {
-        throw new Error("Scan aborted in scan");
-      }
-      yield { filePath: node.path, text: String(await this.readFile(node.path)) };
+    const results = await Promise.all(
+      textNodes.map(async (node) => {
+        const text = String(await this.readFile(node.path));
+        return [node, text] as [TreeNode, string];
+      })
+    );
+    for (const [node, text] of results) {
+      yield { filePath: node.path, text };
     }
   }
 
