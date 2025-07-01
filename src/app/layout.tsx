@@ -48,8 +48,6 @@ export default function RootLayout({
         `}</style>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* <FPSStats /> */}
-        {/* <Inspector /> */}
         <div
           style={{
             backgroundImage: "url('/opal-lite.svg')",
@@ -65,12 +63,14 @@ export default function RootLayout({
                 <JotaiProvider>
                   <SidebarProvider>
                     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                      <div className="w-full flex">
-                        <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
-                          <WorkSpaceButtonBar />
+                      <>
+                        <div className="w-full flex">
+                          <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
+                            <WorkSpaceButtonBar />
+                          </div>
+                          <>{children}</>
                         </div>
-                        {children}
-                      </div>
+                      </>
                     </ThemeProvider>
                   </SidebarProvider>
                 </JotaiProvider>

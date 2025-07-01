@@ -2,15 +2,15 @@ import {
   Cell,
   contentEditableRef$,
   debounceTime,
+  lexical,
   map,
   realmPlugin,
   rootEditor$,
   useCellValue,
   useRealm,
 } from "@mdxeditor/editor";
-import { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, getNearestEditorFromDOMNode } from "lexical";
 import { useCallback } from "react";
-
+const { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, getNearestEditorFromDOMNode } = lexical;
 export const MDX_SEARCH_NAME = "MdxSearch";
 export const MDX_FOCUS_SEARCH_NAME = "MdxFocusSearch";
 
@@ -110,7 +110,7 @@ function indexAllTextNodes(root: HTMLElement | null): TextNodeIndex {
     for (let i = 0; i < nodeContent.length; i++) {
       nodeIndex.push(currentNode);
       offsetIndex.push(i);
-      allText.push(nodeContent[i]);
+      allText.push(nodeContent[i]!);
     }
   }
 

@@ -26,14 +26,7 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/types.d.ts",
-    "next-env.d.ts",
-    "src/lib/ImagesServiceWorker/ImgSw.tsx",
-    ".next/types/**/*.ts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "**/types.d.ts", "next-env.d.ts", ".next/types/**/*.ts"],
   "exclude": [
     ".next",
     "src/app/sand/**",
