@@ -2,7 +2,7 @@ import { CreateDetails, DeleteDetails, Disk, IndexTrigger, RenameDetails } from 
 import { ImageCache } from "@/Db/ImageCache";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { SearchScannable } from "@/features/search/SearchScannable";
+import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
 import { createImage } from "@/lib/createImage";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
@@ -461,7 +461,7 @@ export class Workspace {
   }
 
   NewScannable() {
-    return new SearchScannable(this.disk, { workspaceId: this.id, workspaceName: this.name, foop: 1123 });
+    return new WorkspaceScannable(this.disk, { workspaceId: this.id, workspaceName: this.name });
   }
 
   // To get the return type of NewScannable:

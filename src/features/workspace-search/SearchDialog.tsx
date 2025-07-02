@@ -9,12 +9,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { DiskScanResult } from "@/Db/Disk";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
+import { useSingleItemExpander } from "@/features/filetree-expander/useSingleItemExpander";
 import { SearchResult } from "@/features/search/SearchResults";
-import { useWorkspaceSearch } from "@/features/workspace-search/useWorkspaceSearch";
-import { absPath, joinPath, relPath } from "@/lib/paths2";
-import { ChevronRight, FileTextIcon, Loader, Search, X } from "lucide-react";
+import { useWorkspaceSearchResults } from "@/features/workspace-search/useWorkspaceSearchResults";
+import { AbsPath, absPath, joinPath } from "@/lib/paths2";
+import { ChevronRight, FileTextIcon, Loader, Search, SearchXIcon, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -23,20 +24,21 @@ const MAX_MATCHES_SHOWN = 5;
 export function WorkspaceSearchDialog({ children }: { children: React.ReactNode }) {
   const [isOpen, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dismissedFiles, setDismissedFiles] = useState<Set<string>>(new Set());
   const { currentWorkspace } = useWorkspaceContext();
+  const [isOptionsOpen, setOptionsOpen] = useSingleItemExpander("SearchDialog/options/expand", true);
 
-  // --- Encapsulated Search Logic ---
-  const { isSearching, queryResults, error, tearDown, submit } = useWorkspaceSearch({
-    workspaceName: currentWorkspace.name,
-  });
+  // const [] = useLocalStorage("SearchDialog/options/values", {});
 
-  // This function now only resets state directly owned by the component.
-  // The hook resets its own state automatically when the search term is cleared.
+  const { isSearching, error, tearDown, hasResults, hideResult, resetSearch, workspaceResults, submit } =
+    useWorkspaceSearchResults({
+      workspaceName: currentWorkspace.name,
+      all: false,
+    });
+
   const resetComponentState = useCallback(() => {
     setSearchTerm("");
-    setDismissedFiles(new Set());
-  }, []);
+    resetSearch();
+  }, [resetSearch]);
 
   const handleInputChange = useCallback(
     (value: string) => {
@@ -72,19 +74,23 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleOpenChange]);
 
-  const dismissFile = useCallback((file: string) => {
-    setDismissedFiles((prev) => new Set(prev).add(file));
-  }, []);
-
-  const filteredResults = useMemo(
-    () => (!queryResults ? null : queryResults.filter((result) => !dismissedFiles.has(result.meta.filePath))),
-    [queryResults, dismissedFiles]
-  );
-
-  // This memoized renderer is now simpler, as it just consumes the hook's state.
   const renderSearchResults = useMemo(() => {
-    // Show spinner if searching, even if there are partial results
-    if (isSearching && (!filteredResults || filteredResults.length === 0)) {
+    if (error) {
+      return <div className="text-center text-destructive py-8 text-sm font-mono">{error}</div>;
+    }
+    if (hasResults) {
+      return workspaceResults.map(([workspaceName, items]) => (
+        <SearchResults
+          key={workspaceName + "@" + items?.length}
+          workspaceName={workspaceName}
+          workspaceId={items[0]!.meta.workspaceId ?? ""}
+          results={items}
+          dismissFile={(path) => hideResult(workspaceName, path)}
+          onNavigate={() => handleOpenChange(false)}
+        />
+      ));
+    }
+    if (isSearching) {
       return (
         <div className="flex justify-center items-center text-muted-foreground py-8 text-sm font-mono w-full h-full">
           <div className="animate-spin">
@@ -93,20 +99,15 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
         </div>
       );
     }
-
-    if (error) {
-      return <div className="text-center text-destructive py-8 text-sm font-mono">{error}</div>;
-    }
-
-    // Render results if they exist (even during a subsequent search)
-    if (filteredResults) {
+    if (searchTerm)
       return (
-        <SearchResults results={filteredResults} dismissFile={dismissFile} onNavigate={() => handleOpenChange(false)} />
+        <div className="w-full  justify-center items-center flex font-mono h-12 gap-2">
+          <SearchXIcon />
+          {"no results"}
+        </div>
       );
-    }
-
     return null;
-  }, [error, filteredResults, isSearching, handleOpenChange, dismissFile]);
+  }, [error, handleOpenChange, hasResults, hideResult, isSearching, searchTerm, workspaceResults]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -123,7 +124,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
         <DialogTitle className="font-mono font-thin text-xs flex items-center gap-2 -mt-4 -ml-4 mb-2">
           <Search size={16} /> search
         </DialogTitle>
-        <Collapsible className="group/collapsible">
+        <Collapsible className="group/collapsible" open={isOptionsOpen} onOpenChange={(state) => setOptionsOpen(state)}>
           <div className="flex">
             <CollapsibleTrigger className="text-xs flex items-center -ml-3 mr-1 outline-none" asChild>
               <button className="ouline-none" type="button">
@@ -170,38 +171,48 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     </Dialog>
   );
 }
-// --- Updated SearchResults Component ---
 function SearchResults({
   results,
   dismissFile,
   onNavigate,
+  workspaceName,
+  workspaceId,
 }: {
-  results: DiskSearchResultData[] | null;
-  dismissFile: (path: string) => void;
+  results: WorkspaceSearchItem[];
+  dismissFile: (path: AbsPath) => void;
   onNavigate?: () => void;
+  workspaceId: string;
+  workspaceName: string;
 }) {
-  // Note: The pending/spinner state is now handled by the parent.
-  if (!results) {
-    // This case should ideally not be hit if parent logic is correct,
-    // but it's safe to keep.
-    return null;
-  }
   if (results.length === 0) {
     return <div className="text-center text-muted-foreground py-8 text-sm font-mono">No results found</div>;
   }
-
   return (
-    <ul className="block">
-      {results.map((result) => (
-        <li className="block" key={result.meta.filePath}>
-          <SearchFile
-            searchResult={result}
-            closeFile={() => dismissFile(result.meta.filePath)}
-            onNavigate={onNavigate}
-          />
-        </li>
-      ))}
-    </ul>
+    <div>
+      <div className="text-md bold underline mb-1 w-full justify-start gap-2 items-center flex">
+        <WorkspaceIcon
+          variant="round"
+          size={3}
+          scale={4}
+          input={workspaceId}
+          className="border border-primary-foreground"
+        />
+        <Link onClick={onNavigate} href={joinPath(WorkspaceDAO.rootRoute, workspaceName)} className="font-mono">
+          {workspaceName}
+        </Link>
+      </div>
+      <ul className="block">
+        {results.map((result) => (
+          <li className="block" key={result.meta.filePath}>
+            <SearchFile
+              searchResult={result}
+              closeFile={() => dismissFile(result.meta.filePath)}
+              onNavigate={onNavigate}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -210,7 +221,7 @@ function SearchFile({
   closeFile,
   onNavigate,
 }: {
-  searchResult: DiskScanResult;
+  searchResult: WorkspaceSearchItem;
   closeFile: () => void;
   onNavigate?: () => void;
 }) {
@@ -231,18 +242,9 @@ function SearchFile({
         className="w-full flex items-center border rounded-t text-xs font-mono h-8 sticky top-0 z-10 bg-accent hover:bg-primary-foreground"
       >
         <div className="ml-1 flex items-center justify-center h-full gap-2 ">
-          <div className="justify-center items-center flex ">
-            <WorkspaceIcon
-              variant="round"
-              size={6}
-              scale={2}
-              input={searchResult.meta.workspaceId}
-              className="border border-primary-foreground"
-            />
-          </div>
           <FileTextIcon size={12} className="text-ring h-4" />
         </div>
-        <div className="flex-1 min-w-0 truncate px-2 py-2">{relPath(searchResult.meta.filePath)}</div>
+        <div className="flex-1 min-w-0 truncate px-2 py-2">{searchResult.meta.filePath}</div>
         <Button
           variant="ghost"
           className="flex-shrink-0 h-5 w-5 p-0 mr-1 ml-2 scale-150 rounded-none"

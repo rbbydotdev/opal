@@ -1,0 +1,218 @@
+"use client";
+import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
+import { absPath, AbsPath, joinPath } from "@/lib/paths2";
+// import { DiskSearchResultData } from "@/features/search/SearchResults";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const SEARCH_DEBOUNCE_MS = 250;
+
+/**
+ * Performs a streaming search and yields results as they arrive.
+ * This function is not meant to be called directly by components.
+ */
+function fetchQuerySearch(params: {
+  all: true;
+  searchTerm: string;
+  signal: AbortSignal;
+}): AsyncGenerator<WorkspaceSearchItem, void, unknown>;
+function fetchQuerySearch(params: {
+  workspaceName: string;
+  all?: false | undefined;
+  searchTerm: string;
+  signal: AbortSignal;
+}): AsyncGenerator<WorkspaceSearchItem, void, unknown>;
+async function* fetchQuerySearch({
+  workspaceName,
+  all,
+  searchTerm,
+  signal,
+}: {
+  workspaceName?: string;
+  all?: boolean;
+  searchTerm: string;
+  signal: AbortSignal;
+}): AsyncGenerator<WorkspaceSearchItem, void, unknown> {
+  const url = new URL(joinPath(absPath("workspace-search"), workspaceName || ""), window.location.origin);
+
+  url.searchParams.set("searchTerm", searchTerm);
+  if (all) url.searchParams.set("all", "1");
+
+  const res = await fetch(url.toString(), { signal });
+  // await new Promise((rs) => setTimeout(rs, 2_000));
+
+  if (res.status === 204) {
+    return; // No content, successful but empty stream
+  }
+  if (!res.ok) throw new Error(`Search failed: ${res.statusText}`);
+  if (!res.body) throw new Error("Response has no body to read.");
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || ""; // Keep the last, possibly incomplete line
+
+      for (const line of lines) {
+        if (line.trim() === "") continue;
+        const result = JSON.parse(line) as WorkspaceSearchItem;
+        yield result;
+      }
+    }
+  } catch (err) {
+    // Don't throw an error if the request was intentionally aborted
+    if (err instanceof DOMException && err.name === "AbortError") {
+      return;
+    }
+    throw err;
+  }
+}
+
+/**
+ * A custom hook to perform a debounced, streaming search within a workspace.
+ * It handles loading states, errors, and aborting previous requests.
+ *
+ * @returns The search state including results, loading status, error, and a submit function.
+ */
+export function useWorkspaceSearchResults({
+  workspaceName,
+  debounceMs = SEARCH_DEBOUNCE_MS,
+}: {
+  all: boolean;
+  workspaceName: string;
+  debounceMs?: number;
+}) {
+  // const [isSearching, setIsSearching] = useState(false);
+  // const [queryResults, setQueryResults] = useState<WorkspaceSearchItem[]>([]);
+  // const [error, setError] = useState<string | null>(null);
+  const [hidden, setHidden] = useState<string[]>([]);
+  const [ctx, setCtx] = useState<{
+    queryResults: WorkspaceSearchItem[];
+    error: string | null;
+    isSearching: boolean;
+  }>({ queryResults: [], error: null, isSearching: false });
+
+  const resultKey = (workspaceName: string, filePath: AbsPath) => `${workspaceName}@${filePath}`;
+  const hideResult = (workspaceName: string, filePath: AbsPath) =>
+    setHidden((prev) => [...prev, resultKey(workspaceName, filePath)]);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const reset = useCallback(() => {
+    setCtx({ queryResults: [], error: null, isSearching: false });
+  }, []);
+
+  const query = useCallback(
+    async (searchTerm: string) => {
+      if (!workspaceName || !searchTerm.trim()) {
+        reset();
+        return;
+      }
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setCtx({
+        error: null,
+        isSearching: true,
+        queryResults: [],
+      });
+
+      try {
+        const searchGenerator = fetchQuerySearch({
+          workspaceName,
+          searchTerm,
+          signal: controller.signal,
+        });
+
+        for await (const result of searchGenerator) {
+          if (controller.signal.aborted) break;
+          setCtx((prev) => ({
+            error: null,
+            isSearching: true,
+            queryResults: [...prev.queryResults, result],
+          }));
+        }
+      } catch (err) {
+        console.error("Search error:", err);
+        setCtx(() => ({
+          error: "Search failed. Please try again.",
+          isSearching: false,
+          queryResults: [],
+        }));
+      } finally {
+        setCtx((prev) => ({
+          error: ctx.error,
+          isSearching: false,
+          queryResults: prev.queryResults,
+        }));
+      }
+    },
+    [workspaceName, reset, ctx.error]
+  );
+
+  const submit = useCallback(
+    (searchTerm: string) => {
+      setCtx((prev) => ({ ...prev, isSearching: true }));
+      if (debounceMs === 0) {
+        void query(searchTerm);
+      } else {
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = setTimeout(() => {
+          void query(searchTerm);
+        }, debounceMs);
+      }
+    },
+    [debounceMs, query]
+  );
+
+  // Cleanup on unmount
+  const tearDown = useCallback(() => {
+    reset();
+    abortControllerRef.current?.abort();
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+  }, [reset]);
+
+  useEffect(() => tearDown(), [tearDown]);
+
+  const filteredResults = useMemo(() => {
+    return ctx.queryResults.filter(
+      ({ meta: { workspaceName, filePath } }) => !hidden.includes(resultKey(workspaceName, filePath))
+    );
+  }, [hidden, ctx.queryResults]);
+
+  const workspaceResults = useMemo(
+    () =>
+      Object.entries(
+        Object.groupBy(
+          filteredResults,
+          (result: WorkspaceSearchItem) => result.meta.workspaceName
+        ) as unknown as Record<string, typeof filteredResults>
+      ),
+    [filteredResults]
+  );
+
+  const hasResults = filteredResults.length > 0;
+
+  return {
+    isSearching: ctx.isSearching,
+    workspaceResults,
+    hasResults,
+    error: ctx.error,
+    tearDown,
+    submit,
+    resetSearch: reset,
+    hideResult: hideResult,
+  };
+}

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
 
-import { FileTreeMenuCtxProvider, useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { FileTreeMenuCtxProvider, useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useDndList } from "@/components/SidebarFileMenu/useDndList";
 import { useFileMenuPaste } from "@/components/SidebarFileMenu/useFileMenuPaste";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -38,7 +38,7 @@ import {
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { FileTreeExpanderProvider } from "@/features/filetree-expander/FileTreeExpanderContext";
 import { useFileTreeExpanderContext } from "@/features/filetree-expander/useFileTreeExpander";
-import { useSidebarItemExpander } from "@/features/filetree-expander/useSidebarItemExpander";
+import { useSingleItemExpander } from "@/features/filetree-expander/useSingleItemExpander";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
@@ -186,7 +186,7 @@ function TrashSidebarFileMenuFileSection({ className }: { className?: string }) 
 }
 
 function useFileTreeClipboardEventListeners({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const { focused, selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
+  const { focused, selectedFocused, setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
   const uploadFilesToWorkspace = useHandleDropFilesForNode({ currentWorkspace });
   const handlePaste = useFileMenuPaste({ currentWorkspace });
 
@@ -324,7 +324,7 @@ export const SidebarFileMenuFiles = ({
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
 }) => {
   const { id } = useFileTreeMenuCtx();
-  const [groupExpanded, groupSetExpand] = useSidebarItemExpander("SidebarFileMenuFiles/" + id);
+  const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + id);
   const { currentWorkspace } = useWorkspaceContext();
   const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
   // const { externalDrop } = useExternalDrop({ currentWorkspace });
@@ -463,7 +463,7 @@ const MOCK_CONNECTIONS = [
 ];
 
 function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
-  const [expanded, setExpand] = useSidebarItemExpander("sync");
+  const [expanded, setExpand] = useSingleItemExpander("sync");
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
       <Collapsible className="group/collapsible flex flex-col min-h-0" open={expanded} onOpenChange={setExpand}>
@@ -556,7 +556,7 @@ function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   );
 }
 function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>) {
-  const [expanded, setExpand] = useSidebarItemExpander("publish");
+  const [expanded, setExpand] = useSingleItemExpander("publish");
   return (
     <SidebarGroup {...props}>
       <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
@@ -606,7 +606,7 @@ function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>
 }
 
 function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>) {
-  const [expanded, setExpand] = useSidebarItemExpander("export");
+  const [expanded, setExpand] = useSingleItemExpander("export");
   const { currentWorkspace } = useWorkspaceContext();
   return (
     <SidebarGroup {...props}>
@@ -677,7 +677,7 @@ export function SidebarCollapseContentScroll(
     children: React.ReactNode;
   }
 ) {
-  const [expanded, setExpand] = useSidebarItemExpander(props.name);
+  const [expanded, setExpand] = useSingleItemExpander(props.name);
   const { name, icon: Icon, action, children, ...rest } = props;
   return (
     <SidebarGroup className="pl-0 py-0" {...rest}>

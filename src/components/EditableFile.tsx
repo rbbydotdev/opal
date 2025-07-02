@@ -1,5 +1,5 @@
 "use client";
-import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { Thumb } from "@/Db/Thumb";
@@ -52,7 +52,7 @@ export const EditableFile = ({
     expand,
     currentWorkspace,
   });
-  const { setFileTreeCtx } = useFileTreeMenuCtx();
+  const { setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
   // const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace); //TODO, make for a copy of other files possible too
 
   // this breaks everything and i friggin hate it

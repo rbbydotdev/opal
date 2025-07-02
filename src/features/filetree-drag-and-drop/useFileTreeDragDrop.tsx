@@ -1,6 +1,6 @@
 import { allowedFiletreePathMove } from "@/components/allowedFiletreePathMove";
 import { INTERNAL_NODE_FILE_TYPE, NodeDataJType } from "@/components/FiletreeMenu";
-import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
 import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";

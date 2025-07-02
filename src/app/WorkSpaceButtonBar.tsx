@@ -2,8 +2,8 @@
 
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-// import { SearchModal } from "@/components/ui/search-modal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+// import { SearchModal } from "@/components/ui/search-modal";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";

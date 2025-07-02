@@ -1,5 +1,5 @@
 "use client";
-import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useFileTreeExpander } from "@/features/filetree-expander/useFileTreeExpander";
 import { createContext, ReactNode } from "react";

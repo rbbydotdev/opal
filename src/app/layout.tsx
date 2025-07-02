@@ -1,5 +1,4 @@
 "use client";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { ThemeProvider } from "next-themes";
 
 import { WorkSpaceButtonBar } from "@/app/WorkSpaceButtonBar";
@@ -11,6 +10,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
 import { ErrorPopper } from "@/components/ui/error-popup";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { RequestSignalsInstance } from "@/lib/RequestSignals";
 import React, { useEffect } from "react";
 import "./globals.css";

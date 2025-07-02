@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
 import { Workspace } from "@/Db/Workspace";
