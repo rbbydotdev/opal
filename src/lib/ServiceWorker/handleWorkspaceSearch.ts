@@ -1,89 +1,144 @@
+import { Workspace } from "@/Db/Workspace";
+import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { wrapGeneratorWithSignal } from "@/lib/ServiceWorker/wrapGeneratorWithSignal";
 import { SWWStore } from "./SWWStore";
 
 const activeSearches = new Map<string, AbortController>();
 
-export async function handleWorkspaceSearch(workspaceId: string, searchTerm: string): Promise<Response> {
-  // 1. Cancel any previous search for this workspace. This logic remains the same.
-  activeSearches.get(workspaceId)?.abort("A new search was started.");
+/**
+ * Creates a ReadableStream that merges search results from multiple workspaces.
+ * @param workspaces - An array of initialized workspaces to search within.
+ * @param searchTerm - The term to search for.
+ * @param signal - The AbortSignal to cancel the search generators.
+ * @param searchController - The main AbortController for the operation.
+ * @param searchKey - The key for the activeSearches map for cleanup.
+ * @param includeWorkspaceNameInResult - If true, adds a `workspace` property to each result.
+ * @returns A ReadableStream of NDJSON search results.
+ */
+function createWorkspaceSearchStream({
+  workspaces,
+  searchTerm,
+  signal,
+  searchController,
+  searchKey,
+}: {
+  workspaces: Workspace[];
+  searchTerm: string;
+  signal: AbortSignal;
+  searchController: AbortController;
+  searchKey: string;
+}): ReadableStream {
+  const encoder = new TextEncoder();
+
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        const searchPromises = workspaces.map(async (workspace) => {
+          const scannable = workspace.NewScannable();
+          const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm), signal);
+
+          for await (const result of searchGenerator) {
+            const chunk = encoder.encode(JSON.stringify(result) + "\n");
+            controller.enqueue(chunk);
+          }
+        });
+
+        // Wait for all concurrent searches to complete.
+        await Promise.all(searchPromises);
+        controller.close();
+      } catch (e) {
+        // If any generator errors (e.g., from an abort), error the stream.
+        controller.error(e);
+      } finally {
+        // The search is complete (or failed), so we can clean up.
+        activeSearches.delete(searchKey);
+      }
+    },
+    cancel(reason) {
+      console.log("Stream canceled by client:", reason);
+      searchController.abort("The client closed the connection.");
+    },
+  });
+}
+
+export function handleWorkspaceSearch(
+  all: true,
+  workspaceName: undefined | null,
+  searchTerm: string
+): Promise<Response>;
+export function handleWorkspaceSearch(all: false, workspaceName: string, searchTerm: string): Promise<Response>;
+export async function handleWorkspaceSearch(
+  all: boolean,
+  workspaceName: string | undefined | null,
+  searchTerm: string
+): Promise<Response> {
+  // 1. Cancel previous searches.
   const searchController = new AbortController();
-  activeSearches.set(workspaceId, searchController);
+  const searchKey = all ? "( ͡° ͜ʖ ͡°) ALL!" : workspaceName!;
+
+  if (activeSearches.has(searchKey)) {
+    activeSearches.get(searchKey)?.abort("A new search was started.");
+  }
+  if (all) {
+    activeSearches.forEach((cntrl) => cntrl.abort("A new global search was started."));
+    activeSearches.clear();
+  }
+  activeSearches.set(searchKey, searchController);
 
   try {
     if (!searchTerm) {
-      // For an empty search, we can just return an empty successful response.
       return new Response(null, { status: 204 });
     }
 
     const timeoutSignal = AbortSignal.timeout(10_000);
     const combinedSignal = AbortSignal.any([searchController.signal, timeoutSignal]);
 
-    // We must find the workspace before starting the stream.
-    const workspace = await SWWStore.tryWorkspace(workspaceId);
-    if (!workspace) {
-      throw new NotFoundError(`Workspace not found: ${workspaceId}`);
+    // 2. Prepare the list of workspaces to search.
+    let workspacesToSearch: Workspace[];
+    if (all) {
+      const allWorkspaceMetas = await WorkspaceDAO.all();
+      workspacesToSearch = await Promise.all(
+        allWorkspaceMetas.map((ws) => SWWStore.tryWorkspace(ws.name).then((w) => w.init()))
+      );
+    } else {
+      if (!workspaceName) {
+        throw new NotFoundError(`Workspace name must be provided when all=false`);
+      }
+      const workspace = await SWWStore.tryWorkspace(workspaceName);
+      await workspace.init();
+      workspacesToSearch = [workspace]; // Wrap the single workspace in an array.
     }
-    await workspace.init();
 
-    const encoder = new TextEncoder();
-    const scannable = workspace.NewScannable();
-
-    // 2. Create a ReadableStream to wrap the async generator.
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm), combinedSignal);
-
-          for await (const result of searchGenerator) {
-            // 3. For each result, stringify it and enqueue it as a chunk.
-            // We add a newline to create a Newline Delimited JSON (NDJSON) stream.
-            const chunk = encoder.encode(JSON.stringify(result) + "\n");
-            controller.enqueue(chunk);
-          }
-          // When the generator is done, close the stream.
-          controller.close();
-        } catch (e) {
-          // If the generator errors (e.g., from an abort), error the stream.
-          controller.error(e);
-        } finally {
-          // 4. The search is complete (or failed), so we can clean up.
-          activeSearches.delete(workspaceId);
-        }
-      },
-      cancel(reason) {
-        // This is called if the client aborts the fetch request.
-        console.log("Stream canceled by client:", reason);
-        searchController.abort("The client closed the connection.");
-      },
+    // 3. Create the stream using the helper function.
+    const stream = createWorkspaceSearchStream({
+      workspaces: workspacesToSearch,
+      searchTerm,
+      signal: combinedSignal,
+      searchController,
+      searchKey,
     });
 
-    // 5. Return the stream immediately.
+    // 4. Return the stream in the response.
     return new Response(stream, {
       status: 200,
       headers: {
-        // Use the standard MIME type for NDJSON.
         "Content-Type": "application/x-ndjson",
         "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (e) {
-    // This outer catch now handles errors that occur *before* the stream starts.
-    activeSearches.delete(workspaceId); // Clean up on pre-stream failure.
+    // This outer catch handles errors that occur *before* the stream starts.
+    activeSearches.delete(searchKey); // Clean up on pre-stream failure.
 
     if (e instanceof DOMException && e.name === "AbortError") {
-      console.log(`Search aborted for workspace: ${workspaceId}`);
+      console.log(`Search aborted for: ${searchKey}`);
       return new Response(null, { status: 204 });
     }
     if (isError(e, NotFoundError)) {
-      return new Response("Workspace not found", { status: 404 });
+      return new Response(e.message, { status: 404 });
     }
     console.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Internal Server Error", { status: 500 });
   }
-  // The `finally` block is no longer needed here, as cleanup is handled
-  // inside the stream's lifecycle for the success path.
 }
-
-// The response type is no longer a single object, but you might keep this
-// type to represent a single item in the stream.

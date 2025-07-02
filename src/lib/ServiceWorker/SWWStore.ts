@@ -8,15 +8,15 @@ export const SWWStore = new (class SwWorkspace {
   }
   private workspaces = new Map<string, Promise<Workspace>>();
 
-  async tryWorkspace(workspaceId: string): Promise<Workspace> {
-    if (!this.workspaces.has(workspaceId)) {
-      const ws = WorkspaceDAO.FetchByName(workspaceId).then((wsd) => wsd.toModel().init());
-      this.workspaces.set(workspaceId, ws);
+  async tryWorkspace(workspaceName: string): Promise<Workspace> {
+    if (!this.workspaces.has(workspaceName)) {
+      const ws = WorkspaceDAO.FetchByName(workspaceName).then((wsd) => wsd.toModel().init());
+      this.workspaces.set(workspaceName, ws);
       setTimeout(() => {
-        this.workspaces.delete(workspaceId);
+        this.workspaces.delete(workspaceName);
       }, 5_000);
       return ws;
     }
-    return this.workspaces.get(workspaceId)!;
+    return this.workspaces.get(workspaceName)!;
   }
 })();

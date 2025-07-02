@@ -1,39 +1,54 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
   const isServer = typeof window === "undefined";
 
-  // State to store our value
-  const [storedValue, setStoredValue] = useState<T>(
-    () =>
-      isServer
-        ? typeof initialValue === "function"
-          ? (initialValue as () => T)()
-          : initialValue
-        : (undefined as unknown as T) // Ensure the state is undefined on the server
-  );
+  // Cache the initial value so it doesn't change on every render
+  const initialValueRef = useRef(initialValue);
 
+  // State to store our value
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (isServer) {
+      return typeof initialValueRef.current === "function"
+        ? (initialValueRef.current as () => T)()
+        : initialValueRef.current;
+    }
+    try {
+      const item = window.localStorage.getItem(key);
+      if (item !== null) {
+        return JSON.parse(item) as T;
+      }
+    } catch (_error) {
+      // ignore
+    }
+    return typeof initialValueRef.current === "function"
+      ? (initialValueRef.current as () => T)()
+      : initialValueRef.current;
+  });
+
+  // Only depends on key
   const getInitialValue = useCallback(() => {
     try {
       const item = window.localStorage.getItem(key);
-      return item
-        ? (JSON.parse(item) as T)
-        : typeof initialValue === "function"
-        ? (initialValue as () => T)()
-        : initialValue;
-    } catch (error) {
-      console.error("Error accessing localStorage", error);
-      return typeof initialValue === "function" ? (initialValue as () => T)() : initialValue;
+      if (item !== null) {
+        return JSON.parse(item) as T;
+      }
+    } catch (_error) {
+      // ignore
     }
-  }, [initialValue, key]);
+    return typeof initialValueRef.current === "function"
+      ? (initialValueRef.current as () => T)()
+      : initialValueRef.current;
+  }, [key]);
 
+  // Only run on mount or when key changes
   useEffect(() => {
     if (!isServer) {
-      setStoredValue(getInitialValue() as T);
+      setStoredValue(getInitialValue());
     }
-  }, [getInitialValue, isServer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]); // Don't include getInitialValue or initialValue
 
-  // Return a wrapped version of useState's setter function that persists the new value to localStorage
   const setValue = useCallback(
     (value: T | ((val: T) => T)) => {
       try {
@@ -69,11 +84,13 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
   const clear = useCallback(() => {
     try {
       window.localStorage.removeItem(key);
-      setStoredValue(initialValue as T);
+      setStoredValue(
+        typeof initialValueRef.current === "function" ? (initialValueRef.current as () => T)() : initialValueRef.current
+      );
     } catch (error) {
       console.error("Error clearing localStorage", error);
     }
-  }, [initialValue, key]);
+  }, [key]);
 
   return [storedValue, setValue, clear] as const;
 }
