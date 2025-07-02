@@ -1,4 +1,5 @@
 import { Workspace } from "@/Db/Workspace";
+import { createSearchControllerExtension } from "@/components/Editor/CodeMirrorSearchJumpPlugin";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { searchMarkdownPlugin } from "@/components/Editor/markdownSearchPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
@@ -83,6 +84,8 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
   ],
 };
 
+const searchController = createSearchControllerExtension();
+
 export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const [imgs, setImgs] = useState<string[]>([]);
   const { contents } = useFileContents();
@@ -142,7 +145,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
         codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
       }),
       directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
-      diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: contents }),
+      diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: contents, codeMirrorExtensions: [searchController] }),
       markdownShortcutPlugin(),
     ],
     [contents, currentWorkspace, imgs, path]
