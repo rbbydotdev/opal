@@ -1,5 +1,5 @@
 "use client";
-import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";

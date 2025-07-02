@@ -1,6 +1,6 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
-import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -64,13 +64,13 @@ export function useEditable<T extends TreeFile | TreeDir>({
       if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
-        setFileTreeCtx({
+        setFileTreeCtx(({ selectedRange }) => ({
           editing: null,
           editType: null,
           focused: treeNode.path,
           virtual: null,
           selectedRange: Array.from(new Set([...selectedRange, treeNode.path])),
-        });
+        }));
 
         return;
       } else if (e.shiftKey && focused) {
@@ -89,16 +89,16 @@ export function useEditable<T extends TreeFile | TreeDir>({
         }
       } else if (!isEditing) {
         //check if there was a right click
-        setFileTreeCtx({
+        setFileTreeCtx(({ selectedRange }) => ({
           editing: null,
           editType: null,
           focused: treeNode.path,
           virtual: null,
           selectedRange: [...new Set(selectedRange).add(treeNode.path)],
-        });
+        }));
       }
     },
-    [currentWorkspace.disk.fileTree, focused, isEditing, selectedRange, setFileTreeCtx, treeNode]
+    [currentWorkspace.disk.fileTree, focused, isEditing, setFileTreeCtx, treeNode]
   );
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
@@ -214,15 +214,15 @@ export function useEditable<T extends TreeFile | TreeDir>({
     (_e: React.FocusEvent<HTMLInputElement | HTMLAnchorElement>) => {
       if (virtual) currentWorkspace.removeVirtualfile(virtual);
 
-      setFileTreeCtx({
+      setFileTreeCtx(({ focused, selectedRange }) => ({
         editing: null,
         editType: null,
         virtual: null,
         focused,
         selectedRange,
-      });
+      }));
     },
-    [currentWorkspace, focused, selectedRange, setFileTreeCtx, virtual]
+    [currentWorkspace, setFileTreeCtx, virtual]
   );
 
   const handleClick = useCallback(

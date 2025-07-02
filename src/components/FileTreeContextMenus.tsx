@@ -1,4 +1,4 @@
-import { FILE_TREE_MENUS_TYPE } from "@/components/FileTreeProvider";
+import { FILE_TREE_MENUS_TYPE } from "@/components/FileTreeMenuCtxProvider";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { TrashFileTreeContextMenu } from "@/lib/FileTree/TrashFileTreeContextMenu";
 import React from "react";

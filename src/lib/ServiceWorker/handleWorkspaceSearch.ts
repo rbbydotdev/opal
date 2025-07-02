@@ -1,4 +1,3 @@
-import { DiskSearchResultData } from "@/features/search/SearchResults";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { wrapGeneratorWithSignal } from "@/lib/ServiceWorker/wrapGeneratorWithSignal";
 import { SWWStore } from "./SWWStore";
@@ -88,4 +87,3 @@ export async function handleWorkspaceSearch(workspaceId: string, searchTerm: str
 
 // The response type is no longer a single object, but you might keep this
 // type to represent a single item in the stream.
-export type WorkspaceSearchResponseItem = DiskSearchResultData;

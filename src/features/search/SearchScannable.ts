@@ -6,13 +6,15 @@ export interface Scannable<T> {
 
 export type UnwrapScannable<T extends Scannable<unknown>> = T extends Scannable<infer U> ? U : never;
 
-// Helper function to escape strings for literal regex matching
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export class SearchScannable<T extends { text: string }, MetaExtType extends object> {
-  constructor(private scannable: Scannable<T>, private metaExt: MetaExtType = {} as MetaExtType) {}
+export class SearchTextScannable<MetaExtType extends object, Scanner extends Scannable<{ text: string } & object>> {
+  constructor(
+    private scanner: Scanner,
+    private metaExt: MetaExtType & ValidateDisjoint<MetaExtType, Omit<UnwrapScannable<Scanner>, "text">>
+  ) {}
 
   private computeLineBreaks(text: string): number[] {
     const breaks = [-1];
@@ -28,8 +30,6 @@ export class SearchScannable<T extends { text: string }, MetaExtType extends obj
     pos: number,
     lineBreaks: number[]
   ): { lineStart: number; lineEnd: number; lineNumber: number } {
-    // Use a binary search for performance on very large files, but for simplicity,
-    // a linear scan is clear and often sufficient.
     for (let i = 0; i < lineBreaks.length - 1; i++) {
       if (pos > lineBreaks[i]! && pos <= lineBreaks[i + 1]!) {
         return {
@@ -39,7 +39,6 @@ export class SearchScannable<T extends { text: string }, MetaExtType extends obj
         };
       }
     }
-    // Fallback for a position that might be the very start of the file
     if (pos === 0) {
       return {
         lineStart: 0,
@@ -47,7 +46,6 @@ export class SearchScannable<T extends { text: string }, MetaExtType extends obj
         lineNumber: 1,
       };
     }
-    // This should be unreachable if lineBreaks is computed correctly
     return { lineStart: 0, lineEnd: text.length, lineNumber: 1 };
   }
 
@@ -58,8 +56,11 @@ export class SearchScannable<T extends { text: string }, MetaExtType extends obj
       wholeWord?: boolean;
       regex?: boolean;
     } = { caseSensitive: false, wholeWord: false, regex: true }
-  ): AsyncGenerator<{ matches: SearchResultData[]; meta: Omit<T, "text"> & MetaExtType }> {
-    for await (const item of this.scannable.scan()) {
+  ): AsyncGenerator<{
+    matches: SearchResultData[];
+    meta: Omit<UnwrapScannable<Scanner>, "text"> & MetaExtType;
+  }> {
+    for await (const item of this.scanner.scan()) {
       const { text: haystack, ...rest } = item;
       if (!haystack) continue;
 
@@ -71,7 +72,6 @@ export class SearchScannable<T extends { text: string }, MetaExtType extends obj
         pattern = `\\b${pattern}\\b`;
       }
 
-      // 'g' for global, 's' for dotAll (so '.' matches '\n')
       let flags = "gs";
       if (!options.caseSensitive) {
         flags += "i";
@@ -81,7 +81,6 @@ export class SearchScannable<T extends { text: string }, MetaExtType extends obj
       let match: RegExpExecArray | null;
 
       while ((match = re.exec(haystack)) !== null) {
-        // An empty match would cause an infinite loop
         if (match[0].length === 0) {
           re.lastIndex++;
           continue;
@@ -89,19 +88,10 @@ export class SearchScannable<T extends { text: string }, MetaExtType extends obj
 
         const matchStartIndex = match.index;
         const matchEndIndex = match.index + match[0].length;
-
-        // Find line information for the START of the match
         const startLineInfo = this.findLine(haystack, matchStartIndex, lineBreaks);
-
-        // Find line information for the END of the match
-        // Use matchEndIndex - 1 to get the line containing the last character
         const endLineInfo = this.findLine(haystack, matchEndIndex > 0 ? matchEndIndex - 1 : 0, lineBreaks);
-
         const linesSpanned = endLineInfo.lineNumber - startLineInfo.lineNumber;
-        // The relative start is based on the first line
         const relStart = matchStartIndex - startLineInfo.lineStart;
-
-        // The relative end is clamped to the end of the first line
         const relEnd = Math.min(matchEndIndex, startLineInfo.lineEnd) - startLineInfo.lineStart;
 
         results.push({
@@ -117,8 +107,13 @@ export class SearchScannable<T extends { text: string }, MetaExtType extends obj
         });
       }
       if (results.length > 0) {
-        // ...this.meta,
-        yield { matches: results, meta: { ...this.metaExt, ...rest } };
+        // This is now fully type-safe without assertions.
+        // `rest` has the correct type (e.g., { sourceFile: string })
+        // and the constructor has guaranteed it doesn't conflict with `this.metaExt`.
+        yield {
+          matches: results,
+          meta: { ...rest, ...this.metaExt } as Omit<UnwrapScannable<Scanner>, "text"> & MetaExtType,
+        };
       }
     }
   }

@@ -1,6 +1,6 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
-import { useFileTreeMenuCtx } from "@/components/FileTreeProvider";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { useEditable } from "@/hooks/useEditable";
@@ -53,7 +53,7 @@ export const EditableDir = ({
     expand,
   });
 
-  const { setFileTreeCtx } = useFileTreeMenuCtx();
+  const { setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
 
   useEffect(() => {
     //weird edge case hmmmmmmm keeps focus after editing
