@@ -38,6 +38,7 @@ export function isErrorWithCode(error: unknown, code?: string): boolean {
 export function isError(
   error: unknown,
   target:
+    | Error
     | typeof ApplicationError
     | typeof NotFoundError
     | typeof ConflictError
@@ -51,8 +52,8 @@ export function isError(
     | typeof NotImplementedError
     | typeof AggregateApplicationError
     | string
-): boolean {
-  return (error as { name?: string }).name === (typeof target === "string" ? target : target?.name);
+): error is Error & typeof target {
+  return (error as typeof target & object)?.name === (typeof target === "string" ? target : target?.name);
 }
 
 export function errorCode(error: unknown, code?: string): ErrorWithCode {
@@ -66,6 +67,7 @@ export function errorCode(error: unknown, code?: string): ErrorWithCode {
 
 export class ApplicationError extends Error {
   name = "ApplicationError";
+  // message!: string;
   code: number;
   _hint?: string;
 
@@ -104,7 +106,7 @@ export class ApplicationError extends Error {
 }
 
 export class NotFoundError extends ApplicationError {
-  name = "NotFoundError";
+  name = "NotFoundError" as const;
   constructor(errorOrMessage: Error | string = "not found", public path?: string) {
     super(errorOrMessage, 404);
     Object.setPrototypeOf(this, NotFoundError.prototype);

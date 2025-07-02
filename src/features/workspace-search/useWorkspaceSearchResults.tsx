@@ -5,37 +5,22 @@ import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
-
-/**
- * Performs a streaming search and yields results as they arrive.
- * This function is not meant to be called directly by components.
- */
-function fetchQuerySearch(params: {
-  all: true;
-  searchTerm: string;
-  signal: AbortSignal;
-}): AsyncGenerator<WorkspaceSearchItem, void, unknown>;
-function fetchQuerySearch(params: {
-  workspaceName: string;
-  all?: false | undefined;
-  searchTerm: string;
-  signal: AbortSignal;
-}): AsyncGenerator<WorkspaceSearchItem, void, unknown>;
 async function* fetchQuerySearch({
   workspaceName,
   all,
   searchTerm,
   signal,
 }: {
-  workspaceName?: string;
-  all?: boolean;
+  workspaceName: string;
+  all: boolean;
   searchTerm: string;
   signal: AbortSignal;
 }): AsyncGenerator<WorkspaceSearchItem, void, unknown> {
-  const url = new URL(joinPath(absPath("workspace-search"), workspaceName || ""), window.location.origin);
+  const url = new URL(joinPath(absPath("workspace-search"), workspaceName), window.location.origin);
 
   url.searchParams.set("searchTerm", searchTerm);
   if (all) url.searchParams.set("all", "1");
+  console.log(all, url.toString());
 
   const res = await fetch(url.toString(), { signal });
   // await new Promise((rs) => setTimeout(rs, 2_000));
@@ -80,17 +65,7 @@ async function* fetchQuerySearch({
  *
  * @returns The search state including results, loading status, error, and a submit function.
  */
-export function useWorkspaceSearchResults({
-  workspaceName,
-  debounceMs = SEARCH_DEBOUNCE_MS,
-}: {
-  all: boolean;
-  workspaceName: string;
-  debounceMs?: number;
-}) {
-  // const [isSearching, setIsSearching] = useState(false);
-  // const [queryResults, setQueryResults] = useState<WorkspaceSearchItem[]>([]);
-  // const [error, setError] = useState<string | null>(null);
+export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   const [hidden, setHidden] = useState<string[]>([]);
   const [ctx, setCtx] = useState<{
     queryResults: WorkspaceSearchItem[];
@@ -110,7 +85,8 @@ export function useWorkspaceSearchResults({
   }, []);
 
   const query = useCallback(
-    async (searchTerm: string) => {
+    async (searchTerm: string, type: "rich" | "markdown", all: boolean, workspaceName?: string) => {
+      console.log(type);
       if (!workspaceName || !searchTerm.trim()) {
         reset();
         return;
@@ -130,6 +106,7 @@ export function useWorkspaceSearchResults({
           workspaceName,
           searchTerm,
           signal: controller.signal,
+          all,
         });
 
         for await (const result of searchGenerator) {
@@ -155,20 +132,20 @@ export function useWorkspaceSearchResults({
         }));
       }
     },
-    [workspaceName, reset, ctx.error]
+    [reset, ctx.error]
   );
 
   const submit = useCallback(
-    (searchTerm: string) => {
+    (searchTerm: string, type: "markdown" | "rich", all: boolean, workspaceName: string) => {
       setCtx((prev) => ({ ...prev, isSearching: true }));
       if (debounceMs === 0) {
-        void query(searchTerm);
+        void query(searchTerm, type, all, workspaceName);
       } else {
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
         }
         debounceTimerRef.current = setTimeout(() => {
-          void query(searchTerm);
+          void query(searchTerm, type, all, workspaceName);
         }, debounceMs);
       }
     },

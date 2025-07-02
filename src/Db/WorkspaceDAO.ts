@@ -38,6 +38,7 @@ export class WorkspaceDAO {
     };
   }
 
+  //totally weird ot have this here since its a DB access obj no ?
   static rootRoute = "/workspace" as AbsPath;
 
   static FromJSON(json: WorkspaceRecord) {

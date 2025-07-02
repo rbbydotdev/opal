@@ -14,6 +14,7 @@ import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
 import { useSingleItemExpander } from "@/features/filetree-expander/useSingleItemExpander";
 import { SearchResult } from "@/features/search/SearchResults";
 import { useWorkspaceSearchResults } from "@/features/workspace-search/useWorkspaceSearchResults";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
 import { ChevronRight, FileTextIcon, Loader, Search, SearchXIcon, X } from "lucide-react";
 import Link from "next/link";
@@ -27,13 +28,20 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const { currentWorkspace } = useWorkspaceContext();
   const [isOptionsOpen, setOptionsOpen] = useSingleItemExpander("SearchDialog/options/expand", true);
 
-  // const [] = useLocalStorage("SearchDialog/options/values", {});
+  const [optionsValue, setOptionsValue] = useLocalStorage(
+    "SearchDialog/options/values",
+    () =>
+      ({ all: true, type: "markdown" } as {
+        all: boolean;
+        type: "markdown" | "rich";
+      })
+  );
 
   const { isSearching, error, tearDown, hasResults, hideResult, resetSearch, workspaceResults, submit } =
-    useWorkspaceSearchResults({
-      workspaceName: currentWorkspace.name,
-      all: false,
-    });
+    useWorkspaceSearchResults();
+
+  const { all, type } = optionsValue;
+  const currWorkspaceName = currentWorkspace.name;
 
   const resetComponentState = useCallback(() => {
     setSearchTerm("");
@@ -43,9 +51,9 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const handleInputChange = useCallback(
     (value: string) => {
       setSearchTerm(value);
-      submit(value);
+      submit(value, type, all, currWorkspaceName);
     },
-    [submit]
+    [all, currWorkspaceName, submit, type]
   );
 
   const handleOpenChange = useCallback(
@@ -146,19 +154,37 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
           </div>
           <CollapsibleContent>
             <div className="flex items-center gap-2 mt-4">
-              <Checkbox id="all_workspaces_option" className="scale-75" />
+              <Checkbox
+                id="all_workspaces_option"
+                onCheckedChange={(value) => {
+                  const all = Boolean(value);
+                  setOptionsValue((prev) => ({ ...prev, all }));
+                  resetSearch();
+                  submit(searchTerm, type, all, currWorkspaceName);
+                }}
+                className="scale-75"
+                checked={optionsValue.all}
+              />
               <Label
                 className="text-2xs font-mono text-primary flex items-center gap-1"
                 htmlFor="all_workspaces_option"
               >
                 <span>all workspaces</span>
               </Label>
-              <RadioGroup className="flex items-center gap-2 ml-4" defaultValue="markdown_option">
-                <RadioGroupItem id="markdown_option" value="markdown_option" className="scale-75" />
+              <RadioGroup
+                className="flex items-center gap-2 ml-4"
+                defaultValue={optionsValue.type}
+                onValueChange={(type: "markdown" | "rich") => {
+                  setOptionsValue((prev) => ({ ...prev, type }));
+                  resetSearch();
+                  submit(searchTerm, type, all, currWorkspaceName);
+                }}
+              >
+                <RadioGroupItem id="markdown_option" value="markdown" className="scale-75" />
                 <Label className="text-2xs font-mono text-primary flex items-center gap-1" htmlFor="markdown_option">
                   <span>markdown</span>
                 </Label>
-                <RadioGroupItem id="rich_text_option" value="rich_text_option" className="scale-75" />
+                <RadioGroupItem id="rich_text_option" value="rich" className="scale-75" />
                 <Label className="text-2xs font-mono text-primary flex items-center gap-1" htmlFor="rich_text_option">
                   <span>rich text</span>
                 </Label>
@@ -232,19 +258,21 @@ function SearchFile({
   const visibleMatches = useMemo(() => (expanded ? matches : matches.slice(0, MAX_MATCHES_SHOWN)), [expanded, matches]);
 
   const showExpandButton = matches.length > MAX_MATCHES_SHOWN;
+  const { workspaceName, filePath } = searchResult.meta;
+  const href = joinPath(WorkspaceDAO.rootRoute, workspaceName, filePath);
 
   return (
     <div className="mb-4 rounded-b-lg">
       <Link
         onClick={onNavigate}
-        title={searchResult.meta.filePath}
-        href={searchResult.meta.filePath}
+        title={`${workspaceName}/${filePath}`}
+        href={href}
         className="w-full flex items-center border rounded-t text-xs font-mono h-8 sticky top-0 z-10 bg-accent hover:bg-primary-foreground"
       >
         <div className="ml-1 flex items-center justify-center h-full gap-2 ">
           <FileTextIcon size={12} className="text-ring h-4" />
         </div>
-        <div className="flex-1 min-w-0 truncate px-2 py-2">{searchResult.meta.filePath}</div>
+        <div className="flex-1 min-w-0 truncate px-2 py-2">{filePath}</div>
         <Button
           variant="ghost"
           className="flex-shrink-0 h-5 w-5 p-0 mr-1 ml-2 scale-150 rounded-none"

@@ -109,6 +109,7 @@ self.addEventListener("fetch", async (event) => {
         //get query param searchTerm
         const searchParams = new URLSearchParams(url.search);
         const searchTerm = searchParams.get("searchTerm");
+        const all = searchParams.get("all") || false;
         const [workspaceId, ..._restPath] = segments;
         if (!workspaceId) {
           return event.respondWith(
@@ -126,7 +127,7 @@ self.addEventListener("fetch", async (event) => {
           workspaceId: ${workspaceId}
           searchTerm: ${searchTerm}
         `);
-        return event.respondWith(withRequestSignal(handleWorkspaceSearch)(workspaceId!, searchTerm));
+        return event.respondWith(withRequestSignal(handleWorkspaceSearch)(all, workspaceId, searchTerm));
       }
       if (url.pathname === "/download-encrypted.zip") {
         console.log(`Fetch event for: ${event.request.url}, referrer: ${event.request.referrer}`);
