@@ -396,6 +396,7 @@ export abstract class Disk {
         }
       }
     }
+    return filePath;
   }
 
   async *scan(): AsyncGenerator<{
@@ -655,6 +656,38 @@ export abstract class Disk {
       type: "create",
       details: { filePaths },
     });
+  }
+
+  async transferFiles(
+    transferNodes: [from: TreeNode, to: AbsPath][],
+    fromDisk: Disk,
+    toDisk: Disk,
+    removeSourceNodes: boolean = false
+  ) {
+    const paths = (
+      await Promise.all([
+        ...transferNodes
+          .filter(([node]) => node.isTreeDir())
+          .map(async ([_node, targetPath]) => toDisk.mkdirRecursive(targetPath)),
+        ...transferNodes
+          .filter(([node]) => node.isTreeFile())
+          .map(async ([node, targetPath]) => {
+            try {
+              return toDisk.newFile(
+                joinPath(dirname(targetPath), basename(targetPath)),
+                await fromDisk.readFile(node.path)
+              );
+            } catch (_e) {
+              //TODO: should make a warning toast!
+              console.error(`Failed to transfer file ${fromDisk.guid}${node.path} to ${toDisk.guid}${targetPath}`);
+            }
+          }),
+      ])
+    ).filter(Boolean);
+    if (removeSourceNodes) {
+      await fromDisk.removeMultipleFiles(transferNodes.map(([node]) => node.path));
+    }
+    return paths;
   }
 
   private async copyDirQuiet(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {

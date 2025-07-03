@@ -117,8 +117,6 @@ export function FileTreeMenu({
             }}
           >
             <FileTreeContextMenu
-              // <MainFileTreeContextMenu
-              // <TrashFileTreeContextMenu
               fileTreeId={fileTreeId}
               addFile={() => addDirFile("file", fileNode.closestDir()!)}
               addDir={() => addDirFile("dir", fileNode.closestDir()!)}
@@ -147,7 +145,6 @@ export function FileTreeMenu({
               }
               paste={async () => {
                 const data = await MetaDataTransfer.fromClipboard(await navigator.clipboard.read());
-
                 void handleFileMenuPaste({
                   targetNode: fileNode,
                   data,
