@@ -147,6 +147,12 @@ body {
   max-height: 100%;
 }
 
+.cm-selectionBackground {
+  /* background: blue !important; */
+  background-color: hsl(var(--ring)) !important;
+  opacity: 0.5 !important;
+}
+
 .mdxeditor .cm-highlight-range {
   background-color: hsl(var(--search-highlight-bg)) !important;
   & > * {
