@@ -61,7 +61,8 @@ export class SearchTextScannable<MetaExtType extends object, Scanner extends Sca
     meta: Omit<UnwrapScannable<Scanner>, "text"> & MetaExtType;
   }> {
     for await (const item of this.scanner.scan()) {
-      const { text: haystack, ...rest } = item;
+      const { text, ...rest } = item;
+      const haystack = text.normalize("NFKD").replace(/\n{3,}/g, "\n\n"); //NOTE: mdx editor replaces multiple newlines with two
       if (!haystack) continue;
 
       const lineBreaks = this.computeLineBreaks(haystack);

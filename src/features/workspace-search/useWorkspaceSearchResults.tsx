@@ -20,7 +20,6 @@ async function* fetchQuerySearch({
 
   url.searchParams.set("searchTerm", searchTerm);
   if (all) url.searchParams.set("all", "1");
-  console.log(all, url.toString());
 
   const res = await fetch(url.toString(), { signal });
   // await new Promise((rs) => setTimeout(rs, 2_000));
@@ -86,7 +85,6 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
 
   const query = useCallback(
     async (searchTerm: string, type: "rich" | "markdown", all: boolean, workspaceName?: string) => {
-      console.log(type);
       if (!workspaceName || !searchTerm.trim()) {
         reset();
         return;

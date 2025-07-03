@@ -2,7 +2,7 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Workspace } from "@/Db/Workspace";
 // ForwardRefEditor.tsx
-import { useRemoteMDXEditorRealm, type MDXEditorMethods, type MDXEditorProps } from "@mdxeditor/editor";
+import { type MDXEditorMethods, type MDXEditorProps } from "@mdxeditor/editor";
 import { Loader } from "lucide-react";
 import dynamic from "next/dynamic";
 import { forwardRef } from "react";
@@ -23,8 +23,8 @@ const InitializedMDXEditor = dynamic(() => import("./InitializedMDXEditor"), {
 export const Editor = forwardRef<MDXEditorMethods, MDXEditorProps & { currentWorkspace: Workspace }>(
   ({ currentWorkspace, ...props }, ref) => {
     // const realm = useRemoteMDXEditorRealm("Editor");
-    const realm = useRemoteMDXEditorRealm("MdxEditorRealm");
-    const plugins = useAllPlugins({ currentWorkspace, realm });
+    // const realm = useRemoteMDXEditorRealm("MdxEditorRealm");
+    const plugins = useAllPlugins({ currentWorkspace });
     return (
       <>
         <InitializedMDXEditor {...props} plugins={plugins} editorRef={ref} />

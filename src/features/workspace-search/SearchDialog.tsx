@@ -1,5 +1,6 @@
 "use client";
 
+import { rangesToSearchParams } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -332,9 +333,12 @@ function SearchFile({
 }
 
 function SearchLine({ match, href, onClick }: { match: SearchResult; href: string; onClick?: () => void }) {
+  const sp = rangesToSearchParams([[match.start, match.end]], {
+    viewMode: "source",
+  });
   return (
     // 1. Use flexbox to align the line number and the text content
-    <Link href={href} onClick={onClick}>
+    <a href={href + "?" + sp} onClick={onClick}>
       <div className="border-b-4 last-of-type:border-none border-background flex items-start p-1 py-1 bg-primary-foreground font-mono text-xs group hover:bg-ring/80 cursor-pointer hover:text-primary-foreground">
         {/* 2. Create a container for the line number and badge */}
         <div className="relative min-w-8 text-right font-bold mr-2">
@@ -355,6 +359,6 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
           {match.endText}
         </div>
       </div>
-    </Link>
+    </a>
   );
 }

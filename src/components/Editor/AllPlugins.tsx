@@ -1,15 +1,15 @@
 import { Workspace } from "@/Db/Workspace";
-import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorHighlightURLRange";
+import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { searchMarkdownPlugin } from "@/components/Editor/markdownSearchPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
+import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { useFileContents } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
   KitchenSinkToolbar,
   SandpackConfig,
-  ViewMode,
   codeBlockPlugin,
   codeMirrorPlugin,
   diffSourcePlugin,
@@ -21,13 +21,11 @@ import {
   listsPlugin,
   markdownShortcutPlugin,
   quotePlugin,
-  realmPlugin,
   remoteRealmPlugin,
   sandpackPlugin,
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
-  viewMode$,
 } from "@mdxeditor/editor";
 import { useMemo } from "react";
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
@@ -85,22 +83,6 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
   ],
 };
 
-const urlParamViewModePlugin = realmPlugin({
-  postInit(realm, params?: { type?: "hash" | "search"; key?: string }) {
-    const windowHref = window.location.href;
-    const urlParams =
-      (params?.type ?? "hash") === "hash"
-        ? new URLSearchParams(new URL(windowHref).hash.slice(1))
-        : new URL(windowHref).searchParams;
-
-    const viewMode = urlParams.get(params?.key ?? "viewMode");
-    if (!viewMode) return;
-    const viewModes: Array<ViewMode> = ["rich-text", "source", "diff"];
-    if (viewMode && typeof viewMode === "string" && viewModes.includes(viewMode)) {
-      realm.pub(viewMode$, viewMode);
-    }
-  },
-});
 export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { contents } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
@@ -122,7 +104,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       linkPlugin(),
       searchPlugin(),
       linkDialogPlugin(),
-      urlParamViewModePlugin(),
+      urlParamViewModePlugin({ type: "search" }),
       workspaceImagesPlugin,
       tablePlugin(),
       thematicBreakPlugin(),
