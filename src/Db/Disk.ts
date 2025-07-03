@@ -625,7 +625,7 @@ export abstract class Disk {
     }
     return fullPath;
   }
-  async newFiles(files: [AbsPath, string | Uint8Array | Blob][]) {
+  async newFiles<T extends string | Uint8Array | Blob>(files: [AbsPath, T | Promise<T>][]): Promise<AbsPath[]> {
     await this.ready;
     const result: AbsPath[] = [];
     // eslint-disable-next-line prefer-const
@@ -634,7 +634,7 @@ export abstract class Disk {
         fullPath = incPath(fullPath);
       }
       result.push(fullPath);
-      await this.writeFileRecursive(fullPath, content);
+      await this.writeFileRecursive(fullPath, await content);
     }
     await this.fileTreeIndex();
     await this.local.emit(DiskEvents.INDEX, {
@@ -645,6 +645,7 @@ export abstract class Disk {
       type: "create",
       details: { filePaths: result },
     });
+    return result;
   }
   async indexAndEmitNewFiles(filePaths: AbsPath[]) {
     await this.fileTreeIndex();
@@ -658,36 +659,29 @@ export abstract class Disk {
     });
   }
 
-  async transferFiles(
+  static async TransferFiles(
     transferNodes: [from: TreeNode, to: AbsPath][],
     fromDisk: Disk,
     toDisk: Disk,
     removeSourceNodes: boolean = false
   ) {
-    const paths = (
-      await Promise.all([
-        ...transferNodes
-          .filter(([node]) => node.isTreeDir())
-          .map(async ([_node, targetPath]) => toDisk.mkdirRecursive(targetPath)),
-        ...transferNodes
-          .filter(([node]) => node.isTreeFile())
-          .map(async ([node, targetPath]) => {
-            try {
-              return toDisk.newFile(
-                joinPath(dirname(targetPath), basename(targetPath)),
-                await fromDisk.readFile(node.path)
-              );
-            } catch (_e) {
-              //TODO: should make a warning toast!
-              console.error(`Failed to transfer file ${fromDisk.guid}${node.path} to ${toDisk.guid}${targetPath}`);
-            }
-          }),
-      ])
-    ).filter(Boolean);
+    const dirs = await Promise.all(
+      transferNodes.filter(([node]) => node.isTreeDir()).map(([_node, targetPath]) => toDisk.mkdirRecursive(targetPath))
+    );
+
+    const paths = await toDisk.newFiles(
+      transferNodes
+        .filter(([node]) => node.isTreeFile())
+        .map(([node, targetPath]) => [
+          joinPath(dirname(targetPath), basename(targetPath)),
+          fromDisk.readFile(node.path),
+        ])
+    );
+
     if (removeSourceNodes) {
       await fromDisk.removeMultipleFiles(transferNodes.map(([node]) => node.path));
     }
-    return paths;
+    return [...dirs, ...paths];
   }
 
   private async copyDirQuiet(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
@@ -753,7 +747,6 @@ export abstract class Disk {
       }
     }
 
-    // if (isFile) {
     await this.mkdirRecursive(absPath(dirname(newFullPath)));
     await this.fs.writeFile(encodePath(newFullPath), oldContent, {
       encoding: "utf8",
