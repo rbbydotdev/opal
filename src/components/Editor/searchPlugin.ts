@@ -252,6 +252,7 @@ export function useEditorSearch() {
   const ranges = useCellValue(editorSearchRanges$);
   const cursor = useCellValue(editorSearchCursor$);
   const search = useCellValue(editorSearchTerm$);
+  const currentRange = ranges[cursor - 1] ?? null;
   const contentEditable = useCellValue(editorSearchScollableContent$);
 
   const rangeCount = ranges.length;
@@ -359,6 +360,7 @@ export function useEditorSearch() {
     setMode,
     setSearch,
     search,
+    currentRange,
     ranges,
     scrollToRangeOrIndex,
     replace,
