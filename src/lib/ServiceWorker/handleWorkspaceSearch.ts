@@ -82,7 +82,7 @@ export async function handleWorkspaceSearch({ workspaceName, searchTerm }: Works
     if (all) {
       const allWorkspaceMetas = await WorkspaceDAO.all();
       workspacesToSearch = await Promise.all(
-        allWorkspaceMetas.map((ws) => SWWStore.tryWorkspace(ws.name).then((w) => w.init()))
+        allWorkspaceMetas.map((ws) => SWWStore.tryWorkspace(ws.name).then((w) => w.initNoListen()))
       );
     } else {
       if (!workspaceName) {

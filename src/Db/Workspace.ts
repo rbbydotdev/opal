@@ -1,4 +1,12 @@
-import { CreateDetails, DeleteDetails, Disk, IndexTrigger, RenameDetails } from "@/Db/Disk";
+import {
+  CreateDetails,
+  DeleteDetails,
+  Disk,
+  DiskEvents,
+  DiskRemoteEventPayload,
+  IndexTrigger,
+  RenameDetails,
+} from "@/Db/Disk";
 import { ImageCache } from "@/Db/ImageCache";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
@@ -379,8 +387,12 @@ export class Workspace {
 
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
-    await this.disk.indexAndEmitNewFiles(results);
+    await this.indexAndEmitNewFiles(results);
     return results;
+  }
+
+  indexAndEmitNewFiles(files: AbsPath[]) {
+    return this.disk.indexAndEmitNewFiles(files);
   }
   async dropImageFile(file: File, targetPath: AbsPath) {
     const fileType = getMimeType(file.name);
@@ -415,8 +427,7 @@ export class Workspace {
     return this.nodeFromPath(path) ?? this.nodeFromPath(absPath("/"))!;
   }
 
-  async init() {
-    await this.disk.init();
+  private async initImageFileListeners() {
     this.renameListener(async (nodes) => {
       await Promise.all(
         nodes.map(({ oldPath, newPath, fileType }) =>
@@ -429,7 +440,15 @@ export class Workspace {
           .map(({ oldPath, newPath }) => [oldPath, newPath])
       );
     });
+  }
+
+  async init({ skipListeners }: { skipListeners?: boolean } = {}) {
+    await this.disk.init({ skipListeners });
+    if (!skipListeners) await this.initImageFileListeners();
     return this;
+  }
+  async initNoListen() {
+    return this.init({ skipListeners: true });
   }
 
   async tearDown() {
@@ -475,6 +494,13 @@ export class Workspace {
     return new WorkspaceScannable(this.disk, { workspaceId: this.id, workspaceName: this.name });
   }
 
+  broadcastRemoteDisk<T extends (typeof DiskEvents)[keyof typeof DiskEvents]>(
+    eventName: T,
+    eventData?: DiskRemoteEventPayload[T]
+  ) {
+    return this.disk.broadcastRemote(eventName, eventData);
+  }
+
   // To get the return type of NewScannable:
 
   //TODO: move to service object with along with search
@@ -513,5 +539,52 @@ export class Workspace {
     //TODO: i dont think i need this
 
     return results;
+  }
+
+  async transferFiles(copyNodes: [from: TreeNode, to: AbsPath][], fromWorkspaceName: string, toWorkspace: Workspace) {
+    const fromWs = await WorkspaceDAO.FetchByName(fromWorkspaceName).then((ws) => ws.toModel().initNoListen());
+    const filePaths = (
+      await Promise.all(
+        copyNodes
+          .filter(([node]) => node.isTreeFile())
+          .map(async ([node, targetPath]) => {
+            try {
+              return toWorkspace.newFile(dirname(targetPath), basename(targetPath), await fromWs.readFile(node.path));
+            } catch (_e) {
+              //TODO: should make a warning toast!
+              console.error(`Failed to transfer file ${fromWs.name}${node.path} to ${toWorkspace.name}${targetPath}`);
+            }
+          })
+      )
+    ).filter(Boolean);
+    await toWorkspace.indexAndEmitNewFiles(filePaths);
+    return filePaths;
+  }
+
+  static async TransferFiles(
+    copyNodes: [from: TreeNode, to: AbsPath][],
+    fromWorkspaceName: string,
+    toWorkspaceName: string
+  ) {
+    const [fromWs, toWs] = await Promise.all([
+      WorkspaceDAO.FetchByName(fromWorkspaceName).then((ws) => ws.toModel().initNoListen()),
+      WorkspaceDAO.FetchByName(toWorkspaceName).then((ws) => ws.toModel().initNoListen()),
+    ]);
+    const filePaths = (
+      await Promise.all(
+        copyNodes
+          .filter(([node]) => node.isTreeFile())
+          .map(async ([node, targetPath]) => {
+            try {
+              return toWs.newFile(dirname(targetPath), basename(targetPath), await fromWs.readFile(node.path));
+            } catch (_e) {
+              //TODO: should make a warning toast!
+              console.error(`Failed to transfer file ${fromWs.name}${node.path} to ${toWs.name}${targetPath}`);
+            }
+          })
+      )
+    ).filter(Boolean);
+    // void toWs.broadcastRemoteDisk(DiskEvents.CREATE, { filePaths });
+    return filePaths;
   }
 }

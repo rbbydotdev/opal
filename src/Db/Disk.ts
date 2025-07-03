@@ -151,13 +151,14 @@ export type IndexTrigger =
 
 export type ListenerCallback<T extends "create" | "rename" | "delete"> = Parameters<Disk[`${T}Listener`]>[0];
 
-export class DiskEventsRemote extends Channel<{
+export type DiskRemoteEventPayload = {
   [DiskEvents.RENAME]: RemoteRenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.WRITE]: FilePathsType;
   [DiskEvents.CREATE]: FilePathsType;
   [DiskEvents.DELETE]: FilePathsType;
-}> {}
+};
+export class DiskEventsRemote extends Channel<DiskRemoteEventPayload> {}
 
 export const SIGNAL_ONLY = undefined;
 export const DiskEvents = {
@@ -168,20 +169,21 @@ export const DiskEvents = {
   DELETE: "delete" as const,
 };
 
-export class DiskEventsLocal extends Emittery<{
+type DiskLocalEventPayload = {
   [DiskEvents.RENAME]: RenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.WRITE]: FilePathsType;
   [DiskEvents.CREATE]: FilePathsType;
   [DiskEvents.DELETE]: FilePathsType;
-}> {}
+};
+export class DiskEventsLocal extends Emittery<DiskLocalEventPayload> {}
 
 // export type DiskScanTextSearchResultType = { path: AbsPath; text: string };
 
 export type DiskScanResult = UnwrapScannable<Disk>;
 export abstract class Disk {
   remote: DiskEventsRemote;
-  local = new DiskEventsLocal();
+  local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
 
@@ -193,7 +195,7 @@ export abstract class Disk {
     public fileTree: FileTree,
     private connector: DiskDAO
   ) {
-    this.remote = new DiskEventsRemote(this.guid);
+    this.remote = new DiskEventsRemote(this.guid); //oops this should probably go in remote
   }
 
   static FromJSON(json: DiskJType): Disk {
@@ -256,16 +258,38 @@ export abstract class Disk {
       console.debug("local disk index event");
     });
   }
-  async init() {
+  async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     await this.ready;
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache); //load first from cache
     void this.hydrateIndexFromDisk(); //load first from cache
-    if (!isServiceWorker() || !isWebWorker()) {
-      return this.setupRemoteListeners();
-    } else {
+    if (isServiceWorker() || isWebWorker() || skipListeners) {
       console.debug("skipping remote listeners in service worker");
+    } else {
+      return this.setupRemoteListeners();
     }
+  }
+
+  broadcastRemote<T extends (typeof DiskEvents)[keyof typeof DiskEvents]>(
+    eventName: T,
+    eventData?: DiskRemoteEventPayload[T],
+    options?: { contextId?: string }
+  ): Promise<void> {
+    return Disk.BroadcastRemote(this.guid, eventName, eventData, options);
+  }
+
+  static BroadcastRemote<T extends (typeof DiskEvents)[keyof typeof DiskEvents]>(
+    diskId: string,
+    eventName: T,
+    eventData?: DiskRemoteEventPayload[T],
+    { contextId }: { contextId?: string } = { contextId: nanoid() }
+  ) {
+    const channel = Channel.GetChannel(diskId) as DiskEventsRemote | undefined;
+    if (!channel) {
+      console.warn("No channel found for diskId:", diskId);
+      return Promise.resolve();
+    }
+    return channel.emit(eventName, eventData, { contextId });
   }
 
   async setupRemoteListeners() {
