@@ -109,9 +109,9 @@ self.addEventListener("fetch", async (event) => {
         //get query param searchTerm
         const searchParams = new URLSearchParams(url.search);
         const searchTerm = searchParams.get("searchTerm");
-        const all = searchParams.get("all") || false;
+        const all = Boolean(searchParams.get("all") || false);
         const [workspaceId, ..._restPath] = segments;
-        if (!workspaceId) {
+        if (all === false && !(workspaceId ?? "".length)) {
           return event.respondWith(
             new Response("Workspace ID is required", { status: 400, statusText: "Workspace ID Required" })
           );

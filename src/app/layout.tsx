@@ -12,6 +12,7 @@ import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/sear
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RequestSignalsInstance } from "@/lib/RequestSignals";
+import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import React, { useEffect } from "react";
 import "./globals.css";
 
@@ -63,14 +64,14 @@ export default function RootLayout({
                 <JotaiProvider>
                   <SidebarProvider>
                     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                      <>
+                      <RemoteMDXEditorRealmProvider>
                         <div className="w-full flex">
                           <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
                             <WorkSpaceButtonBar />
                           </div>
                           <>{children}</>
                         </div>
-                      </>
+                      </RemoteMDXEditorRealmProvider>
                     </ThemeProvider>
                   </SidebarProvider>
                 </JotaiProvider>

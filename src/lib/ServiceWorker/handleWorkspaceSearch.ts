@@ -62,12 +62,6 @@ function createWorkspaceSearchStream({
   });
 }
 
-export function handleWorkspaceSearch(
-  all: true,
-  workspaceName: undefined | null,
-  searchTerm: string
-): Promise<Response>;
-export function handleWorkspaceSearch(all: false, workspaceName: string, searchTerm: string): Promise<Response>;
 export async function handleWorkspaceSearch(
   all: boolean,
   workspaceName: string | undefined | null,

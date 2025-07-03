@@ -1,34 +1,35 @@
 import { Workspace } from "@/Db/Workspace";
-import { createSearchControllerExtension } from "@/components/Editor/CodeMirrorSearchJumpPlugin";
+import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorHighlightURLRange";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { searchMarkdownPlugin } from "@/components/Editor/markdownSearchPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
-import { ErrorPopupControl } from "@/components/ui/error-popup";
-import { useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
-import { BadRequestError, isError } from "@/lib/errors";
-import { dirname } from "@/lib/paths2";
+import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
+import { useFileContents } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
   KitchenSinkToolbar,
   SandpackConfig,
+  ViewMode,
   codeBlockPlugin,
   codeMirrorPlugin,
   diffSourcePlugin,
   directivesPlugin,
   frontmatterPlugin,
   headingsPlugin,
-  imagePlugin,
   linkDialogPlugin,
   linkPlugin,
   listsPlugin,
   markdownShortcutPlugin,
   quotePlugin,
+  realmPlugin,
+  remoteRealmPlugin,
   sandpackPlugin,
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
+  viewMode$,
 } from "@mdxeditor/editor";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
 
 const defaultSnippetContent = `
@@ -84,18 +85,25 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
   ],
 };
 
-const searchController = createSearchControllerExtension();
+const urlParamViewModePlugin = realmPlugin({
+  postInit(realm, params?: { type?: "hash" | "search"; key?: string }) {
+    const windowHref = window.location.href;
+    const urlParams =
+      (params?.type ?? "hash") === "hash"
+        ? new URLSearchParams(new URL(windowHref).hash.slice(1))
+        : new URL(windowHref).searchParams;
 
+    const viewMode = urlParams.get(params?.key ?? "viewMode");
+    if (!viewMode) return;
+    const viewModes: Array<ViewMode> = ["rich-text", "source", "diff"];
+    if (viewMode && typeof viewMode === "string" && viewModes.includes(viewMode)) {
+      realm.pub(viewMode$, viewMode);
+    }
+  },
+});
 export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const [imgs, setImgs] = useState<string[]>([]);
   const { contents } = useFileContents();
-
-  const { path } = useWorkspaceRoute();
-  useEffect(() => {
-    return currentWorkspace.watchDisk(() => {
-      setImgs(currentWorkspace.getImages().map((i) => i));
-    });
-  }, [currentWorkspace]);
+  const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
   return useMemo(
     () => [
@@ -106,6 +114,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
           </>
         ),
       }),
+      remoteRealmPlugin({ editorId: "MdxEditorRealm" }),
       searchMarkdownPlugin(),
       listsPlugin(),
       quotePlugin(),
@@ -113,29 +122,8 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       linkPlugin(),
       searchPlugin(),
       linkDialogPlugin(),
-      imagePlugin({
-        imageAutocompleteSuggestions: imgs,
-        imagePreviewHandler: async (src: string) => {
-          return Promise.resolve(src);
-        },
-        imageUploadHandler: async (file: File) => {
-          try {
-            return currentWorkspace.uploadSingleImage(file, dirname(path ?? "/"));
-          } catch (e) {
-            console.error("image upload handler error");
-            console.error(e);
-            if (isError(e, BadRequestError)) {
-              ErrorPopupControl.show({
-                title: "Not a valid image",
-                description: "Please upload a valid image file (png,gif,webp,jpg)",
-              });
-              return Promise.resolve(file.name ?? "");
-            } else {
-              throw e;
-            }
-          }
-        },
-      }),
+      urlParamViewModePlugin(),
+      workspaceImagesPlugin,
       tablePlugin(),
       thematicBreakPlugin(),
       frontmatterPlugin(),
@@ -145,9 +133,13 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
         codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
       }),
       directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
-      diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: contents, codeMirrorExtensions: [searchController] }),
+      diffSourcePlugin({
+        viewMode: "rich-text",
+        diffMarkdown: contents,
+        codeMirrorExtensions: [CodeMirrorHighlightURLRange()],
+      }),
       markdownShortcutPlugin(),
     ],
-    [contents, currentWorkspace, imgs, path]
+    [contents, workspaceImagesPlugin]
   );
 }
