@@ -541,11 +541,23 @@ export class Workspace {
     return results;
   }
 
-  async transferFiles(copyNodes: [from: TreeNode, to: AbsPath][], fromWorkspaceName: string, toWorkspace: Workspace) {
+  mkdirRecursive(path: AbsPath) {
+    return this.disk.mkdirRecursive(path);
+  }
+
+  async transferFiles(
+    transferNodes: [from: TreeNode, to: AbsPath][],
+    fromWorkspaceName: string,
+    toWorkspace: Workspace
+  ) {
     const fromWs = await WorkspaceDAO.FetchByName(fromWorkspaceName).then((ws) => ws.toModel().initNoListen());
-    const filePaths = (
-      await Promise.all(
-        copyNodes
+
+    const paths = (
+      await Promise.all([
+        ...transferNodes
+          .filter(([node]) => node.isTreeDir())
+          .map(async ([_node, targetPath]) => toWorkspace.mkdirRecursive(targetPath)),
+        ...transferNodes
           .filter(([node]) => node.isTreeFile())
           .map(async ([node, targetPath]) => {
             try {
@@ -554,37 +566,35 @@ export class Workspace {
               //TODO: should make a warning toast!
               console.error(`Failed to transfer file ${fromWs.name}${node.path} to ${toWorkspace.name}${targetPath}`);
             }
-          })
-      )
+          }),
+      ])
     ).filter(Boolean);
-    await toWorkspace.indexAndEmitNewFiles(filePaths);
-    return filePaths;
+    await toWorkspace.indexAndEmitNewFiles(paths);
+    return paths;
   }
 
-  static async TransferFiles(
-    copyNodes: [from: TreeNode, to: AbsPath][],
-    fromWorkspaceName: string,
-    toWorkspaceName: string
-  ) {
-    const [fromWs, toWs] = await Promise.all([
-      WorkspaceDAO.FetchByName(fromWorkspaceName).then((ws) => ws.toModel().initNoListen()),
-      WorkspaceDAO.FetchByName(toWorkspaceName).then((ws) => ws.toModel().initNoListen()),
-    ]);
-    const filePaths = (
-      await Promise.all(
-        copyNodes
-          .filter(([node]) => node.isTreeFile())
-          .map(async ([node, targetPath]) => {
-            try {
-              return toWs.newFile(dirname(targetPath), basename(targetPath), await fromWs.readFile(node.path));
-            } catch (_e) {
-              //TODO: should make a warning toast!
-              console.error(`Failed to transfer file ${fromWs.name}${node.path} to ${toWs.name}${targetPath}`);
-            }
-          })
-      )
-    ).filter(Boolean);
-    // void toWs.broadcastRemoteDisk(DiskEvents.CREATE, { filePaths });
-    return filePaths;
-  }
+  // static async TransferFiles(
+  //   copyNodes: [from: TreeNode, to: AbsPath][],
+  //   fromWorkspaceName: string,
+  //   toWorkspaceName: string
+  // ) {
+  //   const [fromWs, toWs] = await Promise.all([
+  //     WorkspaceDAO.FetchByName(fromWorkspaceName).then((ws) => ws.toModel().initNoListen()),
+  //     WorkspaceDAO.FetchByName(toWorkspaceName).then((ws) => ws.toModel().initNoListen()),
+  //   ]);
+  //   const filePaths = (
+  //     await copyNodes
+  //       .filter(([node]) => node.isTreeFile())
+  //       .map(async ([node, targetPath]) => {
+  //         try {
+  //           return toWs.newFile(dirname(targetPath), basename(targetPath), await fromWs.readFile(node.path));
+  //         } catch (_e) {
+  //           //TODO: should make a warning toast!
+  //           console.error(`Failed to transfer file ${fromWs.name}${node.path} to ${toWs.name}${targetPath}`);
+  //         }
+  //       })
+  //   ).filter(Boolean);
+  //   // void toWs.broadcastRemoteDisk(DiskEvents.CREATE, { filePaths });
+  //   return filePaths;
+  // }
 }

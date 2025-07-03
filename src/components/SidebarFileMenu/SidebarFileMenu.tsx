@@ -383,7 +383,6 @@ export const SidebarFileMenuFiles = ({
                 >
                   <SidebarGroupLabel className="text-center _m-2 _p-4 italic border-dashed border h-full _group-hover:bg-sidebar-accent">
                     <div className="w-full ">
-                      {/* No Files, Click <FilePlus className={"inline"} size={12} /> to get started */}
                       <span className="text-3xs">empty</span>
                     </div>
                   </SidebarGroupLabel>
