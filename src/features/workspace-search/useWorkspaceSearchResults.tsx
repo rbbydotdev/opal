@@ -5,25 +5,25 @@ import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
+
+export type WorkspaceQueryParams = {
+  workspaceName: string;
+  searchTerm: string;
+};
+export type WorkspaceFetchParams = WorkspaceQueryParams & {
+  signal: AbortSignal;
+};
 async function* fetchQuerySearch({
   workspaceName,
-  all,
   searchTerm,
   signal,
-}: {
-  workspaceName: string;
-  all: boolean;
-  searchTerm: string;
-  signal: AbortSignal;
-}): AsyncGenerator<WorkspaceSearchItem, void, unknown> {
-  const url = new URL(joinPath(absPath("workspace-search"), workspaceName), window.location.origin);
+}: WorkspaceFetchParams): AsyncGenerator<WorkspaceSearchItem, void, unknown> {
+  const url = new URL(joinPath(absPath("workspace-search"), workspaceName ?? ""), window.location.origin);
 
   url.searchParams.set("searchTerm", searchTerm);
-  if (all) url.searchParams.set("all", "1");
+  console.debug(`query search url = ${url.toString()}`);
 
   const res = await fetch(url.toString(), { signal });
-  // await new Promise((rs) => setTimeout(rs, 2_000));
-
   if (res.status === 204) {
     return; // No content, successful but empty stream
   }
@@ -84,8 +84,9 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   }, []);
 
   const query = useCallback(
-    async (searchTerm: string, type: "rich" | "markdown", all: boolean, workspaceName?: string) => {
+    async ({ workspaceName, searchTerm }: WorkspaceQueryParams) => {
       if (!workspaceName || !searchTerm.trim()) {
+        //TODO dont trim!
         reset();
         return;
       }
@@ -104,7 +105,6 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
           workspaceName,
           searchTerm,
           signal: controller.signal,
-          all,
         });
 
         for await (const result of searchGenerator) {
@@ -134,16 +134,16 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   );
 
   const submit = useCallback(
-    (searchTerm: string, type: "markdown" | "rich", all: boolean, workspaceName: string) => {
+    ({ searchTerm, workspaceName }: WorkspaceQueryParams) => {
       setCtx((prev) => ({ ...prev, isSearching: true }));
       if (debounceMs === 0) {
-        void query(searchTerm, type, all, workspaceName);
+        void query({ searchTerm, workspaceName });
       } else {
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
         }
         debounceTimerRef.current = setTimeout(() => {
-          void query(searchTerm, type, all, workspaceName);
+          void query({ searchTerm, workspaceName });
         }, debounceMs);
       }
     },

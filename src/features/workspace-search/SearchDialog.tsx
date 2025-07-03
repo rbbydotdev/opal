@@ -1,8 +1,8 @@
 "use client";
 
 import { rangesToSearchParams } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { SelectWorkspaceComplete } from "@/components/SelectWorkspaceComplete";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
 import { useSingleItemExpander } from "@/features/filetree-expander/useSingleItemExpander";
 import { SearchResult } from "@/features/search/SearchResults";
+import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceSearchResults } from "@/features/workspace-search/useWorkspaceSearchResults";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
@@ -26,35 +27,35 @@ const MAX_MATCHES_SHOWN = 5;
 export function WorkspaceSearchDialog({ children }: { children: React.ReactNode }) {
   const [isOpen, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { currentWorkspace } = useWorkspaceContext();
+  const { currentWorkspace, workspaces } = useWorkspaceContext();
   const [isOptionsOpen, setOptionsOpen] = useSingleItemExpander("SearchDialog/options/expand", true);
 
   const [optionsValue, setOptionsValue] = useLocalStorage(
     "SearchDialog/options/values",
     () =>
-      ({ all: true, type: "markdown" } as {
-        all: boolean;
+      ({ workspace: ALL_WS_KEY, type: "markdown" } as {
+        workspace: string;
         type: "markdown" | "rich";
       })
   );
 
+  // const isAllOption = ;
+
   const { isSearching, error, tearDown, hasResults, hideResult, resetSearch, workspaceResults, submit } =
     useWorkspaceSearchResults();
-
-  const { all, type } = optionsValue;
+  const { workspace } = optionsValue;
   const currWorkspaceName = currentWorkspace.name;
-
   const resetComponentState = useCallback(() => {
     setSearchTerm("");
     resetSearch();
   }, [resetSearch]);
 
   const handleInputChange = useCallback(
-    (value: string) => {
-      setSearchTerm(value);
-      submit(value, type, all, currWorkspaceName);
+    (searchTerm: string) => {
+      setSearchTerm(searchTerm);
+      submit({ searchTerm, workspaceName: workspace });
     },
-    [all, currWorkspaceName, submit, type]
+    [submit, workspace]
   );
 
   const handleOpenChange = useCallback(
@@ -118,6 +119,12 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     return null;
   }, [error, handleOpenChange, hasResults, hideResult, isSearching, searchTerm, workspaceResults]);
 
+  const handleWorkspaceChange = (workspaceId: string) => {
+    setOptionsValue((prev) => ({ ...prev, workspace: workspaceId }));
+    resetSearch();
+    submit({ searchTerm, workspaceName: workspaceId });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* ... The rest of your JSX remains the same ... */}
@@ -155,30 +162,19 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
           </div>
           <CollapsibleContent>
             <div className="flex items-center gap-2 mt-4">
-              <Checkbox
-                id="all_workspaces_option"
-                onCheckedChange={(value) => {
-                  const all = Boolean(value);
-                  setOptionsValue((prev) => ({ ...prev, all }));
-                  resetSearch();
-                  submit(searchTerm, type, all, currWorkspaceName);
-                }}
-                className="scale-75"
-                checked={optionsValue.all}
+              <SelectWorkspaceComplete
+                initialValue={optionsValue.workspace}
+                defaultValue={ALL_WS_KEY}
+                workspaces={workspaces}
+                onChange={handleWorkspaceChange}
               />
-              <Label
-                className="text-2xs font-mono text-primary flex items-center gap-1"
-                htmlFor="all_workspaces_option"
-              >
-                <span>all workspaces</span>
-              </Label>
               <RadioGroup
-                className="flex items-center gap-2 ml-4"
+                className="_flex items-center gap-2 ml-4 hidden TODO-SOMEDAY"
                 defaultValue={optionsValue.type}
                 onValueChange={(type: "markdown" | "rich") => {
                   setOptionsValue((prev) => ({ ...prev, type }));
                   resetSearch();
-                  submit(searchTerm, type, all, currWorkspaceName);
+                  submit({ searchTerm, workspaceName: currWorkspaceName });
                 }}
               >
                 <RadioGroupItem id="markdown_option" value="markdown" className="scale-75" />
@@ -216,17 +212,23 @@ function SearchResults({
   }
   return (
     <div>
-      <div className="text-md bold underline mb-1 w-full justify-start gap-2 items-center flex">
-        <WorkspaceIcon
-          variant="round"
-          size={3}
-          scale={4}
-          input={workspaceId}
-          className="border border-primary-foreground"
-        />
-        <Link onClick={onNavigate} href={joinPath(WorkspaceDAO.rootRoute, workspaceName)} className="font-mono">
-          {workspaceName}
-        </Link>
+      <div className="text-md bold underline mb-1 w-full justify-start items-center flex">
+        <div className="flex items-center justify-start gap-2 mb-1">
+          <WorkspaceIcon
+            variant="round"
+            size={3}
+            scale={4}
+            input={workspaceId}
+            className="border border-primary-foreground "
+          />
+          <Link
+            onClick={onNavigate}
+            href={joinPath(WorkspaceDAO.rootRoute, workspaceName)}
+            className="font-mono uppercase text-xs "
+          >
+            {workspaceName}
+          </Link>
+        </div>
       </div>
       <ul className="block">
         {results.map((result) => (
@@ -317,8 +319,12 @@ function SearchFile({
                 buttonRef.current?.blur();
               }
             }}
-            onBlur={() => {
-              if (expanded) setExpanded(false);
+            onBlur={(e) => {
+              const target = e.relatedTarget as Node | null;
+              // console.log(target.closest("a"));
+              if (expanded && !(target as HTMLElement)?.closest("a")) {
+                setExpanded(false);
+              }
             }}
             ref={buttonRef}
           >

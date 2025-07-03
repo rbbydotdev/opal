@@ -295,21 +295,20 @@ export class Workspace {
     return await this.renameMultiple(trashedNodes);
   }
 
-  async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]) {
-    //reduceLineage probably
-    //adjust thumbs first so rename index trigger allows for them to easily display
-    await Promise.all(
-      nodes.map(([oldNode, newNode]) =>
-        this.adjustThumbAndCachePath(oldNode, absPath(String(newNode).replace(oldNode.path, String(newNode))))
-      )
-    );
-    const result = await this.disk.renameMultiple(nodes);
-    await this.disk.findReplaceImgBatch(
-      result
-        .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
-        .map(({ oldPath, newPath }) => [oldPath, newPath])
-    );
-    return result;
+  renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]) {
+    //
+    //TODO: I REMOVED THIS IDK --> adjust thumbs first so rename index trigger allows for them to easily display
+    // await Promise.all(
+    //   nodes.map(([oldNode, newNode]) =>
+    //     this.adjustThumbAndCachePath(oldNode, absPath(String(newNode).replace(oldNode.path, String(newNode))))
+    //   )
+    // );
+    return this.disk.renameMultiple(nodes);
+    // ALSO REMOVED, now done in listener ---> await this.disk.findReplaceImgBatch(
+    //   result
+    //     .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
+    //     .map(({ oldPath, newPath }) => [oldPath, newPath])
+    // );
   }
 
   //this is dumb because you do not consider the children!
@@ -418,6 +417,18 @@ export class Workspace {
 
   async init() {
     await this.disk.init();
+    this.renameListener(async (nodes) => {
+      await Promise.all(
+        nodes.map(({ oldPath, newPath, fileType }) =>
+          this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath.replace(oldPath, newPath)))
+        )
+      );
+      await this.disk.findReplaceImgBatch(
+        nodes
+          .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
+          .map(({ oldPath, newPath }) => [oldPath, newPath])
+      );
+    });
     return this;
   }
 

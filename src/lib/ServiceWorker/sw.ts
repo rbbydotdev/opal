@@ -106,14 +106,16 @@ self.addEventListener("fetch", async (event) => {
       }
       if (url.pathname.startsWith("/workspace-search")) {
         const segments = url.pathname.replace("/workspace-search", "").split("/").filter(Boolean);
-        //get query param searchTerm
+        const workspaceName = decodeURI(segments[0] ?? "");
         const searchParams = new URLSearchParams(url.search);
         const searchTerm = searchParams.get("searchTerm");
-        const all = Boolean(searchParams.get("all") || false);
-        const [workspaceId, ..._restPath] = segments;
-        if (all === false && !(workspaceId ?? "".length)) {
+
+        if (!workspaceName) {
           return event.respondWith(
-            new Response("Workspace ID is required", { status: 400, statusText: "Workspace ID Required" })
+            new Response("/<workspaceName> path param is required", {
+              status: 400,
+              statusText: "/<workspaceName> path param is required",
+            })
           );
         }
         if (typeof searchTerm === "undefined" || searchTerm === null) {
@@ -124,10 +126,12 @@ self.addEventListener("fetch", async (event) => {
         console.log(`Intercepted SEARCH request for: 
           url.pathname: ${url.pathname}
           href: ${url.href}
-          workspaceId: ${workspaceId}
+          workspaceName: ${workspaceName}
           searchTerm: ${searchTerm}
         `);
-        return event.respondWith(withRequestSignal(handleWorkspaceSearch)(all, workspaceId, searchTerm));
+        return event.respondWith(
+          withRequestSignal(handleWorkspaceSearch)({ workspaceName: workspaceName, searchTerm })
+        );
       }
       if (url.pathname === "/download-encrypted.zip") {
         console.log(`Fetch event for: ${event.request.url}, referrer: ${event.request.referrer}`);
