@@ -19,6 +19,10 @@ export default function Page() {
     }
   }, [currentWorkspace, filePath, router]);
   if (!filePath) return null;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // useEffect(() => {
+  //   document.querySelector("head");
+  // }, []);
   return (
     <>
       <SpotlightSearch currentWorkspace={currentWorkspace} />

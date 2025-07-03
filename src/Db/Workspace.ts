@@ -375,12 +375,12 @@ export class Workspace {
   }
 
   async uploadSingleImage(file: File, targetDir: AbsPath) {
-    return (await Workspace.UploadMultipleImages([file], targetDir))[0]!;
+    return (await this.uploadMultipleImages([file], targetDir))[0]!;
   }
 
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
-    await this.disk.hydrateIndexFromDisk();
+    await this.disk.indexAndEmitNewFiles(results);
     return results;
   }
   async dropImageFile(file: File, targetPath: AbsPath) {
@@ -499,7 +499,8 @@ export class Workspace {
     await Promise.all(workers);
     //TODO: leaking concerns
     // await this.disk.hydrateIndexFromDisk();
-    //TODO: i dont think i need this await this.disk.indexAndEmitNewFiles(results);
+    //TODO: i dont think i need this
+
     return results;
   }
 }

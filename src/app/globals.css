@@ -60,8 +60,8 @@ body {
     --search-header-bg: 240 4% 18%; /* #2d2d30 */
     --search-row-hover: 240 6% 22%; /* #37373d */
     --search-match-hover: 168 4% 17%; /* #2a2d2e */
-    --search-highlight-bg: 35 100% 19%; /* #613a00 */
-    --search-highlight-fg: 48 100% 50%; /* #ffcc02 */
+    --search-highlight-fg: 35 100% 19%; /* #613a00 */
+    --search-highlight-bg: 48 100% 50%; /* #ffcc02 */
     --search-muted: 220 5% 70%; /* #d1d5db (gray-300) */
     --search-muted-2: 220 5% 50%; /* #6b7280 (gray-500) */
     /* --search-icon: 217 91% 60%; /* #60a5fa (blue-400) */
@@ -145,8 +145,12 @@ body {
 .mdxeditor {
   overflow: scroll;
   max-height: 100%;
-  .mark {
-    background-color: var(--search-highlight-bg) !important;
+}
+
+.mdxeditor .cm-highlight-range {
+  background-color: hsl(var(--search-highlight-bg)) !important;
+  & > * {
+    color: hsl(var(--search-highlight-fg)) !important;
   }
 }
 

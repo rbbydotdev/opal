@@ -351,7 +351,7 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
         {/* 5. The text content is in its own div to handle truncation */}
         <div className="truncate whitespace-nowrap ml-2">
           {match.startText}
-          <span className="bg-highlight">{match.middleText}</span>
+          <span className="bg-search-highlight-bg text-search-highlight-fg">{match.middleText}</span>
           {match.endText}
         </div>
       </div>
