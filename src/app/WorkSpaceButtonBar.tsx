@@ -5,7 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 // import { SearchModal } from "@/components/ui/search-modal";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
-import { WorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
@@ -15,7 +15,7 @@ import clsx from "clsx";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { use, useMemo } from "react";
+import { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 function BigButton({
@@ -59,7 +59,7 @@ function BigButton({
 }
 
 export function WorkSpaceButtonBar() {
-  const { currentWorkspace, workspaces } = use(WorkspaceContext);
+  const { currentWorkspace, workspaces } = useWorkspaceContext();
 
   const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
 

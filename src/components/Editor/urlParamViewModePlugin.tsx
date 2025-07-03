@@ -6,7 +6,7 @@ export const viewModeHash = (vm: ViewMode) => `#viewMode="${vm}"`;
 export const HashListener = () => {
   useEffect(() => {
     const onHashChange = () => {
-      const viewMode = doViewMode("hash", "viewMode");
+      const viewMode = handleUrlParamViewMode("hash", "viewMode");
       if (viewMode) {
         console.log({ viewMode });
         // window.location.hash = "";
@@ -19,7 +19,7 @@ export const HashListener = () => {
   }, []);
   return null;
 };
-function doViewMode(type = "hash", key = "viewMode") {
+function handleUrlParamViewMode(type = "hash", key = "viewMode") {
   const windowHref = window.location.href;
   const urlParams =
     type === "hash" ? new URLSearchParams(new URL(windowHref).hash.slice(1)) : new URL(windowHref).searchParams;
@@ -38,8 +38,7 @@ function doViewMode(type = "hash", key = "viewMode") {
 }
 export const urlParamViewModePlugin = realmPlugin({
   postInit(realm, params?: { type?: "hash" | "search"; key?: string }) {
-    const viewMode = doViewMode(params?.type, params?.key);
-    console.log(viewMode);
+    const viewMode = handleUrlParamViewMode(params?.type, params?.key);
     if (viewMode) {
       realm.pub(viewMode$, viewMode);
       if (realm.getValue(viewMode$) === viewMode) {

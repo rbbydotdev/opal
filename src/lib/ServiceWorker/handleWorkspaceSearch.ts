@@ -1,21 +1,13 @@
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { wrapGeneratorWithSignal } from "@/lib/ServiceWorker/wrapGeneratorWithSignal";
+import { WorkspaceQueryParams } from "../../features/workspace-search/useWorkspaceSearchResults";
 import { SWWStore } from "./SWWStore";
 
 const activeSearches = new Map<string, AbortController>();
 
-/**
- * Creates a ReadableStream that merges search results from multiple workspaces.
- * @param workspaces - An array of initialized workspaces to search within.
- * @param searchTerm - The term to search for.
- * @param signal - The AbortSignal to cancel the search generators.
- * @param searchController - The main AbortController for the operation.
- * @param searchKey - The key for the activeSearches map for cleanup.
- * @param includeWorkspaceNameInResult - If true, adds a `workspace` property to each result.
- * @returns A ReadableStream of NDJSON search results.
- */
 function createWorkspaceSearchStream({
   workspaces,
   searchTerm,
@@ -62,14 +54,11 @@ function createWorkspaceSearchStream({
   });
 }
 
-export async function handleWorkspaceSearch(
-  all: boolean,
-  workspaceName: string | undefined | null,
-  searchTerm: string
-): Promise<Response> {
+export async function handleWorkspaceSearch({ workspaceName, searchTerm }: WorkspaceQueryParams): Promise<Response> {
   // 1. Cancel previous searches.
   const searchController = new AbortController();
-  const searchKey = all ? "( ͡° ͜ʖ ͡°) ALL!" : workspaceName!;
+  const searchKey = workspaceName; //all ? ALL_WS_KEY : workspaceName!;
+  const all = workspaceName === ALL_WS_KEY;
 
   if (activeSearches.has(searchKey)) {
     activeSearches.get(searchKey)?.abort("A new search was started.");
@@ -99,8 +88,7 @@ export async function handleWorkspaceSearch(
       if (!workspaceName) {
         throw new NotFoundError(`Workspace name must be provided when all=false`);
       }
-      const workspace = await SWWStore.tryWorkspace(workspaceName);
-      await workspace.init();
+      const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.init());
       workspacesToSearch = [workspace]; // Wrap the single workspace in an array.
     }
 

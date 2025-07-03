@@ -7,7 +7,7 @@ export const createThumbnailWW = (
 ): Promise<Uint8Array> => {
   return new Promise((resolve, reject) => {
     // Create a Blob from the Uint8Array
-    const blob = new Blob([imageData], { type: "image/jpeg" }); // Adjust the MIME type as needed
+    const blob = new Blob([imageData as BlobPart], { type: "image" }); // Adjust the MIME type as needed
     // Use createImageBitmap to load the image
     createImageBitmap(blob)
       .then((imgBitmap) => {
@@ -39,7 +39,7 @@ export const createThumbnailWW = (
         ctx.drawImage(imgBitmap, 0, 0, width, height);
 
         canvas
-          .convertToBlob({ type: "image/jpeg", quality: 0.7 })
+          .convertToBlob({ type: "image/webp", quality: 0.7 })
           .then((blob) => {
             const reader = new FileReader();
             reader.onload = () => {
