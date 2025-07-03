@@ -2,6 +2,7 @@
 import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { Workspace } from "@/Db/Workspace";
+import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { TreeNodeDataTransferJType } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { useHandleDropFilesForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
@@ -15,14 +16,25 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
 
   return useCallback(
     async function handlePaste({ targetNode, data }: { targetNode: TreeNode; data: MetaDataTransfer }) {
-      const { action, fileNodes } = data.getDataAsJson<TreeNodeDataTransferJType>(INTERNAL_NODE_FILE_TYPE);
+      const {
+        action,
+        fileNodes,
+        workspaceId: sourceWorkspaceId,
+      } = data.getDataAsJson<TreeNodeDataTransferJType>(INTERNAL_NODE_FILE_TYPE);
+      const sourceWorkspace =
+        currentWorkspace.name === sourceWorkspaceId
+          ? currentWorkspace
+          : await WorkspaceDAO.FetchByName(
+              sourceWorkspaceId ?? currentWorkspace.name /* todo should not be undefined but here we are */
+            ).then((ws) => ws.toModel().init());
+
       if (action && fileNodes) {
         try {
-          const copyNodes = fileNodes
+          const copyNodes: [from: TreeNode, to: AbsPath][] = fileNodes
             .map(
               (path) =>
                 [
-                  currentWorkspace.nodeFromPath(path)!, // from
+                  sourceWorkspace.nodeFromPath(path)!, // from
                   joinPath(targetNode.closestDirPath(), basename(path)), // to
                 ] as const
             )
@@ -30,8 +42,15 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
 
           if (copyNodes.length === 0) return;
 
-          // TODO: rename images in markdown && expand menu for item
-          await currentWorkspace.copyMultipleFiles(copyNodes);
+          if (sourceWorkspaceId && currentWorkspace.name !== sourceWorkspaceId) {
+            //Transfer Across Workspace
+            console.debug(`transfering files across workspaces ${sourceWorkspace} to ${currentWorkspace.name}`);
+            //can make this just do a plain copy when workids are the same
+            await currentWorkspace.transferFiles(copyNodes, sourceWorkspaceId, currentWorkspace);
+          } else {
+            // TODO: rename images in markdown && expand menu for item
+            await currentWorkspace.copyMultipleFiles(copyNodes);
+          }
 
           if (action === "cut") {
             await currentWorkspace.removeMultiple(copyNodes.map(([from]) => from));

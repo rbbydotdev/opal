@@ -1,11 +1,15 @@
 import Emittery, { type Options } from "emittery";
 import { nanoid } from "nanoid";
 
-const ChannelSet = new Map<string, () => void>();
+const ChannelSet = new Map<string, Channel>();
 
 export class Channel<EventData = Record<string, unknown>> extends Emittery<EventData> {
   private channel: BroadcastChannel | null = null;
   private contextId: string = nanoid();
+
+  static GetChannel(channelName: string): Channel | undefined {
+    return ChannelSet.get(channelName);
+  }
 
   constructor(public readonly channelName: string, options?: Options<EventData>) {
     super(options);
@@ -15,14 +19,14 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
     if (ChannelSet.has(this.channelName)) {
       console.warn("Channel already exists:" + this.channelName + " ... removing");
       try {
-        const close = ChannelSet.get(this.channelName);
-        if (close) close();
+        const ch = ChannelSet.get(this.channelName);
+        if (ch) ch.tearDown();
       } catch (e) {
         console.error("Error during channel tearDown:", e);
       }
       ChannelSet.delete(this.channelName);
     }
-    ChannelSet.set(this.channelName, this.tearDown);
+    ChannelSet.set(this.channelName, this as Channel);
     return this.createChannel();
   }
 

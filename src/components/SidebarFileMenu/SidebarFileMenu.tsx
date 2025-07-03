@@ -64,6 +64,7 @@ import {
   ChromeIcon as Google,
   Info,
   List,
+  ListXIcon,
   Lock,
   Plus,
   RefreshCw,
@@ -118,6 +119,16 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
           >
             <List />
             Show All
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            className="text-xs flex justify-start"
+            onClick={() => {
+              setDnds([]);
+            }}
+          >
+            <ListXIcon />
+            Hide All
           </DropdownMenuItem>
         </DropdownMenuContent>
         <SidebarGroupLabel className=" h-6">

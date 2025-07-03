@@ -24,21 +24,13 @@ export const INTERNAL_NODE_FILE_TYPE = "web application/opal+json";
 export type NodeDataJType = { nodes: TreeFileJType[] };
 export type NodeDataType = { nodes: TreeNode[] };
 
-// // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// function isNodeDataJType(data: any): data is NodeDataJType {
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//   return data && Array.isArray(data.nodes) && data.nodes.every((node: any) => node.path);
-// }
-
 export async function handleFileTreeNodePaste(
   currentWorkspace: Workspace,
   items: ClipboardItems,
   targetNode: TreeNode
 ) {
   for (const item of items) {
-    // if (item.types.includes("text/plain")) {
     if (item.types.includes(INTERNAL_NODE_FILE_TYPE)) {
-      // const clipboardText = String(await item.getType("text/plain").then((blob) => blob.text()));
       const clipboardText = String(await item.getType(INTERNAL_NODE_FILE_TYPE).then((blob) => blob.text()));
 
       const payload = tryParseCopyNodesPayload(clipboardText);
