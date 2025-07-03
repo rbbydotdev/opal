@@ -9,12 +9,21 @@ export const MdxSearchToolbar = () => {
   const { isSearchOpen, closeSearch } = useEditorSearchTool();
   const realm = useRealm();
   const editorRootEl = realm.getValue(editorRootElementRef$);
-  const { prev, next, cursor, setSearch, ranges, replace, replaceAll, setMode } = useEditorSearch();
+  const { prev, next, cursor, currentRange, setSearch, ranges, replace, replaceAll, setMode } = useEditorSearch();
 
   const handleSearchClose = useCallback(() => {
+    const caretRange = currentRange?.cloneRange();
+
     closeSearch();
-    editorRootEl?.current.focus();
-  }, [closeSearch, editorRootEl]);
+    if (caretRange) {
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      caretRange.collapse(true);
+      selection?.addRange(caretRange);
+    } else {
+      editorRootEl?.current.focus();
+    }
+  }, [closeSearch, currentRange, editorRootEl]);
 
   const handleSearchChange = useCallback(
     (searchTerm: string | null) => {

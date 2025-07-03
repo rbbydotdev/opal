@@ -135,6 +135,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
           e.preventDefault();
           setActiveIndex(itemsLength - 1);
           break;
+        case " ":
         case "Enter":
           if (activeIndex === -1) return;
           e.preventDefault();

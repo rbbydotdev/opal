@@ -57,8 +57,7 @@ export function EditorSearchBar({
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const selectSearchText = useCallback(() => {
     if (searchInputRef.current && isOpen) {
-      searchInputRef.current.focus();
-      searchInputRef.current.setSelectionRange(0, searchInputRef.current.value.length);
+      searchInputRef.current.select();
     }
   }, [isOpen]);
   useEffect(() => {
