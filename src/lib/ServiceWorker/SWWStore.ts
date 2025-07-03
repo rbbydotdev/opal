@@ -10,7 +10,7 @@ export const SWWStore = new (class SwWorkspace {
 
   async tryWorkspace(workspaceName: string): Promise<Workspace> {
     if (!this.workspaces.has(workspaceName)) {
-      const ws = WorkspaceDAO.FetchByName(workspaceName).then((wsd) => wsd.toModel());
+      const ws = WorkspaceDAO.FetchByName(workspaceName).then((wsd) => wsd.toModel().initNoListen());
       this.workspaces.set(workspaceName, ws);
       setTimeout(() => {
         this.workspaces.delete(workspaceName);
