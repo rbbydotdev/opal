@@ -1,7 +1,8 @@
 import { EditorSelection, Extension } from "@codemirror/state";
 import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { checkSum } from "../../lib/checkSum";
 
-const codeMirrorSelectURLRangePlugin = (hlRanges: [number, number][] | null) =>
+const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, chsum?: number][] | null) =>
   ViewPlugin.fromClass(
     class {
       private view: EditorView;
@@ -11,26 +12,21 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [number, number][] | null) =>
         this.view = view;
       }
 
-      private handleSelectRanges = (ranges: [number, number][]) => {
+      private handleSelectRanges = (ranges: [start: number, end: number, chsum?: number][]) => {
         if (!ranges.length) return;
         const docLength = this.view.state.doc.length;
-        if (docLength && false) {
-          console.log(
-            "CODEMIRROR:\n\n\n\n",
-            this.view.state.doc
-              .toString()
-              .replace(/[\t\n\r\v\f\s]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"))
-          );
-        }
+        if (!docLength) return;
 
-        // console.log(
-        //   "CODEMIRROR_LEN:",
-        //   this.view.state.doc
-        //     .toString()
-        //     .replace(/[\t\n\r\v\f\s]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")).length
-        // );
         const selections = ranges
-          .map(([start, end]) => {
+          .map(([start, end, chsumStr]) => {
+            if (chsumStr && chsumStr !== checkSum(this.view.state.doc.slice(start, end).toString())) {
+              console.warn(
+                `chsum mismatch for highlight range [${start}, ${end}] got: ${chsumStr}, expected: ${checkSum(
+                  this.view.state.doc.slice(start, end).toString()
+                )}`
+              );
+              return null;
+            }
             // Clamp to valid range
             const s = Math.max(0, Math.min(start, docLength));
             const e = Math.max(0, Math.min(end, docLength));
@@ -39,11 +35,6 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [number, number][] | null) =>
           })
           .filter(Boolean);
         if (selections.length) {
-          // console.log(
-          //   "selected text",
-          //   `--->${this.view.state.doc.toString().slice(selections[0]!.from, selections[0]!.to)}<---`
-          // );
-          // console.log("selected text from:", selections[0]!.from, "selected text to:", selections[0]!.to);
           this.view.dispatch({
             selection: EditorSelection.create(selections),
             scrollIntoView: true,
@@ -71,8 +62,10 @@ export function CodeMirrorHighlightURLRange(): Extension {
 }
 
 const RANGE_KEY = "hlRanges";
-
-export function rangesToSearchParams(ranges: [number, number][], meta?: Record<string, unknown>): string {
+export function rangesToSearchParams(
+  ranges: [start: number, end: number, chsum?: string][],
+  meta?: Record<string, unknown>
+): string {
   const params = new URLSearchParams();
   params.set(RANGE_KEY, JSON.stringify(ranges));
   if (meta) {
@@ -83,18 +76,21 @@ export function rangesToSearchParams(ranges: [number, number][], meta?: Record<s
   return params.toString();
 }
 
-function getRangesFromURL(windowHref: string, type: "hash" | "search" = "hash"): [start: number, end: number][] | null {
+function getRangesFromURL(
+  windowHref: string,
+  type: "hash" | "search" = "hash"
+): [start: number, end: number, chsum?: number][] | null {
   const params =
     type === "hash" ? new URLSearchParams(new URL(windowHref).hash.slice(1)) : new URL(windowHref).searchParams;
-  let ranges: Array<[string, string]> | null = null;
+  let ranges: Array<[startStr: string, endStr: string, chsum?: number]> | null = null;
   try {
     const parsed = JSON.parse(params.get(RANGE_KEY) ?? "");
     if (Array.isArray(parsed)) {
-      ranges = parsed as Array<[string, string]>;
-      return ranges.map(([s, e]) => [parseInt(s), parseInt(e)]);
+      ranges = parsed as Array<[startStr: string, endStr: string, chsum?: number]>;
+      return ranges.map(([s, e, c]) => [parseInt(s), parseInt(e), c]);
     }
   } catch (_e) {
-    // console.log(params);
+    console.warn(`Invalid range format in URL ${windowHref}`);
   }
   return null;
 }

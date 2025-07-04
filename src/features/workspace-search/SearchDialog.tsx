@@ -129,17 +129,6 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     submit({ searchTerm, workspaceName: workspaceId });
   };
 
-  // const savedInitialValue = useMemo(
-  //   () => (workspaces.some((ws) => ws.name === optionsValue.workspace) ? optionsValue.workspace : ALL_WS_KEY),
-  //   [optionsValue.workspace, workspaces]
-  // );
-
-  // console.log(
-  //   savedInitialValue,
-  //   optionsValue.workspace,
-  //   workspaces.map((ws) => ws.name)
-  // );
-
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* ... The rest of your JSX remains the same ... */}
@@ -353,7 +342,7 @@ function SearchFile({
 }
 
 function SearchLine({ match, href, onClick }: { match: SearchResult; href: string; onClick?: () => void }) {
-  const sp = rangesToSearchParams([[match.start, match.end]], {
+  const sp = rangesToSearchParams([[match.start, match.end, match.chsum]], {
     viewMode: "source",
   });
   return (

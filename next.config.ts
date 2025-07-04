@@ -5,14 +5,6 @@ const config = {
   compiler: {
     removeConsole: false,
   },
-  // webpack: (config, { isServer }) => {
-  //   if (!isServer) {
-  //     config.resolve.alias["decode-named-character-reference"] = require.resolve(
-  //       "decode-named-character-reference/index.js"
-  //     );
-  //   }
-  //   return config;
-  // },
   reactStrictMode: false,
   typescript: {
     // !! WARN !!

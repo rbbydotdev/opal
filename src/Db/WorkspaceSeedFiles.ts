@@ -1,13 +1,10 @@
-import { prettifyMarkdownAsync } from "@/lib/prettifyMarkdown";
-
-export const WorkspaceSeedFiles: Record<string, string | Promise<string>> = Object.fromEntries(
-  Object.entries({
-    // ...Object.fromEntries(new Array(100).fill(0).map((_, x) => [`/file-${x}.md`, ` needle ${x}`.repeat(1000)])),
-    "/welcome.md": "# Welcome to your new workspace!",
-    "/home/drafts/post1.md": "# Hello World!",
-    "/drafts/draft1.md": "# Goodbye World!",
-    "/ideas/ideas.md": "# Foobar bizz bazz",
-    "/lorems-ipsum.md": `
+export const WorkspaceSeedFiles: Record<string, string | Promise<string>> = {
+  // ...Object.fromEntries(new Array(100).fill(0).map((_, x) => [`/file-${x}.md`, ` needle ${x}`.repeat(1000)])),
+  "/welcome.md": "# Welcome to your new workspace!",
+  "/home/drafts/post1.md": "# Hello World!",
+  "/drafts/draft1.md": "# Goodbye World!",
+  "/ideas/ideas.md": "# Foobar bizz bazz",
+  "/lorems-ipsum.md": `
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque cursus augue enim, eu vulputate dolor lacinia at. Sed viverra sem non ultricies congue. Sed quis purus a purus convallis maximus a vitae ex. Suspendisse aliquet sagittis nulla at faucibus. Maecenas tincidunt quam at placerat scelerisque. Proin sollicitudin interdum arcu eget tempus. Proin mattis laoreet pellentesque. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris interdum ante eu massa blandit, ut auctor mi consequat. Aenean id nunc nec nunc dapibus pretium. Nunc gravida efficitur nulla, sit amet aliquam lacus posuere nec. Nam varius mi a congue pellentesque. Suspendisse mattis consequat interdum. Praesent porttitor sapien id sem fermentum sollicitudin. Proin finibus magna nibh, ut vulputate lorem condimentum sit amet. Aenean convallis mauris felis, sed pharetra augue luctus scelerisque.
 
@@ -17,5 +14,4 @@ In mattis arcu id congue mattis. Curabitur ligula magna, fringilla sed fermentum
 
     
     `,
-  }).map(([fileName, content]) => [fileName, prettifyMarkdownAsync(content)])
-);
+};

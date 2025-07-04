@@ -1,4 +1,6 @@
 import { type SearchResultData } from "@/features/search/SearchResults";
+import { prettifyMarkdownSync } from "@/lib/prettifyMarkdown";
+import { checkSum } from "../../lib/checkSum";
 
 export interface Scannable<T> {
   scan(): AsyncGenerator<T>;
@@ -62,9 +64,7 @@ export class SearchTextScannable<MetaExtType extends object, Scanner extends Sca
   }> {
     for await (const item of this.scanner.scan()) {
       const { text, ...rest } = item;
-      // const haystack = normalizeForEditorNewlineFormat(text.normalize("NFKD"));
-      // const haystack = prettifyMarkdown(text.normalize("NFKD"));
-      const haystack = text.normalize("NFKD");
+      const haystack = prettifyMarkdownSync(text.normalize("NFKD"));
 
       if (!haystack) continue;
 
@@ -99,6 +99,7 @@ export class SearchTextScannable<MetaExtType extends object, Scanner extends Sca
         const relEnd = Math.min(matchEndIndex, startLineInfo.lineEnd) - startLineInfo.lineStart;
 
         results.push({
+          chsum: checkSum(haystack.slice(matchStartIndex, matchEndIndex)),
           lineNumber: startLineInfo.lineNumber,
           lineStart: startLineInfo.lineStart,
           lineEnd: startLineInfo.lineEnd,

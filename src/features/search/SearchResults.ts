@@ -1,6 +1,7 @@
 import React, { JSX } from "react";
 
 export interface SearchResultData {
+  chsum: number;
   lineNumber: number;
   lineStart: number;
   lineEnd: number;
@@ -28,7 +29,8 @@ export class SearchResult {
     public relStart: number,
     public relEnd: number,
     public linesSpanned: number,
-    public maxWidth: number = 90 // Default max width for display
+    public maxWidth: number = 90, // Default max width for display
+    public chsum: number = 0 // chsum hash of the match text
   ) {
     // The goal of this constructor is to create a "windowed" view of the line
     // containing the search result. It splits the line into three parts:
@@ -106,7 +108,9 @@ export class SearchResult {
       data.lineText,
       data.relStart,
       data.relEnd,
-      data.linesSpanned
+      data.linesSpanned,
+      90, // default maxWidth
+      data.chsum
     );
   }
   static New(
@@ -118,9 +122,23 @@ export class SearchResult {
     lineText: string,
     relStart: number,
     relEnd: number,
-    width: number = 90
+    linesSpanned: number,
+    width: number = 90,
+    chsum: number = 0
   ): SearchResult {
-    return new SearchResult(lineNumber, lineStart, lineEnd, start, end, lineText, relStart, relEnd, width);
+    return new SearchResult(
+      lineNumber,
+      lineStart,
+      lineEnd,
+      start,
+      end,
+      lineText,
+      relStart,
+      relEnd,
+      linesSpanned,
+      width,
+      chsum
+    );
   }
 
   // Highlight the match in the lineText

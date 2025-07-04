@@ -9,7 +9,8 @@
     "dev:tsc": "tsc --noEmit",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "patch-package"
   },
   "overrides": {
     "dexie": "^4.0.10",
@@ -83,6 +84,8 @@
     "next": "^15.1.4",
     "next-themes": "^0.4.4",
     "next-view-transitions": "^0.3.4",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "react": "^19.1.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "^19.1.0",
