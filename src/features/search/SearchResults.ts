@@ -1,13 +1,5 @@
 import React, { JSX } from "react";
 
-// export type DiskSearchResultData = {
-//   meta: {
-//     filePath: string;
-//     workspaceId: string;
-//     workspaceName: string;
-//   };
-//   matches: SearchResultData[];
-// };
 export interface SearchResultData {
   lineNumber: number;
   lineStart: number;

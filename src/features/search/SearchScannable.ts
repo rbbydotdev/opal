@@ -1,4 +1,5 @@
 import { type SearchResultData } from "@/features/search/SearchResults";
+import { normalizeForEditorNewlineFormat } from "../../lib/normalizeForEditorNewlineFormat";
 
 export interface Scannable<T> {
   scan(): AsyncGenerator<T>;
@@ -62,7 +63,8 @@ export class SearchTextScannable<MetaExtType extends object, Scanner extends Sca
   }> {
     for await (const item of this.scanner.scan()) {
       const { text, ...rest } = item;
-      const haystack = text.normalize("NFKD").replace(/\n{3,}/g, "\n\n"); //NOTE: mdx editor replaces multiple newlines with two
+      const haystack = normalizeForEditorNewlineFormat(text.normalize("NFKD"));
+
       if (!haystack) continue;
 
       const lineBreaks = this.computeLineBreaks(haystack);
