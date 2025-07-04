@@ -98,11 +98,17 @@ export function useCurrentFilepath() {
   const { path: filePath } = useWorkspaceRoute();
 
   if (filePath === null || currentWorkspace.isNull) {
-    return { filePath: null, mimeType: null, isImage: null };
+    return { filePath: null, mimeType: null, isImage: null, isMarkdown: null, inTrash: null };
   }
   const mimeType = mime.lookup(filePath) || "";
 
-  return { filePath, mimeType, isImage: mimeType.startsWith("image/"), inTrash: filePath.startsWith("/.trash") };
+  return {
+    filePath,
+    mimeType,
+    isMarkdown: mimeType.startsWith("text/markdown"),
+    isImage: mimeType.startsWith("image/"),
+    inTrash: filePath.startsWith("/.trash"),
+  };
 }
 
 export function useWorkspaceRoute() {
