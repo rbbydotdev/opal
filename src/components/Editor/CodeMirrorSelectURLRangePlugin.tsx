@@ -63,7 +63,7 @@ export function CodeMirrorHighlightURLRange(): Extension {
 
 const RANGE_KEY = "hlRanges";
 export function rangesToSearchParams(
-  ranges: [start: number, end: number, chsum?: string][],
+  ranges: [start: number, end: number, chsum?: number][],
   meta?: Record<string, unknown>
 ): string {
   const params = new URLSearchParams();
