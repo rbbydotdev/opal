@@ -5,8 +5,9 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 
 // Helper to schedule a function during idle time (with fallback)
-function runWhenIdle(fn: () => void, timeout: number) {
+export function runWhenIdle(fn: () => void, timeout: number) {
   try {
+    // Assuming a browser environment
     window.requestIdleCallback(fn, { timeout });
   } catch (_e) {
     setTimeout(fn, timeout ?? 0);
@@ -14,15 +15,11 @@ function runWhenIdle(fn: () => void, timeout: number) {
 }
 
 export function prettifyMarkdownSync(source: string): string {
-  const processor = unified()
-    .use(remarkParse)
-    .use(remarkGfm) /*.use(remarkMdx)*/
-    .use(remarkDirective)
-    .use(remarkStringify, {
-      bullet: "-",
-      fences: true,
-      listItemIndent: "one",
-    });
+  const processor = unified().use(remarkParse).use(remarkGfm).use(remarkDirective).use(remarkStringify, {
+    bullet: "-",
+    fences: true,
+    listItemIndent: "one",
+  });
 
   const file = processor.processSync(source);
   return String(file);

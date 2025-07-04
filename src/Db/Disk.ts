@@ -276,10 +276,10 @@ export abstract class Disk {
         await this.local.emit(DiskEvents.WRITE, { filePaths });
       }),
 
-      this.remote.on(DiskEvents.INDEX, async (data) => {
-        await this.fileTreeIndex();
-        void this.local.emit(DiskEvents.INDEX, data);
-      }),
+      // this.remote.on(DiskEvents.INDEX, async (data) => {
+      //   await this.fileTreeIndex();
+      //   void this.local.emit(DiskEvents.INDEX, data);
+      // }),
     ];
     return () => listeners.forEach((p) => p());
   }
@@ -407,6 +407,14 @@ export abstract class Disk {
 
   updateListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
     return this.local.on(DiskEvents.WRITE, async ({ filePaths }) => {
+      if (filePaths.includes(watchFilePath)) {
+        fn(String(await this.readFile(absPath(watchFilePath))));
+      }
+    });
+  }
+
+  remoteUpdateListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
+    return this.remote.on(DiskEvents.WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
         fn(String(await this.readFile(absPath(watchFilePath))));
       }

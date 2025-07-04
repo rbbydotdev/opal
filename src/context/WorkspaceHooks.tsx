@@ -1,4 +1,5 @@
 "use client";
+import { DiskEvents } from "@/Db/Disk";
 import { NullWorkspace } from "@/Db/NullWorkspace";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
@@ -36,7 +37,8 @@ export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 
-export function useFileContents() {
+export function useFileContents(listenerCb?: (content: string | null) => void) {
+  const listenerCbRef = useRef(listenerCb);
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
   const [contents, setContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
@@ -53,6 +55,9 @@ export function useFileContents() {
     (updates: string) => {
       if (filePath && currentWorkspace) {
         void currentWorkspace?.disk.writeFile(filePath, updates);
+        void currentWorkspace.disk.local.emit(DiskEvents.WRITE, {
+          filePaths: [filePath],
+        });
       }
     },
     [currentWorkspace, filePath]
@@ -84,12 +89,19 @@ export function useFileContents() {
         }
         //listener is currently only used with remote, since a local write will not trigger
         //a local write event, this is because the common update kind of borks mdx editor
-        return currentWorkspace.disk.updateListener(filePath, setContents);
+        //?????
+        return currentWorkspace.disk.remoteUpdateListener(filePath, setContents);
       }
     };
 
     void fetchFileContents();
   }, [currentWorkspace, filePath, router]);
+
+  useEffect(() => {
+    if (listenerCbRef.current && filePath) {
+      return currentWorkspace.disk.updateListener(filePath, listenerCbRef.current);
+    }
+  }, [currentWorkspace, filePath]);
 
   return { error, filePath, contents: String(contents ?? ""), mimeType, updateContents, debouncedUpdate };
 }

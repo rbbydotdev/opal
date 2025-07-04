@@ -286,24 +286,11 @@ export class Workspace {
   }
 
   renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]) {
-    //
-    //TODO: I REMOVED THIS IDK --> adjust thumbs first so rename index trigger allows for them to easily display
-    // await Promise.all(
-    //   nodes.map(([oldNode, newNode]) =>
-    //     this.adjustThumbAndCachePath(oldNode, absPath(String(newNode).replace(oldNode.path, String(newNode))))
-    //   )
-    // );
     return this.disk.renameMultiple(nodes);
-    // ALSO REMOVED, now done in listener ---> await this.disk.findReplaceImgBatch(
-    //   result
-    //     .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
-    //     .map(({ oldPath, newPath }) => [oldPath, newPath])
-    // );
   }
 
   //this is dumb because you do not consider the children!
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    //reduceLineage probably
     const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
       console.error("Error renaming dir", e);
       throw e;
@@ -314,7 +301,6 @@ export class Workspace {
 
     await newNode.asyncWalk(async (child) => {
       findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
-      //huhhhhh?
       await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
     });
     await this.disk.findReplaceImgBatch(findStrReplaceStr);
