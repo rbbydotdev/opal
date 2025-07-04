@@ -7,7 +7,7 @@ export function ErrorPlaque({
   reset,
 }: {
   error?: Error | null;
-  reset: () => void;
+  reset?: () => void;
 }) {
   return (
     <div className="flex h-screen w-[calc(100vw-5rem)]">

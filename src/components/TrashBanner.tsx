@@ -12,29 +12,76 @@ export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
   const removeFile = React.useCallback(async () => {
     return currentWorkspace.removeSingle(filePath);
   }, [currentWorkspace, filePath]);
-  // drop-shadow-[0_25px_50px_hsl(var(--primary))]
+
   return (
-    <div className="text-ring pointer-events-none absolute left-0 right-0  _shadow-lg m-auto top-16 z-10 flex justify-center items-center _font-mono _font-bold">
+    <div className="w-[480px]  text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-10 flex justify-center items-center _font-mono _font-bold">
       <Button
         tabIndex={0}
         title="Put Back"
         onClick={untrashFile}
         aria-label="Put Back From Trash"
-        className="transition-transform hover:scale-125 hover:text-ring hover:bg-transparent hover:backdrop-brightness-105 backdrop-brightness-95 -translate-x-16 rounded-full block w-12 h-12 bg-transparent backdrop-blur-sm text-sidebar-foreground/70 shadow-lg pointer-events-auto"
+        className="!bg-primary-foreground absolute left-0 peer/putback transition-transform hover:scale-125 hover:text-ring rounded-full ock w-12 h-12 text-sidebar-foreground/70 shadow-lg pointer-events-auto"
       >
         <Undo strokeWidth={3} />
       </Button>
-      <div className="backdrop-brightness-95 font-bold text-ring w-64 h-12 flex justify-center items-center gap-2 translate-x-0 bg-transparent backdrop-blur-sm rounded-full">
-        <Trash2 size={16} strokeWidth={3} /> Trash
-      </div>
       <Button
         title="Permanently Delete"
         onClick={removeFile}
         aria-label="Permanently Delete"
-        className="transition-transform backdrop-brightness-95 hover:scale-125 hover:text-ring hover:bg-transparent shadow-lg rounded-full block w-12 h-12 bg-transparent backdrop-blur-sm text-sidebar-foreground/70 translate-x-16 pointer-events-auto "
+        className="absolute right-0 peer/delete transition-transform  hover:scale-125 hover:text-ring shadow-lg rounded-full block w-12 h-12 !bg-primary-foreground text-sidebar-foreground/70 pointer-events-auto "
       >
         <Delete className="scale-125" strokeWidth={3} />
       </Button>
+      <div
+        data-putback="Put Back"
+        data-delete="Delete"
+        data-trash="Trash"
+        className="
+        shadow-lg
+          transition-transform
+          after:content-[attr(data-trash)]
+
+          bg-primary-foreground
+
+          peer-hover/delete:after:content-[attr(data-delete)]
+          peer-hover/putback:after:content-[attr(data-putback)]
+          peer-hover/putback:-translate-x-12
+
+          peer-hover/putback:scale-x-105
+          peer-hover/delete:scale-x-105
+
+          peer-hover/delete:translate-x-12
+          peer-hover/putback:[&_.putback-icon]:flex
+          peer-hover/delete:[&_.delete-icon]:flex
+
+          peer-hover/putback:[&_.trash-icon]:hidden
+          peer-hover/delete:[&_.trash-icon]:hidden
+
+
+          peer-hover/delete:text-ring
+          peer-hover/putback:text-ring
+
+          font-bold
+          text-sidebar-foreground/70
+          w-64
+          h-12
+          flex
+          justify-center
+          items-center
+          gap-2
+          rounded-full
+        "
+      >
+        <div className="items-center gap-2 justify-center trash-icon">
+          <Trash2 size={16} strokeWidth={3} />
+        </div>
+        <div className="hidden items-center gap-2 justify-center delete-icon">
+          <Delete size={16} strokeWidth={3} />
+        </div>
+        <div className="hidden items-center gap-2 justify-center putback-icon">
+          <Undo size={16} strokeWidth={3} />
+        </div>
+      </div>
     </div>
   );
 };

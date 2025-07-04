@@ -841,8 +841,9 @@ export abstract class Disk {
     }
   }
 
-  async writeFile(filePath: AbsPath, contents: string | Uint8Array) {
-    await this.fs.writeFile(encodePath(filePath), contents, { encoding: "utf8", mode: 0o777 });
+  async writeFile<T extends string | Uint8Array>(filePath: AbsPath, contents: T | Promise<T>) {
+    const awaitedContents = contents instanceof Promise ? await contents : contents;
+    await this.fs.writeFile(encodePath(filePath), awaitedContents, { encoding: "utf8", mode: 0o777 });
     await this.remote.emit(DiskEvents.WRITE, { filePaths: [filePath] });
     return;
   }
