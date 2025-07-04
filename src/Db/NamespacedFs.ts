@@ -1,7 +1,7 @@
-import { CommonFileSystem } from "@/Db/Disk";
 import { AbsPath, absPath, decodePath, encodePath, joinPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
+import { CommonFileSystem } from "./CommonFileSystem";
 
 export class NamespacedFs implements CommonFileSystem {
   namespace: AbsPath;

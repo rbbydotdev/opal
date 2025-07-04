@@ -1,4 +1,4 @@
-import { CommonFileSystem } from "@/Db/Disk";
+import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { exhaustAsyncGenerator } from "@/lib/exhaustAsyncGenerator";
 import {

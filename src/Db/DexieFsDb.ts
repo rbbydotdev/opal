@@ -1,7 +1,7 @@
-import { CommonFileSystem } from "@/Db/Disk";
 import { NotFoundError } from "@/lib/errors";
 import Dexie from "dexie";
 import path from "path";
+import { CommonFileSystem } from "./CommonFileSystem";
 
 interface FileSystemEntry {
   path: string;

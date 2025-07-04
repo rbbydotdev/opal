@@ -1,8 +1,9 @@
+import { CommonFileSystem, OPFSNamespacedFs } from "@/Db/CommonFileSystem";
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
 import { MutexFs } from "@/Db/MutexFs";
-import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
+import { PatchedOPFS } from "@/Db/NamespacedFs";
 import { UnwrapScannable } from "@/features/search/SearchScannable";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
@@ -34,50 +35,6 @@ export const DiskTypes = [
   "ZenWebstorageFSDbDisk",
 ] as const;
 export type DiskType = (typeof DiskTypes)[number];
-
-export interface CommonFileSystem {
-  readdir(path: string): Promise<
-    (
-      | string
-      | Buffer<ArrayBufferLike>
-      | {
-          name: string | Buffer<ArrayBufferLike>;
-          isDirectory: () => boolean;
-          isFile: () => boolean;
-        }
-    )[]
-  >;
-  stat(path: string): Promise<{ isDirectory: () => boolean; isFile: () => boolean }>; // Exact type can vary based on implementation details.
-  readFile(path: string, options?: { encoding?: "utf8" }): Promise<Uint8Array | Buffer | string>;
-  mkdir(path: string, options?: { recursive?: boolean; mode: number }): Promise<string | void>;
-  rename(oldPath: string, newPath: string): Promise<void>;
-  unlink(path: string): Promise<void>;
-  writeFile(
-    path: string,
-    data: Uint8Array | Buffer | string,
-    options?: { encoding?: "utf8"; mode: number }
-  ): Promise<void>;
-}
-
-type OPFSFileSystem = CommonFileSystem & {
-  rm: (path: string, options?: { force?: boolean; recursive?: boolean }) => Promise<void>;
-};
-
-export class OPFSNamespacedFs extends NamespacedFs {
-  fs: OPFSFileSystem;
-  constructor(fs: OPFSFileSystem, namespace: AbsPath | string) {
-    super(fs, namespace);
-    this.fs = fs;
-  }
-
-  tearDown(): Promise<void> {
-    return this.fs.rm(encodePath(this.namespace), { recursive: true, force: true });
-  }
-
-  rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
-    return this.fs.rm(encodePath(joinPath(this.namespace, path)), options);
-  }
-}
 
 export class RenameFileType {
   oldPath: AbsPath;
