@@ -42,7 +42,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
   useEffect(() => {
     //make a cmd+b shortcut to toggle the sidebar collapse state
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+      if (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
         e.preventDefault();
         e.stopPropagation();
         setIsCollapsed((prev) => {

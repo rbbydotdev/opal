@@ -1,3 +1,4 @@
+import { SidebarMdastTreeMenu } from "@/components/MdastTreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
@@ -34,7 +35,9 @@ export function SidebarTreeView(props: React.ComponentProps<typeof SidebarGroup>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-4 pt-2 py-4 flex flex-col gap-2"></div>
+          <div className="px-4 pt-2 py-4 flex flex-col gap-2">
+            <SidebarMdastTreeMenu />
+          </div>
         </CollapsibleContent>
       </Collapsible>
     </SidebarGroup>
