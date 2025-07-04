@@ -181,6 +181,17 @@ export class DiskEventsLocal extends Emittery<DiskLocalEventPayload> {}
 // export type DiskScanTextSearchResultType = { path: AbsPath; text: string };
 
 export type DiskScanResult = UnwrapScannable<Disk>;
+
+/*
+
+TODO add mount dirs to disk
+
+Give disk a mount map 
+
+mounts = Record<AbsPath, Disk>
+
+
+*/
 export abstract class Disk {
   remote: DiskEventsRemote;
   local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
@@ -447,11 +458,16 @@ export abstract class Disk {
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
     if (nodes.length === 0) return [];
-    const results = await Promise.all(
-      nodes.map(([oldNode, newNode]) =>
-        this.quietlyRenameDirOrFile(oldNode.path, newNode instanceof TreeNode ? newNode.path : newNode, oldNode.type)
-      )
-    );
+    const results: RenameFileType[] = [];
+    for (const [oldNode, newNode] of nodes) {
+      /*no mutex everything runs sequentially*/
+      const result = await this.quietlyRenameDirOrFile(
+        oldNode.path,
+        newNode instanceof TreeNode ? newNode.path : newNode,
+        oldNode.type
+      );
+      results.push(result);
+    }
     return this.broadcastRename(results);
   }
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {

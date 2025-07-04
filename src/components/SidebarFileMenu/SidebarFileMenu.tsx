@@ -76,6 +76,7 @@ import {
 import React, { JSX, useEffect, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 import { MetaDataTransfer } from "../MetaDataTransfer";
+import { SidebarTreeView } from "./SidebarTreeView";
 
 export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
@@ -86,6 +87,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
     "export",
     "trash",
     "files",
+    "treeview",
   ] as const);
   const { dnds, setDnds, toggleDnd, dndId } = useDndList(defaultValues, storedValue, setValue);
   return (
@@ -143,6 +145,7 @@ export function SidebarFileMenu({ ...props }: React.ComponentProps<typeof Sideba
         <SidebarFileMenuPublish dnd-id={dndId("publish")} className="flex-shrink flex" />
         <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col min-h-8" />
         <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
+        <SidebarTreeView dnd-id={dndId("treeview")} className="flex-shrink flex" />
 
         <div dnd-id={dndId("trash")} className="min-h-8">
           <FileTreeMenuCtxProvider id="TrashFiles">

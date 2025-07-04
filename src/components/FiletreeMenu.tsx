@@ -19,7 +19,7 @@ import clsx from "clsx";
 import React, { useCallback } from "react";
 import { tryParseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
 
-export const INTERNAL_NODE_FILE_TYPE = "web application/opal+json";
+export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
 
 export type NodeDataJType = { nodes: TreeFileJType[] };
 export type NodeDataType = { nodes: TreeNode[] };
