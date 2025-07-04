@@ -85,8 +85,7 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
 
   const query = useCallback(
     async ({ workspaceName, searchTerm }: WorkspaceQueryParams) => {
-      if (!workspaceName || !searchTerm.trim()) {
-        //TODO dont trim!
+      if (!workspaceName || !searchTerm) {
         reset();
         return;
       }

@@ -14,6 +14,21 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [number, number][] | null) =>
       private handleSelectRanges = (ranges: [number, number][]) => {
         if (!ranges.length) return;
         const docLength = this.view.state.doc.length;
+        if (docLength) {
+          console.log(
+            "CODEMIRROR:\n\n\n\n",
+            this.view.state.doc
+              .toString()
+              .replace(/[\t\n\r\v\f\s]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"))
+          );
+        }
+
+        // console.log(
+        //   "CODEMIRROR_LEN:",
+        //   this.view.state.doc
+        //     .toString()
+        //     .replace(/[\t\n\r\v\f\s]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")).length
+        // );
         const selections = ranges
           .map(([start, end]) => {
             // Clamp to valid range
@@ -24,6 +39,11 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [number, number][] | null) =>
           })
           .filter(Boolean);
         if (selections.length) {
+          // console.log(
+          //   "selected text",
+          //   `--->${this.view.state.doc.toString().slice(selections[0]!.from, selections[0]!.to)}<---`
+          // );
+          // console.log("selected text from:", selections[0]!.from, "selected text to:", selections[0]!.to);
           this.view.dispatch({
             selection: EditorSelection.create(selections),
             scrollIntoView: true,
@@ -31,7 +51,7 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [number, number][] | null) =>
         }
       };
 
-      update(update: ViewUpdate) {
+      update(_update: ViewUpdate) {
         if (!this.didSetSelection && hlRanges) {
           this.didSetSelection = true;
           requestAnimationFrame(() => {

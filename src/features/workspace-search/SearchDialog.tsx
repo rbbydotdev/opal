@@ -125,6 +125,10 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     submit({ searchTerm, workspaceName: workspaceId });
   };
 
+  const savedInitialValue = useMemo(
+    () => (workspaces.some((ws) => ws.name === optionsValue.workspace) ? optionsValue.workspace : ALL_WS_KEY),
+    [optionsValue.workspace, workspaces]
+  );
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* ... The rest of your JSX remains the same ... */}
@@ -163,7 +167,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
           <CollapsibleContent>
             <div className="flex items-center gap-2 mt-4">
               <SelectWorkspaceComplete
-                initialValue={optionsValue.workspace}
+                initialValue={savedInitialValue}
                 defaultValue={ALL_WS_KEY}
                 workspaces={workspaces}
                 onChange={handleWorkspaceChange}
