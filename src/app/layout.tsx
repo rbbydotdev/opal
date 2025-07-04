@@ -9,6 +9,8 @@ import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RequestSignalsInstance } from "@/lib/RequestSignals";
@@ -66,10 +68,14 @@ export default function RootLayout({
                     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                       <RemoteMDXEditorRealmProvider>
                         <div className="w-full flex">
-                          <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
-                            <WorkSpaceButtonBar />
-                          </div>
-                          <>{children}</>
+                          <ErrorBoundary fallback={ErrorPlaque}>
+                            <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
+                              <WorkSpaceButtonBar />
+                            </div>
+                            <ErrorBoundary fallback={ErrorPlaque}>
+                              <>{children}</>
+                            </ErrorBoundary>
+                          </ErrorBoundary>
                         </div>
                       </RemoteMDXEditorRealmProvider>
                     </ThemeProvider>

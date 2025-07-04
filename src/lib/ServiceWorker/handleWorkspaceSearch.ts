@@ -115,12 +115,12 @@ export async function handleWorkspaceSearch({ workspaceName, searchTerm }: Works
 
     if (e instanceof DOMException && e.name === "AbortError") {
       console.log(`Search aborted for: ${searchKey}`);
-      return new Response(null, { status: 204 });
+      return new Response(null, { status: 204, statusText: "search aborted" });
     }
     if (isError(e, NotFoundError)) {
-      return new Response(e.message, { status: 404 });
+      return new Response(e.message, { status: 404, statusText: "not found " + e.message });
     }
     console.error(errF`Error in service worker: ${e}`.toString());
-    return new Response("Internal Server Error", { status: 500 });
+    return new Response("Internal Server Error", { status: 500, statusText: "application error" });
   }
 }

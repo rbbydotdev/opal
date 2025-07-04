@@ -14,7 +14,7 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [number, number][] | null) =>
       private handleSelectRanges = (ranges: [number, number][]) => {
         if (!ranges.length) return;
         const docLength = this.view.state.doc.length;
-        if (docLength) {
+        if (docLength && false) {
           console.log(
             "CODEMIRROR:\n\n\n\n",
             this.view.state.doc

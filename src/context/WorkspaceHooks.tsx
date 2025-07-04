@@ -1,10 +1,13 @@
 "use client";
+import { useDebouncedIdleCallback } from "@/context/useDebouncedIdleCallback";
 import { NullWorkspace } from "@/Db/NullWorkspace";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
+import { prettifyMarkdownAsync } from "@/lib/prettifyMarkdown";
+// import { prettifyMarkdown } from "@/lib/prettifyMarkdown";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
@@ -46,30 +49,30 @@ export function useFileContents() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    return () => clearTimeout(debounceRef.current!);
+    const timeout = debounceRef.current;
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
   }, []);
 
   const updateContents = useCallback(
-    (updates: string) => {
+    async (updates: string) => {
       if (filePath && currentWorkspace) {
-        void currentWorkspace?.disk.writeFile(filePath, updates);
+        await currentWorkspace?.disk.writeFile(filePath, prettifyMarkdownAsync(updates));
       }
     },
     [currentWorkspace, filePath]
   );
-
-  const debouncedUpdate = useCallback(
+  const debouncedUpdate = useDebouncedIdleCallback(
     (content: string | null) => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+      if (content !== null) {
+        void updateContents(String(content));
       }
-      debounceRef.current = setTimeout(() => {
-        if (content !== null) {
-          updateContents(String(content));
-        }
-      }, 250);
     },
-    [updateContents]
+    250,
+    1000
   );
 
   useEffect(() => {

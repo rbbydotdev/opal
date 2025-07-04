@@ -1,5 +1,4 @@
 import { type SearchResultData } from "@/features/search/SearchResults";
-import { normalizeForEditorNewlineFormat } from "../../lib/normalizeForEditorNewlineFormat";
 
 export interface Scannable<T> {
   scan(): AsyncGenerator<T>;
@@ -63,7 +62,9 @@ export class SearchTextScannable<MetaExtType extends object, Scanner extends Sca
   }> {
     for await (const item of this.scanner.scan()) {
       const { text, ...rest } = item;
-      const haystack = normalizeForEditorNewlineFormat(text.normalize("NFKD"));
+      // const haystack = normalizeForEditorNewlineFormat(text.normalize("NFKD"));
+      // const haystack = prettifyMarkdown(text.normalize("NFKD"));
+      const haystack = text.normalize("NFKD");
 
       if (!haystack) continue;
 

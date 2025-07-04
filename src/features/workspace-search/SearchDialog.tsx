@@ -38,8 +38,12 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
         type: "markdown" | "rich";
       })
   );
-
-  // const isAllOption = ;
+  //keeps saved workspace in sync with the current workspaces
+  useEffect(() => {
+    if (optionsValue.workspace !== ALL_WS_KEY && !workspaces.some((ws) => ws.name === optionsValue.workspace)) {
+      setOptionsValue((prev) => ({ ...prev, workspace: ALL_WS_KEY }));
+    }
+  }, [optionsValue.workspace, setOptionsValue, workspaces]);
 
   const { isSearching, error, tearDown, hasResults, hideResult, resetSearch, workspaceResults, submit } =
     useWorkspaceSearchResults();
@@ -125,10 +129,17 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     submit({ searchTerm, workspaceName: workspaceId });
   };
 
-  const savedInitialValue = useMemo(
-    () => (workspaces.some((ws) => ws.name === optionsValue.workspace) ? optionsValue.workspace : ALL_WS_KEY),
-    [optionsValue.workspace, workspaces]
-  );
+  // const savedInitialValue = useMemo(
+  //   () => (workspaces.some((ws) => ws.name === optionsValue.workspace) ? optionsValue.workspace : ALL_WS_KEY),
+  //   [optionsValue.workspace, workspaces]
+  // );
+
+  // console.log(
+  //   savedInitialValue,
+  //   optionsValue.workspace,
+  //   workspaces.map((ws) => ws.name)
+  // );
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* ... The rest of your JSX remains the same ... */}
@@ -167,7 +178,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
           <CollapsibleContent>
             <div className="flex items-center gap-2 mt-4">
               <SelectWorkspaceComplete
-                initialValue={savedInitialValue}
+                initialValue={optionsValue.workspace}
                 defaultValue={ALL_WS_KEY}
                 workspaces={workspaces}
                 onChange={handleWorkspaceChange}
@@ -325,7 +336,6 @@ function SearchFile({
             }}
             onBlur={(e) => {
               const target = e.relatedTarget as Node | null;
-              // console.log(target.closest("a"));
               if (expanded && !(target as HTMLElement)?.closest("a")) {
                 setExpanded(false);
               }

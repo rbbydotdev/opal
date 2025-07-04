@@ -8,7 +8,6 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { withSuspense } from "@/lib/hoc/withSuspense";
-import { normalizeForEditorNewlineFormat } from "@/lib/normalizeForEditorNewlineFormat";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
 import { Suspense, use, useEffect, useMemo, useRef } from "react";
@@ -57,7 +56,10 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
   const { contents, debouncedUpdate, error } = useFileContents();
   useEffect(() => {
     if (editorRef.current && contents !== null) {
-      editorRef.current?.setMarkdown(contents ?? "");
+      // Ensure contents are prettified before setting
+      // const newContents = prettifyMarkdown(contents ?? "");
+      // console.log("writing", `newConents: ${newContents.length} contents: ${contents.length}`);
+      editorRef.current?.setMarkdown(contents);
     }
   }, [contents]);
 
@@ -75,40 +77,6 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
     }
   }
   if (contents === null || !currentWorkspace) return null;
-  console.log(
-    "ORIGINAL DOC:",
-    contents.replace(/[\t\n\r\v\f\s]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"))
-  );
-
-  console.log(
-    "CODEMIRROR?\n\n\n\n",
-    normalizeForEditorNewlineFormat(contents).replace(
-      /[\t\n\r\v\f\s]/g,
-      (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")
-    )
-  );
-
-  // console.log(
-  //   "CODEMIRROR_LEN?",
-  //   normalizeForEditorNewlineFormat(contents).replace(
-  //     /[\t\n\r\v\f\s]/g,
-  //     (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")
-  //   ).length
-  // );
-
-  // // console.log(
-  // //   "HAYSTACK:  ",
-  // //   contents
-  // //     .normalize("NFKD")
-  // //     .split("\n")
-  // //     .map((line) => line.trim())
-  // //     .join("\n")
-  // //     .trim()
-  // //     // .replace(/^\n+|\n+$/g, "")
-  // //     // .replace(/\s+$/gs, "\n") // Added 's' flag to match across newlines
-  // //     .replace(/[\t\n\r\v\f\s]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"))
-  // // );
-
   return (
     <>
       <Editor

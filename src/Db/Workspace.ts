@@ -11,11 +11,11 @@ import { ImageCache } from "@/Db/ImageCache";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
+import { WorkspaceSeedFiles } from "@/Db/WorkspaceSeedFiles";
 import { createImage } from "@/lib/createImage";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { normalizeForEditorNewlineFormat } from "@/lib/normalizeForEditorNewlineFormat";
 import {
   AbsPath,
   absPath,
@@ -43,21 +43,7 @@ export class Workspace {
   imageCache: ImageCache;
   memid = nanoid();
   isNull = false;
-  static seedFiles: Record<string, string> = Object.fromEntries(
-    Object.entries({
-      // ...Object.fromEntries(new Array(100).fill(0).map((_, x) => [`/file-${x}.md`, ` needle ${x}`.repeat(1000)])),
-      "/welcome.md": "# Welcome to your new workspace!",
-      "/home/drafts/post1.md": "# Hello World!",
-      "/drafts/draft1.md": "# Goodbye World!",
-      "/ideas/ideas.md": "# Foobar bizz bazz",
-      "/lorems-ipsum.md": `
-    # Lorem Ipsum Lorem needle ipsum dolor sit amet,
-    consectetur adipiscing needle elit. Sed do eiusmod tempor
-    incididunt ut labore et dolore magna aliqua. Ut enim
-    ad minim veniam, quis needle nostrud exercitation ullamco
-    laboris nisi ut aliquip ex ea commodo consequat.`,
-    }).map(([name, content]) => [name, normalizeForEditorNewlineFormat(content)])
-  );
+  static seedFiles = WorkspaceSeedFiles;
 
   static newCache(id: string) {
     return new ImageCache({ guid: id, name: "img" });
@@ -160,7 +146,7 @@ export class Workspace {
     return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
   }
 
-  static async CreateNew(name: string, files: Record<string, string> = {}) {
+  static async CreateNew(name: string, files: Record<string, string | Promise<string>> = {}) {
     const workspace = (await WorkspaceDAO.CreateNew(name)).toModel();
     await workspace.newFiles(Object.entries(files).map(([path, content]) => [absPath(path), content]));
     return workspace;
@@ -184,7 +170,7 @@ export class Workspace {
     // return this.disk.newFiles(files);
     return this.disk.newFile(joinPath(dirPath, newFileName), content);
   }
-  newFiles(files: [name: AbsPath, content: string | Uint8Array | Blob][]) {
+  newFiles<T extends string | Uint8Array | Blob>(files: [name: AbsPath, content: T | Promise<T>][]) {
     return this.disk.newFiles(files);
   }
 
