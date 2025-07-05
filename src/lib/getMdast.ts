@@ -1,14 +1,26 @@
-import { Content, Heading, Root } from "mdast";
+import mdast, { Content, Heading, Root } from "mdast";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 
-// --- TYPE DEFINITIONS FOR HIERARCHY ---
+//TODO rewrite this:
+
+interface PNode {
+  children: (PNode | CNode)[];
+  type: "#p";
+  ref: mdast.Node;
+}
+
+interface CNode {
+  type: "#c";
+  ref: mdast.Node;
+}
 
 export interface HierarchyNode {
   type: "hierarchyNode";
   heading: Heading;
+  depth: number; // The depth of the heading (1 for H1, 2 for H2, etc.)
   label: string; // The text content of the heading
   children: (HierarchyNode | Content)[];
   position: {
@@ -30,6 +42,10 @@ export interface HierarchyRoot {
   };
 }
 
+export function isHierarchyNode(node: mdast.Node | HierarchyNode): node is HierarchyNode {
+  return node.type === "hierarchyNode";
+}
+
 // --- PARSING FUNCTION ---
 
 export function getMdastSync(source: string): Root {
@@ -38,7 +54,14 @@ export function getMdastSync(source: string): Root {
   return processor.parse(source);
 }
 
-// --- REFINED HIERARCHY FUNCTION ---
+export function getTextContent(node: mdast.Node): string {
+  if ("value" in node && typeof node.value === "string") {
+    return node.value;
+  } else if ("children" in node && Array.isArray((node as mdast.Parent).children)) {
+    return ((node as mdast.Parent).children as mdast.Node[]).map(getTextContent).join("");
+  }
+  return "";
+}
 
 /**
  * Transforms a flat MDAST tree into a nested hierarchy based on headings.
@@ -65,13 +88,11 @@ export function createPageHierarchy(mdastRoot: Root): HierarchyRoot {
   for (const node of mdastRoot.children) {
     if (node.type === "heading") {
       //get text content of the heading
-      const textContent = node.children
-        .filter((child) => child.type === "text")
-        .map((textNode) => textNode.value)
-        .join("");
+      const textContent = getTextContent(node);
       const newHierarchyNode: HierarchyNode = {
         type: "hierarchyNode",
         label: textContent,
+        depth: node.depth,
         heading: node,
         children: [],
         position: node.position as RequiredPosition, // Preserve position for potential use

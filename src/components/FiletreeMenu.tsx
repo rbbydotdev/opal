@@ -58,7 +58,7 @@ function useFiletreeMenuContextMenuActions({
   // fileNode: TreeDir | TreeFile;
 }) {
   const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });
-  const { selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
+  const { setFileTreeCtx } = useFileTreeMenuCtx();
   const { addDirFile, duplicateDirFile, trashFiles, untrashFiles, removeFiles } =
     useWorkspaceFileMgmt(currentWorkspace);
 
@@ -110,8 +110,8 @@ function useFiletreeMenuContextMenuActions({
       virtual: null,
       selectedRange: [fileNode.path],
     });
-  const untrash = (fileNode: TreeNode) => untrashFiles([...new Set(selectedFocused).add(fileNode.path)]);
-  const remove = (fileNode: TreeNode) => removeFiles([...new Set(selectedFocused).add(fileNode.path)]);
+  const untrash = (...fileNodes: (TreeNode | AbsPath | AbsPath[] | TreeNode[])[]) => untrashFiles(...fileNodes);
+  const remove = (...fileNodes: (TreeNode | AbsPath | AbsPath[] | TreeNode[])[]) => removeFiles(...fileNodes);
 
   return {
     addFile,
@@ -147,9 +147,7 @@ export function FileTreeMenu({
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
   const sidebarMenuRef = React.useRef<HTMLUListElement>(null);
-  const { highlightDragover, selectedFocused, setFileTreeCtx, id: fileTreeId, draggingNodes } = useFileTreeMenuCtx();
-  const { addDirFile, duplicateDirFile, trashFiles, untrashFiles, removeFiles } =
-    useWorkspaceFileMgmt(currentWorkspace);
+  const { highlightDragover, selectedFocused, id: fileTreeId, draggingNodes } = useFileTreeMenuCtx();
 
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
@@ -167,7 +165,6 @@ export function FileTreeMenu({
     },
     [handleDragStart, setReactDragImage]
   );
-  const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });
 
   const { addFile, addDir, trash, copy, cut, paste, duplicate, rename, untrash, remove } =
     useFiletreeMenuContextMenuActions({ currentWorkspace });
@@ -198,16 +195,16 @@ export function FileTreeMenu({
           >
             <FileTreeContextMenu
               fileTreeId={fileTreeId}
-              addFile={() => addDirFile("file", fileNode.closestDir()!)}
-              addDir={() => addDirFile("dir", fileNode.closestDir()!)}
+              addFile={() => addFile(fileNode)}
+              addDir={() => addDir(fileNode)}
               trash={() => trash(fileNode, selectedFocused)}
               copy={() => copy(currentWorkspace.nodesFromPaths(selectedFocused))}
               cut={() => cut(currentWorkspace.nodesFromPaths(selectedFocused))}
               paste={() => paste(fileNode)}
               duplicate={() => duplicate(fileNode)}
               rename={() => rename(fileNode)}
-              untrash={() => untrashFiles([...new Set(selectedFocused).add(fileNode.path)])}
-              remove={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
+              untrash={() => untrash(selectedFocused, fileNode)}
+              remove={() => remove(selectedFocused, fileNode)}
             >
               {fileNode.isTreeDir() ? (
                 <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>

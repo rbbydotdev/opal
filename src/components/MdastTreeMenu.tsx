@@ -3,8 +3,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { createPageHierarchy, getMdastSync, HierarchyNode } from "@/lib/getMdast";
-import { ChevronRight, Folder, FolderOpen } from "lucide-react";
+import { createPageHierarchy, getMdastSync, getTextContent, HierarchyNode, isHierarchyNode } from "@/lib/getMdast";
 import mdast from "mdast";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -75,7 +74,7 @@ export function MdastTreeMenu({
                 <Collapsible open={expanded[nodeId(mdastNode)]} onOpenChange={(o) => expand(nodeId(mdastNode), o)}>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton asChild>
-                      <MdastTreeMenuParent depth={depth} node={mdastNode} expand={expandForNode} />
+                      <MdastTreeMenuParent depth={depth} node={mdastNode} />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -90,7 +89,7 @@ export function MdastTreeMenu({
                 </Collapsible>
               ) : isLeaf(mdastNode) ? (
                 <SidebarMenuButton asChild>
-                  <MdastTreeMenuChild depth={depth} node={mdastNode} expand={expandForNode} />
+                  <MdastTreeMenuChild depth={depth} node={mdastNode} />
                 </SidebarMenuButton>
               ) : null}
             </div>
@@ -100,18 +99,36 @@ export function MdastTreeMenu({
     </>
   );
 }
+
+function Bullet({
+  type,
+  depth,
+}: { type: "paragraph" | "listItem" } | { type: "heading" | "hierarchyNode"; depth: number }) {
+  if (type === "paragraph") {
+    return <span className="text-xs">¶</span>;
+  }
+  if (type === "heading" || type === "hierarchyNode") {
+    return <span className="text-xs">h{depth}</span>;
+  }
+}
+
+const getLabel = (node: HierarchyNode | mdast.Node): string => {
+  if (isHierarchyNode(node)) {
+    return node.label ?? node.heading?.value ?? node.type;
+  }
+  return getTextContent(node) || node.type || "Unknown Node";
+};
+
 export const MdastTreeMenuParent = ({
   depth,
   className,
-  expand,
   node,
   onClick,
 }: {
   depth: number;
   className?: string;
-  node: HierarchyNode;
+  node: HierarchyNode | mdast.Node | mdast.Heading;
   onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
-  expand: (node: TreeNode, value: boolean) => void;
 }) => {
   return (
     <span
@@ -126,15 +143,14 @@ export const MdastTreeMenuParent = ({
     >
       <div className="flex w-full items-center truncate">
         <div className="mr-1">
-          <ChevronRight
-            size={14}
-            className={"transition-transform duration-100 rotate-0 group-data-[state=open]/dir:rotate-90 -ml-0.5"}
-          />
+          {/* <Plus
+            size={12}
+            className={"transition-transform duration-100 rotate-0 group-data-[state=open]/dir:rotate-90"}
+          /> */}
+          <Bullet {...node} />
         </div>
         <div className="text-xs truncate w-full flex items-center">
-          <FolderOpen className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=open]/dir:block hidden" />
-          <Folder className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=closed]/dir:block hidden" />
-          <div className="truncate text-xs">
+          <div className="truncate text-xs font-bold">
             <span title={node.label ?? node.type}>{node.label ?? node.type}</span>
           </div>
         </div>
@@ -147,28 +163,17 @@ export const MdastTreeMenuChild = ({
   depth,
   node,
   className,
-  expand,
 }: {
   node: HierarchyNode;
   className?: string;
-  expand: (node: TreeNode, value: boolean) => void;
   depth: number;
 }) => {
   return (
     <div className="select-none">
-      <div
-        className={twMerge(
-          className,
-          // isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
-          "group cursor-pointer my-0"
-        )}
-        tabIndex={0}
-        title={node.label ?? node.type}
-        // onClick={handleClick}
-      >
+      <div className={twMerge(className, "group cursor-pointer my-0")} tabIndex={0} title={node.label ?? node.type}>
         <div className="w-full">
           <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
-            <div className="py-1 text-xs w-full truncate">{node.label ?? node.type}</div>
+            <div className="py-1 text-xs w-full truncate">{getLabel(node)}</div>
           </div>
         </div>
       </div>

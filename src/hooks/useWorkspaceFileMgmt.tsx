@@ -58,10 +58,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   );
 
   const removeFiles = React.useCallback(
-    async (paths: AbsPath[]) => {
-      if (!paths.length) return;
+    async (...paths: (AbsPath | AbsPath[] | TreeNode | TreeNode[])[]) => {
+      const flatPaths = paths.flatMap((node) => String(node) as AbsPath);
+      if (!flatPaths.length) return;
       try {
-        await currentWorkspace.removeMultiple(reduceLineage(paths).map((pathStr) => absPath(pathStr)));
+        await currentWorkspace.removeMultiple(reduceLineage(flatPaths).map((pathStr) => absPath(pathStr)));
       } catch (e) {
         if (e instanceof NotFoundError) {
           console.error(e);
@@ -110,7 +111,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         virtual: null,
         selectedRange: [],
       });
-      return currentWorkspace.untrashMultiple(filePaths.flatMap((node) => String(node) as AbsPath));
+      return currentWorkspace.untrashMultiple([...new Set(filePaths.flatMap((node) => String(node) as AbsPath))]);
     },
     [currentWorkspace, setFileTreeCtx]
   );
