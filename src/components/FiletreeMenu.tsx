@@ -50,6 +50,83 @@ export async function handleFileTreeNodePaste(
   }
 }
 
+function useFiletreeMenuContextMenuActions({
+  currentWorkspace,
+}: // fileNode,
+{
+  currentWorkspace: Workspace;
+  // fileNode: TreeDir | TreeFile;
+}) {
+  const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });
+  const { selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
+  const { addDirFile, duplicateDirFile, trashFiles, untrashFiles, removeFiles } =
+    useWorkspaceFileMgmt(currentWorkspace);
+
+  const addFile = (fileNode: TreeNode) => addDirFile("file", fileNode.closestDir()!);
+  const addDir = (fileNode: TreeNode) => addDirFile("dir", fileNode.closestDir()!);
+  const trash = (...nodes: (AbsPath | TreeNode | AbsPath[] | TreeNode[])[]) =>
+    trashFiles([...new Set(nodes.flatMap((node) => String(node) as AbsPath))]);
+  const copy = (fileNodes: TreeNode[]) =>
+    copyFileNodesToClipboard({
+      fileNodes,
+      action: "copy",
+      workspaceId: currentWorkspace.name,
+    });
+  const cut = (fileNodes: TreeNode[]) =>
+    copyFileNodesToClipboard({
+      fileNodes,
+      action: "cut",
+      workspaceId: currentWorkspace.name,
+    }).then(() => {
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        focused: null,
+        virtual: null,
+        selectedRange: [],
+      });
+    });
+  const paste = async (fileNode: TreeNode) => {
+    const data = await MetaDataTransfer.fromClipboard(await navigator.clipboard.read());
+    void handleFileMenuPaste({
+      targetNode: fileNode,
+      data,
+    });
+
+    return setFileTreeCtx({
+      editing: null,
+      editType: null,
+      focused: null,
+      virtual: null,
+      selectedRange: [],
+    });
+  };
+  const duplicate = (fileNode: TreeNode) => duplicateDirFile(fileNode.type, fileNode);
+  const rename = (fileNode: TreeNode) =>
+    setFileTreeCtx({
+      editing: fileNode.path,
+      editType: "rename",
+      focused: fileNode.path,
+      virtual: null,
+      selectedRange: [fileNode.path],
+    });
+  const untrash = (fileNode: TreeNode) => untrashFiles([...new Set(selectedFocused).add(fileNode.path)]);
+  const remove = (fileNode: TreeNode) => removeFiles([...new Set(selectedFocused).add(fileNode.path)]);
+
+  return {
+    addFile,
+    addDir,
+    trash,
+    copy,
+    cut,
+    paste,
+    duplicate,
+    rename,
+    untrash,
+    remove,
+  };
+}
+
 export function FileTreeMenu({
   fileTreeDir,
   renameDirOrFileMultiple,
@@ -92,6 +169,9 @@ export function FileTreeMenu({
   );
   const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });
 
+  const { addFile, addDir, trash, copy, cut, paste, duplicate, rename, untrash, remove } =
+    useFiletreeMenuContextMenuActions({ currentWorkspace });
+
   return (
     <>
       {DragImagePortal}
@@ -120,54 +200,12 @@ export function FileTreeMenu({
               fileTreeId={fileTreeId}
               addFile={() => addDirFile("file", fileNode.closestDir()!)}
               addDir={() => addDirFile("dir", fileNode.closestDir()!)}
-              trash={() => trashFiles([...new Set(selectedFocused).add(fileNode.path)])}
-              copy={() =>
-                copyFileNodesToClipboard({
-                  fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
-                  action: "copy",
-                  workspaceId: currentWorkspace.name,
-                })
-              }
-              cut={() =>
-                copyFileNodesToClipboard({
-                  fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
-                  action: "cut",
-                  workspaceId: currentWorkspace.name,
-                }).then(() => {
-                  setFileTreeCtx({
-                    editing: null,
-                    editType: null,
-                    focused: null,
-                    virtual: null,
-                    selectedRange: [],
-                  });
-                })
-              }
-              paste={async () => {
-                const data = await MetaDataTransfer.fromClipboard(await navigator.clipboard.read());
-                void handleFileMenuPaste({
-                  targetNode: fileNode,
-                  data,
-                });
-
-                return setFileTreeCtx({
-                  editing: null,
-                  editType: null,
-                  focused: null,
-                  virtual: null,
-                  selectedRange: [],
-                });
-              }}
-              duplicate={() => duplicateDirFile(fileNode.type, fileNode)}
-              rename={() =>
-                setFileTreeCtx({
-                  editing: fileNode.path,
-                  editType: "rename",
-                  focused: fileNode.path,
-                  virtual: null,
-                  selectedRange: [fileNode.path],
-                })
-              }
+              trash={() => trash(fileNode, selectedFocused)}
+              copy={() => copy(currentWorkspace.nodesFromPaths(selectedFocused))}
+              cut={() => cut(currentWorkspace.nodesFromPaths(selectedFocused))}
+              paste={() => paste(fileNode)}
+              duplicate={() => duplicate(fileNode)}
+              rename={() => rename(fileNode)}
               untrash={() => untrashFiles([...new Set(selectedFocused).add(fileNode.path)])}
               remove={() => removeFiles([...new Set(selectedFocused).add(fileNode.path)])}
             >

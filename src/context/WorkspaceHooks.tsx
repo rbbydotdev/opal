@@ -18,7 +18,7 @@ const defaultWorkspaceContext = {
   fileTreeDir: NULL_TREE_ROOT,
   workspaces: [] as WorkspaceDAO[],
   flatTree: [] as string[],
-  currentWorkspace: NULL_WORKSPACE,
+  currentWorkspace: NULL_WORKSPACE as Workspace,
   workspaceRoute: { id: null, path: null } as WorkspaceRouteType,
 };
 
