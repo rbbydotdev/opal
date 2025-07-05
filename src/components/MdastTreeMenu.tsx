@@ -65,38 +65,36 @@ export function MdastTreeMenu({
   expanded: { [path: string]: boolean };
 }) {
   return (
-    <>
-      <SidebarMenu>
-        {Object.values(filterPositionNodes(parent.children) as HierarchyNode[]).map((mdastNode, i) => (
-          <SidebarMenuItem key={mdastNode.position?.start.offset ?? i}>
-            <div>
-              {isParent(mdastNode) ? (
-                <Collapsible open={expanded[nodeId(mdastNode)]} onOpenChange={(o) => expand(nodeId(mdastNode), o)}>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton asChild>
-                      <MdastTreeMenuParent depth={depth} node={mdastNode} />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <MdastTreeMenu
-                      expand={expand}
-                      expandForNode={expandForNode}
-                      parent={mdastNode}
-                      depth={depth + 1}
-                      expanded={expanded}
-                    />
-                  </CollapsibleContent>
-                </Collapsible>
-              ) : isLeaf(mdastNode) ? (
-                <SidebarMenuButton asChild>
-                  <MdastTreeMenuChild depth={depth} node={mdastNode} />
-                </SidebarMenuButton>
-              ) : null}
-            </div>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
-    </>
+    <SidebarMenu>
+      {Object.values(filterPositionNodes(parent.children) as HierarchyNode[]).map((mdastNode, i) => (
+        <SidebarMenuItem key={mdastNode.position?.start.offset ?? i}>
+          <div>
+            {isParent(mdastNode) ? (
+              <Collapsible open={expanded[nodeId(mdastNode)]} onOpenChange={(o) => expand(nodeId(mdastNode), o)}>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton asChild className="h-6">
+                    <MdastTreeMenuParent depth={depth} node={mdastNode} />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <MdastTreeMenu
+                    expand={expand}
+                    expandForNode={expandForNode}
+                    parent={mdastNode}
+                    depth={depth + 1}
+                    expanded={expanded}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            ) : isLeaf(mdastNode) ? (
+              <SidebarMenuButton asChild>
+                <MdastTreeMenuChild depth={depth} node={mdastNode} className="h-6" />
+              </SidebarMenuButton>
+            ) : null}
+          </div>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
   );
 }
 
