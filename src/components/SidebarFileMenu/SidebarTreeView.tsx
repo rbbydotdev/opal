@@ -1,15 +1,11 @@
 import { SidebarMdastTreeMenu } from "@/components/MdastTreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useSingleItemExpander } from "@/features/filetree-expander/useSingleItemExpander";
 import { ChevronRight, LucideGitBranch } from "lucide-react";
-import { useCurrentFilepath } from "../../context/WorkspaceHooks";
 
 export function SidebarTreeView(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleItemExpander("export");
-  const { workspace } = useWorkspaceContext();
-  const { filePath, isMarkdown } = useCurrentFilepath();
   return (
     <SidebarGroup {...props}>
       <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>

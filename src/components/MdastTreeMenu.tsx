@@ -120,7 +120,7 @@ export const MdastTreeMenuParent = ({
       className={twMerge(
         // isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
         className,
-        "w-full flex cursor-pointer select-none group/dir my-0.5"
+        "w-full flex cursor-pointer select-none group/dir my-0"
       )}
       style={{ paddingLeft: depth + "rem" }}
     >
@@ -160,7 +160,7 @@ export const MdastTreeMenuChild = ({
         className={twMerge(
           className,
           // isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
-          "group cursor-pointer my-0.5"
+          "group cursor-pointer my-0"
         )}
         tabIndex={0}
         title={node.label ?? node.type}
@@ -168,7 +168,7 @@ export const MdastTreeMenuChild = ({
       >
         <div className="w-full">
           <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
-            <div className="py-2.5 text-xs w-full truncate">{node.label ?? node.type}</div>
+            <div className="py-1 text-xs w-full truncate">{node.label ?? node.type}</div>
           </div>
         </div>
       </div>

@@ -102,7 +102,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   }, [focused, removeFiles, selectedRange]);
 
   const untrashFiles = React.useCallback(
-    async (filePaths: AbsPath[]) => {
+    async (...filePaths: (AbsPath | TreeNode | AbsPath[] | TreeNode[])[]) => {
       setFileTreeCtx({
         editing: null,
         editType: null,
@@ -110,7 +110,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         virtual: null,
         selectedRange: [],
       });
-      return currentWorkspace.untrashMultiple(filePaths);
+      return currentWorkspace.untrashMultiple(filePaths.flatMap((node) => String(node) as AbsPath));
     },
     [currentWorkspace, setFileTreeCtx]
   );
