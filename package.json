@@ -59,6 +59,7 @@
     "@serwist/next": "^9.0.12",
     "@ukstv/jazzicon-react": "^1.0.0",
     "@zip.js/zip.js": "^2.7.62",
+    "@zumer/snapdom": "^1.8.0",
     "archiver": "^7.0.1",
     "archiver-zip-encrypted": "^2.0.0",
     "async-mutex": "^0.5.0",
