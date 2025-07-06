@@ -64,6 +64,7 @@
     "archiver-zip-encrypted": "^2.0.0",
     "async-mutex": "^0.5.0",
     "babel-plugin-macros": "^3.1.0",
+    "babel-plugin-react-compiler": "^19.1.0-rc.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

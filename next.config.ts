@@ -1,9 +1,13 @@
-const config = {
+import type { NextConfig } from "next";
+const config: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
   compiler: {
     removeConsole: false,
+  },
+  experimental: {
+    reactCompiler: true,
   },
   reactStrictMode: false,
   typescript: {
