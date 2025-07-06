@@ -3,7 +3,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { createPageHierarchy, getMdastSync, getTextContent, HierarchyNode, isHierarchyNode } from "@/lib/getMdast";
+import { createPageHierarchy, HierarchyNode, isHierarchyNode } from "@/lib/mdast/hierarchy";
+import { getMdastSync, getTextContent } from "@/lib/mdast/mdastUtils";
 import mdast from "mdast";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";

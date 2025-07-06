@@ -1,31 +1,6 @@
+import { isParent } from "@/components/MdastTreeMenu";
+import { getTextContent } from "@/lib/mdast/mdastUtils";
 import mdast, { Content, Heading, Root } from "mdast";
-import remarkDirective from "remark-directive";
-import remarkGfm from "remark-gfm";
-import remarkParse from "remark-parse";
-import { unified } from "unified";
-
-//TODO rewrite this:
-
-// interface PNode {
-//   children: (PNode | CNode)[];
-//   type: "#p";
-//   ref: mdast.Node;
-// }
-
-export function isParent(node: unknown): node is mdast.Parent {
-  return Boolean(typeof (node as mdast.Parent).children !== "undefined");
-}
-
-export function isChild(node: unknown): node is mdast.Node {
-  return !isParent(node);
-}
-
-export type PositionedNode = mdast.Node & {
-  position: {
-    start: Required<Required<mdast.Node>["position"]["start"]>;
-    end: Required<Required<mdast.Node>["position"]["end"]>;
-  };
-};
 
 class HierNode {
   children: HierNode[] = [];
@@ -79,7 +54,7 @@ export function createPageHierarchy222(mdastRoot: Root): HierNode {
         // Add the content node as a child of the current heading's section.
 
         if (isParent(node)) {
-          parent.children.push(new HierChild(node)); // Assuming depth 0 for non-heading parents
+          parent.children.push(new HierNode(node, parent.depth + 1)); // Assuming depth 0 for non-heading parents
         }
       } else {
         // If we haven't seen any headings yet, this is top-level content.
@@ -118,21 +93,6 @@ export interface HierarchyRoot {
 
 export function isHierarchyNode(node: mdast.Node | HierarchyNode): node is HierarchyNode {
   return node.type === "hierarchyNode";
-}
-
-export function getMdastSync(source: string): Root {
-  const processor = unified().use(remarkParse).use(remarkGfm).use(remarkDirective);
-
-  return processor.parse(source);
-}
-
-export function getTextContent(node: mdast.Node): string {
-  if ("value" in node && typeof node.value === "string") {
-    return node.value;
-  } else if ("children" in node && Array.isArray((node as mdast.Parent).children)) {
-    return ((node as mdast.Parent).children as mdast.Node[]).map(getTextContent).join("");
-  }
-  return "";
 }
 
 export function createPageHierarchy(mdastRoot: Root): HierarchyRoot {
