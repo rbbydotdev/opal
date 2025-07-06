@@ -8,7 +8,7 @@ import mdast from "mdast";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-function isParent(node: unknown): node is mdast.Parent {
+export function isParent(node: unknown): node is mdast.Parent {
   return Boolean(typeof (node as mdast.Parent).children !== "undefined");
 }
 
@@ -98,10 +98,12 @@ export function MdastTreeMenu({
   );
 }
 
-function Bullet({
-  type,
-  depth,
-}: { type: "paragraph" | "listItem" } | { type: "heading" | "hierarchyNode"; depth: number }) {
+function Bullet(node: mdast.Node | HierarchyNode) {
+  const { type } = node;
+  const depth = isHierarchyNode(node) ? node.depth : 0;
+  if (type === "link") {
+    return <span className="text-xs">🔗</span>;
+  }
   if (type === "paragraph") {
     return <span className="text-xs">¶</span>;
   }
@@ -141,10 +143,6 @@ export const MdastTreeMenuParent = ({
     >
       <div className="flex w-full items-center truncate">
         <div className="mr-1">
-          {/* <Plus
-            size={12}
-            className={"transition-transform duration-100 rotate-0 group-data-[state=open]/dir:rotate-90"}
-          /> */}
           <Bullet {...node} />
         </div>
         <div className="text-xs truncate w-full flex items-center">

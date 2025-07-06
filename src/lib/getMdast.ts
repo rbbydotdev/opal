@@ -6,15 +6,89 @@ import { unified } from "unified";
 
 //TODO rewrite this:
 
-interface PNode {
-  children: (PNode | CNode)[];
-  type: "#p";
-  ref: mdast.Node;
+// interface PNode {
+//   children: (PNode | CNode)[];
+//   type: "#p";
+//   ref: mdast.Node;
+// }
+
+export function isParent(node: unknown): node is mdast.Parent {
+  return Boolean(typeof (node as mdast.Parent).children !== "undefined");
 }
 
-interface CNode {
-  type: "#c";
-  ref: mdast.Node;
+export function isChild(node: unknown): node is mdast.Node {
+  return !isParent(node);
+}
+
+export type PositionedNode = mdast.Node & {
+  position: {
+    start: Required<Required<mdast.Node>["position"]["start"]>;
+    end: Required<Required<mdast.Node>["position"]["end"]>;
+  };
+};
+
+class HierNode {
+  children: HierNode[] = [];
+  type = "#p" as const;
+  label: string;
+  id: string;
+  content: string;
+  constructor(public ref: mdast.Parent, public depth: number) {
+    this.id = ref.position?.start?.line + "-" + ref.position?.start?.column;
+    this.label = ref.type;
+    this.content = getTextContent(ref);
+  }
+}
+
+export function createPageHierarchy222(mdastRoot: Root): HierNode {
+  const root = new HierNode(mdastRoot, 0);
+
+  const stack: HierNode[] = [];
+
+  for (const node of mdastRoot.children) {
+    if (node.type === "heading") {
+      //get text content of the heading
+      const hierNode = new HierNode(node, node.depth);
+
+      // Find the correct parent in the stack. We pop parents off the stack
+      // as long as their heading level is equal to or deeper than the
+      // current heading's level. This correctly handles moving "up" the
+      // hierarchy (e.g., from an H3 back to a new H2).
+      while (stack.length > 0 && stack.at(-1)!.depth >= node.depth) {
+        stack.pop();
+      }
+
+      // The new parent is now at the top of the stack.
+      const currentHier = stack.length > 0 ? stack.at(-1) : null;
+
+      if (currentHier) currentHier.children.push(hierNode);
+      else {
+        // If there's no parent, it's a top-level heading.
+        root.children.push(hierNode);
+      }
+
+      // Push the new heading onto the stack, making it the new
+      // parent context for all subsequent nodes.
+      stack.push(hierNode);
+    } else {
+      // This node is NOT a heading (e.g., paragraph, list, code block).
+      // It belongs to the most recent heading we've encountered.
+      const parent = stack.length > 0 ? stack.at(-1) : null;
+
+      if (parent) {
+        // Add the content node as a child of the current heading's section.
+
+        if (isParent(node)) {
+          parent.children.push(new HierChild(node)); // Assuming depth 0 for non-heading parents
+        }
+      } else {
+        // If we haven't seen any headings yet, this is top-level content.
+        root.children.push(new HierNode(node as mdast.Parent /*?*/, 0));
+      }
+    }
+  }
+
+  return root;
 }
 
 export interface HierarchyNode {
@@ -46,8 +120,6 @@ export function isHierarchyNode(node: mdast.Node | HierarchyNode): node is Hiera
   return node.type === "hierarchyNode";
 }
 
-// --- PARSING FUNCTION ---
-
 export function getMdastSync(source: string): Root {
   const processor = unified().use(remarkParse).use(remarkGfm).use(remarkDirective);
 
@@ -63,14 +135,6 @@ export function getTextContent(node: mdast.Node): string {
   return "";
 }
 
-/**
- * Transforms a flat MDAST tree into a nested hierarchy based on headings.
- * All content following a heading (paragraphs, lists, etc.) becomes a child
- * of that heading's node until a new heading of equal or higher level is found.
- *
- * @param mdastRoot The root of the MDAST tree from remark-parse.
- * @returns A new root node representing the nested page hierarchy.
- */
 export function createPageHierarchy(mdastRoot: Root): HierarchyRoot {
   const hierarchyRoot: HierarchyRoot = {
     type: "hierarchyRoot",
