@@ -193,7 +193,7 @@ export function WorkSpaceButtonBar() {
           </CollapsibleTrigger>
 
           <CollapsibleContent className="w-full min-h-0  max-h-full overflow-y-scroll no-scrollbar">
-            {filteredWorkspaces.map((workspace) => (
+            {workspaces.map((workspace) => (
               <BigButton
                 icon={<WorkspaceIcon input={workspace.guid} />}
                 href={workspace.href}
