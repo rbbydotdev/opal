@@ -67,8 +67,7 @@ function withRequestSignal<T extends (...args: never[]) => Promise<Response>>(ha
   return async function (...args: Parameters<T>): Promise<Response> {
     signalRequest({ type: REQ_SIGNAL.START });
     try {
-      const result = await handler(...args);
-      return result;
+      return await handler(...args);
     } finally {
       signalRequest({ type: REQ_SIGNAL.END });
     }

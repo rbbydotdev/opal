@@ -1,5 +1,5 @@
 "use client";
-import { FileTreeExpanderContext } from "@/features/filetree-expander/FileTreeExpanderContext";
+import { TreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, isAncestor } from "@/lib/paths2";
@@ -12,15 +12,15 @@ function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) 
 }
 type ExpandMap = { [path: string]: boolean };
 
-export function useFileTreeExpanderContext() {
-  const context = useContext(FileTreeExpanderContext);
+export function useTreeExpanderContext() {
+  const context = useContext(TreeExpanderContext);
   if (!context) {
-    throw new Error("useFileTreeExpanderContext must be used within a FileTreeExpanderProvider");
+    throw new Error("useTreeExpanderContext must be used within a TreeExpanderProvider");
   }
   return context;
 }
 
-export function useFileTreeExpander({
+export function useTreeExpander({
   flatTree,
   activePath,
   expanderId,
@@ -31,7 +31,7 @@ export function useFileTreeExpander({
 }) {
   const [local, setLocal] = useState<ExpandMap>({});
   const setAllStates = (state: boolean) => flatTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {});
-  const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${expanderId}`, local);
+  const [stored, setStored] = useLocalStorage<ExpandMap>(`TreeExpander/${expanderId}`, local);
 
   const expandSingle = (path: string, expanded: boolean) => {
     setLocal((prev) => ({ ...prev, [path]: expanded }));
@@ -44,13 +44,6 @@ export function useFileTreeExpander({
       expandSingle(n.path, state);
       n = n.parent;
     }
-
-    // const segments = String(node).split("/").slice(1);
-    // const parent = "/";
-    // while (segments.length > 0) {
-    //   const path = parent + segments.shift();
-    //   expandSingle(path, state);
-    // }
   };
 
   const setExpandAll = (state: boolean) => {

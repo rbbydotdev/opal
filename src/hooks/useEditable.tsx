@@ -103,7 +103,6 @@ export function useEditable<T extends TreeFile | TreeDir>({
     }
     if (!e.shiftKey) {
       linkRef.current?.focus();
-      // const newRange = [...new Set(selectedRange).add(treeNode.path)];
       setFileTreeCtx({
         editing: null,
         editType: null,

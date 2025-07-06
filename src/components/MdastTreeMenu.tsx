@@ -2,6 +2,7 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { createPageHierarchy, HierarchyNode, isHierarchyNode } from "@/lib/mdast/hierarchy";
 import { getMdastSync, getTextContent } from "@/lib/mdast/mdastUtils";
@@ -34,11 +35,13 @@ function nodeId(node: PositionedNode): string {
   return node.position.start.offset.toString();
 }
 
-export function SidebarMdastTreeMenu() {
+export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
   const [contents, setContents] = useState<string | null>(null);
   const { contents: initialValue } = useFileContents((c) => setContents(c ?? ""));
   const { isMarkdown } = useCurrentFilepath();
+
+  const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const totalContent = contents ?? initialValue;
   const mdastTree = useMemo(() => {
     if (!totalContent || !isMarkdown) return {} as mdast.Parent;
@@ -49,10 +52,17 @@ export function SidebarMdastTreeMenu() {
   if (!currentWorkspace || !totalContent || !isMarkdown) {
     return null;
   }
-  return <MdastTreeMenu parent={mdastTree} expand={() => {}} expandForNode={() => {}} expanded={{}} />;
+  return (
+    <SidebarTreeViewMenuContent
+      parent={mdastTree}
+      expand={expandSingle}
+      expandForNode={expandForNode}
+      expanded={expanded}
+    />
+  );
 }
 
-export function MdastTreeMenu({
+export function SidebarTreeViewMenuContent({
   parent,
   depth = 0,
   expand,
@@ -69,30 +79,30 @@ export function MdastTreeMenu({
     <SidebarMenu>
       {Object.values(filterPositionNodes(parent.children) as HierarchyNode[]).map((mdastNode, i) => (
         <SidebarMenuItem key={mdastNode.position?.start.offset ?? i}>
-          <div>
-            {isParent(mdastNode) ? (
-              <Collapsible open={expanded[nodeId(mdastNode)]} onOpenChange={(o) => expand(nodeId(mdastNode), o)}>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton asChild className="h-6">
-                    <MdastTreeMenuParent depth={depth} node={mdastNode} />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <MdastTreeMenu
+          {isParent(mdastNode) ? (
+            <Collapsible open={expanded[nodeId(mdastNode)]} onOpenChange={(o) => expand(nodeId(mdastNode), o)}>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton asChild className="h-6">
+                  <MdastTreeMenuParent depth={depth} node={mdastNode} />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenu>
+                  <SidebarTreeViewMenuContent
                     expand={expand}
                     expandForNode={expandForNode}
                     parent={mdastNode}
                     depth={depth + 1}
                     expanded={expanded}
                   />
-                </CollapsibleContent>
-              </Collapsible>
-            ) : isLeaf(mdastNode) ? (
-              <SidebarMenuButton asChild>
-                <MdastTreeMenuChild depth={depth} node={mdastNode} className="h-6" />
-              </SidebarMenuButton>
-            ) : null}
-          </div>
+                </SidebarMenu>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : isLeaf(mdastNode) ? (
+            <SidebarMenuButton asChild>
+              <MdastTreeMenuChild depth={depth} node={mdastNode} className="h-6" />
+            </SidebarMenuButton>
+          ) : null}
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
