@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { Dispatch, SetStateAction } from "react";
-
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface WindowEventMap {
     "local-storage": CustomEvent;
   }
@@ -25,15 +22,14 @@ const IS_SERVER = typeof window === "undefined";
  * @param {UseLocalStorageOptions<T>} options - Options for the hook.
  * @returns A tuple of [storedValue, setValue, removeValue].
  */
-export default function useLocalStorage2<T, U = T | (() => T)>(
+export default function useLocalStorage2<T>(
   key: string,
-  initialValue: U,
+  initialValue: T | (() => T),
   options: UseLocalStorageOptions<T> = {}
 ) {
-  //  { storedValue: T; initialValue: T | (() => T); setValue: Dispatch<SetStateAction<T>>; removeValue: () => void }
   const { initializeWithValue = true } = options;
 
-  const serializer = (value) => {
+  const serializer = (value: T) => {
     if (options.serializer) {
       return options.serializer(value);
     }
@@ -41,7 +37,7 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
     return JSON.stringify(value);
   };
 
-  const deserializer = (value) => {
+  const deserializer = (value: string): T => {
     if (options.deserializer) {
       return options.deserializer(value);
     }
@@ -82,7 +78,7 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
     }
   };
 
-  const [storedValue, setStoredValue] = useState(() => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
     if (initializeWithValue) {
       return readValue();
     }
@@ -92,7 +88,7 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
 
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
-  const setValue: Dispatch<SetStateAction<T>> = (value) => {
+  const setValue: typeof setStoredValue = (value) => {
     // Prevent build error "window is undefined" but keeps working
     if (IS_SERVER) {
       console.warn(`Tried setting localStorage key “${key}” even though environment is not a client`);
@@ -135,7 +131,6 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
 
   useEffect(() => {
     setStoredValue(readValue());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   const handleStorageChange = (event: StorageEvent | CustomEvent) => {
@@ -155,5 +150,10 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
     };
   }, [handleStorageChange]);
 
-  return { storedValue, defaultValues: initialValue, setValue, removeValue };
+  return {
+    storedValue,
+    defaultValues: (initialValue instanceof Function ? initialValue() : initialValue) as T,
+    setValue,
+    removeValue,
+  };
 }

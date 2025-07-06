@@ -23,7 +23,15 @@ async function* fetchQuerySearch({
   url.searchParams.set("searchTerm", searchTerm);
   console.debug(`query search url = ${url.toString()}`);
 
-  const res = await fetch(url.toString(), { signal });
+  let res = null;
+  try {
+    res = await fetch(url.toString(), { signal });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      return; // Request was aborted, exit gracefully
+    }
+    throw err; // Re-throw other errors
+  }
   if (res.status === 204) {
     return; // No content, successful but empty stream
   }

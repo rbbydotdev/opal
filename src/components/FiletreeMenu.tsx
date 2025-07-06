@@ -4,7 +4,7 @@ import { FileTreeContextMenu } from "@/components/FileTreeContextMenus";
 import { FileTreeDragPreview } from "@/components/FileTreeDragPreview";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
-import { useFileMenuPaste } from "@/components/SidebarFileMenu/useFileMenuPaste";
+import { useFileMenuPaste } from "@/components/SidebarFileMenu/hooks/useFileMenuPaste";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
@@ -65,7 +65,8 @@ function useFiletreeMenuContextMenuActions({
   const addFile = (fileNode: TreeNode) => addDirFile("file", fileNode.closestDir()!);
   const addDir = (fileNode: TreeNode) => addDirFile("dir", fileNode.closestDir()!);
   const trash = (...nodes: (AbsPath | TreeNode | AbsPath[] | TreeNode[])[]) =>
-    trashFiles([...new Set(nodes.flatMap((node) => String(node) as AbsPath))]);
+    trashFiles([...new Set(nodes.flat(Infinity).map((node) => String(node) as AbsPath))]);
+
   const copy = (fileNodes: TreeNode[]) =>
     copyFileNodesToClipboard({
       fileNodes,
@@ -175,7 +176,6 @@ export function FileTreeMenu({
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, fileTreeDir)}
         onDragEnter={(e) => handleDragEnter(e, "/")}
-        className={clsx({ "": depth === 0 })}
       >
         {Object.values(fileTreeDir.filterOutChildren(filter)).map((fileNode) => (
           <SidebarMenuItem

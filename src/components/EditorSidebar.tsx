@@ -1,5 +1,5 @@
 "use client";
-import { SidebarFileMenu } from "@/components/SidebarFileMenu/SidebarFileMenu";
+import { SidebarMenuSections } from "@/components/SidebarFileMenu/SidebarMenuSections";
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +34,6 @@ export function EditorSidebar({
                   <div className="whitespace-nowrap w-full truncate uppercase font-thin font-mono">
                     {currentWorkspace.name}
                   </div>
-                  {/* <span className="text-xs">Virtual Filesystem</span> */}
                 </div>
               </div>
             </SidebarMenuButton>
@@ -42,7 +41,7 @@ export function EditorSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="overflow-clip h-full flex-shrink">
-        <SidebarFileMenu />
+        <SidebarMenuSections />
       </SidebarContent>
 
       <SidebarFooter className="text-3xs to-sidebar-accent uppercase font-mono w-full flex content-center">

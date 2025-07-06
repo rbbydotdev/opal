@@ -12,8 +12,8 @@ import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
-import { useSingleItemExpander } from "@/features/filetree-expander/useSingleItemExpander";
 import { SearchResult } from "@/features/search/SearchResults";
+import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceSearchResults } from "@/features/workspace-search/useWorkspaceSearchResults";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
@@ -341,7 +341,7 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
   });
   return (
     // 1. Use flexbox to align the line number and the text content
-    (<a href={href + "?" + sp} onClick={onClick}>
+    <a href={href + "?" + sp} onClick={onClick}>
       <div className="border-b-4 last-of-type:border-none border-background flex items-start p-1 py-1 bg-primary-foreground font-mono text-xs group hover:bg-ring/80 cursor-pointer hover:text-primary-foreground">
         {/* 2. Create a container for the line number and badge */}
         <div className="relative min-w-8 text-right font-bold mr-2">
@@ -362,6 +362,6 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
           {match.endText}
         </div>
       </div>
-    </a>)
+    </a>
   );
 }

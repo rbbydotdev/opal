@@ -12,7 +12,7 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-export default [
+const config = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     files: ["**/*.ts", "**/*.tsx"],
@@ -26,6 +26,7 @@ export default [
       "@typescript-eslint": typescriptEslintPlugin,
     },
     rules: {
+      "react-hooks/exhaustive-deps": "off",
       "@typescript-eslint/no-floating-promises": "error",
       "@next/next/no-img-element": "off",
       "@typescript-eslint/ban-ts-comment": "off",
@@ -44,3 +45,5 @@ export default [
     },
   },
 ];
+
+export default config;

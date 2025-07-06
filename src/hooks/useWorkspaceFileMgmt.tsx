@@ -15,26 +15,26 @@ import {
   reduceLineage,
   relPath,
 } from "@/lib/paths2";
-import React from "react";
+import { useCallback } from "react";
 import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   const { setFileTreeCtx, selectedRange, resetEditing, focused } = useFileTreeMenuCtx();
 
-  const newFile = React.useCallback(
+  const newFile = useCallback(
     (path: AbsPath, content = "") => {
       return currentWorkspace.newFile(dirname(path), basename(path), content);
     },
     [currentWorkspace]
   );
-  const newDir = React.useCallback(
+  const newDir = useCallback(
     async (path: AbsPath) => {
       return currentWorkspace.newDir(dirname(path), basename(path));
     },
     [currentWorkspace]
   );
 
-  const trashFiles = React.useCallback(
+  const trashFiles = useCallback(
     async (paths: AbsPath[]) => {
       if (!paths.length) return;
       try {
@@ -57,9 +57,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [currentWorkspace, setFileTreeCtx]
   );
 
-  const removeFiles = React.useCallback(
+  const removeFiles = useCallback(
     async (...paths: (AbsPath | AbsPath[] | TreeNode | TreeNode[])[]) => {
-      const flatPaths = paths.flatMap((node) => String(node) as AbsPath);
+      const flatPaths = paths.flat(Infinity).map((node) => String(node) as AbsPath);
       if (!flatPaths.length) return;
       try {
         await currentWorkspace.removeMultiple(reduceLineage(flatPaths).map((pathStr) => absPath(pathStr)));
@@ -80,20 +80,20 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     },
     [currentWorkspace, setFileTreeCtx]
   );
-  const removeFile = React.useCallback(
+  const removeFile = useCallback(
     (path: AbsPath) => {
       return removeFiles([path]);
     },
     [removeFiles]
   );
-  const trashFile = React.useCallback(
+  const trashFile = useCallback(
     async (path: AbsPath) => {
       return trashFiles([path]);
     },
     [trashFiles]
   );
 
-  const removeSelectedFiles = React.useCallback(async () => {
+  const removeSelectedFiles = useCallback(async () => {
     const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
 
     if (!range.length && focused) {
@@ -102,7 +102,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     await removeFiles(range);
   }, [focused, removeFiles, selectedRange]);
 
-  const untrashFiles = React.useCallback(
+  const untrashFiles = useCallback(
     async (...filePaths: (AbsPath | TreeNode | AbsPath[] | TreeNode[])[]) => {
       setFileTreeCtx({
         editing: null,
@@ -111,12 +111,14 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         virtual: null,
         selectedRange: [],
       });
-      return currentWorkspace.untrashMultiple([...new Set(filePaths.flatMap((node) => String(node) as AbsPath))]);
+      return currentWorkspace.untrashMultiple([
+        ...new Set(filePaths.flat(Infinity).map((node) => String(node) as AbsPath)),
+      ]);
     },
     [currentWorkspace, setFileTreeCtx]
   );
 
-  const trashSelectedFiles = React.useCallback(() => {
+  const trashSelectedFiles = useCallback(() => {
     const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
     if (!range.length && focused) {
       range.push(focused);
@@ -131,11 +133,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     return currentWorkspace.trashMultiple(reduceLineage(range));
   }, [currentWorkspace, focused, selectedRange, setFileTreeCtx]);
 
-  const removeFocusedFile = React.useCallback(async () => {
+  const removeFocusedFile = useCallback(async () => {
     if (focused) await removeFiles([focused]);
   }, [focused, removeFiles]);
 
-  const duplicateDirFile = React.useCallback(
+  const duplicateDirFile = useCallback(
     (type: TreeNode["type"], from: AbsPath | TreeNode) => {
       const fromNode = currentWorkspace.nodeFromPath(String(from));
       if (!fromNode) {
@@ -159,7 +161,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     },
     [currentWorkspace, setFileTreeCtx]
   );
-  const addDirFile = React.useCallback(
+  const addDirFile = useCallback(
     (type: TreeNode["type"], parent: TreeDir | AbsPath) => {
       /** --------- TODO: move me somewhere more appropriate start ------ */
       let parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
@@ -184,7 +186,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [currentWorkspace, setFileTreeCtx]
   );
 
-  const renameDirOrFileMultiple = React.useCallback(
+  const renameDirOrFileMultiple = useCallback(
     async (nodes: [oldNode: TreeNode, newFullPath: TreeNode | AbsPath][]) => {
       const result = await currentWorkspace.renameMultiple(nodes);
       if (result.length === 0) return [];
@@ -201,7 +203,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [currentWorkspace, setFileTreeCtx]
   );
 
-  const renameDirOrFile = React.useCallback(
+  const renameDirOrFile = useCallback(
     async (origNode: TreeNode, newFullPath: TreeNode | AbsPath) => {
       const result = await renameDirOrFileMultiple([[origNode, newFullPath]] as [TreeNode, TreeNode | AbsPath][]);
       if (result.length <= 0) return null;
@@ -210,7 +212,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [renameDirOrFileMultiple]
   );
 
-  const commitChange = React.useCallback(
+  const commitChange = useCallback(
     async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new" | "duplicate"): Promise<AbsPath | null> => {
       const wantPath = joinPath(dirname(origNode.path), relPath(decodePath(fileName)));
       if (type === "new") {
