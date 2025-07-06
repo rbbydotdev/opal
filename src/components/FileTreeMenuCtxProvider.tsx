@@ -3,7 +3,7 @@ import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, dirname } from "@/lib/paths2";
 import { usePathname } from "next/navigation";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 export const FileTreeMenuCtx = React.createContext<{
   editing: AbsPath | null;
@@ -72,7 +72,7 @@ export const FileTreeMenuCtxProvider = ({
 
   const { editing, focused, virtual, selectedRange, editType } = fileTreeCtx;
 
-  const resetEditing = useCallback(() => {
+  const resetEditing = () => {
     setFileTreeCtx(() => ({
       editing: null,
       editType: "rename",
@@ -80,24 +80,21 @@ export const FileTreeMenuCtxProvider = ({
       virtual: null,
       selectedRange: [],
     }));
-  }, [focused]);
+  };
 
-  const highlightDragover = useCallback(
-    (menuItem: TreeNode) => {
-      if (!dragOver || !draggingNode) return false;
-      if (dragOver.isTreeDir()) {
-        if (draggingNode.dirname === dragOver.path) return false;
-      }
-      if (dragOver.isTreeFile()) {
-        if (draggingNode.dirname === menuItem.path) return false;
+  const highlightDragover = (menuItem: TreeNode) => {
+    if (!dragOver || !draggingNode) return false;
+    if (dragOver.isTreeDir()) {
+      if (draggingNode.dirname === dragOver.path) return false;
+    }
+    if (dragOver.isTreeFile()) {
+      if (draggingNode.dirname === menuItem.path) return false;
 
-        if (dragOver.dirname === menuItem.path) return true;
-      }
-      if (dragOver.path === menuItem.path) return true;
-      return false;
-    },
-    [draggingNode, dragOver]
-  );
+      if (dragOver.dirname === menuItem.path) return true;
+    }
+    if (dragOver.path === menuItem.path) return true;
+    return false;
+  };
 
   React.useEffect(() => {
     const escapeKey = (e: KeyboardEvent) => {

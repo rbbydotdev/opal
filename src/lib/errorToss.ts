@@ -1,10 +1,10 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 export function useErrorToss() {
   const [_, setState] = useState(null);
-  const toss = useCallback((err: Error) => {
+  const toss = (err: Error) => {
     setState(() => {
       throw err;
     });
-  }, []);
+  };
   return toss;
 }

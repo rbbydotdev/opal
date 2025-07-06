@@ -9,7 +9,7 @@ import fuzzysort from "fuzzysort";
 import { FileTextIcon } from "lucide-react";
 import mime from "mime-types";
 import Link from "next/link";
-import React, { forwardRef, JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState } from "react";
 import { basename } from "../lib/paths2";
 
 const SpotlightSearchItem = forwardRef<
@@ -26,7 +26,7 @@ const SpotlightSearchItem = forwardRef<
 
   return (
     // The `li` is for presentation only; the `a` tag is the menu item.
-    <li role="presentation" className="flex w-full flex-col rounded p-1">
+    (<li role="presentation" className="flex w-full flex-col rounded p-1">
       <Link
         id={id}
         ref={ref}
@@ -54,7 +54,7 @@ const SpotlightSearchItem = forwardRef<
         )}
         <div className="min-w-0 truncate text-xs font-mono text-sidebar-foreground/70">{title}</div>
       </Link>
-    </li>
+    </li>)
   );
 });
 SpotlightSearchItem.displayName = "SpotlightSearchItem";
@@ -70,7 +70,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
   const containerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<Element | null>(null); // To store what element triggered the dialog
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     setOpen(false);
     setSearch("");
     setActiveIndex(-1);
@@ -78,7 +78,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
     if (triggerRef.current instanceof HTMLElement) {
       triggerRef.current.focus();
     }
-  }, []);
+  };
 
   const sortedList = useMemo(() => {
     setActiveIndex(-1); // Reset index on new search results
@@ -105,50 +105,47 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
     }));
   }, [fileList, search]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
-      const itemsLength = menuItems?.length ?? 0;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
+    const itemsLength = menuItems?.length ?? 0;
 
-      switch (e.key) {
-        case "Tab":
-          e.preventDefault();
-          if (e.shiftKey) {
-            setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
-          } else {
-            setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
-          }
-          break;
-        case "ArrowDown":
-          e.preventDefault();
-          setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
-          break;
-        case "ArrowUp":
-          e.preventDefault();
+    switch (e.key) {
+      case "Tab":
+        e.preventDefault();
+        if (e.shiftKey) {
           setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
-          break;
-        case "Home":
-          e.preventDefault();
-          setActiveIndex(-1);
-          break;
-        case "End":
-          e.preventDefault();
-          setActiveIndex(itemsLength - 1);
-          break;
-        case " ":
-        case "Enter":
-          if (activeIndex === -1) return;
-          e.preventDefault();
-          (menuItems?.[activeIndex] as HTMLAnchorElement)?.click();
-          break;
-        case "Escape":
-          e.preventDefault();
-          handleClose();
-          break;
-      }
-    },
-    [activeIndex, handleClose]
-  );
+        } else {
+          setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
+        }
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Home":
+        e.preventDefault();
+        setActiveIndex(-1);
+        break;
+      case "End":
+        e.preventDefault();
+        setActiveIndex(itemsLength - 1);
+        break;
+      case " ":
+      case "Enter":
+        if (activeIndex === -1) return;
+        e.preventDefault();
+        (menuItems?.[activeIndex] as HTMLAnchorElement)?.click();
+        break;
+      case "Escape":
+        e.preventDefault();
+        handleClose();
+        break;
+    }
+  };
 
   // Effect to handle opening the search palette
   useEffect(() => {

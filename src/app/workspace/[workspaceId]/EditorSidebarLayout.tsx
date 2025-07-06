@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 // --- Configuration Constants ---
 // Widths for the sidebar states
@@ -83,7 +83,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
     setCurrentDisplayWidth(initialLoadedIsCollapsed ? COLLAPSED_STATE_WIDTH : initialLoadedOpenWidth);
   }, []);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (sidebarRef.current) {
       dragStartInfoRef.current = {
@@ -92,7 +92,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
       };
       setIsResizing(true);
     }
-  }, []);
+  };
 
   // Effect for managing global mousemove and mouseup event listeners during resize
   useEffect(() => {

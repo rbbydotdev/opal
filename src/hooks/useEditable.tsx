@@ -6,7 +6,7 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, changePrefix, prefix, RelPath, relPath, sanitizeUserInputFilePath } from "@/lib/paths2";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 export function useEditable<T extends TreeFile | TreeDir>({
   treeNode,
   expand,
@@ -56,147 +56,126 @@ export function useEditable<T extends TreeFile | TreeDir>({
     }
   }, [isCurrentPath, isEditing]);
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.button === 2) {
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        setFileTreeCtx(({ selectedRange }) => ({
-          editing: null,
-          editType: null,
-          focused: treeNode.path,
-          virtual: null,
-          selectedRange: Array.from(new Set([...selectedRange, treeNode.path])),
-        }));
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 2) {
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      setFileTreeCtx(({ selectedRange }) => ({
+        editing: null,
+        editType: null,
+        focused: treeNode.path,
+        virtual: null,
+        selectedRange: Array.from(new Set([...selectedRange, treeNode.path])),
+      }));
 
-        return;
-      } else if (e.shiftKey && focused) {
-        e.preventDefault();
-        e.stopPropagation();
-        const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
-        if (focusedNode) {
-          const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode) ?? [];
-          setFileTreeCtx({
-            editing: null,
-            editType: null,
-            focused: treeNode.path,
-            virtual: null,
-            selectedRange: range,
-          });
-        }
-      } else if (!isEditing) {
-        //check if there was a right click
-        setFileTreeCtx(({ selectedRange }) => ({
-          editing: null,
-          editType: null,
-          focused: treeNode.path,
-          virtual: null,
-          selectedRange: [...new Set(selectedRange).add(treeNode.path)],
-        }));
-      }
-    },
-    [currentWorkspace.disk.fileTree, focused, isEditing, setFileTreeCtx, treeNode]
-  );
-  const handleMouseUp = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.button === 2) {
-        return;
-      }
-      if (!e.shiftKey) {
-        linkRef.current?.focus();
-        // const newRange = [...new Set(selectedRange).add(treeNode.path)];
+      return;
+    } else if (e.shiftKey && focused) {
+      e.preventDefault();
+      e.stopPropagation();
+      const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
+      if (focusedNode) {
+        const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode) ?? [];
         setFileTreeCtx({
           editing: null,
           editType: null,
           focused: treeNode.path,
           virtual: null,
+          selectedRange: range,
+        });
+      }
+    } else if (!isEditing) {
+      //check if there was a right click
+      setFileTreeCtx(({ selectedRange }) => ({
+        editing: null,
+        editType: null,
+        focused: treeNode.path,
+        virtual: null,
+        selectedRange: [...new Set(selectedRange).add(treeNode.path)],
+      }));
+    }
+  };
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (e.button === 2) {
+      return;
+    }
+    if (!e.shiftKey) {
+      linkRef.current?.focus();
+      // const newRange = [...new Set(selectedRange).add(treeNode.path)];
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        focused: treeNode.path,
+        virtual: null,
+        selectedRange: [treeNode.path],
+      });
+    }
+  };
+
+  const handleKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      // e.stopPropagation();
+      if (virtual) {
+        currentWorkspace.removeVirtualfile(virtual);
+      }
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        virtual: null,
+        focused,
+        selectedRange: [],
+      });
+      linkRef?.current?.blur();
+    } else if (e.key === "Enter") {
+      if (isEditing && editType) {
+        if (
+          prefix(fileName) &&
+          (["new", "duplicate"].includes(editType) || prefix(fileName) !== prefix(basename(fullPath)))
+        ) {
+          e.stopPropagation();
+          const wantPath = basename(changePrefix(fullPath, sanitizeUserInputFilePath(prefix(fileName))));
+          const gotPath = await commitChange(treeNode, wantPath, editType);
+          const newFocused = gotPath ?? fullPath;
+          if (gotPath !== null) {
+            setFileName(basename(gotPath));
+          }
+          return setFileTreeCtx({
+            editing: null,
+            editType: null,
+            virtual: null,
+            focused: newFocused,
+            selectedRange: [newFocused],
+          });
+        } else {
+          return setFileTreeCtx({
+            editing: null,
+            editType: null,
+            virtual: null,
+            focused,
+            selectedRange: focused ? [focused] : [],
+          });
+        }
+      } /*is not editing  time to edit! */ else {
+        return setFileTreeCtx({
+          editing: treeNode.path,
+          editType: "rename",
+          virtual: null,
+          focused: treeNode.path,
           selectedRange: [treeNode.path],
         });
       }
-    },
-    [setFileTreeCtx, treeNode.path]
-  );
+    } else if (e.key === " " && !isEditing) {
+      e.preventDefault();
+      linkRef.current?.click();
+    } else if (!isEditing && focused && (e.key === "Delete" || e.key === "Backspace") && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      void trashSelectedFiles();
+    }
+  };
 
-  const handleKeyDown = useCallback(
-    async (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        // e.stopPropagation();
-        if (virtual) {
-          currentWorkspace.removeVirtualfile(virtual);
-        }
-        setFileTreeCtx({
-          editing: null,
-          editType: null,
-          virtual: null,
-          focused,
-          selectedRange: [],
-        });
-        linkRef?.current?.blur();
-      } else if (e.key === "Enter") {
-        if (isEditing && editType) {
-          if (
-            prefix(fileName) &&
-            (["new", "duplicate"].includes(editType) || prefix(fileName) !== prefix(basename(fullPath)))
-          ) {
-            e.stopPropagation();
-            const wantPath = basename(changePrefix(fullPath, sanitizeUserInputFilePath(prefix(fileName))));
-            const gotPath = await commitChange(treeNode, wantPath, editType);
-            const newFocused = gotPath ?? fullPath;
-            if (gotPath !== null) {
-              setFileName(basename(gotPath));
-            }
-            return setFileTreeCtx({
-              editing: null,
-              editType: null,
-              virtual: null,
-              focused: newFocused,
-              selectedRange: [newFocused],
-            });
-          } else {
-            return setFileTreeCtx({
-              editing: null,
-              editType: null,
-              virtual: null,
-              focused,
-              selectedRange: focused ? [focused] : [],
-            });
-          }
-        } /*is not editing  time to edit! */ else {
-          return setFileTreeCtx({
-            editing: treeNode.path,
-            editType: "rename",
-            virtual: null,
-            focused: treeNode.path,
-            selectedRange: [treeNode.path],
-          });
-        }
-      } else if (e.key === " " && !isEditing) {
-        e.preventDefault();
-        linkRef.current?.click();
-      } else if (!isEditing && focused && (e.key === "Delete" || e.key === "Backspace") && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        void trashSelectedFiles();
-      }
-    },
-    [
-      isEditing,
-      virtual,
-      setFileTreeCtx,
-      focused,
-      currentWorkspace,
-      editType,
-      fileName,
-      fullPath,
-      commitChange,
-      treeNode,
-      trashSelectedFiles,
-    ]
-  );
-
-  const handleFocus = useCallback(() => {
+  const handleFocus = () => {
     if (selectedRange.includes(treeNode.path)) {
       //to prevent eager focus on click and drag
       return;
@@ -208,39 +187,33 @@ export function useEditable<T extends TreeFile | TreeDir>({
       focused: treeNode.path,
       selectedRange: [treeNode.path],
     });
-  }, [editType, editing, selectedRange, setFileTreeCtx, treeNode.path, virtual]);
+  };
 
-  const handleBlur = useCallback(
-    (_e: React.FocusEvent<HTMLInputElement | HTMLAnchorElement>) => {
-      if (virtual) currentWorkspace.removeVirtualfile(virtual);
+  const handleBlur = (_e: React.FocusEvent<HTMLInputElement | HTMLAnchorElement>) => {
+    if (virtual) currentWorkspace.removeVirtualfile(virtual);
 
-      setFileTreeCtx(({ focused, selectedRange }) => ({
-        editing: null,
-        editType: null,
-        virtual: null,
-        focused,
-        selectedRange,
-      }));
-    },
-    [currentWorkspace, setFileTreeCtx, virtual]
-  );
+    setFileTreeCtx(({ focused, selectedRange }) => ({
+      editing: null,
+      editType: null,
+      virtual: null,
+      focused,
+      selectedRange,
+    }));
+  };
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.button === 2) {
-        return;
-      }
-      // (e.target as HTMLElement).closest("a")?.focus();
-      //meta key cmd click or ctrl click
-      if (e.shiftKey || e.metaKey || e.ctrlKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-      onClick?.(e);
-    },
-    [onClick]
-  );
+  const handleClick = (e: React.MouseEvent) => {
+    if (e.button === 2) {
+      return;
+    }
+    // (e.target as HTMLElement).closest("a")?.focus();
+    //meta key cmd click or ctrl click
+    if (e.shiftKey || e.metaKey || e.ctrlKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    onClick?.(e);
+  };
   return {
     isEditing,
     currentFile,

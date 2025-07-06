@@ -16,7 +16,7 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath } from "@/lib/paths2";
 import clsx from "clsx";
-import React, { useCallback } from "react";
+import React from "react";
 import { tryParseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
 
 export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
@@ -158,13 +158,10 @@ export function FileTreeMenu({
       }
     },
   });
-  const handleDragStartWithImg = useCallback(
-    (node: TreeNode) => (e: React.DragEvent) => {
-      handleDragStart(e, node);
-      setReactDragImage(e, <FileTreeDragPreview />);
-    },
-    [handleDragStart, setReactDragImage]
-  );
+  const handleDragStartWithImg = (node: TreeNode) => (e: React.DragEvent) => {
+    handleDragStart(e, node);
+    setReactDragImage(e, <FileTreeDragPreview />);
+  };
 
   const { addFile, addDir, trash, copy, cut, paste, duplicate, rename, untrash, remove } =
     useFiletreeMenuContextMenuActions({ currentWorkspace });

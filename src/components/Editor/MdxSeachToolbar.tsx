@@ -2,7 +2,7 @@ import { useEditorSearch } from "@/components/Editor/searchPlugin";
 import { EditorSearchBar } from "@/features/editor-search/EditorSearchBar";
 import { useEditorSearchTool } from "@/features/editor-search/useEditorSearch";
 import { editorRootElementRef$, useRealm } from "@mdxeditor/editor";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
 export const MdxSearchToolbar = () => {
@@ -11,7 +11,7 @@ export const MdxSearchToolbar = () => {
   const editorRootEl = realm.getValue(editorRootElementRef$);
   const { prev, next, cursor, currentRange, setSearch, ranges, replace, replaceAll, setMode } = useEditorSearch();
 
-  const handleSearchClose = useCallback(() => {
+  const handleSearchClose = () => {
     const caretRange = currentRange?.cloneRange();
 
     closeSearch();
@@ -23,14 +23,11 @@ export const MdxSearchToolbar = () => {
     } else {
       editorRootEl?.current.focus();
     }
-  }, [closeSearch, currentRange, editorRootEl]);
+  };
 
-  const handleSearchChange = useCallback(
-    (searchTerm: string | null) => {
-      setSearch(searchTerm);
-    },
-    [setSearch]
-  );
+  const handleSearchChange = (searchTerm: string | null) => {
+    setSearch(searchTerm);
+  };
   useEffect(() => {
     if (!isSearchOpen) {
       setMode("typing");

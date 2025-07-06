@@ -20,7 +20,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
 import { ChevronRight, FileTextIcon, Loader, Search, SearchXIcon, X } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const MAX_MATCHES_SHOWN = 5;
 
@@ -49,31 +49,25 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     useWorkspaceSearchResults();
   const { workspace } = optionsValue;
   const currWorkspaceName = currentWorkspace.name;
-  const resetComponentState = useCallback(() => {
+  const resetComponentState = () => {
     setSearchTerm("");
     resetSearch();
-  }, [resetSearch]);
+  };
 
-  const handleInputChange = useCallback(
-    (searchTerm: string) => {
-      setSearchTerm(searchTerm);
-      submit({ searchTerm, workspaceName: workspace });
-    },
-    [submit, workspace]
-  );
+  const handleInputChange = (searchTerm: string) => {
+    setSearchTerm(searchTerm);
+    submit({ searchTerm, workspaceName: workspace });
+  };
 
-  const handleOpenChange = useCallback(
-    (open: boolean) => {
-      if (open) {
-        // When the dialog opens, reset its state.
-        resetComponentState();
-      } else {
-        tearDown();
-      }
-      setOpen(open);
-    },
-    [resetComponentState, tearDown]
-  );
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      // When the dialog opens, reset its state.
+      resetComponentState();
+    } else {
+      tearDown();
+    }
+    setOpen(open);
+  };
 
   // --- Keyboard shortcut effect (no changes) ---
   useEffect(() => {
@@ -347,7 +341,7 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
   });
   return (
     // 1. Use flexbox to align the line number and the text content
-    <a href={href + "?" + sp} onClick={onClick}>
+    (<a href={href + "?" + sp} onClick={onClick}>
       <div className="border-b-4 last-of-type:border-none border-background flex items-start p-1 py-1 bg-primary-foreground font-mono text-xs group hover:bg-ring/80 cursor-pointer hover:text-primary-foreground">
         {/* 2. Create a container for the line number and badge */}
         <div className="relative min-w-8 text-right font-bold mr-2">
@@ -368,6 +362,6 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
           {match.endText}
         </div>
       </div>
-    </a>
+    </a>)
   );
 }

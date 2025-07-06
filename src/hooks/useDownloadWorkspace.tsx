@@ -1,10 +1,8 @@
-import { useCallback } from "react";
-
 export function useDownloadWorkspace({
   onStart: onStart,
   onFinish,
 }: { onStart?: () => void; onFinish?: () => void } = {}) {
-  return useCallback(async () => {
+  return async () => {
     try {
       onStart?.();
       const res = await fetch("/download", { method: "GET" });
@@ -26,5 +24,5 @@ export function useDownloadWorkspace({
       alert("Download failed: " + e.message);
       onFinish?.();
     }
-  }, [onStart, onFinish]);
+  };
 }

@@ -9,7 +9,6 @@ import {
   useCellValue,
   useRealm,
 } from "@mdxeditor/editor";
-import { useCallback } from "react";
 const { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, getNearestEditorFromDOMNode } = lexical;
 export const MDX_SEARCH_NAME = "MdxSearch";
 export const MDX_FOCUS_SEARCH_NAME = "MdxFocusSearch";
@@ -256,101 +255,86 @@ export function useEditorSearch() {
   const contentEditable = useCellValue(editorSearchScollableContent$);
 
   const rangeCount = ranges.length;
-  const scrollToRangeOrIndex = useCallback(
-    (range: Range | number, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
-      const scrollRange = typeof range === "number" ? ranges[range - 1] : range;
-      if (!scrollRange) {
-        throw new Error("Error scrolling to range, range does not exist");
-      }
-      return scrollToRange(scrollRange, contentEditable as HTMLElement, options);
-    },
-    [contentEditable, ranges]
-  );
+  const scrollToRangeOrIndex = (range: Range | number, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
+    const scrollRange = typeof range === "number" ? ranges[range - 1] : range;
+    if (!scrollRange) {
+      throw new Error("Error scrolling to range, range does not exist");
+    }
+    return scrollToRange(scrollRange, contentEditable as HTMLElement, options);
+  };
 
-  const setSearch = useCallback(
-    (term: string | null) => {
-      if ((term ?? "") !== search) {
-        realm.pub(editorSearchCursor$, 0);
-      }
-      realm.pub(editorSearchTermDebounced$, term ?? "");
-      //reset cursor
-    },
-    [realm, search]
-  );
+  const setSearch = (term: string | null) => {
+    if ((term ?? "") !== search) {
+      realm.pub(editorSearchCursor$, 0);
+    }
+    realm.pub(editorSearchTermDebounced$, term ?? "");
+    //reset cursor
+  };
 
-  const setMode = useCallback(
-    (mode: "replace" | "typing") => {
-      realm.pub(debouncedSearch$, mode);
-    },
-    [realm]
-  );
+  const setMode = (mode: "replace" | "typing") => {
+    realm.pub(debouncedSearch$, mode);
+  };
 
-  const next = useCallback(() => {
+  const next = () => {
     if (!ranges.length) return;
     const newVal = (cursor % ranges.length) + 1;
     scrollToRangeOrIndex(newVal);
     realm.pub(editorSearchCursor$, newVal);
-  }, [ranges, cursor, scrollToRangeOrIndex, realm]);
+  };
 
-  const prev = useCallback(() => {
+  const prev = () => {
     if (!ranges.length) return;
     const newVal = cursor <= 1 ? ranges.length : cursor - 1;
     scrollToRangeOrIndex(newVal);
     realm.pub(editorSearchCursor$, newVal);
-  }, [ranges, cursor, scrollToRangeOrIndex, realm]);
+  };
 
-  const replace = useCallback(
-    (str: string, onUpdate?: () => void) => {
-      const currentRange = ranges[cursor - 1];
-      if (!currentRange) {
-        return;
-      }
-      const { startContainer, startOffset } = currentRange ?? {};
-      return replaceTextInRange(currentRange, str, () => {
-        //when the replaced text continues to match the search term
-        //cursor must be incremented to the next match
-        const unsub = realm.sub(editorSearchRanges$, (newRanges) => {
-          unsub();
-          if (
-            isSimilarRange(newRanges[cursor - 1]! ?? {}, {
-              startOffset,
-              startContainer,
-            })
-          ) {
-            realm.pub(editorSearchCursor$, (cursor + 1) % (newRanges.length + 1) || 1);
+  const replace = (str: string, onUpdate?: () => void) => {
+    const currentRange = ranges[cursor - 1];
+    if (!currentRange) {
+      return;
+    }
+    const { startContainer, startOffset } = currentRange ?? {};
+    return replaceTextInRange(currentRange, str, () => {
+      //when the replaced text continues to match the search term
+      //cursor must be incremented to the next match
+      const unsub = realm.sub(editorSearchRanges$, (newRanges) => {
+        unsub();
+        if (
+          isSimilarRange(newRanges[cursor - 1]! ?? {}, {
+            startOffset,
+            startContainer,
+          })
+        ) {
+          realm.pub(editorSearchCursor$, (cursor + 1) % (newRanges.length + 1) || 1);
+        }
+      });
+      onUpdate?.();
+    });
+  };
+
+  const replaceAll = (str: string, onUpdate?: () => void) => {
+    const runReplaceAll = () => {
+      let ticks = 0;
+      for (let i = ranges.length - 1; i >= 0; i--) {
+        const textReplaceRange = ranges[i];
+        if (!textReplaceRange) {
+          throw new Error("error replacing all text range does not exist");
+        }
+        replaceTextInRange(textReplaceRange, str, () => {
+          ticks++;
+          if (ticks >= ranges.length) {
+            onUpdate?.();
           }
         });
-        onUpdate?.();
-      });
-    },
-    [ranges, cursor, realm]
-  );
-
-  const replaceAll = useCallback(
-    (str: string, onUpdate?: () => void) => {
-      const runReplaceAll = () => {
-        let ticks = 0;
-        for (let i = ranges.length - 1; i >= 0; i--) {
-          const textReplaceRange = ranges[i];
-          if (!textReplaceRange) {
-            throw new Error("error replacing all text range does not exist");
-          }
-          replaceTextInRange(textReplaceRange, str, () => {
-            ticks++;
-            if (ticks >= ranges.length) {
-              onUpdate?.();
-            }
-          });
-        }
-      };
-      if (typeof requestIdleCallback === "function") {
-        requestIdleCallback(runReplaceAll);
-      } else {
-        setTimeout(runReplaceAll, 0);
       }
-    },
-    [ranges]
-  );
+    };
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(runReplaceAll);
+    } else {
+      setTimeout(runReplaceAll, 0);
+    }
+  };
 
   return {
     next,
