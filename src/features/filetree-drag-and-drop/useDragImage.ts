@@ -1,5 +1,5 @@
 // hooks/useReactDragImage.ts
-import React, { ReactElement, useCallback, useEffect, useRef, useState } from "react";
+import React, { ReactElement, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -46,7 +46,7 @@ export const useDragImage = () => {
    * @param event The native React.DragEvent from `onDragStart`.
    * @param component The React component (JSX) to use as the image.
    */
-  const setReactDragImage = useCallback((event: React.DragEvent, component: ReactElement) => {
+  const setReactDragImage = (event: React.DragEvent, component: ReactElement) => {
     // Store the event for use in the useEffect.
     eventRef.current = event;
 
@@ -57,7 +57,7 @@ export const useDragImage = () => {
 
     // Set state to trigger the useEffect.
     setDragPreview(componentWithRef);
-  }, []);
+  };
 
   const DragImagePortal = dragPreview ? createPortal(dragPreview, document.body) : null;
 

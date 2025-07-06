@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { Dispatch, SetStateAction } from "react";
 
@@ -33,45 +33,39 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
   //  { storedValue: T; initialValue: T | (() => T); setValue: Dispatch<SetStateAction<T>>; removeValue: () => void }
   const { initializeWithValue = true } = options;
 
-  const serializer = useCallback<(value: T) => string>(
-    (value) => {
-      if (options.serializer) {
-        return options.serializer(value);
-      }
+  const serializer = (value) => {
+    if (options.serializer) {
+      return options.serializer(value);
+    }
 
-      return JSON.stringify(value);
-    },
-    [options]
-  );
+    return JSON.stringify(value);
+  };
 
-  const deserializer = useCallback<(value: string) => T>(
-    (value) => {
-      if (options.deserializer) {
-        return options.deserializer(value);
-      }
-      // Support 'undefined' as a value
-      if (value === "undefined") {
-        return undefined as unknown as T;
-      }
+  const deserializer = (value) => {
+    if (options.deserializer) {
+      return options.deserializer(value);
+    }
+    // Support 'undefined' as a value
+    if (value === "undefined") {
+      return undefined as unknown as T;
+    }
 
-      const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
+    const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
 
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(value);
-      } catch (error) {
-        console.error("Error parsing JSON:", error);
-        return defaultValue; // Return initialValue if parsing fails
-      }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(value);
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      return defaultValue; // Return initialValue if parsing fails
+    }
 
-      return parsed as T;
-    },
-    [options, initialValue]
-  );
+    return parsed as T;
+  };
 
   // Get from local storage then
   // parse stored json or return initialValue
-  const readValue = useCallback((): T => {
+  const readValue = (): T => {
     const initialValueToUse = initialValue instanceof Function ? initialValue() : initialValue;
 
     // Prevent build error "window is undefined" but keep working
@@ -86,7 +80,7 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
       console.warn(`Error reading localStorage key “${key}”:`, error);
       return initialValueToUse;
     }
-  }, [initialValue, key, deserializer]);
+  };
 
   const [storedValue, setStoredValue] = useState(() => {
     if (initializeWithValue) {
@@ -98,33 +92,30 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
 
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
-  const setValue: Dispatch<SetStateAction<T>> = useCallback(
-    (value) => {
-      // Prevent build error "window is undefined" but keeps working
-      if (IS_SERVER) {
-        console.warn(`Tried setting localStorage key “${key}” even though environment is not a client`);
-      }
+  const setValue: Dispatch<SetStateAction<T>> = (value) => {
+    // Prevent build error "window is undefined" but keeps working
+    if (IS_SERVER) {
+      console.warn(`Tried setting localStorage key “${key}” even though environment is not a client`);
+    }
 
-      try {
-        // Allow value to be a function so we have the same API as useState
-        const newValue = value instanceof Function ? value(readValue()) : value;
+    try {
+      // Allow value to be a function so we have the same API as useState
+      const newValue = value instanceof Function ? value(readValue()) : value;
 
-        // Save to local storage
-        window.localStorage.setItem(key, serializer(newValue));
+      // Save to local storage
+      window.localStorage.setItem(key, serializer(newValue));
 
-        // Save state
-        setStoredValue(newValue);
+      // Save state
+      setStoredValue(newValue);
 
-        // We dispatch a custom event so every similar useLocalStorage hook is notified
-        window.dispatchEvent(new StorageEvent("local-storage", { key }));
-      } catch (error) {
-        console.warn(`Error setting localStorage key “${key}”:`, error);
-      }
-    },
-    [key, serializer, readValue]
-  );
+      // We dispatch a custom event so every similar useLocalStorage hook is notified
+      window.dispatchEvent(new StorageEvent("local-storage", { key }));
+    } catch (error) {
+      console.warn(`Error setting localStorage key “${key}”:`, error);
+    }
+  };
 
-  const removeValue = useCallback(() => {
+  const removeValue = () => {
     // Prevent build error "window is undefined" but keeps working
     if (IS_SERVER) {
       console.warn(`Tried removing localStorage key “${key}” even though environment is not a client`);
@@ -140,22 +131,19 @@ export default function useLocalStorage2<T, U = T | (() => T)>(
 
     // We dispatch a custom event so every similar useLocalStorage hook is notified
     window.dispatchEvent(new StorageEvent("local-storage", { key }));
-  }, [initialValue, key]);
+  };
 
   useEffect(() => {
     setStoredValue(readValue());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const handleStorageChange = useCallback(
-    (event: StorageEvent | CustomEvent) => {
-      if ((event as StorageEvent).key && (event as StorageEvent).key !== key) {
-        return;
-      }
-      setStoredValue(readValue());
-    },
-    [key, readValue]
-  );
+  const handleStorageChange = (event: StorageEvent | CustomEvent) => {
+    if ((event as StorageEvent).key && (event as StorageEvent).key !== key) {
+      return;
+    }
+    setStoredValue(readValue());
+  };
 
   useEffect(() => {
     addEventListener("storage", handleStorageChange);

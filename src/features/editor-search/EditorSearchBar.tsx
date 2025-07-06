@@ -6,7 +6,7 @@ import { IS_MAC } from "@/lib/isMac";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import clsx from "clsx";
 import { ChevronDown, ChevronRight, ChevronUp, Replace, ReplaceAll, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface FloatingSearchBarProps {
@@ -40,26 +40,23 @@ export function EditorSearchBar({
   // const replaceTermRef = useRef<string>("");
   const [isReplaceExpanded, setIsReplaceExpanded] = useState<boolean>(false);
   const pauseBlurClose = useRef(false);
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     onClose?.();
     onChange(null);
-  }, [onChange, onClose]);
+  };
 
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      onChange?.(value || null);
-      setSearch(value || null);
-    },
-    [onChange]
-  );
+  const handleSearchChange = (value: string) => {
+    onChange?.(value || null);
+    setSearch(value || null);
+  };
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
-  const selectSearchText = useCallback(() => {
+  const selectSearchText = () => {
     if (searchInputRef.current && isOpen) {
       searchInputRef.current.select();
     }
-  }, [isOpen]);
+  };
   useEffect(() => {
     selectSearchText();
   }, [isOpen, selectSearchText]);
@@ -88,7 +85,7 @@ export function EditorSearchBar({
 
   //this is a work around replacing text node in the lexical way requires a selection range
   //which when used will trigger a blur of the search bar thus triggering a close
-  const pauseBlurCallback = useCallback(function pauseBlurCallback() {
+  const pauseBlurCallback = function pauseBlurCallback() {
     pauseBlurClose.current = true;
     return () => {
       replaceInputRef.current?.addEventListener(
@@ -100,24 +97,21 @@ export function EditorSearchBar({
       );
       replaceInputRef.current?.focus();
     };
-  }, []);
+  };
   //watch for 'submit'
-  const handleReplaceInputKeydown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
-        if (replaceInputRef.current === null) return;
-        // if cmd or ctrl is pressed, replace all
-        if (e.ctrlKey || e.metaKey) {
-          replaceAll(replaceInputRef.current.value, pauseBlurCallback());
-          return;
-        }
-        replace(replaceInputRef.current.value, pauseBlurCallback());
+  const handleReplaceInputKeydown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (replaceInputRef.current === null) return;
+      // if cmd or ctrl is pressed, replace all
+      if (e.ctrlKey || e.metaKey) {
+        replaceAll(replaceInputRef.current.value, pauseBlurCallback());
+        return;
       }
-    },
-    [pauseBlurCallback, replace, replaceAll]
-  );
+      replace(replaceInputRef.current.value, pauseBlurCallback());
+    }
+  };
   useEffect(() => {
     if (isOpen && search) {
       setSearch(search);
@@ -125,13 +119,13 @@ export function EditorSearchBar({
     }
   }, [isOpen, onChange, search]);
 
-  const handleReplace = useCallback(() => {
+  const handleReplace = () => {
     replace(replaceInputRef?.current?.value ?? "", pauseBlurCallback());
-  }, [pauseBlurCallback, replace]);
+  };
 
-  const handleReplaceAll = useCallback(() => {
+  const handleReplaceAll = () => {
     replaceAll(replaceInputRef?.current?.value ?? "", pauseBlurCallback());
-  }, [pauseBlurCallback, replaceAll]);
+  };
 
   if (!isOpen) return null;
 

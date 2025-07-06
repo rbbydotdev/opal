@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export function useSuperKeyLocalStorage<T>(superKey: string, key: string, initialValue: T | (() => T)) {
   const isServer = typeof window === "undefined";
 
   // Helper to get the full object for the superKey
-  const getSuperObject = useCallback((): Record<string, unknown> => {
+  const getSuperObject = (): Record<string, unknown> => {
     try {
       const item = window.localStorage.getItem(superKey);
       return item ? (JSON.parse(item) as Record<string, unknown>) : {};
@@ -12,16 +12,16 @@ export function useSuperKeyLocalStorage<T>(superKey: string, key: string, initia
       console.error("Error accessing localStorage", error);
       return {};
     }
-  }, [superKey]);
+  };
 
   // Helper to get the value for this key
-  const getInitialValue = useCallback(() => {
+  const getInitialValue = () => {
     const superObj = getSuperObject();
     if (superObj && typeof superObj === "object" && superObj !== null && key in superObj) {
       return superObj[key];
     }
     return typeof initialValue === "function" ? (initialValue as () => T)() : initialValue;
-  }, [getSuperObject, initialValue, key]);
+  };
 
   // State to store our value
   const [storedValue, setStoredValue] = useState<T>(
@@ -40,21 +40,18 @@ export function useSuperKeyLocalStorage<T>(superKey: string, key: string, initia
   }, [getInitialValue, isServer]);
 
   // Set value for this key inside the superKey object
-  const setValue = useCallback(
-    (value: T | ((val: T) => T)) => {
-      try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
+  const setValue = (value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
 
-        const superObj = getSuperObject();
-        superObj[key] = valueToStore;
-        window.localStorage.setItem(superKey, JSON.stringify(superObj));
-      } catch (error) {
-        console.error("Error setting localStorage value", error);
-      }
-    },
-    [key, storedValue, superKey, getSuperObject]
-  );
+      const superObj = getSuperObject();
+      superObj[key] = valueToStore;
+      window.localStorage.setItem(superKey, JSON.stringify(superObj));
+    } catch (error) {
+      console.error("Error setting localStorage value", error);
+    }
+  };
 
   // Listen for changes to the superKey object
   useEffect(() => {
@@ -84,7 +81,7 @@ export function useSuperKeyLocalStorage<T>(superKey: string, key: string, initia
   }, [superKey, key, initialValue]);
 
   // Remove just this key from the superKey object
-  const clear = useCallback(() => {
+  const clear = () => {
     try {
       const superObj = getSuperObject();
       delete superObj[key];
@@ -93,16 +90,16 @@ export function useSuperKeyLocalStorage<T>(superKey: string, key: string, initia
     } catch (error) {
       console.error("Error clearing localStorage", error);
     }
-  }, [key, superKey, initialValue, getSuperObject]);
+  };
 
   // Remove the entire superKey object
-  const clearSuperKey = useCallback(() => {
+  const clearSuperKey = () => {
     try {
       window.localStorage.removeItem(superKey);
     } catch (error) {
       console.error("Error clearing superKey from localStorage", error);
     }
-  }, [superKey]);
+  };
 
   return [storedValue, setValue, clear, clearSuperKey] as const;
 }

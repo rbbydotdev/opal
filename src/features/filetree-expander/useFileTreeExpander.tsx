@@ -3,7 +3,7 @@ import { FileTreeExpanderContext } from "@/features/filetree-expander/FileTreeEx
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, isAncestor } from "@/lib/paths2";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 function expandForFile(dirTree: string[], file: AbsPath | null, exp: ExpandMap) {
   if (!file) return exp;
@@ -30,10 +30,7 @@ export function useFileTreeExpander({
   expanderId: string;
 }) {
   const [local, setLocal] = useState<ExpandMap>({});
-  const setAllStates = useCallback(
-    (state: boolean) => flatTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {}),
-    [flatTree]
-  );
+  const setAllStates = (state: boolean) => flatTree.reduce<ExpandMap>((acc, file) => ({ ...acc, [file]: state }), {});
   const [stored, setStored] = useLocalStorage<ExpandMap>(`SidebarFileMenu/expanded/${expanderId}`, local);
 
   const expandSingle = (path: string, expanded: boolean) => {

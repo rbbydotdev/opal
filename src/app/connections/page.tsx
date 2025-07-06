@@ -8,14 +8,14 @@ export default function Page() {
 
 function VendorButton({ children, icon }: { children: ReactNode; icon: ReactNode }) {
   return (
-    <Button variant="outline" className="self-center w-full gap-2">
-      <span>{icon}</span>
-      <span>{children}</span>
-    </Button>
     // <Button variant="outline" className="self-center w-full grid grid-cols-[auto,1fr] items-center gap-2">
     //   <span className="flex justify-start">{icon}</span>
     //   <span className="flex justify-center">{children}</span>
     // </Button>
+    (<Button variant="outline" className="self-center w-full gap-2">
+      <span>{icon}</span>
+      <span>{children}</span>
+    </Button>)
   );
 }
 

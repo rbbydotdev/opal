@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EyeIcon, EyeOffIcon, LockIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 export function EncryptedZipDialog({
   onSubmit,
@@ -33,7 +33,7 @@ export function EncryptedZipDialog({
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const reset = useCallback(() => {
+  const reset = () => {
     setPassword("");
     setConfirmPassword("");
     setShowPassword(false);
@@ -41,7 +41,7 @@ export function EncryptedZipDialog({
     setIsSubmitting(false);
     setError(null);
     setIsOpen(false);
-  }, []);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

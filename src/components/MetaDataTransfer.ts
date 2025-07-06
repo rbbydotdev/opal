@@ -211,7 +211,8 @@ export class MetaDataTransfer {
   private static isStandardMimeType(type: string): boolean {
     const lowerType = type.toLowerCase();
     return (
-      lowerType.startsWith("text/") || lowerType.startsWith("image/") || lowerType.startsWith("application/json") // Add others as needed
+      // Add others as needed
+      (lowerType.startsWith("text/") || lowerType.startsWith("image/") || lowerType.startsWith("application/json"))
     );
   }
 

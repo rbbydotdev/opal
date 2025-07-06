@@ -9,7 +9,7 @@ import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 export const NULL_WORKSPACE = new NullWorkspace();
 const NULL_TREE_ROOT = new TreeDirRoot();
@@ -51,31 +51,25 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
     return () => clearTimeout(debounceRef.current!);
   }, []);
 
-  const updateContents = useCallback(
-    (updates: string) => {
-      if (filePath && currentWorkspace) {
-        void currentWorkspace?.disk.writeFile(filePath, updates);
-        void currentWorkspace.disk.local.emit(DiskEvents.WRITE, {
-          filePaths: [filePath],
-        });
-      }
-    },
-    [currentWorkspace, filePath]
-  );
+  const updateContents = (updates: string) => {
+    if (filePath && currentWorkspace) {
+      void currentWorkspace?.disk.writeFile(filePath, updates);
+      void currentWorkspace.disk.local.emit(DiskEvents.WRITE, {
+        filePaths: [filePath],
+      });
+    }
+  };
 
-  const debouncedUpdate = useCallback(
-    (content: string | null) => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+  const debouncedUpdate = (content: string | null) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      if (content !== null) {
+        updateContents(String(content));
       }
-      debounceRef.current = setTimeout(() => {
-        if (content !== null) {
-          updateContents(String(content));
-        }
-      }, 250);
-    },
-    [updateContents]
-  );
+    }, 250);
+  };
 
   useEffect(() => {
     const fetchFileContents = async () => {

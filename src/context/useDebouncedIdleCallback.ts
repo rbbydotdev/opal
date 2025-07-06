@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 type IdleCallbackHandle = number;
 type TimeoutHandle = ReturnType<typeof setTimeout>;
@@ -21,7 +21,7 @@ export function useDebouncedIdleCallback<T extends unknown[]>(
   });
 
   // Cancel any pending callbacks
-  const cancel = useCallback(() => {
+  const cancel = () => {
     if (handleRef.current.timeout !== null) {
       clearTimeout(handleRef.current.timeout);
       handleRef.current.timeout = null;
@@ -34,34 +34,31 @@ export function useDebouncedIdleCallback<T extends unknown[]>(
       handleRef.current.cancel();
       handleRef.current.cancel = null;
     }
-  }, []);
+  };
 
   // Debounced function
-  const debounced = useCallback(
-    (...args: T) => {
-      cancel();
+  const debounced = (...args: T) => {
+    cancel();
 
-      handleRef.current.timeout = setTimeout(() => {
-        handleRef.current.timeout = null;
+    handleRef.current.timeout = setTimeout(() => {
+      handleRef.current.timeout = null;
 
-        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-          handleRef.current.idle = window.requestIdleCallback(
-            () => {
-              handleRef.current.idle = null;
-              fn(...args);
-            },
-            { timeout: idleTimeout }
-          );
-        } else {
-          handleRef.current.timeout = setTimeout(() => {
-            handleRef.current.timeout = null;
+      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+        handleRef.current.idle = window.requestIdleCallback(
+          () => {
+            handleRef.current.idle = null;
             fn(...args);
-          }, idleTimeout);
-        }
-      }, delay);
-    },
-    [fn, delay, idleTimeout, cancel]
-  );
+          },
+          { timeout: idleTimeout }
+        );
+      } else {
+        handleRef.current.timeout = setTimeout(() => {
+          handleRef.current.timeout = null;
+          fn(...args);
+        }, idleTimeout);
+      }
+    }, delay);
+  };
 
   // Cleanup on unmount
   useEffect(() => cancel, [cancel]);

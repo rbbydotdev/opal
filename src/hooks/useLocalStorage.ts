@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
   const isServer = typeof window === "undefined";
@@ -27,7 +27,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
   });
 
   // Only depends on key
-  const getInitialValue = useCallback(() => {
+  const getInitialValue = () => {
     try {
       const item = window.localStorage.getItem(key);
       if (item !== null) {
@@ -39,7 +39,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
     return typeof initialValueRef.current === "function"
       ? (initialValueRef.current as () => T)()
       : initialValueRef.current;
-  }, [key]);
+  };
 
   // Only run on mount or when key changes
   useEffect(() => {
@@ -49,18 +49,15 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]); // Don't include getInitialValue or initialValue
 
-  const setValue = useCallback(
-    (value: T | ((val: T) => T)) => {
-      try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
-      } catch (error) {
-        console.error("Error setting localStorage value", error);
-      }
-    },
-    [key, storedValue]
-  );
+  const setValue = (value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error("Error setting localStorage value", error);
+    }
+  };
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
@@ -81,7 +78,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
     };
   }, [getInitialValue, key]);
 
-  const clear = useCallback(() => {
+  const clear = () => {
     try {
       window.localStorage.removeItem(key);
       setStoredValue(
@@ -90,7 +87,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
     } catch (error) {
       console.error("Error clearing localStorage", error);
     }
-  }, [key]);
+  };
 
   return [storedValue, setValue, clear] as const;
 }

@@ -6,7 +6,7 @@ import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
-import React, { useCallback } from "react";
+import React from "react";
 
 export function isExternalFileDrop(event: React.DragEvent) {
   return (
@@ -18,43 +18,37 @@ export function isExternalFileDrop(event: React.DragEvent) {
 }
 
 export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  return useCallback(
-    async function ({ files, targetNode }: { files: FileList | []; targetNode: TreeNode }) {
-      let imageFiles: File[] = [];
-      let markdownFiles: File[] = [];
-      const targetDir = targetNode.closestDirPath();
-      const fileArray = Array.from(files);
-      imageFiles = fileArray.filter((file) => file.type.startsWith("image/"));
-      markdownFiles = fileArray.filter((file) => file.type === "text/markdown" || file.name.endsWith(".md"));
-      const promises: Promise<unknown>[] = [];
+  return async function ({ files, targetNode }: { files: FileList | []; targetNode: TreeNode }) {
+    let imageFiles: File[] = [];
+    let markdownFiles: File[] = [];
+    const targetDir = targetNode.closestDirPath();
+    const fileArray = Array.from(files);
+    imageFiles = fileArray.filter((file) => file.type.startsWith("image/"));
+    markdownFiles = fileArray.filter((file) => file.type === "text/markdown" || file.name.endsWith(".md"));
+    const promises: Promise<unknown>[] = [];
 
-      if (imageFiles.length > 0) {
-        promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
-      }
+    if (imageFiles.length > 0) {
+      promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
+    }
 
-      if (markdownFiles.length > 0) {
-        const newFilesData = markdownFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
-        promises.push(currentWorkspace.newFiles(newFilesData));
-      }
+    if (markdownFiles.length > 0) {
+      const newFilesData = markdownFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
+      promises.push(currentWorkspace.newFiles(newFilesData));
+    }
 
-      return Promise.all(promises);
-    },
-    [currentWorkspace]
-  );
+    return Promise.all(promises);
+  };
 }
 
 export function useHandleDropFilesEventForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const dropFilesHandler = useHandleDropFilesForNode({ currentWorkspace });
-  return useCallback(
-    (event: React.DragEvent, targetNode: TreeNode) => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (event.dataTransfer?.files) {
-        return dropFilesHandler({ files: event.dataTransfer.files, targetNode });
-      }
-    },
-    [dropFilesHandler]
-  );
+  return (event: React.DragEvent, targetNode: TreeNode) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer?.files) {
+      return dropFilesHandler({ files: event.dataTransfer.files, targetNode });
+    }
+  };
 }
 
 export function useFileTreeDragDrop({
@@ -76,35 +70,32 @@ export function useFileTreeDragDrop({
   const dropFilesHandler = useHandleDropFilesForNode({ currentWorkspace });
   const { selectedRange, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
     useFileTreeMenuCtx();
-  const handleDragStart = useCallback(
-    (event: React.DragEvent, targetNode: TreeNode) => {
-      event.stopPropagation();
-      setDragOver(null);
-      setDraggingNode(targetNode);
-      setDraggingNodes(selectedRange.map((path) => currentWorkspace.nodeFromPath(path)).filter(Boolean));
-      window.addEventListener(
-        "dragend",
-        () => {
-          setDraggingNode(null);
-          setDraggingNodes([]);
-        },
-        { once: true }
-      );
-      try {
-        prepareNodeDataTransfer({
-          dataTransfer: event.dataTransfer,
-          nodes: currentWorkspace.nodesFromPaths(
-            selectedRange.slice().concat(targetNode.path, selectedRange, focused ?? [])
-          ),
-          workspaceId: currentWorkspace.name,
-          action: "move",
-        });
-      } catch (e) {
-        console.error(errF`Error preparing node data for drag and drop: ${e}`);
-      }
-    },
-    [currentWorkspace, focused, selectedRange, setDragOver, setDraggingNode, setDraggingNodes]
-  );
+  const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
+    event.stopPropagation();
+    setDragOver(null);
+    setDraggingNode(targetNode);
+    setDraggingNodes(selectedRange.map((path) => currentWorkspace.nodeFromPath(path)).filter(Boolean));
+    window.addEventListener(
+      "dragend",
+      () => {
+        setDraggingNode(null);
+        setDraggingNodes([]);
+      },
+      { once: true }
+    );
+    try {
+      prepareNodeDataTransfer({
+        dataTransfer: event.dataTransfer,
+        nodes: currentWorkspace.nodesFromPaths(
+          selectedRange.slice().concat(targetNode.path, selectedRange, focused ?? [])
+        ),
+        workspaceId: currentWorkspace.name,
+        action: "move",
+      });
+    } catch (e) {
+      console.error(errF`Error preparing node data for drag and drop: ${e}`);
+    }
+  };
 
   const handleDragOver = (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
