@@ -49,9 +49,9 @@ export const SidebarFileMenuFiles = ({
           open={groupExpanded}
           onOpenChange={groupSetExpand}
         >
-          <SidebarGroupLabel className="relative w-full pr-0 overflow-x-hidden">
+          <SidebarGroupLabel className="hover:bg-sidebar-accent relative w-full pr-0 overflow-hidden">
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton className="peer">
+              <SidebarMenuButton>
                 <SidebarGroupLabel className="pl-0">
                   <div className="flex items-center">
                     <ChevronRight
@@ -61,16 +61,14 @@ export const SidebarFileMenuFiles = ({
                       }
                     />
                   </div>
-                  <div className="w-full">
-                    <div className="flex justify-center items-center">
-                      <Icon className="mr-2" size={12} />
-                      {title}
-                    </div>
+                  <div className="flex justify-center items-center">
+                    <Icon className="mr-2" size={12} />
+                    {title}
                   </div>
                 </SidebarGroupLabel>
               </SidebarMenuButton>
             </CollapsibleTrigger>
-            {groupExpanded && <div>{children}</div>}
+            {<div>{children}</div>}
           </SidebarGroupLabel>
 
           <CollapsibleContent className="min-h-0 flex-shrink">

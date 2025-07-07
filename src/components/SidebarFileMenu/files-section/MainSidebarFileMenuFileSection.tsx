@@ -10,14 +10,6 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath } from "@/lib/paths2";
 import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
 
-// import { SidebarFileMenuFileSectionInternal } from "@/components/SidebarFileMenu/SidebarFileMenuFileSectionInternal";
-// import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/useFileTreeClipboardEventListeners";
-// import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
-// import { useWorkspaceContext } from "../../context/WorkspaceHooks";
-// import { useTreeExpanderContext } from "../../features/tree-expander/useTreeExpander";
-// import { useWorkspaceFileMgmt } from "../../hooks/useWorkspaceFileMgmt";
-// import { absPath } from "../../lib/paths2";
-// import { useFileTreeMenuCtx } from "../FileTreeMenuCtxProvider";
 export function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { focused } = useFileTreeMenuCtx();
@@ -28,12 +20,15 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
 
   return (
     <SidebarFileMenuFileSectionInternal title={"Files"} className={className} filter={[absPath("/.trash")]}>
-      <SidebarFileMenuFilesActions
-        trashSelectedFiles={trashSelectedFiles}
-        addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
-        addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
-        setExpandAll={setExpandAll}
-      />
+      <span className="block group-data-[state=closed]/collapsible:hidden">
+        <SidebarFileMenuFilesActions
+          trashSelectedFiles={trashSelectedFiles}
+          addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
+          addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
+          setExpandAll={setExpandAll}
+        />
+      </span>
+      {/* )} */}
     </SidebarFileMenuFileSectionInternal>
   );
 }

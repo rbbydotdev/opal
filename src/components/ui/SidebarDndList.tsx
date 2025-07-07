@@ -53,7 +53,7 @@ export function SidebarDndList({
     if (!child) return null;
     return React.cloneElement(child, {
       key: id,
-      className: clsx(child.props.className, "flex-shrink flex", {
+      className: clsx(child.props.className, {
         "bg-sidebar-accent border border-black": dragOver === index,
       }),
       draggable: true,
