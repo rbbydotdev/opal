@@ -4,35 +4,20 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { createPageHierarchy, HierarchyNode, isHierarchyNode } from "@/lib/mdast/hierarchy";
-import { getMdastSync, getTextContent } from "@/lib/mdast/mdastUtils";
+import { HierarchyNode, isHierarchyNode } from "@/lib/mdast/hierarchy";
+import { getMdastSync, sectionize } from "@/lib/mdast/mdastUtils";
+import { convertTreeViewTree, TreeViewNode } from "@/lib/mdast/treeViewDisplayNode";
 import mdast from "mdast";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
+import unist from "unist";
 
-export function isParent(node: unknown): node is mdast.Parent {
+export function isParent(node: unknown): node is unist.Parent {
   return Boolean(typeof (node as mdast.Parent).children !== "undefined");
 }
 
-function isLeaf(node: unknown): node is mdast.Node {
+function isLeaf(node: unknown): node is unist.Node {
   return !isParent(node);
-}
-
-type PositionedNode = mdast.Node & {
-  position: {
-    start: Required<Required<mdast.Node>["position"]["start"]>;
-    end: Required<Required<mdast.Node>["position"]["end"]>;
-  };
-};
-
-function filterPositionNodes(nodes: mdast.Node[]): PositionedNode[] {
-  return nodes.filter(
-    (node) => node.position && typeof node.position?.start !== "undefined" && typeof node.position?.end !== "undefined"
-  ) as PositionedNode[];
-}
-
-function nodeId(node: PositionedNode): string {
-  return node.position.start.offset.toString();
 }
 
 export function SidebarTreeViewMenu() {
@@ -43,18 +28,17 @@ export function SidebarTreeViewMenu() {
 
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const totalContent = contents ?? initialValue;
-  const mdastTree = useMemo(() => {
-    if (!totalContent || !isMarkdown) return {} as mdast.Parent;
-
-    return createPageHierarchy(getMdastSync(totalContent)) as mdast.Parent;
+  const treeViewTree = useMemo(() => {
+    if (!totalContent || !isMarkdown) return {} as TreeViewNode;
+    return convertTreeViewTree(sectionize(getMdastSync(totalContent)));
   }, [isMarkdown, totalContent]);
 
-  if (!currentWorkspace || !totalContent || !isMarkdown) {
+  if (!currentWorkspace || !totalContent || !isMarkdown || !treeViewTree) {
     return null;
   }
   return (
     <SidebarTreeViewMenuContent
-      parent={mdastTree}
+      parent={treeViewTree}
       expand={expandSingle}
       expandForNode={expandForNode}
       expanded={expanded}
@@ -69,7 +53,7 @@ export function SidebarTreeViewMenuContent({
   expandForNode,
   expanded,
 }: {
-  parent: mdast.Parent;
+  parent: TreeViewNode;
   depth?: number;
   expand: (path: string, value: boolean) => void;
   expandForNode: (node: TreeNode, state: boolean) => void;
@@ -77,13 +61,13 @@ export function SidebarTreeViewMenuContent({
 }) {
   return (
     <SidebarMenu>
-      {Object.values(filterPositionNodes(parent.children) as HierarchyNode[]).map((mdastNode, i) => (
-        <SidebarMenuItem key={mdastNode.position?.start.offset ?? i}>
-          {isParent(mdastNode) ? (
-            <Collapsible open={expanded[nodeId(mdastNode)]} onOpenChange={(o) => expand(nodeId(mdastNode), o)}>
+      {Object.values(parent.children ?? []).map((displayNode) => (
+        <SidebarMenuItem key={displayNode.id}>
+          {isParent(displayNode) ? (
+            <Collapsible open={expanded[displayNode.id]} onOpenChange={(o) => expand(displayNode.id, o)}>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton asChild className="h-6">
-                  <MdastTreeMenuParent depth={depth} node={mdastNode} />
+                  <TreeViewMenuParent depth={depth} node={displayNode} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -91,16 +75,16 @@ export function SidebarTreeViewMenuContent({
                   <SidebarTreeViewMenuContent
                     expand={expand}
                     expandForNode={expandForNode}
-                    parent={mdastNode}
+                    parent={displayNode}
                     depth={depth + 1}
                     expanded={expanded}
                   />
                 </SidebarMenu>
               </CollapsibleContent>
             </Collapsible>
-          ) : isLeaf(mdastNode) ? (
+          ) : isLeaf(displayNode) ? (
             <SidebarMenuButton asChild>
-              <MdastTreeMenuChild depth={depth} node={mdastNode} className="h-6" />
+              <TreeViewTreeMenuChild depth={depth} node={displayNode} className="h-6" />
             </SidebarMenuButton>
           ) : null}
         </SidebarMenuItem>
@@ -123,14 +107,7 @@ function Bullet(node: mdast.Node | HierarchyNode) {
   }
 }
 
-const getLabel = (node: HierarchyNode | mdast.Node): string => {
-  if (isHierarchyNode(node)) {
-    return node.label ?? node.heading?.value ?? node.type;
-  }
-  return getTextContent(node) || node.type || "Unknown Node";
-};
-
-export const MdastTreeMenuParent = ({
+export const TreeViewMenuParent = ({
   depth,
   className,
   node,
@@ -138,7 +115,7 @@ export const MdastTreeMenuParent = ({
 }: {
   depth: number;
   className?: string;
-  node: HierarchyNode | mdast.Node | mdast.Heading;
+  node: TreeViewNode;
   onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
 }) => {
   return (
@@ -158,7 +135,7 @@ export const MdastTreeMenuParent = ({
         </div>
         <div className="text-xs truncate w-full flex items-center">
           <div className="truncate text-xs font-bold">
-            <span title={node.label ?? node.type}>{node.label ?? node.type}</span>
+            <span title={node.displayText ?? node.type}>{node.displayText ?? node.type}</span>
           </div>
         </div>
       </div>
@@ -166,21 +143,25 @@ export const MdastTreeMenuParent = ({
   );
 };
 
-export const MdastTreeMenuChild = ({
+export const TreeViewTreeMenuChild = ({
   depth,
   node,
   className,
 }: {
-  node: HierarchyNode;
+  node: TreeViewNode;
   className?: string;
   depth: number;
 }) => {
   return (
     <div className="select-none">
-      <div className={twMerge(className, "group cursor-pointer my-0")} tabIndex={0} title={node.label ?? node.type}>
+      <div
+        className={twMerge(className, "group cursor-pointer my-0")}
+        tabIndex={0}
+        title={node.displayText ?? node.type}
+      >
         <div className="w-full">
           <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
-            <div className="py-1 text-xs w-full truncate">{getLabel(node)}</div>
+            <div className="py-1 text-xs w-full truncate">{node.displayText ?? node.type}</div>
           </div>
         </div>
       </div>

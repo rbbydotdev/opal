@@ -14,7 +14,7 @@ export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
   }, [currentWorkspace, filePath]);
 
   return (
-    <div className="w-[480px]  text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-10 flex justify-center items-center _font-mono _font-bold">
+    <div className="w-[480px] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-10 flex justify-center items-center _font-mono _font-bold">
       <Button
         tabIndex={0}
         title="Put Back"
@@ -73,13 +73,13 @@ export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
         "
       >
         <div className="items-center gap-2 justify-center trash-icon">
-          <Trash2 size={16} strokeWidth={3} />
+          <Trash2 size={16} strokeWidth={2} />
         </div>
         <div className="hidden items-center gap-2 justify-center delete-icon">
-          <Delete size={16} strokeWidth={3} />
+          <Delete size={16} strokeWidth={2} />
         </div>
         <div className="hidden items-center gap-2 justify-center putback-icon">
-          <Undo size={16} strokeWidth={3} />
+          <Undo size={16} strokeWidth={2} />
         </div>
       </div>
     </div>

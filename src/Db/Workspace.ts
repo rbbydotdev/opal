@@ -258,10 +258,7 @@ export class Workspace {
   }
 
   hasTrash() {
-    console.log(this.disk.fileTree.nodeFromPath(absPath("/.trash"))?.children);
-    const r = Boolean(Object.keys(this.disk.fileTree.nodeFromPath(absPath("/.trash"))?.children ?? {}).length);
-    console.log(r);
-    return r;
+    return Boolean(Object.keys(this.disk.fileTree.nodeFromPath(absPath("/.trash"))?.children ?? {}).length);
   }
 
   async untrashSingle(path: AbsPath) {

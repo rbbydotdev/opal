@@ -2,6 +2,7 @@ import mdast, { Root } from "mdast";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
+import remarkSectionize from "remark-sectionize";
 import { unified } from "unified";
 
 export function isParent(node: unknown): node is mdast.Parent {
@@ -32,4 +33,8 @@ export function getMdastSync(source: string): Root {
   const processor = unified().use(remarkParse).use(remarkGfm).use(remarkDirective);
 
   return processor.parse(source);
+}
+
+export function sectionize(mdastTree: Root): Root {
+  return unified().use(remarkSectionize).runSync(mdastTree);
 }
