@@ -12,7 +12,7 @@ export const TinyNotice = () => <div className="ml-1 mb-2 bg-ring w-[5px] h-[5px
 export function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { removeFile } = useWorkspaceFileMgmt(currentWorkspace);
-  console.log(currentWorkspace.hasTrash(), "hasTrash in TrashSidebarFileMenuFileSection");
+
   return (
     <TreeExpanderProvider id="TrashFiles">
       <ContextMenu>
@@ -23,7 +23,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
             className={className}
             scope={absPath("/.trash")}
           >
-            {currentWorkspace.hasTrash() && <TinyNotice />}
+            {currentWorkspace.hasTrash() ? <TinyNotice /> : null}
           </SidebarFileMenuFileSectionInternal>
         </ContextMenuTrigger>
         <ContextMenuContent>

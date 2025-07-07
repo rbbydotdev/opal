@@ -3,7 +3,6 @@ import {
   contentEditableRef$,
   debounceTime,
   lexical,
-  map,
   realmPlugin,
   rootEditor$,
   useCellValue,
@@ -19,11 +18,17 @@ type TextNodeIndex = {
   offsetIndex: number[];
 };
 
+export const EmptyTextNodeIndex: TextNodeIndex = {
+  allText: "",
+  nodeIndex: [],
+  offsetIndex: [],
+};
+
 export const editorSearchTerm$ = Cell<string>("");
 export const editorSearchRanges$ = Cell<Range[]>([]);
 export const editorSearchCursor$ = Cell<number>(0);
-export const editorSearchTextNodeIndex$ = Cell<TextNodeIndex[]>([]);
-export const debouncedSearch$ = Cell<"typing" | "replace">("typing");
+export const editorSearchTextNodeIndex$ = Cell<TextNodeIndex>(EmptyTextNodeIndex);
+export const searchState$ = Cell<"searchIsClosed" | "searchIsOpen">("searchIsClosed");
 export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
   realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(250))));
 });
@@ -31,19 +36,8 @@ export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (r) 
   r.sub(contentEditableRef$, (cref) => r.pub(editorSearchScollableContent$, cref?.current?.children?.[0] ?? null))
 );
 
-export const debouncedIndexer$ = Cell<TextNodeIndex[]>([], (realm) =>
-  realm.link(
-    debouncedIndexer$,
-    realm.pipe(
-      editorSearchTextNodeIndex$,
-      realm.transformer(
-        debounceTime(250),
-        map((index) => {
-          return Array.from(index as Iterable<TextNodeIndex>);
-        })
-      )
-    )
-  )
+export const debouncedIndexer$ = Cell<TextNodeIndex>(EmptyTextNodeIndex, (realm) =>
+  realm.link(debouncedIndexer$, realm.pipe(editorSearchTextNodeIndex$, realm.transformer(debounceTime(250))))
 );
 
 function* searchText(allText: string, searchQuery: string): Generator<[start: number, end: number]> {
@@ -116,23 +110,21 @@ function indexAllTextNodes(root: HTMLElement | null): TextNodeIndex {
   return { allText: allText.join(""), nodeIndex, offsetIndex };
 }
 
-export function* rangeSearchScan(searchQuery: string, textNodeIndex: Iterable<TextNodeIndex>) {
-  for (const { allText, offsetIndex, nodeIndex } of textNodeIndex) {
-    for (const [start, end] of searchText(allText, searchQuery)) {
-      const startOffset = offsetIndex[start];
-      const endOffset = offsetIndex[end];
-      const startNode = nodeIndex[start];
-      const endNode = nodeIndex[end];
-      const range = new Range();
+export function* rangeSearchScan(searchQuery: string, { allText, offsetIndex, nodeIndex }: TextNodeIndex) {
+  for (const [start, end] of searchText(allText, searchQuery)) {
+    const startOffset = offsetIndex[start];
+    const endOffset = offsetIndex[end];
+    const startNode = nodeIndex[start];
+    const endNode = nodeIndex[end];
+    const range = new Range();
 
-      if (startNode === undefined || endNode === undefined || startOffset === undefined || endOffset === undefined) {
-        throw new Error("Invalid range: startNode, endNode, startOffset, or endOffset is undefined.");
-      }
-
-      range.setStart(startNode, startOffset);
-      range.setEnd(endNode, endOffset + 1);
-      yield range;
+    if (startNode === undefined || endNode === undefined || startOffset === undefined || endOffset === undefined) {
+      throw new Error("Invalid range: startNode, endNode, startOffset, or endOffset is undefined.");
     }
+
+    range.setStart(startNode, startOffset);
+    range.setEnd(endNode, endOffset + 1);
+    yield range;
   }
 }
 const focusHighlightRange = (range?: Range | null) => {
@@ -255,7 +247,10 @@ export function useEditorSearch() {
   const contentEditable = useCellValue(editorSearchScollableContent$);
 
   const rangeCount = ranges.length;
-  const scrollToRangeOrIndex = (range: Range | number, options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }) => {
+  const scrollToRangeOrIndex = (
+    range: Range | number,
+    options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }
+  ) => {
     const scrollRange = typeof range === "number" ? ranges[range - 1] : range;
     if (!scrollRange) {
       throw new Error("Error scrolling to range, range does not exist");
@@ -271,8 +266,8 @@ export function useEditorSearch() {
     //reset cursor
   };
 
-  const setMode = (mode: "replace" | "typing") => {
-    realm.pub(debouncedSearch$, mode);
+  const setMode = (mode: "searchIsOpen" | "searchIsClosed") => {
+    realm.pub(searchState$, mode);
   };
 
   const next = () => {
@@ -360,7 +355,7 @@ export const searchPlugin = realmPlugin({
         const ranges = realm.getValue(editorSearchRanges$);
         focusHighlightRange(ranges[cursor - 1]);
       });
-      function updateHighlights(searchQuery: string, textNodeIndex: Iterable<TextNodeIndex>) {
+      function updateHighlights(searchQuery: string, textNodeIndex: TextNodeIndex) {
         if (!searchQuery) {
           realm.pub(editorSearchCursor$, 0);
           realm.pub(editorSearchRanges$, []);
@@ -398,12 +393,12 @@ export const searchPlugin = realmPlugin({
           observer = null;
         }
         if (rootElement) {
-          const initialIndex = [indexAllTextNodes(rootElement)];
+          const initialIndex = indexAllTextNodes(rootElement);
           realm.pub(editorSearchTextNodeIndex$, initialIndex);
 
           observer = new MutationObserver(() => {
-            const newIndex = [indexAllTextNodes(rootElement)];
-            if (realm.getValue(debouncedSearch$) === "replace") {
+            const newIndex = indexAllTextNodes(rootElement);
+            if (realm.getValue(searchState$) === "searchIsOpen") {
               realm.pub(editorSearchTextNodeIndex$, newIndex);
             } else {
               realm.pub(debouncedIndexer$, newIndex);

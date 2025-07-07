@@ -30,9 +30,9 @@ export const MdxSearchToolbar = () => {
   };
   useEffect(() => {
     if (!isSearchOpen) {
-      setMode("typing");
+      setMode("searchIsClosed");
     } else {
-      setMode("replace");
+      setMode("searchIsOpen");
     }
   }, [isSearchOpen, setMode]);
 
