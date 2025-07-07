@@ -38,9 +38,8 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
     "export",
     "trash",
     "files",
-    "files2",
     "treeview",
-  ] satisfies Array<"publish" | "sync" | "export" | "trash" | "files" | "treeview" | "files2">);
+  ] satisfies Array<"publish" | "sync" | "export" | "trash" | "files" | "treeview">);
 
   const { dnds, setDnds, toggleDnd, dndId } = useDndList(defaultValues, storedValue, setValue);
   return (
@@ -94,39 +93,41 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           </DropdownMenuTrigger>
         </SidebarGroupLabel>
       </DropdownMenu>
-      <SidebarDndList storageKey={"sidebarMenu"} show={Array.from(dnds)}>
-        <SidebarFileMenuPublish dnd-id={dndId("publish")} className="flex-shrink flex" />
-        <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col min-h-8" />
-        <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
-        <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-5">
-          <TreeExpanderProvider id="TreeView">
-            <SidebarTreeView className="border-4 border-red-600 flex h-full flex-shrink ">
-              <SidebarGroupContent className="flex items-center">
-                <SidebarTreeViewActions
-                  trashSelectedFiles={function (): void {}}
-                  addFile={function (): void {}}
-                  addDir={function (): void {}}
-                  setExpandAll={function (expand: boolean): void {}}
-                />
-              </SidebarGroupContent>
-            </SidebarTreeView>
-          </TreeExpanderProvider>
-        </div>
-
-        <div dnd-id={dndId("trash")} className="min-h-8">
-          <FileTreeMenuCtxProvider id="TrashFiles">
-            <TrashSidebarFileMenuFileSection />
-          </FileTreeMenuCtxProvider>
-        </div>
-
-        <div className="min-h-8" dnd-id={dndId("files")}>
-          <FileTreeMenuCtxProvider id="MainFiles">
-            <TreeExpanderProvider id="MainFiles">
-              <MainSidebarFileMenuFileSection />
+      <div className="overflow-y-auto scrollbar-thin pr-4">
+        <SidebarDndList storageKey={"sidebarMenu"} show={Array.from(dnds)}>
+          <SidebarFileMenuPublish dnd-id={dndId("publish")} className="flex-shrink flex" />
+          <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col" />
+          <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
+          <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
+            <TreeExpanderProvider id="TreeView">
+              <SidebarTreeView className="">
+                <SidebarGroupContent className="flex items-center">
+                  <SidebarTreeViewActions
+                    trashSelectedFiles={function (): void {}}
+                    addFile={function (): void {}}
+                    addDir={function (): void {}}
+                    setExpandAll={function (expand: boolean): void {}}
+                  />
+                </SidebarGroupContent>
+              </SidebarTreeView>
             </TreeExpanderProvider>
-          </FileTreeMenuCtxProvider>
-        </div>
-      </SidebarDndList>
+          </div>
+
+          <div dnd-id={dndId("trash")} className="min-h-8 flex-shrink flex">
+            <FileTreeMenuCtxProvider id="TrashFiles">
+              <TrashSidebarFileMenuFileSection />
+            </FileTreeMenuCtxProvider>
+          </div>
+
+          <div className="flex-shrink flex" dnd-id={dndId("files")}>
+            <FileTreeMenuCtxProvider id="MainFiles">
+              <TreeExpanderProvider id="MainFiles">
+                <MainSidebarFileMenuFileSection />
+              </TreeExpanderProvider>
+            </FileTreeMenuCtxProvider>
+          </div>
+        </SidebarDndList>
+      </div>
     </SidebarGroup>
   );
 }

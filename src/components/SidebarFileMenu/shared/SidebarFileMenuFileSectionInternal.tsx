@@ -38,7 +38,7 @@ export function SidebarFileMenuFileSectionInternal({
       {...rest}
       title={title}
       Icon={Icon}
-      className={twMerge("min-h-8", className)}
+      className={twMerge("min-h-8 ", className)}
       filter={filter}
       fileTreeDir={treeNode as TreeDirRoot}
       renameDirOrFileMultiple={renameDirOrFileMultiple}
@@ -46,7 +46,8 @@ export function SidebarFileMenuFileSectionInternal({
       expandForNode={expandForNode}
       expanded={expanded}
     >
-      <div className="h-full flex items-center rounded-none">{children}</div>
+      <div className="findme"></div>
+      {children}
     </SidebarFileMenuFiles>
   );
 }

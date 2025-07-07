@@ -15,7 +15,7 @@ export function SidebarTreeView({
 } & React.ComponentProps<typeof SidebarGroup>) {
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarTreeMenu");
   return (
-    <SidebarGroup className={clsx("pl-0 pb-12 py-0 pr-0 w-full bg-blue-200", className)} {...props}>
+    <SidebarGroup className={clsx("pl-0 pb-12 py-0 pr-0 w-full ", className)} {...props}>
       <Collapsible
         className="group/collapsible flex flex-col min-h-0"
         open={groupExpanded}
@@ -46,7 +46,7 @@ export function SidebarTreeView({
         </SidebarGroupLabel>
 
         <CollapsibleContent className="min-h-0 flex-shrink">
-          <SidebarContent className="bg-green-400  overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
+          <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
             <SidebarTreeViewMenu />
           </SidebarContent>
         </CollapsibleContent>
