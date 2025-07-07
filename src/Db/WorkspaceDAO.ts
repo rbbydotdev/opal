@@ -1,4 +1,4 @@
-import { DiskJType, IndexedDbDisk } from "@/Db/Disk";
+import { DiskJType } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
@@ -81,11 +81,8 @@ export class WorkspaceDAO {
   static async CreateNew(
     name: string,
     remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
-    disk: DiskDAO = DiskDAO.CreateNew(IndexedDbDisk.type),
-    thumbs: DiskDAO = DiskDAO.CreateNew(IndexedDbDisk.type)
-
-    // disk: DiskDAO = DiskDAO.CreateNew(MemDisk.type),
-    // thumbs: DiskDAO = DiskDAO.CreateNew(MemDisk.type)
+    disk: DiskDAO = DiskDAO.CreateNew(),
+    thumbs: DiskDAO = DiskDAO.CreateNew()
   ) {
     let uniqueName = WorkspaceDAO.Slugify(name);
     let inc = 0;
