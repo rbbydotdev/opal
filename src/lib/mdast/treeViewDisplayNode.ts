@@ -1,4 +1,3 @@
-import { isParent } from "@/components/MdastTreeMenu";
 import { toString } from "mdast-util-to-string";
 import type { Node } from "unist";
 
@@ -8,6 +7,7 @@ export interface TreeViewNode {
   depth?: number; // For headings/sections
   displayText?: string; // The primary text to display for this node
   children?: TreeViewNode[];
+  isContainer?: boolean; // Indicates if this node is a container (like a section or list)
   // You might add other properties as needed for your UI
   // E.g., iconType: 'paragraph' | 'heading' | 'code' etc.
   // E.g., originalNodeType: string;
@@ -20,7 +20,7 @@ function generateUniqueId(): string {
 }
 
 // --- Function to convert raw AST Node to simplified DisplayNode ---
-export function convertTreeViewTree(node: Node, maxLength = 32): TreeViewNode | null {
+export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): TreeViewNode | null {
   // Reset counter when starting a new tree conversion (e.g., from 'root')
   if (node.type === "root") {
     nodeIdCounter = 0;
@@ -33,36 +33,35 @@ export function convertTreeViewTree(node: Node, maxLength = 32): TreeViewNode | 
 
   // Copy depth property if it exists
   if ("depth" in node && typeof node.depth === "number") {
-    displayNode.depth = node.depth;
+    // displayNode.depth = node.depth;
   }
+  displayNode.depth = depth; // Use the provided depth parameter instead
 
   // Handle specific node types for display purposes
   switch (node.type) {
-    case "list":
+    // break;
+    // if (isParent(node)) {
+    //   const sectionText = toString(node.children[0]!);
+    //   node.children = node.children.slice(1);
+    //   const sectionTruncatedText =
+    //     sectionText.length > maxLength ? `${sectionText.slice(0, maxLength)}...` : sectionText; // Truncate for display
+    //   displayNode.displayText = sectionTruncatedText;
+    //   break;
+    // }
     case "listItem":
     case "section":
-      if (isParent(node)) {
-        if (isParent(node.children?.[0]) && node.children[0].children.length > 1) {
-          Object.assign(node, node.children[0]);
-          //   // node.children[0].children = node.children[0].children.slice(1); // Only take the first child for display
-        }
-        // const sectionText = toString(node.children[0]!);
-        // node.children = node.children.slice(0);
-
-        // const sectionTruncatedText =
-        //   sectionText.length > maxLength ? `${sectionText.slice(0, maxLength)}...` : sectionText; // Truncate for display
-        // displayNode.displayText = sectionTruncatedText;
-        break;
-      }
+    case "list":
     case "root":
     case "listItem":
     case "blockquote":
     case "table":
     case "tableRow":
+      displayNode.isContainer = true; // Mark as a container node
       // These are structural containers; their children will be processed recursively.
       // They typically don't have direct displayable text themselves in this simplified view.
-      break;
 
+      // return displayNode;
+      break;
     case "paragraph":
     case "heading":
     case "text":
@@ -75,12 +74,14 @@ export function convertTreeViewTree(node: Node, maxLength = 32): TreeViewNode | 
     case "strong":
     case "emphasis":
     case "link":
+      displayNode.isContainer = false; // Not a container, but a leaf node
       // For these types, flatten their text content into displayText.
       const text = toString(node);
       const truncatedText = text.length > maxLength ? `${text.slice(0, maxLength)}...` : text; // Truncate for display
       displayNode.displayText = truncatedText;
       return displayNode;
     default:
+      displayNode.isContainer = false; // Not a container, but a leaf node
       const defaultText = toString(node);
       const defaultTruncatedText =
         defaultText.length > maxLength ? `${defaultText.slice(0, maxLength)}...` : defaultText; // Truncate for display
@@ -91,7 +92,8 @@ export function convertTreeViewTree(node: Node, maxLength = 32): TreeViewNode | 
   // Recursively convert children for container nodes
   if ("children" in node && Array.isArray(node.children)) {
     const convertedChildren = (node.children as Node[])
-      .map((child) => convertTreeViewTree(child))
+      .filter(Boolean)
+      .map((child) => convertTreeViewTree(child, depth + 1))
       .filter(Boolean) as TreeViewNode[];
     if (convertedChildren.length > 0) {
       displayNode.children = convertedChildren;

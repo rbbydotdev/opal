@@ -1,4 +1,4 @@
-import { isParent } from "@/components/MdastTreeMenu";
+import { isParent } from "@/components/TreeMenu";
 import { getTextContent } from "@/lib/mdast/mdastUtils";
 import mdast, { Content, Heading, Root } from "mdast";
 

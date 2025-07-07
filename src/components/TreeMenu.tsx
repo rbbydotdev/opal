@@ -4,7 +4,6 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { HierarchyNode, isHierarchyNode } from "@/lib/mdast/hierarchy";
 import { getMdastSync, sectionize } from "@/lib/mdast/mdastUtils";
 import { convertTreeViewTree, TreeViewNode } from "@/lib/mdast/treeViewDisplayNode";
 import mdast from "mdast";
@@ -61,13 +60,13 @@ export function SidebarTreeViewMenuContent({
 }) {
   return (
     <SidebarMenu>
-      {Object.values(parent.children ?? []).map((displayNode) => (
+      {(parent.children ?? []).map((displayNode) => (
         <SidebarMenuItem key={displayNode.id}>
           {isParent(displayNode) ? (
             <Collapsible open={expanded[displayNode.id]} onOpenChange={(o) => expand(displayNode.id, o)}>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton asChild className="h-6">
-                  <TreeViewMenuParent depth={depth} node={displayNode} />
+                  <TreeViewMenuParent depth={depth} node={displayNode.children[0]!} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -93,18 +92,27 @@ export function SidebarTreeViewMenuContent({
   );
 }
 
-function Bullet(node: mdast.Node | HierarchyNode) {
-  const { type } = node;
-  const depth = isHierarchyNode(node) ? node.depth : 0;
+function BulletSquare({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-3xs mr-1  p-0.5 rounded-sm bg-sidebar-primary/70 text-primary-foreground">{children}</span>
+  );
+}
+
+function Bullet({ type, depth }: TreeViewNode) {
   if (type === "link") {
-    return <span className="text-xs">🔗</span>;
+    return <BulletSquare>🔗</BulletSquare>;
   }
   if (type === "paragraph") {
-    return <span className="text-xs">¶</span>;
+    return <BulletSquare>¶</BulletSquare>;
   }
   if (type === "heading" || type === "hierarchyNode") {
-    return <span className="text-xs">h{depth}</span>;
+    return (
+      <BulletSquare>
+        <span className="font-bold">h{depth}</span>
+      </BulletSquare>
+    );
   }
+  return null;
 }
 
 export const TreeViewMenuParent = ({
@@ -130,11 +138,11 @@ export const TreeViewMenuParent = ({
       style={{ paddingLeft: depth + "rem" }}
     >
       <div className="flex w-full items-center truncate">
-        <div className="mr-1">
+        <div className="">
           <Bullet {...node} />
         </div>
         <div className="text-xs truncate w-full flex items-center">
-          <div className="truncate text-xs font-bold">
+          <div className="truncate text-2xs font-bold font-mono">
             <span title={node.displayText ?? node.type}>{node.displayText ?? node.type}</span>
           </div>
         </div>
@@ -161,7 +169,7 @@ export const TreeViewTreeMenuChild = ({
       >
         <div className="w-full">
           <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
-            <div className="py-1 text-xs w-full truncate">{node.displayText ?? node.type}</div>
+            <div className="py-1 font-mono text-2xs w-full truncate">{node.displayText ?? node.type}</div>
           </div>
         </div>
       </div>
