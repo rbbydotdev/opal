@@ -84,7 +84,9 @@ function getRangesFromURL(
     type === "hash" ? new URLSearchParams(new URL(windowHref).hash.slice(1)) : new URL(windowHref).searchParams;
   let ranges: Array<[startStr: string, endStr: string, chsum?: number]> | null = null;
   try {
-    const parsed = JSON.parse(params.get(RANGE_KEY) ?? "");
+    const rangeParam = params.get(RANGE_KEY);
+    if (!rangeParam) return null;
+    const parsed = JSON.parse(rangeParam);
     if (Array.isArray(parsed)) {
       ranges = parsed as Array<[startStr: string, endStr: string, chsum?: number]>;
       return ranges.map(([s, e, c]) => [parseInt(s), parseInt(e), c]);
