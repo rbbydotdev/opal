@@ -5,7 +5,7 @@ import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/cont
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMdastSync, sectionize } from "@/lib/mdast/mdastUtils";
-import { convertTreeViewTree, TreeViewNode } from "@/lib/mdast/treeViewDisplayNode";
+import { convertTreeViewTree, isContainer, isLeaf, TreeViewNode } from "@/lib/mdast/treeViewDisplayNode";
 import mdast from "mdast";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -15,9 +15,9 @@ export function isParent(node: unknown): node is unist.Parent {
   return Boolean(typeof (node as mdast.Parent).children !== "undefined");
 }
 
-function isLeaf(node: unknown): node is unist.Node {
-  return !isParent(node);
-}
+// function isLeaf(node: unknown): node is unist.Node {
+//   return !isParent(node);
+// }
 
 export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
@@ -62,11 +62,11 @@ export function SidebarTreeViewMenuContent({
     <SidebarMenu>
       {(parent.children ?? []).map((displayNode) => (
         <SidebarMenuItem key={displayNode.id}>
-          {isParent(displayNode) ? (
+          {isContainer(displayNode) ? (
             <Collapsible open={expanded[displayNode.id]} onOpenChange={(o) => expand(displayNode.id, o)}>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton asChild className="h-6">
-                  <TreeViewMenuParent depth={depth} node={displayNode.children[0]!} />
+                  <TreeViewMenuParent depth={depth} node={displayNode} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -94,7 +94,9 @@ export function SidebarTreeViewMenuContent({
 
 function BulletSquare({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-3xs mr-1  p-0.5 rounded-sm bg-sidebar-primary/70 text-primary-foreground">{children}</span>
+    <span className="text-3xs mr-1 items-center flex justify-center w-3.5 h-3.5  p-0.5 rounded-sm bg-sidebar-primary/70 text-primary-foreground">
+      {children}
+    </span>
   );
 }
 

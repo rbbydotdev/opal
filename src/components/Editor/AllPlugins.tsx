@@ -12,6 +12,7 @@ import {
   SandpackConfig,
   codeBlockPlugin,
   codeMirrorPlugin,
+  contentEditableRef$,
   diffSourcePlugin,
   directivesPlugin,
   frontmatterPlugin,
@@ -21,6 +22,7 @@ import {
   listsPlugin,
   markdownShortcutPlugin,
   quotePlugin,
+  realmPlugin,
   remoteRealmPlugin,
   sandpackPlugin,
   tablePlugin,
@@ -83,6 +85,22 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
   ],
 };
 
+const readOnlyPlugin = realmPlugin({
+  init(realm) {
+    if (window && window.location.search.includes("readonly=1")) {
+      realm.singletonSub(contentEditableRef$, (cref) => {
+        if (cref?.current) {
+          const setContentEditableFalse = (el: HTMLElement) => {
+            el.setAttribute("contenteditable", "false");
+            Array.from(el.children).forEach((child) => setContentEditableFalse(child as HTMLElement));
+          };
+          setContentEditableFalse(cref.current);
+        }
+      });
+    }
+  },
+});
+
 export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { contents } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
@@ -96,6 +114,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
           </>
         ),
       }),
+      readOnlyPlugin(),
       remoteRealmPlugin({ editorId: "MdxEditorRealm" }),
       listsPlugin(),
       quotePlugin(),
