@@ -1,3 +1,4 @@
+import { getTextContent, isParent } from "@/lib/mdast/mdastUtils";
 import { toString } from "mdast-util-to-string";
 import type { Node } from "unist";
 
@@ -11,6 +12,13 @@ export interface TreeViewNode {
   // You might add other properties as needed for your UI
   // E.g., iconType: 'paragraph' | 'heading' | 'code' etc.
   // E.g., originalNodeType: string;
+}
+
+export function isLeaf(node: TreeViewNode) {
+  return node.isContainer === false;
+}
+export function isContainer(node: TreeViewNode) {
+  return node.isContainer === true;
 }
 
 // --- Function to generate unique IDs for DisplayNodes ---
@@ -29,6 +37,7 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
   const displayNode: TreeViewNode = {
     id: generateUniqueId(),
     type: node.type,
+    isContainer: true,
   };
 
   // Copy depth property if it exists
@@ -40,22 +49,31 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
   // Handle specific node types for display purposes
   switch (node.type) {
     // break;
-    // if (isParent(node)) {
-    //   const sectionText = toString(node.children[0]!);
-    //   node.children = node.children.slice(1);
-    //   const sectionTruncatedText =
-    //     sectionText.length > maxLength ? `${sectionText.slice(0, maxLength)}...` : sectionText; // Truncate for display
-    //   displayNode.displayText = sectionTruncatedText;
-    //   break;
-    // }
-    case "listItem":
     case "section":
+      if (isParent(node)) {
+        const sectionText = toString(node.children[0]!);
+        node.children = node.children.slice(1);
+        const sectionTruncatedText =
+          sectionText.length > maxLength ? `${sectionText.slice(0, maxLength)}...` : sectionText; // Truncate for display
+        displayNode.displayText = sectionTruncatedText;
+      }
+      break;
+
     case "list":
+      displayNode.isContainer = true; // Mark as a container node
+      break;
+    case "listItem":
+      displayNode.isContainer = false; // Mark as a container node
+      displayNode.displayText = "∙ " + getTextContent(node);
+      break;
+    // For list items, we can use the first child text as the display text
+    case "listItem":
     case "root":
     case "listItem":
     case "blockquote":
     case "table":
     case "tableRow":
+      displayNode.displayText = "[" + node.type + "]";
       displayNode.isContainer = true; // Mark as a container node
       // These are structural containers; their children will be processed recursively.
       // They typically don't have direct displayable text themselves in this simplified view.
