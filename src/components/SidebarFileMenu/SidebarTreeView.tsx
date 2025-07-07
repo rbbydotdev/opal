@@ -1,4 +1,4 @@
-import { SidebarTreeViewMenu } from "@/components/MdastTreeMenu";
+import { SidebarTreeViewMenu } from "@/components/TreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";

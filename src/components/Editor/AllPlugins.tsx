@@ -7,6 +7,7 @@ import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { useFileContents } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
+  CodeMirrorEditor,
   KitchenSinkToolbar,
   SandpackConfig,
   codeBlockPlugin,
@@ -107,7 +108,10 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       tablePlugin(),
       thematicBreakPlugin(),
       frontmatterPlugin(),
-      codeBlockPlugin({ defaultCodeBlockLanguage: "" }),
+      codeBlockPlugin({
+        defaultCodeBlockLanguage: "js",
+        codeBlockEditorDescriptors: [{ priority: -10, match: (_) => true, Editor: CodeMirrorEditor }],
+      }),
       sandpackPlugin({ sandpackConfig: virtuosoSampleSandpackConfig }),
       codeMirrorPlugin({
         codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
