@@ -1,6 +1,6 @@
 import { getTextContent, isParent } from "@/lib/mdast/mdastUtils";
 import { toString } from "mdast-util-to-string";
-import type { Node } from "unist";
+import type { Node, Parent } from "unist";
 
 export interface TreeViewNode {
   id: string; // Unique ID for React keys
@@ -37,7 +37,7 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
   const displayNode: TreeViewNode = {
     id: generateUniqueId(),
     type: node.type,
-    isContainer: true,
+    isContainer: Boolean((node as Parent).children),
   };
 
   // Copy depth property if it exists
