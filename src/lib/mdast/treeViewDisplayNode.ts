@@ -37,15 +37,15 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
   const displayNode: TreeViewNode = {
     id: generateUniqueId(),
     type: node.type,
-    // isContainer: Boolean((node as Parent).children),
     isContainer: isContainerType(node.type),
   };
 
   // Copy depth property if it exists
   if ("depth" in node && typeof node.depth === "number") {
-    // displayNode.depth = node.depth;
+    displayNode.depth = node.depth;
+  } else {
+    displayNode.depth = depth; // Use the provided depth parameter instead
   }
-  displayNode.depth = depth; // Use the provided depth parameter instead
 
   // Handle specific node types for display purposes
   switch (node.type) {
@@ -54,6 +54,7 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
       if (isParent(node)) {
         // displayNode.isContainer = true; // Mark as a container node
         const sectionText = toString(node.children[0]!);
+        node.children = node.children.slice(1);
         // node.children = node.children.slice(1);
         const sectionTruncatedText =
           sectionText.length > maxLength ? `${sectionText.slice(0, maxLength)}...` : sectionText; // Truncate for display
@@ -62,6 +63,7 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
       break;
 
     case "list":
+      displayNode.displayText = "[list]";
       // displayNode.isContainer = true; // Mark as a container node
       break;
     case "listItem":

@@ -112,7 +112,7 @@ function Bullet({ type, depth }: TreeViewNode) {
   if (type === "paragraph") {
     return <BulletSquare>¶</BulletSquare>;
   }
-  if (type === "heading" || type === "hierarchyNode") {
+  if (type === "heading" || type === "section") {
     return (
       <BulletSquare>
         <span className="font-bold">h{depth}</span>
@@ -167,6 +167,7 @@ export const TreeViewTreeMenuChild = ({
   className?: string;
   depth: number;
 }) => {
+  if (!node.displayText) return null;
   return (
     <div className="select-none">
       <div
@@ -176,7 +177,7 @@ export const TreeViewTreeMenuChild = ({
       >
         <div className="w-full">
           <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
-            <div className="py-1 font-mono text-2xs w-full truncate">{node.displayText ?? node.type}</div>
+            <div className="py-1 font-mono text-2xs w-full truncate">{node.displayText}</div>
           </div>
         </div>
       </div>
