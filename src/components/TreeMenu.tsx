@@ -58,6 +58,9 @@ export function SidebarTreeViewMenuContent({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
 }) {
+  if (parent.type === "list") {
+    console.log(parent);
+  }
   return (
     <SidebarMenu>
       {(parent.children ?? []).map((displayNode) => (
@@ -82,9 +85,11 @@ export function SidebarTreeViewMenuContent({
               </CollapsibleContent>
             </Collapsible>
           ) : isLeaf(displayNode) ? (
-            <SidebarMenuButton asChild>
-              <TreeViewTreeMenuChild depth={depth} node={displayNode} className="h-6" />
-            </SidebarMenuButton>
+            <>
+              <SidebarMenuButton asChild>
+                <TreeViewTreeMenuChild depth={depth} node={displayNode} className="h-6" />
+              </SidebarMenuButton>
+            </>
           ) : null}
         </SidebarMenuItem>
       ))}

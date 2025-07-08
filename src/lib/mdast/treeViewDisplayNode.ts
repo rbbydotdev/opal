@@ -1,6 +1,6 @@
 import { getTextContent, isParent } from "@/lib/mdast/mdastUtils";
 import { toString } from "mdast-util-to-string";
-import type { Node, Parent } from "unist";
+import type { Node } from "unist";
 
 export interface TreeViewNode {
   id: string; // Unique ID for React keys
@@ -37,7 +37,8 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
   const displayNode: TreeViewNode = {
     id: generateUniqueId(),
     type: node.type,
-    isContainer: Boolean((node as Parent).children),
+    // isContainer: Boolean((node as Parent).children),
+    isContainer: isContainerType(node.type),
   };
 
   // Copy depth property if it exists
@@ -51,8 +52,9 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
     // break;
     case "section":
       if (isParent(node)) {
+        // displayNode.isContainer = true; // Mark as a container node
         const sectionText = toString(node.children[0]!);
-        node.children = node.children.slice(1);
+        // node.children = node.children.slice(1);
         const sectionTruncatedText =
           sectionText.length > maxLength ? `${sectionText.slice(0, maxLength)}...` : sectionText; // Truncate for display
         displayNode.displayText = sectionTruncatedText;
@@ -60,21 +62,20 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
       break;
 
     case "list":
-      displayNode.isContainer = true; // Mark as a container node
+      // displayNode.isContainer = true; // Mark as a container node
       break;
     case "listItem":
-      displayNode.isContainer = false; // Mark as a container node
+      // displayNode.isContainer = true; // Mark as a container node
+      // displayNode.isContainer = false; // Mark as a container node
       displayNode.displayText = "∙ " + getTextContent(node);
       break;
     // For list items, we can use the first child text as the display text
-    case "listItem":
     case "root":
-    case "listItem":
     case "blockquote":
     case "table":
     case "tableRow":
       displayNode.displayText = "[" + node.type + "]";
-      displayNode.isContainer = true; // Mark as a container node
+      // displayNode.isContainer = true; // Mark as a container node
       // These are structural containers; their children will be processed recursively.
       // They typically don't have direct displayable text themselves in this simplified view.
 
@@ -92,7 +93,7 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
     case "strong":
     case "emphasis":
     case "link":
-      displayNode.isContainer = false; // Not a container, but a leaf node
+      // displayNode.isContainer = false; // Not a container, but a leaf node
       // For these types, flatten their text content into displayText.
       const text = toString(node);
       const truncatedText = text.length > maxLength ? `${text.slice(0, maxLength)}...` : text; // Truncate for display
@@ -119,4 +120,33 @@ export function convertTreeViewTree(node: Node, depth = 0, maxLength = 32): Tree
   }
 
   return displayNode;
+}
+
+function isContainerType(type: string): boolean {
+  switch (type) {
+    case "section":
+    case "list":
+    case "listItem":
+    case "root":
+    case "blockquote":
+    case "table":
+    case "tableRow":
+      return true;
+    case "paragraph":
+    case "heading":
+    case "text":
+    case "code":
+    case "html":
+    case "thematicBreak":
+    case "definition":
+    case "footnoteDefinition":
+    case "tableCell":
+    case "strong":
+    case "emphasis":
+    case "link":
+      return false;
+    default:
+      // Default to treating unknown types as leaf nodes
+      return false;
+  }
 }
