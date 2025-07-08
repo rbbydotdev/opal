@@ -24,7 +24,7 @@ export function getTextContent(node: mdast.Node): string {
   if ("value" in node && typeof node.value === "string") {
     return node.value;
   } else if ("children" in node && Array.isArray((node as mdast.Parent).children)) {
-    return ((node as mdast.Parent).children as mdast.Node[]).map(getTextContent).join("");
+    return ((node as mdast.Parent).children as mdast.Node[]).map(getTextContent).join(" ");
   }
   return "";
 }
