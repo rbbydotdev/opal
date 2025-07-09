@@ -26,7 +26,7 @@ const config = [
       "@typescript-eslint": typescriptEslintPlugin,
     },
     rules: {
-      "react-hooks/exhaustive-deps": "off",
+      "react-hooks/exhaustive-deps": "warn",
       "@typescript-eslint/no-floating-promises": "error",
       "@next/next/no-img-element": "off",
       "@typescript-eslint/ban-ts-comment": "off",

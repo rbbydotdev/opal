@@ -7,11 +7,20 @@ import { TreeExpanderProvider } from "@/features/tree-expander/TreeExpanderConte
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath } from "@/lib/paths2";
 import { Delete, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 export const TinyNotice = () => <div className="ml-1 mb-2 bg-ring w-[5px] h-[5px] rounded-full"></div>;
 
 export function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { removeFile } = useWorkspaceFileMgmt(currentWorkspace);
+  const [hasTrash, setHasTrash] = useState<boolean>(false);
+  useEffect(
+    () =>
+      currentWorkspace.watchDisk(() => {
+        setHasTrash(currentWorkspace.hasTrash());
+      }),
+    [currentWorkspace]
+  );
 
   return (
     <TreeExpanderProvider id="TrashFiles">
@@ -23,7 +32,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
             className={className}
             scope={absPath("/.trash")}
           >
-            {currentWorkspace.hasTrash() ? <TinyNotice /> : null}
+            {hasTrash ? <TinyNotice /> : null}
           </SidebarFileMenuFileSectionInternal>
         </ContextMenuTrigger>
         <ContextMenuContent>

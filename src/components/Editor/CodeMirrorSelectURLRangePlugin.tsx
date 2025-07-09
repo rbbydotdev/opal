@@ -1,8 +1,11 @@
 import { EditorSelection, Extension } from "@codemirror/state";
-import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { EditorView, ViewPlugin } from "@codemirror/view";
 import { checkSum } from "../../lib/checkSum";
 
-const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, chsum?: number][] | null) =>
+const codeMirrorSelectURLRangePlugin = (
+  hlRanges: [start: number, end: number, chsum?: number][] | null,
+  exactMatch = false
+) =>
   ViewPlugin.fromClass(
     class {
       private view: EditorView;
@@ -25,7 +28,10 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, c
                   this.view.state.doc.slice(start, end).toString()
                 )}`
               );
-              return null;
+              if (exactMatch) {
+                // If exact match is required, skip this range
+                return null;
+              }
             }
             // Clamp to valid range
             const s = Math.max(0, Math.min(start, docLength));
@@ -42,7 +48,7 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, c
         }
       };
 
-      update(_update: ViewUpdate) {
+      update() {
         if (!this.didSetSelection && hlRanges) {
           this.didSetSelection = true;
           requestAnimationFrame(() => {

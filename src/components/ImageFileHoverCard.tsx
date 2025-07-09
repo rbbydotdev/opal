@@ -1,13 +1,14 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import React from "react";
 
-export function ImageFileHoverCard({ children }: { children: React.ReactNode }) {
+export function ImageFileHoverCard({ children, src }: { children: React.ReactNode; src?: string }) {
   // Ensure children is a single React element and is an <img>
   if (!React.isValidElement(children) || children.type !== "img") {
     throw new Error("ImageFileHoverCard expects a single <img> element as its child.");
   }
 
-  const src = (children as React.ReactElement<{ src: string }>).props.src;
+  //
+  const finalSrc = src ?? (children as React.ReactElement<{ src: string }>).props.src;
 
   return (
     <HoverCard>
@@ -32,7 +33,7 @@ export function ImageFileHoverCard({ children }: { children: React.ReactNode }) 
             borderRight: "22px solid white",
           }}
         /> */}
-        <img src={src} alt="Image preview" className="object-cover w-full h-full" />
+        <img src={finalSrc} alt="Image preview" className="object-cover w-full h-full" />
       </HoverCardContent>
     </HoverCard>
   );
