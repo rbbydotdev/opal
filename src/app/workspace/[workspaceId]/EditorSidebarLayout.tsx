@@ -169,7 +169,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
         title="Resize sidebar"
       ></div>
 
-      <main className="relative min-w-0 flex-grow overflow-y-auto">{main}</main>
+      <main className="relative min-w-0 flex-col flex flex-grow overflow-hidden ">{main}</main>
     </div>
   );
 };
