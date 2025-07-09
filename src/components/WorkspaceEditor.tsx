@@ -86,7 +86,7 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
         onChange={debouncedUpdate}
         markdown={String(contents || "")}
         className={twMerge("h-full bg-background flex flex-col", className)}
-        contentEditableClassName="max-w-full overflow-auto content-editable prose"
+        contentEditableClassName="max-w-full overflow-auto content-editable prose bg-background"
       />
     </>
   );

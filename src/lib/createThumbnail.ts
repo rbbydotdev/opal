@@ -1,6 +1,6 @@
 import { errF } from "@/lib/errors";
 
-export const createThumbnailWW = (
+export const createThumbnail = (
   imageData: Uint8Array,
   maxWidth: number = 20,
   maxHeight: number = 20

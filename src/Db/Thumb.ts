@@ -1,5 +1,5 @@
 import { Disk } from "@/Db/Disk";
-import { createThumbnailWW } from "@/lib/createThumbnailWW";
+import { createThumbnail } from "@/lib/createThumbnail";
 import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, encodePath } from "@/lib/paths2";
@@ -47,7 +47,7 @@ export class Thumb {
   async make() {
     const content = await this.imgRepo.readFile(this.path);
     if (!content) throw new NotFoundError("Image not found for thumb" + this.path);
-    this.content = await createThumbnailWW(content as Uint8Array, this.size, this.size);
+    this.content = await createThumbnail(content as Uint8Array, this.size, this.size);
     await this.save();
     return this;
   }

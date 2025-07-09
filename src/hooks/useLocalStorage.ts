@@ -27,6 +27,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
   });
 
   // Only depends on key
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const getInitialValue = () => {
     try {
       const item = window.localStorage.getItem(key);
