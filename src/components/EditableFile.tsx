@@ -112,7 +112,7 @@ export const EditableFile = ({
             <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
               <SelectedMark selected={isSelected} />
               {isImage(treeNode.path) ? (
-                <ImageFileHoverCard src={treeNode.path}>
+                <ImageFileHoverCard fallbackSrc={treeNode.path}>
                   <img
                     src={Thumb.resolveURLFromNode(treeNode)}
                     alt=""

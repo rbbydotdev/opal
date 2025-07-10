@@ -425,4 +425,4 @@ export function isVirtualDupNode(node: TreeNode): node is VirtualDupTreeNode {
   return isVirtualNode(node) && typeof node.source !== "undefined";
 }
 
-// expor
+export const OrphanRootNode = TreeNode.FromPath(absPath("/"), "dir");

@@ -46,9 +46,11 @@ export type FILE_TREE_MENUS_TYPE = (typeof FILE_TREE_MENUS)[number];
 export const FileTreeMenuCtxProvider = ({
   children,
   id,
+  currentWorkspace,
 }: {
   id: (typeof FILE_TREE_MENUS)[number];
   children: React.ReactNode;
+  currentWorkspace: Workspace;
 }) => {
   const pathname = usePathname();
   const { filePath } = Workspace.parseWorkspacePath(pathname);
@@ -70,7 +72,23 @@ export const FileTreeMenuCtxProvider = ({
     selectedRange: [],
   });
 
-  const { editing, focused, virtual, selectedRange, editType } = fileTreeCtx;
+  //sync fileTreeCtx with the current workspace,
+  const { editing, focused, virtual, selectedRange, editType } = useMemo(() => {
+    return {
+      editing: currentWorkspace.nodeFromPath(fileTreeCtx.editing)?.path ?? null,
+      focused: currentWorkspace.nodeFromPath(fileTreeCtx.focused)?.path ?? null,
+      virtual: fileTreeCtx.virtual,
+      selectedRange: fileTreeCtx.selectedRange.filter((path) => currentWorkspace.nodeFromPath(path) !== null),
+      editType: fileTreeCtx.editType,
+    };
+  }, [
+    currentWorkspace,
+    fileTreeCtx.editType,
+    fileTreeCtx.editing,
+    fileTreeCtx.focused,
+    fileTreeCtx.selectedRange,
+    fileTreeCtx.virtual,
+  ]);
 
   const resetEditing = () => {
     setFileTreeCtx(() => ({

@@ -40,6 +40,7 @@ export function EditorSearchBar({
   // const replaceTermRef = useRef<string>("");
   const [isReplaceExpanded, setIsReplaceExpanded] = useState<boolean>(false);
   const pauseBlurClose = useRef(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleClose = () => {
     onClose?.();
     onChange(null);
@@ -52,6 +53,7 @@ export function EditorSearchBar({
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const selectSearchText = () => {
     if (searchInputRef.current && isOpen) {
       searchInputRef.current.select();

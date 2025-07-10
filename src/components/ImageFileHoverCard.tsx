@@ -1,14 +1,14 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import React from "react";
 
-export function ImageFileHoverCard({ children, src }: { children: React.ReactNode; src?: string }) {
+export function ImageFileHoverCard({ children, fallbackSrc }: { children: React.ReactNode; fallbackSrc?: string }) {
   // Ensure children is a single React element and is an <img>
   if (!React.isValidElement(children) || children.type !== "img") {
     throw new Error("ImageFileHoverCard expects a single <img> element as its child.");
   }
 
   //
-  const finalSrc = src ?? (children as React.ReactElement<{ src: string }>).props.src;
+  const finalSrc = fallbackSrc ?? (children as React.ReactElement<{ src: string }>).props.src;
 
   return (
     <HoverCard>

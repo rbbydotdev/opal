@@ -4,7 +4,7 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { basename, changePrefix, prefix, RelPath, relPath, sanitizeUserInputFilePath } from "@/lib/paths2";
+import { basename, changePrefix, prefix, RelPath, relPath, strictPathname } from "@/lib/paths2";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 export function useEditable<T extends TreeFile | TreeDir>({
@@ -58,9 +58,11 @@ export function useEditable<T extends TreeFile | TreeDir>({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 2) {
+      //ignore and allow for context menu
       return;
     }
     if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
+      //add single file to selection
       e.preventDefault();
       e.stopPropagation();
       setFileTreeCtx(({ selectedRange }) => ({
@@ -73,27 +75,27 @@ export function useEditable<T extends TreeFile | TreeDir>({
 
       return;
     } else if (e.shiftKey && focused) {
+      //select range of files
       e.preventDefault();
       e.stopPropagation();
       const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
-      if (focusedNode) {
-        const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode) ?? [];
-        setFileTreeCtx({
-          editing: null,
-          editType: null,
-          focused: treeNode.path,
-          virtual: null,
-          selectedRange: range,
-        });
-      }
-    } else if (!isEditing) {
-      //check if there was a right click
-      setFileTreeCtx(({ selectedRange }) => ({
+      const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode!) ?? [];
+      setFileTreeCtx({
         editing: null,
         editType: null,
         focused: treeNode.path,
         virtual: null,
-        selectedRange: [...new Set(selectedRange).add(treeNode.path)],
+        selectedRange: range,
+      });
+    } else if (!isEditing && !e.shiftKey && !isSelectedRange) {
+      //select single file
+      //ignore if within selection to allow for drag
+      setFileTreeCtx(() => ({
+        editing: null,
+        editType: null,
+        focused: treeNode.path,
+        virtual: null,
+        selectedRange: [treeNode.path],
       }));
     }
   };
@@ -134,7 +136,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
           (["new", "duplicate"].includes(editType) || prefix(fileName) !== prefix(basename(fullPath)))
         ) {
           e.stopPropagation();
-          const wantPath = basename(changePrefix(fullPath, sanitizeUserInputFilePath(prefix(fileName))));
+          const wantPath = basename(changePrefix(fullPath, strictPathname(prefix(fileName))));
           const gotPath = await commitChange(treeNode, wantPath, editType);
           const newFocused = gotPath ?? fullPath;
           if (gotPath !== null) {
