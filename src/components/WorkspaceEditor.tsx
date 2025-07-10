@@ -77,20 +77,25 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
     }
   }
   if (contents === null || !currentWorkspace) return null;
+  // editor.dispatchCommand<DragEvent>(
+  //   DROP_COMMAND,
+  //   (event) => {
+  //     return onDragover(event, !!theUploadHandler)
+  //   },
+  //   COMMAND_PRIORITY_LOW
+  // ),
   return (
-    <>
-      <div className="flex flex-col h-full">
-        {/* <div className="bg-blue-500 w-full h-24 flex-shrink-0"></div> */}
-        <Editor
-          {...props}
-          ref={editorRef}
-          currentWorkspace={currentWorkspace}
-          onChange={debouncedUpdate}
-          markdown={String(contents || "")}
-          className={twMerge("bg-background flex-grow  flex-col", className)}
-          contentEditableClassName="max-w-full content-editable prose bg-background"
-        />
-      </div>
-    </>
+    <div className="flex flex-col h-full">
+      <Editor
+        {...props}
+        ref={editorRef}
+        // onDrop={handleDrop}
+        currentWorkspace={currentWorkspace}
+        onChange={debouncedUpdate}
+        markdown={String(contents || "")}
+        className={twMerge("bg-background flex-grow  flex-col", className)}
+        contentEditableClassName="max-w-full content-editable prose bg-background"
+      />
+    </div>
   );
 }

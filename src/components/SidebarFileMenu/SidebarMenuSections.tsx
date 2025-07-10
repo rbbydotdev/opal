@@ -114,13 +114,13 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           </div>
 
           <div dnd-id={dndId("trash")} className="min-h-8 flex-shrink flex">
-            <FileTreeMenuCtxProvider id="TrashFiles">
+            <FileTreeMenuCtxProvider id="TrashFiles" currentWorkspace={currentWorkspace}>
               <TrashSidebarFileMenuFileSection />
             </FileTreeMenuCtxProvider>
           </div>
 
           <div className="flex-shrink flex" dnd-id={dndId("files")}>
-            <FileTreeMenuCtxProvider id="MainFiles">
+            <FileTreeMenuCtxProvider id="MainFiles" currentWorkspace={currentWorkspace}>
               <TreeExpanderProvider id="MainFiles">
                 <MainSidebarFileMenuFileSection />
               </TreeExpanderProvider>

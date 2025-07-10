@@ -15,6 +15,7 @@ export function useSuperKeyLocalStorage<T>(superKey: string, key: string, initia
   };
 
   // Helper to get the value for this key
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const getInitialValue = () => {
     const superObj = getSuperObject();
     if (superObj && typeof superObj === "object" && superObj !== null && key in superObj) {
