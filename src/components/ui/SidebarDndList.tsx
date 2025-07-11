@@ -1,7 +1,7 @@
 // SidebarDnd.tsx
-import React, { createContext, useContext, useEffect, useState, ReactNode, ReactElement, HTMLAttributes } from "react";
-import clsx from "clsx";
 import { Slot } from "@radix-ui/react-slot";
+import clsx from "clsx";
+import React, { createContext, HTMLAttributes, ReactElement, ReactNode, useContext, useEffect, useState } from "react";
 
 type SidebarDndContextType = {
   dragging: number | null;
@@ -113,6 +113,8 @@ function SidebarDndItem(props: SidebarDndItemProps) {
       onDragOver?.(e);
     },
     onDragLeave: (e: React.DragEvent<HTMLElement>) => {
+      setDragging(null);
+      setDragOver(null);
       onDragLeave?.(e);
     },
     onDrop: (e: React.DragEvent<HTMLElement>) => {

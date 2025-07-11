@@ -14,7 +14,7 @@ export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
   }, [currentWorkspace, filePath]);
 
   return (
-    <div className="w-[480px] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-10 flex justify-center items-center _font-mono _font-bold">
+    <div className="w-[480px] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-50 flex justify-center items-center _font-mono _font-bold">
       <Button
         tabIndex={0}
         title="Put Back"

@@ -41,14 +41,7 @@ export const TrashFileTreeContextMenu = ({
         }}
       >
         {isRoot && (
-          <ContextMenuItem
-            className="flex gap-2"
-            onClick={() =>
-              remove(absPath("/.trash")).catch(() => {
-                /* no-op */
-              })
-            }
-          >
+          <ContextMenuItem className="flex gap-2" onClick={() => remove(absPath("/.trash"))}>
             <Delete className="mr-3 h-4 w-4" />
             Empty
           </ContextMenuItem>

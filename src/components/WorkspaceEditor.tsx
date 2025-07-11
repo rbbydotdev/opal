@@ -1,13 +1,17 @@
 "use client";
 
+import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { Editor } from "@/components/Editor/Editor";
 import { ImageViewer } from "@/components/ImageViewer";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
+import { useHandleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
+import { RootNode } from "@/lib/FileTree/TreeNode";
 import { withSuspense } from "@/lib/hoc/withSuspense";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
@@ -15,16 +19,24 @@ import { Suspense, use, useEffect, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
+  currentWorkspace: Workspace;
   className?: string;
 }
 
+const shouldActivateForFiles = (types: readonly string[]) => {
+  return types.includes("Files");
+};
 export function WorkspaceView(props: WorkspaceEditorProps) {
   const { isImage, filePath, inTrash } = useCurrentFilepath();
+
+  const handleDropFilesEvent = useHandleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
   return (
-    <>
-      {inTrash && <TrashBanner filePath={filePath} />}
-      {isImage ? <ImageViewer alt={filePath} origSrc={filePath} /> : <WorkspaceEditor {...props} />}
-    </>
+    <ConditionalDropzone shouldActivate={shouldActivateForFiles} onDrop={(e) => handleDropFilesEvent(e, RootNode)}>
+      <>
+        {isImage ? <ImageViewer alt={filePath} origSrc={filePath} /> : <WorkspaceEditor {...props} />}
+        {inTrash && <TrashBanner filePath={filePath} />}
+      </>
+    </ConditionalDropzone>
   );
 }
 const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationError> }) => {
@@ -52,7 +64,7 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
   );
 });
 
-export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
+export function WorkspaceEditor({ className, currentWorkspace, ...props }: WorkspaceEditorProps) {
   const editorRef = useRef<MDXEditorMethods>(null);
   const { contents, debouncedUpdate, error } = useFileContents();
   useEffect(() => {
@@ -63,8 +75,6 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
       editorRef.current?.setMarkdown(contents);
     }
   }, [contents]);
-
-  const { currentWorkspace } = useWorkspaceContext();
 
   if (error) {
     if (isError(error, NotFoundError)) {
@@ -84,7 +94,6 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
         <Editor
           {...props}
           ref={editorRef}
-          // onDrop={handleDrop}
           currentWorkspace={currentWorkspace}
           onChange={debouncedUpdate}
           markdown={String(contents || "")}
