@@ -9,18 +9,19 @@ body {
 @layer base {
   :root {
     /* --off-white: rgb(255, 248, 240); */
-    --off-white: 32 100% 97.1%;
+    --off-white: 32 100% 97.06%;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    /* --card: var(--off-white); */
-    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 32 100% 97.06%;
+    --secondary-foreground: 212 100% 10%;
+
+    --card: var(--background);
+    --card-foreground: var(--secondary-foreground);
+
     /* --secondary-foreground: 270, 27%, 15%; */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -32,7 +33,6 @@ body {
     --success-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    /* --ring: 222.2 84% 4.9%; */
     --ring: 262.1 83.3% 57.8%;
     --highlight: 43 83.3% 57.8%;
     --highlight-focus: var(--ring);
@@ -41,16 +41,19 @@ body {
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
     --radius: 0.5rem;
-    /* --sidebar-background: 0 0% 98%; */
-    --sidebar-background: 210 40% 96.1%;
+
+    --sidebar-background: 212 100% 97%;
+
+    /* --sidebar-background: var(--secondary); */
+
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 5.3% 93%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    /* --sidebar-ring: 217.2 91.2% 59.8%; */
     --sidebar-ring: var(--ring);
     --navbar-height: 2.5rem;
     --editor-toolbar-height: 3.5rem;
@@ -64,8 +67,24 @@ body {
     --search-highlight-bg: 48 100% 50%; /* #ffcc02 */
     --search-muted: 220 5% 70%; /* #d1d5db (gray-300) */
     --search-muted-2: 220 5% 50%; /* #6b7280 (gray-500) */
-    /* --search-icon: 217 91% 60%; /* #60a5fa (blue-400) */
     --search-icon: var(--ring);
+
+    --chart-6: 221 100% 70%; /* rgb(102, 153, 255) */
+    --chart-7: 320 100% 70%; /* rgb(255, 102, 178) */
+    --chart-8: 150 100% 70%; /* rgb(102, 255, 178) */
+    --chart-9: 210 100% 70%; /* rgb(102, 178, 255) */
+    --chart-10: 32 100% 70%; /* rgb(255, 178, 102) */
+    --chart-11: 270 100% 70%; /* rgb(178, 102, 255) */
+    --chart-12: 140 100% 70%; /* rgb(102, 255, 102) */
+    --chart-13: 60 100% 70%; /* rgb(255, 255, 102) */
+    --chart-14: 160 100% 70%; /* rgb(102, 255, 178) */
+    --chart-15: 0 100% 70%; /* rgb(255, 102, 102) */
+    --chart-16: 180 100% 70%; /* rgb(102, 255, 255) */
+    --chart-17: 260 100% 70%; /* rgb(153, 102, 255) */
+    --chart-18: 300 100% 80%; /* rgb(255, 153, 255) */
+    --chart-19: 120 100% 70%; /* rgb(102, 255, 102) */
+    --chart-20: 270 100% 70%; /* rgb(178, 102, 255) */
+    --chart-21: 210 100% 70%; /* rgb(102, 178, 255) */
   }
   .dark__disabled {
     --background: 222.2 84% 4.9%;

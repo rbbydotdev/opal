@@ -25,9 +25,9 @@ import {
 } from "../ui/dropdown-menu";
 import { Separator } from "../ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel } from "../ui/sidebar";
-import { SidebarDndList } from "../ui/SidebarDndList";
-import { useDndList } from "./hooks/useDndList";
+import { SidebarDnd } from "../ui/SidebarDndList";
 import { SidebarTreeView, SidebarTreeViewActions } from "./SidebarTreeView";
+import { useDndList } from "@/features/filetree-drag-and-drop/useDndList";
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
@@ -94,11 +94,17 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         </SidebarGroupLabel>
       </DropdownMenu>
       <div className="overflow-y-auto scrollbar-thin pr-4">
-        <SidebarDndList storageKey={"sidebarMenu"} show={Array.from(dnds)}>
-          <SidebarFileMenuPublish dnd-id={dndId("publish")} className="flex-shrink flex" />
-          <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col" />
-          <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
-          <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
+        <SidebarDnd.List storageKey={"sidebarMenu"} show={Array.from(dnds)}>
+          <SidebarDnd.Item dnd-id={dndId("publish")} className="flex-shrink flex">
+            <SidebarFileMenuPublish />
+          </SidebarDnd.Item>
+          <SidebarDnd.Item dnd-id={dndId("sync")} className="flex-shrink flex flex-col">
+            <SidebarFileMenuSync />
+          </SidebarDnd.Item>
+          <SidebarDnd.Item dnd-id={dndId("export")} className="flex-shrink flex">
+            <SidebarFileMenuExport />
+          </SidebarDnd.Item>
+          <SidebarDnd.Item dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
             <TreeExpanderProvider id="TreeView">
               <SidebarTreeView className="">
                 <SidebarGroupContent className="flex items-center">
@@ -111,22 +117,20 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
                 </SidebarGroupContent>
               </SidebarTreeView>
             </TreeExpanderProvider>
-          </div>
-
-          <div dnd-id={dndId("trash")} className="min-h-8 flex-shrink flex">
+          </SidebarDnd.Item>
+          <SidebarDnd.Item dnd-id={dndId("trash")} className="min-h-8 flex-shrink flex">
             <FileTreeMenuCtxProvider id="TrashFiles" currentWorkspace={currentWorkspace}>
               <TrashSidebarFileMenuFileSection />
             </FileTreeMenuCtxProvider>
-          </div>
-
-          <div className="flex-shrink flex" dnd-id={dndId("files")}>
+          </SidebarDnd.Item>
+          <SidebarDnd.Item className="flex-shrink flex" dnd-id={dndId("files")}>
             <FileTreeMenuCtxProvider id="MainFiles" currentWorkspace={currentWorkspace}>
               <TreeExpanderProvider id="MainFiles">
                 <MainSidebarFileMenuFileSection />
               </TreeExpanderProvider>
             </FileTreeMenuCtxProvider>
-          </div>
-        </SidebarDndList>
+          </SidebarDnd.Item>
+        </SidebarDnd.List>
       </div>
     </SidebarGroup>
   );
