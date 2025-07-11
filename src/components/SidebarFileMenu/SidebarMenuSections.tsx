@@ -30,7 +30,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Separator } from "../ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel } from "../ui/sidebar";
-import { SidebarDnd } from "../ui/SidebarDndList";
+import { SidebarDndList } from "../ui/SidebarDndList";
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
@@ -97,17 +97,11 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         </SidebarGroupLabel>
       </DropdownMenu>
       <div className="overflow-y-auto scrollbar-thin pr-4">
-        <SidebarDnd.List storageKey={"sidebarMenu"} show={Array.from(dnds)}>
-          <SidebarDnd.Item dnd-id={dndId("publish")} className="flex-shrink flex">
-            <SidebarFileMenuPublish />
-          </SidebarDnd.Item>
-          <SidebarDnd.Item dnd-id={dndId("sync")} className="flex-shrink flex flex-col">
-            <SidebarFileMenuSync />
-          </SidebarDnd.Item>
-          <SidebarDnd.Item dnd-id={dndId("export")} className="flex-shrink flex">
-            <SidebarFileMenuExport />
-          </SidebarDnd.Item>
-          <SidebarDnd.Item dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
+        <SidebarDndList storageKey={"sidebarMenu"} show={Array.from(dnds)}>
+          <SidebarFileMenuPublish dnd-id={dndId("publish")} className="flex-shrink flex" />
+          <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col" />
+          <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
+          <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
             <TreeExpanderProvider id="TreeView">
               <SidebarTreeView className="">
                 <SidebarGroupContent className="flex items-center">
@@ -115,25 +109,27 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
                     trashSelectedFiles={function (): void {}}
                     addFile={function (): void {}}
                     addDir={function (): void {}}
-                    setExpandAll={function (_expand: boolean): void {}}
+                    setExpandAll={function (expand: boolean): void {}}
                   />
                 </SidebarGroupContent>
               </SidebarTreeView>
             </TreeExpanderProvider>
-          </SidebarDnd.Item>
-          <SidebarDnd.Item dnd-id={dndId("trash")} className="min-h-8 flex-shrink flex">
+          </div>
+
+          <div dnd-id={dndId("trash")} className="min-h-8 flex-shrink flex">
             <FileTreeMenuCtxProvider id="TrashFiles" currentWorkspace={currentWorkspace}>
               <TrashSidebarFileMenuFileSection />
             </FileTreeMenuCtxProvider>
-          </SidebarDnd.Item>
-          <SidebarDnd.Item className="flex-shrink flex" dnd-id={dndId("files")}>
+          </div>
+
+          <div className="flex-shrink flex" dnd-id={dndId("files")}>
             <FileTreeMenuCtxProvider id="MainFiles" currentWorkspace={currentWorkspace}>
               <TreeExpanderProvider id="MainFiles">
                 <MainSidebarFileMenuFileSection />
               </TreeExpanderProvider>
             </FileTreeMenuCtxProvider>
-          </SidebarDnd.Item>
-        </SidebarDnd.List>
+          </div>
+        </SidebarDndList>
       </div>
     </SidebarGroup>
   );
