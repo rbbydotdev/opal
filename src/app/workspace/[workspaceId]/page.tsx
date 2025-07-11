@@ -1,6 +1,7 @@
 "use client";
 
 import { SpotlightSearch } from "@/components/SpotlightSearch";
+import { CardTiltWindow } from "@/components/ui/CardTilt";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useHandleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useFavicon from "@/hooks/useFavicon";
@@ -35,19 +36,19 @@ export default function Page() {
       >
         {/* Overlay for background opacity */}
         <div
+          className="bg-background"
           style={{
             position: "absolute",
             inset: 0,
-            background: "white",
             opacity: 0.9,
             pointerEvents: "none",
           }}
         />
         <FirstFileRedirect />
-        <div className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center bg-white relative z-10">
+        <CardTiltWindow className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center relative z-10">
           <Opal size={78} />
           <div className="font-thin text-2xl font-mono text-center">Opal</div>
-        </div>
+        </CardTiltWindow>
       </div>
     </>
   );

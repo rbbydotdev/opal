@@ -58,7 +58,7 @@ export default function RootLayout({
             backgroundSize: "600px 600px",
             position: "relative",
           }}
-          className="w-full h-full flex items-center justify-center"
+          className="w-full h-full flex items-center justify-center bg-background"
         >
           <AsyncWindowErrorBoundary>
             <ErrorPopper>
