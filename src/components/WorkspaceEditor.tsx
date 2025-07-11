@@ -79,8 +79,9 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
 
 export function WorkspaceEditor({ className, currentWorkspace, ...props }: WorkspaceEditorProps) {
   const editorRef = useRef<MDXEditorMethods>(null);
-  const { contents, debouncedUpdate, error } = useFileContents((contents) => {
-    if (contents !== null) editorRef.current?.setMarkdown(contents);
+  const { initialContents, debouncedUpdate, error } = useFileContents((newContent) => {
+    //this is for out of editor updates like via tab or image path updates
+    editorRef.current?.setMarkdown(newContent ?? "");
   });
 
   if (error) {
@@ -94,7 +95,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
       throw error; // rethrow other errors to be caught by the nearest error boundary
     }
   }
-  if (contents === null || !currentWorkspace) return null;
+  if (initialContents === null || !currentWorkspace) return null;
   return (
     <div className="flex flex-col h-full relative">
       <DropCommanderProvider>
@@ -103,7 +104,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
           ref={editorRef}
           currentWorkspace={currentWorkspace}
           onChange={debouncedUpdate}
-          markdown={String(contents || "")}
+          markdown={String(initialContents || "")}
           className={twMerge("bg-background flex-grow  flex-col", className)}
           contentEditableClassName="max-w-full content-editable prose bg-background"
         />

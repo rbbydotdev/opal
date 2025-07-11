@@ -85,7 +85,7 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
 };
 
 export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const { contents } = useFileContents();
+  const { initialContents } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
   return useMemo(
@@ -120,11 +120,11 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
       diffSourcePlugin({
         viewMode: "rich-text",
-        diffMarkdown: contents,
+        diffMarkdown: initialContents,
         codeMirrorExtensions: [CodeMirrorHighlightURLRange()],
       }),
       markdownShortcutPlugin(),
     ],
-    [contents, workspaceImagesPlugin]
+    [initialContents, workspaceImagesPlugin]
   );
 }
