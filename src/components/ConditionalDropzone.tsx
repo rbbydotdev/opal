@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 interface ConditionalDropzoneProps {
   children: React.ReactNode;
   // A function to decide if the overlay should activate for the dragged content
-  shouldActivate: (types: readonly string[]) => boolean;
+  shouldActivate: (e: React.DragEvent) => boolean;
   onDrop: (event: React.DragEvent<HTMLDivElement>) => void;
   className?: string;
   activeClassName?: string;
@@ -27,7 +27,8 @@ export function ConditionalDropzone({
   // Memoize handlers to prevent re-creating them on every render
   const handleDragEnter = useCallback(
     (e: DragEvent) => {
-      if (shouldActivate(e.dataTransfer?.types ?? [])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (shouldActivate(e as any)) {
         setIsDragActive(true);
       }
     },
@@ -82,40 +83,40 @@ export function ConditionalDropzone({
   };
 
   return (
-    <div className={cn("relative w-full h-full", className)}>
-      {/* The content underneath */}
-      {children}
+    <>
+      <div className={cn("relative w-full h-full flex justify-center items-center", className)}>
+        {children}
 
-      {/* The Overlay */}
-      <div
-        ref={overlayRef}
-        {...(isDragActive ? overlayDragHandlers : {})}
-        className={cn(
-          "absolute inset-0 transition-colors duration-200 border-2 border-dashed border-transparent z-[999]",
-          // This is the key: toggle pointer-events based on state
-          {
-            "pointer-events-auto": isDragActive,
-            "pointer-events-none": !isDragActive,
-          },
-          isDragActive && activeClassName
-        )}
-      >
-        {/* Optional: Show a message when the dropzone is active */}
-        {isDragActive && (
-          <div className="w-full h-full flex justify-center items-center font-mono">
-            <Card
-              // The handlers are on the parent, so the card just acts as a visual
-              className="w-96 h-60 p-4 flex justify-center items-center pointer-events-none" // `pointer-events-none` prevents flickering
-            >
-              <div className="flex flex-col font-mono text-xs border-primary items-center border border-dashed w-full h-full rounded justify-center gap-2">
-                <FileIcon />
-                <div>drag & drop</div>
-                <div>(docx, md, png, svg, jpeg, webp)</div>
-              </div>
-            </Card>
-          </div>
-        )}
+        <div
+          ref={overlayRef}
+          {...(isDragActive ? overlayDragHandlers : {})}
+          className={cn(
+            "absolute inset-0 transition-colors duration-200 border-2 border-dashed border-transparent z-[999]",
+            // This is the key: toggle pointer-events based on state
+            {
+              "pointer-events-auto": isDragActive,
+              "pointer-events-none": !isDragActive,
+            },
+            isDragActive && activeClassName
+          )}
+        >
+          {/* Optional: Show a message when the dropzone is active */}
+          {isDragActive && (
+            <div className="w-full h-full flex justify-center items-center font-mono">
+              <Card
+                // The handlers are on the parent, so the card just acts as a visual
+                className="w-96 h-60 p-4 flex justify-center items-center pointer-events-none" // `pointer-events-none` prevents flickering
+              >
+                <div className="flex flex-col font-mono text-xs border-primary items-center border border-dashed w-full h-full rounded justify-center gap-2">
+                  <FileIcon />
+                  <div>drag & drop</div>
+                  <div>(docx, md, png, svg, jpeg, webp)</div>
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

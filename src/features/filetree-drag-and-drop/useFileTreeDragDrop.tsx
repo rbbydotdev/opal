@@ -6,6 +6,7 @@ import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 export function isExternalFileDrop(event: React.DragEvent) {
@@ -24,7 +25,7 @@ export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspa
     const fileArray = Array.from(files);
     imageFiles = fileArray.filter((file) => file.type.startsWith("image/"));
     markdownFiles = fileArray.filter((file) => file.type === "text/markdown" || file.name.endsWith(".md"));
-    const promises: Promise<unknown>[] = [];
+    const promises: Promise<AbsPath[]>[] = [];
 
     if (imageFiles.length > 0) {
       promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
@@ -35,7 +36,7 @@ export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspa
       promises.push(currentWorkspace.newFiles(newFilesData));
     }
 
-    return Promise.all(promises);
+    return (await Promise.all(promises)).flat();
   };
 }
 
@@ -46,7 +47,26 @@ export function useHandleDropFilesEventForNode({ currentWorkspace }: { currentWo
     event.stopPropagation();
     if (event.dataTransfer?.files) {
       return dropFilesHandler({ files: event.dataTransfer.files, targetNode });
+    } else {
+      console.warn("No files found in the drag event dataTransfer.");
+      return Promise.resolve([]);
     }
+  };
+}
+
+export function useHandleDropFilesEventForNodeRedirect({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  const router = useRouter();
+  const dropFilesHandler = useHandleDropFilesEventForNode({ currentWorkspace });
+  return (event: React.DragEvent, targetNode: TreeNode) => {
+    return dropFilesHandler(event, targetNode).then(([file]) => {
+      if (file) {
+        const filePath = currentWorkspace.resolveFileUrl(file);
+        router.push(filePath);
+      } else {
+        console.warn("No file returned from dropFilesHandler.");
+      }
+      return file;
+    });
   };
 }
 

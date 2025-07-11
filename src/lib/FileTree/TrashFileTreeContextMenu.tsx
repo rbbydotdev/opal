@@ -1,4 +1,5 @@
 import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
@@ -21,6 +22,8 @@ export const TrashFileTreeContextMenu = ({
     return () => (fnRef.current = fn);
   };
 
+  // const { selectedNodes } = useFiletreeMenuContextMenuActions({
+  const { selectedRange } = useFileTreeMenuCtx();
   const { untrash, remove } = useFiletreeMenuContextMenuActions({
     currentWorkspace,
   });
@@ -48,11 +51,11 @@ export const TrashFileTreeContextMenu = ({
         )}
         {!isRoot && (
           <>
-            <ContextMenuItem inset onClick={deferredFn(() => untrash(fileNode))}>
+            <ContextMenuItem inset onClick={deferredFn(() => untrash(selectedRange, fileNode))}>
               <Undo className="mr-3 h-4 w-4" />
               Put Back
             </ContextMenuItem>
-            <ContextMenuItem inset onClick={deferredFn(() => remove(fileNode))}>
+            <ContextMenuItem inset onClick={deferredFn(() => remove(selectedRange, fileNode))}>
               <Delete className="mr-3 h-4 w-4" />
               Delete
             </ContextMenuItem>

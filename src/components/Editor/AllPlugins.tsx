@@ -1,5 +1,6 @@
 import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
@@ -96,7 +97,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
           </>
         ),
       }),
-      remoteRealmPlugin({ editorId: "MdxEditorRealm" }),
+      remoteRealmPlugin({ editorId: MainEditorRealmId }),
       listsPlugin(),
       quotePlugin(),
       headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),

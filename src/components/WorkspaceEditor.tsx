@@ -9,12 +9,16 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
-import { useHandleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import {
+  isExternalFileDrop,
+  useHandleDropFilesEventForNode,
+} from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { withSuspense } from "@/lib/hoc/withSuspense";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Suspense, use, useEffect, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -23,20 +27,29 @@ interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
   className?: string;
 }
 
-const shouldActivateForFiles = (types: readonly string[]) => {
-  return types.includes("Files");
-};
 export function WorkspaceView(props: WorkspaceEditorProps) {
   const { isImage, filePath, inTrash } = useCurrentFilepath();
 
+  const router = useRouter();
   const handleDropFilesEvent = useHandleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
   return (
-    <ConditionalDropzone shouldActivate={shouldActivateForFiles} onDrop={(e) => handleDropFilesEvent(e, RootNode)}>
-      <>
-        {isImage ? <ImageViewer alt={filePath} origSrc={filePath} /> : <WorkspaceEditor {...props} />}
-        {inTrash && <TrashBanner filePath={filePath} />}
-      </>
-    </ConditionalDropzone>
+    <>
+      {isImage ? (
+        <ConditionalDropzone
+          shouldActivate={isExternalFileDrop}
+          onDrop={(e) =>
+            handleDropFilesEvent(e, RootNode).then(([filePath]) => {
+              if (filePath) router.push(props.currentWorkspace.resolveFileUrl(filePath));
+            })
+          }
+        >
+          <ImageViewer alt={filePath} origSrc={filePath} />
+        </ConditionalDropzone>
+      ) : (
+        <WorkspaceEditor {...props} />
+      )}
+      {inTrash && <TrashBanner filePath={filePath} />}
+    </>
   );
 }
 const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationError> }) => {

@@ -22,8 +22,6 @@ const InitializedMDXEditor = dynamic(() => import("./InitializedMDXEditor"), {
 // to accept other props, including a ref.
 export const Editor = forwardRef<MDXEditorMethods, MDXEditorProps & { currentWorkspace: Workspace }>(
   ({ currentWorkspace, ...props }, ref) => {
-    // const realm = useRemoteMDXEditorRealm("Editor");
-    // const realm = useRemoteMDXEditorRealm("MdxEditorRealm");
     const plugins = useAllPlugins({ currentWorkspace });
     return (
       <>
