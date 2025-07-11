@@ -1,7 +1,9 @@
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
+import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { FileTreeDragPreview } from "@/components/FileTreeDragPreview";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { useFileMenuPaste } from "@/components/SidebarFileMenu/hooks/useFileMenuPaste";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -14,11 +16,9 @@ import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTr
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath } from "@/lib/paths2";
-import clsx from "clsx";
+import cn from "clsx";
 import React from "react";
 import { tryParseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
-import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
-import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 
 export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
 
@@ -177,7 +177,7 @@ export function FileTreeMenu({
         {fileNodeChildren.map((fileNode) => (
           <SidebarMenuItem
             key={fileNode.path}
-            className={clsx({
+            className={cn({
               ["bg-sidebar-accent"]: fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
             })}
             onDragOver={(e) => handleDragOver(e, fileNode)}
@@ -188,12 +188,13 @@ export function FileTreeMenu({
             }}
           >
             <FileItemContextMenu fileNode={fileNode} currentWorkspace={currentWorkspace}>
-              <div>
-                {fileNode.isTreeDir() ? (
+              {fileNode.isTreeDir() ? (
+                <div className="pt-0.5">
                   <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton asChild>
                         <EditableDir
+                          className="pl-8"
                           workspaceRoute={workspaceRoute}
                           currentWorkspace={currentWorkspace}
                           depth={depth}
@@ -217,9 +218,12 @@ export function FileTreeMenu({
                       />
                     </CollapsibleContent>
                   </Collapsible>
-                ) : fileNode.isTreeFile() ? (
+                </div>
+              ) : fileNode.isTreeFile() ? (
+                <div className="pt-0.5">
                   <SidebarMenuButton asChild>
                     <EditableFile
+                      className="pl-8"
                       workspaceRoute={workspaceRoute}
                       currentWorkspace={currentWorkspace}
                       depth={depth}
@@ -229,8 +233,8 @@ export function FileTreeMenu({
                       onDragStart={handleDragStartWithImg(fileNode)}
                     />
                   </SidebarMenuButton>
-                ) : null}
-              </div>
+                </div>
+              ) : null}
             </FileItemContextMenu>
           </SidebarMenuItem>
         ))}

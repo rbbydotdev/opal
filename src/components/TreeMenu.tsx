@@ -1,13 +1,13 @@
 // getMdastSync
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { getMdastSync, sectionize } from "@/lib/mdast/mdastUtils";
-import { convertTreeViewTree, isContainer, isLeaf, TreeViewNode } from "@/lib/mdast/treeViewDisplayNode";
+import { isContainer, isLeaf, TreeViewNode } from "@/lib/mdast/treeViewDisplayNode";
+import { lexical } from "@mdxeditor/editor";
 import mdast from "mdast";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import unist from "unist";
 
@@ -19,25 +19,32 @@ export function isParent(node: unknown): node is unist.Parent {
 //   return !isParent(node);
 // }
 
-export function SidebarTreeViewMenu() {
+export function SidebarTreeViewMenuFOOBAR() {
   const { currentWorkspace } = useWorkspaceContext();
-  const [contents, setContents] = useState<string | null>(null);
-  const { contents: initialValue } = useFileContents((c) => setContents(c ?? ""));
-  const { isMarkdown } = useCurrentFilepath();
 
+  // const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
+  // const editor = useCellValueForRealm(rootEditor$, realm);
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
-  const totalContent = contents ?? initialValue;
-  const treeViewTree = useMemo(() => {
-    if (!totalContent || !isMarkdown) return {} as TreeViewNode;
-    return convertTreeViewTree(sectionize(getMdastSync(totalContent)));
-  }, [isMarkdown, totalContent]);
+  const [lexicalRoot, setLexicalRoot] = useState<lexical.RootNode | null>(null);
+  useEffect(() => {
+    // console.log(editor);rich-text
+    // if (editor) {
+    //   editor.update(() => {
+    //     // setLexicalRoot(lexical.$getRoot());
+    //   });
+    // }
+  }, []);
+  const displayTree = useMemo(() => {
+    if (!lexicalRoot) return null;
+    // return lexicalToTreeView(lexicalRoot as lexical.RootNode);
+  }, [lexicalRoot]);
 
-  if (!currentWorkspace || !totalContent || !isMarkdown || !treeViewTree) {
+  if (!currentWorkspace || !displayTree) {
     return null;
   }
   return (
     <SidebarTreeViewMenuContent
-      parent={treeViewTree}
+      parent={displayTree}
       expand={expandSingle}
       expandForNode={expandForNode}
       expanded={expanded}

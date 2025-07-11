@@ -7,6 +7,7 @@ import { Workspace } from "@/Db/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, equals, isImage, prefix, relPath } from "@/lib/paths2";
+import { cn } from "@/lib/utils";
 import clsx from "clsx";
 import { FileText } from "lucide-react";
 import Link from "next/link";
@@ -82,11 +83,10 @@ export const EditableFile = ({
           draggable
           onDragStart={onDragStart}
           href={currentWorkspace.resolveFileUrl(fullPath)}
-          className={twMerge(
+          className={cn(
             className,
-
-            isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
-            "group cursor-pointer my-0.5"
+            { "bg-sidebar-accent font-bold": isSelectedRange || isFocused },
+            "group cursor-pointer"
           )}
           ref={linkRef}
           tabIndex={0}

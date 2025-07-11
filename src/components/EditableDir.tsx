@@ -6,9 +6,9 @@ import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, relPath } from "@/lib/paths2";
+import { cn } from "@/lib/utils";
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
 import { ComponentProps, useEffect } from "react";
-import { twMerge } from "tailwind-merge";
 export const EditableDir = ({
   depth,
   className,
@@ -85,15 +85,14 @@ export const EditableDir = ({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onFocus={handleFocus}
-      className={twMerge(
-        isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
+      className={cn(
+        { "bg-sidebar-accent font-bold": isSelectedRange || isFocused },
         className,
-        "w-full flex cursor-pointer select-none group/dir my-0.5"
+        "w-full flex cursor-pointer select-none group/dir"
       )}
       onKeyDown={(e) => handleKeyDown(e)}
-      style={{ paddingLeft: depth + "rem" }}
     >
-      <div className="flex w-full items-center truncate">
+      <div className="flex w-full items-center truncate" style={{ paddingLeft: depth + "rem" }}>
         <div className="mr-1">
           <ChevronRight
             size={14}
