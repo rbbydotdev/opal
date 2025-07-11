@@ -19,7 +19,7 @@ import { withSuspense } from "@/lib/hoc/withSuspense";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, use, useEffect, useMemo, useRef } from "react";
+import { Suspense, use, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
@@ -79,15 +79,9 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
 
 export function WorkspaceEditor({ className, currentWorkspace, ...props }: WorkspaceEditorProps) {
   const editorRef = useRef<MDXEditorMethods>(null);
-  const { contents, debouncedUpdate, error } = useFileContents();
-  useEffect(() => {
-    if (editorRef.current && contents !== null) {
-      // Ensure contents are prettified before setting
-      // const newContents = prettifyMarkdown(contents ?? "");
-      // console.log("writing", `newConents: ${newContents.length} contents: ${contents.length}`);
-      editorRef.current?.setMarkdown(contents);
-    }
-  }, [contents]);
+  const { contents, debouncedUpdate, error } = useFileContents((contents) => {
+    if (contents !== null) editorRef.current?.setMarkdown(contents);
+  });
 
   if (error) {
     if (isError(error, NotFoundError)) {

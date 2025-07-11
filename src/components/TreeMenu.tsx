@@ -1,13 +1,15 @@
 // getMdastSync
+import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isContainer, isLeaf, TreeViewNode } from "@/lib/mdast/treeViewDisplayNode";
-import { lexical } from "@mdxeditor/editor";
+import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import mdast from "mdast";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import unist from "unist";
 
@@ -19,36 +21,33 @@ export function isParent(node: unknown): node is unist.Parent {
 //   return !isParent(node);
 // }
 
-export function SidebarTreeViewMenuFOOBAR() {
+export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
 
-  // const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
-  // const editor = useCellValueForRealm(rootEditor$, realm);
+  const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
+  const editor = useCellValueForRealm(rootEditor$, realm);
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const [lexicalRoot, setLexicalRoot] = useState<lexical.RootNode | null>(null);
   useEffect(() => {
     // console.log(editor);rich-text
-    // if (editor) {
-    //   editor.update(() => {
-    //     // setLexicalRoot(lexical.$getRoot());
-    //   });
-    // }
-  }, []);
-  const displayTree = useMemo(() => {
-    if (!lexicalRoot) return null;
-    // return lexicalToTreeView(lexicalRoot as lexical.RootNode);
-  }, [lexicalRoot]);
+    if (editor) {
+      // editor.read(() => {
+      //   console.log(lexicalToTreeView(lexical.$getRoot()));
+      //   // setLexicalRoot(lexical.$getRoot());
+      // });
+    }
+  }, [editor]);
+  // const displayTree = useMemo(() => {
+  //   if (!lexicalRoot) return null;
+  //   return lexicalToTreeView(lexicalRoot as lexical.RootNode);
+  // }, [lexicalRoot]);
 
-  if (!currentWorkspace || !displayTree) {
+  if (!currentWorkspace) {
     return null;
   }
+  return null;
   return (
-    <SidebarTreeViewMenuContent
-      parent={displayTree}
-      expand={expandSingle}
-      expandForNode={expandForNode}
-      expanded={expanded}
-    />
+    <SidebarTreeViewMenuContent parent={null} expand={expandSingle} expandForNode={expandForNode} expanded={expanded} />
   );
 }
 

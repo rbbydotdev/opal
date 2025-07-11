@@ -62,3 +62,14 @@
     outline: none;
   }
 }
+
+.mdxeditor-root-contenteditable,
+.mdxeditor-rich-text-editor .content-editable,
+.mdxeditor-diff-source-wrapper,
+.mdxeditor-rich-text-editor,
+.mdxeditor-root-contenteditable > div {
+  height: 100%;
+}
+.mdxeditor-rich-text-editor .content-editable {
+  background-color: transparent !important;
+}
