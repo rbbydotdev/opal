@@ -1,27 +1,16 @@
 import { Card } from "@/components/ui/card";
-import EventEmitter from "events";
-import { ArrowBigDownDash, File, FileIcon, TargetIcon } from "lucide-react";
-import React, { createContext, useContext, useMemo } from "react";
+import { ArrowBigDownDash, File, TargetIcon } from "lucide-react";
+import React, { createContext, useContext } from "react";
 type DropCommanderProps = {
-  isOpen: boolean;
-  setIsOpen: (value: boolean) => void;
-  hide: () => void;
-  show: () => void;
   handleExternalFileDrop: (files: File[]) => Promise<void>;
   handleFileTreeNodeDrop: (files: File[], targetNode: string) => Promise<void>;
   handleDrop: (event: React.DragEvent) => Promise<void>;
-  listen: (element: string) => void;
 };
 
 const DropCommanderContext = createContext<DropCommanderProps>({
-  isOpen: false,
-  setIsOpen: () => {},
   handleExternalFileDrop: async () => {},
   handleFileTreeNodeDrop: async () => Promise.resolve(),
   handleDrop: async () => Promise.resolve(),
-  hide: () => {},
-  show: () => {},
-  listen: (element: string) => {},
 });
 
 //detect dragging
@@ -40,66 +29,17 @@ export function DropCommanderProvider({ children }: { children: React.ReactNode 
   const handleFileTreeNodeDrop = async () => {};
   const handleDrop = async () => {};
 
-  const hide = () => setIsOpen(false);
-  const show = () => {
-    if (!isOpen) setIsOpen(true);
-  };
-  const events = useMemo(() => {
-    const Events = new EventEmitter();
-    return () => Events.removeAllListeners();
-  }, []);
   const listen = () => {};
 
   return (
     <DropCommanderContext.Provider
       value={{
-        setIsOpen,
-        isOpen,
-        hide,
-        listen,
-        show,
         handleFileTreeNodeDrop,
         handleExternalFileDrop,
         handleDrop,
       }}
     >
-      <>
-        <div
-          className="drop-commander inset-0 w-full h-full absolute z-50 pointer-events-none"
-          onDrop={(e) => {
-            //get the element is dropped on
-            const droppedElement = document.elementFromPoint(e.clientX, e.clientY);
-            console.log(droppedElement);
-            // console.log("Dropped on element:", droppedElement);
-          }}
-          onDragOver={(e) => {
-            show();
-            if (detectExtFileDrag(e)) {
-            }
-          }}
-          // onDragLeave={(e) => {
-          //   e.preventDefault();
-          //   hide();
-          // }}
-          // onDrop={async (e) => {
-          //   e.preventDefault();
-          //   await handleDrop(e);
-          //   hide();
-          // }}
-        ></div>
-        {children}
-        {isOpen && (
-          <div className="absolute inset-0 bg-primary/40 w-full h-full z-50 flex justify-center items-center">
-            <Card className="w-96 h-48 p-4 flex justify-center items-center">
-              <div className="flex flex-col text-xs border-primary items-center gap-1 border border-dashed w-full h-full rounded justify-center">
-                <FileIcon />
-                <div className="font-mono ">drag & drop</div>
-                <div className="font-mono ">(docx, md, png, svg, jpeg, webp)</div>
-              </div>
-            </Card>
-          </div>
-        )}
-      </>
+      <>{children}</>
     </DropCommanderContext.Provider>
   );
 }
