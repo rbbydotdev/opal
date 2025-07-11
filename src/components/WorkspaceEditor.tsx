@@ -77,13 +77,6 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
     }
   }
   if (contents === null || !currentWorkspace) return null;
-  // editor.dispatchCommand<DragEvent>(
-  //   DROP_COMMAND,
-  //   (event) => {
-  //     return onDragover(event, !!theUploadHandler)
-  //   },
-  //   COMMAND_PRIORITY_LOW
-  // ),
   return (
     <div className="flex flex-col h-full">
       <Editor

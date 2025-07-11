@@ -18,9 +18,9 @@ const config = [
     files: ["**/*.ts", "**/*.tsx", "*.ts"],
     languageOptions: {
       parser: typescriptEslintParser,
-      // parserOptions: {
-      //   project: "./tsconfig.json",
-      // },
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
     },
     plugins: {
       "@typescript-eslint": typescriptEslintPlugin,

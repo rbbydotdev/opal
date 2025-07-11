@@ -4,5 +4,5 @@ import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 export class DiskRecord {
   guid!: string;
   type!: DiskType;
-  indexCache!: TreeDirRootJType;
+  indexCache!: TreeDirRootJType | null;
 }

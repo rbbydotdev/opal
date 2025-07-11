@@ -8,6 +8,7 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath } from "@/lib/paths2";
 import { Delete, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { TrashFileTreeContextMenu } from "../../../lib/FileTree/TrashFileTreeContextMenu";
 export const TinyNotice = () => <div className="ml-1 mb-2 bg-ring w-[5px] h-[5px] rounded-full"></div>;
 
 export function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
@@ -27,6 +28,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
       <ContextMenu>
         <ContextMenuTrigger disabled={!currentWorkspace.hasTrash()} asChild>
           <SidebarFileMenuFileSectionInternal
+            FileItemContextMenu={TrashFileTreeContextMenu}
             Icon={Trash2}
             title={"Trash"}
             className={className}

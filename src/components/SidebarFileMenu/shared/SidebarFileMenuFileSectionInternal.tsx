@@ -1,6 +1,7 @@
 "use client";
 
-import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/trash-section/SidebarFileMenuFiles";
+import { FileItemContextMenu } from "@/components/FiletreeMenu";
+import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
@@ -16,6 +17,7 @@ export function SidebarFileMenuFileSectionInternal({
   filter,
   children,
   Icon = Files,
+  FileItemContextMenu: FileItemContextMenu,
   ...rest
 }: {
   title: JSX.Element | string;
@@ -23,6 +25,7 @@ export function SidebarFileMenuFileSectionInternal({
   scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   children?: React.ReactNode;
+  FileItemContextMenu: FileItemContextMenu;
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
 }) {
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
@@ -38,6 +41,7 @@ export function SidebarFileMenuFileSectionInternal({
       {...rest}
       title={title}
       Icon={Icon}
+      FileItemContextMenu={FileItemContextMenu}
       className={twMerge("min-h-8 ", className)}
       filter={filter}
       fileTreeDir={treeNode as TreeDirRoot}
@@ -46,7 +50,6 @@ export function SidebarFileMenuFileSectionInternal({
       expandForNode={expandForNode}
       expanded={expanded}
     >
-      <div className="findme"></div>
       {children}
     </SidebarFileMenuFiles>
   );

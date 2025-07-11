@@ -72,7 +72,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   };
 
   useEffect(() => {
-    const fetchFileContents = async () => {
+    const fetchFileContentsOnLoad = async () => {
       if (currentWorkspace && filePath) {
         try {
           setContents(await currentWorkspace.disk.readFile(filePath));
@@ -81,17 +81,27 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
         } catch (error) {
           setError(error as Error);
         }
-        //listener is currently only used with remote, since a local write will not trigger
-        //a local write event, this is because the common update kind of borks mdx editor
-        //?????
-        return currentWorkspace.disk.remoteUpdateListener(filePath, setContents);
       }
     };
-
-    void fetchFileContents();
+    fetchFileContentsOnLoad();
   }, [currentWorkspace, filePath, router]);
 
   useEffect(() => {
+    //Mount Remote Listener
+    if (filePath) {
+      return currentWorkspace.disk.remoteUpdateListener(filePath, setContents);
+    }
+  }, [filePath]);
+
+  useEffect(() => {
+    //Mount Local Listener
+    if (filePath) {
+      return currentWorkspace.disk.updateListener(filePath, setContents);
+    }
+  }, [filePath]);
+
+  useEffect(() => {
+    //mount additional listener
     if (listenerCbRef.current && filePath) {
       return currentWorkspace.disk.updateListener(filePath, listenerCbRef.current);
     }

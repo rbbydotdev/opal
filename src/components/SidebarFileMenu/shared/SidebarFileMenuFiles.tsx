@@ -1,5 +1,5 @@
 "use client";
-import { FileTreeMenu } from "../../FiletreeMenu";
+import { FileItemContextMenu, FileTreeMenu } from "../../FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../ui/collapsible";
 
 import clsx from "clsx";
@@ -12,6 +12,7 @@ import { TreeDir, TreeDirRoot, TreeNode } from "../../../lib/FileTree/TreeNode";
 import { absPath, AbsPath } from "../../../lib/paths2";
 import { useFileTreeMenuCtx } from "../../FileTreeMenuCtxProvider";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "../../ui/sidebar";
+import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 export const SidebarFileMenuFiles = ({
   fileTreeDir,
   renameDirOrFileMultiple,
@@ -23,6 +24,7 @@ export const SidebarFileMenuFiles = ({
   filter,
   title,
   Icon = Files,
+  FileItemContextMenu: FileItemContextMenu,
   ...rest
 }: {
   fileTreeDir: TreeDirRoot;
@@ -35,6 +37,7 @@ export const SidebarFileMenuFiles = ({
   children: React.ReactNode;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
+  FileItemContextMenu: FileItemContextMenu;
 }) => {
   const { id } = useFileTreeMenuCtx();
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + id);
@@ -78,11 +81,7 @@ export const SidebarFileMenuFiles = ({
                   className="w-full"
                   onDrop={(e) => handleExternalDropEvent(e, TreeNode.FromPath(absPath("/"), "dir"))}
                 >
-                  <SidebarGroupLabel className="text-center italic border-dashed border h-full ">
-                    <div className="w-full ">
-                      <span className="text-3xs">empty</span>
-                    </div>
-                  </SidebarGroupLabel>
+                  <EmptySidebarLabel />
                 </div>
               ) : (
                 <FileTreeMenu
@@ -91,6 +90,7 @@ export const SidebarFileMenuFiles = ({
                   filter={filter}
                   renameDirOrFileMultiple={renameDirOrFileMultiple}
                   expandForNode={expandForNode}
+                  FileItemContextMenu={FileItemContextMenu}
                   expanded={expanded}
                   depth={0}
                 />
