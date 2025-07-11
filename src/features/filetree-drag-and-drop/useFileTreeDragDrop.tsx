@@ -11,8 +11,7 @@ import React from "react";
 export function isExternalFileDrop(event: React.DragEvent) {
   return (
     event.dataTransfer &&
-    event.dataTransfer.files &&
-    event.dataTransfer.files.length > 0 &&
+    Array.from(event.dataTransfer.types).some((type) => ["Files", "application/x-moz-file"].includes(type)) &&
     !event.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)
   );
 }

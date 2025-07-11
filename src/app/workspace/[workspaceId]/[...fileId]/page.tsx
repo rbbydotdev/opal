@@ -26,8 +26,7 @@ export default function Page() {
   return (
     <>
       <SpotlightSearch currentWorkspace={currentWorkspace} />
-
-      <WorkspaceView />
+      <WorkspaceView currentWorkspace={currentWorkspace} />
     </>
   );
 }

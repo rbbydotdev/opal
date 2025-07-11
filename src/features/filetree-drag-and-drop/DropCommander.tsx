@@ -15,13 +15,6 @@ const DropCommanderContext = createContext<DropCommanderProps>({
 
 //detect dragging
 
-function detectExtFileDrag(event: React.DragEvent): boolean {
-  return (
-    event.dataTransfer &&
-    (event.dataTransfer.types.includes("Files") || event.dataTransfer.types.includes("application/x-moz-file"))
-  );
-}
-
 export function DropCommanderProvider({ children }: { children: React.ReactNode }) {
   // You can add your context values here later
   const [isOpen, setIsOpen] = React.useState(false);
