@@ -17,7 +17,8 @@ import { AbsPath, basename, joinPath } from "@/lib/paths2";
 import clsx from "clsx";
 import React from "react";
 import { tryParseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
-import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
+import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 
 export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
 
@@ -50,13 +51,7 @@ export async function handleFileTreeNodePaste(
   }
 }
 
-export function useFiletreeMenuContextMenuActions({
-  currentWorkspace,
-}: // fileNode,
-{
-  currentWorkspace: Workspace;
-  // fileNode: TreeDir | TreeFile;
-}) {
+export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });
   const { setFileTreeCtx } = useFileTreeMenuCtx();
   const { addDirFile, duplicateDirFile, trashFiles, untrashFiles, removeFiles } =
@@ -64,8 +59,7 @@ export function useFiletreeMenuContextMenuActions({
 
   const addFile = (fileNode: TreeNode) => addDirFile("file", fileNode.closestDir()!);
   const addDir = (fileNode: TreeNode) => addDirFile("dir", fileNode.closestDir()!);
-  const trash = (...nodes: (AbsPath | TreeNode | AbsPath[] | TreeNode[])[]) =>
-    trashFiles([...new Set(nodes.flat(Infinity).map((node) => String(node) as AbsPath))]);
+  const trash = (...nodes: (AbsPath | TreeNode | AbsPath[] | TreeNode[])[]) => trashFiles(flatUniqNodeArgs(nodes));
 
   const copy = (fileNodes: TreeNode[]) =>
     copyFileNodesToClipboard({
@@ -111,8 +105,10 @@ export function useFiletreeMenuContextMenuActions({
       virtual: null,
       selectedRange: [fileNode.path],
     });
-  const untrash = (...fileNodes: (TreeNode | AbsPath | AbsPath[] | TreeNode[])[]) => untrashFiles(...fileNodes);
-  const remove = (...fileNodes: (TreeNode | AbsPath | AbsPath[] | TreeNode[])[]) => removeFiles(...fileNodes);
+  const untrash = (...fileNodes: (TreeNode | AbsPath | AbsPath[] | TreeNode[])[]) =>
+    untrashFiles(flatUniqNodeArgs(fileNodes));
+  const remove = (...fileNodes: (TreeNode | AbsPath | AbsPath[] | TreeNode[])[]) =>
+    removeFiles(flatUniqNodeArgs(fileNodes));
 
   return {
     addFile,
@@ -128,17 +124,6 @@ export function useFiletreeMenuContextMenuActions({
   };
 }
 
-// ContextMenu: ({ children, fileNode }: { children: React.ReactNode; fileNode: TreeNode }) => React.ReactElement | null;
-
-export type FileItemContextMenu = ({
-  children,
-  fileNode,
-  currentWorkspace,
-}: {
-  children: React.ReactNode;
-  fileNode: TreeNode;
-  currentWorkspace: Workspace;
-}) => React.ReactElement | null;
 export function FileTreeMenu({
   fileTreeDir,
   renameDirOrFileMultiple,
@@ -156,7 +141,7 @@ export function FileTreeMenu({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
-  FileItemContextMenu: FileItemContextMenu;
+  FileItemContextMenu: FileItemContextMenuComponentType;
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
@@ -176,6 +161,7 @@ export function FileTreeMenu({
     handleDragStart(e, node);
     setReactDragImage(e, <FileTreeDragPreview />);
   };
+  const fileNodeChildren = Object.values(fileTreeDir.filterOutChildren(filter));
 
   return (
     <>
@@ -187,7 +173,8 @@ export function FileTreeMenu({
         onDrop={(e) => handleDrop(e, fileTreeDir)}
         onDragEnter={(e) => handleDragEnter(e, "/")}
       >
-        {Object.values(fileTreeDir.filterOutChildren(filter)).map((fileNode) => (
+        {/* <FileItemContextMenu fileNode={fileNode} currentWorkspace={currentWorkspace}> */}
+        {fileNodeChildren.map((fileNode) => (
           <SidebarMenuItem
             key={fileNode.path}
             className={clsx({
@@ -201,25 +188,23 @@ export function FileTreeMenu({
             }}
           >
             <FileItemContextMenu fileNode={fileNode} currentWorkspace={currentWorkspace}>
-              {fileNode.isTreeDir() ? (
-                <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton asChild>
-                      <EditableDir
-                        workspaceRoute={workspaceRoute}
-                        currentWorkspace={currentWorkspace}
-                        depth={depth}
-                        onDragStart={handleDragStartWithImg(fileNode)}
-                        treeDir={fileNode}
-                        expand={expandForNode}
-                        fullPath={fileNode.path}
-                      />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    {!fileNode.hasChildren() ? (
-                      <EmptySidebarLabel label={"folder is empty"} />
-                    ) : (
+              <div>
+                {fileNode.isTreeDir() ? (
+                  <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton asChild>
+                        <EditableDir
+                          workspaceRoute={workspaceRoute}
+                          currentWorkspace={currentWorkspace}
+                          depth={depth}
+                          onDragStart={handleDragStartWithImg(fileNode)}
+                          treeDir={fileNode}
+                          expand={expandForNode}
+                          fullPath={fileNode.path}
+                        />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
                       <FileTreeMenu
                         expand={expand}
                         FileItemContextMenu={FileItemContextMenu}
@@ -230,22 +215,22 @@ export function FileTreeMenu({
                         expanded={expanded}
                         filter={filter}
                       />
-                    )}
-                  </CollapsibleContent>
-                </Collapsible>
-              ) : fileNode.isTreeFile() ? (
-                <SidebarMenuButton asChild>
-                  <EditableFile
-                    workspaceRoute={workspaceRoute}
-                    currentWorkspace={currentWorkspace}
-                    depth={depth}
-                    fullPath={fileNode.path}
-                    treeNode={fileNode}
-                    expand={expandForNode}
-                    onDragStart={handleDragStartWithImg(fileNode)}
-                  />
-                </SidebarMenuButton>
-              ) : null}
+                    </CollapsibleContent>
+                  </Collapsible>
+                ) : fileNode.isTreeFile() ? (
+                  <SidebarMenuButton asChild>
+                    <EditableFile
+                      workspaceRoute={workspaceRoute}
+                      currentWorkspace={currentWorkspace}
+                      depth={depth}
+                      fullPath={fileNode.path}
+                      treeNode={fileNode}
+                      expand={expandForNode}
+                      onDragStart={handleDragStartWithImg(fileNode)}
+                    />
+                  </SidebarMenuButton>
+                ) : null}
+              </div>
             </FileItemContextMenu>
           </SidebarMenuItem>
         ))}
