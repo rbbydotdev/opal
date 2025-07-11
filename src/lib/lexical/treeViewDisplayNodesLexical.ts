@@ -70,6 +70,7 @@ function convertLexicalContentNode(
       if (lexicalNode.getChildren()?.some((child) => child.getType() === "list")) {
         viewNode.children = lexicalNode
           .getChildren()
+          .filter((child) => child.getType() === "list") // Only include nested lists
           .map((child) => convertLexicalContentNode(child as lexical.ElementNode, currentDepth + 1, maxLength))
           .filter((n): n is TreeViewNode => n !== null);
       }
@@ -116,9 +117,12 @@ export function lexicalToTreeView(lexicalRoot: lexical.RootNode, maxHeadingLevel
 
   for (const lexicalNode of lexicalRoot.getChildren<lexical.ElementNode & HeadingNode>()) {
     // We only care about ElementNodes at the top level
-    if (!lexicalNode.getChildrenSize()) continue;
+    if (!lexicalNode.getChildrenSize()) {
+      // console.log("Skipping empty node:", lexicalNode.getType());
+      continue;
+    }
 
-    const currentParent = stack[stack.length - 1];
+    const currentParent = stack.at(-1);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (currentParent && $isHeadingNode(lexicalNode as any)) {
@@ -129,6 +133,7 @@ export function lexicalToTreeView(lexicalRoot: lexical.RootNode, maxHeadingLevel
         // Treat headings deeper than max level as simple content
         const contentNode = convertLexicalContentNode(headingNode, (currentParent.depth || 0) + 1, maxLength);
         if (contentNode) {
+          // console.debug("Adding content node for deep heading:", contentNode);
           currentParent.children?.push(contentNode);
         }
         continue;
@@ -141,7 +146,7 @@ export function lexicalToTreeView(lexicalRoot: lexical.RootNode, maxHeadingLevel
         stack.pop();
       }
 
-      const newParent = stack[stack.length - 1];
+      const newParent = stack[stack.length - 1]!;
 
       const sectionNode: TreeViewNode = {
         id: generateUniqueId(),
@@ -152,10 +157,12 @@ export function lexicalToTreeView(lexicalRoot: lexical.RootNode, maxHeadingLevel
         children: [],
       };
 
-      newParent?.children?.push(sectionNode);
+      // console.debug("Adding section node:", sectionNode);
+      newParent.children?.push(sectionNode);
       stack.push(sectionNode); // This heading is now the current section
+      // console.log("stack", stack);
     } else {
-      // This is a content node (paragraph, list, etc.)
+      // console.debug("Processing content node:", lexicalNode.getType());
       const contentNode = convertLexicalContentNode(lexicalNode, (currentParent?.depth || 0) + 1, maxLength);
       if (contentNode) {
         currentParent?.children?.push(contentNode);
@@ -163,5 +170,7 @@ export function lexicalToTreeView(lexicalRoot: lexical.RootNode, maxHeadingLevel
     }
   }
 
+  // console.log(JSON.stringify(rootTreeViewNode, null, 4));
+  // console.log(rootTreeViewNode);
   return rootTreeViewNode;
 }

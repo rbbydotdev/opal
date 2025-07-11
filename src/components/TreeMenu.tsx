@@ -6,6 +6,7 @@ import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { lexicalToTreeView } from "@/lib/lexical/treeViewDisplayNodesLexical";
 import { isContainer, isLeaf, TreeViewNode } from "@/lib/mdast/treeViewDisplayNode";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import mdast from "mdast";
@@ -27,27 +28,26 @@ export function SidebarTreeViewMenu() {
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
-  const [lexicalRoot, setLexicalRoot] = useState<lexical.RootNode | null>(null);
-  useEffect(() => {
-    // console.log(editor);rich-text
-    if (editor) {
-      // editor.read(() => {
-      //   console.log(lexicalToTreeView(lexical.$getRoot()));
-      //   // setLexicalRoot(lexical.$getRoot());
-      // });
-    }
-  }, [editor]);
-  // const displayTree = useMemo(() => {
-  //   if (!lexicalRoot) return null;
-  //   return lexicalToTreeView(lexicalRoot as lexical.RootNode);
-  // }, [lexicalRoot]);
-
-  if (!currentWorkspace) {
+  const [displayTree, setDisplayTree] = useState<TreeViewNode | null>(null);
+  useEffect(
+    () =>
+      editor?.registerUpdateListener(({ editorState }) => {
+        editorState?.read(() => {
+          setDisplayTree(lexicalToTreeView(lexical.$getRoot()));
+        });
+      }),
+    [editor]
+  );
+  if (!currentWorkspace || !displayTree) {
     return null;
   }
-  return null;
   return (
-    <SidebarTreeViewMenuContent parent={null} expand={expandSingle} expandForNode={expandForNode} expanded={expanded} />
+    <SidebarTreeViewMenuContent
+      parent={displayTree}
+      expand={expandSingle}
+      expandForNode={expandForNode}
+      expanded={expanded}
+    />
   );
 }
 
@@ -64,9 +64,6 @@ export function SidebarTreeViewMenuContent({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
 }) {
-  if (parent.type === "list") {
-    console.log(parent);
-  }
   return (
     <SidebarMenu>
       {(parent.children ?? []).map((displayNode) => (
