@@ -3,7 +3,6 @@ import { EditorSidebarLayout } from "@/app/workspace/[workspaceId]/EditorSidebar
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
-import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { DROP_COMMAND } from "lexical";
@@ -37,9 +36,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             // void handleExternalDropEvent(e, OrphanRootNode);
           }}
         >
-          <DropCommanderProvider>
-            <EditorSidebarLayout sidebar={<EditorSidebar className="main-editor-sidebar" />} main={children} />
-          </DropCommanderProvider>
+          <EditorSidebarLayout sidebar={<EditorSidebar className="main-editor-sidebar" />} main={children} />
         </div>
       </ServiceWorker>
     </>

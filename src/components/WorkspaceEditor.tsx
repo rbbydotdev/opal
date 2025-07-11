@@ -6,6 +6,7 @@ import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { withSuspense } from "@/lib/hoc/withSuspense";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
@@ -78,17 +79,19 @@ export function WorkspaceEditor({ className, ...props }: WorkspaceEditorProps) {
   }
   if (contents === null || !currentWorkspace) return null;
   return (
-    <div className="flex flex-col h-full">
-      <Editor
-        {...props}
-        ref={editorRef}
-        // onDrop={handleDrop}
-        currentWorkspace={currentWorkspace}
-        onChange={debouncedUpdate}
-        markdown={String(contents || "")}
-        className={twMerge("bg-background flex-grow  flex-col", className)}
-        contentEditableClassName="max-w-full content-editable prose bg-background"
-      />
+    <div className="flex flex-col h-full relative">
+      <DropCommanderProvider>
+        <Editor
+          {...props}
+          ref={editorRef}
+          // onDrop={handleDrop}
+          currentWorkspace={currentWorkspace}
+          onChange={debouncedUpdate}
+          markdown={String(contents || "")}
+          className={twMerge("bg-background flex-grow  flex-col", className)}
+          contentEditableClassName="max-w-full content-editable prose bg-background"
+        />
+      </DropCommanderProvider>
     </div>
   );
 }
