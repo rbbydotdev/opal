@@ -5,6 +5,11 @@ import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/mai
 import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-section/SidebarFileMenuPublish";
 import { SidebarFileMenuSync } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
+import {
+  SidebarTreeView,
+  SidebarTreeViewActions,
+} from "@/components/SidebarFileMenu/tree-view-section/SidebarTreeView";
+import { useDndList } from "@/features/filetree-drag-and-drop/useDndList";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
@@ -26,8 +31,6 @@ import {
 import { Separator } from "../ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel } from "../ui/sidebar";
 import { SidebarDnd } from "../ui/SidebarDndList";
-import { SidebarTreeView, SidebarTreeViewActions } from "./SidebarTreeView";
-import { useDndList } from "@/features/filetree-drag-and-drop/useDndList";
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
