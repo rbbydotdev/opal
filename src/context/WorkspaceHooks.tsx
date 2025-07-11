@@ -1,5 +1,4 @@
 "use client";
-import { DiskEvents } from "@/Db/Disk";
 import { NullWorkspace } from "@/Db/NullWorkspace";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
@@ -9,7 +8,7 @@ import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 export const NULL_WORKSPACE = new NullWorkspace();
 const NULL_TREE_ROOT = new TreeDirRoot();
@@ -37,6 +36,64 @@ export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 
+export function useFileContentsOLD() {
+  const { currentWorkspace } = useWorkspaceContext();
+  const { path: filePath } = useWorkspaceRoute();
+  const [contents, setContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
+  const [mimeType, setMimeType] = useState<null | string>(null);
+  const [error, setError] = useState<null | Error>(null);
+  const router = useRouter();
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => clearTimeout(debounceRef.current!);
+  }, []);
+
+  const updateContents = useCallback(
+    (updates: string) => {
+      if (filePath && currentWorkspace) {
+        void currentWorkspace?.disk.writeFile(filePath, updates);
+      }
+    },
+    [currentWorkspace, filePath]
+  );
+
+  const debouncedUpdate = useCallback(
+    (content: string | null) => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+      debounceRef.current = setTimeout(() => {
+        if (content !== null) {
+          updateContents(String(content));
+        }
+      }, 250);
+    },
+    [updateContents]
+  );
+
+  useEffect(() => {
+    const fetchFileContents = async () => {
+      if (currentWorkspace && filePath) {
+        try {
+          setContents(await currentWorkspace.disk.readFile(filePath));
+          setMimeType(getMimeType(filePath));
+          setError(null);
+        } catch (error) {
+          setError(error as Error);
+        }
+        //listener is currently only used with remote, since a local write will not trigger
+        //a local write event, this is because the common update kind of borks mdx editor
+        return currentWorkspace.disk.updateListener(filePath, setContents);
+      }
+    };
+
+    void fetchFileContents();
+  }, [currentWorkspace, filePath, router]);
+
+  return { error, filePath, contents: String(contents ?? ""), mimeType, updateContents, debouncedUpdate };
+}
+
 export function useFileContents(listenerCb?: (content: string | null) => void) {
   const listenerCbRef = useRef(listenerCb);
   const { currentWorkspace } = useWorkspaceContext();
@@ -54,9 +111,9 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   const updateContents = (updates: string) => {
     if (filePath && currentWorkspace) {
       void currentWorkspace?.disk.writeFile(filePath, updates);
-      void currentWorkspace.disk.local.emit(DiskEvents.WRITE, {
-        filePaths: [filePath],
-      });
+      //DO NOT EMIT THIS-> void currentWorkspace.disk.local.emit(DiskEvents.WRITE, {
+      //   filePaths: [filePath],
+      // });
     }
   };
 
@@ -72,7 +129,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   };
 
   useEffect(() => {
-    const fetchFileContentsOnLoad = async () => {
+    void (async () => {
       if (currentWorkspace && filePath) {
         try {
           setContents(await currentWorkspace.disk.readFile(filePath));
@@ -82,8 +139,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
           setError(error as Error);
         }
       }
-    };
-    void fetchFileContentsOnLoad();
+    })();
   }, [currentWorkspace, filePath, router]);
 
   useEffect(() => {
@@ -93,12 +149,12 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
     }
   }, [currentWorkspace.disk, filePath]);
 
-  // useEffect(() => {
-  //   //Mount Local Listener
-  //   if (filePath) {
-  //     return currentWorkspace.disk.updateListener(filePath, setContents);
-  //   }
-  // }, [currentWorkspace.disk, filePath]);
+  useEffect(() => {
+    //Mount Local Listener
+    if (filePath) {
+      return currentWorkspace.disk.updateListener(filePath, setContents);
+    }
+  }, [currentWorkspace.disk, filePath]);
 
   useEffect(() => {
     //mount additional listener
@@ -107,7 +163,11 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
     }
   }, [currentWorkspace, filePath]);
 
-  return { error, filePath, contents: String(contents ?? ""), mimeType, updateContents, debouncedUpdate };
+  // contents will not reflect the latest changes via updateContents, the state must be tracked somewhere else
+  // this avoids glitchy behavior in the editor et all
+  // the editor should use contents as initialContents
+  // the editor will track the contents state itself, writes using debouncedUpdate WILL write to file
+  return { error, filePath, initialContents: contents, mimeType, updateContents, debouncedUpdate };
 }
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
