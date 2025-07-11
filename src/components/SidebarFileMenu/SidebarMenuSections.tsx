@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarFileMenuExport } from "@/components/SidebarFileMenu/export-section/SidebarFileMenuExport";
-import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/files-section/MainSidebarFileMenuFileSection";
+import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/main-files-section/MainSidebarFileMenuFileSection";
 import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-section/SidebarFileMenuPublish";
 import { SidebarFileMenuSync } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
@@ -112,7 +112,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
                     trashSelectedFiles={function (): void {}}
                     addFile={function (): void {}}
                     addDir={function (): void {}}
-                    setExpandAll={function (expand: boolean): void {}}
+                    setExpandAll={function (_expand: boolean): void {}}
                   />
                 </SidebarGroupContent>
               </SidebarTreeView>

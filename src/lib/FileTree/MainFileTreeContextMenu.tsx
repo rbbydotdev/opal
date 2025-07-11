@@ -1,4 +1,8 @@
+import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { Workspace } from "@/Db/Workspace";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import {
   ClipboardCopy,
   ClipboardPasteIcon,
@@ -11,25 +15,19 @@ import {
 import { useRef } from "react";
 export const MainFileTreeContextMenu = ({
   children,
-  cut,
-  copy,
-  duplicate,
-  rename,
-  paste,
-  trash,
-  addFile,
-  addDir,
+  fileNode,
+  currentWorkspace,
 }: {
-  trash: () => void;
-  duplicate: () => void;
-  rename: () => void;
-  addFile: () => void;
-  copy: () => void;
-  cut: () => void;
-  paste: () => void;
-  addDir: () => void;
+  fileNode: TreeNode;
   children: React.ReactNode;
+  currentWorkspace: Workspace;
 }) => {
+  const { addFile, addDir, trash, copy, cut, paste, duplicate, rename } = useFiletreeMenuContextMenuActions({
+    currentWorkspace,
+  });
+
+  const { selectedFocused } = useFileTreeMenuCtx();
+
   const fnRef = useRef<null | (() => void)>(null);
   const deferredFn = (fn: () => void) => {
     return () => (fnRef.current = fn);
@@ -47,35 +45,35 @@ export const MainFileTreeContextMenu = ({
           }
         }}
       >
-        <ContextMenuItem inset onClick={deferredFn(() => addFile())} className="w-full flex justify-start">
+        <ContextMenuItem inset onClick={deferredFn(() => addFile(fileNode))} className="w-full flex justify-start">
           <FilePlusIcon className="mr-3 h-4 w-4" />
           New File
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => addDir())}>
+        <ContextMenuItem inset onClick={deferredFn(() => addDir(fileNode))}>
           <FolderPlusIcon className="mr-3 h-4 w-4" />
           New Dir
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => rename())}>
+        <ContextMenuItem inset onClick={deferredFn(() => rename(fileNode))}>
           <SquarePen className="mr-3 h-4 w-4" />
           Rename
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => copy())}>
+        <ContextMenuItem inset onClick={deferredFn(() => copy(currentWorkspace.nodesFromPaths(selectedFocused)))}>
           <ClipboardCopy className="mr-3 h-4 w-4" />
           Copy
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => cut())}>
+        <ContextMenuItem inset onClick={deferredFn(() => cut(currentWorkspace.nodesFromPaths(selectedFocused)))}>
           <Scissors className="mr-3 h-4 w-4" />
           Cut
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => paste())}>
+        <ContextMenuItem inset onClick={deferredFn(() => paste(fileNode))}>
           <ClipboardPasteIcon className="mr-3 h-4 w-4" />
           Paste
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => duplicate())}>
+        <ContextMenuItem inset onClick={deferredFn(() => duplicate(fileNode))}>
           <FilePlusIcon className="mr-3 h-4 w-4" />
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => trash())}>
+        <ContextMenuItem inset onClick={deferredFn(() => trash(fileNode, selectedFocused))}>
           <Trash2 className="mr-3 h-4 w-4" />
           Trash
         </ContextMenuItem>

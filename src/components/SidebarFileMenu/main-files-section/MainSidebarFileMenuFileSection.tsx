@@ -9,6 +9,7 @@ import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath } from "@/lib/paths2";
 import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
+import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 
 export function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
@@ -19,7 +20,12 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
   useFileTreeClipboardEventListeners({ currentWorkspace });
 
   return (
-    <SidebarFileMenuFileSectionInternal title={"Files"} className={className} filter={[absPath("/.trash")]}>
+    <SidebarFileMenuFileSectionInternal
+      FileItemContextMenu={MainFileTreeContextMenu}
+      title={"Files"}
+      className={className}
+      filter={[absPath("/.trash")]}
+    >
       <span className="block group-data-[state=closed]/collapsible:hidden">
         <SidebarFileMenuFilesActions
           trashSelectedFiles={trashSelectedFiles}
@@ -28,7 +34,6 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
           setExpandAll={setExpandAll}
         />
       </span>
-      {/* )} */}
     </SidebarFileMenuFileSectionInternal>
   );
 }

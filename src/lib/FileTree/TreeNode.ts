@@ -71,6 +71,9 @@ export class TreeNode {
   toString() {
     return this.path;
   }
+  hasChildren(): boolean {
+    return this.isTreeDir() && Object.keys(this.children ?? {}).length > 0;
+  }
   get str() {
     return this.toString();
   }

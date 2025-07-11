@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { Workspace } from "@/Db/Workspace";
@@ -26,18 +26,20 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
             sourceWorkspaceId ?? currentWorkspace.name /* todo should not be undefined but here we are */
           ).then((ws) => ws.toModel().init());
 
+    console.debug(`Pasting into ${targetNode.path} from ${sourceWorkspace.name} with action: ${action}`);
+    console.debug(`FileNodes to paste: ${fileNodes?.length} - ${fileNodes?.join(", ")}`);
     if (action && fileNodes) {
       try {
-        const copyNodes: [from: TreeNode, to: AbsPath][] = fileNodes
-          .map(
-            (path) =>
-              [
-                sourceWorkspace.nodeFromPath(path)!, // from
-                joinPath(targetNode.closestDirPath(), basename(path)), // to
-              ] as const
-          )
-          .filter(([from, to]) => from && String(from.path) !== String(to)) as [TreeNode, AbsPath][];
+        const copyNodes: [from: TreeNode, to: AbsPath][] = fileNodes.map(
+          (path) =>
+            [
+              sourceWorkspace.nodeFromPath(path)!, // from
+              joinPath(targetNode.closestDirPath(), basename(path)), // to
+            ] as const
+        );
+        // wtf did i have this for?: .filter(([from, to]) => from && String(from.path) !== String(to)) as [TreeNode, AbsPath][];
 
+        console.debug(`copyNodes: ${copyNodes.map(([from, to]) => `${from.path} -> ${to}`)} - ${copyNodes.length}`);
         if (copyNodes.length === 0) return;
 
         if (sourceWorkspaceId && currentWorkspace.name !== sourceWorkspaceId) {
@@ -45,15 +47,19 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
           console.debug(`transfering files across workspaces ${sourceWorkspace} to ${currentWorkspace.name}`);
           //can make this just do a plain copy when workids are the same
           await currentWorkspace.transferFiles(copyNodes, sourceWorkspaceId, currentWorkspace);
+          //TOAST
         } else {
+          //some redundancy with transferFiles
+          console.debug(`copying files within workspace ${currentWorkspace.name}`);
           // TODO: rename images in markdown && expand menu for item
           await currentWorkspace.copyMultipleFiles(copyNodes);
-        }
 
-        if (action === "cut") {
-          await currentWorkspace.removeMultiple(copyNodes.map(([from]) => from));
-          // Clear the clipboard to prevent pasting the same "cut" content again.
-          void navigator.clipboard.writeText("");
+          if (action === "cut") {
+            await currentWorkspace.removeMultiple(copyNodes.map(([from]) => from));
+            // Clear the clipboard to prevent pasting the same "cut" content again.
+            void navigator.clipboard.writeText("");
+            //TOAST
+          }
         }
       } catch (error) {
         console.error("Failed to parse internal node data:", error);

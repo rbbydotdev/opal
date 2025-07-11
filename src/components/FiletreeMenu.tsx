@@ -1,6 +1,5 @@
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
-import { FileTreeContextMenu } from "@/components/FileTreeContextMenus";
 import { FileTreeDragPreview } from "@/components/FileTreeDragPreview";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
@@ -18,6 +17,7 @@ import { AbsPath, basename, joinPath } from "@/lib/paths2";
 import clsx from "clsx";
 import React from "react";
 import { tryParseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
+import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 
 export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
 
@@ -50,7 +50,7 @@ export async function handleFileTreeNodePaste(
   }
 }
 
-function useFiletreeMenuContextMenuActions({
+export function useFiletreeMenuContextMenuActions({
   currentWorkspace,
 }: // fileNode,
 {
@@ -128,6 +128,17 @@ function useFiletreeMenuContextMenuActions({
   };
 }
 
+// ContextMenu: ({ children, fileNode }: { children: React.ReactNode; fileNode: TreeNode }) => React.ReactElement | null;
+
+export type FileItemContextMenu = ({
+  children,
+  fileNode,
+  currentWorkspace,
+}: {
+  children: React.ReactNode;
+  fileNode: TreeNode;
+  currentWorkspace: Workspace;
+}) => React.ReactElement | null;
 export function FileTreeMenu({
   fileTreeDir,
   renameDirOrFileMultiple,
@@ -136,6 +147,7 @@ export function FileTreeMenu({
   expandForNode,
   expanded,
   filter,
+  FileItemContextMenu,
 }: {
   fileTreeDir: TreeDir | TreeDirRoot;
   depth?: number;
@@ -144,11 +156,12 @@ export function FileTreeMenu({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
+  FileItemContextMenu: FileItemContextMenu;
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
   const sidebarMenuRef = React.useRef<HTMLUListElement>(null);
-  const { highlightDragover, selectedFocused, id: fileTreeId, draggingNodes } = useFileTreeMenuCtx();
+  const { highlightDragover, draggingNodes } = useFileTreeMenuCtx();
 
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
@@ -163,9 +176,6 @@ export function FileTreeMenu({
     handleDragStart(e, node);
     setReactDragImage(e, <FileTreeDragPreview />);
   };
-
-  const { addFile, addDir, trash, copy, cut, paste, duplicate, rename, untrash, remove } =
-    useFiletreeMenuContextMenuActions({ currentWorkspace });
 
   return (
     <>
@@ -190,19 +200,7 @@ export function FileTreeMenu({
               handleDragEnter(e, fileNode.path);
             }}
           >
-            <FileTreeContextMenu
-              fileTreeId={fileTreeId}
-              addFile={() => addFile(fileNode)}
-              addDir={() => addDir(fileNode)}
-              trash={() => trash(fileNode, selectedFocused)}
-              copy={() => copy(currentWorkspace.nodesFromPaths(selectedFocused))}
-              cut={() => cut(currentWorkspace.nodesFromPaths(selectedFocused))}
-              paste={() => paste(fileNode)}
-              duplicate={() => duplicate(fileNode)}
-              rename={() => rename(fileNode)}
-              untrash={() => untrash(selectedFocused, fileNode)}
-              remove={() => remove(selectedFocused, fileNode)}
-            >
+            <FileItemContextMenu fileNode={fileNode} currentWorkspace={currentWorkspace}>
               {fileNode.isTreeDir() ? (
                 <Collapsible open={expanded[fileNode.path]} onOpenChange={(o) => expand(fileNode.path, o)}>
                   <CollapsibleTrigger asChild>
@@ -219,15 +217,20 @@ export function FileTreeMenu({
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <FileTreeMenu
-                      expand={expand}
-                      expandForNode={expandForNode}
-                      fileTreeDir={fileNode as TreeDir}
-                      renameDirOrFileMultiple={renameDirOrFileMultiple}
-                      depth={depth + 1}
-                      expanded={expanded}
-                      filter={filter}
-                    />
+                    {!fileNode.hasChildren() ? (
+                      <EmptySidebarLabel label={"folder is empty"} />
+                    ) : (
+                      <FileTreeMenu
+                        expand={expand}
+                        FileItemContextMenu={FileItemContextMenu}
+                        expandForNode={expandForNode}
+                        fileTreeDir={fileNode as TreeDir}
+                        renameDirOrFileMultiple={renameDirOrFileMultiple}
+                        depth={depth + 1}
+                        expanded={expanded}
+                        filter={filter}
+                      />
+                    )}
                   </CollapsibleContent>
                 </Collapsible>
               ) : fileNode.isTreeFile() ? (
@@ -243,7 +246,7 @@ export function FileTreeMenu({
                   />
                 </SidebarMenuButton>
               ) : null}
-            </FileTreeContextMenu>
+            </FileItemContextMenu>
           </SidebarMenuItem>
         ))}
       </SidebarMenu>

@@ -519,6 +519,6 @@ export class Workspace {
     toWorkspace: Workspace
   ) {
     const fromWs = await WorkspaceDAO.FetchByName(fromWorkspaceName).then((ws) => ws.toModel().initNoListen());
-    return Disk.TransferFiles(transferNodes, fromWs.disk, toWorkspace.disk);
+    return await Disk.TransferFiles(transferNodes, fromWs.disk, toWorkspace.disk);
   }
 }

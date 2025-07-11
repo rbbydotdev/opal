@@ -7,7 +7,7 @@ import { nanoid } from "nanoid";
 export class DiskDAO {
   guid: string;
   type: DiskType;
-  indexCache: TreeDirRootJType;
+  indexCache: TreeDirRootJType | null;
   static guid = () => "__disk__" + nanoid();
 
   constructor(disk: Optional<DiskRecord, "indexCache">) {

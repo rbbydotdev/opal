@@ -8,7 +8,7 @@ import { UnwrapScannable } from "@/features/search/SearchScannable";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
-import { TreeNodeDirJType, VirtualDupTreeNode } from "@/lib/FileTree/TreeNode";
+import { TreeDirRoot, TreeNodeDirJType, VirtualDupTreeNode } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
 import LightningFs from "@isomorphic-git/lightning-fs";
@@ -24,7 +24,7 @@ import { RequestSignalsInstance } from "../lib/RequestSignals";
 // TODO: Lazy load modules based on disk
 
 // Utility type to make certain properties optional
-export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType };
+export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType | null };
 
 export const DiskTypes = [
   "IndexedDbDisk",
@@ -229,7 +229,7 @@ export abstract class Disk {
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     await this.ready;
     const { indexCache } = await this.connector.hydrate();
-    this.initialIndexFromCache(indexCache); //load first from cache
+    this.initialIndexFromCache(indexCache ?? new TreeDirRoot()); //load first from cache
     void this.hydrateIndexFromDisk(); //load first from cache
     if (isServiceWorker() || isWebWorker() || skipListeners) {
       console.debug("skipping remote listeners in service worker");
@@ -300,7 +300,7 @@ export abstract class Disk {
     const DiskConstructor = DiskMap[type] satisfies {
       new (guid: string): Disk; //TODO interface somewhere?
     };
-    return new DiskConstructor(guid, indexCache);
+    return new DiskConstructor(guid, indexCache ?? new TreeDirRoot());
   }
 
   async *iteratorMutex(filter?: (node: TreeNode) => boolean): AsyncIterableIterator<TreeNode> {
@@ -646,6 +646,7 @@ export abstract class Disk {
     toDisk: Disk,
     removeSourceNodes: boolean = false
   ) {
+    console.debug(`Transferring ${transferNodes.length} files from ${fromDisk.guid} to ${toDisk.guid}`);
     const dirs = await Promise.all(
       transferNodes.filter(([node]) => node.isTreeDir()).map(([_node, targetPath]) => toDisk.mkdirRecursive(targetPath))
     );
@@ -660,6 +661,7 @@ export abstract class Disk {
     );
 
     if (removeSourceNodes) {
+      console.debug(`Removing ${transferNodes.length} files from ${fromDisk.guid}`);
       await fromDisk.removeMultipleFiles(transferNodes.map(([node]) => node.path));
     }
     return [...dirs, ...paths];
