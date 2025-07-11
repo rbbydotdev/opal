@@ -21,7 +21,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
 
   return (
     <SidebarFileMenuFileSectionInternal
-      FileItemContextMenu={MainFileTreeContextMenu}
+      FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
       title={"Files"}
       className={className}
       filter={[absPath("/.trash")]}

@@ -17,6 +17,7 @@ import {
 } from "@/lib/paths2";
 import { useCallback } from "react";
 import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
+import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   const { setFileTreeCtx, selectedRange, resetEditing, focused } = useFileTreeMenuCtx();
@@ -59,7 +60,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
 
   const removeFiles = useCallback(
     async (...paths: (AbsPath | AbsPath[] | TreeNode | TreeNode[])[]) => {
-      const flatPaths = paths.flat(Infinity).map((node) => String(node) as AbsPath);
+      const flatPaths = flatUniqNodeArgs(paths);
       if (!flatPaths.length) return;
       try {
         await currentWorkspace.removeMultiple(reduceLineage(flatPaths).map((pathStr) => absPath(pathStr)));
@@ -111,9 +112,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         virtual: null,
         selectedRange: [],
       });
-      return currentWorkspace.untrashMultiple([
-        ...new Set(filePaths.flat(Infinity).map((node) => String(node) as AbsPath)),
-      ]);
+      return currentWorkspace.untrashMultiple(flatUniqNodeArgs(filePaths));
     },
     [currentWorkspace, setFileTreeCtx]
   );

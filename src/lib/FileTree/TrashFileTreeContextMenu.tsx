@@ -2,16 +2,19 @@ import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { absPath } from "@/lib/paths2";
 import { Delete, Undo } from "lucide-react";
 import { useRef } from "react";
 export const TrashFileTreeContextMenu = ({
   children,
   currentWorkspace,
   fileNode,
+  disabled,
 }: {
   children: React.ReactNode;
   currentWorkspace: Workspace;
   fileNode: TreeNode;
+  disabled?: boolean;
 }) => {
   const fnRef = useRef<null | (() => void)>(null);
   const deferredFn = (fn: () => void) => {
@@ -21,9 +24,12 @@ export const TrashFileTreeContextMenu = ({
   const { untrash, remove } = useFiletreeMenuContextMenuActions({
     currentWorkspace,
   });
+  const isRoot = fileNode.path === "/";
   return (
     <ContextMenu>
-      <ContextMenuTrigger>{children}</ContextMenuTrigger>
+      <ContextMenuTrigger asChild disabled={disabled}>
+        {children}
+      </ContextMenuTrigger>
       <ContextMenuContent
         className="w-52"
         onCloseAutoFocus={(event) => {
@@ -34,14 +40,31 @@ export const TrashFileTreeContextMenu = ({
           }
         }}
       >
-        <ContextMenuItem inset onClick={deferredFn(() => untrash(fileNode))}>
-          <Undo className="mr-3 h-4 w-4" />
-          Put Back
-        </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => remove(fileNode))}>
-          <Delete className="mr-3 h-4 w-4" />
-          Delete
-        </ContextMenuItem>
+        {isRoot && (
+          <ContextMenuItem
+            className="flex gap-2"
+            onClick={() =>
+              remove(absPath("/.trash")).catch(() => {
+                /* no-op */
+              })
+            }
+          >
+            <Delete className="mr-3 h-4 w-4" />
+            Empty
+          </ContextMenuItem>
+        )}
+        {!isRoot && (
+          <>
+            <ContextMenuItem inset onClick={deferredFn(() => untrash(fileNode))}>
+              <Undo className="mr-3 h-4 w-4" />
+              Put Back
+            </ContextMenuItem>
+            <ContextMenuItem inset onClick={deferredFn(() => remove(fileNode))}>
+              <Delete className="mr-3 h-4 w-4" />
+              Delete
+            </ContextMenuItem>
+          </>
+        )}
       </ContextMenuContent>
     </ContextMenu>
   );

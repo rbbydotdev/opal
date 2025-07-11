@@ -1,6 +1,6 @@
 "use client";
 
-import { FileItemContextMenu } from "@/components/FiletreeMenu";
+import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
@@ -25,7 +25,7 @@ export function SidebarFileMenuFileSectionInternal({
   scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   children?: React.ReactNode;
-  FileItemContextMenu: FileItemContextMenu;
+  FileItemContextMenu: FileItemContextMenuComponentType;
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
 }) {
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();

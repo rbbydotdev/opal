@@ -28,7 +28,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
       <ContextMenu>
         <ContextMenuTrigger disabled={!currentWorkspace.hasTrash()} asChild>
           <SidebarFileMenuFileSectionInternal
-            FileItemContextMenu={TrashFileTreeContextMenu}
+            FileItemContextMenu={TrashFileTreeContextMenu} //<TrashFileTreeContextMenu ...
             Icon={Trash2}
             title={"Trash"}
             className={className}
