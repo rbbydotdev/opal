@@ -1,4 +1,5 @@
-// import { $isHeadingNode, HeadingNode } from "@lexical/rich-text";
+import { $isHeadingNode, HeadingNode } from "@lexical/rich-text";
+
 import { lexical } from "@mdxeditor/editor";
 // --- Unique ID Generator ---
 let nodeIdCounter = 0;
@@ -115,7 +116,7 @@ export function lexicalToTreeView(lexicalRoot: lexical.RootNode, maxHeadingLevel
 
   for (const lexicalNode of lexicalRoot.getChildren<lexical.ElementNode & HeadingNode>()) {
     // We only care about ElementNodes at the top level
-    if (!("children" in lexicalNode)) continue;
+    if (!lexicalNode.getChildrenSize()) continue;
 
     const currentParent = stack[stack.length - 1];
 

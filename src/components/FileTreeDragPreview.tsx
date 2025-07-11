@@ -24,7 +24,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
       className="grid place-items-center relative w-24 h-24"
       style={{ gridTemplateAreas: "'stack'" }}
     >
-      {count > 3 && (
+      {count > 1 && (
         <div className="rounded-full flex justify-center z-10 w-6 h-6 bg-red-500 text-white absolute right-1 top-3">
           {count}
         </div>

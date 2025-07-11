@@ -83,7 +83,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
         }
       }
     };
-    fetchFileContentsOnLoad();
+    void fetchFileContentsOnLoad();
   }, [currentWorkspace, filePath, router]);
 
   useEffect(() => {
@@ -91,14 +91,14 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
     if (filePath) {
       return currentWorkspace.disk.remoteUpdateListener(filePath, setContents);
     }
-  }, [filePath]);
+  }, [currentWorkspace.disk, filePath]);
 
-  useEffect(() => {
-    //Mount Local Listener
-    if (filePath) {
-      return currentWorkspace.disk.updateListener(filePath, setContents);
-    }
-  }, [filePath]);
+  // useEffect(() => {
+  //   //Mount Local Listener
+  //   if (filePath) {
+  //     return currentWorkspace.disk.updateListener(filePath, setContents);
+  //   }
+  // }, [currentWorkspace.disk, filePath]);
 
   useEffect(() => {
     //mount additional listener
