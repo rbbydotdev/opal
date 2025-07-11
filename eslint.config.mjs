@@ -15,12 +15,12 @@ const compat = new FlatCompat({
 const config = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["**/*.ts", "**/*.tsx", "*.ts"],
     languageOptions: {
       parser: typescriptEslintParser,
-      parserOptions: {
-        project: "./tsconfig.json",
-      },
+      // parserOptions: {
+      //   project: "./tsconfig.json",
+      // },
     },
     plugins: {
       "@typescript-eslint": typescriptEslintPlugin,

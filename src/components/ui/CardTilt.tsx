@@ -54,7 +54,7 @@ type CardTiltWindowProps = {
   className?: string;
 };
 
-const MAX_ROTATE = 30; // degrees
+const MAX_ROTATE = 7; // degrees
 
 export const CardTiltWindow: React.FC<CardTiltWindowProps> = ({ children, className = "", ...rest }) => {
   const cardRef = useRef<HTMLDivElement>(null);
