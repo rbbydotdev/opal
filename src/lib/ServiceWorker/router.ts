@@ -34,7 +34,7 @@ function createRoute(method: "GET" | "POST" | "ANY", path: string, handler: Hand
 // --- Route Definitions ---
 const routes: Route[] = [
   createRoute("POST", "/upload-image/.*", uploadImageHandler),
-  createRoute("POST", "/convert-docx", convertDocxHandler),
+  createRoute("POST", "/upload-docx", convertDocxHandler),
   createRoute("GET", "/workspace-search/:workspaceName", workspaceSearchHandler),
   createRoute("POST", "/download-encrypted.zip", downloadEncryptedHandler),
   createRoute("GET", "/download.zip", downloadHandler),

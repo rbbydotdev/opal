@@ -197,13 +197,13 @@ export function useEditorSearch() {
   const rangeCount = ranges.length;
   const scrollToRangeOrIndex = (
     range: Range | number,
-    options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior }
+    options?: { ignoreIfInView?: boolean; behavior?: ScrollBehavior; offset?: number }
   ) => {
     const scrollRange = typeof range === "number" ? ranges[range - 1] : range;
     if (!scrollRange) {
       throw new Error("Error scrolling to range, range does not exist");
     }
-    return scrollToEditorElement(scrollRange, options);
+    return scrollToEditorElement(scrollRange, { offset: -30, ...options });
   };
 
   const setSearch = (term: string | null) => {

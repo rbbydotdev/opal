@@ -1,4 +1,5 @@
 "use client";
+import mime from "mime-types";
 import React, { useCallback, useState } from "react";
 
 export default function Page() {
@@ -20,6 +21,7 @@ export const DocxToMarkdownTester: React.FC = () => {
 
     const formData = new FormData();
     Array.from(files).forEach((file) => {
+      console.log(mime.extension(file.type));
       formData.append("files", file);
     });
 

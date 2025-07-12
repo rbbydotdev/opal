@@ -9,6 +9,8 @@ import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
 import { useRouter } from "next/navigation";
 import React from "react";
 
+import mime from "mime-types";
+
 export function isExternalFileDrop(event: React.DragEvent | DragEvent): boolean {
   return Boolean(
     event.dataTransfer &&
@@ -19,12 +21,15 @@ export function isExternalFileDrop(event: React.DragEvent | DragEvent): boolean 
 
 export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
   return async function ({ files, targetNode }: { files: FileList | []; targetNode: TreeNode }) {
-    let imageFiles: File[] = [];
-    let markdownFiles: File[] = [];
     const targetDir = targetNode.closestDirPath();
     const fileArray = Array.from(files);
-    imageFiles = fileArray.filter((file) => file.type.startsWith("image/"));
-    markdownFiles = fileArray.filter((file) => file.type === "text/markdown" || file.name.endsWith(".md"));
+    const imageFiles: File[] = fileArray.filter((file) => file.type.startsWith("image/"));
+    const markdownFiles: File[] = fileArray.filter(
+      (file) => file.type === "text/markdown" || file.name.endsWith(".md")
+    );
+    const docxFiles: File[] = fileArray.filter(
+      (file) => mime.extension(file.type) === "docx" || file.name.endsWith(".docx")
+    );
     const promises: Promise<AbsPath[]>[] = [];
 
     if (imageFiles.length > 0) {
