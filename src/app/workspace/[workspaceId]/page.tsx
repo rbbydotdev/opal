@@ -2,7 +2,8 @@
 
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
-import { CardTiltWindow } from "@/components/ui/CardTilt";
+import { Card } from "@/components/ui/card";
+import { Tilt } from "@/components/ui/Tilt";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import {
   isExternalFileDrop,
@@ -52,10 +53,24 @@ export default function Page() {
             }}
           />
           <FirstFileRedirect />
-          <CardTiltWindow className="rounded-xl text-accent-foreground p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center relative z-10">
-            <Opal size={78} />
+          <Card className="rounded-xl p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center relative z-10 ">
+            <div className="rotate-12">
+              <Tilt maxRotate={30}>
+                <div>
+                  <div
+                    className="animate-spin"
+                    style={{
+                      animationDuration: "1s",
+                      animationIterationCount: 1,
+                    }}
+                  >
+                    <Opal size={78} />
+                  </div>
+                </div>
+              </Tilt>
+            </div>
             <div className="font-thin text-2xl font-mono text-center">Opal</div>
-          </CardTiltWindow>
+          </Card>
         </ConditionalDropzone>
       </div>
     </>

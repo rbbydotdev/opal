@@ -1,6 +1,8 @@
+import { Thumb } from "@/Db/Thumb";
+import { absPath, basename } from "@/lib/paths2";
 import { $isHeadingNode, HeadingNode } from "@lexical/rich-text";
 
-import { lexical } from "@mdxeditor/editor";
+import { $isImageNode, lexical } from "@mdxeditor/editor";
 // --- Unique ID Generator ---
 let nodeIdCounter = 0;
 function generateUniqueId(): string {
@@ -11,7 +13,7 @@ export interface LexicalTreeViewNode {
   id: string; // Unique ID for React keys
   type: string;
   depth?: number; // For headings/sections
-  displayText?: string; // The primary text to display for this node
+  displayText?: string | React.ReactElement; // The primary text to display for this node
   children?: LexicalTreeViewNode[];
 
   lexicalNodeId: string; // The original Lexical node ID for reference
@@ -29,20 +31,12 @@ export function isContainer(node: LexicalTreeViewNode) {
   return node.isContainer === true;
 }
 
-function getLexicalTextContent(node: lexical.ElementNode): string {
-  return node
-    .getAllTextNodes()
-    .map((textNode) => textNode.getTextContent())
-    .join("");
-  // let text = "";
-  // for (const child of node.getChildren()) {
-  //   if (child.getType() === "text") {
-  //     text += (child as lexical.TextNode).getTextContent();
-  //   } else if ("children" in child) {
-  //     text += getLexicalTextContent(child);
-  //   }
-  // }
-  // return text;
+function getLexicalTextContent(node: lexical.LexicalNode): string {
+  if (lexical.$isElementNode(node)) {
+    return node.getTextContent();
+  } else {
+    return node.getType();
+  }
 }
 /**
  * Converts a Lexical content node (like paragraph, list) to a TreeViewNode.
@@ -73,7 +67,35 @@ function convertLexicalContentNode(
         .map((child) => convertLexicalContentNode(child, currentDepth + 1, maxLength))
         .filter((n): n is LexicalTreeViewNode => n !== null);
       break;
+    case "paragraph":
+      viewNode.isContainer = true;
+      viewNode.displayText = "[paragraph]";
+      viewNode.children = (lexicalNode.getChildren() as lexical.ElementNode[])
+        .map((child) => convertLexicalContentNode(child, currentDepth + 1, maxLength))
+        .filter((n): n is LexicalTreeViewNode => n !== null);
+      break;
 
+    case "image":
+      if ($isImageNode(lexicalNode)) {
+        viewNode.displayText = (
+          <span title={displayText} className="text-xs flex justify-center items-center truncate w-full ">
+            <img
+              src={Thumb.pathToURL(absPath(lexicalNode.getSrc()))}
+              alt={lexicalNode.getSrc()}
+              className="mr-2 h-4 w-4 flex-shrink-0 border  border-background object-cover"
+            />
+            <span className="truncate w-full text-2xs">{`${basename(lexicalNode.getSrc())}`}</span>
+          </span>
+        );
+      } else {
+        viewNode.displayText = (
+          <span title={displayText} className="text-xs">
+            {`[image]`}
+          </span>
+        );
+      }
+      viewNode.isContainer = false;
+      break;
     case "listitem":
       // List items are containers for their text and potential nested lists
       viewNode.isContainer = true;
@@ -87,7 +109,6 @@ function convertLexicalContentNode(
       }
       break;
 
-    case "paragraph":
     case "code":
     case "blockquote":
       // These are treated as leaf nodes in the tree view

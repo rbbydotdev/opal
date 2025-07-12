@@ -109,7 +109,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
                     trashSelectedFiles={function (): void {}}
                     addFile={function (): void {}}
                     addDir={function (): void {}}
-                    setExpandAll={function (expand: boolean): void {}}
+                    setExpandAll={function (_expand: boolean): void {}}
                   />
                 </SidebarGroupContent>
               </SidebarTreeView>

@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 interface ConditionalDropzoneProps {
   children: React.ReactNode;
   // A function to decide if the overlay should activate for the dragged content
-  shouldActivate: (e: React.DragEvent) => boolean;
+  shouldActivate: (e: React.DragEvent | DragEvent) => boolean;
   onDrop: (event: React.DragEvent<HTMLDivElement>) => void;
   className?: string;
   activeClassName?: string;
@@ -26,23 +26,29 @@ export function ConditionalDropzone({
 
   // Memoize handlers to prevent re-creating them on every render
   const handleDragEnter = useCallback(
-    (e: DragEvent) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (shouldActivate(e as any)) {
+    (e: React.DragEvent | DragEvent) => {
+      // console.debug("ConditionalDropzone: dragenter", e);
+      if (shouldActivate(e)) {
+        // console.debug("ConditionalDropzone: shouldActivate returned true, activating overlay");
         setIsDragActive(true);
+      } else {
+        // console.debug("ConditionalDropzone: shouldActivate returned false");
       }
     },
     [shouldActivate]
   );
 
-  const handleDragLeave = useCallback((e: DragEvent) => {
+  const handleDragLeave = useCallback((e: React.DragEvent | DragEvent) => {
+    // console.debug("ConditionalDropzone: dragleave", e);
     // Check if the mouse is leaving the window
     if (e.relatedTarget === null || (e.target === document.body && e.clientY <= 0)) {
+      // console.debug("ConditionalDropzone: drag left window, deactivating overlay");
       setIsDragActive(false);
     }
   }, []);
 
-  const handleDrop = useCallback((_e: DragEvent) => {
+  const handleDrop = useCallback((_e: React.DragEvent | DragEvent) => {
+    // console.debug("ConditionalDropzone: drop or dragend, deactivating overlay");
     // Reset on any drop anywhere to clean up
     setIsDragActive(false);
   }, []);
@@ -51,11 +57,13 @@ export function ConditionalDropzone({
   useEffect(() => {
     window.addEventListener("dragenter", handleDragEnter);
     window.addEventListener("dragleave", handleDragLeave);
-    window.addEventListener("drop", handleDrop);
+    window.addEventListener("dragend", handleDrop);
+    window.addEventListener("drop", handleDrop); // Use capture to ensure we catch drops before they bubble up
 
     return () => {
       window.removeEventListener("dragenter", handleDragEnter);
       window.removeEventListener("dragleave", handleDragLeave);
+      window.removeEventListener("dragend", handleDrop);
       window.removeEventListener("drop", handleDrop);
     };
   }, [handleDragEnter, handleDragLeave, handleDrop]);
@@ -75,6 +83,7 @@ export function ConditionalDropzone({
       }
     },
     onDrop: (e: React.DragEvent<HTMLDivElement>) => {
+      console.log("drop");
       e.preventDefault();
       e.stopPropagation();
       setIsDragActive(false); // Deactivate after drop

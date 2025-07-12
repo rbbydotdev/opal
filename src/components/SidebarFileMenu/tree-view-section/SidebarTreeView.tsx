@@ -1,5 +1,4 @@
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
-import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SidebarTreeViewMenu } from "@/components/TreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -55,7 +54,7 @@ export function SidebarTreeView({
 
         <CollapsibleContent className="min-h-0 flex-shrink">
           <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
-            {currentEditor ? <SidebarTreeViewMenu /> : <EmptySidebarLabel label="no editor" />}
+            <SidebarTreeViewMenu />
           </SidebarContent>
         </CollapsibleContent>
       </Collapsible>

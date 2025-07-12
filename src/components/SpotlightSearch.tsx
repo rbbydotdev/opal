@@ -26,7 +26,7 @@ const SpotlightSearchItem = forwardRef<
 
   return (
     // The `li` is for presentation only; the `a` tag is the menu item.
-    (<li role="presentation" className="flex w-full flex-col rounded p-1">
+    <li role="presentation" className="flex w-full flex-col rounded p-1">
       <Link
         id={id}
         ref={ref}
@@ -45,7 +45,7 @@ const SpotlightSearchItem = forwardRef<
       >
         {(mime.lookup(basename(href)) || "").startsWith("image/") ? (
           <img
-            src={Thumb.pathToURL(absPath(filePath || "/"))}
+            src={Thumb.pathToURL(absPath(filePath!))}
             alt=""
             className="mr-2 h-3 w-3 flex-shrink-0 border border-black bg-white"
           />
@@ -54,7 +54,7 @@ const SpotlightSearchItem = forwardRef<
         )}
         <div className="min-w-0 truncate text-xs font-mono text-sidebar-foreground/70">{title}</div>
       </Link>
-    </li>)
+    </li>
   );
 });
 SpotlightSearchItem.displayName = "SpotlightSearchItem";
