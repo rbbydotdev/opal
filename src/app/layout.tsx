@@ -8,6 +8,7 @@ import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary"
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
@@ -45,6 +46,11 @@ export default function RootLayout({
             color: hsl(var(--background));
           }
           ::highlight(${MDX_FOCUS_SEARCH_NAME}) {
+            background-color: hsl(var(--highlight-focus));
+            color: hsl(var(--background));
+          }
+
+          ::highlight(${MDX_TREE_HIGHLIGHT_NAME}) {
             background-color: hsl(var(--highlight-focus));
             color: hsl(var(--background));
           }

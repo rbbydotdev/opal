@@ -22,6 +22,7 @@ interface FloatingSearchBarProps {
   matchTotal: number;
   onSubmit?: () => void;
   className?: string;
+  closeOnBlur?: boolean;
 }
 
 export function EditorSearchBar({
@@ -33,11 +34,12 @@ export function EditorSearchBar({
   replaceAll,
   onClose,
   onChange,
+  closeOnBlur = true,
   matchTotal,
   className = "",
 }: FloatingSearchBarProps) {
+  const editorSearchBarRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState<string | null>(null);
-  // const replaceTermRef = useRef<string>("");
   const [isReplaceExpanded, setIsReplaceExpanded] = useState<boolean>(false);
   const pauseBlurClose = useRef(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,37 +58,54 @@ export function EditorSearchBar({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const selectSearchText = () => {
     if (searchInputRef.current && isOpen) {
+      searchInputRef.current.focus();
       searchInputRef.current.select();
     }
   };
   useEffect(() => {
-    selectSearchText();
-  }, [isOpen, selectSearchText]);
+    if (searchInputRef.current) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Enter" && isOpen) {
+          e.preventDefault();
+          if (e.shiftKey) {
+            prev();
+          } else {
+            next();
+          }
+        }
+      };
+      const ref = searchInputRef.current;
+      ref.addEventListener("keydown", handleKeyDown);
+      return () => {
+        ref.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isOpen, next, prev]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
-        selectSearchText();
-      }
-      if (e.key === "Escape" && isOpen) {
-        handleClose();
-      }
-      if (e.key === "Enter" && isOpen) {
-        e.preventDefault();
-        if (e.shiftKey) {
-          prev();
-        } else {
-          next();
+    if (editorSearchBarRef.current) {
+      const handleWindowSearchHotkey = (e: KeyboardEvent) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "f" && isOpen) {
+          selectSearchText();
         }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+      };
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && isOpen) {
+          handleClose();
+        }
+      };
+      window.addEventListener("keydown", handleWindowSearchHotkey);
+      const ref = editorSearchBarRef.current;
+      ref.addEventListener("keydown", handleKeyDown);
+      return () => {
+        window.removeEventListener("keydown", handleWindowSearchHotkey);
+        ref.removeEventListener("keydown", handleKeyDown);
+      };
+    }
   }, [isOpen, handleClose, matchTotal, prev, next, selectSearchText]);
 
-  //this is a work around replacing text node in the lexical way requires a selection range
-  //which when used will trigger a blur of the search bar thus triggering a close
+  //this is a work around replacing text node in via "lexical way" requires a selection range
+  //which when used will trigger a blur of the search bar thus triggering a close when closeOnBlur is true
   const pauseBlurCallback = function pauseBlurCallback() {
     pauseBlurClose.current = true;
     return () => {
@@ -129,10 +148,22 @@ export function EditorSearchBar({
     replaceAll(replaceInputRef?.current?.value ?? "", pauseBlurCallback());
   };
 
+  useEffect(() => {
+    //because react on blur is not working how i want it to...
+    if (!isOpen) return;
+    const handleOtherFocus = (e: FocusEvent) => {
+      if (closeOnBlur && !(e.currentTarget as Node)?.contains?.(e.relatedTarget as Node) && !pauseBlurClose.current) {
+        handleClose();
+      }
+    };
+    window.addEventListener("focus", handleOtherFocus);
+    return () => window.removeEventListener("focus", handleOtherFocus);
+  }, [closeOnBlur, handleClose, isOpen]);
   if (!isOpen) return null;
 
   return (
     <div
+      ref={editorSearchBarRef}
       onMouseDown={(e) => {
         const target = e.target as HTMLElement;
         if (target.tagName !== "INPUT" && target.tagName !== "BUTTON") {
@@ -140,13 +171,13 @@ export function EditorSearchBar({
           e.stopPropagation();
         }
       }}
-      onBlur={(e) => {
-        // Only close if focus moves outside the search bar and its children
-        // also ignore blur events triggered by the replace input
-        if (!e.currentTarget.contains(e.relatedTarget as Node) && !pauseBlurClose.current) {
-          handleClose();
-        }
-      }}
+      // onBlur={(e) => {
+      //   // Only close if focus moves outside the search bar and its children
+      //   // also ignore blur events triggered by the replace input
+      //   if (closeOnBlur && !e.currentTarget.contains(e.relatedTarget as Node) && !pauseBlurClose.current) {
+      //     handleClose();
+      //   }
+      // }}
       className={twMerge(
         clsx({ "animate-in": open }),
         "bg-transparent backdrop-blur-md border rounded-lg shadow-lg flex absolute top-12 translate-y-4 right-4 z-50",
@@ -163,8 +194,6 @@ export function EditorSearchBar({
                 onClick={() => setIsReplaceExpanded(!isReplaceExpanded)}
                 title={isReplaceExpanded ? "Hide Replace" : "Show Replace"}
               >
-                {/* <ChevronDown className={`transition-transform ${isReplaceExpanded ? "rotate-0" : "-rotate-90"}`} /> */}
-
                 <ChevronRight
                   size={14}
                   className={
