@@ -73,3 +73,8 @@
 .mdxeditor-rich-text-editor .content-editable {
   background-color: transparent !important;
 }
+
+.mdxeditor [data-lexical-decorator="true"] {
+  /* this fixes scroll to calculations */
+  display: inline-block;
+}

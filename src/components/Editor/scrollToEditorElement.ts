@@ -11,7 +11,7 @@ export const scrollToEditorElement = (
   scrollContentElement = getEditorScrollContentElement()
 ) => {
   if (!element) return;
-  const ignoreIfInView = options?.ignoreIfInView ?? true;
+  const ignoreIfInView = options?.ignoreIfInView ?? false;
   const behavior = options?.behavior ?? "smooth";
   const [first] = element.getClientRects();
 
