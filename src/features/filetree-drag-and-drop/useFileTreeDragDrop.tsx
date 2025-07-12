@@ -32,6 +32,10 @@ export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspa
     );
     const promises: Promise<AbsPath[]>[] = [];
 
+    if (docxFiles.length > 0) {
+      promises.push(currentWorkspace.uploadMultipleDocx(docxFiles, targetDir));
+    }
+
     if (imageFiles.length > 0) {
       promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
     }
