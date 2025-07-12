@@ -36,7 +36,9 @@ export async function setupServiceWorker(): Promise<void> {
     }
   } catch (error) {
     console.error("Error setting up Service Worker and Comlink:", error);
-    throw error;
+    if (process.env.NODE_ENV !== "development") {
+      throw error;
+    }
   }
 }
 /*

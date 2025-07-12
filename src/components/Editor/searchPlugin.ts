@@ -1,13 +1,5 @@
-import {
-  Cell,
-  contentEditableRef$,
-  debounceTime,
-  lexical,
-  realmPlugin,
-  rootEditor$,
-  useCellValue,
-  useRealm,
-} from "@mdxeditor/editor";
+import { scrollToEditorElement } from "@/components/Editor/scrollToEditorElement";
+import { Cell, debounceTime, lexical, realmPlugin, rootEditor$, useCellValue, useRealm } from "@mdxeditor/editor";
 const { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, getNearestEditorFromDOMNode } = lexical;
 export const MDX_SEARCH_NAME = "MdxSearch";
 export const MDX_FOCUS_SEARCH_NAME = "MdxFocusSearch";
@@ -32,9 +24,9 @@ export const searchState$ = Cell<"searchIsClosed" | "searchIsOpen">("searchIsClo
 export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
   realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(250))));
 });
-export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (r) =>
-  r.sub(contentEditableRef$, (cref) => r.pub(editorSearchScollableContent$, cref?.current?.children?.[0] ?? null))
-);
+// export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (r) =>
+//   r.sub(contentEditableRef$, (cref) => r.pub(editorSearchScollableContent$, cref?.current?.children?.[0] ?? null))
+// );
 
 export const debouncedIndexer$ = Cell<TextNodeIndex>(EmptyTextNodeIndex, (realm) =>
   realm.link(debouncedIndexer$, realm.pipe(editorSearchTextNodeIndex$, realm.transformer(debounceTime(250))))
@@ -140,50 +132,6 @@ const resetHighlights = () => {
   CSS.highlights.delete(MDX_SEARCH_NAME);
   CSS.highlights.delete(MDX_FOCUS_SEARCH_NAME);
 };
-const scrollToRange = (
-  range: Range,
-  contentEditable: HTMLElement,
-  options?: {
-    ignoreIfInView?: boolean;
-    behavior?: ScrollBehavior;
-  }
-) => {
-  // Set defaults if options or any property is undefined
-  const ignoreIfInView = options?.ignoreIfInView ?? true;
-  const behavior = options?.behavior ?? "smooth";
-
-  const [first] = range.getClientRects();
-
-  if (!contentEditable) {
-    return console.warn("No content-editable element found for scrolling.");
-  }
-  if (!first) {
-    return console.warn("No client rect found for the range, cannot scroll.");
-  }
-
-  // Get bounding rects relative to the scroll container
-  const containerRect = contentEditable.getBoundingClientRect();
-  const topRelativeToContainer = first.top - containerRect.top;
-  const bottomRelativeToContainer = first.bottom - containerRect.top;
-  // Optionally ignore if already in view
-  if (ignoreIfInView) {
-    // The visible area is [scrollTop, scrollTop + clientHeight]
-    // The range is in view if its top and bottom are within this area
-    const rangeTop = topRelativeToContainer + contentEditable.scrollTop;
-    const rangeBottom = bottomRelativeToContainer + contentEditable.scrollTop;
-    const visibleTop = contentEditable.scrollTop;
-    const visibleBottom = visibleTop + contentEditable.clientHeight;
-
-    const inView = rangeTop >= visibleTop && rangeBottom <= visibleBottom;
-
-    if (inView) return;
-  }
-
-  // Scroll so the range is near the top, with some offset if desired
-  const top = topRelativeToContainer + contentEditable.scrollTop - first.height; // adjust this offset as needed
-
-  contentEditable.scrollTo({ top, behavior });
-};
 
 function isSimilarRange(
   range1: Pick<Range, "startContainer" | "startOffset">,
@@ -244,7 +192,7 @@ export function useEditorSearch() {
   const cursor = useCellValue(editorSearchCursor$);
   const search = useCellValue(editorSearchTerm$);
   const currentRange = ranges[cursor - 1] ?? null;
-  const contentEditable = useCellValue(editorSearchScollableContent$);
+  // const contentEditable = useCellValue(editorSearchScollableContent$);
 
   const rangeCount = ranges.length;
   const scrollToRangeOrIndex = (
@@ -255,7 +203,7 @@ export function useEditorSearch() {
     if (!scrollRange) {
       throw new Error("Error scrolling to range, range does not exist");
     }
-    return scrollToRange(scrollRange, contentEditable as HTMLElement, options);
+    return scrollToEditorElement(scrollRange, options);
   };
 
   const setSearch = (term: string | null) => {
@@ -370,10 +318,7 @@ export const searchPlugin = realmPlugin({
           realm.pub(editorSearchCursor$, currentCursor);
           const scrollRange = ranges[currentCursor - 1];
           if (!scrollRange) throw new Error("error updating highlights, scroll range does not exist");
-          const contentEditable = realm.getValue(editorSearchScollableContent$);
-          scrollToRange(scrollRange, contentEditable as HTMLElement, {
-            ignoreIfInView: true,
-          });
+          return scrollToEditorElement(scrollRange, { ignoreIfInView: true });
         } else {
           resetHighlights();
         }

@@ -120,7 +120,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
       diffSourcePlugin({
         viewMode: "rich-text",
-        diffMarkdown: initialContents,
+        diffMarkdown: String(initialContents ?? ""),
         codeMirrorExtensions: [CodeMirrorHighlightURLRange()],
       }),
       markdownShortcutPlugin(),

@@ -5,7 +5,7 @@
   max-width: 100%;
   /* height: calc(100vh - var(--editor-toolbar-height)); */
 }
-.mdxeditor-diff-source-wrapper {
+.mdxeditor {
   overflow-y: scroll;
 }
 .mdxeditor-toolbar {

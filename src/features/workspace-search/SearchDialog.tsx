@@ -74,6 +74,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") {
         e.preventDefault();
+        e.stopPropagation();
         e.stopImmediatePropagation();
         handleOpenChange(true);
       }
