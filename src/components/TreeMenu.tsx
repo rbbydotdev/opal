@@ -2,6 +2,7 @@
 import { highlightMdxElement } from "@/components/Editor/highlightMdxElement";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { scrollToEditorElement } from "@/components/Editor/scrollToEditorElement";
+import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
@@ -29,8 +30,15 @@ export function SidebarTreeViewMenu() {
 
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
-  if (!currentWorkspace || !displayTree || !editor?.getRootElement()) {
+  if (!currentWorkspace) {
     return null;
+  }
+
+  if (!editor?.getRootElement()) {
+    return <EmptySidebarLabel label="no editor" />;
+  }
+  if (!displayTree || !Boolean(displayTree.children?.length)) {
+    return <EmptySidebarLabel label="empty" />;
   }
 
   return (
