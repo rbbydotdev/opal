@@ -1,8 +1,12 @@
+import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
+import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SidebarTreeViewMenu } from "@/components/TreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
+import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
+import { rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import clsx from "clsx";
 import { ChevronRight, CopyMinus, FilePlus, FolderPlus, LucideGitBranch, Trash2 } from "lucide-react";
 
@@ -14,6 +18,10 @@ export function SidebarTreeView({
   className?: string;
 } & React.ComponentProps<typeof SidebarGroup>) {
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarTreeMenu");
+
+  const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
+  const editor = useCellValueForRealm(rootEditor$, realm);
+  const currentEditor = Boolean(editor?.getRootElement());
   return (
     <SidebarGroup className={clsx("pl-0 pb-12 py-0 pr-0 w-full ", className)} {...props}>
       <Collapsible
@@ -47,7 +55,7 @@ export function SidebarTreeView({
 
         <CollapsibleContent className="min-h-0 flex-shrink">
           <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
-            <SidebarTreeViewMenu />
+            {currentEditor ? <SidebarTreeViewMenu /> : <EmptySidebarLabel label="no editor" />}
           </SidebarContent>
         </CollapsibleContent>
       </Collapsible>
