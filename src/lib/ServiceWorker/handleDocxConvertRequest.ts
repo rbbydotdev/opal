@@ -11,19 +11,19 @@ export async function handleDocxConvertRequest(
   const workspace = await SWWStore.tryWorkspace(workspaceId);
   const fileName = basename(fullPathname);
   const targetDirName = dirname(fullPathname);
-  const docName = strictPathname(prefix(fileName));
-  const docDirName = `${docName}-docx`;
+  const docNamePrefix = strictPathname(prefix(fileName));
+  const docDirName = `${docNamePrefix}-docx`;
   const docDir = await workspace.newDir(targetDirName, relPath(docDirName));
   const options = {
     convertImage: mammoth.images.imgElement(function (image) {
       return image.readAsArrayBuffer().then(async (imageBuffer) => {
         const convertedImage = await convertImage({
           imageInput: new Blob([imageBuffer], { type: image.contentType }),
-          prefixName: `${docName}-img`,
+          prefixName: `${docNamePrefix}-img`,
         });
         const resultPath = await workspace.newFile(
           joinPath(docDir, "/images"),
-          relPath(`${docName}-img${extname(convertedImage.name)}`),
+          relPath(`${docNamePrefix}-img${extname(convertedImage.name)}`),
           convertedImage
         );
         // Return Markdown image reference
@@ -33,7 +33,7 @@ export async function handleDocxConvertRequest(
   };
   const { value: markdown } = await mammoth.convertToMarkdown({ arrayBuffer: file }, options);
 
-  const resultPath = await workspace.newFile(docDir, fileName, markdown);
+  const resultPath = await workspace.newFile(docDir, relPath(`${docNamePrefix}.md`), markdown);
 
   return new Response(resultPath, {
     status: 200,
