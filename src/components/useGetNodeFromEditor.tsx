@@ -7,23 +7,36 @@ export function useGetNodeFromEditor(editorRealmId = MainEditorRealmId) {
   const editor = useCellValueForRealm(rootEditor$, realm);
   const getLexicalNodeCbRef = useRef<GetLexicalNodeFnType>(() => {});
   const getDOMNodeCbRef = useRef<GetDOMNodeFnType>(() => {});
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const updateNodeCallbacks = (editorInstance: typeof editor, editorState: lexical.EditorState) => {
+    getLexicalNodeCbRef.current = (id, cb) => {
+      editorState?.read(() => {
+        cb(lexical.$getNodeByKey(id) ?? null);
+      });
+    };
+    getDOMNodeCbRef.current = (id, cb) => {
+      editorState?.read(() => {
+        cb(editorInstance?.getElementByKey(id) ?? null);
+      });
+    };
+  };
+
+  useEffect(() => {
+    const editorState = editor?.getEditorState();
+    editorState?.read(() => {
+      updateNodeCallbacks(editor, editorState);
+    });
+  }, [editor, updateNodeCallbacks]);
+
   useEffect(
     () =>
       editor?.registerUpdateListener(({ editorState }) => {
         editorState?.read(() => {
-          getLexicalNodeCbRef.current = (id, cb) => {
-            editorState?.read(() => {
-              cb(lexical.$getNodeByKey(id) ?? null);
-            });
-          };
-          getDOMNodeCbRef.current = (id, cb) => {
-            editorState?.read(() => {
-              cb(editor.getElementByKey(id) ?? null);
-            });
-          };
+          updateNodeCallbacks(editor, editorState);
         });
       }),
-    [editor]
+    [editor, updateNodeCallbacks]
   );
   const getDOMNode = async (id: string) =>
     new Promise<HTMLElement | null>((resolve) => {
