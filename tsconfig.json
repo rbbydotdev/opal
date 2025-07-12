@@ -36,7 +36,8 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "./src/**/*.ts",
-    "./src/**/*.tsx"
+    "./src/**/*.tsx",
+    "./src/types"
   ],
   "exclude": [
     "./tools",

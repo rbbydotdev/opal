@@ -1,7 +1,8 @@
 "use client";
+import mammoth from "mammoth/mammoth.browser";
+
 import React, { useRef, useState } from "react";
-// @ts-ignore
-import * as mammoth from "mammoth/mammoth.browser";
+
 export default function Page() {
   return (
     <div>
