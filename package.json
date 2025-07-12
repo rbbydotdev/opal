@@ -80,6 +80,7 @@
     "install": "^0.13.0",
     "jotai": "^2.10.4",
     "lucide-react": "^0.468.0",
+    "mammoth": "^1.9.1",
     "mdast": "^2.3.2",
     "memfs": "^4.17.2",
     "mime-types": "^2.1.35",
