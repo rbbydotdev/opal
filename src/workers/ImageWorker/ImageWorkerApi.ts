@@ -3,7 +3,7 @@ import { AbsPath } from "@/lib/paths2";
 
 export const ImageWorkerApi = {
   async createImage(workspace: Workspace, filePath: AbsPath, buffer: ArrayBuffer | File) {
-    return workspace.NewImage(buffer, filePath);
+    return workspace.NewImage_DEPRECATED(buffer, filePath);
   },
 };
 

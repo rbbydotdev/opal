@@ -1,6 +1,6 @@
 import { isImageType } from "@/lib/fileType";
 import { absPath, decodePath } from "@/lib/paths2";
-import { handleDocxConvertRequest } from "@/lib/ServiceWorker/handleDocxConvertRequest";
+import { handleDocxConvertRequest as handleDocxUploadRequest } from "@/lib/ServiceWorker/handleDocxConvertRequest";
 import { handleDownloadRequest } from "@/lib/ServiceWorker/handleDownloadRequest";
 import { handleDownloadRequestEncrypted } from "@/lib/ServiceWorker/handleDownloadRequestEncrypted";
 import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
@@ -23,22 +23,16 @@ export const uploadImageHandler = withRequestSignal((context: RequestContext) =>
   const { event, url, workspaceId } = context;
   const filePath = absPath(decodePath(url.pathname).replace("/upload-image", ""));
   console.log(`Handling image upload for: ${url.pathname}`);
+
   return handleImageUpload(event, url, filePath, workspaceId);
 });
 
 export const convertDocxHandler = withRequestSignal(async (context: RequestContext) => {
-  const { event } = context;
-  const formData = await event.request.formData();
-  const files: File[] = [];
-  for (const entry of formData.values()) {
-    if (entry instanceof File) files.push(entry);
-  }
-  console.log(`Files to convert: ${files.map((f) => f.name).join(", ")}`);
-  return handleDocxConvertRequest(context.workspaceId, files);
-  // return new Response(JSON.stringify({ status: "ok" }), {
-  //   status: 200,
-  //   headers: { "Content-Type": "application/json" },
-  // });
+  const { event, url, workspaceId } = context;
+
+  const docPathname = absPath(decodePath(url.pathname).replace("/upload-image", ""));
+
+  return handleDocxUploadRequest(workspaceId, docPathname, await event.request.arrayBuffer());
 });
 
 export const workspaceSearchHandler = withRequestSignal(async (context: RequestContext) => {

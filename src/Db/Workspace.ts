@@ -353,6 +353,12 @@ export class Workspace {
     return (await this.uploadMultipleImages([file], targetDir))[0]!;
   }
 
+  async uploadMultipleDocx(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+    const results = await Workspace.UploadMultipleDocxs(files, targetDir, concurrency);
+    await this.indexAndEmitNewFiles(results);
+    return results;
+  }
+
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
     await this.indexAndEmitNewFiles(results);
@@ -361,13 +367,6 @@ export class Workspace {
 
   indexAndEmitNewFiles(files: AbsPath[]) {
     return this.disk.indexAndEmitNewFiles(files);
-  }
-  async dropImageFile(file: File, targetPath: AbsPath) {
-    const fileType = getMimeType(file.name);
-    if (!isImageType(fileType)) {
-      throw new BadRequestError("Not a valid image, got " + fileType);
-    }
-    return this.newFile(targetPath, relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
 
   getFileTreeRoot() {
@@ -472,14 +471,47 @@ export class Workspace {
   // To get the return type of NewScannable:
 
   //TODO: move to service object with along with search
-  async NewImage(arrayBuffer: ArrayBuffer | File, filePath: AbsPath): Promise<AbsPath> {
+  async NewImage_DEPRECATED(arrayBuffer: ArrayBuffer | File, filePath: AbsPath): Promise<AbsPath> {
     const file =
       (mime.lookup(filePath) || "").startsWith("image/svg") || (mime.lookup(filePath) || "").startsWith("image/webp")
         ? new File([arrayBuffer], basename(filePath))
         : await createImage({ file: new File([arrayBuffer], basename(filePath)) });
-    const newImageLocation = await this.dropImageFile(file, dirname(filePath));
-    return newImageLocation;
+
+    const fileType = getMimeType(file.name);
+    if (!isImageType(fileType)) {
+      throw new BadRequestError("Not a valid image, got " + fileType);
+    }
+    return this.newFile(dirname(filePath), relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
+
+  static async UploadMultipleDocxs(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+    const results: AbsPath[] = [];
+    let index = 0;
+    const filesArr = Array.from(files);
+
+    const uploadNext = async () => {
+      if (index >= filesArr.length) return;
+      const current = index++;
+      const file = filesArr[current];
+      const res = await fetch(joinPath(absPath("/upload-docx"), joinPath(targetDir, file!.name), file!.name), {
+        method: "POST",
+        headers: {
+          "Content-Type": file!.type,
+        },
+        body: file,
+      });
+      results[current] = absPath(await res.text());
+      await uploadNext();
+    };
+
+    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
+    await Promise.all(workers);
+    //TODO: leaking concerns
+    // await this.disk.hydrateIndexFromDisk();
+    //TODO: i dont think i need this
+    return results;
+  }
+
   static async UploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
@@ -505,7 +537,6 @@ export class Workspace {
     //TODO: leaking concerns
     // await this.disk.hydrateIndexFromDisk();
     //TODO: i dont think i need this
-
     return results;
   }
 
