@@ -2,7 +2,7 @@ import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
 import { EncHeader, PassHeader } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
-import { signalRequest } from "@/lib/ServiceWorker/sw";
+import { signalRequest } from "@/lib/ServiceWorker/utils";
 import { BlobWriter, Uint8ArrayReader, ZipWriter, ZipWriterConstructorOptions } from "@zip.js/zip.js";
 import path from "path";
 import { SWWStore } from "./SWWStore";

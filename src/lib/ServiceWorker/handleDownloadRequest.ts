@@ -1,7 +1,7 @@
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
-import { signalRequest } from "@/lib/ServiceWorker/sw";
+import { signalRequest } from "@/lib/ServiceWorker/utils";
 import * as fflate from "fflate";
 import { SWWStore } from "./SWWStore";
 

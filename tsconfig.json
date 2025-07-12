@@ -44,7 +44,7 @@
     ".next",
     ".next/types/**/*.ts",
     "src/app/sand/**",
-    "node_modules",
+    "node_modules/**/*",
     "tailwind.config.ts",
     "**/*.ignore.*", // Excludes any file with `.ignore.` in its name
     "**/_*" // Excludes any file or directory starting with `_`
