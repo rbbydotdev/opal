@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev:workerlog": "tsx ./src/workerlogger",
+    "dev:workerlog": "tsx ./src/workerlog",
     "dev:slow": "next dev",
     "dev": "next dev --turbopack",
     "dev:tsc": "tsc --noEmit",

@@ -9,11 +9,11 @@ import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-export function isExternalFileDrop(event: React.DragEvent) {
-  return (
+export function isExternalFileDrop(event: React.DragEvent | DragEvent): boolean {
+  return Boolean(
     event.dataTransfer &&
-    Array.from(event.dataTransfer.types).some((type) => ["Files", "application/x-moz-file"].includes(type)) &&
-    !event.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)
+      Array.from(event.dataTransfer.types).some((type) => ["Files", "application/x-moz-file"].includes(type)) &&
+      !event.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)
   );
 }
 

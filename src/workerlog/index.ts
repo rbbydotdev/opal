@@ -24,7 +24,8 @@ const server = http.createServer((req: http.IncomingMessage, res: http.ServerRes
     req.on("end", () => {
       try {
         const data = JSON.parse(body);
-        console.log(data.msg);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.log((data as any).msg);
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }

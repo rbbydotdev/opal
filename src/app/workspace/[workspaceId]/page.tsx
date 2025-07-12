@@ -1,5 +1,6 @@
 "use client";
 
+import { DocxToMarkdownTester } from "@/app/sandbox/page";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { Card } from "@/components/ui/card";
@@ -23,6 +24,8 @@ export default function Page() {
   const { id } = useWorkspaceRoute();
   useFavicon("/favicon.svg" + "?" + id, "image/svg+xml");
   const handleExternalDrop = useHandleDropFilesEventForNodeRedirect({ currentWorkspace });
+
+  return <DocxToMarkdownTester />;
 
   return (
     <>

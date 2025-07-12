@@ -1,4 +1,3 @@
-// getMdastSync
 import { highlightMdxElement } from "@/components/Editor/highlightMdxElement";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { scrollToEditorElement } from "@/components/Editor/scrollToEditorElement";
@@ -130,7 +129,7 @@ export function SidebarTreeViewMenuContent({
                   <SidebarMenuButton asChild className="h-6">
                     <TreeViewMenuParent depth={depth} node={displayNode}>
                       <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
-                        <span className="hover:underline " title={displayNode.displayText ?? displayNode.type}>
+                        <span className="hover:underline " title={displayNode.type}>
                           {displayNode.displayText ?? displayNode.type}
                         </span>
                       </HighlightNodeSelector>
@@ -251,11 +250,7 @@ export const TreeViewTreeMenuChild = ({
   if (!node.displayText) return null;
   return (
     <div className="select-none">
-      <div
-        className={twMerge(className, "group cursor-pointer my-0")}
-        tabIndex={0}
-        title={node.displayText ?? node.type}
-      >
+      <div className={twMerge(className, "group cursor-pointer my-0")} tabIndex={0} title={node.type}>
         <div className="w-full">
           <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
             {children}
