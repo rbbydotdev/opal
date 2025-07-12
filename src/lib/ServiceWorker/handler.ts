@@ -30,9 +30,10 @@ export const uploadImageHandler = withRequestSignal((context: RequestContext) =>
 export const convertDocxHandler = withRequestSignal(async (context: RequestContext) => {
   const { event, url, workspaceId } = context;
 
-  const docPathname = absPath(decodePath(url.pathname).replace("/upload-image", ""));
+  const fullPathname = absPath(decodePath(url.pathname).replace("/upload-docx", ""));
+  console.log(`Handling DOCX upload for: ${fullPathname}`);
 
-  return handleDocxUploadRequest(workspaceId, docPathname, await event.request.arrayBuffer());
+  return handleDocxUploadRequest(workspaceId, fullPathname, await event.request.arrayBuffer());
 });
 
 export const workspaceSearchHandler = withRequestSignal(async (context: RequestContext) => {

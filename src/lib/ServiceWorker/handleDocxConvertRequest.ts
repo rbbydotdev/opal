@@ -5,12 +5,12 @@ import { SWWStore } from "./SWWStore";
 
 export async function handleDocxConvertRequest(
   workspaceId: string,
-  docPathname: AbsPath,
+  fullPathname: AbsPath,
   file: ArrayBuffer
 ): Promise<Response> {
   const workspace = await SWWStore.tryWorkspace(workspaceId);
-  const fileName = basename(docPathname);
-  const targetDirName = dirname(docPathname);
+  const fileName = basename(fullPathname);
+  const targetDirName = dirname(fullPathname);
   const docName = strictPathname(prefix(fileName));
   const docDirName = `${docName}-docx`;
   const docDir = await workspace.newDir(targetDirName, relPath(docDirName));

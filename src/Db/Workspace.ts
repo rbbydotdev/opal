@@ -493,7 +493,7 @@ export class Workspace {
       if (index >= filesArr.length) return;
       const current = index++;
       const file = filesArr[current];
-      const res = await fetch(joinPath(absPath("/upload-docx"), joinPath(targetDir, file!.name), file!.name), {
+      const res = await fetch(joinPath(absPath("/upload-docx"), targetDir, file!.name), {
         method: "POST",
         headers: {
           "Content-Type": file!.type,
