@@ -103,7 +103,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
           <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
             <TreeExpanderProvider id="TreeView">
-              <SidebarTreeView className="">
+              <SidebarTreeView>
                 <SidebarGroupContent className="flex items-center">
                   <SidebarTreeViewActions
                     trashSelectedFiles={function (): void {}}

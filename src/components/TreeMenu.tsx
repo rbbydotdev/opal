@@ -4,13 +4,14 @@ import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { scrollToEditorElement } from "@/components/Editor/scrollToEditorElement";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { useEditorDisplayTree } from "@/components/useEditorDisplayTree";
 import { useGetNodeFromEditor } from "@/components/useGetNodeFromEditor";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isContainer, isLeaf, LexicalTreeViewNode } from "@/lib/lexical/treeViewDisplayNodesLexical";
-import { lexical } from "@mdxeditor/editor";
+import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
 import mdast from "mdast";
 import { twMerge } from "tailwind-merge";
@@ -25,7 +26,10 @@ export function SidebarTreeViewMenu() {
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const displayTree = useEditorDisplayTree(MainEditorRealmId);
   const { getLexicalNode, getDOMNode } = useGetNodeFromEditor(MainEditorRealmId);
-  if (!currentWorkspace || !displayTree) {
+
+  const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
+  const editor = useCellValueForRealm(rootEditor$, realm);
+  if (!currentWorkspace || !displayTree || !editor?.getRootElement()) {
     return null;
   }
 
