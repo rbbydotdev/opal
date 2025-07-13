@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,6 +29,13 @@ export function NewWorkspaceDialog({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const defaultValue = useMemo(() => "wrk-" + nanoid(), []);
   const router = useRouter();
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      router.back();
+    }
+  };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -39,7 +47,7 @@ export function NewWorkspaceDialog({
     router.push(workspace.home());
   };
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* 1. Give the form a unique ID */}
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

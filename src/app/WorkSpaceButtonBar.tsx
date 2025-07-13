@@ -2,7 +2,6 @@
 
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { NewWorkspaceDialog } from "@/components/ui/NewWorkspaceDialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
@@ -106,14 +105,14 @@ export function WorkSpaceButtonBar() {
             ),
             unregisterServiceWorkers(),
             //@ts-expect-error
-          ]).then(() => (window.location = "/new"))
+          ]).then(() => (window.location = "/newWorkspace"))
         }
       />
       <BigButton
         icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
         title={"Delete All"}
         href="#"
-        onClick={() => Workspace.DeleteAll().then(() => router.push("/new"))}
+        onClick={() => Workspace.DeleteAll().then(() => router.push("/newWorkspace"))}
       />
       <BigButton
         icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
@@ -152,14 +151,12 @@ export function WorkSpaceButtonBar() {
         title="settings"
         href="/settings"
       />
-      <NewWorkspaceDialog>
-        <BigButton
-          icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
-          title="new workspace"
-          href="#"
-          className="text-3xs"
-        />
-      </NewWorkspaceDialog>
+      <BigButton
+        icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
+        title="new workspace"
+        href="/newWorkspace"
+        className="text-3xs"
+      />
 
       {coalescedWorkspace && (
         <BigButton

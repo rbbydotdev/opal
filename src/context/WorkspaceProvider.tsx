@@ -34,7 +34,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         return ws;
       })
       .catch((e) => {
-        router.replace("/new");
+        router.replace("/newWorkspace");
         throw e;
       });
     return () => {
