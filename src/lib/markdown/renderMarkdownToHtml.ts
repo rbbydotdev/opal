@@ -2,7 +2,6 @@ import rehypeRaw from "rehype-raw";
 import rehypeStringify from "rehype-stringify";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
-import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
@@ -13,7 +12,7 @@ export function renderMarkdownToHtml(source: string): string {
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkDirective)
-    .use(remarkMdx)
+    // .use(remarkMdx)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw) // <-- This is crucial for HTML in markdown!
     .use(rehypeStringify, { allowDangerousHtml: true });
