@@ -315,7 +315,7 @@ export abstract class Disk {
   //TODO: should probabably parse document then search find image nodes
   //Also this function is a little beefy, service object?
   //TODO use search ?
-  async findReplaceImgBatch(findReplace: [string, string][]) {
+  async findReplaceImgBatch(findReplace: [string, string][], origin: string = "") {
     const filePaths = [];
     for await (const node of await this.iteratorMutex((node) => node.isMarkdownFile())) {
       let content = String(await this.readFile(node.path));
@@ -323,8 +323,8 @@ export abstract class Disk {
       for (const [find, replace] of findReplace) {
         // Match either the find string or window.location.origin + find, preceded by (< or [
         const encodedFind = encodePath(find);
-        const originFind = window.location.origin + find;
-        const encodedOriginFind = window.location.origin + encodedFind;
+        const originFind = origin + find;
+        const encodedOriginFind = origin + encodedFind;
 
         const escapedOriginFind = originFind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const encodedEscapedOriginFind = encodedOriginFind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -349,6 +349,7 @@ export abstract class Disk {
     await this.local.emit(DiskEvents.WRITE, {
       filePaths,
     });
+    return filePaths;
   }
 
   async mkdirRecursive(filePath: AbsPath) {

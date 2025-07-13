@@ -401,11 +401,16 @@ export class Workspace {
           this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath.replace(oldPath, newPath)))
         )
       );
-      await this.disk.findReplaceImgBatch(
+      await this.renameMdImages(
         nodes
           .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
           .map(({ oldPath, newPath }) => [oldPath, newPath])
       );
+      // await this.disk.findReplaceImgBatch(
+      //   nodes
+      //     .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
+      //     .map(({ oldPath, newPath }) => [oldPath, newPath])
+      // );
     });
   }
 
@@ -484,6 +489,18 @@ export class Workspace {
     return this.newFile(dirname(filePath), relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
 
+  async renameMdImages(paths: [to: string, from: string][]) {
+    const res = await fetch("/replace-md-images", {
+      method: "POST",
+      body: JSON.stringify(paths),
+    }).then((res) => res.json() as Promise<AbsPath[]>);
+    if (res.length) {
+      await this.disk.local.emit(DiskEvents.WRITE, {
+        filePaths: res,
+      });
+    }
+  }
+
   static async UploadMultipleDocxs(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
@@ -506,9 +523,6 @@ export class Workspace {
 
     const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
     await Promise.all(workers);
-    //TODO: leaking concerns
-    // await this.disk.hydrateIndexFromDisk();
-    //TODO: i dont think i need this
     return results;
   }
 

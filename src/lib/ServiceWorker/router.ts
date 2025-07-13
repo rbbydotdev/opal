@@ -5,6 +5,7 @@ import {
   downloadHandler,
   faviconHandler,
   imageHandler,
+  replaceMdImageHandler,
   RequestContext,
   uploadImageHandler,
   workspaceSearchHandler,
@@ -33,6 +34,7 @@ function createRoute(method: "GET" | "POST" | "ANY", path: string, handler: Hand
 
 // --- Route Definitions ---
 const routes: Route[] = [
+  createRoute("POST", "/replace-md-images", replaceMdImageHandler),
   createRoute("POST", "/upload-image/.*", uploadImageHandler),
   createRoute("POST", "/upload-docx/.*", convertDocxHandler),
   createRoute("GET", "/workspace-search/:workspaceName", workspaceSearchHandler),
