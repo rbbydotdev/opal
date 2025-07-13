@@ -2,6 +2,7 @@ import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
+import { historyPlugin } from "@/components/Editor/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
@@ -103,6 +104,9 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
       linkPlugin(),
       searchPlugin(),
+      historyPlugin({
+        editHistoryId: "foobar",
+      }),
       linkDialogPlugin(),
       urlParamViewModePlugin({ type: "search" }),
       workspaceImagesPlugin,

@@ -2,6 +2,7 @@
 
 import { TopToolbar } from "@/app/(main)/TopToolbar";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
+import { EditHistoryMenu } from "@/components/Editor/EditHistoryMenu";
 import { Editor } from "@/components/Editor/Editor";
 import { ImageViewer } from "@/components/ImageViewer";
 import { TrashBanner } from "@/components/TrashBanner";
@@ -99,6 +100,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
   if (initialContents === null || !currentWorkspace) return null;
   return (
     <div className="flex flex-col h-full relative">
+      <EditHistoryMenu historyId="foobar" />
       <TopToolbar />
       <DropCommanderProvider>
         <Editor

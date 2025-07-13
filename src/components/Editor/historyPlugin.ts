@@ -1,19 +1,22 @@
 "use client";
-import { Cell, NodeRef, Realm, Signal, markdown$, realmPlugin } from "@mdxeditor/editor";
+import { Cell, Realm, Signal, debounceTime, markdown$, realmPlugin } from "@mdxeditor/editor";
 import { DocumentChange, historyDB } from "./HistoryDB";
 
-//Signals$ assume a single editor
-//if history plugin used for multiple editors, a different strategy is needed
-export class HistoryPlugin {
-  static selectedEdit$ = Cell<DocumentChange | null>(null, () => {}, false);
-  static resetMd$ = Signal(() => {}, false);
-  static clearAll$ = Signal(() => {}, false);
-  static draftRootMd$ = Signal<string>(() => {}, false);
-  static contentIn$ = Signal<string>(() => {}, false);
-  static contentOut$ = Signal<string>(() => {}, false);
+// Signals$ assume a single editor
+// if history plugin used for multiple editors, a different strategy is needed
+export const HistoryState = {
+  /* signals will be scoped to editor realm */
+  selectedEdit$: Cell<DocumentChange | null>(null, () => {}, false),
+  resetMd$: Signal(() => {}, false),
+  clearAll$: Signal(() => {}, false),
+  draftRootMd$: Signal<string>(() => {}, false),
+  contentIn$: Signal<string>(() => {}, false),
+  contentOut$: Signal<string>(() => {}, false),
+  md$: Cell(""),
+};
 
+export class HistoryPlugin {
   private saveFrequency = 5_000;
-  private md$: NodeRef<string> = Cell("");
   private startingMarkdown = "";
   private debounceTimeout: NodeJS.Timeout | null = null;
   private muteMdUpdates = false;
@@ -22,19 +25,24 @@ export class HistoryPlugin {
     this.id = editHistoryId;
     this.realm = realm;
     this.startingMarkdown = realm.getValue(markdown$);
-    realm.sub(HistoryPlugin.contentIn$, (md) => realm.pub(this.md$, md));
+    realm.sub(HistoryState.contentIn$, (md) => {
+      realm.pub(HistoryState.md$, md);
+    });
+    realm.sub(realm.pipe(markdown$, debounceTime(1000)), (md) => {
+      realm.pub(HistoryState.contentIn$, md);
+    });
 
-    realm.sub(HistoryPlugin.resetMd$, () => this.resetToStartingMarkdown());
-    realm.sub(HistoryPlugin.selectedEdit$, (edit: DocumentChange | null) => {
+    realm.sub(HistoryState.resetMd$, () => this.resetToStartingMarkdown());
+    realm.sub(HistoryState.selectedEdit$, (edit: DocumentChange | null) => {
       if (edit) {
         void this.setMarkdownFromEdit(edit);
         clearTimeout(this.debounceTimeout!);
       }
     });
-    realm.sub(HistoryPlugin.clearAll$, () => this.clearAll());
-    realm.sub(HistoryPlugin.draftRootMd$, (md) => {
+    realm.sub(HistoryState.clearAll$, () => this.clearAll());
+    realm.sub(HistoryState.draftRootMd$, (md) => {
       this.startingMarkdown = md;
-      realm.pub(HistoryPlugin.selectedEdit$, null);
+      realm.pub(HistoryState.selectedEdit$, null);
     });
 
     this.submd(realm);
@@ -52,7 +60,7 @@ export class HistoryPlugin {
       if (!this.realm) {
         return console.error("no realm");
       }
-      this.realm.pub(HistoryPlugin.contentOut$, this.startingMarkdown);
+      this.realm.pub(HistoryState.contentOut$, this.startingMarkdown);
     });
   }
   debounce(fn: () => void) {
@@ -64,7 +72,7 @@ export class HistoryPlugin {
     void this.transaction(async () => {
       const document = await historyDB.reconstructDocumentFromEdit(selectedEdit);
       if (this.realm) {
-        this.realm.pub(HistoryPlugin.contentOut$, document);
+        this.realm.pub(HistoryState.contentOut$, document);
       } else {
         console.error("realm not set");
       }
@@ -82,23 +90,21 @@ export class HistoryPlugin {
   }
 
   submd = (realm: Realm) => {
-    realm.singletonSub(this.md$, (md) => {
+    realm.sub(HistoryState.md$, async (md) => {
       if (!this.muteMdUpdates && this.id !== null) {
-        this.debounce(async () => {
-          this.startingMarkdown = md;
-          await historyDB.saveEdit(this.id!, md);
-        });
+        this.startingMarkdown = md;
+        await historyDB.saveEdit(this.id!, md);
       }
     });
   };
 }
-class HistoryRealmPlugin {
-  history!: HistoryPlugin;
-  init(realm: Realm, params?: { editHistoryId: string }) {
-    this.history = new HistoryPlugin(realm, {
-      editHistoryId: params!.editHistoryId,
-    });
-  }
-}
 
-export const historyPlugin = realmPlugin(new HistoryRealmPlugin());
+export const historyPlugin = realmPlugin({
+  init(realm: Realm, params?: { editHistoryId: string }) {
+    if (params) {
+      new HistoryPlugin(realm, {
+        editHistoryId: params.editHistoryId,
+      });
+    }
+  },
+});
