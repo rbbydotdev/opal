@@ -1,4 +1,3 @@
-import { PreviewPane } from "@/components/Editor/PreviewPane/PreviewPane";
 import { Button } from "@/components/ui/button";
 import {
   Menubar,
@@ -31,7 +30,7 @@ export function TopToolbar() {
         </Menubar>
       </div>
       <div className="flex items-center gap-2">
-        <PreviewPane pathname="/" />
+        {/* <PreviewPane pathname="/" /> */}
         <Button size="sm">Preview</Button>
         <Button size="sm">Button 2</Button>
         <Button size="sm">Button 3</Button>

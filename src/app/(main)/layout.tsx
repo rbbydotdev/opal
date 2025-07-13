@@ -17,7 +17,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { RequestSignalsInstance } from "@/lib/RequestSignals";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import React, { useEffect } from "react";
-import "./styles.css";
+import "../styles.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

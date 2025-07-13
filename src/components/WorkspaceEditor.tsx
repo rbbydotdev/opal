@@ -1,9 +1,9 @@
 "use client";
 
+import { TopToolbar } from "@/app/(main)/TopToolbar";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { Editor } from "@/components/Editor/Editor";
 import { ImageViewer } from "@/components/ImageViewer";
-import { TopToolbar } from "@/components/TopToolbar/TopToolbar";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";

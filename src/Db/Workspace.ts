@@ -1,3 +1,4 @@
+"use client";
 import {
   CreateDetails,
   DeleteDetails,
@@ -138,8 +139,12 @@ export class Workspace {
 
   static parseWorkspacePath(pathOrUrl: string) {
     const pathname = absPathname(pathOrUrl);
-    if (!pathname.startsWith(WorkspaceDAO.rootRoute)) return { workspaceId: null, filePath: null };
-    const [workspaceId, ...filePathRest] = decodePath(relPath(pathname.replace(WorkspaceDAO.rootRoute, ""))).split("/");
+    if (!pathname.startsWith(WorkspaceDAO.rootRoute) && !pathname.startsWith(WorkspaceDAO.previewRoute)) {
+      return { workspaceId: null, filePath: null };
+    }
+    const [workspaceId, ...filePathRest] = decodePath(
+      relPath(pathname.replace(WorkspaceDAO.previewRoute, "").replace(WorkspaceDAO.rootRoute, ""))
+    ).split("/");
     const filePath = filePathRest.join("/");
     if (!workspaceId) {
       return { workspaceId: null, filePath: null };
