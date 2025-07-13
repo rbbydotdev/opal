@@ -5,10 +5,7 @@ import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/mai
 import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-section/SidebarFileMenuPublish";
 import { SidebarFileMenuSync } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
-import {
-  SidebarTreeView,
-  SidebarTreeViewActions,
-} from "@/components/SidebarFileMenu/tree-view-section/SidebarTreeView";
+import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { useDndList } from "@/features/filetree-drag-and-drop/useDndList";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
 import React from "react";
@@ -29,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Separator } from "../ui/separator";
-import { SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel } from "../ui/sidebar";
+import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "../ui/sidebar";
 import { SidebarDndList } from "../ui/SidebarDndList";
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
@@ -103,16 +100,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
           <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
             <TreeExpanderProvider id="TreeView">
-              <SidebarTreeView>
-                <SidebarGroupContent className="flex items-center">
-                  <SidebarTreeViewActions
-                    trashSelectedFiles={function (): void {}}
-                    addFile={function (): void {}}
-                    addDir={function (): void {}}
-                    setExpandAll={function (_expand: boolean): void {}}
-                  />
-                </SidebarGroupContent>
-              </SidebarTreeView>
+              <SidebarMenuTreeSection />
             </TreeExpanderProvider>
           </div>
 

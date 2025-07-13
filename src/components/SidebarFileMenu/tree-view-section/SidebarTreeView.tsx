@@ -1,13 +1,10 @@
-import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { SidebarTreeViewMenu } from "@/components/TreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import clsx from "clsx";
-import { ChevronRight, CopyMinus, FilePlus, FolderPlus, LucideGitBranch, Trash2 } from "lucide-react";
+import { ChevronRight, CopyMinus, LucideGitBranch } from "lucide-react";
 
 export function SidebarTreeView({
   className,
@@ -18,9 +15,6 @@ export function SidebarTreeView({
 } & React.ComponentProps<typeof SidebarGroup>) {
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarTreeMenu");
 
-  const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
-  const editor = useCellValueForRealm(rootEditor$, realm);
-  const currentEditor = Boolean(editor?.getRootElement());
   return (
     <SidebarGroup className={clsx("pl-0 pb-12 py-0 pr-0 w-full ", className)} {...props}>
       <Collapsible
@@ -62,33 +56,8 @@ export function SidebarTreeView({
   );
 }
 
-export const SidebarTreeViewActions = ({
-  trashSelectedFiles,
-  addFile,
-  addDir,
-  setExpandAll,
-}: {
-  trashSelectedFiles: () => void;
-  addFile: () => void;
-  addDir: () => void;
-  setExpandAll: (expand: boolean) => void;
-}) => (
+export const SidebarTreeViewActions = ({ setExpandAll }: { setExpandAll: (expand: boolean) => void }) => (
   <div className="whitespace-nowrap">
-    <Button
-      onClick={trashSelectedFiles}
-      className="p-1 m-0 h-fit"
-      variant="ghost"
-      aria-label="Trash Files"
-      title="Trash Files"
-    >
-      <Trash2 />
-    </Button>
-    <Button onClick={addFile} className="p-1 m-0 h-fit" variant="ghost" aria-label="Add File" title="New File">
-      <FilePlus />
-    </Button>
-    <Button onClick={addDir} className="p-1 m-0 h-fit" variant="ghost" aria-label="Add Folder" title="New Folder">
-      <FolderPlus />
-    </Button>
     <Button
       aria-label="Expand All"
       onDoubleClick={() => setExpandAll(true)}
