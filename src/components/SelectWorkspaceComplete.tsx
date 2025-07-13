@@ -12,11 +12,10 @@ import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { Opal } from "@/lib/Opal";
 import { cn } from "@/lib/utils";
 
-const ALL = (
-  <>
-    <Opal /> All Workspaces
-  </>
-);
+const ALL = {
+  icon: <Opal />,
+  label: "All Workspaces",
+};
 const WSIcon = (id: string) => (
   <WorkspaceIcon variant="square" size={3} scale={4} input={id} className="border border-primary-foreground" />
 );
@@ -36,20 +35,17 @@ export function SelectWorkspaceComplete({
 
   type WorkspaceOption = {
     value: string;
-    label: string | React.JSX.Element;
+    label: string;
+    icon: React.JSX.Element;
   };
 
   const workspacesOptions: WorkspaceOption[] = React.useMemo(
     () => [
-      { value: ALL_WS_KEY, label: ALL },
+      { value: ALL_WS_KEY, label: ALL.label, icon: ALL.icon },
       ...workspaces.map((ws) => ({
         value: ws.name,
-        label: (
-          <>
-            {WSIcon(ws.guid)}
-            {ws.name}
-          </>
-        ),
+        icon: WSIcon(ws.guid),
+        label: ws.name,
       })),
     ],
     [workspaces]
@@ -60,24 +56,40 @@ export function SelectWorkspaceComplete({
     setValue(newVal);
     setOpen(false);
   };
+  const currWs = workspacesOptions.find((workspace) => workspace.value === value);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between">
-          {value ? workspacesOptions.find((workspace) => workspace.value === value)?.label : "Select Workspace..."}
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between truncate">
+          {value ? (
+            <>
+              {currWs?.icon} {currWs?.label}
+            </>
+          ) : (
+            "Select Workspace..."
+          )}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
 
       <PopoverContent className="w-[200px] p-0">
         <Command value={value}>
-          <CommandInput placeholder="Search framework..." className="h-9" />
+          <CommandInput placeholder="Search workspace..." className="h-9" />
           <CommandList>
-            <CommandEmpty>No framework found.</CommandEmpty>
-            <CommandGroup onChange={(v) => console.log("CommandGroup changed:", v)}>
+            <CommandEmpty>No workspace found.</CommandEmpty>
+            <CommandGroup>
               {workspacesOptions.map((workspace) => (
-                <CommandItem key={workspace.value} value={workspace.value} onSelect={handleSelect}>
-                  {workspace.label}
+                <CommandItem
+                  tabIndex={0}
+                  key={workspace.value}
+                  value={workspace.value}
+                  onSelect={handleSelect}
+                  className="flex items-center gap-2 w-full overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {workspace.icon}
+                    <span className="truncate ">{workspace.label}</span>
+                  </div>
                   <Check className={cn("ml-auto", value === workspace.value ? "opacity-100" : "opacity-0")} />
                 </CommandItem>
               ))}

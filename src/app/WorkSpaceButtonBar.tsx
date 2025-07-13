@@ -87,49 +87,53 @@ export function WorkSpaceButtonBar() {
         </Link>
       </div>
 
-      <BigButton
-        icon={<BombIcon stroke="current" size={24} strokeWidth={1.25} />}
-        title={"Destroy All"}
-        href="#"
-        onClick={() =>
-          Promise.all([
-            // deleteIDBs(),
-            currentWorkspace.tearDown(),
-            WorkspaceDAO.all().then((workspaces) =>
-              workspaces.map((ws) =>
-                ws
-                  .toModel()
-                  .tearDown()
-                  .then((ws) => ws.delete())
-              )
-            ),
-            unregisterServiceWorkers(),
-            //@ts-expect-error
-          ]).then(() => (window.location = "/newWorkspace"))
-        }
-      />
-      <BigButton
-        icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
-        title={"Delete All"}
-        href="#"
-        onClick={() => Workspace.DeleteAll().then(() => router.push("/newWorkspace"))}
-      />
-      <BigButton
-        icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
-        title={"Unregister Services"}
-        href="#"
-        onClick={() => {
-          // Unregister all service workers for this origin
-          const promises: Promise<boolean>[] = [];
-          void navigator.serviceWorker.getRegistrations().then(async (registrations) => {
-            for (const registration of registrations) {
-              promises.push(registration.unregister());
+      {process.env.NODE_ENV === "development" ? (
+        <>
+          <BigButton
+            icon={<BombIcon stroke="current" size={24} strokeWidth={1.25} />}
+            title={"Destroy All"}
+            href="#"
+            onClick={() =>
+              Promise.all([
+                // deleteIDBs(),
+                currentWorkspace.tearDown(),
+                WorkspaceDAO.all().then((workspaces) =>
+                  workspaces.map((ws) =>
+                    ws
+                      .toModel()
+                      .tearDown()
+                      .then((ws) => ws.delete())
+                  )
+                ),
+                unregisterServiceWorkers(),
+                //@ts-expect-error
+              ]).then(() => (window.location = "/newWorkspace"))
             }
-            await Promise.all(promises);
-            alert("All service workers unregistered!");
-          });
-        }}
-      />
+          />
+          <BigButton
+            icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
+            title={"Delete All"}
+            href="#"
+            onClick={() => Workspace.DeleteAll().then(() => router.push("/newWorkspace"))}
+          />
+          <BigButton
+            icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
+            title={"Unregister Services"}
+            href="#"
+            onClick={() => {
+              // Unregister all service workers for this origin
+              const promises: Promise<boolean>[] = [];
+              void navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+                for (const registration of registrations) {
+                  promises.push(registration.unregister());
+                }
+                await Promise.all(promises);
+                alert("All service workers unregistered!");
+              });
+            }}
+          />
+        </>
+      ) : null}
 
       <WorkspaceSearchDialog>
         <BigButton
