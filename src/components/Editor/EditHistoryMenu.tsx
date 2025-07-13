@@ -1,14 +1,17 @@
 // EditHistoryMenu.tsx;
 import { DocumentChange } from "@/components/Editor/HistoryDB";
+import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { useEditHistoryPlugin } from "@/components/Editor/useEditHistory";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@mdxeditor/editor";
+import { Separator } from "@/components/ui/separator";
+import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { ChevronDown, History } from "lucide-react";
 import { cloneElement, useEffect, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export function EditHistoryMenu({ historyId }: { historyId: string }) {
-  const [edits, selectedEdit, setEdit, reset, clearAll] = useEditHistoryPlugin(historyId);
+  const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
+  const [edits, selectedEdit, setEdit, reset, clearAll] = useEditHistoryPlugin(historyId, realm);
 
   const [timeAgoStr, setTimeAgoStr] = useState("");
   useEffect(() => {
@@ -16,14 +19,14 @@ export function EditHistoryMenu({ historyId }: { historyId: string }) {
       if (selectedEdit === null) return setTimeAgoStr("");
       setTimeAgoStr(timeAgo(new Date(selectedEdit.timestamp)));
     };
-    const intId = setInterval(updateTimeAgo, 1000);
+    const intervalTimer = setInterval(updateTimeAgo, 1000);
     updateTimeAgo();
 
-    return () => clearInterval(intId);
+    return () => clearInterval(intervalTimer);
   }, [edits, selectedEdit]);
 
   return (
-    <div className="relative mb-2 flex items-center border-2 border-dashed border-primary bg-primary-foreground py-2 pl-6 font-mono text-xl">
+    <div className="relative mb-2 flex items-center border-2 border-dashed border-primary bg-primary-foreground py-1 pl-6 font-mono text-sm">
       <EditHistoryScroll select={setEdit} reset={reset} clearAll={clearAll} edits={edits} selectedEdit={selectedEdit}>
         <button className="flex w-full items-center">
           <div className="mr-2 flex items-center space-x-2">
@@ -94,6 +97,7 @@ function EditHistoryScroll({
 
   return (
     <div ref={menuRef} className="w-full">
+      {/* @ts-ignore */}
       {cloneElement(children, { onClick: handleClick })}
       {isOpen && (
         <div className="absolute left-0 z-10 mt-2 w-full">

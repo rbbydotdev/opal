@@ -24,9 +24,6 @@ export const searchState$ = Cell<"searchIsClosed" | "searchIsOpen">("searchIsClo
 export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
   realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(250))));
 });
-// export const editorSearchScollableContent$ = Cell<HTMLElement | null>(null, (r) =>
-//   r.sub(contentEditableRef$, (cref) => r.pub(editorSearchScollableContent$, cref?.current?.children?.[0] ?? null))
-// );
 
 export const debouncedIndexer$ = Cell<TextNodeIndex>(EmptyTextNodeIndex, (realm) =>
   realm.link(debouncedIndexer$, realm.pipe(editorSearchTextNodeIndex$, realm.transformer(debounceTime(250))))

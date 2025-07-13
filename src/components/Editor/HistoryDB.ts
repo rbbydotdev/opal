@@ -124,4 +124,4 @@ class HistoryDB extends Dexie {
 
 // Create and export the singleton instance
 export const historyDB = new HistoryDB();
-const _HistoryDBDocuments = historyDB.documents;
+// const _HistoryDBDocuments = historyDB.documents;

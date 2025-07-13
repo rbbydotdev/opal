@@ -1,32 +1,18 @@
 import { DocumentChange } from "@/components/Editor/HistoryDB";
-import { HistoryPlugin } from "@/components/Editor/historyPlugin";
-import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
+import { HistoryState } from "@/components/Editor/historyPlugin";
 import { useCellForRealm } from "@/components/useCellForRealm";
-import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
+import { Realm } from "@mdxeditor/editor";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useCallback, useEffect, useRef } from "react";
 import { historyDB } from "./HistoryDB";
 
-/**
- * Custom hook to fetch and observe the list of edits for a specific document ID.
- * @param documentIdRef The ID of the document to fetch edits for.
- * @returns A tuple containing:
- *  - An array of DocumentChange objects or an empty array if still loading.
- *  - The currently selected DocumentChange or null.
- *  - A function to set the selected edit by its ID.
- *  - A function to reset the edit selection and markdown.
- */
 export function useEditHistoryPlugin(
-  documentId: string
+  documentId: string,
+  realm: Realm | undefined
 ): readonly [DocumentChange[], DocumentChange | null, (edit: DocumentChange) => boolean, () => void, () => void] {
   //Sticky Doc Id!
   const DocIdRef = useRef(documentId);
   const documentIdRef = documentId ?? DocIdRef.current;
-  useEffect(() => {
-    if (documentId) {
-      DocIdRef.current = documentId;
-    }
-  }, [documentId]);
 
   const edits = useLiveQuery(
     async () => {
@@ -39,15 +25,14 @@ export function useEditHistoryPlugin(
     [documentIdRef] // Dependencies array to re-run the query if documentId changes
   );
 
-  const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
-  const [edit, setSelectedEdit] = useCellForRealm(HistoryPlugin.selectedEdit$, realm);
+  const [edit, setSelectedEdit] = useCellForRealm(HistoryState.selectedEdit$, realm);
 
   const lastEdit = useRef<DocumentChange | null>(null);
 
   const setEdit = useCallback(
     (selectedEdit: DocumentChange) => {
       setSelectedEdit(selectedEdit);
-      realm?.pub(HistoryPlugin.selectedEdit$, selectedEdit);
+      realm?.pub(HistoryState.selectedEdit$, selectedEdit);
       return true;
     },
     [realm, setSelectedEdit]
@@ -55,12 +40,12 @@ export function useEditHistoryPlugin(
 
   const reset = useCallback(() => {
     setSelectedEdit(null);
-    realm?.pub(HistoryPlugin.resetMd$);
+    realm?.pub(HistoryState.resetMd$);
   }, [realm, setSelectedEdit]);
 
   const clearAll = useCallback(() => {
     setSelectedEdit(null);
-    realm?.pub(HistoryPlugin.clearAll$);
+    realm?.pub(HistoryState.clearAll$);
   }, [realm, setSelectedEdit]);
 
   //poor mans pub sub for resetting the selected edit, when text in editor is updated and selected edit
