@@ -1,5 +1,6 @@
 "use client";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -15,18 +16,23 @@ import {
   reduceLineage,
   relPath,
 } from "@/lib/paths2";
+import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
-import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   const { setFileTreeCtx, selectedRange, resetEditing, focused } = useFileTreeMenuCtx();
+  const router = useRouter();
 
   const newFile = useCallback(
-    (path: AbsPath, content = "") => {
-      return currentWorkspace.newFile(dirname(path), basename(path), content);
+    async (path: AbsPath, content = "", options: { redirect?: boolean } = {}) => {
+      const result = await currentWorkspace.newFile(dirname(path), basename(path), content);
+      if (options.redirect) {
+        router.push(currentWorkspace.resolveFileUrl(result));
+      }
+      return result;
     },
-    [currentWorkspace]
+    [currentWorkspace, router]
   );
   const newDir = useCallback(
     async (path: AbsPath) => {
@@ -216,9 +222,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       const wantPath = joinPath(dirname(origNode.path), relPath(decodePath(fileName)));
       if (type === "new") {
         if (origNode.isTreeFile())
-          return currentWorkspace.newFile(dirname(wantPath), basename(wantPath), "# " + basename(wantPath));
+          return newFile(wantPath, "# " + basename(wantPath), {
+            redirect: true,
+          });
         else {
-          return currentWorkspace.newDir(dirname(wantPath), basename(wantPath));
+          return newDir(wantPath);
         }
       } else if (type === "duplicate") {
         if (isVirtualDupNode(origNode)) {
@@ -232,7 +240,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         throw new Error("invalid commit type");
       }
     },
-    [currentWorkspace, renameDirOrFile]
+    [currentWorkspace, newDir, newFile, renameDirOrFile]
   );
   return {
     renameDirOrFileMultiple,

@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { absPath } from "@/lib/paths2";
 import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
-import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 
 export function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
