@@ -1,4 +1,4 @@
-import { SpecialDirs } from "@/Db/SpecialDirs";
+import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
 import { absPath, joinPath, strictPathname } from "@/lib/paths2";
@@ -40,7 +40,7 @@ export async function handleDownloadRequestEncrypted(workspaceId: string, event:
     const zipWriter = new ZipWriter(new BlobWriter("application/zip"), zipWriterOptions);
 
     await workspace.disk.fileTree.index();
-    const fileNodes = [...workspace.disk.fileTree.iterator((node) => !node.path.startsWith(SpecialDirs.Trash))];
+    const fileNodes = [...workspace.disk.fileTree.iterator(FilterOutSpecialDirs)];
 
     if (!fileNodes || fileNodes.length === 0) {
       console.log("{EncZip}: No files found in the workspace to download.");

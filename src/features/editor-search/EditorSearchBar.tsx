@@ -85,7 +85,7 @@ export function EditorSearchBar({
   useEffect(() => {
     if (editorSearchBarRef.current) {
       const handleWindowSearchHotkey = (e: KeyboardEvent) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === "f" && isOpen) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "f" && isOpen && !e.shiftKey) {
           selectSearchText();
         }
       };

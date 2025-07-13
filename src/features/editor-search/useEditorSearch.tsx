@@ -14,8 +14,7 @@ export function useEditorSearchTool() {
     if (!canShowSearchTool() || viewMode !== "rich-text") return;
     const handleSearchKeyboardShortcut = (e: KeyboardEvent) => {
       //cmd+f
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
-        // if ((e.ctrlKey || e.metaKey) && e.key === "f" && !e.shiftKey) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f" && !e.shiftKey) {
         e.preventDefault();
         setIsSearchOpen(true);
       }

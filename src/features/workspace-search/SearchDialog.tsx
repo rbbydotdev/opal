@@ -59,6 +59,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     submit({ searchTerm, workspaceName: workspace });
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleOpenChange = (open: boolean) => {
     if (open) {
       // When the dialog opens, reset its state.
@@ -75,7 +76,6 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") {
         e.preventDefault();
         e.stopPropagation();
-        e.stopImmediatePropagation();
         handleOpenChange(true);
       }
     };
