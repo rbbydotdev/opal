@@ -3,6 +3,7 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { Editor } from "@/components/Editor/Editor";
 import { ImageViewer } from "@/components/ImageViewer";
+import { TopToolbar } from "@/components/TopToolbar/TopToolbar";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -98,6 +99,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
   if (initialContents === null || !currentWorkspace) return null;
   return (
     <div className="flex flex-col h-full relative">
+      <TopToolbar />
       <DropCommanderProvider>
         <Editor
           {...props}
