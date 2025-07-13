@@ -10,6 +10,7 @@ import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeDirRoot, TreeNodeDirJType, VirtualDupTreeNode } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
+import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
 import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
@@ -312,6 +313,27 @@ export abstract class Disk {
     this.mutex.release();
   }
 
+  async findReplaceImgBatch2(findReplace: [string, string][], origin: string = ""): Promise<AbsPath[]> {
+    const filePaths = [];
+    for await (const node of await this.iteratorMutex((node) => node.isMarkdownFile())) {
+      const [newContent, changed] = await replaceImageUrlsInMarkdown(
+        String(await this.readFile(node.path)),
+        findReplace,
+        origin
+      );
+
+      if (changed) {
+        await this.writeFile(node.path, newContent);
+        filePaths.push(node.path);
+      }
+    }
+    if (filePaths.length) {
+      await this.local.emit(DiskEvents.WRITE, {
+        filePaths,
+      });
+    }
+    return filePaths;
+  }
   //TODO: should probabably parse document then search find image nodes
   //Also this function is a little beefy, service object?
   //TODO use search ?
@@ -321,6 +343,7 @@ export abstract class Disk {
       let content = String(await this.readFile(node.path));
       let changed = false;
       for (const [find, replace] of findReplace) {
+        // replaceImageUrlsInMarkdown
         // Match either the find string or window.location.origin + find, preceded by (< or [
         const encodedFind = encodePath(find);
         const originFind = origin + find;
