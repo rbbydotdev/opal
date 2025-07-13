@@ -2,8 +2,8 @@
 
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { NewWorkspaceDialog } from "@/components/ui/NewWorkspaceDialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-// import { SearchModal } from "@/components/ui/search-modal";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
@@ -15,7 +15,6 @@ import clsx from "clsx";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
 function BigButton({
@@ -65,10 +64,10 @@ export function WorkSpaceButtonBar() {
 
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
 
-  const filteredWorkspaces = useMemo(
-    () => workspaces.filter((workspace) => workspace.guid !== coalescedWorkspace?.guid),
-    [workspaces, coalescedWorkspace]
-  );
+  // const filteredWorkspaces = useMemo(
+  //   () => workspaces.filter((workspace) => workspace.guid !== coalescedWorkspace?.guid),
+  //   [workspaces, coalescedWorkspace]
+  // );
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const { pending } = useRequestSignals();
   const router = useRouter();
@@ -91,7 +90,7 @@ export function WorkSpaceButtonBar() {
 
       <BigButton
         icon={<BombIcon stroke="current" size={24} strokeWidth={1.25} />}
-        title={"Nuke All"}
+        title={"Destroy All"}
         href="#"
         onClick={() =>
           Promise.all([
@@ -153,12 +152,14 @@ export function WorkSpaceButtonBar() {
         title="settings"
         href="/settings"
       />
-      <BigButton
-        icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
-        title="new workspace"
-        href="/new"
-        className="text-3xs"
-      />
+      <NewWorkspaceDialog>
+        <BigButton
+          icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
+          title="new workspace"
+          href="#"
+          className="text-3xs"
+        />
+      </NewWorkspaceDialog>
 
       {coalescedWorkspace && (
         <BigButton
