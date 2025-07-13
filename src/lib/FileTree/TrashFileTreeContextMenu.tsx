@@ -1,9 +1,9 @@
 import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath } from "@/lib/paths2";
 import { Delete, Undo } from "lucide-react";
 import { useRef } from "react";
 export const TrashFileTreeContextMenu = ({
@@ -44,7 +44,7 @@ export const TrashFileTreeContextMenu = ({
         }}
       >
         {isRoot && (
-          <ContextMenuItem className="flex gap-2" onClick={() => remove(absPath("/.trash"))}>
+          <ContextMenuItem className="flex gap-2" onClick={() => remove(SpecialDirs.Trash)}>
             <Delete className="mr-3 h-4 w-4" />
             Empty
           </ContextMenuItem>

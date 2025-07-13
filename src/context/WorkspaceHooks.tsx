@@ -1,5 +1,6 @@
 "use client";
 import { NullWorkspace } from "@/Db/NullWorkspace";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -183,7 +184,7 @@ export function useCurrentFilepath() {
     mimeType,
     isMarkdown: mimeType.startsWith("text/markdown"),
     isImage: mimeType.startsWith("image/"),
-    inTrash: filePath.startsWith("/.trash"),
+    inTrash: filePath.startsWith(SpecialDirs.Trash),
   };
 }
 

@@ -10,7 +10,9 @@ export function SidebarMenuTreeSection() {
   return (
     <SidebarTreeView>
       <SidebarGroupContent className="flex items-center">
-        <SidebarTreeViewActions setExpandAll={setExpandAll} />
+        <span className="block group-data-[state=closed]/collapsible:hidden">
+          <SidebarTreeViewActions setExpandAll={setExpandAll} />
+        </span>
       </SidebarGroupContent>
     </SidebarTreeView>
   );

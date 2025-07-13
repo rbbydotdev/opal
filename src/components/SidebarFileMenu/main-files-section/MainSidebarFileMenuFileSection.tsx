@@ -5,6 +5,7 @@ import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu
 import { SidebarFileMenuFileSectionInternal } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFileSectionInternal";
 import { Button } from "@/components/ui/button";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
@@ -24,7 +25,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
       FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
       title={"Files"}
       className={className}
-      filter={[absPath("/.trash")]}
+      filter={SpecialDirs.All} // Exclude trash and git directories
     >
       <span className="block group-data-[state=closed]/collapsible:hidden">
         <SidebarFileMenuFilesActions
