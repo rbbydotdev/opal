@@ -1,3 +1,4 @@
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, RelPath, absPath, basename, dirname, depth as getDepth, incPath, relPath } from "@/lib/paths2";
 
@@ -335,7 +336,9 @@ export class TreeDirRoot extends TreeDir {
   trash() {
     return new TreeDirRoot({
       ...this,
-      children: Object.fromEntries(Object.entries(this.children).filter(([_, child]) => child.path === "/.trash")),
+      children: Object.fromEntries(
+        Object.entries(this.children).filter(([_, child]) => child.path === SpecialDirs.Trash)
+      ),
     });
   }
   excludeHidden() {

@@ -25,9 +25,10 @@ export const replaceMdImageHandler = withRequestSignal(async (context: RequestCo
   console.log(`Handling MD image replacement for: ${workspaceId}`);
   //parse json bod
   const body = await context.event.request.json();
-  if (!Array.isArray(body) || body.length === 0) {
+  if (!Array.isArray(body)) {
     return new Response("Invalid request body. Expected an array of [find, replace] pairs.", { status: 400 });
   }
+
   const findReplace: [string, string][] = body as [string, string][];
   console.log(`Replacing images in MD with: ${findReplace.length} pairs`);
 

@@ -8,6 +8,7 @@ import {
   RenameDetails,
 } from "@/Db/Disk";
 import { ImageCache } from "@/Db/ImageCache";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
@@ -250,7 +251,7 @@ export class Workspace {
 
     const untrashedNodes = nodes.map((node) => {
       const fromNode = node;
-      const toNode = TreeNode.FromPath(resolveFromRoot(absPath("/.trash"), node.path), node.type);
+      const toNode = TreeNode.FromPath(resolveFromRoot(SpecialDirs.Trash, node.path), node.type);
       return [fromNode, toNode] as [TreeDir, TreeNode];
     });
 
@@ -258,7 +259,7 @@ export class Workspace {
   }
 
   hasTrash() {
-    return Boolean(Object.keys(this.disk.fileTree.nodeFromPath(absPath("/.trash"))?.children ?? {}).length);
+    return Boolean(Object.keys(this.disk.fileTree.nodeFromPath(SpecialDirs.Trash)?.children ?? {}).length);
   }
 
   async untrashSingle(path: AbsPath) {
@@ -266,7 +267,7 @@ export class Workspace {
     if (!fromNode) {
       throw new BadRequestError(`Node not found for path: ${path}`);
     }
-    const toNode = TreeNode.FromPath(resolveFromRoot(absPath("/.trash"), fromNode.path), fromNode.type);
+    const toNode = TreeNode.FromPath(resolveFromRoot(SpecialDirs.Trash, fromNode.path), fromNode.type);
     return this.renameSingle(fromNode, toNode);
   }
 
@@ -279,7 +280,7 @@ export class Workspace {
       return fromNode;
     });
     const trashedNodes = nodes.map((fromNode) => {
-      const toNode = TreeNode.FromPath(joinPath(absPath("/.trash"), fromNode.path), fromNode.type);
+      const toNode = TreeNode.FromPath(joinPath(SpecialDirs.Trash, fromNode.path), fromNode.type);
       return [fromNode, toNode] as [TreeNode, TreeDir];
     });
     return await this.renameMultiple(trashedNodes);
@@ -490,10 +491,23 @@ export class Workspace {
   }
 
   async renameMdImages(paths: [to: string, from: string][]) {
+    if (paths.length === 0) return [];
     const res = await fetch("/replace-md-images", {
       method: "POST",
       body: JSON.stringify(paths),
-    }).then((res) => res.json() as Promise<AbsPath[]>);
+    })
+      .then(async (res) => {
+        try {
+          return (await res.clone().json()) as Promise<AbsPath[]>;
+        } catch (e) {
+          console.error(`Error parsing response from /replace-md-images\n\n${await res.clone().text()}`, e);
+          return [];
+        }
+      })
+      .catch((e) => {
+        console.error("Error renaming md images", e);
+        return [];
+      });
     if (res.length) {
       await this.disk.local.emit(DiskEvents.WRITE, {
         filePaths: res,

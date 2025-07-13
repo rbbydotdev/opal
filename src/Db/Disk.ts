@@ -277,10 +277,10 @@ export abstract class Disk {
         await this.local.emit(DiskEvents.WRITE, { filePaths });
       }),
 
-      // this.remote.on(DiskEvents.INDEX, async (data) => {
-      //   await this.fileTreeIndex();
-      //   void this.local.emit(DiskEvents.INDEX, data);
-      // }),
+      this.remote.on(DiskEvents.INDEX, async (data) => {
+        await this.fileTreeIndex();
+        void this.local.emit(DiskEvents.INDEX, data);
+      }),
     ];
     return () => listeners.forEach((p) => p());
   }
@@ -314,6 +314,7 @@ export abstract class Disk {
   }
 
   async findReplaceImgBatch2(findReplace: [string, string][], origin: string = ""): Promise<AbsPath[]> {
+    if (findReplace.length === 0) return [];
     const filePaths = [];
     for await (const node of await this.iteratorMutex((node) => node.isMarkdownFile())) {
       const [newContent, changed] = await replaceImageUrlsInMarkdown(

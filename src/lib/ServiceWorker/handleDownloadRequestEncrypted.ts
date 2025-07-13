@@ -1,45 +1,20 @@
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
+import { absPath, joinPath, strictPathname } from "@/lib/paths2";
 import { EncHeader, PassHeader } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
 import { signalRequest } from "@/lib/ServiceWorker/utils";
 import { BlobWriter, Uint8ArrayReader, ZipWriter, ZipWriterConstructorOptions } from "@zip.js/zip.js";
-import path from "path";
+import { normalize } from "path";
 import { SWWStore } from "./SWWStore";
-
-// function formatConsoleMsg(msg: unknown): string {
-//   if (msg instanceof Error) {
-//     return `${msg.name}: ${msg.message}\n${msg.stack ?? ""}`;
-//   }
-//   if (typeof msg === "object") {
-//     try {
-//       return JSON.stringify(msg, null, 2);
-//     } catch {
-//       return String(msg);
-//     }
-//   }
-//   return String(msg);
-// }
-
-// const RL = RemoteLogger("ServiceWorker");
-// console.log = function (msg: unknown) {
-//   RL(formatConsoleMsg(msg), "log");
-// };
-// console.debug = function (msg: unknown) {
-//   RL(formatConsoleMsg(msg), "debug");
-// };
-// console.error = function (msg: unknown) {
-//   RL(formatConsoleMsg(msg), "error");
-// };
-// console.warn = function (msg: unknown) {
-//   RL(formatConsoleMsg(msg), "warn");
-// };
 
 export interface DownloadOptions {
   password: string;
   encryption: "aes" | "zipcrypto";
 }
 export async function handleDownloadRequestEncrypted(workspaceId: string, event: FetchEvent): Promise<Response> {
+  const workspaceDirName = absPath(strictPathname(workspaceId));
   const options: DownloadOptions = {
     password: event.request.headers.get(PassHeader)!,
     encryption: event.request.headers.get(EncHeader)! as "aes" | "zipcrypto",
@@ -65,7 +40,7 @@ export async function handleDownloadRequestEncrypted(workspaceId: string, event:
     const zipWriter = new ZipWriter(new BlobWriter("application/zip"), zipWriterOptions);
 
     await workspace.disk.fileTree.index();
-    const fileNodes = [...workspace.disk.fileTree.iterator((node) => !node.path.startsWith("/.trash"))];
+    const fileNodes = [...workspace.disk.fileTree.iterator((node) => !node.path.startsWith(SpecialDirs.Trash))];
 
     if (!fileNodes || fileNodes.length === 0) {
       console.log("{EncZip}: No files found in the workspace to download.");
@@ -82,7 +57,7 @@ export async function handleDownloadRequestEncrypted(workspaceId: string, event:
         try {
           const data = await workspace.disk.readFile(node.path);
           await zipWriter.add(
-            node.path,
+            joinPath(workspaceDirName, node.path),
             new Uint8ArrayReader(coerceUint8Array(data)),
             {
               useWebWorkers: false,
@@ -106,7 +81,10 @@ export async function handleDownloadRequestEncrypted(workspaceId: string, event:
       .map(async (node) => {
         try {
           // Add a 0-byte entry with a trailing slash to represent an empty directory
-          await zipWriter.add(path.normalize(node + "/"), new Uint8ArrayReader(new Uint8Array(0)));
+          await zipWriter.add(
+            normalize(joinPath(workspaceDirName, node.path) + "/"),
+            new Uint8ArrayReader(new Uint8Array(0))
+          );
 
           return { status: "fulfilled", path: node.path };
         } catch (e) {

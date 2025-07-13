@@ -6,6 +6,7 @@ import {
   useWorkspaceRoute,
   WorkspaceContext,
 } from "@/context/WorkspaceHooks";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { isAncestor } from "@/lib/paths2";
@@ -51,7 +52,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
             (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
             (fileType === "dir" && isAncestor(workspaceRoute.path, oldPath))
           ) {
-            if (newPath.startsWith("/.trash")) {
+            if (newPath.startsWith(SpecialDirs.Trash)) {
               router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
               void currentWorkspace.tryFirstFileUrl().then((firstFileUrl) => {
                 router.push(firstFileUrl);

@@ -1,5 +1,7 @@
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
+import { absPath, joinPath, strictPathname } from "@/lib/paths2";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
 import { signalRequest } from "@/lib/ServiceWorker/utils";
 import * as fflate from "fflate";
@@ -7,6 +9,7 @@ import { SWWStore } from "./SWWStore";
 
 export async function handleDownloadRequest(workspaceId: string): Promise<Response> {
   try {
+    const workspaceDirName = absPath(strictPathname(workspaceId));
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
 
@@ -24,7 +27,7 @@ export async function handleDownloadRequest(workspaceId: string): Promise<Respon
 
     await workspace.disk.fileTree.index();
 
-    const fileNodes = [...workspace.disk.fileTree.iterator((node) => !node.path.startsWith("/.trash"))];
+    const fileNodes = [...workspace.disk.fileTree.iterator((node) => !node.path.startsWith(SpecialDirs.Trash))];
 
     if (!fileNodes || fileNodes.length === 0) {
       console.warn("No files found in the workspace to download.");
@@ -38,7 +41,7 @@ export async function handleDownloadRequest(workspaceId: string): Promise<Respon
         if (node.isTreeFile()) {
           try {
             console.log(`Adding file to zip: ${node.path}`);
-            const fileStream = new fflate.ZipDeflate(node.path, { level: 9 });
+            const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
             zip.add(fileStream);
             //'stream' file by file
             void workspace.disk
@@ -57,8 +60,7 @@ export async function handleDownloadRequest(workspaceId: string): Promise<Respon
             console.error(`Failed to add file to zip: ${node.path}`, e);
           }
         } else if (node.type === "dir") {
-          const dirName = node.path + "/";
-          const emptyDir = new fflate.ZipPassThrough(dirName);
+          const emptyDir = new fflate.ZipPassThrough(joinPath(workspaceDirName, node.path) + "/");
           zip.add(emptyDir);
           emptyDir.push(new Uint8Array(0), true);
         }
