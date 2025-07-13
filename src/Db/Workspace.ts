@@ -303,7 +303,7 @@ export class Workspace {
       findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
       await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
     });
-    await this.disk.findReplaceImgBatch(findStrReplaceStr);
+    await this.renameMdImages(findStrReplaceStr);
 
     return newNode;
   };
