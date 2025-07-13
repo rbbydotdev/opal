@@ -44,10 +44,11 @@ export function NewWorkspaceDialog({
     const workspace = await Workspace.CreateNewWithSeedFiles(workspaceName);
     setPending(false);
     setIsOpen(false);
+
     router.push(workspace.home());
   };
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
       {/* 1. Give the form a unique ID */}
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

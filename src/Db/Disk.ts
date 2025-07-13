@@ -643,11 +643,11 @@ export abstract class Disk {
       await this.writeFileRecursive(fullPath, await content);
     }
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX, {
+    void this.local.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: result },
     });
-    await this.remote.emit(DiskEvents.INDEX, {
+    void this.remote.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: result },
     });
@@ -655,11 +655,11 @@ export abstract class Disk {
   }
   async indexAndEmitNewFiles(filePaths: AbsPath[]) {
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX, {
+    void this.local.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths },
     });
-    await this.remote.emit(DiskEvents.INDEX, {
+    void this.remote.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths },
     });
