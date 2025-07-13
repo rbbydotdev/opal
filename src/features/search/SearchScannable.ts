@@ -1,5 +1,5 @@
 import { type SearchResultData } from "@/features/search/SearchResults";
-import { prettifyMarkdownSync } from "@/lib/prettifyMarkdown";
+import { prettifyMarkdownSync } from "@/lib/markdown/prettifyMarkdown";
 import { checkSum } from "../../lib/checkSum";
 
 export interface Scannable<T> {

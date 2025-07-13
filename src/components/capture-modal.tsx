@@ -118,6 +118,7 @@ export function ElementCaptureModal({
 
   // We clone the trigger to attach our custom onClick handler
   const triggerWithClickHandler = React.cloneElement(trigger, {
+    //@ts-ignore
     onClick: handleCaptureAndOpen,
   });
 
