@@ -34,9 +34,14 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         console.debug("Initialize Workspace:" + ws.name);
         return ws;
       })
-      .catch((e) => {
-        router.replace("/newWorkspace");
-        throw e;
+      .catch(() => {
+        // router.replace("/newWorkspace");
+        // router.replace("/newWorkspace");
+        window.location.href = "/";
+        // toss(e);
+        // notFound();
+        // throw e;
+        // return NULL_WORKSPACE;
       });
     return () => {
       void workspace.then((ws) => ws.tearDown());

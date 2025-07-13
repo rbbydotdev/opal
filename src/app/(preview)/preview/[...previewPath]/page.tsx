@@ -4,14 +4,20 @@ import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { isImage, isMarkdown } from "@/lib/paths2";
 import "github-markdown-css/github-markdown.css";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 export default function Page({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("sessionId");
+
+  // You can now use sessionId as needed
   return (
     <>
       <div className="min-w-0 h-full flex w-full">
         <div className="flex-1 overflow-hidden">
           <WorkspaceProvider>
+            Example usage: <div>Session ID: {sessionId}</div>
             <PreviewComponent />
             {children}
           </WorkspaceProvider>
@@ -61,4 +67,36 @@ function MarkdownRender() {
       <div className="" style={{ padding: "32px" }} dangerouslySetInnerHTML={{ __html: html }}></div>
     </div>
   );
+}
+
+import { ReactNode, useEffect, useRef } from "react";
+
+function ScrollSyncListener({
+  sessionId,
+  children,
+}: {
+  sessionId: string | null;
+  children: (ref: React.RefObject<HTMLDivElement | null>) => ReactNode;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const channel = new BroadcastChannel(sessionId);
+
+    const handler = (event: MessageEvent) => {
+      const { x, y } = event.data || {};
+      if (typeof x === "number" && typeof y === "number" && containerRef.current) {
+        containerRef.current.scrollTo(x, y);
+      }
+    };
+
+    channel.addEventListener("message", handler);
+    return () => {
+      channel.removeEventListener("message", handler);
+      channel.close();
+    };
+  }, [sessionId]);
+
+  return <>{children(containerRef)}</>;
 }
