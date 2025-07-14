@@ -19,9 +19,6 @@ export function useImagesPlugin({ currentWorkspace }: { currentWorkspace: Worksp
     () =>
       imagePlugin({
         imageAutocompleteSuggestions: imgs,
-        imagePreviewHandler: async (src: string) => {
-          return Promise.resolve(src);
-        },
         imageUploadHandler: async (file: File) => {
           try {
             return currentWorkspace.uploadSingleImage(file, dirname(path ?? "/"));
