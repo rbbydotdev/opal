@@ -22,6 +22,12 @@ export default function Page() {
   const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
   const { id } = useWorkspaceRoute();
   useFavicon("/favicon.svg" + "?" + id, "image/svg+xml");
+
+  useEffect(() => {
+    if (id) {
+      document.title = id;
+    }
+  }, [id]);
   const handleExternalDrop = useHandleDropFilesEventForNodeRedirect({ currentWorkspace });
 
   return (

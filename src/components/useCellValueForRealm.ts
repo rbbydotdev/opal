@@ -7,7 +7,7 @@ export function useCellValueForRealm<T>(cell: NodeRef<T>, realm: Realm | undefin
 
   return React.useSyncExternalStore(
     cb,
-    () => realm?.getValue(cell),
-    () => realm?.getValue(cell)
+    () => realm?.getValue(cell) ?? null,
+    () => realm?.getValue(cell) ?? null
   );
 }

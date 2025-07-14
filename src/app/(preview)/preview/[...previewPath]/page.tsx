@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 
 export default function Page({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("sessionId");
+  // const sessionId = searchParams.get("sessionId");
 
   // You can now use sessionId as needed
   return (
@@ -17,7 +17,7 @@ export default function Page({ children }: { children: React.ReactNode }) {
       <div className="min-w-0 h-full flex w-full">
         <div className="flex-1 overflow-hidden">
           <WorkspaceProvider>
-            Example usage: <div>Session ID: {sessionId}</div>
+            {/* Example usage: <div>Session ID: {sessionId}</div> */}
             <PreviewComponent />
             {children}
           </WorkspaceProvider>

@@ -9,7 +9,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 
-export function TopToolbar() {
+export function TopToolbar({ children }: { children?: React.ReactNode }) {
   return (
     <div className="bg-background h-12 flex items-center justify-start px-2 border-b border-border gap-4">
       <div>
@@ -30,7 +30,7 @@ export function TopToolbar() {
         </Menubar>
       </div>
       <div className="flex items-center gap-2">
-        {/* <PreviewPane pathname="/" /> */}
+        {children}
         <Button size="sm">Preview</Button>
         <Button size="sm">Button 2</Button>
         <Button size="sm">Button 3</Button>
