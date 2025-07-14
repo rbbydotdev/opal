@@ -39,15 +39,25 @@ export function EditHistoryMenu({
   return (
     <div className="relative mb-2 flex items-center border-primary bg-primary-foreground py-1 pl-2 font-mono text-sm">
       {isRestoreState && (
-        <button
-          onClick={() => {
-            finalizeRestore(selectedEditMd!);
-            setEdit(null);
-          }}
-          className="rounded-xl text-xs border-2 mr-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
-        >
-          restore
-        </button>
+        <>
+          <button
+            onClick={() => {
+              finalizeRestore(selectedEditMd!);
+              setEdit(null);
+            }}
+            className="rounded-xl text-xs border-2 mr-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            restore
+          </button>
+          <button
+            onClick={() => {
+              reset();
+            }}
+            className="rounded-xl text-xs border-2 mr-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            reset
+          </button>
+        </>
       )}
       <EditHistoryScroll select={setEdit} reset={reset} clearAll={clearAll} edits={edits} selectedEdit={selectedEdit}>
         <button tabIndex={0} className="cursor-pointer flex border border-primary items-center p-2">
@@ -126,15 +136,6 @@ function EditHistoryScroll({
             <div className="p-4">
               <h4 className="mb-4 text-sm font-medium leading-none">
                 Edits{" "}
-                <button
-                  onClick={() => {
-                    reset();
-                    setOpen(false);
-                  }}
-                  className="ml-2 rounded-xl border-2 bg-primary p-2 text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
-                >
-                  reset
-                </button>
                 <button
                   onClick={() => {
                     clearAll();
