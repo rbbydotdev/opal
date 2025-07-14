@@ -1,7 +1,7 @@
 // EditHistoryMenu.tsx;
-import { DocumentChange } from "@/components/Editor/HistoryDB";
+import { DocumentChange } from "@/components/Editor/history/HistoryDB";
+import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
-import { useEditHistoryPlugin } from "@/components/Editor/useEditHistory";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
@@ -78,7 +78,7 @@ function EditHistoryScroll({
   children,
   select,
   edits,
-  reset,
+  reset: _reset,
   clearAll,
   selectedEdit,
 }: {
@@ -145,6 +145,11 @@ function EditHistoryScroll({
                   clear all
                 </button>
               </h4>
+              {edits.length === 0 && (
+                <div className="border-muted-foreground flex justify-center text-sm text-muted-foreground border border-dashed p-2">
+                  empty
+                </div>
+              )}
 
               {edits.map((edit) => (
                 <div key={edit.edit_id}>
