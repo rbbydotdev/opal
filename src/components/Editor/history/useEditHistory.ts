@@ -1,11 +1,10 @@
-import { DocumentChange } from "@/components/Editor/HistoryDB";
-import { HistoryPlugin } from "@/components/Editor/historyPlugin";
+import { DocumentChange, historyDB } from "@/components/Editor/history/HistoryDB";
+import { HistoryPlugin } from "@/components/Editor/history/historyPlugin";
 import { useCellForRealm } from "@/components/useCellForRealm";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { Realm } from "@mdxeditor/editor";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { historyDB } from "./HistoryDB";
 
 export function useEditHistoryPlugin(documentId: string, realm: Realm | undefined) {
   //: readonly [DocumentChange[], DocumentChange | null, (edit: DocumentChange) => boolean, () => void, () => void]

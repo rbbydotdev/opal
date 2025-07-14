@@ -1,7 +1,7 @@
 import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
-import { historyPlugin } from "@/components/Editor/historyPlugin";
+import { historyPlugin } from "@/components/Editor/history/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";

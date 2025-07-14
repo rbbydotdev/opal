@@ -44,7 +44,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         // return NULL_WORKSPACE;
       });
     return () => {
-      void workspace.then((ws) => ws.tearDown());
+      void workspace.then((ws) => ws?.tearDown());
     };
   }, [router, workspaceId]);
 

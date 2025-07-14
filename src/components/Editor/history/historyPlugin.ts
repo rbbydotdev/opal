@@ -1,5 +1,5 @@
 "use client";
-import { DocumentChange, historyDB } from "@/components/Editor/HistoryDB";
+import { DocumentChange, historyDB } from "@/components/Editor/history/HistoryDB";
 import {
   Cell,
   Realm,
