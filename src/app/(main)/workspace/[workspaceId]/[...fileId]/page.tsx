@@ -14,15 +14,17 @@ export default function Page() {
   useFavicon("/favicon.svg" + "?" + id, "image/svg+xml");
 
   useEffect(() => {
+    if (id) {
+      document.title = id;
+    }
+  }, [id]);
+
+  useEffect(() => {
     if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
       void currentWorkspace.tryFirstFileUrl().then((path) => router.push(path));
     }
   }, [currentWorkspace, filePath, router]);
   if (!filePath) return null;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  // useEffect(() => {
-  //   document.querySelector("head");
-  // }, []);
   return (
     <>
       <SpotlightSearch currentWorkspace={currentWorkspace} />

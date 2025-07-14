@@ -9,8 +9,8 @@ import { ChevronDown, History } from "lucide-react";
 import { cloneElement, useEffect, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
-export function EditHistoryMenu({ historyId }: { historyId: string }) {
-  const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
+export function EditHistoryMenu({ historyId, realmId = MainEditorRealmId }: { historyId: string; realmId?: string }) {
+  const realm = useRemoteMDXEditorRealm(realmId);
   const [edits, selectedEdit, setEdit, reset, clearAll] = useEditHistoryPlugin(historyId, realm);
 
   const [timeAgoStr, setTimeAgoStr] = useState("");

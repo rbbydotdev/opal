@@ -1,6 +1,5 @@
 import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
-import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { historyPlugin } from "@/components/Editor/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
@@ -85,7 +84,7 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
   ],
 };
 
-export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspace }) {
+export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace: Workspace; realmId: string }) {
   const { initialContents } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
@@ -98,7 +97,7 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
           </>
         ),
       }),
-      remoteRealmPlugin({ editorId: MainEditorRealmId }),
+      remoteRealmPlugin({ editorId: realmId }),
       listsPlugin(),
       quotePlugin(),
       headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
@@ -129,6 +128,6 @@ export function useAllPlugins({ currentWorkspace }: { currentWorkspace: Workspac
       }),
       markdownShortcutPlugin(),
     ],
-    [initialContents, workspaceImagesPlugin]
+    [initialContents, realmId, workspaceImagesPlugin]
   );
 }
