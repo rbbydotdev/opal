@@ -1,51 +1,86 @@
 "use client";
-import { Cell, Realm, Signal, debounceTime, markdown$, realmPlugin } from "@mdxeditor/editor";
-import { DocumentChange, historyDB } from "./HistoryDB";
-
-// Signals$ assume a single editor
-// if history plugin used for multiple editors, a different strategy is needed
-export const HistoryState = {
-  /* signals will be scoped to editor realm */
-  selectedEdit$: Cell<DocumentChange | null>(null, () => {}, false),
-  resetMd$: Signal(() => {}, false),
-  clearAll$: Signal(() => {}, false),
-  draftRootMd$: Signal<string>(() => {}, false),
-  contentIn$: Signal<string>(() => {}, false),
-  contentOut$: Signal<string>(() => {}, false),
-  md$: Cell(""),
-};
+import { DocumentChange, historyDB } from "@/components/Editor/HistoryDB";
+import {
+  Cell,
+  Realm,
+  Signal,
+  debounceTime,
+  filter,
+  map,
+  markdown$,
+  markdownSourceEditorValue$,
+  realmPlugin,
+  setMarkdown$,
+  withLatestFrom,
+} from "@mdxeditor/editor";
+import { Mutex } from "async-mutex";
 
 export class HistoryPlugin {
-  private saveFrequency = 5_000;
+  static selectedEdit$ = Cell<DocumentChange | null>(null, () => {}, false);
+  static resetMd$ = Signal(() => {}, false);
+  static clearAll$ = Signal(() => {}, false);
+  static muteChange$ = Cell<boolean>(false);
+  static draftRootMd$ = Signal<string>(() => {}, false);
+
+  static allMd$ = Cell("", (r) => {
+    r.sub(markdown$, (md) => {
+      r.pub(HistoryPlugin.allMd$, md);
+    });
+    r.sub(markdownSourceEditorValue$, (md) => {
+      r.pub(HistoryPlugin.allMd$, md);
+    });
+  });
+
+  private mutex = new Mutex();
   private startingMarkdown = "";
-  private debounceTimeout: NodeJS.Timeout | null = null;
-  private muteMdUpdates = false;
-  private id: string;
-  constructor(private realm: Realm, { editHistoryId }: { editHistoryId: string }) {
+  private id: string | null;
+  constructor(
+    private realm: Realm,
+    { editHistoryId, saveFrequency = 5_000 }: { editHistoryId: string; saveFrequency?: number }
+  ) {
     this.id = editHistoryId;
     this.realm = realm;
     this.startingMarkdown = realm.getValue(markdown$);
-    realm.sub(HistoryState.contentIn$, (md) => {
-      realm.pub(HistoryState.md$, md);
-    });
-    realm.sub(realm.pipe(markdown$, debounceTime(1000)), (md) => {
-      realm.pub(HistoryState.contentIn$, md);
-    });
 
-    realm.sub(HistoryState.resetMd$, () => this.resetToStartingMarkdown());
-    realm.sub(HistoryState.selectedEdit$, (edit: DocumentChange | null) => {
+    realm.sub(
+      realm.pipe(
+        HistoryPlugin.allMd$,
+        withLatestFrom(HistoryPlugin.muteChange$),
+        filter(([, muted]) => !muted),
+        map(([value]) => value),
+        debounceTime(saveFrequency)
+      ),
+      async (md) => {
+        if (this.id !== null) {
+          this.startingMarkdown = md;
+          const latest = await historyDB.getLatestEdit(this.id);
+          // check if edit is redundant
+          if (latest) {
+            const latestDoc = await historyDB.reconstructDocumentFromEdit(latest);
+            if (latestDoc === md) {
+              console.log("Skipping redundant edit save");
+              return;
+            }
+          }
+          await historyDB.saveEdit(this.id!, md);
+        }
+      }
+    );
+
+    realm.sub(HistoryPlugin.resetMd$, () => this.resetToStartingMarkdown());
+    realm.sub(HistoryPlugin.selectedEdit$, (edit: DocumentChange | null) => {
       if (edit) {
-        void this.setMarkdownFromEdit(edit);
-        clearTimeout(this.debounceTimeout!);
+        void this.transaction(async () => {
+          await this.setMarkdownFromEdit(edit);
+          // realm.pub(HistoryPlugin.selectedEdit$, null);
+        });
       }
     });
-    realm.sub(HistoryState.clearAll$, () => this.clearAll());
-    realm.sub(HistoryState.draftRootMd$, (md) => {
+    realm.sub(HistoryPlugin.clearAll$, () => this.clearAll());
+    realm.sub(HistoryPlugin.draftRootMd$, (md) => {
       this.startingMarkdown = md;
-      realm.pub(HistoryState.selectedEdit$, null);
+      realm.pub(HistoryPlugin.selectedEdit$, null);
     });
-
-    this.submd(realm);
   }
 
   clearAll() {
@@ -58,21 +93,17 @@ export class HistoryPlugin {
   resetToStartingMarkdown() {
     void this.transaction(() => {
       if (!this.realm) {
-        return console.error("no realm");
+        return console.error("no realm for history plugin");
       }
-      this.realm.pub(HistoryState.contentOut$, this.startingMarkdown);
+      this.realm.pub(setMarkdown$, this.startingMarkdown);
     });
-  }
-  debounce(fn: () => void) {
-    clearTimeout(this.debounceTimeout!);
-    this.debounceTimeout = setTimeout(fn, this.saveFrequency);
   }
 
   async setMarkdownFromEdit(selectedEdit: DocumentChange) {
     void this.transaction(async () => {
       const document = await historyDB.reconstructDocumentFromEdit(selectedEdit);
       if (this.realm) {
-        this.realm.pub(HistoryState.contentOut$, document);
+        this.realm.pub(setMarkdown$, document);
       } else {
         console.error("realm not set");
       }
@@ -80,31 +111,22 @@ export class HistoryPlugin {
   }
 
   async transaction(fn: (realm: Realm | null) => void) {
-    if (this.realm === null) {
-      console.error("realm not set");
-      return;
-    }
-    this.muteMdUpdates = true;
-    await fn(this.realm);
-    this.muteMdUpdates = false;
-  }
-
-  submd = (realm: Realm) => {
-    realm.sub(HistoryState.md$, async (md) => {
-      if (!this.muteMdUpdates && this.id !== null) {
-        this.startingMarkdown = md;
-        await historyDB.saveEdit(this.id!, md);
+    return this.mutex.runExclusive(async () => {
+      if (this.realm === null) {
+        console.error("realm not set");
+        return;
       }
+      this.realm.pub(HistoryPlugin.muteChange$, true);
+      await fn(this.realm);
+      this.realm.pub(HistoryPlugin.muteChange$, false);
     });
-  };
+  }
 }
 
 export const historyPlugin = realmPlugin({
   init(realm: Realm, params?: { editHistoryId: string }) {
-    if (params) {
-      new HistoryPlugin(realm, {
-        editHistoryId: params.editHistoryId,
-      });
-    }
+    new HistoryPlugin(realm, {
+      editHistoryId: params!.editHistoryId,
+    });
   },
 });

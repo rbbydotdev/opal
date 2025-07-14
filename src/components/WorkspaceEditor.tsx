@@ -2,8 +2,10 @@
 
 import { TopToolbar } from "@/app/(main)/TopToolbar";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
+import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { EditHistoryMenu } from "@/components/Editor/EditHistoryMenu";
 import { Editor } from "@/components/Editor/Editor";
+import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ImageViewer } from "@/components/ImageViewer";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
@@ -86,6 +88,8 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     editorRef.current?.setMarkdown(newContent ?? "");
   });
 
+  const plugins = useAllPlugins({ currentWorkspace, realmId: MainEditorRealmId });
+
   if (error) {
     if (isError(error, NotFoundError)) {
       return (
@@ -97,16 +101,18 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
       throw error; // rethrow other errors to be caught by the nearest error boundary
     }
   }
+
   if (initialContents === null || !currentWorkspace) return null;
   return (
     <div className="flex flex-col h-full relative">
-      <EditHistoryMenu historyId="foobar" />
-      <TopToolbar />
+      <TopToolbar>
+        <EditHistoryMenu historyId="foobar" finalizeRestore={(md) => debouncedUpdate(md)} />
+      </TopToolbar>
       <DropCommanderProvider>
         <Editor
           {...props}
-          ref={editorRef}
-          currentWorkspace={currentWorkspace}
+          editorRef={editorRef}
+          plugins={plugins}
           onChange={debouncedUpdate}
           markdown={String(initialContents || "")}
           className={twMerge("bg-background flex-grow  flex-col", className)}
