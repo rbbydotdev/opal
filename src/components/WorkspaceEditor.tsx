@@ -105,8 +105,9 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
   if (initialContents === null || !currentWorkspace) return null;
   return (
     <div className="flex flex-col h-full relative">
-      <EditHistoryMenu historyId="foobar" />
-      <TopToolbar />
+      <TopToolbar>
+        <EditHistoryMenu historyId="foobar" finalizeRestore={(md) => debouncedUpdate(md)} />
+      </TopToolbar>
       <DropCommanderProvider>
         <Editor
           {...props}

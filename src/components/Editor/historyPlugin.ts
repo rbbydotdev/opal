@@ -21,6 +21,7 @@ export class HistoryPlugin {
   static clearAll$ = Signal(() => {}, false);
   static muteChange$ = Cell<boolean>(false);
   static draftRootMd$ = Signal<string>(() => {}, false);
+
   static allMd$ = Cell("", (r) => {
     r.sub(markdown$, (md) => {
       r.pub(HistoryPlugin.allMd$, md);
@@ -52,6 +53,15 @@ export class HistoryPlugin {
       async (md) => {
         if (this.id !== null) {
           this.startingMarkdown = md;
+          const latest = await historyDB.getLatestEdit(this.id);
+          // check if edit is redundant
+          if (latest) {
+            const latestDoc = await historyDB.reconstructDocumentFromEdit(latest);
+            if (latestDoc === md) {
+              console.log("Skipping redundant edit save");
+              return;
+            }
+          }
           await historyDB.saveEdit(this.id!, md);
         }
       }
@@ -60,7 +70,10 @@ export class HistoryPlugin {
     realm.sub(HistoryPlugin.resetMd$, () => this.resetToStartingMarkdown());
     realm.sub(HistoryPlugin.selectedEdit$, (edit: DocumentChange | null) => {
       if (edit) {
-        void this.transaction(() => this.setMarkdownFromEdit(edit));
+        void this.transaction(async () => {
+          await this.setMarkdownFromEdit(edit);
+          // realm.pub(HistoryPlugin.selectedEdit$, null);
+        });
       }
     });
     realm.sub(HistoryPlugin.clearAll$, () => this.clearAll());
