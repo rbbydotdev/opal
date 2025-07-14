@@ -37,32 +37,10 @@ export function EditHistoryMenu({
   }, [edits, selectedEdit]);
 
   return (
-    <div className="relative mb-2 flex items-center border-primary bg-primary-foreground py-1 pl-2 font-mono text-sm">
-      {isRestoreState && (
-        <>
-          <button
-            onClick={() => {
-              finalizeRestore(selectedEditMd!);
-              setEdit(null);
-            }}
-            className="rounded-xl text-xs border-2 mr-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
-          >
-            restore
-          </button>
-          <button
-            onClick={() => {
-              reset();
-            }}
-            className="rounded-xl text-xs border-2 mr-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
-          >
-            reset
-          </button>
-        </>
-      )}
+    <div className="relative flex items-center bg-primary-foreground py-1 pl-2 gap-2 font-mono text-sm">
       <EditHistoryScroll select={setEdit} reset={reset} clearAll={clearAll} edits={edits} selectedEdit={selectedEdit}>
-        <button tabIndex={0} className="cursor-pointer flex border border-primary items-center p-2">
+        <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
           <div className="mr-2 flex items-center space-x-2">
-            {/* <span>Draft: </span> */}
             <span className="fill-primary-foreground stroke-success-darker text-4xl" style={{ lineHeight: "1rem" }}>
               {selectedEdit !== null ? <History className=" inline-block text-primary" /> : ""}
             </span>
@@ -71,6 +49,27 @@ export function EditHistoryMenu({
           <ChevronDown />
         </button>
       </EditHistoryScroll>
+      {isRestoreState && (
+        <>
+          <button
+            onClick={() => {
+              finalizeRestore(selectedEditMd!);
+              setEdit(null);
+            }}
+            className="rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            restore
+          </button>
+          <button
+            onClick={() => {
+              reset();
+            }}
+            className="rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            reset
+          </button>
+        </>
+      )}
     </div>
   );
 }
