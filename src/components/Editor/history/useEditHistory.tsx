@@ -1,5 +1,6 @@
-import { DocumentChange, historyDB } from "@/components/Editor/history/HistoryDB";
+import { DocumentChange } from "@/components/Editor/history/HistoryDB";
 import { HistoryPlugin } from "@/components/Editor/history/historyPlugin";
+import { useHistoryStorage } from "@/components/Editor/history/storage";
 import { useCellForRealm } from "@/components/useCellForRealm";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { Realm } from "@mdxeditor/editor";
@@ -7,7 +8,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useEditHistoryPlugin(documentId: string, realm: Realm | undefined) {
-  //: readonly [DocumentChange[], DocumentChange | null, (edit: DocumentChange) => boolean, () => void, () => void]
+  const historyDB = useHistoryStorage();
   const edits = useLiveQuery(() => {
     if (!documentId) {
       console.error("No document ID provided to useEditHistoryPlugin");
@@ -56,7 +57,7 @@ export function useEditHistoryPlugin(documentId: string, realm: Realm | undefine
     } else {
       setSelectedEditDoc(null);
     }
-  }, [selectedEdit]);
+  }, [historyDB, selectedEdit]);
 
   const editorMd = useCellValueForRealm(HistoryPlugin.allMd$, realm);
   const isRestoreState = selectedEditMd !== null && selectedEditMd === editorMd;
