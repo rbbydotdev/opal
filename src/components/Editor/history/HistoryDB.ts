@@ -21,7 +21,7 @@ export class DocumentChange {
   }
 }
 
-class HistoryDB extends Dexie {
+export class HistoryDB extends Dexie implements HistoryStorageInterface {
   public documents!: Table<DocumentChange, number>;
 
   private dmp: diff_match_patch;
@@ -37,6 +37,8 @@ class HistoryDB extends Dexie {
     this.dmp = new diff_match_patch();
     this.cache = new Map();
   }
+
+  tearDown() {}
 
   clear(docId: string) {
     return this.documents.where("id").equals(docId).delete();
@@ -122,6 +124,13 @@ class HistoryDB extends Dexie {
   }
 }
 
-// Create and export the singleton instance
-export const historyDB = new HistoryDB();
-// const _HistoryDBDocuments = historyDB.documents;
+export interface HistoryStorageInterface {
+  clear(docId: string): void;
+  saveEdit(id: string, newText: string): Promise<number>;
+  reconstructDocument(edit_id: number): Promise<string | null>;
+  clearAllEdits(id: string): void;
+  reconstructDocumentFromEdit(edit: DocumentChange): Promise<string | null>;
+  getEditByEditId(edit_id: number): Promise<DocumentChange | null>;
+  getEdits(id: string): Promise<DocumentChange[]>;
+  getLatestEdit(id: string): Promise<DocumentChange | null>;
+}

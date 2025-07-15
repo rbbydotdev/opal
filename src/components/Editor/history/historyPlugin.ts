@@ -1,16 +1,16 @@
 "use client";
-import { DocumentChange, historyDB } from "@/components/Editor/history/HistoryDB";
+import { DocumentChange, HistoryStorageInterface } from "@/components/Editor/history/HistoryDB";
 import {
   Cell,
-  Realm,
-  Signal,
   debounceTime,
   filter,
   map,
   markdown$,
   markdownSourceEditorValue$,
+  Realm,
   realmPlugin,
   setMarkdown$,
+  Signal,
   withLatestFrom,
 } from "@mdxeditor/editor";
 import { Mutex } from "async-mutex";
@@ -22,6 +22,8 @@ export class HistoryPlugin {
   static muteChange$ = Cell<boolean>(false);
   static draftRootMd$ = Signal<string>(() => {}, false);
 
+  static 
+
   static allMd$ = Cell("", (r) => {
     r.sub(markdown$, (md) => {
       r.pub(HistoryPlugin.allMd$, md);
@@ -31,13 +33,19 @@ export class HistoryPlugin {
     });
   });
 
+  private historyStorage: HistoryStorageInterface;
   private mutex = new Mutex();
   private startingMarkdown = "";
   private id: string | null;
   constructor(
     private realm: Realm,
-    { editHistoryId, saveFrequency = 5_000 }: { editHistoryId: string; saveFrequency?: number }
+    {
+      historyStorage,
+      editHistoryId,
+      saveFrequency = 5_000,
+    }: { historyStorage: HistoryStorageInterface; editHistoryId: string; saveFrequency?: number }
   ) {
+    this.historyStorage = historyStorage;
     this.id = editHistoryId;
     this.realm = realm;
     this.startingMarkdown = realm.getValue(markdown$);
@@ -53,16 +61,16 @@ export class HistoryPlugin {
       async (md) => {
         if (this.id !== null) {
           this.startingMarkdown = md;
-          const latest = await historyDB.getLatestEdit(this.id);
+          const latest = await this.historyStorage.getLatestEdit(this.id);
           // check if edit is redundant
           if (latest) {
-            const latestDoc = await historyDB.reconstructDocumentFromEdit(latest);
+            const latestDoc = await this.historyStorage.reconstructDocumentFromEdit(latest);
             if (latestDoc === md) {
               console.log("Skipping redundant edit save");
               return;
             }
           }
-          await historyDB.saveEdit(this.id!, md);
+          await this.historyStorage.saveEdit(this.id!, md);
         }
       }
     );
@@ -72,7 +80,6 @@ export class HistoryPlugin {
       if (edit) {
         void this.transaction(async () => {
           await this.setMarkdownFromEdit(edit);
-          // realm.pub(HistoryPlugin.selectedEdit$, null);
         });
       }
     });
@@ -85,7 +92,7 @@ export class HistoryPlugin {
 
   clearAll() {
     void this.transaction(async () => {
-      await historyDB.clearAllEdits(this.id!);
+      await this.historyStorage.clearAllEdits(this.id!);
       this.resetToStartingMarkdown();
     });
   }
@@ -101,7 +108,7 @@ export class HistoryPlugin {
 
   async setMarkdownFromEdit(selectedEdit: DocumentChange) {
     void this.transaction(async () => {
-      const document = await historyDB.reconstructDocumentFromEdit(selectedEdit);
+      const document = await this.historyStorage.reconstructDocumentFromEdit(selectedEdit);
       if (this.realm) {
         this.realm.pub(setMarkdown$, document);
       } else {
@@ -124,9 +131,10 @@ export class HistoryPlugin {
 }
 
 export const historyPlugin = realmPlugin({
-  init(realm: Realm, params?: { editHistoryId: string }) {
+  init(realm: Realm, params?: { editHistoryId: string; historyStorage: HistoryStorageInterface }) {
     new HistoryPlugin(realm, {
       editHistoryId: params!.editHistoryId,
+      historyStorage: params!.historyStorage,
     });
   },
 });

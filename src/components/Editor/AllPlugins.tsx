@@ -2,6 +2,7 @@ import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { historyPlugin } from "@/components/Editor/history/historyPlugin";
+import { useHistoryStorage } from "@/components/Editor/history/storage";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
@@ -87,6 +88,7 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
 export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace: Workspace; realmId: string }) {
   const { initialContents } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
+  const historyStorage = useHistoryStorage();
 
   return useMemo(
     () => [
@@ -105,6 +107,7 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       searchPlugin(),
       historyPlugin({
         editHistoryId: "foobar",
+        historyStorage,
       }),
       linkDialogPlugin(),
       urlParamViewModePlugin({ type: "search" }),
