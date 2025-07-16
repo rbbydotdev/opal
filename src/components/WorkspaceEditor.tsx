@@ -4,7 +4,7 @@ import { TopToolbar } from "@/app/(main)/TopToolbar";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
-import { EditHistoryMenu } from "@/components/Editor/history/editHistoryMenu";
+import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ImageViewer } from "@/components/ImageViewer";
 import { TrashBanner } from "@/components/TrashBanner";

@@ -16,13 +16,14 @@ import {
 import { Mutex } from "async-mutex";
 
 export class HistoryPlugin {
+  static edits$ = Cell<DocumentChange[]>([]);
   static selectedEdit$ = Cell<DocumentChange | null>(null, () => {}, false);
   static resetMd$ = Signal(() => {}, false);
   static clearAll$ = Signal(() => {}, false);
   static muteChange$ = Cell<boolean>(false);
   static draftRootMd$ = Signal<string>(() => {}, false);
 
-  static 
+  static selectedEditDoc$ = Cell<string | null>(null);
 
   static allMd$ = Cell("", (r) => {
     r.sub(markdown$, (md) => {
@@ -42,7 +43,7 @@ export class HistoryPlugin {
     {
       historyStorage,
       editHistoryId,
-      saveFrequency = 5_000,
+      saveFrequency = 1_000,
     }: { historyStorage: HistoryStorageInterface; editHistoryId: string; saveFrequency?: number }
   ) {
     this.historyStorage = historyStorage;
@@ -77,27 +78,37 @@ export class HistoryPlugin {
 
     realm.sub(HistoryPlugin.resetMd$, () => this.resetToStartingMarkdown());
     realm.sub(HistoryPlugin.selectedEdit$, (edit: DocumentChange | null) => {
-      if (edit) {
-        void this.transaction(async () => {
-          await this.setMarkdownFromEdit(edit);
-        });
-      }
+      void this.transaction(async () => {
+        if (edit) {
+          const document = await this.historyStorage.reconstructDocumentFromEdit(edit);
+          this.realm.pub(setMarkdown$, document);
+          this.realm.pub(HistoryPlugin.selectedEditDoc$, document);
+        } else {
+          realm.pub(HistoryPlugin.selectedEditDoc$, null);
+        }
+      });
     });
     realm.sub(HistoryPlugin.clearAll$, () => this.clearAll());
     realm.sub(HistoryPlugin.draftRootMd$, (md) => {
       this.startingMarkdown = md;
       realm.pub(HistoryPlugin.selectedEdit$, null);
     });
+
+    void historyStorage.getEdits(this.id).then((edits) => this.realm.pub(HistoryPlugin.edits$, edits));
+
+    historyStorage.onUpdate(this.id, (edits) => {
+      this.realm.pub(HistoryPlugin.edits$, edits);
+    });
   }
 
-  clearAll() {
+  private clearAll() {
     void this.transaction(async () => {
       await this.historyStorage.clearAllEdits(this.id!);
       this.resetToStartingMarkdown();
     });
   }
 
-  resetToStartingMarkdown() {
+  private resetToStartingMarkdown() {
     void this.transaction(() => {
       if (!this.realm) {
         return console.error("no realm for history plugin");
@@ -106,18 +117,7 @@ export class HistoryPlugin {
     });
   }
 
-  async setMarkdownFromEdit(selectedEdit: DocumentChange) {
-    void this.transaction(async () => {
-      const document = await this.historyStorage.reconstructDocumentFromEdit(selectedEdit);
-      if (this.realm) {
-        this.realm.pub(setMarkdown$, document);
-      } else {
-        console.error("realm not set");
-      }
-    });
-  }
-
-  async transaction(fn: (realm: Realm | null) => void) {
+  private async transaction(fn: (realm: Realm | null) => void) {
     return this.mutex.runExclusive(async () => {
       if (this.realm === null) {
         console.error("realm not set");

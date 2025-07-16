@@ -1,5 +1,6 @@
-import Dexie, { Table } from "dexie";
+import Dexie, { liveQuery, Table } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
+import Emittery from "emittery";
 
 export class DocumentChange {
   id: string;
@@ -21,8 +22,27 @@ export class DocumentChange {
   }
 }
 
+/*
+
+  const historyDB = useHistoryStorage();
+  const edits = useLiveQuery(() => {
+    if (!documentId) {
+      console.error("No document ID provided to useEditHistoryPlugin");
+      return [];
+    }
+    return historyDB.getEdits(documentId);
+  }, [documentId]);
+
+*/
+
 export class HistoryDB extends Dexie implements HistoryStorageInterface {
   public documents!: Table<DocumentChange, number>;
+
+  emitter = new Emittery<{ edits: DocumentChange[] }>();
+
+  private unsubUpdateListener = liveQuery(() => this.documents.toArray()).subscribe((edits) => {
+    void this.emitter.emit("edits", edits);
+  });
 
   private dmp: diff_match_patch;
   private cache: Map<number, string>;
@@ -38,7 +58,18 @@ export class HistoryDB extends Dexie implements HistoryStorageInterface {
     this.cache = new Map();
   }
 
-  tearDown() {}
+  onUpdate(documentId: string, cb: (edits: DocumentChange[]) => void) {
+    this.emitter.on("edits", (edits) =>
+      cb(edits.filter((edit) => edit.id === documentId).sort((a, b) => b.timestamp - a.timestamp))
+    );
+  }
+
+  tearDown() {
+    this.unsubUpdateListener.unsubscribe();
+    this.cache.clear();
+    // this.dmp = null!;
+    // this.close();
+  }
 
   clear(docId: string) {
     return this.documents.where("id").equals(docId).delete();
@@ -133,4 +164,8 @@ export interface HistoryStorageInterface {
   getEditByEditId(edit_id: number): Promise<DocumentChange | null>;
   getEdits(id: string): Promise<DocumentChange[]>;
   getLatestEdit(id: string): Promise<DocumentChange | null>;
+  onUpdate: (documentId: string, cb: (edits: DocumentChange[]) => void) => void;
+  ready?: Promise<boolean>;
+  tearDown?(): void;
+  init?(): void;
 }
