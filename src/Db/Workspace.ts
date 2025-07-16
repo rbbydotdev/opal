@@ -139,11 +139,15 @@ export class Workspace {
 
   static parseWorkspacePath(pathOrUrl: string) {
     const pathname = absPathname(pathOrUrl);
-    if (!pathname.startsWith(WorkspaceDAO.rootRoute) && !pathname.startsWith(WorkspaceDAO.previewRoute)) {
+    if (!WorkspaceDAO.Routes.some((route) => pathname.startsWith(route))) {
       return { workspaceId: null, filePath: null };
     }
+
     const [workspaceId, ...filePathRest] = decodePath(
-      relPath(pathname.replace(WorkspaceDAO.previewRoute, "").replace(WorkspaceDAO.rootRoute, ""))
+      relPath(
+        //TODO: some kind of regex garbo
+        WorkspaceDAO.Routes.reduce((prev, next) => prev.replace(next, ""), String(pathname))
+      )
     ).split("/");
     const filePath = filePathRest.join("/");
     if (!workspaceId) {

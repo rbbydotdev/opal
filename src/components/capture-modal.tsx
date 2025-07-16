@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Slot } from "@radix-ui/react-slot";
 
 type SnapdomOptions = {
   compress?: boolean;
@@ -27,7 +28,7 @@ type SnapdomOptions = {
 
 interface ElementCaptureModalProps {
   targetClass: string;
-  trigger: React.ReactElement; // Trigger must be a single React element
+  children: React.ReactElement; // Trigger must be a single React element
   snapOptions?: SnapdomOptions;
   modalTitle?: string;
   modalDescription?: string;
@@ -39,7 +40,7 @@ interface ElementCaptureModalProps {
 
 export function ElementCaptureModal({
   targetClass,
-  trigger,
+  children,
   snapOptions,
   modalTitle = "Element Snapshot",
   modalDescription = "Here is a snapshot of the selected element.",
@@ -96,10 +97,7 @@ export function ElementCaptureModal({
       document.body.appendChild(offscreenContainer);
 
       const startTime = performance.now();
-
-      // --- NEW: Capture the CLONE, not the original element ---
-      const imgElement = await snapdom.toPng(clone, snapOptions);
-
+      const imgElement = await snapdom.toWebp(clone, snapOptions);
       const endTime = performance.now();
       setCaptureDuration(endTime - startTime);
       setImageUrl(imgElement.src);
@@ -107,8 +105,6 @@ export function ElementCaptureModal({
       console.error("snapdom capture failed:", err);
       setError(err instanceof Error ? err.message : "An unknown error occurred.");
     } finally {
-      // --- NEW: CRITICAL cleanup step ---
-      // Always remove the off-screen container from the DOM
       if (document.body.contains(offscreenContainer)) {
         document.body.removeChild(offscreenContainer);
       }
@@ -116,15 +112,9 @@ export function ElementCaptureModal({
     }
   };
 
-  // We clone the trigger to attach our custom onClick handler
-  const triggerWithClickHandler = React.cloneElement(trigger, {
-    //@ts-ignore
-    onClick: handleCaptureAndOpen,
-  });
-
   return (
     <>
-      {triggerWithClickHandler}
+      <Slot onClick={handleCaptureAndOpen}>{children}</Slot>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[80vw] md:max-w-[60vw] lg:max-w-[50vw]">
           <DialogHeader>
@@ -160,7 +150,14 @@ export function ElementCaptureModal({
             <div className="flex w-full items-center justify-between">
               <div>
                 {imageUrl && captureDuration !== null && (
-                  <p className="text-sm text-muted-foreground">Capture took: {captureDuration.toFixed(2)} ms</p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm text-muted-foreground">Capture took: {captureDuration.toFixed(2)} ms</p>
+                    {imageUrl && (
+                      <p className="text-sm text-muted-foreground">
+                        Size: {((imageUrl.length * 3) / 4 / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
               <Button variant="outline" onClick={() => setIsOpen(false)}>

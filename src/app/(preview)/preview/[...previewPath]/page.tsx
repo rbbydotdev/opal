@@ -4,11 +4,10 @@ import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { isImage, isMarkdown } from "@/lib/paths2";
 import "github-markdown-css/github-markdown-light.css";
-import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 export default function Page({ children }: { children: React.ReactNode }) {
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   // const sessionId = searchParams.get("sessionId");
 
   // You can now use sessionId as needed
@@ -69,34 +68,34 @@ function MarkdownRender() {
   );
 }
 
-import { ReactNode, useEffect, useRef } from "react";
+// import { ReactNode, useEffect, useRef } from "react";
 
-function ScrollSyncListener({
-  sessionId,
-  children,
-}: {
-  sessionId: string | null;
-  children: (ref: React.RefObject<HTMLDivElement | null>) => ReactNode;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
+// function _ScrollSyncListener({
+//   sessionId,
+//   children,
+// }: {
+//   sessionId: string | null;
+//   children: (ref: React.RefObject<HTMLDivElement | null>) => ReactNode;
+// }) {
+//   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!sessionId) return;
-    const channel = new BroadcastChannel(sessionId);
+//   useEffect(() => {
+//     if (!sessionId) return;
+//     const channel = new BroadcastChannel(sessionId);
 
-    const handler = (event: MessageEvent) => {
-      const { x, y } = event.data || {};
-      if (typeof x === "number" && typeof y === "number" && containerRef.current) {
-        containerRef.current.scrollTo(x, y);
-      }
-    };
+//     const handler = (event: MessageEvent) => {
+//       const { x, y } = event.data || {};
+//       if (typeof x === "number" && typeof y === "number" && containerRef.current) {
+//         containerRef.current.scrollTo(x, y);
+//       }
+//     };
 
-    channel.addEventListener("message", handler);
-    return () => {
-      channel.removeEventListener("message", handler);
-      channel.close();
-    };
-  }, [sessionId]);
+//     channel.addEventListener("message", handler);
+//     return () => {
+//       channel.removeEventListener("message", handler);
+//       channel.close();
+//     };
+//   }, [sessionId]);
 
-  return <>{children(containerRef)}</>;
-}
+//   return <>{children(containerRef)}</>;
+// }
