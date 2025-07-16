@@ -3,7 +3,7 @@ import { useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { isImage, isMarkdown } from "@/lib/paths2";
-import "github-markdown-css/github-markdown.css";
+import "github-markdown-css/github-markdown-light.css";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 

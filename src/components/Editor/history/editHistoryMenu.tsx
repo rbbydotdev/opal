@@ -4,6 +4,7 @@ import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
 import { ChevronDown, History } from "lucide-react";
@@ -38,13 +39,13 @@ export function EditHistoryMenu({
 
   return (
     <div className="relative flex items-center bg-primary-foreground py-1 pl-2 gap-2 font-mono text-sm">
-      <EditHistoryScroll select={setEdit} reset={reset} clearAll={clearAll} edits={edits} selectedEdit={selectedEdit}>
+      <EditHistoryScroll select={setEdit} clearAll={clearAll} edits={edits} selectedEdit={selectedEdit}>
         <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
           <div className="mr-2 flex items-center space-x-2 ">
             <span className="fill-primary-foreground stroke-success-darker text-4xl" style={{ lineHeight: "1rem" }}>
               {selectedEdit !== null && (
                 <div key={selectedEdit.edit_id} className="animate-spin animation-iteration-once ">
-                  <History className="-scale-x-100 inline-block text-primary" />
+                  <History className="-scale-x-100 inline-block text-ring" />
                 </div>
               )}
             </span>
@@ -60,17 +61,17 @@ export function EditHistoryMenu({
               finalizeRestore(selectedEditMd!);
               setEdit(null);
             }}
-            className="rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
+            className="font-bold rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary border-ring hover:bg-primary hover:text-primary-foreground"
           >
-            restore
+            OK
           </button>
           <button
             onClick={() => {
               reset();
             }}
-            className="rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
+            className="font-bold rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
           >
-            reset
+            CANCEL
           </button>
         </>
       )}
@@ -82,14 +83,12 @@ function EditHistoryScroll({
   children,
   select,
   edits,
-  reset: _reset,
   clearAll,
   selectedEdit,
 }: {
   children: React.ReactElement;
   select: (edit: DocumentChange) => void;
   edits: DocumentChange[];
-  reset: () => void;
   clearAll: () => void;
   selectedEdit: DocumentChange | null;
 }) {
@@ -135,22 +134,32 @@ function EditHistoryScroll({
       <Slot onClick={handleClick}>{children}</Slot>
       {isOpen && (
         <div className="absolute left-0 z-10 mt-2">
-          <ScrollArea className="h-72 w-[420px] rounded-md border bg-primary-foreground text-primary shadow-lg">
+          <ScrollArea
+            className={cn(
+              { "h-72": Boolean(edits.length), "h-18": !Boolean(edits.length) },
+              "w-[420px] rounded-md border bg-primary-foreground text-primary shadow-lg"
+            )}
+          >
             <div className="p-4">
-              <h4 className="mb-4 text-sm font-medium leading-none">
-                <button
-                  onClick={() => {
-                    clearAll();
-                    setOpen(false);
-                  }}
-                  className="ml-2 rounded-xl border-2 bg-primary p-2 text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
-                >
-                  clear all
-                </button>
-              </h4>
+              {Boolean(edits.length) && (
+                <div className="mb-4 text-sm font-medium leading-none">
+                  <button
+                    onClick={() => {
+                      clearAll();
+                      setOpen(false);
+                    }}
+                    className="ml-2 rounded-xl border-2 bg-primary p-2 text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
+                  >
+                    clear all
+                  </button>
+                </div>
+              )}
               {edits.length === 0 && (
-                <div className="border-muted-foreground flex justify-center text-sm text-muted-foreground border border-dashed p-2">
-                  empty
+                <div className="flex h-full flex-col gap-4">
+                  edits:
+                  <div className="border-muted-foreground flex justify-center text-sm text-muted-foreground border border-dashed p-2">
+                    empty
+                  </div>
                 </div>
               )}
 
@@ -167,7 +176,7 @@ function EditHistoryScroll({
                     {!selectedEdit || selectedEdit.edit_id !== edit.edit_id ? (
                       <span className="mr-2 text-primary">{"•"}</span>
                     ) : (
-                      <span className="-ml-1 mr-2 text-2xl font-bold text-success">{"✓"}</span>
+                      <span className="-ml-1 mr-2 text-2xl font-bold text-ring">{"✓"}</span>
                     )}
 
                     {new Date(edit.timestamp).toLocaleString()}

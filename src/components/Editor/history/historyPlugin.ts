@@ -21,7 +21,7 @@ export class HistoryPlugin {
   static resetMd$ = Signal(() => {}, false);
   static clearAll$ = Signal(() => {}, false);
   static muteChange$ = Cell<boolean>(false);
-  static draftRootMd$ = Signal<string>(() => {}, false);
+  static latestMd$ = Cell<string>("");
 
   static selectedEditDoc$ = Cell<string | null>(null);
 
@@ -36,20 +36,20 @@ export class HistoryPlugin {
 
   private historyStorage: HistoryStorageInterface;
   private mutex = new Mutex();
-  private startingMarkdown = "";
   private id: string | null;
   constructor(
     private realm: Realm,
     {
+      historyRoot,
       historyStorage,
       editHistoryId,
       saveFrequency = 1_000,
-    }: { historyStorage: HistoryStorageInterface; editHistoryId: string; saveFrequency?: number }
+    }: { historyRoot: string; historyStorage: HistoryStorageInterface; editHistoryId: string; saveFrequency?: number }
   ) {
     this.historyStorage = historyStorage;
     this.id = editHistoryId;
     this.realm = realm;
-    this.startingMarkdown = realm.getValue(HistoryPlugin.allMd$);
+    realm.pub(HistoryPlugin.latestMd$, historyRoot);
 
     realm.sub(
       realm.pipe(
@@ -61,7 +61,12 @@ export class HistoryPlugin {
       ),
       async (md) => {
         if (this.id !== null) {
-          this.startingMarkdown = md;
+          const edits = await this.historyStorage.getEdits(this.id);
+          if (!edits.length) {
+            // If there are no edits yet, we can save the initial state as the first edit
+            await this.historyStorage.saveEdit(this.id!, realm.getValue(HistoryPlugin.latestMd$));
+          }
+          realm.pub(HistoryPlugin.latestMd$, md);
           const latest = await this.historyStorage.getLatestEdit(this.id);
           // check if edit is redundant
           if (latest) {
@@ -89,12 +94,7 @@ export class HistoryPlugin {
       });
     });
     realm.sub(HistoryPlugin.clearAll$, () => this.clearAll());
-    // realm.sub(HistoryPlugin.draftRootMd$, (md) => {
-    //   this.startingMarkdown = md;
-    //   realm.pub(HistoryPlugin.selectedEdit$, null);
-    // });
 
-    console.log(realm.getValue(HistoryPlugin.allMd$));
     void historyStorage.getEdits(this.id).then(async (edits) => {
       // Initialize the edits Cell with the current edits
       this.realm.pub(HistoryPlugin.edits$, edits);
@@ -117,7 +117,7 @@ export class HistoryPlugin {
       if (!this.realm) {
         return console.error("no realm for history plugin");
       }
-      this.realm.pub(setMarkdown$, this.startingMarkdown);
+      this.realm.pub(setMarkdown$, this.realm.getValue(HistoryPlugin.latestMd$));
     });
   }
 
@@ -135,8 +135,9 @@ export class HistoryPlugin {
 }
 
 export const historyPlugin = realmPlugin({
-  init(realm: Realm, params?: { editHistoryId: string; historyStorage: HistoryStorageInterface }) {
+  init(realm: Realm, params?: { historyRoot: string; editHistoryId: string; historyStorage: HistoryStorageInterface }) {
     new HistoryPlugin(realm, {
+      historyRoot: params!.historyRoot,
       editHistoryId: params!.editHistoryId,
       historyStorage: params!.historyStorage,
     });
