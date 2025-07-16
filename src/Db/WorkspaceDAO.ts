@@ -41,6 +41,9 @@ export class WorkspaceDAO {
   //totally weird ot have this here since its a DB access obj no ?
   static rootRoute = "/workspace" as AbsPath;
   static previewRoute = "/preview" as AbsPath;
+  static editViewRoute = "/editview" as AbsPath;
+
+  static Routes = [WorkspaceDAO.rootRoute, WorkspaceDAO.previewRoute, WorkspaceDAO.editViewRoute];
 
   static FromJSON(json: WorkspaceRecord) {
     return new WorkspaceDAO({
