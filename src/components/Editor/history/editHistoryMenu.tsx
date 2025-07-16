@@ -1,9 +1,11 @@
 // EditHistoryMenu.tsx;
 import { DocumentChange } from "@/components/Editor/history/HistoryDB";
+import { IframeImage } from "@/components/Editor/history/IframeImage";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { cn } from "@/lib/utils";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
@@ -94,6 +96,7 @@ function EditHistoryScroll({
 }) {
   const [isOpen, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
 
   const handleClick = () => {
     setOpen(!isOpen);
@@ -173,6 +176,9 @@ function EditHistoryScroll({
                     }}
                     className="hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
                   >
+                    {workspaceId && filePath ? (
+                      <IframeImage src={`/editview/${workspaceId}/${filePath}?editId=${edit.edit_id}`} />
+                    ) : null}
                     {!selectedEdit || selectedEdit.edit_id !== edit.edit_id ? (
                       <span className="mr-2 text-primary">{"•"}</span>
                     ) : (

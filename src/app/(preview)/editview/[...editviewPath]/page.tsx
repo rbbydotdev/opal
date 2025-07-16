@@ -72,7 +72,10 @@ function MarkdownRender({ contents }: { contents?: string | null }) {
       const blob = await capture.toBlob({
         type: "webp",
       });
-      window.parent.postMessage({ type: "BLOB_RESULT", blob }, "*");
+
+      const buffer = await blob.arrayBuffer();
+
+      window.parent.postMessage({ type: "BLOB_RESULT", buffer, mimeType: blob.type }, "*");
     };
 
     const observer = new MutationObserver(handleMutations);
