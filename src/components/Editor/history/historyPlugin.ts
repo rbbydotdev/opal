@@ -49,7 +49,7 @@ export class HistoryPlugin {
     this.historyStorage = historyStorage;
     this.id = editHistoryId;
     this.realm = realm;
-    this.startingMarkdown = realm.getValue(markdown$);
+    this.startingMarkdown = realm.getValue(HistoryPlugin.allMd$);
 
     realm.sub(
       realm.pipe(
@@ -89,12 +89,16 @@ export class HistoryPlugin {
       });
     });
     realm.sub(HistoryPlugin.clearAll$, () => this.clearAll());
-    realm.sub(HistoryPlugin.draftRootMd$, (md) => {
-      this.startingMarkdown = md;
-      realm.pub(HistoryPlugin.selectedEdit$, null);
-    });
+    // realm.sub(HistoryPlugin.draftRootMd$, (md) => {
+    //   this.startingMarkdown = md;
+    //   realm.pub(HistoryPlugin.selectedEdit$, null);
+    // });
 
-    void historyStorage.getEdits(this.id).then((edits) => this.realm.pub(HistoryPlugin.edits$, edits));
+    console.log(realm.getValue(HistoryPlugin.allMd$));
+    void historyStorage.getEdits(this.id).then(async (edits) => {
+      // Initialize the edits Cell with the current edits
+      this.realm.pub(HistoryPlugin.edits$, edits);
+    });
 
     historyStorage.onUpdate(this.id, (edits) => {
       this.realm.pub(HistoryPlugin.edits$, edits);
