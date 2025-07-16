@@ -1,8 +1,8 @@
 import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
+import { HistoryDB } from "@/components/Editor/history/HistoryDB";
 import { historyPlugin } from "@/components/Editor/history/historyPlugin";
-import { useHistoryStorage } from "@/components/Editor/history/storage";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
@@ -29,7 +29,7 @@ import {
   thematicBreakPlugin,
   toolbarPlugin,
 } from "@mdxeditor/editor";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
 
 const defaultSnippetContent = `
@@ -88,7 +88,8 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
 export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace: Workspace; realmId: string }) {
   const { initialContents } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
-  const historyStorage = useHistoryStorage();
+  const historyDB = useMemo(() => new HistoryDB(), []);
+  useEffect(() => () => historyDB.tearDown(), [historyDB]);
 
   return useMemo(
     () => [
@@ -107,7 +108,7 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       searchPlugin(),
       historyPlugin({
         editHistoryId: "foobar",
-        historyStorage,
+        historyStorage: historyDB,
       }),
       linkDialogPlugin(),
       urlParamViewModePlugin({ type: "search" }),
@@ -131,6 +132,6 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       }),
       markdownShortcutPlugin(),
     ],
-    [initialContents, realmId, workspaceImagesPlugin]
+    [historyDB, initialContents, realmId, workspaceImagesPlugin]
   );
 }

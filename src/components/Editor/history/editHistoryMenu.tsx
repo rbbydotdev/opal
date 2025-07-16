@@ -40,9 +40,13 @@ export function EditHistoryMenu({
     <div className="relative flex items-center bg-primary-foreground py-1 pl-2 gap-2 font-mono text-sm">
       <EditHistoryScroll select={setEdit} reset={reset} clearAll={clearAll} edits={edits} selectedEdit={selectedEdit}>
         <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
-          <div className="mr-2 flex items-center space-x-2">
+          <div className="mr-2 flex items-center space-x-2 ">
             <span className="fill-primary-foreground stroke-success-darker text-4xl" style={{ lineHeight: "1rem" }}>
-              {selectedEdit !== null ? <History className=" inline-block text-primary" /> : ""}
+              {selectedEdit !== null && (
+                <div key={selectedEdit.edit_id} className="animate-spin animation-iteration-once ">
+                  <History className="-scale-x-100 inline-block text-primary" />
+                </div>
+              )}
             </span>
             <span>Edit history {timeAgoStr}</span>
           </div>
@@ -134,7 +138,6 @@ function EditHistoryScroll({
           <ScrollArea className="h-72 w-[420px] rounded-md border bg-primary-foreground text-primary shadow-lg">
             <div className="p-4">
               <h4 className="mb-4 text-sm font-medium leading-none">
-                Edits{" "}
                 <button
                   onClick={() => {
                     clearAll();
@@ -159,7 +162,7 @@ function EditHistoryScroll({
                       setOpen(false);
                       select(edit);
                     }}
-                    className="flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
+                    className="hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
                   >
                     {!selectedEdit || selectedEdit.edit_id !== edit.edit_id ? (
                       <span className="mr-2 text-primary">{"•"}</span>
