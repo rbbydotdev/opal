@@ -6,6 +6,7 @@ import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { absPath, joinPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
@@ -140,7 +141,7 @@ function EditHistoryScroll({
           <ScrollArea
             className={cn(
               { "h-72": Boolean(edits.length), "h-18": !Boolean(edits.length) },
-              "w-[420px] rounded-md border bg-primary-foreground text-primary shadow-lg"
+              "_w-[420px] w-[900px] rounded-md border bg-primary-foreground text-primary shadow-lg"
             )}
           >
             <div className="p-4">
@@ -166,29 +167,32 @@ function EditHistoryScroll({
                 </div>
               )}
 
-              {edits.map((edit) => (
-                <div key={edit.edit_id}>
+              {edits.map((EDIT) => (
+                <div key={EDIT.edit_id}>
                   <button
                     tabIndex={0}
                     onClick={() => {
                       setOpen(false);
-                      select(edit);
+                      select(EDIT);
                     }}
                     className="hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
                   >
                     {workspaceId && filePath ? (
-                      <IframeImage src={`/editview/${workspaceId}/${filePath}?editId=${edit.edit_id}`} />
+                      <IframeImage
+                        src={`${joinPath(absPath("editview"), workspaceId, filePath)}?editId=${EDIT.edit_id}`}
+                      />
                     ) : null}
-                    {!selectedEdit || selectedEdit.edit_id !== edit.edit_id ? (
+                    {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
                       <span className="mr-2 text-primary">{"•"}</span>
                     ) : (
                       <span className="-ml-1 mr-2 text-2xl font-bold text-ring">{"✓"}</span>
                     )}
 
-                    {new Date(edit.timestamp).toLocaleString()}
+                    {new Date(EDIT.timestamp).toLocaleString()}
                     <span className="text-black">
-                      &nbsp;
-                      <span>{`- ${timeAgo(new Date(edit.timestamp))}`}</span>
+                      {/* &nbsp; */}
+                      <span className="font-bold font-mono ml-4">{EDIT.edit_id}</span>{" "}
+                      <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
                     </span>
                   </button>
                   <Separator />
