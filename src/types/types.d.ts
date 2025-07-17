@@ -39,3 +39,9 @@ type Brand<T, B extends string> = T & { [brand]: B };
 //    */
 //   groupBy<K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K): Record<K, T[]>;
 // }
+
+declare module "@zumer/snapdom" {
+  interface SnapResult {
+    toBlob: (options: SnapOptions) => Promise<Blob>;
+  }
+}

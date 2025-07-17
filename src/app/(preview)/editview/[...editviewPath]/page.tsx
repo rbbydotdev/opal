@@ -1,4 +1,8 @@
 "use client";
+import {
+  NewIframeImageDebugPayload,
+  NewIframeImageMessagePayload,
+} from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
 import { HistoryDB } from "@/components/Editor/history/HistoryDB";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
@@ -16,7 +20,6 @@ export default function Page({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId");
   const { path } = useWorkspaceRoute();
-  // console.log({ path });
   if (!isMarkdown(path ?? "")) {
     return <div>editview is only available for markdown files.</div>;
   }
@@ -54,10 +57,10 @@ function PreviewComponent({ editId }: { editId: number }) {
     })();
   }, [editId, toss]);
 
-  return <MarkdownRender contents={editContent} />;
+  return <MarkdownRender contents={editContent} editId={editId} />;
 }
 
-function MarkdownRender({ contents }: { contents?: string | null }) {
+function MarkdownRender({ contents, editId }: { contents?: string | null; editId?: number }) {
   const html = useMemo(() => renderMarkdownToHtml(contents ?? ""), [contents]);
   const htmlRef = useRef<HTMLDivElement>(null);
 
@@ -67,14 +70,11 @@ function MarkdownRender({ contents }: { contents?: string | null }) {
 
     // Callback for mutation observer
     const handleMutations = async () => {
+      const windowLocation = window.location.href;
+      window.parent.postMessage(NewIframeImageDebugPayload(windowLocation + ":" + editId + " : " + target.innerHTML));
       const capture = await snapdom.capture(target);
-      const element = await capture.toWebp({
-        fast: true,
-        quality: 0.8,
-      });
-      capture.toBlob({ format: "jpg" });
-
-      window.parent.postMessage({ type: "BLOB_RESULT", src: element.src.toString() }, "*");
+      const blob = await capture.toBlob({ format: "webp" });
+      window.parent.postMessage(NewIframeImageMessagePayload(blob));
     };
 
     const observer = new MutationObserver(handleMutations);
@@ -83,7 +83,7 @@ function MarkdownRender({ contents }: { contents?: string | null }) {
     return () => {
       observer.disconnect();
     };
-  }, [html]);
+  }, [editId, html]);
 
   return (
     <div>
