@@ -6,13 +6,9 @@ export const IframeImage = ({ src, className }: { src: string; className?: strin
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    let objectUrl: string | null = null;
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === "BLOB_RESULT" && event.data.buffer && event.data.mimeType) {
-        const blob = new Blob([event.data.buffer], { type: event.data.mimeType });
-        objectUrl = URL.createObjectURL(blob);
-        setImageUrl(objectUrl);
-        // console.debug("IframeImage: Created object URL", objectUrl);
+      if (event.data && event.data.type === "BLOB_RESULT" && event.data.src) {
+        setImageUrl(event.data.src);
 
         // Cleanup: remove iframe and event listener
         if (iframeRef.current) {
@@ -27,7 +23,7 @@ export const IframeImage = ({ src, className }: { src: string; className?: strin
 
     // Create hidden iframe
     const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
+    // iframe.style.display = "none";
     iframe.src = src;
     iframeRef.current = iframe;
     // console.debug("IframeImage: Created iframe with src", src);
@@ -48,10 +44,6 @@ export const IframeImage = ({ src, className }: { src: string; className?: strin
         document.body.removeChild(iframeRef.current);
         // console.debug("IframeImage: Cleanup - removed iframe from DOM");
         iframeRef.current = null;
-      }
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-        // console.debug("IframeImage: Cleanup - revoked object URL", objectUrl);
       }
     };
   }, [src]);
