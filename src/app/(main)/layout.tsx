@@ -1,7 +1,7 @@
 "use client";
 import { ThemeProvider } from "next-themes";
 
-import { WorkSpaceButtonBar } from "@/app/WorkSpaceButtonBar";
+import { WorkspaceButtonBar } from "@/app/WorkSpaceButtonBar";
 
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
@@ -78,7 +78,7 @@ export default function RootLayout({
                         <div className="w-full flex">
                           <ErrorBoundary fallback={ErrorPlaque}>
                             <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
-                              <WorkSpaceButtonBar />
+                              <WorkspaceButtonBar />
                             </div>
                             <ErrorBoundary fallback={ErrorPlaque}>
                               <>{children}</>

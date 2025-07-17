@@ -1,6 +1,6 @@
 // EditHistoryMenu.tsx;
 import { DocumentChange } from "@/components/Editor/history/HistoryDB";
-import { IframeImage } from "@/components/Editor/history/IframeImage";
+import { IframeEditViewImage } from "@/components/Editor/history/IframeEditViewImage";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -178,7 +178,7 @@ function EditHistoryScroll({
                     className="hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
                   >
                     {workspaceId && filePath ? (
-                      <IframeImage
+                      <IframeEditViewImage
                         editId={EDIT.edit_id}
                         src={`${joinPath(absPath("editview"), workspaceId, filePath)}?editId=${EDIT.edit_id}`}
                       />

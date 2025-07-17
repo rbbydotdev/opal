@@ -54,7 +54,7 @@ function useIframeImage(src: string, editId: string | number) {
   return imageUrl;
 }
 
-export const IframeImage = ({
+export const IframeEditViewImage = ({
   src,
   editId,
   className,
