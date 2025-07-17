@@ -56,19 +56,15 @@ function BigButton({
   );
 }
 
-export function WorkSpaceButtonBar() {
-  const { currentWorkspace, workspaces } = useWorkspaceContext();
-
-  const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
-
-  const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
-
-  // const filteredWorkspaces = useMemo(
-  //   () => workspaces.filter((workspace) => workspace.guid !== coalescedWorkspace?.guid),
-  //   [workspaces, coalescedWorkspace]
-  // );
-  const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
+export function WorkspaceButtonBar() {
   const { pending } = useRequestSignals();
+  return <WorkspaceButtonBarInternal pending={pending} />;
+}
+function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
+  const { currentWorkspace, workspaces } = useWorkspaceContext();
+  const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
+  const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
+  const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const router = useRouter();
   return (
     <div className="[&>*]:outline-none  max-h-full flex flex-col">
