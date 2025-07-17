@@ -179,6 +179,7 @@ function EditHistoryScroll({
                   >
                     {workspaceId && filePath ? (
                       <IframeImage
+                        editId={EDIT.edit_id}
                         src={`${joinPath(absPath("editview"), workspaceId, filePath)}?editId=${EDIT.edit_id}`}
                       />
                     ) : null}

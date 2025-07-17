@@ -1,7 +1,4 @@
-import {
-  isIframeImageDebugMessage,
-  isIframeImageMessage,
-} from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
+import { isIframeImageMessage } from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
@@ -19,17 +16,13 @@ function cleanupIframe(iframeRef: React.MutableRefObject<HTMLIFrameElement | nul
   }
 }
 
-function useIframeImage(src: string) {
+function useIframeImage(src: string, editId: string | number) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
-      if (isIframeImageDebugMessage(event)) {
-        console.log("IframeImage Debug:", event.data.message);
-        return;
-      }
-      if (isIframeImageMessage(event)) {
+      if (isIframeImageMessage(event) && String(event.data.editId) === String(editId)) {
         const blob = event.data.blob;
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
@@ -48,7 +41,7 @@ function useIframeImage(src: string) {
       window.removeEventListener("message", handleMessage);
       cleanupIframe(iframeRef);
     };
-  }, [src]);
+  }, [editId, src]);
 
   useEffect(() => {
     return () => {
@@ -61,8 +54,16 @@ function useIframeImage(src: string) {
   return imageUrl;
 }
 
-export const IframeImage = ({ src, className }: { src: string; className?: string }) => {
-  const imageUrl = useIframeImage(src);
+export const IframeImage = ({
+  src,
+  editId,
+  className,
+}: {
+  src: string;
+  editId: string | number;
+  className?: string;
+}) => {
+  const imageUrl = useIframeImage(src, editId);
   return imageUrl !== null ? (
     <img src={imageUrl} className={cn("w-32 h-32 _bg-blue-400 object-cover border border-black", className)} alt="" />
   ) : null;
