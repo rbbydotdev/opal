@@ -3,7 +3,18 @@ import { RemoteLogger } from "@/lib/RemoteLogger";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
 
 // --- Constants ---
-export const WHITELIST = ["/opal.svg", "/opal-blank.svg", "/favicon.ico", "/icon.svg", "/opal-lite.svg"];
+
+// const match = url.pathname.match(route.pattern);
+// if (match) {
+// new RegExp(`^${}$`)
+export const WHITELIST = [
+  "/editview/.*",
+  "/opal.svg",
+  "/opal-blank.svg",
+  "/favicon.ico",
+  "/icon.svg",
+  "/opal-lite.svg",
+].map((path) => new RegExp(`^${path}$`));
 
 // --- Logging Setup ---
 function formatConsoleMsg(msg: unknown): string {

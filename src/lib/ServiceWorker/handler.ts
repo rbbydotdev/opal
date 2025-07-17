@@ -8,7 +8,7 @@ import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
 import { handleImageUpload } from "@/lib/ServiceWorker/handleImageUpload";
 import { handleMdImageReplace } from "@/lib/ServiceWorker/handleMdImageReplace";
 import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
-import { WHITELIST, withRequestSignal } from "./utils"; // Assuming utils are in the same dir
+import { withRequestSignal } from "./utils"; // Assuming utils are in the same dir
 
 // --- Handler Context ---
 export interface RequestContext {
@@ -85,7 +85,8 @@ export const faviconHandler = withRequestSignal((context: RequestContext) => {
 
 export const imageHandler = withRequestSignal((context: RequestContext) => {
   const { event, url, workspaceId } = context;
-  if ((event.request.destination === "image" || isImageType(url.pathname)) && !WHITELIST.includes(url.pathname)) {
+
+  if (event.request.destination === "image" || isImageType(url.pathname)) {
     console.log(`Handling image request for: ${url.pathname}`);
     return handleImageRequest(event, url, workspaceId);
   }

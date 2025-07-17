@@ -68,14 +68,13 @@ function MarkdownRender({ contents }: { contents?: string | null }) {
     // Callback for mutation observer
     const handleMutations = async () => {
       const capture = await snapdom.capture(target);
-      //@ts-ignore
-      const blob = await capture.toBlob({
-        type: "webp",
+      const element = await capture.toWebp({
+        fast: true,
+        quality: 0.8,
       });
+      capture.toBlob({ format: "jpg" });
 
-      const buffer = await blob.arrayBuffer();
-
-      window.parent.postMessage({ type: "BLOB_RESULT", buffer, mimeType: blob.type }, "*");
+      window.parent.postMessage({ type: "BLOB_RESULT", src: element.src.toString() }, "*");
     };
 
     const observer = new MutationObserver(handleMutations);

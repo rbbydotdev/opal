@@ -2,6 +2,7 @@ import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { routeRequest } from "@/lib/ServiceWorker/router";
+import { WHITELIST } from "@/lib/ServiceWorker/utils";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -21,9 +22,10 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  const whiteListMatch = WHITELIST.some((pattern) => pattern.test(url.pathname));
   // If there's no referrer, it's likely a direct navigation or non-app request.
   // Let the browser handle it directly.
-  if (!request.referrer) {
+  if (!request.referrer || whiteListMatch) {
     return event.respondWith(defaultFetchHandler(event));
   }
 
