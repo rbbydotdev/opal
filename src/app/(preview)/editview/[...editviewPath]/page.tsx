@@ -1,8 +1,5 @@
 "use client";
-import {
-  NewIframeImageDebugPayload,
-  NewIframeImageMessagePayload,
-} from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
+import { NewIframeImageMessagePayload } from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
 import { HistoryDB } from "@/components/Editor/history/HistoryDB";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
@@ -70,11 +67,11 @@ function MarkdownRender({ contents, editId }: { contents?: string | null; editId
 
     // Callback for mutation observer
     const handleMutations = async () => {
-      const windowLocation = window.location.href;
-      window.parent.postMessage(NewIframeImageDebugPayload(windowLocation + ":" + editId + " : " + target.innerHTML));
+      // const windowLocation = window.location.href;
+      // window.parent.postMessage(NewIframeImageDebugPayload(windowLocation + ":" + editId + " : " + target.innerHTML));
       const capture = await snapdom.capture(target);
       const blob = await capture.toBlob({ format: "webp" });
-      window.parent.postMessage(NewIframeImageMessagePayload(blob));
+      window.parent.postMessage(NewIframeImageMessagePayload(blob, editId!));
     };
 
     const observer = new MutationObserver(handleMutations);

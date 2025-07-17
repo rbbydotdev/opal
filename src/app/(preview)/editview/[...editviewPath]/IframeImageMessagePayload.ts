@@ -2,24 +2,22 @@ export type IframeImageMessagePayload = {
   mimeType: string;
   blob: Blob;
   type: "IFRAME_IMAGE_MESSAGE";
+  editId: number;
 };
 
-export function NewIframeImageMessagePayload(blob: Blob) {
+export function NewIframeImageMessagePayload(blob: Blob, editId: number) {
   return {
     mimeType: blob.type,
     blob: blob,
     type: "IFRAME_IMAGE_MESSAGE",
+    editId,
   } satisfies IframeImageMessagePayload;
 }
 
 export function isIframeImageMessage(event: MessageEvent<unknown>): event is MessageEvent<IframeImageMessagePayload> {
   const message = event.data;
   return (
-    typeof message === "object" &&
-    message !== null &&
-    (message as { type?: string }).type === "IFRAME_IMAGE_MESSAGE" &&
-    typeof (message as IframeImageMessagePayload).mimeType === "string" &&
-    (message as IframeImageMessagePayload).blob instanceof Blob
+    typeof message === "object" && message !== null && (message as { type?: string }).type === "IFRAME_IMAGE_MESSAGE"
   );
 }
 
@@ -38,9 +36,6 @@ export function isIframeImageDebugMessage(
 ): event is MessageEvent<IframeImageDebugPayload> {
   const message = event.data;
   return (
-    typeof message === "object" &&
-    message !== null &&
-    (message as { type?: string }).type === "IFRAME_IMAGE_DEBUG" &&
-    typeof (message as IframeImageDebugPayload).message === "string"
+    typeof message === "object" && message !== null && (message as { type?: string }).type === "IFRAME_IMAGE_DEBUG"
   );
 }
