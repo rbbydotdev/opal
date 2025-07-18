@@ -117,7 +117,6 @@ class PoolManager<TResource extends Resource> {
         this.queue.push(new DelayedWorker(poolWorker, resolve, reject));
       } else {
         this.pool[availIdx] = poolWorker
-          .using(null) // A new resource will be set up
           .exec()
           .catch(reject)
           .then(resolve)
@@ -126,15 +125,16 @@ class PoolManager<TResource extends Resource> {
             this.pool[availIdx] = null; // Free up the slot
 
             if (this.queue.length > 0) {
-              console.log("popping from queue");
+              console.log("popping from queue", "queue length:", this.queue.length);
               const nextWorker = this.queue.pop()!;
               // Reuse the resource for the next worker in the queue
-              nextWorker.using(resource);
               // Schedule the next worker. The returned promise is intentionally
               // ignored, as the original promise for that worker is resolved
               // by the DelayedWorker's internal resolve/reject handlers.
+              nextWorker.using(resource);
               void this.work(nextWorker);
             } else {
+              console.log("idle worker, cleaning up resource");
               // pw.terminate(resource!); // Clean up the resource
               resource?.terminate();
             }

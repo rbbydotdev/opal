@@ -1,5 +1,4 @@
 import { NewComlinkSnapshotPoolWorker, useSnapApiPool } from "@/components/Editor/history/SnapApiPoolProvider";
-import { HistoryDAO } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 
@@ -13,17 +12,20 @@ function useIframeImage({ editId, workspaceId, filePath }: { editId: number; wor
       setImageUrl(URL.createObjectURL(blob));
     });
   }, [editId, filePath, workspaceId]);
+  // useEffect(() => {
+  //   const history = new HistoryDAO();
+  //   void (async () => {
+  //     const change = await history.getEditByEditId(editId);
+  //     if (change?.preview) {
+  //       setImageUrl(URL.createObjectURL(change.preview));
+  //     } else {
+  //       void work(worker);
+  //     }
+  //   })();
+  // }, [editId, work, worker]);
   useEffect(() => {
-    const history = new HistoryDAO();
-    void (async () => {
-      const change = await history.getEditByEditId(editId);
-      if (change?.preview) {
-        setImageUrl(URL.createObjectURL(change.preview));
-      } else {
-        void work(worker);
-      }
-    })();
-  }, [editId, work, worker]);
+    void work(worker);
+  }, [work, worker]);
   useEffect(() => {
     return () => {
       try {

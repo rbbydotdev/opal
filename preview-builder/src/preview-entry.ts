@@ -20,6 +20,11 @@ async function snapshotAndPost(target: HTMLElement, editId: number) {
       )
     );
   }
+
+  // const capture = await snapdom.capture(target);
+  // const result = await capture.toWebp();
+  // return base64URIToBlob(result.src);
+
   const capture = await snapdom.capture(target);
   const canvas = await capture.toCanvas();
   const blob: Blob = await new Promise((resolve) => {
@@ -36,7 +41,6 @@ const PreviewWorkerApi = {
       throw new Error(`No document change found for editId: ${editId}`);
     }
     const markdownContent = (await history.reconstructDocumentFromEdit(change)) ?? "";
-    // history.tearDown();
 
     const html = renderMarkdownToHtml(markdownContent);
     const target = document.getElementById("render-target");
@@ -48,6 +52,8 @@ const PreviewWorkerApi = {
     const result = await snapshotAndPost(target, editId);
 
     await history.updatePreviewForEditId(result.editId, result.blob);
+
+    history.tearDown();
 
     return result;
   },
