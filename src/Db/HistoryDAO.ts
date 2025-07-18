@@ -1,8 +1,10 @@
-import Dexie, { liveQuery, Table } from "dexie";
+import { ClientDb } from "@/Db/instance";
+import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
 import Emittery from "emittery";
+import { useMemo } from "react";
 
-export class DocumentChange {
+export class HistoryDocRecord {
   id: string;
   change: string;
   timestamp: number;
@@ -24,43 +26,23 @@ export class DocumentChange {
   }
 }
 
-/*
+export function useHistoryDAO() {
+  return useMemo(() => new HistoryDAO(), []);
+}
 
-  const historyDB = useHistoryStorage();
-  const edits = useLiveQuery(() => {
-    if (!documentId) {
-      console.error("No document ID provided to useEditHistoryPlugin");
-      return [];
-    }
-    return historyDB.getEdits(documentId);
-  }, [documentId]);
+export class HistoryDAO implements HistoryStorageInterface {
+  // public documents!: Table<DocumentChange, number>;
 
-*/
+  emitter = new Emittery<{ edits: HistoryDocRecord[] }>();
 
-export class HistoryDB extends Dexie implements HistoryStorageInterface {
-  public documents!: Table<DocumentChange, number>;
-
-  emitter = new Emittery<{ edits: DocumentChange[] }>();
-
-  private unsubUpdateListener = liveQuery(() => this.documents.toArray()).subscribe((edits) => {
+  private unsubUpdateListener = liveQuery(() => ClientDb.historyDocs.toArray()).subscribe((edits) => {
     void this.emitter.emit("edits", edits);
   });
 
-  private dmp: diff_match_patch;
-  private cache: Map<number, string>;
+  private dmp: diff_match_patch = new diff_match_patch();
+  private cache: Map<number, string> = new Map();
 
-  constructor() {
-    super("EditHistoryDB");
-    this.version(1).stores({
-      documents: "++edit_id,id,parent", // Auto-increment edit_id
-    });
-
-    this.documents.mapToClass(DocumentChange);
-    this.dmp = new diff_match_patch();
-    this.cache = new Map();
-  }
-
-  onUpdate(documentId: string, cb: (edits: DocumentChange[]) => void) {
+  onUpdate(documentId: string, cb: (edits: HistoryDocRecord[]) => void) {
     this.emitter.on("edits", (edits) =>
       cb(edits.filter((edit) => edit.id === documentId).sort((a, b) => b.timestamp - a.timestamp))
     );
@@ -74,7 +56,7 @@ export class HistoryDB extends Dexie implements HistoryStorageInterface {
   }
 
   clear(docId: string) {
-    return this.documents.where("id").equals(docId).delete();
+    return ClientDb.historyDocs.where("id").equals(docId).delete();
   }
 
   public async saveEdit(id: string, newText: string, abortForNewlines = false): Promise<number> {
@@ -95,7 +77,9 @@ export class HistoryDB extends Dexie implements HistoryStorageInterface {
     this.dmp.diff_cleanupEfficiency(diffs);
     const patch = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
 
-    return await this.documents.add(new DocumentChange(id, patch, Date.now(), latestEdit ? latestEdit.edit_id! : null));
+    return await ClientDb.historyDocs.add(
+      new HistoryDocRecord(id, patch, Date.now(), latestEdit ? latestEdit.edit_id! : null)
+    );
   }
 
   public async reconstructDocument(edit_id: number): Promise<string | null> {
@@ -123,11 +107,11 @@ export class HistoryDB extends Dexie implements HistoryStorageInterface {
     return text;
   }
   public async clearAllEdits(id: string) {
-    return this.documents.where("id").equals(id).delete();
+    return ClientDb.historyDocs.where("id").equals(id).delete();
   }
 
-  public async reconstructDocumentFromEdit(edit: DocumentChange): Promise<string | null> {
-    let current: DocumentChange | null = edit;
+  public async reconstructDocumentFromEdit(edit: HistoryDocRecord): Promise<string | null> {
+    let current: HistoryDocRecord | null = edit;
     const patches: string[] = [];
 
     while (current) {
@@ -144,15 +128,15 @@ export class HistoryDB extends Dexie implements HistoryStorageInterface {
     return text;
   }
 
-  public async getEditByEditId(edit_id: number): Promise<DocumentChange | null> {
-    return (await this.documents.get(edit_id)) ?? null;
+  public async getEditByEditId(edit_id: number): Promise<HistoryDocRecord | null> {
+    return (await ClientDb.historyDocs.get(edit_id)) ?? null;
   }
 
-  public async getEdits(id: string): Promise<DocumentChange[]> {
-    return await this.documents.where("id").equals(id).reverse().sortBy("timestamp");
+  public async getEdits(id: string): Promise<HistoryDocRecord[]> {
+    return await ClientDb.historyDocs.where("id").equals(id).reverse().sortBy("timestamp");
   }
-  public async getLatestEdit(id: string): Promise<DocumentChange | null> {
-    const result = await this.documents.where("id").equals(id).reverse().sortBy("timestamp");
+  public async getLatestEdit(id: string): Promise<HistoryDocRecord | null> {
+    const result = await ClientDb.historyDocs.where("id").equals(id).reverse().sortBy("timestamp");
     return result[0] ?? null;
   }
 }
@@ -162,11 +146,11 @@ export interface HistoryStorageInterface {
   saveEdit(id: string, newText: string): Promise<number>;
   reconstructDocument(edit_id: number): Promise<string | null>;
   clearAllEdits(id: string): void;
-  reconstructDocumentFromEdit(edit: DocumentChange): Promise<string | null>;
-  getEditByEditId(edit_id: number): Promise<DocumentChange | null>;
-  getEdits(id: string): Promise<DocumentChange[]>;
-  getLatestEdit(id: string): Promise<DocumentChange | null>;
-  onUpdate: (documentId: string, cb: (edits: DocumentChange[]) => void) => void;
+  reconstructDocumentFromEdit(edit: HistoryDocRecord): Promise<string | null>;
+  getEditByEditId(edit_id: number): Promise<HistoryDocRecord | null>;
+  getEdits(id: string): Promise<HistoryDocRecord[]>;
+  getLatestEdit(id: string): Promise<HistoryDocRecord | null>;
+  onUpdate: (documentId: string, cb: (edits: HistoryDocRecord[]) => void) => void;
   ready?: Promise<boolean>;
   tearDown?(): void;
   init?(): void;

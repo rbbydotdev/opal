@@ -1,3 +1,4 @@
+import { HistoryDocRecord } from "@/Db/HistoryDAO";
 import { SettingsRecord } from "@/Db/SettingsRecord";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
@@ -11,6 +12,8 @@ export class ClientIndexedDb extends Dexie {
   settings!: EntityTable<SettingsRecord, "name">;
   disks!: EntityTable<DiskRecord, "guid">;
 
+  historyDocs!: EntityTable<HistoryDocRecord, "edit_id">; // Auto-increment edit_id
+
   constructor() {
     super("ClientIndexedDb");
 
@@ -20,12 +23,14 @@ export class ClientIndexedDb extends Dexie {
       workspaces: "guid, name",
       disks: "guid",
       thumbnails: "[workspaceId+path], guid, path, workspaceId",
+      historyDocs: "++edit_id,id,parent", // Auto-increment edit_id
     });
 
     this.remoteAuths.mapToClass(RemoteAuthRecord);
     this.workspaces.mapToClass(WorkspaceRecord);
     this.settings.mapToClass(SettingsRecord);
     this.disks.mapToClass(DiskRecord);
+    this.historyDocs.mapToClass(HistoryDocRecord);
 
     applyEncryptionMiddleware<ClientIndexedDb>(
       this as ClientIndexedDb,

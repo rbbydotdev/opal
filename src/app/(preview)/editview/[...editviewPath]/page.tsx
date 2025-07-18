@@ -3,18 +3,18 @@ import {
   NewIframeErrorMessagePayload,
   NewIframeImageMessagePayload,
 } from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
-import { HistoryDB } from "@/components/Editor/history/HistoryDB";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
+import { HistoryDAO } from "@/Db/HistoryDAO";
 import { useErrorToss } from "@/lib/errorToss";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { isMarkdown } from "@/lib/paths2";
 import { snapdom } from "@zumer/snapdom";
 import "github-markdown-css/github-markdown-light.css";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { cache, use, useEffect, useMemo, useRef, useState } from "react";
 
 function PageComponent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
@@ -53,28 +53,50 @@ export default function Page({ children }: { children: React.ReactNode }) {
     </ErrorBoundary>
   );
 }
+const getEdit = cache(async (editId: string | number) => {
+  const history = new HistoryDAO();
+  const documentChange = await history.getEditByEditId(parseInt(String(editId)));
+
+  if (documentChange === null) {
+    throw new Error(`No document change found for editId: ${editId}`);
+  }
+  history.tearDown();
+  return documentChange;
+});
 
 function PreviewComponent({ editId }: { editId: number }) {
   const toss = useErrorToss();
   const [editContent, setEditContent] = useState("");
   const { currentWorkspace } = useWorkspaceContext();
+  // const [documentChange, setDocumentChange] = useState<DocumentChange | null>(null);
+  const documentChange = use(getEdit(editId));
+  // useEffect(() => {
+  //   void (async () => {
+  //     try {
+  //       const history = new HistoryDAO();
+  //       const change = await history.getEditByEditId(editId);
+  //       if (change === null) {
+  //         return toss(new Error(`No document change found for editId: ${editId}`));
+  //       }
+  //       setDocumentChange(change);
+  //     } catch (error) {
+  //       toss(error as Error);
+  //     }
+  //   })();
+  // }, []);
 
-  useEffect(() => {
-    void (async () => {
-      try {
-        const history = new HistoryDB();
-        const documentChange = await history.getEditByEditId(editId);
-        if (documentChange === null) {
-          return toss(new Error(`No document change found for editId: ${editId}`));
-        }
-        setEditContent((await history.reconstructDocumentFromEdit(documentChange)) ?? "");
-        history.tearDown();
-        void currentWorkspace?.tearDown();
-      } catch (error) {
-        toss(error as Error);
-      }
-    })();
-  }, [currentWorkspace, editId, toss]);
+  // useEffect(() => {
+  //   void (async () => {
+  //     try {
+  //       // const history = new HistoryDAO();
+  //       // const documentChange = await history.getEditByEditId(editId);
+  //       // setEditContent((await history.reconstructDocumentFromEdit(documentChange)) ?? "");
+  //       void currentWorkspace?.tearDown();
+  //     } catch (error) {
+  //       toss(error as Error);
+  //     }
+  //   })();
+  // }, [currentWorkspace, editId, toss]);
 
   return <MarkdownRender contents={editContent} editId={editId} />;
 }
@@ -114,15 +136,23 @@ function MarkdownRender({ contents, editId }: { contents?: string | null; editId
                   })
             )
           );
+          await new Promise((rs) => setTimeout(rs, 1000));
         }
+
         window.parent.postMessage(NewIframeImageMessagePayload(blob, editId!));
       };
 
-      const observer = new MutationObserver(handleMutations);
-      observer.observe(target, { childList: true, subtree: true, characterData: true });
-      return () => {
-        observer.disconnect();
-      };
+      // const observer = new MutationObserver(handleMutations);
+      // observer.observe(target, { childList: true, subtree: true, characterData: true });
+      // return () => {
+      //   observer.disconnect();
+      // };
+      if (html) {
+        handleMutations().catch((e) => {
+          console.error("Error in mutation observer:", e);
+          toss(new Error(`Error in mutation observer: ${e}`));
+        });
+      }
     } catch (e) {
       throw toss(new Error(`Error setting up mutation observer: ${e}`));
     }
