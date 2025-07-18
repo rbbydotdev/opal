@@ -15,6 +15,7 @@ import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RequestSignalsInstance } from "@/lib/RequestSignals";
+import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import React, { useEffect } from "react";
 import "../styles.css";
@@ -68,31 +69,33 @@ export default function RootLayout({
           }}
           className="w-full h-full flex items-center justify-center bg-background"
         >
-          <AsyncWindowErrorBoundary>
-            <ErrorPopper>
-              <WorkspaceProvider>
-                <JotaiProvider>
-                  <SidebarProvider>
-                    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                      <RemoteMDXEditorRealmProvider>
-                        <div className="w-full flex">
-                          <ErrorBoundary fallback={ErrorPlaque}>
-                            <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
-                              <WorkspaceButtonBar />
-                            </div>
+          <ServiceWorker>
+            <AsyncWindowErrorBoundary>
+              <ErrorPopper>
+                <WorkspaceProvider>
+                  <JotaiProvider>
+                    <SidebarProvider>
+                      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                        <RemoteMDXEditorRealmProvider>
+                          <div className="w-full flex">
                             <ErrorBoundary fallback={ErrorPlaque}>
-                              <>{children}</>
-                              <>{newWorkspace}</>
+                              <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
+                                <WorkspaceButtonBar />
+                              </div>
+                              <ErrorBoundary fallback={ErrorPlaque}>
+                                <>{children}</>
+                                <>{newWorkspace}</>
+                              </ErrorBoundary>
                             </ErrorBoundary>
-                          </ErrorBoundary>
-                        </div>
-                      </RemoteMDXEditorRealmProvider>
-                    </ThemeProvider>
-                  </SidebarProvider>
-                </JotaiProvider>
-              </WorkspaceProvider>
-            </ErrorPopper>
-          </AsyncWindowErrorBoundary>
+                          </div>
+                        </RemoteMDXEditorRealmProvider>
+                      </ThemeProvider>
+                    </SidebarProvider>
+                  </JotaiProvider>
+                </WorkspaceProvider>
+              </ErrorPopper>
+            </AsyncWindowErrorBoundary>
+          </ServiceWorker>
         </div>
       </body>
     </html>

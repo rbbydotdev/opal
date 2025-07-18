@@ -79,16 +79,22 @@ function useIframeImage(src: string, editId: number) {
 }
 
 export const IframeEditViewImage = ({
-  src,
+  workspaceId,
+  filePath,
   editId,
   className,
 }: {
-  src: string;
+  workspaceId: string;
+  filePath: string;
   editId: number;
   className?: string;
 }) => {
-  // await history.getEditByEditId(editId);
-
+  const searchParams = new URLSearchParams({
+    editId: String(editId),
+    filePath,
+    workspaceId,
+  });
+  const src = `/doc-preview-image.html?${searchParams.toString()}`;
   const imageUrl = useIframeImage(src, editId);
   return imageUrl !== null ? (
     <img src={imageUrl} className={cn("w-32 h-32 _bg-blue-400 object-cover border border-black", className)} alt="" />

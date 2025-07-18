@@ -6,7 +6,6 @@ import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
-import { absPath, joinPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
@@ -178,11 +177,7 @@ function EditHistoryScroll({
                     className="hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
                   >
                     {workspaceId && filePath ? (
-                      <IframeEditViewImage
-                        // await history.getEditByEditId(editId);
-                        editId={EDIT.edit_id}
-                        src={`${joinPath(absPath("editview"), workspaceId, filePath)}?editId=${EDIT.edit_id}`}
-                      />
+                      <IframeEditViewImage filePath={filePath} workspaceId={workspaceId} editId={EDIT.edit_id} />
                     ) : null}
                     {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
                       <span className="mr-2 text-primary">{"•"}</span>

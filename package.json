@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "build:preview": "tsx ./scripts/build-preview.ts"
   },
   "overrides": {
     "dexie": "^4.0.10",
@@ -151,6 +152,8 @@
     "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
+    "esbuild": "^0.25.6",
+    "esbuild-style-plugin": "^1.6.3",
     "eslint": "^9.25.1",
     "eslint-config-next": "15.1.0",
     "eslint-plugin-immutable": "^1.0.0",

@@ -5,12 +5,10 @@ import {
 } from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
-import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { useErrorToss } from "@/lib/errorToss";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { isMarkdown } from "@/lib/paths2";
 import { snapdom } from "@zumer/snapdom";
 import "github-markdown-css/github-markdown-light.css";
 import { useSearchParams } from "next/navigation";
@@ -19,10 +17,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 function PageComponent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId");
-  const { path } = useWorkspaceRoute();
-  if (!isMarkdown(path ?? "")) {
-    return <div>editview is only available for markdown files.</div>;
-  }
   if (editId === null) return <div>Missing editId</div>;
 
   return (
@@ -56,7 +50,6 @@ export default function Page({ children }: { children: React.ReactNode }) {
 function PreviewComponent({ editId }: { editId: number }) {
   const toss = useErrorToss();
   const [editContent, setEditContent] = useState("");
-  const { currentWorkspace } = useWorkspaceContext();
   useEffect(() => {
     void (async () => {
       try {
@@ -67,12 +60,11 @@ function PreviewComponent({ editId }: { editId: number }) {
         }
         setEditContent((await history.reconstructDocumentFromEdit(change)) ?? "");
         history.tearDown();
-        void currentWorkspace?.tearDown();
       } catch (error) {
         toss(error as Error);
       }
     })();
-  }, [currentWorkspace, editId, toss]);
+  }, [editId, toss]);
 
   return <MarkdownRender contents={editContent} editId={editId} />;
 }
