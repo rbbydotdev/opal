@@ -128,6 +128,20 @@ export class HistoryDAO implements HistoryStorageInterface {
     return text;
   }
 
+  public async updatePreviewForEditId(edit_id: number, preview: Blob): Promise<void> {
+    const edit = await this.getEditByEditId(edit_id);
+    if (edit) {
+      edit.preview = preview;
+      await ClientDb.historyDocs.put(edit);
+    } else {
+      console.warn(`Edit with ID ${edit_id} not found for updating preview.`);
+    }
+  }
+  public async updatePreviewForEdit(edit: HistoryDocRecord, preview: Blob): Promise<void> {
+    edit.preview = preview;
+    await ClientDb.historyDocs.put(edit);
+  }
+
   public async getEditByEditId(edit_id: number): Promise<HistoryDocRecord | null> {
     return (await ClientDb.historyDocs.get(edit_id)) ?? null;
   }

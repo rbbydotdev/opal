@@ -20,7 +20,7 @@ function cleanupIframe(iframeRef: React.MutableRefObject<HTMLIFrameElement | nul
   }
 }
 
-function useIframeImage(src: string, editId: string | number) {
+function useIframeImage(src: string, editId: number) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -54,7 +54,7 @@ function useIframeImage(src: string, editId: string | number) {
       }
       if (isIframeImageMessage(event) && String(event.data.editId) === String(editId)) {
         const blob = event.data.blob;
-        console.log(blob.toString());
+        void historyDB.updatePreviewForEditId(editId, blob); //should do this in iframe?
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
         cleanupIframe(iframeRef);
@@ -84,7 +84,7 @@ export const IframeEditViewImage = ({
   className,
 }: {
   src: string;
-  editId: string | number;
+  editId: number;
   className?: string;
 }) => {
   // await history.getEditByEditId(editId);
