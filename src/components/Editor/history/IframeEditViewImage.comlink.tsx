@@ -1,12 +1,11 @@
-import { usePoolContext } from "@/components/PoolWorker";
+import { PoolWorker, usePoolContext } from "@/components/PoolWorker";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";
 import { useEffect, useMemo, useState } from "react";
 
-interface Resource {
-  resource: PreviewWorkerApi;
+interface Resource<T> {
+  resource: T;
   ready: Promise<boolean>;
-
   terminate: () => void;
 }
 function createApiResource({
@@ -29,13 +28,20 @@ function createApiResource({
   });
   const terminate = () => iframe.remove();
   iframe.src = "/doc-preview-image.html?" + searchParams.toString();
-  return { resource: api, ready, terminate } satisfies Resource;
+  return { resource: api, ready, terminate } satisfies Resource<unknown>;
 }
+class ApiPoolWorker extends PoolWorker<ReturnType<typeof createApiResource>> {}
 function NewComlinkSnapshotPoolWorker(
   { editId, workspaceId, filePath }: { editId: number; workspaceId: string; filePath: string },
   cb: ({ editId, blob }: { editId: number; blob: Blob }) => void
 ) {
-  // return new PoolWorker((api) => api.renderAndSnapshot(editId).then((result) => cb(result)), ready, iframe.remove);
+  return new ApiPoolWorker(
+    ({ resource: api }) => {
+      return api.renderAndSnapshot(editId).then((result) => cb(result));
+    },
+    () => createApiResource({ editId, workspaceId, filePath }),
+    (res) => res?.terminate()
+  );
 }
 
 function useIframeImage({ editId, workspaceId, filePath }: { editId: number; workspaceId: string; filePath: string }) {
