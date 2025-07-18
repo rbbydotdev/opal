@@ -20,7 +20,7 @@ function cleanupIframe(iframeRef: React.MutableRefObject<HTMLIFrameElement | nul
   }
 }
 
-function useIframeImage(src: string, editId: number) {
+function useIframeImage({ editId, workspaceId, filePath }: { editId: number; workspaceId: string; filePath: string }) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -28,6 +28,13 @@ function useIframeImage(src: string, editId: number) {
 
   useEffect(() => {
     void (async () => {
+      const searchParams = new URLSearchParams({
+        editId: String(editId),
+        filePath,
+        workspaceId,
+      });
+
+      const src = `/doc-preview-image.html?${searchParams.toString()}`;
       const { preview } = (await historyDB.getEditByEditId(parseInt(String(editId)))) ?? { preview: null };
       if (!preview) {
         const iframe = createHiddenIframe(src);
@@ -43,7 +50,7 @@ function useIframeImage(src: string, editId: number) {
     return () => {
       cleanupIframe(iframeRef);
     };
-  }, [editId, historyDB, src]);
+  }, [editId, filePath, historyDB, workspaceId]);
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
       if (isIframeErrorMessage(event)) {
@@ -65,7 +72,7 @@ function useIframeImage(src: string, editId: number) {
     return () => {
       window.removeEventListener("message", (event) => handleMessage(event));
     };
-  }, [editId, historyDB, src]);
+  }, [editId, historyDB]);
 
   useEffect(() => {
     return () => {
@@ -89,13 +96,7 @@ export const IframeEditViewImage = ({
   editId: number;
   className?: string;
 }) => {
-  const searchParams = new URLSearchParams({
-    editId: String(editId),
-    filePath,
-    workspaceId,
-  });
-  const src = `/doc-preview-image.html?${searchParams.toString()}`;
-  const imageUrl = useIframeImage(src, editId);
+  const imageUrl = useIframeImage({ editId, filePath, workspaceId });
   return imageUrl !== null ? (
     <img src={imageUrl} className={cn("w-32 h-32 _bg-blue-400 object-cover border border-black", className)} alt="" />
   ) : null;
