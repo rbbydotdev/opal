@@ -16,14 +16,15 @@ async function build(): Promise<void> {
     minify: true,
     format: "iife",
     target: "es2020",
+    outdir: path.resolve(appDir, "public"),
     alias: {
       "@": path.resolve(appDir, "src/"),
     },
     plugins: [
       stylePlugin({
-        // css: {
-        //   inject: true,
-        // },
+        css: {
+          inject: true,
+        },
       }),
     ],
     metafile: true,

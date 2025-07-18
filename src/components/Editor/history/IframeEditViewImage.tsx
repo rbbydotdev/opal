@@ -1,4 +1,5 @@
 import { NewComlinkSnapshotPoolWorker, useSnapApiPool } from "@/components/Editor/history/SnapApiPoolProvider";
+import { HistoryDAO } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 
@@ -7,15 +8,22 @@ function useIframeImage({ editId, workspaceId, filePath }: { editId: number; wor
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const worker = useMemo(() => {
-    console.log("Creating new worker for editId", editId, "filePath", filePath, "workspaceId", workspaceId);
-    return NewComlinkSnapshotPoolWorker({ editId, workspaceId, filePath }, ({ blob }) => {
+    // console.log("Creating new worker for editId", editId, "filePath", filePath, "workspaceId", workspaceId);
+    return NewComlinkSnapshotPoolWorker({ editId, workspaceId, filePath }, async ({ blob }) => {
       setImageUrl(URL.createObjectURL(blob));
     });
   }, [editId, filePath, workspaceId]);
   useEffect(() => {
-    console.log("Starting work with worker", worker);
-    void work(worker);
-  }, [work, worker]);
+    const history = new HistoryDAO();
+    void (async () => {
+      const change = await history.getEditByEditId(editId);
+      if (change?.preview) {
+        setImageUrl(URL.createObjectURL(change.preview));
+      } else {
+        void work(worker);
+      }
+    })();
+  }, [editId, work, worker]);
   useEffect(() => {
     return () => {
       try {

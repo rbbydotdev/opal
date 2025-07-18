@@ -1,9 +1,9 @@
 "use client";
-import { snapdom } from "@zumer/snapdom";
-// import "github-markdown-css/github-markdown-light.css";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
+import { snapdom } from "@zumer/snapdom";
 import * as Comlink from "comlink";
+import "github-markdown-css/github-markdown-light.css";
 
 async function snapshotAndPost(target: HTMLElement, editId: number) {
   // ... (snapshot logic remains unchanged)
@@ -36,7 +36,7 @@ const PreviewWorkerApi = {
       throw new Error(`No document change found for editId: ${editId}`);
     }
     const markdownContent = (await history.reconstructDocumentFromEdit(change)) ?? "";
-    history.tearDown();
+    // history.tearDown();
 
     const html = renderMarkdownToHtml(markdownContent);
     const target = document.getElementById("render-target");
@@ -45,7 +45,11 @@ const PreviewWorkerApi = {
     }
     target.innerHTML = html;
 
-    return snapshotAndPost(target, editId);
+    const result = await snapshotAndPost(target, editId);
+
+    await history.updatePreviewForEditId(result.editId, result.blob);
+
+    return result;
   },
 } satisfies PreviewWorkerApi;
 
