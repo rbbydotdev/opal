@@ -37,9 +37,11 @@ async function snapshotAndPost(target: HTMLElement, editId: number) {
     );
   }
 
-  // No more @ts-ignore! `snapdom` is properly imported.
   const capture = await snapdom.capture(target);
-  const blob = await capture.toBlob({ format: "webp" });
+  const canvas = await capture.toCanvas();
+  const blob: Blob = await new Promise((resolve) => {
+    canvas.toBlob((b) => resolve(b as Blob), "image/webp");
+  });
 
   window.parent.postMessage(NewIframeImageMessagePayload(blob, editId));
 }

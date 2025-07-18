@@ -37,7 +37,7 @@ function useIframeImage(src: string, editId: number) {
       } else {
         const url = URL.createObjectURL(preview);
         setImageUrl(url);
-        console.log("Using cached preview for editId:", editId);
+        // console.log("Using cached preview for editId:", editId);
       }
     })();
     return () => {
