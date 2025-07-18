@@ -45,3 +45,10 @@ declare module "@zumer/snapdom" {
     toBlob: (options: SnapOptions) => Promise<Blob>;
   }
 }
+
+type PreviewWorkerApi = {
+  renderAndSnapshot: (editId: number) => Promise<{
+    blob: Blob;
+    editId: number;
+  }>;
+};

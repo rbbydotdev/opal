@@ -42,6 +42,7 @@ async function snapshotAndPost(target: HTMLElement, editId: number) {
     );
   }
   const capture = await snapdom.capture(target);
+
   const canvas = await capture.toCanvas();
   const blob: Blob = await new Promise((resolve) => {
     canvas.toBlob((b) => resolve(b as Blob), "image/webp");
