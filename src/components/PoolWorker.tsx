@@ -1,41 +1,76 @@
 import { createContext, useContext, useMemo } from "react";
 
-type PollContextType = {
+type PoolContextType = {
   work: (pw: IPoolWorker) => Promise<unknown>;
   sighup: () => Promise<void[]>;
 };
 
-const PoolContext = createContext<PollContextType | null>(null);
-
-interface IPoolWorker {
-  ready: Promise<unknown>;
-  exec: () => Promise<unknown>;
+export interface Resource {
+  resource: unknown;
   terminate: () => void;
 }
 
-export class PoolWorker implements IPoolWorker {
+const PoolContext = createContext<PoolContextType | null>(null);
+
+interface IPoolWorker<TResource extends Resource = Resource> {
+  // ready: Promise<unknown>;
+  exec: () => Promise<unknown>;
+  terminate: (re: IPoolWorker<TResource>["resource"]) => void;
+
+  setup: () => Promise<TResource> | TResource;
+
+  readonly resource: TResource | null;
+  using: (res: TResource | null) => IPoolWorker<TResource>;
+}
+
+export class PoolWorker<TResource extends Resource> implements IPoolWorker {
+  resource: TResource | null = null;
+
+  ready = Promise.resolve(true);
   constructor(
-    public exec: IPoolWorker["exec"],
-    public ready: IPoolWorker["ready"],
+    private execFn: (res: TResource) => Promise<void>,
+    public setup: IPoolWorker<TResource>["setup"],
     public terminate: IPoolWorker["terminate"]
   ) {}
+  async exec() {
+    await this.ready;
+    return this.execFn(this.resource ?? ((await this.setup()) as TResource));
+  }
+  using(res: Resource | null) {
+    const typedRes = res as TResource | null;
+    if (typedRes === null) {
+      this.ready = Promise.resolve(this.setup()).then((res) => {
+        this.resource = res as TResource;
+        return true;
+      });
+      return this;
+    } else {
+      this.resource = typedRes;
+      return this;
+    }
+  }
 }
 
 class DelayedWorker {
+  ready = Promise.resolve(true);
+  resource: Resource | null = null;
   constructor(
     private poolWorker: IPoolWorker,
     private resolve: (value?: unknown) => void,
     private reject: (reason?: unknown) => void
   ) {}
-  exec() {
+  async exec() {
     return this.poolWorker.exec().then(this.resolve).catch(this.reject);
   }
-  get ready() {
-    return this.poolWorker.ready;
+  setup() {
+    return this.poolWorker.setup();
   }
 
   terminate() {
-    return this.poolWorker.terminate();
+    return this.poolWorker.terminate(this.resource);
+  }
+  using(res: Resource | null) {
+    return this.poolWorker.using(res);
   }
 }
 
@@ -66,13 +101,17 @@ export const PoolProvider = ({ children, max }: { children: React.ReactNode; max
         console.log("queue full");
         queue.push(new DelayedWorker(pw, rs, rj));
       } else {
-        pool[availIdx] = pw.ready
-          .then(() => pw.exec().catch(rj).then(rs))
+        pool[availIdx] = pw
+          .using(null)
+          .exec()
+          .catch(rj)
+          .then(rs)
           .finally(() => {
+            const resource = pw.resource;
             pool[availIdx] = null;
             if (queue.length) {
               console.log("popping from queue");
-              void work(queue.pop()!);
+              void work(queue.pop()!.using(resource));
             }
           });
       }
