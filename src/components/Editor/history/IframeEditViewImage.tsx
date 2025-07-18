@@ -1,9 +1,12 @@
-import { isIframeImageMessage } from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
+import {
+  isIframeErrorMessage,
+  isIframeImageMessage,
+} from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
+import { Workspace } from "@/Db/Workspace";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
 function createHiddenIframe(src: string): HTMLIFrameElement {
-  console.log({ src });
   const iframe = document.createElement("iframe");
   iframe.src = src;
   return iframe;
@@ -11,6 +14,7 @@ function createHiddenIframe(src: string): HTMLIFrameElement {
 
 function cleanupIframe(iframeRef: React.MutableRefObject<HTMLIFrameElement | null>) {
   if (iframeRef.current) {
+    console.log("cleaning up iframe:", iframeRef.current.src);
     document.body.removeChild(iframeRef.current);
     iframeRef.current = null;
   }
@@ -22,8 +26,16 @@ function useIframeImage(src: string, editId: string | number) {
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
+      if (isIframeErrorMessage(event)) {
+        console.error("Error in iframe:", event.data.error);
+        // Optionally, you can handle the error here, e.g., show a notification
+        cleanupIframe(iframeRef);
+        window.removeEventListener("message", handleMessage);
+        return;
+      }
       if (isIframeImageMessage(event) && String(event.data.editId) === String(editId)) {
         const blob = event.data.blob;
+        console.log(blob.toString());
         const url = URL.createObjectURL(blob);
         setImageUrl(url);
         cleanupIframe(iframeRef);
@@ -58,7 +70,9 @@ export const IframeEditViewImage = ({
   src,
   editId,
   className,
+  currentWorkspace,
 }: {
+  currentWorkspace: Workspace;
   src: string;
   editId: string | number;
   className?: string;

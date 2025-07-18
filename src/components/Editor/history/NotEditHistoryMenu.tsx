@@ -140,7 +140,7 @@ function EditHistoryScroll({
         <div className="absolute left-0 z-10 mt-2">
           <ScrollArea
             className={cn(
-              { "h-72": Boolean(edits.length), "h-18": !Boolean(edits.length) },
+              { "h-96": Boolean(edits.length), "h-18": !Boolean(edits.length) },
               "_w-[420px] w-[900px] rounded-md border bg-primary-foreground text-primary shadow-lg"
             )}
           >
@@ -191,8 +191,8 @@ function EditHistoryScroll({
 
                     {new Date(EDIT.timestamp).toLocaleString()}
                     <span className="text-black">
-                      {/* &nbsp; */}
-                      <span className="font-bold font-mono ml-4">{EDIT.edit_id}</span>{" "}
+                      &nbsp;
+                      {/* <span className="font-bold font-mono ml-4">{EDIT.edit_id}</span>{" "} */}
                       <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
                     </span>
                   </button>

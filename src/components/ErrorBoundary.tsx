@@ -1,24 +1,38 @@
 import React from "react";
 
-// Error boundaries currently have to be classes.
 interface ErrorBoundaryProps {
   fallback: React.ComponentType<{ error?: Error | null }> | React.ReactNode;
+  onError?: (error: Error) => void;
   children?: React.ReactNode;
 }
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
-  state = { hasError: false, error: null };
-  static getDerivedStateFromError(error: Error): { hasError: boolean; error: Error } {
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
       hasError: true,
       error,
     };
   }
+
+  componentDidCatch(error: Error) {
+    // Call onError only once per error
+    if (this.props.onError) {
+      this.props.onError(error);
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       const Fallback = this.props.fallback;
       if (typeof Fallback === "function") {
-        return <Fallback error={this.state.error}></Fallback>;
+        return <Fallback error={this.state.error} />;
       } else if (React.isValidElement(Fallback)) {
         return Fallback;
       } else {
