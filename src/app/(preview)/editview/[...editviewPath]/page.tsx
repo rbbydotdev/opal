@@ -84,6 +84,7 @@ const handleMutations = async (target: HTMLDivElement, editId: number) => {
     );
   }
   const capture = await snapdom.capture(target);
+  //@ts-ignore
   const blob = await capture.toBlob({ format: "webp" });
 
   window.parent.postMessage(NewIframeImageMessagePayload(blob, editId));

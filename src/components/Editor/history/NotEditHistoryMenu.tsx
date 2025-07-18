@@ -1,9 +1,9 @@
 // EditHistoryMenu.tsx;
 import { DocumentChange } from "@/components/Editor/history/HistoryDB";
 import { IframeEditViewImage } from "@/components/Editor/history/IframeEditViewImage";
+import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
-import { PoolProvider } from "@/components/PoolWorker";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
@@ -166,7 +166,7 @@ function EditHistoryScroll({
                   </div>
                 </div>
               )}
-              <PoolProvider max={5}>
+              <SnapApiPoolProvider max={5}>
                 {edits.map((EDIT) => (
                   <div key={EDIT.edit_id}>
                     <button
@@ -196,7 +196,7 @@ function EditHistoryScroll({
                     <Separator />
                   </div>
                 ))}
-              </PoolProvider>
+              </SnapApiPoolProvider>
             </div>
           </ScrollArea>
         </div>

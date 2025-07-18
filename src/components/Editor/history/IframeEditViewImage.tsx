@@ -1,87 +1,30 @@
-import {
-  isIframeErrorMessage,
-  isIframeImageMessage,
-} from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
-import { useHistoryDAO } from "@/Db/HistoryDAO";
+import { NewComlinkSnapshotPoolWorker, useSnapApiPool } from "@/components/Editor/history/SnapApiPoolProvider";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
-
-function createHiddenIframe(src: string): HTMLIFrameElement {
-  const iframe = document.createElement("iframe");
-  iframe.src = src;
-  return iframe;
-}
-
-function cleanupIframe(iframeRef: React.MutableRefObject<HTMLIFrameElement | null>) {
-  if (iframeRef.current) {
-    console.log("cleaning up iframe:", iframeRef.current.src);
-    document.body.removeChild(iframeRef.current);
-    iframeRef.current = null;
-  }
-}
+import { useEffect, useMemo, useState } from "react";
 
 function useIframeImage({ editId, workspaceId, filePath }: { editId: number; workspaceId: string; filePath: string }) {
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const { work } = useSnapApiPool();
+
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  const historyDB = useHistoryDAO();
-
+  const worker = useMemo(() => {
+    console.log("Creating new worker for editId", editId, "filePath", filePath, "workspaceId", workspaceId);
+    return NewComlinkSnapshotPoolWorker({ editId, workspaceId, filePath }, ({ blob }) => {
+      setImageUrl(URL.createObjectURL(blob));
+    });
+  }, [editId, filePath, workspaceId]);
   useEffect(() => {
-    void (async () => {
-      const searchParams = new URLSearchParams({
-        editId: String(editId),
-        filePath,
-        workspaceId,
-      });
-
-      const src = `/doc-preview-image.html?${searchParams.toString()}`;
-      const { preview } = (await historyDB.getEditByEditId(parseInt(String(editId)))) ?? { preview: null };
-      if (!preview) {
-        const iframe = createHiddenIframe(src);
-        console.log("opened iframe:", iframe.src);
-        iframeRef.current = iframe;
-        document.body.appendChild(iframe);
-      } else {
-        const url = URL.createObjectURL(preview);
-        setImageUrl(url);
-        // console.log("Using cached preview for editId:", editId);
-      }
-    })();
-    return () => {
-      cleanupIframe(iframeRef);
-    };
-  }, [editId, filePath, historyDB, workspaceId]);
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (isIframeErrorMessage(event)) {
-        console.error("Error in iframe:", event.data.error);
-        cleanupIframe(iframeRef);
-        window.removeEventListener("message", handleMessage);
-        return;
-      }
-      if (isIframeImageMessage(event) && String(event.data.editId) === String(editId)) {
-        const blob = event.data.blob;
-        void historyDB.updatePreviewForEditId(editId, blob); //should do this in iframe?
-        const url = URL.createObjectURL(blob);
-        setImageUrl(url);
-        cleanupIframe(iframeRef);
-        window.removeEventListener("message", handleMessage);
-      }
-    }
-    window.addEventListener("message", (event) => handleMessage(event));
-    return () => {
-      window.removeEventListener("message", (event) => handleMessage(event));
-    };
-  }, [editId, historyDB]);
-
+    console.log("Starting work with worker", worker);
+    void work(worker);
+  }, [work, worker]);
   useEffect(() => {
     return () => {
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
+      try {
+        URL.revokeObjectURL(imageUrl ?? "");
+      } catch (e) {
+        console.error(e);
       }
     };
-  }, [imageUrl]);
-
+  }, [imageUrl, work, worker]);
   return imageUrl;
 }
 
