@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit Preview</title>
+  <style>
+    /* Basic body styling */
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Your custom class from the original component */
+    .markdown-editview {
+      padding: 32px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- The target for our rendered markdown content -->
+  <div id="render-target" class="markdown-body markdown-editview"></div>
+  <!-- esbuild will inject the final bundled JS and CSS here -->
+  <!--__SCRIPT_INJECT_PLACEHOLDER__-->
+</body>
+
+</html>

@@ -1,20 +1,19 @@
-import { Workspace } from "@/Db/Workspace";
-import { usePathname } from "next/navigation";
+// import { usePathname } from "next/navigation";
 import { useLayoutEffect, useState } from "react";
 
 //will delay the loading of the page until the service worker is ready
 export const ServiceWorker = ({ children }: { children: React.ReactNode }) => {
-  const pathname = usePathname();
-  const { workspaceId } = Workspace.parseWorkspacePath(pathname);
+  // const pathname = usePathname();
+  // const { workspaceId } = Workspace.parseWorkspacePath(pathname);
   const [ready, setReady] = useState(false);
 
   useLayoutEffect(() => {
-    if (!workspaceId) {
-      console.log("No current workspace");
-      return;
-    }
+    // if (!workspaceId) {
+    //   console.log("No current workspace");
+    //   return;
+    // }
     void setupServiceWorker().then(() => setReady(true));
-  }, [workspaceId]);
+  }, []);
   if (ready) return children;
   return null;
 };

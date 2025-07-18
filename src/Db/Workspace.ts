@@ -138,22 +138,30 @@ export class Workspace {
   // }
 
   static parseWorkspacePath(pathOrUrl: string) {
-    const pathname = absPathname(pathOrUrl);
-    if (!WorkspaceDAO.Routes.some((route) => pathname.startsWith(route))) {
-      return { workspaceId: null, filePath: null };
+    const url = new URL(pathOrUrl, "http://dummy"); // base needed for relative URLs
+    const pathname = absPathname(url.pathname);
+
+    let workspaceId: string | null = null;
+    let filePath: AbsPath | undefined | null = null;
+
+    if (WorkspaceDAO.Routes.some((route) => pathname.startsWith(route))) {
+      const [id, ...filePathRest] = decodePath(
+        relPath(WorkspaceDAO.Routes.reduce((prev, next) => prev.replace(next, ""), String(pathname)))
+      ).split("/");
+      workspaceId = id || null;
+      filePath = filePathRest.length ? absPath(filePathRest.join("/")) : undefined;
     }
 
-    const [workspaceId, ...filePathRest] = decodePath(
-      relPath(
-        //TODO: some kind of regex garbo
-        WorkspaceDAO.Routes.reduce((prev, next) => prev.replace(next, ""), String(pathname))
-      )
-    ).split("/");
-    const filePath = filePathRest.join("/");
+    // Try search params if not found
     if (!workspaceId) {
-      return { workspaceId: null, filePath: null };
+      workspaceId = url.searchParams.get("workspaceId");
     }
-    return { workspaceId, filePath: filePath ? absPath(filePath) : undefined };
+    if (!filePath) {
+      const fp = url.searchParams.get("filePath");
+      filePath = fp ? absPath(fp) : null;
+    }
+
+    return { workspaceId, filePath };
   }
 
   static async CreateNew(name: string, files: Record<string, string | Promise<string>> = {}) {
