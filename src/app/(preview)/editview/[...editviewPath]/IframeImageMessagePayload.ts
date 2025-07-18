@@ -11,7 +11,37 @@ export type IframeErrorMessagePayload = {
   type: "IFRAME_ERROR_MESSAGE";
   error: string;
 };
+export type IframeNewImagePayload = {
+  type: "IFRAME_NEW_IMAGE";
+  editId: number;
+};
 
+export type IframeReadyPayload = {
+  type: "IFRAME_READY";
+};
+
+export function NewIframeReadyPayload(): IframeReadyPayload {
+  return {
+    type: "IFRAME_READY",
+  };
+}
+
+export function isIframeReadyMessage(event: MessageEvent<unknown>): event is MessageEvent<IframeReadyPayload> {
+  const message = event.data;
+  return typeof message === "object" && message !== null && (message as { type?: string }).type === "IFRAME_READY";
+}
+
+export function NewIframeNewImagePayload(editId: number): IframeNewImagePayload {
+  return {
+    type: "IFRAME_NEW_IMAGE",
+    editId,
+  };
+}
+
+export function isIframeNewImageMessage(event: MessageEvent<unknown>): event is MessageEvent<IframeNewImagePayload> {
+  const message = event.data;
+  return typeof message === "object" && message !== null && (message as { type?: string }).type === "IFRAME_NEW_IMAGE";
+}
 export function NewIframeErrorMessagePayload(error: string | Error): IframeErrorMessagePayload {
   return {
     type: "IFRAME_ERROR_MESSAGE",
