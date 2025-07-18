@@ -2,7 +2,7 @@ import {
   isIframeErrorMessage,
   isIframeImageMessage,
 } from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
-import { Workspace } from "@/Db/Workspace";
+import { useHistoryDAO } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
@@ -24,11 +24,30 @@ function useIframeImage(src: string, editId: string | number) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
+  const historyDB = useHistoryDAO();
+
+  useEffect(() => {
+    void (async () => {
+      const { preview } = (await historyDB.getEditByEditId(parseInt(String(editId)))) ?? { preview: null };
+      if (!preview) {
+        const iframe = createHiddenIframe(src);
+        console.log("opened iframe:", iframe.src);
+        iframeRef.current = iframe;
+        document.body.appendChild(iframe);
+      } else {
+        const url = URL.createObjectURL(preview);
+        setImageUrl(url);
+        console.log("Using cached preview for editId:", editId);
+      }
+    })();
+    return () => {
+      cleanupIframe(iframeRef);
+    };
+  }, [editId, historyDB, src]);
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
       if (isIframeErrorMessage(event)) {
         console.error("Error in iframe:", event.data.error);
-        // Optionally, you can handle the error here, e.g., show a notification
         cleanupIframe(iframeRef);
         window.removeEventListener("message", handleMessage);
         return;
@@ -42,18 +61,11 @@ function useIframeImage(src: string, editId: string | number) {
         window.removeEventListener("message", handleMessage);
       }
     }
-
-    const iframe = createHiddenIframe(src);
-    console.log("opened iframe:", iframe.src);
-    iframeRef.current = iframe;
-    window.addEventListener("message", handleMessage);
-    document.body.appendChild(iframe);
-
+    window.addEventListener("message", (event) => handleMessage(event));
     return () => {
-      window.removeEventListener("message", handleMessage);
-      cleanupIframe(iframeRef);
+      window.removeEventListener("message", (event) => handleMessage(event));
     };
-  }, [editId, src]);
+  }, [editId, historyDB, src]);
 
   useEffect(() => {
     return () => {
@@ -70,13 +82,13 @@ export const IframeEditViewImage = ({
   src,
   editId,
   className,
-  currentWorkspace,
 }: {
-  currentWorkspace: Workspace;
   src: string;
   editId: string | number;
   className?: string;
 }) => {
+  // await history.getEditByEditId(editId);
+
   const imageUrl = useIframeImage(src, editId);
   return imageUrl !== null ? (
     <img src={imageUrl} className={cn("w-32 h-32 _bg-blue-400 object-cover border border-black", className)} alt="" />

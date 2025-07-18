@@ -1,7 +1,7 @@
+import { useHistoryDAO } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
-import { HistoryDB } from "@/components/Editor/history/HistoryDB";
 import { historyPlugin } from "@/components/Editor/history/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
@@ -88,7 +88,7 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
 export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace: Workspace; realmId: string }) {
   const { initialContents } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
-  const historyDB = useMemo(() => new HistoryDB(), []);
+  const historyDB = useHistoryDAO();
   useEffect(() => () => historyDB.tearDown(), [historyDB]);
 
   return useMemo(
