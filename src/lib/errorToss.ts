@@ -5,6 +5,7 @@ export function useErrorToss() {
     setState(() => {
       throw err;
     });
+    return err;
   };
   return toss;
 }

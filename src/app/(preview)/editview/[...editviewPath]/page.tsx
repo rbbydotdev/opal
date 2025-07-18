@@ -1,9 +1,12 @@
 "use client";
-import { NewIframeImageMessagePayload } from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
+import {
+  NewIframeErrorMessagePayload,
+  NewIframeImageMessagePayload,
+} from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
 import { HistoryDB } from "@/components/Editor/history/HistoryDB";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
-import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { useErrorToss } from "@/lib/errorToss";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
@@ -13,7 +16,7 @@ import "github-markdown-css/github-markdown-light.css";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-export default function Page({ children }: { children: React.ReactNode }) {
+function PageComponent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId");
   const { path } = useWorkspaceRoute();
@@ -39,48 +42,91 @@ export default function Page({ children }: { children: React.ReactNode }) {
   );
 }
 
+function broadcastError(error: Error) {
+  return window.parent.postMessage(NewIframeErrorMessagePayload(error), "*");
+}
+
+export default function Page({ children }: { children: React.ReactNode }) {
+  return (
+    <ErrorBoundary onError={(error) => broadcastError(error)} fallback={null}>
+      <PageComponent>{children}</PageComponent>
+    </ErrorBoundary>
+  );
+}
+
 function PreviewComponent({ editId }: { editId: number }) {
   const toss = useErrorToss();
   const [editContent, setEditContent] = useState("");
+  const { currentWorkspace } = useWorkspaceContext();
 
   useEffect(() => {
     void (async () => {
-      const history = new HistoryDB();
-      const documentChange = await history.getEditByEditId(editId);
-      if (documentChange === null) {
-        return toss(new Error(`No document change found for editId: ${editId}`));
+      try {
+        const history = new HistoryDB();
+        const documentChange = await history.getEditByEditId(editId);
+        if (documentChange === null) {
+          return toss(new Error(`No document change found for editId: ${editId}`));
+        }
+        setEditContent((await history.reconstructDocumentFromEdit(documentChange)) ?? "");
+        history.tearDown();
+        void currentWorkspace?.tearDown();
+      } catch (error) {
+        toss(error as Error);
       }
-      setEditContent((await history.reconstructDocumentFromEdit(documentChange)) ?? "");
     })();
-  }, [editId, toss]);
+  }, [currentWorkspace, editId, toss]);
 
   return <MarkdownRender contents={editContent} editId={editId} />;
 }
 
 function MarkdownRender({ contents, editId }: { contents?: string | null; editId?: number }) {
-  const html = useMemo(() => renderMarkdownToHtml(contents ?? ""), [contents]);
+  const toss = useErrorToss();
+  const html = useMemo(() => {
+    try {
+      return renderMarkdownToHtml(contents ?? "");
+    } catch (e) {
+      throw toss(new Error(`Error rendering markdown: ${e}`));
+    }
+  }, [contents, toss]);
   const htmlRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const target = htmlRef.current;
-    if (!target) return;
+    try {
+      const target = htmlRef.current;
+      if (!target) return;
 
-    // Callback for mutation observer
-    const handleMutations = async () => {
-      // const windowLocation = window.location.href;
-      // window.parent.postMessage(NewIframeImageDebugPayload(windowLocation + ":" + editId + " : " + target.innerHTML));
-      const capture = await snapdom.capture(target);
-      const blob = await capture.toBlob({ format: "webp" });
-      window.parent.postMessage(NewIframeImageMessagePayload(blob, editId!));
-    };
+      // Callback for mutation observer
+      const handleMutations = async () => {
+        // const windowLocation = window.location.href;
+        // window.parent.postMessage(NewIframeImageDebugPayload(windowLocation + ":" + editId + " : " + target.innerHTML));
+        const capture = await snapdom.capture(target);
+        const blob = await capture.toBlob({ format: "webp" });
+        // Wait for all images to load before capturing
+        const images = Array.from(target.querySelectorAll("img"));
+        if (images.length > 0) {
+          await Promise.all(
+            images.map((img) =>
+              img.complete
+                ? Promise.resolve()
+                : new Promise((resolve) => {
+                    img.addEventListener("load", resolve, { once: true });
+                    img.addEventListener("error", resolve, { once: true });
+                  })
+            )
+          );
+        }
+        window.parent.postMessage(NewIframeImageMessagePayload(blob, editId!));
+      };
 
-    const observer = new MutationObserver(handleMutations);
-    observer.observe(target, { childList: true, subtree: true, characterData: true });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [editId, html]);
+      const observer = new MutationObserver(handleMutations);
+      observer.observe(target, { childList: true, subtree: true, characterData: true });
+      return () => {
+        observer.disconnect();
+      };
+    } catch (e) {
+      throw toss(new Error(`Error setting up mutation observer: ${e}`));
+    }
+  }, [editId, html, toss]);
 
   return (
     <div>

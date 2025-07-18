@@ -8,12 +8,14 @@ export class DocumentChange {
   timestamp: number;
   parent: number | null;
   edit_id!: number;
+  preview: Uint8Array | null;
 
-  constructor(id: string, change: string, timestamp: number, parent: number | null) {
+  constructor(id: string, change: string, timestamp: number, parent: number | null, preview: Uint8Array | null = null) {
     this.id = id;
     this.change = change;
     this.timestamp = timestamp;
     this.parent = parent;
+    this.preview = preview;
   }
 
   log() {

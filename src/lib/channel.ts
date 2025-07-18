@@ -67,7 +67,11 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   }
 
   tearDown = () => {
-    console.log("channel tearDown");
+    if (typeof window !== "undefined" && window.location) {
+      console.log("channel tearDown in " + window.location.href); //TODO:
+    } else {
+      console.log("channel tearDown (window not available)");
+    }
     ChannelSet.delete(this.channelName);
     if (this.channel) {
       this.channel.close();

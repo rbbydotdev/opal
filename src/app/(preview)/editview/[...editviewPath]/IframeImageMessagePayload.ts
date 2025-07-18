@@ -1,9 +1,30 @@
+import { unwrapError } from "@/lib/errors";
+
 export type IframeImageMessagePayload = {
   mimeType: string;
   blob: Blob;
   type: "IFRAME_IMAGE_MESSAGE";
   editId: number;
 };
+
+export type IframeErrorMessagePayload = {
+  type: "IFRAME_ERROR_MESSAGE";
+  error: string;
+};
+
+export function NewIframeErrorMessagePayload(error: string | Error): IframeErrorMessagePayload {
+  return {
+    type: "IFRAME_ERROR_MESSAGE",
+    error: unwrapError(error),
+  };
+}
+
+export function isIframeErrorMessage(event: MessageEvent<unknown>): event is MessageEvent<IframeErrorMessagePayload> {
+  const message = event.data;
+  return (
+    typeof message === "object" && message !== null && (message as { type?: string }).type === "IFRAME_ERROR_MESSAGE"
+  );
+}
 
 export function NewIframeImageMessagePayload(blob: Blob, editId: number) {
   return {
