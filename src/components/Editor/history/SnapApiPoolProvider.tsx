@@ -18,11 +18,12 @@ async function createApiResource({
     filePath,
     workspaceId,
   });
-  console.log("creating iframe with params", searchParams.toString());
+  // console.log("creating iframe with params", searchParams.toString());
   iframe.src = "/doc-preview-image.html?" + searchParams.toString();
   document.body.appendChild(iframe);
   // iframe.sandbox.add("allow-scripts", "allow-same-origin");
   await new Promise((rs) => (iframe.onload = () => rs(true)));
+  console.log("iframe up");
   const api = Comlink.wrap<PreviewWorkerApi>(Comlink.windowEndpoint(iframe.contentWindow!));
   const terminate = () => {
     console.log("removing iframe");

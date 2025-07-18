@@ -166,7 +166,7 @@ function EditHistoryScroll({
                   </div>
                 </div>
               )}
-              <SnapApiPoolProvider max={5}>
+              <SnapApiPoolProvider max={1}>
                 {edits.map((EDIT) => (
                   <div key={EDIT.edit_id}>
                     <button
