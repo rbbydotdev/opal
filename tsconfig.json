@@ -40,6 +40,9 @@
     "./src/types"
   ],
   "exclude": [
+    "./src/components/ui/calendar.tsx",
+    "./node_modules",
+    "./src/components/ui/input-otp.tsx",
     "./tools",
     ".next",
     ".next/types/**/*.ts",

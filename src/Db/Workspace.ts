@@ -508,23 +508,24 @@ export class Workspace {
   }
 
   async renameMdImages(paths: [to: string, from: string][]) {
-    if (paths.length === 0) return [];
-    const res = await fetch("/replace-md-images", {
+    if (paths.length === 0 || !paths.flat().length) return [];
+    let res: AbsPath[] = [];
+    const response = await fetch("/replace-md-images", {
       method: "POST",
       body: JSON.stringify(paths),
-    })
-      .then(async (res) => {
-        try {
-          return (await res.clone().json()) as Promise<AbsPath[]>;
-        } catch (e) {
-          console.error(`Error parsing response from /replace-md-images\n\n${await res.clone().text()}`, e);
-          return [];
-        }
-      })
-      .catch((e) => {
-        console.error("Error renaming md images", e);
-        return [];
-      });
+    });
+    if (response.ok) {
+      try {
+        res = (await response.clone().json()) as AbsPath[];
+      } catch (e) {
+        console.error(`Error parsing JSON from /replace-md-images\n\n${await response.clone().text()}`, e);
+        res = [];
+      }
+    } else {
+      const bodyText = await response.text();
+      console.error(`Error renaming md images: ${response.status} ${response.statusText}\n${bodyText}`);
+      res = [];
+    }
     if (res.length) {
       await this.disk.local.emit(DiskEvents.WRITE, {
         filePaths: res,
