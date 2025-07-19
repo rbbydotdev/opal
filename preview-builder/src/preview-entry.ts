@@ -14,8 +14,11 @@ async function snapshotAndPost(target: HTMLElement, editId: number) {
         (img) =>
           new Promise((resolve) => {
             if (img.complete) return resolve(true);
-            img.addEventListener("load", () => resolve(true), { once: true });
-            img.addEventListener("error", () => resolve(true), { once: true });
+            const onDone = () => resolve(true);
+            img.addEventListener("load", onDone, { once: true });
+            img.addEventListener("error", onDone, { once: true });
+            // Timeout fallback (e.g., 2 seconds)
+            setTimeout(onDone, 2000);
           })
       )
     );
