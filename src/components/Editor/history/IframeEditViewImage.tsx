@@ -1,31 +1,29 @@
-import { NewComlinkSnapshotPoolWorker, useSnapApiPool } from "@/components/Editor/history/SnapApiPoolProvider";
+import {
+  ApiPoolWorker,
+  NewComlinkSnapshotPoolWorker,
+  useSnapApiPool,
+} from "@/components/Editor/history/SnapApiPoolProvider";
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 function useIframeImage({ editId, workspaceId, filePath }: { editId: number; workspaceId: string; filePath: string }) {
-  const { work } = useSnapApiPool();
+  const { work, terminate } = useSnapApiPool();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const worker = useMemo(() => {
-    // console.log("Creating new worker for editId", editId, "filePath", filePath, "workspaceId", workspaceId);
-    return NewComlinkSnapshotPoolWorker({ editId, workspaceId, filePath }, async ({ blob }) => {
-      setImageUrl(URL.createObjectURL(blob));
-    });
-  }, [editId, filePath, workspaceId]);
-  // useEffect(() => {
-  //   const history = new HistoryDAO();
-  //   void (async () => {
-  //     const change = await history.getEditByEditId(editId);
-  //     if (change?.preview) {
-  //       setImageUrl(URL.createObjectURL(change.preview));
-  //     } else {
-  //       void work(worker);
-  //     }
-  //   })();
-  // }, [editId, work, worker]);
   useEffect(() => {
+    let worker: ApiPoolWorker | null = NewComlinkSnapshotPoolWorker(
+      { editId, workspaceId, filePath },
+      async ({ blob }) => {
+        setImageUrl(URL.createObjectURL(blob));
+      }
+    );
     void work(worker);
-  }, [work, worker]);
+    return () => {
+      worker = null;
+      // worker.cleanup(); ???
+      terminate();
+    };
+  }, [editId, filePath, terminate, work, workspaceId]);
   useEffect(() => {
     return () => {
       try {
@@ -34,7 +32,7 @@ function useIframeImage({ editId, workspaceId, filePath }: { editId: number; wor
         console.error(e);
       }
     };
-  }, [imageUrl, work, worker]);
+  }, [imageUrl, work]);
   return imageUrl;
 }
 
@@ -51,7 +49,7 @@ export const IframeEditViewImage = ({
 }) => {
   const imageUrl = useIframeImage({ editId, filePath, workspaceId });
   return imageUrl !== null ? (
-    <img src={imageUrl} className={cn("w-32 h-32 object-cover border border-black", className)} alt="" />
+    <img src={imageUrl} className={cn("w-32 h-32 object-contain border border-black", className)} alt="" />
   ) : (
     <div className={cn("w-32 h-32 border border-black", className)}></div>
   );

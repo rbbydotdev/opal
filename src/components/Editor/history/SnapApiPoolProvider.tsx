@@ -12,7 +12,7 @@ async function createApiResource({
   workspaceId: string;
   filePath: string;
 }): Promise<Resource<Comlink.Remote<PreviewWorkerApi>>> {
-  let iframe: HTMLIFrameElement | null = document.createElement("iframe");
+  const iframe: HTMLIFrameElement | null = document.createElement("iframe");
   const searchParams = new URLSearchParams({
     editId: String(editId),
     filePath,
@@ -24,17 +24,22 @@ async function createApiResource({
   // iframe.sandbox.add("allow-scripts", "allow-same-origin");
   await new Promise((rs) => (iframe!.onload = () => rs(true)));
   console.log("iframe up");
-  let api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
+  const api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
     Comlink.windowEndpoint(iframe.contentWindow!)
   );
+  const wrefApi = new WeakRef(api);
+  const wrefIframe = new WeakRef(iframe);
   const terminate = () => {
     console.log("terminating api resource");
-    api?.[Comlink.releaseProxy]();
-    api = null;
-    iframe!.remove();
-    iframe = null;
+    // api?.[Comlink.releaseProxy]();
+    // iframe?.remove();
+    wrefApi.deref()?.[Comlink.releaseProxy]();
+    wrefIframe.deref()?.remove();
+    // api = null;
+    // iframe!.remove();
+    // iframe = null;
   };
-  return { api, ready: Promise.resolve(true), terminate };
+  return { api, terminate };
 }
 export function NewComlinkSnapshotPoolWorker(
   { editId, workspaceId, filePath }: { editId: number; workspaceId: string; filePath: string },
@@ -42,9 +47,7 @@ export function NewComlinkSnapshotPoolWorker(
 ) {
   return new ApiPoolWorker(
     ({ api }) => api.renderAndSnapshot(editId).then((result) => cb(result)),
-    () => {
-      return createApiResource({ editId, workspaceId, filePath });
-    }
+    () => createApiResource({ editId, workspaceId, filePath })
   );
 }
 

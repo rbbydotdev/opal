@@ -6,7 +6,7 @@ import React, { createContext, useContext, useMemo } from "react";
 
 export interface Resource<T = unknown> {
   api: T;
-  ready: Promise<boolean>;
+  // ready: Promise<boolean>;
   terminate: () => void;
 }
 
@@ -17,24 +17,23 @@ export interface IPoolWorker<TResource extends Resource> {
 
   // cleanup: (re: TResource) => void; // terminate: () => void;
 
-  $p: ReturnType<typeof Promise.withResolvers<void>>;
+  // $p: ReturnType<typeof Promise.withResolvers<void>>;
 }
 
 export class PoolWorker<TResource extends Resource> implements IPoolWorker<TResource> {
   // resource: TResource | null = null;
-  ready = Promise.resolve(true);
+  // ready = Promise.resolve(true);
 
-  $p = Promise.withResolvers<void>();
+  // $p = Promise.withResolvers<void>();
 
   constructor(
     private execFn: (res: TResource) => Promise<void>,
-    public setupResource: () => Promise<TResource> | TResource // public terminate: (re: TResource) => void // terminate: () => void;
-  ) // public cleanup: (re: TResource) => void
-  {}
+    public setupResource: () => Promise<TResource> | TResource // public terminate: (re: TResource) => void // terminate: () => void; // public cleanup: (re: TResource) => void
+  ) {}
 
   async exec(res: TResource) {
     const result = await this.execFn(res);
-    this.$p.resolve(result);
+    // this.$p.resolve(result);
     return result;
   }
 }
@@ -46,9 +45,9 @@ class DelayedWorker<TResource extends Resource> implements IPoolWorker<TResource
     private reject: (reason?: unknown) => void
   ) {}
 
-  get $p() {
-    return this.poolWorker.$p;
-  }
+  // get $p() {
+  // return this.poolWorker.$p;
+  // }
   async exec(res: TResource) {
     return this.poolWorker.exec(res).then(this.resolve).catch(this.reject);
   }
@@ -77,16 +76,17 @@ class PoolManager<TResource extends Resource> {
     this.pool = new Array(max).fill(null);
   }
 
-  /**
-   * Clears the pending work queue and returns a promise that resolves
-   * when all currently active workers have completed.
-   */
-  sighup = (): Promise<void[]> => {
-    return Promise.all([]);
-    // while (this.queue.length) this.queue.pop();
-    // const runningJobs = this.pool.filter((p): p is IPoolWorker<TResource> => p !== null);
-    // .map((pw) => pw.promise.promise);
-    // return Promise.all(runningJobs);
+  terminate = (): void => {
+    this.pool.forEach((worker, idx) => {
+      if (worker) {
+        // worker.$p.reject(new Error("Pool terminated"));
+        // worker.$p.resolve();
+        this.resourcePool[idx]?.terminate();
+        this.resourcePool[idx] = null;
+      }
+    });
+    this.pool.fill(null);
+    this.queue.length = 0;
   };
 
   work = <TWorker extends IPoolWorker<TResource>>(poolWorker: TWorker): Promise<unknown> => {
@@ -130,7 +130,7 @@ class PoolManager<TResource extends Resource> {
  */
 type PoolContextValue<TWorker extends IPoolWorker<Resource<any>>> = {
   work: (pw: TWorker) => Promise<any>;
-  sighup: () => Promise<void[]>;
+  terminate: () => void;
 };
 
 /**
@@ -148,7 +148,7 @@ export function CreatePoolContext<TWorker extends IPoolWorker<Resource<any>>>() 
     // more specific `work` signature required by the context value.
     const contextValue: PoolContextValue<TWorker> = {
       work: manager.work,
-      sighup: manager.sighup,
+      terminate: manager.terminate,
     };
 
     return <Context.Provider value={contextValue}>{children}</Context.Provider>;
