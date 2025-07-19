@@ -3,7 +3,7 @@ import { CreatePoolContext, PoolWorker, Resource } from "@/components/PoolWorker
 
 import * as Comlink from "comlink";
 
-async function createApiResource({
+export async function createApiResource({
   editId,
   workspaceId,
   filePath,
@@ -12,7 +12,7 @@ async function createApiResource({
   workspaceId: string;
   filePath: string;
 }): Promise<Resource<Comlink.Remote<PreviewWorkerApi>>> {
-  const iframe: HTMLIFrameElement | null = document.createElement("iframe");
+  let iframe: HTMLIFrameElement | null = document.createElement("iframe");
   const searchParams = new URLSearchParams({
     editId: String(editId),
     filePath,
@@ -24,7 +24,7 @@ async function createApiResource({
   // iframe.sandbox.add("allow-scripts", "allow-same-origin");
   await new Promise((rs) => (iframe!.onload = () => rs(true)));
   console.log("iframe up");
-  const api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
+  let api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
     Comlink.windowEndpoint(iframe.contentWindow!)
   );
   const wrefApi = new WeakRef(api);
@@ -33,11 +33,12 @@ async function createApiResource({
     console.log("terminating api resource");
     // api?.[Comlink.releaseProxy]();
     // iframe?.remove();
+    (wrefIframe.deref()! || {}).src = "about:blank";
     wrefApi.deref()?.[Comlink.releaseProxy]();
     wrefIframe.deref()?.remove();
-    // api = null;
+    api = null;
     // iframe!.remove();
-    // iframe = null;
+    iframe = null;
   };
   return { api, terminate };
 }

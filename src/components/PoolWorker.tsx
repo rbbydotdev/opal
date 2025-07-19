@@ -74,19 +74,14 @@ class PoolManager<TResource extends Resource> {
 
   constructor(max: number) {
     this.pool = new Array(max).fill(null);
+    this.resourcePool = new Array(max).fill(null);
   }
 
-  terminate = (): void => {
-    this.pool.forEach((worker, idx) => {
-      if (worker) {
-        // worker.$p.reject(new Error("Pool terminated"));
-        // worker.$p.resolve();
-        this.resourcePool[idx]?.terminate();
-        this.resourcePool[idx] = null;
-      }
-    });
-    this.pool.fill(null);
-    this.queue.length = 0;
+  flush = (): void => {
+    // console.log("Terminating pool manager and cleaning up resources");
+    while (this.resourcePool.length) this.resourcePool.pop()?.terminate();
+    while (this.queue.length) this.queue.pop();
+    while (this.pool.length) this.pool.pop();
   };
 
   work = <TWorker extends IPoolWorker<TResource>>(poolWorker: TWorker): Promise<unknown> => {
@@ -130,7 +125,7 @@ class PoolManager<TResource extends Resource> {
  */
 type PoolContextValue<TWorker extends IPoolWorker<Resource<any>>> = {
   work: (pw: TWorker) => Promise<any>;
-  terminate: () => void;
+  flush: () => void;
 };
 
 /**
@@ -148,7 +143,7 @@ export function CreatePoolContext<TWorker extends IPoolWorker<Resource<any>>>() 
     // more specific `work` signature required by the context value.
     const contextValue: PoolContextValue<TWorker> = {
       work: manager.work,
-      terminate: manager.terminate,
+      flush: manager.flush,
     };
 
     return <Context.Provider value={contextValue}>{children}</Context.Provider>;
