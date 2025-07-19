@@ -15,7 +15,7 @@ export interface IPoolWorker<TResource extends Resource> {
 
   setupResource: () => Promise<TResource> | TResource;
 
-  cleanup: (re: TResource) => void; // terminate: () => void;
+  // cleanup: (re: TResource) => void; // terminate: () => void;
 
   $p: ReturnType<typeof Promise.withResolvers<void>>;
 }
@@ -28,10 +28,9 @@ export class PoolWorker<TResource extends Resource> implements IPoolWorker<TReso
 
   constructor(
     private execFn: (res: TResource) => Promise<void>,
-    public setupResource: () => Promise<TResource> | TResource, // public terminate: (re: TResource) => void // terminate: () => void;
-
-    public cleanup: (re: TResource) => void
-  ) {}
+    public setupResource: () => Promise<TResource> | TResource // public terminate: (re: TResource) => void // terminate: () => void;
+  ) // public cleanup: (re: TResource) => void
+  {}
 
   async exec(res: TResource) {
     const result = await this.execFn(res);
@@ -56,9 +55,9 @@ class DelayedWorker<TResource extends Resource> implements IPoolWorker<TResource
   get setupResource() {
     return this.poolWorker.setupResource;
   }
-  get cleanup() {
-    return this.poolWorker.cleanup;
-  }
+  // get cleanup() {
+  //   return this.poolWorker.cleanup;
+  // }
 }
 
 // New Business Logic Class & Context Factory
@@ -108,7 +107,7 @@ class PoolManager<TResource extends Resource> {
         try {
           if (!this.startTime) this.startTime = Date.now();
           const result = await poolWorker.exec(this.resourcePool[availIdx]!);
-          console.log((Date.now() - this.startTime) / 1000, "seconds");
+          // console.log((Date.now() - this.startTime) / 1000, "seconds");
           return resolve(result);
         } catch (e) {
           return reject(e);
@@ -117,7 +116,7 @@ class PoolManager<TResource extends Resource> {
           if (this.queue.length > 0) {
             return this.work(this.queue.shift()!);
           } else {
-            this.resourcePool[availIdx]?.terminate();
+            this.resourcePool[availIdx].terminate();
             this.resourcePool[availIdx] = null;
           }
         }

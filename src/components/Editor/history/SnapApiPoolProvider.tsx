@@ -24,10 +24,13 @@ async function createApiResource({
   // iframe.sandbox.add("allow-scripts", "allow-same-origin");
   await new Promise((rs) => (iframe.onload = () => rs(true)));
   console.log("iframe up");
-  const api = Comlink.wrap<PreviewWorkerApi>(Comlink.windowEndpoint(iframe.contentWindow!));
+  let api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
+    Comlink.windowEndpoint(iframe.contentWindow!)
+  );
   const terminate = () => {
-    // console.log("removing iframe");
-    // console.log(document.querySelectorAll("iframe").length);
+    console.log("terminating api resource");
+    api?.[Comlink.releaseProxy]();
+    api = null;
     iframe.remove();
   };
   return { api, ready: Promise.resolve(true), terminate };
@@ -40,10 +43,6 @@ export function NewComlinkSnapshotPoolWorker(
     ({ api }) => api.renderAndSnapshot(editId).then((result) => cb(result)),
     () => {
       return createApiResource({ editId, workspaceId, filePath });
-    },
-    (resource) => {
-      console.log(typeof resource, "cleanup resource", resource);
-      resource?.terminate();
     }
   );
 }

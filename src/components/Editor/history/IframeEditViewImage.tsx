@@ -51,6 +51,8 @@ export const IframeEditViewImage = ({
 }) => {
   const imageUrl = useIframeImage({ editId, filePath, workspaceId });
   return imageUrl !== null ? (
-    <img src={imageUrl} className={cn("w-32 h-32 _bg-blue-400 object-cover border border-black", className)} alt="" />
-  ) : null;
+    <img src={imageUrl} className={cn("w-32 h-32 object-cover border border-black", className)} alt="" />
+  ) : (
+    <div className={cn("w-32 h-32 border border-black", className)}></div>
+  );
 };
