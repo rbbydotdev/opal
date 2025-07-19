@@ -6,8 +6,16 @@ import {
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
-function useIframeImage({ editId, workspaceId, filePath }: { editId: number; workspaceId: string; filePath: string }) {
-  const { work, terminate } = useSnapApiPool();
+function useIframeImagePooled({
+  editId,
+  workspaceId,
+  filePath,
+}: {
+  editId: number;
+  workspaceId: string;
+  filePath: string;
+}) {
+  const { work, flush: terminate } = useSnapApiPool();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
@@ -19,9 +27,11 @@ function useIframeImage({ editId, workspaceId, filePath }: { editId: number; wor
     );
     void work(worker);
     return () => {
-      worker = null;
+      // console.log("unmount terminate");
+      // () => createApiResource({ editId, workspaceId, filePath })
       // worker.cleanup(); ???
       terminate();
+      worker = null;
     };
   }, [editId, filePath, terminate, work, workspaceId]);
   useEffect(() => {
@@ -47,7 +57,7 @@ export const IframeEditViewImage = ({
   editId: number;
   className?: string;
 }) => {
-  const imageUrl = useIframeImage({ editId, filePath, workspaceId });
+  const imageUrl = useIframeImagePooled({ editId, filePath, workspaceId });
   return imageUrl !== null ? (
     <img src={imageUrl} className={cn("w-32 h-32 object-contain border border-black", className)} alt="" />
   ) : (
