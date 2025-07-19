@@ -28,6 +28,7 @@ async function createApiResource({
   const terminate = () => {
     console.log("removing iframe");
     iframe.remove();
+    console.log(document.querySelectorAll("iframe").length);
   };
   return { api, ready: Promise.resolve(true), terminate };
 }
@@ -40,7 +41,10 @@ export function NewComlinkSnapshotPoolWorker(
     () => {
       return createApiResource({ editId, workspaceId, filePath });
     },
-    (resource) => resource?.terminate()
+    (resource) => {
+      console.log(typeof resource, "cleanup resource", resource);
+      resource?.terminate();
+    }
   );
 }
 
