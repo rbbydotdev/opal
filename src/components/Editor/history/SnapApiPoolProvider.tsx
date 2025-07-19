@@ -26,9 +26,9 @@ async function createApiResource({
   console.log("iframe up");
   const api = Comlink.wrap<PreviewWorkerApi>(Comlink.windowEndpoint(iframe.contentWindow!));
   const terminate = () => {
-    console.log("removing iframe");
+    // console.log("removing iframe");
+    // console.log(document.querySelectorAll("iframe").length);
     iframe.remove();
-    console.log(document.querySelectorAll("iframe").length);
   };
   return { api, ready: Promise.resolve(true), terminate };
 }

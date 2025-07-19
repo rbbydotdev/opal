@@ -108,7 +108,7 @@ export default function Page() {
   const arr = useMemo(() => [Date.now(), Date.now()], []);
   const [, render] = useState(0);
   return (
-    <PoolProvider max={1}>
+    <PoolProvider max={5}>
       <SomeComponent />
     </PoolProvider>
   );

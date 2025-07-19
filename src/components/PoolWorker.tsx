@@ -11,70 +11,54 @@ export interface Resource<T = unknown> {
 }
 
 export interface IPoolWorker<TResource extends Resource> {
-  ready: Promise<boolean>;
-  exec: () => Promise<unknown>;
+  exec: (res: TResource) => Promise<unknown>;
 
-  promise: { promise: Promise<void>; resolve: (value?: void) => void; reject: (reason?: void) => void };
-  // terminate: () => void;
-  setup: () => Promise<TResource> | TResource;
-  readonly resource: TResource | null;
-  using: (res: TResource | null) => IPoolWorker<TResource>;
+  setupResource: () => Promise<TResource> | TResource;
 
   cleanup: (re: TResource) => void; // terminate: () => void;
+
+  $p: ReturnType<typeof Promise.withResolvers<void>>;
 }
 
 export class PoolWorker<TResource extends Resource> implements IPoolWorker<TResource> {
-  resource: TResource | null = null;
+  // resource: TResource | null = null;
   ready = Promise.resolve(true);
 
-  promise = Promise.withResolvers<void>();
+  $p = Promise.withResolvers<void>();
 
   constructor(
     private execFn: (res: TResource) => Promise<void>,
-    public setup: () => Promise<TResource> | TResource, // public terminate: (re: TResource) => void // terminate: () => void;
+    public setupResource: () => Promise<TResource> | TResource, // public terminate: (re: TResource) => void // terminate: () => void;
 
     public cleanup: (re: TResource) => void
   ) {}
 
-  async exec() {
-    await this.using(null).ready;
-    return this.execFn(this.resource!).finally(() => this.promise.resolve());
-  }
-
-  using(res: TResource | null): PoolWorker<TResource> {
-    const typedRes = res;
-    if (typedRes === null) {
-      this.ready = Promise.resolve(this.setup()).then((newResource) => {
-        newResource.id = id++;
-        console.log("made new resource");
-        this.resource = newResource;
-        return true;
-      });
-    } else {
-      this.resource = typedRes;
-    }
-    return this;
+  async exec(res: TResource) {
+    const result = await this.execFn(res);
+    this.$p.resolve(result);
+    return result;
   }
 }
-let id = 0;
 
 class DelayedWorker<TResource extends Resource> implements IPoolWorker<TResource> {
-  ready = Promise.resolve(true);
-  resource: TResource | null = null;
-  promise = Promise.withResolvers<void>();
-
   constructor(
     private poolWorker: IPoolWorker<TResource>,
     private resolve: (value?: unknown) => void,
     private reject: (reason?: unknown) => void
   ) {}
 
-  async exec() {
-    return this.poolWorker.exec().then(this.resolve).catch(this.reject);
+  get $p() {
+    return this.poolWorker.$p;
   }
-  setup = this.poolWorker.setup;
-  cleanup = this.poolWorker.cleanup;
-  using = this.poolWorker.using;
+  async exec(res: TResource) {
+    return this.poolWorker.exec(res).then(this.resolve).catch(this.reject);
+  }
+  get setupResource() {
+    return this.poolWorker.setupResource;
+  }
+  get cleanup() {
+    return this.poolWorker.cleanup;
+  }
 }
 
 // New Business Logic Class & Context Factory
@@ -86,7 +70,9 @@ class DelayedWorker<TResource extends Resource> implements IPoolWorker<TResource
 class PoolManager<TResource extends Resource> {
   private readonly pool: (IPoolWorker<TResource> | null)[];
   private readonly queue: IPoolWorker<TResource>[] = [];
-  private readonly resources: TResource[] = [];
+  private readonly resourcePool: (TResource | null)[] = [];
+
+  private startTime = 0;
 
   constructor(max: number) {
     this.pool = new Array(max).fill(null);
@@ -97,49 +83,44 @@ class PoolManager<TResource extends Resource> {
    * when all currently active workers have completed.
    */
   sighup = (): Promise<void[]> => {
-    while (this.queue.length) this.queue.pop();
-    const runningJobs = this.pool
-      .filter((p): p is IPoolWorker<TResource> => p !== null)
-      .map((pw) => pw.promise.promise);
-    return Promise.all(runningJobs);
+    return Promise.all([]);
+    // while (this.queue.length) this.queue.pop();
+    // const runningJobs = this.pool.filter((p): p is IPoolWorker<TResource> => p !== null);
+    // .map((pw) => pw.promise.promise);
+    // return Promise.all(runningJobs);
   };
 
-  /**
-   * Accepts a worker, runs it if a slot is available, or queues it if not.
-   * Manages resource creation and reuse between sequential jobs.
-   * @param poolWorker The worker to execute.
-   * @returns A promise that resolves or rejects when the worker completes.
-   */
   work = <TWorker extends IPoolWorker<TResource>>(poolWorker: TWorker): Promise<unknown> => {
-    return new Promise((resolve, reject) => {
-      const availIdx = this.pool.indexOf(null);
-
+    return new Promise(async (resolve, reject) => {
+      const availIdx = !this.pool.length ? 0 : this.pool.indexOf(null);
       if (availIdx === -1) {
-        console.log("queue full");
+        //pool slot not available
+        // console.log(this.pool.length, "slots full, queuing work");
         this.queue.push(new DelayedWorker(poolWorker, resolve, reject));
       } else {
+        //pool slot available
+        //immediately mark the slot as occupied
         this.pool[availIdx] = poolWorker;
-        void poolWorker
-          .exec()
-          .catch(reject)
-          .then(resolve)
-          .finally(() => {
-            console.log("finish looking at queue ->", this.queue.length);
-            const resource = poolWorker.resource;
-            // console.log("pool worker finished, now have resource ->", resource);
-            this.pool[availIdx] = null; // Free up the slot
-
-            // console.log(this.queue, this.pool);
-            if (this.queue.length > 0) {
-              console.log("popping from queue passing resource:", resource);
-              // void nextWorker.ready.then(() => this.work(nextWorker));
-              return this.work(this.queue.pop()!.using(resource));
-            } else {
-              console.log("idle worker, cleaning up resources");
-              this.pool.forEach((pw) => pw?.resource?.terminate());
-              resource?.terminate();
-            }
-          });
+        if (!this.resourcePool[availIdx]) {
+          // console.log(poolWorker, poolWorker.setupResource);
+          this.resourcePool[availIdx] = await poolWorker.setupResource();
+        }
+        try {
+          if (!this.startTime) this.startTime = Date.now();
+          const result = await poolWorker.exec(this.resourcePool[availIdx]!);
+          console.log((Date.now() - this.startTime) / 1000, "seconds");
+          return resolve(result);
+        } catch (e) {
+          return reject(e);
+        } finally {
+          this.pool[availIdx] = null; // Free up the slot
+          if (this.queue.length > 0) {
+            return this.work(this.queue.shift()!);
+          } else {
+            this.resourcePool[availIdx]?.terminate();
+            this.resourcePool[availIdx] = null;
+          }
+        }
       }
     });
   };
