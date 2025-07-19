@@ -12,7 +12,7 @@ async function createApiResource({
   workspaceId: string;
   filePath: string;
 }): Promise<Resource<Comlink.Remote<PreviewWorkerApi>>> {
-  const iframe = document.createElement("iframe");
+  let iframe: HTMLIFrameElement | null = document.createElement("iframe");
   const searchParams = new URLSearchParams({
     editId: String(editId),
     filePath,
@@ -22,7 +22,7 @@ async function createApiResource({
   iframe.src = "/doc-preview-image.html?" + searchParams.toString();
   document.body.appendChild(iframe);
   // iframe.sandbox.add("allow-scripts", "allow-same-origin");
-  await new Promise((rs) => (iframe.onload = () => rs(true)));
+  await new Promise((rs) => (iframe!.onload = () => rs(true)));
   console.log("iframe up");
   let api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
     Comlink.windowEndpoint(iframe.contentWindow!)
@@ -31,7 +31,8 @@ async function createApiResource({
     console.log("terminating api resource");
     api?.[Comlink.releaseProxy]();
     api = null;
-    iframe.remove();
+    iframe!.remove();
+    iframe = null;
   };
   return { api, ready: Promise.resolve(true), terminate };
 }
