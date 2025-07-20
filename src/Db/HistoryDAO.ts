@@ -164,6 +164,7 @@ export interface HistoryStorageInterface {
   getEditByEditId(edit_id: number): Promise<HistoryDocRecord | null>;
   getEdits(id: string): Promise<HistoryDocRecord[]>;
   getLatestEdit(id: string): Promise<HistoryDocRecord | null>;
+  updatePreviewForEditId(edit_id: number, preview: Blob): Promise<void>;
   onUpdate: (documentId: string, cb: (edits: HistoryDocRecord[]) => void) => void;
   ready?: Promise<boolean>;
   tearDown?(): void;
