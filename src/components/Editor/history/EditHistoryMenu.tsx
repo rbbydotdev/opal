@@ -167,7 +167,7 @@ function EditHistoryScroll({
                 </div>
               )}
               {/* <SnapApiPoolProvider max={Math.max((navigator?.hardwareConcurrency ?? 0) - 1 || 2)}> */}
-              <SnapApiPoolProvider max={5}>
+              <SnapApiPoolProvider max={1}>
                 {edits.map((EDIT) => (
                   <div key={EDIT.edit_id}>
                     <button
@@ -181,18 +181,20 @@ function EditHistoryScroll({
                       {workspaceId && filePath ? (
                         <IframeEditViewImage filePath={filePath} workspaceId={workspaceId} editId={EDIT.edit_id} />
                       ) : null}
-                      {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
-                        <span className="mr-2 text-primary">{"•"}</span>
-                      ) : (
-                        <span className="-ml-1 mr-2 text-2xl font-bold text-ring">{"✓"}</span>
-                      )}
+                      <div className="ml-4">
+                        {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
+                          <span className="mr-2 text-primary">{"•"}</span>
+                        ) : (
+                          <span className="-ml-1 mr-2 text-2xl font-bold text-ring">{"✓"}</span>
+                        )}
 
-                      {new Date(EDIT.timestamp).toLocaleString()}
-                      <span className="text-black">
-                        &nbsp;
-                        {/* <span className="font-bold font-mono ml-4">{EDIT.edit_id}</span>{" "} */}
-                        <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
-                      </span>
+                        {new Date(EDIT.timestamp).toLocaleString()}
+                        <span className="text-black">
+                          &nbsp;
+                          {/* <span className="font-bold font-mono ml-4">{EDIT.edit_id}</span>{" "} */}
+                          <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
+                        </span>
+                      </div>
                     </button>
                     <Separator />
                   </div>
