@@ -104,6 +104,8 @@ class PoolManager<TResource extends Resource> {
           const result = await poolWorker.exec(this.resourcePool[availIdx]!);
           // console.log((Date.now() - this.startTime) / 1000, "seconds");
           return resolve(result);
+          // return poolWorker.exec(this.resourcePool[availIdx]!).then((result) => resolve(result));
+          // return resolve(poolWorker.exec(this.resourcePool[availIdx]!));
         } catch (e) {
           return reject(e);
         } finally {
