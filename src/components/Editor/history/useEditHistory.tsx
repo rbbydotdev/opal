@@ -1,4 +1,4 @@
-import { DocumentChange } from "@/components/Editor/history/HistoryDB";
+import { DocumentChangeDAO } from "@/components/Editor/history/HistoryDB";
 import { HistoryPlugin } from "@/components/Editor/history/historyPlugin";
 import { useCellForRealm } from "@/components/useCellForRealm";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
@@ -10,10 +10,10 @@ export function useEditHistoryPlugin(documentId: string, realm: Realm | undefine
 
   const [selectedEdit, setSelectedEdit] = useCellForRealm(HistoryPlugin.selectedEdit$, realm);
 
-  const lastEdit = useRef<DocumentChange | null>(null);
+  const lastEdit = useRef<DocumentChangeDAO | null>(null);
 
   const setEdit = useCallback(
-    (selectedEdit: DocumentChange | null) => {
+    (selectedEdit: DocumentChangeDAO | null) => {
       setSelectedEdit(selectedEdit);
       realm?.pub(HistoryPlugin.selectedEdit$, selectedEdit);
       return true;

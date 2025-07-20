@@ -13,6 +13,7 @@ export async function createApiResource({
   filePath: string;
 }): Promise<Resource<Comlink.Remote<PreviewWorkerApi>>> {
   let iframe: HTMLIFrameElement | null = document.createElement("iframe");
+  // iframe.style = "visibility: hidden; position: absolute; width: 0; height: 0; border: none;";
   const searchParams = new URLSearchParams({
     editId: String(editId),
     filePath,
