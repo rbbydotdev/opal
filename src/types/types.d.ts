@@ -47,8 +47,6 @@ declare module "@zumer/snapdom" {
 }
 
 type PreviewWorkerApi = {
-  renderAndSnapshot: (editId: number) => Promise<{
-    blob: Blob;
-    editId: number;
-  }>;
+  renderAndSnapshot: (editId: number) => Promise<Blob>;
+  renderFromMarkdownAndSnapshot: (markdown: string, editId: number) => Promise<Blob>;
 };

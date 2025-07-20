@@ -47,7 +47,7 @@ export function NewComlinkSnapshotPoolWorker(
   cb: ({ editId, blob }: { editId: number; blob: Blob }) => void
 ) {
   return new ApiPoolWorker(
-    ({ api }) => api.renderAndSnapshot(editId).then((result) => cb(result)),
+    ({ api }) => api.renderAndSnapshot(editId).then((blob) => cb({ editId, blob })),
     () => createApiResource({ editId, workspaceId, filePath })
   );
 }
