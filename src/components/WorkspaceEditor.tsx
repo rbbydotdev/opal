@@ -117,9 +117,6 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     <div className="flex flex-col h-full relative">
       <TopToolbar>
         <EditHistoryMenu historyId="foobar" finalizeRestore={(md) => debouncedUpdate(md)} />
-        <Button onClick={() => setFormat(0)}>Reset Format</Button>
-        <Button onClick={() => setBold(0)}>Reset Format</Button>
-        <Button onClick={() => setMarkdown("")}>clear</Button>
       </TopToolbar>
       <DropCommanderProvider>
         <Editor

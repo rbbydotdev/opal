@@ -1,5 +1,5 @@
 "use client";
-import { DocumentChange, HistoryStorageInterface } from "@/components/Editor/history/HistoryDB";
+import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
 import {
   Cell,
   debounceTime,
@@ -16,8 +16,8 @@ import {
 import { Mutex } from "async-mutex";
 
 export class HistoryPlugin {
-  static edits$ = Cell<DocumentChange[]>([]);
-  static selectedEdit$ = Cell<DocumentChange | null>(null, () => {}, false);
+  static edits$ = Cell<HistoryDocRecord[]>([]);
+  static selectedEdit$ = Cell<HistoryDocRecord | null>(null, () => {}, false);
   static resetMd$ = Signal(() => {}, false);
   static clearAll$ = Signal(() => {}, false);
   static muteChange$ = Cell<boolean>(false);
@@ -82,7 +82,7 @@ export class HistoryPlugin {
     );
 
     realm.sub(HistoryPlugin.resetMd$, () => this.resetToStartingMarkdown());
-    realm.sub(HistoryPlugin.selectedEdit$, (edit: DocumentChange | null) => {
+    realm.sub(HistoryPlugin.selectedEdit$, (edit: HistoryDocRecord | null) => {
       void this.transaction(async () => {
         if (edit) {
           const document = await this.historyStorage.reconstructDocumentFromEdit(edit);

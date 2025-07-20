@@ -57,10 +57,12 @@ export const IframeEditViewImage = ({
   editId: number;
   className?: string;
 }) => {
-  const imageUrl = useIframeImagePooled({ editId, filePath, workspaceId });
-  return imageUrl !== null ? (
-    <img src={imageUrl} className={cn("w-32 h-32 object-contain border border-black", className)} alt="" />
-  ) : (
-    <div className={cn("w-32 h-32 border border-black", className)}></div>
-  );
+  // const imageUrl = useIframeImagePooled({ editId, filePath, workspaceId });
+  // return imageUrl !== null ? (
+  //   <img src={imageUrl} className={cn("w-32 h-32 object-contain border border-black", className)} alt="" />
+  // ) : (
+  //   <div className={cn("w-32 h-32 border border-black", className)}></div>
+  // );
+
+  return <div className={cn("w-32 h-32 border border-black", className)}></div>;
 };
