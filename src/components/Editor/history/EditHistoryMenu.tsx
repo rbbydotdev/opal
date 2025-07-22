@@ -1,17 +1,18 @@
 // EditHistoryMenu.tsx;
-import { DocumentChange } from "@/components/Editor/history/HistoryDB";
+// import { HistoryDocRecord } from "@/components/Editor/history/HistoryDB";
 import { IframeEditViewImage } from "@/components/Editor/history/IframeEditViewImage";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { HistoryDocRecord } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
 import { ChevronDown, History } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export function EditHistoryMenu({
@@ -82,6 +83,20 @@ export function EditHistoryMenu({
   );
 }
 
+function scrollSelectedItemIntoView(
+  selectedItemRef: RefObject<HTMLSpanElement | null>,
+  viewportRef: RefObject<HTMLDivElement | null>
+) {
+  if (selectedItemRef?.current && viewportRef?.current) {
+    const selectedItemRect = selectedItemRef.current.getBoundingClientRect();
+    const offsetTop = selectedItemRef.current.offsetTop;
+    const itemHeight = selectedItemRect.height;
+    const viewportHeight = viewportRef.current.clientHeight;
+    const scrollTo = offsetTop - viewportHeight / 2 + itemHeight / 2;
+    viewportRef.current.scrollTop = Math.max(0, Math.min(scrollTo, viewportRef.current.scrollHeight - viewportHeight));
+  }
+}
+
 function EditHistoryScroll({
   children,
   select,
@@ -90,13 +105,15 @@ function EditHistoryScroll({
   selectedEdit,
 }: {
   children: React.ReactElement;
-  select: (edit: DocumentChange) => void;
-  edits: DocumentChange[];
+  select: (edit: HistoryDocRecord) => void;
+  edits: HistoryDocRecord[];
   clearAll: () => void;
-  selectedEdit: DocumentChange | null;
+  selectedEdit: HistoryDocRecord | null;
 }) {
   const [isOpen, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const selectedItemRef = useRef<HTMLSpanElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const { id: workspaceId, path: filePath } = useWorkspaceRoute();
 
   const handleClick = () => {
@@ -133,12 +150,19 @@ function EditHistoryScroll({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      scrollSelectedItemIntoView(selectedItemRef!, viewportRef);
+    }
+  }, [isOpen]);
+
   return (
     <div ref={menuRef}>
       <Slot onClick={handleClick}>{children}</Slot>
       {isOpen && (
         <div className="absolute left-0 z-10 mt-2">
-          <ScrollArea
+          <ScrollAreaViewportRef
+            viewportRef={viewportRef}
             className={cn(
               { "h-96": Boolean(edits.length), "h-18": !Boolean(edits.length) },
               "_w-[420px] w-[900px] rounded-md border bg-primary-foreground text-primary shadow-lg"
@@ -176,7 +200,10 @@ function EditHistoryScroll({
                         setOpen(false);
                         select(EDIT);
                       }}
-                      className="hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
+                      className={cn(
+                        { "bg-sidebar-accent": selectedEdit && selectedEdit.edit_id === EDIT.edit_id },
+                        "hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
+                      )}
                     >
                       {workspaceId && filePath ? (
                         <IframeEditViewImage filePath={filePath} workspaceId={workspaceId} editId={EDIT.edit_id} />
@@ -185,7 +212,9 @@ function EditHistoryScroll({
                         {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
                           <span className="mr-2 text-primary">{"•"}</span>
                         ) : (
-                          <span className="-ml-1 mr-2 text-2xl font-bold text-ring">{"✓"}</span>
+                          <span ref={selectedItemRef} className="-ml-1 mr-2 text-2xl font-bold text-ring">
+                            {"✓"}
+                          </span>
                         )}
 
                         {new Date(EDIT.timestamp).toLocaleString()}
@@ -201,7 +230,7 @@ function EditHistoryScroll({
                 ))}
               </SnapApiPoolProvider>
             </div>
-          </ScrollArea>
+          </ScrollAreaViewportRef>
         </div>
       )}
     </div>
