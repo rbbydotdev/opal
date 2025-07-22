@@ -36,37 +36,68 @@ export class HistoryPlugin {
 
   private historyStorage: HistoryStorageInterface;
   private mutex = new Mutex();
-  private id: string | null;
+  private id: string;
+  private realm: Realm;
+  private historyRoot: string;
+  private debounceFrequency: number;
+
+  private saveThreshold: number;
   constructor(
-    private realm: Realm,
+    realm: Realm,
     {
       historyRoot,
       historyStorage,
       editHistoryId,
-      saveFrequency = 1_000,
-    }: { historyRoot: string; historyStorage: HistoryStorageInterface; editHistoryId: string; saveFrequency?: number }
+      saveThreshold = 0.7,
+      debounceFrequency = 2_000,
+    }: {
+      historyRoot: string;
+      historyStorage: HistoryStorageInterface;
+      saveThreshold?: number;
+      editHistoryId: string | null;
+      debounceFrequency?: number;
+    }
   ) {
-    this.historyStorage = historyStorage;
-    this.id = editHistoryId;
     this.realm = realm;
-    realm.pub(HistoryPlugin.latestMd$, historyRoot);
+    this.historyRoot = historyRoot;
+    this.saveThreshold = saveThreshold;
+    this.debounceFrequency = debounceFrequency;
+    this.id = editHistoryId ?? "";
+    this.historyStorage = historyStorage;
+    this.init();
+  }
 
-    realm.sub(
-      realm.pipe(
+  init({ id = this.id, historyRoot = this.historyRoot } = {}) {
+    this.id = id;
+    this.historyRoot = historyRoot;
+    if (!this.id) {
+      console.warn("Edit history ID cannot be null aborting");
+      return;
+    }
+    this.realm.pub(HistoryPlugin.latestMd$, this.historyRoot);
+
+    this.realm.singletonSub(
+      this.realm.pipe(
         HistoryPlugin.allMd$,
         withLatestFrom(HistoryPlugin.muteChange$),
         filter(([, muted]) => !muted),
         map(([value]) => value),
-        debounceTime(saveFrequency)
+        debounceTime(this.debounceFrequency)
       ),
       async (md) => {
         if (this.id !== null) {
+          const saveScore = await this.historyStorage.getSaveThreshold(this.id, md);
+          if (saveScore < this.saveThreshold) {
+            console.log(`Skipping save for ${this.id} due to low score: ${saveScore}`);
+            return;
+          }
+
           const edits = await this.historyStorage.getEdits(this.id);
           if (!edits.length) {
             // If there are no edits yet, we can save the initial state as the first edit
-            await this.historyStorage.saveEdit(this.id!, realm.getValue(HistoryPlugin.latestMd$));
+            await this.historyStorage.saveEdit(this.id!, this.realm.getValue(HistoryPlugin.latestMd$));
           }
-          realm.pub(HistoryPlugin.latestMd$, md);
+          this.realm.pub(HistoryPlugin.latestMd$, md);
           const latest = await this.historyStorage.getLatestEdit(this.id);
           // check if edit is redundant
           if (latest) {
@@ -81,26 +112,26 @@ export class HistoryPlugin {
       }
     );
 
-    realm.sub(HistoryPlugin.resetMd$, () => this.resetToStartingMarkdown());
-    realm.sub(HistoryPlugin.selectedEdit$, (edit: HistoryDocRecord | null) => {
+    this.realm.singletonSub(HistoryPlugin.resetMd$, () => this.resetToStartingMarkdown());
+    this.realm.singletonSub(HistoryPlugin.selectedEdit$, (edit: HistoryDocRecord | null) => {
       void this.transaction(async () => {
         if (edit) {
           const document = await this.historyStorage.reconstructDocumentFromEdit(edit);
           this.realm.pub(setMarkdown$, document);
           this.realm.pub(HistoryPlugin.selectedEditDoc$, document);
         } else {
-          realm.pub(HistoryPlugin.selectedEditDoc$, null);
+          this.realm.pub(HistoryPlugin.selectedEditDoc$, null);
         }
       });
     });
-    realm.sub(HistoryPlugin.clearAll$, () => this.clearAll());
+    this.realm.singletonSub(HistoryPlugin.clearAll$, () => this.clearAll());
 
-    void historyStorage.getEdits(this.id).then(async (edits) => {
+    void this.historyStorage.getEdits(this.id).then(async (edits) => {
       // Initialize the edits Cell with the current edits
       this.realm.pub(HistoryPlugin.edits$, edits);
     });
 
-    historyStorage.onUpdate(this.id, (edits) => {
+    this.historyStorage.onUpdate(this.id, (edits) => {
       this.realm.pub(HistoryPlugin.edits$, edits);
     });
   }
@@ -135,7 +166,10 @@ export class HistoryPlugin {
 }
 
 export const historyPlugin = realmPlugin({
-  init(realm: Realm, params?: { historyRoot: string; documentId: string; historyStorage: HistoryStorageInterface }) {
+  init(
+    realm: Realm,
+    params?: { historyRoot: string; documentId: string | null; historyStorage: HistoryStorageInterface }
+  ) {
     new HistoryPlugin(realm, {
       historyRoot: params!.historyRoot,
       editHistoryId: params!.documentId,

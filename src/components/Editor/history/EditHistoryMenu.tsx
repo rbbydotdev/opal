@@ -1,7 +1,6 @@
 // EditHistoryMenu.tsx;
 // import { HistoryDocRecord } from "@/components/Editor/history/HistoryDB";
 import { EditViewImage } from "@/components/Editor/history/EditViewImage";
-import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
@@ -16,19 +15,14 @@ import { RefObject, useEffect, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export function EditHistoryMenu({
-  historyId,
   realmId = MainEditorRealmId,
   finalizeRestore,
 }: {
-  historyId: string;
   realmId?: string;
   finalizeRestore: (md: string) => void;
 }) {
   const realm = useRemoteMDXEditorRealm(realmId);
-  const { edits, selectedEdit, setEdit, reset, clearAll, isRestoreState, selectedEditMd } = useEditHistoryPlugin(
-    historyId,
-    realm
-  );
+  const { edits, selectedEdit, setEdit, reset, clearAll, isRestoreState, selectedEditMd } = useEditHistoryPlugin(realm);
   const [timeAgoStr, setTimeAgoStr] = useState("");
   useEffect(() => {
     const updateTimeAgo = () => {
@@ -191,44 +185,40 @@ function EditHistoryScroll({
                 </div>
               )}
               {/* <SnapApiPoolProvider max={Math.max((navigator?.hardwareConcurrency ?? 0) - 1 || 2)}> */}
-              <SnapApiPoolProvider max={1}>
-                {edits.map((EDIT) => (
-                  <div key={EDIT.edit_id}>
-                    <button
-                      tabIndex={0}
-                      onClick={() => {
-                        setOpen(false);
-                        select(EDIT);
-                      }}
-                      className={cn(
-                        { "bg-sidebar-accent": selectedEdit && selectedEdit.edit_id === EDIT.edit_id },
-                        "hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
-                      )}
-                    >
-                      {workspaceId && filePath ? (
-                        <EditViewImage filePath={filePath} workspaceId={workspaceId} edit={EDIT} />
-                      ) : null}
-                      <div className="ml-4">
-                        {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
-                          <span className="mr-2 text-primary">{"•"}</span>
-                        ) : (
-                          <span ref={selectedItemRef} className="-ml-1 mr-2 text-2xl font-bold text-ring">
-                            {"✓"}
-                          </span>
-                        )}
-
-                        {new Date(EDIT.timestamp).toLocaleString()}
-                        <span className="text-black">
-                          &nbsp;
-                          {/* <span className="font-bold font-mono ml-4">{EDIT.edit_id}</span>{" "} */}
-                          <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
+              {edits.map((EDIT) => (
+                <div key={EDIT.edit_id}>
+                  <button
+                    tabIndex={0}
+                    onClick={() => {
+                      setOpen(false);
+                      select(EDIT);
+                    }}
+                    className={cn(
+                      { "bg-sidebar-accent": selectedEdit && selectedEdit.edit_id === EDIT.edit_id },
+                      "hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
+                    )}
+                  >
+                    {workspaceId && filePath ? <EditViewImage workspaceId={workspaceId} edit={EDIT} /> : null}
+                    <div className="ml-4">
+                      {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
+                        <span className="mr-2 text-primary">{"•"}</span>
+                      ) : (
+                        <span ref={selectedItemRef} className="-ml-1 mr-2 text-2xl font-bold text-ring">
+                          {"✓"}
                         </span>
-                      </div>
-                    </button>
-                    <Separator />
-                  </div>
-                ))}
-              </SnapApiPoolProvider>
+                      )}
+
+                      {new Date(EDIT.timestamp).toLocaleString()}
+                      <span className="text-black">
+                        &nbsp;
+                        {/* <span className="font-bold font-mono ml-4">{EDIT.edit_id}</span>{" "} */}
+                        <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
+                      </span>
+                    </div>
+                  </button>
+                  <Separator />
+                </div>
+              ))}
             </div>
           </ScrollAreaViewportRef>
         </div>

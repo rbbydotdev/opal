@@ -7,35 +7,47 @@ import { HistoryDocRecord } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
-function useIframeImagePooled({
-  edit,
-  workspaceId,
-  filePath,
-}: {
-  edit: HistoryDocRecord;
-  workspaceId: string;
-  filePath: string;
-}) {
-  const { work, flush: terminate } = useSnapApiPool();
+function previewId({ workspaceId, editId }: { workspaceId: string; editId: string }) {
+  return `${workspaceId}/${editId}`;
+}
+
+export function useIframeImagePooledImperitiveWorker({ workspaceId }: { workspaceId: string }) {
+  const { work } = useSnapApiPool();
+
+  return function previewForEdit(edit: HistoryDocRecord) {
+    const worker: ApiPoolWorker = NewComlinkSnapshotPoolWorker({ editId: edit.edit_id, workspaceId });
+    void work(worker);
+  };
+}
+
+function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecord; workspaceId: string; id: string }) {
+  const { work, findWorker, flush } = useSnapApiPool();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
     if (edit.preview === null) {
-      let worker: ApiPoolWorker | null = NewComlinkSnapshotPoolWorker(
-        { editId: edit.edit_id, workspaceId, filePath },
-        async ({ blob }) => {
-          setImageUrl(URL.createObjectURL(blob));
-        }
-      );
-      void work(worker);
-      return () => {
-        terminate();
-        worker = null;
-      };
+      // const foundWorker = findWorker(id);
+      if (false) {
+        // void foundWorker.$p.promise.then(({ blob }) => {
+        //   setImageUrl(URL.createObjectURL(blob));
+        // });
+      } else {
+        let worker: ApiPoolWorker | null = NewComlinkSnapshotPoolWorker(
+          { editId: edit.edit_id, workspaceId, id },
+          async ({ blob }) => {
+            setImageUrl(URL.createObjectURL(blob));
+          }
+        );
+        void work(worker);
+        return () => {
+          flush();
+          worker = null;
+        };
+      }
     } else {
       setImageUrl(URL.createObjectURL(edit.preview));
     }
-  }, [edit, filePath, terminate, work, workspaceId]);
+  }, [edit, findWorker, id, flush, work, workspaceId]);
   useEffect(() => {
     return () => {
       try {
@@ -50,16 +62,14 @@ function useIframeImagePooled({
 
 export const EditViewImage = ({
   workspaceId,
-  filePath,
   edit,
   className,
 }: {
   workspaceId: string;
-  filePath: string;
   edit: HistoryDocRecord;
   className?: string;
 }) => {
-  const imageUrl = useIframeImagePooled({ edit, filePath, workspaceId });
+  const imageUrl = useIframeImagePooled({ edit, workspaceId, id: previewId({ workspaceId, editId: edit.id }) });
   return imageUrl !== null ? (
     <img src={imageUrl} className={cn("w-32 h-32 object-contain border border-black", className)} alt="" />
   ) : (

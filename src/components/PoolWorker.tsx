@@ -11,29 +11,27 @@ export interface Resource<T = unknown> {
 }
 
 export interface IPoolWorker<TResource extends Resource> {
+  workId: string;
   exec: (res: TResource) => Promise<unknown>;
 
   setupResource: () => Promise<TResource> | TResource;
 
   // cleanup: (re: TResource) => void; // terminate: () => void;
 
-  // $p: ReturnType<typeof Promise.withResolvers<void>>;
+  $p: ReturnType<typeof Promise.withResolvers<void>>;
 }
 
 export class PoolWorker<TResource extends Resource> implements IPoolWorker<TResource> {
-  // resource: TResource | null = null;
-  // ready = Promise.resolve(true);
-
-  // $p = Promise.withResolvers<void>();
-
+  public readonly $p = Promise.withResolvers<void>();
   constructor(
     private execFn: (res: TResource) => Promise<void>,
-    public setupResource: () => Promise<TResource> | TResource // public terminate: (re: TResource) => void // terminate: () => void; // public cleanup: (re: TResource) => void
+    public setupResource: () => Promise<TResource> | TResource, // public terminate: (re: TResource) => void // terminate: () => void; // public cleanup: (re: TResource) => void
+    public workId: string = crypto.randomUUID()
   ) {}
 
   async exec(res: TResource) {
     const result = await this.execFn(res);
-    // this.$p.resolve(result);
+    this.$p.resolve(result);
     return result;
   }
 }
@@ -45,9 +43,12 @@ class DelayedWorker<TResource extends Resource> implements IPoolWorker<TResource
     private reject: (reason?: unknown) => void
   ) {}
 
-  // get $p() {
-  // return this.poolWorker.$p;
-  // }
+  get $p() {
+    return this.poolWorker.$p;
+  }
+  get workId() {
+    return this.poolWorker.workId;
+  }
   async exec(res: TResource) {
     return this.poolWorker.exec(res).then(this.resolve).catch(this.reject);
   }
@@ -76,6 +77,13 @@ class PoolManager<TResource extends Resource> {
     this.pool = new Array(max).fill(null);
     this.resourcePool = new Array(max).fill(null);
   }
+
+  findWorker = (id: string) => {
+    // Search in the active pool
+    return (
+      this.pool.find((worker) => worker?.workId === id) || this.queue.find((worker) => worker.workId === id) || null
+    );
+  };
 
   flush = (): void => {
     // console.log("Terminating pool manager and cleaning up resources");
@@ -128,6 +136,7 @@ class PoolManager<TResource extends Resource> {
 type PoolContextValue<TWorker extends IPoolWorker<Resource<any>>> = {
   work: (pw: TWorker) => Promise<any>;
   flush: () => void;
+  findWorker: (id: string) => TWorker | null;
 };
 
 /**
@@ -146,6 +155,8 @@ export function CreatePoolContext<TWorker extends IPoolWorker<Resource<any>>>() 
     const contextValue: PoolContextValue<TWorker> = {
       work: manager.work,
       flush: manager.flush,
+      // findWorker: manager.findWorker as (id: string) => TWorker | null,
+      findWorker: manager.findWorker as (id: string) => TWorker | null,
     };
 
     return <Context.Provider value={contextValue}>{children}</Context.Provider>;
