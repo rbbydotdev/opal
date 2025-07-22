@@ -1,6 +1,6 @@
 // EditHistoryMenu.tsx;
 // import { HistoryDocRecord } from "@/components/Editor/history/HistoryDB";
-import { IframeEditViewImage } from "@/components/Editor/history/IframeEditViewImage";
+import { EditViewImage } from "@/components/Editor/history/EditViewImage";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
@@ -206,7 +206,7 @@ function EditHistoryScroll({
                       )}
                     >
                       {workspaceId && filePath ? (
-                        <IframeEditViewImage filePath={filePath} workspaceId={workspaceId} editId={EDIT.edit_id} />
+                        <EditViewImage filePath={filePath} workspaceId={workspaceId} edit={EDIT} />
                       ) : null}
                       <div className="ml-4">
                         {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (

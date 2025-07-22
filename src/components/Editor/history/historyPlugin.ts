@@ -135,10 +135,10 @@ export class HistoryPlugin {
 }
 
 export const historyPlugin = realmPlugin({
-  init(realm: Realm, params?: { historyRoot: string; editHistoryId: string; historyStorage: HistoryStorageInterface }) {
+  init(realm: Realm, params?: { historyRoot: string; documentId: string; historyStorage: HistoryStorageInterface }) {
     new HistoryPlugin(realm, {
       historyRoot: params!.historyRoot,
-      editHistoryId: params!.editHistoryId,
+      editHistoryId: params!.documentId,
       historyStorage: params!.historyStorage,
     });
   },

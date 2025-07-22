@@ -107,7 +107,7 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       linkPlugin(),
       searchPlugin(),
       historyPlugin({
-        editHistoryId: "foobar",
+        documentId: "foobar",
         historyStorage: historyDB,
         historyRoot: String(initialContents ?? ""),
       }),
