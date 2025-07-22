@@ -10,7 +10,6 @@ import { ImageViewer } from "@/components/ImageViewer";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { usePublisherForRealm } from "@/components/usePublisherForRealm";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
@@ -21,13 +20,7 @@ import {
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { withSuspense } from "@/lib/hoc/withSuspense";
-import {
-  currentFormat$,
-  MDXEditorMethods,
-  MDXEditorProps,
-  setMarkdown$,
-  useRemoteMDXEditorRealm,
-} from "@mdxeditor/editor";
+import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useMemo, useRef } from "react";
@@ -89,9 +82,6 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
 });
 
 export function WorkspaceEditor({ className, currentWorkspace, ...props }: WorkspaceEditorProps) {
-  const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
-  const setFormat = usePublisherForRealm(currentFormat$, realm);
-  const setMarkdown = usePublisherForRealm(setMarkdown$, realm);
   const editorRef = useRef<MDXEditorMethods>(null);
   const { initialContents, debouncedUpdate, error } = useFileContents((newContent) => {
     //this is for out of editor updates like via tab or image path updates

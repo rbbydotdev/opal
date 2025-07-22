@@ -121,6 +121,7 @@ export class HistoryDAO implements HistoryStorageInterface {
 
     let text = "";
     for (const patchText of patches) {
+      console.log(patchText);
       const patch = this.dmp.patch_fromText(patchText);
       [text] = this.dmp.patch_apply(patch, text);
     }
