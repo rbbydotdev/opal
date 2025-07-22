@@ -300,6 +300,10 @@ export class HistoryDAO implements HistoryStorageInterface {
     return text;
   }
 
+  static async removeAllForWorkspaceId(workspaceId: string): Promise<number> {
+    return ClientDb.historyDocs.where("workspaceId").equals(workspaceId).delete();
+  }
+
   public async updatePreviewForEditId(edit_id: number, preview: Blob): Promise<void> {
     const edit = await this.getEditByEditId(edit_id);
     if (edit) {

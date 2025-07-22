@@ -8,6 +8,7 @@ import {
   IndexTrigger,
   RenameDetails,
 } from "@/Db/Disk";
+import { HistoryDAO } from "@/Db/HistoryDAO";
 import { ImageCache } from "@/Db/ImageCache";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
@@ -448,7 +449,8 @@ export class Workspace {
 
   async delete() {
     return Promise.all([
-      await this.disk.tearDown(),
+      HistoryDAO.removeAllForWorkspaceId(this.id),
+      this.disk.tearDown(),
       this.connector.delete(),
       this.disk.delete(),
       this.thumbs.delete(),
