@@ -37,6 +37,8 @@ export class HistoryPlugin {
   private historyStorage: HistoryStorageInterface;
   private mutex = new Mutex();
   private id: string;
+
+  private workspaceId: string;
   private realm: Realm;
   private historyRoot: string;
   private debounceFrequency: number;
@@ -48,6 +50,7 @@ export class HistoryPlugin {
       historyRoot,
       historyStorage,
       editHistoryId,
+      workspaceId,
       saveThreshold = 0.7,
       debounceFrequency = 2_000,
     }: {
@@ -55,10 +58,12 @@ export class HistoryPlugin {
       historyStorage: HistoryStorageInterface;
       saveThreshold?: number;
       editHistoryId: string | null;
+      workspaceId: string;
       debounceFrequency?: number;
     }
   ) {
     this.realm = realm;
+    this.workspaceId = workspaceId;
     this.historyRoot = historyRoot;
     this.saveThreshold = saveThreshold;
     this.debounceFrequency = debounceFrequency;
@@ -67,13 +72,15 @@ export class HistoryPlugin {
     this.init();
   }
 
-  init({ id = this.id, historyRoot = this.historyRoot } = {}) {
+  init({ workspaceId = this.workspaceId, id = this.id, historyRoot = this.historyRoot } = {}) {
     this.id = id;
     this.historyRoot = historyRoot;
+    this.workspaceId = workspaceId;
     if (!this.id) {
       console.warn("Edit history ID cannot be null aborting");
       return;
     }
+
     this.realm.pub(HistoryPlugin.latestMd$, this.historyRoot);
 
     this.realm.singletonSub(
@@ -95,7 +102,7 @@ export class HistoryPlugin {
           const edits = await this.historyStorage.getEdits(this.id);
           if (!edits.length) {
             // If there are no edits yet, we can save the initial state as the first edit
-            await this.historyStorage.saveEdit(this.id!, this.realm.getValue(HistoryPlugin.latestMd$));
+            await this.historyStorage.saveEdit(this.workspaceId, this.id, this.realm.getValue(HistoryPlugin.latestMd$));
           }
           this.realm.pub(HistoryPlugin.latestMd$, md);
           const latest = await this.historyStorage.getLatestEdit(this.id);
@@ -107,7 +114,7 @@ export class HistoryPlugin {
               return;
             }
           }
-          await this.historyStorage.saveEdit(this.id!, md);
+          await this.historyStorage.saveEdit(this.workspaceId, this.id, md);
         }
       }
     );
@@ -168,10 +175,16 @@ export class HistoryPlugin {
 export const historyPlugin = realmPlugin({
   init(
     realm: Realm,
-    params?: { historyRoot: string; documentId: string | null; historyStorage: HistoryStorageInterface }
+    params?: {
+      historyRoot: string;
+      documentId: string | null;
+      historyStorage: HistoryStorageInterface;
+      workspaceId: string;
+    }
   ) {
     new HistoryPlugin(realm, {
       historyRoot: params!.historyRoot,
+      workspaceId: params!.workspaceId,
       editHistoryId: params!.documentId,
       historyStorage: params!.historyStorage,
     });

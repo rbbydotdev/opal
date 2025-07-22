@@ -110,6 +110,7 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       searchPlugin(),
       historyPlugin({
         documentId,
+        workspaceId: currentWorkspace.id,
         historyStorage: historyDB,
         historyRoot: String(initialContents ?? ""),
       }),
@@ -135,6 +136,6 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       }),
       markdownShortcutPlugin(),
     ],
-    [documentId, historyDB, initialContents, realmId, workspaceImagesPlugin]
+    [currentWorkspace.id, documentId, historyDB, initialContents, realmId, workspaceImagesPlugin]
   );
 }

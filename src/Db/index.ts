@@ -20,10 +20,10 @@ export class ClientIndexedDb extends Dexie {
     this.version(1).stores({
       settings: "name",
       remoteAuths: "guid",
-      workspaces: "guid, name",
+      workspaces: "guid,name",
       disks: "guid",
-      thumbnails: "[workspaceId+path], guid, path, workspaceId",
-      historyDocs: "++edit_id,id,parent", // Auto-increment edit_id
+      thumbnails: "[workspaceId+path],guid,path,workspaceId",
+      historyDocs: "++edit_id,id,parent,workspaceId",
     });
 
     this.remoteAuths.mapToClass(RemoteAuthRecord);
