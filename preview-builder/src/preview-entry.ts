@@ -17,16 +17,11 @@ async function snapshotAndPost(target: HTMLElement) {
             const onDone = () => resolve(true);
             img.addEventListener("load", onDone, { once: true });
             img.addEventListener("error", onDone, { once: true });
-            // Timeout fallback (e.g., 2 seconds)
             setTimeout(onDone, 2000);
           })
       )
     );
   }
-
-  // const capture = await snapdom.capture(target);
-  // const result = await capture.toWebp();
-  // return base64URIToBlob(result.src);
 
   const capture = await snapdom.capture(target);
   const canvas = await capture.toCanvas();
@@ -52,6 +47,11 @@ const PreviewWorkerApi = {
     const change = await history.getEditByEditId(editId);
     if (!change) {
       throw new Error(`No document change found for editId: ${editId}`);
+    }
+
+    if (change.preview !== null) {
+      history.tearDown();
+      return change.preview;
     }
     const markdownContent = (await history.reconstructDocumentFromEdit(change)) ?? "";
 

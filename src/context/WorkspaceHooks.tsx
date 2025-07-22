@@ -5,11 +5,11 @@ import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath } from "@/lib/paths2";
+import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export const NULL_WORKSPACE = new NullWorkspace();
 const NULL_TREE_ROOT = new TreeDirRoot();
@@ -37,62 +37,10 @@ export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 
-export function useFileContentsOLD() {
-  const { currentWorkspace } = useWorkspaceContext();
-  const { path: filePath } = useWorkspaceRoute();
-  const [contents, setContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
-  const [mimeType, setMimeType] = useState<null | string>(null);
-  const [error, setError] = useState<null | Error>(null);
-  const router = useRouter();
-
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    return () => clearTimeout(debounceRef.current!);
-  }, []);
-
-  const updateContents = useCallback(
-    (updates: string) => {
-      if (filePath && currentWorkspace) {
-        void currentWorkspace?.disk.writeFile(filePath, updates);
-      }
-    },
-    [currentWorkspace, filePath]
-  );
-
-  const debouncedUpdate = useCallback(
-    (content: string | null) => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-      debounceRef.current = setTimeout(() => {
-        if (content !== null) {
-          updateContents(String(content));
-        }
-      }, 250);
-    },
-    [updateContents]
-  );
-
-  useEffect(() => {
-    const fetchFileContents = async () => {
-      if (currentWorkspace && filePath) {
-        try {
-          setContents(await currentWorkspace.disk.readFile(filePath));
-          setMimeType(getMimeType(filePath));
-          setError(null);
-        } catch (error) {
-          setError(error as Error);
-        }
-        //listener is currently only used with remote, since a local write will not trigger
-        //a local write event, this is because the common update kind of borks mdx editor
-        return currentWorkspace.disk.updateListener(filePath, setContents);
-      }
-    };
-
-    void fetchFileContents();
-  }, [currentWorkspace, filePath, router]);
-
-  return { error, filePath, contents: String(contents ?? ""), mimeType, updateContents, debouncedUpdate };
+export function useWorkspaceDocumentId() {
+  //should probably look at the document contents and parse the id: in the front matter
+  const { path: filePath, id: workspaceId } = useWorkspaceRoute();
+  return filePath && workspaceId ? joinPath(absPath(workspaceId), absPath(filePath)) : null;
 }
 
 export function useFileContents(listenerCb?: (content: string | null) => void) {
@@ -190,21 +138,25 @@ export function useCurrentFilepath() {
 
 export function useWorkspaceRoute() {
   const pathname = usePathname();
-  const [workspaceRoute, setRouteWorkspaceInfo] = useState<WorkspaceRouteType>({
-    id: null,
-    path: null,
-  });
-  useEffect(() => {
-    if (!pathname) return;
-    const { workspaceId, filePath } = Workspace.parseWorkspacePath(pathname);
-    if (workspaceId && workspaceId !== "new") {
-      setRouteWorkspaceInfo({
-        id: workspaceId ?? null,
-        path: filePath ?? null,
-      });
+  return (
+    useMemo(() => {
+      if (!pathname)
+        return {
+          id: null,
+          path: null,
+        };
+      const { workspaceId, filePath } = Workspace.parseWorkspacePath(pathname);
+      if (workspaceId && workspaceId !== "new") {
+        return {
+          id: workspaceId ?? null,
+          path: filePath ?? null,
+        };
+      }
+    }, [pathname]) ?? {
+      id: null,
+      path: null,
     }
-  }, [pathname]);
-  return workspaceRoute;
+  );
 }
 
 export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: (node: TreeNode) => boolean) {

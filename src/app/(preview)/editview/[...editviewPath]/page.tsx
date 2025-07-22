@@ -92,7 +92,7 @@ const handleMutations = async (target: HTMLDivElement) => {
   return blob;
 };
 
-function MarkdownRender({ contents, editId }: { contents?: string | null; editId?: number }) {
+function MarkdownRender({ contents, editId: _eid }: { contents?: string | null; editId?: number }) {
   const toss = useErrorToss();
   const [src, setSrc] = useState<string | null>(null);
   const html = useMemo(() => {

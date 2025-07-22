@@ -6,17 +6,15 @@ import * as Comlink from "comlink";
 export async function createApiResource({
   editId,
   workspaceId,
-  filePath,
 }: {
   editId: number;
   workspaceId: string;
-  filePath: string;
 }): Promise<Resource<Comlink.Remote<PreviewWorkerApi>>> {
   let iframe: HTMLIFrameElement | null = document.createElement("iframe");
   // iframe.style = "visibility: hidden; position: absolute; width: 0; height: 0; border: none;";
   const searchParams = new URLSearchParams({
     editId: String(editId),
-    filePath,
+    filePath: "/preview-doc.md",
     workspaceId,
   });
   // console.log("creating iframe with params", searchParams.toString());
@@ -44,12 +42,16 @@ export async function createApiResource({
   return { api, terminate };
 }
 export function NewComlinkSnapshotPoolWorker(
-  { editId, workspaceId, filePath }: { editId: number; workspaceId: string; filePath: string },
-  cb: ({ editId, blob }: { editId: number; blob: Blob }) => void
+  { editId, workspaceId, id }: { editId: number; workspaceId: string; id?: string },
+  cb?: ({ editId, blob }: { editId: number; blob: Blob }) => void
 ) {
   return new ApiPoolWorker(
-    ({ api }) => api.renderAndSnapshot(editId).then((blob) => cb({ editId, blob })),
-    () => createApiResource({ editId, workspaceId, filePath })
+    ({ api }) =>
+      api.renderAndSnapshot(editId).then((blob) => {
+        if (cb) cb({ editId, blob });
+      }),
+    () => createApiResource({ editId, workspaceId }),
+    id
   );
 }
 

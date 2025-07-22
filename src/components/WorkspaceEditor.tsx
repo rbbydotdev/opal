@@ -5,12 +5,19 @@ import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
+import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ImageViewer } from "@/components/ImageViewer";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import {
+  useCurrentFilepath,
+  useFileContents,
+  useWorkspaceContext,
+  useWorkspaceDocumentId,
+} from "@/context/WorkspaceHooks";
+import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import {
@@ -23,7 +30,7 @@ import { withSuspense } from "@/lib/hoc/withSuspense";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, use, useMemo, useRef } from "react";
+import { ComponentProps, Suspense, use, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
@@ -87,8 +94,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     //this is for out of editor updates like via tab or image path updates
     editorRef.current?.setMarkdown(newContent ?? "");
   });
-
-  const plugins = useAllPlugins({ currentWorkspace, realmId: MainEditorRealmId });
+  const documentId = useWorkspaceDocumentId() ?? "unknown";
 
   if (error) {
     if (isError(error, NotFoundError)) {
@@ -104,21 +110,37 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
 
   if (initialContents === null || !currentWorkspace) return null;
   return (
-    <div className="flex flex-col h-full relative">
-      <TopToolbar>
-        <EditHistoryMenu historyId="foobar" finalizeRestore={(md) => debouncedUpdate(md)} />
-      </TopToolbar>
-      <DropCommanderProvider>
-        <Editor
-          {...props}
-          editorRef={editorRef}
-          plugins={plugins}
-          onChange={debouncedUpdate}
-          markdown={String(initialContents || "")}
-          className={twMerge("bg-background flex-grow  flex-col", className)}
-          contentEditableClassName="max-w-full content-editable prose bg-background"
-        />
-      </DropCommanderProvider>
-    </div>
+    <SnapApiPoolProvider max={1}>
+      <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.name}>
+        <div className="flex flex-col h-full relative">
+          <TopToolbar>
+            <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} />
+          </TopToolbar>
+          <DropCommanderProvider>
+            <EditorWithPlugins
+              {...props}
+              currentWorkspace={currentWorkspace}
+              editorRef={editorRef}
+              onChange={debouncedUpdate}
+              markdown={String(initialContents || "")}
+              className={twMerge("bg-background flex-grow  flex-col", className)}
+              contentEditableClassName="max-w-full content-editable prose bg-background"
+            />
+          </DropCommanderProvider>
+        </div>
+      </HistorySnapDBProvider>
+    </SnapApiPoolProvider>
+  );
+}
+function EditorWithPlugins(props: ComponentProps<typeof Editor> & { currentWorkspace: Workspace }) {
+  const plugins = useAllPlugins({ currentWorkspace: props.currentWorkspace, realmId: MainEditorRealmId });
+  return (
+    <Editor
+      {...props}
+      plugins={plugins}
+      editorRef={props.editorRef}
+      onChange={props.onChange}
+      markdown={props.markdown}
+    />
   );
 }

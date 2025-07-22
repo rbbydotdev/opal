@@ -1,4 +1,4 @@
-import { useHistoryDAO } from "@/Db/HistoryDAO";
+import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
@@ -6,7 +6,7 @@ import { historyPlugin } from "@/components/Editor/history/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
-import { useFileContents } from "@/context/WorkspaceHooks";
+import { useFileContents, useWorkspaceDocumentId } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
@@ -29,7 +29,7 @@ import {
   thematicBreakPlugin,
   toolbarPlugin,
 } from "@mdxeditor/editor";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
 
 const defaultSnippetContent = `
@@ -88,8 +88,10 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
 export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace: Workspace; realmId: string }) {
   const { initialContents } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
-  const historyDB = useHistoryDAO();
-  useEffect(() => () => historyDB.tearDown(), [historyDB]);
+
+  const documentId = useWorkspaceDocumentId();
+
+  const historyDB = useSnapHistoryDB();
 
   return useMemo(
     () => [
@@ -107,7 +109,7 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       linkPlugin(),
       searchPlugin(),
       historyPlugin({
-        documentId: "foobar",
+        documentId,
         historyStorage: historyDB,
         historyRoot: String(initialContents ?? ""),
       }),
@@ -133,6 +135,6 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       }),
       markdownShortcutPlugin(),
     ],
-    [historyDB, initialContents, realmId, workspaceImagesPlugin]
+    [documentId, historyDB, initialContents, realmId, workspaceImagesPlugin]
   );
 }
