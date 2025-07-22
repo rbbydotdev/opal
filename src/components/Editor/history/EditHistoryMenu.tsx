@@ -6,7 +6,7 @@ import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
-import { HistoryDocRecord } from "@/Db/HistoryDAO";
+import { HistoryDocRecord, useSnapHistoryDB, useSnapHistoryPendingSave } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
@@ -23,6 +23,8 @@ export function EditHistoryMenu({
 }) {
   const realm = useRemoteMDXEditorRealm(realmId);
   const { edits, selectedEdit, setEdit, reset, clearAll, isRestoreState, selectedEditMd } = useEditHistoryPlugin(realm);
+  const historyDB = useSnapHistoryDB();
+  const pendingSave = useSnapHistoryPendingSave({ historyDB });
   const [timeAgoStr, setTimeAgoStr] = useState("");
   useEffect(() => {
     const updateTimeAgo = () => {
@@ -40,12 +42,8 @@ export function EditHistoryMenu({
       <EditHistoryScroll select={setEdit} clearAll={clearAll} edits={edits} selectedEdit={selectedEdit}>
         <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
           <div className="mr-2 flex items-center space-x-2 ">
-            <span className="fill-primary-foreground stroke-success-darker text-4xl" style={{ lineHeight: "1rem" }}>
-              {selectedEdit !== null && (
-                <div key={selectedEdit.edit_id} className="animate-spin animation-iteration-once ">
-                  <History className="-scale-x-100 inline-block text-ring" />
-                </div>
-              )}
+            <span className="fill-primary-foreground text-4xl" style={{ lineHeight: "1rem" }}>
+              <HistoryStatus selectedEdit={selectedEdit} pendingSave={pendingSave} />
             </span>
             <span>Edit history {timeAgoStr}</span>
           </div>
@@ -73,6 +71,29 @@ export function EditHistoryMenu({
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+function HistoryStatus({ selectedEdit, pendingSave }: { selectedEdit: HistoryDocRecord | null; pendingSave: boolean }) {
+  if (selectedEdit !== null) {
+    return (
+      <div key={selectedEdit.edit_id} className="animate-spin animation-iteration-once ">
+        <History className="-scale-x-100 inline-block text-ring" />
+      </div>
+    );
+  }
+  if (pendingSave) {
+    return (
+      <div className="animate-spin animation-iteration-once ">
+        <History className="-scale-x-100 inline-block text-success" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="">
+      <History className="-scale-x-100 inline-block text-primary" />
     </div>
   );
 }
@@ -159,7 +180,7 @@ function EditHistoryScroll({
             viewportRef={viewportRef}
             className={cn(
               { "h-96": Boolean(edits.length), "h-18": !Boolean(edits.length) },
-              "_w-[420px] w-[900px] rounded-md border bg-primary-foreground text-primary shadow-lg"
+              "w-[600px] _w-[900px] rounded-md border bg-primary-foreground text-primary shadow-lg"
             )}
           >
             <div className="p-4">

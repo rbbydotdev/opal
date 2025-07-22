@@ -3,7 +3,7 @@ import { ClientDb } from "@/Db/instance";
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
 import Emittery from "emittery";
-import { createContext, ReactNode, useContext, useEffect, useMemo } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
 export class HistoryDocRecord {
   id: string;
@@ -96,6 +96,24 @@ export function HistorySnapDBProvider({ documentId, workspaceId, children }: His
   return <HistorySnapDBContext.Provider value={historyDB}>{children}</HistorySnapDBContext.Provider>;
 }
 
+export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryDAO }): boolean {
+  const [pendingSave, setPendingSave] = useState(false);
+  useEffect(() => {
+    let timeout = null as ReturnType<typeof setTimeout> | null;
+    const unsub = historyDB.onNewEdit("*", () => {
+      setPendingSave(true);
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        setPendingSave(false);
+      }, 3000);
+    });
+    return () => {
+      clearTimeout(timeout!);
+      unsub();
+    };
+  }, [historyDB]);
+  return pendingSave;
+}
 export function useSnapHistoryDB(): HistoryDAO {
   const ctx = useContext(HistorySnapDBContext);
   if (!ctx) {
@@ -131,16 +149,16 @@ export class HistoryDAO implements HistoryStorageInterface {
   private dmp: diff_match_patch = new diff_match_patch();
   private cache: Map<number, string> = new Map();
 
-  onUpdate(documentId: string, cb: (edits: HistoryDocRecord[]) => void) {
+  onUpdate(documentId: string | "*", cb: (edits: HistoryDocRecord[]) => void) {
     const unsub = this.emitter.on("edits", (edits) =>
-      cb(edits.filter((edit) => edit.id === documentId).sort((a, b) => b.timestamp - a.timestamp))
+      cb(edits.filter((edit) => documentId === "*" || edit.id === documentId).sort((a, b) => b.timestamp - a.timestamp))
     );
     this.unsubs.push(unsub);
     return unsub;
   }
-  onNewEdit(documentId: string, cb: (edit: HistoryDocRecord) => void) {
+  onNewEdit(documentId: string | "*", cb: (edit: HistoryDocRecord) => void) {
     const unsub = this.emitter.on("new_edit", (edit) => {
-      if (edit.id === documentId) {
+      if (documentId === "*" || edit.id === documentId) {
         cb(edit);
       }
     });
