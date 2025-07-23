@@ -1,18 +1,37 @@
+import { sessionIdParam, useScrollSync } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarShortcut,
-  MenubarTrigger,
-} from "@/components/ui/menubar";
+import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { absPath, joinPath } from "@/lib/paths2";
+import Link from "next/link";
 
 export function TopToolbar({ children }: { children?: React.ReactNode }) {
+  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
+  const { sessionId } = useScrollSync();
   return (
-    <div className="bg-background h-12 flex items-center justify-start px-2 border-b border-border gap-4">
-      <div>
+    <div className="bg-background h-12 flex items-center justify-start border-b border-border gap-4 py-1">
+      <div className="flex items-center gap-2">
+        {children}
+        {/* <Link href={`/preview/${workspaceId}/${filePath}`}> */}
+        <Button size="sm" asChild>
+          <Link
+            href={joinPath(
+              absPath("preview"),
+              workspaceId!,
+              filePath! + `?${sessionIdParam({ sessionId: sessionId! })}`
+            )}
+            target="_blank"
+          >
+            {/*  preview button */}
+            Preview
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+{
+  /* <div className="hidden">
         <Menubar>
           <MenubarMenu>
             <MenubarTrigger>File</MenubarTrigger>
@@ -28,13 +47,5 @@ export function TopToolbar({ children }: { children?: React.ReactNode }) {
             </MenubarContent>
           </MenubarMenu>
         </Menubar>
-      </div>
-      <div className="flex items-center gap-2">
-        {children}
-        <Button size="sm">Preview</Button>
-        <Button size="sm">Button 2</Button>
-        <Button size="sm">Button 3</Button>
-      </div>
-    </div>
-  );
+      </div> */
 }

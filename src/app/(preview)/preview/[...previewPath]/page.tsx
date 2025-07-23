@@ -1,37 +1,34 @@
 "use client";
+import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
 import { useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { isImage, isMarkdown } from "@/lib/paths2";
 import "github-markdown-css/github-markdown-light.css";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { RefObject, useMemo, useState } from "react";
 
 export default function Page({ children }: { children: React.ReactNode }) {
-  // const searchParams = useSearchParams();
-  // const sessionId = searchParams.get("sessionId");
-
-  // You can now use sessionId as needed
   return (
-    <>
-      <div className="min-w-0 h-full flex w-full">
-        <div className="flex-1 overflow-hidden">
-          <WorkspaceProvider>
-            {/* Example usage: <div>Session ID: {sessionId}</div> */}
-            <PreviewComponent />
-            {children}
-          </WorkspaceProvider>
-        </div>
-      </div>
-    </>
+    <WorkspaceProvider>
+      <PreviewComponent />
+      {children}
+    </WorkspaceProvider>
   );
 }
 
 function PreviewComponent() {
-  // const { currentWorkspace } = useWorkspaceContext();
   const { path } = useWorkspaceRoute();
+  const searchParams = useSearchParams();
+  const sessionIdParam = searchParams.get("sessionId");
+  const { scrollEmitter } = useScrollChannel({ sessionId: sessionIdParam });
   if (!path) return null;
   if (isMarkdown(path)) {
-    return <MarkdownRender />;
+    return (
+      <ScrollSyncProvider scrollEmitter={scrollEmitter}>
+        <MarkdownRender />
+      </ScrollSyncProvider>
+    );
   }
   if (isImage(path)) {
     return <ImageRender />;
@@ -61,9 +58,20 @@ function MarkdownRender() {
     () => renderMarkdownToHtml(contents === null ? String(initialContents ?? "") : contents ?? ""),
     [contents, initialContents]
   );
+  const { scrollRef } = useScrollSync();
   return (
-    <div>
-      <div className="" style={{ padding: "32px" }} dangerouslySetInnerHTML={{ __html: html }}></div>
+    <div
+      style={{
+        border: "10px solid purple",
+        maxWidth: "980px",
+        padding: 0,
+        margin: 0,
+        height: "calc(100vh - 20px)",
+        overflowY: "scroll",
+      }}
+      ref={scrollRef as RefObject<HTMLDivElement>}
+    >
+      <div className="markdown-body" dangerouslySetInnerHTML={{ __html: html }}></div>
     </div>
   );
 }
