@@ -8,6 +8,7 @@ import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ImageViewer } from "@/components/ImageViewer";
+import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import {
   useFileContents,
   useWorkspaceContext,
   useWorkspaceDocumentId,
+  useWorkspaceRoute,
 } from "@/context/WorkspaceHooks";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
@@ -24,6 +26,7 @@ import {
   isExternalFileDrop,
   useHandleDropFilesEventForNode,
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useWatchElement } from "@/hooks/useWatchElement";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { withSuspense } from "@/lib/hoc/withSuspense";
@@ -94,6 +97,12 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     //this is for out of editor updates like via tab or image path updates
     editorRef.current?.setMarkdown(newContent ?? "");
   });
+  const { id, path } = useWorkspaceRoute();
+
+  const { scrollEmitter, sessionId } = useScrollChannel({ sessionId: `${id}/${path}` });
+
+  const mdxEditorElement = useWatchElement(".mdxeditor");
+
   const documentId = useWorkspaceDocumentId() ?? "unknown";
 
   if (error) {
@@ -112,22 +121,25 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
   return (
     <SnapApiPoolProvider max={1}>
       <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.name}>
-        <div className="flex flex-col h-full relative">
-          <TopToolbar>
-            <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} />
-          </TopToolbar>
-          <DropCommanderProvider>
-            <EditorWithPlugins
-              {...props}
-              currentWorkspace={currentWorkspace}
-              editorRef={editorRef}
-              onChange={debouncedUpdate}
-              markdown={String(initialContents || "")}
-              className={twMerge("bg-background flex-grow  flex-col", className)}
-              contentEditableClassName="max-w-full content-editable prose bg-background"
-            />
-          </DropCommanderProvider>
-        </div>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <ScrollSyncProvider scrollEl={mdxEditorElement as any} scrollEmitter={scrollEmitter} sessionId={sessionId}>
+          <div className="flex flex-col h-full relative">
+            <TopToolbar>
+              <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} />
+            </TopToolbar>
+            <DropCommanderProvider>
+              <EditorWithPlugins
+                {...props}
+                currentWorkspace={currentWorkspace}
+                editorRef={editorRef}
+                onChange={debouncedUpdate}
+                markdown={String(initialContents || "")}
+                className={twMerge("bg-background flex-grow  flex-col", className)}
+                contentEditableClassName="max-w-full content-editable prose bg-background"
+              />
+            </DropCommanderProvider>
+          </div>
+        </ScrollSyncProvider>
       </HistorySnapDBProvider>
     </SnapApiPoolProvider>
   );

@@ -1,0 +1,122 @@
+import { nanoid } from "nanoid";
+import { useSearchParams } from "next/navigation";
+import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef } from "react";
+
+// --- Types ---
+interface ScrollEmitter {
+  onScroll: (cb: (x: number, y: number) => void) => UnsubFn;
+  emitScroll: (x: number, y: number) => void;
+  tearDown: () => void;
+}
+type UnsubFn = () => void;
+
+// --- Context ---
+interface ScrollSyncContextValue {
+  scrollRef: RefObject<HTMLElement | null>;
+  sessionId?: string;
+}
+const ScrollSyncCtx = createContext<ScrollSyncContextValue | null>(null);
+
+export function useScrollSync() {
+  const context = useContext(ScrollSyncCtx);
+  if (!context) {
+    throw new Error("useScrollSync must be used within a ScrollSyncProvider");
+  }
+  return context;
+}
+
+/// --- ScrollBroadcastChannel ---
+export class ScrollBroadcastChannel implements ScrollEmitter {
+  channel: BroadcastChannel;
+  constructor(readonly sessionId: string) {
+    this.channel = new BroadcastChannel(sessionId);
+  }
+  onScroll(cb: (x: number, y: number) => void): UnsubFn {
+    const handler = (event: MessageEvent) => {
+      const { x, y } = event.data;
+      cb(x, y);
+    };
+    this.channel.addEventListener("message", handler);
+    return () => this.channel.removeEventListener("message", handler);
+  }
+  emitScroll(x: number, y: number) {
+    this.channel.postMessage({ x, y });
+  }
+  tearDown() {
+    this.channel.close();
+  }
+}
+
+export function sessionIdParam({ sessionId }: { sessionId: string }) {
+  const searchParams = new URLSearchParams();
+  searchParams.set("sessionId", sessionId);
+  return searchParams.toString();
+}
+
+export function useScrollChannelFromSearchParams() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("sessionId");
+  useEffect(() => {
+    if (!sessionId) {
+      console.error("No sessionId provided in search params, using default sessionId.");
+    }
+  }, [sessionId]);
+  return useScrollChannel({
+    sessionId,
+  });
+}
+
+// --- useScrollChannel hook ---
+export function useScrollChannel({ sessionId }: { sessionId?: string | null } = {}) {
+  const sId = useMemo(() => sessionId ?? `scroll-sync-${nanoid()}`, [sessionId]);
+  const scrollEmitter = useMemo(() => new ScrollBroadcastChannel(sId), [sId]);
+  useEffect(() => {
+    return () => scrollEmitter.tearDown();
+  }, [scrollEmitter]);
+  return { scrollEmitter, sessionId: sId };
+}
+
+export function ScrollSyncProvider({
+  scrollEmitter,
+  sessionId,
+  children,
+  scrollEl,
+}: {
+  scrollEmitter: ScrollEmitter;
+  sessionId?: string;
+  scrollEl?: HTMLElement;
+  children: ReactNode;
+}) {
+  const scrollRef = useRef<HTMLElement | null>(null);
+
+  const scrollPause = useRef(false);
+  useEffect(() => {
+    const sRef = scrollEl ?? scrollRef.current;
+    const unsubs: UnsubFn[] = [];
+    if (sRef) {
+      const handleScroll = () => {
+        if (scrollPause.current) {
+          console.log("Scroll event paused, ignoring scroll event.");
+          return;
+        }
+        scrollEmitter.emitScroll(sRef.scrollLeft, sRef.scrollTop);
+      };
+      sRef.addEventListener("scroll", handleScroll, { passive: true });
+      unsubs.push(() => sRef.removeEventListener("scroll", handleScroll));
+      unsubs.push(
+        scrollEmitter.onScroll(async (x, y) => {
+          scrollPause.current = true;
+          const $scroll = new Promise((rs) => sRef.addEventListener("scroll", rs, { passive: true, once: true })); // Ensure we only pause once per scroll event
+          sRef.scrollTo(x, y);
+          await $scroll;
+          scrollPause.current = false;
+        })
+      );
+    }
+    return () => {
+      unsubs.forEach((us) => us());
+    };
+  }, [scrollEl, scrollEmitter]);
+
+  return <ScrollSyncCtx.Provider value={{ scrollRef, sessionId }}>{children}</ScrollSyncCtx.Provider>;
+}

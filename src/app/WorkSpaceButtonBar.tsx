@@ -10,7 +10,7 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRequestSignals } from "@/lib/RequestSignals";
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -69,7 +69,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
   return (
     <div className="[&>*]:outline-none  max-h-full flex flex-col">
       <div className="flex justify-center flex-col items-center w-full ">
-        <Link href={"/"} className={clsx("outline-none", { "animate-spin": pending })}>
+        <Link href={"/"} className={cn("outline-none", { "animate-spin": pending })}>
           <div className="rotate-12">
             <div
               className="h-7 w-7 rounded-sm mt-4 mb-4"
