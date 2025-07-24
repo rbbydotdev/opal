@@ -85,7 +85,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
             Hide All
           </DropdownMenuItem>
         </DropdownMenuContent>
-        <SidebarGroupLabel className=" h-6">
+        <SidebarGroupLabel className="h-6">
           <DropdownMenuTrigger asChild>
             <SidebarGroupAction className="mr-2 -mt-2">
               <Ellipsis />
@@ -99,7 +99,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col" />
           <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
           <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
-            <TreeExpanderProvider id="TreeView">
+            <TreeExpanderProvider nodePaths={[]} id="TreeView">
               <SidebarMenuTreeSection />
             </TreeExpanderProvider>
           </div>
@@ -112,7 +112,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
 
           <div className="flex-shrink flex" dnd-id={dndId("files")}>
             <FileTreeMenuCtxProvider id="MainFiles" currentWorkspace={currentWorkspace}>
-              <TreeExpanderProvider id="MainFiles">
+              <TreeExpanderProvider nodePaths={[]} id="MainFiles">
                 <MainSidebarFileMenuFileSection />
               </TreeExpanderProvider>
             </FileTreeMenuCtxProvider>

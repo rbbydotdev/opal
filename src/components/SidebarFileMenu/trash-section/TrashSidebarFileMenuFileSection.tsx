@@ -24,7 +24,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
   );
 
   return (
-    <TreeExpanderProvider id="TrashFiles">
+    <TreeExpanderProvider nodePaths={[]} id="TrashFiles">
       <ContextMenu>
         <ContextMenuTrigger disabled={!currentWorkspace.hasTrash()} asChild>
           <SidebarFileMenuFileSectionInternal
