@@ -184,7 +184,7 @@ function EditHistoryScroll({
                     clearAll();
                     setOpen(false);
                   }}
-                  className="bg-primary p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
+                  className="bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
                 >
                   clear all
                 </button>

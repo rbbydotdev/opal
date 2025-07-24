@@ -33,7 +33,8 @@ export function useEditHistoryPlugin(realm: Realm | undefined) {
 
   const selectedEditMd = useCellValueForRealm(HistoryPlugin.selectedEditDoc$, realm);
   const editorMd = useCellValueForRealm(HistoryPlugin.allMd$, realm);
-  const isRestoreState = selectedEditMd !== null && selectedEditMd === editorMd;
+  const isRestoreState = selectedEditMd !== null && (selectedEditMd ?? "") === (editorMd ?? "");
+  // console.log({ isRestoreState }, selectedEditMd, editorMd);
 
   return {
     edits: edits ?? [],
