@@ -64,6 +64,7 @@ function MarkdownRender() {
       style={{
         border: "10px solid black",
         maxWidth: "980px",
+        minWidth: "600px",
         padding: 0,
         margin: 0,
         height: "calc(100vh - 20px)",

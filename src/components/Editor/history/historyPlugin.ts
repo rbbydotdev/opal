@@ -81,6 +81,7 @@ export class HistoryPlugin {
       return;
     }
 
+    this.realm.pub(HistoryPlugin.allMd$, this.historyRoot);
     this.realm.pub(HistoryPlugin.latestMd$, this.historyRoot);
 
     this.realm.singletonSub(
@@ -95,6 +96,7 @@ export class HistoryPlugin {
         if (this.id !== null) {
           const saveScore = await this.historyStorage.getSaveThreshold(this.id, md);
           if (saveScore < this.saveThreshold) {
+            // if (false) {
             console.log(`Skipping save for ${this.id} due to low score: ${saveScore}`);
             return;
           }
@@ -124,8 +126,8 @@ export class HistoryPlugin {
       void this.transaction(async () => {
         if (edit) {
           const document = await this.historyStorage.reconstructDocumentFromEdit(edit);
-          this.realm.pub(setMarkdown$, document);
           this.realm.pub(HistoryPlugin.selectedEditDoc$, document);
+          this.realm.pub(setMarkdown$, document);
         } else {
           this.realm.pub(HistoryPlugin.selectedEditDoc$, null);
         }
