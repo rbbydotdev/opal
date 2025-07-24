@@ -1,17 +1,23 @@
 // EditHistoryMenu.tsx;
-// import { HistoryDocRecord } from "@/components/Editor/history/HistoryDB";
 import { EditViewImage } from "@/components/Editor/history/EditViewImage";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
+import { useSelectedItemScroll } from "@/components/Editor/history/useSelectedItemScroll";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { HistoryDocRecord, useSnapHistoryDB, useSnapHistoryPendingSave } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
-import { Slot } from "@radix-ui/react-slot";
 import { ChevronDown, History } from "lucide-react";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export function EditHistoryMenu({
@@ -26,6 +32,10 @@ export function EditHistoryMenu({
   const historyDB = useSnapHistoryDB();
   const pendingSave = useSnapHistoryPendingSave({ historyDB });
   const [timeAgoStr, setTimeAgoStr] = useState("");
+  const [isOpen, setOpen] = useState(false);
+  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
+  const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
+
   useEffect(() => {
     const updateTimeAgo = () => {
       if (selectedEdit === null) return setTimeAgoStr("");
@@ -38,18 +48,92 @@ export function EditHistoryMenu({
   }, [edits, selectedEdit]);
 
   return (
-    <div className="relative flex items-center bg-primary-foreground py-1 pl-2 gap-2 font-mono text-sm">
-      <EditHistoryScroll select={setEdit} clearAll={clearAll} edits={edits} selectedEdit={selectedEdit}>
-        <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
-          <div className="mr-2 flex items-center space-x-2 ">
-            <span className="fill-primary-foreground text-4xl" style={{ lineHeight: "1rem" }}>
-              <HistoryStatus selectedEdit={selectedEdit} pendingSave={pendingSave} />
-            </span>
-            <span>Edit history {timeAgoStr}</span>
-          </div>
-          <ChevronDown />
-        </button>
-      </EditHistoryScroll>
+    <div className="relative flex  items-center bg-primary-foreground py-1 pl-2 gap-2 font-mono text-sm">
+      <DropdownMenu open={isOpen} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
+            <div className="mr-2 flex items-center space-x-2 ">
+              <span className="fill-primary-foreground text-4xl" style={{ lineHeight: "1rem" }}>
+                <HistoryStatus selectedEdit={selectedEdit} pendingSave={pendingSave} />
+              </span>
+              <span className="whitespace-nowrap">Edit history {timeAgoStr}</span>
+            </div>
+            <ChevronDown />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-[600px] bg-primary-foreground p-0">
+          {Boolean(edits.length) ? (
+            <div className="border-b border-border p-2">
+              <Button
+                variant={"secondary"}
+                size="default"
+                onClick={() => {
+                  clearAll();
+                  setOpen(false);
+                }}
+                className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
+              >
+                clear
+              </Button>
+            </div>
+          ) : null}
+          <ScrollAreaViewportRef
+            viewportRef={(ref) => {
+              scrollAreaRef.current = ref;
+            }}
+            className={cn({
+              "h-96": Boolean(edits.length),
+              "h-18": !Boolean(edits.length),
+            })}
+          >
+            <div className="p-1 font-mono">
+              {edits.length === 0 && (
+                <div className="flex h-full flex-col items-center justify-center gap-4 p-4">
+                  <div className="w-full flex justify-center items-center border-muted-foreground text-sm text-muted-foreground border border-dashed p-2">
+                    empty
+                  </div>
+                </div>
+              )}
+              {edits.map((EDIT, index) => (
+                <div key={EDIT.edit_id}>
+                  <DropdownMenuItem
+                    ref={selectedEdit?.edit_id === EDIT.edit_id ? updateSelectedItemRef : null}
+                    // ref={selectedEdit?.edit_id === EDIT.edit_id ? selectedItemCallbackRef : null}
+                    // ref={(el) => {
+                    //   if (selectedEdit?.edit_id && selectedEdit.edit_id === EDIT.edit_id) {
+                    //     selectedItemRef.current = el as HTMLDivElement;
+                    //   }
+                    // }}
+                    onSelect={() => setEdit(EDIT)}
+                    className={cn("h-auto cursor-pointer p-1 py-2 focus:bg-sidebar-accent", {
+                      "bg-sidebar-accent": selectedEdit && selectedEdit.edit_id === EDIT.edit_id,
+                    })}
+                  >
+                    <div className="flex w-full items-center justify-start text-left text-sm">
+                      {workspaceId && filePath ? <EditViewImage workspaceId={workspaceId} edit={EDIT} /> : null}
+                      <div className="ml-4">
+                        {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
+                          <span className="mr-2 text-primary">{"•"}</span>
+                        ) : (
+                          <span className="-ml-1 mr-2 text-2xl font-bold text-ring">{"✓"}</span>
+                        )}
+
+                        {new Date(EDIT.timestamp).toLocaleString()}
+                        <span className="text-black">
+                          &nbsp;
+                          <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                  {index < edits.length - 1 && <Separator />}
+                </div>
+              ))}
+            </div>
+          </ScrollAreaViewportRef>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       {isRestoreState && (
         <>
           <button
@@ -79,174 +163,21 @@ function HistoryStatus({ selectedEdit, pendingSave }: { selectedEdit: HistoryDoc
   if (selectedEdit !== null) {
     return (
       <div key={selectedEdit.edit_id} className="animate-spin animation-iteration-once ">
-        <History className="-scale-x-100 inline-block text-ring" />
+        <History className="-scale-x-100 inline-block !text-ring" />
       </div>
     );
   }
   if (pendingSave) {
     return (
       <div className="animate-spin animation-iteration-once ">
-        <History className="-scale-x-100 inline-block text-success" />
+        <History className="-scale-x-100 inline-block !text-success" />
       </div>
     );
   }
 
   return (
     <div className="">
-      <History className="-scale-x-100 inline-block text-primary" />
-    </div>
-  );
-}
-
-function scrollSelectedItemIntoView(
-  selectedItemRef: RefObject<HTMLSpanElement | null>,
-  viewportRef: RefObject<HTMLDivElement | null>
-) {
-  if (selectedItemRef?.current && viewportRef?.current) {
-    const selectedItemRect = selectedItemRef.current.getBoundingClientRect();
-    const offsetTop = selectedItemRef.current.offsetTop;
-    const itemHeight = selectedItemRect.height;
-    const viewportHeight = viewportRef.current.clientHeight;
-    const scrollTo = offsetTop - viewportHeight / 2 + itemHeight / 2;
-    viewportRef.current.scrollTop = Math.max(0, Math.min(scrollTo, viewportRef.current.scrollHeight - viewportHeight));
-  }
-}
-
-function EditHistoryScroll({
-  children,
-  select,
-  edits,
-  clearAll,
-  selectedEdit,
-}: {
-  children: React.ReactElement;
-  select: (edit: HistoryDocRecord) => void;
-  edits: HistoryDocRecord[];
-  clearAll: () => void;
-  selectedEdit: HistoryDocRecord | null;
-}) {
-  const [isOpen, setOpen] = useState(false);
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const selectedItemRef = useRef<HTMLSpanElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
-
-  const handleClick = () => {
-    setOpen(!isOpen);
-  };
-
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "Escape") {
-      setOpen(false);
-    }
-  };
-
-  const handleClickOutside = (event: MouseEvent) => {
-    if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-      setOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-      document.addEventListener("click", handleClickOutside);
-    } else {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("click", handleClickOutside);
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen) {
-      scrollSelectedItemIntoView(selectedItemRef!, viewportRef);
-    }
-  }, [isOpen]);
-
-  return (
-    <div ref={menuRef}>
-      <Slot onClick={handleClick}>{children}</Slot>
-      {isOpen && (
-        <div className="absolute left-2 z-10 mt-2 ">
-          <div className="text-sm font-medium leading-none bg-primary-foreground drop-shadow-lg rounded-t-md py-4">
-            <div className="ml-2 ">
-              {Boolean(edits.length) ? (
-                <button
-                  onClick={() => {
-                    clearAll();
-                    setOpen(false);
-                  }}
-                  className="bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
-                >
-                  clear all
-                </button>
-              ) : (
-                <span className="">edits: </span>
-              )}
-            </div>
-          </div>
-          <ScrollAreaViewportRef
-            viewportRef={viewportRef}
-            className={cn(
-              { "h-96": Boolean(edits.length), "h-18": !Boolean(edits.length) },
-              "w-[600px] _w-[900px] rounded-lg rounded-t-none bg-primary-foreground text-primary shadow-lg"
-            )}
-          >
-            <div className="p-4">
-              {edits.length === 0 && (
-                <div className="flex h-full flex-col gap-4">
-                  <div className="border-muted-foreground flex justify-center text-sm text-muted-foreground border border-dashed p-2">
-                    empty
-                  </div>
-                </div>
-              )}
-              {/* <SnapApiPoolProvider max={Math.max((navigator?.hardwareConcurrency ?? 0) - 1 || 2)}> */}
-              {edits.map((EDIT) => (
-                <div key={EDIT.edit_id}>
-                  <button
-                    tabIndex={0}
-                    onClick={() => {
-                      setOpen(false);
-                      select(EDIT);
-                    }}
-                    className={cn(
-                      { "bg-sidebar-accent": selectedEdit && selectedEdit.edit_id === EDIT.edit_id },
-                      "hover:bg-sidebar-accent flex w-full items-center justify-start p-1 py-2 text-left text-sm hover:bg-tool focus:outline-none"
-                    )}
-                  >
-                    {workspaceId && filePath ? <EditViewImage workspaceId={workspaceId} edit={EDIT} /> : null}
-                    <div className="ml-4">
-                      {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
-                        <span className="mr-2 text-primary">{"•"}</span>
-                      ) : (
-                        <span ref={selectedItemRef} className="-ml-1 mr-2 text-2xl font-bold text-ring">
-                          {"✓"}
-                        </span>
-                      )}
-
-                      {new Date(EDIT.timestamp).toLocaleString()}
-                      <span className="text-black">
-                        &nbsp;
-                        {/* <span className="font-bold font-mono ml-4">{EDIT.edit_id}</span>{" "} */}
-                        <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
-                      </span>
-                    </div>
-                  </button>
-                  <Separator />
-                </div>
-              ))}
-            </div>
-          </ScrollAreaViewportRef>
-        </div>
-      )}
+      <History className="-scale-x-100 inline-block !text-primary" />
     </div>
   );
 }

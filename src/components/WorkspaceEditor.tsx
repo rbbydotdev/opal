@@ -1,10 +1,8 @@
 "use client";
 
-import { TopToolbar } from "@/app/(main)/TopToolbar";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
-import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ImageViewer } from "@/components/ImageViewer";
@@ -124,9 +122,10 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <ScrollSyncProvider scrollEl={mdxEditorElement as any} scrollEmitter={scrollEmitter} sessionId={sessionId}>
           <div className="flex flex-col h-full relative">
-            <TopToolbar>
+            {/* <TopToolbar>
               <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} />
-            </TopToolbar>
+            </TopToolbar> */}
+            {/* <TopToolbar /> */}
             <DropCommanderProvider>
               <EditorWithPlugins
                 {...props}

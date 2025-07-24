@@ -1,7 +1,9 @@
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
+import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { historyPlugin } from "@/components/Editor/history/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
@@ -86,7 +88,7 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
 };
 
 export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace: Workspace; realmId: string }) {
-  const { initialContents } = useFileContents();
+  const { initialContents, debouncedUpdate } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
   const documentId = useWorkspaceDocumentId();
@@ -98,6 +100,8 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       toolbarPlugin({
         toolbarContents: () => (
           <>
+            <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} />
+            <LivePreviewButton />
             <MdxSearchToolbar /> <KitchenSinkToolbar />
           </>
         ),
@@ -136,6 +140,6 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
       }),
       markdownShortcutPlugin(),
     ],
-    [currentWorkspace.id, documentId, historyDB, initialContents, realmId, workspaceImagesPlugin]
+    [currentWorkspace.id, debouncedUpdate, documentId, historyDB, initialContents, realmId, workspaceImagesPlugin]
   );
 }

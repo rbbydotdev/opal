@@ -84,6 +84,13 @@ export class HistoryPlugin {
     this.realm.pub(HistoryPlugin.allMd$, this.historyRoot);
     this.realm.pub(HistoryPlugin.latestMd$, this.historyRoot);
 
+    this.realm.singletonSub(HistoryPlugin.allMd$, () => {
+      const selectedEdit = this.realm.getValue(HistoryPlugin.selectedEdit$);
+      const isMuted = this.realm.getValue(HistoryPlugin.muteChange$);
+      if (selectedEdit && !isMuted) {
+        this.realm.pub(HistoryPlugin.selectedEdit$, null);
+      }
+    });
     this.realm.singletonSub(
       this.realm.pipe(
         HistoryPlugin.allMd$,
