@@ -95,18 +95,24 @@ export function ScrollSyncProvider({
     const unsubs: UnsubFn[] = [];
     if (sRef) {
       const handleScroll = () => {
-        if (scrollPause.current) {
-          console.log("Scroll event paused, ignoring scroll event.");
-          return;
-        }
-        scrollEmitter.emitScroll(sRef.scrollLeft, sRef.scrollTop);
+        if (scrollPause.current) return;
+        // Calculate relative scroll positions
+        const maxScrollLeft = sRef.scrollWidth - sRef.clientWidth;
+        const maxScrollTop = sRef.scrollHeight - sRef.clientHeight;
+        const relX = maxScrollLeft > 0 ? sRef.scrollLeft / maxScrollLeft : 0;
+        const relY = maxScrollTop > 0 ? sRef.scrollTop / maxScrollTop : 0;
+        scrollEmitter.emitScroll(relX, relY);
       };
       sRef.addEventListener("scroll", handleScroll, { passive: true });
       unsubs.push(() => sRef.removeEventListener("scroll", handleScroll));
       unsubs.push(
-        scrollEmitter.onScroll(async (x, y) => {
+        scrollEmitter.onScroll(async (relX, relY) => {
           scrollPause.current = true;
-          const $scroll = new Promise((rs) => sRef.addEventListener("scroll", rs, { passive: true, once: true })); // Ensure we only pause once per scroll event
+          const maxScrollLeft = sRef.scrollWidth - sRef.clientWidth;
+          const maxScrollTop = sRef.scrollHeight - sRef.clientHeight;
+          const x = relX * maxScrollLeft;
+          const y = relY * maxScrollTop;
+          const $scroll = new Promise((rs) => sRef.addEventListener("scroll", rs, { passive: true, once: true }));
           sRef.scrollTo(x, y);
           await $scroll;
           scrollPause.current = false;
