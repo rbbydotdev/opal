@@ -6,6 +6,7 @@ import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-sec
 import { SidebarFileMenuSync } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
+import { DisplayTreeProvider, useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { useDndList } from "@/features/filetree-drag-and-drop/useDndList";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
 import React from "react";
@@ -99,9 +100,9 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col" />
           <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
           <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
-            <TreeExpanderProvider nodePaths={[]} id="TreeView">
-              <SidebarMenuTreeSection />
-            </TreeExpanderProvider>
+            <DisplayTreeProvider>
+              <TreeMenuSection id="TreeView" />
+            </DisplayTreeProvider>
           </div>
 
           <div dnd-id={dndId("trash")} className="min-h-8 flex-shrink flex">
@@ -120,5 +121,15 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         </SidebarDndList>
       </div>
     </SidebarGroup>
+  );
+}
+
+function TreeMenuSection({ id }: { id: string }) {
+  const { flatTree } = useEditorDisplayTreeCtx();
+  return (
+    <TreeExpanderProvider nodePaths={flatTree} id={id}>
+      {/* <TreeView */}
+      <SidebarMenuTreeSection />
+    </TreeExpanderProvider>
   );
 }

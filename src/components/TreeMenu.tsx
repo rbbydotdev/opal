@@ -5,7 +5,7 @@ import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabe
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
-import { useEditorDisplayTree } from "@/components/useEditorDisplayTree";
+import { useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { useGetNodeFromEditor } from "@/components/useGetNodeFromEditor";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
@@ -22,7 +22,7 @@ export function isParent(node: unknown): node is unist.Parent {
 
 export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
-  const displayTree = useEditorDisplayTree(MainEditorRealmId);
+  const { displayTree } = useEditorDisplayTreeCtx();
   const { getLexicalNode, getDOMNode } = useGetNodeFromEditor(MainEditorRealmId);
 
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
@@ -37,17 +37,7 @@ export function SidebarTreeViewMenu() {
   if (!displayTree || !Boolean(displayTree.children?.length)) {
     return <EmptySidebarLabel label="empty" />;
   }
-
-  return (
-    <SidebarTreeViewMenuContent
-      getLexicalNode={getLexicalNode}
-      getDOMNode={getDOMNode}
-      parent={displayTree}
-      // expand={expandSingle}
-      // expandForNode={expandForNode}
-      // isExpanded={isExpanded}
-    />
-  );
+  return <SidebarTreeViewMenuContent getLexicalNode={getLexicalNode} getDOMNode={getDOMNode} parent={displayTree} />;
 }
 
 function HighlightNodeSelector({
@@ -122,7 +112,7 @@ export function SidebarTreeViewMenuContent({
                   <SidebarMenuButton asChild className="h-6">
                     <TreeViewMenuParent depth={depth} node={displayNode}>
                       <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
-                        <span className="hover:underline " title={displayNode.type}>
+                        <span className="hover:underline" title={displayNode.type}>
                           {displayNode.displayText ?? displayNode.type}
                         </span>
                       </HighlightNodeSelector>
@@ -133,11 +123,8 @@ export function SidebarTreeViewMenuContent({
               <CollapsibleContent>
                 <SidebarMenu>
                   <SidebarTreeViewMenuContent
-                    // expand={expand}
-                    // expandForNode={expandForNode}
                     parent={displayNode}
                     depth={depth + 1}
-                    // isExpanded={isExpanded}
                     getDOMNode={getDOMNode}
                     getLexicalNode={getLexicalNode}
                   />
