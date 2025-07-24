@@ -128,18 +128,8 @@ export class Workspace {
     return thumb.readOrMake();
   }
 
-  // static originPathForNode(node: TreeNode | AbsPath) {
-  //   const path = String(node);
-  //   const { workspaceId } = Workspace.parseWorkspacePath(window?.location?.pathname ?? "");
-  //   return `${window.location.origin}${joinPath(
-  //     absPath(WorkspaceDAO.rootRoute),
-  //     absPath(workspaceId ?? "<no-workspace>"),
-  //     path ?? ""
-  //   )}`;
-  // }
-
   static parseWorkspacePath(pathOrUrl: string) {
-    const url = new URL(pathOrUrl, "http://dummy"); // base needed for relative URLs
+    const url = new URL(pathOrUrl, "http://example");
     const pathname = absPathname(url.pathname);
 
     let workspaceId: string | null = null;
@@ -308,7 +298,6 @@ export class Workspace {
     return this.disk.renameMultiple(nodes);
   }
 
-  //this is dumb because you do not consider the children!
   renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
       console.error("Error renaming dir", e);
