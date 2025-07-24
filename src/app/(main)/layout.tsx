@@ -32,10 +32,10 @@ const geistMono = Geist_Mono({
 
 export default function RootLayout({
   children,
-  newWorkspace,
+  newWorkspaceModal,
 }: Readonly<{
   children: React.ReactNode;
-  newWorkspace: React.ReactNode;
+  newWorkspaceModal: React.ReactNode;
 }>) {
   useEffect(() => {
     return RequestSignalsInstance.initAndWatch((_count) => {});
@@ -84,7 +84,7 @@ export default function RootLayout({
                               </div>
                               <ErrorBoundary fallback={ErrorPlaque}>
                                 <>{children}</>
-                                <>{newWorkspace}</>
+                                <>{newWorkspaceModal}</>
                               </ErrorBoundary>
                             </ErrorBoundary>
                           </div>

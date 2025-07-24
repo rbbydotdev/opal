@@ -5,8 +5,7 @@ import { snapdom } from "@zumer/snapdom";
 import * as Comlink from "comlink";
 import "github-markdown-css/github-markdown-light.css";
 
-async function snapshotAndPost(target: HTMLElement) {
-  // ... (snapshot logic remains unchanged)
+async function snapshot(target: HTMLElement) {
   const images = Array.from(target.querySelectorAll("img"));
   if (images.length > 0) {
     await Promise.all(
@@ -23,10 +22,21 @@ async function snapshotAndPost(target: HTMLElement) {
     );
   }
 
-  const capture = await snapdom.capture(target);
+  const capture = await snapdom.capture(target, {});
   const canvas = await capture.toCanvas();
+
+  // Scale down the canvas to 50% size (adjust as needed)
+  const scale = parseFloat((1 / 8).toFixed(4));
+  const scaledCanvas = document.createElement("canvas");
+  scaledCanvas.width = canvas.width * scale;
+  scaledCanvas.height = canvas.height * scale;
+  const ctx = scaledCanvas.getContext("2d");
+  if (ctx) {
+    ctx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+  }
+
   const blob: Blob = await new Promise((resolve) => {
-    canvas.toBlob((b) => resolve(b as Blob), "image/webp");
+    scaledCanvas.toBlob((b) => resolve(b as Blob), "image/webp", 0.5);
   });
   return blob;
 }
@@ -40,7 +50,7 @@ const PreviewWorkerApi = {
     }
     target.innerHTML = html;
 
-    return await snapshotAndPost(target);
+    return await snapshot(target);
   },
   async renderAndSnapshot(editId: number) {
     const history = new HistoryDAO();
@@ -62,7 +72,7 @@ const PreviewWorkerApi = {
     }
     target.innerHTML = html;
 
-    const result = await snapshotAndPost(target);
+    const result = await snapshot(target);
 
     await history.updatePreviewForEditId(editId, result);
 

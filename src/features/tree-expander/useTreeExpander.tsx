@@ -58,5 +58,11 @@ export function useTreeExpander({
   }, [activePath, flatTree]);
 
   const all = { ...stored, ...local };
-  return { expandSingle, expanded: all, setExpandAll, expandForNode };
+  return {
+    expandSingle,
+    expanded: all,
+    setExpandAll,
+    expandForNode,
+    isExpanded: (node: TreeNode | string) => all[String(node)] === true,
+  };
 }

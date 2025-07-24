@@ -9,7 +9,6 @@ import { useEditorDisplayTree } from "@/components/useEditorDisplayTree";
 import { useGetNodeFromEditor } from "@/components/useGetNodeFromEditor";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isContainer, isLeaf, LexicalTreeViewNode } from "@/lib/lexical/treeViewDisplayNodesLexical";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
@@ -23,7 +22,6 @@ export function isParent(node: unknown): node is unist.Parent {
 
 export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
-  const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const displayTree = useEditorDisplayTree(MainEditorRealmId);
   const { getLexicalNode, getDOMNode } = useGetNodeFromEditor(MainEditorRealmId);
 
@@ -45,9 +43,9 @@ export function SidebarTreeViewMenu() {
       getLexicalNode={getLexicalNode}
       getDOMNode={getDOMNode}
       parent={displayTree}
-      expand={expandSingle}
-      expandForNode={expandForNode}
-      expanded={expanded}
+      // expand={expandSingle}
+      // expandForNode={expandForNode}
+      // isExpanded={isExpanded}
     />
   );
 }
@@ -105,25 +103,20 @@ export function SidebarTreeViewMenuContent({
   getDOMNode,
   parent,
   depth = 0,
-  expand,
-  expandForNode,
-  expanded,
 }: {
   getLexicalNode: (id: string) => Promise<lexical.LexicalNode | null>;
   getDOMNode: (id: string) => Promise<HTMLElement | null>;
 
   parent: LexicalTreeViewNode;
   depth?: number;
-  expand: (path: string, value: boolean) => void;
-  expandForNode: (node: TreeNode, state: boolean) => void;
-  expanded: { [path: string]: boolean };
 }) {
+  const { isExpanded, expandSingle } = useTreeExpanderContext();
   return (
     <SidebarMenu>
       {(parent.children ?? []).map((displayNode) => (
         <SidebarMenuItem key={displayNode.id}>
           {isContainer(displayNode) ? (
-            <Collapsible open={expanded[displayNode.id]} onOpenChange={(o) => expand(displayNode.id, o)}>
+            <Collapsible open={isExpanded(displayNode.id)} onOpenChange={(o) => expandSingle(displayNode.id, o)}>
               <CollapsibleTrigger asChild>
                 <div>
                   <SidebarMenuButton asChild className="h-6">
@@ -140,11 +133,11 @@ export function SidebarTreeViewMenuContent({
               <CollapsibleContent>
                 <SidebarMenu>
                   <SidebarTreeViewMenuContent
-                    expand={expand}
-                    expandForNode={expandForNode}
+                    // expand={expand}
+                    // expandForNode={expandForNode}
                     parent={displayNode}
                     depth={depth + 1}
-                    expanded={expanded}
+                    // isExpanded={isExpanded}
                     getDOMNode={getDOMNode}
                     getLexicalNode={getLexicalNode}
                   />
