@@ -2,6 +2,7 @@ import { sessionIdParam, useScrollSync } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { absPath, joinPath } from "@/lib/paths2";
+import { Zap } from "lucide-react";
 import Link from "next/link";
 
 export function TopToolbar({ children }: { children?: React.ReactNode }) {
@@ -22,7 +23,7 @@ export function TopToolbar({ children }: { children?: React.ReactNode }) {
             target="_blank"
           >
             {/*  preview button */}
-            Preview
+            Live Preview <Zap />
           </Link>
         </Button>
       </div>

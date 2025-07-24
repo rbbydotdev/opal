@@ -175,31 +175,34 @@ function EditHistoryScroll({
     <div ref={menuRef}>
       <Slot onClick={handleClick}>{children}</Slot>
       {isOpen && (
-        <div className="absolute left-0 z-10 mt-2">
+        <div className="absolute left-2 z-10 mt-2 ">
+          <div className="text-sm font-medium leading-none bg-primary-foreground drop-shadow-lg rounded-t-md py-4">
+            <div className="ml-2 ">
+              {Boolean(edits.length) ? (
+                <button
+                  onClick={() => {
+                    clearAll();
+                    setOpen(false);
+                  }}
+                  className="bg-primary p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
+                >
+                  clear all
+                </button>
+              ) : (
+                <span className="">edits: </span>
+              )}
+            </div>
+          </div>
           <ScrollAreaViewportRef
             viewportRef={viewportRef}
             className={cn(
               { "h-96": Boolean(edits.length), "h-18": !Boolean(edits.length) },
-              "w-[600px] _w-[900px] rounded-md border bg-primary-foreground text-primary shadow-lg"
+              "w-[600px] _w-[900px] rounded-lg rounded-t-none bg-primary-foreground text-primary shadow-lg"
             )}
           >
             <div className="p-4">
-              {Boolean(edits.length) && (
-                <div className="mb-4 text-sm font-medium leading-none">
-                  <button
-                    onClick={() => {
-                      clearAll();
-                      setOpen(false);
-                    }}
-                    className="ml-2 rounded-xl border-2 bg-primary p-2 text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
-                  >
-                    clear all
-                  </button>
-                </div>
-              )}
               {edits.length === 0 && (
                 <div className="flex h-full flex-col gap-4">
-                  edits:
                   <div className="border-muted-foreground flex justify-center text-sm text-muted-foreground border border-dashed p-2">
                     empty
                   </div>

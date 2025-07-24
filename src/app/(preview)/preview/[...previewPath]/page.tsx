@@ -62,7 +62,7 @@ function MarkdownRender() {
   return (
     <div
       style={{
-        border: "10px solid purple",
+        border: "10px solid black",
         maxWidth: "980px",
         padding: 0,
         margin: 0,
