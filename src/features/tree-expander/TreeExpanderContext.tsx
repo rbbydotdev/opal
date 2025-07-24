@@ -6,9 +6,17 @@ import { createContext, ReactNode } from "react";
 type TreeExpanderContextType = ReturnType<typeof useTreeExpander>;
 export const TreeExpanderContext = createContext<TreeExpanderContextType | undefined>(undefined);
 
-export function TreeExpanderProvider({ children, id }: { children: ReactNode; id: string }) {
-  const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
+export function TreeExpanderProvider({
+  children,
+  id,
+  nodePaths,
+}: {
+  children: ReactNode;
+  id: string;
+  nodePaths: string[];
+}) {
+  const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const expanderId = currentWorkspace.id + "/" + id;
-  const value = useTreeExpander({ flatTree, activePath: workspaceRoute.path, expanderId });
+  const value = useTreeExpander({ nodePaths, activePath: workspaceRoute.path, expanderId });
   return <TreeExpanderContext.Provider value={value}>{children}</TreeExpanderContext.Provider>;
 }
