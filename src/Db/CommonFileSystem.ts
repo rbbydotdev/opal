@@ -23,6 +23,9 @@ export interface CommonFileSystem {
     data: Uint8Array | Buffer | string,
     options?: { encoding?: "utf8"; mode: number }
   ): Promise<void>;
+
+  rmdir(path: string, options?: { recursive?: boolean }): Promise<void>;
+  lstat(path: string): Promise<{ isDirectory: () => boolean; isFile: () => boolean }>; // Similar to stat, but for symbolic links
 }
 
 type OPFSFileSystem = CommonFileSystem & {

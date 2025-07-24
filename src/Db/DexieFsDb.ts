@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/lib/errors";
+import { ConflictError, NotFoundError } from "@/lib/errors";
 import Dexie from "dexie";
 import path from "path";
 import { CommonFileSystem } from "./CommonFileSystem";
@@ -160,5 +160,19 @@ export class DexieFsDb implements CommonFileSystem {
       mtimeMs: Date.now(),
       ctimeMs: Date.now(),
     });
+  }
+
+  lstat(path: string): Promise<{ isDirectory: () => boolean; isFile: () => boolean }> {
+    return this.stat(path);
+  }
+  async rmdir(path: string, options?: { recursive?: boolean }): Promise<void> {
+    //check if directory is empty
+    if (!options?.recursive) {
+      const entries = await this.files.where("parent").equals(path).toArray();
+      if (entries.length > 0) {
+        throw new ConflictError(`ENOTEMPTY: directory not empty, rmdir '${path}'`);
+      }
+    }
+    return this.rm(path, options);
   }
 }

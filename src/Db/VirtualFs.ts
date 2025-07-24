@@ -156,6 +156,7 @@ export class VirtualFileSystem implements CommonFileSystem {
     if (resolved) {
       try {
         // We cast here because we will normalize to string names later.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         baseContents = (await resolved.fs.readdir(resolved.relativePath)) as any[];
       } catch (e) {
         // If readdir fails, we might still have mount points inside, so we continue.
@@ -182,6 +183,7 @@ export class VirtualFileSystem implements CommonFileSystem {
     // 3. Combine and deduplicate the results.
     const nameSet = new Set<string>();
     baseContents.forEach((item) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const name = typeof item === "string" ? item : (item as any).name.toString();
       nameSet.add(name);
     });
@@ -190,5 +192,17 @@ export class VirtualFileSystem implements CommonFileSystem {
     // The interface allows for string[], so we return that for simplicity.
     // A more complex implementation could return virtual Dirent objects.
     return Array.from(nameSet);
+  }
+
+  async rmdir(path: string, options?: { recursive?: boolean }) {
+    const resolved = this._resolvePath(path);
+    if (!resolved) {
+      throw new FsError(`ENOENT: no such file or directory, rmdir '${path}'`, "ENOENT");
+    }
+    return resolved.fs.rmdir(resolved.relativePath, options);
+  }
+  async lstat(path: string) {
+    //not bothering with symlinks...
+    return this.stat(path);
   }
 }
