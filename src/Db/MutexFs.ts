@@ -38,6 +38,14 @@ export class MutexFs implements CommonFileSystem {
   async writeFile(path: AbsPath, data: Uint8Array | Buffer | string, options?: { encoding?: "utf8"; mode: number }) {
     return this.mutex.runExclusive(() => this.fs.writeFile(path, data, options));
   }
+
+  async rmdir(path: AbsPath, options?: { recursive?: boolean }) {
+    return this.mutex.runExclusive(() => this.fs.rmdir(path, options));
+  }
+  async lstat(path: AbsPath) {
+    //not bothering with symlinks...
+    return this.stat(path);
+  }
 }
 
 // ExclusifyClass: No 'any' used

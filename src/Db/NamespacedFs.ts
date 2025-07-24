@@ -49,6 +49,14 @@ export class NamespacedFs implements CommonFileSystem {
   ): Promise<void> {
     return this.fs.writeFile(encodePath(joinPath(this.namespace, path)), data, options);
   }
+
+  async rmdir(path: AbsPath, options?: { recursive?: boolean }) {
+    return this.fs.rmdir(path, options);
+  }
+  async lstat(path: AbsPath) {
+    //not bothering with symlinks...
+    return this.stat(path);
+  }
 }
 
 export class PatchedOPFS extends FsaNodeFs {
