@@ -154,9 +154,8 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
       <BigButton
         icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
         title="new workspace"
-        href={"/newWorkspace"}
+        href={"/newWorkspace/newWorkspace"}
         className="text-3xs"
-        prefetch={false}
       />
 
       {coalescedWorkspace && (

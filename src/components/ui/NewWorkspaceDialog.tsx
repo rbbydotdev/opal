@@ -18,15 +18,9 @@ import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-export function NewWorkspaceDialog({
-  children,
-  defaultOpen = false,
-}: {
-  children?: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
+export function NewWorkspaceDialog({ children }: { children?: React.ReactNode }) {
   const [isPending, setPending] = useState(false);
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isOpen, setIsOpen] = useState(true);
   const defaultValue = useMemo(() => "wrk-" + nanoid(), []);
   const router = useRouter();
 
@@ -47,8 +41,9 @@ export function NewWorkspaceDialog({
 
     router.push(workspace.home());
   };
+  console.log("RENDER", { isOpen });
   return (
-    <Dialog open={isOpen} defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} defaultOpen={true} onOpenChange={handleOpenChange}>
       {/* 1. Give the form a unique ID */}
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

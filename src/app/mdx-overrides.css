@@ -78,3 +78,11 @@
   /* this fixes scroll to calculations */
   display: inline-block;
 }
+
+.mdxeditor-source-editor {
+  /* caret-color: black !important; */
+}
+
+.mdxeditor-source-editor .cm-focused .cm-matchingBracket {
+  outline: none !important;
+}
