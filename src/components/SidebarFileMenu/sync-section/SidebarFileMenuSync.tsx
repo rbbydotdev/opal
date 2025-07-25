@@ -1,6 +1,17 @@
 "use client";
 
-import { Check, ChevronRight, DotIcon, Download, GitBranchIcon, GitMerge, Plus, RefreshCw, Upload } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  DotIcon,
+  Download,
+  GitBranchIcon,
+  GitMerge,
+  InfoIcon,
+  Plus,
+  RefreshCw,
+  Upload,
+} from "lucide-react";
 import React from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
@@ -52,6 +63,12 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu>
+            <div className="px-4 pt-2">
+              <Button className="w-full " size="sm" variant="outline">
+                <InfoIcon className="mr-1" />
+                Init
+              </Button>
+            </div>
             <div className="px-4 pt-2">
               <Button className="w-full " size="sm" variant="outline">
                 <GitMerge className="mr-1" />
