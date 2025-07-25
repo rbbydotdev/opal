@@ -3,7 +3,7 @@ import { HistoryDAO } from "@/Db/HistoryDAO";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { snapdom } from "@zumer/snapdom";
 import * as Comlink from "comlink";
-import "github-markdown-css/github-markdown-light.css";
+// import "github-markdown-css/github-markdown-light.css";
 
 async function snapshot(target: HTMLElement) {
   const images = Array.from(target.querySelectorAll("img"));
@@ -25,7 +25,6 @@ async function snapshot(target: HTMLElement) {
   const capture = await snapdom.capture(target, {});
   const canvas = await capture.toCanvas();
 
-  // Scale down the canvas to 50% size (adjust as needed)
   const scale = parseFloat((1 / 8).toFixed(4));
   const scaledCanvas = document.createElement("canvas");
   scaledCanvas.width = canvas.width * scale;
@@ -36,7 +35,7 @@ async function snapshot(target: HTMLElement) {
   }
 
   const blob: Blob = await new Promise((resolve) => {
-    scaledCanvas.toBlob((b) => resolve(b as Blob), "image/webp", 0.5);
+    scaledCanvas.toBlob((b) => resolve(b as Blob), "image/webp", 0.8);
   });
   return blob;
 }

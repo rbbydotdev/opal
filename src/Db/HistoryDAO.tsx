@@ -124,10 +124,9 @@ export function useSnapHistoryDB(): HistoryDAO {
 
 export class HistoryDAO implements HistoryStorageInterface {
   // --- Constants for Threshold Calculation ---
-  // Time in ms after which a save is highly encouraged (e.g., 30 seconds)
-  private readonly TIME_NORMALIZATION_MS = 60 * 1000;
+  private readonly TIME_NORMALIZATION_MS = 30 * 1000;
   // Number of characters changed after which a save is highly encouraged
-  private readonly CHANGE_NORMALIZATION_CHARS = 180;
+  private readonly CHANGE_NORMALIZATION_CHARS = 100;
   // Weight for the time-based score component
   private readonly TIME_WEIGHT = 0.4;
   // Weight for the change-based score component
