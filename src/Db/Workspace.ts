@@ -15,6 +15,7 @@ import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
 import { WorkspaceSeedFiles } from "@/Db/WorkspaceSeedFiles";
+import { Repo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
@@ -588,5 +589,12 @@ export class Workspace {
   ) {
     const fromWs = await WorkspaceDAO.FetchByName(fromWorkspaceName).then((ws) => ws.toModel().initNoListen());
     return await Disk.TransferFiles(transferNodes, fromWs.disk, toWorkspace.disk);
+  }
+
+  NewRepo() {
+    new Repo({
+      fs: this.disk.fs,
+      dir: this.disk.root,
+    });
   }
 }
