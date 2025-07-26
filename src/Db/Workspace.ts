@@ -1,13 +1,5 @@
 "use client";
-import {
-  CreateDetails,
-  DeleteDetails,
-  Disk,
-  DiskEvents,
-  DiskRemoteEventPayload,
-  IndexTrigger,
-  RenameDetails,
-} from "@/Db/Disk";
+import { CreateDetails, DeleteDetails, Disk, DiskEvents, IndexTrigger, RenameDetails } from "@/Db/Disk";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { ImageCache } from "@/Db/ImageCache";
 import { SpecialDirs } from "@/Db/SpecialDirs";
@@ -15,7 +7,6 @@ import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
 import { WorkspaceSeedFiles } from "@/Db/WorkspaceSeedFiles";
-import { Repo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
@@ -476,17 +467,10 @@ export class Workspace {
     return new WorkspaceScannable(this.disk, { workspaceId: this.id, workspaceName: this.name });
   }
 
-  broadcastRemoteDisk<T extends (typeof DiskEvents)[keyof typeof DiskEvents]>(
-    eventName: T,
-    eventData?: DiskRemoteEventPayload[T]
-  ) {
-    return this.disk.broadcastRemote(eventName, eventData);
-  }
-
   // To get the return type of NewScannable:
 
   //TODO: move to service object with along with search
-  async NewImage_DEPRECATED(arrayBuffer: ArrayBuffer | File, filePath: AbsPath): Promise<AbsPath> {
+  async NewImage(arrayBuffer: ArrayBuffer | File, filePath: AbsPath): Promise<AbsPath> {
     const file =
       (mime.lookup(filePath) || "").startsWith("image/svg") || (mime.lookup(filePath) || "").startsWith("image/webp")
         ? new File([arrayBuffer], basename(filePath))
@@ -592,9 +576,9 @@ export class Workspace {
   }
 
   NewRepo() {
-    new Repo({
-      fs: this.disk.fs,
-      dir: this.disk.root,
-    });
+    // new Repo({
+    //   fs: this.disk.fs,
+    //   dir: this.disk.root,
+    // });
   }
 }

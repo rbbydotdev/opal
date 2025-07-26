@@ -113,8 +113,8 @@ export type DiskRemoteEventPayload = {
   [DiskEvents.RENAME]: RemoteRenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.WRITE]: FilePathsType;
-  [DiskEvents.CREATE]: FilePathsType;
-  [DiskEvents.DELETE]: FilePathsType;
+  // [DiskEvents.CREATE]: FilePathsType;
+  // [DiskEvents.DELETE]: FilePathsType;
 };
 export class DiskEventsRemote extends Channel<DiskRemoteEventPayload> {}
 
@@ -131,8 +131,6 @@ type DiskLocalEventPayload = {
   [DiskEvents.RENAME]: RenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.WRITE]: FilePathsType;
-  [DiskEvents.CREATE]: FilePathsType;
-  [DiskEvents.DELETE]: FilePathsType;
 };
 export class DiskEventsLocal extends Emittery<DiskLocalEventPayload> {}
 
@@ -237,28 +235,6 @@ export abstract class Disk {
     } else {
       return this.setupRemoteListeners();
     }
-  }
-
-  broadcastRemote<T extends (typeof DiskEvents)[keyof typeof DiskEvents]>(
-    eventName: T,
-    eventData?: DiskRemoteEventPayload[T],
-    options?: { contextId?: string }
-  ): Promise<void> {
-    return Disk.BroadcastRemote(this.guid, eventName, eventData, options);
-  }
-
-  static BroadcastRemote<T extends (typeof DiskEvents)[keyof typeof DiskEvents]>(
-    diskId: string,
-    eventName: T,
-    eventData?: DiskRemoteEventPayload[T],
-    { contextId }: { contextId?: string } = { contextId: nanoid() }
-  ) {
-    const channel = Channel.GetChannel(diskId) as DiskEventsRemote | undefined;
-    if (!channel) {
-      console.warn("No channel found for diskId:", diskId);
-      return Promise.resolve();
-    }
-    return channel.emit(eventName, eventData, { contextId });
   }
 
   async setupRemoteListeners() {
