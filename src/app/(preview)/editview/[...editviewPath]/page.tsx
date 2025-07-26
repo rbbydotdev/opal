@@ -1,5 +1,4 @@
 "use client";
-import { NewIframeErrorMessagePayload } from "@/app/(preview)/editview/[...editviewPath]/IframeImageMessagePayload";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
@@ -32,16 +31,8 @@ function PageComponent({ children }: { children: React.ReactNode }) {
   );
 }
 
-function broadcastError(error: Error) {
-  return window.parent.postMessage(NewIframeErrorMessagePayload(error), "*");
-}
-
 export default function Page({ children }: { children: React.ReactNode }) {
-  return (
-    <ErrorBoundary onError={(error) => broadcastError(error)} fallback={null}>
-      <PageComponent>{children}</PageComponent>
-    </ErrorBoundary>
-  );
+  return <PageComponent>{children}</PageComponent>;
 }
 
 function PreviewComponent({ editId }: { editId: number }) {
