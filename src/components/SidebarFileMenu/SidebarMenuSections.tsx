@@ -128,7 +128,6 @@ function TreeMenuSection({ id }: { id: string }) {
   const { flatTree } = useEditorDisplayTreeCtx();
   return (
     <TreeExpanderProvider nodePaths={flatTree} id={id}>
-      {/* <TreeView */}
       <SidebarMenuTreeSection />
     </TreeExpanderProvider>
   );

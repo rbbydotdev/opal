@@ -1,8 +1,9 @@
 import { CommonFileSystem } from "@/Db/CommonFileSystem";
+import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
+import Emittery from "emittery";
 import git, { AuthCallback } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
-import { useMemo } from "react";
 
 interface IRemote {
   branch: string;
@@ -17,13 +18,6 @@ export type GitRepoAuthor = {
 };
 
 type RemoteVerifyCodes = (typeof Remote.VERIFY_CODES)[keyof typeof Remote.VERIFY_CODES];
-class VerifyRemoteError extends Error {
-  constructor(message: string, code: RemoteVerifyCodes) {
-    super(message);
-    this.name = "VerifyRemoteError";
-  }
-}
-
 class Remote implements IRemote {
   branch: string;
   name: string;
@@ -73,10 +67,18 @@ class Remote implements IRemote {
   }
 }
 
+export class RepoEventsLocal extends Emittery<{
+  update: void;
+}> {}
+
 export class Repo {
   fs: CommonFileSystem;
   dir: AbsPath;
   branch: string;
+
+  private gitWpm = new WatchPromiseMembers(git);
+  readonly git = this.gitWpm.watched;
+  readonly events = this.gitWpm.events;
 
   author: GitRepoAuthor = {
     name: "Opal Editor",
@@ -109,6 +111,10 @@ export class Repo {
     this.author = author || this.author;
   }
 
+  latestCommit() {}
+
+  updatePilot() {}
+
   async mustBeInitialized() {
     if (this.state.initialized) return true;
     if (!(await this.isInitialized())) {
@@ -120,15 +126,6 @@ export class Repo {
     }
     return (this.state.initialized = true);
   }
-
-  // async initRepo() {
-  //   // Initialize a new git repository
-  //   await git.init({
-  //     fs: this.repo.fs,
-  //     dir: this.repo.dir,
-  //     defaultBranch: this.repo.branch,
-  //   });
-  // }
 
   async isInitialized(): Promise<boolean> {
     try {
@@ -207,11 +204,12 @@ export class RepoWithRemote extends Repo {
     return (this.state.remoteOK = true);
   }
 }
-class Playbook {
+export class GitPlaybook {
   constructor(private repo: Repo) {}
 
   async commit(message: string, author?: GitRepoAuthor) {
-    await git.commit({
+    await this.repo.mustBeInitialized();
+    await this.repo.git.commit({
       fs: this.repo.fs,
       dir: this.repo.dir,
       message,
@@ -220,7 +218,7 @@ class Playbook {
   }
 
   async addRemote(remote: IRemote) {
-    await git.addRemote({
+    await this.repo.git.addRemote({
       fs: this.repo.fs,
       dir: this.repo.dir,
       remote: remote.name,
@@ -231,7 +229,7 @@ class Playbook {
   }
 }
 
-class RemotePlaybook extends Playbook {
+export class GitRemotePlaybook extends GitPlaybook {
   constructor(private remoteRepo: RepoWithRemote) {
     super(remoteRepo);
   }
@@ -287,16 +285,4 @@ class RemotePlaybook extends Playbook {
     //     console.error("Error syncing with remote:", error);
     //   });
   }
-}
-
-export function useGitPlaybook(repo: Repo | RepoWithRemote) {
-  return useMemo(() => {
-    if (repo instanceof RepoWithRemote) {
-      return new RemotePlaybook(repo);
-    }
-    return new Playbook(repo);
-  }, [repo]);
-}
-export function useGitRepo(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
-  return useMemo(() => new Repo({ fs, dir, branch }), [branch, dir, fs]);
 }

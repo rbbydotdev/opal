@@ -7,6 +7,8 @@ import { CommonFileSystem } from "./CommonFileSystem";
 export class MutexFs implements CommonFileSystem {
   fs: CommonFileSystem;
 
+  label = "mutexfs";
+
   constructor(fs: CommonFileSystem, protected mutex = new Mutex()) {
     this.fs = fs;
   }
@@ -45,6 +47,14 @@ export class MutexFs implements CommonFileSystem {
   async lstat(path: AbsPath) {
     //not bothering with symlinks...
     return this.stat(path);
+  }
+  async readlink(_path: AbsPath) {
+    throw new Error("MutexFs does not support readlink");
+    return null;
+  }
+  async symlink(_path: AbsPath) {
+    throw new Error("MutexFs does not support symlinks");
+    return;
   }
 }
 

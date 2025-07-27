@@ -82,7 +82,7 @@ export const EditableFile = ({
           active={equals(fullPath, workspaceRoute.path)}
           draggable
           onDragStart={onDragStart}
-          href={currentWorkspace.resolveFileUrl(fullPath)}
+          href={currentWorkspace.resolveEditorFileUrl(fullPath)}
           className={cn(
             className,
             { "bg-sidebar-accent font-bold": isSelectedRange || isFocused },

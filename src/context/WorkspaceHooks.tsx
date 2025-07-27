@@ -37,6 +37,8 @@ export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 
+const DEFAULT_MIME_TYPE = "application/octet-stream"; //i think this just means binary?
+
 export function useWorkspaceDocumentId() {
   //should probably look at the document contents and parse the id: in the front matter
   const { path: filePath, id: workspaceId } = useWorkspaceRoute();
@@ -48,7 +50,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
   const [contents, setContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
-  const [mimeType, setMimeType] = useState<null | string>(null);
+  // const [mimeType, setMimeType] = useState<null | string>(null);
   const [error, setError] = useState<null | Error>(null);
   const router = useRouter();
 
@@ -82,7 +84,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
       if (currentWorkspace && filePath) {
         try {
           setContents(await currentWorkspace.disk.readFile(filePath));
-          setMimeType(getMimeType(filePath));
+
           setError(null);
         } catch (error) {
           setError(error as Error);
@@ -116,16 +118,23 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   // this avoids glitchy behavior in the editor et all
   // the editor should use contents as initialContents
   // the editor will track the contents state itself, writes using debouncedUpdate WILL write to file
-  return { error, filePath, initialContents: contents, mimeType, updateContents, debouncedUpdate };
+  return {
+    error,
+    filePath,
+    initialContents: contents,
+    mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
+    updateContents,
+    debouncedUpdate,
+  };
 }
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
 
   if (filePath === null || currentWorkspace.isNull) {
-    return { filePath: null, mimeType: null, isImage: null, isMarkdown: null, inTrash: null };
+    return { filePath: null, mimeType: DEFAULT_MIME_TYPE, isImage: null, isMarkdown: null, inTrash: null };
   }
-  const mimeType = mime.lookup(filePath) || "";
+  const mimeType = mime.lookup(filePath) || DEFAULT_MIME_TYPE;
 
   return {
     filePath,

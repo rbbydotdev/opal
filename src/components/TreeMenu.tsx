@@ -7,7 +7,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { useGetNodeFromEditor } from "@/components/useGetNodeFromEditor";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { isContainer, isLeaf, LexicalTreeViewNode } from "@/lib/lexical/treeViewDisplayNodesLexical";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
@@ -24,6 +24,7 @@ export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
   const { displayTree } = useEditorDisplayTreeCtx();
   const { getLexicalNode, getDOMNode } = useGetNodeFromEditor(MainEditorRealmId);
+  const { mimeType } = useCurrentFilepath();
 
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
@@ -31,6 +32,9 @@ export function SidebarTreeViewMenu() {
     return null;
   }
 
+  if (!mimeType.startsWith("text/markdown")) {
+    return <EmptySidebarLabel label="markdown only" />;
+  }
   if (!editor?.getRootElement()) {
     return <EmptySidebarLabel label="no editor" />;
   }

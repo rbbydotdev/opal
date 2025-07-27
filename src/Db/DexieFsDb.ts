@@ -175,4 +175,12 @@ export class DexieFsDb implements CommonFileSystem {
     }
     return this.rm(path, options);
   }
+  async symlink(_target: string, _path: string): Promise<void> {
+    throw new Error("DexieFsDb does not support symlinks");
+    return;
+  }
+  async readlink(_path: string): Promise<string | null> {
+    throw new Error("DexieFsDb does not support symlinks");
+    return null;
+  }
 }

@@ -7,7 +7,7 @@ import {
   Download,
   GitBranchIcon,
   GitMerge,
-  InfoIcon,
+  Loader,
   Plus,
   RefreshCw,
   Upload,
@@ -25,10 +25,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useUIGitPlaybook, useWorkspaceRepo } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { Github, ChromeIcon as Google } from "lucide-react";
+
 export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
+  const { currentWorkspace } = useWorkspaceContext();
+  const { repo } = useWorkspaceRepo(currentWorkspace);
+  const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
+  const { cmdRef, show } = useTooltipToastCmd();
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
       <Collapsible className="group/collapsible flex flex-col min-h-0" open={expanded} onOpenChange={setExpand}>
@@ -64,15 +72,23 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu>
             <div className="px-4 pt-2">
-              <Button className="w-full " size="sm" variant="outline">
-                <InfoIcon className="mr-1" />
-                Init
-              </Button>
-            </div>
-            <div className="px-4 pt-2">
-              <Button className="w-full " size="sm" variant="outline">
-                <GitMerge className="mr-1" />
-                Commit
+              <Button
+                className="w-full"
+                onClick={() => {
+                  void commit().then(show);
+                }}
+                size="sm"
+                variant="outline"
+                disabled={isPending}
+              >
+                {pendingCommand === "commit" ? (
+                  <Loader className="mr-1 animate-spin animation-iteration-infinite" />
+                ) : (
+                  <GitMerge className="mr-1" />
+                )}
+                <TooltipToast cmdRef={cmdRef} message={"success!"} durationMs={1000} sideOffset={10}>
+                  Commit
+                </TooltipToast>
               </Button>
             </div>
             <div className="px-4 pt-2">

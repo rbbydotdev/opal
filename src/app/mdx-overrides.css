@@ -86,3 +86,10 @@
 .mdxeditor-source-editor .cm-focused .cm-matchingBracket {
   outline: none !important;
 }
+
+.hide-rich-text .mdxeditor {
+  /* super hack to hide rich text editor */
+  [class^="_diffSourceToggleWrapper_"] {
+    display: none;
+  }
+}
