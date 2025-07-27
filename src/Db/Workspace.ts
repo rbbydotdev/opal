@@ -2,6 +2,7 @@
 import { CreateDetails, DeleteDetails, Disk, DiskEvents, IndexTrigger, RenameDetails } from "@/Db/Disk";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { ImageCache } from "@/Db/ImageCache";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
@@ -29,8 +30,6 @@ import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage } from "../lib/paths2";
-import { RemoteAuth } from "./RemoteAuth";
-
 export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;
 
 // type DiskScan = UnwrapScannable<Disk>;
@@ -46,7 +45,7 @@ export class Workspace {
 
   name: string;
   guid: string;
-  remoteAuth: RemoteAuth;
+  remoteAuths?: RemoteAuthDAO[];
   disk: Disk;
   thumbs: Disk;
 
@@ -56,19 +55,19 @@ export class Workspace {
       guid,
       disk,
       thumbs,
-      remoteAuth,
+      remoteAuths,
     }: {
       name: string;
       guid: string;
       disk: Disk;
       thumbs: Disk;
-      remoteAuth: RemoteAuth;
+      remoteAuths?: RemoteAuthDAO[];
     },
     private connector: WorkspaceDAO
   ) {
     this.name = WorkspaceDAO.Slugify(name);
     this.guid = guid;
-    this.remoteAuth = remoteAuth;
+    this.remoteAuths = remoteAuths || [];
     this.disk = disk;
     this.thumbs = thumbs;
     this.imageCache = Workspace.newCache(this.name);
@@ -92,7 +91,7 @@ export class Workspace {
       name: this.name,
       guid: this.guid,
       href: this.href,
-      remoteAuth: this.remoteAuth.toJSON(),
+      remoteAuths: (this.remoteAuths ?? []).map((ra) => ra.toJSON()),
       disk: this.disk.toJSON(),
       thumbs: this.thumbs.toJSON(),
     };
@@ -105,7 +104,7 @@ export class Workspace {
         guid: json.guid,
         disk: Disk.FromJSON(json.disk),
         thumbs: Disk.FromJSON(json.thumbs),
-        remoteAuth: RemoteAuth.FromJSON(json.remoteAuth),
+        remoteAuths: json.remoteAuths.map((ra) => RemoteAuthDAO.FromJSON(ra)),
       },
       connector
     );
@@ -576,9 +575,6 @@ export class Workspace {
   }
 
   NewRepo() {
-    // new Repo({
-    //   fs: this.disk.fs,
-    //   dir: this.disk.root,
-    // });
+    return this.disk.NewGitRepo();
   }
 }

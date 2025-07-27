@@ -4,6 +4,7 @@ import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
 import { MutexFs } from "@/Db/MutexFs";
 import { PatchedOPFS } from "@/Db/NamespacedFs";
+import { Repo as GitRepo } from "@/features/git-repo/GitRepo";
 import { UnwrapScannable } from "@/features/search/SearchScannable";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
@@ -158,8 +159,9 @@ export abstract class Disk {
 
   constructor(
     public readonly guid: string,
-    protected fs: CommonFileSystem,
-    public fileTree: FileTree,
+    readonly fs: CommonFileSystem,
+    //TODO move things into protected to isolate property digging
+    readonly fileTree: FileTree,
     private connector: DiskDAO
   ) {
     this.remote = new DiskEventsRemote(this.guid); //oops this should probably go in remote
@@ -852,8 +854,12 @@ export abstract class Disk {
     await this.local.clearListeners();
   }
 
-  get promises() {
-    return this.fs;
+  // get promises() {
+  //   return this.fs;
+  // }
+
+  NewGitRepo(/*author?: GitRepoAuthor*/) {
+    return GitRepo.New(this.fs, this.fileTree.root.path);
   }
 }
 
