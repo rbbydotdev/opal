@@ -1,9 +1,9 @@
 import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { Disk } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
-import { GitPlaybook, GitRemotePlaybook, Repo, RepoWithRemote } from "@/features/git-repo/GitRepo";
+import { GitPlaybook, GitRemotePlaybook, Repo, RepoLatestCommit, RepoWithRemote } from "@/features/git-repo/GitRepo";
 import { AbsPath, absPath } from "@/lib/paths2";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export function useGitPlaybook(repo: Repo | RepoWithRemote) {
   return useMemo(() => {
@@ -38,7 +38,23 @@ export function useUIGitPlaybook(repo: Repo) {
 
 export function useWorkspaceRepo(workspace: Workspace) {
   const repo = useMemo(() => workspace.disk.NewGitRepo(), [workspace]);
-  return { repo, latestCommit: null };
+  const [info, setInfo] = useState<{ latestCommit: RepoLatestCommit | null }>({ latestCommit: null });
+  const updateInfo = useCallback(async () => {
+    setInfo({
+      latestCommit: await repo.tryLatestCommit(),
+    });
+  }, [repo]);
+  useEffect(() => {
+    if (!workspace.isNull) {
+      void updateInfo();
+    }
+  }, [updateInfo, workspace.isNull]);
+  useEffect(() => {
+    if (repo) {
+      return repo.watch(updateInfo);
+    }
+  }, [repo, setInfo, updateInfo]);
+  return { repo, info };
 }
 export function useGitRepoFromDisk(disk: Disk): Repo {
   return useMemo(() => disk.NewGitRepo(), [disk]);

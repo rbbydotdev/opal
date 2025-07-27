@@ -71,6 +71,18 @@ export class RepoEventsLocal extends Emittery<{
   update: void;
 }> {}
 
+export type RepoLatestCommit = {
+  oid: string;
+  date: number;
+  message: string;
+  author: {
+    name: string;
+    email: string;
+    timestamp: number;
+    timezoneOffset: number;
+  };
+};
+
 export class Repo {
   fs: CommonFileSystem;
   dir: AbsPath;
@@ -90,6 +102,17 @@ export class Repo {
   } = {
     initialized: false,
   };
+
+  watch(callback: () => void) {
+    const unsub: (() => void)[] = [];
+    unsub.push(this.events.on("commit:end", callback));
+    unsub.push(this.events.on("pull:end", callback));
+    unsub.push(this.events.on("merge:end", callback));
+    // unsub.push(this.events.on("fetch:end", callback));
+    return () => {
+      unsub.forEach((u) => u());
+    };
+  }
 
   static New(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main", author?: GitRepoAuthor): Repo {
     return new Repo({ fs, dir, branch, author });
@@ -111,7 +134,25 @@ export class Repo {
     this.author = author || this.author;
   }
 
-  latestCommit() {}
+  async tryLatestCommit(): Promise<RepoLatestCommit | null> {
+    if (!(await this.isInitialized())) return null;
+    const commitOid = await this.git.resolveRef({
+      fs: this.fs,
+      dir: this.dir,
+      ref: "HEAD",
+    });
+    const commit = await this.git.readCommit({
+      fs: this.fs,
+      dir: this.dir,
+      oid: commitOid,
+    });
+    return {
+      oid: commitOid,
+      date: commit.commit.committer.timestamp * 1000, // timestamp is in seconds
+      message: commit.commit.message,
+      author: commit.commit.author,
+    };
+  }
 
   updatePilot() {}
 
