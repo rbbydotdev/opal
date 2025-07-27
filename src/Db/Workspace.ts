@@ -358,6 +358,10 @@ export class Workspace {
     return results;
   }
 
+  async rehydrateIndexCache() {
+    await this.disk.rehydrateIndexCache();
+  }
+
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
     await this.indexAndEmitNewFiles(results);
@@ -405,11 +409,6 @@ export class Workspace {
           .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
           .map(({ oldPath, newPath }) => [oldPath, newPath])
       );
-      // await this.disk.findReplaceImgBatch(
-      //   nodes
-      //     .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
-      //     .map(({ oldPath, newPath }) => [oldPath, newPath])
-      // );
     });
   }
 
