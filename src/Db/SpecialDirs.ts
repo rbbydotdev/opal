@@ -4,7 +4,7 @@ import { AbsPath, absPath } from "@/lib/paths2";
 export const SpecialDirs = {
   Trash: absPath("/.trash"),
   Storage: absPath("/.storage"),
-  Git: absPath("/.git"),
+  Git: absPath("/__.git"),
   get All() {
     return [this.Trash, this.Storage, this.Git];
   },

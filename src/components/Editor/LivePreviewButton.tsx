@@ -5,10 +5,14 @@ import { absPath, joinPath } from "@/lib/paths2";
 import { Zap } from "lucide-react";
 import Link from "next/link";
 
-export function LivePreviewButton() {
+export function LivePreviewButton({ disabled }: { disabled?: boolean }) {
   const { id: workspaceId, path: filePath } = useWorkspaceRoute();
   const { sessionId } = useScrollSync();
-  return (
+  return disabled ? (
+    <Button size="sm" disabled={disabled}>
+      Live Preview <Zap className="!text-primary-foreground" />
+    </Button>
+  ) : (
     <Button size="sm" asChild>
       <Link
         href={joinPath(absPath("preview"), workspaceId!, filePath! + `?${sessionIdParam({ sessionId: sessionId! })}`)}

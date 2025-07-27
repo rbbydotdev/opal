@@ -96,6 +96,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     editorRef.current?.setMarkdown(newContent ?? "");
   });
   const { id, path } = useWorkspaceRoute();
+  const { mimeType } = useCurrentFilepath();
 
   const { scrollEmitter, sessionId } = useScrollChannel({ sessionId: `${id}/${path}` });
 
@@ -122,13 +123,10 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <ScrollSyncProvider scrollEl={mdxEditorElement as any} scrollEmitter={scrollEmitter} sessionId={sessionId}>
           <div className="flex flex-col h-full relative">
-            {/* <TopToolbar>
-              <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} />
-            </TopToolbar> */}
-            {/* <TopToolbar /> */}
             <DropCommanderProvider>
               <EditorWithPlugins
                 {...props}
+                mimeType={mimeType}
                 currentWorkspace={currentWorkspace}
                 editorRef={editorRef}
                 onChange={debouncedUpdate}
@@ -143,8 +141,12 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     </SnapApiPoolProvider>
   );
 }
-function EditorWithPlugins(props: ComponentProps<typeof Editor> & { currentWorkspace: Workspace }) {
-  const plugins = useAllPlugins({ currentWorkspace: props.currentWorkspace, realmId: MainEditorRealmId });
+function EditorWithPlugins(props: ComponentProps<typeof Editor> & { currentWorkspace: Workspace; mimeType: string }) {
+  const plugins = useAllPlugins({
+    currentWorkspace: props.currentWorkspace,
+    realmId: MainEditorRealmId,
+    mimeType: props.mimeType,
+  });
   return (
     <Editor
       {...props}

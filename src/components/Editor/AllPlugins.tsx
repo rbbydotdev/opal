@@ -31,7 +31,7 @@ import {
   thematicBreakPlugin,
   toolbarPlugin,
 } from "@mdxeditor/editor";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
 
 const defaultSnippetContent = `
@@ -87,7 +87,15 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
   ],
 };
 
-export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace: Workspace; realmId: string }) {
+export function useAllPlugins({
+  currentWorkspace,
+  realmId,
+  mimeType,
+}: {
+  currentWorkspace: Workspace;
+  realmId: string;
+  mimeType: string;
+}) {
   const { initialContents, debouncedUpdate } = useFileContents();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
@@ -95,51 +103,71 @@ export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace:
 
   const historyDB = useSnapHistoryDB();
 
+  useEffect(() => {
+    if (mimeType === "text/markdown") return;
+    document.body.classList.add("hide-rich-text");
+    return () => {
+      document.body.classList.remove("hide-rich-text");
+    };
+  }, [mimeType]);
+
   return useMemo(
-    () => [
-      toolbarPlugin({
-        toolbarContents: () => (
-          <>
-            <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} />
-            <LivePreviewButton />
-            <MdxSearchToolbar /> <KitchenSinkToolbar />
-          </>
-        ),
-      }),
-      remoteRealmPlugin({ editorId: realmId }),
-      listsPlugin(),
-      quotePlugin(),
-      headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
-      linkPlugin(),
-      searchPlugin(),
-      historyPlugin({
-        documentId,
-        workspaceId: currentWorkspace.id,
-        historyStorage: historyDB,
-        historyRoot: String(initialContents ?? ""),
-      }),
-      linkDialogPlugin(),
-      urlParamViewModePlugin({ type: "search" }),
+    () =>
+      [
+        toolbarPlugin({
+          toolbarContents: () => (
+            <>
+              <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} disabled={mimeType !== "text/markdown"} />
+              <LivePreviewButton disabled={mimeType !== "text/markdown"} />
+              <MdxSearchToolbar /> <KitchenSinkToolbar />
+            </>
+          ),
+        }),
+        remoteRealmPlugin({ editorId: realmId }),
+        listsPlugin(),
+        quotePlugin(),
+        headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
+        linkPlugin(),
+        searchPlugin(),
+        mimeType.startsWith("text/markdown")
+          ? historyPlugin({
+              documentId,
+              workspaceId: currentWorkspace.id,
+              historyStorage: historyDB,
+              historyRoot: String(initialContents ?? ""),
+            })
+          : null,
+        linkDialogPlugin(),
+        urlParamViewModePlugin({ type: "search" }),
+        workspaceImagesPlugin,
+        tablePlugin(),
+        thematicBreakPlugin(),
+        frontmatterPlugin(),
+        codeBlockPlugin({
+          defaultCodeBlockLanguage: "js",
+          codeBlockEditorDescriptors: [{ priority: -10, match: (_) => true, Editor: CodeMirrorEditor }],
+        }),
+        sandpackPlugin({ sandpackConfig: virtuosoSampleSandpackConfig }),
+        codeMirrorPlugin({
+          codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
+        }),
+        directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
+        diffSourcePlugin({
+          viewMode: "rich-text",
+          diffMarkdown: String(initialContents ?? ""),
+          codeMirrorExtensions: [CodeMirrorHighlightURLRange()],
+        }),
+        markdownShortcutPlugin(),
+      ].filter(Boolean),
+    [
+      currentWorkspace.id,
+      debouncedUpdate,
+      documentId,
+      historyDB,
+      initialContents,
+      mimeType,
+      realmId,
       workspaceImagesPlugin,
-      tablePlugin(),
-      thematicBreakPlugin(),
-      frontmatterPlugin(),
-      codeBlockPlugin({
-        defaultCodeBlockLanguage: "js",
-        codeBlockEditorDescriptors: [{ priority: -10, match: (_) => true, Editor: CodeMirrorEditor }],
-      }),
-      sandpackPlugin({ sandpackConfig: virtuosoSampleSandpackConfig }),
-      codeMirrorPlugin({
-        codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
-      }),
-      directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
-      diffSourcePlugin({
-        viewMode: "rich-text",
-        diffMarkdown: String(initialContents ?? ""),
-        codeMirrorExtensions: [CodeMirrorHighlightURLRange()],
-      }),
-      markdownShortcutPlugin(),
-    ],
-    [currentWorkspace.id, debouncedUpdate, documentId, historyDB, initialContents, realmId, workspaceImagesPlugin]
+    ]
   );
 }

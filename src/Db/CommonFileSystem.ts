@@ -26,6 +26,10 @@ export interface CommonFileSystem {
 
   rmdir(path: string, options?: { recursive?: boolean }): Promise<void>;
   lstat(path: string): Promise<{ isDirectory: () => boolean; isFile: () => boolean }>; // Similar to stat, but for symbolic links
+
+  symlink(target: string, path: string): Promise<void>;
+
+  readlink(path: string): Promise<Buffer<ArrayBufferLike> | string | null>;
 }
 
 type OPFSFileSystem = CommonFileSystem & {
@@ -45,5 +49,11 @@ export class OPFSNamespacedFs extends NamespacedFs {
 
   rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
     return this.fs.rm(encodePath(joinPath(this.namespace, path)), options);
+  }
+  async symlink(_target: string, _path: string): Promise<void> {
+    throw new Error("OPFS does not support symlinks");
+  }
+  async readlink(_path: string): Promise<Buffer<ArrayBufferLike> | string | null> {
+    throw new Error("OPFS does not support readlink");
   }
 }

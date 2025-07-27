@@ -23,9 +23,11 @@ import { timeAgo } from "short-time-ago";
 export function EditHistoryMenu({
   realmId = MainEditorRealmId,
   finalizeRestore,
+  disabled,
 }: {
   realmId?: string;
   finalizeRestore: (md: string) => void;
+  disabled?: boolean;
 }) {
   const realm = useRemoteMDXEditorRealm(realmId);
   const { edits, selectedEdit, setEdit, reset, clearAll, isRestoreState, selectedEditMd } = useEditHistoryPlugin(realm);
@@ -48,9 +50,13 @@ export function EditHistoryMenu({
   }, [edits, selectedEdit]);
 
   return (
-    <div className="relative flex  items-center bg-primary-foreground py-1 pl-2 gap-2 font-mono text-sm">
+    <div
+      className={cn("relative flex items-center bg-primary-foreground py-1 pl-2 gap-2 font-mono text-sm", {
+        "opacity-50": disabled,
+      })}
+    >
       <DropdownMenu open={isOpen} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger asChild disabled={disabled}>
           <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
             <div className="mr-2 flex items-center space-x-2 ">
               <span className="fill-primary-foreground text-4xl" style={{ lineHeight: "1rem" }}>
