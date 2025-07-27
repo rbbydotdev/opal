@@ -10,6 +10,19 @@ interface IRemote {
   auth?: AuthCallback;
 }
 
+export type GitRepoAuthor = {
+  name: string;
+  email: string;
+};
+
+type RemoteVerifyCodes = (typeof Remote.VERIFY_CODES)[keyof typeof Remote.VERIFY_CODES];
+class VerifyRemoteError extends Error {
+  constructor(message: string, code: RemoteVerifyCodes) {
+    super(message);
+    this.name = "VerifyRemoteError";
+  }
+}
+
 class Remote implements IRemote {
   branch: string;
   name: string;
@@ -24,13 +37,13 @@ class Remote implements IRemote {
   }
 
   static VERIFY_CODES = {
-    SUCCESS: 0,
-    BRANCH_NOT_FOUND: 1,
-    NO_ACCESS: 2,
-    UNEXPECTED_ERROR: 3,
+    SUCCESS: "SUCCESS" as const,
+    BRANCH_NOT_FOUND: "BRANCH_NOT_FOUND" as const,
+    NO_ACCESS: "NO_ACCESS" as const,
+    UNEXPECTED_ERROR: "UNEXPECTED_ERROR" as const,
   };
 
-  async verifyRemote(): Promise<number> {
+  async verifyRemote(): Promise<RemoteVerifyCodes> {
     try {
       const remoteRefs = await git.listServerRefs({
         http,
@@ -64,10 +77,7 @@ export class Repo {
   dir: AbsPath;
   branch: string;
 
-  author: {
-    email: string;
-    name: string;
-  } = {
+  author: GitRepoAuthor = {
     name: "Opal Editor",
     email: "user@opaleditor.com",
   };
@@ -78,8 +88,8 @@ export class Repo {
     initialized: false,
   };
 
-  New(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
-    return new Repo({ fs, dir, branch });
+  static New(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main", author?: GitRepoAuthor): Repo {
+    return new Repo({ fs, dir, branch, author });
   }
   constructor({
     fs,
@@ -175,6 +185,7 @@ export class RepoWithRemote extends Repo {
     super({ fs, dir, branch });
     this.remote = remote instanceof Remote ? remote : new Remote(remote);
   }
+
   get isRemoteOk() {
     return this.state.remoteOK;
   }
@@ -198,15 +209,12 @@ export class RepoWithRemote extends Repo {
 class Playbook {
   constructor(private repo: Repo) {}
 
-  async commit(message: string) {
+  async commit(message: string, author?: GitRepoAuthor) {
     await git.commit({
       fs: this.repo.fs,
       dir: this.repo.dir,
       message,
-      author: {
-        name: "Your Name",
-        email: "your@email.com",
-      },
+      author: author || this.repo.author,
     });
   }
 
@@ -223,51 +231,51 @@ class Playbook {
 }
 
 class RemotePlaybook extends Playbook {
-  constructor(private repo: RepoWithRemote) {
-    super(repo);
+  constructor(private remoteRepo: RepoWithRemote) {
+    super(remoteRepo);
   }
 
   private async precommandCheck() {
-    if (!this.repo.isRemoteOk) {
-      await this.repo.assertRemoteOK({ verifyOrThrow: true });
+    if (!this.remoteRepo.isRemoteOk) {
+      await this.remoteRepo.assertRemoteOK({ verifyOrThrow: true });
     }
-    if (!(await this.repo.ready())) {
+    if (!(await this.remoteRepo.ready())) {
     }
   }
   async push() {
     await this.precommandCheck();
     /*commit,push*/
     await git.push({
-      fs: this.repo.fs,
+      fs: this.remoteRepo.fs,
       http,
-      dir: this.repo.dir,
-      remote: this.repo.remote.name,
-      ref: this.repo.branch, // or any branch you want to push to
-      onAuth: this.repo.remote.auth,
+      dir: this.remoteRepo.dir,
+      remote: this.remoteRepo.remote.name,
+      ref: this.remoteRepo.branch, // or any branch you want to push to
+      onAuth: this.remoteRepo.remote.auth,
     });
   }
   async pull() {
     await this.precommandCheck();
     /*fetch,merge*/
     await git.fetch({
-      fs: this.repo.fs,
+      fs: this.remoteRepo.fs,
       http,
-      dir: this.repo.dir,
-      remote: this.repo.remote.name,
-      ref: this.repo.remote.branch, // or any branch you want to fetch from
-      onAuth: this.repo.remote.auth,
+      dir: this.remoteRepo.dir,
+      remote: this.remoteRepo.remote.name,
+      ref: this.remoteRepo.remote.branch, // or any branch you want to fetch from
+      onAuth: this.remoteRepo.remote.auth,
     });
     await git.merge({
-      fs: this.repo.fs,
-      dir: this.repo.dir,
-      ours: this.repo.branch, // or any branch you want to merge into
-      theirs: this.repo.remote.branch, // or any branch you want to merge from
+      fs: this.remoteRepo.fs,
+      dir: this.remoteRepo.dir,
+      ours: this.remoteRepo.branch, // or any branch you want to merge into
+      theirs: this.remoteRepo.remote.branch, // or any branch you want to merge from
       fastForwardOnly: true, // Set to false if you want to allow non-fast-forward merges
     });
   }
   async syncWithRemote() {
     await this.precommandCheck();
-    await this.repo.ready();
+    await this.remoteRepo.ready();
     /*commit,fetch,merge,push*/
     //check if the repo is initialized
     // await
@@ -278,4 +286,14 @@ class RemotePlaybook extends Playbook {
     //     console.error("Error syncing with remote:", error);
     //   });
   }
+}
+
+function useGitPlaybook(repo: Repo | RepoWithRemote) {
+  if (repo instanceof RepoWithRemote) {
+    return new RemotePlaybook(repo);
+  }
+  return new Playbook(repo);
+}
+function useGitRepo(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
+  return new Repo({ fs, dir, branch });
 }
