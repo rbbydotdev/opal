@@ -33,7 +33,7 @@ import { Github, ChromeIcon as Google } from "lucide-react";
 
 export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { repo } = useWorkspaceRepo(currentWorkspace);
+  const { repo, info } = useWorkspaceRepo(currentWorkspace);
   const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef, show } = useTooltipToastCmd();
@@ -72,6 +72,16 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu>
             <div className="px-4 pt-2">
+              {info.latestCommit?.oid && (
+                <ul className="mb-4">
+                  <li className="font-mono text-2xs mb-0 text-left truncate">
+                    <b>commit:</b> {info.latestCommit.oid}
+                  </li>
+                  <li className="font-mono text-2xs mb-0 text-left truncate">
+                    <b>date:</b> {new Date(info.latestCommit.date).toLocaleString()}
+                  </li>
+                </ul>
+              )}
               <Button
                 className="w-full"
                 onClick={() => {
