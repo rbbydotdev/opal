@@ -227,6 +227,11 @@ export abstract class Disk {
       console.debug("local disk index event");
     });
   }
+
+  async rehydrateIndexCache() {
+    const { indexCache } = await this.connector.hydrate();
+    this.initialIndexFromCache(indexCache ?? new TreeDirRoot());
+  }
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     await this.ready;
     const { indexCache } = await this.connector.hydrate();
@@ -291,7 +296,7 @@ export abstract class Disk {
     this.mutex.release();
   }
 
-  async findReplaceImgBatch2(findReplace: [string, string][], origin: string = ""): Promise<AbsPath[]> {
+  async findReplaceImgBatch(findReplace: [string, string][], origin: string = ""): Promise<AbsPath[]> {
     if (findReplace.length === 0) return [];
     const filePaths = [];
     for await (const node of await this.iteratorMutex((node) => node.isMarkdownFile())) {
@@ -316,43 +321,6 @@ export abstract class Disk {
   //TODO: should probabably parse document then search find image nodes
   //Also this function is a little beefy, service object?
   //TODO use search ?
-  async findReplaceImgBatch(findReplace: [string, string][], origin: string = "") {
-    const filePaths = [];
-    for await (const node of await this.iteratorMutex((node) => node.isMarkdownFile())) {
-      let content = String(await this.readFile(node.path));
-      let changed = false;
-      for (const [find, replace] of findReplace) {
-        // replaceImageUrlsInMarkdown
-        // Match either the find string or window.location.origin + find, preceded by (< or [
-        const encodedFind = encodePath(find);
-        const originFind = origin + find;
-        const encodedOriginFind = origin + encodedFind;
-
-        const escapedOriginFind = originFind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const encodedEscapedOriginFind = encodedOriginFind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-        const escapedFind = find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const encodedEscapedFind = encodedFind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-        const regex = new RegExp(
-          `([(<])(${escapedOriginFind}|${escapedFind}|${encodedEscapedOriginFind}|${encodedEscapedFind})`,
-          "g"
-        );
-        if (regex.test(content)) {
-          content = content.replace(regex, (_match, p1, _p2) => `${p1}${encodePath(replace)}`);
-          changed = true;
-        }
-      }
-      if (changed) {
-        await this.writeFile(node.path, content);
-        filePaths.push(node.path);
-      }
-    }
-    await this.local.emit(DiskEvents.WRITE, {
-      filePaths,
-    });
-    return filePaths;
-  }
 
   async mkdirRecursive(filePath: AbsPath) {
     await this.ready;
