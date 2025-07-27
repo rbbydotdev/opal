@@ -1,5 +1,5 @@
 import { NullDisk } from "@/Db/Disk";
-import { NullRemoteAuth } from "@/Db/RemoteAuth";
+// import { NullRemoteAuth } from "@/Db/RemoteOAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 
@@ -14,7 +14,7 @@ export class NullWorkspace extends Workspace {
         name: "",
         guid: "",
         disk: new NullDisk(),
-        remoteAuth: new NullRemoteAuth(),
+        remoteAuths: [],
         thumbs: new NullDisk(),
       },
       {} as WorkspaceDAO

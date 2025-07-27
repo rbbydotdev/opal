@@ -26,13 +26,13 @@ export class WorkspaceDAO {
   name: string;
   disk: DiskDAO;
   thumbs: DiskDAO;
-  remoteAuth: RemoteAuthDAO;
+  remoteAuths: RemoteAuthDAO[] = [];
 
   toJSON() {
     return {
       name: this.name,
       guid: this.guid,
-      remoteAuth: this.remoteAuth,
+      remoteAuth: this.remoteAuths,
       disk: this.disk,
       thumbs: this.thumbs,
     };
@@ -51,7 +51,7 @@ export class WorkspaceDAO {
       guid: json.guid,
       disk: json.disk,
       thumbs: json.thumbs,
-      remoteAuth: json.remoteAuth,
+      remoteAuths: json.remoteAuths,
     });
   }
 
@@ -78,13 +78,13 @@ export class WorkspaceDAO {
       guid: this.guid,
       name: this.name,
       disk: this.disk,
-      remoteAuth: this.remoteAuth,
+      remoteAuths: this.remoteAuths,
       thumbs: this.thumbs,
     });
   };
   static async CreateNew(
     name: string,
-    remoteAuth: RemoteAuthDAO = RemoteAuthDAO.new(),
+    remoteAuths: RemoteAuthDAO[] = [],
     disk: DiskDAO = DiskDAO.CreateNew(),
     thumbs: DiskDAO = DiskDAO.CreateNew()
   ) {
@@ -98,13 +98,18 @@ export class WorkspaceDAO {
       guid: WorkspaceDAO.guid(),
       disk,
       thumbs,
-      remoteAuth,
+      remoteAuths,
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
-      return await Promise.all([disk.save(), thumbs.save(), remoteAuth.save(), workspace.save()]);
+      return await Promise.all([
+        disk.save(),
+        thumbs.save(),
+        Promise.all(remoteAuths.map((ra) => ra.save())),
+        workspace.save(),
+      ]);
     });
 
-    return new WorkspaceDAO({ ...workspace, remoteAuth, disk, thumbs });
+    return new WorkspaceDAO({ ...workspace, remoteAuths, disk, thumbs });
   }
   static async FetchByName(name: string) {
     const ws = await ClientDb.workspaces.where("name").equals(name).first();
@@ -120,9 +125,9 @@ export class WorkspaceDAO {
   static Slugify(name: string) {
     return slugify(name, { strict: true });
   }
-  private getRemoteAuth() {
-    return RemoteAuthDAO.FromJSON(this.remoteAuth);
-  }
+  // private getRemoteAuth() {
+  //   return RemoteOAuthDAO.FromJSON(this.remoteAuth);
+  // }
 
   getDisk() {
     return DiskDAO.FromJSON(this.disk);
@@ -176,7 +181,7 @@ export class WorkspaceDAO {
         ...this,
         disk: this.disk.toModel(),
         thumbs: this.thumbs.toModel(),
-        remoteAuth: this.remoteAuth.toModel(),
+        remoteAuths: this.remoteAuths,
       },
       this
     );
@@ -203,18 +208,18 @@ export class WorkspaceDAO {
     name,
     disk,
     thumbs,
-    remoteAuth,
+    remoteAuths,
   }: {
     guid: string;
     name: string;
     disk: DiskDAO | DiskJType;
     thumbs: DiskDAO | DiskJType;
-    remoteAuth: RemoteAuthDAO | RemoteAuthJType;
+    remoteAuths: RemoteAuthJType[];
   }) {
     this.guid = guid;
     this.name = name;
     this.disk = DiskDAO.FromJSON(disk);
     this.thumbs = DiskDAO.FromJSON(thumbs);
-    this.remoteAuth = RemoteAuthDAO.FromJSON(remoteAuth);
+    this.remoteAuths = remoteAuths.map((ra) => RemoteAuthDAO.FromJSON(ra));
   }
 }

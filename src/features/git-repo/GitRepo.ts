@@ -2,6 +2,7 @@ import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import git, { AuthCallback } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
+import { useMemo } from "react";
 
 interface IRemote {
   branch: string;
@@ -288,12 +289,14 @@ class RemotePlaybook extends Playbook {
   }
 }
 
-function useGitPlaybook(repo: Repo | RepoWithRemote) {
-  if (repo instanceof RepoWithRemote) {
-    return new RemotePlaybook(repo);
-  }
-  return new Playbook(repo);
+export function useGitPlaybook(repo: Repo | RepoWithRemote) {
+  return useMemo(() => {
+    if (repo instanceof RepoWithRemote) {
+      return new RemotePlaybook(repo);
+    }
+    return new Playbook(repo);
+  }, [repo]);
 }
-function useGitRepo(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
-  return new Repo({ fs, dir, branch });
+export function useGitRepo(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
+  return useMemo(() => new Repo({ fs, dir, branch }), [branch, dir, fs]);
 }
