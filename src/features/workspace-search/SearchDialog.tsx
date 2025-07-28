@@ -16,7 +16,7 @@ import { SearchResult } from "@/features/search/SearchResults";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceSearchResults } from "@/features/workspace-search/useWorkspaceSearchResults";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
 import { ChevronRight, FileTextIcon, Loader, Search, SearchXIcon, X } from "lucide-react";
 import Link from "next/link";
@@ -30,7 +30,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const [isOptionsOpen, setOptionsOpen] = useSingleItemExpander("SearchDialog/options/expand", true);
 
-  const [optionsValue, setOptionsValue] = useLocalStorage(
+  const { storedValue: optionsValue, setValue: setOptionsValue } = useLocalStorage2(
     "SearchDialog/options/values",
     () =>
       ({ workspace: ALL_WS_KEY, type: "markdown" } as {
@@ -38,6 +38,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
         type: "markdown" | "rich";
       })
   );
+
   //keeps saved workspace in sync with the current workspaces
   useEffect(() => {
     if (optionsValue.workspace !== ALL_WS_KEY && !workspaces.some((ws) => ws.name === optionsValue.workspace)) {
