@@ -35,6 +35,9 @@ export function useUIGitPlaybook(repo: Repo) {
   };
   return { isPending: pendingCommand !== null, pendingCommand, commit };
 }
+export function useUIGitPlaybook2() {
+  // const remotePlaybook = GitRemotePlaybook();
+}
 
 export function useWorkspaceRepo(workspace: Workspace) {
   const repo = useMemo(() => workspace.disk.NewGitRepo(), [workspace]);
