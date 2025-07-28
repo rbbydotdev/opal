@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +43,8 @@ function useSidebar() {
 }
 
 export function useSidebarState(sidebarId = SIDEBAR_STORAGE_NAME) {
-  return useLocalStorage(sidebarId, true);
+  const { storedValue, setValue } = useLocalStorage2(sidebarId, true);
+  return [storedValue, setValue] as const;
 }
 
 const SidebarProvider = React.forwardRef<

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 declare global {
   interface WindowEventMap {
@@ -27,26 +27,29 @@ export default function useLocalStorage2<T>(
   initialValue: T | (() => T),
   options: UseLocalStorageOptions<T> = {}
 ) {
-  const { initializeWithValue = true } = options;
+  const initialValueRef = useRef<T | (() => T)>(initialValue);
+  // const { initializeWithValue = true } = options;
+  const optionsRef = useRef<UseLocalStorageOptions<T>>(options);
 
   const serializer = (value: T) => {
-    if (options.serializer) {
-      return options.serializer(value);
+    if (optionsRef.current.serializer) {
+      return optionsRef.current.serializer(value);
     }
 
     return JSON.stringify(value);
   };
 
-  const deserializer = (value: string): T => {
-    if (options.deserializer) {
-      return options.deserializer(value);
+  const deserializer = useCallback((value: string): T => {
+    if (optionsRef.current.deserializer) {
+      return optionsRef.current.deserializer(value);
     }
     // Support 'undefined' as a value
     if (value === "undefined") {
       return undefined as unknown as T;
     }
 
-    const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
+    const defaultValue =
+      initialValueRef.current instanceof Function ? initialValueRef.current() : initialValueRef.current;
 
     let parsed: unknown;
     try {
@@ -57,12 +60,13 @@ export default function useLocalStorage2<T>(
     }
 
     return parsed as T;
-  };
+  }, []);
 
   // Get from local storage then
   // parse stored json or return initialValue
-  const readValue = (): T => {
-    const initialValueToUse = initialValue instanceof Function ? initialValue() : initialValue;
+  const readValue = useCallback((): T => {
+    const initialValueToUse =
+      initialValueRef.current instanceof Function ? initialValueRef.current() : initialValueRef.current;
 
     // Prevent build error "window is undefined" but keep working
     if (IS_SERVER) {
@@ -76,14 +80,14 @@ export default function useLocalStorage2<T>(
       console.warn(`Error reading localStorage key “${key}”:`, error);
       return initialValueToUse;
     }
-  };
+  }, [deserializer, key]);
 
   const [storedValue, setStoredValue] = useState<T>(() => {
-    if (initializeWithValue) {
+    if (optionsRef.current?.initializeWithValue) {
       return readValue();
     }
 
-    return initialValue instanceof Function ? initialValue() : initialValue;
+    return initialValueRef.current instanceof Function ? initialValueRef.current() : initialValueRef.current;
   });
 
   // Return a wrapped version of useState's setter function that ...
@@ -111,13 +115,14 @@ export default function useLocalStorage2<T>(
     }
   };
 
-  const removeValue = () => {
+  const removeValue = useCallback(() => {
     // Prevent build error "window is undefined" but keeps working
     if (IS_SERVER) {
       console.warn(`Tried removing localStorage key “${key}” even though environment is not a client`);
     }
 
-    const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
+    const defaultValue =
+      initialValueRef.current instanceof Function ? initialValueRef.current() : initialValueRef.current;
 
     // Remove the key from local storage
     window.localStorage.removeItem(key);
@@ -127,18 +132,21 @@ export default function useLocalStorage2<T>(
 
     // We dispatch a custom event so every similar useLocalStorage hook is notified
     window.dispatchEvent(new StorageEvent("local-storage", { key }));
-  };
+  }, [key]);
 
   useEffect(() => {
     setStoredValue(readValue());
-  }, [key]);
+  }, [key, readValue]);
 
-  const handleStorageChange = (event: StorageEvent | CustomEvent) => {
-    if ((event as StorageEvent).key && (event as StorageEvent).key !== key) {
-      return;
-    }
-    setStoredValue(readValue());
-  };
+  const handleStorageChange = useCallback(
+    (event: StorageEvent | CustomEvent) => {
+      if ((event as StorageEvent).key && (event as StorageEvent).key !== key) {
+        return;
+      }
+      setStoredValue(readValue());
+    },
+    [key, readValue]
+  );
 
   useEffect(() => {
     addEventListener("storage", handleStorageChange);

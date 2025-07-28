@@ -8,7 +8,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
@@ -62,7 +62,7 @@ export function WorkspaceButtonBar() {
 }
 function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
   const { currentWorkspace, workspaces } = useWorkspaceContext();
-  const [expand, setExpand] = useLocalStorage("BigButtonBar/expand", false);
+  const { storedValue: expand, setValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const router = useRouter();
