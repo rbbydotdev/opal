@@ -8,8 +8,10 @@ const config: NextConfig = {
   },
   experimental: {
     reactCompiler: true,
+    reactRoot: "concurrent",
+    // reactMode: 'concurrent',
   },
-  reactStrictMode: false,
+  reactStrictMode: true,
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if

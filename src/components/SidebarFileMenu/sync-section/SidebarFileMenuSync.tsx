@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  Check,
-  ChevronRight,
-  DotIcon,
-  Download,
-  GitBranchIcon,
-  GitMerge,
-  Loader,
-  Plus,
-  RefreshCw,
-  Upload,
-} from "lucide-react";
+import { ChevronRight, Download, GitBranchIcon, GitMerge, Loader, Plus, RefreshCw, Upload } from "lucide-react";
 import React from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
@@ -23,7 +12,6 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
@@ -103,7 +91,7 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
             </div>
             <div className="px-4 pt-2">
               <Button className="w-full " size="sm" variant="outline">
-                <RefreshCw className="mr-1" />
+                <RefreshCw className="mr-1" onClick={() => {}} />
                 Sync Now
               </Button>
             </div>
@@ -120,7 +108,7 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
               </Button>
             </div>
           </SidebarMenu>
-          <SidebarGroup className="pl-2">
+          {/* <SidebarGroup className="pl-2">
             <SidebarGroupLabel>
               <div className="w-full text-xs text-sidebar-foreground/70">Connections</div>
             </SidebarGroupLabel>
@@ -147,7 +135,7 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
-          </SidebarGroup>
+          </SidebarGroup> */}
         </CollapsibleContent>
       </Collapsible>
     </SidebarGroup>
@@ -158,7 +146,7 @@ export const VENDOR_ICONS = {
   GitHub: <Github size={12} />,
   Google: <Google size={12} />,
 };
-export const MOCK_CONNECTIONS = [
+export const MOCK_CONNECTIONS = []; /* [
   {
     name: "GitHub",
     type: "oauth",
@@ -180,3 +168,4 @@ export const MOCK_CONNECTIONS = [
     vendor: "Google",
   },
 ];
+*/
