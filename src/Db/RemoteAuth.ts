@@ -7,11 +7,15 @@ type AuthTypes = "api" | "oauth";
 export interface RemoteAuthRecord {
   guid: string;
   authType: AuthTypes;
+
+  tag: string;
 }
 
 export class RemoteAuthDAO {
   guid!: string;
   authType!: AuthTypes;
+
+  tag!: string;
 
   record: RemoteAuthAPIRecord | RemoteAuthOAuthRecord | null = null;
 
@@ -20,29 +24,33 @@ export class RemoteAuthDAO {
       ...this.record,
       guid: this.guid,
       authType: this.authType,
+      tag: this.tag,
     });
   }
 
   constructor({
     guid,
     authType,
+    tag,
     record,
   }: {
     guid: string;
     authType: AuthTypes;
+    tag: string;
     record?: RemoteAuthAPIRecord | RemoteAuthOAuthRecord;
   }) {
     this.guid = guid;
+    this.tag = tag;
     this.authType = authType;
     this.record = record || null;
   }
 
   static guid = () => "__remoteauth__" + nanoid();
-  static Create(record: RemoteAuthOAuthRecord | RemoteAuthAPIRecord) {
+  static Create(tag: string, record: RemoteAuthOAuthRecord | RemoteAuthAPIRecord) {
     const guid = RemoteAuthDAO.guid();
     const authType = record.authType;
 
-    const dao = new RemoteAuthDAO({ guid, authType, record });
+    const dao = new RemoteAuthDAO({ guid, tag, authType, record });
     return dao.save().then(() => dao);
   }
 
@@ -58,12 +66,14 @@ export class RemoteAuthDAO {
 
   toJSON() {
     return {
+      tag: this.tag,
       guid: this.guid,
       authType: this.authType,
     } as RemoteAuthJType;
   }
   static FromJSON(json: RemoteAuthJType) {
     return new RemoteAuthDAO({
+      tag: json.tag,
       guid: json.guid,
       authType: json.authType,
     });

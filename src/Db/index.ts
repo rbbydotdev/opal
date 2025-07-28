@@ -19,7 +19,7 @@ export class ClientIndexedDb extends Dexie {
 
     this.version(1).stores({
       settings: "name",
-      remoteAuths: "guid,authType",
+      remoteAuths: "guid,authType,ta",
       workspaces: "guid,name",
       disks: "guid",
       thumbnails: "[workspaceId+path],guid,path,workspaceId",

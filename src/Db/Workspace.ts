@@ -588,4 +588,10 @@ export class Workspace {
   NewRepo() {
     return this.disk.NewGitRepo();
   }
+
+  // addRemote
+
+  getRemoteGitRepos() {
+    return this.remoteAuths ?? [];
+  }
 }
