@@ -1,22 +1,35 @@
 "use client";
 
-import { ChevronRight, Download, GitBranchIcon, GitMerge, Loader, Plus, RefreshCw, Upload } from "lucide-react";
+import {
+  ChevronRight,
+  Download,
+  GitBranchIcon,
+  GitMerge,
+  Loader,
+  Plus,
+  RefreshCw,
+  SatelliteDishIcon,
+  Upload,
+} from "lucide-react";
 import React from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   SidebarGroup,
   SidebarGroupAction,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useUIGitPlaybook, useWorkspaceRepo } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
+import { cn } from "@/lib/utils";
 import { Github, ChromeIcon as Google } from "lucide-react";
 
 export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
@@ -89,6 +102,13 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
                 </TooltipToast>
               </Button>
             </div>
+
+            <div className="px-4 py-4">
+              <SidebarSeparator />
+            </div>
+            <div className="px-4 pt-2 w-full flex justify-center ">
+              <RemoteSelect />
+            </div>
             <div className="px-4 pt-2">
               <Button className="w-full " size="sm" variant="outline">
                 <RefreshCw className="mr-1" onClick={() => {}} />
@@ -139,6 +159,40 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
         </CollapsibleContent>
       </Collapsible>
     </SidebarGroup>
+  );
+}
+const RemoteSelectPlaceHolder = (
+  <div className="flex justify-center items-center">
+    <SatelliteDishIcon className="p-1 mr-2 stroke-ring" />
+    Remote
+  </div>
+);
+
+function RemoteSelect({ className }: { className?: string }) {
+  const { currentWorkspace } = useWorkspaceContext();
+  return (
+    <div className="w-full flex items-center justify-between space-x-2">
+      <Select>
+        <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
+          <SelectValue placeholder={RemoteSelectPlaceHolder} />
+        </SelectTrigger>
+        <SelectContent>
+          <div className="bg-background border rounded stroke-1"></div>
+          <SelectItem value="light" className="text-xs">
+            Light
+          </SelectItem>
+          <SelectItem value="dark" className="text-xs">
+            Dark
+          </SelectItem>
+          <SelectItem value="system" className="text-xs">
+            System
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Button variant="outline" className="h-8" size="sm">
+        <Plus />
+      </Button>
+    </div>
   );
 }
 

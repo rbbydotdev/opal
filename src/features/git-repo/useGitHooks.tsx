@@ -1,7 +1,14 @@
 import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { Disk } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
-import { GitPlaybook, GitRemotePlaybook, Repo, RepoLatestCommit, RepoWithRemote } from "@/features/git-repo/GitRepo";
+import {
+  GitPlaybook,
+  GitRemote,
+  GitRemotePlaybook,
+  Repo,
+  RepoLatestCommit,
+  RepoWithRemote,
+} from "@/features/git-repo/GitRepo";
 import { AbsPath, absPath } from "@/lib/paths2";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -18,7 +25,7 @@ export function useGitPlaybookFromDisk(disk: Disk) {
   return useGitPlaybook(disk.NewGitRepo());
 }
 
-export function useUIGitPlaybook(repo: Repo) {
+export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
   const playbook = useGitPlaybook(repo);
   const [pendingCommand, setPending] = useState<"commit" | null>(null);
   const commit = async () => {
@@ -41,10 +48,14 @@ export function useUIGitPlaybook2() {
 
 export function useWorkspaceRepo(workspace: Workspace) {
   const repo = useMemo(() => workspace.disk.NewGitRepo(), [workspace]);
-  const [info, setInfo] = useState<{ latestCommit: RepoLatestCommit | null }>({ latestCommit: null });
+  const [info, setInfo] = useState<{ latestCommit: RepoLatestCommit | null; remotes: GitRemote[] }>({
+    remotes: [],
+    latestCommit: null,
+  });
   const updateInfo = useCallback(async () => {
     setInfo({
       latestCommit: await repo.tryLatestCommit(),
+      remotes: await repo.tryGitRemotes(),
     });
   }, [repo]);
   useEffect(() => {

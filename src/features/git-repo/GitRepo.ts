@@ -5,6 +5,13 @@ import Emittery from "emittery";
 import git, { AuthCallback } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 
+//git remote is different from IRemote as its
+//more so just a Git remote as it appears in Git
+//
+export interface GitRemote {
+  name: string;
+  url: string;
+}
 interface IRemote {
   branch: string;
   name: string;
@@ -134,6 +141,17 @@ export class Repo {
     this.author = author || this.author;
   }
 
+  async tryGitRemotes(): Promise<GitRemote[]> {
+    if (!(await this.isInitialized())) return [];
+    const remotes = await this.git.listRemotes({
+      fs: this.fs,
+      dir: this.dir,
+    });
+    return remotes.map(({ url, remote }) => ({
+      name: remote,
+      url: url,
+    }));
+  }
   async tryLatestCommit(): Promise<RepoLatestCommit | null> {
     if (!(await this.isInitialized())) return null;
     const commitOid = await this.git.resolveRef({
@@ -285,6 +303,8 @@ export class GitRemotePlaybook extends GitPlaybook {
   async push() {
     await this.precommandCheck();
     /*commit,push*/
+
+    await this.commit("opal commit", this.remoteRepo.author);
     await git.push({
       fs: this.remoteRepo.fs,
       http,
