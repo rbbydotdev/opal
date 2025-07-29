@@ -26,8 +26,6 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
             sourceWorkspaceId ?? currentWorkspace.name /* todo should not be undefined but here we are */
           ).then((ws) => ws.toModel().init());
 
-    // // console.debug(`Pasting into ${targetNode.path} from ${sourceWorkspace.name} with action: ${action}`);
-    // console.debug(`FileNodes to paste: ${fileNodes?.length} - ${fileNodes?.join(", ")}`);
     if (action && fileNodes) {
       try {
         const copyNodes: [from: TreeNode, to: AbsPath][] = fileNodes.map(
@@ -37,9 +35,6 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
               joinPath(targetNode.closestDirPath(), basename(path)), // to
             ] as const
         );
-        // wtf did i have this for?: .filter(([from, to]) => from && String(from.path) !== String(to)) as [TreeNode, AbsPath][];
-
-        // console.debug(`copyNodes: ${copyNodes.map(([from, to]) => `${from.path} -> ${to}`)} - ${copyNodes.length}`);
         if (copyNodes.length === 0) return;
 
         if (sourceWorkspaceId && currentWorkspace.name !== sourceWorkspaceId) {

@@ -57,6 +57,14 @@ export class NamespacedFs implements CommonFileSystem {
     //not bothering with symlinks...
     return this.stat(path);
   }
+  symlink(_target: string, _path: string): Promise<void> {
+    throw new Error("Symlinks are not supported in NamespacedFs");
+    return Promise.resolve();
+  }
+  readlink(_path: string): Promise<string | Buffer<ArrayBufferLike> | null> {
+    throw new Error("Symlinks are not supported in NamespacedFs");
+    return Promise.resolve("");
+  }
 }
 
 export class PatchedOPFS extends FsaNodeFs {
