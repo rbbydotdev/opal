@@ -51,34 +51,9 @@ export class HistoryDocRecord {
   }
 }
 
-export function useHistoryDAO() {
-  return useMemo(() => new HistoryDAO(), []);
-}
-
-export function useHistoryWithSnapshots({
-  documentId,
-  workspaceId,
-}: {
-  documentId: string | null;
-  workspaceId: string;
-}) {
-  const historyDB = useHistoryDAO();
-
-  const handleEditPreview = useIframeImagePooledImperitiveWorker({
-    workspaceId,
-  });
-  useEffect(() => {
-    if (documentId) {
-      return historyDB.onNewEdit(documentId, (edit) => {
-        handleEditPreview(edit);
-      });
-    }
-  }, [documentId, handleEditPreview, historyDB]);
-
-  useEffect(() => () => historyDB.tearDown(), [historyDB]);
-  return historyDB;
-}
-
+// export function useHistoryDAO() {
+//   return useMemo(() => new HistoryDAO(), []);
+// }
 // --- Context and Provider for HistorySnapDB ---
 
 type HistorySnapDBContextType = HistoryDAO | null;
@@ -92,7 +67,20 @@ interface HistorySnapDBProviderProps {
 }
 
 export function HistorySnapDBProvider({ documentId, workspaceId, children }: HistorySnapDBProviderProps) {
-  const historyDB = useHistoryWithSnapshots({ documentId, workspaceId });
+  const historyDB = useMemo(() => new HistoryDAO(), []);
+  useEffect(() => () => historyDB.tearDown(), [historyDB]);
+
+  const handleEditPreview = useIframeImagePooledImperitiveWorker({
+    workspaceId,
+  });
+  useEffect(() => {
+    if (documentId) {
+      return historyDB.onNewEdit(documentId, (edit) => {
+        handleEditPreview(edit);
+      });
+    }
+  }, [documentId, handleEditPreview, historyDB]);
+
   return <HistorySnapDBContext.Provider value={historyDB}>{children}</HistorySnapDBContext.Provider>;
 }
 

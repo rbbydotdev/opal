@@ -78,7 +78,7 @@ export class HistoryPlugin {
     this.historyRoot = historyRoot;
     this.workspaceId = workspaceId;
     if (!this.id) {
-      console.warn("Edit history ID cannot be null aborting");
+      console.warn("Edit history ID cannot be null, aborting");
       return;
     }
 
@@ -133,7 +133,6 @@ export class HistoryPlugin {
     });
 
     this.historyStorage.onUpdate(this.id, (edits) => {
-      console.log("History edits updated", edits.length);
       this.realm.pub(HistoryPlugin.edits$, edits);
     });
   }
@@ -194,7 +193,6 @@ export const historyPlugin = realmPlugin({
       workspaceId: string;
     }
   ) {
-    console.log("Initializing History Plugin", params);
     new HistoryPlugin(realm, {
       historyRoot: params!.historyRoot,
       workspaceId: params!.workspaceId,
