@@ -1,12 +1,12 @@
 "use client";
 import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
-import { useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useFileContents, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { isImage, isMarkdown } from "@/lib/paths2";
 import "github-markdown-css/github-markdown-light.css";
-import { useSearchParams } from "next/navigation";
-import { RefObject, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { RefObject, useEffect, useMemo, useState } from "react";
 
 export default function Page({ children }: { children: React.ReactNode }) {
   return (
@@ -20,8 +20,22 @@ export default function Page({ children }: { children: React.ReactNode }) {
 function PreviewComponent() {
   const { path } = useWorkspaceRoute();
   const searchParams = useSearchParams();
-  const sessionIdParam = searchParams.get("sessionId");
-  const { scrollEmitter } = useScrollChannel({ sessionId: sessionIdParam });
+  const { currentWorkspace } = useWorkspaceContext();
+  const router = useRouter();
+  useEffect(() => {
+    //TODO this should just be a reusable hook somewhere
+    currentWorkspace.renameListener((details) => {
+      const pathRename = details.find(({ oldPath }) => oldPath === path);
+      if (pathRename) {
+        router.replace(
+          window.location.pathname.replace(pathRename.oldPath, pathRename.newPath) + window.location.search
+        );
+      }
+    });
+  }, [currentWorkspace, path, router]);
+
+  const sessionId = searchParams.get("sessionId") ?? "UNKNOWN_SESSION_ID";
+  const { scrollEmitter } = useScrollChannel({ sessionId });
   if (!path) return null;
   if (isMarkdown(path)) {
     return (

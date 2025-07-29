@@ -126,10 +126,10 @@ export function ScrollSyncProvider({
           scrollPause.current = false;
         })
       );
+      return () => {
+        unsubs.forEach((us) => us());
+      };
     }
-    return () => {
-      unsubs.forEach((us) => us());
-    };
   }, [scrollEl, scrollEmitter]);
 
   return <ScrollSyncCtx.Provider value={{ scrollRef, sessionId }}>{children}</ScrollSyncCtx.Provider>;
