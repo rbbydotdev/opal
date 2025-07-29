@@ -117,7 +117,7 @@ export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryDAO
 export function useSnapHistoryDB(): HistoryDAO {
   const ctx = useContext(HistorySnapDBContext);
   if (!ctx) {
-    throw new Error("useSpanHistoryDB must be used within a HistorySnapDBProvider");
+    throw new Error("useSnapHistoryDB must be used within a HistorySnapDBProvider");
   }
   return ctx;
 }
