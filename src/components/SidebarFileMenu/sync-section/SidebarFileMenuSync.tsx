@@ -12,7 +12,7 @@ import {
   SatelliteDishIcon,
   Upload,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
             </div>
             <div className="px-4 w-full flex justify-center ">
               <div className="flex flex-col items-center w-full">
-                <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={5} />
+                <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
                 <RemoteManager
                   remotes={info.remotes}
                   addGitRemote={(remoteName) => {
@@ -157,15 +157,23 @@ function RemoteManager({
   deleteGitRemote: (remoteName: string) => void;
 }) {
   const [mode, setMode] = useState<"select" | "delete">("select");
-  const [select, setSelect] = useState<string | undefined>();
+  const [value, setValue] = useState<string>("");
+
   return mode === "delete" ? (
-    <RemoteDelete remotes={remotes} cancel={() => setMode("select")} onSelect={deleteGitRemote} />
+    <RemoteDelete
+      remotes={remotes}
+      cancel={() => setMode("select")}
+      onSelect={(name: string) => {
+        if (name === value) setValue("");
+        deleteGitRemote(name);
+      }}
+    />
   ) : (
-    <RemoteSelect remotes={remotes} defaultValue={select} onSelect={(s) => console.log(">>>", s)}>
+    <RemoteSelect remotes={remotes} value={value} onSelect={setValue}>
       <GitRemoteDialog
         onSubmit={(remote) => {
           addGitRemote(remote);
-          setSelect(remote.name);
+          setValue(remote.name);
         }}
       >
         <Button variant="outline" className="h-8" size="sm">
@@ -228,26 +236,18 @@ function RemoteSelect({
   className,
   children,
   remotes,
-  defaultValue,
   onSelect,
+  value,
 }: {
   className?: string;
   children: React.ReactNode;
   remotes: GitRemote[];
-  defaultValue?: string;
   onSelect: (value: string) => void;
+  value: string;
 }) {
-  const superDefault = defaultValue ?? remotes[0]?.name;
-  useEffect(() => {
-    if (superDefault) onSelect(superDefault!);
-  }, [onSelect, superDefault]);
   return (
     <div className="w-full flex items-center justify-between space-x-2">
-      <Select
-        key={superDefault /*forces rerender when def val changes*/}
-        defaultValue={superDefault}
-        onValueChange={(value) => onSelect(value)}
-      >
+      <Select key={value} onValueChange={(value) => onSelect(value)} value={value}>
         <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
           <SelectValue placeholder={RemoteSelectPlaceHolder} />
         </SelectTrigger>
