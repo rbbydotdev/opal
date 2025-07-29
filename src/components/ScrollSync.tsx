@@ -1,3 +1,4 @@
+import { Channel } from "@/lib/channel";
 import { nanoid } from "nanoid";
 import { useSearchParams } from "next/navigation";
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef } from "react";
@@ -9,6 +10,13 @@ interface ScrollEmitter {
   tearDown: () => void;
 }
 type UnsubFn = () => void;
+
+const ScrollEvents = {
+  SCROLL: "scroll" as const,
+};
+type ScrollEventPayload = {
+  [ScrollEvents.SCROLL]: { x: number; y: number };
+};
 
 // --- Context ---
 interface ScrollSyncContextValue {
@@ -26,30 +34,19 @@ export function useScrollSync() {
 }
 
 /// --- ScrollBroadcastChannel ---
-export class ScrollBroadcastChannel implements ScrollEmitter {
-  channel: BroadcastChannel;
+export class ScrollBroadcastChannel extends Channel<ScrollEventPayload> implements ScrollEmitter {
   constructor(readonly sessionId: string) {
-    this.channel = new BroadcastChannel(sessionId);
+    super(sessionId);
   }
+
   onScroll(cb: (x: number, y: number) => void): UnsubFn {
-    const handler = (event: MessageEvent) => {
-      const { x, y } = event.data;
+    return this.on(ScrollEvents.SCROLL, ({ x, y }) => {
       cb(x, y);
-    };
-    this.channel.addEventListener("message", handler);
-    return () => this.channel.removeEventListener("message", handler);
+    });
   }
+
   emitScroll(x: number, y: number) {
-    try {
-      this.channel.postMessage({ x, y });
-    } catch (_swallow) {
-      console.warn("ScrollBroadcastChannel failed to post message, attempting to recover.");
-      this.channel = new BroadcastChannel(this.sessionId);
-      this.emitScroll(x, y);
-    }
-  }
-  tearDown() {
-    this.channel.close();
+    void this.emit(ScrollEvents.SCROLL, { x, y });
   }
 }
 
@@ -77,7 +74,11 @@ export function useScrollChannel({ sessionId }: { sessionId?: string | null } = 
   const sId = useMemo(() => sessionId ?? `scroll-sync-${nanoid()}`, [sessionId]);
   const scrollEmitter = useMemo(() => new ScrollBroadcastChannel(sId), [sId]);
   useEffect(() => {
-    return () => scrollEmitter.tearDown();
+    const cleanup = scrollEmitter.init();
+    return () => {
+      cleanup();
+      scrollEmitter.tearDown();
+    };
   }, [scrollEmitter]);
   return { scrollEmitter, sessionId: sId };
 }

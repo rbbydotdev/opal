@@ -1,23 +1,12 @@
 "use client";
 
-import {
-  ChevronRight,
-  Download,
-  GitBranchIcon,
-  GitMerge,
-  Loader,
-  Minus,
-  Plus,
-  RefreshCw,
-  SatelliteDishIcon,
-  Upload,
-} from "lucide-react";
-import React, { useState } from "react";
+import { ChevronRight, Download, GitBranchIcon, GitMerge, Loader, Plus, RefreshCw, Upload } from "lucide-react";
+import React from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
+import { GitRemoteManager } from "@/components/SidebarFileMenu/sync-section/GitRemoteManager";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   SidebarGroup,
   SidebarGroupAction,
@@ -28,12 +17,9 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useUIGitPlaybook, useWorkspaceRepo } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { cn } from "@/lib/utils";
 import { Github, ChromeIcon as Google } from "lucide-react";
-import { GitRemoteDialog } from "./GitRemoteDialog";
 
 export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
@@ -110,7 +96,7 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
             <div className="px-4 w-full flex justify-center ">
               <div className="flex flex-col items-center w-full">
                 <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
-                <RemoteManager
+                <GitRemoteManager
                   remotes={info.remotes}
                   addGitRemote={(remoteName) => {
                     void repo.addGitRemote(remoteName);
@@ -145,123 +131,6 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
         </CollapsibleContent>
       </Collapsible>
     </SidebarGroup>
-  );
-}
-function RemoteManager({
-  remotes,
-  addGitRemote,
-  deleteGitRemote,
-}: {
-  remotes: GitRemote[];
-  addGitRemote: (remote: { name: string; url: string }) => void;
-  deleteGitRemote: (remoteName: string) => void;
-}) {
-  const [mode, setMode] = useState<"select" | "delete">("select");
-  const [value, setValue] = useState<string>("");
-
-  return mode === "delete" ? (
-    <RemoteDelete
-      remotes={remotes}
-      cancel={() => setMode("select")}
-      onSelect={(name: string) => {
-        if (name === value) setValue("");
-        deleteGitRemote(name);
-      }}
-    />
-  ) : (
-    <RemoteSelect remotes={remotes} value={value} onSelect={setValue}>
-      <GitRemoteDialog
-        onSubmit={(remote) => {
-          addGitRemote(remote);
-          setValue(remote.name);
-        }}
-      >
-        <Button variant="outline" className="h-8" size="sm">
-          <Plus />
-        </Button>
-      </GitRemoteDialog>
-      <Button variant="outline" className="h-8" size="sm" onClick={() => setMode("delete")}>
-        <Minus />
-      </Button>
-    </RemoteSelect>
-  );
-}
-function RemoteDelete({
-  className,
-  remotes,
-  cancel,
-  onSelect,
-}: {
-  className?: string;
-  remotes: GitRemote[];
-  cancel: () => void;
-  onSelect: (remoteName: string) => void;
-}) {
-  return (
-    <Select
-      defaultOpen={true}
-      onValueChange={onSelect}
-      onOpenChange={(open) => {
-        if (!open) cancel();
-      }}
-    >
-      <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
-        <SelectValue placeholder="Delete Remote" />
-      </SelectTrigger>
-      <SelectContent>
-        {remotes.map((remote) => (
-          <SelectItem
-            key={remote.name}
-            value={remote.name}
-            className={
-              "!text-xs focus:bg-destructive focus:text-primary-foreground w-full flex items-center justify-between"
-            }
-          >
-            {remote.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
-const RemoteSelectPlaceHolder = (
-  <div className="flex justify-center items-center">
-    <SatelliteDishIcon className="p-1 mr-2 stroke-ring" />
-    Remote
-  </div>
-);
-
-function RemoteSelect({
-  className,
-  children,
-  remotes,
-  onSelect,
-  value,
-}: {
-  className?: string;
-  children: React.ReactNode;
-  remotes: GitRemote[];
-  onSelect: (value: string) => void;
-  value: string;
-}) {
-  return (
-    <div className="w-full flex items-center justify-between space-x-2">
-      <Select key={value} onValueChange={(value) => onSelect(value)} value={value}>
-        <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
-          <SelectValue placeholder={RemoteSelectPlaceHolder} />
-        </SelectTrigger>
-        <SelectContent>
-          <div className="bg-background border rounded stroke-1"></div>
-          {remotes.map((remote) => (
-            <SelectItem key={remote.name} value={remote.name} className={"!text-xs"}>
-              {remote.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {children}
-    </div>
   );
 }
 

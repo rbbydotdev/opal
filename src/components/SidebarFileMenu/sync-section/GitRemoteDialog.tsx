@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type React from "react";
-import { useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -40,12 +40,21 @@ export function GitRemoteDialog({
   children,
   defaultName = "origin",
   onSubmit,
+  cmdRef,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   defaultName?: string;
   onSubmit: (remote: { name: string; url: string }) => void;
+  cmdRef: React.RefObject<{ open: () => void }>;
 }) {
   const [open, setOpen] = useState(false);
+  useImperativeHandle(
+    cmdRef,
+    () => ({
+      open: () => setOpen(true),
+    }),
+    []
+  );
 
   const form = useForm<GitRemoteFormValues>({
     resolver: zodResolver(gitRemoteSchema),

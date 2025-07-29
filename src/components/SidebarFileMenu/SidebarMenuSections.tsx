@@ -8,6 +8,7 @@ import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/tr
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { DisplayTreeProvider, useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { useDndList } from "@/features/filetree-drag-and-drop/useDndList";
+import { IS_MAC } from "@/lib/isMac";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
@@ -24,6 +25,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Separator } from "../ui/separator";
@@ -58,17 +60,27 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           {defaultValues.map((id) => (
             <DropdownMenuCheckboxItem
               key={id}
-              className="flex gap-2"
+              className="flex gap-2 py-2"
               checked={dnds.includes(id)}
-              onCheckedChange={() => toggleDnd(id)}
+              onClick={(e) => {
+                if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault();
+                toggleDnd(id);
+              }}
+              onCheckedChange={() => {
+                toggleDnd(id);
+              }}
             >
               <span className="text-xs">{capitalizeFirst(id)}</span>
             </DropdownMenuCheckboxItem>
           ))}
           <Separator />
           <DropdownMenuItem
-            className="text-xs flex justify-start"
-            onClick={() => {
+            className="text-xs flex justify-start py-2"
+            onSelect={() => {
+              setDnds([...defaultValues]);
+            }}
+            onClick={(e) => {
+              if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault();
               setDnds([...defaultValues]);
             }}
           >
@@ -77,14 +89,22 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            className="text-xs flex justify-start"
-            onClick={() => {
+            className="text-xs flex justify-start py-2"
+            onClick={(e) => {
+              if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault();
               setDnds([]);
+            }}
+            onSelect={() => {
+              setDnds([...defaultValues]);
             }}
           >
             <ListXIcon />
             Hide All
           </DropdownMenuItem>
+          <Separator />
+          <DropdownMenuLabel className="py-2 text-2xs w-full text-muted-foreground">
+            {IS_MAC ? "⌘ cmd" : "ctrl"}+click = multi-select
+          </DropdownMenuLabel>
         </DropdownMenuContent>
         <SidebarGroupLabel className="h-6">
           <DropdownMenuTrigger asChild>
