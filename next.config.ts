@@ -9,7 +9,7 @@ const config: NextConfig = {
   experimental: {
     reactCompiler: true,
   },
-  reactStrictMode: true,
+  reactStrictMode: false,
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if

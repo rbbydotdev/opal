@@ -57,12 +57,14 @@ export function EditHistoryMenu({
       })}
     >
       <DropdownMenu open={isOpen} onOpenChange={setOpen}>
+        <div className="h-full absolute left-4 flex justify-center items-center">
+          <button className="fill-primary-foreground text-4xl leading-4 group" onClick={() => triggerSave()}>
+            <HistoryStatus selectedEdit={selectedEdit} pendingSave={pendingSave} />
+          </button>
+        </div>
         <DropdownMenuTrigger asChild disabled={disabled}>
           <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
-            <div className="mr-2 flex items-center space-x-2 ">
-              <span className="fill-primary-foreground text-4xl" style={{ lineHeight: "1rem" }}>
-                <HistoryStatus selectedEdit={selectedEdit} pendingSave={pendingSave} />
-              </span>
+            <div className="pl-8 mr-2 flex items-center space-x-2 ">
               <span className="whitespace-nowrap">Edit history {timeAgoStr}</span>
             </div>
             <ChevronDown />
@@ -183,8 +185,8 @@ function HistoryStatus({ selectedEdit, pendingSave }: { selectedEdit: HistoryDoc
   }
 
   return (
-    <div className="">
-      <History className="-scale-x-100 inline-block !text-primary" />
+    <div>
+      <History className="-scale-x-100 inline-block !text-primary group-hover:!text-ring" />
     </div>
   );
 }
