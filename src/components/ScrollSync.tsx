@@ -40,7 +40,13 @@ export class ScrollBroadcastChannel implements ScrollEmitter {
     return () => this.channel.removeEventListener("message", handler);
   }
   emitScroll(x: number, y: number) {
-    this.channel.postMessage({ x, y });
+    try {
+      this.channel.postMessage({ x, y });
+    } catch (_swallow) {
+      console.warn("ScrollBroadcastChannel failed to post message, attempting to recover.");
+      this.channel = new BroadcastChannel(this.sessionId);
+      this.emitScroll(x, y);
+    }
   }
   tearDown() {
     this.channel.close();
@@ -88,8 +94,8 @@ export function ScrollSyncProvider({
   children: ReactNode;
 }) {
   const scrollRef = useRef<HTMLElement | null>(null);
-
   const scrollPause = useRef(false);
+
   useEffect(() => {
     const sRef = scrollEl ?? scrollRef.current;
     const unsubs: UnsubFn[] = [];
@@ -112,7 +118,9 @@ export function ScrollSyncProvider({
           const maxScrollTop = sRef.scrollHeight - sRef.clientHeight;
           const x = relX * maxScrollLeft;
           const y = relY * maxScrollTop;
-          const $scroll = new Promise((rs) => sRef.addEventListener("scroll", rs, { passive: true, once: true }));
+          const $scroll = new Promise((resolve) =>
+            sRef.addEventListener("scroll", resolve, { passive: true, once: true })
+          );
           sRef.scrollTo(x, y);
           await $scroll;
           scrollPause.current = false;

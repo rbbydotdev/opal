@@ -8,8 +8,6 @@ const config: NextConfig = {
   },
   experimental: {
     reactCompiler: true,
-    reactRoot: "concurrent",
-    // reactMode: 'concurrent',
   },
   reactStrictMode: true,
   typescript: {

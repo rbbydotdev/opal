@@ -87,6 +87,10 @@
   outline: none !important;
 }
 
+.mdxeditor-source-editor .cm-nonmatchingBracket {
+  outline: none !important;
+}
+
 .hide-rich-text .mdxeditor {
   /* super hack to hide rich text editor */
   [class^="_diffSourceToggleWrapper_"] {

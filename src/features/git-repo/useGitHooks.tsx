@@ -64,9 +64,7 @@ export function useWorkspaceRepo(workspace: Workspace) {
     }
   }, [updateInfo, workspace.isNull]);
   useEffect(() => {
-    if (repo) {
-      return repo.watch(updateInfo);
-    }
+    if (repo) return repo.watch(updateInfo);
   }, [repo, setInfo, updateInfo]);
   return { repo, info };
 }

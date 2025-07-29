@@ -8,7 +8,7 @@ import { historyPlugin } from "@/components/Editor/history/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
-import { useFileContents, useWorkspaceDocumentId } from "@/context/WorkspaceHooks";
+import { useCurrentFilepath, useFileContents, useWorkspaceDocumentId } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
@@ -97,6 +97,7 @@ export function useAllPlugins({
   mimeType: string;
 }) {
   const { initialContents, debouncedUpdate } = useFileContents();
+  const { isMarkdown } = useCurrentFilepath();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
   const documentId = useWorkspaceDocumentId();
@@ -115,13 +116,19 @@ export function useAllPlugins({
     () =>
       [
         toolbarPlugin({
-          toolbarContents: () => (
-            <>
-              <EditHistoryMenu finalizeRestore={(md) => debouncedUpdate(md)} disabled={mimeType !== "text/markdown"} />
-              <LivePreviewButton disabled={mimeType !== "text/markdown"} />
-              <MdxSearchToolbar /> <KitchenSinkToolbar />
-            </>
-          ),
+          toolbarContents: () =>
+            !isMarkdown ? (
+              <div className="h-[30px] text-sm flex justify-center items-center">Source Mode</div>
+            ) : (
+              <>
+                <EditHistoryMenu
+                  finalizeRestore={(md) => debouncedUpdate(md)}
+                  disabled={mimeType !== "text/markdown"}
+                />
+                <LivePreviewButton disabled={mimeType !== "text/markdown"} />
+                <MdxSearchToolbar /> <KitchenSinkToolbar />
+              </>
+            ),
         }),
         remoteRealmPlugin({ editorId: realmId }),
         listsPlugin(),
@@ -129,7 +136,7 @@ export function useAllPlugins({
         headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
         linkPlugin(),
         searchPlugin(),
-        mimeType.startsWith("text/markdown")
+        isMarkdown
           ? historyPlugin({
               documentId,
               workspaceId: currentWorkspace.id,
@@ -165,6 +172,7 @@ export function useAllPlugins({
       documentId,
       historyDB,
       initialContents,
+      isMarkdown,
       mimeType,
       realmId,
       workspaceImagesPlugin,

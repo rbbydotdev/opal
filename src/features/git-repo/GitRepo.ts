@@ -115,7 +115,8 @@ export class Repo {
     unsub.push(this.events.on("commit:end", callback));
     unsub.push(this.events.on("pull:end", callback));
     unsub.push(this.events.on("merge:end", callback));
-    // unsub.push(this.events.on("fetch:end", callback));
+    unsub.push(this.events.on("addRemote:end", callback));
+    unsub.push(this.events.on("deleteRemote:end", callback));
     return () => {
       unsub.forEach((u) => u());
     };
@@ -141,7 +142,7 @@ export class Repo {
     this.author = author || this.author;
   }
 
-  async tryGitRemotes(): Promise<GitRemote[]> {
+  tryGitRemotes = async (): Promise<GitRemote[]> => {
     if (!(await this.isInitialized())) return [];
     const remotes = await this.git.listRemotes({
       fs: this.fs,
@@ -151,8 +152,8 @@ export class Repo {
       name: remote,
       url: url,
     }));
-  }
-  async tryLatestCommit(): Promise<RepoLatestCommit | null> {
+  };
+  tryLatestCommit = async (): Promise<RepoLatestCommit | null> => {
     if (!(await this.isInitialized())) return null;
     const commitOid = await this.git.resolveRef({
       fs: this.fs,
@@ -170,11 +171,9 @@ export class Repo {
       message: commit.commit.message,
       author: commit.commit.author,
     };
-  }
+  };
 
-  updatePilot() {}
-
-  async mustBeInitialized() {
+  mustBeInitialized = async (): Promise<boolean> => {
     if (this.state.initialized) return true;
     if (!(await this.isInitialized())) {
       await git.init({
@@ -184,9 +183,28 @@ export class Repo {
       });
     }
     return (this.state.initialized = true);
-  }
+  };
 
-  async isInitialized(): Promise<boolean> {
+  addGitRemote = async (remote: GitRemote) => {
+    await this.mustBeInitialized();
+    await this.git.addRemote({
+      fs: this.fs,
+      dir: this.dir,
+      remote: remote.name,
+      url: remote.url,
+      force: true,
+    });
+  };
+
+  deleteGitRemote = async (remoteName: string) => {
+    await this.mustBeInitialized();
+    await this.git.deleteRemote({
+      fs: this.fs,
+      dir: this.dir,
+      remote: remoteName,
+    });
+  };
+  isInitialized = async (): Promise<boolean> => {
     try {
       if (this.state.initialized) return true;
       await this.fs.readFile(joinPath(this.dir, ".git"));
@@ -195,9 +213,9 @@ export class Repo {
     } catch (_e) {
       return (this.state.initialized = false);
     }
-  }
+  };
 
-  withRemote(remote: IRemote): RepoWithRemote {
+  withRemote = (remote: IRemote): RepoWithRemote => {
     return new RepoWithRemote(
       {
         fs: this.fs,
@@ -210,7 +228,7 @@ export class Repo {
       },
       remote
     );
-  }
+  };
 }
 export class RepoWithRemote extends Repo {
   readonly remote: Remote;

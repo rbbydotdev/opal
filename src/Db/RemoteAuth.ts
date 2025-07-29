@@ -7,7 +7,6 @@ type AuthTypes = "api" | "oauth";
 export interface RemoteAuthRecord {
   guid: string;
   authType: AuthTypes;
-
   tag: string;
 }
 
