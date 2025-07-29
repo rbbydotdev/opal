@@ -30,7 +30,8 @@ export function EditHistoryMenu({
   disabled?: boolean;
 }) {
   const realm = useRemoteMDXEditorRealm(realmId);
-  const { edits, selectedEdit, setEdit, reset, clearAll, isRestoreState, selectedEditMd } = useEditHistoryPlugin(realm);
+  const { edits, selectedEdit, setEdit, reset, clearAll, triggerSave, isRestoreState, selectedEditMd } =
+    useEditHistoryPlugin(realm);
   const historyDB = useSnapHistoryDB();
   const pendingSave = useSnapHistoryPendingSave({ historyDB });
   const [timeAgoStr, setTimeAgoStr] = useState("");

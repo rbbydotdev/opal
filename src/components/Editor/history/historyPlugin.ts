@@ -16,6 +16,7 @@ import {
 import { Mutex } from "async-mutex";
 
 export class HistoryPlugin {
+  static triggerSave$ = Signal(() => {}, false);
   static edits$ = Cell<HistoryDocRecord[]>([]);
   static selectedEdit$ = Cell<HistoryDocRecord | null>(null, () => {}, false);
   static resetMd$ = Signal(() => {}, false);
@@ -103,31 +104,15 @@ export class HistoryPlugin {
         if (this.id !== null) {
           const saveScore = await this.historyStorage.getSaveThreshold(this.id, md);
           if (saveScore < this.saveThreshold) {
-            // if (false) {
-            console.log(`Skipping save for ${this.id} due to low score: ${saveScore}`);
-            return;
+            return console.log(`Skipping save for ${this.id} due to low score: ${saveScore}`);
           }
-
-          const edits = await this.historyStorage.getEdits(this.id);
-          if (!edits.length) {
-            // If there are no edits yet, we can save the initial state as the first edit
-            await this.historyStorage.saveEdit(this.workspaceId, this.id, this.realm.getValue(HistoryPlugin.latestMd$));
-          }
-          this.realm.pub(HistoryPlugin.latestMd$, md);
-          const latest = await this.historyStorage.getLatestEdit(this.id);
-          // check if edit is redundant
-          if (latest) {
-            const latestDoc = await this.historyStorage.reconstructDocumentFromEdit(latest);
-            if (latestDoc === md) {
-              console.log("Skipping redundant edit save");
-              return;
-            }
-          }
-          await this.historyStorage.saveEdit(this.workspaceId, this.id, md);
+          return this.saveEdit(md);
         }
       }
     );
-
+    this.realm.singletonSub(HistoryPlugin.triggerSave$, () => {
+      void this.saveEdit(this.realm.getValue(HistoryPlugin.allMd$));
+    });
     this.realm.singletonSub(HistoryPlugin.resetMd$, () => this.resetToStartingMarkdown());
     this.realm.singletonSub(HistoryPlugin.selectedEdit$, (edit: HistoryDocRecord | null) => {
       void this.transaction(async () => {
@@ -148,10 +133,28 @@ export class HistoryPlugin {
     });
 
     this.historyStorage.onUpdate(this.id, (edits) => {
+      console.log("History edits updated", edits.length);
       this.realm.pub(HistoryPlugin.edits$, edits);
     });
   }
 
+  private async saveEdit(md: string) {
+    const edits = await this.historyStorage.getEdits(this.id);
+    if (!edits.length) {
+      // If there are no edits yet, we can save the initial state as the first edit
+      await this.historyStorage.saveEdit(this.workspaceId, this.id, this.realm.getValue(HistoryPlugin.latestMd$));
+    }
+    this.realm.pub(HistoryPlugin.latestMd$, md);
+    const latest = await this.historyStorage.getLatestEdit(this.id);
+    // check if edit is redundant
+    if (latest) {
+      const latestDoc = await this.historyStorage.reconstructDocumentFromEdit(latest);
+      if (latestDoc === md) {
+        return console.log("Skipping redundant edit save");
+      }
+    }
+    await this.historyStorage.saveEdit(this.workspaceId, this.id, md);
+  }
   private clearAll() {
     void this.transaction(async () => {
       await this.historyStorage.clearAllEdits(this.id!);
@@ -191,6 +194,7 @@ export const historyPlugin = realmPlugin({
       workspaceId: string;
     }
   ) {
+    console.log("Initializing History Plugin", params);
     new HistoryPlugin(realm, {
       historyRoot: params!.historyRoot,
       workspaceId: params!.workspaceId,

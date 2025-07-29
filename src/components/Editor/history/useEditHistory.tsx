@@ -26,6 +26,10 @@ export function useEditHistoryPlugin(realm: Realm | undefined) {
     realm?.pub(HistoryPlugin.resetMd$);
   }, [realm, setSelectedEdit]);
 
+  const triggerSave = useCallback(() => {
+    realm?.pub(HistoryPlugin.triggerSave$);
+  }, [realm]);
+
   const clearAll = useCallback(() => {
     setSelectedEdit(null);
     realm?.pub(HistoryPlugin.clearAll$);
@@ -39,6 +43,7 @@ export function useEditHistoryPlugin(realm: Realm | undefined) {
     edits: edits ?? [],
     selectedEdit: isRestoreState ? selectedEdit : null,
     selectedEditMd,
+    triggerSave,
     isRestoreState,
     setEdit,
     reset,
