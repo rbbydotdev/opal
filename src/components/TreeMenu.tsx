@@ -24,7 +24,7 @@ export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
   const { displayTree } = useEditorDisplayTreeCtx();
   const { getLexicalNode, getDOMNode } = useGetNodeFromEditor(MainEditorRealmId);
-  const { mimeType } = useCurrentFilepath();
+  const { isMarkdown } = useCurrentFilepath();
 
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
@@ -32,7 +32,7 @@ export function SidebarTreeViewMenu() {
     return null;
   }
 
-  if (!mimeType.startsWith("text/markdown")) {
+  if (!isMarkdown) {
     return <EmptySidebarLabel label="markdown only" />;
   }
   if (!editor?.getRootElement()) {

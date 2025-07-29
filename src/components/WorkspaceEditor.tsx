@@ -40,6 +40,10 @@ interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
 }
 
 export function WorkspaceView(props: WorkspaceEditorProps) {
+  /*
+  TODO: I need a source editor which has not association with markdown,
+  just a pure text editor using code mirror or monaco editor.
+  */
   const { isImage, filePath, inTrash } = useCurrentFilepath();
 
   const router = useRouter();
@@ -98,7 +102,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
   const { id, path } = useWorkspaceRoute();
   const { mimeType } = useCurrentFilepath();
 
-  const { scrollEmitter, sessionId } = useScrollChannel({ sessionId: `${id}/${path}` });
+  const { scrollEmitter, sessionId } = useScrollChannel({ sessionId: `${id}${path}` });
 
   const mdxEditorElement = useWatchElement(".mdxeditor");
 
@@ -120,8 +124,11 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
   return (
     <SnapApiPoolProvider max={1}>
       <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.name}>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <ScrollSyncProvider scrollEl={mdxEditorElement as any} scrollEmitter={scrollEmitter} sessionId={sessionId}>
+        <ScrollSyncProvider
+          scrollEl={mdxEditorElement as HTMLElement}
+          scrollEmitter={scrollEmitter}
+          sessionId={sessionId}
+        >
           <div className="flex flex-col h-full relative">
             <DropCommanderProvider>
               <EditorWithPlugins
