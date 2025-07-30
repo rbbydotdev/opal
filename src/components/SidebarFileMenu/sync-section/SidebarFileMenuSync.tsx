@@ -32,12 +32,20 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
-function LatestCommitInfo({ latestCommit }: { latestCommit: RepoLatestCommit }) {
+function LatestCommitInfo({
+  latestCommit,
+  currentBranch,
+}: {
+  latestCommit: RepoLatestCommit;
+  currentBranch: string | null;
+}) {
   const timeAgo = useTimeAgoUpdater({ date: new Date(latestCommit.date) });
   return (
     <dl className="mb-4 grid [grid-template-columns:max-content_1fr] gap-x-2 font-mono text-2xs text-left">
       <dt className="font-bold">commit:</dt>
       <dd className="truncate">{latestCommit.oid}</dd>
+      <dt className="font-bold">branch:</dt>
+      <dd className="truncate">{currentBranch || <i>none</i>}</dd>
       <dt className="font-bold">date:</dt>
       <dd className="truncate">{new Date(latestCommit.date).toLocaleString()}</dd>
       <dt className="font-bold">time ago:</dt>
@@ -155,7 +163,7 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="gap-2">
             <div className="px-4 pt-2">
-              {exists && <LatestCommitInfo latestCommit={info.latestCommit} />}
+              {exists && <LatestCommitInfo latestCommit={info.latestCommit} currentBranch={info.currentBranch} />}
               <CommitOrInitButton
                 exists={exists}
                 commit={commit}
@@ -167,7 +175,12 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
             {exists && (
               <>
                 <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
-                <BranchManagerSection repo={repo} branches={info.branches} branchRef={branchRef} />
+                <BranchManagerSection
+                  repo={repo}
+                  defaultBranch={repo.defaultBranch}
+                  branches={info.branches}
+                  branchRef={branchRef}
+                />
                 <SyncPullPushButtons />
               </>
             )}

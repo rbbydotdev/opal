@@ -26,6 +26,7 @@ export function GitRemoteManager({
 }) {
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [selectValue, setSelectValue] = useState<string>("");
+  const [selectOpen, setSelectOpen] = useState(false);
   const cmdRef = useGitRemoteDialogCmd();
 
   return selectMode === "delete" ? (
@@ -51,14 +52,21 @@ export function GitRemoteManager({
           setSelectValue(next.name);
         }}
       />
-      <RemoteSelect remotes={remotes} value={selectValue} onSelect={setSelectValue}>
-        <GitAddDeleteEditDropDown>
+      <RemoteSelect
+        onOpenButEmpty={() => setSelectOpen(true)}
+        remotes={remotes}
+        value={selectValue}
+        onSelect={setSelectValue}
+      >
+        <GitAddDeleteEditDropDown open={selectOpen} setOpen={setSelectOpen}>
           <DropdownMenuItem onClick={() => cmdRef.current.open("add")}>
             <Plus /> Add Remote
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSelectMode("delete")}>
-            <Trash2 /> Delete Remote
-          </DropdownMenuItem>
+          {Boolean(remotes.length) && (
+            <DropdownMenuItem onClick={() => setSelectMode("delete")}>
+              <Trash2 /> Delete Remote
+            </DropdownMenuItem>
+          )}
           {Boolean(selectValue) ? (
             <DropdownMenuItem
               onClick={() =>
@@ -78,8 +86,16 @@ export function GitRemoteManager({
   );
 }
 
-const GitAddDeleteEditDropDown = ({ children }: { children: React.ReactNode }) => (
-  <DropdownMenu>
+const GitAddDeleteEditDropDown = ({
+  children,
+  open,
+  setOpen,
+}: {
+  children: React.ReactNode;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) => (
+  <DropdownMenu open={open} onOpenChange={setOpen}>
     <DropdownMenuTrigger asChild>
       <Button variant="outline" className="h-8" size="sm">
         <Ellipsis />
@@ -147,17 +163,29 @@ function RemoteSelect({
   remotes,
   onSelect,
   value,
+  onOpenButEmpty,
 }: {
   className?: string;
   children?: React.ReactNode;
   remotes: GitRemote[];
   onSelect: (value: string) => void;
   value: string;
+  onOpenButEmpty?: () => void; // Optional callback when opening select with no remotes
 }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="w-full flex items-center justify-between space-x-2">
-      <Select key={value} onValueChange={(value) => onSelect(value)} value={value}>
-        <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
+      <Select
+        open={open}
+        onOpenChange={(o) => {
+          if (!remotes.length) return onOpenButEmpty?.();
+          setOpen(o);
+        }}
+        key={value}
+        onValueChange={(value) => onSelect(value)}
+        value={value}
+      >
+        <SelectTrigger className={cn(className, "disabled:cursor-pointer w-full bg-background text-xs h-8")}>
           <SelectValue placeholder={remotes.length ? RemoteSelectPlaceHolder : NoRemoteSelectPlaceHolder} />
         </SelectTrigger>
         <SelectContent>
