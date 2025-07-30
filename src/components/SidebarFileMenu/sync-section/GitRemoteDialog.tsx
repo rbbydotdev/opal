@@ -1,8 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type React from "react";
-import { useImperativeHandle, useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -20,6 +19,8 @@ import { Input } from "@/components/ui/input";
 import { GitBranch } from "lucide-react";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { GitRemote } from "@/features/git-repo/GitRepo";
+import { useImperativeHandle, useState } from "react";
 
 export const gitRemoteSchema = z.object({
   name: z
@@ -36,6 +37,41 @@ export const gitRemoteSchema = z.object({
 
 type GitRemoteFormValues = z.infer<typeof gitRemoteSchema>;
 
+const GitRemoteDialogModes = {
+  ADD: "add",
+  EDIT: "edit",
+} as const;
+type GitRemoteDialogModeType = (typeof GitRemoteDialogModes)[keyof typeof GitRemoteDialogModes];
+
+function descForMode(mode: GitRemoteDialogModeType) {
+  switch (mode) {
+    case GitRemoteDialogModes.ADD:
+      return "Add a new Git remote to your repository.";
+    case GitRemoteDialogModes.EDIT:
+      return "Edit an existing Git remote in your repository.";
+  }
+}
+function titleForMode(mode: GitRemoteDialogModeType) {
+  switch (mode) {
+    case GitRemoteDialogModes.ADD:
+      return "Add Git Remote";
+    case GitRemoteDialogModes.EDIT:
+      return "Edit Git Remote";
+  }
+}
+export function useGitRemoteDialogMode(
+  defaultMode: GitRemoteDialogModeType = "add"
+): [GitRemoteDialogModeType, (mode: GitRemoteDialogModeType) => void] {
+  return useState<GitRemoteDialogModeType>(defaultMode);
+}
+type GitRemoteDialogCmdRefType = {
+  open: (mode: GitRemoteDialogModeType, previous?: GitRemote) => void;
+};
+export function useGitRemoteDialogCmd() {
+  return React.useRef<GitRemoteDialogCmdRefType>({
+    open: () => {},
+  });
+}
 export function GitRemoteDialog({
   children,
   defaultName = "origin",
@@ -44,25 +80,32 @@ export function GitRemoteDialog({
 }: {
   children?: React.ReactNode;
   defaultName?: string;
-  onSubmit: (remote: { name: string; url: string }) => void;
-  cmdRef: React.RefObject<{ open: () => void }>;
+  onSubmit: (values: { previous: null | GitRemote; next: GitRemote; mode: GitRemoteDialogModeType }) => void;
+  cmdRef: React.RefObject<GitRemoteDialogCmdRefType>;
 }) {
-  const [open, setOpen] = useState(false);
-  useImperativeHandle(
-    cmdRef,
-    () => ({
-      open: () => setOpen(true),
-    }),
-    []
-  );
-
+  const defaultValues = {
+    name: defaultName,
+    url: "https://github.com/rbbydotdev/test123",
+  };
+  const prevRef = React.useRef<GitRemote | null>(null);
+  const modeRef = React.useRef<GitRemoteDialogModeType>(GitRemoteDialogModes.ADD);
   const form = useForm<GitRemoteFormValues>({
     resolver: zodResolver(gitRemoteSchema),
-    defaultValues: {
-      name: defaultName,
-      url: "https://github.com/rbbydotdev/test123",
-    },
+    defaultValues,
   });
+  useImperativeHandle(
+    cmdRef,
+    () =>
+      ({
+        open: (mode: GitRemoteDialogModeType, previous?: GitRemote) => {
+          modeRef.current = mode;
+          form.reset(previous ?? defaultValues);
+          prevRef.current = previous ?? null;
+          setOpen(true);
+        },
+      } satisfies GitRemoteDialogCmdRefType)
+  );
+  const [open, setOpen] = useState(false);
 
   function handleDialogOpenChange(isOpen: boolean) {
     setOpen(isOpen);
@@ -72,7 +115,7 @@ export function GitRemoteDialog({
   }
 
   function handleFormSubmit(values: GitRemoteFormValues) {
-    onSubmit(values);
+    onSubmit({ previous: prevRef.current, next: values, mode: modeRef.current });
     setOpen(false);
     form.reset();
   }
@@ -82,6 +125,7 @@ export function GitRemoteDialog({
     form.reset();
   }
 
+  const mode = modeRef.current;
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -89,9 +133,9 @@ export function GitRemoteDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GitBranch className="h-5 w-5" />
-            Add Git Remote
+            {titleForMode(mode)}
           </DialogTitle>
-          <DialogDescription>Add a new remote repository to your Git configuration.</DialogDescription>
+          <DialogDescription>{descForMode(mode)}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
