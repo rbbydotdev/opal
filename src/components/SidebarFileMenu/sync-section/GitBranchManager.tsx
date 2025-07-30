@@ -15,16 +15,20 @@ import { useState } from "react";
 export function GitBranchManager({
   branches,
   addGitBranch,
+  setCurrentBranch,
   replaceGitBranch,
   deleteGitBranch,
+  defaultBranch,
 }: {
   branches: string[];
-  addGitBranch: (branch: GitBranchFormValue) => void;
+  addGitBranch: (baseBranch: string, branch: GitBranchFormValue) => void;
   replaceGitBranch: (previous: GitBranchFormValue, next: GitBranchFormValue) => void;
+  setCurrentBranch: (branch: string) => void;
   deleteGitBranch: (remoteName: string) => void;
+  defaultBranch: string;
 }) {
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  const [selectValue, setSelectValue] = useState<string>("");
+  const [selectValue, setSelectValue] = useState<string>(defaultBranch);
   const [open, setOpen] = useState(false);
   const [inputMode, setInputMode] = useState<GitBranchInputModeType>(GitBranchInputModes.ADD);
   const [showInput, setShowInput] = useState(false);
@@ -49,7 +53,7 @@ export function GitBranchManager({
         previous={{ branch: selectValue }}
         onSubmit={({ previous, next, mode }) => {
           if (mode === "add") {
-            addGitBranch(next);
+            addGitBranch(selectValue, next);
           }
           if (mode === "edit") {
             replaceGitBranch(previous!, next);
@@ -74,9 +78,11 @@ export function GitBranchManager({
           >
             <Plus /> Add Branch
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSelectMode("delete")}>
-            <Trash2 /> Delete Branch
-          </DropdownMenuItem>
+          {branches.length > 1 && (
+            <DropdownMenuItem onClick={() => setSelectMode("delete")}>
+              <Trash2 /> Delete Branch
+            </DropdownMenuItem>
+          )}
           {Boolean(selectValue) ? (
             <DropdownMenuItem
               onClick={() => {
@@ -185,7 +191,7 @@ function BranchSelect({
 }) {
   return (
     <div className="w-full flex items-center justify-between space-x-2">
-      <Select key={value} onValueChange={(value) => onSelect(value)} value={value}>
+      <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
         <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
           <SelectValue placeholder={RemoteSelectPlaceHolder} />
         </SelectTrigger>
@@ -205,10 +211,12 @@ function BranchSelect({
 
 export function BranchManagerSection({
   repo,
+  defaultBranch,
   branches,
   branchRef,
 }: {
   repo: Repo;
+  defaultBranch: string;
   branches: string[];
   branchRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {
@@ -218,13 +226,15 @@ export function BranchManagerSection({
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
+          defaultBranch={defaultBranch || branches[0] || ""}
+          setCurrentBranch={(branch) => repo.setCurrentBranch(branch)}
           branches={branches}
           replaceGitBranch={(remoteName, remote) => {
             void repo.replaceGitBranch(remoteName.branch, remote.branch);
             branchRef.current.show("branch replaced");
           }}
-          addGitBranch={(remoteName) => {
-            void repo.addGitBranch(remoteName.branch);
+          addGitBranch={(baseBranch, remoteName) => {
+            void repo.addGitBranch(remoteName.branch, baseBranch);
             branchRef.current.show("branch added");
           }}
           deleteGitBranch={(remoteName) => {
@@ -285,7 +295,6 @@ function GitBranchInput({
   });
 
   function handleFormSubmit(values: GitBranchFormValue) {
-    console.log(values);
     onSubmit({ previous, next: values, mode });
     setShow(false);
     form.reset();

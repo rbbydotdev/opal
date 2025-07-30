@@ -45,12 +45,6 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
 }
 
 export function useWorkspaceRepo(workspace: Workspace) {
-  // | {
-  //     repo: Repo;
-  //     info: RepoInfoType;
-  //     initialized: true;
-  //   }
-  // |  {
   const repo = useMemo(() => workspace.disk.NewGitRepo(), [workspace]);
   const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
   const updateInfo = useCallback(async () => {
@@ -63,7 +57,7 @@ export function useWorkspaceRepo(workspace: Workspace) {
     if (repo) return repo.watch(updateInfo);
   }, [repo, setInfo, updateInfo]);
   if (!info.latestCommit) {
-    return { repo, info: null, exists: false } as {
+    return { repo, info: null, exists: false } satisfies {
       repo: Repo;
       info: null;
       exists: false;
@@ -80,5 +74,5 @@ export function useGitRepoFromDisk(disk: Disk): Repo {
   return useMemo(() => disk.NewGitRepo(), [disk]);
 }
 export function useGitRepo(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
-  return useMemo(() => new Repo({ fs, dir, branch }), [branch, dir, fs]);
+  return useMemo(() => new Repo({ fs, dir, defaultBranch: branch }), [branch, dir, fs]);
 }
