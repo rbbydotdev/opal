@@ -3,9 +3,10 @@ import { Disk } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
 import {
   GitPlaybook,
-  GitRemote,
   GitRemotePlaybook,
   Repo,
+  RepoDefaultInfo,
+  RepoInfoType,
   RepoLatestCommit,
   RepoWithRemote,
 } from "@/features/git-repo/GitRepo";
@@ -42,31 +43,38 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
   };
   return { isPending: pendingCommand !== null, pendingCommand, commit };
 }
-export function useUIGitPlaybook2() {
-  // const remotePlaybook = GitRemotePlaybook();
-}
 
 export function useWorkspaceRepo(workspace: Workspace) {
+  // | {
+  //     repo: Repo;
+  //     info: RepoInfoType;
+  //     initialized: true;
+  //   }
+  // |  {
   const repo = useMemo(() => workspace.disk.NewGitRepo(), [workspace]);
-  const [info, setInfo] = useState<{ latestCommit: RepoLatestCommit | null; remotes: GitRemote[] }>({
-    remotes: [],
-    latestCommit: null,
-  });
+  const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
   const updateInfo = useCallback(async () => {
-    setInfo({
-      latestCommit: await repo.tryLatestCommit(),
-      remotes: await repo.tryGitRemotes(),
-    });
+    setInfo(await repo.tryInfo());
   }, [repo]);
   useEffect(() => {
-    if (!workspace.isNull) {
-      void updateInfo();
-    }
+    if (!workspace.isNull) void updateInfo();
   }, [updateInfo, workspace.isNull]);
   useEffect(() => {
     if (repo) return repo.watch(updateInfo);
   }, [repo, setInfo, updateInfo]);
-  return { repo, info };
+  if (!info.initialized) {
+    return { repo, info: null, initialized: false } as {
+      repo: Repo;
+      info: null;
+      initialized: false;
+    };
+  } else {
+    return { repo, info, initialized: true } as {
+      repo: Repo;
+      info: typeof info & { latestCommit: RepoLatestCommit };
+      initialized: true;
+    };
+  }
 }
 export function useGitRepoFromDisk(disk: Disk): Repo {
   return useMemo(() => disk.NewGitRepo(), [disk]);
