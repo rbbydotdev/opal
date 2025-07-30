@@ -102,6 +102,14 @@ export const RepoLatestCommitNull = {
   },
 };
 
+export const RepoDefaultInfo = {
+  initialized: false,
+  branches: [] as string[],
+  remotes: [] as GitRemote[],
+  latestCommit: null as RepoLatestCommit | null,
+};
+export type RepoInfoType = typeof RepoDefaultInfo;
+
 export class Repo {
   fs: CommonFileSystem;
   dir: AbsPath;
@@ -122,12 +130,23 @@ export class Repo {
     initialized: false,
   };
 
+  // watchRemoteRepo(callback: () => void) {
+  // this.remoteEvents = new RemoteGitChannel();
+  // return this.remoteEvents.on(RemoteGitEvents.UPDATE, callback);
+  // }
+
   watch(callback: () => void) {
     const unsub: (() => void)[] = [];
+    // unsub.push(this.events.on("*:end", /*endless loop*/));
+    // this.events.on("*:end", ()=>{
+    // this.remoteEvents?.emit(RemoteGitEvents.UPDATE);
+    //})
     unsub.push(this.events.on("commit:end", callback));
     unsub.push(this.events.on("pull:end", callback));
     unsub.push(this.events.on("merge:end", callback));
     unsub.push(this.events.on("addRemote:end", callback));
+    unsub.push(this.events.on("branch:end", callback));
+    unsub.push(this.events.on("deleteBranch:end", callback));
     unsub.push(this.events.on("deleteRemote:end", callback));
     return () => {
       unsub.forEach((u) => u());
@@ -154,6 +173,24 @@ export class Repo {
     this.author = author || this.author;
   }
 
+  async tryInfo(): Promise<RepoInfoType> {
+    return {
+      initialized: this.state.initialized,
+      branches: await this.tryGitBranches(),
+      remotes: await this.tryGitRemotes(),
+      latestCommit: await this.tryLatestCommit(),
+    };
+  }
+
+  tryGitBranches = async (): Promise<string[]> => {
+    if (!(await this.isInitialized())) return [];
+    const result = await this.git.listBranches({
+      fs: this.fs,
+      dir: this.dir,
+    });
+    console.log(result);
+    return result;
+  };
   tryGitRemotes = async (): Promise<GitRemote[]> => {
     if (!(await this.isInitialized())) return [];
     const remotes = await this.git.listRemotes({
@@ -195,6 +232,40 @@ export class Repo {
       });
     }
     return (this.state.initialized = true);
+  };
+
+  addGitBranch = async (branchName: string, symbolicRef = this.branch) => {
+    await this.mustBeInitialized();
+    const branches = await this.git.listBranches({
+      fs: this.fs,
+      dir: this.dir,
+    });
+    const uniqueBranchName = getUniqueSlug(branchName, branches);
+    await this.git.branch({
+      fs: this.fs,
+      dir: this.dir,
+      ref: uniqueBranchName,
+      object: symbolicRef, // The branch to base the new branch on
+    });
+    // this.branch = uniqueBranchName; // Update the current branch to the new one
+    // this.state.initialized = true; // Mark the repo as initialized
+    // this.events.emit("branch:end", {});
+    console.log(uniqueBranchName);
+    return uniqueBranchName;
+  };
+  deleteGitBranch = async (branchName: string) => {
+    await this.mustBeInitialized();
+    await this.git.deleteBranch({
+      fs: this.fs,
+      dir: this.dir,
+      ref: branchName,
+    });
+  };
+  replaceGitBranch = async (previous: string, branch: string) => {
+    if (previous === branch) return;
+    await this.mustBeInitialized();
+    await this.addGitBranch(branch, previous);
+    return this.deleteGitBranch(previous);
   };
 
   addGitRemote = async (remote: GitRemote) => {

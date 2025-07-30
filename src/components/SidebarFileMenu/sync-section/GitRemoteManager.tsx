@@ -7,7 +7,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GitRemote } from "@/features/git-repo/GitRepo";
+import { TooltipToast } from "@/components/ui/TooltipToast";
+import { GitRemote, Repo, RepoLatestCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { Ellipsis, Pencil, Plus, SatelliteDishIcon, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -162,6 +163,39 @@ function RemoteSelect({
         </SelectContent>
       </Select>
       {children}
+    </div>
+  );
+}
+
+export function RemoteManagerSection({
+  repo,
+  info,
+  remoteRef,
+}: {
+  repo: Repo;
+  info: { latestCommit: RepoLatestCommit; remotes: GitRemote[] };
+  remoteRef: React.RefObject<{ show: (text?: string) => void }>;
+}) {
+  return (
+    <div className="px-4 w-full flex justify-center ">
+      <div className="flex flex-col items-center w-full">
+        <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
+        <GitRemoteManager
+          remotes={info.remotes}
+          replaceGitRemote={(remoteName, remote) => {
+            void repo.replaceGitRemote(remoteName, remote);
+            remoteRef.current.show("remote replaced");
+          }}
+          addGitRemote={(remoteName) => {
+            void repo.addGitRemote(remoteName);
+            remoteRef.current.show("remote added");
+          }}
+          deleteGitRemote={(remoteName) => {
+            void repo.deleteGitRemote(remoteName);
+            remoteRef.current.show("remote deleted");
+          }}
+        />
+      </div>
     </div>
   );
 }

@@ -14,10 +14,11 @@ import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref"
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { HistoryDocRecord, useSnapHistoryDB, useSnapHistoryPendingSave } from "@/Db/HistoryDAO";
+import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { ChevronDown, History } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export function EditHistoryMenu({
@@ -34,21 +35,12 @@ export function EditHistoryMenu({
     useEditHistoryPlugin(realm);
   const historyDB = useSnapHistoryDB();
   const pendingSave = useSnapHistoryPendingSave({ historyDB });
-  const [timeAgoStr, setTimeAgoStr] = useState("");
+  // const [timeAgoStr, setTimeAgoStr] = useState("");
   const [isOpen, setOpen] = useState(false);
   const { id: workspaceId, path: filePath } = useWorkspaceRoute();
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
 
-  useEffect(() => {
-    const updateTimeAgo = () => {
-      if (selectedEdit === null) return setTimeAgoStr("");
-      setTimeAgoStr(timeAgo(new Date(selectedEdit.timestamp)));
-    };
-    const intervalTimer = setInterval(updateTimeAgo, 1000);
-    updateTimeAgo();
-
-    return () => clearInterval(intervalTimer);
-  }, [edits, selectedEdit]);
+  const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
 
   return (
     <div
