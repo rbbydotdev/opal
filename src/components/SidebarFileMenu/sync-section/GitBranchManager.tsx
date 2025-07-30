@@ -191,20 +191,22 @@ function BranchSelect({
 }) {
   return (
     <div className="w-full flex items-center justify-between space-x-2">
-      <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
-        <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
-          <SelectValue placeholder={RemoteSelectPlaceHolder} />
-        </SelectTrigger>
-        <SelectContent>
-          <div className="bg-background border rounded stroke-1"></div>
-          {branches.map((branch) => (
-            <SelectItem key={branch} value={branch} className={"!text-xs"}>
-              {branch}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {children}
+      <div className="max-w-full w-full">
+        <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
+          <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}>
+            <SelectValue placeholder={RemoteSelectPlaceHolder} />
+          </SelectTrigger>
+          <SelectContent>
+            <div className="bg-background border rounded stroke-1"></div>
+            {branches.map((branch) => (
+              <SelectItem key={branch} value={branch} className={"!text-xs"}>
+                {branch}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>{children}</div>
     </div>
   );
 }
