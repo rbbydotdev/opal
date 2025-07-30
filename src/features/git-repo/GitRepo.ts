@@ -90,6 +90,17 @@ export type RepoLatestCommit = {
     timezoneOffset: number;
   };
 };
+export const RepoLatestCommitNull = {
+  oid: "",
+  date: 0,
+  message: "",
+  author: {
+    name: "",
+    email: "",
+    timestamp: 0,
+    timezoneOffset: 0,
+  },
+};
 
 export class Repo {
   fs: CommonFileSystem;

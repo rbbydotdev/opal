@@ -1,6 +1,16 @@
 "use client";
 
-import { ChevronRight, Download, GitBranchIcon, GitMerge, Loader, Plus, RefreshCw, Upload } from "lucide-react";
+import {
+  BookMarked,
+  ChevronRight,
+  Download,
+  GitBranchIcon,
+  GitMerge,
+  Loader,
+  Plus,
+  RefreshCw,
+  Upload,
+} from "lucide-react";
 import React from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
@@ -17,10 +27,131 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { GitRemote, Repo, RepoLatestCommit, RepoLatestCommitNull } from "@/features/git-repo/GitRepo";
 import { useUIGitPlaybook, useWorkspaceRepo } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { Github, ChromeIcon as Google } from "lucide-react";
 
+// 1. LatestCommitInfo
+function LatestCommitInfo({ latestCommit }: { latestCommit: RepoLatestCommit }) {
+  if (!latestCommit) return null;
+  return (
+    <dl className="mb-4 grid [grid-template-columns:max-content_1fr] gap-x-2 font-mono text-2xs text-left">
+      <dt className="font-bold">commit:</dt>
+      <dd className="truncate">{latestCommit.oid}</dd>
+      <dt className="font-bold">date:</dt>
+      <dd className="truncate">{new Date(latestCommit.date).toLocaleString()}</dd>
+    </dl>
+  );
+}
+
+// 2. CommitOrInitButton
+function CommitOrInitButton({
+  latestCommit,
+  commit,
+  isPending,
+  pendingCommand,
+  commitRef,
+}: {
+  latestCommit: RepoLatestCommit;
+  commit: () => Promise<void>;
+  isPending: boolean;
+  pendingCommand: string;
+  commitRef: React.RefObject<{
+    show: (text?: string) => void;
+  }>;
+}) {
+  if (!latestCommit) {
+    return (
+      <Button className="w-full" size="sm" variant="outline">
+        <BookMarked className="mr-1" />
+        Initialize Git Repo
+      </Button>
+    );
+  }
+  return (
+    <Button
+      className="w-full"
+      onClick={() => {
+        void commit().then(() => commitRef.current.show());
+      }}
+      size="sm"
+      variant="outline"
+      disabled={isPending}
+    >
+      {pendingCommand === "commit" ? (
+        <Loader className="mr-1 animate-spin animation-iteration-infinite" />
+      ) : (
+        <GitMerge className="mr-1" />
+      )}
+      <TooltipToast cmdRef={commitRef} message={"success!"} durationMs={1000} sideOffset={10} />
+      Commit
+    </Button>
+  );
+}
+
+// 3. RemoteManagerSection
+function RemoteManagerSection({
+  repo,
+  info,
+  remoteRef,
+}: {
+  repo: Repo;
+  info: { latestCommit: RepoLatestCommit; remotes: GitRemote[] };
+  remoteRef: React.RefObject<{ show: (text?: string) => void }>;
+}) {
+  if (!info.latestCommit) return null;
+  return (
+    <div className="px-4 w-full flex justify-center ">
+      <div className="flex flex-col items-center w-full">
+        <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
+        <GitRemoteManager
+          remotes={info.remotes}
+          replaceGitRemote={(remoteName, remote) => {
+            void repo.replaceGitRemote(remoteName, remote);
+            remoteRef.current.show("remote replaced");
+          }}
+          addGitRemote={(remoteName) => {
+            void repo.addGitRemote(remoteName);
+            remoteRef.current.show("remote added");
+          }}
+          deleteGitRemote={(remoteName) => {
+            void repo.deleteGitRemote(remoteName);
+            remoteRef.current.show("remote deleted");
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// 4. SyncPullPushButtons
+function SyncPullPushButtons({ repoInitialized }: { repoInitialized: boolean }) {
+  if (!repoInitialized) return null;
+  return (
+    <>
+      <div className="px-4">
+        <Button className="w-full" size="sm" variant="outline">
+          <RefreshCw className="mr-1" onClick={() => {}} />
+          Sync Now
+        </Button>
+      </div>
+      <div className="px-4">
+        <Button className="w-full" size="sm" variant="outline">
+          <Download className="mr-1" />
+          Pull
+        </Button>
+      </div>
+      <div className="px-4">
+        <Button className="w-full" size="sm" variant="outline">
+          <Upload className="mr-1" />
+          Push
+        </Button>
+      </div>
+    </>
+  );
+}
+
+// 5. Main Component
 export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const { repo, info } = useWorkspaceRepo(currentWorkspace);
@@ -28,6 +159,11 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
   const { cmdRef: remoteRef } = useTooltipToastCmd();
+
+  const repoInitialized = Boolean(info.latestCommit);
+  const latestCommit = info.latestCommit || RepoLatestCommitNull;
+  const remotes = info.remotes || [];
+
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
       <Collapsible className="group/collapsible flex flex-col min-h-0" open={expanded} onOpenChange={setExpand}>
@@ -63,136 +199,27 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="gap-2">
             <div className="px-4 pt-2">
-              {info.latestCommit?.oid && (
-                <dl className="mb-4 grid [grid-template-columns:max-content_1fr] gap-x-2 font-mono text-2xs text-left">
-                  <dt className="font-bold">commit:</dt>
-                  <dd className="truncate">{info.latestCommit.oid}</dd>
-                  <dt className="font-bold">date:</dt>
-                  <dd className="truncate">{new Date(info.latestCommit.date).toLocaleString()}</dd>
-                </dl>
-              )}
-              <Button
-                className="w-full"
-                onClick={() => {
-                  void commit().then(() => commitRef.current.show());
-                }}
-                size="sm"
-                variant="outline"
-                disabled={isPending}
-              >
-                {pendingCommand === "commit" ? (
-                  <Loader className="mr-1 animate-spin animation-iteration-infinite" />
-                ) : (
-                  <GitMerge className="mr-1" />
-                )}
-                <TooltipToast cmdRef={commitRef} message={"success!"} durationMs={1000} sideOffset={10} />
-                Commit
-              </Button>
+              <LatestCommitInfo latestCommit={latestCommit} />
+              <CommitOrInitButton
+                latestCommit={latestCommit}
+                commit={commit}
+                isPending={isPending}
+                pendingCommand={pendingCommand ?? ""}
+                commitRef={commitRef}
+              />
             </div>
-
-            <div className="px-4 my-2">
-              <SidebarSeparator />
-            </div>
-            <div className="px-4 w-full flex justify-center ">
-              <div className="flex flex-col items-center w-full">
-                <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
-                <GitRemoteManager
-                  remotes={info.remotes}
-                  replaceGitRemote={(remoteName, remote) => {
-                    void repo.replaceGitRemote(remoteName, remote);
-                    remoteRef.current.show("remote replaced");
-                  }}
-                  addGitRemote={(remoteName) => {
-                    void repo.addGitRemote(remoteName);
-                    remoteRef.current.show("remote added");
-                  }}
-                  deleteGitRemote={(remoteName) => {
-                    void repo.deleteGitRemote(remoteName);
-                    remoteRef.current.show("remote deleted");
-                  }}
-                />
-              </div>
-            </div>
-            <div className="px-4">
-              <Button className="w-full " size="sm" variant="outline">
-                <RefreshCw className="mr-1" onClick={() => {}} />
-                Sync Now
-              </Button>
-            </div>
-            <div className="px-4">
-              <Button className="w-full " size="sm" variant="outline">
-                <Download className="mr-1" />
-                Pull
-              </Button>
-            </div>
-            <div className="px-4">
-              <Button className="w-full " size="sm" variant="outline">
-                <Upload className="mr-1" />
-                Push
-              </Button>
-            </div>
+            {repoInitialized && (
+              <>
+                <div className="px-4 my-2">
+                  <SidebarSeparator />
+                </div>
+                <RemoteManagerSection repo={repo} info={{ remotes, latestCommit }} remoteRef={remoteRef} />
+                <SyncPullPushButtons repoInitialized={repoInitialized} />
+              </>
+            )}
           </SidebarMenu>
         </CollapsibleContent>
       </Collapsible>
     </SidebarGroup>
   );
-}
-
-export const VENDOR_ICONS = {
-  GitHub: <Github size={12} />,
-  Google: <Google size={12} />,
-};
-export const MOCK_CONNECTIONS = []; /* [
-  {
-    name: "GitHub",
-    type: "oauth",
-    vendor: "GitHub",
-  },
-  {
-    name: "GitHub API",
-    type: "apikey",
-    vendor: "GitHub",
-  },
-  {
-    name: "Google Drive",
-    type: "oauth",
-    vendor: "Google",
-  },
-  {
-    name: "Google Drive API",
-    type: "apikey",
-    vendor: "Google",
-  },
-];
-*/
-
-{
-  /* <SidebarGroup className="pl-2">
-            <SidebarGroupLabel>
-              <div className="w-full text-xs text-sidebar-foreground/70">Connections</div>
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              {MOCK_CONNECTIONS.map((connection, i) => (
-                <SidebarMenuItem key={connection.name}>
-                  <SidebarMenuButton className="flex justify-start w-full text-xs p-1">
-                    <div className="w-full whitespace-nowrap flex items-center space-x-1">
-                      {i === 0 ? (
-                        <div className="w-4 h-4 text-success items-center justify-center flex">
-                          <Check size={10} strokeWidth={4} />
-                        </div>
-                      ) : (
-                        <div className="w-4 h-4 items-center justify-center flex">
-                          <DotIcon size={14} strokeWidth={4} fill="black" />
-                        </div>
-                      )}
-                      <span className="rounded-full p-1 border">
-                        {VENDOR_ICONS[connection.vendor as keyof typeof VENDOR_ICONS]}
-                      </span>
-                      <span className="overflow-clip text-ellipsis">{connection.name}</span>
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroup> */
 }
