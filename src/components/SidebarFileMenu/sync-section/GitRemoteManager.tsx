@@ -143,12 +143,12 @@ function RemoteDelete({
   );
 }
 
-const RemoteSelectPlaceHolder = (
-  <div className="flex justify-center items-center">
+const RemoteSelectPlaceHolder = "Remote"; /*(
+  <div className="flex justify-center items-center max-w-full truncate">
     <SatelliteDishIcon className="p-1 mr-2 stroke-ring" />
     Remote
   </div>
-);
+);*/
 
 const NoRemoteSelectPlaceHolder = (
   <div className="flex justify-center items-center">
@@ -186,7 +186,7 @@ function RemoteSelect({
           onValueChange={(value) => onSelect(value)}
           value={value}
         >
-          <SelectTrigger className={cn(className, "disabled:cursor-pointer w-full bg-background text-xs h-8")}>
+          <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}>
             <SelectValue placeholder={remotes.length ? RemoteSelectPlaceHolder : NoRemoteSelectPlaceHolder} />
           </SelectTrigger>
           <SelectContent>
