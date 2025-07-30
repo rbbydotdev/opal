@@ -134,6 +134,13 @@ const RemoteSelectPlaceHolder = (
   </div>
 );
 
+const NoRemoteSelectPlaceHolder = (
+  <div className="flex justify-center items-center">
+    <SatelliteDishIcon className="p-1 mr-2 stroke-ring" />
+    Add Remote
+  </div>
+);
+
 function RemoteSelect({
   className,
   children,
@@ -151,7 +158,7 @@ function RemoteSelect({
     <div className="w-full flex items-center justify-between space-x-2">
       <Select key={value} onValueChange={(value) => onSelect(value)} value={value}>
         <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
-          <SelectValue placeholder={RemoteSelectPlaceHolder} />
+          <SelectValue placeholder={remotes.length ? RemoteSelectPlaceHolder : NoRemoteSelectPlaceHolder} />
         </SelectTrigger>
         <SelectContent>
           <div className="bg-background border rounded stroke-1"></div>

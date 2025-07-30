@@ -62,17 +62,17 @@ export function useWorkspaceRepo(workspace: Workspace) {
   useEffect(() => {
     if (repo) return repo.watch(updateInfo);
   }, [repo, setInfo, updateInfo]);
-  if (!info.initialized) {
-    return { repo, info: null, initialized: false } as {
+  if (!info.latestCommit) {
+    return { repo, info: null, exists: false } as {
       repo: Repo;
       info: null;
-      initialized: false;
+      exists: false;
     };
   } else {
-    return { repo, info, initialized: true } as {
+    return { repo, info, exists: true } as {
       repo: Repo;
       info: typeof info & { latestCommit: RepoLatestCommit };
-      initialized: true;
+      exists: true;
     };
   }
 }
