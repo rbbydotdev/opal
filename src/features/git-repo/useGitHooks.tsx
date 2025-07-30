@@ -1,4 +1,3 @@
-import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { Disk } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
 import {
@@ -7,10 +6,8 @@ import {
   Repo,
   RepoDefaultInfo,
   RepoInfoType,
-  RepoLatestCommit,
   RepoWithRemote,
 } from "@/features/git-repo/GitRepo";
-import { AbsPath, absPath } from "@/lib/paths2";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export function useGitPlaybook(repo: Repo | RepoWithRemote) {
@@ -51,11 +48,16 @@ export function useWorkspaceRepo(workspace: Workspace) {
     setInfo(await repo.tryInfo());
   }, [repo]);
   useEffect(() => {
-    if (!workspace.isNull) void updateInfo();
-  }, [updateInfo, workspace.isNull]);
+    if (!workspace.isNull) void repo.sync().then(updateInfo);
+  }, [repo, updateInfo, workspace.isNull]);
   useEffect(() => {
     if (repo) return repo.watch(updateInfo);
   }, [repo, setInfo, updateInfo]);
+  useEffect(() => {
+    if (repo) {
+      return () => repo.tearDown();
+    }
+  }, [repo]);
   if (!info.latestCommit) {
     return { repo, info: null, exists: false } satisfies {
       repo: Repo;
@@ -65,14 +67,14 @@ export function useWorkspaceRepo(workspace: Workspace) {
   } else {
     return { repo, info, exists: true } as {
       repo: Repo;
-      info: typeof info & { latestCommit: RepoLatestCommit };
+      info: DeepNonNullable<RepoInfoType>; //typeof info & { latestCommit: RepoLatestCommit };
       exists: true;
     };
   }
 }
-export function useGitRepoFromDisk(disk: Disk): Repo {
-  return useMemo(() => disk.NewGitRepo(), [disk]);
-}
-export function useGitRepo(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
-  return useMemo(() => new Repo({ fs, dir, defaultBranch: branch }), [branch, dir, fs]);
-}
+// export function useGitRepoFromDisk(disk: Disk): Repo {
+//   return useMemo(() => disk.NewGitRepo(), [disk]);
+// }
+// export function useGitRepo(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
+//   return useMemo(() => new Repo({ fs, dir, defaultBranch: branch }), [branch, dir, fs]);
+// }
