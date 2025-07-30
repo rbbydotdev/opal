@@ -26,26 +26,26 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { RepoLatestCommit } from "@/features/git-repo/GitRepo";
+import { RepoInfoType } from "@/features/git-repo/GitRepo";
 import { useUIGitPlaybook, useWorkspaceRepo } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
-function LatestCommitInfo({
-  latestCommit,
-  currentBranch,
-}: {
-  latestCommit: RepoLatestCommit;
-  currentBranch: string | null;
-}) {
+function LatestInfo({ info }: { info: DeepNonNullable<RepoInfoType> }) {
+  const { latestCommit, currentBranch, hasChanges } = info;
   const timeAgo = useTimeAgoUpdater({ date: new Date(latestCommit.date) });
+  if (!latestCommit) {
+    return null;
+  }
   return (
     <dl className="mb-4 grid [grid-template-columns:max-content_1fr] gap-x-2 font-mono text-2xs text-left">
       <dt className="font-bold">commit:</dt>
       <dd className="truncate">{latestCommit.oid}</dd>
       <dt className="font-bold">branch:</dt>
       <dd className="truncate">{currentBranch || <i>none</i>}</dd>
+      <dt className="font-bold">has changes:</dt>
+      <dd className="truncate">{hasChanges ? "yes" : "no"}</dd>
       <dt className="font-bold">date:</dt>
       <dd className="truncate">{new Date(latestCommit.date).toLocaleString()}</dd>
       <dt className="font-bold">time ago:</dt>
@@ -86,7 +86,7 @@ function CommitOrInitButton({
       ) : (
         <PlusIcon className="mr-1" />
       )}
-      <TooltipToast cmdRef={commitRef} message={"success!"} durationMs={1000} sideOffset={10} />
+      <TooltipToast cmdRef={commitRef} message={"commited"} durationMs={1000} sideOffset={10} />
       {exists ? "Commit" : "Initialize Git Repo"}
     </Button>
   );
@@ -163,7 +163,7 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="gap-2">
             <div className="px-4 pt-2">
-              {exists && <LatestCommitInfo latestCommit={info.latestCommit} currentBranch={info.currentBranch} />}
+              {exists && <LatestInfo info={info} />}
               <CommitOrInitButton
                 exists={exists}
                 commit={commit}
@@ -177,7 +177,8 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
                 <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
                 <BranchManagerSection
                   repo={repo}
-                  defaultBranch={repo.defaultBranch}
+                  // defaultBranch={repo.defaultBranch}
+                  defaultBranch={info.currentBranch || repo.defaultBranch}
                   branches={info.branches}
                   branchRef={branchRef}
                 />
