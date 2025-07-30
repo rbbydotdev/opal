@@ -98,6 +98,10 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
                 <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
                 <GitRemoteManager
                   remotes={info.remotes}
+                  replaceGitRemote={(remoteName, remote) => {
+                    void repo.replaceGitRemote(remoteName, remote);
+                    remoteRef.current.show("remote replaced");
+                  }}
                   addGitRemote={(remoteName) => {
                     void repo.addGitRemote(remoteName);
                     remoteRef.current.show("remote added");

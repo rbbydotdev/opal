@@ -1,4 +1,4 @@
-import { GitRemoteDialog } from "@/components/SidebarFileMenu/sync-section/GitRemoteDialog";
+import { GitRemoteDialog, useGitRemoteDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitRemoteDialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,101 +10,81 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { Ellipsis, Pencil, Plus, SatelliteDishIcon, Trash2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 export function GitRemoteManager({
   remotes,
   addGitRemote,
+  replaceGitRemote,
   deleteGitRemote,
 }: {
   remotes: GitRemote[];
   addGitRemote: (remote: { name: string; url: string }) => void;
+  replaceGitRemote: (previous: GitRemote, next: GitRemote) => void;
   deleteGitRemote: (remoteName: string) => void;
 }) {
-  const [mode, setMode] = useState<"select" | "delete">("select");
-  const [value, setValue] = useState<string>("");
-  const gitRemoteCmdRef = useRef({ open: () => {} });
+  const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
+  const [selectValue, setSelectValue] = useState<string>("");
+  const cmdRef = useGitRemoteDialogCmd();
 
-  return mode === "delete" ? (
+  return selectMode === "delete" ? (
     <RemoteDelete
       remotes={remotes}
-      cancel={() => setMode("select")}
+      cancel={() => setSelectMode("select")}
       onSelect={(name: string) => {
-        if (name === value) setValue("");
+        if (name === selectValue) setSelectValue("");
         deleteGitRemote(name);
       }}
     />
   ) : (
     <>
       <GitRemoteDialog
-        onSubmit={(remote) => {
-          addGitRemote(remote);
-          setValue(remote.name);
+        cmdRef={cmdRef}
+        onSubmit={({ previous, next, mode }) => {
+          if (mode === "add") {
+            addGitRemote(next);
+          }
+          if (mode === "edit") {
+            replaceGitRemote(previous!, next);
+          }
+          setSelectValue(next.name);
         }}
-        cmdRef={gitRemoteCmdRef}
       />
-      <RemoteSelect remotes={remotes} value={value} onSelect={setValue}>
-        <GitAddDeleteEditDropDown
-          onAddSelect={() => {}}
-          onDeleteSelect={() => setMode("delete")}
-          onEditSelect={() => {}}
-        />
+      <RemoteSelect remotes={remotes} value={selectValue} onSelect={setSelectValue}>
+        <GitAddDeleteEditDropDown>
+          <DropdownMenuItem onClick={() => cmdRef.current.open("add")}>
+            <Plus /> Add Remote
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSelectMode("delete")}>
+            <Trash2 /> Delete Remote
+          </DropdownMenuItem>
+          {Boolean(selectValue) ? (
+            <DropdownMenuItem
+              onClick={() =>
+                cmdRef.current.open(
+                  "edit",
+                  remotes.find((r) => r.name === selectValue)
+                )
+              }
+            >
+              <Pencil />
+              Edit Remote
+            </DropdownMenuItem>
+          ) : null}
+        </GitAddDeleteEditDropDown>
       </RemoteSelect>
     </>
   );
 }
 
-// function GitRemoteAddDeleteDropDown({
-//   addGitRemote,
-// }: {
-//   addGitRemote: (remote: { name: string; url: string }) => void;
-// }) {
-//   return (
-//     <>
-//       <GitRemoteDialog
-//         onSubmit={(remote) => {
-//           addGitRemote(remote);
-//           setValue(remote.name);
-//         }}
-//       >
-//         <Button variant="outline" className="h-8" size="sm">
-//           <Plus />
-//         </Button>
-//       </GitRemoteDialog>
-//       <Button variant="outline" className="h-8" size="sm" onClick={() => setMode("delete")}>
-//         <Minus />
-//       </Button>
-//     </>
-//   );
-// }
-
-const GitAddDeleteEditDropDown = ({
-  onAddSelect,
-  onDeleteSelect,
-  onEditSelect,
-}: {
-  onAddSelect: () => void;
-  onDeleteSelect: () => void;
-  onEditSelect: () => void;
-}) => (
+const GitAddDeleteEditDropDown = ({ children }: { children: React.ReactNode }) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <Button variant="outline" className="h-8" size="sm">
         <Ellipsis />
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
-      <DropdownMenuItem onClick={onAddSelect}>
-        <Plus /> Add Remote
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={onDeleteSelect}>
-        <Trash2 /> Delete Remote
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={onEditSelect}>
-        <Pencil />
-        Edit Remote
-      </DropdownMenuItem>
-    </DropdownMenuContent>
+    <DropdownMenuContent align="end">{children}</DropdownMenuContent>
   </DropdownMenu>
 );
 function RemoteDelete({

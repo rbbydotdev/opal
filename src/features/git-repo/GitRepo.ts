@@ -1,5 +1,6 @@
 import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
+import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import Emittery from "emittery";
 import git, { AuthCallback } from "isomorphic-git";
@@ -187,6 +188,20 @@ export class Repo {
 
   addGitRemote = async (remote: GitRemote) => {
     await this.mustBeInitialized();
+    const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
+    await this.git.addRemote({
+      fs: this.fs,
+      dir: this.dir,
+      remote: getUniqueSlug(
+        remote.name,
+        remotes.map((r) => r.remote)
+      ),
+      url: remote.url,
+    });
+  };
+  replaceGitRemote = async (previous: GitRemote, remote: GitRemote) => {
+    await this.mustBeInitialized();
+    await this.deleteGitRemote(previous.name);
     await this.git.addRemote({
       fs: this.fs,
       dir: this.dir,
