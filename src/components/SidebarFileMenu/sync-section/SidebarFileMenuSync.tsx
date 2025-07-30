@@ -49,11 +49,11 @@ function LatestCommitInfo({ latestCommit }: { latestCommit: RepoLatestCommit }) 
 function CommitOrInitButton({
   commit,
   isPending,
-  initialized,
+  exists,
   pendingCommand,
   commitRef,
 }: {
-  initialized: boolean;
+  exists: boolean;
   commit: () => Promise<void>;
   isPending: boolean;
   pendingCommand: string;
@@ -73,20 +73,19 @@ function CommitOrInitButton({
     >
       {pendingCommand === "commit" ? (
         <Loader className="mr-1 animate-spin animation-iteration-infinite" />
-      ) : initialized ? (
+      ) : exists ? (
         <GitMerge className="mr-1" />
       ) : (
         <PlusIcon className="mr-1" />
       )}
       <TooltipToast cmdRef={commitRef} message={"success!"} durationMs={1000} sideOffset={10} />
-      {initialized ? "Commit" : "Initialize Git Repo"}
+      {exists ? "Commit" : "Initialize Git Repo"}
     </Button>
   );
 }
 
 // 4. SyncPullPushButtons
-function SyncPullPushButtons({ repoInitialized }: { repoInitialized: boolean }) {
-  if (!repoInitialized) return null;
+function SyncPullPushButtons() {
   return (
     <>
       <div className="px-4">
@@ -114,7 +113,7 @@ function SyncPullPushButtons({ repoInitialized }: { repoInitialized: boolean }) 
 // 5. Main Component
 export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { repo, info, initialized } = useWorkspaceRepo(currentWorkspace);
+  const { repo, info, exists } = useWorkspaceRepo(currentWorkspace);
   const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
@@ -156,20 +155,20 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="gap-2">
             <div className="px-4 pt-2">
-              {initialized && <LatestCommitInfo latestCommit={info.latestCommit} />}
+              {exists && <LatestCommitInfo latestCommit={info.latestCommit} />}
               <CommitOrInitButton
-                initialized={initialized}
+                exists={exists}
                 commit={commit}
                 isPending={isPending}
                 pendingCommand={pendingCommand ?? ""}
                 commitRef={commitRef}
               />
             </div>
-            {initialized && (
+            {exists && (
               <>
                 <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
                 <BranchManagerSection repo={repo} branches={info.branches} branchRef={branchRef} />
-                <SyncPullPushButtons repoInitialized={initialized} />
+                <SyncPullPushButtons />
               </>
             )}
           </SidebarMenu>
