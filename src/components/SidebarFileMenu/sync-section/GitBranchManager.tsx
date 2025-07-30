@@ -191,7 +191,7 @@ function BranchSelect({
 }) {
   return (
     <div className="w-full flex items-center justify-between space-x-2">
-      <div className="max-w-full w-full">
+      <div className="w-full">
         <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
           <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}>
             <SelectValue placeholder={RemoteSelectPlaceHolder} />
