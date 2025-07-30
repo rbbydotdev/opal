@@ -5,7 +5,7 @@ import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
-import { absPath, AbsPath, joinPath } from "@/lib/paths2";
+import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import { usePathname, useRouter } from "next/navigation";
@@ -38,12 +38,6 @@ export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
 export type Workspaces = WorkspaceDAO[];
 
 const DEFAULT_MIME_TYPE = "application/octet-stream"; //i think this just means binary?
-
-export function useWorkspaceDocumentId() {
-  //should probably look at the document contents and parse the id: in the front matter
-  const { path: filePath, id: workspaceId } = useWorkspaceRoute();
-  return filePath && workspaceId ? joinPath(absPath(workspaceId), absPath(filePath)) : null;
-}
 
 export function useFileContents(listenerCb?: (content: string | null) => void) {
   const listenerCbRef = useRef(listenerCb);
@@ -121,7 +115,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   return {
     error,
     filePath,
-    initialContents: contents,
+    initialContents: contents !== null ? String(contents) : null,
     mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
     updateContents,
     debouncedUpdate,

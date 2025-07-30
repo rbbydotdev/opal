@@ -3,6 +3,7 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
+import { useWorkspaceDocumentId } from "@/components/Editor/history/historyMarkdownFile";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ImageViewer } from "@/components/ImageViewer";
@@ -10,13 +11,7 @@ import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import {
-  useCurrentFilepath,
-  useFileContents,
-  useWorkspaceContext,
-  useWorkspaceDocumentId,
-  useWorkspaceRoute,
-} from "@/context/WorkspaceHooks";
+import { useCurrentFilepath, useFileContents, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
@@ -106,7 +101,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
 
   const mdxEditorElement = useWatchElement(".mdxeditor");
 
-  const documentId = useWorkspaceDocumentId() ?? "unknown";
+  const documentId = useWorkspaceDocumentId(initialContents) ?? "unknown";
 
   if (error) {
     if (isError(error, NotFoundError)) {

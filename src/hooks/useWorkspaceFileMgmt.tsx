@@ -4,6 +4,7 @@ import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
+import { setFrontmatter } from "@/lib/markdown/getMarkdownData";
 import {
   AbsPath,
   RelPath,
@@ -16,6 +17,7 @@ import {
   reduceLineage,
   relPath,
 } from "@/lib/paths2";
+import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
@@ -222,7 +224,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       const wantPath = joinPath(dirname(origNode.path), relPath(decodePath(fileName)));
       if (type === "new") {
         if (origNode.isTreeFile())
-          return newFile(wantPath, "# " + basename(wantPath), {
+          return newFile(wantPath, setFrontmatter("# " + basename(wantPath), { documentId: nanoid() }), {
             redirect: true,
           });
         else {

@@ -4,11 +4,12 @@ import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelec
 import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
+import { useWorkspaceDocumentId } from "@/components/Editor/history/historyMarkdownFile";
 import { historyPlugin } from "@/components/Editor/history/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
-import { useCurrentFilepath, useFileContents, useWorkspaceDocumentId } from "@/context/WorkspaceHooks";
+import { useCurrentFilepath, useFileContents } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
@@ -100,7 +101,7 @@ export function useAllPlugins({
   const { isMarkdown } = useCurrentFilepath();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
-  const documentId = useWorkspaceDocumentId();
+  const documentId = useWorkspaceDocumentId(String(initialContents || ""));
 
   const historyDB = useSnapHistoryDB();
 
