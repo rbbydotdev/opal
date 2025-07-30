@@ -123,7 +123,7 @@ function RemoteDelete({
         if (!open) cancel();
       }}
     >
-      <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
+      <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}>
         <SelectValue placeholder="Delete Remote" />
       </SelectTrigger>
       <SelectContent>
@@ -132,7 +132,7 @@ function RemoteDelete({
             key={remote.name}
             value={remote.name}
             className={
-              "!text-xs focus:bg-destructive focus:text-primary-foreground w-full flex items-center justify-between"
+              "!text-xs focus:bg-destructive focus:text-primary-foreground max-w-full flex items-center justify-between"
             }
           >
             {remote.name}
@@ -175,29 +175,31 @@ function RemoteSelect({
   const [open, setOpen] = useState(false);
   return (
     <div className="w-full flex items-center justify-between space-x-2">
-      <Select
-        open={open}
-        onOpenChange={(o) => {
-          if (!remotes.length) return onOpenButEmpty?.();
-          setOpen(o);
-        }}
-        key={value}
-        onValueChange={(value) => onSelect(value)}
-        value={value}
-      >
-        <SelectTrigger className={cn(className, "disabled:cursor-pointer w-full bg-background text-xs h-8")}>
-          <SelectValue placeholder={remotes.length ? RemoteSelectPlaceHolder : NoRemoteSelectPlaceHolder} />
-        </SelectTrigger>
-        <SelectContent>
-          <div className="bg-background border rounded stroke-1"></div>
-          {remotes.map((remote) => (
-            <SelectItem key={remote.name} value={remote.name} className={"!text-xs"}>
-              {remote.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {children}
+      <div className="w-full">
+        <Select
+          open={open}
+          onOpenChange={(o) => {
+            if (!remotes.length) return onOpenButEmpty?.();
+            setOpen(o);
+          }}
+          key={value}
+          onValueChange={(value) => onSelect(value)}
+          value={value}
+        >
+          <SelectTrigger className={cn(className, "disabled:cursor-pointer w-full bg-background text-xs h-8")}>
+            <SelectValue placeholder={remotes.length ? RemoteSelectPlaceHolder : NoRemoteSelectPlaceHolder} />
+          </SelectTrigger>
+          <SelectContent>
+            <div className="bg-background border rounded stroke-1"></div>
+            {remotes.map((remote) => (
+              <SelectItem key={remote.name} value={remote.name} className={"!text-xs"}>
+                {remote.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>{children}</div>
     </div>
   );
 }

@@ -175,6 +175,12 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
             {exists && (
               <>
                 <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
+                {/* <div className="w-full flex justify-center items-center px-4 py-2 border-black border-2">
+                  <div className="whitespace-nowrap w-full">
+                    xxxxxxx xxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxx
+                    xxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx
+                  </div>
+                </div> */}
                 <BranchManagerSection
                   repo={repo}
                   defaultBranch={repo.defaultBranch}

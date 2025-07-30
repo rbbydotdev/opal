@@ -102,8 +102,8 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
             Hide All
           </DropdownMenuItem>
           <Separator />
-          <DropdownMenuLabel className="py-2 text-2xs w-full text-muted-foreground">
-            {IS_MAC ? "⌘ cmd" : "ctrl"}+click = multi-select
+          <DropdownMenuLabel className="py-2 text-2xs w-full text-muted-foreground font-thin">
+            {IS_MAC ? "⌘ cmd" : "ctrl"} + click / multi-select
           </DropdownMenuLabel>
         </DropdownMenuContent>
         <SidebarGroupLabel className="h-6">
