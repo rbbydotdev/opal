@@ -11,7 +11,7 @@ export function useImagesPlugin({ currentWorkspace }: { currentWorkspace: Worksp
 
   const { path } = useWorkspaceRoute();
   useEffect(() => {
-    return currentWorkspace.watchDisk(() => {
+    return currentWorkspace.watchDiskIndex(() => {
       setImgs(currentWorkspace.getImages().map((i) => i));
     });
   }, [currentWorkspace]);

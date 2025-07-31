@@ -17,7 +17,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
   const [hasTrash, setHasTrash] = useState<boolean>(false);
   useEffect(
     () =>
-      currentWorkspace.watchDisk(() => {
+      currentWorkspace.watchDiskIndex(() => {
         setHasTrash(currentWorkspace.hasTrash());
       }),
     [currentWorkspace]

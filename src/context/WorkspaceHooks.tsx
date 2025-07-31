@@ -43,8 +43,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   const listenerCbRef = useRef(listenerCb);
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
-  const [contents, setContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
-  // const [mimeType, setMimeType] = useState<null | string>(null);
+  const [initialContents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
   const [error, setError] = useState<null | Error>(null);
   const router = useRouter();
 
@@ -56,9 +55,11 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   const updateContents = (updates: string) => {
     if (filePath && currentWorkspace) {
       void currentWorkspace?.disk.writeFile(filePath, updates);
-      //DO NOT EMIT THIS-> void currentWorkspace.disk.local.emit(DiskEvents.WRITE, {
+      //DO NOT EMIT THIS, IT MESSES UP THE EDITOR VIA TEXT-MD-TEXT TOMFOOLERY -> void currentWorkspace.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
       //   filePaths: [filePath],
       // });
+      //USE INSIDE_WRITE INSTEAD SOMEWHERE ELSE
+      //THIS HOOK IS INTEDED FOR OUT OF BAND UPDATES
     }
   };
 
@@ -77,7 +78,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
     void (async () => {
       if (currentWorkspace && filePath) {
         try {
-          setContents(await currentWorkspace.disk.readFile(filePath));
+          setInitialContents(await currentWorkspace.disk.readFile(filePath));
 
           setError(null);
         } catch (error) {
@@ -90,21 +91,21 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   useEffect(() => {
     //Mount Remote Listener
     if (filePath) {
-      return currentWorkspace.disk.remoteUpdateListener(filePath, setContents);
+      return currentWorkspace.disk.remoteUpdateListener(filePath, setInitialContents);
     }
   }, [currentWorkspace.disk, filePath]);
 
   useEffect(() => {
     //Mount Local Listener
     if (filePath) {
-      return currentWorkspace.disk.updateListener(filePath, setContents);
+      return currentWorkspace.disk.outsideWriteListener(filePath, setInitialContents);
     }
   }, [currentWorkspace.disk, filePath]);
 
   useEffect(() => {
     //mount additional listener
     if (listenerCbRef.current && filePath) {
-      return currentWorkspace.disk.updateListener(filePath, listenerCbRef.current);
+      return currentWorkspace.disk.outsideWriteListener(filePath, listenerCbRef.current);
     }
   }, [currentWorkspace, filePath]);
 
@@ -115,7 +116,7 @@ export function useFileContents(listenerCb?: (content: string | null) => void) {
   return {
     error,
     filePath,
-    initialContents: contents !== null ? String(contents) : null,
+    initialContents: initialContents !== null ? String(initialContents) : null,
     mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
     updateContents,
     debouncedUpdate,
@@ -168,7 +169,7 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: 
 
   useEffect(() => {
     if (currentWorkspace) {
-      return currentWorkspace.watchDisk((fileTreeDir: TreeDir) => {
+      return currentWorkspace.watchDiskIndex((fileTreeDir: TreeDir) => {
         const newTree = new TreeDirRoot(fileTreeDir);
         //if getFlateTree() === flatTree [they are the same] do not update
         setFileTree(newTree);

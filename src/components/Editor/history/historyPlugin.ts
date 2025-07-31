@@ -104,7 +104,7 @@ export class HistoryPlugin {
         if (this.id !== null) {
           const saveScore = await this.historyStorage.getSaveThreshold(this.id, md);
           if (saveScore < this.saveThreshold) {
-            return console.log(`Skipping save for ${this.id} due to low score: ${saveScore}`);
+            return console.debug(`Skipping save for ${this.id} due to low score: ${saveScore}`);
           }
           return this.saveEdit(md);
         }

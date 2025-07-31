@@ -22,17 +22,17 @@ export function GitBranchManager({
   setCurrentBranch,
   replaceGitBranch,
   deleteGitBranch,
-  defaultBranch,
+  branch,
 }: {
   branches: string[];
   addGitBranch: (baseBranch: string, branch: GitBranchFormValue) => void;
   replaceGitBranch: (previous: GitBranchFormValue, next: GitBranchFormValue) => void;
   setCurrentBranch: (branch: string) => void;
   deleteGitBranch: (remoteName: string) => void;
-  defaultBranch: string;
+  branch: string;
 }) {
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  const [selectValue, setSelectValue] = useState<string>(defaultBranch);
+  // const [selectValue, setSelectValue] = useState<string>(defaultBranch);
   const [open, setOpen] = useState(false);
   const [inputMode, setInputMode] = useState<GitBranchInputModeType>(GitBranchInputModes.ADD);
   const [showInput, setShowInput] = useState(false);
@@ -43,7 +43,6 @@ export function GitBranchManager({
         branches={branches}
         cancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
-          if (name === selectValue) setSelectValue("");
           deleteGitBranch(name);
         }}
       />
@@ -55,15 +54,14 @@ export function GitBranchManager({
       <GitBranchInput
         mode={inputMode}
         setShow={setShowInput}
-        previous={{ branch: selectValue }}
+        previous={{ branch }}
         onSubmit={({ previous, next, mode }) => {
           if (mode === "add") {
-            addGitBranch(selectValue, next);
+            addGitBranch(branch, next);
           }
           if (mode === "edit") {
             replaceGitBranch(previous!, next);
           }
-          setSelectValue(next.branch);
         }}
       />
     );
@@ -72,9 +70,8 @@ export function GitBranchManager({
     return (
       <BranchSelect
         branches={branches}
-        value={selectValue}
+        value={branch}
         onSelect={(value: string) => {
-          setSelectValue(value);
           setCurrentBranch(value);
         }}
       >
@@ -92,13 +89,13 @@ export function GitBranchManager({
             <Plus /> Add Branch
           </DropdownMenuItem>
           {branches.length > 1 && (
-            <DropdownMenuItem disabled={isLockedBranch(selectValue)} onClick={() => setSelectMode("delete")}>
+            <DropdownMenuItem disabled={isLockedBranch(branch)} onClick={() => setSelectMode("delete")}>
               <Trash2 /> Delete Branch
             </DropdownMenuItem>
           )}
-          {Boolean(selectValue) ? (
+          {Boolean(branch) ? (
             <DropdownMenuItem
-              disabled={isLockedBranch(selectValue)}
+              disabled={isLockedBranch(branch)}
               onClick={() => {
                 setInputMode("edit");
                 setShowInput(true);
@@ -133,15 +130,7 @@ const GitBranchMenuDropDown = ({
         <Ellipsis />
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent
-      onCloseAutoFocus={(e) => {
-        console.log("on close auto focus");
-        e.preventDefault();
-      }}
-      align="end"
-    >
-      {children}
-    </DropdownMenuContent>
+    <DropdownMenuContent align="end">{children}</DropdownMenuContent>
   </DropdownMenu>
 );
 function BranchDelete({
@@ -205,7 +194,6 @@ function BranchSelect({
   onSelect: (value: string) => void;
   value: string;
 }) {
-  console.log("BranchSelect.value", value);
   return (
     <div className="w-full flex items-center justify-between space-x-2">
       <div className="w-full">
@@ -249,13 +237,12 @@ export function BranchManagerSection({
   branchRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {
   if (!branches) return null;
-  console.log(defaultBranch || branches[0] || "");
   return (
     <div className="px-4 w-full flex justify-center ">
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
-          defaultBranch={defaultBranch || branches[0] || ""}
+          branch={defaultBranch || branches[0] || ""}
           setCurrentBranch={(branch) => repo.checkoutBranch(branch)}
           branches={branches}
           replaceGitBranch={(remoteName, remote) => {

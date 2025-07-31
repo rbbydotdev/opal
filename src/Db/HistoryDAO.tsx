@@ -235,7 +235,7 @@ export class HistoryDAO implements HistoryStorageInterface {
     }
     */
 
-    console.log("save edit");
+    console.debug("save edit");
     const latestEdit = await this.getLatestEdit(id);
     const parentText = latestEdit ? await this.reconstructDocument(latestEdit.edit_id!) : "";
     const diffs: Diff[] = this.dmp.diff_main(parentText || "", newText);

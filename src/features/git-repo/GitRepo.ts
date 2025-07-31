@@ -1,5 +1,7 @@
 import { CommonFileSystem } from "@/Db/CommonFileSystem";
+import { Disk } from "@/Db/Disk";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
+import { Channel } from "@/lib/channel";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import Emittery from "emittery";
@@ -75,10 +77,6 @@ class Remote implements IRemote {
   }
 }
 
-export class RepoEventsLocal extends Emittery<{
-  update: void;
-}> {}
-
 export type RepoLatestCommit = {
   oid: string;
   date: number;
@@ -111,19 +109,42 @@ export const RepoDefaultInfo = {
   hasChanges: false,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
+//--------------------------
+
+export const SIGNAL_ONLY = undefined;
+export const RepoEvents = {
+  WORKTREE: "worktree" as const,
+  GIT: "git" as const,
+};
+
+type RepoLocalEventPayload = {
+  [RepoEvents.WORKTREE]: undefined;
+  [RepoEvents.GIT]: undefined;
+};
+export class RepoEventsLocal extends Emittery<RepoLocalEventPayload> {}
+
+export type RepoRemoteEventPayload = {
+  [RepoEvents.WORKTREE]: undefined;
+  [RepoEvents.GIT]: undefined;
+};
+export class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
 
 export class Repo {
+  readonly guid: string;
   private info: RepoInfoType | null = null;
   fs: CommonFileSystem;
   dir: AbsPath;
   defaultBranch: string;
+
+  local = new RepoEventsLocal();
+  remote: RepoEventsRemote;
 
   private readonly $p = Promise.withResolvers<RepoInfoType>();
   public readonly ready = this.$p.promise;
 
   private gitWpm = new WatchPromiseMembers(git);
   readonly git = this.gitWpm.watched;
-  readonly events = this.gitWpm.events;
+  private readonly gitEvents = this.gitWpm.events;
 
   author: GitRepoAuthor = {
     name: "Opal Editor",
@@ -141,57 +162,102 @@ export class Repo {
   // return this.remoteEvents.on(RemoteGitEvents.UPDATE, callback);
   // }
 
+  initListeners() {
+    this.gitEvents.on(
+      [
+        "commit:end",
+        "checkout:end",
+        "pull:end",
+        "merge:end",
+        "addRemote:end",
+        "branch:end",
+        "deleteBranch:end",
+        "deleteRemote:end",
+      ],
+      () => {
+        void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
+        void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
+        // this.$p.resolve(this.info!);
+      }
+    );
+  }
+
   async sync(forceUpdate = false) {
+    console.log("sync called");
     await this.$p.resolve(await this.tryInfo(forceUpdate));
     return this.info!;
   }
 
-  watchWrites(callback: () => void) {
-    const unsub: (() => void)[] = [];
-    unsub.push(this.events.on("checkout:end", callback));
-    unsub.push(this.events.on("pull:end", callback));
-    unsub.push(this.events.on("merge:end", callback));
-    return () => {
-      unsub.forEach((u) => u());
-    };
-  }
+  // watchWrites(callback: () => void) {
+  //   const unsub: (() => void)[] = [];
+  //   unsub.push(this.gitEvents.on("checkout:end", callback));
+  //   unsub.push(this.gitEvents.on("pull:end", callback));
+  //   unsub.push(this.gitEvents.on("merge:end", callback));
+  //   return () => {
+  //     unsub.forEach((u) => u());
+  //   };
+  // }
+
   watch(callback: () => void) {
     const unsub: (() => void)[] = [];
-    // unsub.push(this.events.on("*:end", /*endless loop*/));
-    // this.events.on("*:end", ()=>{
-    // this.remoteEvents?.emit(RemoteGitEvents.UPDATE);
-    //})
-    unsub.push(this.events.on("commit:end", callback));
-    unsub.push(this.events.on("checkout:end", callback));
-    unsub.push(this.events.on("pull:end", callback));
-    unsub.push(this.events.on("merge:end", callback));
-    unsub.push(this.events.on("addRemote:end", callback));
-    unsub.push(this.events.on("branch:end", callback));
-    unsub.push(this.events.on("deleteBranch:end", callback));
-    unsub.push(this.events.on("deleteRemote:end", callback));
+    unsub.push(
+      this.gitEvents.on(
+        [
+          "commit:end",
+          "checkout:end",
+          "pull:end",
+          "merge:end",
+          "addRemote:end",
+          "branch:end",
+          "deleteBranch:end",
+          "deleteRemote:end",
+        ],
+        callback
+      )
+    );
     return () => {
       unsub.forEach((u) => u());
     };
   }
 
-  static New(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main", author?: GitRepoAuthor): Repo {
-    return new Repo({ fs, dir, defaultBranch: branch, author });
+  static New(
+    fs: CommonFileSystem,
+    guid: string,
+    dir: AbsPath = absPath("/"),
+    branch: string = "main",
+    author?: GitRepoAuthor
+  ): Repo {
+    return new Repo({ fs, guid, dir, defaultBranch: branch, author });
+  }
+
+  static FromDisk(
+    disk: Disk,
+    guid: string,
+    dir: AbsPath = absPath("/"),
+    branch: string = "main",
+    author?: GitRepoAuthor
+  ): Repo {
+    return new Repo({ guid, fs: disk.fs, dir, defaultBranch: branch, author });
   }
   constructor({
+    guid,
     fs,
     dir,
     defaultBranch,
     author,
   }: {
+    guid: string;
     fs: CommonFileSystem;
     dir: AbsPath;
     defaultBranch: string;
     author?: { email: string; name: string };
   }) {
+    this.guid = guid;
     this.fs = fs;
     this.dir = dir;
     this.defaultBranch = defaultBranch;
     this.author = author || this.author;
+    this.remote = new RepoEventsRemote(this.guid);
   }
 
   async tryInfo(forceUpdate = true): Promise<RepoInfoType> {
@@ -200,15 +266,15 @@ export class Repo {
     }
     return (this.info = {
       initialized: this.state.initialized,
-      currentBranch: await this.tryCurrentBranch(),
-      branches: await this.tryGitBranches(),
-      remotes: await this.tryGitRemotes(),
-      latestCommit: await this.tryLatestCommit(),
-      hasChanges: await this.tryHasChanges(),
+      currentBranch: await this.getCurrentBranch(),
+      branches: await this.getBranches(),
+      remotes: await this.getRemotes(),
+      latestCommit: await this.getLatestCommit(),
+      hasChanges: await this.hasChanges(),
     });
   }
 
-  tryCurrentBranch = async (): Promise<string | null> => {
+  getCurrentBranch = async (): Promise<string | null> => {
     if (!(await this.exists())) return null;
     return (
       (await this.git.currentBranch({
@@ -218,20 +284,20 @@ export class Repo {
     );
   };
 
-  tryHasChanges = async (): Promise<boolean> => {
+  hasChanges = async (): Promise<boolean> => {
     if (!(await this.exists())) return false;
     const matrix = await git.statusMatrix({ fs: this.fs, dir: this.dir });
     return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
   };
 
-  tryGitBranches = async (): Promise<string[]> => {
+  getBranches = async (): Promise<string[]> => {
     if (!(await this.exists())) return [];
     return await this.git.listBranches({
       fs: this.fs,
       dir: this.dir,
     });
   };
-  tryGitRemotes = async (): Promise<GitRemote[]> => {
+  getRemotes = async (): Promise<GitRemote[]> => {
     if (!(await this.exists())) return [];
     const remotes = await this.git.listRemotes({
       fs: this.fs,
@@ -242,7 +308,7 @@ export class Repo {
       url: url,
     }));
   };
-  tryLatestCommit = async (): Promise<RepoLatestCommit | null> => {
+  getLatestCommit = async (): Promise<RepoLatestCommit | null> => {
     if (!(await this.exists())) return null;
     const commitOid = await this.git.resolveRef({
       fs: this.fs,
@@ -277,17 +343,14 @@ export class Repo {
 
   checkoutBranch = async (branchName: string) => {
     await this.mustBeInitialized();
-    const currentBranch = await this.git.currentBranch({
-      fs: this.fs,
-      dir: this.dir,
-    });
+    const currentBranch = await this.getCurrentBranch();
     if (currentBranch === branchName) return; // No change needed
     await this.git.checkout({
       fs: this.fs,
       dir: this.dir,
       ref: branchName,
       force: true, // Force checkout if necessary
-      noCheckout: false, // Ensure the working directory is updated
+      // noCheckout: false, // Ensure the working directory is updated
     });
     return branchName;
   };
@@ -320,10 +383,7 @@ export class Repo {
   };
   deleteGitBranch = async (branchName: string) => {
     await this.mustBeInitialized();
-    const currentBranch = await this.git.currentBranch({
-      fs: this.fs,
-      dir: this.dir,
-    });
+    const currentBranch = await this.getCurrentBranch();
     await this.git.deleteBranch({
       fs: this.fs,
       dir: this.dir,
@@ -392,6 +452,7 @@ export class Repo {
   withRemote = (remote: IRemote): RepoWithRemote => {
     return new RepoWithRemote(
       {
+        guid: this.guid,
         fs: this.fs,
         dir: this.dir,
         branch: this.defaultBranch,
@@ -404,11 +465,11 @@ export class Repo {
     );
   };
   tearDown() {
-    this.events.clearListeners();
+    this.gitEvents.clearListeners();
   }
 }
 export class RepoWithRemote extends Repo {
-  readonly remote: Remote;
+  readonly gitRemote: Remote;
 
   state: {
     initialized: boolean;
@@ -420,10 +481,12 @@ export class RepoWithRemote extends Repo {
 
   constructor(
     {
+      guid,
       fs,
       dir,
       branch,
     }: {
+      guid: string;
       fs: CommonFileSystem;
       dir: AbsPath;
       branch: string;
@@ -434,8 +497,8 @@ export class RepoWithRemote extends Repo {
     },
     remote: IRemote | Remote
   ) {
-    super({ fs, dir, defaultBranch: branch });
-    this.remote = remote instanceof Remote ? remote : new Remote(remote);
+    super({ guid, fs, dir, defaultBranch: branch });
+    this.gitRemote = remote instanceof Remote ? remote : new Remote(remote);
   }
 
   get isRemoteOk() {
@@ -450,7 +513,7 @@ export class RepoWithRemote extends Repo {
 
   async assertRemoteOK({ verifyOrThrow }: { verifyOrThrow: boolean } = { verifyOrThrow: false }) {
     if (this.state.remoteOK) return true;
-    const verifyCode = await this.remote.verifyRemote();
+    const verifyCode = await this.gitRemote.verifyRemote();
     if (verifyCode !== Remote.VERIFY_CODES.SUCCESS) {
       if (verifyOrThrow) throw new Error(`Remote verification failed with code: ${verifyCode}`);
       return (this.state.remoteOK = false);
@@ -461,8 +524,19 @@ export class RepoWithRemote extends Repo {
 export class GitPlaybook {
   constructor(private repo: Repo) {}
 
-  async commit(message: string, author?: GitRepoAuthor) {
+  async commit({
+    message,
+    author,
+    allowEmpty = false,
+  }: {
+    message: string;
+    author?: GitRepoAuthor;
+    allowEmpty?: boolean;
+  }) {
     await this.repo.mustBeInitialized();
+    if (!allowEmpty && !(await this.repo.hasChanges())) {
+      return false;
+    }
     await this.repo.git.add({
       fs: this.repo.fs,
       dir: this.repo.dir,
@@ -474,6 +548,7 @@ export class GitPlaybook {
       message,
       author: author || this.repo.author,
     });
+    return true;
   }
 
   async addRemote(remote: IRemote) {
@@ -504,14 +579,14 @@ export class GitRemotePlaybook extends GitPlaybook {
     await this.precommandCheck();
     /*commit,push*/
 
-    await this.commit("opal commit", this.remoteRepo.author);
+    await this.commit({ message: "opal commit", author: this.remoteRepo.author });
     await git.push({
       fs: this.remoteRepo.fs,
       http,
       dir: this.remoteRepo.dir,
-      remote: this.remoteRepo.remote.name,
+      remote: this.remoteRepo.gitRemote.name,
       ref: this.remoteRepo.defaultBranch, // or any branch you want to push to
-      onAuth: this.remoteRepo.remote.auth,
+      onAuth: this.remoteRepo.gitRemote.auth,
     });
   }
   async pull() {
@@ -521,15 +596,15 @@ export class GitRemotePlaybook extends GitPlaybook {
       fs: this.remoteRepo.fs,
       http,
       dir: this.remoteRepo.dir,
-      remote: this.remoteRepo.remote.name,
-      ref: this.remoteRepo.remote.branch, // or any branch you want to fetch from
-      onAuth: this.remoteRepo.remote.auth,
+      remote: this.remoteRepo.gitRemote.name,
+      ref: this.remoteRepo.gitRemote.branch, // or any branch you want to fetch from
+      onAuth: this.remoteRepo.gitRemote.auth,
     });
     await git.merge({
       fs: this.remoteRepo.fs,
       dir: this.remoteRepo.dir,
       ours: this.remoteRepo.defaultBranch, // or any branch you want to merge into
-      theirs: this.remoteRepo.remote.branch, // or any branch you want to merge from
+      theirs: this.remoteRepo.gitRemote.branch, // or any branch you want to merge from
       fastForwardOnly: true, // Set to false if you want to allow non-fast-forward merges
     });
   }
