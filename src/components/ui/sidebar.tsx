@@ -43,7 +43,7 @@ function useSidebar() {
 }
 
 export function useSidebarState(sidebarId = SIDEBAR_STORAGE_NAME) {
-  const { storedValue, setValue } = useLocalStorage2(sidebarId, true);
+  const { storedValue, setStoredValue: setValue } = useLocalStorage2(sidebarId, true);
   return [storedValue, setValue] as const;
 }
 

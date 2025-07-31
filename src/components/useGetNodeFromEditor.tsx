@@ -21,16 +21,6 @@ export function useGetNodeFromEditor(editorRealmId = MainEditorRealmId) {
     );
   };
 
-  // useEffect(
-  //   () =>
-  //     editor?.registerUpdateListener(({ editorState }) => {
-  //       editorState?.read(() => {
-  //         lexical.$getRoot(),
-  //       });
-  //     }),
-  //   [editor]
-  // );
-
   // Return the functions to get lexical and DOM nodes
   return { getLexicalNode, getDOMNode };
 }

@@ -17,7 +17,6 @@ export async function createApiResource({
     filePath: "/preview-doc.md",
     workspaceId,
   });
-  // console.log("creating iframe with params", searchParams.toString());
   iframe.src = "/doc-preview-image.html?" + searchParams.toString();
   document.body.appendChild(iframe);
   // iframe.sandbox.add("allow-scripts", "allow-same-origin");

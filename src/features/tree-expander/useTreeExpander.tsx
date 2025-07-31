@@ -31,7 +31,10 @@ export function useTreeExpander({
 }) {
   const [local, setLocal] = useState<ExpandMap>({});
   const setAllStates = (state: boolean) => nodePaths.reduce<ExpandMap>((acc, path) => ({ ...acc, [path]: state }), {});
-  const { storedValue: stored, setValue: setStored } = useLocalStorage2<ExpandMap>(`TreeExpander/${expanderId}`, local);
+  const { storedValue: stored, setStoredValue: setStored } = useLocalStorage2<ExpandMap>(
+    `TreeExpander/${expanderId}`,
+    local
+  );
 
   const expandSingle = (path: string, expanded: boolean) => {
     setLocal((prev) => ({ ...prev, [path]: expanded }));

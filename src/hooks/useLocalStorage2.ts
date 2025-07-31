@@ -82,7 +82,7 @@ export default function useLocalStorage2<T>(
     }
   }, [deserializer, key]);
 
-  const [storedValue, setStoredValue] = useState<T>(() => {
+  const [stateValue, setStateValue] = useState<T>(() => {
     if (optionsRef.current?.initializeWithValue) {
       return readValue();
     }
@@ -92,7 +92,7 @@ export default function useLocalStorage2<T>(
 
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
-  const setValue: typeof setStoredValue = (value) => {
+  const setValue: typeof setStateValue = (value) => {
     // Prevent build error "window is undefined" but keeps working
     if (IS_SERVER) {
       console.warn(`Tried setting localStorage key “${key}” even though environment is not a client`);
@@ -106,7 +106,7 @@ export default function useLocalStorage2<T>(
       window.localStorage.setItem(key, serializer(newValue));
 
       // Save state
-      setStoredValue(newValue);
+      setStateValue(newValue);
 
       // We dispatch a custom event so every similar useLocalStorage hook is notified
       window.dispatchEvent(new StorageEvent("local-storage", { key }));
@@ -128,14 +128,14 @@ export default function useLocalStorage2<T>(
     window.localStorage.removeItem(key);
 
     // Save state with default value
-    setStoredValue(defaultValue);
+    setStateValue(defaultValue);
 
     // We dispatch a custom event so every similar useLocalStorage hook is notified
     window.dispatchEvent(new StorageEvent("local-storage", { key }));
   }, [key]);
 
   useEffect(() => {
-    setStoredValue(readValue());
+    setStateValue(readValue());
   }, [key, readValue]);
 
   const handleStorageChange = useCallback(
@@ -143,7 +143,7 @@ export default function useLocalStorage2<T>(
       if ((event as StorageEvent).key && (event as StorageEvent).key !== key) {
         return;
       }
-      setStoredValue(readValue());
+      setStateValue(readValue());
     },
     [key, readValue]
   );
@@ -159,9 +159,9 @@ export default function useLocalStorage2<T>(
   }, [handleStorageChange]);
 
   return {
-    storedValue,
+    storedValue: stateValue,
     defaultValues: (initialValue instanceof Function ? initialValue() : initialValue) as T,
-    setValue,
+    setStoredValue: setValue,
     removeValue,
   };
 }

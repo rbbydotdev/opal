@@ -35,16 +35,17 @@ import { SidebarDndList } from "../ui/SidebarDndList";
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
-  const { setValue, storedValue, defaultValues } = useLocalStorage2("SidebarFileMenu/Dnd", [
+  const { setStoredValue, storedValue, defaultValues } = useLocalStorage2("SidebarFileMenu/Dnd", [
     "publish",
-    "sync",
+    "git",
     "export",
     "trash",
     "files",
     "treeview",
-  ] satisfies Array<"publish" | "sync" | "export" | "trash" | "files" | "treeview">);
+  ] satisfies Array<"publish" | "git" | "export" | "trash" | "files" | "treeview">);
 
-  const { dnds, setDnds, toggleDnd, dndId } = useDndList(defaultValues, storedValue, setValue);
+  //todo do not need this
+  const { setDnds, toggleDnd, dndId } = useDndList(defaultValues, storedValue, setStoredValue);
   return (
     <SidebarGroup
       {...props}
@@ -61,12 +62,9 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
             <DropdownMenuCheckboxItem
               key={id}
               className="flex gap-2 py-2"
-              checked={dnds.includes(id)}
+              checked={storedValue.includes(id)}
               onClick={(e) => {
                 if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault();
-                toggleDnd(id);
-              }}
-              onCheckedChange={() => {
                 toggleDnd(id);
               }}
             >
@@ -76,9 +74,6 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           <Separator />
           <DropdownMenuItem
             className="text-xs flex justify-start py-2"
-            onSelect={() => {
-              setDnds([...defaultValues]);
-            }}
             onClick={(e) => {
               if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault();
               setDnds([...defaultValues]);
@@ -93,9 +88,6 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
             onClick={(e) => {
               if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault();
               setDnds([]);
-            }}
-            onSelect={() => {
-              setDnds([...defaultValues]);
             }}
           >
             <ListXIcon />
@@ -115,9 +107,9 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         </SidebarGroupLabel>
       </DropdownMenu>
       <div className="overflow-y-auto scrollbar-thin pr-4">
-        <SidebarDndList storageKey={"sidebarMenu"} show={Array.from(dnds)}>
+        <SidebarDndList storageKey={"sidebarMenu"} show={storedValue}>
           <SidebarFileMenuPublish dnd-id={dndId("publish")} className="flex-shrink flex" />
-          <SidebarFileMenuSync dnd-id={dndId("sync")} className="flex-shrink flex flex-col" />
+          <SidebarFileMenuSync dnd-id={dndId("git")} className="flex-shrink flex flex-col" />
           <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
           <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
             <DisplayTreeProvider>

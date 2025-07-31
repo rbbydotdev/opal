@@ -607,15 +607,14 @@ export class Workspace {
   }
 
   NewRepo() {
+    //all a hack until hierarchy and dep injection is sorted out
+    //workspace should not know about window.href
     const repo = Repo.FromDisk(this.disk, `${this.id}/repo`);
     this.dirtyListener(debounce(() => repo.sync(), 3000));
-    // repo.local.on(RepoEvents.GIT
-    this.disk.updateListenerAll((details) => {
-      console.log(details);
-    });
+    const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
     const unsub = repo.gitListener(() => {
       void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
-        filePaths: [],
+        filePaths: [currentPath!],
       });
     });
     this.unsubs.push(unsub);
