@@ -22,16 +22,14 @@ export async function createApiResource({
   document.body.appendChild(iframe);
   // iframe.sandbox.add("allow-scripts", "allow-same-origin");
   await new Promise((rs) => (iframe!.onload = () => rs(true)));
-  console.log("iframe up");
+  console.debug("iframe up");
   let api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
     Comlink.windowEndpoint(iframe.contentWindow!)
   );
   const wrefApi = new WeakRef(api);
   const wrefIframe = new WeakRef(iframe);
   const terminate = () => {
-    console.log("terminating api resource");
-    // api?.[Comlink.releaseProxy]();
-    // iframe?.remove();
+    console.debug("terminating api resource");
     (wrefIframe.deref()! || {}).src = "about:blank";
     wrefApi.deref()?.[Comlink.releaseProxy]();
     wrefIframe.deref()?.remove();

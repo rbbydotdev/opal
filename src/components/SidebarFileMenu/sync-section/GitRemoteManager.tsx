@@ -174,7 +174,7 @@ function RemoteSelect({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="w-full flex items-center justify-between space-x-2">
+    <div className="w-full flex items-center justify-between space-x-2 ">
       <div className="w-full">
         <Select
           open={open}

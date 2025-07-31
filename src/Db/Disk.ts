@@ -402,7 +402,7 @@ export abstract class Disk {
     });
   }
   dirtyListener(cb: () => void) {
-    this.local.on([DiskEvents.INSIDE_WRITE, DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], cb);
+    return this.local.on([DiskEvents.INSIDE_WRITE, DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], cb);
   }
   updateListenerAll(fn: (details: FilePathsType) => void) {
     return this.local.on(DiskEvents.OUTSIDE_WRITE, fn);

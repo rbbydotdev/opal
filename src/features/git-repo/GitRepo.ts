@@ -115,17 +115,20 @@ export const SIGNAL_ONLY = undefined;
 export const RepoEvents = {
   WORKTREE: "worktree" as const,
   GIT: "git" as const,
+  INFO: "info" as const,
 };
 
 type RepoLocalEventPayload = {
   [RepoEvents.WORKTREE]: undefined;
   [RepoEvents.GIT]: undefined;
+  [RepoEvents.INFO]: RepoInfoType;
 };
 export class RepoEventsLocal extends Emittery<RepoLocalEventPayload> {}
 
 export type RepoRemoteEventPayload = {
   [RepoEvents.WORKTREE]: undefined;
   [RepoEvents.GIT]: undefined;
+  [RepoEvents.INFO]: RepoInfoType;
 };
 export class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
 
@@ -135,6 +138,8 @@ export class Repo {
   fs: CommonFileSystem;
   dir: AbsPath;
   defaultBranch: string;
+
+  private unsubs: (() => void)[] = [];
 
   local = new RepoEventsLocal();
   remote: RepoEventsRemote;
@@ -163,7 +168,7 @@ export class Repo {
   // }
 
   initListeners() {
-    this.gitEvents.on(
+    return this.gitEvents.on(
       [
         "commit:end",
         "checkout:end",
@@ -177,26 +182,29 @@ export class Repo {
       () => {
         void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
         void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
-        // this.$p.resolve(this.info!);
+        void this.sync();
       }
     );
   }
 
-  async sync(forceUpdate = false) {
-    console.log("sync called");
-    await this.$p.resolve(await this.tryInfo(forceUpdate));
-    return this.info!;
+  gitListener(cb: () => void) {
+    return this.local.on(RepoEvents.GIT, cb);
   }
 
-  // watchWrites(callback: () => void) {
-  //   const unsub: (() => void)[] = [];
-  //   unsub.push(this.gitEvents.on("checkout:end", callback));
-  //   unsub.push(this.gitEvents.on("pull:end", callback));
-  //   unsub.push(this.gitEvents.on("merge:end", callback));
-  //   return () => {
-  //     unsub.forEach((u) => u());
-  //   };
-  // }
+  infoListener(cb: (info: RepoInfoType) => void) {
+    return this.local.on(RepoEvents.INFO, cb);
+  }
+  async sync() {
+    // const currentInfo = { ...this.info };
+    const newInfo = { ...(await this.tryInfo()) };
+    await this.$p.resolve(newInfo);
+    // if (deepEqual(currentInfo, newInfo)) {
+    //   return this.info; // No changes, return current info
+    // }
+    void this.local.emit(RepoEvents.INFO, newInfo);
+    void this.remote.emit(RepoEvents.INFO, newInfo);
+    return (this.info = newInfo);
+  }
 
   watch(callback: () => void) {
     const unsub: (() => void)[] = [];
@@ -218,6 +226,11 @@ export class Repo {
     return () => {
       unsub.forEach((u) => u());
     };
+  }
+
+  init() {
+    this.unsubs.push(this.initListeners());
+    void this.sync();
   }
 
   static New(
@@ -260,18 +273,15 @@ export class Repo {
     this.remote = new RepoEventsRemote(this.guid);
   }
 
-  async tryInfo(forceUpdate = true): Promise<RepoInfoType> {
-    if (!forceUpdate && this.info) {
-      return this.info;
-    }
-    return (this.info = {
+  async tryInfo(): Promise<RepoInfoType> {
+    return {
       initialized: this.state.initialized,
       currentBranch: await this.getCurrentBranch(),
       branches: await this.getBranches(),
       remotes: await this.getRemotes(),
       latestCommit: await this.getLatestCommit(),
       hasChanges: await this.hasChanges(),
-    });
+    };
   }
 
   getCurrentBranch = async (): Promise<string | null> => {
@@ -336,7 +346,7 @@ export class Repo {
         dir: this.dir,
         defaultBranch: this.defaultBranch,
       });
-      await this.tryInfo(true); // Force update the info after initialization
+      await this.sync();
     }
     return (this.state.initialized = true);
   };
@@ -465,6 +475,7 @@ export class Repo {
     );
   };
   tearDown() {
+    this.unsubs.forEach((unsub) => unsub());
     this.gitEvents.clearListeners();
   }
 }

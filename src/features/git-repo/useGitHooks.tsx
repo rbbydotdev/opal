@@ -7,7 +7,7 @@ import {
   RepoInfoType,
   RepoWithRemote,
 } from "@/features/git-repo/GitRepo";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export function useGitPlaybook(repo: Repo | RepoWithRemote) {
   return useMemo(() => {
@@ -39,29 +39,17 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
 export function useWorkspaceRepo(workspace: Workspace) {
   const repo = useMemo(() => workspace.NewRepo(), [workspace]);
 
-  // useEffect(() => {
-  //   return workspace.watchDiskWriteIndex(() => {
-  //     console.log("update to disk");
-  //     // console.log(Date.now());
-  //     // void repo.sync(true);
-  //   });
-  // }, [repo, workwatchDiskWriteIndexspace]);
-
   const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
-  const updateInfo = useCallback(async () => {
-    setInfo(await repo.tryInfo());
-  }, [repo]);
-  useEffect(() => {
-    if (!workspace.isNull) void repo.sync().then(updateInfo);
-  }, [repo, updateInfo, workspace.isNull]);
-  useEffect(() => {
-    if (repo) return repo.watch(updateInfo);
-  }, [repo, setInfo, updateInfo]);
+
+  useEffect(() => repo.infoListener(setInfo), [repo]);
+
   useEffect(() => {
     if (repo) {
+      void repo.init();
       return () => repo.tearDown();
     }
   }, [repo]);
+
   if (!info.latestCommit) {
     return { repo, info: null, exists: false } satisfies {
       repo: Repo;
