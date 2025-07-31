@@ -62,7 +62,7 @@ export function WorkspaceButtonBar() {
 }
 function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
   const { currentWorkspace, workspaces } = useWorkspaceContext();
-  const { storedValue: expand, setValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
+  const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const router = useRouter();

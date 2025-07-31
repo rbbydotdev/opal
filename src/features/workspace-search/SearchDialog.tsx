@@ -30,7 +30,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const [isOptionsOpen, setOptionsOpen] = useSingleItemExpander("SearchDialog/options/expand", true);
 
-  const { storedValue: optionsValue, setValue: setOptionsValue } = useLocalStorage2(
+  const { storedValue: optionsValue, setStoredValue: setOptionsValue } = useLocalStorage2(
     "SearchDialog/options/values",
     () =>
       ({ workspace: ALL_WS_KEY, type: "markdown" } as {

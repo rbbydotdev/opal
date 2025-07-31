@@ -22,7 +22,6 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const { request } = event;
   const url = new URL(request.url);
   //log every request
-  // console.log(`Service Worker: Fetching ${url.pathname} with method ${request.method}. Referrer: ${request.referrer}`);
 
   const whiteListMatch = WHITELIST.some((pattern) => pattern.test(url.pathname));
   // If there's no referrer, it's likely a direct navigation or non-app request.
