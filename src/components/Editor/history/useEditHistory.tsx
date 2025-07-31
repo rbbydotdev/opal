@@ -4,7 +4,7 @@ import { useCellForRealm } from "@/components/useCellForRealm";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
 import { Realm } from "@mdxeditor/editor";
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 
 export function useEditHistoryPlugin(realm: Realm | undefined) {
   const edits = useCellValueForRealm(HistoryPlugin.edits$, realm);
@@ -59,10 +59,13 @@ export function useEditHistoryPlugin2(historyProps: {
   rootMarkdown: string;
 }) {
   const history = useMemo(() => new HistoryPlugin2(historyProps), [historyProps]);
-  const { edits, selectedEdit, selectedEditMd } = useSyncExternalStore(
-    (onStoreChange) => history.onStateUpdate(onStoreChange),
-    () => history.getState()
-  );
+  useEffect(() => {
+    history.init();
+    return () => {
+      history.teardown();
+    };
+  }, [history]);
+  const { edits, selectedEdit, selectedEditMd } = useSyncExternalStore(history.onStateUpdate, history.getState);
   const setEdit = useCallback(
     (selectedEdit: HistoryDocRecord | null) => history.setSelectedEdit(selectedEdit),
     [history]

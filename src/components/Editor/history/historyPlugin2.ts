@@ -43,6 +43,23 @@ export class HistoryPlugin2 {
   private debounceMs = 5_000;
   private edits: HistoryDocRecord[] = [];
 
+  set $edits(edits: HistoryDocRecord[]) {
+    this.edits = edits;
+    this.events.emit(HistoryEvents.EDITS, edits);
+  }
+  set $selectedEdit(edit: HistoryDocRecord | null) {
+    this.selectedEdit = edit;
+    this.events.emit(HistoryEvents.SELECTED_EDIT, edit);
+  }
+  set $latestMarkdown(md: string) {
+    this.latestMarkdown = md;
+    this.events.emit(HistoryEvents.INSIDE_MARKDOWN, md);
+  }
+  set $selectedEditMd(md: string | null) {
+    this.selectedEditMd = md;
+    this.events.emit(HistoryEvents.SELECTED_EDIT_MD, md);
+  }
+
   constructor({
     workspaceId,
     documentId,
@@ -61,29 +78,28 @@ export class HistoryPlugin2 {
     this.latestMarkdown = rootMarkdown;
     this.selectedEditMd = rootMarkdown;
   }
-  getState() {
+  getState = () => {
     return {
       edits: this.edits,
       selectedEdit: this.selectedEdit,
       selectedEditMd: this.selectedEditMd,
     };
-  }
-  // state: ReturnType<HistoryPlugin2["getState"]>
-  onStateUpdate(cb: () => void) {
+  };
+  // state:
+  onStateUpdate = (cb: () => void) => {
     this.events.on(HistoryEvents.EDITS, cb);
     this.events.on(HistoryEvents.SELECTED_EDIT, cb);
+    this.events.on(HistoryEvents.SELECTED_EDIT_MD, cb);
     return () => {
       this.events.off(HistoryEvents.EDITS, cb);
       this.events.off(HistoryEvents.SELECTED_EDIT, cb);
+      this.events.off(HistoryEvents.SELECTED_EDIT_MD, cb);
     };
-  }
+  };
   init() {
     void this.historyStorage.getEdits(this.documentId).then(async (edits) => {
       //emit latest edits to start
-      this.events.emit(HistoryEvents.EDITS, edits);
-    });
-    this.events.on(HistoryEvents.EDITS, (edits: HistoryDocRecord[]) => {
-      this.edits = edits;
+      this.$edits = edits;
     });
 
     this.events.on(HistoryEvents.OUTSIDE_MARKDOWN, () => {
@@ -111,12 +127,12 @@ export class HistoryPlugin2 {
           console.error("Reconstructed history document is not a string");
           return;
         }
-        this.events.emit(HistoryEvents.INSIDE_MARKDOWN, editDoc);
-        this.selectedEditMd = editDoc;
+        this.$latestMarkdown = editDoc;
+        this.$selectedEditMd = editDoc;
       } else {
-        this.selectedEditMd = null;
+        this.$selectedEditMd = null;
       }
-      this.events.emit(HistoryEvents.SELECTED_EDIT, edit);
+      this.$selectedEdit = edit;
     });
   }
 
@@ -131,23 +147,22 @@ export class HistoryPlugin2 {
       const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, this.latestMarkdown);
       if (newEdit) {
         edits.push(newEdit); //Assuming ascending
-        this.events.emit(HistoryEvents.EDITS, edits);
+        this.$edits = edits;
       } else {
         console.error("Failed to save initial edit");
       }
     }
-    this.latestMarkdown = newMarkdown;
+    this.latestMarkdown = newMarkdown; //not $latestMarkdown to avoid loop
     const headEdit = edits[0];
     if (headEdit) {
-      const latestEditMarkdown = await this.historyStorage.reconstructDocumentFromEdit(headEdit);
-      if (latestEditMarkdown === newMarkdown) {
+      if ((await this.historyStorage.reconstructDocumentFromEdit(headEdit)) === newMarkdown) {
         return console.debug("Skipping redundant edit save");
       }
     }
     const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, newMarkdown);
     if (newEdit) {
-      edits.push(newEdit); //Assuming ascending order
-      this.events.emit(HistoryEvents.EDITS, edits);
+      edits.push(newEdit);
+      this.$edits = edits;
     } else {
       console.error("Failed to save new edit");
     }
@@ -156,12 +171,13 @@ export class HistoryPlugin2 {
   clearAll() {
     return this.transaction(async () => {
       await this.historyStorage.clearAllEdits(this.documentId);
-      this.events.emit(HistoryEvents.EDITS, []);
+      this.$edits = [];
       return this.resetToStartingMarkdown();
     });
   }
 
   private resetToStartingMarkdown() {
+    //for the edit to go from from edit markdown to latest markdown
     return this.transaction(() => {
       this.events.emit(HistoryEvents.INSIDE_MARKDOWN, this.latestMarkdown);
     });

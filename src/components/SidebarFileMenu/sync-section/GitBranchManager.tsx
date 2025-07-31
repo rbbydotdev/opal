@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { Repo } from "@/features/git-repo/GitRepo";
+import { GitPlaybook, Repo } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { Ellipsis, GitBranchIcon, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -174,8 +174,8 @@ function BranchDelete({
   );
 }
 
-const RemoteSelectPlaceHolder = (
-  <div className="flex justify-center items-center">
+const BranchSelectPlaceHolder = (
+  <div className="w-full truncate flex items-center">
     <GitBranchIcon className="p-1 mr-2 stroke-ring" />
     Branch
   </div>
@@ -196,24 +196,24 @@ function BranchSelect({
 }) {
   return (
     <div className="w-full flex items-center justify-between space-x-2">
-      <div className="w-full">
+      <div className="w-full ">
         <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
-          <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}>
-            <SelectValue placeholder={RemoteSelectPlaceHolder} />
+          {/* <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}> */}
+
+          <SelectTrigger
+            className={cn(
+              className,
+              "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"
+            )}
+          >
+            <SelectValue className="w-full" placeholder={BranchSelectPlaceHolder} />
           </SelectTrigger>
           <SelectContent>
-            <div className="bg-background border rounded stroke-1"></div>
             {branches.map((branch) => (
               <SelectItem key={branch} value={branch} className={"!text-xs"}>
-                <div className="w-full flex justify-center items-center gap-2">
-                  {isLockedBranch(branch) ? (
-                    <>
-                      <LockKeyhole size={12} />
-                      {branch}
-                    </>
-                  ) : (
-                    <>{branch}</>
-                  )}
+                <div className="flex gap-2 items-center justify-start ">
+                  {isLockedBranch(branch) ? <LockKeyhole size={12} /> : <GitBranchIcon size={12} />}
+                  {branch}
                 </div>
               </SelectItem>
             ))}
@@ -228,10 +228,12 @@ function BranchSelect({
 export function BranchManagerSection({
   repo,
   defaultBranch,
+  playbook,
   branches,
   branchRef,
 }: {
   repo: Repo;
+  playbook: GitPlaybook;
   defaultBranch: string;
   branches: string[];
   branchRef: React.RefObject<{ show: (text?: string) => void }>;
@@ -243,7 +245,7 @@ export function BranchManagerSection({
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
           branch={defaultBranch || branches[0] || ""}
-          setCurrentBranch={(branch) => repo.checkoutBranch(branch)}
+          setCurrentBranch={(branch) => playbook.switchBranch(branch)}
           branches={branches}
           replaceGitBranch={(remoteName, remote) => {
             void repo.replaceGitBranch(remoteName.branch, remote.branch);

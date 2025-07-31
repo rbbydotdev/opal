@@ -1,4 +1,4 @@
-import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
+import { MainEditorRealmId } from "@/components/Editor/EditorConst";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { LexicalTreeViewNode, lexicalToTreeView } from "@/lib/lexical/treeViewDisplayNodesLexical";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";

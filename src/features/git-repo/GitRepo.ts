@@ -479,6 +479,12 @@ export class Repo {
     this.gitEvents.clearListeners();
   }
 }
+const SYSTEM_COMMITS = {
+  COMMIT: "opal@COMMIT",
+  SWITCH_BRANCH: "opal@SWITCH_BRANCH",
+  INIT: "opal@INIT",
+  PREPUSH: "opal@PREPUSH",
+};
 export class RepoWithRemote extends Repo {
   readonly gitRemote: Remote;
 
@@ -535,12 +541,24 @@ export class RepoWithRemote extends Repo {
 export class GitPlaybook {
   constructor(private repo: Repo) {}
 
-  async commit({
+  switchBranch = async (branchName: string) => {
+    if ((await this.repo.getCurrentBranch()) === branchName) return false;
+    if (await this.repo.hasChanges()) {
+      await this.addCommit({
+        message: SYSTEM_COMMITS.SWITCH_BRANCH,
+      });
+    }
+    await this.repo.checkoutBranch(branchName);
+    return true;
+  };
+  async addCommit({
     message,
     author,
     allowEmpty = false,
+    filepath = ".",
   }: {
     message: string;
+    filepath?: string;
     author?: GitRepoAuthor;
     allowEmpty?: boolean;
   }) {
@@ -551,7 +569,7 @@ export class GitPlaybook {
     await this.repo.git.add({
       fs: this.repo.fs,
       dir: this.repo.dir,
-      filepath: ".",
+      filepath,
     });
     await this.repo.git.commit({
       fs: this.repo.fs,
@@ -590,7 +608,9 @@ export class GitRemotePlaybook extends GitPlaybook {
     await this.precommandCheck();
     /*commit,push*/
 
-    await this.commit({ message: "opal commit", author: this.remoteRepo.author });
+    if (await this.remoteRepo.hasChanges()) {
+      await this.addCommit({ message: SYSTEM_COMMITS.PREPUSH, author: this.remoteRepo.author });
+    }
     await git.push({
       fs: this.remoteRepo.fs,
       http,

@@ -1,5 +1,5 @@
+import { MainEditorRealmId } from "@/components/Editor/EditorConst";
 import { highlightMdxElement } from "@/components/Editor/highlightMdxElement";
-import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { scrollToEditorElement } from "@/components/Editor/scrollToEditorElement";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
