@@ -1,9 +1,10 @@
 import { HistoryPlugin } from "@/components/Editor/history/historyPlugin";
+import { HistoryPlugin2 } from "@/components/Editor/history/historyPlugin2";
 import { useCellForRealm } from "@/components/useCellForRealm";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
-import { HistoryDocRecord } from "@/Db/HistoryDAO";
+import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
 import { Realm } from "@mdxeditor/editor";
-import { useCallback } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 export function useEditHistoryPlugin(realm: Realm | undefined) {
   const edits = useCellValueForRealm(HistoryPlugin.edits$, realm);
@@ -36,6 +37,43 @@ export function useEditHistoryPlugin(realm: Realm | undefined) {
   }, [realm, setSelectedEdit]);
 
   const selectedEditMd = useCellValueForRealm(HistoryPlugin.selectedEditDoc$, realm);
+  // const editorMd = useCellValueForRealm(HistoryPlugin.allMd$, realm);
+  const isRestoreState = selectedEditMd !== null; // && (selectedEditMd ?? "") === (editorMd ?? "");
+
+  return {
+    edits: edits ?? [],
+    selectedEdit: isRestoreState ? selectedEdit : null,
+    selectedEditMd,
+    triggerSave,
+    isRestoreState,
+    setEdit,
+    reset,
+    clearAll,
+  };
+}
+
+export function useEditHistoryPlugin2(historyProps: {
+  workspaceId: string;
+  documentId: string;
+  historyStorage: HistoryStorageInterface;
+  rootMarkdown: string;
+}) {
+  const history = useMemo(() => new HistoryPlugin2(historyProps), [historyProps]);
+  const { edits, selectedEdit, selectedEditMd } = useSyncExternalStore(
+    (onStoreChange) => history.onStateUpdate(onStoreChange),
+    () => history.getState()
+  );
+  const setEdit = useCallback(
+    (selectedEdit: HistoryDocRecord | null) => history.setSelectedEdit(selectedEdit),
+    [history]
+  );
+
+  const reset = useCallback(() => history.reset(), [history]);
+
+  const triggerSave = useCallback(() => history.triggerSave(), [history]);
+
+  const clearAll = useCallback(() => history.clearAll(), [history]);
+
   // const editorMd = useCellValueForRealm(HistoryPlugin.allMd$, realm);
   const isRestoreState = selectedEditMd !== null; // && (selectedEditMd ?? "") === (editorMd ?? "");
 

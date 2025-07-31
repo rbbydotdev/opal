@@ -138,7 +138,8 @@ export class WorkspaceDAO {
   }
 
   static async fetchFromRoute(route: string) {
-    if (!isAncestor(route, WorkspaceDAO.rootRoute)) throw new BadRequestError("Invalid route " + route);
+    if (!isAncestor({ child: route, parent: WorkspaceDAO.rootRoute }))
+      throw new BadRequestError("Invalid route " + route);
 
     const name = route.slice(WorkspaceDAO.rootRoute.length + 1).split("/")[0];
 

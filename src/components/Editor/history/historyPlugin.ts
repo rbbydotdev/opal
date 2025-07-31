@@ -149,7 +149,9 @@ export class HistoryPlugin {
     if (latest) {
       const latestDoc = await this.historyStorage.reconstructDocumentFromEdit(latest);
       if (latestDoc === md) {
-        return console.log("Skipping redundant edit save");
+        const allMd = this.realm.getValue(HistoryPlugin.allMd$);
+        console.debug("TODO: REMOVE ME", { md, latestDoc, allMd });
+        return console.debug("Skipping redundant edit save");
       }
     }
     await this.historyStorage.saveEdit(this.workspaceId, this.id, md);
@@ -201,3 +203,24 @@ export const historyPlugin = realmPlugin({
     });
   },
 });
+
+/*
+
+  //realm.sub(allMd$,(md)=>HistoryPlugin.updateMarkdown(md));
+  updateOutsideMarkdown(md: string) {
+    this.events.emit(HistoryEvents.OUTSIDE_MARKDOWN, md);
+  }
+  private updateInsideMarkdown(md: string) {
+    this.events.emit(HistoryEvents.INSIDE_MARKDOWN, md);
+  }
+  // //watchInsideMarkdown(md=>realm.pub(setMarkdown$,md));
+  watchInsideMarkdown(callback: (md: string) => void) {
+    this.events.on(HistoryEvents.INSIDE_MARKDOWN, callback);
+  }
+
+state machine 
+
+
+
+
+*/

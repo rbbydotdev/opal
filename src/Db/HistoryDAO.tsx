@@ -220,7 +220,12 @@ export class HistoryDAO implements HistoryStorageInterface {
     return Math.min(finalScore, 1.0);
   }
 
-  public async saveEdit(workspaceId: string, id: string, newText: string, abortForNewlines = false): Promise<number> {
+  public async saveEdit(
+    workspaceId: string,
+    id: string,
+    newText: string,
+    abortForNewlines = false
+  ): Promise<HistoryDocRecord | null> {
     /*
     // --- HOW TO USE THE THRESHOLD ---
     // You can now call the threshold method at the beginning of saveEdit.
@@ -247,16 +252,16 @@ export class HistoryDAO implements HistoryStorageInterface {
         .every(([_operation, text]) => text.replace("\n\n", "") === "")
     ) {
       console.log("Aborting edit due to newlines only");
-      return 0;
+      return null;
     }
 
     this.dmp.diff_cleanupEfficiency(diffs);
     const patch = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
 
     const newDoc = new HistoryDocRecord(workspaceId, id, patch, Date.now(), latestEdit ? latestEdit.edit_id! : null);
-    const result = await ClientDb.historyDocs.add(newDoc);
-    void this.emitter.emit("new_edit", HistoryDocRecord.FromJSON({ ...newDoc, edit_id: result! }));
-    return result;
+    const resultId = await ClientDb.historyDocs.add(newDoc);
+    void this.emitter.emit("new_edit", HistoryDocRecord.FromJSON({ ...newDoc, edit_id: resultId! }));
+    return newDoc;
   }
 
   public async reconstructDocument(edit_id: number): Promise<string | null> {
@@ -337,7 +342,7 @@ export class HistoryDAO implements HistoryStorageInterface {
 
 export interface HistoryStorageInterface {
   clear(docId: string): void;
-  saveEdit(workspaceId: string, id: string, newText: string): Promise<number>;
+  saveEdit(workspaceId: string, id: string, newText: string): Promise<HistoryDocRecord | null>;
   reconstructDocument(edit_id: number): Promise<string | null>;
   clearAllEdits(id: string): void;
   reconstructDocumentFromEdit(edit: HistoryDocRecord): Promise<string | null>;
