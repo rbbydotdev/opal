@@ -600,9 +600,25 @@ export class Workspace {
     return await Disk.TransferFiles(transferNodes, fromWs.disk, toWorkspace.disk);
   }
 
+  dirtyListener(callback: (trigger?: IndexTrigger) => void) {
+    const unsub = this.disk.dirtyListener(callback);
+    this.unsubs.push(unsub);
+    return unsub;
+  }
+
   NewRepo() {
     const repo = Repo.FromDisk(this.disk, `${this.id}/repo`);
-    void this.disk.dirtyListener(debounce(() => repo.sync(true), 3000));
+    this.dirtyListener(debounce(() => repo.sync(), 3000));
+    // repo.local.on(RepoEvents.GIT
+    this.disk.updateListenerAll((details) => {
+      console.log(details);
+    });
+    const unsub = repo.gitListener(() => {
+      void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
+        filePaths: [],
+      });
+    });
+    this.unsubs.push(unsub);
     return repo;
   }
 

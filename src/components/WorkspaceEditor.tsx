@@ -94,6 +94,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     //this is for out of editor updates like via tab or image path updates
     editorRef.current?.setMarkdown(newContent ?? "");
   });
+
   const { id, path } = useWorkspaceRoute();
   const { mimeType } = useCurrentFilepath();
 
