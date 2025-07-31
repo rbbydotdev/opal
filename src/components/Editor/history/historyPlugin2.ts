@@ -1,3 +1,4 @@
+import { MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
 import { debounce } from "@/lib/debounce";
 import { Mutex } from "async-mutex";
@@ -115,7 +116,9 @@ export class HistoryPlugin2 {
       return this.saveNewEdit(md);
     }, this.debounceMs);
     this.events.on(HistoryEvents.OUTSIDE_MARKDOWN, (md) => {
-      if (!this.muteChange) debouncedMdUpdate(md);
+      //attempt to determine the editor change was done by the user
+      const editorInFocus = Boolean(document.activeElement?.closest(MdxEditorSelector));
+      if (!this.muteChange && editorInFocus) debouncedMdUpdate(md);
     });
   }
   async setSelectedEdit(edit: HistoryDocRecord | null) {
