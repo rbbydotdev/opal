@@ -55,7 +55,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         for (const { oldPath, newPath, fileType } of CHANGES) {
           if (
             (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
-            (fileType === "dir" && isAncestor(workspaceRoute.path, oldPath))
+            (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
           ) {
             if (newPath.startsWith(SpecialDirs.Trash)) {
               router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
@@ -77,7 +77,10 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         }
       }),
       currentWorkspace.deleteListener(async (details) => {
-        if (workspaceRoute.path && details.filePaths.some((path) => isAncestor(workspaceRoute.path, path))) {
+        if (
+          workspaceRoute.path &&
+          details.filePaths.some((path) => isAncestor({ child: workspaceRoute.path, parent: path }))
+        ) {
           router.push(await currentWorkspace.tryFirstFileUrl());
         }
       }),

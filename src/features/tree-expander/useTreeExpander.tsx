@@ -7,7 +7,7 @@ import { useContext, useEffect, useState } from "react";
 
 function expandForFile(dirTree: string[], file: AbsPath | string | null, exp: ExpandMap) {
   if (!file) return exp;
-  dirTree.filter((dir) => isAncestor(file, dir)).forEach((d) => (exp[d] = true));
+  dirTree.filter((dir) => isAncestor({ child: file, parent: dir })).forEach((d) => (exp[d] = true));
   return exp;
 }
 type ExpandMap = { [path: string]: boolean };

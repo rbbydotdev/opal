@@ -175,11 +175,17 @@ export function isMarkdown(path: AbsPath | RelPath | TreeNode | string): boolean
 }
 
 // --- Ancestor/Lineage Utilities ---
-export function isAncestor(path: AbsPath | string | null, root: AbsPath | string | null): boolean {
-  if (path === root) return true;
-  if (path === null || root === null) return false;
-  const rootSegments = root.split("/");
-  const pathSegments = path.split("/");
+export function isAncestor({
+  child: child,
+  parent: parent,
+}: {
+  child: AbsPath | string | null;
+  parent: AbsPath | string | null;
+}): boolean {
+  if (child === parent) return true; // false?
+  if (child === null || parent === null) return false;
+  const rootSegments = parent.split("/");
+  const pathSegments = child.split("/");
   return pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i]);
 }
 
@@ -199,16 +205,40 @@ export function replaceAncestor(
 }
 
 // --- Reduce Lineage ---
-export function reduceLineage<T extends (string | { toString(): string })[]>(range: T): T {
-  [...range].sort((a, b) => a.toString().length - b.toString().length);
-  for (let i = 0; i < range.length; i++) {
-    const a = range[i];
-    for (let j = i + 1; j < range.length; j++) {
-      const b = range[j];
-      if (isAncestor(b!.toString(), a!.toString())) range.splice(j--, 1);
+export function reduceLineage____old<T extends (string | { toString(): string })[]>(range: T): T {
+  const sortedRange = [...range].sort((a, b) => a.toString().split("/").length - b.toString().split("/").length) as T;
+  for (let i = 0; i < sortedRange.length; i++) {
+    const a = sortedRange[i];
+    for (let j = i + 1; j < sortedRange.length; j++) {
+      const b = sortedRange[j];
+      if (isAncestor({ child: b!.toString(), parent: a!.toString() })) sortedRange.splice(j--, 1);
     }
   }
-  return range;
+  return sortedRange;
+}
+export function reduceLineage<T extends string | { toString(): string }>(range: Array<T>) {
+  type nodeType = Record<string, unknown> & Record<symbol, T>;
+  const $end = Symbol();
+  const tree = {
+    root: {},
+  };
+  for (const path of range) {
+    let node: nodeType = tree.root;
+    for (const segment of path.toString().split("/").slice(0)) {
+      node = node[segment] = (node[segment] as nodeType) ?? ({} as nodeType);
+    }
+    node[$end] = path;
+  }
+  const results: Array<T> = [];
+  for (const queue: nodeType[] = [tree.root]; queue.length; ) {
+    const node = queue.pop()!;
+    if (typeof node[$end] !== "undefined") {
+      results.push(node[$end]);
+    } else {
+      queue.push(...(Object.values(node) as nodeType[]));
+    }
+  }
+  return results;
 }
 
 export function strictPathname(str: string): string {
