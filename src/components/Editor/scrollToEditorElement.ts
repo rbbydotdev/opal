@@ -1,4 +1,4 @@
-import { getEditorScrollContentElement } from "@/components/Editor/getEditorScrollContentElement";
+import { MdxEditorSelector } from "@/components/Editor/EditorConst";
 
 export const scrollToEditorElement = (
   // element: HTMLElement | null,
@@ -8,7 +8,7 @@ export const scrollToEditorElement = (
     ignoreIfInView?: boolean;
     behavior?: ScrollBehavior;
   },
-  scrollContentElement = getEditorScrollContentElement()
+  scrollContentElement = document.querySelector(MdxEditorSelector) as HTMLElement
 ) => {
   if (!element) return;
   const ignoreIfInView = options?.ignoreIfInView ?? false;

@@ -24,8 +24,9 @@ export function GitRemoteManager({
   replaceGitRemote: (previous: GitRemote, next: GitRemote) => void;
   deleteGitRemote: (remoteName: string) => void;
 }) {
+  const defaultRemote = remotes.find((r) => r.name === "origin") || remotes[0];
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  const [selectValue, setSelectValue] = useState<string>("");
+  const [selectValue, setSelectValue] = useState<string>(defaultRemote?.name ?? "");
   const [selectOpen, setSelectOpen] = useState(false);
   const cmdRef = useGitRemoteDialogCmd();
 
@@ -144,15 +145,15 @@ function RemoteDelete({
 }
 
 const RemoteSelectPlaceHolder = (
-  <div className="flex justify-center items-center max-w-full truncate">
-    <SatelliteDishIcon className="p-1 mr-2 stroke-ring" />
+  <div className="w-full truncate flex items-center">
+    <SatelliteDishIcon className="p-1 mr-1 stroke-ring" />
     Remote
   </div>
 );
 
 const NoRemoteSelectPlaceHolder = (
-  <div className="flex justify-center items-center">
-    <SatelliteDishIcon className="p-1 mr-2 stroke-ring" />
+  <div className="w-full truncate flex items-center">
+    <SatelliteDishIcon className="p-1 mr-1 stroke-ring" />
     Add Remote
   </div>
 );
@@ -186,14 +187,24 @@ function RemoteSelect({
           onValueChange={(value) => onSelect(value)}
           value={value}
         >
-          <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}>
-            <SelectValue placeholder={remotes.length ? RemoteSelectPlaceHolder : NoRemoteSelectPlaceHolder} />
+          <SelectTrigger
+            className={cn(
+              className,
+              "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"
+            )}
+          >
+            <SelectValue
+              className="w-full"
+              placeholder={remotes.length ? RemoteSelectPlaceHolder : NoRemoteSelectPlaceHolder}
+            />
           </SelectTrigger>
           <SelectContent>
-            <div className="bg-background border rounded stroke-1"></div>
             {remotes.map((remote) => (
               <SelectItem key={remote.name} value={remote.name} className={"!text-xs"}>
-                {remote.name}
+                <div className="flex gap-2 items-center justify-start ">
+                  <SatelliteDishIcon size={12} className="stroke-ring" />
+                  {remote.name}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>

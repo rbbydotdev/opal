@@ -3,9 +3,9 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
+import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { useWorkspaceDocumentId } from "@/components/Editor/history/historyMarkdownFile";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
-import { MainEditorRealmId } from "@/components/Editor/MainEditorRealmId";
 import { ImageViewer } from "@/components/ImageViewer";
 import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
 import { TrashBanner } from "@/components/TrashBanner";
@@ -100,7 +100,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
 
   const { scrollEmitter, sessionId } = useScrollChannel({ sessionId: `${id}${path}` });
 
-  const mdxEditorElement = useWatchElement(".mdxeditor");
+  const mdxEditorElement = useWatchElement(MdxEditorSelector);
 
   const documentId = useWorkspaceDocumentId(initialContents) ?? "unknown";
 

@@ -25,7 +25,7 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
     const minWait = new Promise((rs) => setTimeout(rs, 1000));
     try {
       setPending("commit");
-      await playbook.commit({ message: "opal commit" });
+      await playbook.addCommit({ message: "opal commit" });
     } catch (e) {
       console.error("Error in commit function:", e);
     } finally {
@@ -38,6 +38,7 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
 
 export function useWorkspaceRepo(workspace: Workspace) {
   const repo = useMemo(() => workspace.NewRepo(), [workspace]);
+  const playbook = useGitPlaybook(repo);
 
   const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
 
@@ -51,14 +52,16 @@ export function useWorkspaceRepo(workspace: Workspace) {
   }, [repo]);
 
   if (!info.latestCommit) {
-    return { repo, info: null, exists: false } satisfies {
+    return { repo, playbook, info: null, exists: false } satisfies {
       repo: Repo;
+      playbook: GitPlaybook;
       info: null;
       exists: false;
     };
   } else {
-    return { repo, info, exists: true } as {
+    return { repo, info, playbook, exists: true } as {
       repo: Repo;
+      playbook: GitPlaybook;
       info: DeepNonNullable<RepoInfoType>; //typeof info & { latestCommit: RepoLatestCommit };
       exists: true;
     };

@@ -121,7 +121,7 @@ function SyncPullPushButtons() {
 // 5. Main Component
 export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { repo, info, exists } = useWorkspaceRepo(currentWorkspace);
+  const { repo, playbook, info, exists } = useWorkspaceRepo(currentWorkspace);
   const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
@@ -174,14 +174,15 @@ export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGr
             </div>
             {exists && (
               <>
-                <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
                 <BranchManagerSection
                   repo={repo}
+                  playbook={playbook}
                   // defaultBranch={repo.defaultBranch}
                   defaultBranch={info.currentBranch || repo.defaultBranch}
                   branches={info.branches}
                   branchRef={branchRef}
                 />
+                <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
                 <SyncPullPushButtons />
               </>
             )}
