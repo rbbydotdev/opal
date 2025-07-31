@@ -8,7 +8,9 @@ import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
 import { WorkspaceSeedFiles } from "@/Db/WorkspaceSeedFiles";
+import { Repo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
+import { debounce } from "@/lib/debounce";
 import { BadRequestError } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
@@ -48,6 +50,9 @@ export class Workspace {
   remoteAuths?: RemoteAuthDAO[];
   disk: Disk;
   thumbs: Disk;
+  repo: Repo | null = null; //TODO
+
+  private unsubs: (() => void)[] = [];
 
   constructor(
     {
@@ -310,9 +315,12 @@ export class Workspace {
     return this.disk.readFile(filePath);
   };
 
-  watchDisk(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
-    return this.disk.latestIndexListener(callback);
+  watchDiskIndex(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
+    const unsub = this.disk.latestIndexListener(callback);
+    this.unsubs.push(unsub);
+    return unsub;
   }
+
   copyMultipleFiles(copyNodes: [from: TreeNode, to: AbsPath | TreeNode][]) {
     return this.disk.copyMultiple(copyNodes);
   }
@@ -329,15 +337,21 @@ export class Workspace {
   }
 
   renameListener(callback: (details: RenameDetails[]) => void) {
-    return this.disk.renameListener(callback);
+    const unsub = this.disk.renameListener(callback);
+    this.unsubs.push(unsub);
+    return unsub;
   }
 
   createListener(callback: (details: CreateDetails) => void) {
-    return this.disk.createListener(callback);
+    const unsub = this.disk.createListener(callback);
+    this.unsubs.push(unsub);
+    return unsub;
   }
 
   deleteListener(callback: (details: DeleteDetails) => void) {
-    return this.disk.deleteListener(callback);
+    const unsub = this.disk.deleteListener(callback);
+    this.unsubs.push(unsub);
+    return unsub;
   }
 
   async getFirstFile() {
@@ -398,7 +412,7 @@ export class Workspace {
   }
 
   private async initImageFileListeners() {
-    this.renameListener(async (nodes) => {
+    return this.renameListener(async (nodes) => {
       await Promise.all(
         nodes.map(({ oldPath, newPath, fileType }) =>
           this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath.replace(oldPath, newPath)))
@@ -423,6 +437,7 @@ export class Workspace {
 
   async tearDown() {
     await Promise.all([this.disk.tearDown(), this.thumbs.tearDown()]);
+    this.unsubs.forEach((unsub) => unsub());
     return this;
   }
 
@@ -513,7 +528,7 @@ export class Workspace {
       res = [];
     }
     if (res.length) {
-      await this.disk.local.emit(DiskEvents.WRITE, {
+      await this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
         filePaths: res,
       });
     }
@@ -586,7 +601,9 @@ export class Workspace {
   }
 
   NewRepo() {
-    return this.disk.NewGitRepo();
+    const repo = Repo.FromDisk(this.disk, `${this.id}/repo`);
+    void this.disk.dirtyListener(debounce(() => repo.sync(true), 3000));
+    return repo;
   }
 
   // addRemote

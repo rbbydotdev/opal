@@ -1,4 +1,3 @@
-import { Disk } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
 import {
   GitPlaybook,
@@ -19,10 +18,6 @@ export function useGitPlaybook(repo: Repo | RepoWithRemote) {
   }, [repo]);
 }
 
-export function useGitPlaybookFromDisk(disk: Disk) {
-  return useGitPlaybook(disk.NewGitRepo());
-}
-
 export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
   const playbook = useGitPlaybook(repo);
   const [pendingCommand, setPending] = useState<"commit" | null>(null);
@@ -30,7 +25,7 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
     const minWait = new Promise((rs) => setTimeout(rs, 1000));
     try {
       setPending("commit");
-      await playbook.commit("opal commit");
+      await playbook.commit({ message: "opal commit" });
     } catch (e) {
       console.error("Error in commit function:", e);
     } finally {
@@ -42,7 +37,16 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
 }
 
 export function useWorkspaceRepo(workspace: Workspace) {
-  const repo = useMemo(() => workspace.disk.NewGitRepo(), [workspace]);
+  const repo = useMemo(() => workspace.NewRepo(), [workspace]);
+
+  // useEffect(() => {
+  //   return workspace.watchDiskWriteIndex(() => {
+  //     console.log("update to disk");
+  //     // console.log(Date.now());
+  //     // void repo.sync(true);
+  //   });
+  // }, [repo, workwatchDiskWriteIndexspace]);
+
   const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
   const updateInfo = useCallback(async () => {
     setInfo(await repo.tryInfo());

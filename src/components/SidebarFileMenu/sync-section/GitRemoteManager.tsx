@@ -143,12 +143,12 @@ function RemoteDelete({
   );
 }
 
-const RemoteSelectPlaceHolder = "Remote"; /*(
+const RemoteSelectPlaceHolder = (
   <div className="flex justify-center items-center max-w-full truncate">
     <SatelliteDishIcon className="p-1 mr-2 stroke-ring" />
     Remote
   </div>
-);*/
+);
 
 const NoRemoteSelectPlaceHolder = (
   <div className="flex justify-center items-center">

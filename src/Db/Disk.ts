@@ -4,7 +4,6 @@ import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
 import { MutexFs } from "@/Db/MutexFs";
 import { PatchedOPFS } from "@/Db/NamespacedFs";
-import { Repo as GitRepo } from "@/features/git-repo/GitRepo";
 import { UnwrapScannable } from "@/features/search/SearchScannable";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
@@ -113,15 +112,20 @@ export type ListenerCallback<T extends "create" | "rename" | "delete"> = Paramet
 export type DiskRemoteEventPayload = {
   [DiskEvents.RENAME]: RemoteRenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
-  [DiskEvents.WRITE]: FilePathsType;
-  // [DiskEvents.CREATE]: FilePathsType;
-  // [DiskEvents.DELETE]: FilePathsType;
+  //for remotes or 'processes'(img node src replace on file move etc)
+  //that write 'outside' not intended for local writes done via the editor
+  //may be used to indicate to the editor to update
+  [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
+  //intended for hot writes, when the editor is writing to disk
+  //therefore inside writes should never do anything which impacts the editor
+  [DiskEvents.INSIDE_WRITE]: FilePathsType;
 };
 export class DiskEventsRemote extends Channel<DiskRemoteEventPayload> {}
 
 export const SIGNAL_ONLY = undefined;
 export const DiskEvents = {
-  WRITE: "write" as const,
+  INSIDE_WRITE: "inside-write" as const, //for writes done by the editor or local process
+  OUTSIDE_WRITE: "outside-write" as const,
   INDEX: "index" as const,
   RENAME: "rename" as const,
   CREATE: "create" as const,
@@ -131,7 +135,8 @@ export const DiskEvents = {
 type DiskLocalEventPayload = {
   [DiskEvents.RENAME]: RenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
-  [DiskEvents.WRITE]: FilePathsType;
+  [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
+  [DiskEvents.INSIDE_WRITE]: FilePathsType;
 };
 export class DiskEventsLocal extends Emittery<DiskLocalEventPayload> {}
 
@@ -154,7 +159,7 @@ export abstract class Disk {
   local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
-
+  private unsubs: (() => void)[] = [];
   abstract type: DiskType;
 
   constructor(
@@ -164,7 +169,7 @@ export abstract class Disk {
     readonly fileTree: FileTree,
     private connector: DiskDAO
   ) {
-    this.remote = new DiskEventsRemote(this.guid); //oops this should probably go in remote
+    this.remote = new DiskEventsRemote(this.guid);
   }
 
   static FromJSON(json: DiskJType): Disk {
@@ -256,8 +261,8 @@ export abstract class Disk {
         });
         console.debug("remote rename", JSON.stringify(data, null, 4));
       }),
-      this.remote.on(DiskEvents.WRITE, async ({ filePaths }) => {
-        await this.local.emit(DiskEvents.WRITE, { filePaths });
+      this.remote.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
+        await this.local.emit(DiskEvents.OUTSIDE_WRITE, { filePaths });
       }),
 
       this.remote.on(DiskEvents.INDEX, async (data) => {
@@ -312,7 +317,7 @@ export abstract class Disk {
       }
     }
     if (filePaths.length) {
-      await this.local.emit(DiskEvents.WRITE, {
+      await this.local.emit(DiskEvents.OUTSIDE_WRITE, {
         filePaths,
       });
     }
@@ -376,16 +381,35 @@ export abstract class Disk {
     });
   }
 
-  updateListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-    return this.local.on(DiskEvents.WRITE, async ({ filePaths }) => {
+  writeIndexListener(callback: () => void) {
+    return this.local.on([DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], callback);
+    // const unsubs: (() => void)[] = [];
+    // return () => unsubs.forEach((unsub) => unsub());
+  }
+
+  outsideWriteListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
+    return this.local.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
         fn(String(await this.readFile(absPath(watchFilePath))));
       }
     });
   }
+  insideWriteListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
+    return this.local.on(DiskEvents.INSIDE_WRITE, async ({ filePaths }) => {
+      if (filePaths.includes(watchFilePath)) {
+        fn(String(await this.readFile(absPath(watchFilePath))));
+      }
+    });
+  }
+  dirtyListener(cb: () => void) {
+    this.local.on([DiskEvents.INSIDE_WRITE, DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], cb);
+  }
+  updateListenerAll(fn: (details: FilePathsType) => void) {
+    return this.local.on(DiskEvents.OUTSIDE_WRITE, fn);
+  }
 
   remoteUpdateListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-    return this.remote.on(DiskEvents.WRITE, async ({ filePaths }) => {
+    return this.remote.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
         fn(String(await this.readFile(absPath(watchFilePath))));
       }
@@ -798,7 +822,8 @@ export abstract class Disk {
   async writeFile<T extends string | Uint8Array>(filePath: AbsPath, contents: T | Promise<T>) {
     const awaitedContents = contents instanceof Promise ? await contents : contents;
     await this.fs.writeFile(encodePath(filePath), awaitedContents, { encoding: "utf8", mode: 0o777 });
-    await this.remote.emit(DiskEvents.WRITE, { filePaths: [filePath] });
+    void this.remote.emit(DiskEvents.OUTSIDE_WRITE, { filePaths: [filePath] });
+    void this.local.emit(DiskEvents.INSIDE_WRITE, { filePaths: [filePath] });
     return;
   }
   async readFile(filePath: AbsPath) {
@@ -820,14 +845,7 @@ export abstract class Disk {
   async tearDown() {
     await this.remote.tearDown();
     await this.local.clearListeners();
-  }
-
-  // get promises() {
-  //   return this.fs;
-  // }
-
-  NewGitRepo(/*author?: GitRepoAuthor*/) {
-    return GitRepo.New(this.fs, this.fileTree.root.path);
+    this.unsubs.forEach((us) => us());
   }
 }
 
