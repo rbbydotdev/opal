@@ -96,7 +96,9 @@ export class HistoryPlugin {
       this.realm.pipe(
         HistoryPlugin.allMd$,
         withLatestFrom(HistoryPlugin.muteChange$),
-        filter(([, muted]) => !muted),
+        filter(([, muted]) => {
+          return !muted;
+        }),
         map(([value]) => value),
         debounceTime(this.debounceFrequency)
       ),

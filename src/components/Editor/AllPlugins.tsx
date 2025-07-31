@@ -104,6 +104,7 @@ export function useAllPlugins({
   const documentId = useWorkspaceDocumentId(String(initialContents || ""));
 
   const historyDB = useSnapHistoryDB();
+  // useEditHistoryPlugin2
 
   useEffect(() => {
     if (mimeType === "text/markdown") return;
