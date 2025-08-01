@@ -32,7 +32,6 @@ import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage } from "../lib/paths2";
-export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;
 
 // type DiskScan = UnwrapScannable<Disk>;
 export class Workspace {
@@ -627,3 +626,4 @@ export class Workspace {
     return this.remoteAuths ?? [];
   }
 }
+export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;

@@ -37,6 +37,12 @@ export class VirtualFileSystem implements CommonFileSystem {
       }))
       .sort((a, b) => b.mountPath.length - a.mountPath.length);
   }
+  symlink(_target: string, _path: string): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  readlink(_path: string): Promise<Buffer<ArrayBufferLike> | string | null> {
+    throw new Error("Method not implemented.");
+  }
 
   /**
    * Resolves a virtual path to a specific file system and a relative path within it.

@@ -183,21 +183,21 @@ function HistoryStatus({ selectedEdit, pendingSave }: { selectedEdit: HistoryDoc
   if (selectedEdit !== null) {
     return (
       <div key={selectedEdit.edit_id} className="animate-spin animation-iteration-once ">
-        <History className="-scale-x-100 inline-block !text-ring" />
+        <History size={20} className="-scale-x-100 inline-block !text-ring" />
       </div>
     );
   }
   if (pendingSave) {
     return (
       <div className="animate-spin animation-iteration-once ">
-        <History className="-scale-x-100 inline-block !text-success" />
+        <History size={20} className="-scale-x-100 inline-block !text-success" />
       </div>
     );
   }
 
   return (
     <div>
-      <History className="-scale-x-100 inline-block !text-primary group-hover:!text-ring" />
+      <History size={20} className="-scale-x-100 inline-block !text-primary group-hover:!text-ring" />
     </div>
   );
 }

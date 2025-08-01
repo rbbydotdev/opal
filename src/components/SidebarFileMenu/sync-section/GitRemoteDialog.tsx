@@ -146,7 +146,7 @@ export function GitRemoteDialog({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="origin" {...field} />
+                    <Input autoComplete="off" placeholder="origin" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -159,7 +159,7 @@ export function GitRemoteDialog({
                 <FormItem>
                   <FormLabel>URL</FormLabel>
                   <FormControl>
-                    <Input autoFocus placeholder="https://github.com/user/repo.git" {...field} />
+                    <Input autoComplete="off" autoFocus placeholder="https://github.com/user/repo.git" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
