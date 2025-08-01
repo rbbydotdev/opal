@@ -6,6 +6,7 @@ export function useTimeAgoUpdater({ date, delay }: { date?: Date | null; delay?:
   useEffect(() => {
     const updateTimeAgo = () => {
       if (date) setTimeAgoStr(timeAgo(date));
+      else setTimeAgoStr("");
     };
     const intervalTimer = setInterval(updateTimeAgo, delay || 1000);
     updateTimeAgo();

@@ -3,12 +3,12 @@
 import { SidebarFileMenuExport } from "@/components/SidebarFileMenu/export-section/SidebarFileMenuExport";
 import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/main-files-section/MainSidebarFileMenuFileSection";
 import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-section/SidebarFileMenuPublish";
-import { SidebarFileMenuSync } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
+import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { DisplayTreeProvider, useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
-import { useDndList } from "@/features/filetree-drag-and-drop/useDndList";
 import { IS_MAC } from "@/lib/isMac";
+import { Slot } from "@radix-ui/react-slot";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
@@ -32,20 +32,35 @@ import { Separator } from "../ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "../ui/sidebar";
 import { SidebarDndList } from "../ui/SidebarDndList";
 
+function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
+  return (
+    <Slot dnd-id={dndId} {...rest}>
+      {children}
+    </Slot>
+  );
+}
+const dndSections = ["publish", "git", "export", "trash", "files", "treeview"];
+type DndSectionType = "publish" | "git" | "export" | "trash" | "files" | "treeview";
+
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
-  const { setStoredValue, storedValue, defaultValues } = useLocalStorage2("SidebarFileMenu/Dnd", [
-    "publish",
-    "git",
-    "export",
-    "trash",
-    "files",
-    "treeview",
-  ] satisfies Array<"publish" | "git" | "export" | "trash" | "files" | "treeview">);
+  const { setStoredValue, storedValue, defaultValues } = useLocalStorage2(
+    "SidebarFileMenu/Dnd",
+    dndSections as DndSectionType[]
+  );
+  const setDnds = (ids: DndSectionType[]) => {
+    setStoredValue(ids);
+  };
+  const toggleDnd = (id: DndSectionType) => {
+    if (storedValue.includes(id)) {
+      setStoredValue(storedValue.filter((v) => v !== id));
+    } else {
+      setStoredValue([...storedValue, id]);
+    }
+  };
 
   //todo do not need this
-  const { setDnds, toggleDnd, dndId } = useDndList(defaultValues, storedValue, setStoredValue);
   return (
     <SidebarGroup
       {...props}
@@ -108,28 +123,40 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
       </DropdownMenu>
       <div className="overflow-y-auto scrollbar-thin pr-4">
         <SidebarDndList storageKey={"sidebarMenu"} show={storedValue}>
-          <SidebarFileMenuPublish dnd-id={dndId("publish")} className="flex-shrink flex" />
-          <SidebarFileMenuSync dnd-id={dndId("git")} className="flex-shrink flex flex-col" />
-          <SidebarFileMenuExport dnd-id={dndId("export")} className="flex-shrink flex" />
-          <div dnd-id={dndId("treeview")} className="flex-shrink flex min-h-8">
-            <DisplayTreeProvider>
-              <TreeMenuSection id="TreeView" />
-            </DisplayTreeProvider>
-          </div>
+          <DndSlot dndId={"publish"}>
+            <SidebarFileMenuPublish className="flex-shrink flex" />
+          </DndSlot>
+          <DndSlot dndId={"git"}>
+            <SidebarGitSection className="flex-shrink flex flex-col" />
+          </DndSlot>
+          <DndSlot dndId={"export"}>
+            <SidebarFileMenuExport className="flex-shrink flex" />
+          </DndSlot>
+          <DndSlot dndId={"treeview"}>
+            <div className="flex-shrink flex min-h-8">
+              <DisplayTreeProvider>
+                <TreeMenuSection id="TreeView" />
+              </DisplayTreeProvider>
+            </div>
+          </DndSlot>
 
-          <div dnd-id={dndId("trash")} className="min-h-8 flex-shrink flex">
-            <FileTreeMenuCtxProvider id="TrashFiles" currentWorkspace={currentWorkspace}>
-              <TrashSidebarFileMenuFileSection />
-            </FileTreeMenuCtxProvider>
-          </div>
+          <DndSlot dndId={"trash"}>
+            <div className="min-h-8 flex-shrink flex">
+              <FileTreeMenuCtxProvider id="TrashFiles" currentWorkspace={currentWorkspace}>
+                <TrashSidebarFileMenuFileSection />
+              </FileTreeMenuCtxProvider>
+            </div>
+          </DndSlot>
 
-          <div className="flex-shrink flex" dnd-id={dndId("files")}>
-            <FileTreeMenuCtxProvider id="MainFiles" currentWorkspace={currentWorkspace}>
-              <TreeExpanderProvider nodePaths={[]} id="MainFiles">
-                <MainSidebarFileMenuFileSection />
-              </TreeExpanderProvider>
-            </FileTreeMenuCtxProvider>
-          </div>
+          <DndSlot dndId={"files"}>
+            <div className="flex-shrink flex">
+              <FileTreeMenuCtxProvider id="MainFiles" currentWorkspace={currentWorkspace}>
+                <TreeExpanderProvider nodePaths={[]} id="MainFiles">
+                  <MainSidebarFileMenuFileSection />
+                </TreeExpanderProvider>
+              </FileTreeMenuCtxProvider>
+            </div>
+          </DndSlot>
         </SidebarDndList>
       </div>
     </SidebarGroup>

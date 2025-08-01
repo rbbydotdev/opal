@@ -128,7 +128,9 @@ export function EditHistoryMenu({
                     })}
                   >
                     <div className="flex w-full items-center justify-start text-left text-sm">
-                      {workspaceId && filePath ? <EditViewImage workspaceId={workspaceId} edit={EDIT} /> : null}
+                      {workspaceId && filePath ? (
+                        <EditViewImage className="w-12 h-12" workspaceId={workspaceId} edit={EDIT} />
+                      ) : null}
                       <div className="ml-4">
                         {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
                           <span className="mr-2 text-primary">{"•"}</span>

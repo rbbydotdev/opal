@@ -64,8 +64,8 @@ export const EditViewImage = ({
 }) => {
   const imageUrl = useIframeImagePooled({ edit, workspaceId, id: previewId({ workspaceId, editId: edit.id }) });
   return imageUrl !== null ? (
-    <img src={imageUrl} className={cn("w-32 h-32 object-contain border border-black", className)} alt="" />
+    <img src={imageUrl} className={cn("object-contain border border-black", className)} alt="" />
   ) : (
-    <div className={cn("w-32 h-32 border border-black", className)}></div>
+    <div className={cn("border border-black", className)}></div>
   );
 };

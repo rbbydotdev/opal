@@ -118,8 +118,7 @@ function SyncPullPushButtons() {
   );
 }
 
-// 5. Main Component
-export function SidebarFileMenuSync(props: React.ComponentProps<typeof SidebarGroup>) {
+export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const { repo, playbook, info, exists } = useWorkspaceRepo(currentWorkspace);
   const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
