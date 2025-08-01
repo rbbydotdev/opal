@@ -5,7 +5,6 @@ import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { useWorkspaceDocumentId } from "@/components/Editor/history/historyMarkdownFile";
-import { historyPlugin } from "@/components/Editor/history/historyPlugin";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
@@ -31,6 +30,7 @@ import {
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
+  useRemoteMDXEditorRealm,
 } from "@mdxeditor/editor";
 import { useEffect, useMemo } from "react";
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
@@ -102,9 +102,9 @@ export function useAllPlugins({
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
   const documentId = useWorkspaceDocumentId(String(initialContents || ""));
+  const realm = useRemoteMDXEditorRealm(realmId);
 
   const historyDB = useSnapHistoryDB();
-  // useEditHistoryPlugin2
 
   useEffect(() => {
     if (mimeType === "text/markdown") return;
@@ -124,8 +124,12 @@ export function useAllPlugins({
             ) : (
               <>
                 <EditHistoryMenu
+                  documentId={documentId}
+                  historyStorage={historyDB}
+                  rootMarkdown={String(initialContents ?? "")}
                   finalizeRestore={(md) => debouncedUpdate(md)}
                   disabled={mimeType !== "text/markdown"}
+                  realm={realm}
                 />
                 <LivePreviewButton disabled={mimeType !== "text/markdown"} />
                 <MdxSearchToolbar /> <KitchenSinkToolbar />
@@ -138,14 +142,14 @@ export function useAllPlugins({
         headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
         linkPlugin(),
         searchPlugin(),
-        isMarkdown
-          ? historyPlugin({
-              documentId,
-              workspaceId: currentWorkspace.id,
-              historyStorage: historyDB,
-              historyRoot: String(initialContents ?? ""),
-            })
-          : null,
+        // isMarkdown
+        //   ? historyPlugin({
+        //       documentId,
+        //       workspaceId: currentWorkspace.id,
+        //       historyStorage: historyDB,
+        //       historyRoot: String(initialContents ?? ""),
+        //     })
+        //   : null,
         linkDialogPlugin(),
         urlParamViewModePlugin({ type: "search" }),
         workspaceImagesPlugin,
@@ -169,13 +173,13 @@ export function useAllPlugins({
         markdownShortcutPlugin(),
       ].filter(Boolean),
     [
-      currentWorkspace.id,
       debouncedUpdate,
       documentId,
       historyDB,
       initialContents,
       isMarkdown,
       mimeType,
+      realm,
       realmId,
       workspaceImagesPlugin,
     ]

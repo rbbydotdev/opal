@@ -26,24 +26,17 @@ function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecor
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
     if (edit.preview === null) {
-      // const foundWorker = findWorker(id);
-      if (false) {
-        // void foundWorker.$p.promise.then(({ blob }) => {
-        //   setImageUrl(URL.createObjectURL(blob));
-        // });
-      } else {
-        let worker: ApiPoolWorker | null = NewComlinkSnapshotPoolWorker(
-          { editId: edit.edit_id, workspaceId, id },
-          async ({ blob }) => {
-            setImageUrl(URL.createObjectURL(blob));
-          }
-        );
-        void work(worker);
-        return () => {
-          flush();
-          worker = null;
-        };
-      }
+      let worker: ApiPoolWorker | null = NewComlinkSnapshotPoolWorker(
+        { editId: edit.edit_id, workspaceId, id },
+        async ({ blob }) => {
+          setImageUrl(URL.createObjectURL(blob));
+        }
+      );
+      void work(worker);
+      return () => {
+        flush();
+        worker = null;
+      };
     } else {
       setImageUrl(URL.createObjectURL(edit.preview));
     }

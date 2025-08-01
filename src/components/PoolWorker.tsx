@@ -120,7 +120,7 @@ class PoolManager<TResource extends Resource> {
           this.pool[availIdx] = null; // Free up the slot
           if (this.queue.length > 0) {
             return this.work(this.queue.shift()!);
-          } else {
+          } else if (this.resourcePool[availIdx]) {
             this.resourcePool[availIdx].terminate();
             this.resourcePool[availIdx] = null;
           }
