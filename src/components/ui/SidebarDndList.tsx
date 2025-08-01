@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 
 type SidebarDndListChildProps = React.HTMLAttributes<HTMLDivElement> & {
   onDrop?: React.DragEventHandler;
-  "dnd-id": string;
+  dndId: string;
   className?: string;
 };
 
@@ -20,7 +20,7 @@ export function SidebarDndList({
   const initialChildren = React.Children.toArray(children)
     .filter(React.isValidElement)
     .map((child) => child as React.ReactElement<SidebarDndListChildProps>);
-  const initialOrder = initialChildren.map((child) => child.props["dnd-id"]);
+  const initialOrder = initialChildren.map((child) => child.props["dndId"]);
 
   const [order, setOrder] = useState<string[]>(() => {
     const savedOrder = localStorage.getItem(storageKey);
@@ -45,7 +45,7 @@ export function SidebarDndList({
   const [dragging, setDragging] = useState<number | null>(null);
 
   // Always use latest children
-  const idToChild = Object.fromEntries(initialChildren.map((child) => [child.props["dnd-id"], child]));
+  const idToChild = Object.fromEntries(initialChildren.map((child) => [child.props["dndId"], child]));
 
   return order.map((id, index) => {
     const child = idToChild[id];

@@ -38,13 +38,19 @@ class HistoryEventEmitter extends EventEmitter {
   }
 }
 
-function timeout$(ms: number, warnMsg?: string): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (warnMsg) console.warn(warnMsg);
-      resolve(void 0);
-    }, ms);
-  });
+function timeout$(ms: number, warnMsg?: string): [Promise<void>, () => void] {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return [
+    new Promise((resolve) => {
+      timeoutId = setTimeout(() => {
+        if (warnMsg) console.warn(warnMsg);
+        resolve(void 0);
+      }, ms);
+    }),
+    () => {
+      clearTimeout(timeoutId);
+    },
+  ];
 }
 
 export class HistoryPlugin2 {
@@ -147,17 +153,16 @@ export class HistoryPlugin2 {
     });
     this.events.on(HistoryEvents.SELECTED_EDIT_MD, async (md) => {
       if (md !== null) {
-        await this.publishMuted(md);
+        await this.publishMuted(md, false);
       }
     });
 
     const debouncedMdUpdate = debounce(async (md: string) => {
       const saveScore = await this.historyStorage.getSaveThreshold(this.documentId, md);
-      // if (saveScore < this.saveThreshold) {
-      if (false) {
+      if (saveScore < this.saveThreshold) {
         return console.debug(`Skipping save for ${this.documentId} due to low score: ${saveScore}`);
       }
-      console.log(md);
+      // console.log(md);
       return this.saveNewEdit(md);
     }, this.debounceMs);
 
@@ -170,25 +175,22 @@ export class HistoryPlugin2 {
     return this;
   };
   setSelectedEdit = async (edit: HistoryDocRecord) => {
-    await this.transaction(async () => {
-      this.selectedEdit = edit;
-      const editDoc = await this.historyStorage.reconstructDocumentFromEdit(edit);
-      if (typeof editDoc !== "string") {
-        console.error("Reconstructed history document is not a string");
-        return;
-      }
-      this.$selectedEditMd = editDoc;
-    });
+    const editDoc = await this.historyStorage.reconstructDocumentFromEdit(edit);
+    if (typeof editDoc !== "string") {
+      console.error("Reconstructed history document is not a string");
+      return;
+    }
+    this.$selectedEdit = edit;
+    this.$selectedEditMd = editDoc;
   };
 
   private async publishMuted(md: string, anticipateOutsideUpdate = true) {
     return this.transaction(async () => {
       const $p = anticipateOutsideUpdate ? this.events.awaitEvent(HistoryEvents.OUTSIDE_MARKDOWN) : Promise.resolve();
+      const [$t, clear] = timeout$(1000, "markdown await external update timeout"); // if the editor does not update in time, we will warn and continue
       this.events.emit(HistoryEvents.INSIDE_MARKDOWN, md);
-      await Promise.race([
-        $p,
-        timeout$(1000, "markdown await external update timeout"), // if the editor does not update in time, we will warn and continue
-      ]);
+      await Promise.race([$p, $t]);
+      clear();
     });
   }
 
@@ -197,40 +199,40 @@ export class HistoryPlugin2 {
   };
 
   private async saveNewEdit(newMarkdown: string) {
-    const edits = await this.historyStorage.getEdits(this.documentId);
-    if (!edits.length) {
-      // If there are no edits yet, we can save the initial state as the first edit
-      const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, this.latestMarkdown);
+    await this.transaction(async () => {
+      const edits = await this.historyStorage.getEdits(this.documentId);
+      if (!edits.length) {
+        // If there are no edits yet, we can save the initial state as the first edit
+        const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, this.latestMarkdown);
+        if (newEdit) {
+          edits.unshift(newEdit); //Assuming ascending
+          this.$edits = edits;
+        } else {
+          console.error("Failed to save initial edit");
+        }
+      }
+      this.latestMarkdown = newMarkdown; //not $latestMarkdown to avoid loop
+      const headEdit = edits[0];
+      if (headEdit) {
+        if ((await this.historyStorage.reconstructDocumentFromEdit(headEdit)) === newMarkdown) {
+          return console.debug("Skipping redundant edit save");
+        }
+      }
+      const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, newMarkdown);
       if (newEdit) {
-        edits.unshift(newEdit); //Assuming ascending
+        edits.unshift(newEdit);
         this.$edits = edits;
       } else {
-        console.error("Failed to save initial edit");
+        console.error("Failed to save new edit");
       }
-    }
-    this.latestMarkdown = newMarkdown; //not $latestMarkdown to avoid loop
-    const headEdit = edits[0];
-    if (headEdit) {
-      if ((await this.historyStorage.reconstructDocumentFromEdit(headEdit)) === newMarkdown) {
-        return console.debug("Skipping redundant edit save");
-      }
-    }
-    const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, newMarkdown);
-    if (newEdit) {
-      edits.unshift(newEdit);
-      this.$edits = edits;
-    } else {
-      console.error("Failed to save new edit");
-    }
+    });
   }
 
-  clearAll = () => {
-    return this.transaction(async () => {
-      await this.historyStorage.clearAllEdits(this.documentId);
-      this.$edits = [];
-      this.selectedEdit = null;
-      this.selectedEditMd = null;
-    });
+  clearAll = async () => {
+    await this.historyStorage.clearAllEdits(this.documentId);
+    this.$edits = [];
+    this.$selectedEdit = null;
+    this.$selectedEditMd = null;
   };
 
   clearSelectedEdit = () => {
@@ -248,7 +250,7 @@ export class HistoryPlugin2 {
     this.$selectedEdit = null;
     this.$selectedEditMd = null;
     // this.events.emit(HistoryEvents.INSIDE_MARKDOWN, this.latestMarkdown);
-    return this.publishMuted(this.latestMarkdown);
+    return this.publishMuted(this.latestMarkdown, false);
   };
 
   private async transaction(fn: () => void) {
@@ -259,14 +261,12 @@ export class HistoryPlugin2 {
     });
   }
 
-  triggerSave = () => {
-    return this.transaction(async () => {
-      if (this.latestMarkdown) {
-        await this.saveNewEdit(this.latestMarkdown);
-      } else {
-        console.warn("No latest markdown to save");
-      }
-    });
+  triggerSave = async () => {
+    if (this.latestMarkdown) {
+      await this.saveNewEdit(this.latestMarkdown);
+    } else {
+      console.warn("No latest markdown to save");
+    }
   };
   setMarkdown = (md: string) => {
     this.events.emit(HistoryEvents.OUTSIDE_MARKDOWN, md);
