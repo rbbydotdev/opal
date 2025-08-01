@@ -1,0 +1,179 @@
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TooltipToast } from "@/components/ui/TooltipToast";
+import { GitPlaybook, Repo } from "@/features/git-repo/GitRepo";
+import { cn } from "@/lib/utils";
+import { Ellipsis, GitCommit, Plus, RotateCcw } from "lucide-react";
+import { useState } from "react";
+
+export function GitCommitManager({
+  commits,
+  setCurrentCommit,
+  currentCommit,
+}: {
+  commits: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
+  setCurrentCommit: (commitOid: string) => void;
+  currentCommit?: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  /* select commit */
+  return (
+    <CommitSelect
+      commits={commits}
+      value={currentCommit || commits[0]?.oid || ""}
+      onSelect={(value: string) => {
+        setCurrentCommit(value);
+      }}
+    >
+      <GitCommitMenuDropDown open={open} setOpen={setOpen}>
+        <DropdownMenuItem
+          onClick={() => {
+            // Future: Add commit functionality
+          }}
+          onSelect={() => {
+            // Future: Add commit functionality
+          }}
+        >
+          <Plus /> Add Commit
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            // Future: Reset to HEAD functionality
+            if (commits[0]) {
+              setCurrentCommit(commits[0].oid);
+            }
+          }}
+          onSelect={() => {
+            if (commits[0]) {
+              setCurrentCommit(commits[0].oid);
+            }
+          }}
+        >
+          <RotateCcw />
+          Reset to HEAD
+        </DropdownMenuItem>
+      </GitCommitMenuDropDown>
+    </CommitSelect>
+  );
+}
+
+const GitCommitMenuDropDown = ({
+  children,
+  open,
+  setOpen,
+}: {
+  children: React.ReactNode;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) => (
+  <DropdownMenu onOpenChange={setOpen} open={open}>
+    <DropdownMenuTrigger asChild>
+      <Button variant="outline" className="h-8" size="sm">
+        <Ellipsis />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end">{children}</DropdownMenuContent>
+  </DropdownMenu>
+);
+
+const CommitSelectPlaceHolder = (
+  <div className="w-full truncate flex items-center">
+    <GitCommit className="p-1 mr-2 stroke-ring" />
+    Commit
+  </div>
+);
+
+function CommitSelect({
+  className,
+  children,
+  commits,
+  onSelect,
+  value,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+  commits: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
+  onSelect: (value: string) => void;
+  value: string;
+}) {
+  const formatCommitMessage = (message: string, maxLength = 40) => {
+    const firstLine = message.split('\n')[0];
+    return firstLine.length > maxLength ? firstLine.substring(0, maxLength) + '...' : firstLine;
+  };
+
+  const formatCommitHash = (oid: string) => {
+    return oid.substring(0, 7);
+  };
+
+  return (
+    <div className="w-full flex items-center justify-between space-x-2">
+      <div className="w-full ">
+        <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
+          <SelectTrigger
+            className={cn(
+              className,
+              "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"
+            )}
+          >
+            <SelectValue className="w-full" placeholder={CommitSelectPlaceHolder} />
+          </SelectTrigger>
+          <SelectContent>
+            {commits.map((commitData) => (
+              <SelectItem key={commitData.oid} value={commitData.oid} className={"!text-xs"}>
+                <div className="flex gap-2 items-center justify-start">
+                  <GitCommit size={12} />
+                  <span className="font-mono text-muted-foreground">
+                    {formatCommitHash(commitData.oid)}
+                  </span>
+                  <span className="truncate">
+                    {formatCommitMessage(commitData.commit.message)}
+                  </span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+export function CommitManagerSection({
+  repo,
+  playbook,
+  commits = [],
+  currentCommit,
+  commitRef,
+}: {
+  repo: Repo;
+  playbook: GitPlaybook;
+  commits?: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
+  currentCommit?: string;
+  commitRef: React.RefObject<{ show: (text?: string) => void }>;
+}) {
+  if (!commits || commits.length === 0) return null;
+  
+  return (
+    <div className="px-4 w-full flex justify-center ">
+      <div className="flex flex-col items-center w-full">
+        <TooltipToast cmdRef={commitRef} durationMs={1000} sideOffset={0} />
+        <GitCommitManager
+          commits={commits}
+          currentCommit={currentCommit}
+          setCurrentCommit={(commitOid) => {
+            playbook.switchCommit(commitOid);
+            commitRef.current?.show("switched to commit");
+          }}
+        />
+      </div>
+    </div>
+  );
+}
