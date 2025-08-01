@@ -107,6 +107,7 @@ export const RepoDefaultInfo = {
   remotes: [] as GitRemote[],
   latestCommit: null as RepoLatestCommit | null,
   hasChanges: false,
+  commitHistory: [] as Array<{ oid: string; commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } } }>,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
 //--------------------------
@@ -281,6 +282,7 @@ export class Repo {
       remotes: await this.getRemotes(),
       latestCommit: await this.getLatestCommit(),
       hasChanges: await this.hasChanges(),
+      commitHistory: await this.getCommitHistory({ depth: 20 }),
     };
   }
 
@@ -336,6 +338,29 @@ export class Repo {
       message: commit.commit.message,
       author: commit.commit.author,
     };
+  };
+
+  getCommitHistory = async (options?: { 
+    depth?: number; 
+    ref?: string; 
+    filepath?: string 
+  }): Promise<Array<{ oid: string; commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } } }>> => {
+    if (!(await this.exists())) return [];
+    
+    try {
+      const commits = await this.git.log({
+        fs: this.fs,
+        dir: this.dir,
+        depth: options?.depth || 20, // Default to 20 commits
+        ref: options?.ref || 'HEAD',
+        filepath: options?.filepath, // Optional: get history for specific file
+      });
+      
+      return commits;
+    } catch (error) {
+      console.error('Error fetching commit history:', error);
+      return [];
+    }
   };
 
   mustBeInitialized = async (): Promise<boolean> => {
@@ -482,6 +507,7 @@ export class Repo {
 const SYSTEM_COMMITS = {
   COMMIT: "opal@COMMIT",
   SWITCH_BRANCH: "opal@SWITCH_BRANCH",
+  SWITCH_COMMIT: "opal@SWITCH_COMMIT",
   INIT: "opal@INIT",
   PREPUSH: "opal@PREPUSH",
 };
@@ -549,6 +575,21 @@ export class GitPlaybook {
       });
     }
     await this.repo.checkoutBranch(branchName);
+    return true;
+  };
+
+  switchCommit = async (commitOid: string) => {
+    if (await this.repo.hasChanges()) {
+      await this.addCommit({
+        message: SYSTEM_COMMITS.SWITCH_COMMIT,
+      });
+    }
+    await this.repo.git.checkout({
+      fs: this.repo.fs,
+      dir: this.repo.dir,
+      ref: commitOid,
+      force: true,
+    });
     return true;
   };
   async addCommit({

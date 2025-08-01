@@ -15,6 +15,7 @@ import React from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
 import { BranchManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
+import { CommitManagerSection } from "@/components/SidebarFileMenu/sync-section/GitCommitManager";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -126,6 +127,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: commitRef } = useTooltipToastCmd();
   const { cmdRef: remoteRef } = useTooltipToastCmd();
   const { cmdRef: branchRef } = useTooltipToastCmd();
+  const { cmdRef: commitManagerRef } = useTooltipToastCmd();
 
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
@@ -180,6 +182,13 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   defaultBranch={info.currentBranch || repo.defaultBranch}
                   branches={info.branches}
                   branchRef={branchRef}
+                />
+                <CommitManagerSection
+                  repo={repo}
+                  playbook={playbook}
+                  commits={info.commitHistory}
+                  currentCommit={info.latestCommit?.oid}
+                  commitRef={commitManagerRef}
                 />
                 <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
                 <SyncPullPushButtons />
