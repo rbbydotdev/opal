@@ -1,7 +1,6 @@
 // EditHistoryMenu.tsx;
-import { MainEditorRealmId } from "@/components/Editor/EditorConst";
 import { EditViewImage } from "@/components/Editor/history/EditViewImage";
-import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
+import { useEditHistoryPlugin2 } from "@/components/Editor/history/useEditHistory";
 import { useSelectedItemScroll } from "@/components/Editor/history/useSelectedItemScroll";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,31 +12,55 @@ import {
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
-import { HistoryDocRecord, useSnapHistoryDB, useSnapHistoryPendingSave } from "@/Db/HistoryDAO";
+import {
+  HistoryDocRecord,
+  HistoryStorageInterface,
+  useSnapHistoryDB,
+  useSnapHistoryPendingSave,
+} from "@/Db/HistoryDAO";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
-import { useRemoteMDXEditorRealm } from "@mdxeditor/editor";
+import { Realm } from "@mdxeditor/editor";
 import { ChevronDown, History } from "lucide-react";
 import { useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export function EditHistoryMenu({
-  realmId = MainEditorRealmId,
   finalizeRestore,
   disabled,
+  documentId,
+  historyStorage,
+  rootMarkdown,
+  realm,
 }: {
-  realmId?: string;
   finalizeRestore: (md: string) => void;
   disabled?: boolean;
+  documentId: string;
+  historyStorage: HistoryStorageInterface;
+  rootMarkdown: string;
+  realm: Realm | undefined;
 }) {
-  const realm = useRemoteMDXEditorRealm(realmId);
-  const { edits, selectedEdit, setEdit, reset, clearAll, triggerSave, isRestoreState, selectedEditMd } =
-    useEditHistoryPlugin(realm);
+  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
+  const {
+    edits,
+    selectedEdit,
+    setEdit,
+    rebaseHistory,
+    resetAndRestore,
+    clearAll,
+    triggerSave,
+    isRestoreState,
+    selectedEditMd,
+  } = useEditHistoryPlugin2({
+    workspaceId: workspaceId!,
+    documentId,
+    historyStorage,
+    rootMarkdown,
+    realm,
+  });
   const historyDB = useSnapHistoryDB();
   const pendingSave = useSnapHistoryPendingSave({ historyDB });
-  // const [timeAgoStr, setTimeAgoStr] = useState("");
   const [isOpen, setOpen] = useState(false);
-  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
 
   const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
@@ -69,7 +92,7 @@ export function EditHistoryMenu({
                 variant={"secondary"}
                 size="default"
                 onClick={() => {
-                  clearAll();
+                  void clearAll();
                   setOpen(false);
                 }}
                 className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
@@ -99,12 +122,6 @@ export function EditHistoryMenu({
                 <div key={EDIT.edit_id}>
                   <DropdownMenuItem
                     ref={selectedEdit?.edit_id === EDIT.edit_id ? updateSelectedItemRef : null}
-                    // ref={selectedEdit?.edit_id === EDIT.edit_id ? selectedItemCallbackRef : null}
-                    // ref={(el) => {
-                    //   if (selectedEdit?.edit_id && selectedEdit.edit_id === EDIT.edit_id) {
-                    //     selectedItemRef.current = el as HTMLDivElement;
-                    //   }
-                    // }}
                     onSelect={() => setEdit(EDIT)}
                     className={cn("h-auto cursor-pointer p-1 py-2 focus:bg-sidebar-accent", {
                       "bg-sidebar-accent": selectedEdit && selectedEdit.edit_id === EDIT.edit_id,
@@ -140,7 +157,7 @@ export function EditHistoryMenu({
           <button
             onClick={() => {
               finalizeRestore(selectedEditMd!);
-              setEdit(null);
+              rebaseHistory(selectedEditMd!);
             }}
             className="font-bold rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary border-ring hover:bg-primary hover:text-primary-foreground"
           >
@@ -148,7 +165,7 @@ export function EditHistoryMenu({
           </button>
           <button
             onClick={() => {
-              reset();
+              void resetAndRestore();
             }}
             className="font-bold rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
           >

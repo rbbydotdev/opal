@@ -417,6 +417,7 @@ export abstract class Disk {
   }
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
+    console.log(nodes);
     if (nodes.length === 0) return [];
     const results: RenameFileType[] = [];
     for (const [oldNode, newNode] of nodes) {
@@ -426,6 +427,7 @@ export abstract class Disk {
         newNode instanceof TreeNode ? newNode.path : newNode,
         oldNode.type
       );
+      console.log(result);
       results.push(result);
     }
     return this.broadcastRename(results);

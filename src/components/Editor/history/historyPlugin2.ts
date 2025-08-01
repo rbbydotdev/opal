@@ -12,25 +12,43 @@ const HistoryEvents = {
   EDITS: "edits",
 } as const;
 
-type HistoryEventTypes = typeof HistoryEvents;
-
-class HistoryEventEmmiter extends EventEmitter {
-  constructor() {
-    super();
-  }
-  on(event: HistoryEventTypes["EDITS"], callback: (edits: HistoryDocRecord[]) => void): this;
-  on(event: HistoryEventTypes["SELECTED_EDIT"], callback: (edit: HistoryDocRecord) => void): this;
-  on(event: HistoryEventTypes["SELECTED_EDIT_MD"], callback: (md: string) => void): this;
-  on(event: HistoryEventTypes["INSIDE_MARKDOWN"], callback: (md: string) => void): this;
-  on(event: HistoryEventTypes["OUTSIDE_MARKDOWN"], callback: (md: string) => void): this;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on(event: string, callback: (...args: any[]) => void): this {
+type HistoryEventMap = {
+  [HistoryEvents.INSIDE_MARKDOWN]: [md: string];
+  [HistoryEvents.OUTSIDE_MARKDOWN]: [md: string];
+  [HistoryEvents.SELECTED_EDIT_MD]: [md: string | null];
+  [HistoryEvents.SELECTED_EDIT]: [edit: HistoryDocRecord | null];
+  [HistoryEvents.EDITS]: [edits: HistoryDocRecord[]];
+};
+class HistoryEventEmitter extends EventEmitter {
+  on<K extends keyof HistoryEventMap>(event: K, callback: (...args: HistoryEventMap[K]) => void): this {
     return super.on(event, callback);
+  }
+  awaitEvent<K extends keyof HistoryEventMap>(event: K): Promise<HistoryEventMap[K]> {
+    return new Promise((resolve) => {
+      const handler = (...args: HistoryEventMap[K]) => {
+        this.off(event, handler);
+        resolve(args);
+      };
+      this.on(event, handler);
+    });
+  }
+
+  emit<K extends keyof HistoryEventMap>(event: K, ...args: HistoryEventMap[K]): boolean {
+    return super.emit(event, ...args);
   }
 }
 
+function timeout$(ms: number, warnMsg?: string): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (warnMsg) console.warn(warnMsg);
+      resolve(void 0);
+    }, ms);
+  });
+}
+
 export class HistoryPlugin2 {
-  private events = new HistoryEventEmmiter();
+  private events = new HistoryEventEmitter();
   readonly workspaceId: string;
   readonly documentId: string;
   readonly historyStorage: HistoryStorageInterface;
@@ -41,22 +59,27 @@ export class HistoryPlugin2 {
   private selectedEditMd: string | null = null;
   private selectedEdit: HistoryDocRecord | null = null;
   private saveThreshold = 0.7;
-  private debounceMs = 5_000;
+  private debounceMs = 2_000;
   private edits: HistoryDocRecord[] = [];
 
+  private eventId = 0;
+
   set $edits(edits: HistoryDocRecord[]) {
+    // console.debug(`Setting edits for ${this.documentId}`, edits.length);
+    this.eventId++;
     this.edits = edits;
     this.events.emit(HistoryEvents.EDITS, edits);
   }
+
   set $selectedEdit(edit: HistoryDocRecord | null) {
+    // console.debug(`Setting selected edit for ${this.documentId}`, edit?.id ?? "null");
+    this.eventId++;
     this.selectedEdit = edit;
     this.events.emit(HistoryEvents.SELECTED_EDIT, edit);
   }
-  set $latestMarkdown(md: string) {
-    this.latestMarkdown = md;
-    this.events.emit(HistoryEvents.INSIDE_MARKDOWN, md);
-  }
   set $selectedEditMd(md: string | null) {
+    // console.debug(`Setting selected edit markdown for ${this.documentId}`, md ?? "null");
+    this.eventId++;
     this.selectedEditMd = md;
     this.events.emit(HistoryEvents.SELECTED_EDIT_MD, md);
   }
@@ -77,14 +100,25 @@ export class HistoryPlugin2 {
     this.historyStorage = historyStorage;
     this.rootMarkdown = rootMarkdown;
     this.latestMarkdown = rootMarkdown;
-    this.selectedEditMd = rootMarkdown;
+    this.selectedEditMd = null;
   }
+  private lastState: {
+    edits: HistoryDocRecord[];
+    selectedEdit: HistoryDocRecord | null;
+    selectedEditMd: string | null;
+  } | null = null;
+
+  private lastEventId = -1;
   getState = () => {
-    return {
-      edits: this.edits,
-      selectedEdit: this.selectedEdit,
-      selectedEditMd: this.selectedEditMd,
-    };
+    if (this.eventId !== this.lastEventId || !this.lastState) {
+      this.lastEventId = this.eventId;
+      return (this.lastState = {
+        edits: this.edits,
+        selectedEdit: this.selectedEdit,
+        selectedEditMd: this.selectedEditMd,
+      });
+    }
+    return this.lastState;
   };
   // state:
   onStateUpdate = (cb: () => void) => {
@@ -97,51 +131,70 @@ export class HistoryPlugin2 {
       this.events.off(HistoryEvents.SELECTED_EDIT_MD, cb);
     };
   };
-  init() {
+  init = () => {
     void this.historyStorage.getEdits(this.documentId).then(async (edits) => {
       //emit latest edits to start
+      this.$edits = edits;
+    });
+    void this.historyStorage.onUpdate(this.documentId, async (edits) => {
+      //watch for latest ids
       this.$edits = edits;
     });
 
     this.events.on(HistoryEvents.OUTSIDE_MARKDOWN, () => {
       //on editor change de-select edit by setting to null
-      if (this.selectedEdit && !this.muteChange) void this.setSelectedEdit(null);
+      if (this.selectedEdit && !this.muteChange) this.clearSelectedEdit();
+    });
+    this.events.on(HistoryEvents.SELECTED_EDIT_MD, async (md) => {
+      if (md !== null) {
+        await this.publishMuted(md);
+      }
     });
 
     const debouncedMdUpdate = debounce(async (md: string) => {
       const saveScore = await this.historyStorage.getSaveThreshold(this.documentId, md);
-      if (saveScore < this.saveThreshold) {
+      // if (saveScore < this.saveThreshold) {
+      if (false) {
         return console.debug(`Skipping save for ${this.documentId} due to low score: ${saveScore}`);
       }
+      console.log(md);
       return this.saveNewEdit(md);
     }, this.debounceMs);
+
     this.events.on(HistoryEvents.OUTSIDE_MARKDOWN, (md) => {
       //attempt to determine the editor change was done by the user
       const editorInFocus = Boolean(document.activeElement?.closest(MdxEditorSelector));
       if (!this.muteChange && editorInFocus) debouncedMdUpdate(md);
     });
-  }
-  async setSelectedEdit(edit: HistoryDocRecord | null) {
+
+    return this;
+  };
+  setSelectedEdit = async (edit: HistoryDocRecord) => {
     await this.transaction(async () => {
       this.selectedEdit = edit;
-      if (edit) {
-        const editDoc = await this.historyStorage.reconstructDocumentFromEdit(edit);
-        if (typeof editDoc !== "string") {
-          console.error("Reconstructed history document is not a string");
-          return;
-        }
-        this.$latestMarkdown = editDoc;
-        this.$selectedEditMd = editDoc;
-      } else {
-        this.$selectedEditMd = null;
+      const editDoc = await this.historyStorage.reconstructDocumentFromEdit(edit);
+      if (typeof editDoc !== "string") {
+        console.error("Reconstructed history document is not a string");
+        return;
       }
-      this.$selectedEdit = edit;
+      this.$selectedEditMd = editDoc;
+    });
+  };
+
+  private async publishMuted(md: string, anticipateOutsideUpdate = true) {
+    return this.transaction(async () => {
+      const $p = anticipateOutsideUpdate ? this.events.awaitEvent(HistoryEvents.OUTSIDE_MARKDOWN) : Promise.resolve();
+      this.events.emit(HistoryEvents.INSIDE_MARKDOWN, md);
+      await Promise.race([
+        $p,
+        timeout$(1000, "markdown await external update timeout"), // if the editor does not update in time, we will warn and continue
+      ]);
     });
   }
 
-  teardown() {
+  teardown = () => {
     this.events.removeAllListeners();
-  }
+  };
 
   private async saveNewEdit(newMarkdown: string) {
     const edits = await this.historyStorage.getEdits(this.documentId);
@@ -149,7 +202,7 @@ export class HistoryPlugin2 {
       // If there are no edits yet, we can save the initial state as the first edit
       const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, this.latestMarkdown);
       if (newEdit) {
-        edits.push(newEdit); //Assuming ascending
+        edits.unshift(newEdit); //Assuming ascending
         this.$edits = edits;
       } else {
         console.error("Failed to save initial edit");
@@ -164,31 +217,39 @@ export class HistoryPlugin2 {
     }
     const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, newMarkdown);
     if (newEdit) {
-      edits.push(newEdit);
+      edits.unshift(newEdit);
       this.$edits = edits;
     } else {
       console.error("Failed to save new edit");
     }
   }
 
-  clearAll() {
+  clearAll = () => {
     return this.transaction(async () => {
       await this.historyStorage.clearAllEdits(this.documentId);
       this.$edits = [];
-      return this.resetToStartingMarkdown();
+      this.selectedEdit = null;
+      this.selectedEditMd = null;
     });
-  }
+  };
 
-  private resetToStartingMarkdown() {
-    //for the edit to go from from edit markdown to latest markdown
-    return this.transaction(() => {
-      this.events.emit(HistoryEvents.INSIDE_MARKDOWN, this.latestMarkdown);
-    });
-  }
-  async reset() {
-    await this.resetToStartingMarkdown();
-    return this.setSelectedEdit(null);
-  }
+  clearSelectedEdit = () => {
+    this.$selectedEdit = null;
+    this.$selectedEditMd = null;
+  };
+
+  rebaseHistory = (md: string) => {
+    this.$selectedEdit = null;
+    this.$selectedEditMd = null;
+    this.latestMarkdown = md;
+  };
+
+  resetAndRestore = () => {
+    this.$selectedEdit = null;
+    this.$selectedEditMd = null;
+    // this.events.emit(HistoryEvents.INSIDE_MARKDOWN, this.latestMarkdown);
+    return this.publishMuted(this.latestMarkdown);
+  };
 
   private async transaction(fn: () => void) {
     return this.mutex.runExclusive(async () => {
@@ -198,23 +259,22 @@ export class HistoryPlugin2 {
     });
   }
 
-  triggerSave() {
+  triggerSave = () => {
     return this.transaction(async () => {
-      const latestMarkdown = this.latestMarkdown;
-      if (latestMarkdown) {
-        await this.saveNewEdit(latestMarkdown);
+      if (this.latestMarkdown) {
+        await this.saveNewEdit(this.latestMarkdown);
       } else {
         console.warn("No latest markdown to save");
       }
     });
-  }
-  setMarkdown(md: string) {
+  };
+  setMarkdown = (md: string) => {
     this.events.emit(HistoryEvents.OUTSIDE_MARKDOWN, md);
-  }
-  handleMarkdown(callback: (md: string) => void) {
+  };
+  handleMarkdown = (callback: (md: string) => void) => {
     this.events.on(HistoryEvents.INSIDE_MARKDOWN, callback);
-  }
-  handleSelectedEdit(callback: (edit: HistoryDocRecord | null) => void) {
+  };
+  handleSelectedEdit = (callback: (edit: HistoryDocRecord | null) => void) => {
     this.events.on(HistoryEvents.SELECTED_EDIT, callback);
-  }
+  };
 }
