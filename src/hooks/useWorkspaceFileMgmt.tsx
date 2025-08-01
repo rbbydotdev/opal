@@ -4,7 +4,7 @@ import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
-import { setFrontmatter } from "@/lib/markdown/getMarkdownData";
+import { setFrontmatter } from "@/lib/markdown/frontMatter";
 import {
   AbsPath,
   RelPath,

@@ -1,9 +1,10 @@
 "use client";
 import { HistoryDAO } from "@/Db/HistoryDAO";
+import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { snapdom } from "@zumer/snapdom";
 import * as Comlink from "comlink";
-// import "github-markdown-css/github-markdown-light.css";
+import "github-markdown-css/github-markdown-light.css";
 
 async function snapshot(target: HTMLElement) {
   const images = Array.from(target.querySelectorAll("img"));
@@ -42,7 +43,7 @@ async function snapshot(target: HTMLElement) {
 
 const PreviewWorkerApi = {
   async renderFromMarkdownAndSnapshot(markdownContent: string) {
-    const html = renderMarkdownToHtml(markdownContent);
+    const html = renderMarkdownToHtml(stripFrontmatter(markdownContent));
     const target = document.getElementById("render-target");
     if (!target) {
       throw new Error("Render target element not found.");

@@ -1,5 +1,5 @@
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
-import { getMarkdownData } from "@/lib/markdown/getMarkdownData";
+import { getMarkdownData } from "@/lib/markdown/frontMatter";
 import { absPath, joinPath } from "@/lib/paths2";
 
 export function useWorkspaceDocumentId(contents: string | null) {

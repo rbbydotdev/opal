@@ -1,4 +1,4 @@
-import { setFrontmatter } from "@/lib/markdown/getMarkdownData";
+import { setFrontmatter } from "@/lib/markdown/frontMatter";
 import { nanoid } from "nanoid";
 
 export const DOC_ID_IDENTIFIER = "documentId";
