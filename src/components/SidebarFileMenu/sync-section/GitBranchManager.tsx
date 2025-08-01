@@ -331,6 +331,7 @@ function GitBranchInput({
         onBlur={(_e) => {
           handleCancel();
         }}
+        autoComplete="off"
         onKeyDown={(e) => {
           if (e.key === "Escape") handleCancel();
         }}

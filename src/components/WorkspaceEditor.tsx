@@ -4,7 +4,6 @@ import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
-import { useWorkspaceDocumentId } from "@/components/Editor/history/historyMarkdownFile";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { ImageViewer } from "@/components/ImageViewer";
 import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
@@ -28,6 +27,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, Suspense, use, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
+import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
 interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
   currentWorkspace: Workspace;

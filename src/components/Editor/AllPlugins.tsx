@@ -4,7 +4,6 @@ import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelec
 import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
-import { useWorkspaceDocumentId } from "@/components/Editor/history/historyMarkdownFile";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
@@ -33,6 +32,7 @@ import {
   useRemoteMDXEditorRealm,
 } from "@mdxeditor/editor";
 import { useEffect, useMemo } from "react";
+import { useWorkspaceDocumentId } from "./history/useWorkspaceDocumentId";
 const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
 
 const defaultSnippetContent = `
