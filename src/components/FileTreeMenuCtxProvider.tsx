@@ -1,7 +1,7 @@
 "use client";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, dirname } from "@/lib/paths2";
+import { absPath, AbsPath, dirname } from "@/lib/paths2";
 import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
 
@@ -12,7 +12,9 @@ export const FileTreeMenuCtx = React.createContext<{
   resetEditing: () => void;
   highlightDragover: (menuItem: TreeNode) => boolean;
   setDragOver: (node: TreeNode | null) => void;
+  scopedTreeNode: TreeNode;
   dragOver: TreeNode | null;
+
   setFileTreeCtx: React.Dispatch<
     React.SetStateAction<{
       editing: AbsPath | null;
@@ -43,20 +45,42 @@ type EditType = "rename" | "new" | "duplicate";
 
 export const FILE_TREE_MENUS = ["TrashFiles", "MainFiles"] as const;
 export type FILE_TREE_MENUS_TYPE = (typeof FILE_TREE_MENUS)[number];
+
+// filterFromRangeSelect={SpecialDirs.allSpecialDirsExcept(SpecialDirs.Trash)}
 export const FileTreeMenuCtxProvider = ({
   children,
   id,
   currentWorkspace,
+  scope,
+  filter,
 }: {
   id: (typeof FILE_TREE_MENUS)[number];
   children: React.ReactNode;
   currentWorkspace: Workspace;
+  scope?: AbsPath;
+  filter?: ((node: TreeNode) => boolean) | AbsPath[];
 }) => {
   const pathname = usePathname();
+
+  const filteredTree = useMemo(() => {
+    if (typeof filter === "undefined") return null;
+    if (Array.isArray(filter)) {
+      return (node: TreeNode) => filter.includes(node.path);
+    }
+    return filter;
+  }, [filter]);
   const { filePath } = Workspace.parseWorkspacePath(pathname);
   const [dragOver, setDragOver] = useState<TreeNode | null>(null);
   const [draggingNode, setDraggingNode] = useState<TreeNode | null>(null);
   const [draggingNodes, setDraggingNodes] = useState<TreeNode[]>([]);
+
+  const scopedTreeNode = useMemo(
+    () =>
+      typeof scope === "undefined"
+        ? currentWorkspace.nodeFromPath(absPath("/"))!
+        : currentWorkspace.nodeFromPath(scope)!,
+    [currentWorkspace, scope]
+  );
 
   const [fileTreeCtx, setFileTreeCtx] = useState<{
     editing: AbsPath | null;
@@ -140,6 +164,7 @@ export const FileTreeMenuCtxProvider = ({
         id,
         selectedRange,
         setFileTreeCtx,
+        scopedTreeNode,
         dragOver,
         setDragOver,
         setDraggingNode,

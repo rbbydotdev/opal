@@ -101,8 +101,11 @@ export function useAllPlugins({
   const { isMarkdown } = useCurrentFilepath();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
+  //TODO heal documentId or prevent erasure
   const documentId = useWorkspaceDocumentId(String(initialContents || ""));
   const realm = useRemoteMDXEditorRealm(realmId);
+  // realm?.getValue(markdown$)
+  // realm?.getValue(markdownSourceEditorValue$)
 
   const historyDB = useSnapHistoryDB();
 

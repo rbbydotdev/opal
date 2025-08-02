@@ -133,7 +133,7 @@ export class FileTree {
     await this.index();
   }
 
-  async *recurseTree(
+  private async *recurseTree(
     parent: TreeDir = this.root,
     depth = 0,
     haltOnError = false

@@ -33,11 +33,7 @@ import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "../ui/sideb
 import { SidebarDndList } from "../ui/SidebarDndList";
 
 function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
-  return (
-    <Slot dnd-id={dndId} {...rest}>
-      {children}
-    </Slot>
-  );
+  return <Slot {...rest}>{children}</Slot>;
 }
 const dndSections = ["publish", "git", "export", "trash", "files", "treeview"];
 type DndSectionType = "publish" | "git" | "export" | "trash" | "files" | "treeview";

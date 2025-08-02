@@ -155,7 +155,7 @@ export function CommitManagerSection({
           resetToHead={playbook.resetToHead}
           setCurrentCommit={async (commitOid) => {
             await playbook.switchCommit(commitOid);
-            commitRef.current?.show("switched to commit");
+            //  commitRef.current?.show("switched to commit");
           }}
         />
       </div>

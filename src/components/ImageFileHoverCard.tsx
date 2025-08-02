@@ -1,7 +1,16 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 import React from "react";
 
-export function ImageFileHoverCard({ children, fallbackSrc }: { children: React.ReactNode; fallbackSrc?: string }) {
+export function ImageFileHoverCard({
+  children,
+  fallbackSrc,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  fallbackSrc?: string;
+}) {
   // Ensure children is a single React element and is an <img>
   if (!React.isValidElement(children) || children.type !== "img") {
     throw new Error("ImageFileHoverCard expects a single <img> element as its child.");
@@ -16,7 +25,7 @@ export function ImageFileHoverCard({ children, fallbackSrc }: { children: React.
       <HoverCardContent
         side="right"
         // sideOffset={20}
-        className="p-2 bg-white border border-gray-200 shadow-lg rounded w-32 h-32 relative "
+        className={cn("p-2 bg-white border border-gray-200 shadow-lg rounded w-32 h-32 relative", className)}
         style={{ boxShadow: "0 4px 12px 0 hsl(var(--foreground))" }}
       >
         {/* Triangle edge pointing left */}
@@ -33,7 +42,7 @@ export function ImageFileHoverCard({ children, fallbackSrc }: { children: React.
             borderRight: "22px solid white",
           }}
         /> */}
-        <img src={finalSrc} alt="Image preview" className="object-cover w-full h-full" />
+        <img src={finalSrc} alt="Image preview" className="object-cover w-full h-full border border-black" />
       </HoverCardContent>
     </HoverCard>
   );

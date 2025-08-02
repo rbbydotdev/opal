@@ -26,7 +26,7 @@ async function snapshot(target: HTMLElement) {
   const capture = await snapdom.capture(target, {});
   const canvas = await capture.toCanvas();
 
-  const scale = parseFloat((1 / 8).toFixed(4));
+  const scale = parseFloat((1 / 4).toFixed(4));
   const scaledCanvas = document.createElement("canvas");
   scaledCanvas.width = canvas.width * scale;
   scaledCanvas.height = canvas.height * scale;

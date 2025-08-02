@@ -9,11 +9,11 @@ export const TreeExpanderContext = createContext<TreeExpanderContextType | undef
 export function TreeExpanderProvider({
   children,
   id,
-  nodePaths,
+  nodePaths = [],
 }: {
   children: ReactNode;
   id: string;
-  nodePaths: string[];
+  nodePaths?: string[];
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const expanderId = currentWorkspace.id + "/" + id;
