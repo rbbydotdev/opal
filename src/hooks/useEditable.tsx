@@ -49,7 +49,6 @@ export function useEditable<T extends TreeFile | TreeDir>({
     if (isCurrentPath && !isEditing && linkRef.current) {
       setTimeout(() => {
         if (linkRef.current && document.activeElement !== linkRef.current) {
-          // console.log(document.activeElement, "focus on linkRef");
           linkRef.current?.focus();
         }
       }, 0);
@@ -80,6 +79,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
       e.stopPropagation();
       const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
       const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode!) ?? [];
+      console.log(range);
       setFileTreeCtx({
         editing: null,
         editType: null,

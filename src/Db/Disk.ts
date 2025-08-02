@@ -161,6 +161,8 @@ export abstract class Disk {
   mutex = new Mutex();
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
+  //rename log
+  //delete log
 
   constructor(
     public readonly guid: string,
@@ -201,7 +203,12 @@ export abstract class Disk {
     };
   }
 
-  fileTreeIndex = async ({
+  triggerIndex = async () => {
+    await this.fileTreeIndex();
+    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+  };
+
+  private fileTreeIndex = async ({
     writeIndexCache = true,
   }: {
     writeIndexCache?: boolean;
@@ -417,7 +424,6 @@ export abstract class Disk {
   }
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
-    console.log(nodes);
     if (nodes.length === 0) return [];
     const results: RenameFileType[] = [];
     for (const [oldNode, newNode] of nodes) {
@@ -427,7 +433,6 @@ export abstract class Disk {
         newNode instanceof TreeNode ? newNode.path : newNode,
         oldNode.type
       );
-      console.log(result);
       results.push(result);
     }
     return this.broadcastRename(results);
@@ -548,6 +553,7 @@ export abstract class Disk {
   private async quietRemove(filePath: AbsPath) {
     await this.ready;
     try {
+      //TODO: run clean up for file ? like document id etc?
       await this.fs.unlink(encodePath(filePath));
     } catch (err) {
       if (isErrorWithCode(err, "ENOENT")) {

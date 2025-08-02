@@ -1,8 +1,18 @@
 import { HistoryPlugin2 } from "@/components/Editor/history/historyPlugin2";
+import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { HistoryStorageInterface } from "@/Db/HistoryDAO";
-import { markdown$, markdownSourceEditorValue$, Realm, setMarkdown$ } from "@mdxeditor/editor";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { Cell, markdown$, markdownSourceEditorValue$, Realm, setMarkdown$ } from "@mdxeditor/editor";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 
+const allMarkdown$ = Cell("", (realm) => {
+  realm.sub(markdown$, (md) => {
+    realm.pub(allMarkdown$, md);
+  });
+  realm.sub(markdownSourceEditorValue$, (md) => {
+    realm.pub(allMarkdown$, md);
+  });
+  realm.pub(allMarkdown$, realm.getValue(markdown$));
+});
 export function useEditHistoryPlugin2({
   workspaceId,
   documentId,
@@ -23,8 +33,7 @@ export function useEditHistoryPlugin2({
   useEffect(() => {
     if (realm) {
       history.init();
-      realm.singletonSub(markdown$, history.setMarkdown);
-      realm.singletonSub(markdownSourceEditorValue$, history.setMarkdown);
+      realm.singletonSub(allMarkdown$, history.setMarkdown);
       history.handleMarkdown((md) => realm.pub(setMarkdown$, md));
     }
     return () => {
@@ -34,11 +43,20 @@ export function useEditHistoryPlugin2({
   const { edits, selectedEdit, selectedEditMd } = useSyncExternalStore(history.onStateUpdate, history.getState);
   const isRestoreState = selectedEditMd !== null; // && (selectedEditMd ?? "") === (editorMd ?? "");
 
+  const allMd = useCellValueForRealm(allMarkdown$, realm);
+  const triggerSave = useCallback(() => {
+    if (allMd) {
+      void history.triggerSave(allMd);
+    } else {
+      console.warn("attempt to trigger save when allMd is null");
+    }
+  }, [history, allMd]);
+
   return {
     edits: edits ?? [],
     selectedEdit: isRestoreState ? selectedEdit : null,
     selectedEditMd,
-    triggerSave: history.triggerSave,
+    triggerSave: triggerSave,
     clearSelectedEdit: history.clearSelectedEdit,
     resetAndRestore: history.resetAndRestore,
     rebaseHistory: history.rebaseHistory,

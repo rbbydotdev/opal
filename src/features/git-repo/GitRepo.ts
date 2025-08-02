@@ -190,6 +190,9 @@ export class Repo {
       }
     );
   }
+  getInfo = () => {
+    return this.info;
+  };
 
   gitListener(cb: () => void) {
     return this.local.on(RepoEvents.GIT, cb);
@@ -301,8 +304,13 @@ export class Repo {
 
   hasChanges = async (): Promise<boolean> => {
     if (!(await this.exists())) return false;
-    const matrix = await git.statusMatrix({ fs: this.fs, dir: this.dir });
-    return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
+    try {
+      const matrix = await git.statusMatrix({ fs: this.fs, dir: this.dir });
+      return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
+    } catch (error) {
+      console.error("Error checking for changes:", error);
+      return true;
+    }
   };
 
   getBranches = async (): Promise<string[]> => {

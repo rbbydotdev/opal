@@ -73,7 +73,7 @@ export function EditHistoryMenu({
     >
       <DropdownMenu open={isOpen} onOpenChange={setOpen}>
         <div className="h-full absolute left-4 flex justify-center items-center">
-          <button className="fill-primary-foreground text-4xl leading-4 group" onClick={() => triggerSave()}>
+          <button className="fill-primary-foreground text-4xl leading-4 group" onClick={triggerSave}>
             <HistoryStatus selectedEdit={selectedEdit} pendingSave={pendingSave} />
           </button>
         </div>
@@ -182,14 +182,14 @@ export function EditHistoryMenu({
 function HistoryStatus({ selectedEdit, pendingSave }: { selectedEdit: HistoryDocRecord | null; pendingSave: boolean }) {
   if (selectedEdit !== null) {
     return (
-      <div key={selectedEdit.edit_id} className="animate-spin animation-iteration-once ">
+      <div key={selectedEdit.edit_id} className="_animate-spin _animation-iteration-once ">
         <History size={20} className="-scale-x-100 inline-block !text-ring" />
       </div>
     );
   }
   if (pendingSave) {
     return (
-      <div className="animate-spin animation-iteration-once ">
+      <div className="_animate-spin _animation-iteration-once ">
         <History size={20} className="-scale-x-100 inline-block !text-success" />
       </div>
     );

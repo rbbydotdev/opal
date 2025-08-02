@@ -14,13 +14,13 @@ export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
   }, [currentWorkspace, filePath]);
 
   return (
-    <div className="w-[480px] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-50 flex justify-center items-center _font-mono _font-bold">
+    <div className=" w-[480px] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-50 flex justify-center items-center _font-mono _font-bold">
       <Button
         tabIndex={0}
         title="Put Back"
         onClick={untrashFile}
         aria-label="Put Back From Trash"
-        className="!bg-primary-foreground absolute left-0 peer/putback transition-transform hover:scale-125 hover:text-ring rounded-full ock w-12 h-12 text-sidebar-foreground/70 shadow-lg pointer-events-auto"
+        className="border backdrop-blur-lg !bg-transparent _border-primary _!bg-primary-foreground absolute left-0 peer/putback transition-transform hover:scale-125 hover:text-ring rounded-full ock w-12 h-12 text-sidebar-foreground/70 shadow-lg pointer-events-auto"
       >
         <Undo strokeWidth={3} />
       </Button>
@@ -28,7 +28,7 @@ export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
         title="Permanently Delete"
         onClick={removeFile}
         aria-label="Permanently Delete"
-        className="absolute right-0 peer/delete transition-transform  hover:scale-125 hover:text-ring shadow-lg rounded-full block w-12 h-12 !bg-primary-foreground text-sidebar-foreground/70 pointer-events-auto "
+        className="_!bg-primary-foreground backdrop-blur-lg !bg-transparent border _border-primary absolute right-0 peer/delete transition-transform  hover:scale-125 hover:text-ring shadow-lg rounded-full block w-12 h-12 text-sidebar-foreground/70 pointer-events-auto "
       >
         <Delete className="scale-125" strokeWidth={3} />
       </Button>
@@ -37,11 +37,14 @@ export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
         data-delete="Delete"
         data-trash="Trash"
         className="
-        shadow-lg
+          border _border-primary
+          shadow-lg
           transition-transform
           after:content-[attr(data-trash)]
 
-          bg-primary-foreground
+          _bg-primary-foreground
+
+          backdrop-blur-lg bg-transparent
 
           peer-hover/delete:after:content-[attr(data-delete)]
           peer-hover/putback:after:content-[attr(data-putback)]

@@ -60,24 +60,26 @@ function CommitOrInitButton({
   exists,
   pendingCommand,
   commitRef,
+  disabled,
 }: {
   exists: boolean;
   commit: () => Promise<void>;
   isPending: boolean;
   pendingCommand: string;
+  disabled?: boolean;
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
 }) {
   return (
     <Button
-      className="w-full"
+      className="w-full disabled:cursor-pointer"
       onClick={() => {
         void commit().then(() => commitRef.current.show());
       }}
       size="sm"
       variant="outline"
-      disabled={isPending}
+      disabled={isPending || disabled}
     >
       {pendingCommand === "commit" ? (
         <Loader className="mr-1 animate-spin animation-iteration-infinite" />
@@ -167,6 +169,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               <CommitOrInitButton
                 exists={exists}
                 commit={commit}
+                disabled={exists && info.currentBranch === null}
                 isPending={isPending}
                 pendingCommand={pendingCommand ?? ""}
                 commitRef={commitRef}

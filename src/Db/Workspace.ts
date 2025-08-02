@@ -610,6 +610,10 @@ export class Workspace {
     //workspace should not know about window.href
     const repo = Repo.FromDisk(this.disk, `${this.id}/repo`);
     this.dirtyListener(debounce(() => repo.sync(), 3000));
+    // repo
+    repo.gitListener(() => {
+      void this.disk.triggerIndex();
+    });
     const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
     const unsub = repo.gitListener(() => {
       void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {

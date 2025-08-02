@@ -162,7 +162,6 @@ export class HistoryPlugin2 {
       if (saveScore < this.saveThreshold) {
         return console.debug(`Skipping save for ${this.documentId} due to low score: ${saveScore}`);
       }
-      // console.log(md);
       return this.saveNewEdit(md);
     }, this.debounceMs);
 
@@ -198,7 +197,7 @@ export class HistoryPlugin2 {
     this.events.removeAllListeners();
   };
 
-  private async saveNewEdit(newMarkdown: string) {
+  private async saveNewEdit(newMarkdown: string, force = false) {
     await this.transaction(async () => {
       const edits = await this.historyStorage.getEdits(this.documentId);
       if (!edits.length) {
@@ -214,7 +213,11 @@ export class HistoryPlugin2 {
       this.latestMarkdown = newMarkdown; //not $latestMarkdown to avoid loop
       const headEdit = edits[0];
       if (headEdit) {
-        if ((await this.historyStorage.reconstructDocumentFromEdit(headEdit)) === newMarkdown) {
+        const headEditDoc = await this.historyStorage.reconstructDocumentFromEdit(headEdit);
+        if (headEditDoc === newMarkdown) {
+          // console.log(headEditDoc);
+          // console.log("----------------");
+          // console.log(newMarkdown);
           return console.debug("Skipping redundant edit save");
         }
       }
@@ -241,6 +244,7 @@ export class HistoryPlugin2 {
   };
 
   rebaseHistory = (md: string) => {
+    // console.log(md);
     this.$selectedEdit = null;
     this.$selectedEditMd = null;
     this.latestMarkdown = md;
@@ -261,9 +265,9 @@ export class HistoryPlugin2 {
     });
   }
 
-  triggerSave = async () => {
-    if (this.latestMarkdown) {
-      await this.saveNewEdit(this.latestMarkdown);
+  triggerSave = async (newMarkdown: string) => {
+    if (newMarkdown) {
+      await this.saveNewEdit(newMarkdown);
     } else {
       console.warn("No latest markdown to save");
     }

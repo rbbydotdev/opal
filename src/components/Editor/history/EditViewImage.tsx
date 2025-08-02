@@ -3,6 +3,7 @@ import {
   NewComlinkSnapshotPoolWorker,
   useSnapApiPool,
 } from "@/components/Editor/history/SnapApiPoolProvider";
+import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { HistoryDocRecord } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -64,7 +65,9 @@ export const EditViewImage = ({
 }) => {
   const imageUrl = useIframeImagePooled({ edit, workspaceId, id: previewId({ workspaceId, editId: edit.id }) });
   return imageUrl !== null ? (
-    <img src={imageUrl} className={cn("object-contain border border-black", className)} alt="" />
+    <ImageFileHoverCard className="w-48 h-48">
+      <img src={imageUrl} className={cn("object-contain border border-black", className)} alt="" />
+    </ImageFileHoverCard>
   ) : (
     <div className={cn("border border-black", className)}></div>
   );
