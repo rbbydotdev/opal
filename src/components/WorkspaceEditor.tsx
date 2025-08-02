@@ -10,6 +10,7 @@ import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { useReadOnlyMode } from "@/components/useReadOnlyMode";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
@@ -94,6 +95,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     //this is for out of editor updates like via tab or image path updates
     editorRef.current?.setMarkdown(newContent ?? "");
   });
+  const [readOnlyMode, setReadOnly] = useReadOnlyMode();
 
   const { id, path } = useWorkspaceRoute();
   const { mimeType } = useCurrentFilepath();
@@ -129,6 +131,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
             <DropCommanderProvider>
               <EditorWithPlugins
                 {...props}
+                readOnly={readOnlyMode}
                 mimeType={mimeType}
                 currentWorkspace={currentWorkspace}
                 editorRef={editorRef}

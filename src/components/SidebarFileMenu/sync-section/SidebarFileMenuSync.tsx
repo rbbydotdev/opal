@@ -27,13 +27,12 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { RepoInfoType } from "@/features/git-repo/GitRepo";
-import { useUIGitPlaybook, useWorkspaceRepo } from "@/features/git-repo/useGitHooks";
+import { useUIGitPlaybook, useWorkspaceRepo, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
-function LatestInfo({ info }: { info: DeepNonNullable<RepoInfoType> }) {
+function LatestInfo({ info }: { info: WorkspaceRepoType }) {
   const { latestCommit, currentBranch, hasChanges } = info;
   const timeAgo = useTimeAgoUpdater({ date: new Date(latestCommit.date) });
   if (!latestCommit) {
@@ -44,7 +43,7 @@ function LatestInfo({ info }: { info: DeepNonNullable<RepoInfoType> }) {
       <dt className="font-bold">commit:</dt>
       <dd className="truncate">{latestCommit.oid}</dd>
       <dt className="font-bold">branch:</dt>
-      <dd className="truncate">{currentBranch || <i>none</i>}</dd>
+      <dd className="truncate">{currentBranch || <i>none / detatched</i>}</dd>
       <dt className="font-bold">has changes:</dt>
       <dd className="truncate">{hasChanges ? "yes" : "no"}</dd>
       <dt className="font-bold">date:</dt>
@@ -179,12 +178,11 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   repo={repo}
                   playbook={playbook}
                   // defaultBranch={repo.defaultBranch}
-                  defaultBranch={info.currentBranch || repo.defaultBranch}
+                  branch={info.currentBranch}
                   branches={info.branches}
                   branchRef={branchRef}
                 />
                 <CommitManagerSection
-                  repo={repo}
                   playbook={playbook}
                   commits={info.commitHistory}
                   currentCommit={info.latestCommit?.oid}

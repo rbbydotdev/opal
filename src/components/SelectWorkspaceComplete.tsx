@@ -88,7 +88,7 @@ export function SelectWorkspaceComplete({
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {workspace.icon}
-                    <span className="truncate ">{workspace.label}</span>
+                    <span className="truncate">{workspace.label}</span>
                   </div>
                   <Check className={cn("ml-auto", value === workspace.value ? "opacity-100" : "opacity-0")} />
                 </CommandItem>

@@ -66,10 +66,10 @@ function ImageRender() {
 function MarkdownRender() {
   const [contents, setContents] = useState<string | null>(null);
   const { initialContents } = useFileContents((contents) => {
-    setContents(String(contents));
+    setContents(stripFrontmatter(String(contents)));
   });
   const html = useMemo(
-    () => renderMarkdownToHtml(contents === null ? String(initialContents ?? "") : contents ?? ""),
+    () => renderMarkdownToHtml(stripFrontmatter(contents === null ? String(initialContents ?? "") : contents ?? "")),
     [contents, initialContents]
   );
   const { scrollRef } = useScrollSync();
@@ -92,6 +92,7 @@ function MarkdownRender() {
 }
 
 // import { ReactNode, useEffect, useRef } from "react";
+import { stripFrontmatter } from "../../../../lib/markdown/frontMatter";
 
 // function _ScrollSyncListener({
 //   sessionId,

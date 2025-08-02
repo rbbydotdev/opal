@@ -107,7 +107,10 @@ export const RepoDefaultInfo = {
   remotes: [] as GitRemote[],
   latestCommit: null as RepoLatestCommit | null,
   hasChanges: false,
-  commitHistory: [] as Array<{ oid: string; commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } } }>,
+  commitHistory: [] as Array<{
+    oid: string;
+    commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
+  }>,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
 //--------------------------
@@ -340,25 +343,30 @@ export class Repo {
     };
   };
 
-  getCommitHistory = async (options?: { 
-    depth?: number; 
-    ref?: string; 
-    filepath?: string 
-  }): Promise<Array<{ oid: string; commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } } }>> => {
+  getCommitHistory = async (options?: {
+    depth?: number;
+    ref?: string;
+    filepath?: string;
+  }): Promise<
+    Array<{
+      oid: string;
+      commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
+    }>
+  > => {
     if (!(await this.exists())) return [];
-    
+
     try {
       const commits = await this.git.log({
         fs: this.fs,
         dir: this.dir,
         depth: options?.depth || 20, // Default to 20 commits
-        ref: options?.ref || 'HEAD',
+        ref: options?.ref || "HEAD",
         filepath: options?.filepath, // Optional: get history for specific file
       });
-      
+
       return commits;
     } catch (error) {
-      console.error('Error fetching commit history:', error);
+      console.error("Error fetching commit history:", error);
       return [];
     }
   };
@@ -578,6 +586,9 @@ export class GitPlaybook {
     return true;
   };
 
+  //a new branch is created from the current branch and commit
+  //
+  // switchToCommitBranch =
   switchCommit = async (commitOid: string) => {
     if (await this.repo.hasChanges()) {
       await this.addCommit({
@@ -620,6 +631,8 @@ export class GitPlaybook {
     });
     return true;
   }
+
+  resetToHead = async () => {};
 
   async addRemote(remote: IRemote) {
     await this.repo.git.addRemote({
