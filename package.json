@@ -97,7 +97,7 @@
     "isomorphic-git": "^1.32.1",
     "jotai": "^2.10.4",
     "js-yaml": "^4.1.0",
-    "lucide-react": "^0.468.0",
+    "lucide-react": "^0.536.0",
     "mammoth": "^1.9.1",
     "mdast": "^2.3.2",
     "memfs": "^4.17.2",

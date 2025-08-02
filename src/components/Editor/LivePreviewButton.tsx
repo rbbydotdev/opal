@@ -9,11 +9,11 @@ export function LivePreviewButton({ disabled }: { disabled?: boolean }) {
   const { id: workspaceId, path: filePath } = useWorkspaceRoute();
   const { sessionId } = useScrollSync();
   return disabled ? (
-    <Button size="sm" disabled={disabled}>
+    <Button size="sm" className="opacity-70" disabled={disabled}>
       Live Preview <Zap className="!text-primary-foreground" />
     </Button>
   ) : (
-    <Button size="sm" asChild>
+    <Button size="sm" className="pointer-events-auto" asChild>
       <Link
         href={joinPath(absPath("preview"), workspaceId!, filePath! + `?${sessionIdParam({ sessionId: sessionId! })}`)}
         target="_blank"

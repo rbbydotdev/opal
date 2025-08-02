@@ -7,18 +7,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitPlaybook, Repo } from "@/features/git-repo/GitRepo";
+import { GitPlaybook } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
-import { Ellipsis, GitCommit, Plus, RotateCcw } from "lucide-react";
+import { Ellipsis, GitCommit, RotateCcw } from "lucide-react";
 import { useState } from "react";
 
 export function GitCommitManager({
   commits,
   setCurrentCommit,
+  resetToHead,
   currentCommit,
 }: {
   commits: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
   setCurrentCommit: (commitOid: string) => void;
+  resetToHead: () => void;
   currentCommit?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -33,7 +35,7 @@ export function GitCommitManager({
       }}
     >
       <GitCommitMenuDropDown open={open} setOpen={setOpen}>
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           onClick={() => {
             // Future: Add commit functionality
           }}
@@ -42,20 +44,8 @@ export function GitCommitManager({
           }}
         >
           <Plus /> Add Commit
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            // Future: Reset to HEAD functionality
-            if (commits[0]) {
-              setCurrentCommit(commits[0].oid);
-            }
-          }}
-          onSelect={() => {
-            if (commits[0]) {
-              setCurrentCommit(commits[0].oid);
-            }
-          }}
-        >
+        </DropdownMenuItem> */}
+        <DropdownMenuItem onClick={resetToHead} onSelect={resetToHead}>
           <RotateCcw />
           Reset to HEAD
         </DropdownMenuItem>
@@ -104,8 +94,8 @@ function CommitSelect({
   value: string;
 }) {
   const formatCommitMessage = (message: string, maxLength = 40) => {
-    const firstLine = message.split('\n')[0];
-    return firstLine.length > maxLength ? firstLine.substring(0, maxLength) + '...' : firstLine;
+    const firstLine = message.split("\n")[0] || "";
+    return firstLine.length > maxLength ? firstLine!.substring(0, maxLength) + "..." : firstLine;
   };
 
   const formatCommitHash = (oid: string) => {
@@ -128,13 +118,9 @@ function CommitSelect({
             {commits.map((commitData) => (
               <SelectItem key={commitData.oid} value={commitData.oid} className={"!text-xs"}>
                 <div className="flex gap-2 items-center justify-start">
-                  <GitCommit size={12} />
-                  <span className="font-mono text-muted-foreground">
-                    {formatCommitHash(commitData.oid)}
-                  </span>
-                  <span className="truncate">
-                    {formatCommitMessage(commitData.commit.message)}
-                  </span>
+                  <GitCommit size={12} className="flex-shrink-0" />
+                  <span className="font-mono text-muted-foreground">{formatCommitHash(commitData.oid)}</span>
+                  <span className="truncate">{formatCommitMessage(commitData.commit.message)}</span>
                 </div>
               </SelectItem>
             ))}
@@ -147,20 +133,18 @@ function CommitSelect({
 }
 
 export function CommitManagerSection({
-  repo,
   playbook,
   commits = [],
   currentCommit,
   commitRef,
 }: {
-  repo: Repo;
   playbook: GitPlaybook;
   commits?: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
   currentCommit?: string;
   commitRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {
   if (!commits || commits.length === 0) return null;
-  
+
   return (
     <div className="px-4 w-full flex justify-center ">
       <div className="flex flex-col items-center w-full">
@@ -168,8 +152,9 @@ export function CommitManagerSection({
         <GitCommitManager
           commits={commits}
           currentCommit={currentCommit}
-          setCurrentCommit={(commitOid) => {
-            playbook.switchCommit(commitOid);
+          resetToHead={playbook.resetToHead}
+          setCurrentCommit={async (commitOid) => {
+            await playbook.switchCommit(commitOid);
             commitRef.current?.show("switched to commit");
           }}
         />

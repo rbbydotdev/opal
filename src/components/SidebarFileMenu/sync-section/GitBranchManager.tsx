@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TooltipToast } from "@/components/ui/TooltipToast";
 import { GitPlaybook, Repo } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
-import { Ellipsis, GitBranchIcon, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
+import { Ellipsis, GitBranchIcon, GitPullRequestDraft, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const isLockedBranch = (branch: string) => {
@@ -29,7 +29,7 @@ export function GitBranchManager({
   replaceGitBranch: (previous: GitBranchFormValue, next: GitBranchFormValue) => void;
   setCurrentBranch: (branch: string) => void;
   deleteGitBranch: (remoteName: string) => void;
-  branch: string;
+  branch: string | null;
 }) {
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   // const [selectValue, setSelectValue] = useState<string>(defaultBranch);
@@ -47,9 +47,7 @@ export function GitBranchManager({
         }}
       />
     );
-  }
-  /* edit or add branch */
-  if (showInput) {
+  } else if (showInput && branch) {
     return (
       <GitBranchInput
         mode={inputMode}
@@ -89,11 +87,11 @@ export function GitBranchManager({
             <Plus /> Add Branch
           </DropdownMenuItem>
           {branches.length > 1 && (
-            <DropdownMenuItem disabled={isLockedBranch(branch)} onClick={() => setSelectMode("delete")}>
+            <DropdownMenuItem disabled={isLockedBranch(branch ?? "")} onClick={() => setSelectMode("delete")}>
               <Trash2 /> Delete Branch
             </DropdownMenuItem>
           )}
-          {Boolean(branch) ? (
+          {!!branch ? (
             <DropdownMenuItem
               disabled={isLockedBranch(branch)}
               onClick={() => {
@@ -176,8 +174,8 @@ function BranchDelete({
 
 const BranchSelectPlaceHolder = (
   <div className="w-full truncate flex items-center">
-    <GitBranchIcon className="p-1 mr-2 stroke-ring" />
-    Branch
+    <GitPullRequestDraft className="p-1 mr-2 stroke-ring" />
+    Detatched
   </div>
 );
 
@@ -192,12 +190,12 @@ function BranchSelect({
   children?: React.ReactNode;
   branches: string[];
   onSelect: (value: string) => void;
-  value: string;
+  value: string | null;
 }) {
   return (
     <div className="w-full flex items-center justify-between space-x-2">
       <div className="w-full ">
-        <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
+        <Select key={value} onValueChange={(v) => onSelect(v)} value={value !== null ? value : undefined}>
           {/* <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}> */}
 
           <SelectTrigger
@@ -227,14 +225,14 @@ function BranchSelect({
 
 export function BranchManagerSection({
   repo,
-  defaultBranch,
+  branch,
   playbook,
   branches,
   branchRef,
 }: {
   repo: Repo;
   playbook: GitPlaybook;
-  defaultBranch: string;
+  branch: string | null;
   branches: string[];
   branchRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {
@@ -244,7 +242,7 @@ export function BranchManagerSection({
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
-          branch={defaultBranch || branches[0] || ""}
+          branch={branch}
           setCurrentBranch={(branch) => playbook.switchBranch(branch)}
           branches={branches}
           replaceGitBranch={(remoteName, remote) => {

@@ -62,11 +62,12 @@ export function useWorkspaceRepo(workspace: Workspace) {
     return { repo, info, playbook, exists: true } as {
       repo: Repo;
       playbook: GitPlaybook;
-      info: DeepNonNullable<RepoInfoType>; //typeof info & { latestCommit: RepoLatestCommit };
+      info: DeepNonNullable<RepoInfoType, "currentBranch">; //typeof info & { latestCommit: RepoLatestCommit };
       exists: true;
     };
   }
 }
+export type WorkspaceRepoType = DeepNonNullable<RepoInfoType, "currentBranch">;
 // export function useGitRepoFromDisk(disk: Disk): Repo {
 //   return useMemo(() => disk.NewGitRepo(), [disk]);
 // }
