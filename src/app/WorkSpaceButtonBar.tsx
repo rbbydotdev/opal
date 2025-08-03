@@ -43,7 +43,9 @@ function BigButton({
             <div className="flex flex-col items-center justify-center">
               {icon}
               {title && (
-                <div className="uppercase text-ellipsis px-2 pt-2 text-center overflow-clip w-full">{title}</div>
+                <div className="uppercase text-ellipsis px-2 pt-2 text-center overflow-clip whitespace-nowrap w-full">
+                  {title}
+                </div>
               )}
             </div>
           </div>
