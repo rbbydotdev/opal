@@ -169,7 +169,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               <CommitOrInitButton
                 exists={exists}
                 commit={commit}
-                disabled={exists && info.currentBranch === null}
+                disabled={(exists && info.currentBranch === null) || (info !== null && !info.hasChanges)}
                 isPending={isPending}
                 pendingCommand={pendingCommand ?? ""}
                 commitRef={commitRef}
