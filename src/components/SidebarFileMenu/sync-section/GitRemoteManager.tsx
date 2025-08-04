@@ -188,6 +188,7 @@ function RemoteSelect({
           value={value}
         >
           <SelectTrigger
+            title="select remote"
             className={cn(
               className,
               "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"

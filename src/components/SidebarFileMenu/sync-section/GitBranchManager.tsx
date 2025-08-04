@@ -230,6 +230,7 @@ function BranchSelect({
           {/* <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}> */}
 
           <SelectTrigger
+            title="select branch"
             className={cn(
               className,
               "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"

@@ -107,6 +107,7 @@ function CommitSelect({
       <div className="w-full ">
         <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
           <SelectTrigger
+            title="select commit"
             className={cn(
               className,
               "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"
