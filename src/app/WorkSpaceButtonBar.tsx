@@ -18,16 +18,18 @@ import React, { JSX } from "react";
 import { twMerge } from "tailwind-merge";
 
 const BigButtonWorkspaceTitle = ({ title }: { title: string }) => (
-  <div className="uppercase truncate px-2 pt-2 text-center w-full">{title}</div>
+  <div title={title} className="uppercase truncate px-2 pt-2 text-center w-full">
+    {title}
+  </div>
 );
 function BigButton({
   icon,
-  title,
+  btnTitle,
   active,
   ...restProps
 }: {
   icon: React.ReactNode;
-  title?: string | React.ReactNode | JSX.Element | null;
+  btnTitle?: string | React.ReactNode | JSX.Element | null;
   active?: boolean;
 } & React.ComponentProps<typeof Link>) {
   const pathname = usePathname();
@@ -48,17 +50,17 @@ function BigButton({
               {icon}
               {/* text-ellipsis overflow-clip whitespace-nowrap  */}
               {/* {title && <div className="uppercase truncate px-2 pt-2 text-center w-full">{title}</div>} */}
-              {typeof title === "string" ? (
-                <div className="uppercase px-2 pt-2 text-center w-full">{title}</div>
+              {typeof btnTitle === "string" ? (
+                <div className="uppercase px-2 pt-2 text-center w-full">{btnTitle}</div>
               ) : (
-                title
+                btnTitle
               )}
             </div>
           </div>
         </Link>
       </TooltipTrigger>
       <TooltipContent side="right" align="center" className="uppercase">
-        {title}
+        {btnTitle}
       </TooltipContent>
     </Tooltip>
   );
@@ -95,7 +97,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
         <>
           <BigButton
             icon={<BombIcon stroke="current" size={24} strokeWidth={1.25} />}
-            title={"Destroy All"}
+            btnTitle={"Destroy All"}
             href="#"
             onClick={() =>
               Promise.all([
@@ -116,13 +118,13 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
           />
           <BigButton
             icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
-            title={"Delete All"}
+            btnTitle={"Delete All"}
             href="#"
             onClick={() => Workspace.DeleteAll().then(() => router.push("/newWorkspace"))}
           />
           <BigButton
             icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
-            title={"Unregister Services"}
+            btnTitle={"Unregister Services"}
             href="#"
             onClick={() => {
               // Unregister all service workers for this origin
@@ -142,7 +144,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
       <WorkspaceSearchDialog>
         <BigButton
           icon={<SearchIcon stroke="current" size={24} strokeWidth={1.25} />}
-          title="search"
+          btnTitle="search"
           href="#"
           className="text-3xs"
         />
@@ -150,18 +152,18 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
       <BigButton
         className="hidden"
         icon={<Zap stroke="current" size={24} strokeWidth={1.25} />}
-        title="connections"
+        btnTitle="connections"
         href="/connections"
       />
       <BigButton
         className="hidden"
         icon={<Settings stroke="current" size={24} strokeWidth={1.25} />}
-        title="settings"
+        btnTitle="settings"
         href="/settings"
       />
       <BigButton
         icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
-        title="new workspace"
+        btnTitle="new workspace"
         href={"/newWorkspace"}
         className="text-3xs"
       />
@@ -169,7 +171,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
       {coalescedWorkspace && (
         <BigButton
           icon={<WorkspaceIcon input={coalescedWorkspace.guid} />}
-          title={<BigButtonWorkspaceTitle title={coalescedWorkspace.name} />}
+          btnTitle={<BigButtonWorkspaceTitle title={coalescedWorkspace.name} />}
           href={coalescedWorkspace.href}
           className="text-white big-button-active"
         />
@@ -203,7 +205,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
               <BigButton
                 icon={<WorkspaceIcon input={workspace.guid} />}
                 href={workspace.href}
-                title={workspace.name}
+                btnTitle={workspace.name}
                 key={workspace.guid}
               />
             ))}
