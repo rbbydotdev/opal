@@ -4,14 +4,12 @@ import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { TreeNodeDataTransferJType } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
-import { useHandleDropFilesForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { handleDropFilesForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath } from "@/lib/paths2";
 
 export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const uploadFilesToWorkspace = useHandleDropFilesForNode({
-    currentWorkspace,
-  });
+  // const uploadFilesToWorkspace =
 
   return async function handlePaste({ targetNode, data }: { targetNode: TreeNode; data: MetaDataTransfer }) {
     const {
@@ -66,7 +64,8 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
     // The new class proxies the `files` property directly.
     if (data.files.length > 0) {
       // Convert FileList to an array for the upload function.
-      await uploadFilesToWorkspace({
+      await handleDropFilesForNode({
+        currentWorkspace,
         files: data.files,
         targetNode,
       });

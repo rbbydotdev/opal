@@ -5,12 +5,10 @@ import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { useFileMenuPaste } from "@/components/SidebarFileMenu/hooks/useFileMenuPaste";
 import { Workspace } from "@/Db/Workspace";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
-import { useHandleDropFilesForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useEffect } from "react";
 
 export function useFileTreeClipboardEventListeners({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { focused, selectedFocused, setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
-  const uploadFilesToWorkspace = useHandleDropFilesForNode({ currentWorkspace });
   const handlePaste = useFileMenuPaste({ currentWorkspace });
 
   useEffect(() => {
@@ -57,5 +55,5 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
       window.removeEventListener("cut", handleCutEvent);
       window.removeEventListener("copy", handleCopyEvent);
     };
-  }, [currentWorkspace, uploadFilesToWorkspace, focused, selectedFocused, setFileTreeCtx, handlePaste]);
+  }, [currentWorkspace, focused, selectedFocused, setFileTreeCtx, handlePaste]);
 }
