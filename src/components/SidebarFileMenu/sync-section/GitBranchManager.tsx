@@ -201,7 +201,7 @@ function BranchDelete({
 
 const BranchSelectPlaceHolder = ({ currentGitRef }: { currentGitRef: GitRef | null }) => (
   <div className="w-full truncate flex items-center">
-    <GitPullRequestDraft className="p-1 mr-2 stroke-ring" />
+    <GitPullRequestDraft className="p-1 mr-2 stroke-ring flex-shrink-0" />
     {currentGitRef && isCommitRef(currentGitRef)
       ? `Detached at ${currentGitRef.value.slice(0, 7) || currentGitRef.value}`
       : "Detached"}

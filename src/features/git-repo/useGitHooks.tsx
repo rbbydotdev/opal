@@ -25,7 +25,7 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
     const minWait = new Promise((rs) => setTimeout(rs, 1000));
     try {
       setPending("commit");
-      await playbook.addAllCommit({ message: "opal commit" });
+      await playbook.addAllCommit({ message: "opal user commit" });
     } catch (e) {
       console.error("Error in commit function:", e);
     } finally {

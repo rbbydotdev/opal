@@ -48,7 +48,7 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
       <dt className="font-bold">commit:</dt>
       <dd className="truncate">{latestCommit.oid}</dd>
       <dt className="font-bold">branch:</dt>
-      <dd className="truncate">{currentBranch || <i>none / detatched</i>}</dd>
+      <dd className="truncate">{currentBranch || <i>none / detached</i>}</dd>
       <dt className="font-bold">has changes:</dt>
       <dd className="truncate">{hasChanges ? <b className="font-bold">yes</b> : "no"}</dd>
       <dt className="font-bold">date:</dt>
