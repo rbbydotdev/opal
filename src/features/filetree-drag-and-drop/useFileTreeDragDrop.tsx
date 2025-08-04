@@ -59,11 +59,13 @@ export async function handleDropFilesEventForNode({
   targetNode,
 }: {
   currentWorkspace: Workspace;
-  event: React.DragEvent;
+  event: React.DragEvent | { dataTransfer: { files: FileList | null } };
   targetNode: TreeNode;
 }) {
-  event.preventDefault();
-  event.stopPropagation();
+  if (event instanceof DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
   if (event.dataTransfer?.files) {
     return handleDropFilesForNode({ currentWorkspace, files: event.dataTransfer.files, targetNode });
   } else {
