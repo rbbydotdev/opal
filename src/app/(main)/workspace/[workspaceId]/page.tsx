@@ -88,7 +88,7 @@ function FirstFileRedirect() {
   const { currentWorkspace } = useWorkspaceContext();
   useEffect(() => {
     if (!currentWorkspace.isNull) {
-      void currentWorkspace.tryFirstFileUrl().then((ff) => router.push(ff));
+      // void currentWorkspace.tryFirstFileUrl().then((ff) => router.push(ff));
     }
   }, [currentWorkspace, router]);
   return null;
