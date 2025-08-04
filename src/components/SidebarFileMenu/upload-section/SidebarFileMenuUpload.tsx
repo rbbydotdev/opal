@@ -1,17 +1,18 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { ChevronRight, UploadIcon } from "lucide-react";
+import { useRef } from "react";
 
 export function SidebarFileMenuUpload(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleItemExpander("upload");
   const { currentWorkspace } = useWorkspaceContext();
   const _fileMgr = useWorkspaceFileMgmt(currentWorkspace);
+  const fileUploadRef = useRef<HTMLInputElement>(null);
   return (
     <SidebarGroup {...props}>
       <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
@@ -44,9 +45,7 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                 onSubmit={(e) => {
                   e.preventDefault();
                   console.log("Form submitted");
-                  const input = e.target as HTMLFormElement;
-                  const fileInput = input.querySelector<HTMLInputElement>("#file-upload");
-                  console.log("Files to upload:", fileInput?.files);
+                  console.log("Files to upload:", fileUploadRef.current?.files);
                 }}
               >
                 <label
@@ -64,6 +63,7 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                   <UploadIcon className="mx-auto mb-2" size={24} />
                   <span className="block text-xs mb-2">Drag & drop files here or click to select</span>
                   <input
+                    ref={fileUploadRef}
                     id="file-upload"
                     type="file"
                     className="hidden"
@@ -72,10 +72,6 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                     }}
                   />
                 </label>
-                <Button className="w-full text-xs" size="sm" variant="outline" type="submit">
-                  <UploadIcon className="mr-1" />
-                  Upload File
-                </Button>
               </form>
             </SidebarGroup>
           </div>
