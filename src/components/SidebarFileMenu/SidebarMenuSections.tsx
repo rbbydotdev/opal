@@ -7,10 +7,11 @@ import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/Sid
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { DisplayTreeProvider, useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { IS_MAC } from "@/lib/isMac";
 import { Slot } from "@radix-ui/react-slot";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceContext } from "../../context/WorkspaceHooks";
 import { useHandleDropFilesEventForNode } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
@@ -18,7 +19,7 @@ import { TreeExpanderProvider } from "../../features/tree-expander/TreeExpanderC
 import useLocalStorage2 from "../../hooks/useLocalStorage2";
 import { capitalizeFirst } from "../../lib/capitalizeFirst";
 import { TreeNode } from "../../lib/FileTree/TreeNode";
-import { absPath } from "../../lib/paths2";
+import { absPath, filterOutAncestor } from "../../lib/paths2";
 import { FileTreeMenuCtxProvider } from "../FileTreeMenuCtxProvider";
 import {
   DropdownMenu,
@@ -56,6 +57,12 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
     }
   };
 
+  const filterAllSpecialDirs = useMemo(() => filterOutAncestor(SpecialDirs.All), []);
+  const filterAllSpecialDirsExceptTrash = useMemo(
+    () => filterOutAncestor(SpecialDirs.allSpecialDirsExcept(SpecialDirs.Trash)),
+    []
+  );
+  // filterOutAncestor(SpecialDirs.allSpecialDirsExcept(SpecialDirs.Trash))
   //todo do not need this
   return (
     <SidebarGroup
@@ -138,7 +145,11 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
 
           <DndSlot dndId={"trash"}>
             <div className="min-h-8 flex-shrink flex">
-              <FileTreeMenuCtxProvider id="TrashFiles" currentWorkspace={currentWorkspace}>
+              <FileTreeMenuCtxProvider
+                id="TrashFiles"
+                currentWorkspace={currentWorkspace}
+                // filterRange={filterAllSpecialDirsExceptTrash}
+              >
                 <TrashSidebarFileMenuFileSection />
               </FileTreeMenuCtxProvider>
             </div>
@@ -146,8 +157,12 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
 
           <DndSlot dndId={"files"}>
             <div className="flex-shrink flex">
-              <FileTreeMenuCtxProvider id="MainFiles" currentWorkspace={currentWorkspace}>
-                <TreeExpanderProvider nodePaths={[]} id="MainFiles">
+              <FileTreeMenuCtxProvider
+                id="MainFiles"
+                currentWorkspace={currentWorkspace}
+                // filterRange={filterAllSpecialDirs}
+              >
+                <TreeExpanderProvider id="MainFiles">
                   <MainSidebarFileMenuFileSection />
                 </TreeExpanderProvider>
               </FileTreeMenuCtxProvider>

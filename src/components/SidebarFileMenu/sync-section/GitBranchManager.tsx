@@ -12,9 +12,31 @@ import { cn } from "@/lib/utils";
 import { Ellipsis, GitBranchIcon, GitPullRequestDraft, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+export type GitRefType = "branch" | "commit";
+
+export interface GitRef {
+  value: string;
+  type: GitRefType;
+  // hash?: string; // commit hash for commits, undefined for branches
+}
+
 const isLockedBranch = (branch: string) => {
   return ["master", "main"].includes(branch.toLowerCase());
 };
+
+// Utility functions for GitRef
+export const createBranchRef = (name: string): GitRef => ({
+  value: name,
+  type: "branch",
+});
+
+export const createCommitRef = (name: string): GitRef => ({
+  value: name,
+  type: "commit",
+});
+
+export const isCommitRef = (gitRef: GitRef): boolean => gitRef.type === "commit";
+export const isBranchRef = (gitRef: GitRef): boolean => gitRef.type === "branch";
 
 export function GitBranchManager({
   branches,
@@ -22,14 +44,14 @@ export function GitBranchManager({
   setCurrentBranch,
   replaceGitBranch,
   deleteGitBranch,
-  branch,
+  currentGitRef,
 }: {
   branches: string[];
-  addGitBranch: (baseBranch: string, branch: GitBranchFormValue) => void;
+  addGitBranch: (baseRef: GitRef, branch: GitBranchFormValue) => void;
   replaceGitBranch: (previous: GitBranchFormValue, next: GitBranchFormValue) => void;
   setCurrentBranch: (branch: string) => void;
   deleteGitBranch: (remoteName: string) => void;
-  branch: string | null;
+  currentGitRef: GitRef | null;
 }) {
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   // const [selectValue, setSelectValue] = useState<string>(defaultBranch);
@@ -47,17 +69,17 @@ export function GitBranchManager({
         }}
       />
     );
-  } else if (showInput && branch) {
+  } else if (showInput && currentGitRef) {
     return (
       <GitBranchInput
         mode={inputMode}
         setShow={setShowInput}
-        previous={{ branch }}
+        previous={{ branch: currentGitRef.value }}
         onSubmit={({ previous, next, mode }) => {
           if (mode === "add") {
-            addGitBranch(branch, next);
+            addGitBranch(currentGitRef, next);
           }
-          if (mode === "edit") {
+          if (mode === "edit" && isBranchRef(currentGitRef)) {
             replaceGitBranch(previous!, next);
           }
         }}
@@ -68,7 +90,12 @@ export function GitBranchManager({
     return (
       <BranchSelect
         branches={branches}
-        value={branches.includes(branch!) ? branch : null}
+        currentGitRef={currentGitRef}
+        value={
+          currentGitRef && isBranchRef(currentGitRef) && branches.includes(currentGitRef.value)
+            ? currentGitRef.value
+            : null
+        }
         onSelect={(value: string) => {
           setCurrentBranch(value);
         }}
@@ -86,14 +113,14 @@ export function GitBranchManager({
           >
             <Plus /> Add Branch
           </DropdownMenuItem>
-          {branches.length > 1 && (
-            <DropdownMenuItem disabled={isLockedBranch(branch ?? "")} onClick={() => setSelectMode("delete")}>
+          {branches.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
+            <DropdownMenuItem onClick={() => setSelectMode("delete")}>
               <Trash2 /> Delete Branch
             </DropdownMenuItem>
           )}
-          {!!branch ? (
+          {currentGitRef && isBranchRef(currentGitRef) ? (
             <DropdownMenuItem
-              disabled={isLockedBranch(branch)}
+              disabled={isLockedBranch(currentGitRef.value)}
               onClick={() => {
                 setInputMode("edit");
                 setShowInput(true);
@@ -172,10 +199,12 @@ function BranchDelete({
   );
 }
 
-const BranchSelectPlaceHolder = (
+const BranchSelectPlaceHolder = ({ currentGitRef }: { currentGitRef: GitRef | null }) => (
   <div className="w-full truncate flex items-center">
     <GitPullRequestDraft className="p-1 mr-2 stroke-ring" />
-    Detatched
+    {currentGitRef && isCommitRef(currentGitRef)
+      ? `Detached at ${currentGitRef.value.slice(0, 7) || currentGitRef.value}`
+      : "Detached"}
   </div>
 );
 
@@ -185,12 +214,14 @@ function BranchSelect({
   branches,
   onSelect,
   value,
+  currentGitRef,
 }: {
   className?: string;
   children?: React.ReactNode;
   branches: string[];
   onSelect: (value: string) => void;
   value: string | null;
+  currentGitRef: GitRef | null;
 }) {
   return (
     <div className="w-full flex items-center justify-between space-x-2">
@@ -204,7 +235,7 @@ function BranchSelect({
               "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"
             )}
           >
-            <SelectValue className="w-full" placeholder={BranchSelectPlaceHolder} />
+            <SelectValue className="w-full" placeholder={<BranchSelectPlaceHolder currentGitRef={currentGitRef} />} />
           </SelectTrigger>
           <SelectContent>
             {branches.map((branch) => (
@@ -225,14 +256,14 @@ function BranchSelect({
 
 export function BranchManagerSection({
   repo,
-  branch,
+  currentGitRef,
   playbook,
   branches,
   branchRef,
 }: {
   repo: Repo;
   playbook: GitPlaybook;
-  branch: string | null;
+  currentGitRef: GitRef | null;
   branches: string[];
   branchRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {
@@ -242,15 +273,17 @@ export function BranchManagerSection({
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
-          branch={branch}
+          currentGitRef={currentGitRef}
           setCurrentBranch={(branch) => playbook.switchBranch(branch)}
           branches={branches}
           replaceGitBranch={(remoteName, remote) => {
             void playbook.replaceGitBranch(remoteName.branch, remote.branch);
             branchRef.current.show("branch replaced");
           }}
-          addGitBranch={(baseBranch, remoteName) => {
-            void repo.addGitBranch({ branchName: remoteName.branch, symbolicRef: baseBranch, checkout: true });
+          addGitBranch={(baseRef, remoteName) => {
+            // For branches, use the branch name as base
+            // For commits, use the commit hash as base
+            void repo.addGitBranch({ branchName: remoteName.branch, symbolicRef: baseRef.value, checkout: true });
             branchRef.current.show("branch added");
           }}
           deleteGitBranch={(remoteName) => {
@@ -271,6 +304,19 @@ import { z } from "zod";
 
 import { Input } from "@/components/ui/input";
 
+export const gitRefSchema = z.object({
+  value: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name is too long")
+    .regex(
+      /^(?!\/|.*([/.]\.|\/\/|@\{|\\))[^\x00-\x1f\x7f ~^:?*[]+(?<!\.lock|\/|\.| )$/,
+      "Invalid name: must not start/end with '/', contain spaces, or special characters"
+    ),
+  type: z.enum(["branch", "commit"]),
+});
+
+// Keep backward compatibility
 export const gitBranchSchema = z.object({
   branch: z
     .string()
@@ -282,6 +328,7 @@ export const gitBranchSchema = z.object({
     ),
 });
 
+// type GitRefFormValue = z.infer<typeof gitRefSchema>;
 type GitBranchFormValue = z.infer<typeof gitBranchSchema>;
 
 const GitBranchInputModes = {
