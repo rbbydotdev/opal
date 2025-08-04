@@ -148,7 +148,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
               <FileTreeMenuCtxProvider
                 id="TrashFiles"
                 currentWorkspace={currentWorkspace}
-                // filterRange={filterAllSpecialDirsExceptTrash}
+                filterRange={filterAllSpecialDirsExceptTrash}
               >
                 <TrashSidebarFileMenuFileSection />
               </FileTreeMenuCtxProvider>
@@ -160,9 +160,9 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
               <FileTreeMenuCtxProvider
                 id="MainFiles"
                 currentWorkspace={currentWorkspace}
-                // filterRange={filterAllSpecialDirs}
+                filterRange={filterAllSpecialDirs}
               >
-                <TreeExpanderProvider id="MainFiles">
+                <TreeExpanderProvider id="MainFiles" nodePaths={[]}>
                   <MainSidebarFileMenuFileSection />
                 </TreeExpanderProvider>
               </FileTreeMenuCtxProvider>
