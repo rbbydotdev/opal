@@ -9,18 +9,18 @@ import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-s
 import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
 import { DisplayTreeProvider, useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { SpecialDirs } from "@/Db/SpecialDirs";
+import { RootNode } from "@/lib/FileTree/TreeNode";
 import { IS_MAC } from "@/lib/isMac";
 import { Slot } from "@radix-ui/react-slot";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
 import React, { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceContext } from "../../context/WorkspaceHooks";
-import { useHandleDropFilesEventForNode } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { handleDropFilesEventForNode } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeExpanderProvider } from "../../features/tree-expander/TreeExpanderContext";
 import useLocalStorage2 from "../../hooks/useLocalStorage2";
 import { capitalizeFirst } from "../../lib/capitalizeFirst";
-import { TreeNode } from "../../lib/FileTree/TreeNode";
-import { absPath, filterOutAncestor } from "../../lib/paths2";
+import { filterOutAncestor } from "../../lib/paths2";
 import { FileTreeMenuCtxProvider } from "../FileTreeMenuCtxProvider";
 import {
   DropdownMenu,
@@ -42,7 +42,7 @@ type DndSectionType = "publish" | "git" | "export" | "trash" | "files" | "treevi
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
-  const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
+  // const handleExternalDropEvent = handleDropFilesEventForNode({ currentWorkspace });
   const { setStoredValue, storedValue, defaultValues } = useLocalStorage2(
     "SidebarFileMenu/Dnd",
     dndSections as DndSectionType[]
@@ -72,7 +72,13 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         e.preventDefault();
         e.stopPropagation();
       }}
-      onDrop={(e) => handleExternalDropEvent(e, TreeNode.FromPath(absPath("/"), "dir"))}
+      onDrop={(event) =>
+        handleDropFilesEventForNode({
+          currentWorkspace,
+          event,
+          targetNode: RootNode,
+        })
+      }
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
     >
       <DropdownMenu>

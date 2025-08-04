@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Tilt } from "@/components/ui/Tilt";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import {
+  handleDropFilesEventForNode,
   isExternalFileDrop,
-  useHandleDropFilesEventForNode,
   useHandleDropFilesEventForNodeRedirect,
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useFavicon from "@/hooks/useFavicon";
@@ -19,7 +19,7 @@ import { useEffect } from "react";
 
 export default function Page() {
   const { currentWorkspace } = useWorkspaceContext();
-  const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
+  // const handleExternalDropEvent = handleDropFilesEventForNode({ currentWorkspace });
   const { id } = useWorkspaceRoute();
   useFavicon("/favicon.svg" + "?" + id, "image/svg+xml");
 
@@ -41,7 +41,13 @@ export default function Page() {
           position: "relative",
         }}
         className="w-full h-full flex items-center justify-center"
-        onDrop={(e) => handleExternalDropEvent(e, TreeNode.FromPath(absPath("/"), "dir"))}
+        onDrop={(e) =>
+          handleDropFilesEventForNode({
+            currentWorkspace,
+            event: e,
+            targetNode: TreeNode.FromPath(absPath("/"), "dir"),
+          })
+        }
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();

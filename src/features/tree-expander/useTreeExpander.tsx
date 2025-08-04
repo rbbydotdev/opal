@@ -65,6 +65,7 @@ export function useTreeExpander({
     expandSingle,
     expanded: all,
     setExpandAll,
+    expanderId,
     expandForNode,
     isExpanded: (node: TreeNode | string) => all[String(node)] === true,
   };

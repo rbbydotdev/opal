@@ -3,16 +3,15 @@ import { FileItemContextMenuComponentType } from "@/components/FileItemContextMe
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { useHandleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { NULL_TREE_ROOT, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath } from "@/lib/paths2";
+import { NULL_TREE_ROOT, RootNode, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
+import { AbsPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { ChevronRight, Files } from "lucide-react";
 import React, { JSX, useMemo } from "react";
@@ -46,9 +45,16 @@ export const SidebarFileMenuFiles = ({
     }
     return node;
   }, [currentWorkspace, fileTreeDir, scope]);
-  const { id } = useFileTreeMenuCtx();
-  const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + id);
-  const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
+  const { expanderId } = useTreeExpanderContext();
+  const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId);
+  // const handleExternalDropEvent =
+
+  // onDrop={(event) =>
+  //   handleDropFilesEventForNode({
+  //     currentWorkspace,
+  //     event,
+  //     targetNode: RootNode,
+  //   })
 
   const isEmpty = !Object.keys(treeNode.filterOutChildren(filter) ?? {}).length;
   return (
@@ -91,7 +97,7 @@ export const SidebarFileMenuFiles = ({
                 {isEmpty ? (
                   <div
                     className="w-full"
-                    onDrop={(e) => handleExternalDropEvent(e, TreeNode.FromPath(absPath("/"), "dir"))}
+                    onDrop={(event) => handleDropFilesEventForNode({ currentWorkspace, event, targetNode: RootNode })}
                   >
                     <EmptySidebarLabel label={"empty"} />
                   </div>
