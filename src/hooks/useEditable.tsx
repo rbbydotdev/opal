@@ -79,7 +79,6 @@ export function useEditable<T extends TreeFile | TreeDir>({
       e.stopPropagation();
       const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
       const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode!) ?? [];
-      console.log(range);
       setFileTreeCtx({
         editing: null,
         editType: null,

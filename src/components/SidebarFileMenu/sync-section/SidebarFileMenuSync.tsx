@@ -30,6 +30,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useUIGitPlaybook, useWorkspaceRepo, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
+import { useRouter } from "next/navigation";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
 function LatestInfo({ info }: { info: WorkspaceRepoType }) {
@@ -122,7 +123,8 @@ function SyncPullPushButtons() {
 
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { repo, playbook, info, exists } = useWorkspaceRepo(currentWorkspace);
+  const router = useRouter();
+  const { repo, playbook, info, exists } = useWorkspaceRepo(currentWorkspace, () => router.push(currentWorkspace.href));
   const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
@@ -181,7 +183,9 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   repo={repo}
                   playbook={playbook}
                   // defaultBranch={repo.defaultBranch}
-                  branch={info.currentBranch}
+                  // branch={info.currentBranch}
+                  branch={info.currentBranch || info.latestCommit?.oid || null}
+                  // gitObject={info.currentBranch || info.latestCommit}
                   branches={info.branches}
                   branchRef={branchRef}
                 />

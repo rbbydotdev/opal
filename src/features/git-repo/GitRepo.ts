@@ -4,6 +4,7 @@ import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
+import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import git, { AuthCallback } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
@@ -77,6 +78,10 @@ class Remote implements IRemote {
   }
 }
 
+type GitHistoryType = Array<{
+  oid: string;
+  commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
+}>;
 export type RepoLatestCommit = {
   oid: string;
   date: number;
@@ -141,8 +146,9 @@ export class Repo {
   private info: RepoInfoType | null = null;
   fs: CommonFileSystem;
   dir: AbsPath;
-  defaultBranch: string;
+  defaultMainBranch: string;
 
+  mutex = new Mutex();
   private unsubs: (() => void)[] = [];
 
   local = new RepoEventsLocal();
@@ -265,17 +271,20 @@ export class Repo {
     dir,
     defaultBranch,
     author,
+    mutex = new Mutex(),
   }: {
     guid: string;
     fs: CommonFileSystem;
     dir: AbsPath;
     defaultBranch: string;
     author?: { email: string; name: string };
+    mutex?: Mutex;
   }) {
+    this.mutex = mutex;
     this.guid = guid;
     this.fs = fs;
     this.dir = dir;
-    this.defaultBranch = defaultBranch;
+    this.defaultMainBranch = defaultBranch;
     this.author = author || this.author;
     this.remote = new RepoEventsRemote(this.guid);
   }
@@ -305,7 +314,7 @@ export class Repo {
   hasChanges = async (): Promise<boolean> => {
     if (!(await this.exists())) return false;
     try {
-      const matrix = await git.statusMatrix({ fs: this.fs, dir: this.dir });
+      const matrix = await this.mutex.runExclusive(() => git.statusMatrix({ fs: this.fs, dir: this.dir }));
       return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
     } catch (error) {
       console.error("Error checking for changes:", error);
@@ -351,16 +360,7 @@ export class Repo {
     };
   };
 
-  getCommitHistory = async (options?: {
-    depth?: number;
-    ref?: string;
-    filepath?: string;
-  }): Promise<
-    Array<{
-      oid: string;
-      commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
-    }>
-  > => {
+  getCommitHistory = async (options?: { depth?: number; ref?: string; filepath?: string }): Promise<GitHistoryType> => {
     if (!(await this.exists())) return [];
 
     try {
@@ -385,25 +385,51 @@ export class Repo {
       await git.init({
         fs: this.fs,
         dir: this.dir,
-        defaultBranch: this.defaultBranch,
+        defaultBranch: this.defaultMainBranch,
       });
       await this.sync();
     }
     return (this.state.initialized = true);
   };
 
-  checkoutBranch = async (branchName: string) => {
+  async add(filepath: string | string[]) {
     await this.mustBeInitialized();
-    const currentBranch = await this.getCurrentBranch();
-    if (currentBranch === branchName) return; // No change needed
-    await this.git.checkout({
+    return this.git.add({
       fs: this.fs,
       dir: this.dir,
-      ref: branchName,
-      force: true, // Force checkout if necessary
-      // noCheckout: false, // Ensure the working directory is updated
+      filepath: Array.isArray(filepath) ? filepath : [filepath],
     });
-    return branchName;
+  }
+  async remove(filepath: string | string[]) {
+    await this.mustBeInitialized();
+    return this.mutex.runExclusive(() =>
+      Promise.all(
+        (Array.isArray(filepath) ? filepath : [filepath]).map((fp) =>
+          this.git.remove({
+            fs: this.fs,
+            dir: this.dir,
+            filepath: fp,
+          })
+        )
+      )
+    );
+  }
+
+  checkoutRef = async (ref: string) => {
+    await this.mustBeInitialized();
+    const currentBranch = await this.getCurrentBranch();
+    if (currentBranch === ref) return; // No change needed
+    //TODO consider doing more mutex locks elsewhere
+    await this.mutex.runExclusive(async () => {
+      await this.git.checkout({
+        fs: this.fs,
+        dir: this.dir,
+        ref: ref,
+        force: true, // Force checkout if necessary
+        // noCheckout: false, // Ensure the working directory is updated
+      });
+    });
+    return ref;
   };
 
   addGitBranch = async ({
@@ -415,7 +441,7 @@ export class Repo {
     symbolicRef?: string;
     checkout?: boolean;
   }) => {
-    symbolicRef = symbolicRef || this.defaultBranch;
+    symbolicRef = symbolicRef || this.defaultMainBranch;
     checkout = checkout ?? false;
     await this.mustBeInitialized();
     const branches = await this.git.listBranches({
@@ -435,27 +461,28 @@ export class Repo {
   deleteGitBranch = async (branchName: string) => {
     await this.mustBeInitialized();
     const currentBranch = await this.getCurrentBranch();
-    await this.git.deleteBranch({
-      fs: this.fs,
-      dir: this.dir,
-      ref: branchName,
-    });
-    if (currentBranch === branchName) {
-      await this.git.checkout({
+
+    return this.mutex.runExclusive(async () => {
+      await this.git.deleteBranch({
         fs: this.fs,
         dir: this.dir,
-        ref: this.defaultBranch,
-        force: true,
+        ref: branchName,
       });
-    }
-  };
-  replaceGitBranch = async (symbolicRef: string, branchName: string) => {
-    if (symbolicRef === branchName) return;
-    await this.mustBeInitialized();
-    await this.addGitBranch({ branchName, symbolicRef });
-    return this.deleteGitBranch(symbolicRef);
+      if (currentBranch === branchName) {
+        await this.git.checkout({
+          fs: this.fs,
+          dir: this.dir,
+          ref: this.defaultMainBranch,
+          force: true,
+        });
+      }
+    });
   };
 
+  async statusMatrix() {
+    await this.mustBeInitialized();
+    return git.statusMatrix({ fs: this.fs, dir: this.dir });
+  }
   addGitRemote = async (remote: GitRemote) => {
     await this.mustBeInitialized();
     const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
@@ -506,7 +533,7 @@ export class Repo {
         guid: this.guid,
         fs: this.fs,
         dir: this.dir,
-        branch: this.defaultBranch,
+        branch: this.defaultMainBranch,
         remoteBranch: remote.branch,
         remoteName: remote.name,
         url: remote.url,
@@ -524,6 +551,7 @@ const SYSTEM_COMMITS = {
   COMMIT: "opal@COMMIT",
   SWITCH_BRANCH: "opal@SWITCH_BRANCH",
   SWITCH_COMMIT: "opal@SWITCH_COMMIT",
+  RENAME_BRANCH: "opal@RENAME_BRANCH",
   INIT: "opal@INIT",
   PREPUSH: "opal@PREPUSH",
 };
@@ -581,17 +609,29 @@ export class RepoWithRemote extends Repo {
   }
 }
 export class GitPlaybook {
-  constructor(private repo: Repo) {}
+  //should probably dep inject shared mutex from somewhere rather than relying on repo's
+  //rather should share mutex
+  constructor(private repo: Repo, private mutex = new Mutex()) {}
 
   switchBranch = async (branchName: string) => {
     if ((await this.repo.getCurrentBranch()) === branchName) return false;
     if (await this.repo.hasChanges()) {
-      await this.addCommit({
+      await this.addAllCommit({
         message: SYSTEM_COMMITS.SWITCH_BRANCH,
       });
     }
-    await this.repo.checkoutBranch(branchName);
+    await this.repo.checkoutRef(branchName);
     return true;
+  };
+
+  replaceGitBranch = async (symbolicRef: string, branchName: string) => {
+    if (symbolicRef === branchName) return;
+    if (await this.repo.hasChanges()) {
+      await this.addAllCommit({ message: SYSTEM_COMMITS.RENAME_BRANCH });
+    }
+    await this.repo.addGitBranch({ branchName, symbolicRef });
+    await this.repo.deleteGitBranch(symbolicRef);
+    await this.repo.checkoutRef(branchName);
   };
 
   //a new branch is created from the current branch and commit
@@ -599,19 +639,14 @@ export class GitPlaybook {
   // switchToCommitBranch =
   switchCommit = async (commitOid: string) => {
     if (await this.repo.hasChanges()) {
-      await this.addCommit({
+      await this.addAllCommit({
         message: SYSTEM_COMMITS.SWITCH_COMMIT,
       });
     }
-    await this.repo.git.checkout({
-      fs: this.repo.fs,
-      dir: this.repo.dir,
-      ref: commitOid,
-      force: true,
-    });
+    await this.repo.checkoutRef(commitOid);
     return true;
   };
-  async addCommit({
+  async addAllCommit({
     message,
     author,
     allowEmpty = false,
@@ -626,11 +661,14 @@ export class GitPlaybook {
     if (!allowEmpty && !(await this.repo.hasChanges())) {
       return false;
     }
-    await this.repo.git.add({
-      fs: this.repo.fs,
-      dir: this.repo.dir,
-      filepath,
-    });
+    const statusMatrix = await this.repo.statusMatrix();
+
+    for (const [filepath, head, workdir] of statusMatrix) {
+      if (head && !workdir) {
+        await this.repo.remove(filepath);
+      }
+    }
+    await this.repo.add(filepath);
     await this.repo.git.commit({
       fs: this.repo.fs,
       dir: this.repo.dir,
@@ -671,14 +709,14 @@ export class GitRemotePlaybook extends GitPlaybook {
     /*commit,push*/
 
     if (await this.remoteRepo.hasChanges()) {
-      await this.addCommit({ message: SYSTEM_COMMITS.PREPUSH, author: this.remoteRepo.author });
+      await this.addAllCommit({ message: SYSTEM_COMMITS.PREPUSH, author: this.remoteRepo.author });
     }
     await git.push({
       fs: this.remoteRepo.fs,
       http,
       dir: this.remoteRepo.dir,
       remote: this.remoteRepo.gitRemote.name,
-      ref: this.remoteRepo.defaultBranch, // or any branch you want to push to
+      ref: this.remoteRepo.defaultMainBranch, // or any branch you want to push to
       onAuth: this.remoteRepo.gitRemote.auth,
     });
   }
@@ -696,7 +734,7 @@ export class GitRemotePlaybook extends GitPlaybook {
     await git.merge({
       fs: this.remoteRepo.fs,
       dir: this.remoteRepo.dir,
-      ours: this.remoteRepo.defaultBranch, // or any branch you want to merge into
+      ours: this.remoteRepo.defaultMainBranch, // or any branch you want to merge into
       theirs: this.remoteRepo.gitRemote.branch, // or any branch you want to merge from
       fastForwardOnly: true, // Set to false if you want to allow non-fast-forward merges
     });

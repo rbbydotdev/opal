@@ -1,51 +1,56 @@
 "use client";
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
-import { FileTreeMenu } from "../../FiletreeMenu";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../ui/collapsible";
+import { FileTreeMenu } from "@/components/FiletreeMenu";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
+import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useHandleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
+import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { NULL_TREE_ROOT, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
+import { absPath, AbsPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { ChevronRight, Files } from "lucide-react";
-import React, { JSX } from "react";
-import { useWorkspaceContext } from "../../../context/WorkspaceHooks";
-import { useHandleDropFilesEventForNode } from "../../../features/filetree-drag-and-drop/useFileTreeDragDrop";
-import { useSingleItemExpander } from "../../../features/tree-expander/useSingleItemExpander";
-import { TreeDir, TreeDirRoot, TreeNode } from "../../../lib/FileTree/TreeNode";
-import { absPath, AbsPath } from "../../../lib/paths2";
-import { useFileTreeMenuCtx } from "../../FileTreeMenuCtxProvider";
-import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "../../ui/sidebar";
+import React, { JSX, useMemo } from "react";
 export const SidebarFileMenuFiles = ({
-  fileTreeDir,
-  renameDirOrFileMultiple,
-  expandSingle,
-  expandForNode,
-  expanded,
   children,
   className,
   filter,
   title,
   Icon = Files,
+  scope,
   FileItemContextMenu,
   ...rest
 }: {
-  fileTreeDir: TreeDirRoot;
   className?: string;
-  expandSingle: (path: string, expanded: boolean) => void;
-  expandForNode: (node: TreeNode, state: boolean) => void;
-  expanded: { [key: string]: boolean };
-  renameDirOrFileMultiple: (nodes: [TreeNode, TreeNode | AbsPath][]) => Promise<unknown>;
   title: JSX.Element | string;
   children: React.ReactNode;
+  scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
   FileItemContextMenu: FileItemContextMenuComponentType;
 }) => {
+  const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
+  const { fileTreeDir, currentWorkspace } = useWorkspaceContext();
+  const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
+
+  const treeNode = useMemo(() => {
+    const node =
+      typeof scope === "undefined" ? fileTreeDir : currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT;
+    if (!node.isTreeDir()) {
+      throw new Error("SidebarFileMenuFiles: scoped node is not a TreeDir");
+    }
+    return node;
+  }, [currentWorkspace, fileTreeDir, scope]);
   const { id } = useFileTreeMenuCtx();
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + id);
-  const { currentWorkspace } = useWorkspaceContext();
   const handleExternalDropEvent = useHandleDropFilesEventForNode({ currentWorkspace });
 
-  const isEmpty = !Object.keys(fileTreeDir?.filterOutChildren?.(filter) ?? {}).length;
+  const isEmpty = !Object.keys(treeNode.filterOutChildren(filter) ?? {}).length;
   return (
     <>
       <FileItemContextMenu
@@ -92,7 +97,7 @@ export const SidebarFileMenuFiles = ({
                   </div>
                 ) : (
                   <FileTreeMenu
-                    fileTreeDir={fileTreeDir as TreeDir}
+                    fileTreeDir={treeNode as TreeDir}
                     expand={expandSingle}
                     filter={filter}
                     renameDirOrFileMultiple={renameDirOrFileMultiple}

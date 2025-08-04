@@ -7,7 +7,7 @@ import {
   RepoInfoType,
   RepoWithRemote,
 } from "@/features/git-repo/GitRepo";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export function useGitPlaybook(repo: Repo | RepoWithRemote) {
   return useMemo(() => {
@@ -25,7 +25,7 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
     const minWait = new Promise((rs) => setTimeout(rs, 1000));
     try {
       setPending("commit");
-      await playbook.addCommit({ message: "opal commit" });
+      await playbook.addAllCommit({ message: "opal commit" });
     } catch (e) {
       console.error("Error in commit function:", e);
     } finally {
@@ -36,8 +36,9 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
   return { isPending: pendingCommand !== null, pendingCommand, commit };
 }
 
-export function useWorkspaceRepo(workspace: Workspace) {
-  const repo = useMemo(() => workspace.NewRepo(), [workspace]);
+export function useWorkspaceRepo(workspace: Workspace, onPathNoExists?: (path: string) => void) {
+  const onPathNoExistsRef = useRef(onPathNoExists);
+  const repo = useMemo(() => workspace.NewRepo(onPathNoExistsRef.current), [workspace]);
   const playbook = useGitPlaybook(repo);
 
   const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);

@@ -2,7 +2,7 @@
 
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
-import { SidebarFileMenuFileSectionInternal } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFileSectionInternal";
+import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { Button } from "@/components/ui/button";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { SpecialDirs } from "@/Db/SpecialDirs";
@@ -21,11 +21,11 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
   useFileTreeClipboardEventListeners({ currentWorkspace });
 
   return (
-    <SidebarFileMenuFileSectionInternal
+    <SidebarFileMenuFiles
       FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
       title={"Files"}
       className={className}
-      filter={SpecialDirs.All} // Exclude trash and git directories
+      filter={SpecialDirs.All} // Exclude trash and git directories etc
     >
       <span className="block group-data-[state=closed]/collapsible:hidden">
         <SidebarFileMenuFilesActions
@@ -35,7 +35,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
           setExpandAll={setExpandAll}
         />
       </span>
-    </SidebarFileMenuFileSectionInternal>
+    </SidebarFileMenuFiles>
   );
 }
 

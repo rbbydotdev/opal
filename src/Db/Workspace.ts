@@ -605,7 +605,7 @@ export class Workspace {
     return unsub;
   }
 
-  NewRepo() {
+  NewRepo(_onPathNoExists?: (path: AbsPath) => void): Repo {
     //all a hack until hierarchy and dep injection is sorted out
     //workspace should not know about window.href
     const repo = Repo.FromDisk(this.disk, `${this.id}/repo`);
@@ -614,11 +614,20 @@ export class Workspace {
     repo.gitListener(() => {
       void this.disk.triggerIndex();
     });
-    const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
-    const unsub = repo.gitListener(() => {
-      void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
-        filePaths: [currentPath!],
-      });
+    //need to maybe make event more specific so this does not over fire
+    const unsub = repo.gitListener(async () => {
+      const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
+      //not always a write could be a remove!
+      if (await this.disk.pathExists(currentPath!)) {
+        void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
+          filePaths: [currentPath!],
+        });
+      } else {
+        void this.disk.local.emit(DiskEvents.INDEX, {
+          type: "delete",
+          details: { filePaths: [currentPath!] },
+        });
+      }
     });
     this.unsubs.push(unsub);
     return repo;

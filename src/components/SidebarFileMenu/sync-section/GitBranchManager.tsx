@@ -68,7 +68,7 @@ export function GitBranchManager({
     return (
       <BranchSelect
         branches={branches}
-        value={branch}
+        value={branches.includes(branch!) ? branch : null}
         onSelect={(value: string) => {
           setCurrentBranch(value);
         }}
@@ -246,7 +246,7 @@ export function BranchManagerSection({
           setCurrentBranch={(branch) => playbook.switchBranch(branch)}
           branches={branches}
           replaceGitBranch={(remoteName, remote) => {
-            void repo.replaceGitBranch(remoteName.branch, remote.branch);
+            void playbook.replaceGitBranch(remoteName.branch, remote.branch);
             branchRef.current.show("branch replaced");
           }}
           addGitBranch={(baseBranch, remoteName) => {

@@ -3,7 +3,7 @@ import { NullWorkspace } from "@/Db/NullWorkspace";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
+import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -12,7 +12,6 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export const NULL_WORKSPACE = new NullWorkspace();
-const NULL_TREE_ROOT = new TreeDirRoot();
 
 const defaultWorkspaceContext = {
   fileTreeDir: NULL_TREE_ROOT,
