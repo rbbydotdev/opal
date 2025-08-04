@@ -1,6 +1,6 @@
 "use client";
 
-import { SidebarFileMenuFileSectionInternal } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFileSectionInternal";
+import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { SpecialDirs } from "@/Db/SpecialDirs";
@@ -27,7 +27,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
     <TreeExpanderProvider nodePaths={[]} id="TrashFiles">
       <ContextMenu>
         <ContextMenuTrigger disabled={!currentWorkspace.hasTrash()} asChild>
-          <SidebarFileMenuFileSectionInternal
+          <SidebarFileMenuFiles
             FileItemContextMenu={TrashFileTreeContextMenu} //<TrashFileTreeContextMenu ...
             Icon={Trash2}
             title={"Trash"}
@@ -35,7 +35,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
             scope={SpecialDirs.Trash}
           >
             {hasTrash ? <TinyNotice /> : null}
-          </SidebarFileMenuFileSectionInternal>
+          </SidebarFileMenuFiles>
         </ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem className="flex gap-2" onClick={() => removeFile(SpecialDirs.Trash)}>
