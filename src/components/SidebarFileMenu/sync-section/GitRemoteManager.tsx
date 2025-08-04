@@ -200,10 +200,10 @@ function RemoteSelect({
           </SelectTrigger>
           <SelectContent>
             {remotes.map((remote) => (
-              <SelectItem key={remote.name} value={remote.name} className={"!text-xs"}>
-                <div className="flex gap-2 items-center justify-start ">
-                  <SatelliteDishIcon size={12} className="stroke-ring" />
-                  {remote.name}
+              <SelectItem key={remote.name} value={remote.name} className={"!text-xs truncate"}>
+                <div className="flex gap-2 items-center justify-start truncate">
+                  <SatelliteDishIcon size={12} className="stroke-ring flex-shrink-0" />
+                  <span className="truncate">{remote.name}</span>
                 </div>
               </SelectItem>
             ))}

@@ -64,13 +64,6 @@ export const FileTreeMenuCtxProvider = ({
 }) => {
   const pathname = usePathname();
 
-  // const filteredTree = useMemo(() => {
-  //   if (typeof filter === "undefined") return null;
-  //   if (Array.isArray(filter)) {
-  //     return (node: TreeNode) => filter.includes(node.path);
-  //   }
-  //   return filter;
-  // }, [filter]);
   const { filePath } = Workspace.parseWorkspacePath(pathname);
   const [dragOver, setDragOver] = useState<TreeNode | null>(null);
   const [draggingNode, setDraggingNode] = useState<TreeNode | null>(null);

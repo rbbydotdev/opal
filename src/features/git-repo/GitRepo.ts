@@ -2,6 +2,7 @@ import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { Disk } from "@/Db/Disk";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
+import { deepEqual } from "@/lib/deepEqual";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
@@ -208,12 +209,11 @@ export class Repo {
     return this.local.on(RepoEvents.INFO, cb);
   }
   async sync() {
-    // const currentInfo = { ...this.info };
     const newInfo = { ...(await this.tryInfo()) };
     await this.$p.resolve(newInfo);
-    // if (deepEqual(currentInfo, newInfo)) {
-    //   return this.info; // No changes, return current info
-    // }
+    if (deepEqual(this.info, newInfo)) {
+      return this.info; // No changes, return current info
+    }
     void this.local.emit(RepoEvents.INFO, newInfo);
     void this.remote.emit(RepoEvents.INFO, newInfo);
     return (this.info = newInfo);

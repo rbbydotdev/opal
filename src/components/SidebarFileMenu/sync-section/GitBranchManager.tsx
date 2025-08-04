@@ -241,8 +241,12 @@ function BranchSelect({
             {branches.map((branch) => (
               <SelectItem key={branch} value={branch} className={"!text-xs"}>
                 <div className="flex gap-2 items-center justify-start ">
-                  {isLockedBranch(branch) ? <LockKeyhole size={12} /> : <GitBranchIcon size={12} />}
-                  {branch}
+                  {isLockedBranch(branch) ? (
+                    <LockKeyhole size={12} className="flex-shrink-0" />
+                  ) : (
+                    <GitBranchIcon size={12} className="flex-shrink-0" />
+                  )}
+                  <span className="truncate">{branch}</span>
                 </div>
               </SelectItem>
             ))}
