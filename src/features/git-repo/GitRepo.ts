@@ -227,6 +227,10 @@ export class Repo {
     }
     return (this.info = newInfo);
   }
+  // findParentBranchHead = async (ref: string): Promise<string | null> => {
+  //check the reflog to find the parent
+
+  // }
 
   watch(callback: () => void) {
     const unsub: (() => void)[] = [];
@@ -388,6 +392,15 @@ export class Repo {
     }
   };
 
+  resolveRef = async (ref: string): Promise<string> => {
+    await this.mustBeInitialized();
+    return this.git.resolveRef({
+      fs: this.fs,
+      dir: this.dir,
+      ref,
+    });
+  };
+
   mustBeInitialized = async (): Promise<boolean> => {
     if (this.state.initialized) return true;
     if (!(await this.exists())) {
@@ -536,6 +549,26 @@ export class Repo {
     }
   };
 
+  currentBranch = async ({ fullname = false }: { fullname: boolean }): Promise<string | void> => {
+    await this.mustBeInitialized();
+    return await this.git.currentBranch({
+      fs: this.fs,
+      dir: this.dir,
+      fullname,
+    });
+  };
+
+  writeRef = async ({ ref, value, force = false }: { ref: string; value: string; force: boolean }) => {
+    await this.mustBeInitialized();
+    return this.git.writeRef({
+      fs: this.fs,
+      dir: this.dir,
+      ref,
+      value,
+      force,
+    });
+  };
+
   withRemote = (remote: IRemote): RepoWithRemote => {
     return new RepoWithRemote(
       {
@@ -643,9 +676,30 @@ export class GitPlaybook {
     await this.repo.checkoutRef(branchName);
   };
 
-  //a new branch is created from the current branch and commit
-  //
-  // switchToCommitBranch =
+  static readonly ORIG_BRANCH_REF = "refs/orig-branch";
+
+  recallOrigBranch = async () => {
+    const origBranch = await this.repo.resolveRef(GitPlaybook.ORIG_BRANCH_REF);
+    if (origBranch) {
+      await this.repo.checkoutRef(origBranch);
+      return true;
+    } else {
+      return false;
+    }
+  };
+  rememberCurrentBranch = async () => {
+    const currentBranch = await this.repo.currentBranch({ fullname: true });
+    if (currentBranch) {
+      await this.repo.writeRef({
+        ref: GitPlaybook.ORIG_BRANCH_REF,
+        value: currentBranch,
+        force: true,
+      });
+      return true;
+    } else {
+      return false;
+    }
+  };
   switchCommit = async (commitOid: string) => {
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({

@@ -50,7 +50,7 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
       <dt className="font-bold">branch:</dt>
       <dd className="truncate">{currentBranch || <i>none / detatched</i>}</dd>
       <dt className="font-bold">has changes:</dt>
-      <dd className="truncate">{hasChanges ? "yes" : "no"}</dd>
+      <dd className="truncate">{hasChanges ? <b className="font-bold">yes</b> : "no"}</dd>
       <dt className="font-bold">date:</dt>
       <dd className="truncate">{new Date(latestCommit.date).toLocaleString()}</dd>
       <dt className="font-bold">time ago:</dt>
