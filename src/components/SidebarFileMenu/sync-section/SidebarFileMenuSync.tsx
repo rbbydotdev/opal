@@ -11,10 +11,14 @@ import {
   RefreshCw,
   Upload,
 } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
-import { BranchManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
+import {
+  BranchManagerSection,
+  createBranchRef,
+  createCommitRef,
+} from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { CommitManagerSection } from "@/components/SidebarFileMenu/sync-section/GitCommitManager";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -131,6 +135,14 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: remoteRef } = useTooltipToastCmd();
   const { cmdRef: branchRef } = useTooltipToastCmd();
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
+  const currentGitRef = useMemo(() => {
+    if (info?.currentBranch) {
+      return createBranchRef(info.currentBranch);
+    } else if (info?.latestCommit?.oid) {
+      return createCommitRef(info?.latestCommit.oid);
+    }
+    return null;
+  }, [info]);
 
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
@@ -182,10 +194,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 <BranchManagerSection
                   repo={repo}
                   playbook={playbook}
-                  // defaultBranch={repo.defaultBranch}
-                  // branch={info.currentBranch}
-                  branch={info.currentBranch || info.latestCommit?.oid || null}
-                  // gitObject={info.currentBranch || info.latestCommit}
+                  currentGitRef={currentGitRef}
                   branches={info.branches}
                   branchRef={branchRef}
                 />

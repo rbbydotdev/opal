@@ -280,3 +280,9 @@ export function absPathname(path: string) {
     return absPath(path);
   }
 }
+
+export function filterOutAncestor(paths: AbsPath[]) {
+  return (path: AbsPath) => {
+    return !paths.some((ancestor) => isAncestor({ child: path, parent: ancestor }));
+  };
+}
