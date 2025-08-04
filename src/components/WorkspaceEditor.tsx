@@ -15,10 +15,7 @@ import { useCurrentFilepath, useFileContents, useWorkspaceContext, useWorkspaceR
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
-import {
-  isExternalFileDrop,
-  useHandleDropFilesEventForNode,
-} from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { RootNode } from "@/lib/FileTree/TreeNode";
@@ -43,14 +40,18 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
   const { isImage, filePath, inTrash } = useCurrentFilepath();
 
   const router = useRouter();
-  const handleDropFilesEvent = useHandleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
+  // const handleDropFilesEvent = handleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
   return (
     <>
       {isImage ? (
         <ConditionalDropzone
           shouldActivate={isExternalFileDrop}
           onDrop={(e) =>
-            handleDropFilesEvent(e, RootNode).then(([filePath]) => {
+            handleDropFilesEventForNode({
+              currentWorkspace: props.currentWorkspace,
+              event: e,
+              targetNode: RootNode,
+            }).then(([filePath]) => {
               if (filePath) router.push(props.currentWorkspace.resolveFileUrl(filePath));
             })
           }
@@ -95,7 +96,7 @@ export function WorkspaceEditor({ className, currentWorkspace, ...props }: Works
     //this is for out of editor updates like via tab or image path updates
     editorRef.current?.setMarkdown(newContent ?? "");
   });
-  const [readOnlyMode, setReadOnly] = useReadOnlyMode();
+  const [readOnlyMode, _setReadOnly] = useReadOnlyMode();
 
   const { id, path } = useWorkspaceRoute();
   const { mimeType } = useCurrentFilepath();

@@ -53,24 +53,30 @@ export async function handleDropFilesForNode({
   return (await Promise.all(promises)).flat();
 }
 
-export function useHandleDropFilesEventForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  return async (event: React.DragEvent, targetNode: TreeNode) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.dataTransfer?.files) {
-      return handleDropFilesForNode({ currentWorkspace, files: event.dataTransfer.files, targetNode });
-    } else {
-      console.warn("No files found in the drag event dataTransfer.");
-      return Promise.resolve([]);
-    }
-  };
+export async function handleDropFilesEventForNode({
+  currentWorkspace,
+  event,
+  targetNode,
+}: {
+  currentWorkspace: Workspace;
+  event: React.DragEvent;
+  targetNode: TreeNode;
+}) {
+  event.preventDefault();
+  event.stopPropagation();
+  if (event.dataTransfer?.files) {
+    return handleDropFilesForNode({ currentWorkspace, files: event.dataTransfer.files, targetNode });
+  } else {
+    console.warn("No files found in the drag event dataTransfer.");
+    return Promise.resolve([]);
+  }
 }
 
 export function useHandleDropFilesEventForNodeRedirect({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const router = useRouter();
-  const dropFilesHandler = useHandleDropFilesEventForNode({ currentWorkspace });
+  // const dropFilesHandler = useHandleDropFilesEventForNode({ currentWorkspace });
   return (event: React.DragEvent, targetNode: TreeNode) => {
-    return dropFilesHandler(event, targetNode).then(([file]) => {
+    return handleDropFilesEventForNode({ currentWorkspace, event, targetNode }).then(([file]) => {
       if (file) {
         const filePath = currentWorkspace.resolveFileUrl(file);
         router.push(filePath);
