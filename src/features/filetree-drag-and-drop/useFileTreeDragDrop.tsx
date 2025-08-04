@@ -19,43 +19,46 @@ export function isExternalFileDrop(event: React.DragEvent | DragEvent): boolean 
   );
 }
 
-export function useHandleDropFilesForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  return async function ({ files, targetNode }: { files: FileList | []; targetNode: TreeNode }) {
-    const targetDir = targetNode.closestDirPath();
-    const fileArray = Array.from(files);
-    const imageFiles: File[] = fileArray.filter((file) => file.type.startsWith("image/"));
-    const markdownFiles: File[] = fileArray.filter(
-      (file) => file.type === "text/markdown" || file.name.endsWith(".md")
-    );
-    const docxFiles: File[] = fileArray.filter(
-      (file) => mime.extension(file.type) === "docx" || file.name.endsWith(".docx")
-    );
-    const promises: Promise<AbsPath[]>[] = [];
+export async function handleDropFilesForNode({
+  currentWorkspace,
+  files,
+  targetNode,
+}: {
+  currentWorkspace: Workspace;
+  files: FileList | [];
+  targetNode: TreeNode;
+}) {
+  const targetDir = targetNode.closestDirPath();
+  const fileArray = Array.from(files);
+  const imageFiles: File[] = fileArray.filter((file) => file.type.startsWith("image/"));
+  const markdownFiles: File[] = fileArray.filter((file) => file.type === "text/markdown" || file.name.endsWith(".md"));
+  const docxFiles: File[] = fileArray.filter(
+    (file) => mime.extension(file.type) === "docx" || file.name.endsWith(".docx")
+  );
+  const promises: Promise<AbsPath[]>[] = [];
 
-    if (docxFiles.length > 0) {
-      promises.push(currentWorkspace.uploadMultipleDocx(docxFiles, targetDir));
-    }
+  if (docxFiles.length > 0) {
+    promises.push(currentWorkspace.uploadMultipleDocx(docxFiles, targetDir));
+  }
 
-    if (imageFiles.length > 0) {
-      promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
-    }
+  if (imageFiles.length > 0) {
+    promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
+  }
 
-    if (markdownFiles.length > 0) {
-      const newFilesData = markdownFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
-      promises.push(currentWorkspace.newFiles(newFilesData));
-    }
+  if (markdownFiles.length > 0) {
+    const newFilesData = markdownFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
+    promises.push(currentWorkspace.newFiles(newFilesData));
+  }
 
-    return (await Promise.all(promises)).flat();
-  };
+  return (await Promise.all(promises)).flat();
 }
 
 export function useHandleDropFilesEventForNode({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const dropFilesHandler = useHandleDropFilesForNode({ currentWorkspace });
-  return (event: React.DragEvent, targetNode: TreeNode) => {
+  return async (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
     event.stopPropagation();
     if (event.dataTransfer?.files) {
-      return dropFilesHandler({ files: event.dataTransfer.files, targetNode });
+      return handleDropFilesForNode({ currentWorkspace, files: event.dataTransfer.files, targetNode });
     } else {
       console.warn("No files found in the drag event dataTransfer.");
       return Promise.resolve([]);
@@ -95,7 +98,7 @@ export function useFileTreeDragDrop({
     return TreeNode.FromPath(dropPath(targetPath, node), node.type);
   }
 
-  const dropFilesHandler = useHandleDropFilesForNode({ currentWorkspace });
+  // const dropFilesHandler = handleDropFilesForNode({ currentWorkspace });
   const { selectedRange, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
     useFileTreeMenuCtx();
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
@@ -143,7 +146,7 @@ export function useFileTreeDragDrop({
     if (!isExternalFileDrop(event)) {
       return;
     }
-    return dropFilesHandler({ files: event.dataTransfer.files, targetNode });
+    return handleDropFilesForNode({ currentWorkspace, files: event.dataTransfer.files, targetNode });
   };
 
   const handleDrop = async (event: React.DragEvent, targetNode: TreeNode = currentWorkspace.disk.fileTree.root) => {
