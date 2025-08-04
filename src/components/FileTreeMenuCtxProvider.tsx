@@ -27,7 +27,6 @@ export const FileTreeMenuCtx = React.createContext<{
   selectedFocused: AbsPath[];
   draggingNode: TreeNode | null;
   draggingNodes: TreeNode[];
-  id: FILE_TREE_MENUS_TYPE;
   setDraggingNode: (node: TreeNode | null) => void;
   setDraggingNodes: (node: TreeNode[]) => void;
   selectedRange: AbsPath[];
@@ -43,20 +42,15 @@ export function useFileTreeMenuCtx() {
 }
 type EditType = "rename" | "new" | "duplicate";
 
-export const FILE_TREE_MENUS = ["TrashFiles", "MainFiles"] as const;
-export type FILE_TREE_MENUS_TYPE = (typeof FILE_TREE_MENUS)[number];
-
 // filterFromRangeSelect={SpecialDirs.allSpecialDirsExcept(SpecialDirs.Trash)}
 export const FileTreeMenuCtxProvider = ({
   children,
-  id,
   currentWorkspace,
   scope,
   // filterRange is needed since selecting ranges will include hidden files in the range
   // so they need filtered out
   filterRange,
 }: {
-  id: (typeof FILE_TREE_MENUS)[number];
   children: React.ReactNode;
   currentWorkspace: Workspace;
   scope?: AbsPath;
@@ -159,7 +153,6 @@ export const FileTreeMenuCtxProvider = ({
   return (
     <FileTreeMenuCtx.Provider
       value={{
-        id,
         selectedRange,
         setFileTreeCtx,
         scopedTreeNode,

@@ -6,6 +6,7 @@ import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-sec
 import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
+import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
 import { DisplayTreeProvider, useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { IS_MAC } from "@/lib/isMac";
@@ -36,8 +37,8 @@ import { SidebarDndList } from "../ui/SidebarDndList";
 function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
   return <Slot {...rest}>{children}</Slot>;
 }
-const dndSections = ["publish", "git", "export", "trash", "files", "treeview"];
-type DndSectionType = "publish" | "git" | "export" | "trash" | "files" | "treeview";
+const dndSections = ["publish", "git", "export", "trash", "files", "treeview", "upload"];
+type DndSectionType = "publish" | "git" | "export" | "trash" | "files" | "treeview" | "upload";
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
@@ -146,7 +147,6 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           <DndSlot dndId={"trash"}>
             <div className="min-h-8 flex-shrink flex">
               <FileTreeMenuCtxProvider
-                id="TrashFiles"
                 currentWorkspace={currentWorkspace}
                 filterRange={filterAllSpecialDirsExceptTrash}
               >
@@ -155,13 +155,17 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
             </div>
           </DndSlot>
 
+          <DndSlot dndId={"upload"}>
+            <div className="flex-shrink flex">
+              <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace}>
+                <SidebarFileMenuUpload />
+              </FileTreeMenuCtxProvider>
+            </div>
+          </DndSlot>
+
           <DndSlot dndId={"files"}>
             <div className="flex-shrink flex">
-              <FileTreeMenuCtxProvider
-                id="MainFiles"
-                currentWorkspace={currentWorkspace}
-                filterRange={filterAllSpecialDirs}
-              >
+              <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace} filterRange={filterAllSpecialDirs}>
                 <TreeExpanderProvider id="MainFiles" nodePaths={[]}>
                   <MainSidebarFileMenuFileSection />
                 </TreeExpanderProvider>
