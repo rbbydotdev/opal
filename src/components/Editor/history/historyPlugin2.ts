@@ -84,7 +84,7 @@ export class HistoryPlugin2 {
     this.events.emit(HistoryEvents.SELECTED_EDIT, edit);
   }
   set $selectedEditMd(md: string | null) {
-    console.debug(`Setting selected edit markdown for ${this.documentId}`, md ?? "null");
+    console.debug(`Setting selected edit markdown for ${this.documentId}`, md?.length ?? "null");
     this.eventId++;
     this.selectedEditMd = md;
     this.events.emit(HistoryEvents.SELECTED_EDIT_MD, md);
@@ -197,7 +197,7 @@ export class HistoryPlugin2 {
     this.events.removeAllListeners();
   };
 
-  private async saveNewEdit(newMarkdown: string, force = false) {
+  private async saveNewEdit(newMarkdown: string) {
     await this.transaction(async () => {
       const edits = await this.historyStorage.getEdits(this.documentId);
       if (!edits.length) {

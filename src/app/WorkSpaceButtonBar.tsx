@@ -14,8 +14,12 @@ import { cn } from "@/lib/utils";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import React, { JSX } from "react";
 import { twMerge } from "tailwind-merge";
 
+const BigButtonWorkspaceTitle = ({ title }: { title: string }) => (
+  <div className="uppercase truncate px-2 pt-2 text-center w-full">{title}</div>
+);
 function BigButton({
   icon,
   title,
@@ -23,7 +27,7 @@ function BigButton({
   ...restProps
 }: {
   icon: React.ReactNode;
-  title?: string;
+  title?: string | React.ReactNode | JSX.Element | null;
   active?: boolean;
 } & React.ComponentProps<typeof Link>) {
   const pathname = usePathname();
@@ -42,10 +46,12 @@ function BigButton({
             {isActive && <div className="w-0.5 h-full bg-white ml-1"></div>}
             <div className="flex flex-col items-center justify-center">
               {icon}
-              {title && (
-                <div className="uppercase text-ellipsis px-2 pt-2 text-center overflow-clip whitespace-nowrap w-full">
-                  {title}
-                </div>
+              {/* text-ellipsis overflow-clip whitespace-nowrap  */}
+              {/* {title && <div className="uppercase truncate px-2 pt-2 text-center w-full">{title}</div>} */}
+              {typeof title === "string" ? (
+                <div className="uppercase px-2 pt-2 text-center w-full">{title}</div>
+              ) : (
+                title
               )}
             </div>
           </div>
@@ -163,7 +169,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
       {coalescedWorkspace && (
         <BigButton
           icon={<WorkspaceIcon input={coalescedWorkspace.guid} />}
-          title={coalescedWorkspace.name}
+          title={<BigButtonWorkspaceTitle title={coalescedWorkspace.name} />}
           href={coalescedWorkspace.href}
           className="text-white big-button-active"
         />
