@@ -62,6 +62,15 @@ export function EditHistoryMenu({
   const pendingSave = useSnapHistoryPendingSave({ historyDB });
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
+  const finalizeAndRestore = () => {
+    const edit = selectedEditMd;
+    if (edit) {
+      finalizeRestore(edit);
+      rebaseHistory(edit);
+    } else {
+      console.warn("No edit selected to restore");
+    }
+  };
 
   const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
 
@@ -157,18 +166,13 @@ export function EditHistoryMenu({
       {isRestoreState && (
         <>
           <button
-            onClick={() => {
-              finalizeRestore(selectedEditMd!);
-              rebaseHistory(selectedEditMd!);
-            }}
+            onClick={finalizeAndRestore}
             className="font-bold rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary border-ring hover:bg-primary hover:text-primary-foreground"
           >
             OK
           </button>
           <button
-            onClick={() => {
-              void resetAndRestore();
-            }}
+            onClick={resetAndRestore}
             className="font-bold rounded-xl text-xs border-2 bg-primary-foreground p-2 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground"
           >
             CANCEL

@@ -71,20 +71,20 @@ export class HistoryPlugin2 {
   private eventId = 0;
 
   set $edits(edits: HistoryDocRecord[]) {
-    // console.debug(`Setting edits for ${this.documentId}`, edits.length);
+    console.debug(`Setting edits for ${this.documentId}`, edits.length);
     this.eventId++;
     this.edits = edits;
     this.events.emit(HistoryEvents.EDITS, edits);
   }
 
   set $selectedEdit(edit: HistoryDocRecord | null) {
-    // console.debug(`Setting selected edit for ${this.documentId}`, edit?.id ?? "null");
+    console.debug(`Setting selected edit for ${this.documentId}`, edit?.id ?? "null");
     this.eventId++;
     this.selectedEdit = edit;
     this.events.emit(HistoryEvents.SELECTED_EDIT, edit);
   }
   set $selectedEditMd(md: string | null) {
-    // console.debug(`Setting selected edit markdown for ${this.documentId}`, md ?? "null");
+    console.debug(`Setting selected edit markdown for ${this.documentId}`, md ?? "null");
     this.eventId++;
     this.selectedEditMd = md;
     this.events.emit(HistoryEvents.SELECTED_EDIT_MD, md);
@@ -245,9 +245,9 @@ export class HistoryPlugin2 {
 
   rebaseHistory = (md: string) => {
     // console.log(md);
+    this.latestMarkdown = md;
     this.$selectedEdit = null;
     this.$selectedEditMd = null;
-    this.latestMarkdown = md;
   };
 
   resetAndRestore = () => {

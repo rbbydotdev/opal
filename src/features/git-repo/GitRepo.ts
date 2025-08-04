@@ -179,6 +179,10 @@ export class Repo {
   // }
 
   initListeners() {
+    this.remote.init();
+    this.remote.on(RepoEvents.INFO, () => {
+      void this.syncLocal();
+    });
     return this.gitEvents.on(
       [
         "commit:end",
@@ -208,14 +212,19 @@ export class Repo {
   infoListener(cb: (info: RepoInfoType) => void) {
     return this.local.on(RepoEvents.INFO, cb);
   }
-  async sync() {
+  private syncLocal = async () => {
+    return this.sync({ emitRemote: false });
+  };
+  async sync({ emitRemote = true } = {}) {
     const newInfo = { ...(await this.tryInfo()) };
     await this.$p.resolve(newInfo);
     if (deepEqual(this.info, newInfo)) {
       return this.info; // No changes, return current info
     }
     void this.local.emit(RepoEvents.INFO, newInfo);
-    void this.remote.emit(RepoEvents.INFO, newInfo);
+    if (emitRemote) {
+      void this.remote.emit(RepoEvents.INFO, newInfo);
+    }
     return (this.info = newInfo);
   }
 
