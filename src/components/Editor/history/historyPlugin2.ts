@@ -1,6 +1,7 @@
 import { MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
 import { debounce } from "@/lib/debounce";
+import { deepEqual } from "@/lib/deepEqual";
 import { Mutex } from "async-mutex";
 import EventEmitter from "events";
 
@@ -116,6 +117,7 @@ export class HistoryPlugin2 {
 
   private lastEventId = -1;
   getState = () => {
+    console.debug("getState called");
     if (this.eventId !== this.lastEventId || !this.lastState) {
       this.lastEventId = this.eventId;
       return (this.lastState = {
@@ -123,6 +125,19 @@ export class HistoryPlugin2 {
         selectedEdit: this.selectedEdit,
         selectedEditMd: this.selectedEditMd,
       });
+    }
+    return this.lastState;
+  };
+
+  getState2 = () => {
+    console.debug("getState called");
+    const nextState = {
+      edits: this.edits,
+      selectedEdit: this.selectedEdit,
+      selectedEditMd: this.selectedEditMd,
+    };
+    if (!deepEqual(this.lastState, nextState)) {
+      this.lastState = nextState;
     }
     return this.lastState;
   };

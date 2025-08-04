@@ -3,15 +3,15 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { RootNode } from "@/lib/FileTree/TreeNode";
 import { ChevronRight, UploadIcon } from "lucide-react";
 import { useRef } from "react";
 
 export function SidebarFileMenuUpload(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleItemExpander("upload");
   const { currentWorkspace } = useWorkspaceContext();
-  const _fileMgr = useWorkspaceFileMgmt(currentWorkspace);
   const fileUploadRef = useRef<HTMLInputElement>(null);
   return (
     <SidebarGroup {...props}>
@@ -51,13 +51,13 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                 <label
                   htmlFor="file-upload"
                   className="border-dashed border-2 rounded px-4 py-6 text-center cursor-pointer hover:border-primary transition-colors"
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    console.log("Drag over");
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    console.log("File dropped", e.dataTransfer.files);
+                  // onDragOver={(e) => {
+                  //   e.preventDefault();
+                  // }}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    void handleDropFilesEventForNode({ currentWorkspace, event, targetNode: RootNode });
                   }}
                 >
                   <UploadIcon className="mx-auto mb-2" size={24} />
@@ -68,7 +68,11 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                     type="file"
                     className="hidden"
                     onChange={(e) => {
-                      console.log("File selected", e.target.files);
+                      void handleDropFilesEventForNode({
+                        currentWorkspace,
+                        event: { dataTransfer: { files: e.target.files } },
+                        targetNode: RootNode,
+                      });
                     }}
                   />
                 </label>

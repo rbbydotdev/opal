@@ -23,6 +23,9 @@ export const ImageViewerDropZone = ({
       e.stopPropagation();
       if (!isOpen) setOpen(true);
     },
+    onClick: (_e: React.MouseEvent<HTMLDivElement>) => {
+      setOpen(false);
+    },
     onDragOver: (e: React.DragEvent<HTMLDivElement>) => {
       // This is the crucial part!
       e.preventDefault();
@@ -40,7 +43,6 @@ export const ImageViewerDropZone = ({
     onDrop: (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log("DROP!");
       setOpen(false); // Close the dropzone UI after a successful drop
       onDrop(e);
     },

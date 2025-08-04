@@ -65,6 +65,7 @@ export function EditHistoryMenu({
   const finalizeAndRestore = () => {
     const edit = selectedEditMd;
     if (edit) {
+      console.debug("Finalizing restore with edit:", edit.length);
       finalizeRestore(edit);
       rebaseHistory(edit);
     } else {

@@ -74,6 +74,9 @@ export function ConditionalDropzone({
       e.preventDefault(); // This is necessary to allow dropping
       e.stopPropagation();
     },
+    onClick: (_e: React.MouseEvent<HTMLDivElement>) => {
+      setIsDragActive(false);
+    },
     onDragLeave: (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
@@ -83,7 +86,6 @@ export function ConditionalDropzone({
       }
     },
     onDrop: (e: React.DragEvent<HTMLDivElement>) => {
-      console.log("drop");
       e.preventDefault();
       e.stopPropagation();
       setIsDragActive(false); // Deactivate after drop
