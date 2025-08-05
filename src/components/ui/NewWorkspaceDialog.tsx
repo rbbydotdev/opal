@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Disk, DiskEnabledFSTypes, DiskType } from "@/Db/Disk";
+import { Disk, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
 import { LoaderIcon } from "lucide-react";
 import { nanoid } from "nanoid";
@@ -82,7 +82,7 @@ export function NewWorkspaceDialog({
                 <SelectContent id="fileSystem-1">
                   {DiskEnabledFSTypes.map((diskType) => (
                     <SelectItem key={diskType} value={diskType}>
-                      {diskType}
+                      {DiskLabelMap[diskType]}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -37,6 +37,14 @@ export const DiskTypes = [
 ] as const;
 
 export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk"] as const;
+export const DiskLabelMap: Record<DiskType, string> = {
+  IndexedDbDisk: "IndexedDB",
+  MemDisk: "Memory",
+  DexieFsDbDisk: "DexieFS",
+  NullDisk: "Null",
+  OpFsDisk: "OPFS (origin private file system)",
+  ZenWebstorageFSDbDisk: "ZenWebstorageFSDb",
+};
 
 export type DiskType = (typeof DiskTypes)[number];
 
