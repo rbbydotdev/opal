@@ -4,7 +4,7 @@ import { type ImageWorkerApiType } from "@/workers/ImageWorker/ImageWorkerApi";
 import "@/workers/transferHandlers";
 import { wrap } from "comlink";
 
-export async function uploadImages__old(
+export async function uploadImages2(
   workspace: Workspace,
   files: Iterable<File>,
   targetDir: AbsPath,
@@ -67,9 +67,8 @@ export async function uploadImages(
       }
     } catch (e) {
       console.error(`Error uploading image:`, e);
-    } finally {
-      worker.terminate();
     }
+    worker.terminate();
   }
 
   const poolSize = Math.min(concurrency, filesArr.length);

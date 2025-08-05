@@ -1,7 +1,6 @@
 import { MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
 import { debounce } from "@/lib/debounce";
-import { deepEqual } from "@/lib/deepEqual";
 import { Mutex } from "async-mutex";
 import EventEmitter from "events";
 
@@ -69,25 +68,23 @@ export class HistoryPlugin2 {
   private debounceMs = 2_000;
   private edits: HistoryDocRecord[] = [];
 
-  private eventId = 0;
-
   set $edits(edits: HistoryDocRecord[]) {
     console.debug(`Setting edits for ${this.documentId}`, edits.length);
-    this.eventId++;
     this.edits = edits;
+    this.updateState();
     this.events.emit(HistoryEvents.EDITS, edits);
   }
 
   set $selectedEdit(edit: HistoryDocRecord | null) {
     console.debug(`Setting selected edit for ${this.documentId}`, edit?.id ?? "null");
-    this.eventId++;
     this.selectedEdit = edit;
+    this.updateState();
     this.events.emit(HistoryEvents.SELECTED_EDIT, edit);
   }
   set $selectedEditMd(md: string | null) {
     console.debug(`Setting selected edit markdown for ${this.documentId}`, md?.length ?? "null");
-    this.eventId++;
     this.selectedEditMd = md;
+    this.updateState();
     this.events.emit(HistoryEvents.SELECTED_EDIT_MD, md);
   }
 
@@ -115,31 +112,16 @@ export class HistoryPlugin2 {
     selectedEditMd: string | null;
   } | null = null;
 
-  private lastEventId = -1;
-  getState = () => {
-    console.debug("getState called");
-    if (this.eventId !== this.lastEventId || !this.lastState) {
-      this.lastEventId = this.eventId;
-      return (this.lastState = {
-        edits: this.edits,
-        selectedEdit: this.selectedEdit,
-        selectedEditMd: this.selectedEditMd,
-      });
-    }
-    return this.lastState;
-  };
-
-  getState2 = () => {
-    console.debug("getState called");
-    const nextState = {
+  private updateState() {
+    return (this.lastState = {
       edits: this.edits,
       selectedEdit: this.selectedEdit,
       selectedEditMd: this.selectedEditMd,
-    };
-    if (!deepEqual(this.lastState, nextState)) {
-      this.lastState = nextState;
-    }
-    return this.lastState;
+    });
+  }
+
+  getState = () => {
+    return (this.lastState = this.lastState || this.updateState());
   };
   // state:
   onStateUpdate = (cb: () => void) => {
