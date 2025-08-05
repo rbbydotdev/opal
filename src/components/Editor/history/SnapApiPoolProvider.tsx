@@ -19,7 +19,6 @@ export async function createApiResource({
   });
   iframe.src = "/doc-preview-image.html?" + searchParams.toString();
   document.body.appendChild(iframe);
-  // iframe.sandbox.add("allow-scripts", "allow-same-origin");
   await new Promise((rs) => (iframe!.onload = () => rs(true)));
   console.debug("iframe up");
   let api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
@@ -28,12 +27,12 @@ export async function createApiResource({
   const wrefApi = new WeakRef(api);
   const wrefIframe = new WeakRef(iframe);
   const terminate = () => {
+    //me being paranoid about memory leaks
     console.debug("terminating api resource");
     (wrefIframe.deref()! || {}).src = "about:blank";
     wrefApi.deref()?.[Comlink.releaseProxy]();
     wrefIframe.deref()?.remove();
     api = null;
-    // iframe!.remove();
     iframe = null;
   };
   return { api, terminate };

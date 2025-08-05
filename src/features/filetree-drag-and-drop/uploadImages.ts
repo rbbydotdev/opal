@@ -1,9 +1,10 @@
 import { type Workspace } from "@/Db/Workspace";
 import { AbsPath, joinPath } from "@/lib/paths2";
 import { type ImageWorkerApiType } from "@/workers/ImageWorker/ImageWorkerApi";
+import "@/workers/transferHandlers";
 import { wrap } from "comlink";
 
-export async function uploadImages(
+export async function uploadImages__old(
   workspace: Workspace,
   files: Iterable<File>,
   targetDir: AbsPath,
@@ -42,4 +43,39 @@ export async function uploadImages(
 
 export async function uploadSingleImage(currentWorkspace: Workspace, file: File, targetDir: AbsPath) {
   return (await uploadImages(currentWorkspace, [file], targetDir))[0]!;
+}
+
+export async function uploadImages(
+  currentWorkspace: Workspace,
+  files: Iterable<File>,
+  targetDir: AbsPath,
+  concurrency = window.navigator.hardwareConcurrency ?? 2
+): Promise<AbsPath[]> {
+  const filesArr = Array.from(files);
+  const results: AbsPath[] = new Array(filesArr.length);
+  const queue = filesArr.map((file, idx) => ({ file, idx }));
+
+  async function workerTask() {
+    const worker = new Worker(new URL("@/workers/ImageWorker/image.ww.ts", import.meta.url));
+    const api = wrap<ImageWorkerApiType>(worker);
+
+    try {
+      while (queue.length > 0) {
+        const { file, idx } = queue.pop()!;
+        const arrayBuffer = await file.arrayBuffer();
+        results[idx] = await api.createImage(currentWorkspace, joinPath(targetDir, file.name), arrayBuffer);
+      }
+    } catch (e) {
+      console.error(`Error uploading image:`, e);
+    } finally {
+      worker.terminate();
+    }
+  }
+
+  const poolSize = Math.min(concurrency, filesArr.length);
+  const pool = Array.from({ length: poolSize }, () => workerTask());
+  await Promise.all(pool);
+
+  await currentWorkspace.disk.indexAndEmitNewFiles(results);
+  return results;
 }
