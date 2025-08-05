@@ -96,24 +96,14 @@ class PoolManager<TResource extends Resource> {
     return new Promise(async (resolve, reject) => {
       const availIdx = !this.pool.length ? 0 : this.pool.indexOf(null);
       if (availIdx === -1) {
-        //pool slot not available
-        // console.log(this.pool.length, "slots full, queuing work");
         this.queue.push(new DelayedWorker(poolWorker, resolve, reject));
       } else {
-        //pool slot available
-        //immediately mark the slot as occupied
         this.pool[availIdx] = poolWorker;
-        if (!this.resourcePool[availIdx]) {
-          // console.log(poolWorker, poolWorker.setupResource);
-          this.resourcePool[availIdx] = await poolWorker.setupResource();
-        }
+        if (!this.resourcePool[availIdx]) this.resourcePool[availIdx] = await poolWorker.setupResource();
         try {
           if (!this.startTime) this.startTime = Date.now();
           const result = await poolWorker.exec(this.resourcePool[availIdx]!);
-          // console.log((Date.now() - this.startTime) / 1000, "seconds");
           return resolve(result);
-          // return poolWorker.exec(this.resourcePool[availIdx]!).then((result) => resolve(result));
-          // return resolve(poolWorker.exec(this.resourcePool[availIdx]!));
         } catch (e) {
           return reject(e);
         } finally {
@@ -149,13 +139,9 @@ export function CreatePoolContext<TWorker extends IPoolWorker<Resource<any>>>() 
 
   const PoolProvider = ({ children, max }: { children: React.ReactNode; max: number }) => {
     const manager = useMemo(() => new PoolManager(max), [max]);
-
-    // The manager's generic `work` method is compatible with the
-    // more specific `work` signature required by the context value.
     const contextValue: PoolContextValue<TWorker> = {
       work: manager.work,
       flush: manager.flush,
-      // findWorker: manager.findWorker as (id: string) => TWorker | null,
       findWorker: manager.findWorker as (id: string) => TWorker | null,
     };
 

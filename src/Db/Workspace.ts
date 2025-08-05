@@ -8,6 +8,7 @@ import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
 import { WorkspaceSeedFiles } from "@/Db/WorkspaceSeedFiles";
+import { uploadImages } from "@/features/filetree-drag-and-drop/uploadImages";
 import { Repo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
 import { debounce } from "@/lib/debounce";
@@ -376,7 +377,8 @@ export class Workspace {
   }
 
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
+    const results = await uploadImages(this, files, targetDir, concurrency);
+    // const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
     await this.indexAndEmitNewFiles(results);
     return results;
   }
