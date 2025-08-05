@@ -64,6 +64,7 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                     ref={fileUploadRef}
                     id="file-upload"
                     type="file"
+                    multiple={true}
                     className="hidden"
                     onChange={(e) => {
                       setPending(true);
