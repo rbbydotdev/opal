@@ -86,7 +86,6 @@ class PoolManager<TResource extends Resource> {
   };
 
   flush = (): void => {
-    // console.log("Terminating pool manager and cleaning up resources");
     while (this.resourcePool.length) this.resourcePool.pop()?.terminate();
     while (this.queue.length) this.queue.pop();
     while (this.pool.length) this.pool.pop();
