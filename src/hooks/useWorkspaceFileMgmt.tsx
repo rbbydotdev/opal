@@ -1,6 +1,7 @@
 "use client";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -13,6 +14,7 @@ import {
   decodePath,
   dirname,
   duplicatePath,
+  isAncestor,
   joinPath,
   reduceLineage,
   relPath,
@@ -47,7 +49,12 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     async (paths: AbsPath[]) => {
       if (!paths.length) return;
       try {
-        await currentWorkspace.trashMultiple(reduceLineage(paths));
+        const alreadyTrashedNowDelete = paths.filter((path) => isAncestor({ parent: SpecialDirs.Trash, child: path }));
+        if (alreadyTrashedNowDelete.length) {
+          return removeFiles(alreadyTrashedNowDelete);
+        } else {
+          await currentWorkspace.trashMultiple(reduceLineage(paths));
+        }
       } catch (e) {
         if (e instanceof NotFoundError) {
           console.error(e);
@@ -137,8 +144,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       virtual: null,
       selectedRange: [],
     });
-    return currentWorkspace.trashMultiple(reduceLineage(range));
-  }, [currentWorkspace, focused, selectedRange, setFileTreeCtx]);
+    const alreadyTrashedNowDelete = range.filter((path) => isAncestor({ parent: SpecialDirs.Trash, child: path }));
+    if (alreadyTrashedNowDelete.length) {
+      return removeFiles(alreadyTrashedNowDelete);
+    } else {
+      return currentWorkspace.trashMultiple(reduceLineage(range));
+    }
+  }, [currentWorkspace, focused, removeFiles, selectedRange, setFileTreeCtx]);
 
   const removeFocusedFile = useCallback(async () => {
     if (focused) await removeFiles([focused]);

@@ -202,10 +202,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (e.button === 2) {
-      return;
-    }
-    // (e.target as HTMLElement).closest("a")?.focus();
+    if (e.button === 2) return;
     //meta key cmd click or ctrl click
     if (e.shiftKey || e.metaKey || e.ctrlKey) {
       e.preventDefault();
