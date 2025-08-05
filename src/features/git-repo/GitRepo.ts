@@ -155,6 +155,11 @@ export class Repo {
   local = new RepoEventsLocal();
   remote: RepoEventsRemote;
 
+  onTearDown = (fn: () => void) => {
+    this.unsubs.push(fn);
+    return this;
+  };
+
   private readonly $p = Promise.withResolvers<RepoInfoType>();
   public readonly ready = this.$p.promise;
 

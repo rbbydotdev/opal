@@ -22,6 +22,7 @@ import {
 import { CommitManagerSection } from "@/components/SidebarFileMenu/sync-section/GitCommitManager";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarGroup,
   SidebarGroupAction,
@@ -204,6 +205,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   currentCommit={info.latestCommit?.oid}
                   commitRef={commitManagerRef}
                 />
+                <Separator className="my-2" />
                 <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
                 <SyncPullPushButtons />
               </>
