@@ -22,7 +22,7 @@ export function useIframeImagePooledImperitiveWorker({ workspaceId }: { workspac
 }
 
 function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecord; workspaceId: string; id: string }) {
-  const { work, findWorker, flush } = useSnapApiPool();
+  const { work, flush } = useSnapApiPool();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
@@ -41,7 +41,7 @@ function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecor
     } else {
       setImageUrl(URL.createObjectURL(edit.preview));
     }
-  }, [edit, findWorker, id, flush, work, workspaceId]);
+  }, [edit, id, flush, work, workspaceId]);
   useEffect(() => {
     return () => {
       try {

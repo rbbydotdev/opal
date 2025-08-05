@@ -11,7 +11,6 @@ export async function createApiResource({
   workspaceId: string;
 }): Promise<Resource<Comlink.Remote<PreviewWorkerApi>>> {
   let iframe: HTMLIFrameElement | null = document.createElement("iframe");
-  // iframe.style = "visibility: hidden; position: absolute; width: 0; height: 0; border: none;";
   const searchParams = new URLSearchParams({
     editId: String(editId),
     filePath: "/preview-doc.md",
@@ -27,6 +26,7 @@ export async function createApiResource({
   const wrefApi = new WeakRef(api);
   const wrefIframe = new WeakRef(iframe);
   const terminate = () => {
+    //TODO: profile this to see if its even needed
     //me being paranoid about memory leaks
     console.debug("terminating api resource");
     (wrefIframe.deref()! || {}).src = "about:blank";
@@ -42,10 +42,7 @@ export function NewComlinkSnapshotPoolWorker(
   cb?: ({ editId, blob }: { editId: number; blob: Blob }) => void
 ) {
   return new ApiPoolWorker(
-    ({ api }) =>
-      api.renderAndSnapshot(editId).then((blob) => {
-        if (cb) cb({ editId, blob });
-      }),
+    ({ api }) => api.renderAndSnapshot(editId).then((blob) => cb?.({ editId, blob })),
     () => createApiResource({ editId, workspaceId }),
     id
   );
