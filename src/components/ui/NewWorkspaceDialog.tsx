@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Disk, DiskEnabledFSTypes, DiskType } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
 import { LoaderIcon } from "lucide-react";
 import { nanoid } from "nanoid";
@@ -41,8 +43,9 @@ export function NewWorkspaceDialog({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const workspaceName = formData.get("workspaceName") as string;
+    const fileSystem = formData.get("fileSystem") as DiskType;
     setPending(true);
-    const workspace = await Workspace.CreateNewWithSeedFiles(workspaceName);
+    const workspace = await Workspace.CreateNewWithSeedFiles(workspaceName, fileSystem);
     setPending(false);
     setIsOpen(false);
 
@@ -69,6 +72,21 @@ export function NewWorkspaceDialog({
                 defaultValue={defaultValue}
                 autoComplete="off"
               />
+            </div>
+            <div className="grid gap-3">
+              <Label htmlFor="fileSystem-1">File System</Label>
+              <Select name="fileSystem" defaultValue={Disk.defaultDiskType}>
+                <SelectTrigger>
+                  <SelectValue placeholder={"Disk Filesystem Type"}></SelectValue>
+                </SelectTrigger>
+                <SelectContent id="fileSystem-1">
+                  {DiskEnabledFSTypes.map((diskType) => (
+                    <SelectItem key={diskType} value={diskType}>
+                      {diskType}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

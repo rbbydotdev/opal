@@ -35,6 +35,9 @@ export const DiskTypes = [
   "OpFsDisk",
   "ZenWebstorageFSDbDisk",
 ] as const;
+
+export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk"] as const;
+
 export type DiskType = (typeof DiskTypes)[number];
 
 export class RenameFileType {
@@ -155,6 +158,8 @@ mounts = Record<AbsPath, Disk>
 
 */
 export abstract class Disk {
+  static defaultDiskType: DiskType = "IndexedDbDisk";
+
   remote: DiskEventsRemote;
   local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
   ready: Promise<void> = Promise.resolve();
@@ -279,8 +284,6 @@ export abstract class Disk {
     ];
     return () => listeners.forEach((p) => p());
   }
-
-  static defaultDiskType: DiskType = "IndexedDbDisk";
 
   static guid = () => "__disk__" + nanoid();
 
