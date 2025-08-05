@@ -70,17 +70,18 @@ export function GitBranchManager({
       />
     );
   } else if (showInput && currentGitRef) {
+    const friendlyName = isBranchRef(currentGitRef) ? currentGitRef.value : currentGitRef.value.slice(0, 7);
     return (
       <GitBranchInput
         mode={inputMode}
         setShow={setShowInput}
-        previous={{ branch: currentGitRef.value }}
-        onSubmit={({ previous, next, mode }) => {
+        previous={{ branch: friendlyName }}
+        onSubmit={({ next, mode }) => {
           if (mode === "add") {
             addGitBranch(currentGitRef, next);
           }
           if (mode === "edit" && isBranchRef(currentGitRef)) {
-            replaceGitBranch(previous!, next);
+            replaceGitBranch({ branch: currentGitRef.value }, next);
           }
         }}
       />

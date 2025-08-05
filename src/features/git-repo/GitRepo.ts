@@ -683,6 +683,14 @@ export class GitPlaybook {
 
   static readonly ORIG_BRANCH_REF = "refs/orig-branch";
 
+  getOrigBranchName = async (): Promise<string | null> => {
+    const origBranch = await this.repo.resolveRef(GitPlaybook.ORIG_BRANCH_REF);
+    if (origBranch) {
+      return origBranch;
+    } else {
+      return null;
+    }
+  };
   recallOrigBranch = async () => {
     const origBranch = await this.repo.resolveRef(GitPlaybook.ORIG_BRANCH_REF);
     if (origBranch) {
