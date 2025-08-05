@@ -609,8 +609,7 @@ export class Workspace {
     //all a hack until hierarchy and dep injection is sorted out
     //workspace should not know about window.href
     const repo = Repo.FromDisk(this.disk, `${this.id}/repo`);
-    this.dirtyListener(debounce(() => repo.sync(), 500));
-    // repo
+    repo.onTearDown(this.dirtyListener(debounce(() => repo.sync(), 500)));
     repo.gitListener(() => {
       void this.disk.triggerIndex();
     });
