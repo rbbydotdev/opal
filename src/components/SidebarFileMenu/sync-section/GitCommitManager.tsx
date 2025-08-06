@@ -35,16 +35,6 @@ export function GitCommitManager({
       }}
     >
       <GitCommitMenuDropDown open={open} setOpen={setOpen}>
-        {/* <DropdownMenuItem
-          onClick={() => {
-            // Future: Add commit functionality
-          }}
-          onSelect={() => {
-            // Future: Add commit functionality
-          }}
-        >
-          <Plus /> Add Commit
-        </DropdownMenuItem> */}
         <DropdownMenuItem onClick={resetToHead} onSelect={resetToHead}>
           <RotateCcw />
           Reset to HEAD

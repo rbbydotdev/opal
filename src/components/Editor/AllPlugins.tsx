@@ -5,14 +5,15 @@ import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
-import { urlParamViewModePlugin } from "@/components/Editor/urlParamViewModePlugin";
+import { handleUrlParamViewMode } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
-import { useCurrentFilepath, useFileContents } from "@/context/WorkspaceHooks";
+import { useFileContents } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
   KitchenSinkToolbar,
   SandpackConfig,
+  ViewMode,
   codeBlockPlugin,
   codeMirrorPlugin,
   diffSourcePlugin,
@@ -92,22 +93,21 @@ export function useAllPlugins({
   currentWorkspace,
   realmId,
   mimeType,
+  viewMode = "rich-text",
 }: {
   currentWorkspace: Workspace;
   realmId: string;
   mimeType: string;
+  viewMode?: ViewMode;
 }) {
   const { initialContents, debouncedUpdate } = useFileContents();
-  const { isMarkdown } = useCurrentFilepath();
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
-
   //TODO heal documentId or prevent erasure
   const documentId = useWorkspaceDocumentId(String(initialContents || ""));
   const realm = useRemoteMDXEditorRealm(realmId);
-  // realm?.getValue(markdown$)
-  // realm?.getValue(markdownSourceEditorValue$)
-
+  const viewModeOverride = useMemo(() => handleUrlParamViewMode("search", "viewMode"), []);
   const historyDB = useSnapHistoryDB();
+  const finalViewMode = (viewModeOverride as ViewMode) || viewMode || "source";
 
   useEffect(() => {
     if (mimeType === "text/markdown") return;
@@ -122,7 +122,7 @@ export function useAllPlugins({
       [
         toolbarPlugin({
           toolbarContents: () =>
-            !isMarkdown ? (
+            finalViewMode === "source" ? (
               <div className="h-[30px] text-sm flex justify-center items-center">Source Mode</div>
             ) : (
               <>
@@ -145,16 +145,7 @@ export function useAllPlugins({
         headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4] }),
         linkPlugin(),
         searchPlugin(),
-        // isMarkdown
-        //   ? historyPlugin({
-        //       documentId,
-        //       workspaceId: currentWorkspace.id,
-        //       historyStorage: historyDB,
-        //       historyRoot: String(initialContents ?? ""),
-        //     })
-        //   : null,
         linkDialogPlugin(),
-        urlParamViewModePlugin({ type: "search" }),
         workspaceImagesPlugin,
         tablePlugin(),
         thematicBreakPlugin(),
@@ -169,7 +160,7 @@ export function useAllPlugins({
         }),
         directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
         diffSourcePlugin({
-          viewMode: "rich-text",
+          viewMode: finalViewMode,
           diffMarkdown: String(initialContents ?? ""),
           codeMirrorExtensions: [CodeMirrorHighlightURLRange()],
         }),
@@ -178,9 +169,9 @@ export function useAllPlugins({
     [
       debouncedUpdate,
       documentId,
+      finalViewMode,
       historyDB,
       initialContents,
-      isMarkdown,
       mimeType,
       realm,
       realmId,

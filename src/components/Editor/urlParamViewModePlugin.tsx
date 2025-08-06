@@ -1,25 +1,8 @@
 import { ViewMode, realmPlugin, viewMode$ } from "@mdxeditor/editor";
-import { useEffect } from "react";
 
 export const viewModeHash = (vm: ViewMode) => `#viewMode="${vm}"`;
 
-export const HashListener = () => {
-  useEffect(() => {
-    const onHashChange = () => {
-      const viewMode = handleUrlParamViewMode("hash", "viewMode");
-      if (viewMode) {
-        console.log({ viewMode });
-        // window.location.hash = "";
-      }
-    };
-    window.addEventListener("hashchange", onHashChange);
-    return () => {
-      window.removeEventListener("hashchange", onHashChange);
-    };
-  }, []);
-  return null;
-};
-function handleUrlParamViewMode(type = "hash", key = "viewMode") {
+export function handleUrlParamViewMode(type = "hash", key = "viewMode") {
   const windowHref = window.location.href;
   const urlParams =
     type === "hash" ? new URLSearchParams(new URL(windowHref).hash.slice(1)) : new URL(windowHref).searchParams;

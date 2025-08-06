@@ -10,7 +10,7 @@ import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { absPath } from "@/lib/paths2";
-import { CopyMinus, FilePlus, FolderPlus, Trash2 } from "lucide-react";
+import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Trash2 } from "lucide-react";
 
 export function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
@@ -31,6 +31,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
         <SidebarFileMenuFilesActions
           trashSelectedFiles={trashSelectedFiles}
           addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
+          addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
           addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
           setExpandAll={setExpandAll}
         />
@@ -43,10 +44,12 @@ export const SidebarFileMenuFilesActions = ({
   trashSelectedFiles,
   addFile,
   addDir,
+  addCssFile,
   setExpandAll,
 }: {
   trashSelectedFiles: () => void;
   addFile: () => void;
+  addCssFile?: () => void; // Optional for future use
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
 }) => (
@@ -64,10 +67,19 @@ export const SidebarFileMenuFilesActions = ({
       onClick={addFile}
       className="p-1 m-0 !bg-transparent"
       variant="ghost"
-      aria-label="Add File"
-      title="New File"
+      aria-label="New Markdown File"
+      title="New Markdown File"
     >
-      <FilePlus />
+      <FileEditIcon />
+    </Button>
+    <Button
+      onClick={addCssFile}
+      className="p-1 m-0 !bg-transparent"
+      variant="ghost"
+      aria-label="New Css File"
+      title="New Css File"
+    >
+      <FileCode2Icon />
     </Button>
     <Button
       onClick={addDir}
