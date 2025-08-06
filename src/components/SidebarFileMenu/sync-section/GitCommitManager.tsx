@@ -16,11 +16,13 @@ export function GitCommitManager({
   commits,
   setCurrentCommit,
   resetToHead,
+  resetToOrigHead,
   currentCommit,
 }: {
   commits: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
   setCurrentCommit: (commitOid: string) => void;
   resetToHead: () => void;
+  resetToOrigHead: () => void;
   currentCommit?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -38,6 +40,10 @@ export function GitCommitManager({
         <DropdownMenuItem onClick={resetToHead} onSelect={resetToHead}>
           <RotateCcw />
           Reset to HEAD
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={resetToOrigHead} onSelect={resetToOrigHead}>
+          <RotateCcw />
+          Reset to Previous Branch
         </DropdownMenuItem>
       </GitCommitMenuDropDown>
     </CommitSelect>
@@ -144,6 +150,7 @@ export function CommitManagerSection({
           commits={commits}
           currentCommit={currentCommit}
           resetToHead={playbook.resetToHead}
+          resetToOrigHead={playbook.resetToPrevBranch}
           setCurrentCommit={async (commitOid) => {
             await playbook.switchCommit(commitOid);
             //  commitRef.current?.show("switched to commit");

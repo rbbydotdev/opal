@@ -160,6 +160,10 @@ export class Repo {
     return this;
   };
 
+  get gitDir() {
+    return joinPath(this.dir, ".git");
+  }
+
   private readonly $p = Promise.withResolvers<RepoInfoType>();
   public readonly ready = this.$p.promise;
 
@@ -182,6 +186,20 @@ export class Repo {
   // this.remoteEvents = new RemoteGitChannel();
   // return this.remoteEvents.on(RemoteGitEvents.UPDATE, callback);
   // }
+
+  resetToHead = async () => {
+    return this.checkoutRef("HEAD");
+  };
+  getPrevBranch = async () => {
+    const prevBranch = await this.fs.readFile(joinPath(this.gitDir, "PREV_BRANCH")).catch(() => null);
+    if (prevBranch) {
+      return String(prevBranch).trim();
+    }
+    return null;
+  };
+  writePrevBranch = async (branchName: string) => {
+    await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
+  };
 
   initListeners() {
     this.remote.init();
@@ -220,6 +238,17 @@ export class Repo {
   private syncLocal = async () => {
     return this.sync({ emitRemote: false });
   };
+
+  rememberCurrentBranch = async () => {
+    const currentBranch = await this.currentBranch({ fullname: true });
+    if (currentBranch) {
+      await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), currentBranch);
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   async sync({ emitRemote = true } = {}) {
     const newInfo = { ...(await this.tryInfo()) };
     await this.$p.resolve(newInfo);
@@ -357,6 +386,11 @@ export class Repo {
       dir: this.dir,
     });
   };
+  isBranchOrTag = async (ref: string) => {
+    const branches = await this.getBranches();
+    const tags = await git.listTags({ fs: this.fs, dir: this.dir });
+    return branches.includes(ref) || tags.includes(ref);
+  };
   getRemotes = async (): Promise<GitRemote[]> => {
     if (!(await this.exists())) return [];
     const remotes = await this.git.listRemotes({
@@ -453,6 +487,7 @@ export class Repo {
   }
 
   checkoutRef = async (ref: string) => {
+    //check if ref is ref or branch name
     await this.mustBeInitialized();
     const currentBranch = await this.getCurrentBranch();
     if (currentBranch === ref) return; // No change needed
@@ -465,6 +500,9 @@ export class Repo {
         force: true, // Force checkout if necessary
         // noCheckout: false, // Ensure the working directory is updated
       });
+      if (await this.isBranchOrTag(ref)) {
+        await this.rememberCurrentBranch();
+      }
     });
     return ref;
   };
@@ -691,7 +729,7 @@ export class GitPlaybook {
     await this.repo.checkoutRef(branchName);
   };
 
-  static readonly ORIG_BRANCH_REF = "refs/orig-branch";
+  // static readonly ORIG_BRANCH_REF = "refs/orig-branch";
 
   // getOrigBranchName = async (): Promise<string | null> => {
   //   const origBranch = await this.repo.resolveRef(GitPlaybook.ORIG_BRANCH_REF);
@@ -711,21 +749,8 @@ export class GitPlaybook {
   //     return false;
   //   }
   // };
-  // rememberCurrentBranch = async () => {
-  //   const currentBranch = await this.repo.currentBranch({ fullname: true });
-  //   if (currentBranch) {
-  //     await this.repo.writeRef({
-  //       ref: GitPlaybook.ORIG_BRANCH_REF,
-  //       value: currentBranch,
-  //       force: true,
-  //     });
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // };
   switchCommit = async (commitOid: string) => {
-    // await this.rememberCurrentBranch();
+    await this.repo.rememberCurrentBranch();
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.SWITCH_COMMIT,
@@ -766,9 +791,13 @@ export class GitPlaybook {
     return true;
   }
 
-  resetToHead = async () => {
-    // return this.recallOrigBranch();
-    return this.repo.checkoutRef("ORIG_HEAD");
+  resetToPrevBranch = async () => {
+    const prevBranch = await this.repo.getPrevBranch();
+    if (prevBranch) {
+      await this.repo.checkoutRef(prevBranch);
+      return true;
+    }
+    return false;
   };
 
   // async addRemote(remote: IRemote) {
