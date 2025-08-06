@@ -7,6 +7,7 @@ import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/Editor
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { ImageViewer } from "@/components/ImageViewer";
 import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
+import { SourceEditor } from "@/components/SourceEditor";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -37,7 +38,8 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
   TODO: I need a source editor which has not association with markdown,
   just a pure text editor using code mirror or monaco editor.
   */
-  const { isImage, filePath, inTrash } = useCurrentFilepath();
+
+  const { isImage, isSource, filePath, inTrash } = useCurrentFilepath();
 
   const router = useRouter();
   // const handleDropFilesEvent = handleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
@@ -62,6 +64,9 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
       </>
     );
   }
+  if (isSource) {
+    return <SourceEditor />;
+  }
   return (
     <>
       {inTrash && <TrashBanner filePath={filePath} />}
@@ -69,6 +74,7 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
     </>
   );
 }
+
 const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationError> }) => {
   const { currentWorkspace } = useWorkspaceContext();
   const tryFirstFile = use(useMemo(() => currentWorkspace.tryFirstFileUrl(), [currentWorkspace]));
@@ -96,9 +102,12 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
 
 export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props }: WorkspaceEditorProps) {
   const editorRef = useRef<MDXEditorMethods>(null);
-  const { initialContents, debouncedUpdate, error } = useFileContents((newContent) => {
-    //this is for out of editor updates like via tab or image path updates
-    editorRef.current?.setMarkdown(newContent ?? "");
+  const { initialContents, debouncedUpdate, error } = useFileContents({
+    currentWorkspace,
+    listenerCb: (newContent) => {
+      //this is for out of editor updates like via tab or image path updates
+      editorRef.current?.setMarkdown(newContent ?? "");
+    },
   });
   const [readOnlyMode, _setReadOnly] = useReadOnlyMode();
 

@@ -9,7 +9,7 @@ import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, equals, isImage, prefix, relPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import clsx from "clsx";
-import { FileText } from "lucide-react";
+import { FileCode2, FileText } from "lucide-react";
 import Link from "next/link";
 import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
@@ -53,23 +53,9 @@ export const EditableFile = ({
     expand,
     currentWorkspace,
   });
-  const { setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
-  // const { handleCopyKeyDown } = useCopyKeydownImages(currentWorkspace); //TODO, make for a copy of other files possible too
-
-  // this breaks everything and i friggin hate it
-  // useEffect(() => {
-  //   if (isFocused && !isEditing) {
-  //     linkRef.current?.focus();
-  //     //TODO: 'sometimes' on load focus is lost when instead we want it, https://github.com/vercel/next.js/issues/49386
-  //     const timer = setTimeout(() => {
-  //       linkRef.current?.focus();
-  //     }, 500);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [isEditing, isFocused, linkRef]);
+  const { setFileTreeCtx } = useFileTreeMenuCtx();
 
   useEffect(() => {
-    //weird edge case hmmmmmmm keeps focus after editing
     if (linkRef.current && isFocused && !isEditing) {
       linkRef?.current?.focus();
     }
@@ -82,7 +68,7 @@ export const EditableFile = ({
           active={equals(fullPath, workspaceRoute.path)}
           draggable
           onDragStart={onDragStart}
-          href={currentWorkspace.resolveEditorFileUrl(fullPath)}
+          href={currentWorkspace.resolveFileUrl(fullPath)}
           className={cn(
             className,
             { "bg-sidebar-accent font-bold": isSelectedRange || isFocused },
@@ -94,7 +80,6 @@ export const EditableFile = ({
           onMouseUp={handleMouseUp}
           title={fullPath}
           onMouseDown={handleMouseDown}
-          // onKeyDown={(e) => handleCopyKeyDown(handleKeyDown)(e, fullPath)}
           onKeyDown={(e) => handleKeyDown(e)}
           onClick={handleClick}
           onDoubleClick={() =>
@@ -111,17 +96,7 @@ export const EditableFile = ({
           <div className="w-full">
             <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
               <SelectedMark selected={isSelected} />
-              {isImage(treeNode.path) ? (
-                <ImageFileHoverCard fallbackSrc={treeNode.path}>
-                  <img
-                    src={Thumb.resolveURLFromNode(treeNode)}
-                    alt=""
-                    className="w-6 h-6 border border-white flex-shrink-0 bg-white mr-2 object-cover"
-                  />
-                </ImageFileHoverCard>
-              ) : (
-                <FileText className="w-3 h-3 flex-shrink-0 mr-2" />
-              )}
+              <IconForTreeNode treeNode={treeNode} />
               <div className="py-2.5 text-xs w-full truncate">{prefix(fileName)}</div>
             </div>
           </div>
@@ -180,3 +155,31 @@ export const ActiveLink = ({
   // @ts-ignore
   return <div {...props} />;
 };
+
+function IconForTreeNode({ treeNode }: { treeNode: TreeNode }) {
+  switch (treeNode.getMimeType()) {
+    case "text/markdown":
+      return <FileText className="w-3 h-3 flex-shrink-0 mr-2" />;
+    case "text/css":
+      return <FileCode2 className="w-3 h-3 flex-shrink-0 mr-2" />;
+    case "image/png":
+    case "image/jpeg":
+    case "image/gif":
+    case "image/webp":
+      return <ImageNodeIcon treeNode={treeNode} />;
+    default:
+      return <FileText className="w-3 h-3 flex-shrink-0 mr-2" />;
+  }
+}
+
+function ImageNodeIcon({ treeNode }: { treeNode: TreeNode }) {
+  return (
+    <ImageFileHoverCard fallbackSrc={treeNode.path}>
+      <img
+        src={Thumb.resolveURLFromNode(treeNode)}
+        alt={treeNode.path + " " + "thumbnail"}
+        className="w-6 h-6 border border-white flex-shrink-0 bg-white mr-2 object-cover"
+      />
+    </ImageFileHoverCard>
+  );
+}

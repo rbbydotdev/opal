@@ -2,6 +2,7 @@
 import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
 import { useFileContents, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
+import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { isImage, isMarkdown } from "@/lib/paths2";
 import "github-markdown-css/github-markdown-light.css";
@@ -65,8 +66,12 @@ function ImageRender() {
 
 function MarkdownRender() {
   const [contents, setContents] = useState<string | null>(null);
-  const { initialContents } = useFileContents((contents) => {
-    setContents(stripFrontmatter(String(contents)));
+  const { currentWorkspace } = useWorkspaceContext();
+  const { initialContents } = useFileContents({
+    currentWorkspace,
+    listenerCb: (contents) => {
+      setContents(stripFrontmatter(String(contents)));
+    },
   });
   const html = useMemo(
     () => renderMarkdownToHtml(stripFrontmatter(contents === null ? String(initialContents ?? "") : contents ?? "")),
@@ -92,7 +97,6 @@ function MarkdownRender() {
 }
 
 // import { ReactNode, useEffect, useRef } from "react";
-import { stripFrontmatter } from "../../../../lib/markdown/frontMatter";
 
 // function _ScrollSyncListener({
 //   sessionId,

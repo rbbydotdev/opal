@@ -455,24 +455,23 @@ export class Workspace {
   resolveFileUrl = (filePath: AbsPath) => {
     return this.href + encodePath(filePath);
   };
-  // ?viewMode=source
-  resolveEditorFileUrl = (filePath: AbsPath) => {
-    //get mime type
-    const mimeType = getMimeType(filePath);
-    if (mimeType.startsWith("image/")) {
-      return this.resolveFileUrl(filePath);
-    }
-    if (mimeType.startsWith("text/markdown")) {
-      return this.resolveFileUrl(filePath); /* + "?viewMode=rich-text" rich text is default */
-    }
-    if (mimeType.startsWith("text/css")) {
-      return this.resolveFileUrl(filePath) + "?viewMode=source";
-    }
-    if (mimeType.startsWith("text/plain")) {
-      return this.resolveFileUrl(filePath) + "?viewMode=source";
-    }
-    return this.resolveFileUrl(filePath) + "?viewMode=source";
-  };
+  // resolveEditorFileUrl = (filePath: AbsPath) => {
+  //   //get mime type
+  //   const mimeType = getMimeType(filePath);
+  //   if (mimeType.startsWith("image/")) {
+  //     return this.resolveFileUrl(filePath);
+  //   }
+  //   if (mimeType.startsWith("text/markdown")) {
+  //     return this.resolveFileUrl(filePath); /* + "?viewMode=rich-text" rich text is default */
+  //   }
+  //   if (mimeType.startsWith("text/css")) {
+  //     return this.resolveFileUrl(filePath) ;
+  //   }
+  //   if (mimeType.startsWith("text/plain")) {
+  //     return this.resolveFileUrl(filePath) + "?viewMode=source";
+  //   }
+  //   return this.resolveFileUrl(filePath) + "?viewMode=source";
+  // };
   async tryFirstFileUrl() {
     const ff = await this.getFirstFile();
     if (!ff) {

@@ -100,7 +100,7 @@ export function useAllPlugins({
   mimeType: string;
   viewMode?: ViewMode;
 }) {
-  const { initialContents, debouncedUpdate } = useFileContents();
+  const { initialContents, debouncedUpdate } = useFileContents({ currentWorkspace });
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
   //TODO heal documentId or prevent erasure
   const documentId = useWorkspaceDocumentId(String(initialContents || ""));

@@ -38,9 +38,14 @@ export type Workspaces = WorkspaceDAO[];
 
 const DEFAULT_MIME_TYPE = "application/octet-stream"; //i think this just means binary?
 
-export function useFileContents(listenerCb?: (content: string | null) => void) {
+export function useFileContents({
+  currentWorkspace,
+  listenerCb,
+}: {
+  currentWorkspace: Workspace;
+  listenerCb?: (content: string | null) => void;
+}) {
   const listenerCbRef = useRef(listenerCb);
-  const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
   const [initialContents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
   const [error, setError] = useState<null | Error>(null);
@@ -126,7 +131,14 @@ export function useCurrentFilepath() {
   const { path: filePath } = useWorkspaceRoute();
 
   if (filePath === null || currentWorkspace.isNull) {
-    return { filePath: null, mimeType: DEFAULT_MIME_TYPE, isImage: null, isMarkdown: null, inTrash: null };
+    return {
+      filePath: null,
+      mimeType: DEFAULT_MIME_TYPE,
+      isImage: null,
+      isMarkdown: null,
+      inTrash: null,
+      isSource: null,
+    };
   }
   const mimeType = mime.lookup(filePath) || DEFAULT_MIME_TYPE;
 
@@ -135,6 +147,7 @@ export function useCurrentFilepath() {
     mimeType,
     isMarkdown: mimeType.startsWith("text/markdown"),
     isImage: mimeType.startsWith("image/"),
+    isSource: !mimeType.startsWith("text/markdown") && mimeType.startsWith("text/"),
     inTrash: filePath.startsWith(SpecialDirs.Trash),
   };
 }
