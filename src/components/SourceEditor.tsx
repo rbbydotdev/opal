@@ -13,7 +13,7 @@ export const SourceEditor = ({ className }: { className?: string }) => {
       value={String(initialContents || "")}
       onChange={debouncedUpdate}
       readOnly={false}
-      className={cn("flex-grow", className)}
+      className={cn("source-editor", "flex-grow", className)}
     />
   );
 };

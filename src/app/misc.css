@@ -21,4 +21,12 @@
   ::selection {
     @apply bg-ring text-white;
   }
+
+  /* .source-editor::selection {
+    @apply bg-ring text-primary;
+  } */
+
+  .mdxeditor::selection {
+    @apply bg-ring text-primary-foreground;
+  }
 }
