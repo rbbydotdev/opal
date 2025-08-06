@@ -187,9 +187,6 @@ export class Repo {
   // return this.remoteEvents.on(RemoteGitEvents.UPDATE, callback);
   // }
 
-  resetToHead = async () => {
-    return this.checkoutRef("HEAD");
-  };
   getPrevBranch = async () => {
     const prevBranch = await this.fs.readFile(joinPath(this.gitDir, "PREV_BRANCH")).catch(() => null);
     if (prevBranch) {
@@ -729,26 +726,9 @@ export class GitPlaybook {
     await this.repo.checkoutRef(branchName);
   };
 
-  // static readonly ORIG_BRANCH_REF = "refs/orig-branch";
-
-  // getOrigBranchName = async (): Promise<string | null> => {
-  //   const origBranch = await this.repo.resolveRef(GitPlaybook.ORIG_BRANCH_REF);
-  //   if (origBranch) {
-  //     return origBranch;
-  //   } else {
-  //     return null;
-  //   }
-  // };
-  // recallOrigBranch = async () => {
-  //   const origBranch = await this.repo.resolveRef(GitPlaybook.ORIG_BRANCH_REF);
-  //   if (origBranch) {
-  //     console.log("Recalling original branch:", origBranch);
-  //     await this.repo.checkoutRef(origBranch);
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // };
+  resetToHead = async () => {
+    return this.repo.checkoutRef("HEAD");
+  };
   switchCommit = async (commitOid: string) => {
     await this.repo.rememberCurrentBranch();
     if (await this.repo.hasChanges()) {
@@ -794,8 +774,16 @@ export class GitPlaybook {
   resetToPrevBranch = async () => {
     const prevBranch = await this.repo.getPrevBranch();
     if (prevBranch) {
-      await this.repo.checkoutRef(prevBranch);
-      return true;
+      try {
+        await this.repo.checkoutRef(prevBranch);
+        return true;
+      } catch (error) {
+        if (error instanceof git.Errors.NotFoundError) {
+          void this.repo.checkoutRef(this.repo.defaultMainBranch);
+        } else {
+          console.error("Error switching to previous branch:", error);
+        }
+      }
     }
     return false;
   };
