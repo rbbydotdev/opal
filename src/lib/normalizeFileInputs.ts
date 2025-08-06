@@ -21,7 +21,7 @@ function matchesMimeFilter(mimeType: string, filter: string[]): boolean {
   return false;
 }
 
-const DEFAULT_ACCEPTED_TYPES = ["image/*", "text/markdown"];
+const DEFAULT_ACCEPTED_TYPES = ["image/*", "text/markdown", "text/plain", "text/css"];
 
 /**
  * Takes a FileList or ClipboardItems and returns a Promise that resolves

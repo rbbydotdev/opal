@@ -5,6 +5,7 @@ export const FileTypes = {
   WEBP: "image/webp",
   BIN: "application/octet-stream",
   MARKDOWN: "text/markdown",
+  CSS: "text/css",
 } as const;
 
 export const MimeTypeExt = {
@@ -14,6 +15,7 @@ export const MimeTypeExt = {
   "image/webp": "webp",
   "application/octet-stream": "bin",
   "text/markdown": "md",
+  "text/css": "css",
 } as const;
 
 export const MimeTypes = {
@@ -23,6 +25,7 @@ export const MimeTypes = {
   WEBP: "image/webp",
   BIN: "application/octet-stream",
   MARKDOWN: "text/markdown",
+  CSS: "text/css",
 } as const;
 
 export type FileType = (typeof FileTypes)[keyof typeof FileTypes];

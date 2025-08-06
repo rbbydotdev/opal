@@ -69,6 +69,12 @@ export class TreeNode {
   isMarkdownFile() {
     return this.getMimeType() === "text/markdown";
   }
+  isTextFile() {
+    return this.getMimeType().startsWith("text/");
+  }
+  isCssFile() {
+    return this.getMimeType() === "text/css";
+  }
   toString() {
     return this.path;
   }

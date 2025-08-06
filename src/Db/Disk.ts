@@ -609,6 +609,7 @@ export abstract class Disk {
 
   addVirtualFile(props: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null): TreeNode {
     const parent = selectedNode || this.fileTree.root;
+
     const node = this.fileTree.insertClosestVirtualNode({ type: props.type, name: props.name }, parent);
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return node;

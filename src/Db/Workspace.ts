@@ -465,6 +465,12 @@ export class Workspace {
     if (mimeType.startsWith("text/markdown")) {
       return this.resolveFileUrl(filePath); /* + "?viewMode=rich-text" rich text is default */
     }
+    if (mimeType.startsWith("text/css")) {
+      return this.resolveFileUrl(filePath) + "?viewMode=source";
+    }
+    if (mimeType.startsWith("text/plain")) {
+      return this.resolveFileUrl(filePath) + "?viewMode=source";
+    }
     return this.resolveFileUrl(filePath) + "?viewMode=source";
   };
   async tryFirstFileUrl() {

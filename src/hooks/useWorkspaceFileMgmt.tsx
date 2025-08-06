@@ -19,10 +19,21 @@ import {
   reduceLineage,
   relPath,
 } from "@/lib/paths2";
+import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
+
+function defaultFileContent(path: AbsPath) {
+  if (mime.lookup(path) === "text/css") {
+    return `/* ${basename(path)} */\n`;
+  }
+  if (mime.lookup(path) === "text/markdown") {
+    return setFrontmatter("# " + basename(path), { documentId: nanoid() });
+  }
+  return "";
+}
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   const { setFileTreeCtx, selectedRange, resetEditing, focused } = useFileTreeMenuCtx();
@@ -43,6 +54,30 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       return currentWorkspace.newDir(dirname(path), basename(path));
     },
     [currentWorkspace]
+  );
+
+  const removeFiles = useCallback(
+    async (...paths: (AbsPath | AbsPath[] | TreeNode | TreeNode[])[]) => {
+      const flatPaths = flatUniqNodeArgs(paths);
+      if (!flatPaths.length) return;
+      try {
+        await currentWorkspace.removeMultiple(reduceLineage(flatPaths).map((pathStr) => absPath(pathStr)));
+      } catch (e) {
+        if (e instanceof NotFoundError) {
+          console.error(e);
+        } else {
+          throw e;
+        }
+      }
+      setFileTreeCtx({
+        editing: null,
+        editType: null,
+        focused: null,
+        virtual: null,
+        selectedRange: [],
+      });
+    },
+    [currentWorkspace, setFileTreeCtx]
   );
 
   const trashFiles = useCallback(
@@ -70,32 +105,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         selectedRange: [],
       });
     },
-    [currentWorkspace, setFileTreeCtx]
+    [currentWorkspace, removeFiles, setFileTreeCtx]
   );
 
-  const removeFiles = useCallback(
-    async (...paths: (AbsPath | AbsPath[] | TreeNode | TreeNode[])[]) => {
-      const flatPaths = flatUniqNodeArgs(paths);
-      if (!flatPaths.length) return;
-      try {
-        await currentWorkspace.removeMultiple(reduceLineage(flatPaths).map((pathStr) => absPath(pathStr)));
-      } catch (e) {
-        if (e instanceof NotFoundError) {
-          console.error(e);
-        } else {
-          throw e;
-        }
-      }
-      setFileTreeCtx({
-        editing: null,
-        editType: null,
-        focused: null,
-        virtual: null,
-        selectedRange: [],
-      });
-    },
-    [currentWorkspace, setFileTreeCtx]
-  );
   const removeFile = useCallback(
     (path: AbsPath) => {
       return removeFiles([path]);
@@ -181,7 +193,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     [currentWorkspace, setFileTreeCtx]
   );
   const addDirFile = useCallback(
-    (type: TreeNode["type"], parent: TreeDir | AbsPath) => {
+    (type: TreeNode["type"], parent: TreeDir | AbsPath, fileName?: string) => {
       /** --------- TODO: move me somewhere more appropriate start ------ */
       let parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
       if (!parentNode) {
@@ -191,7 +203,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         parentNode = parentNode?.parent ?? currentWorkspace.getFileTreeRoot();
       }
       /** --------- end ------ */
-      const name = type === "dir" ? "newdir" : "newfile.md";
+      const name = fileName || (type === "dir" ? "newdir" : "newfile.md");
       const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, parentNode);
       setFileTreeCtx({
         editing: newNode.path,
@@ -235,11 +247,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new" | "duplicate"): Promise<AbsPath | null> => {
       const wantPath = joinPath(dirname(origNode.path), relPath(decodePath(fileName)));
       if (type === "new") {
-        if (origNode.isTreeFile())
-          return newFile(wantPath, setFrontmatter("# " + basename(wantPath), { documentId: nanoid() }), {
+        if (origNode.isTreeFile()) {
+          return newFile(wantPath, defaultFileContent(wantPath), {
             redirect: true,
           });
-        else {
+        } else {
           return newDir(wantPath);
         }
       } else if (type === "duplicate") {

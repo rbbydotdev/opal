@@ -41,9 +41,9 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
 
   const router = useRouter();
   // const handleDropFilesEvent = handleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
-  return (
-    <>
-      {isImage ? (
+  if (isImage) {
+    return (
+      <>
         <ConditionalDropzone
           shouldActivate={isExternalFileDrop}
           onDrop={(e) =>
@@ -56,12 +56,16 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
             })
           }
         >
+          {inTrash && <TrashBanner filePath={filePath} />}
           <ImageViewer alt={filePath} origSrc={filePath} />
         </ConditionalDropzone>
-      ) : (
-        <WorkspaceEditor {...props} />
-      )}
+      </>
+    );
+  }
+  return (
+    <>
       {inTrash && <TrashBanner filePath={filePath} />}
+      <WorkspaceMarkdownEditor {...props} />
     </>
   );
 }
@@ -90,7 +94,7 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
   );
 });
 
-export function WorkspaceEditor({ className, currentWorkspace, ...props }: WorkspaceEditorProps) {
+export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props }: WorkspaceEditorProps) {
   const editorRef = useRef<MDXEditorMethods>(null);
   const { initialContents, debouncedUpdate, error } = useFileContents((newContent) => {
     //this is for out of editor updates like via tab or image path updates
@@ -153,6 +157,7 @@ function EditorWithPlugins(props: ComponentProps<typeof Editor> & { currentWorks
     currentWorkspace: props.currentWorkspace,
     realmId: MainEditorRealmId,
     mimeType: props.mimeType,
+    viewMode: props.mimeType === "text/markdown" ? "rich-text" : "source",
   });
   return (
     <Editor

@@ -31,7 +31,7 @@ export async function handleDropFilesForNode({
   const targetDir = targetNode.closestDirPath();
   const fileArray = Array.from(files);
   const imageFiles: File[] = fileArray.filter((file) => file.type.startsWith("image/"));
-  const markdownFiles: File[] = fileArray.filter((file) => file.type === "text/markdown" || file.name.endsWith(".md"));
+  const textFiles: File[] = fileArray.filter((file) => file.type.startsWith("text/"));
   const docxFiles: File[] = fileArray.filter(
     (file) => mime.extension(file.type) === "docx" || file.name.endsWith(".docx")
   );
@@ -45,8 +45,8 @@ export async function handleDropFilesForNode({
     promises.push(currentWorkspace.uploadMultipleImages(imageFiles, targetDir));
   }
 
-  if (markdownFiles.length > 0) {
-    const newFilesData = markdownFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
+  if (textFiles.length > 0) {
+    const newFilesData = textFiles.map((file) => [joinPath(targetDir, file.name), file] as [AbsPath, File]);
     promises.push(currentWorkspace.newFiles(newFilesData));
   }
 
