@@ -1,7 +1,7 @@
 import { type Workspace } from "@/Db/Workspace";
 import { AbsPath, joinPath } from "@/lib/paths2";
-import { type ImageWorkerApiType } from "@/workers/ImageWorker/ImageWorkerApi";
-import "@/workers/transferHandlers";
+import { type ImageWorkerApiType } from "@/workers/ImageWorker/Image.api";
+import "@/workers/transferHandlers/asyncGenerator.th";
 import { wrap } from "comlink";
 
 export async function uploadImages2(

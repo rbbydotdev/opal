@@ -1,8 +1,8 @@
 "use client";
 import { type Workspace } from "@/Db/Workspace";
-import { SearchWorkerApi, SearchWorkerApiType } from "@/workers/SearchWorker/SearchWorkerApi";
+import { SearchWorkerApi, SearchWorkerApiType } from "@/workers/SearchWorker/search.api";
 import { Remote, wrap } from "comlink";
-import "../transferHandlers";
+import "../transferHandlers/asyncGenerator.th";
 
 export class SearchWorkspaceWorker {
   private worker!: Worker;

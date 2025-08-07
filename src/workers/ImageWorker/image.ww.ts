@@ -1,5 +1,5 @@
 import { Workspace, WorkspaceJType } from "@/Db/Workspace";
-import { ImageWorkerApi } from "@/workers/ImageWorker/ImageWorkerApi";
+import { ImageWorkerApi } from "@/workers/ImageWorker/Image.api";
 import * as Comlink from "comlink";
 import { transferHandlers } from "comlink";
 import { asyncGeneratorTransferHandler } from "comlink-async-generator";

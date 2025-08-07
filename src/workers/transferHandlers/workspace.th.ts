@@ -1,8 +1,5 @@
 import { Workspace, WorkspaceJType } from "@/Db/Workspace";
 import { transferHandlers } from "comlink";
-import { asyncGeneratorTransferHandler } from "comlink-async-generator";
-// This function is called to ensure the transfer handlers are registered
-transferHandlers.set("asyncGenerator", asyncGeneratorTransferHandler);
 transferHandlers.set("Workspace", {
   canHandle: (obj): obj is Workspace => obj instanceof Workspace,
   serialize: (obj: Workspace) => {
