@@ -43,3 +43,7 @@ next-env.d.ts
 # Serwist
 public/sw*
 public/swe-worker*
+.last-run.json
+.claude/settings.local.json
+playwright-report/index.html
+playwright-report
