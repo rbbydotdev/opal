@@ -95,7 +95,7 @@ export function EditHistoryMenu({
             <ChevronDown />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[600px] bg-primary-foreground p-0">
+        <DropdownMenuContent align="start" className="w-[37.5rem] bg-primary-foreground p-0">
           {Boolean(edits.length) ? (
             <div className="border-b border-border p-2">
               <Button

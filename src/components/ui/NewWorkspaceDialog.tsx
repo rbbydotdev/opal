@@ -55,7 +55,7 @@ export function NewWorkspaceDialog({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* 1. Give the form a unique ID */}
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[26.5625rem]">
         <DialogHeader>
           <DialogTitle>New Workspace</DialogTitle>
           <DialogDescription>Create A New Workspace</DialogDescription>

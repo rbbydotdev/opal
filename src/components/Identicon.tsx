@@ -132,8 +132,8 @@ const Identicon = ({ input, size = 5, scale = 20 }: IdenticonProps) => {
 
   return (
     <svg
-      width={size * scale}
-      height={size * scale}
+      width={`${(size * scale) / 16}rem`}
+      height={`${(size * scale) / 16}rem`}
       viewBox={`0 0 ${size * scale} ${size * scale}`}
       xmlns="http://www.w3.org/2000/svg"
       style={{ backgroundColor: `rgb(${colors.r},${colors.g},${colors.b})` }} // Set the background color

@@ -147,14 +147,18 @@ function RemoteDelete({
 
 const RemoteSelectPlaceHolder = (
   <div className="w-full truncate flex items-center">
-    <SatelliteDishIcon className="p-1 mr-1 stroke-ring flex-shrink-0" />
+    <div className="p-1 mr-1">
+      <SatelliteDishIcon className="w-4 h-4 stroke-ring flex-shrink-0" />
+    </div>
     Remote
   </div>
 );
 
 const NoRemoteSelectPlaceHolder = (
   <div className="w-full truncate flex items-center">
-    <SatelliteDishIcon className="p-1 mr-1 stroke-ring flex-shrink-0" />
+    <div className="p-1 mr-1">
+      <SatelliteDishIcon className="w-4 h-4 stroke-ring flex-shrink-0" />
+    </div>
     Add Remote
   </div>
 );
@@ -204,7 +208,7 @@ function RemoteSelect({
             {remotes.map((remote) => (
               <SelectItem key={remote.name} value={remote.name} className={"!text-xs truncate"}>
                 <div className="flex gap-2 items-center justify-start truncate">
-                  <SatelliteDishIcon size={12} className="stroke-ring flex-shrink-0" />
+                  <SatelliteDishIcon size={16} className="stroke-ring flex-shrink-0 w-4 h-4" />
                   <span className="truncate">{remote.name}</span>
                 </div>
               </SelectItem>

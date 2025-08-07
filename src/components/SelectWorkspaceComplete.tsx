@@ -60,7 +60,7 @@ export function SelectWorkspaceComplete({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between truncate">
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[12.5rem] justify-between truncate">
           {value ? (
             <>
               {currWs?.icon} {currWs?.label}
@@ -72,7 +72,7 @@ export function SelectWorkspaceComplete({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className="w-[12.5rem] p-0">
         <Command value={value}>
           <CommandInput placeholder="Search workspace..." className="h-9" />
           <CommandList>

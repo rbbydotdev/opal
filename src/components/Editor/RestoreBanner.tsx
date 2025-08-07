@@ -18,7 +18,7 @@ export const RestoreBanner = ({
   return (
     <div
       className={cn(
-        "w-[480px] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-50 flex justify-center items-center",
+        "w-[30rem] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-50 flex justify-center items-center",
         className
       )}
     >

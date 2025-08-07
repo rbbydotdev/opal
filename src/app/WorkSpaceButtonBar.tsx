@@ -14,22 +14,17 @@ import { cn } from "@/lib/utils";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import React, { JSX } from "react";
+import React from "react";
 import { twMerge } from "tailwind-merge";
 
-const BigButtonWorkspaceTitle = ({ title }: { title: string }) => (
-  <div title={title} className="uppercase truncate px-2 pt-2 text-center w-full">
-    {title}
-  </div>
-);
 function BigButton({
   icon,
-  btnTitle,
+  title,
   active,
   ...restProps
 }: {
   icon: React.ReactNode;
-  btnTitle?: string | React.ReactNode | JSX.Element | null;
+  title?: React.ReactNode | null;
   active?: boolean;
 } & React.ComponentProps<typeof Link>) {
   const pathname = usePathname();
@@ -48,19 +43,17 @@ function BigButton({
             {isActive && <div className="w-0.5 h-full bg-white ml-1"></div>}
             <div className="flex flex-col items-center justify-center">
               {icon}
-              {/* text-ellipsis overflow-clip whitespace-nowrap  */}
-              {/* {title && <div className="uppercase truncate px-2 pt-2 text-center w-full">{title}</div>} */}
-              {typeof btnTitle === "string" ? (
-                <div className="uppercase px-2 pt-2 text-center w-full">{btnTitle}</div>
+              {typeof title === "string" ? (
+                <div className="uppercase px-2 pt-2 text-center w-full">{title}</div>
               ) : (
-                btnTitle
+                title
               )}
             </div>
           </div>
         </Link>
       </TooltipTrigger>
       <TooltipContent side="right" align="center" className="uppercase">
-        {btnTitle}
+        {title}
       </TooltipContent>
     </Tooltip>
   );
@@ -97,7 +90,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
         <>
           <BigButton
             icon={<BombIcon stroke="current" size={24} strokeWidth={1.25} />}
-            btnTitle={"Destroy All"}
+            title={"Destroy All"}
             href="#"
             onClick={() =>
               Promise.all([
@@ -118,13 +111,13 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
           />
           <BigButton
             icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
-            btnTitle={"Delete All"}
+            title={"Delete All"}
             href="#"
             onClick={() => Workspace.DeleteAll().then(() => router.push("/newWorkspace"))}
           />
           <BigButton
             icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
-            btnTitle={"Unregister Services"}
+            title={"Unregister Services"}
             href="#"
             onClick={() => {
               // Unregister all service workers for this origin
@@ -144,7 +137,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
       <WorkspaceSearchDialog>
         <BigButton
           icon={<SearchIcon stroke="current" size={24} strokeWidth={1.25} />}
-          btnTitle="search"
+          title="search"
           href="#"
           className="text-3xs"
         />
@@ -152,18 +145,18 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
       <BigButton
         className="hidden"
         icon={<Zap stroke="current" size={24} strokeWidth={1.25} />}
-        btnTitle="connections"
+        title="connections"
         href="/connections"
       />
       <BigButton
         className="hidden"
         icon={<Settings stroke="current" size={24} strokeWidth={1.25} />}
-        btnTitle="settings"
+        title="settings"
         href="/settings"
       />
       <BigButton
         icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
-        btnTitle="new workspace"
+        title="new workspace"
         href={"/newWorkspace"}
         className="text-3xs"
       />
@@ -171,9 +164,9 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
       {coalescedWorkspace && (
         <BigButton
           icon={<WorkspaceIcon input={coalescedWorkspace.guid} />}
-          btnTitle={<BigButtonWorkspaceTitle title={coalescedWorkspace.name} />}
+          title={coalescedWorkspace.name}
           href={coalescedWorkspace.href}
-          className="text-white big-button-active"
+          className="text-white big-button-active whitespace-nowrap truncate"
         />
       )}
 
@@ -205,7 +198,8 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
               <BigButton
                 icon={<WorkspaceIcon input={workspace.guid} />}
                 href={workspace.href}
-                btnTitle={workspace.name}
+                className="whitespace-nowrap"
+                title={workspace.name}
                 key={workspace.guid}
               />
             ))}

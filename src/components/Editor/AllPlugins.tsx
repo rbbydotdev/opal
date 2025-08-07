@@ -123,7 +123,7 @@ export function useAllPlugins({
         toolbarPlugin({
           toolbarContents: () =>
             finalViewMode === "source" ? (
-              <div className="h-[30px] text-sm flex justify-center items-center">Source Mode</div>
+              <div className="h-[1.875rem] text-sm flex justify-center items-center">Source Mode</div>
             ) : (
               <>
                 <EditHistoryMenu
