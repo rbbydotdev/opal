@@ -29,16 +29,7 @@
     }
   },
 
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.d.ts",
-    "next-env.d.ts",
-    ".next/types/**/*.ts",
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/types"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts", "next-env.d.ts", "./src/**/*.ts", "./src/**/*.tsx", "./src/types"],
   "exclude": [
     "./src/components/ui/calendar.tsx",
     "./node_modules",

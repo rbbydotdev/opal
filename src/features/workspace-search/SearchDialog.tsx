@@ -130,7 +130,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       {/* ... The rest of your JSX remains the same ... */}
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
-        className="sm:max-w-[720px] max-h-[80svh] flex flex-col top-[15vh] translate-y-0"
+        className="sm:max-w-[45rem] max-h-[80svh] flex flex-col top-[15vh] translate-y-0"
         onEscapeKeyDown={(event) => {
           if (document.activeElement?.hasAttribute("data-search-file-expand")) {
             event.preventDefault();
@@ -349,7 +349,7 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
         <div className="relative min-w-8 text-right font-bold mr-2">
           {/* 3. Conditionally render the linesSpanned badge */}
           {match.linesSpanned > 0 && (
-            <div className="group-hover:text-white group-hover:bg-ring bg-primary-foreground w-8 left-4 absolute -top-2.5 -right-2 flex items-center justify-center rounded-full text-ring scale-75 text-[10px] font-bold">
+            <div className="group-hover:text-white group-hover:bg-ring bg-primary-foreground w-8 left-4 absolute -top-2.5 -right-2 flex items-center justify-center rounded-full text-ring scale-75 text-[0.625rem] font-bold">
               +{match.linesSpanned}
             </div>
           )}

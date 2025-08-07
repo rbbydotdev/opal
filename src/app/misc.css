@@ -25,8 +25,8 @@
   /* .source-editor::selection {
     @apply bg-ring text-primary;
   } */
+}
 
-  .mdxeditor::selection {
-    @apply bg-ring text-primary-foreground;
-  }
+html {
+  font-size: 0.75rem; /* 14px */
 }

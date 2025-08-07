@@ -122,7 +122,7 @@ export function ElementCaptureModal({
             <DialogDescription>{modalDescription}</DialogDescription>
           </DialogHeader>
 
-          <div className="flex min-h-[300px] items-center justify-center rounded-md border bg-muted">
+          <div className="flex min-h-[18.75rem] items-center justify-center rounded-md border bg-muted">
             {isLoading && (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin" />

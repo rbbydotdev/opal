@@ -88,7 +88,7 @@ export function ConnectionsModal({ children }: { children: React.ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[26.5625rem]">
         <DialogHeader>
           <DialogTitle>Connect to API</DialogTitle>
           <DialogDescription>Connect your application to various APIs to extend its functionality.</DialogDescription>

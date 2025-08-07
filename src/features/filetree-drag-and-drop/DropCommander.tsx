@@ -49,7 +49,7 @@ const _ExtravaCard = () => (
   <Card className="rotate-6 w-96 h-96 border bg-secondary text-secondary-foreground rounded-lg flex items-center flex-col justify-center gap-2 drop-shadow-lg">
     <div>
       <div>
-        <div className="relative w-[72px] h-[72px]  -translate-y-12 translate-x-4 rotate-6 scale-150">
+        <div className="relative w-[4.5rem] h-[4.5rem]  -translate-y-12 translate-x-4 rotate-6 scale-150">
           <File
             size={72}
             fill="hsl(var(--secondary-foreground))"

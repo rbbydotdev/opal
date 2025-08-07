@@ -86,10 +86,9 @@ export function useWorkspaceRepoWW(workspace: Workspace, onPathNoExists?: (path:
       });
       void workspace.dirtyListener(debounce(() => repoInstance.sync(), 500));
       void repoInstance.infoListener(async (newInfo) => {
-        if (newInfo) {
-          setInfo(newInfo);
-        }
+        if (newInfo) setInfo(newInfo);
       });
+      await repoInstance.sync();
       repoRef.current = repoInstance;
       setPlaybook(new GitPlaybook(repoInstance));
     })();

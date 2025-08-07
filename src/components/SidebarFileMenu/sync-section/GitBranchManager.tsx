@@ -202,7 +202,9 @@ function BranchDelete({
 
 const BranchSelectPlaceHolder = ({ currentGitRef }: { currentGitRef: GitRef | null }) => (
   <div className="w-full truncate flex items-center">
-    <GitPullRequestDraft className="p-1 mr-2 stroke-ring flex-shrink-0" />
+    <div className="p-1 mr-2">
+      <GitPullRequestDraft className="stroke-ring flex-shrink-0 w-4 h-4" />
+    </div>
     {currentGitRef && isCommitRef(currentGitRef)
       ? `Detached at ${currentGitRef.value.slice(0, 7) || currentGitRef.value}`
       : "Detached"}
@@ -244,9 +246,9 @@ function BranchSelect({
               <SelectItem key={branch} value={branch} className={"!text-xs"}>
                 <div className="flex gap-2 items-center justify-start ">
                   {isLockedBranch(branch) ? (
-                    <LockKeyhole size={12} className="flex-shrink-0" />
+                    <LockKeyhole className="flex-shrink-0 w-4 h-4" />
                   ) : (
-                    <GitBranchIcon size={12} className="flex-shrink-0" />
+                    <GitBranchIcon className="flex-shrink-0 w-4 h-4" />
                   )}
                   <span className="truncate">{branch}</span>
                 </div>
