@@ -131,9 +131,7 @@ function SyncPullPushButtons() {
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const router = useRouter();
-  const { repo, playbook, info, exists } = useWorkspaceRepoWW(currentWorkspace, () =>
-    router.push(currentWorkspace.href)
-  );
+  const { repo, playbook, info } = useWorkspaceRepoWW(currentWorkspace, () => router.push(currentWorkspace.href));
   const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
@@ -148,6 +146,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
     }
     return null;
   }, [info]);
+  const exists = info.exists;
 
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
@@ -188,7 +187,8 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               <CommitOrInitButton
                 exists={exists}
                 commit={commit}
-                disabled={(exists && info.currentBranch === null) || (info !== null && !info.hasChanges)}
+                // disabled={(exists && info.currentBranch === null) || (info !== null && !info.hasChanges)}
+                disabled={exists && !info.hasChanges}
                 isPending={isPending}
                 pendingCommand={pendingCommand ?? ""}
                 commitRef={commitRef}
