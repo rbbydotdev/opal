@@ -1,4 +1,3 @@
-import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { Disk } from "@/Db/Disk";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
@@ -143,29 +142,19 @@ export type RepoRemoteEventPayload = {
 export class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
 
 export class Repo {
-  readonly guid: string;
-  private info: RepoInfoType | null = null;
-  fs: CommonFileSystem;
+  disk: Disk;
   dir: AbsPath;
   defaultMainBranch: string;
+  readonly guid: string;
 
   mutex = new Mutex();
-  private unsubs: (() => void)[] = [];
 
   local = new RepoEventsLocal();
   remote: RepoEventsRemote;
-
-  onTearDown = (fn: () => void) => {
-    this.unsubs.push(fn);
-    return this;
-  };
-
-  get gitDir() {
-    return joinPath(this.dir, ".git");
-  }
-
   private readonly $p = Promise.withResolvers<RepoInfoType>();
   public readonly ready = this.$p.promise;
+  private unsubs: (() => void)[] = [];
+  private info: RepoInfoType | null = null;
 
   private gitWpm = new WatchPromiseMembers(git);
   readonly git = this.gitWpm.watched;
@@ -182,10 +171,18 @@ export class Repo {
     initialized: false,
   };
 
-  // watchRemoteRepo(callback: () => void) {
-  // this.remoteEvents = new RemoteGitChannel();
-  // return this.remoteEvents.on(RemoteGitEvents.UPDATE, callback);
-  // }
+  onTearDown = (fn: () => void) => {
+    this.unsubs.push(fn);
+    return this;
+  };
+
+  get fs() {
+    return this.disk.fs;
+  }
+
+  get gitDir() {
+    return joinPath(this.dir, ".git");
+  }
 
   getPrevBranch = async () => {
     const prevBranch = await this.fs.readFile(joinPath(this.gitDir, "PREV_BRANCH")).catch(() => null);
@@ -194,10 +191,14 @@ export class Repo {
     }
     return null;
   };
-  writePrevBranch = async (branchName: string) => {
-    await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
+
+  private syncLocal = async () => {
+    return this.sync({ emitRemote: false });
   };
 
+  getInfo = () => {
+    return this.info;
+  };
   initListeners() {
     this.remote.init();
     this.remote.on(RepoEvents.INFO, () => {
@@ -221,9 +222,6 @@ export class Repo {
       }
     );
   }
-  getInfo = () => {
-    return this.info;
-  };
 
   gitListener(cb: () => void) {
     return this.local.on(RepoEvents.GIT, cb);
@@ -232,8 +230,8 @@ export class Repo {
   infoListener(cb: (info: RepoInfoType) => void) {
     return this.local.on(RepoEvents.INFO, cb);
   }
-  private syncLocal = async () => {
-    return this.sync({ emitRemote: false });
+  writePrevBranch = async (branchName: string) => {
+    await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
   };
 
   rememberCurrentBranch = async () => {
@@ -291,13 +289,13 @@ export class Repo {
   }
 
   static New(
-    fs: CommonFileSystem,
+    disk: Disk,
     guid: string,
     dir: AbsPath = absPath("/"),
     branch: string = "main",
     author?: GitRepoAuthor
   ): Repo {
-    return new Repo({ fs, guid, dir, defaultBranch: branch, author });
+    return new Repo({ disk, guid, dir, defaultBranch: branch, author });
   }
 
   static FromDisk(
@@ -307,18 +305,18 @@ export class Repo {
     branch: string = "main",
     author?: GitRepoAuthor
   ): Repo {
-    return new Repo({ guid, fs: disk.fs, dir, defaultBranch: branch, author });
+    return new Repo({ guid, disk, dir, defaultBranch: branch, author });
   }
   constructor({
     guid,
-    fs,
+    disk,
     dir,
     defaultBranch,
     author,
     mutex = new Mutex(),
   }: {
     guid: string;
-    fs: CommonFileSystem;
+    disk: Disk;
     dir: AbsPath;
     defaultBranch: string;
     author?: { email: string; name: string };
@@ -326,11 +324,28 @@ export class Repo {
   }) {
     this.mutex = mutex;
     this.guid = guid;
-    this.fs = fs;
+    this.disk = disk;
     this.dir = dir;
     this.defaultMainBranch = defaultBranch;
     this.author = author || this.author;
     this.remote = new RepoEventsRemote(this.guid);
+  }
+
+  toJSON() {
+    return {
+      guid: this.guid,
+      disk: this.disk.toJSON(),
+      dir: this.dir,
+      defaultBranch: this.defaultMainBranch,
+    };
+  }
+  static FromJSON(json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): Repo {
+    return new Repo({
+      guid: json.guid,
+      disk: Disk.FromJSON(json.disk),
+      dir: json.dir,
+      defaultBranch: json.defaultBranch,
+    });
   }
 
   addRemote = async (name: string, url: string) => {
@@ -623,7 +638,7 @@ export class Repo {
     return new RepoWithRemote(
       {
         guid: this.guid,
-        fs: this.fs,
+        disk: this.disk,
         dir: this.dir,
         branch: this.defaultMainBranch,
         remoteBranch: remote.branch,
@@ -661,12 +676,12 @@ export class RepoWithRemote extends Repo {
   constructor(
     {
       guid,
-      fs,
+      disk,
       dir,
       branch,
     }: {
       guid: string;
-      fs: CommonFileSystem;
+      disk: Disk;
       dir: AbsPath;
       branch: string;
       remoteBranch?: string;
@@ -676,7 +691,7 @@ export class RepoWithRemote extends Repo {
     },
     remote: IRemote | Remote
   ) {
-    super({ guid, fs, dir, defaultBranch: branch });
+    super({ guid, disk, dir, defaultBranch: branch });
     this.gitRemote = remote instanceof Remote ? remote : new Remote(remote);
   }
 
