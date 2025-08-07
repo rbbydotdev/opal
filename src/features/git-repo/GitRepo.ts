@@ -1,8 +1,9 @@
-import { Disk } from "@/Db/Disk";
+import { Disk, DiskJType } from "@/Db/Disk";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { deepEqual } from "@/lib/deepEqual";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
+import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
@@ -116,6 +117,7 @@ export const RepoDefaultInfo = {
     oid: string;
     commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
   }>,
+  context: "main" as "main" | "worker",
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
 //--------------------------
@@ -149,10 +151,9 @@ export type RepoJType = {
 };
 export class Repo {
   disk: Disk;
-  dir: AbsPath;
-  defaultMainBranch: string;
+  dir: AbsPath = absPath("/");
+  defaultMainBranch: string = "main";
   readonly guid: string;
-
   mutex = new Mutex();
 
   local = new RepoEventsLocal();
@@ -205,7 +206,7 @@ export class Repo {
   getInfo = () => {
     return this.info;
   };
-  initListeners() {
+  initListeners = () => {
     this.remote.init();
     this.remote.on(RepoEvents.INFO, () => {
       void this.syncLocal();
@@ -227,15 +228,15 @@ export class Repo {
         void this.sync();
       }
     );
-  }
+  };
 
-  gitListener(cb: () => void) {
+  gitListener = (cb: () => void) => {
     return this.local.on(RepoEvents.GIT, cb);
-  }
+  };
 
-  infoListener(cb: (info: RepoInfoType) => void) {
+  infoListener = (cb: (info: RepoInfoType) => void) => {
     return this.local.on(RepoEvents.INFO, cb);
-  }
+  };
   writePrevBranch = async (branchName: string) => {
     await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
   };
@@ -319,20 +320,20 @@ export class Repo {
     dir,
     defaultBranch,
     author,
-    mutex = new Mutex(),
+    mutex,
   }: {
     guid: string;
-    disk: Disk;
-    dir: AbsPath;
-    defaultBranch: string;
+    disk: Disk | DiskJType;
+    dir?: AbsPath;
+    defaultBranch?: string;
     author?: { email: string; name: string };
     mutex?: Mutex;
   }) {
-    this.mutex = mutex;
+    this.mutex = mutex || this.mutex;
     this.guid = guid;
-    this.disk = disk;
-    this.dir = dir;
-    this.defaultMainBranch = defaultBranch;
+    this.disk = disk instanceof Disk ? disk : Disk.FromJSON(disk);
+    this.dir = dir || this.dir;
+    this.defaultMainBranch = defaultBranch || this.defaultMainBranch;
     this.author = author || this.author;
     this.remote = new RepoEventsRemote(this.guid);
   }
@@ -373,6 +374,7 @@ export class Repo {
       latestCommit: await this.getLatestCommit(),
       hasChanges: await this.hasChanges(),
       commitHistory: await this.getCommitHistory({ depth: 20 }),
+      context: isWebWorker() ? "worker" : "main",
     };
   }
 
@@ -660,6 +662,7 @@ export class Repo {
     this.gitEvents.clearListeners();
   }
 }
+
 const SYSTEM_COMMITS = {
   COMMIT: "opal@COMMIT",
   SWITCH_BRANCH: "opal@SWITCH_BRANCH",
