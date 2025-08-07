@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TooltipToast } from "@/components/ui/TooltipToast";
 import { GitRemote, Repo, RepoLatestCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
+import * as Comlink from "comlink";
 import { Ellipsis, Pencil, Plus, SatelliteDishIcon, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -221,7 +222,7 @@ export function RemoteManagerSection({
   info,
   remoteRef,
 }: {
-  repo: Repo;
+  repo: Repo | Comlink.Remote<Repo>;
   info: { latestCommit: RepoLatestCommit; remotes: GitRemote[] };
   remoteRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {

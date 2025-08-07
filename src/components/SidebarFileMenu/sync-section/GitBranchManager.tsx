@@ -267,7 +267,7 @@ export function BranchManagerSection({
   branches,
   branchRef,
 }: {
-  repo: Repo;
+  repo: Repo | Remote<Repo>;
   playbook: GitPlaybook;
   currentGitRef: GitRef | null;
   branches: string[];
@@ -309,6 +309,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Input } from "@/components/ui/input";
+import { Remote } from "comlink";
 
 export const gitRefSchema = z.object({
   value: z

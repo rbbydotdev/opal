@@ -32,14 +32,14 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { useUIGitPlaybook, useWorkspaceRepo, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
+import { useUIGitPlaybook, useWorkspaceRepoWW, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { useRouter } from "next/navigation";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
 function LatestInfo({ info }: { info: WorkspaceRepoType }) {
-  const { latestCommit, currentBranch, hasChanges } = info;
+  const { latestCommit, context, currentBranch, hasChanges } = info;
   const timeAgo = useTimeAgoUpdater({ date: new Date(latestCommit.date) });
   if (!latestCommit) {
     return null;
@@ -56,6 +56,8 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
       <dd className="truncate">{new Date(latestCommit.date).toLocaleString()}</dd>
       <dt className="font-bold">time ago:</dt>
       <dd className="truncate">{timeAgo}</dd>
+      <dt className="font-bold">context:</dt>
+      <dd className="truncate">{context}</dd>
     </dl>
   );
 }
@@ -129,7 +131,9 @@ function SyncPullPushButtons() {
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const router = useRouter();
-  const { repo, playbook, info, exists } = useWorkspaceRepo(currentWorkspace, () => router.push(currentWorkspace.href));
+  const { repo, playbook, info, exists } = useWorkspaceRepoWW(currentWorkspace, () =>
+    router.push(currentWorkspace.href)
+  );
   const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
