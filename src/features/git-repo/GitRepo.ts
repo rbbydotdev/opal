@@ -123,6 +123,7 @@ export const RepoDefaultInfo = {
     commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
   }>,
   context: "main" as "main" | "worker",
+  exists: false,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
 //--------------------------
@@ -262,11 +263,12 @@ export class Repo {
     if (deepEqual(this.info, newInfo)) {
       return this.info; // No changes, return current info
     }
+    this.info = newInfo;
     void this.local.emit(RepoEvents.INFO, newInfo);
     if (emitRemote) {
       void this.remote.emit(RepoEvents.INFO, newInfo);
     }
-    return (this.info = newInfo);
+    return newInfo;
   };
   // findParentBranchHead = async (ref: string): Promise<string | null> => {
   //check the reflog to find the parent
@@ -297,7 +299,7 @@ export class Repo {
 
   init() {
     this.unsubs.push(this.initListeners());
-    void this.sync();
+    return this.sync();
   }
 
   static New(
@@ -381,6 +383,7 @@ export class Repo {
       hasChanges: await this.hasChanges(),
       commitHistory: await this.getCommitHistory({ depth: 20 }),
       context: isWebWorker() ? "worker" : "main",
+      exists: await this.exists(),
     };
   };
 
@@ -835,6 +838,11 @@ export class GitPlaybook {
     }
     return false;
   };
+}
+export class NullGitPlaybook extends GitPlaybook {
+  constructor() {
+    super(new NullRepo());
+  }
 }
 
 export class GitRemotePlaybook extends GitPlaybook {

@@ -947,4 +947,7 @@ export class NullDisk extends Disk {
     const ft = new FileTree(fs.promises, guid, mt);
     super("null", fs.promises, ft, DiskDAO.New(NullDisk.type, guid));
   }
+  async init() {
+    return () => {};
+  }
 }
