@@ -171,13 +171,13 @@ export function EditorSearchBar({
           e.stopPropagation();
         }
       }}
-      // onBlur={(e) => {
-      //   // Only close if focus moves outside the search bar and its children
-      //   // also ignore blur events triggered by the replace input
-      //   if (closeOnBlur && !e.currentTarget.contains(e.relatedTarget as Node) && !pauseBlurClose.current) {
-      //     handleClose();
-      //   }
-      // }}
+      onBlur={(e) => {
+        // Only close if focus moves outside the search bar and its children
+        // also ignore blur events triggered by the replace input
+        if (closeOnBlur && !e.currentTarget.contains(e.relatedTarget as Node) && !pauseBlurClose.current) {
+          handleClose();
+        }
+      }}
       className={twMerge(
         clsx({ "animate-in": open }),
         "bg-transparent backdrop-blur-md border rounded-lg shadow-lg flex absolute top-12 translate-y-4 right-4 z-50",
