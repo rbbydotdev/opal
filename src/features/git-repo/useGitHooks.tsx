@@ -2,6 +2,7 @@ import { Workspace } from "@/Db/Workspace";
 import {
   GitPlaybook,
   GitRemotePlaybook,
+  NullRepo,
   Repo,
   RepoDefaultInfo,
   RepoInfoType,
@@ -13,16 +14,17 @@ import "@/workers/transferHandlers/repo.th";
 import * as Comlink from "comlink";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-export function useGitPlaybook(repo: Repo | RepoWithRemote) {
+export function useGitPlaybook(repo: Repo | Comlink.Remote<Repo>): GitPlaybook | GitRemotePlaybook {
   return useMemo(() => {
     if (repo instanceof RepoWithRemote) {
       return new GitRemotePlaybook(repo);
     }
+
     return new GitPlaybook(repo);
   }, [repo]);
 }
 
-export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
+export function useUIGitPlaybook(repo: Repo | Comlink.Remote<Repo>) {
   const playbook = useGitPlaybook(repo);
   const [pendingCommand, setPending] = useState<"commit" | null>(null);
   const commit = async () => {
@@ -40,38 +42,46 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
   return { isPending: pendingCommand !== null, pendingCommand, commit };
 }
 
-async function repoWebWorker(workspace: Workspace) {
-  const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
-  const RepoApi = Comlink.wrap<typeof Repo>(worker);
-  // debugger;
-  const repoWw = await new RepoApi({
-    guid: `${workspace.id}/repo`,
-    disk: workspace.disk.toJSON(),
-  });
+// async function repoWebWorker(workspace: Workspace) {
+//   const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
+//   const RepoApi = Comlink.wrap<typeof Repo>(worker);
+//   // debugger;
+//   const repoWw = await new RepoApi({
+//     guid: `${workspace.id}/repo`,
+//     disk: workspace.disk.toJSON(),
+//   });
 
-  await repoWw.init();
-  await repoWw.infoListener((info) => {
-    console.log(">>>>>>>Repo info updated:", info);
-  });
-  console.log(await repoWw.sync());
-  console.log(repoWw.infoListener(() => {}));
-}
+//   await repoWw.init();
+//   await repoWw.infoListener((info) => {
+//     console.log(">>>>>>>Repo info updated:", info);
+//   });
+//   console.log(await repoWw.sync());
+//   console.log(repoWw.infoListener(() => {}));
+// }
 
-function useWorkspaceRepoWW(workspace: Workspace) {
-  const [repo, setRepo] = useState<Comlink.Remote<Repo> | null>(null);
+export function useWorkspaceRepoWW(workspace: Workspace, onPathNoExists?: (path: string) => void) {
+  const _onPathNoExistsRef = useRef(onPathNoExists);
+  const repoRef = useRef<Comlink.Remote<Repo> | Repo>(new NullRepo());
+  const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
+  const [playbook, setPlaybook] = useState<GitPlaybook>(null);
   useEffect(() => {
     void (async () => {
       const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
       const RepoApi = Comlink.wrap<typeof Repo>(worker);
-      setRepo(
-        await new RepoApi({
-          guid: `${workspace.id}/repo`,
-          disk: workspace.disk.toJSON(),
-        })
-      );
+      const repoInstance = await new RepoApi({
+        guid: `${workspace.id}/repo`,
+        disk: workspace.disk.toJSON(),
+      });
+      await repoInstance.infoListener(async (info) => {
+        // setInfo(await repoInstance.sync());
+        setInfo(info);
+      });
+      await repoInstance.init();
+      repoRef.current = repoInstance;
+      setPlaybook(new GitPlaybook(repoInstance));
     })();
-  }, [workspace.disk, workspace.id]);
-  return repo;
+  }, [workspace.disk, workspace.id, repoRef, setPlaybook, setInfo]);
+  return { repo: repoRef.current, info, playbook, exists: info.initialized };
 }
 
 export function useWorkspaceRepo(workspace: Workspace, onPathNoExists?: (path: string) => void) {
@@ -83,11 +93,6 @@ export function useWorkspaceRepo(workspace: Workspace, onPathNoExists?: (path: s
 
   useEffect(() => repo.infoListener(setInfo), [repo]);
 
-  useEffect(() => {
-    if (workspace && !workspace.isNull) {
-      void repoWebWorker(workspace);
-    }
-  }, [workspace]);
   useEffect(() => {
     if (repo) {
       void repo.init();

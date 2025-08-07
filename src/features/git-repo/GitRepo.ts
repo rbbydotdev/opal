@@ -1,4 +1,4 @@
-import { Disk, DiskJType } from "@/Db/Disk";
+import { Disk, DiskJType, NullDisk } from "@/Db/Disk";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { deepEqual } from "@/lib/deepEqual";
@@ -6,10 +6,10 @@ import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
+import * as Comlink from "comlink";
 import Emittery from "emittery";
 import git, { AuthCallback } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
-
 //git remote is different from IRemote as its
 //more so just a Git remote as it appears in Git
 //
@@ -111,7 +111,12 @@ export const RepoDefaultInfo = {
   initialized: false,
   branches: [] as string[],
   remotes: [] as GitRemote[],
-  latestCommit: null as RepoLatestCommit | null,
+  latestCommit: {
+    oid: "",
+    date: 0,
+    message: "",
+    author: { name: "", email: "", timestamp: 0, timezoneOffset: 0 },
+  },
   hasChanges: false,
   commitHistory: [] as Array<{
     oid: string;
@@ -251,7 +256,7 @@ export class Repo {
     }
   };
 
-  async sync({ emitRemote = true } = {}) {
+  sync = async ({ emitRemote = true } = {}) => {
     const newInfo = { ...(await this.tryInfo()) };
     await this.$p.resolve(newInfo);
     if (deepEqual(this.info, newInfo)) {
@@ -262,7 +267,7 @@ export class Repo {
       void this.remote.emit(RepoEvents.INFO, newInfo);
     }
     return (this.info = newInfo);
-  }
+  };
   // findParentBranchHead = async (ref: string): Promise<string | null> => {
   //check the reflog to find the parent
 
@@ -338,22 +343,23 @@ export class Repo {
     this.remote = new RepoEventsRemote(this.guid);
   }
 
-  toJSON() {
+  toJSON = () => {
     return {
       guid: this.guid,
       disk: this.disk.toJSON(),
       dir: this.dir,
       defaultBranch: this.defaultMainBranch,
     };
-  }
-  static FromJSON(json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): Repo {
+  };
+
+  static FromJSON = (json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): Repo => {
     return new Repo({
       guid: json.guid,
       disk: Disk.FromJSON(json.disk),
       dir: json.dir,
       defaultBranch: json.defaultBranch,
     });
-  }
+  };
 
   addRemote = async (name: string, url: string) => {
     await this.git.addRemote({
@@ -365,7 +371,7 @@ export class Repo {
     });
   };
 
-  async tryInfo(): Promise<RepoInfoType> {
+  tryInfo = async (): Promise<RepoInfoType> => {
     return {
       initialized: this.state.initialized,
       currentBranch: await this.getCurrentBranch(),
@@ -376,7 +382,7 @@ export class Repo {
       commitHistory: await this.getCommitHistory({ depth: 20 }),
       context: isWebWorker() ? "worker" : "main",
     };
-  }
+  };
 
   getCurrentBranch = async (): Promise<string | null> => {
     if (!(await this.exists())) return null;
@@ -406,11 +412,13 @@ export class Repo {
       dir: this.dir,
     });
   };
+
   isBranchOrTag = async (ref: string) => {
     const branches = await this.getBranches();
     const tags = await git.listTags({ fs: this.fs, dir: this.dir });
     return branches.includes(ref) || tags.includes(ref);
   };
+
   getRemotes = async (): Promise<GitRemote[]> => {
     if (!(await this.exists())) return [];
     const remotes = await this.git.listRemotes({
@@ -422,8 +430,9 @@ export class Repo {
       url: url,
     }));
   };
-  getLatestCommit = async (): Promise<RepoLatestCommit | null> => {
-    if (!(await this.exists())) return null;
+
+  getLatestCommit = async (): Promise<RepoLatestCommit> => {
+    if (!(await this.exists())) return RepoLatestCommitNull;
     const commitOid = await this.git.resolveRef({
       fs: this.fs,
       dir: this.dir,
@@ -483,15 +492,26 @@ export class Repo {
     return (this.state.initialized = true);
   };
 
-  async add(filepath: string | string[]): Promise<void> {
+  commit = async ({ message, author }: { message: string; author?: GitRepoAuthor }): Promise<string> => {
+    await this.mustBeInitialized();
+    return this.git.commit({
+      fs: this.fs,
+      dir: this.dir,
+      author: author || this.author,
+      message,
+    });
+  };
+
+  add = async (filepath: string | string[]): Promise<void> => {
     await this.mustBeInitialized();
     return this.git.add({
       fs: this.fs,
       dir: this.dir,
       filepath: Array.isArray(filepath) ? filepath : [filepath],
     });
-  }
-  async remove(filepath: string | string[]): Promise<void> {
+  };
+
+  remove = async (filepath: string | string[]): Promise<void> => {
     await this.mustBeInitialized();
     await this.mutex.runExclusive(() =>
       Promise.all(
@@ -504,7 +524,11 @@ export class Repo {
         )
       )
     );
-  }
+  };
+
+  checkoutDefaultBranch = async () => {
+    return await this.checkoutRef(this.defaultMainBranch);
+  };
 
   checkoutRef = async (ref: string): Promise<string | void> => {
     //check if ref is ref or branch name
@@ -553,6 +577,7 @@ export class Repo {
     });
     return uniqueBranchName;
   };
+
   deleteGitBranch = async (branchName: string): Promise<void> => {
     await this.mustBeInitialized();
     const currentBranch = await this.getCurrentBranch();
@@ -574,10 +599,11 @@ export class Repo {
     });
   };
 
-  async statusMatrix(): Promise<Array<[string, number, number, number]>> {
+  statusMatrix = async (): Promise<Array<[string, number, number, number]>> => {
     await this.mustBeInitialized();
     return git.statusMatrix({ fs: this.fs, dir: this.dir });
-  }
+  };
+
   addGitRemote = async (remote: GitRemote): Promise<void> => {
     await this.mustBeInitialized();
     const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
@@ -591,6 +617,7 @@ export class Repo {
       url: remote.url,
     });
   };
+
   replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {
     await this.mustBeInitialized();
     await this.deleteGitRemote(previous.name);
@@ -611,6 +638,7 @@ export class Repo {
       remote: remoteName,
     });
   };
+
   exists = async (): Promise<boolean> => {
     try {
       if (this.state.initialized) return true;
@@ -657,10 +685,11 @@ export class Repo {
       remote
     );
   };
-  tearDown() {
+
+  tearDown = () => {
     this.unsubs.forEach((unsub) => unsub());
     this.gitEvents.clearListeners();
-  }
+  };
 }
 
 const SYSTEM_COMMITS = {
@@ -727,7 +756,7 @@ export class RepoWithRemote extends Repo {
 export class GitPlaybook {
   //should probably dep inject shared mutex from somewhere rather than relying on repo's
   //rather should share mutex
-  constructor(private repo: Repo, private mutex = new Mutex()) {}
+  constructor(private repo: Repo | Comlink.Remote<Repo>, private mutex = new Mutex()) {}
 
   switchBranch = async (branchName: string) => {
     if ((await this.repo.getCurrentBranch()) === branchName) return false;
@@ -765,13 +794,11 @@ export class GitPlaybook {
   };
   async addAllCommit({
     message,
-    author,
     allowEmpty = false,
     filepath = ".",
   }: {
     message: string;
     filepath?: string;
-    author?: GitRepoAuthor;
     allowEmpty?: boolean;
   }) {
     await this.repo.mustBeInitialized();
@@ -786,11 +813,8 @@ export class GitPlaybook {
       }
     }
     await this.repo.add(filepath);
-    await this.repo.git.commit({
-      fs: this.repo.fs,
-      dir: this.repo.dir,
+    await this.repo.commit({
       message,
-      author: author || this.repo.author,
     });
     return true;
   }
@@ -803,7 +827,7 @@ export class GitPlaybook {
         return true;
       } catch (error) {
         if (error instanceof git.Errors.NotFoundError) {
-          void this.repo.checkoutRef(this.repo.defaultMainBranch);
+          void this.repo.checkoutDefaultBranch();
         } else {
           console.error("Error switching to previous branch:", error);
         }
@@ -811,17 +835,6 @@ export class GitPlaybook {
     }
     return false;
   };
-
-  // async addRemote(remote: IRemote) {
-  //   await this.repo.git.addRemote({
-  //     fs: this.repo.fs,
-  //     dir: this.repo.dir,
-  //     remote: remote.name,
-  //     url: remote.url,
-  //     force: true,
-  //   });
-  //   return this.repo.withRemote(remote);
-  // }
 }
 
 export class GitRemotePlaybook extends GitPlaybook {
@@ -841,7 +854,7 @@ export class GitRemotePlaybook extends GitPlaybook {
     /*commit,push*/
 
     if (await this.remoteRepo.hasChanges()) {
-      await this.addAllCommit({ message: SYSTEM_COMMITS.PREPUSH, author: this.remoteRepo.author });
+      await this.addAllCommit({ message: SYSTEM_COMMITS.PREPUSH });
     }
     await git.push({
       fs: this.remoteRepo.fs,
@@ -884,4 +897,15 @@ export class GitRemotePlaybook extends GitPlaybook {
     //     console.error("Error syncing with remote:", error);
     //   });
   }
+}
+
+export class NullRepo extends Repo {
+  constructor() {
+    super({ guid: "NullRepo", disk: new NullDisk(), dir: absPath("/"), defaultBranch: "main" });
+    this.state.initialized = true;
+  }
+
+  static FromJSON = (_json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): NullRepo => {
+    return new NullRepo();
+  };
 }
