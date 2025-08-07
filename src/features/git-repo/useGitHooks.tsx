@@ -7,6 +7,10 @@ import {
   RepoInfoType,
   RepoWithRemote,
 } from "@/features/git-repo/GitRepo";
+import "@/workers/transferHandlers/disk.th";
+import "@/workers/transferHandlers/function.th";
+import "@/workers/transferHandlers/repo.th";
+import * as Comlink from "comlink";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export function useGitPlaybook(repo: Repo | RepoWithRemote) {
@@ -36,6 +40,40 @@ export function useUIGitPlaybook(repo: Repo | RepoWithRemote) {
   return { isPending: pendingCommand !== null, pendingCommand, commit };
 }
 
+async function repoWebWorker(workspace: Workspace) {
+  const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
+  const RepoApi = Comlink.wrap<typeof Repo>(worker);
+  // debugger;
+  const repoWw = await new RepoApi({
+    guid: `${workspace.id}/repo`,
+    disk: workspace.disk.toJSON(),
+  });
+
+  await repoWw.init();
+  await repoWw.infoListener((info) => {
+    console.log(">>>>>>>Repo info updated:", info);
+  });
+  console.log(await repoWw.sync());
+  console.log(repoWw.infoListener(() => {}));
+}
+
+function useWorkspaceRepoWW(workspace: Workspace) {
+  const [repo, setRepo] = useState<Comlink.Remote<Repo> | null>(null);
+  useEffect(() => {
+    void (async () => {
+      const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
+      const RepoApi = Comlink.wrap<typeof Repo>(worker);
+      setRepo(
+        await new RepoApi({
+          guid: `${workspace.id}/repo`,
+          disk: workspace.disk.toJSON(),
+        })
+      );
+    })();
+  }, [workspace.disk, workspace.id]);
+  return repo;
+}
+
 export function useWorkspaceRepo(workspace: Workspace, onPathNoExists?: (path: string) => void) {
   const onPathNoExistsRef = useRef(onPathNoExists);
   const repo = useMemo(() => workspace.NewRepo(onPathNoExistsRef.current), [workspace]);
@@ -46,11 +84,19 @@ export function useWorkspaceRepo(workspace: Workspace, onPathNoExists?: (path: s
   useEffect(() => repo.infoListener(setInfo), [repo]);
 
   useEffect(() => {
+    if (workspace && !workspace.isNull) {
+      void repoWebWorker(workspace);
+    }
+  }, [workspace]);
+  useEffect(() => {
     if (repo) {
       void repo.init();
+      void (async () => {
+        // await workspace.NewRepoWW();
+      })();
       return () => repo.tearDown();
     }
-  }, [repo]);
+  }, [repo, workspace]);
 
   if (!info.latestCommit) {
     return { repo, playbook, info: null, exists: false } satisfies {

@@ -1,11 +1,5 @@
-import { Repo } from "@/features/git-repo/GitRepo";
 import * as Comlink from "comlink";
-
-import "@/workers/transferHandlers/disk.th";
-import "@/workers/transferHandlers/function.th";
-import "@/workers/transferHandlers/repo.th";
 import { transferHandlers } from "comlink";
-
 transferHandlers.set("FUNCTION", {
   canHandle: (obj) => typeof obj === "function",
   serialize(obj) {
@@ -18,5 +12,3 @@ transferHandlers.set("FUNCTION", {
     return Comlink.wrap(port);
   },
 });
-
-Comlink.expose(Repo);
