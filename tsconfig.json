@@ -49,6 +49,8 @@
     "src/app/sand/**",
     "node_modules/**/*",
     "tailwind.config.ts",
+    "scripts/build-preview.ts",
+    "*.ignore.*",
     "**/*.ignore.*", // Excludes any file with `.ignore.` in its name
     "**/_*" // Excludes any file or directory starting with `_`
   ]
