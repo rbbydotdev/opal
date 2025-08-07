@@ -122,7 +122,7 @@ export const RepoDefaultInfo = {
     oid: string;
     commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
   }>,
-  context: "main" as "main" | "worker",
+  context: "" as "main" | "worker" | "",
   exists: false,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
@@ -215,7 +215,15 @@ export class Repo {
   initListeners = () => {
     this.remote.init();
     this.remote.on(RepoEvents.INFO, () => {
-      void this.syncLocal();
+      if (isWebWorker()) {
+        void this.sync();
+      } else {
+        void this.syncLocal();
+      }
+    });
+    //TODO: added this donno if breaks in main or worker?
+    void this.remote.on(RepoEvents.GIT, () => {
+      void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
     });
     return this.gitEvents.on(
       [

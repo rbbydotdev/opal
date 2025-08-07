@@ -52,20 +52,20 @@ export function useWorkspaceRepoWW(workspace: Workspace, onPathNoExists?: (path:
   const [playbook, setPlaybook] = useState<GitPlaybook>(new NullGitPlaybook());
   useEffect(() => {
     void (async () => {
-      // const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
-      // const RepoApi = Comlink.wrap<typeof Repo>(worker);
-      // const repoInstance = await new RepoApi({
-      //   guid: `${workspace.id}/repo`,
-      //   disk: workspace.disk.toJSON(),
-      // });
       const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
       const RepoApi = Comlink.wrap<typeof Repo>(worker);
       const repoInstance = await new RepoApi({
         guid: `${workspace.id}/repo`,
         disk: workspace.disk.toJSON(),
       });
+      // const repoInstance = new Repo({
+      //   guid: `${workspace.id}/repo`,
+      //   disk: workspace.disk,
+      // });
 
       //Todo Workspace.attachRepo(repoInstance); which will return a detatch function
+      await repoInstance.init();
+
       void repoInstance.gitListener(async () => {
         const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
         //not always a write could be a remove!
@@ -90,7 +90,6 @@ export function useWorkspaceRepoWW(workspace: Workspace, onPathNoExists?: (path:
           setInfo(newInfo);
         }
       });
-      await repoInstance.init();
       repoRef.current = repoInstance;
       setPlaybook(new GitPlaybook(repoInstance));
     })();
