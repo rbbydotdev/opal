@@ -36,6 +36,7 @@ export const MdxSearchToolbar = () => {
     }
   }, [isSearchOpen, setMode]);
 
+  if (!isSearchOpen) return null;
   return createPortal(
     <EditorSearchBar
       prev={prev}

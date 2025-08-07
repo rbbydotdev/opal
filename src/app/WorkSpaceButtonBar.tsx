@@ -21,10 +21,12 @@ function BigButton({
   icon,
   title,
   active,
+  truncate,
   ...restProps
 }: {
   icon: React.ReactNode;
   title?: React.ReactNode | null;
+  truncate?: boolean;
   active?: boolean;
 } & React.ComponentProps<typeof Link>) {
   const pathname = usePathname();
@@ -44,7 +46,9 @@ function BigButton({
             <div className="flex flex-col items-center justify-center">
               {icon}
               {typeof title === "string" ? (
-                <div className="uppercase px-2 pt-2 text-center w-full">{title}</div>
+                <div className={cn("uppercase px-2 pt-2 text-center w-full", { truncate: Boolean(truncate) })}>
+                  {title}
+                </div>
               ) : (
                 title
               )}
@@ -166,6 +170,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
           icon={<WorkspaceIcon input={coalescedWorkspace.guid} />}
           title={coalescedWorkspace.name}
           href={coalescedWorkspace.href}
+          truncate={true}
           className="text-white big-button-active whitespace-nowrap truncate"
         />
       )}
@@ -198,6 +203,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
               <BigButton
                 icon={<WorkspaceIcon input={workspace.guid} />}
                 href={workspace.href}
+                truncate={true}
                 className="whitespace-nowrap"
                 title={workspace.name}
                 key={workspace.guid}

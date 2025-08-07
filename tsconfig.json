@@ -1,14 +1,20 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "webworker"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "types": [],
-    "typeRoots": ["./src/types"],
-
+    "typeRoots": [
+      "./src/types"
+    ],
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -25,11 +31,21 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-
-  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts", "next-env.d.ts", "./src/**/*.ts", "./src/**/*.tsx", "./src/types"],
+  "include": [
+    "**/*.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./src/types",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
   "exclude": [
     "./src/components/ui/calendar.tsx",
     "./node_modules",
