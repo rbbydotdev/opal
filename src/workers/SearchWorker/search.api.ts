@@ -1,6 +1,6 @@
 import { type Workspace } from "@/Db/Workspace";
 
-import "@/workers/transferHandlers";
+import "@/workers/transferHandlers/asyncGenerator.th";
 export const SearchWorkerApi = {
   async *searchWorkspace(workspace: Workspace, searchTerm: string) {
     yield* workspace.NewScannable().search(searchTerm);

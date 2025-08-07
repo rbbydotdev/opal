@@ -141,6 +141,12 @@ export type RepoRemoteEventPayload = {
 };
 export class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
 
+export type RepoJType = {
+  guid: string;
+  disk: Disk;
+  dir: AbsPath;
+  defaultBranch: string;
+};
 export class Repo {
   disk: Disk;
   dir: AbsPath;
@@ -475,7 +481,7 @@ export class Repo {
     return (this.state.initialized = true);
   };
 
-  async add(filepath: string | string[]) {
+  async add(filepath: string | string[]): Promise<void> {
     await this.mustBeInitialized();
     return this.git.add({
       fs: this.fs,
@@ -483,9 +489,9 @@ export class Repo {
       filepath: Array.isArray(filepath) ? filepath : [filepath],
     });
   }
-  async remove(filepath: string | string[]) {
+  async remove(filepath: string | string[]): Promise<void> {
     await this.mustBeInitialized();
-    return this.mutex.runExclusive(() =>
+    await this.mutex.runExclusive(() =>
       Promise.all(
         (Array.isArray(filepath) ? filepath : [filepath]).map((fp) =>
           this.git.remove({
@@ -498,7 +504,7 @@ export class Repo {
     );
   }
 
-  checkoutRef = async (ref: string) => {
+  checkoutRef = async (ref: string): Promise<string | void> => {
     //check if ref is ref or branch name
     await this.mustBeInitialized();
     const currentBranch = await this.getCurrentBranch();
@@ -527,7 +533,7 @@ export class Repo {
     branchName: string;
     symbolicRef?: string;
     checkout?: boolean;
-  }) => {
+  }): Promise<string | void> => {
     symbolicRef = symbolicRef || this.defaultMainBranch;
     checkout = checkout ?? false;
     await this.mustBeInitialized();
@@ -545,7 +551,7 @@ export class Repo {
     });
     return uniqueBranchName;
   };
-  deleteGitBranch = async (branchName: string) => {
+  deleteGitBranch = async (branchName: string): Promise<void> => {
     await this.mustBeInitialized();
     const currentBranch = await this.getCurrentBranch();
 
@@ -566,11 +572,11 @@ export class Repo {
     });
   };
 
-  async statusMatrix() {
+  async statusMatrix(): Promise<Array<[string, number, number, number]>> {
     await this.mustBeInitialized();
     return git.statusMatrix({ fs: this.fs, dir: this.dir });
   }
-  addGitRemote = async (remote: GitRemote) => {
+  addGitRemote = async (remote: GitRemote): Promise<void> => {
     await this.mustBeInitialized();
     const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
     await this.git.addRemote({
@@ -583,7 +589,7 @@ export class Repo {
       url: remote.url,
     });
   };
-  replaceGitRemote = async (previous: GitRemote, remote: GitRemote) => {
+  replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {
     await this.mustBeInitialized();
     await this.deleteGitRemote(previous.name);
     await this.git.addRemote({
@@ -595,7 +601,7 @@ export class Repo {
     });
   };
 
-  deleteGitRemote = async (remoteName: string) => {
+  deleteGitRemote = async (remoteName: string): Promise<void> => {
     await this.mustBeInitialized();
     await this.git.deleteRemote({
       fs: this.fs,
@@ -623,7 +629,7 @@ export class Repo {
     });
   };
 
-  writeRef = async ({ ref, value, force = false }: { ref: string; value: string; force: boolean }) => {
+  writeRef = async ({ ref, value, force = false }: { ref: string; value: string; force: boolean }): Promise<void> => {
     await this.mustBeInitialized();
     return this.git.writeRef({
       fs: this.fs,
