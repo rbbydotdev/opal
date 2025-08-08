@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { useWorkspaceRepoWW, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
+import { useWorkspaceRepo, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { useRouter } from "next/navigation";
@@ -201,7 +201,7 @@ function SyncPullPushButtons() {
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const router = useRouter();
-  const { repo, playbook, info } = useWorkspaceRepoWW(currentWorkspace, () => router.push(currentWorkspace.href));
+  const { repo, playbook, info } = useWorkspaceRepo(currentWorkspace, () => router.push(currentWorkspace.href));
   // const { commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
