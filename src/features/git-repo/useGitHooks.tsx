@@ -26,22 +26,20 @@ export function useGitPlaybook(repo: Repo | Comlink.Remote<Repo>): GitPlaybook |
   }, [repo]);
 }
 
-export function useWorkspaceRepoWW(workspace: Workspace, onPathNoExists?: (path: string) => void) {
-  const _onPathNoExistsRef = useRef(onPathNoExists);
+export function useWorkspaceRepo(workspace: Workspace, _onPathNoExists?: (path: string) => void) {
+  //this would be suceptible to race conditions git event vs most recent index
+  //but i think the events are all when the things end?
+  const _onPathNoExistsRef = useRef(_onPathNoExists);
   const repoRef = useRef<Comlink.Remote<Repo> | Repo>(new NullRepo());
   const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
   const [playbook, setPlaybook] = useState<GitPlaybook>(new NullGitPlaybook());
   useEffect(() => {
     const unsubs: UnsubscribeFunction[] = [];
-    let worker: Worker | null = null;
     void (async () => {
-      worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
-      const RepoApi = Comlink.wrap<typeof Repo>(worker);
-      const repoInstance = await new RepoApi({
-        guid: `${workspace.id}/repo`,
-        disk: workspace.disk.toJSON(),
-      });
-
+      // const repoWorker = await workspace.RepoWorker();
+      // const repoInstance = repoWorker.repo;
+      // unsubs.push(() => repoWorker.worker.terminate());
+      const repoInstance = workspace.RepoMainThread();
       await repoInstance.init();
       unsubs.push(
         ...(await Promise.all([
@@ -57,48 +55,12 @@ export function useWorkspaceRepoWW(workspace: Workspace, onPathNoExists?: (path:
     })();
     return () => {
       unsubs.forEach((unsub) => unsub());
-      worker?.terminate();
       void repoRef.current?.tearDown();
     };
   }, [workspace.disk, workspace.id, repoRef, setPlaybook, setInfo, workspace]);
   return { repo: repoRef.current, info, playbook };
 }
 
-export function useWorkspaceRepo(workspace: Workspace, onPathNoExists?: (path: string) => void) {
-  const onPathNoExistsRef = useRef(onPathNoExists);
-  const repo = useMemo(() => workspace.NewRepo(onPathNoExistsRef.current), [workspace]);
-  const playbook = useGitPlaybook(repo);
-
-  const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
-
-  useEffect(() => repo.infoListener(setInfo), [repo]);
-
-  useEffect(() => {
-    if (repo) {
-      void repo.init();
-      void (async () => {
-        // await workspace.NewRepoWW();
-      })();
-      return () => repo.tearDown();
-    }
-  }, [repo, workspace]);
-
-  if (!info.latestCommit) {
-    return { repo, playbook, info: null, exists: false } satisfies {
-      repo: Repo;
-      playbook: GitPlaybook;
-      info: null;
-      exists: false;
-    };
-  } else {
-    return { repo, info, playbook, exists: true } as {
-      repo: Repo;
-      playbook: GitPlaybook;
-      info: DeepNonNullable<RepoInfoType, "currentBranch">; //typeof info & { latestCommit: RepoLatestCommit };
-      exists: true;
-    };
-  }
-}
 export type WorkspaceRepoType = DeepNonNullable<RepoInfoType, "currentBranch">;
 // export function useGitRepoFromDisk(disk: Disk): Repo {
 //   return useMemo(() => disk.NewGitRepo(), [disk]);

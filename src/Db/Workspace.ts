@@ -608,37 +608,29 @@ export class Workspace {
     return unsub;
   }
 
-  NewRepo(_onPathNoExists?: (path: AbsPath) => void): Repo {
-    //all a hack until hierarchy and dep injection is sorted out
-    //workspace should not know about window.href
-    const repo = Repo.FromDisk(this.disk, `${this.id}/repo`);
-    repo.onTearDown(this.dirtyListener(debounce(() => repo.sync(), 500)));
-    repo.gitListener(() => {
-      void this.disk.triggerIndex();
-    });
-    //need to maybe make event more specific so this does not over fire
-    const unsub = repo.gitListener(async () => {
-      const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
-      //not always a write could be a remove!
-      if (await this.disk.pathExists(currentPath!)) {
-        void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
-          filePaths: [currentPath!],
-        });
-      } else {
-        void this.disk.local.emit(DiskEvents.INDEX, {
-          type: "delete",
-          details: { filePaths: [currentPath!] },
-        });
-      }
-    });
-    this.unsubs.push(unsub);
-    return repo;
-  }
+  // NewRepo(_onPathNoExists?: (path: AbsPath) => void): Repo {
+  //   return Repo.FromDisk(this.disk, `${this.id}/repo`);
+  // }
 
   getRemoteGitRepos() {
     return this.remoteAuths ?? [];
   }
 
+  //Not used, since we use web worker
+  async RepoWorker() {
+    const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
+    const RepoApi = Comlink.wrap<typeof Repo>(worker);
+    return {
+      worker,
+      repo: await new RepoApi({
+        guid: `${this.id}/repo`,
+        disk: this.disk.toJSON(),
+      }),
+    };
+  }
+  RepoMainThread() {
+    return Repo.FromDisk(this.disk, `${this.id}/repo`);
+  }
   async AttachRepo(repo: Repo | Comlink.Remote<Repo>) {
     const unsubs: UnsubscribeFunction[] = [];
     unsubs.push(this.dirtyListener(debounce(() => repo.sync(), 500)));
@@ -649,7 +641,6 @@ export class Workspace {
         }),
         repo.gitListener(async () => {
           const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
-          //not always a write could be a remove!
           if (await this.disk.pathExists(currentPath!)) {
             void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
               filePaths: [currentPath!],
