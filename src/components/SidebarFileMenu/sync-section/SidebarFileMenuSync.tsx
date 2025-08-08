@@ -69,11 +69,13 @@ function CommitSection({
   exists,
   hasChanges,
   commit,
+  initialCommit,
   commitRef,
 }: {
   exists: boolean;
   hasChanges: boolean;
   commit: (message: string) => void;
+  initialCommit: () => void;
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
@@ -92,7 +94,7 @@ function CommitSection({
 
   const handleButtonClick = async () => {
     if (commitState === "init") {
-      await commit(commitMessage);
+      await initialCommit();
       commitRef.current?.show("Repository initialized");
     } else if (commitState === "commit") {
       setShowMessageInput(true);
@@ -275,6 +277,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 exists={exists}
                 hasChanges={info.hasChanges}
                 commit={(message) => playbook.addAllCommit({ message })}
+                initialCommit={() => playbook.initialCommit()}
                 commitRef={commitRef}
               />
             </div>

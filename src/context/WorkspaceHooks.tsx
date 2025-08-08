@@ -41,9 +41,11 @@ const DEFAULT_MIME_TYPE = "application/octet-stream"; //i think this just means 
 export function useFileContents({
   currentWorkspace,
   listenerCb,
+  debounceMs = 250,
 }: {
   currentWorkspace: Workspace;
   listenerCb?: (content: string | null) => void;
+  debounceMs?: number;
 }) {
   const listenerCbRef = useRef(listenerCb);
   const { path: filePath } = useWorkspaceRoute();
@@ -75,7 +77,7 @@ export function useFileContents({
       if (content !== null) {
         updateContents(String(content));
       }
-    }, 250);
+    }, debounceMs);
   };
 
   useEffect(() => {
