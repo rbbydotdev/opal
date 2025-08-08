@@ -22,6 +22,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useImperativeHandle, useState } from "react";
+import { AuthSelect } from "@/components/AuthSelect";
 
 export const gitRemoteSchema = z.object({
   name: z
@@ -42,6 +43,7 @@ export const gitRemoteSchema = z.object({
       (val) => val === undefined || (typeof val === "string" && /^https?:\/\//.test(val)),
       "CORS Proxy must be a valid HTTP/HTTPS URL"
     ),
+  authId: z.string().optional(),
 });
 
 type GitRemoteFormValues = z.infer<typeof gitRemoteSchema>;
@@ -192,6 +194,24 @@ export function GitRemoteDialog({
                   </FormLabel>
                   <FormControl>
                     <Input autoComplete="off" placeholder="Optional" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="authId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Authentication</FormLabel>
+                  <FormControl>
+                    <AuthSelect 
+                      value={field.value} 
+                      onValueChange={field.onChange}
+                      placeholder="Optional - Select authentication"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
