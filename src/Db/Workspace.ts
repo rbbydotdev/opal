@@ -201,7 +201,7 @@ export class Workspace {
           .catch((e) => {
             console.error(e);
           }),
-        this.imageCache.getCache().then((c) => c.delete(encodePath(imagePath))),
+        this.imageCache.getCache().then((c) => c.delete(String(encodePath(imagePath)))),
       ])
     );
     return this.disk.removeMultipleFiles(filePaths.map((path) => absPath(path)));
