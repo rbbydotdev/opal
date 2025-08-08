@@ -832,7 +832,7 @@ export abstract class Disk {
   async pathExists(filePath: AbsPath | TreeNode) {
     await this.ready;
     try {
-      await this.fs.stat(encodePath(filePath));
+      await this.fs.stat(encodePath(String(filePath)));
       return true;
     } catch (_e) {
       return false;

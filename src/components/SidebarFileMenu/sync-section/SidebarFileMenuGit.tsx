@@ -1,19 +1,8 @@
 "use client";
 
-import {
-  ChevronRight,
-  Download,
-  GitBranchIcon,
-  GitMerge,
-  Loader,
-  Plus,
-  PlusIcon,
-  RefreshCw,
-  Upload,
-} from "lucide-react";
+import { ChevronRight, Download, GitBranchIcon, GitMerge, Loader, PlusIcon, RefreshCw, Upload } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
-import { ConnectionsModal } from "@/components/connections-modal";
 import {
   BranchManagerSection,
   createBranchRef,
@@ -24,13 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import {
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar";
+import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useWorkspaceRepoWW, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
@@ -261,13 +244,13 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
           </SidebarMenuButton>
         </CollapsibleTrigger>
 
-        <div className="group-data-[state=closed]/collapsible:hidden">
+        {/* <div className="group-data-[state=closed]/collapsible:hidden">
           <ConnectionsModal>
             <SidebarGroupAction className="top-1.5">
               <Plus /> <span className="sr-only">Add Connection</span>
             </SidebarGroupAction>
           </ConnectionsModal>
-        </div>
+        </div> */}
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="gap-2">

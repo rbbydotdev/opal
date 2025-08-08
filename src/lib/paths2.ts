@@ -55,30 +55,22 @@ export function equals(a: AbsPath | RelPath | null | undefined, b: AbsPath | Rel
 }
 
 // --- Encoding/Decoding ---
-export function encodePath(path: AbsPath | RelPath | TreeNode | string): string {
-  return String(path)
-    .split("/")
-    .map((part) => {
-      try {
-        return part !== decodeURIComponent(part) ? part : encodeURIComponent(part);
-      } catch {
-        return encodeURIComponent(part);
-      }
-    })
-    .join("/");
+function isEncoded(str: string): boolean {
+  return /%[0-9A-Fa-f]{2}/.test(str);
 }
 
-export function decodePath(path: AbsPath | RelPath | string): string {
-  return path
+export function encodePath<T extends string | TreeNode | AbsPath>(path: T): T {
+  return String(path)
     .split("/")
-    .map((part) => {
-      try {
-        return part === decodeURIComponent(part) ? part : decodeURIComponent(part);
-      } catch {
-        return part;
-      }
-    })
-    .join("/");
+    .map((part) => (isEncoded(part) ? part : encodeURIComponent(part)))
+    .join("/") as T;
+}
+
+export function decodePath<T extends string | TreeNode | AbsPath>(path: T): T {
+  return String(path)
+    .split("/")
+    .map((part) => (isEncoded(part) ? decodeURIComponent(part) : part))
+    .join("/") as T;
 }
 
 // --- Join ---

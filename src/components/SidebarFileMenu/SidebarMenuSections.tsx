@@ -4,7 +4,7 @@ import { SidebarFileMenuExport } from "@/components/SidebarFileMenu/export-secti
 import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/main-files-section/MainSidebarFileMenuFileSection";
 import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-section/SidebarFileMenuPublish";
 import { SidebarConnectionsSection } from "@/components/SidebarFileMenu/SidebarConnectionsSections";
-import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
+import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuGit";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
