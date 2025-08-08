@@ -18,3 +18,6 @@ export const SpecialDirs = {
 export function FilterOutSpecialDirs(path: AbsPath | TreeNode): boolean {
   return !SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
+export function FilterInSpecialDirs(path: AbsPath | TreeNode): boolean {
+  return SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
+}

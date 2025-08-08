@@ -202,6 +202,30 @@ export class TreeNode {
     this.basename = relPath(basename(this.path));
     return this;
   }
+  deepCopy(): TreeNode {
+    if (isTreeDir(this)) {
+      return new TreeDir({
+        name: this.name,
+        dirname: this.dirname,
+        basename: this.basename,
+        parent: this.parent,
+        path: this.path,
+        depth: this.depth,
+        children: Object.fromEntries(
+          Object.entries(this.children ?? {}).map(([key, child]) => [key, child.deepCopy()])
+        ),
+      } as TreeDir & { children: Record<string, TreeNode> });
+    }
+    return new TreeFile({
+      name: this.name,
+      dirname: this.dirname,
+      basename: this.basename,
+      parent: this.parent,
+      path: this.path,
+      depth: this.depth,
+    });
+  }
+
   copy() {
     if (isTreeDir(this)) {
       return new TreeDir({
@@ -282,6 +306,43 @@ export class TreeDir extends TreeNode {
     this.children = children;
   }
 
+  //mutates
+  pruneMutate(filterOut: ((n: TreeNode) => boolean) | AbsPath[]): this {
+    const filterFn = Array.isArray(filterOut) ? (node: TreeNode) => filterOut.includes(node.path) : filterOut;
+    for (const [key, child] of Object.entries(this.children)) {
+      if (filterFn(child)) {
+        delete this.children[key];
+      } else if (child.isTreeDir()) {
+        child.pruneMutate(filterOut);
+      }
+    }
+    return this;
+  }
+
+  prune(filterOut: ((n: TreeNode) => boolean) | AbsPath[]): TreeDir {
+    const filterFn = Array.isArray(filterOut) ? (node: TreeNode) => filterOut.includes(node.path) : filterOut;
+    const newChildren: Record<string, TreeFile | TreeDir> = {};
+
+    for (const [key, child] of Object.entries(this.children)) {
+      if (!filterFn(child)) {
+        if (child?.isTreeDir()) {
+          newChildren[key] = child.prune(filterOut);
+        } else {
+          newChildren[key] = child;
+        }
+      }
+    }
+
+    return new TreeDir({
+      name: this.name,
+      dirname: this.dirname,
+      basename: this.basename,
+      path: this.path,
+      depth: this.depth,
+      parent: this.parent,
+      children: newChildren,
+    });
+  }
   filterOutChildren(filter?: ((node: TreeNode) => boolean) | AbsPath[]): Record<string, TreeFile | TreeDir> {
     if (!filter) {
       return this.children ?? {};
@@ -292,13 +353,6 @@ export class TreeDir extends TreeNode {
       );
     }
     return Object.fromEntries(Object.entries(this.children).filter(([_, child]) => filter(child))) ?? {};
-  }
-
-  withFilterOutChildren(filter?: ((node: TreeNode) => boolean) | AbsPath[]): TreeDir {
-    return new TreeDir({
-      ...this,
-      children: this.filterOutChildren(filter),
-    });
   }
 
   toJSON(): TreeNodeDirJType {
