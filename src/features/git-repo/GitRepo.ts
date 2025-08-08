@@ -16,6 +16,7 @@ import http from "isomorphic-git/http/web";
 export interface GitRemote {
   name: string;
   url: string;
+  corsProxy?: string;
 }
 interface IRemote {
   branch: string;
@@ -371,17 +372,6 @@ export class Repo {
     });
   };
 
-  addRemote = async (name: string, url: string) => {
-    await this.mustBeInitialized();
-    await this.git.addRemote({
-      fs: this.fs,
-      dir: this.dir,
-      remote: name,
-      url: url,
-      force: true,
-    });
-  };
-
   tryInfo = async (): Promise<RepoInfoType> => {
     return {
       initialized: this.state.initialized,
@@ -437,10 +427,16 @@ export class Repo {
       fs: this.fs,
       dir: this.dir,
     });
-    return remotes.map(({ url, remote }) => ({
-      name: remote,
-      url: url,
-    }));
+    return Promise.all(
+      remotes.map(async (remote) => {
+        const corsProxy = await this.getCorsProxy(remote.remote);
+        return {
+          name: remote.remote,
+          url: remote.url,
+          corsProxy: corsProxy || undefined,
+        };
+      })
+    );
   };
 
   getLatestCommit = async (): Promise<RepoLatestCommit> => {
@@ -616,30 +612,50 @@ export class Repo {
     return git.statusMatrix({ fs: this.fs, dir: this.dir });
   };
 
-  addGitRemote = async (remote: GitRemote): Promise<void> => {
+  setConfig = async (path: string, value: string): Promise<void> => {
     await this.mustBeInitialized();
-    const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
-    await this.git.addRemote({
+    await this.git.setConfig({
       fs: this.fs,
       dir: this.dir,
-      remote: getUniqueSlug(
-        remote.name,
-        remotes.map((r) => r.remote)
-      ),
-      url: remote.url,
+      path,
+      value,
+    });
+  };
+  getConfig = async (path: string): Promise<string | null> => {
+    await this.mustBeInitialized();
+    return this.git.getConfig({
+      fs: this.fs,
+      dir: this.dir,
+      path,
     });
   };
 
-  replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {
+  setCorsProxy = async (remoteName: string, corsProxy: string): Promise<void> => {
+    return this.setConfig(`remote.${remoteName}.corsProxy`, corsProxy);
+  };
+  getCorsProxy = async (remoteName: string): Promise<string | null> => {
+    return this.getConfig(`remote.${remoteName}.corsProxy`);
+  };
+
+  addGitRemote = async (remote: GitRemote): Promise<void> => {
     await this.mustBeInitialized();
-    await this.deleteGitRemote(previous.name);
+    const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
+    const uniqSlug = getUniqueSlug(
+      remote.name,
+      remotes.map((r) => r.remote)
+    );
     await this.git.addRemote({
       fs: this.fs,
       dir: this.dir,
-      remote: remote.name,
+      remote: uniqSlug,
       url: remote.url,
-      force: true,
     });
+    if (remote.corsProxy) await this.setCorsProxy(uniqSlug, remote.corsProxy);
+  };
+  replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {
+    await this.mustBeInitialized();
+    await this.deleteGitRemote(previous.name);
+    await this.addGitRemote(remote);
   };
 
   deleteGitRemote = async (remoteName: string): Promise<void> => {

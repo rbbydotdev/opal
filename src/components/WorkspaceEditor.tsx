@@ -39,7 +39,7 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
   just a pure text editor using code mirror or monaco editor.
   */
 
-  const { isImage, isSource, filePath, inTrash } = useCurrentFilepath();
+  const { isImage, isSource, isBin, filePath, inTrash } = useCurrentFilepath();
 
   const router = useRouter();
   // const handleDropFilesEvent = handleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
@@ -64,7 +64,7 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
       </>
     );
   }
-  if (isSource) {
+  if (isSource || isBin) {
     return <SourceEditor />;
   }
   return (

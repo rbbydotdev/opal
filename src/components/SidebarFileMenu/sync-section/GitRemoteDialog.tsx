@@ -197,7 +197,7 @@ export function GitRemoteDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <DialogFooter className="flex justify-between gap-2">
               <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>

@@ -21,7 +21,7 @@ export function GitRemoteManager({
   deleteGitRemote,
 }: {
   remotes: GitRemote[];
-  addGitRemote: (remote: { name: string; url: string }) => void;
+  addGitRemote: (remote: GitRemote) => void;
   replaceGitRemote: (previous: GitRemote, next: GitRemote) => void;
   deleteGitRemote: (remoteName: string) => void;
 }) {
@@ -236,16 +236,16 @@ export function RemoteManagerSection({
         <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
         <GitRemoteManager
           remotes={info.remotes}
-          replaceGitRemote={(remoteName, remote) => {
-            void repo.replaceGitRemote(remoteName, remote);
+          replaceGitRemote={(previousRemote, nextRemote) => {
+            void repo.replaceGitRemote(previousRemote, nextRemote);
             remoteRef.current.show("remote replaced");
           }}
-          addGitRemote={(remoteName) => {
-            void repo.addGitRemote(remoteName);
+          addGitRemote={(remote) => {
+            void repo.addGitRemote(remote);
             remoteRef.current.show("remote added");
           }}
-          deleteGitRemote={(remoteName) => {
-            void repo.deleteGitRemote(remoteName);
+          deleteGitRemote={(remote) => {
+            void repo.deleteGitRemote(remote);
             remoteRef.current.show("remote deleted");
           }}
         />
