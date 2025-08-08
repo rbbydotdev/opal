@@ -17,7 +17,6 @@ export type GitRefType = "branch" | "commit";
 export interface GitRef {
   value: string;
   type: GitRefType;
-  // hash?: string; // commit hash for commits, undefined for branches
 }
 
 const isLockedBranch = (branch: string) => {

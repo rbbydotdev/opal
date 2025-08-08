@@ -63,11 +63,10 @@ export function EditHistoryMenu({
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
   const finalizeAndRestore = () => {
-    const edit = selectedEditMd;
-    if (edit) {
-      console.debug("Finalizing restore with edit:", edit.length);
-      finalizeRestore(edit);
-      rebaseHistory(edit);
+    if (selectedEditMd) {
+      console.debug("Finalizing restore with edit:", selectedEditMd.length);
+      finalizeRestore(selectedEditMd);
+      rebaseHistory(selectedEditMd);
     } else {
       console.warn("No edit selected to restore");
     }

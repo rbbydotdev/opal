@@ -281,7 +281,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 commitRef={commitRef}
               />
             </div>
-            {exists && (
+            {exists && currentGitRef !== null && (
               <>
                 <BranchManagerSection
                   repo={repo}
@@ -291,6 +291,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   branchRef={branchRef}
                 />
                 <CommitManagerSection
+                  refType={currentGitRef.type}
                   playbook={playbook}
                   commits={info.commitHistory}
                   currentCommit={info.latestCommit?.oid}
