@@ -177,7 +177,7 @@ export function useWorkspaceRoute() {
 
 export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: (node: TreeNode) => boolean) {
   const [fileTreeDir, setFileTree] = useState<TreeDirRoot>(NULL_TREE_ROOT);
-  const [flatTree, setFlatTree] = useState<string[]>([]);
+  const [flatTree, setFlatTree] = useState<AbsPath[]>([]);
 
   useEffect(() => {
     if (currentWorkspace) {

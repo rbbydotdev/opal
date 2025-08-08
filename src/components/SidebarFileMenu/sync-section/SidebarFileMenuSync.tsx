@@ -11,7 +11,7 @@ import {
   RefreshCw,
   Upload,
 } from "lucide-react";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
 import { ConnectionsModal } from "@/components/connections-modal";
 import {
@@ -22,6 +22,7 @@ import {
 import { CommitManagerSection } from "@/components/SidebarFileMenu/sync-section/GitCommitManager";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarGroup,
@@ -62,43 +63,132 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
   );
 }
 
-function CommitOrInitButton({
+type CommitState = "init" | "commit" | "commit-disabled" | "enter-message" | "pending";
+
+function CommitSection({
+  exists,
+  hasChanges,
   commit,
   isPending,
-  exists,
   pendingCommand,
   commitRef,
-  disabled,
 }: {
   exists: boolean;
-  commit: () => Promise<void>;
+  hasChanges: boolean;
+  commit: (message?: string) => Promise<void>;
   isPending: boolean;
   pendingCommand: string;
-  disabled?: boolean;
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
 }) {
+  const [commitMessage, setCommitMessage] = useState("");
+  const [showMessageInput, setShowMessageInput] = useState(false);
+
+  const getCommitState = (): CommitState => {
+    if (isPending) return "pending";
+    if (showMessageInput) return "enter-message";
+    if (!exists) return "init";
+    if (!hasChanges) return "commit-disabled";
+    return "commit";
+  };
+
+  const commitState = getCommitState();
+
+  const handleButtonClick = async () => {
+    if (commitState === "init") {
+      await commit();
+      commitRef.current?.show("Repository initialized");
+    } else if (commitState === "commit") {
+      setShowMessageInput(true);
+    }
+  };
+
+  const handleMessageSubmit = async (message: string) => {
+    if (message.trim()) {
+      setShowMessageInput(false);
+      setCommitMessage("");
+      await commit(message);
+      commitRef.current?.show("Committed");
+    }
+  };
+
+  const handleMessageCancel = () => {
+    setShowMessageInput(false);
+    setCommitMessage("");
+  };
+
+  if (commitState === "enter-message") {
+    return (
+      <Input
+        placeholder="Enter commit message"
+        className="text-xs"
+        value={commitMessage}
+        onChange={(e) => setCommitMessage(e.target.value)}
+        onBlur={handleMessageCancel}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            handleMessageCancel();
+          }
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleMessageSubmit(commitMessage);
+          }
+        }}
+        autoFocus
+      />
+    );
+  }
+
+  const getButtonContent = () => {
+    switch (commitState) {
+      case "pending":
+        return (
+          <>
+            <Loader className="mr-1 animate-spin" />
+            {exists ? "Committing..." : "Initializing..."}
+          </>
+        );
+      case "init":
+        return (
+          <>
+            <PlusIcon className="mr-1" />
+            Initialize Git Repo
+          </>
+        );
+      case "commit":
+        return (
+          <>
+            <GitMerge className="mr-1" />
+            Commit
+          </>
+        );
+      case "commit-disabled":
+        return (
+          <>
+            <GitMerge className="mr-1" />
+            No Changes to Commit
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <Button
-      className="w-full disabled:cursor-pointer"
-      onClick={() => {
-        void commit().then(() => commitRef.current.show());
-      }}
-      size="sm"
-      variant="outline"
-      disabled={isPending || disabled}
-    >
-      {pendingCommand === "commit" ? (
-        <Loader className="mr-1 animate-spin animation-iteration-infinite" />
-      ) : exists ? (
-        <GitMerge className="mr-1" />
-      ) : (
-        <PlusIcon className="mr-1" />
-      )}
-      <TooltipToast cmdRef={commitRef} message={"commited"} durationMs={1000} sideOffset={10} />
-      {exists ? "Commit" : "Initialize Git Repo"}
-    </Button>
+    <>
+      <Button
+        className="w-full disabled:cursor-pointer"
+        onClick={handleButtonClick}
+        size="sm"
+        variant="outline"
+        disabled={commitState === "pending" || commitState === "commit-disabled"}
+      >
+        {getButtonContent()}
+      </Button>
+      <TooltipToast cmdRef={commitRef} message="Operation completed" durationMs={1000} sideOffset={10} />
+    </>
   );
 }
 
@@ -138,6 +228,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: remoteRef } = useTooltipToastCmd();
   const { cmdRef: branchRef } = useTooltipToastCmd();
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
+
   const currentGitRef = useMemo(() => {
     if (info?.currentBranch) {
       return createBranchRef(info.currentBranch);
@@ -146,6 +237,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
     }
     return null;
   }, [info]);
+
   const exists = info.exists;
 
   return (
@@ -182,13 +274,12 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="gap-2">
-            <div className="px-4 pt-2">
+            <div className="px-4 pt-2 gap-2 flex flex-col">
               {exists && <LatestInfo info={info} />}
-              <CommitOrInitButton
+              <CommitSection
                 exists={exists}
+                hasChanges={info.hasChanges}
                 commit={commit}
-                // disabled={(exists && info.currentBranch === null) || (info !== null && !info.hasChanges)}
-                disabled={exists && !info.hasChanges}
                 isPending={isPending}
                 pendingCommand={pendingCommand ?? ""}
                 commitRef={commitRef}

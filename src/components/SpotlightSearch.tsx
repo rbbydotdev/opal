@@ -1,5 +1,6 @@
 "use client";
 import { useWatchWorkspaceFileTree } from "@/context/WorkspaceHooks";
+import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
@@ -61,7 +62,7 @@ SpotlightSearchItem.displayName = "SpotlightSearchItem";
 
 export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const filesOnlyFilter = useRef((node: TreeNode) => node.isTreeFile());
-  const { flatTree: fileList } = useWatchWorkspaceFileTree(currentWorkspace, filesOnlyFilter.current!);
+  const { flatTree } = useWatchWorkspaceFileTree(currentWorkspace, filesOnlyFilter.current!);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1); // -1 means input is active
@@ -83,12 +84,12 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
   const sortedList = useMemo(() => {
     setActiveIndex(-1); // Reset index on new search results
     if (!search) {
-      return fileList.map((file) => ({
+      return flatTree.filter(FilterOutSpecialDirs).map((file) => ({
         element: <>{file}</>,
         href: file,
       }));
     }
-    const results = fuzzysort.go(search, fileList, {
+    const results = fuzzysort.go(search, flatTree, {
       // To prevent slow performance on large file lists
       limit: 50,
     });
@@ -102,7 +103,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
       ),
       href: result.target,
     }));
-  }, [fileList, search]);
+  }, [flatTree, search]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
