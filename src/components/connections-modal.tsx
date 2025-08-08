@@ -4,6 +4,7 @@ import type React from "react";
 
 import { Github, ChromeIcon as Google } from "lucide-react";
 import { useState } from "react";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -50,24 +51,76 @@ const connectionTypes: ConnectionType[] = [
   },
 ];
 
-export function ConnectionsModal({ children }: { children: React.ReactNode }) {
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string>("");
-  const [apiName, setApiName] = useState("");
+export function ConnectionsModal({ 
+  children, 
+  mode = "add", 
+  editConnection,
+  onSuccess,
+  open,
+  onOpenChange
+}: { 
+  children: React.ReactNode;
+  mode?: "add" | "edit";
+  editConnection?: {
+    id: string;
+    name: string;
+    type: string;
+    authType: "api" | "oauth";
+  };
+  onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string>(editConnection?.type || "");
+  const [apiName, setApiName] = useState(editConnection?.name || "");
   const [apiKey, setApiKey] = useState("");
+  const [apiSecret, setApiSecret] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const selectedConnection = connectionTypes.find((connection) => connection.id === selectedConnectionId);
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setIsOpen = onOpenChange || setInternalOpen;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting API connection:", {
-      connectionType: selectedConnection,
-      name: apiName,
-      key: apiKey,
-    });
-    resetForm();
-    setOpen(false);
+    if (!selectedConnection || !apiName.trim()) return;
+
+    setSubmitting(true);
+    try {
+      if (selectedConnection.type === "apikey") {
+        if (mode === "edit" && editConnection) {
+          // Update existing connection
+          const dao = RemoteAuthDAO.FromJSON({
+            guid: editConnection.id,
+            authType: "api",
+            tag: apiName,
+          });
+          dao.record = {
+            authType: "api",
+            apiKey: apiKey,
+            apiSecret: apiSecret || apiKey,
+          };
+          await dao.save();
+        } else {
+          // Create new connection
+          await RemoteAuthDAO.Create(apiName, {
+            authType: "api",
+            apiKey: apiKey,
+            apiSecret: apiSecret || apiKey,
+          });
+        }
+      }
+      
+      onSuccess?.();
+      resetForm();
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error saving connection:", error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleOAuthConnect = () => {
@@ -76,22 +129,28 @@ export function ConnectionsModal({ children }: { children: React.ReactNode }) {
     // In a real implementation, you would redirect to the OAuth provider here
     // For demonstration purposes, we'll just close the modal
     resetForm();
-    setOpen(false);
+    setIsOpen(false);
   };
 
   const resetForm = () => {
     setSelectedConnectionId("");
     setApiName("");
     setApiKey("");
+    setApiSecret("");
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[26.5625rem]">
         <DialogHeader>
-          <DialogTitle>Connect to API</DialogTitle>
-          <DialogDescription>Connect your application to various APIs to extend its functionality.</DialogDescription>
+          <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
+          <DialogDescription>
+            {mode === "edit" 
+              ? "Update your connection details." 
+              : "Connect your application to various APIs to extend its functionality."
+            }
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -141,11 +200,23 @@ export function ConnectionsModal({ children }: { children: React.ReactNode }) {
                       required
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="api-secret">API Secret (Optional)</Label>
+                    <Input
+                      id="api-secret"
+                      value={apiSecret}
+                      onChange={(e) => setApiSecret(e.target.value)}
+                      type="password"
+                      placeholder="Enter your API secret (if different from key)"
+                    />
+                  </div>
                   <div className="flex justify-end gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit">Connect</Button>
+                    <Button type="submit" disabled={submitting}>
+                      {submitting ? "Saving..." : (mode === "edit" ? "Update" : "Connect")}
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -157,7 +228,7 @@ export function ConnectionsModal({ children }: { children: React.ReactNode }) {
                     </p>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                       Cancel
                     </Button>
                     <Button type="button" onClick={handleOAuthConnect} className="flex items-center gap-2">
