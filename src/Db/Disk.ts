@@ -38,7 +38,7 @@ export const DiskTypes = [
 
 export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk"] as const;
 export const DiskLabelMap: Record<DiskType, string> = {
-  IndexedDbDisk: "IndexedDB",
+  IndexedDbDisk: "IndexedDB (Recommended)",
   MemDisk: "Memory",
   DexieFsDbDisk: "DexieFS",
   NullDisk: "Null",

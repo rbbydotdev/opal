@@ -88,11 +88,11 @@ export function EditHistoryMenu({
           </button>
         </div>
         <DropdownMenuTrigger asChild disabled={disabled}>
-          <button tabIndex={0} className="cursor-pointer flex rounded-md border border-primary items-center p-1">
+          <button tabIndex={0} className="h-8 cursor-pointer flex rounded-md border border-primary items-center p-1">
             <div className="pl-8 mr-2 flex items-center space-x-2 ">
               <span className="whitespace-nowrap">Edit history {timeAgoStr}</span>
             </div>
-            <ChevronDown />
+            <ChevronDown size={12} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[37.5rem] bg-primary-foreground p-0">
@@ -188,21 +188,21 @@ function HistoryStatus({ selectedEdit, pendingSave }: { selectedEdit: HistoryDoc
   if (selectedEdit !== null) {
     return (
       <div key={selectedEdit.edit_id} className="_animate-spin _animation-iteration-once ">
-        <History size={20} className="-scale-x-100 inline-block !text-ring" />
+        <History size={16} className="-scale-x-100 inline-block !text-ring" />
       </div>
     );
   }
   if (pendingSave) {
     return (
       <div className="_animate-spin _animation-iteration-once ">
-        <History size={20} className="-scale-x-100 inline-block !text-success" />
+        <History size={16} className="-scale-x-100 inline-block !text-success" />
       </div>
     );
   }
 
   return (
     <div>
-      <History size={20} className="-scale-x-100 inline-block !text-primary group-hover:!text-ring" />
+      <History size={16} className="-scale-x-100 inline-block !text-primary group-hover:!text-ring" />
     </div>
   );
 }
