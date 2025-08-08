@@ -96,7 +96,7 @@ export const SidebarFileMenuFiles = ({
               <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden border-l-2 group">
                 {isEmpty ? (
                   <div
-                    className="w-full"
+                    className="w-full px-4 py-2"
                     onDrop={(event) => handleDropFilesEventForNode({ currentWorkspace, event, targetNode: RootNode })}
                   >
                     <EmptySidebarLabel label={"empty"} />
