@@ -2,7 +2,7 @@ import { HistoryPlugin2 } from "@/components/Editor/history/historyPlugin2";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { HistoryStorageInterface } from "@/Db/HistoryDAO";
 import { Cell, markdown$, markdownSourceEditorValue$, Realm, setMarkdown$ } from "@mdxeditor/editor";
-import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const allMarkdown$ = Cell("", (realm) => {
   realm.sub(markdown$, (md) => {
@@ -40,8 +40,13 @@ export function useEditHistoryPlugin2({
       history.teardown();
     };
   }, [history, realm]);
-  const { edits, selectedEdit, selectedEditMd } = useSyncExternalStore(history.onStateUpdate, history.getState);
+  const [{ edits, selectedEdit, selectedEditMd }, setInfoState] = useState(() => history.getState());
   const isRestoreState = selectedEdit !== null;
+  useEffect(() => {
+    return history.onStateUpdate(() => {
+      setInfoState({ ...history.getState() });
+    });
+  }, [history]);
 
   const allMd = useCellValueForRealm(allMarkdown$, realm);
   const triggerSave = useCallback(() => {

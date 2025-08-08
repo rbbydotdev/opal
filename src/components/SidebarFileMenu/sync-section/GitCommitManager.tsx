@@ -18,12 +18,14 @@ export function GitCommitManager({
   setCurrentCommit,
   resetToHead,
   resetToOrigHead,
+  refType: _refType,
   currentCommit,
 }: {
   commits: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
   setCurrentCommit: (commitOid: string) => void;
   resetToHead: () => void;
   resetToOrigHead: () => void;
+  refType: "branch" | "commit";
   currentCommit?: string;
 }) {
   const { cmdRef, open: openConfirm } = useGitConfirmCmd();
@@ -31,10 +33,18 @@ export function GitCommitManager({
   // const cmdRef = useState<{ show: (text?: string) => void }>({ show: () => {} });
 
   const resetToHeadHandler = () => {
-    openConfirm(resetToHead, "Reset to HEAD", "Are you sure you want to reset to HEAD?");
+    openConfirm(
+      resetToHead,
+      "Reset to HEAD",
+      "Are you sure you want to reset to HEAD? This will discard all changes made since the last commit."
+    );
   };
   const resetToOrigHeadHandler = () => {
-    openConfirm(resetToOrigHead, "Reset to Previous Branch", "Are you sure you want to reset to the previous branch?");
+    openConfirm(
+      resetToOrigHead,
+      "Reset to Previous Branch",
+      "Are you sure you want to reset to the previous branch? This will discard all changes made since the last commit."
+    );
   };
   /* select commit */
   return (
@@ -52,7 +62,11 @@ export function GitCommitManager({
             <RotateCcw />
             Reset to HEAD
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={resetToOrigHeadHandler} onSelect={resetToOrigHeadHandler}>
+          <DropdownMenuItem
+            // disabled={refType === "branch"}
+            onClick={resetToOrigHeadHandler}
+            onSelect={resetToOrigHeadHandler}
+          >
             <RotateCcw />
             Reset to Previous Branch
           </DropdownMenuItem>
@@ -146,11 +160,13 @@ export function CommitManagerSection({
   commits = [],
   currentCommit,
   commitRef,
+  refType,
 }: {
   playbook: GitPlaybook;
   commits?: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
   currentCommit?: string;
   commitRef: React.RefObject<{ show: (text?: string) => void }>;
+  refType: "branch" | "commit";
 }) {
   if (!commits || commits.length === 0) return null;
 
@@ -159,6 +175,7 @@ export function CommitManagerSection({
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={commitRef} durationMs={1000} sideOffset={0} />
         <GitCommitManager
+          refType={refType}
           commits={commits}
           currentCommit={currentCommit}
           resetToHead={playbook.resetToHead}

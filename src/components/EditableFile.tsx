@@ -177,7 +177,7 @@ function ImageNodeIcon({ treeNode }: { treeNode: TreeNode }) {
     <ImageFileHoverCard fallbackSrc={treeNode.path}>
       <img
         src={Thumb.resolveURLFromNode(treeNode)}
-        alt={treeNode.path + " " + "thumbnail"}
+        alt=""
         className="w-6 h-6 border border-white flex-shrink-0 bg-white mr-2 object-cover"
       />
     </ImageFileHoverCard>

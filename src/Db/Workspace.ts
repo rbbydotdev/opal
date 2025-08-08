@@ -231,8 +231,9 @@ export class Workspace {
       });
       await this.NewThumb(oldNode.path)
         .move(oldNode.path, newPath)
-        .catch(async (_e) => {
-          console.debug(`error moving thumb from ${oldNode.path} to ${newPath}`);
+        .catch(async (e) => {
+          console.error(`error moving thumb from ${oldNode.path} to ${newPath}`);
+          console.error(e);
         });
     }
   }

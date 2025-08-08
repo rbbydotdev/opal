@@ -44,7 +44,7 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
               <form className="w-full flex flex-col gap-2">
                 <label
                   htmlFor="file-upload"
-                  className="border-dashed border-2 rounded px-3 py-4 text-center cursor-pointer hover:border-primary transition-colors"
+                  className="border-dashed border rounded px-3 py-4 text-center cursor-pointer hover:border-primary transition-colors"
                   onDrop={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -57,9 +57,12 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                   {pending ? (
                     <Loader className="animate-spin mx-auto mb-2 w-5" size={24} />
                   ) : (
-                    <UploadIcon className="mx-auto mb-2 w-5" size={24} />
+                    <UploadIcon className="mx-auto mb-2 w-5 text-sidebar-foreground/70" size={24} />
                   )}
-                  <span className="block text-xs mb-2">Drag & drop files here or click to select</span>
+
+                  <span className="text-sidebar-foreground/70 block text-xs mb-2">
+                    Drag & drop files here or click to select
+                  </span>
                   <input
                     ref={fileUploadRef}
                     id="file-upload"
