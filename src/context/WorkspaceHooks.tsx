@@ -150,6 +150,7 @@ export function useCurrentFilepath() {
     isMarkdown: mimeType.startsWith("text/markdown"),
     isImage: mimeType.startsWith("image/"),
     isSource: !mimeType.startsWith("text/markdown") && mimeType.startsWith("text/"),
+    isBin: mimeType.startsWith("application/octet-stream"),
     inTrash: filePath.startsWith(SpecialDirs.Trash),
   };
 }
