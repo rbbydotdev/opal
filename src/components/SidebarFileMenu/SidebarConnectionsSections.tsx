@@ -1,4 +1,5 @@
 import { ConnectionsModal } from "@/components/connections-modal";
+import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
@@ -10,8 +11,14 @@ import {
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { ChevronRight, Plus, Sparkle } from "lucide-react";
 
+type Connections = {
+  id: string;
+  name: string;
+};
+
 export function SidebarConnectionsSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleItemExpander("connections");
+  const connections: Connections[] = [];
 
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
@@ -46,7 +53,20 @@ export function SidebarConnectionsSection(props: React.ComponentProps<typeof Sid
         </div>
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
-          <SidebarMenu className="gap-2"></SidebarMenu>
+          <SidebarMenu className="gap-2">
+            {connections.length === 0 && (
+              <div className="px-4 py-2">
+                <EmptySidebarLabel label="no connections" />
+              </div>
+            )}
+            {connections.map((connection) => (
+              <SidebarMenuButton key={connection.id} className="pl-2">
+                <div className="flex items-center">
+                  <span className="truncate">{connection.name}</span>
+                </div>
+              </SidebarMenuButton>
+            ))}
+          </SidebarMenu>
         </CollapsibleContent>
       </Collapsible>
     </SidebarGroup>

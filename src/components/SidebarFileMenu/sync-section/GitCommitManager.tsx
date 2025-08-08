@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
+import { GitConfirm, useGitConfirmCmd } from "@/features/git-repo/GitConfirm";
 import { GitPlaybook } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { Ellipsis, GitCommit, RotateCcw } from "lucide-react";
@@ -25,28 +26,39 @@ export function GitCommitManager({
   resetToOrigHead: () => void;
   currentCommit?: string;
 }) {
+  const { cmdRef, open: openConfirm } = useGitConfirmCmd();
   const [open, setOpen] = useState(false);
+  // const cmdRef = useState<{ show: (text?: string) => void }>({ show: () => {} });
 
+  const resetToHeadHandler = () => {
+    openConfirm(resetToHead, "Reset to HEAD", "Are you sure you want to reset to HEAD?");
+  };
+  const resetToOrigHeadHandler = () => {
+    openConfirm(resetToOrigHead, "Reset to Previous Branch", "Are you sure you want to reset to the previous branch?");
+  };
   /* select commit */
   return (
-    <CommitSelect
-      commits={commits}
-      value={currentCommit || commits[0]?.oid || ""}
-      onSelect={(value: string) => {
-        setCurrentCommit(value);
-      }}
-    >
-      <GitCommitMenuDropDown open={open} setOpen={setOpen}>
-        <DropdownMenuItem onClick={resetToHead} onSelect={resetToHead}>
-          <RotateCcw />
-          Reset to HEAD
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={resetToOrigHead} onSelect={resetToOrigHead}>
-          <RotateCcw />
-          Reset to Previous Branch
-        </DropdownMenuItem>
-      </GitCommitMenuDropDown>
-    </CommitSelect>
+    <>
+      <GitConfirm cmdRef={cmdRef} />
+      <CommitSelect
+        commits={commits}
+        value={currentCommit || commits[0]?.oid || ""}
+        onSelect={(value: string) => {
+          setCurrentCommit(value);
+        }}
+      >
+        <GitCommitMenuDropDown open={open} setOpen={setOpen}>
+          <DropdownMenuItem onClick={resetToHeadHandler} onSelect={resetToHeadHandler}>
+            <RotateCcw />
+            Reset to HEAD
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={resetToOrigHeadHandler} onSelect={resetToOrigHeadHandler}>
+            <RotateCcw />
+            Reset to Previous Branch
+          </DropdownMenuItem>
+        </GitCommitMenuDropDown>
+      </CommitSelect>
+    </>
   );
 }
 
