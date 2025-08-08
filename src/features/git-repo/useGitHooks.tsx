@@ -27,23 +27,23 @@ export function useGitPlaybook(repo: Repo | Comlink.Remote<Repo>): GitPlaybook |
   }, [repo]);
 }
 
-export function useUIGitPlaybook(repo: Repo | Comlink.Remote<Repo>) {
-  const playbook = useGitPlaybook(repo);
-  const [pendingCommand, setPending] = useState<"commit" | null>(null);
-  const commit = async () => {
-    const minWait = new Promise((rs) => setTimeout(rs, 1000));
-    try {
-      setPending("commit");
-      await playbook.addAllCommit({ message: "opal user commit" });
-    } catch (e) {
-      console.error("Error in commit function:", e);
-    } finally {
-      await minWait;
-      setPending(null);
-    }
-  };
-  return { isPending: pendingCommand !== null, pendingCommand, commit };
-}
+// export function useUIGitPlaybook(repo: Repo | Comlink.Remote<Repo>) {
+//   const playbook = useGitPlaybook(repo);
+//   const [pendingCommand, setPending] = useState<"commit" | null>(null);
+//   const commit = async (message: string) => {
+//     const minWait = new Promise((rs) => setTimeout(rs, 1000));
+//     try {
+//       setPending("commit");
+//       await playbook.addAllCommit({ message });
+//     } catch (e) {
+//       console.error("Error in commit function:", e);
+//     } finally {
+//       await minWait;
+//       setPending(null);
+//     }
+//   };
+//   return { isPending: pendingCommand !== null, pendingCommand, commit };
+// }
 
 export function useWorkspaceRepoWW(workspace: Workspace, onPathNoExists?: (path: string) => void) {
   const _onPathNoExistsRef = useRef(onPathNoExists);

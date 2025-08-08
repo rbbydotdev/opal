@@ -41,7 +41,7 @@ export function useEditHistoryPlugin2({
     };
   }, [history, realm]);
   const { edits, selectedEdit, selectedEditMd } = useSyncExternalStore(history.onStateUpdate, history.getState);
-  const isRestoreState = selectedEditMd !== null; // && (selectedEditMd ?? "") === (editorMd ?? "");
+  const isRestoreState = selectedEdit !== null;
 
   const allMd = useCellValueForRealm(allMarkdown$, realm);
   const triggerSave = useCallback(() => {
@@ -54,7 +54,7 @@ export function useEditHistoryPlugin2({
 
   return {
     edits: edits ?? [],
-    selectedEdit: isRestoreState ? selectedEdit : null,
+    selectedEdit,
     selectedEditMd,
     triggerSave: triggerSave,
     clearSelectedEdit: history.clearSelectedEdit,

@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { useUIGitPlaybook, useWorkspaceRepoWW, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
+import { useWorkspaceRepoWW, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { useRouter } from "next/navigation";
@@ -69,15 +69,11 @@ function CommitSection({
   exists,
   hasChanges,
   commit,
-  isPending,
-  pendingCommand,
   commitRef,
 }: {
   exists: boolean;
   hasChanges: boolean;
-  commit: (message?: string) => Promise<void>;
-  isPending: boolean;
-  pendingCommand: string;
+  commit: (message: string) => void;
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
@@ -86,7 +82,6 @@ function CommitSection({
   const [showMessageInput, setShowMessageInput] = useState(false);
 
   const getCommitState = (): CommitState => {
-    if (isPending) return "pending";
     if (showMessageInput) return "enter-message";
     if (!exists) return "init";
     if (!hasChanges) return "commit-disabled";
@@ -97,7 +92,7 @@ function CommitSection({
 
   const handleButtonClick = async () => {
     if (commitState === "init") {
-      await commit();
+      await commit(commitMessage);
       commitRef.current?.show("Repository initialized");
     } else if (commitState === "commit") {
       setShowMessageInput(true);
@@ -133,7 +128,7 @@ function CommitSection({
           }
           if (e.key === "Enter") {
             e.preventDefault();
-            handleMessageSubmit(commitMessage);
+            void handleMessageSubmit(commitMessage);
           }
         }}
         autoFocus
@@ -222,7 +217,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { currentWorkspace } = useWorkspaceContext();
   const router = useRouter();
   const { repo, playbook, info } = useWorkspaceRepoWW(currentWorkspace, () => router.push(currentWorkspace.href));
-  const { pendingCommand, commit, isPending } = useUIGitPlaybook(repo);
+  // const { commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
   const { cmdRef: remoteRef } = useTooltipToastCmd();
@@ -279,9 +274,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               <CommitSection
                 exists={exists}
                 hasChanges={info.hasChanges}
-                commit={commit}
-                isPending={isPending}
-                pendingCommand={pendingCommand ?? ""}
+                commit={(message) => playbook.addAllCommit({ message })}
                 commitRef={commitRef}
               />
             </div>

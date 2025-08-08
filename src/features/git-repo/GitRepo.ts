@@ -372,6 +372,7 @@ export class Repo {
   };
 
   addRemote = async (name: string, url: string) => {
+    await this.mustBeInitialized();
     await this.git.addRemote({
       fs: this.fs,
       dir: this.dir,
