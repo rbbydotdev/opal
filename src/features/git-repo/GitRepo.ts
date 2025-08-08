@@ -10,6 +10,8 @@ import * as Comlink from "comlink";
 import Emittery from "emittery";
 import git, { AuthCallback } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
+import { ClientDb } from "@/Db/instance";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 //git remote is different from IRemote as its
 //more so just a Git remote as it appears in Git
 //
@@ -17,6 +19,7 @@ export interface GitRemote {
   name: string;
   url: string;
   corsProxy?: string;
+  authId?: string;
 }
 interface IRemote {
   branch: string;
@@ -430,10 +433,12 @@ export class Repo {
     return Promise.all(
       remotes.map(async (remote) => {
         const corsProxy = await this.getCorsProxy(remote.remote);
+        const authId = await this.getAuthId(remote.remote);
         return {
           name: remote.remote,
           url: remote.url,
           corsProxy: corsProxy || undefined,
+          authId: authId || undefined,
         };
       })
     );
@@ -637,6 +642,39 @@ export class Repo {
     return this.getConfig(`remote.${remoteName}.corsProxy`);
   };
 
+  setAuthId = async (remoteName: string, authId: string): Promise<void> => {
+    return this.setConfig(`remote.${remoteName}.authId`, authId);
+  };
+  getAuthId = async (remoteName: string): Promise<string | null> => {
+    return this.getConfig(`remote.${remoteName}.authId`);
+  };
+
+  getRemoteAuthCallback = async (remoteName: string): Promise<AuthCallback | undefined> => {
+    const authId = await this.getAuthId(remoteName);
+    if (!authId) return undefined;
+
+    try {
+      const authRecord = await ClientDb.remoteAuths.get({ guid: authId });
+      if (!authRecord) return undefined;
+
+      if (authRecord.authType === "api") {
+        return () => ({
+          username: authRecord.apiKey,
+          password: authRecord.apiSecret || authRecord.apiKey,
+        });
+      } else if (authRecord.authType === "oauth") {
+        return () => ({
+          username: authRecord.accessToken,
+          password: "", // OAuth typically only needs the token as username
+        });
+      }
+    } catch (error) {
+      console.warn(`Failed to load auth for remote ${remoteName}:`, error);
+    }
+
+    return undefined;
+  };
+
   addGitRemote = async (remote: GitRemote): Promise<void> => {
     await this.mustBeInitialized();
     const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
@@ -651,6 +689,7 @@ export class Repo {
       url: remote.url,
     });
     if (remote.corsProxy) await this.setCorsProxy(uniqSlug, remote.corsProxy);
+    if (remote.authId) await this.setAuthId(uniqSlug, remote.authId);
   };
   replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {
     await this.mustBeInitialized();
@@ -698,6 +737,16 @@ export class Repo {
     });
   };
 
+  convertGitRemoteToIRemote = async (gitRemote: GitRemote, branch: string): Promise<IRemote> => {
+    const auth = await this.getRemoteAuthCallback(gitRemote.name);
+    return {
+      branch,
+      name: gitRemote.name,
+      url: gitRemote.url,
+      auth,
+    };
+  };
+
   withRemote = (remote: IRemote): RepoWithRemote => {
     return new RepoWithRemote(
       {
@@ -712,6 +761,11 @@ export class Repo {
       },
       remote
     );
+  };
+
+  withGitRemote = async (gitRemote: GitRemote, branch: string): Promise<RepoWithRemote> => {
+    const iRemote = await this.convertGitRemoteToIRemote(gitRemote, branch);
+    return this.withRemote(iRemote);
   };
 
   tearDown = () => {
