@@ -16,9 +16,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { GitBranch } from "lucide-react";
+import { GitBranch, Info } from "lucide-react";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useImperativeHandle, useState } from "react";
 
@@ -33,6 +34,14 @@ export const gitRemoteSchema = z.object({
     .min(1, "Remote URL is required")
     .url("Remote URL must be a valid URL")
     .regex(/^(https?|git|ssh|file):\/\/|^git@/, "Remote URL must be a valid Git URL"),
+  corsProxy: z
+    .string()
+    .optional()
+    .transform((val) => (val === "" ? undefined : val))
+    .refine(
+      (val) => val === undefined || (typeof val === "string" && /^https?:\/\//.test(val)),
+      "CORS Proxy must be a valid HTTP/HTTPS URL"
+    ),
 });
 
 type GitRemoteFormValues = z.infer<typeof gitRemoteSchema>;
@@ -86,6 +95,7 @@ export function GitRemoteDialog({
   const defaultValues = {
     name: defaultName,
     url: "https://github.com/rbbydotdev/test123",
+    corsProxy: "https://cors.isomorphic-git.org",
   };
   const prevRef = React.useRef<GitRemote | null>(null);
   const modeRef = React.useRef<GitRemoteDialogModeType>(GitRemoteDialogModes.ADD);
@@ -159,7 +169,29 @@ export function GitRemoteDialog({
                 <FormItem>
                   <FormLabel>URL</FormLabel>
                   <FormControl>
-                    <Input autoComplete="off" autoFocus placeholder="https://github.com/user/repo.git" {...field} />
+                    <Input
+                      required
+                      autoComplete="off"
+                      autoFocus
+                      placeholder="https://github.com/user/repo.git"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="corsProxy"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    CORS Proxy <CorsProxyTooltip />
+                  </FormLabel>
+                  <FormControl>
+                    <Input autoComplete="off" placeholder="Optional" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -177,3 +209,14 @@ export function GitRemoteDialog({
     </Dialog>
   );
 }
+
+const CorsProxyTooltip = () => (
+  <Tooltip>
+    <TooltipTrigger>
+      <Info className="w-3.5 h-3.5" />
+    </TooltipTrigger>
+    <TooltipContent>
+      <p>Optional, but probably required</p>
+    </TooltipContent>
+  </Tooltip>
+);
