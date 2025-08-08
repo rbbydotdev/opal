@@ -201,7 +201,7 @@ export abstract class Disk {
       await this.fileTreeIndex({
         writeIndexCache: false,
       });
-      await this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+      void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     } catch (e) {
       throw errF`Error initializing index ${e}`;
     }
@@ -273,16 +273,16 @@ export abstract class Disk {
     const listeners = [
       this.remote.init(),
       this.remote.on(DiskEvents.RENAME, async (data) => {
-        await this.local.emit(DiskEvents.RENAME, data.map(RenameFileType.New));
+        void this.local.emit(DiskEvents.RENAME, data.map(RenameFileType.New));
         await this.fileTreeIndex();
-        await this.local.emit(DiskEvents.INDEX, {
+        void this.local.emit(DiskEvents.INDEX, {
           type: "rename",
           details: data,
         });
         console.debug("remote rename", JSON.stringify(data, null, 4));
       }),
       this.remote.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
-        await this.local.emit(DiskEvents.OUTSIDE_WRITE, { filePaths });
+        void this.local.emit(DiskEvents.OUTSIDE_WRITE, { filePaths });
       }),
 
       this.remote.on(DiskEvents.INDEX, async (data) => {
@@ -335,7 +335,7 @@ export abstract class Disk {
       }
     }
     if (filePaths.length) {
-      await this.local.emit(DiskEvents.OUTSIDE_WRITE, {
+      void this.local.emit(DiskEvents.OUTSIDE_WRITE, {
         filePaths,
       });
     }
@@ -514,11 +514,11 @@ export abstract class Disk {
 
   private async broadcastDelete(filePaths: AbsPath[]) {
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX, {
+    void this.local.emit(DiskEvents.INDEX, {
       type: "delete",
       details: { filePaths },
     });
-    await this.remote.emit(DiskEvents.INDEX, {
+    void this.remote.emit(DiskEvents.INDEX, {
       type: "delete",
       details: { filePaths },
     });
@@ -527,8 +527,8 @@ export abstract class Disk {
   private async broadcastRename(change: RenameFileType[]) {
     await this.fileTreeIndex();
     void this.remote.emit(DiskEvents.RENAME, change);
-    await this.local.emit(DiskEvents.RENAME, change);
-    await this.local.emit(DiskEvents.INDEX, {
+    void this.local.emit(DiskEvents.RENAME, change);
+    void this.local.emit(DiskEvents.INDEX, {
       type: "rename",
       details: change,
     });
@@ -543,11 +543,11 @@ export abstract class Disk {
     await this.mkdirRecursive(fullPath);
     await this.fileTreeIndex();
 
-    await this.local.emit(DiskEvents.INDEX, {
+    void this.local.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: [fullPath] },
     });
-    await this.remote.emit(DiskEvents.INDEX, {
+    void this.remote.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: [fullPath] },
     });
@@ -577,11 +577,11 @@ export abstract class Disk {
   async removeFile(filePath: AbsPath) {
     await this.quietRemove(filePath);
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX, {
+    void this.local.emit(DiskEvents.INDEX, {
       type: "delete",
       details: { filePaths: [filePath] },
     });
-    await this.remote.emit(DiskEvents.INDEX, {
+    void this.remote.emit(DiskEvents.INDEX, {
       type: "delete",
       details: { filePaths: [filePath] },
     });
@@ -707,11 +707,11 @@ export abstract class Disk {
       }
     }
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX, {
+    void this.local.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: [newFullPath] },
     });
-    await this.remote.emit(DiskEvents.INDEX, {
+    void this.remote.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: [newFullPath] },
     });
@@ -801,11 +801,11 @@ export abstract class Disk {
     }
     await this.writeFileRecursive(fullPath, content);
     await this.fileTreeIndex();
-    await this.local.emit(DiskEvents.INDEX, {
+    void this.local.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: [fullPath] },
     });
-    await this.remote.emit(DiskEvents.INDEX, {
+    void this.remote.emit(DiskEvents.INDEX, {
       type: "create",
       details: { filePaths: [fullPath] },
     });
