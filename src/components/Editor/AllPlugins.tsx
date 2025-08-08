@@ -3,6 +3,7 @@ import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
+import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { handleUrlParamViewMode } from "@/components/Editor/urlParamViewModePlugin";
@@ -11,8 +12,6 @@ import { useFileContents } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
-  KitchenSinkToolbar,
-  SandpackConfig,
   ViewMode,
   codeBlockPlugin,
   codeMirrorPlugin,
@@ -26,7 +25,6 @@ import {
   markdownShortcutPlugin,
   quotePlugin,
   remoteRealmPlugin,
-  sandpackPlugin,
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
@@ -34,60 +32,6 @@ import {
 } from "@mdxeditor/editor";
 import { useEffect, useMemo } from "react";
 import { useWorkspaceDocumentId } from "./history/useWorkspaceDocumentId";
-const dataCode = `export const data = Array.from({ length: 10000 }, (_, i) => ({ id: i, name: 'Item ' + i }))`;
-
-const defaultSnippetContent = `
-export default function App() {
-  return (
-    <div className="App">
-      <h1>Hello CodeSandbox</h1>
-      <h2>Start editing to see some magic happen!</h2>
-    </div>
-  );
-}
-`.trim();
-
-export const virtuosoSampleSandpackConfig: SandpackConfig = {
-  defaultPreset: "react",
-  presets: [
-    {
-      label: "React",
-      name: "react",
-      meta: "live react",
-      sandpackTemplate: "react",
-      sandpackTheme: "light",
-      snippetFileName: "/App.js",
-      snippetLanguage: "jsx",
-      initialSnippetContent: defaultSnippetContent,
-    },
-    {
-      label: "React",
-      name: "react",
-      meta: "live",
-      sandpackTemplate: "react",
-      sandpackTheme: "light",
-      snippetFileName: "/App.js",
-      snippetLanguage: "jsx",
-      initialSnippetContent: defaultSnippetContent,
-    },
-    {
-      label: "Virtuoso",
-      name: "virtuoso",
-      meta: "live virtuoso",
-      sandpackTemplate: "react-ts",
-      sandpackTheme: "light",
-      snippetFileName: "/App.tsx",
-      initialSnippetContent: defaultSnippetContent,
-      dependencies: {
-        "react-virtuoso": "latest",
-        "@ngneat/falso": "latest",
-      },
-      files: {
-        "/data.ts": dataCode,
-      },
-    },
-  ],
-};
 
 export function useAllPlugins({
   currentWorkspace,
@@ -135,7 +79,8 @@ export function useAllPlugins({
                   realm={realm}
                 />
                 <LivePreviewButton disabled={mimeType !== "text/markdown"} />
-                <MdxSearchToolbar /> <KitchenSinkToolbar />
+                <MdxSearchToolbar />
+                <MdxToolbar />
               </>
             ),
         }),
@@ -154,7 +99,7 @@ export function useAllPlugins({
           defaultCodeBlockLanguage: "js",
           codeBlockEditorDescriptors: [{ priority: -10, match: (_) => true, Editor: CodeMirrorEditor }],
         }),
-        sandpackPlugin({ sandpackConfig: virtuosoSampleSandpackConfig }),
+        // sandpackPlugin({ sandpackConfig: virtuosoSampleSandpackConfig }),
         codeMirrorPlugin({
           codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
         }),

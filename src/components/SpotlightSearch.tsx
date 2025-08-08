@@ -48,10 +48,12 @@ const SpotlightSearchItem = forwardRef<
           <img
             src={Thumb.pathToURL(absPath(filePath!))}
             alt=""
-            className="mr-2 h-8 w-8 flex-shrink-0 border border-black bg-white"
+            className="mr-2 h-6 w-6 flex-shrink-0 border border-black bg-white"
           />
         ) : (
-          <FileTextIcon className="mr-1 h-8 w-8 flex-shrink-0 flex-grow-0 text-ring" />
+          <div className="w-6 h-6 flex justify-center items-center">
+            <FileTextIcon className="mr-1 h-4 w-4 flex-shrink-0 flex-grow-0 text-ring" />
+          </div>
         )}
         <div className="min-w-0 truncate text-md font-mono text-sidebar-foreground/70">{title}</div>
       </Link>
@@ -81,15 +83,19 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
     }
   };
 
+  const visibleFilesOnly = useMemo(() => {
+    return flatTree.filter((file) => FilterOutSpecialDirs(file));
+  }, [flatTree]);
+
   const sortedList = useMemo(() => {
     setActiveIndex(-1); // Reset index on new search results
     if (!search) {
-      return flatTree.filter(FilterOutSpecialDirs).map((file) => ({
+      return visibleFilesOnly.map((file) => ({
         element: <>{file}</>,
         href: file,
       }));
     }
-    const results = fuzzysort.go(search, flatTree, {
+    const results = fuzzysort.go(search, visibleFilesOnly, {
       // To prevent slow performance on large file lists
       limit: 50,
     });
@@ -103,11 +109,17 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
       ),
       href: result.target,
     }));
-  }, [flatTree, search]);
+  }, [search, visibleFilesOnly]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
     const itemsLength = menuItems?.length ?? 0;
+
+    if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      inputRef.current?.select();
+      return;
+    }
 
     switch (e.key) {
       case "Tab":
