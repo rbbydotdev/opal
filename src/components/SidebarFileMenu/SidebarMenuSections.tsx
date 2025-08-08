@@ -3,6 +3,7 @@
 import { SidebarFileMenuExport } from "@/components/SidebarFileMenu/export-section/SidebarFileMenuExport";
 import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/main-files-section/MainSidebarFileMenuFileSection";
 import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-section/SidebarFileMenuPublish";
+import { SidebarConnectionsSection } from "@/components/SidebarFileMenu/SidebarConnectionsSections";
 import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/SidebarFileMenuSync";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
@@ -37,8 +38,8 @@ import { SidebarDndList } from "../ui/SidebarDndList";
 function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
   return <Slot {...rest}>{children}</Slot>;
 }
-const dndSections = ["publish", "git", "export", "trash", "files", "treeview", "upload"];
-type DndSectionType = "publish" | "git" | "export" | "trash" | "files" | "treeview" | "upload";
+const dndSections = ["publish", "git", "export", "trash", "files", "treeview", "upload", "connections"];
+type DndSectionType = "publish" | "git" | "export" | "trash" | "files" | "treeview" | "upload" | "connections";
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
@@ -138,6 +139,9 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           </DndSlot>
           <DndSlot dndId={"git"}>
             <SidebarGitSection className="flex-shrink flex flex-col" />
+          </DndSlot>
+          <DndSlot dndId={"connections"}>
+            <SidebarConnectionsSection className="flex-shrink flex flex-col" />
           </DndSlot>
           <DndSlot dndId={"export"}>
             <SidebarFileMenuExport className="flex-shrink flex" />

@@ -28,6 +28,8 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
+import * as Comlink from "comlink";
+import { UnsubscribeFunction } from "emittery";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
@@ -583,9 +585,6 @@ export class Workspace {
 
     const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
     await Promise.all(workers);
-    //TODO: leaking concerns
-    // await this.disk.hydrateIndexFromDisk();
-    //TODO: i dont think i need this
     return results;
   }
 
@@ -635,10 +634,35 @@ export class Workspace {
     return repo;
   }
 
-  // addRemote
-
   getRemoteGitRepos() {
     return this.remoteAuths ?? [];
+  }
+
+  async AttachRepo(repo: Repo | Comlink.Remote<Repo>) {
+    const unsubs: UnsubscribeFunction[] = [];
+    unsubs.push(this.dirtyListener(debounce(() => repo.sync(), 500)));
+    unsubs.push(
+      ...(await Promise.all([
+        repo.gitListener(() => {
+          void this.disk.triggerIndex();
+        }),
+        repo.gitListener(async () => {
+          const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
+          //not always a write could be a remove!
+          if (await this.disk.pathExists(currentPath!)) {
+            void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
+              filePaths: [currentPath!],
+            });
+          } else {
+            void this.disk.local.emit(DiskEvents.INDEX, {
+              type: "delete",
+              details: { filePaths: [currentPath!] },
+            });
+          }
+        }),
+      ]))
+    );
+    return () => unsubs.forEach((unsub) => unsub());
   }
 }
 export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;

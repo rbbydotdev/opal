@@ -48,12 +48,12 @@ const SpotlightSearchItem = forwardRef<
           <img
             src={Thumb.pathToURL(absPath(filePath!))}
             alt=""
-            className="mr-2 h-3 w-3 flex-shrink-0 border border-black bg-white"
+            className="mr-2 h-8 w-8 flex-shrink-0 border border-black bg-white"
           />
         ) : (
-          <FileTextIcon className="mr-1 h-3 w-3 flex-shrink-0 flex-grow-0 text-ring" />
+          <FileTextIcon className="mr-1 h-8 w-8 flex-shrink-0 flex-grow-0 text-ring" />
         )}
-        <div className="min-w-0 truncate text-xs font-mono text-sidebar-foreground/70">{title}</div>
+        <div className="min-w-0 truncate text-md font-mono text-sidebar-foreground/70">{title}</div>
       </Link>
     </li>
   );
@@ -178,7 +178,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
     <div
       ref={containerRef}
       className={clsx(
-        "absolute left-0 right-0 top-4 z-20 m-auto flex w-96 flex-col items-center justify-center",
+        "absolute left-0 right-0 top-4 z-20 m-auto flex w-[36rem] flex-col items-center justify-center",
         "translate-y-12",
         { "animate-in": open }
       )}
@@ -199,17 +199,9 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
           type="text"
           autoComplete="off"
           placeholder="Spotlight Search..."
-          // onKeyDown={(e) => {
-          //   if (e.key === "Tab" && !e.shiftKey) {
-          //     e.preventDefault();
-          //     goToFirstItem();
-          //   }
-          // }}
-          className="w-full rounded-lg border-none bg-background p-2 text-sm focus:outline-none"
+          className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
           aria-controls="spotlight-menu"
-          // aria-expanded={open}
           aria-haspopup="true"
-          // Points to the active item for screen readers while focus remains on input
           aria-activedescendant={activeIndex > -1 ? `spotlight-item-${activeIndex}` : undefined}
         />
       </div>

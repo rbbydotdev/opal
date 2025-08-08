@@ -804,6 +804,13 @@ export class GitPlaybook {
     await this.repo.checkoutRef(commitOid);
     return true;
   };
+  async initialCommit() {
+    await this.repo.mustBeInitialized();
+    await this.repo.add(".");
+    await this.repo.commit({
+      message: "Initial commit",
+    });
+  }
   async addAllCommit({
     message,
     allowEmpty = false,
