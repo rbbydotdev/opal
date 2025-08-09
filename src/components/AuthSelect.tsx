@@ -1,15 +1,21 @@
-import React from "react";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, Key, Github } from "lucide-react";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { Github, Key, Plus, Shield } from "lucide-react";
 
 interface AuthSelectProps {
   value?: string;
   onValueChange: (value: string | undefined) => void;
   placeholder?: string;
+  onAddAuth: () => void;
 }
 
-export function AuthSelect({ value, onValueChange, placeholder = "Select authentication" }: AuthSelectProps) {
+export function AuthSelect({
+  value,
+  onValueChange,
+  onAddAuth,
+  placeholder = "Select authentication",
+}: AuthSelectProps) {
   const { remoteAuths, loading, error } = useRemoteAuths();
 
   const handleValueChange = (selectedValue: string) => {
@@ -52,29 +58,40 @@ export function AuthSelect({ value, onValueChange, placeholder = "Select authent
   };
 
   return (
-    <Select value={value || "none"} onValueChange={handleValueChange}>
-      <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="none">
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-muted-foreground" />
-            <span>No authentication</span>
-          </div>
-        </SelectItem>
-        {remoteAuths.map((auth) => (
-          <SelectItem key={auth.id} value={auth.id}>
+    <div className="flex items-center gap-2">
+      <Select value={value || "none"} onValueChange={handleValueChange}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">
             <div className="flex items-center gap-2">
-              {getAuthIcon(auth.authType)}
-              <div>
-                <p className="text-sm font-medium">{auth.name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{auth.authType}</p>
-              </div>
+              <Shield className="w-4 h-4 text-muted-foreground" />
+              <span>No authentication</span>
             </div>
           </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+          {remoteAuths.map((auth) => (
+            <SelectItem key={auth.id} value={auth.id}>
+              <div className="flex items-center gap-2">
+                {getAuthIcon(auth.authType)}
+                <div>
+                  <p className="text-sm font-medium">{auth.name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{auth.authType}</p>
+                </div>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button
+        variant="outline"
+        onClick={(e) => {
+          e.preventDefault();
+          onAddAuth();
+        }}
+      >
+        <Plus />
+      </Button>
+    </div>
   );
 }

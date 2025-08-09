@@ -1,8 +1,42 @@
 import { type Workspace } from "@/Db/Workspace";
 import { AbsPath, joinPath } from "@/lib/paths2";
 import { type ImageWorkerApiType } from "@/workers/ImageWorker/Image.api";
+import { ImageWorkerMessageArgs, ImageWorkerMessageReturn } from "@/workers/ImageWorker/image3.ww";
 import "@/workers/transferHandlers/asyncGenerator.th";
 import { wrap } from "comlink";
+
+export async function uploadImages3(
+  workspace: Workspace,
+  files: File[],
+  targetDir: AbsPath
+): Promise<(AbsPath | null)[]> {
+  return Promise.all(
+    files.map(async (file) => {
+      const worker = new Worker(new URL("@/workers/ImageWorker/image3.ww.ts", import.meta.url));
+      const buffer = await file.arrayBuffer();
+      worker.postMessage(
+        {
+          workspace: workspace.toJSON(),
+          filePath: joinPath(targetDir, file.name),
+          buffer,
+        } as ImageWorkerMessageArgs,
+        [buffer]
+      ); // Transfer the file object to the worker
+      return new Promise<AbsPath | null>((resolve) => {
+        worker.onmessage = (event: MessageEvent<ImageWorkerMessageReturn>) => {
+          const { path, error } = event.data;
+          if (error || path === null) {
+            console.error("Error uploading image:", error);
+            resolve(null);
+          } else {
+            console.log("file uploaded to ww", path);
+            resolve(path);
+          }
+        };
+      });
+    })
+  );
+}
 
 export async function uploadImages2(
   workspace: Workspace,
