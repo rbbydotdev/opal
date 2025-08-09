@@ -44,6 +44,8 @@
     "@isomorphic-git/lightning-fs": "^4.6.0",
     "@mdxeditor/editor": "^3.39.1",
     "@midudev/tailwind-animations": "^0.1.0",
+    "@octokit/auth-oauth-device": "^8.0.1",
+    "@octokit/core": "^7.0.3",
     "@polkadot/react-identicon": "^3.11.3",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
