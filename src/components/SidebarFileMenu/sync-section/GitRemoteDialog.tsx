@@ -18,11 +18,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { GitBranch, Info } from "lucide-react";
 
+import { AuthSelect } from "@/components/AuthSelect";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useImperativeHandle, useState } from "react";
-import { AuthSelect } from "@/components/AuthSelect";
 
 export const gitRemoteSchema = z.object({
   name: z
@@ -142,91 +142,109 @@ export function GitRemoteDialog({
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[26.5625rem]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <GitBranch className="h-5 w-5" />
-            {titleForMode(mode)}
-          </DialogTitle>
-          <DialogDescription>{descForMode(mode)}</DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input autoComplete="off" placeholder="origin" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      required
-                      autoComplete="off"
-                      autoFocus
-                      placeholder="https://github.com/user/repo.git"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="corsProxy"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    CORS Proxy <CorsProxyTooltip />
-                  </FormLabel>
-                  <FormControl>
-                    <Input autoComplete="off" placeholder="Optional" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="authId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Authentication</FormLabel>
-                  <FormControl>
-                    <AuthSelect 
-                      value={field.value} 
-                      onValueChange={field.onChange}
-                      placeholder="Optional - Select authentication"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter className="flex justify-between gap-2">
-              <Button type="button" variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button type="submit">OK</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+        <GitRemoteDialogInternal form={form} mode={mode} onSubmit={handleFormSubmit} onCancel={handleCancel} />
       </DialogContent>
     </Dialog>
+  );
+}
+function GitRemoteDialogInternal({
+  form,
+  mode,
+  onSubmit,
+  onCancel,
+}: {
+  form: ReturnType<typeof useForm<GitRemoteFormValues>>;
+  mode: GitRemoteDialogModeType;
+  onSubmit: (values: GitRemoteFormValues) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <GitBranch className="h-5 w-5" />
+          {titleForMode(mode)}
+        </DialogTitle>
+        <DialogDescription>{descForMode(mode)}</DialogDescription>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input autoComplete="off" placeholder="origin" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>URL</FormLabel>
+                <FormControl>
+                  <Input
+                    required
+                    autoComplete="off"
+                    autoFocus
+                    placeholder="https://github.com/user/repo.git"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="corsProxy"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  CORS Proxy <CorsProxyTooltip />
+                </FormLabel>
+                <FormControl>
+                  <Input autoComplete="off" placeholder="Optional" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="authId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Authentication</FormLabel>
+                <FormControl>
+                  <AuthSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Optional - Select authentication"
+                    onAddAuth={() => {}}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <DialogFooter className="flex justify-between gap-2">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit">OK</Button>
+          </DialogFooter>
+        </form>
+      </Form>
+    </>
   );
 }
 

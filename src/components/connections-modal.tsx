@@ -143,17 +143,19 @@ export function ConnectionsModal({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <ConnectionsModalContent
-        mode={mode}
-        editConnection={editConnection}
-        onSuccess={onSuccess}
-        onOpenChange={setIsOpen}
-      />
+      <DialogContent className="sm:max-w-[26.5625rem]">
+        <ConnectionsModalContent
+          mode={mode}
+          editConnection={editConnection}
+          onSuccess={onSuccess}
+          onOpenChange={setIsOpen}
+        />
+      </DialogContent>
     </Dialog>
   );
 }
 
-function ConnectionsModalContent({
+export function ConnectionsModalContent({
   mode,
   editConnection,
   onSuccess,
@@ -232,8 +234,10 @@ function ConnectionsModalContent({
     setApiSecret("");
   };
 
+  // <DialogContent className="sm:max-w-[26.5625rem]">
+  // </DialogContent>
   return (
-    <DialogContent className="sm:max-w-[26.5625rem]">
+    <>
       <DialogHeader>
         <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
         <DialogDescription>
@@ -331,6 +335,6 @@ function ConnectionsModalContent({
           </div>
         )}
       </div>
-    </DialogContent>
+    </>
   );
 }
