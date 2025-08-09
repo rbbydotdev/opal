@@ -1,6 +1,13 @@
 import { ConnectionsModal } from "@/components/connections-modal";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarGroup,
   SidebarGroupAction,
@@ -10,20 +17,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { ChevronRight, Plus, Sparkle, MoreHorizontal, Pencil, Trash2, Key, Github } from "lucide-react";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { cn } from "@/lib/utils";
+import { ChevronRight, Github, Key, MoreHorizontal, Pencil, Plus, Sparkle, Trash2 } from "lucide-react";
 import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
 function ConnectionManager() {
   const { remoteAuths, loading, deleteRemoteAuth, refetch } = useRemoteAuths();
-  const [mode, setMode] = useState<"list" | "delete">("list");
   const [editingConnection, setEditingConnection] = useState<{
     id: string;
     name: string;
@@ -31,7 +31,7 @@ function ConnectionManager() {
     authType: "api" | "oauth";
   } | null>(null);
 
-  const handleEdit = (connection: typeof remoteAuths[0]) => {
+  const handleEdit = (connection: (typeof remoteAuths)[0]) => {
     setEditingConnection({
       id: connection.id,
       name: connection.name,
@@ -40,51 +40,48 @@ function ConnectionManager() {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteRemoteAuth(id);
-  };
-
-  const getConnectionIcon = (authType: "api" | "oauth") => {
+  const ConnectionIcon = ({ authType, className }: { authType: "api" | "oauth"; className?: string }) => {
     switch (authType) {
       case "api":
-        return <Key className="w-4 h-4" />;
+        return <Key className={cn("w-4 h-4", className)} />;
       case "oauth":
-        return <Github className="w-4 h-4" />;
+        return <Github className={cn("w-4 h-4", className)} />;
       default:
-        return <Key className="w-4 h-4" />;
+        return <Key className={cn("w-4 h-4", className)} />;
     }
   };
 
-  if (mode === "delete") {
-    return (
-      <div className="px-4 py-2 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-destructive">Delete Mode</span>
-          <Button size="sm" variant="outline" onClick={() => setMode("list")}>
-            Cancel
-          </Button>
-        </div>
-        {remoteAuths.map((connection) => (
-          <SidebarMenuItem key={connection.id}>
-            <SidebarMenuButton
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={() => handleDelete(connection.id)}
-            >
-              {getConnectionIcon(connection.authType)}
-              <span className="truncate">{connection.name}</span>
-              <Trash2 className="w-4 h-4 ml-auto" />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </div>
-    );
-  }
+  // if (mode === "delete") {
+  //   return (
+  //     <div className="px-4 py-2 space-y-2">
+  //       <div className="flex items-center justify-between">
+  //         <span className="text-sm font-medium text-destructive">Delete Mode</span>
+  //         <Button size="sm" variant="outline" onClick={() => setMode("list")}>
+  //           Cancel
+  //         </Button>
+  //       </div>
+  //       {false &&
+  //         remoteAuths.map((connection) => (
+  //           <SidebarMenuItem key={connection.id}>
+  //             <SidebarMenuButton
+  //               className="text-destructive hover:text-destructive hover:bg-destructive/10"
+  //               onClick={() => handleDelete(connection.id)}
+  //             >
+  //               {getConnectionIcon(connection.authType)}
+  //               <span className="truncate">{connection.name}</span>
+  //               <Trash2 className="w-4 h-4 ml-auto" />
+  //             </SidebarMenuButton>
+  //           </SidebarMenuItem>
+  //         ))}
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
       {/* Add Connection Modal */}
       <ConnectionsModal onSuccess={refetch}>
-        <SidebarGroupAction className="top-1.5">
+        <SidebarGroupAction className="top-1.5 p-3">
           <Plus /> <span className="sr-only">Add Connection</span>
         </SidebarGroupAction>
       </ConnectionsModal>
@@ -92,13 +89,13 @@ function ConnectionManager() {
       {/* Edit Connection Modal */}
       <ConnectionsModal
         mode="edit"
-        editConnection={editingConnection}
-        open={!!editingConnection}
+        editConnection={editingConnection!}
+        open={Boolean(editingConnection)}
         onOpenChange={(open) => {
           if (!open) setEditingConnection(null);
         }}
         onSuccess={() => {
-          refetch();
+          void refetch();
           setEditingConnection(null);
         }}
       >
@@ -117,43 +114,46 @@ function ConnectionManager() {
               <EmptySidebarLabel label="no connections" />
             </div>
           )}
-          {!loading && remoteAuths.map((connection) => (
-            <SidebarMenuItem key={connection.id}>
-              <SidebarMenuButton className="group pl-2 pr-1">
-                <div className="flex items-center flex-1 min-w-0">
-                  {getConnectionIcon(connection.authType)}
-                  <span className="truncate ml-2">{connection.name}</span>
-                  <span className="text-xs text-muted-foreground ml-2 capitalize">
-                    {connection.authType}
-                  </span>
+          {!loading &&
+            remoteAuths.map((connection) => (
+              <SidebarMenuItem key={connection.id}>
+                <div className="group flex items-center pr-1">
+                  <SidebarMenuButton className="flex-1 min-w-0 pl-8">
+                    <div className="flex items-center flex-1 min-w-0 gap-1">
+                      <ConnectionIcon authType={connection.authType} className="flex-shrink-0" />
+                      <span className="font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">
+                        {connection.name}
+                      </span>
+                      <span className="flex-shrink-0">{"/"}</span>
+                      <span className="text-xs text-muted-foreground capitalize font-mono overflow-hidden text-ellipsis whitespace-nowrap">
+                        {connection.authType} {"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"}
+                      </span>
+                    </div>
+                  </SidebarMenuButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-4.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(connection)}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => deleteRemoteAuth(connection.id)}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEdit(connection)}>
-                      <Pencil className="w-4 h-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => setMode("delete")}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+              </SidebarMenuItem>
+            ))}
         </SidebarMenu>
       </CollapsibleContent>
     </>

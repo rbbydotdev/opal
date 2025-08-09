@@ -320,6 +320,7 @@ export class TreeDir extends TreeNode {
   }
 
   prune(filterOut: ((n: TreeNode) => boolean) | AbsPath[]): TreeDir {
+    // const maxDepth = Array.isArray(filterOut) ? Math.max(...filterOut.map((path) => getDepth(path))) : Infinity;
     const filterFn = Array.isArray(filterOut) ? (node: TreeNode) => filterOut.includes(node.path) : filterOut;
     const newChildren: Record<string, TreeFile | TreeDir> = {};
 
