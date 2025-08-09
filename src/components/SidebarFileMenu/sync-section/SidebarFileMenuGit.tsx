@@ -1,12 +1,23 @@
 "use client";
 
-import { ChevronRight, Download, GitBranchIcon, GitMerge, Loader, PlusIcon, RefreshCw, Upload } from "lucide-react";
+import {
+  ChevronRight,
+  Download,
+  GitBranchIcon,
+  GitMerge,
+  GitPullRequestDraftIcon,
+  Loader,
+  PlusIcon,
+  RefreshCw,
+  Upload,
+} from "lucide-react";
 import React, { useMemo, useState } from "react";
 
 import {
   BranchManagerSection,
   createBranchRef,
   createCommitRef,
+  GitRef,
 } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { CommitManagerSection } from "@/components/SidebarFileMenu/sync-section/GitCommitManager";
 import { Button } from "@/components/ui/button";
@@ -46,7 +57,7 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
   );
 }
 
-type CommitState = "init" | "commit" | "commit-disabled" | "enter-message" | "pending";
+type CommitState = "init" | "commit" | "commit-disabled" | "enter-message" | "pending" | "detatched";
 
 function CommitSection({
   exists,
@@ -54,11 +65,13 @@ function CommitSection({
   commit,
   initialCommit,
   commitRef,
+  currentGitRef,
 }: {
   exists: boolean;
   hasChanges: boolean;
   commit: (message: string) => void;
   initialCommit: () => void;
+  currentGitRef: GitRef | null;
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
@@ -66,14 +79,13 @@ function CommitSection({
   const [commitMessage, setCommitMessage] = useState("");
   const [showMessageInput, setShowMessageInput] = useState(false);
 
-  const getCommitState = (): CommitState => {
+  const commitState = ((): CommitState => {
     if (showMessageInput) return "enter-message";
     if (!exists) return "init";
     if (!hasChanges) return "commit-disabled";
+    if (currentGitRef?.type === "commit") return "detatched";
     return "commit";
-  };
-
-  const commitState = getCommitState();
+  })();
 
   const handleButtonClick = async () => {
     if (commitState === "init") {
@@ -81,6 +93,8 @@ function CommitSection({
       commitRef.current?.show("Repository initialized");
     } else if (commitState === "commit") {
       setShowMessageInput(true);
+    } else if (commitState === "detatched") {
+      // commitRef.current?.show("You are in a detatched state, please switch to a branch to commit");
     }
   };
 
@@ -121,41 +135,6 @@ function CommitSection({
     );
   }
 
-  const getButtonContent = () => {
-    switch (commitState) {
-      case "pending":
-        return (
-          <>
-            <Loader className="mr-1 animate-spin" />
-            {exists ? "Committing..." : "Initializing..."}
-          </>
-        );
-      case "init":
-        return (
-          <>
-            <PlusIcon className="mr-1" />
-            Initialize Git Repo
-          </>
-        );
-      case "commit":
-        return (
-          <>
-            <GitMerge className="mr-1" />
-            Commit
-          </>
-        );
-      case "commit-disabled":
-        return (
-          <>
-            <GitMerge className="mr-1" />
-            No Changes to Commit
-          </>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <>
       <Button
@@ -163,14 +142,56 @@ function CommitSection({
         onClick={handleButtonClick}
         size="sm"
         variant="outline"
-        disabled={commitState === "pending" || commitState === "commit-disabled"}
+        disabled={commitState === "pending" || commitState === "commit-disabled" || commitState === "detatched"}
       >
-        {getButtonContent()}
+        <GitActionButton commitState={commitState} exists={exists} />
       </Button>
       <TooltipToast cmdRef={commitRef} message="Operation completed" durationMs={1000} sideOffset={10} />
     </>
   );
 }
+
+const GitActionButton = ({ commitState, exists }: { commitState?: CommitState; exists: boolean }) => {
+  switch (commitState) {
+    case "pending":
+      return (
+        <>
+          <Loader className="mr-1 animate-spin" />
+          {exists ? "Committing..." : "Initializing..."}
+        </>
+      );
+    case "init":
+      return (
+        <>
+          <PlusIcon className="mr-1" />
+          Initialize Git Repo
+        </>
+      );
+    case "commit":
+      return (
+        <>
+          <GitMerge className="mr-1" />
+          Commit
+        </>
+      );
+    case "commit-disabled":
+      return (
+        <>
+          <GitMerge className="mr-1" />
+          No Changes to Commit
+        </>
+      );
+    case "detatched":
+      return (
+        <>
+          <GitPullRequestDraftIcon className="mr-1" />
+          Detatched
+        </>
+      );
+    default:
+      return null;
+  }
+};
 
 // 4. SyncPullPushButtons
 function SyncPullPushButtons() {
@@ -262,6 +283,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 commit={(message) => playbook.addAllCommit({ message })}
                 initialCommit={() => playbook.initialCommit()}
                 commitRef={commitRef}
+                currentGitRef={currentGitRef}
               />
             </div>
             {exists && currentGitRef !== null && (
