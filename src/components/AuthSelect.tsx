@@ -10,6 +10,17 @@ interface AuthSelectProps {
   onAddAuth: () => void;
 }
 
+const AuthIcon = ({ authType }: { authType: "api" | "oauth" }) => {
+  switch (authType) {
+    case "api":
+      return <Key className="w-4 h-4" />;
+    case "oauth":
+      return <Github className="w-4 h-4" />;
+    default:
+      return <Shield className="w-4 h-4" />;
+  }
+};
+
 export function AuthSelect({
   value,
   onValueChange,
@@ -46,17 +57,6 @@ export function AuthSelect({
     );
   }
 
-  const getAuthIcon = (authType: "api" | "oauth") => {
-    switch (authType) {
-      case "api":
-        return <Key className="w-4 h-4" />;
-      case "oauth":
-        return <Github className="w-4 h-4" />;
-      default:
-        return <Shield className="w-4 h-4" />;
-    }
-  };
-
   return (
     <div className="flex items-center gap-2">
       <Select value={value || "none"} onValueChange={handleValueChange}>
@@ -73,10 +73,11 @@ export function AuthSelect({
           {remoteAuths.map((auth) => (
             <SelectItem key={auth.id} value={auth.id}>
               <div className="flex items-center gap-2">
-                {getAuthIcon(auth.authType)}
-                <div>
-                  <p className="text-sm font-medium">{auth.name}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{auth.authType}</p>
+                <AuthIcon authType={auth.authType} />
+                <div className="flex justify-center items-center gap-2 font-mono">
+                  <span className="text-sm font-medium">{auth.name}</span>
+                  <span>/</span>
+                  <span className="text-xs text-muted-foreground capitalize">{auth.authType}</span>
                 </div>
               </div>
             </SelectItem>

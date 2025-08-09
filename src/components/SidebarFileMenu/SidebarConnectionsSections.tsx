@@ -1,4 +1,5 @@
-import { ConnectionsModal } from "@/components/connections-modal";
+// import { ConnectionsModal } from "@/components/connections-modal";
+import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -103,7 +104,7 @@ function ConnectionManager() {
       </ConnectionsModal>
 
       <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
-        <SidebarMenu className="gap-2">
+        <SidebarMenu>
           {loading && (
             <div className="px-4 py-2">
               <span className="text-sm text-muted-foreground">Loading...</span>
@@ -126,7 +127,7 @@ function ConnectionManager() {
                       </span>
                       <span className="flex-shrink-0">{"/"}</span>
                       <span className="text-xs text-muted-foreground capitalize font-mono overflow-hidden text-ellipsis whitespace-nowrap">
-                        {connection.authType} {"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"}
+                        {connection.authType}{" "}
                       </span>
                     </div>
                   </SidebarMenuButton>
