@@ -72,10 +72,7 @@ export function GitRemoteManager({
           {Boolean(selectValue) ? (
             <DropdownMenuItem
               onClick={() =>
-                cmdRef.current.open(
-                  "edit",
-                  remotes.find((r) => r.name === selectValue)
-                )
+                cmdRef.current.open("edit", { ...((remotes.find((r) => r.name === selectValue) || {}) as GitRemote) })
               }
             >
               <Pencil />

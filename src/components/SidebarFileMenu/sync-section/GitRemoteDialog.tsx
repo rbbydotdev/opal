@@ -124,6 +124,9 @@ export function GitRemoteDialog({
     () =>
       ({
         open: (mode: GitRemoteDialogModeType, previous?: GitRemote) => {
+          if (mode === "edit") {
+            form.reset({ ...defaultValues, ...previous });
+          }
           modeRef.current = mode;
           prevRef.current = previous ?? null;
           setOpen(true);
@@ -154,7 +157,6 @@ export function GitRemoteDialog({
     setOpen(false);
   }
 
-  const mode = modeRef.current;
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -178,7 +180,7 @@ export function GitRemoteDialog({
           </div>
           <GitRemoteDialogInternal
             className={cn("col-start-1 row-start-1", { invisible: showConnectionModal })}
-            mode={mode}
+            mode={modeRef.current}
             form={form}
             onSubmit={handleFormSubmit}
             onCancel={handleCancel}

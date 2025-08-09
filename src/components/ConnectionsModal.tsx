@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { Github, ChromeIcon as Google } from "lucide-react";
+import { Github } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ type ConnectionType = {
   id: string;
   name: string;
   description: string;
-  type: "oauth" | "apikey";
+  type: "oauth" | "apikey" | "device";
   icon: React.ReactNode;
 };
 
@@ -35,19 +35,20 @@ const connectionTypes: ConnectionType[] = [
     type: "apikey",
     icon: <Github className="h-5 w-5" />,
   },
+
+  {
+    id: "github-device",
+    name: "GitHub Device Auth",
+    description: "Connect using GitHub Device Authentication",
+    type: "device",
+    icon: <Github className="h-5 w-5" />,
+  },
   {
     id: "github-oauth",
     name: "GitHub OAuth",
     description: "Connect using GitHub OAuth",
     type: "oauth",
     icon: <Github className="h-5 w-5" />,
-  },
-  {
-    id: "google-oauth",
-    name: "Google OAuth",
-    description: "Connect using Google OAuth",
-    type: "oauth",
-    icon: <Google className="h-5 w-5" />,
   },
 ];
 
@@ -173,7 +174,9 @@ export function ConnectionsModalContent({
   onSuccess?: (rad?: RemoteAuthDAO) => void;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string>(editConnection?.type || "");
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string>(
+    editConnection?.type || connectionTypes[0]!.id
+  );
   const [apiName, setApiName] = useState(editConnection?.name || "");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
