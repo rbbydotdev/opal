@@ -19,9 +19,11 @@ import { Input } from "@/components/ui/input";
 import { GitBranch, Info } from "lucide-react";
 
 import { AuthSelect } from "@/components/AuthSelect";
+import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GitRemote } from "@/features/git-repo/GitRepo";
+import { cn } from "@/lib/utils";
 import { useImperativeHandle, useState } from "react";
 
 export const gitRemoteSchema = z.object({
@@ -99,19 +101,30 @@ export function GitRemoteDialog({
     url: "https://github.com/rbbydotdev/test123",
     corsProxy: "https://cors.isomorphic-git.org",
   };
-  const prevRef = React.useRef<GitRemote | null>(null);
-  const modeRef = React.useRef<GitRemoteDialogModeType>(GitRemoteDialogModes.ADD);
+
   const form = useForm<GitRemoteFormValues>({
     resolver: zodResolver(gitRemoteSchema),
     defaultValues,
   });
+  const prevRef = React.useRef<GitRemote | null>(null);
+  const modeRef = React.useRef<GitRemoteDialogModeType>(GitRemoteDialogModes.ADD);
+  const connModalKeyRef = React.useRef<string>("0");
+  const authSelectKeyRef = React.useRef<string>("0");
+  const [showConnectionModal, setShowConnModal] = React.useState(false);
+  const resetConnModal = () => {
+    connModalKeyRef.current = Date.now().toString();
+    setShowConnModal(false);
+  };
+  const resetAuthSelect = () => {
+    authSelectKeyRef.current = Date.now().toString();
+  };
+
   useImperativeHandle(
     cmdRef,
     () =>
       ({
         open: (mode: GitRemoteDialogModeType, previous?: GitRemote) => {
           modeRef.current = mode;
-          form.reset(previous ?? defaultValues);
           prevRef.current = previous ?? null;
           setOpen(true);
         },
@@ -120,21 +133,25 @@ export function GitRemoteDialog({
   const [open, setOpen] = useState(false);
 
   function handleDialogOpenChange(isOpen: boolean) {
+    if (showConnectionModal) {
+      resetConnModal();
+      return;
+    }
     setOpen(isOpen);
     if (!isOpen) {
-      form.reset();
+      setShowConnModal(false);
+      prevRef.current = null;
+      modeRef.current = GitRemoteDialogModes.ADD;
     }
   }
 
   function handleFormSubmit(values: GitRemoteFormValues) {
     onSubmit({ previous: prevRef.current, next: values, mode: modeRef.current });
     setOpen(false);
-    form.reset();
   }
 
   function handleCancel() {
     setOpen(false);
-    form.reset();
   }
 
   const mode = modeRef.current;
@@ -142,24 +159,56 @@ export function GitRemoteDialog({
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[26.5625rem]">
-        <GitRemoteDialogInternal form={form} mode={mode} onSubmit={handleFormSubmit} onCancel={handleCancel} />
+        <div className="grid relative">
+          <div className="col-start-1 row-start-1">
+            <ConnectionsModalContent
+              className={cn({ hidden: !showConnectionModal })}
+              mode={"add"}
+              key={connModalKeyRef.current}
+              onSuccess={(rad) => {
+                resetConnModal();
+                resetAuthSelect();
+                form.setValue("authId", rad?.guid ?? "");
+                console.log("Connection added:", rad);
+              }}
+              onOpenChange={(state) => {
+                if (!state && showConnectionModal) resetConnModal();
+              }}
+            />
+          </div>
+          <GitRemoteDialogInternal
+            className={cn("col-start-1 row-start-1", { invisible: showConnectionModal })}
+            mode={mode}
+            form={form}
+            onSubmit={handleFormSubmit}
+            onCancel={handleCancel}
+            onAddAuth={() => setShowConnModal(true)}
+            authSelectKey={connModalKeyRef.current}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 function GitRemoteDialogInternal({
-  form,
+  className,
   mode,
   onSubmit,
+  onAddAuth,
+  authSelectKey = "git-remote-auth-select",
   onCancel,
+  form,
 }: {
-  form: ReturnType<typeof useForm<GitRemoteFormValues>>;
+  className?: string;
+  authSelectKey?: string;
   mode: GitRemoteDialogModeType;
   onSubmit: (values: GitRemoteFormValues) => void;
+  onAddAuth: () => void;
   onCancel: () => void;
+  form: ReturnType<typeof useForm<GitRemoteFormValues>>;
 }) {
   return (
-    <>
+    <div className={className}>
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
           <GitBranch className="h-5 w-5" />
@@ -226,10 +275,11 @@ function GitRemoteDialogInternal({
                 <FormLabel>Authentication</FormLabel>
                 <FormControl>
                   <AuthSelect
+                    key={authSelectKey}
                     value={field.value}
                     onValueChange={field.onChange}
                     placeholder="Optional - Select authentication"
-                    onAddAuth={() => {}}
+                    onAddAuth={onAddAuth}
                   />
                 </FormControl>
                 <FormMessage />
@@ -244,7 +294,7 @@ function GitRemoteDialogInternal({
           </DialogFooter>
         </form>
       </Form>
-    </>
+    </div>
   );
 }
 

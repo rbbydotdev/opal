@@ -160,6 +160,7 @@ export function ConnectionsModalContent({
   editConnection,
   onSuccess,
   onOpenChange,
+  className,
 }: {
   mode: "add" | "edit";
   editConnection?: {
@@ -168,7 +169,8 @@ export function ConnectionsModalContent({
     type: string;
     authType: "api" | "oauth";
   };
-  onSuccess?: () => void;
+  className?: string;
+  onSuccess?: (rad?: RemoteAuthDAO) => void;
   onOpenChange: (open: boolean) => void;
 }) {
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>(editConnection?.type || "");
@@ -199,17 +201,19 @@ export function ConnectionsModalContent({
             apiSecret: apiSecret || apiKey,
           };
           await dao.save();
+          onSuccess?.(dao);
         } else {
           // Create new connection
-          await RemoteAuthDAO.Create(apiName, {
-            authType: "api",
-            apiKey: apiKey,
-            apiSecret: apiSecret || apiKey,
-          });
+          onSuccess?.(
+            await RemoteAuthDAO.Create(apiName, {
+              authType: "api",
+              apiKey: apiKey,
+              apiSecret: apiSecret || apiKey,
+            })
+          );
         }
       }
 
-      onSuccess?.();
       resetForm();
       onOpenChange(false);
     } catch (error) {
@@ -237,7 +241,7 @@ export function ConnectionsModalContent({
   // <DialogContent className="sm:max-w-[26.5625rem]">
   // </DialogContent>
   return (
-    <>
+    <div className={className}>
       <DialogHeader>
         <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
         <DialogDescription>
@@ -269,6 +273,13 @@ export function ConnectionsModalContent({
           </Select>
         </div>
 
+        {!Boolean(selectedConnection) && (
+          <div className="flex w-full justify-end">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+          </div>
+        )}
         {selectedConnection && (
           <div className="pt-2">
             {selectedConnection.type === "apikey" ? (
@@ -335,6 +346,6 @@ export function ConnectionsModalContent({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
