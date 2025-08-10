@@ -232,7 +232,7 @@ export class WorkspaceDAO {
     name,
     disk,
     thumbs,
-    remoteAuths,
+    remoteAuths = [],
   }: {
     guid: string;
     name: string;

@@ -14,7 +14,7 @@ export function useResource<T extends TeardownableResource>(
     }
     resource.current = setup();
     return () => {
-      resource.current.tearDown();
+      resource.current?.tearDown();
     };
   }, deps);
 
