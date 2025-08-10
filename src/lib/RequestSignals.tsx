@@ -119,8 +119,6 @@ export const useRequestSignals = () => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pending, setPending] = useState(false);
 
-  // const req
-
   useEffect(() => {
     return RequestSignalsInstance.initAndWatch((count) => {
       if (count <= 0) {

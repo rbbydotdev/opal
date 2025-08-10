@@ -1,15 +1,14 @@
-"use client";
 import { useWatchWorkspaceFileTree } from "@/context/WorkspaceHooks";
 import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, absPathname, joinPath } from "@/lib/paths2";
+import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
 import { FileTextIcon } from "lucide-react";
 import mime from "mime-types";
-import { Link } from "@tanstack/react-router";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState } from "react";
 import { basename } from "../lib/paths2";
 

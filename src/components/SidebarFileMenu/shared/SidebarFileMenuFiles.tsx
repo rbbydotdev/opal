@@ -1,4 +1,3 @@
-"use client";
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -39,7 +38,7 @@ export const SidebarFileMenuFiles = ({
 
   const treeNode = useMemo(() => {
     const node =
-      typeof scope === "undefined" ? fileTreeDir : currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT;
+      typeof scope === "undefined" ? fileTreeDir : (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT);
     if (!node.isTreeDir()) {
       throw new Error("SidebarFileMenuFiles: scoped node is not a TreeDir");
     }

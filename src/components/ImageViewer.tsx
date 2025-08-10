@@ -1,4 +1,3 @@
-"use client";
 import { encodePath } from "@/lib/paths2";
 
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {

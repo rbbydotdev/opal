@@ -1,4 +1,3 @@
-"use client";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,9 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Disk, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
+import { useNavigate } from "@tanstack/react-router";
 import { LoaderIcon } from "lucide-react";
 import { nanoid } from "nanoid";
-import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 export function NewWorkspaceDialog({

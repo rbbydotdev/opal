@@ -1,4 +1,3 @@
-"use client";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { SidebarMenuButton } from "@/components/ui/sidebar";

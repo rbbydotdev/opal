@@ -1,5 +1,3 @@
-"use client";
-
 import { rangesToSearchParams } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { SelectWorkspaceComplete } from "@/components/SelectWorkspaceComplete";
 import { Button } from "@/components/ui/button";
@@ -18,8 +16,8 @@ import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceSearchResults } from "@/features/workspace-search/useWorkspaceSearchResults";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
-import { ChevronRight, FileTextIcon, Loader, Search, SearchXIcon, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { ChevronRight, FileTextIcon, Loader, Search, SearchXIcon, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const MAX_MATCHES_SHOWN = 5;
@@ -33,10 +31,10 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const { storedValue: optionsValue, setStoredValue: setOptionsValue } = useLocalStorage2(
     "SearchDialog/options/values",
     () =>
-      ({ workspace: ALL_WS_KEY, type: "markdown" } as {
+      ({ workspace: ALL_WS_KEY, type: "markdown" }) as {
         workspace: string;
         type: "markdown" | "rich";
-      })
+      }
   );
 
   //keeps saved workspace in sync with the current workspaces

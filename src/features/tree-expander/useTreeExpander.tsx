@@ -1,4 +1,3 @@
-"use client";
 import { TreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { TreeNode } from "@/lib/FileTree/TreeNode";

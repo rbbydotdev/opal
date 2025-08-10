@@ -1,4 +1,3 @@
-"use client";
 import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { Workspace } from "@/Db/Workspace";

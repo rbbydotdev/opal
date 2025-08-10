@@ -1,4 +1,3 @@
-"use client";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";

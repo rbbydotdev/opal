@@ -1,12 +1,10 @@
-"use client";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "@/components/Editor/theme-provider";
 
 import { WorkspaceButtonBar } from "@/app/WorkSpaceButtonBar";
 
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
-import { Geist, Geist_Mono } from "next/font/google";
 
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
@@ -14,21 +12,14 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { RequestSignalsInstance } from "@/lib/RequestSignals";
+// import { RequestSignalsInstance } from "@/lib/RequestSignals";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import React, { useEffect } from "react";
 import "../styles.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Using CSS variables defined in styles.css for font families
+// The Geist fonts are loaded via <link> tags in index.html
 
 export default function RootLayout({
   children,
@@ -38,7 +29,7 @@ export default function RootLayout({
   newWorkspaceModal: React.ReactNode;
 }>) {
   useEffect(() => {
-    return RequestSignalsInstance.initAndWatch((_count) => {});
+    // return RequestSignalsInstance.initAndWatch((_count) => {});
   }, []);
   return (
     <html lang="en" suppressHydrationWarning>
@@ -59,7 +50,7 @@ export default function RootLayout({
           }
         `}</style>
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className="font-sans antialiased">
         <div
           style={{
             backgroundImage: "url('/opal-lite.svg')",

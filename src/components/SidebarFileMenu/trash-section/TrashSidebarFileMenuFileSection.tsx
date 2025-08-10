@@ -1,5 +1,3 @@
-"use client";
-
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";

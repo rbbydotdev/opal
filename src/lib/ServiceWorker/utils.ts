@@ -1,5 +1,5 @@
 declare const self: ServiceWorkerGlobalScope;
-import { RemoteLogger } from "@/lib/RemoteLogger";
+// import { RemoteLogger } from "@/lib/RemoteLogger";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
 
 // --- Constants ---
@@ -31,11 +31,11 @@ function formatConsoleMsg(msg: unknown): string {
   return String(msg);
 }
 
-const RL = RemoteLogger("ServiceWorker");
-console.log = (msg: unknown) => RL(formatConsoleMsg(msg), "log");
-console.debug = (msg: unknown) => RL(formatConsoleMsg(msg), "debug");
-console.error = (msg: unknown) => RL(formatConsoleMsg(msg), "error");
-console.warn = (msg: unknown) => RL(formatConsoleMsg(msg), "warn");
+// const RL = RemoteLogger("ServiceWorker");
+// console.log = (msg: unknown) => RL(formatConsoleMsg(msg), "log");
+// console.debug = (msg: unknown) => RL(formatConsoleMsg(msg), "debug");
+// console.error = (msg: unknown) => RL(formatConsoleMsg(msg), "error");
+// console.warn = (msg: unknown) => RL(formatConsoleMsg(msg), "warn");
 
 // --- Request Signaling ---
 export function signalRequest(detail: RequestEventDetail) {

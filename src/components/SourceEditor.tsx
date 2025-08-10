@@ -1,4 +1,3 @@
-"use client";
 import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { cn } from "@/lib/utils";

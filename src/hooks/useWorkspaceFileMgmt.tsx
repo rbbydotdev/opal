@@ -1,4 +1,3 @@
-"use client";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { SpecialDirs } from "@/Db/SpecialDirs";
@@ -19,9 +18,9 @@ import {
   reduceLineage,
   relPath,
 } from "@/lib/paths2";
+import { useNavigate } from "@tanstack/react-router";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
-import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
 

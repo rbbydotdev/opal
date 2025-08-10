@@ -71,7 +71,7 @@ export function SearchWorkerProvider({ children }: { children: React.ReactNode }
   }, [maxPoolSize]);
 
   const createWorker = useCallback(() => {
-    const worker = new Worker(new URL("@/workers/SearchWorker/search.ww.ts", import.meta.url));
+    const worker = new Worker(new URL("/src/workers/SearchWorker/search.ww.ts", import.meta.url), { type: "module" });
     pool.current.push(worker);
     return worker;
   }, []);

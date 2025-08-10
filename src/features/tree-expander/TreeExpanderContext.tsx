@@ -1,4 +1,3 @@
-"use client";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useTreeExpander } from "@/features/tree-expander/useTreeExpander";
 import { createContext, ReactNode } from "react";

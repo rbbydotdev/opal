@@ -1,4 +1,3 @@
-"use client";
 import { type Workspace } from "@/Db/Workspace";
 import { SearchWorkerApi, SearchWorkerApiType } from "@/workers/SearchWorker/search.api";
 import { Remote, wrap } from "comlink";
@@ -10,7 +9,8 @@ export class SearchWorkspaceWorker {
   constructor(worker?: Worker) {
     try {
       if (typeof Worker === "undefined") return;
-      this.worker = worker ?? new Worker(new URL("./search.ww.ts", import.meta.url));
+      this.worker =
+        worker ?? new Worker(new URL("/src/workers/SearchWorker/search.ww.ts", import.meta.url), { type: "module" });
       this.api = wrap<SearchWorkerApiType>(this.worker);
       console.log("search worker ready");
     } catch (error) {

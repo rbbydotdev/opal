@@ -32,7 +32,7 @@ export async function processWorkspaceImagesWW(
     if (index >= filesArr.length) return;
     const current = index++;
     const file = filesArr[current];
-    const worker = new Worker(new URL("@/workers/ImageWorker/image.ww.ts", import.meta.url));
+    const worker = new Worker(new URL("/src/workers/ImageWorker/image.ww.ts", import.meta.url), { type: "module" });
     try {
       const api = wrap<ImageWorkerApiType>(worker);
       const arrayBuffer = await file!.arrayBuffer();

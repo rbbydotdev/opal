@@ -1,4 +1,3 @@
-"use client";
 import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
 import { useFileContents, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
@@ -74,7 +73,7 @@ function MarkdownRender() {
     },
   });
   const html = useMemo(
-    () => renderMarkdownToHtml(stripFrontmatter(contents === null ? String(initialContents ?? "") : contents ?? "")),
+    () => renderMarkdownToHtml(stripFrontmatter(contents === null ? String(initialContents ?? "") : (contents ?? ""))),
     [contents, initialContents]
   );
   const { scrollRef } = useScrollSync();

@@ -1,5 +1,3 @@
-"use client";
-
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { useFileMenuPaste } from "@/components/SidebarFileMenu/hooks/useFileMenuPaste";

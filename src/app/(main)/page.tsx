@@ -1,5 +1,3 @@
-"use client";
-
 import { Card } from "@/components/ui/card";
 import { Tilt } from "@/components/ui/Tilt";
 import { Opal } from "@/lib/Opal";

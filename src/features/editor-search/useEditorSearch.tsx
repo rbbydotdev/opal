@@ -1,5 +1,3 @@
-"use client";
-
 import { useCellValue, viewMode$ } from "@mdxeditor/editor";
 import { useEffect, useState } from "react";
 
