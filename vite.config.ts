@@ -1,6 +1,6 @@
 // vite.config.ts
 
-import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
+import { tanstackRouter } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
@@ -9,7 +9,8 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 export default defineConfig({
   plugins: [
     react(),
-    TanStackRouterVite(),
+    // TanStackRouterVite(),
+    tanstackRouter(),
     // This plugin provides polyfills for Node.js core modules and globals.
     // It handles both development (esbuild) and production (rollup) builds.
     nodePolyfills({
