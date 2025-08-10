@@ -1,7 +1,5 @@
-import Identicon from "@/components/Identicon";
 import { Workspace } from "@/Db/Workspace";
-import React from "react";
-import { renderToString } from "react-dom/server";
+import { IdenticonStr } from "@/components/IndenticonStr";
 import { SWWStore } from "./SWWStore";
 
 export async function handleFaviconRequest(event: FetchEvent): Promise<Response> {
@@ -13,12 +11,10 @@ export async function handleFaviconRequest(event: FetchEvent): Promise<Response>
   }
   const workspace = await SWWStore.tryWorkspace(workspaceId);
   return new Response(
-    renderToString(
-      React.createElement(Identicon, {
-        input: workspace.guid,
-        size: 4,
-      })
-    ),
+    IdenticonStr({
+      input: workspace.guid,
+      size: 4, // Grid size
+    }),
     {
       headers: {
         "Content-Type": "image/svg+xml",
