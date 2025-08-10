@@ -17,10 +17,10 @@ import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppNewWorkspaceRouteImport } from './routes/_app/newWorkspace'
 import { Route as AppConnectionsRouteImport } from './routes/_app/connections'
-import { Route as AppWorkspaceWorkspaceIdRouteImport } from './routes/_app/workspace/$workspaceId'
-import { Route as AppWorkspaceWorkspaceIdIndexRouteImport } from './routes/_app/workspace/$workspaceId/index'
-import { Route as AppWorkspaceWorkspaceIdSettingsRouteImport } from './routes/_app/workspace/$workspaceId/settings'
-import { Route as AppWorkspaceWorkspaceIdSplatRouteImport } from './routes/_app/workspace/$workspaceId.$'
+import { Route as AppWorkspaceWorkspaceNameRouteImport } from './routes/_app/workspace/$workspaceName'
+import { Route as AppWorkspaceWorkspaceNameIndexRouteImport } from './routes/_app/workspace/$workspaceName/index'
+import { Route as AppWorkspaceWorkspaceNameSettingsRouteImport } from './routes/_app/workspace/$workspaceName/settings'
+import { Route as AppWorkspaceWorkspaceNameSplatRouteImport } from './routes/_app/workspace/$workspaceName.$'
 
 const PreviewRoute = PreviewRouteImport.update({
   id: '/preview',
@@ -61,28 +61,29 @@ const AppConnectionsRoute = AppConnectionsRouteImport.update({
   path: '/connections',
   getParentRoute: () => AppRoute,
 } as any)
-const AppWorkspaceWorkspaceIdRoute = AppWorkspaceWorkspaceIdRouteImport.update({
-  id: '/$workspaceId',
-  path: '/$workspaceId',
-  getParentRoute: () => AppWorkspaceRoute,
-} as any)
-const AppWorkspaceWorkspaceIdIndexRoute =
-  AppWorkspaceWorkspaceIdIndexRouteImport.update({
+const AppWorkspaceWorkspaceNameRoute =
+  AppWorkspaceWorkspaceNameRouteImport.update({
+    id: '/$workspaceName',
+    path: '/$workspaceName',
+    getParentRoute: () => AppWorkspaceRoute,
+  } as any)
+const AppWorkspaceWorkspaceNameIndexRoute =
+  AppWorkspaceWorkspaceNameIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AppWorkspaceWorkspaceIdRoute,
+    getParentRoute: () => AppWorkspaceWorkspaceNameRoute,
   } as any)
-const AppWorkspaceWorkspaceIdSettingsRoute =
-  AppWorkspaceWorkspaceIdSettingsRouteImport.update({
+const AppWorkspaceWorkspaceNameSettingsRoute =
+  AppWorkspaceWorkspaceNameSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
-    getParentRoute: () => AppWorkspaceWorkspaceIdRoute,
+    getParentRoute: () => AppWorkspaceWorkspaceNameRoute,
   } as any)
-const AppWorkspaceWorkspaceIdSplatRoute =
-  AppWorkspaceWorkspaceIdSplatRouteImport.update({
+const AppWorkspaceWorkspaceNameSplatRoute =
+  AppWorkspaceWorkspaceNameSplatRouteImport.update({
     id: '/$',
     path: '/$',
-    getParentRoute: () => AppWorkspaceWorkspaceIdRoute,
+    getParentRoute: () => AppWorkspaceWorkspaceNameRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -93,10 +94,10 @@ export interface FileRoutesByFullPath {
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/preview/$': typeof PreviewSplatRoute
   '/': typeof AppIndexRoute
-  '/workspace/$workspaceId': typeof AppWorkspaceWorkspaceIdRouteWithChildren
-  '/workspace/$workspaceId/$': typeof AppWorkspaceWorkspaceIdSplatRoute
-  '/workspace/$workspaceId/settings': typeof AppWorkspaceWorkspaceIdSettingsRoute
-  '/workspace/$workspaceId/': typeof AppWorkspaceWorkspaceIdIndexRoute
+  '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
+  '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
+  '/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
+  '/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
 }
 export interface FileRoutesByTo {
   '/preview': typeof PreviewRouteWithChildren
@@ -106,9 +107,9 @@ export interface FileRoutesByTo {
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/preview/$': typeof PreviewSplatRoute
   '/': typeof AppIndexRoute
-  '/workspace/$workspaceId/$': typeof AppWorkspaceWorkspaceIdSplatRoute
-  '/workspace/$workspaceId/settings': typeof AppWorkspaceWorkspaceIdSettingsRoute
-  '/workspace/$workspaceId': typeof AppWorkspaceWorkspaceIdIndexRoute
+  '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
+  '/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
+  '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -120,10 +121,10 @@ export interface FileRoutesById {
   '/_app/workspace': typeof AppWorkspaceRouteWithChildren
   '/preview/$': typeof PreviewSplatRoute
   '/_app/': typeof AppIndexRoute
-  '/_app/workspace/$workspaceId': typeof AppWorkspaceWorkspaceIdRouteWithChildren
-  '/_app/workspace/$workspaceId/$': typeof AppWorkspaceWorkspaceIdSplatRoute
-  '/_app/workspace/$workspaceId/settings': typeof AppWorkspaceWorkspaceIdSettingsRoute
-  '/_app/workspace/$workspaceId/': typeof AppWorkspaceWorkspaceIdIndexRoute
+  '/_app/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
+  '/_app/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
+  '/_app/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
+  '/_app/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -135,10 +136,10 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/preview/$'
     | '/'
-    | '/workspace/$workspaceId'
-    | '/workspace/$workspaceId/$'
-    | '/workspace/$workspaceId/settings'
-    | '/workspace/$workspaceId/'
+    | '/workspace/$workspaceName'
+    | '/workspace/$workspaceName/$'
+    | '/workspace/$workspaceName/settings'
+    | '/workspace/$workspaceName/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/preview'
@@ -148,9 +149,9 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/preview/$'
     | '/'
-    | '/workspace/$workspaceId/$'
-    | '/workspace/$workspaceId/settings'
-    | '/workspace/$workspaceId'
+    | '/workspace/$workspaceName/$'
+    | '/workspace/$workspaceName/settings'
+    | '/workspace/$workspaceName'
   id:
     | '__root__'
     | '/_app'
@@ -161,10 +162,10 @@ export interface FileRouteTypes {
     | '/_app/workspace'
     | '/preview/$'
     | '/_app/'
-    | '/_app/workspace/$workspaceId'
-    | '/_app/workspace/$workspaceId/$'
-    | '/_app/workspace/$workspaceId/settings'
-    | '/_app/workspace/$workspaceId/'
+    | '/_app/workspace/$workspaceName'
+    | '/_app/workspace/$workspaceName/$'
+    | '/_app/workspace/$workspaceName/settings'
+    | '/_app/workspace/$workspaceName/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -230,61 +231,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConnectionsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/workspace/$workspaceId': {
-      id: '/_app/workspace/$workspaceId'
-      path: '/$workspaceId'
-      fullPath: '/workspace/$workspaceId'
-      preLoaderRoute: typeof AppWorkspaceWorkspaceIdRouteImport
+    '/_app/workspace/$workspaceName': {
+      id: '/_app/workspace/$workspaceName'
+      path: '/$workspaceName'
+      fullPath: '/workspace/$workspaceName'
+      preLoaderRoute: typeof AppWorkspaceWorkspaceNameRouteImport
       parentRoute: typeof AppWorkspaceRoute
     }
-    '/_app/workspace/$workspaceId/': {
-      id: '/_app/workspace/$workspaceId/'
+    '/_app/workspace/$workspaceName/': {
+      id: '/_app/workspace/$workspaceName/'
       path: '/'
-      fullPath: '/workspace/$workspaceId/'
-      preLoaderRoute: typeof AppWorkspaceWorkspaceIdIndexRouteImport
-      parentRoute: typeof AppWorkspaceWorkspaceIdRoute
+      fullPath: '/workspace/$workspaceName/'
+      preLoaderRoute: typeof AppWorkspaceWorkspaceNameIndexRouteImport
+      parentRoute: typeof AppWorkspaceWorkspaceNameRoute
     }
-    '/_app/workspace/$workspaceId/settings': {
-      id: '/_app/workspace/$workspaceId/settings'
+    '/_app/workspace/$workspaceName/settings': {
+      id: '/_app/workspace/$workspaceName/settings'
       path: '/settings'
-      fullPath: '/workspace/$workspaceId/settings'
-      preLoaderRoute: typeof AppWorkspaceWorkspaceIdSettingsRouteImport
-      parentRoute: typeof AppWorkspaceWorkspaceIdRoute
+      fullPath: '/workspace/$workspaceName/settings'
+      preLoaderRoute: typeof AppWorkspaceWorkspaceNameSettingsRouteImport
+      parentRoute: typeof AppWorkspaceWorkspaceNameRoute
     }
-    '/_app/workspace/$workspaceId/$': {
-      id: '/_app/workspace/$workspaceId/$'
+    '/_app/workspace/$workspaceName/$': {
+      id: '/_app/workspace/$workspaceName/$'
       path: '/$'
-      fullPath: '/workspace/$workspaceId/$'
-      preLoaderRoute: typeof AppWorkspaceWorkspaceIdSplatRouteImport
-      parentRoute: typeof AppWorkspaceWorkspaceIdRoute
+      fullPath: '/workspace/$workspaceName/$'
+      preLoaderRoute: typeof AppWorkspaceWorkspaceNameSplatRouteImport
+      parentRoute: typeof AppWorkspaceWorkspaceNameRoute
     }
   }
 }
 
-interface AppWorkspaceWorkspaceIdRouteChildren {
-  AppWorkspaceWorkspaceIdSplatRoute: typeof AppWorkspaceWorkspaceIdSplatRoute
-  AppWorkspaceWorkspaceIdSettingsRoute: typeof AppWorkspaceWorkspaceIdSettingsRoute
-  AppWorkspaceWorkspaceIdIndexRoute: typeof AppWorkspaceWorkspaceIdIndexRoute
+interface AppWorkspaceWorkspaceNameRouteChildren {
+  AppWorkspaceWorkspaceNameSplatRoute: typeof AppWorkspaceWorkspaceNameSplatRoute
+  AppWorkspaceWorkspaceNameSettingsRoute: typeof AppWorkspaceWorkspaceNameSettingsRoute
+  AppWorkspaceWorkspaceNameIndexRoute: typeof AppWorkspaceWorkspaceNameIndexRoute
 }
 
-const AppWorkspaceWorkspaceIdRouteChildren: AppWorkspaceWorkspaceIdRouteChildren =
+const AppWorkspaceWorkspaceNameRouteChildren: AppWorkspaceWorkspaceNameRouteChildren =
   {
-    AppWorkspaceWorkspaceIdSplatRoute: AppWorkspaceWorkspaceIdSplatRoute,
-    AppWorkspaceWorkspaceIdSettingsRoute: AppWorkspaceWorkspaceIdSettingsRoute,
-    AppWorkspaceWorkspaceIdIndexRoute: AppWorkspaceWorkspaceIdIndexRoute,
+    AppWorkspaceWorkspaceNameSplatRoute: AppWorkspaceWorkspaceNameSplatRoute,
+    AppWorkspaceWorkspaceNameSettingsRoute:
+      AppWorkspaceWorkspaceNameSettingsRoute,
+    AppWorkspaceWorkspaceNameIndexRoute: AppWorkspaceWorkspaceNameIndexRoute,
   }
 
-const AppWorkspaceWorkspaceIdRouteWithChildren =
-  AppWorkspaceWorkspaceIdRoute._addFileChildren(
-    AppWorkspaceWorkspaceIdRouteChildren,
+const AppWorkspaceWorkspaceNameRouteWithChildren =
+  AppWorkspaceWorkspaceNameRoute._addFileChildren(
+    AppWorkspaceWorkspaceNameRouteChildren,
   )
 
 interface AppWorkspaceRouteChildren {
-  AppWorkspaceWorkspaceIdRoute: typeof AppWorkspaceWorkspaceIdRouteWithChildren
+  AppWorkspaceWorkspaceNameRoute: typeof AppWorkspaceWorkspaceNameRouteWithChildren
 }
 
 const AppWorkspaceRouteChildren: AppWorkspaceRouteChildren = {
-  AppWorkspaceWorkspaceIdRoute: AppWorkspaceWorkspaceIdRouteWithChildren,
+  AppWorkspaceWorkspaceNameRoute: AppWorkspaceWorkspaceNameRouteWithChildren,
 }
 
 const AppWorkspaceRouteWithChildren = AppWorkspaceRoute._addFileChildren(

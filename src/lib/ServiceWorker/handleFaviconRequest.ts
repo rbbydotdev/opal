@@ -4,8 +4,7 @@ import { SWWStore } from "./SWWStore";
 
 export async function handleFaviconRequest(event: FetchEvent): Promise<Response> {
   const referrerPath = new URL(event.request.referrer).pathname;
-  Workspace.parseWorkspacePath(referrerPath);
-  const { workspaceId } = Workspace.parseWorkspacePath(referrerPath);
+  const { workspaceId } = Workspace.parseWorkspacePathLegacy(referrerPath);
   if (!workspaceId) {
     return fetch(event.request);
   }

@@ -163,10 +163,10 @@ export function useWorkspaceRoute() {
           id: null,
           path: null,
         };
-      const { workspaceId, filePath } = Workspace.parseWorkspacePath(location.pathname);
-      if (workspaceId && workspaceId !== "new") {
+      const { workspaceName, filePath } = Workspace.parseWorkspacePath(location.pathname);
+      if (workspaceName && workspaceName !== "new") {
         return {
-          id: workspaceId ?? null,
+          id: workspaceName ?? null,
           path: filePath ?? null,
         };
       }
