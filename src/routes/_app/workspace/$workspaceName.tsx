@@ -5,19 +5,19 @@ import useFavicon from "@/hooks/useFavicon";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-export const Route = createFileRoute("/_app/workspace/$workspaceId")({
+export const Route = createFileRoute("/_app/workspace/$workspaceName")({
   component: WorkspaceLayout,
 });
 
 function WorkspaceLayout() {
-  const { workspaceId } = Route.useParams();
-  useFavicon("/favicon.svg" + "?" + workspaceId, "image/svg+xml");
+  const { workspaceName } = Route.useParams();
+  useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
 
   useEffect(() => {
-    if (workspaceId) {
-      document.title = workspaceId;
+    if (workspaceName) {
+      document.title = workspaceName;
     }
-  }, [workspaceId]);
+  }, [workspaceName]);
 
   return (
     <>

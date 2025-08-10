@@ -19,15 +19,15 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const { fileTreeDir, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
   const location = useLocation();
   const navigate = useNavigate();
-  const { workspaceId } = Workspace.parseWorkspacePath(location.pathname);
+  const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);
 
   useEffect(() => {
     //todo hackish
-    if (workspaceId === "new" || !workspaceId) {
+    if (workspaceName === "new" || !workspaceName) {
       setCurrentWorkspace(NULL_WORKSPACE);
       return;
     }
-    const workspace = WorkspaceDAO.FetchModelFromNameAndInit(workspaceId)
+    const workspace = WorkspaceDAO.FetchModelFromNameAndInit(workspaceName)
       .then((ws) => {
         setCurrentWorkspace(ws);
         console.debug("Initialize Workspace:" + ws.name);
@@ -45,7 +45,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     return () => {
       void workspace.then((ws) => ws?.tearDown());
     };
-  }, [navigate, workspaceId]);
+  }, [navigate, workspaceName]);
 
   useEffect(() => {
     if (!currentWorkspace) return;

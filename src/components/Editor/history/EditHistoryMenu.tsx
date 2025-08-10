@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
-import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useWorkspaceRoute, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import {
   HistoryDocRecord,
   HistoryStorageInterface,
@@ -40,7 +40,9 @@ export function EditHistoryMenu({
   rootMarkdown: string;
   realm: Realm | undefined;
 }) {
-  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
+  const { path: filePath } = useWorkspaceRoute();
+  const { currentWorkspace } = useWorkspaceContext();
+  const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
   const {
     edits,
     selectedEdit,

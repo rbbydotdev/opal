@@ -5,22 +5,22 @@ import useFavicon from "@/hooks/useFavicon";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-export const Route = createFileRoute("/_app/workspace/$workspaceId/$")({
+export const Route = createFileRoute("/_app/workspace/$workspaceName/$")({
   component: WorkspaceFilePage,
 });
 
 function WorkspaceFilePage() {
-  const { workspaceId } = Route.useParams();
+  const { workspaceName } = Route.useParams();
   const { filePath } = useCurrentFilepath();
   const { currentWorkspace } = useWorkspaceContext();
   const navigate = useNavigate();
-  useFavicon("/favicon.svg" + "?" + workspaceId, "image/svg+xml");
+  useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
 
   useEffect(() => {
-    if (workspaceId) {
-      document.title = workspaceId;
+    if (workspaceName) {
+      document.title = workspaceName;
     }
-  }, [workspaceId]);
+  }, [workspaceName]);
 
   useEffect(() => {
     if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
@@ -33,7 +33,7 @@ function WorkspaceFilePage() {
   return (
     <>
       <SpotlightSearch currentWorkspace={currentWorkspace} />
-      <WorkspaceView key={filePath + workspaceId} currentWorkspace={currentWorkspace} />
+      <WorkspaceView key={filePath + workspaceName} currentWorkspace={currentWorkspace} />
     </>
   );
 }

@@ -128,27 +128,33 @@ export class Workspace {
     const url = new URL(pathOrUrl, "http://example");
     const pathname = absPathname(url.pathname);
 
-    let workspaceId: string | null = null;
+    let workspaceName: string | null = null;
     let filePath: AbsPath | undefined | null = null;
 
     if (WorkspaceDAO.Routes.some((route) => pathname.startsWith(route))) {
       const [id, ...filePathRest] = decodePath(
         relPath(WorkspaceDAO.Routes.reduce((prev, next) => prev.replace(next, ""), String(pathname)))
       ).split("/");
-      workspaceId = id || null;
+      workspaceName = id || null;
       filePath = filePathRest.length ? absPath(filePathRest.join("/")) : undefined;
     }
 
     // Try search params if not found
-    if (!workspaceId) {
-      workspaceId = url.searchParams.get("workspaceId");
+    if (!workspaceName) {
+      workspaceName = url.searchParams.get("workspaceId") || url.searchParams.get("workspaceName");
     }
     if (!filePath) {
       const fp = url.searchParams.get("filePath");
       filePath = fp ? absPath(fp) : null;
     }
 
-    return { workspaceId, filePath };
+    return { workspaceName, filePath };
+  }
+
+  // Deprecated: Use parseWorkspacePath instead
+  static parseWorkspacePathLegacy(pathOrUrl: string) {
+    const result = Workspace.parseWorkspacePath(pathOrUrl);
+    return { workspaceId: result.workspaceName, filePath: result.filePath };
   }
 
   static async CreateNew(name: string, files: Record<string, string | Promise<string>> = {}, diskType?: DiskType) {
