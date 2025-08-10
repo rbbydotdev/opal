@@ -64,7 +64,7 @@ export function useCopyKeydownImages(currentWorkspace: Workspace) {
           .filter(Boolean)
           .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
           .filter(Boolean);
-        void copyFileNodesToClipboard({ fileNodes, action: "copy", workspaceId: currentWorkspace.name });
+        void copyFileNodesToClipboard({ fileNodes, action: "copy", workspaceId: currentWorkspace.id });
 
         console.debug("copy keydown");
       } else {

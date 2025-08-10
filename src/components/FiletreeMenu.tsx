@@ -35,7 +35,7 @@ export async function handleFileTreeNodePaste(
       const clipboardText = String(await item.getType(INTERNAL_NODE_FILE_TYPE).then((blob) => blob.text()));
 
       const payload = tryParseCopyNodesPayload(clipboardText);
-      if (!payload || payload.workspaceId !== currentWorkspace.name) continue;
+      if (!payload || payload.workspaceId !== currentWorkspace.id) continue;
       const { fileNodes, action } = payload;
       const copyNodes: [TreeNode, AbsPath][] = fileNodes
         .map((path) => [
@@ -65,13 +65,13 @@ export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { curren
     copyFileNodesToClipboard({
       fileNodes,
       action: "copy",
-      workspaceId: currentWorkspace.name,
+      workspaceId: currentWorkspace.id,
     });
   const cut = (fileNodes: TreeNode[]) =>
     copyFileNodesToClipboard({
       fileNodes,
       action: "cut",
-      workspaceId: currentWorkspace.name,
+      workspaceId: currentWorkspace.id,
     }).then(() => {
       setFileTreeCtx({
         editing: null,

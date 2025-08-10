@@ -1,4 +1,4 @@
-import Identicon from "@/components/Identicon";
+import { Identicon } from "@/components/Identicon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { twMerge } from "tailwind-merge";
 
@@ -31,7 +31,7 @@ export function WorkspaceIcon({
 }: WorkspaceIconProps & { variant?: keyof typeof variants }) {
   return (
     <div className={twMerge(variants[variant ?? "square"], "inline-block overflow-clip", className)}>
-      <Identicon {...props} size={props.size ?? 4} scale={props.scale ?? 7} />
+      <Identicon {...props} size={props.size ?? 4} scale={props.scale ?? 5} />
     </div>
   );
 }
