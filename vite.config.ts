@@ -1,31 +1,46 @@
-import { TanStackRouterVite } from "@tanstack/router-vite-plugin/vite";
+// vite.config.ts
 
+import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
-  logLevel: "info",
-  plugins: [react(), TanStackRouterVite()],
+  plugins: [
+    react(),
+    TanStackRouterVite(),
+    // This plugin provides polyfills for Node.js core modules and globals.
+    // It handles both development (esbuild) and production (rollup) builds.
+    nodePolyfills({
+      // Whether to polyfill `node:` protocol imports.
+      protocolImports: false,
+    }),
+  ],
   resolve: {
     alias: {
+      // Your existing aliases
       "@": path.resolve(__dirname, "./src"),
-      stream: "stream-browserify",
+
+      // Polyfills for node builtins are handled by `vite-plugin-node-polyfills`
+      // You don't need to specify them manually here.
+      // stream: "stream-browserify",
       // path: "path-browserify",
+      // crypto: "crypto-browserify",
     },
   },
   server: {
     port: 3000,
   },
-  build: {
-    outDir: "dist",
-    sourcemap: true,
-  },
-  define: {
-    global: "globalThis",
-    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
-  },
+  // The `optimizeDeps` and `build.rollupOptions.plugins` sections
+  // for polyfills are no longer needed. The plugin handles it.
   optimizeDeps: {
-    exclude: ["fsevents", "stream-browserify", "path-browserify"],
+    exclude: ["fsevents"], // Still a good idea to exclude this
+  },
+  // The `define` section for process.env is still useful.
+  // The plugin will handle polyfilling `process` and `global`.
+  define: {
+    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
+    "process.version": JSON.stringify("v18.18.0"),
   },
 });
