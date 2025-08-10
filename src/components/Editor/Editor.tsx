@@ -1,15 +1,7 @@
-import React, { Suspense, lazy } from "react";
-import { Loader } from "lucide-react";
+// InitializedMDXEditor.tsx
+import { MDXEditor } from "@mdxeditor/editor";
+import "@mdxeditor/editor/style.css";
+import "./mdxeditor-custom-styles.css";
 
-// This is the only place InitializedMDXEditor is imported directly.
-const InitializedMDXEditor = lazy(() => import("./InitializedMDXEditor"));
-
-export const Editor = () => (
-  <Suspense fallback={
-    <div className="w-full h-full flex items-center justify-center animate-spin">
-      <Loader />
-    </div>
-  }>
-    <InitializedMDXEditor />
-  </Suspense>
-);
+// Only import this to the next file
+export const Editor = MDXEditor;
