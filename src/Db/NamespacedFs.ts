@@ -5,7 +5,10 @@ import { CommonFileSystem } from "./CommonFileSystem";
 
 export class NamespacedFs implements CommonFileSystem {
   namespace: AbsPath;
-  constructor(protected fs: CommonFileSystem, namespace: AbsPath | string) {
+  constructor(
+    protected fs: CommonFileSystem,
+    namespace: AbsPath | string
+  ) {
     if (typeof namespace === "string") {
       this.namespace = absPath(decodePath(namespace));
     } else {

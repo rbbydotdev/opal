@@ -17,7 +17,7 @@ import { Disk, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
 import { LoaderIcon } from "lucide-react";
 import { nanoid } from "nanoid";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 export function NewWorkspaceDialog({
@@ -31,12 +31,12 @@ export function NewWorkspaceDialog({
 }) {
   const [isPending, setPending] = useState(false);
   const defaultValue = useMemo(() => "wrk-" + nanoid(), []);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open) {
-      router.back();
+      navigate({ to: -1 });
     }
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,7 +49,7 @@ export function NewWorkspaceDialog({
     setPending(false);
     setIsOpen(false);
 
-    router.push(workspace.home());
+    navigate({ to: workspace.home() });
   };
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>

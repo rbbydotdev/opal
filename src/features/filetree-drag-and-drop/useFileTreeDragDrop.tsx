@@ -6,7 +6,7 @@ import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import React from "react";
 
 import mime from "mime-types";
@@ -75,13 +75,13 @@ export async function handleDropFilesEventForNode({
 }
 
 export function useHandleDropFilesEventForNodeRedirect({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   // const dropFilesHandler = useHandleDropFilesEventForNode({ currentWorkspace });
   return (event: React.DragEvent, targetNode: TreeNode) => {
     return handleDropFilesEventForNode({ currentWorkspace, event, targetNode }).then(([file]) => {
       if (file) {
         const filePath = currentWorkspace.resolveFileUrl(file);
-        router.push(filePath);
+        navigate({ to: filePath });
       } else {
         console.warn("No file returned from dropFilesHandler.");
       }

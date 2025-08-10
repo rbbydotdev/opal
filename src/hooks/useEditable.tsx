@@ -5,7 +5,7 @@ import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, changePrefix, prefix, RelPath, relPath, strictPathname } from "@/lib/paths2";
-import { usePathname } from "next/navigation";
+import { useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 export function useEditable<T extends TreeFile | TreeDir>({
   treeNode,
@@ -31,10 +31,10 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const isFocused = fullPath === focused;
   const isVirtual = fullPath === virtual;
   const isSelectedRange = useMemo(() => selectedRange.includes(treeNode.path), [selectedRange, treeNode.path]);
-  const pathname = usePathname();
+  const location = useLocation();
   const isCurrentPath = useMemo(
-    () => Workspace.parseWorkspacePath(pathname).filePath === fullPath,
-    [pathname, fullPath]
+    () => Workspace.parseWorkspacePath(location.pathname).filePath === fullPath,
+    [location.pathname, fullPath]
   );
 
   //assuring focus on the input when editing

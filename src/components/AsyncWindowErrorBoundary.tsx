@@ -1,7 +1,7 @@
 "use client";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { useEscapeKeyClose } from "@/hooks/useEscapeKeyClose";
-import { usePathname } from "next/navigation";
+import { useLocation } from "@tanstack/react-router";
 import React, { useEffect, useState } from "react";
 
 export const AsyncWindowErrorBoundary = ({ children }: { children: React.ReactNode }) => {
@@ -17,10 +17,10 @@ export const AsyncWindowErrorBoundary = ({ children }: { children: React.ReactNo
     setIsOpen(true);
   };
 
-  const pathname = usePathname();
+  const location = useLocation();
   useEffect(() => {
     reset();
-  }, [pathname, reset]);
+  }, [location.pathname, reset]);
   //close on keyboard escape key
   useEscapeKeyClose(isOpen, reset);
 

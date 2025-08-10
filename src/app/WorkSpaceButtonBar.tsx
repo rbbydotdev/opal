@@ -11,9 +11,8 @@ import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog"
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -29,8 +28,8 @@ function BigButton({
   truncate?: boolean;
   active?: boolean;
 } & React.ComponentProps<typeof Link>) {
-  const pathname = usePathname();
-  const isActive = active ?? pathname === restProps.href;
+  const location = useLocation();
+  const isActive = active ?? location.pathname === restProps.to;
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -72,11 +71,11 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
-  const router = useRouter();
+  const navigate = useNavigate();
   return (
     <div className="[&>*]:outline-none  max-h-full flex flex-col">
       <div className="flex justify-center flex-col items-center w-full ">
-        <Link href={"/"} className={cn("outline-none", { "animate-spin": pending })}>
+        <Link to={"/"} className={cn("outline-none", { "animate-spin": pending })}>
           <div className="rotate-12">
             <div
               className="h-7 w-7 rounded-sm mt-4 mb-4"
@@ -95,7 +94,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
           <BigButton
             icon={<BombIcon stroke="current" size={24} strokeWidth={1.25} />}
             title={"Destroy All"}
-            href="#"
+            to="#"
             onClick={() =>
               Promise.all([
                 // deleteIDBs(),
@@ -109,20 +108,19 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
                   )
                 ),
                 unregisterServiceWorkers(),
-                //@ts-expect-error
-              ]).then(() => (window.location = "/newWorkspace"))
+              ]).then(() => navigate({ to: "/newWorkspace" }))
             }
           />
           <BigButton
             icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
             title={"Delete All"}
-            href="#"
-            onClick={() => Workspace.DeleteAll().then(() => router.push("/newWorkspace"))}
+            to="#"
+            onClick={() => Workspace.DeleteAll().then(() => navigate({ to: "/newWorkspace" }))}
           />
           <BigButton
             icon={<Delete stroke="current" size={24} strokeWidth={1.25} />}
             title={"Unregister Services"}
-            href="#"
+            to="#"
             onClick={() => {
               // Unregister all service workers for this origin
               const promises: Promise<boolean>[] = [];
@@ -142,7 +140,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
         <BigButton
           icon={<SearchIcon stroke="current" size={24} strokeWidth={1.25} />}
           title="search"
-          href="#"
+          to="#"
           className="text-3xs"
         />
       </WorkspaceSearchDialog>
@@ -150,13 +148,13 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
         className="hidden"
         icon={<Zap stroke="current" size={24} strokeWidth={1.25} />}
         title="connections"
-        href="/connections"
+        to="/connections"
       />
       <BigButton
         className="hidden"
         icon={<Settings stroke="current" size={24} strokeWidth={1.25} />}
         title="settings"
-        href="/settings"
+        to="/settings"
       />
       <BigButton
         icon={<CirclePlus stroke="current" size={24} strokeWidth={1.25} />}
@@ -169,7 +167,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
         <BigButton
           icon={<WorkspaceIcon input={coalescedWorkspace.guid} />}
           title={coalescedWorkspace.name}
-          href={coalescedWorkspace.href}
+          to={coalescedWorkspace.href}
           truncate={true}
           className="text-white big-button-active whitespace-nowrap truncate"
         />
@@ -202,7 +200,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
             {workspaces.map((workspace) => (
               <BigButton
                 icon={<WorkspaceIcon input={workspace.guid} />}
-                href={workspace.href}
+                to={workspace.href}
                 truncate={true}
                 className="whitespace-nowrap"
                 title={workspace.name}

@@ -10,7 +10,7 @@ import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { isAncestor } from "@/lib/paths2";
-import { usePathname, useRouter } from "next/navigation";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import React, { useEffect, useState } from "react";
 
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
@@ -18,9 +18,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaceRoute = useWorkspaceRoute();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
   const { fileTreeDir, flatTree } = useWatchWorkspaceFileTree(currentWorkspace);
-  const pathname = usePathname();
-  const router = useRouter();
-  const { workspaceId } = Workspace.parseWorkspacePath(pathname);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { workspaceId } = Workspace.parseWorkspacePath(location.pathname);
 
   useEffect(() => {
     //todo hackish
@@ -46,7 +46,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     return () => {
       void workspace.then((ws) => ws?.tearDown());
     };
-  }, [router, workspaceId]);
+  }, [navigate, workspaceId]);
 
   useEffect(() => {
     if (!currentWorkspace) return;
@@ -54,16 +54,16 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       currentWorkspace.renameListener((CHANGES) => {
         for (const { oldPath, newPath, fileType } of CHANGES) {
           if (
-            (fileType === "file" && pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
+            (fileType === "file" && location.pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
             (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
           ) {
             if (newPath.startsWith(SpecialDirs.Trash)) {
-              router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+              navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
               void currentWorkspace.tryFirstFileUrl().then((firstFileUrl) => {
-                router.push(firstFileUrl);
+                navigate({ to: firstFileUrl });
               });
             } else {
-              router.push(currentWorkspace.replaceUrlPath(pathname, oldPath, newPath));
+              navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
             }
           }
         }
@@ -73,7 +73,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
           const navPath = details.filePaths
             .map((path) => currentWorkspace.nodeFromPath(path))
             .find((n) => n?.isTreeFile())?.path;
-          if (navPath) router.push(currentWorkspace.resolveFileUrl(navPath));
+          if (navPath) navigate({ to: currentWorkspace.resolveFileUrl(navPath) });
         }
       }),
       currentWorkspace.deleteListener(async (details) => {
@@ -81,14 +81,14 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
           workspaceRoute.path &&
           details.filePaths.some((path) => isAncestor({ child: workspaceRoute.path, parent: path }))
         ) {
-          router.push(await currentWorkspace.tryFirstFileUrl());
+          navigate({ to: await currentWorkspace.tryFirstFileUrl() });
         }
       }),
     ];
     return () => {
       listeners.forEach((listener) => listener());
     };
-  }, [currentWorkspace, pathname, router, workspaceRoute.path]);
+  }, [currentWorkspace, location.pathname, navigate, workspaceRoute.path]);
 
   return (
     <WorkspaceContext.Provider
