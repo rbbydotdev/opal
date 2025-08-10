@@ -82,6 +82,7 @@ export default function RootLayout({
                               <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
                                 <WorkspaceButtonBar />
                               </div>
+                              dddddddddddddddddddddddddddd
                               <ErrorBoundary fallback={ErrorPlaque}>
                                 <>{children}</>
                                 <>{newWorkspaceModal}</>
