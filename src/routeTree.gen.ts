@@ -17,6 +17,7 @@ import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspaceWorkspaceIdRouteImport } from './routes/workspace/$workspaceId'
 import { Route as PreviewSplatRouteImport } from './routes/preview.$'
+import { Route as EditviewSplatRouteImport } from './routes/editview.$'
 import { Route as WorkspaceWorkspaceIdSplatRouteImport } from './routes/workspace/$workspaceId.$'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
@@ -59,6 +60,11 @@ const PreviewSplatRoute = PreviewSplatRouteImport.update({
   path: '/$',
   getParentRoute: () => PreviewRoute,
 } as any)
+const EditviewSplatRoute = EditviewSplatRouteImport.update({
+  id: '/editview/$',
+  path: '/editview/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkspaceWorkspaceIdSplatRoute =
   WorkspaceWorkspaceIdSplatRouteImport.update({
     id: '/$',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/preview': typeof PreviewRouteWithChildren
   '/settings': typeof SettingsRoute
   '/workspace': typeof WorkspaceRouteWithChildren
+  '/editview/$': typeof EditviewSplatRoute
   '/preview/$': typeof PreviewSplatRoute
   '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRouteWithChildren
   '/workspace/$workspaceId/$': typeof WorkspaceWorkspaceIdSplatRoute
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/preview': typeof PreviewRouteWithChildren
   '/settings': typeof SettingsRoute
   '/workspace': typeof WorkspaceRouteWithChildren
+  '/editview/$': typeof EditviewSplatRoute
   '/preview/$': typeof PreviewSplatRoute
   '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRouteWithChildren
   '/workspace/$workspaceId/$': typeof WorkspaceWorkspaceIdSplatRoute
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/preview': typeof PreviewRouteWithChildren
   '/settings': typeof SettingsRoute
   '/workspace': typeof WorkspaceRouteWithChildren
+  '/editview/$': typeof EditviewSplatRoute
   '/preview/$': typeof PreviewSplatRoute
   '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRouteWithChildren
   '/workspace/$workspaceId/$': typeof WorkspaceWorkspaceIdSplatRoute
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/preview'
     | '/settings'
     | '/workspace'
+    | '/editview/$'
     | '/preview/$'
     | '/workspace/$workspaceId'
     | '/workspace/$workspaceId/$'
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/preview'
     | '/settings'
     | '/workspace'
+    | '/editview/$'
     | '/preview/$'
     | '/workspace/$workspaceId'
     | '/workspace/$workspaceId/$'
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/preview'
     | '/settings'
     | '/workspace'
+    | '/editview/$'
     | '/preview/$'
     | '/workspace/$workspaceId'
     | '/workspace/$workspaceId/$'
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   PreviewRoute: typeof PreviewRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
+  EditviewSplatRoute: typeof EditviewSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PreviewSplatRouteImport
       parentRoute: typeof PreviewRoute
     }
+    '/editview/$': {
+      id: '/editview/$'
+      path: '/editview/$'
+      fullPath: '/editview/$'
+      preLoaderRoute: typeof EditviewSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/workspace/$workspaceId/$': {
       id: '/workspace/$workspaceId/$'
       path: '/$'
@@ -254,6 +274,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreviewRoute: PreviewRouteWithChildren,
   SettingsRoute: SettingsRoute,
   WorkspaceRoute: WorkspaceRouteWithChildren,
+  EditviewSplatRoute: EditviewSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -14,10 +14,15 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { RequestSignalsInstance } from "@/lib/RequestSignals";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
+import { ThemeProvider } from "@/components/Editor/theme-provider";
 import "../app/styles.css";
 
-export const Route = createRootRoute({
-  component: () => (
+function RootComponent() {
+  useEffect(() => {
+    return RequestSignalsInstance.initAndWatch((_count) => {});
+  }, []);
+
+  return (
     <>
       <div className="font-sans antialiased">
         <div
@@ -35,7 +40,7 @@ export const Route = createRootRoute({
                 <WorkspaceProvider>
                   <JotaiProvider>
                     <SidebarProvider>
-                      <div className="theme-provider">
+                      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                         <RemoteMDXEditorRealmProvider>
                           <div className="w-full flex">
                             <ErrorBoundary fallback={ErrorPlaque}>
@@ -48,7 +53,7 @@ export const Route = createRootRoute({
                             </ErrorBoundary>
                           </div>
                         </RemoteMDXEditorRealmProvider>
-                      </div>
+                      </ThemeProvider>
                     </SidebarProvider>
                   </JotaiProvider>
                 </WorkspaceProvider>
@@ -73,5 +78,9 @@ export const Route = createRootRoute({
         }
       `}</style>
     </>
-  ),
+  );
+}
+
+export const Route = createRootRoute({
+  component: RootComponent,
 })
