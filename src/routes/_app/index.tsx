@@ -3,7 +3,7 @@ import { Tilt } from "@/components/ui/Tilt";
 import { Opal } from "@/lib/Opal";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_app/")({
   component: Index,
 });
 

@@ -16,6 +16,8 @@ export async function createApiResource({
     workspaceId,
   });
   iframe.src = "/doc-preview-image.html?" + searchParams.toString();
+  iframe.style.transform = "translate(-9999px, -9999px)";
+  iframe.style.position = "absolute";
   document.body.appendChild(iframe);
   await new Promise((rs) => (iframe!.onload = () => rs(true)));
   console.debug("iframe up");

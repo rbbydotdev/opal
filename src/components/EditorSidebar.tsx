@@ -32,9 +32,7 @@ export function EditorSidebar({
                     <CurrentWorkspaceIcon size={4} scale={7} />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none truncate">
-                    <div className="whitespace-nowrap w-full truncate uppercase font-thin font-mono">
-                      {currentWorkspace.name}
-                    </div>
+                    <div className="whitespace-nowrap w-full truncate uppercase font-mono">{currentWorkspace.name}</div>
                   </div>
                 </div>
               </Link>
