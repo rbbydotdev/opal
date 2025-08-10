@@ -82,7 +82,9 @@ export default defineConfig(() => {
         exclude: [/\.ww\.(ts|js)$/, /sw\.(ts|js)$/],
       }),
       // TanStackRouterVite(),
-      tanstackRouter(),
+      tanstackRouter({
+        routeToken: "layout",
+      }),
       // This plugin provides polyfills for Node.js core modules and globals.
       // It handles both development (esbuild) and production (rollup) builds.
       nodePolyfills({
