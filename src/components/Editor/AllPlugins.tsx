@@ -1,7 +1,7 @@
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
-import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
+// import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
@@ -78,7 +78,7 @@ export function useAllPlugins({
                   disabled={mimeType !== "text/markdown"}
                   realm={realm}
                 />
-                <LivePreviewButton disabled={mimeType !== "text/markdown"} />
+                {/* <LivePreviewButton disabled={mimeType !== "text/markdown"} /> */}
                 <MdxSearchToolbar />
                 <MdxToolbar />
               </>
