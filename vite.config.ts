@@ -58,30 +58,4 @@ export default defineConfig({
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
     "process.version": JSON.stringify("v18.18.0"),
   },
-  // Web Workers and Service Workers configuration
-  worker: {
-    // format: "es", // Use ESM format for workers
-    format: "iife", // Use IIFE format for compatibility
-    plugins: () => [
-      // Workers also need the same plugins for TypeScript and polyfills
-      nodePolyfills({
-        protocolImports: false,
-      }),
-    ],
-  },
-  // Service Worker specific configuration
-  build: {
-    rollupOptions: {
-      input: {
-        main: "index.html",
-        sw: "src/lib/ServiceWorker/sw.ts", // Build service worker separately
-      },
-      output: {
-        // Ensure service worker is built as a separate entry
-        entryFileNames: (chunkInfo) => {
-          return chunkInfo.name === "sw" ? "sw.js" : "assets/[name]-[hash].js";
-        },
-      },
-    },
-  },
 });
