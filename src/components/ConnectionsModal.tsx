@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { Github, Loader } from "lucide-react";
+import { ExternalLink, Github, Loader } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -373,7 +373,7 @@ function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: Conn
             >
               Navigate to {selectedConnection.name.split(" ")[0]}
             </Link>{" "}
-            and enter device PIN below to authenticate.
+            and enter the device PIN below to authenticate.
           </p>
           <div className="flex justify-end gap-2 mt-4">
             {Array.from(pin).map((char, idx) => (
@@ -415,12 +415,20 @@ function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: Conn
           </Button>
         )}
         {Boolean(pin) && (
-          <Button asChild type="button" className="flex items-center gap-2">
-            <Link href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
-              {selectedConnection.icon}
-              Go to {selectedConnection.name.split(" ")[0]}
-            </Link>
-          </Button>
+          <>
+            <Button asChild type="button" className="flex items-center gap-2  hidden" variant={"outline"}>
+              <Link href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
+                Retrieve Auth
+              </Link>
+            </Button>
+            <Button asChild type="button" className="flex items-center gap-2">
+              <Link href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
+                {selectedConnection.icon}
+                Go to {selectedConnection.name.split(" ")[0]}
+                <ExternalLink className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          </>
         )}
       </div>
     </div>
