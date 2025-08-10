@@ -1,4 +1,3 @@
-"use client";
 import { CreateDetails, DeleteDetails, Disk, DiskEvents, DiskType, IndexTrigger, RenameDetails } from "@/Db/Disk";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { ImageCache } from "@/Db/ImageCache";
@@ -618,7 +617,7 @@ export class Workspace {
 
   //Not used, since we use web worker
   async RepoWorker() {
-    const worker = new Worker(new URL("@/workers/RepoWorker/repo.ww.ts", import.meta.url));
+    const worker = new Worker(new URL("/src/workers/RepoWorker/repo.ww.ts", import.meta.url), { type: "module" });
     const RepoApi = Comlink.wrap<typeof Repo>(worker);
     return {
       worker,

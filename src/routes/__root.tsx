@@ -1,25 +1,25 @@
-import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
-import React, { useEffect } from "react";
-import { WorkspaceButtonBar } from "@/app/WorkSpaceButtonBar";
 import { JotaiProvider } from "@/app/JotaiProvider";
+import { WorkspaceButtonBar } from "@/app/WorkSpaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
-import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { RequestSignalsInstance } from "@/lib/RequestSignals";
+import { WorkspaceProvider } from "@/context/WorkspaceProvider";
+import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { useEffect } from "react";
+// import { RequestSignalsInstance } from "@/lib/RequestSignals";
+import { ThemeProvider } from "@/components/Editor/theme-provider";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
-import { ThemeProvider } from "@/components/Editor/theme-provider";
 import "../app/styles.css";
 
 function RootComponent() {
   useEffect(() => {
-    return RequestSignalsInstance.initAndWatch((_count) => {});
+    // return RequestSignalsInstance.initAndWatch((_count) => {});
   }, []);
 
   return (
@@ -83,4 +83,4 @@ function RootComponent() {
 
 export const Route = createRootRoute({
   component: RootComponent,
-})
+});

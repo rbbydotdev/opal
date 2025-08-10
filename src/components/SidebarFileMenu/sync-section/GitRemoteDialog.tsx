@@ -1,5 +1,3 @@
-"use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -131,7 +129,7 @@ export function GitRemoteDialog({
           prevRef.current = previous ?? null;
           setOpen(true);
         },
-      } satisfies GitRemoteDialogCmdRefType)
+      }) satisfies GitRemoteDialogCmdRefType
   );
   const [open, setOpen] = useState(false);
 

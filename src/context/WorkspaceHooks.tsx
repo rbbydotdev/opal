@@ -1,4 +1,3 @@
-"use client";
 import { NullWorkspace } from "@/Db/NullWorkspace";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
@@ -6,9 +5,9 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
-import { useLocation, useNavigate } from "@tanstack/react-router";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export const NULL_WORKSPACE = new NullWorkspace();
@@ -25,8 +24,8 @@ export type DeepNonNullable<T extends object, K extends keyof T = never> = {
   [P in keyof T]: P extends K
     ? T[P]
     : NonNullable<T[P]> extends T
-    ? DeepNonNullable<NonNullable<T[P]>, K>
-    : NonNullable<T[P]>;
+      ? DeepNonNullable<NonNullable<T[P]>, K>
+      : NonNullable<T[P]>;
 };
 export type WorkspaceContextType = typeof defaultWorkspaceContext;
 

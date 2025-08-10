@@ -1,4 +1,3 @@
-"use client";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { Toaster } from "@/components/ui/toaster";
 import React from "react";

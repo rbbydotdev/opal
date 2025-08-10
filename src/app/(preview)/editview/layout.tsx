@@ -1,5 +1,3 @@
-"use client";
-
 // import "../styles.css";
 import "../../styles.css"; //TODO JUST FOR FUN REMOVE ME
 

@@ -1,4 +1,3 @@
-"use client";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { useEscapeKeyClose } from "@/hooks/useEscapeKeyClose";
 import { useLocation } from "@tanstack/react-router";

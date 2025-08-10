@@ -1,5 +1,3 @@
-"use client";
-
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils"; // Assuming you have a utility for classnames
 import { FileIcon } from "lucide-react";

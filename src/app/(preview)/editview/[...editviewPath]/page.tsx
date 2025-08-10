@@ -1,4 +1,3 @@
-"use client";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";

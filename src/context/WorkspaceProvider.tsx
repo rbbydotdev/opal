@@ -1,4 +1,3 @@
-"use client";
 import {
   NULL_WORKSPACE,
   useLiveWorkspaces,

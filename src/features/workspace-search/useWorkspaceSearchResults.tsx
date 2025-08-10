@@ -1,4 +1,3 @@
-"use client";
 import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 // import { DiskSearchResultData } from "@/features/search/SearchResults";

@@ -1,4 +1,3 @@
-"use client";
 import { NewWorkspaceDialog } from "@/components/ui/NewWorkspaceDialog";
 import { useState } from "react";
 

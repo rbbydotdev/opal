@@ -12,7 +12,7 @@ export async function uploadImages3(
 ): Promise<(AbsPath | null)[]> {
   return Promise.all(
     files.map(async (file) => {
-      const worker = new Worker(new URL("@/workers/ImageWorker/image3.ww.ts", import.meta.url));
+      const worker = new Worker(new URL("/src/workers/ImageWorker/image3.ww.ts", import.meta.url), { type: "module" });
       const buffer = await file.arrayBuffer();
       worker.postMessage(
         {
@@ -52,7 +52,7 @@ export async function uploadImages2(
     if (index >= filesArr.length) return;
     const current = index++;
     const file = filesArr[current];
-    const worker = new Worker(new URL("@/workers/ImageWorker/image.ww.ts", import.meta.url));
+    const worker = new Worker(new URL("/src/workers/ImageWorker/image.ww.ts", import.meta.url), { type: "module" });
     try {
       const api = wrap<ImageWorkerApiType>(worker);
       const arrayBuffer = await file!.arrayBuffer();
@@ -90,7 +90,7 @@ export async function uploadImages(
   const queue = filesArr.map((file, idx) => ({ file, idx }));
 
   async function workerTask() {
-    const worker = new Worker(new URL("@/workers/ImageWorker/image.ww.ts", import.meta.url));
+    const worker = new Worker(new URL("/src/workers/ImageWorker/image.ww.ts", import.meta.url), { type: "module" });
     const api = wrap<ImageWorkerApiType>(worker);
 
     try {

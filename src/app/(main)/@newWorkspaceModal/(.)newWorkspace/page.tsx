@@ -1,5 +1,3 @@
-"use client";
-
 import { NewWorkspaceDialog } from "@/components/ui/NewWorkspaceDialog";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";

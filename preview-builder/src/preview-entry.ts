@@ -1,4 +1,3 @@
-"use client";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";

@@ -1,4 +1,3 @@
-"use client";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { WorkspaceRouteType } from "@/context/WorkspaceHooks";
@@ -8,9 +7,9 @@ import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, equals, isImage, prefix, relPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import { FileCode2, FileText } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -91,7 +90,6 @@ export const EditableFile = ({
               selectedRange: [],
             })
           }
-          prefetch={false}
         >
           <div className="w-full">
             <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
@@ -146,11 +144,10 @@ export function SelectedMark({ selected = false }: { selected?: boolean }) {
 
 export const ActiveLink = ({
   active,
-  prefetch,
   ...props
 }: { active: boolean } & (ComponentProps<typeof Link> & HTMLAttributes<HTMLDivElement>)) => {
   if (!active) {
-    return <Link {...props} prefetch={prefetch} />;
+    return <Link {...props} />;
   }
   // @ts-ignore
   return <div {...props} />;

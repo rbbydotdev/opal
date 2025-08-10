@@ -1,5 +1,3 @@
-"use client";
-
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { Card } from "@/components/ui/card";

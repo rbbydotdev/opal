@@ -1,5 +1,3 @@
-"use client";
-
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
@@ -22,8 +20,7 @@ import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { withSuspense } from "@/lib/hoc/withSuspense";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
-import { Link } from "@tanstack/react-router";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ComponentProps, Suspense, use, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
@@ -54,7 +51,7 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
               event: e,
               targetNode: RootNode,
             }).then(([filePath]) => {
-              if (filePath) navigate({ to: props.currentWorkspace.resolveFileUrl(filePath) });
+              if (filePath) return navigate({ to: props.currentWorkspace.resolveFileUrl(filePath) });
             })
           }
         >

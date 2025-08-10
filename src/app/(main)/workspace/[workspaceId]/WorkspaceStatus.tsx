@@ -1,5 +1,3 @@
-"use client";
-
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 
 export const WorkspaceStatus = () => {

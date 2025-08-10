@@ -1,4 +1,4 @@
-// "use client";
+//
 // // InitializedMDXEditor.tsx
 // import { MDXEditor, type MDXEditorMethods, type MDXEditorProps } from "@mdxeditor/editor";
 // import "@mdxeditor/editor/style.css";

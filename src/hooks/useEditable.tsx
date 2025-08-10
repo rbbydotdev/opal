@@ -1,4 +1,3 @@
-"use client";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";

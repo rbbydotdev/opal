@@ -1,4 +1,3 @@
-"use client";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { WorkspaceView } from "@/components/WorkspaceEditor";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";

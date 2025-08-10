@@ -1,4 +1,3 @@
-"use client";
 import { SidebarMenuSections } from "@/components/SidebarFileMenu/SidebarMenuSections";
 import {
   Sidebar,

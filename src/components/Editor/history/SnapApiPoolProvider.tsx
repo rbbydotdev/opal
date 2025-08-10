@@ -1,4 +1,3 @@
-"use client";
 import { CreatePoolContext, PoolWorker, Resource } from "@/components/PoolWorker";
 
 import * as Comlink from "comlink";
