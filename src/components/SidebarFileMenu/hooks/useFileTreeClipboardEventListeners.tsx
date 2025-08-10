@@ -30,7 +30,7 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
         return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
           action: "cut",
-          workspaceId: currentWorkspace.name,
+          workspaceId: currentWorkspace.id,
         });
       }
     };
@@ -40,7 +40,7 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
         return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
           action: "copy",
-          workspaceId: currentWorkspace.name,
+          workspaceId: currentWorkspace.id,
         });
       }
     };

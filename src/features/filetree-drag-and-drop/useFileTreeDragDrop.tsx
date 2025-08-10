@@ -128,7 +128,7 @@ export function useFileTreeDragDrop({
         nodes: currentWorkspace.nodesFromPaths(
           selectedRange.slice().concat(targetNode.path, selectedRange, focused ?? [])
         ),
-        workspaceId: currentWorkspace.name,
+        workspaceId: currentWorkspace.id,
         action: "move",
       });
     } catch (e) {

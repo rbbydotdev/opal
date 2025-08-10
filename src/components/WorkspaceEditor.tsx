@@ -132,7 +132,7 @@ export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props 
   return (
     <div className="flex flex-col h-full relative">
       <SnapApiPoolProvider max={1}>
-        <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.name}>
+        <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
           <ScrollSyncProvider
             scrollEl={mdxEditorElement as HTMLElement}
             scrollEmitter={scrollEmitter}
