@@ -24,11 +24,14 @@ export async function setupServiceWorker(): Promise<void> {
     // await unregisterServiceWorkers();
     if (!navigator.serviceWorker.controller) {
       console.warn("Service Worker is not controlling the page.");
-      await navigator.serviceWorker.register(new URL("/src/lib/ServiceWorker/sw.ts", import.meta.url), {
+      // await navigator.serviceWorker.register(new URL("/src/lib/ServiceWorker/sw.ts", import.meta.url), {
+      //   scope: "/",
+      //   updateViaCache: "none",
+      //   type: "module", // Use module type for ESM support
+      // });
+      await navigator.serviceWorker.register("/sw.js", {
         scope: "/",
         updateViaCache: "none",
-        type: "module", // Use module type for ESM support
-        // type: "classic", // Use classic type for compatibility
       });
 
       // Wait for the service worker to be ready

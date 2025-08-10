@@ -50,3 +50,4 @@ playwright-report
 
 
 dist/**/*
+public/assets/*.js

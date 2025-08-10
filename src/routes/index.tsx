@@ -1,17 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { TopToolbar } from '@/app/(main)/TopToolbar'
-import { Card } from '@/components/ui/card'
-import { Tilt } from '@/components/ui/Tilt'
-import { Opal } from '@/lib/Opal'
+import { Card } from "@/components/ui/card";
+import { Tilt } from "@/components/ui/Tilt";
+import { Opal } from "@/lib/Opal";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: Index,
-})
+});
 
 function Index() {
   return (
     <div className="w-full h-screen max-h-screen flex flex-col">
-      <TopToolbar />
       <div className="flex-1 overflow-hidden">
         <div className="w-full h-full flex items-center justify-center">
           <Card className="rounded-xl p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center relative z-10">
@@ -35,5 +33,5 @@ function Index() {
         </div>
       </div>
     </div>
-  )
+  );
 }
