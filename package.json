@@ -2,6 +2,7 @@
   "name": "webeditor",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev:workerlog": "tsx ./src/workerlog",
     "dev": "vite",
@@ -87,6 +88,7 @@
     "cmdk": "^1.1.1",
     "comlink": "^4.4.2",
     "comlink-async-generator": "^0.0.1",
+    "crypto-browserify": "^3.12.1",
     "date-fns": "^3.6.0",
     "dexie": "^4.0.10",
     "dexie-encrypted": "^2.0.0",
@@ -176,6 +178,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.31.1",
     "vite": "^6.3.5",
-    "vite-plugin-commonjs": "^0.10.4"
+    "vite-plugin-commonjs": "^0.10.4",
+    "vite-plugin-node-polyfills": "^0.24.0"
   }
 }
