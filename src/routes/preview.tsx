@@ -1,9 +1,10 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import "../app/styles.css";
 
-export const Route = createFileRoute('/preview')({
-  component: PreviewLayout,
-})
-
-function PreviewLayout() {
-  return <Outlet />
+function PreviewRootComponent() {
+  return <Outlet />;
 }
+
+export const Route = createFileRoute("/preview")({
+  component: PreviewRootComponent,
+});

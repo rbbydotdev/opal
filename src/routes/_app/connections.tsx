@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 // Import the connections page content once we identify it
-export const Route = createFileRoute("/connections")({
+export const Route = createFileRoute("/_app/connections")({
   component: ConnectionsPage,
 });
 

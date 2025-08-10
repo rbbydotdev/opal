@@ -3,7 +3,6 @@
 import { tanstackRouter } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
 import path, { resolve } from "path";
-import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig, UserConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
@@ -14,7 +13,6 @@ const buildSwConfig: UserConfig = {
       // Whether to polyfill `node:` protocol imports.
       protocolImports: false,
     }),
-    visualizer(), // Add visualizer as the last plugin
   ],
   build: {
     minify: true,
@@ -103,7 +101,6 @@ export default defineConfig(() => {
         // Allow service workers to control the entire site scope
         "Service-Worker-Allowed": "/",
       },
-      hmr: false,
     },
     preview: {
       headers: {

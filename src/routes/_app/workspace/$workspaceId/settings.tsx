@@ -23,7 +23,7 @@ const defaultValues: Partial<WorkspaceFormValues> = {
   workspaceName: "",
 };
 
-export const Route = createFileRoute('/workspace/$workspaceId/settings')({
+export const Route = createFileRoute('/_app/workspace/$workspaceId/settings')({
   component: WorkspaceSettingsPage,
 })
 

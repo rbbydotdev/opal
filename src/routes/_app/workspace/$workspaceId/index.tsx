@@ -14,7 +14,7 @@ import { absPath } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-export const Route = createFileRoute('/workspace/$workspaceId/')({
+export const Route = createFileRoute('/_app/workspace/$workspaceId/')({
   component: WorkspaceIndexPage,
 })
 
