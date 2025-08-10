@@ -51,3 +51,6 @@ playwright-report
 
 dist/**/*
 public/assets/*.js
+
+CLAUDE.md
+.github

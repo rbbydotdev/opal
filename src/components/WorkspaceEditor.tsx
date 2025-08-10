@@ -9,7 +9,6 @@ import { SourceEditor } from "@/components/SourceEditor";
 import { TrashBanner } from "@/components/TrashBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { useReadOnlyMode } from "@/components/useReadOnlyMode";
 import { useCurrentFilepath, useFileContents, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
@@ -106,7 +105,7 @@ export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props 
       editorRef.current?.setMarkdown(newContent ?? "");
     },
   });
-  const [readOnlyMode, _setReadOnly] = useReadOnlyMode();
+  // const [readOnlyMode, _setReadOnly] = useReadOnlyMode();
 
   const { id, path } = useWorkspaceRoute();
   const { mimeType } = useCurrentFilepath();
@@ -131,18 +130,18 @@ export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props 
 
   if (initialContents === null || !currentWorkspace) return null;
   return (
-    <SnapApiPoolProvider max={1}>
-      <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.name}>
-        <ScrollSyncProvider
-          scrollEl={mdxEditorElement as HTMLElement}
-          scrollEmitter={scrollEmitter}
-          sessionId={sessionId}
-        >
-          <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full relative">
+      <SnapApiPoolProvider max={1}>
+        <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.name}>
+          <ScrollSyncProvider
+            scrollEl={mdxEditorElement as HTMLElement}
+            scrollEmitter={scrollEmitter}
+            sessionId={sessionId}
+          >
             <DropCommanderProvider>
               <EditorWithPlugins
                 {...props}
-                readOnly={readOnlyMode}
+                // readOnly={readOnlyMode}
                 mimeType={mimeType}
                 currentWorkspace={currentWorkspace}
                 editorRef={editorRef}
@@ -152,10 +151,10 @@ export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props 
                 contentEditableClassName="max-w-full content-editable prose bg-background"
               />
             </DropCommanderProvider>
-          </div>
-        </ScrollSyncProvider>
-      </HistorySnapDBProvider>
-    </SnapApiPoolProvider>
+          </ScrollSyncProvider>
+        </HistorySnapDBProvider>
+      </SnapApiPoolProvider>
+    </div>
   );
 }
 function EditorWithPlugins(props: ComponentProps<typeof Editor> & { currentWorkspace: Workspace; mimeType: string }) {

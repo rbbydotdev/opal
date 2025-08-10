@@ -61,18 +61,6 @@ export const EditableDir = ({
     }
   }, [isFocused, isEditing, linkRef, treeDir]);
 
-  // this breaks everything and i friggin hate it
-  // useEffect(() => {
-  //   if (isFocused && !isEditing) {
-  //     linkRef.current?.focus();
-  //     //TODO: 'sometimes' on load focus is lost when instead we want it, https://github.com/vercel/next.js/issues/49386
-  //     const timer = setTimeout(() => {
-  //       linkRef.current?.focus();
-  //     }, 500);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [isEditing, isFocused, linkRef]);
-
   return (
     <span
       {...props}

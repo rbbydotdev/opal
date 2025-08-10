@@ -1,20 +1,19 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { WorkspaceView } from "@/components/WorkspaceEditor";
-import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import useFavicon from "@/hooks/useFavicon";
-import { useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-export const Route = createFileRoute('/workspace/$workspaceId/$')({
+export const Route = createFileRoute("/workspace/$workspaceId/$")({
   component: WorkspaceFilePage,
-})
+});
 
 function WorkspaceFilePage() {
-  const { workspaceId } = Route.useParams()
+  const { workspaceId } = Route.useParams();
   const { filePath } = useCurrentFilepath();
   const { currentWorkspace } = useWorkspaceContext();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   useFavicon("/favicon.svg" + "?" + workspaceId, "image/svg+xml");
 
   useEffect(() => {
@@ -28,13 +27,13 @@ function WorkspaceFilePage() {
       void currentWorkspace.tryFirstFileUrl().then((path) => navigate({ to: path }));
     }
   }, [currentWorkspace, filePath, navigate]);
-  
+
   if (!filePath) return null;
-  
+
   return (
     <>
       <SpotlightSearch currentWorkspace={currentWorkspace} />
-      <WorkspaceView currentWorkspace={currentWorkspace} />
+      <WorkspaceView key={filePath + workspaceId} currentWorkspace={currentWorkspace} />
     </>
   );
 }
