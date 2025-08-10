@@ -1,10 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { TopToolbar } from '@/app/(main)/TopToolbar'
+import { createFileRoute } from "@tanstack/react-router";
 
 // Import the connections page content once we identify it
-export const Route = createFileRoute('/connections')({
+export const Route = createFileRoute("/connections")({
   component: ConnectionsPage,
-})
+});
 
 function ConnectionsPage() {
   return (
@@ -15,5 +14,5 @@ function ConnectionsPage() {
         {/* Connections page content will go here */}
       </div>
     </div>
-  )
+  );
 }
