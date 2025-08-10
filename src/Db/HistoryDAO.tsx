@@ -1,5 +1,7 @@
 import { useIframeImagePooledImperitiveWorker } from "@/components/Editor/history/EditViewImage";
 import { ClientDb } from "@/Db/instance";
+import { NullHistoryDAO } from "@/Db/NullHistoryDAO";
+import { useResource } from "@/hooks/useResource";
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
 import Emittery from "emittery";
@@ -56,9 +58,10 @@ export class HistoryDocRecord {
 // }
 // --- Context and Provider for HistorySnapDB ---
 
-type HistorySnapDBContextType = HistoryDAO | null;
+type HistorySnapDBContextType = HistoryStorageInterface | null;
 
-const HistorySnapDBContext = createContext<HistorySnapDBContextType>(null);
+const NULL_HISTORY_DAO = new NullHistoryDAO();
+const HistorySnapDBContext = createContext<HistorySnapDBContextType>(NULL_HISTORY_DAO);
 
 interface HistorySnapDBProviderProps {
   documentId: string | null;
@@ -67,8 +70,29 @@ interface HistorySnapDBProviderProps {
 }
 
 export function HistorySnapDBProvider({ documentId, workspaceId, children }: HistorySnapDBProviderProps) {
-  const historyDB = useMemo(() => new HistoryDAO(), []);
-  useEffect(() => () => historyDB.tearDown(), [historyDB]);
+  const historyDB = useResource<HistoryStorageInterface>(() => new HistoryDAO(), [], NULL_HISTORY_DAO);
+
+  const handleEditPreview = useIframeImagePooledImperitiveWorker({
+    workspaceId,
+  });
+  useEffect(() => {
+    if (documentId && historyDB) {
+      return historyDB.onNewEdit(documentId, (edit) => {
+        handleEditPreview(edit);
+      });
+    }
+  }, [documentId, handleEditPreview, historyDB]);
+
+  return (
+    <HistorySnapDBContext.Provider value={historyDB || NULL_HISTORY_DAO}>{children}</HistorySnapDBContext.Provider>
+  );
+}
+export function HistorySnapDBProvider__old({ documentId, workspaceId, children }: HistorySnapDBProviderProps) {
+  const historyDB = useMemo(() => new HistoryDAO(), [documentId, workspaceId, children]);
+  useEffect(() => {
+    console.log("use effect ran");
+    return () => historyDB.tearDown();
+  }, [historyDB, documentId, workspaceId, children]);
 
   const handleEditPreview = useIframeImagePooledImperitiveWorker({
     workspaceId,
@@ -102,7 +126,7 @@ export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryDAO
   }, [historyDB]);
   return pendingSave;
 }
-export function useSnapHistoryDB(): HistoryDAO {
+export function useSnapHistoryDB(): HistoryStorageInterface {
   const ctx = useContext(HistorySnapDBContext);
   if (!ctx) {
     throw new Error("useSnapHistoryDB must be used within a HistorySnapDBProvider");
@@ -350,10 +374,10 @@ export interface HistoryStorageInterface {
   getEdits(id: string): Promise<HistoryDocRecord[]>;
   getLatestEdit(id: string): Promise<HistoryDocRecord | null>;
   updatePreviewForEditId(edit_id: number, preview: Blob): Promise<void>;
-  onUpdate: (documentId: string, cb: (edits: HistoryDocRecord[]) => void) => void;
-
+  onUpdate: (documentId: string, cb: (edits: HistoryDocRecord[]) => void) => () => void;
+  onNewEdit: (documentId: string, cb: (edit: HistoryDocRecord) => void) => () => void;
+  tearDown(): void;
   getSaveThreshold(documentId: string, newText: string): Promise<number>;
   ready?: Promise<boolean>;
-  tearDown?(): void;
   init?(): void;
 }
