@@ -108,7 +108,7 @@ export function HistorySnapDBProvider__old({ documentId, workspaceId, children }
   return <HistorySnapDBContext.Provider value={historyDB}>{children}</HistorySnapDBContext.Provider>;
 }
 
-export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryDAO }): boolean {
+export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryStorageInterface }): boolean {
   const [pendingSave, setPendingSave] = useState(false);
   useEffect(() => {
     let timeout = null as ReturnType<typeof setTimeout> | null;

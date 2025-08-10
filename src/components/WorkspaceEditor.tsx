@@ -132,7 +132,7 @@ export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props 
   if (initialContents === null || !currentWorkspace) return null;
   return (
     <SnapApiPoolProvider max={1}>
-      <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
+      <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.name}>
         <ScrollSyncProvider
           scrollEl={mdxEditorElement as HTMLElement}
           scrollEmitter={scrollEmitter}

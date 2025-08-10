@@ -15,7 +15,14 @@ async function snapshot(target: HTMLElement) {
             if (img.complete) return resolve(true);
             const onDone = () => resolve(true);
             img.addEventListener("load", onDone, { once: true });
-            img.addEventListener("error", onDone, { once: true });
+            img.addEventListener(
+              "error",
+              (e) => {
+                console.error("Image failed to load:", img.src, e);
+                onDone();
+              },
+              { once: true }
+            );
             setTimeout(onDone, 2000);
           })
       )
