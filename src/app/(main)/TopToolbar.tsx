@@ -1,4 +1,4 @@
-import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
+// import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 
 export function TopToolbar({ children }: { children?: React.ReactNode }) {
   return (
@@ -6,7 +6,7 @@ export function TopToolbar({ children }: { children?: React.ReactNode }) {
       <div className="flex items-center gap-2">
         {children}
         {/* <Link href={`/preview/${workspaceId}/${filePath}`}> */}
-        <LivePreviewButton />
+        {/* <LivePreviewButton /> */}
       </div>
     </div>
   );
