@@ -22,8 +22,8 @@ import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { withSuspense } from "@/lib/hoc/withSuspense";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { ComponentProps, Suspense, use, useMemo, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
@@ -41,7 +41,7 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
 
   const { isImage, isSource, isBin, filePath, inTrash } = useCurrentFilepath();
 
-  const router = useRouter();
+  const navigate = useNavigate();
   // const handleDropFilesEvent = handleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
   if (isImage) {
     return (
@@ -54,7 +54,7 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
               event: e,
               targetNode: RootNode,
             }).then(([filePath]) => {
-              if (filePath) router.push(props.currentWorkspace.resolveFileUrl(filePath));
+              if (filePath) navigate({ to: props.currentWorkspace.resolveFileUrl(filePath) });
             })
           }
         >
@@ -92,7 +92,7 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
         </CardContent>
         <CardFooter className="flex justify-center">
           <Button asChild variant="destructive">
-            <Link href={tryFirstFile}>Sorry!</Link>
+            <Link to={tryFirstFile}>Sorry!</Link>
           </Button>
         </CardFooter>
       </Card>

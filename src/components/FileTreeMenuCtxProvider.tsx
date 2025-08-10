@@ -2,7 +2,7 @@
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";
-import { usePathname } from "next/navigation";
+import { useLocation } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
 
 export const FileTreeMenuCtx = React.createContext<{
@@ -56,9 +56,9 @@ export const FileTreeMenuCtxProvider = ({
   scope?: AbsPath;
   filterRange?: (path: AbsPath) => boolean;
 }) => {
-  const pathname = usePathname();
+  const location = useLocation();
 
-  const { filePath } = Workspace.parseWorkspacePath(pathname);
+  const { filePath } = Workspace.parseWorkspacePath(location.pathname);
   const [dragOver, setDragOver] = useState<TreeNode | null>(null);
   const [draggingNode, setDraggingNode] = useState<TreeNode | null>(null);
   const [draggingNodes, setDraggingNodes] = useState<TreeNode[]>([]);

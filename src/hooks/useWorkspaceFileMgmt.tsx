@@ -21,7 +21,7 @@ import {
 } from "@/lib/paths2";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
 
@@ -37,17 +37,17 @@ function defaultFileContent(path: AbsPath) {
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   const { setFileTreeCtx, selectedRange, resetEditing, focused } = useFileTreeMenuCtx();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const newFile = useCallback(
     async (path: AbsPath, content = "", options: { redirect?: boolean } = {}) => {
       const result = await currentWorkspace.newFile(dirname(path), basename(path), content);
       if (options.redirect) {
-        router.push(currentWorkspace.resolveFileUrl(result));
+        navigate({ to: currentWorkspace.resolveFileUrl(result) });
       }
       return result;
     },
-    [currentWorkspace, router]
+    [currentWorkspace, navigate]
   );
   const newDir = useCallback(
     async (path: AbsPath) => {

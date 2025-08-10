@@ -1,9 +1,13 @@
-"use client";
-import dynamic from "next/dynamic";
+import React, { Suspense, lazy } from "react";
 
 //@ts-expect-error :TS7016
-const FPSStatsComponent = dynamic(() => import("react-fps-stats"), { ssr: false });
+const FPSStatsComponent = lazy(() => import("react-fps-stats"));
+
 export function FPSStats() {
-  if (process.env.NODE_ENV === "production") return null;
-  return <FPSStatsComponent />;
+  if (import.meta.env.PROD) return null;
+  return (
+    <Suspense fallback={null}>
+      <FPSStatsComponent />
+    </Suspense>
+  );
 }

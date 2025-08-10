@@ -30,7 +30,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { useWorkspaceRepo, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
 function LatestInfo({ info }: { info: WorkspaceRepoType }) {
@@ -221,8 +221,8 @@ function SyncPullPushButtons() {
 
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
-  const router = useRouter();
-  const { repo, playbook, info } = useWorkspaceRepo(currentWorkspace, () => router.push(currentWorkspace.href));
+  const navigate = useNavigate();
+  const { repo, playbook, info } = useWorkspaceRepo(currentWorkspace, () => navigate({ to: currentWorkspace.href }));
   // const { commit, isPending } = useUIGitPlaybook(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();

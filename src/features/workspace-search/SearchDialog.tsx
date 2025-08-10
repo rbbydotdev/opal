@@ -19,7 +19,7 @@ import { useWorkspaceSearchResults } from "@/features/workspace-search/useWorksp
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
 import { ChevronRight, FileTextIcon, Loader, Search, SearchXIcon, X } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const MAX_MATCHES_SHOWN = 5;
@@ -223,7 +223,7 @@ function SearchResults({
           />
           <Link
             onClick={onNavigate}
-            href={joinPath(WorkspaceDAO.rootRoute, workspaceName)}
+            to={joinPath(WorkspaceDAO.rootRoute, workspaceName)}
             className="font-mono uppercase text-xs "
           >
             {workspaceName}
@@ -269,7 +269,7 @@ function SearchFile({
       <Link
         onClick={onNavigate}
         title={`${workspaceName}/${filePath}`}
-        href={href}
+        to={href}
         className="w-full flex items-center border rounded-t text-xs font-mono h-8 sticky top-0 z-10 bg-accent hover:bg-primary-foreground"
       >
         <div className="ml-1 flex items-center justify-center h-full gap-2 ">

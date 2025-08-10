@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { absPath, joinPath } from "@/lib/paths2";
 import { Zap } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 
 export function LivePreviewButton({ disabled }: { disabled?: boolean }) {
   const { id: workspaceId, path: filePath } = useWorkspaceRoute();
@@ -15,7 +15,7 @@ export function LivePreviewButton({ disabled }: { disabled?: boolean }) {
   ) : (
     <Button size="sm" className="pointer-events-auto" asChild>
       <Link
-        href={joinPath(absPath("preview"), workspaceId!, filePath! + `?${sessionIdParam({ sessionId: sessionId! })}`)}
+        to={joinPath(absPath("preview"), workspaceId!, filePath! + `?${sessionIdParam({ sessionId: sessionId! })}`)}
         target="_blank"
       >
         Live Preview <Zap className="!text-primary-foreground" />

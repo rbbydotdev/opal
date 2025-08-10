@@ -1,6 +1,6 @@
 import { Channel } from "@/lib/channel";
 import { nanoid } from "nanoid";
-import { useSearchParams } from "next/navigation";
+import { useSearch } from "@tanstack/react-router";
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef } from "react";
 
 // --- Types ---
@@ -57,8 +57,8 @@ export function sessionIdParam({ sessionId }: { sessionId: string }) {
 }
 
 export function useScrollChannelFromSearchParams() {
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get("sessionId");
+  const search = useSearch({ from: '__root__' });
+  const sessionId = search?.sessionId || null;
   useEffect(() => {
     if (!sessionId) {
       console.error("No sessionId provided in search params, using default sessionId.");

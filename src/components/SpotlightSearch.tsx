@@ -9,7 +9,7 @@ import clsx from "clsx";
 import fuzzysort from "fuzzysort";
 import { FileTextIcon } from "lucide-react";
 import mime from "mime-types";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState } from "react";
 import { basename } from "../lib/paths2";
 
@@ -31,7 +31,7 @@ const SpotlightSearchItem = forwardRef<
       <Link
         id={id}
         ref={ref}
-        href={href}
+        to={href}
         role="menuitem"
         tabIndex={isActive ? 0 : -1} // Roving tabindex implementation
         onClick={onClick}
@@ -232,7 +232,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
                 id={`spotlight-item-${index}`}
                 isActive={index === activeIndex}
                 onClick={handleClose}
-                href={joinPath(currentWorkspace.href, file.href)}
+                to={joinPath(currentWorkspace.href, file.href)}
                 title={file.element}
               />
             );

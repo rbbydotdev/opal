@@ -10,7 +10,7 @@ import { AbsPath, equals, isImage, prefix, relPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import clsx from "clsx";
 import { FileCode2, FileText } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -68,7 +68,7 @@ export const EditableFile = ({
           active={equals(fullPath, workspaceRoute.path)}
           draggable
           onDragStart={onDragStart}
-          href={currentWorkspace.resolveFileUrl(fullPath)}
+          to={currentWorkspace.resolveFileUrl(fullPath)}
           className={cn(
             className,
             { "bg-sidebar-accent font-bold": isSelectedRange || isFocused },

@@ -47,3 +47,6 @@ public/swe-worker*
 .claude/settings.local.json
 playwright-report/index.html
 playwright-report
+
+
+dist/**/*

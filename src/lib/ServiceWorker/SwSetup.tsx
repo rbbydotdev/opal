@@ -1,4 +1,4 @@
-// import { usePathname } from "next/navigation";
+// import { useLocation } from "@tanstack/react-router";
 import { useLayoutEffect, useState } from "react";
 
 //will delay the loading of the page until the service worker is ready

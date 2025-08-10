@@ -8,7 +8,7 @@ import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
-import { usePathname, useRouter } from "next/navigation";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export const NULL_WORKSPACE = new NullWorkspace();
@@ -51,7 +51,7 @@ export function useFileContents({
   const { path: filePath } = useWorkspaceRoute();
   const [initialContents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
   const [error, setError] = useState<null | Error>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -92,7 +92,7 @@ export function useFileContents({
         }
       }
     })();
-  }, [currentWorkspace, filePath, router]);
+  }, [currentWorkspace, filePath, navigate]);
 
   useEffect(() => {
     //Mount Remote Listener
@@ -156,22 +156,22 @@ export function useCurrentFilepath() {
 }
 
 export function useWorkspaceRoute() {
-  const pathname = usePathname();
+  const location = useLocation();
   return (
     useMemo(() => {
-      if (!pathname)
+      if (!location.pathname)
         return {
           id: null,
           path: null,
         };
-      const { workspaceId, filePath } = Workspace.parseWorkspacePath(pathname);
+      const { workspaceId, filePath } = Workspace.parseWorkspacePath(location.pathname);
       if (workspaceId && workspaceId !== "new") {
         return {
           id: workspaceId ?? null,
           path: filePath ?? null,
         };
       }
-    }, [pathname]) ?? {
+    }, [location.pathname]) ?? {
       id: null,
       path: null,
     }

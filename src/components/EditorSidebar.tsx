@@ -12,7 +12,7 @@ import {
 import { CurrentWorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { Opal } from "@/lib/Opal";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 export function EditorSidebar({
@@ -27,7 +27,7 @@ export function EditorSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton className="_cursor-pointer" size="lg" asChild>
-              <Link href={`/workspace/${currentWorkspace.name}`} className="flex items-center w-full">
+              <Link to={`/workspace/${currentWorkspace.name}`} className="flex items-center w-full">
                 <div className="flex items-center gap-2 border-2 border-secondary-foreground rounded p-2 shadow-md w-full">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
                     <CurrentWorkspaceIcon size={4} scale={7} />
