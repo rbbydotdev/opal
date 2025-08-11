@@ -62,9 +62,3 @@ export function useWorkspaceRepo(workspace: Workspace, _onPathNoExists?: (path: 
 }
 
 export type WorkspaceRepoType = DeepNonNullable<RepoInfoType, "currentBranch">;
-// export function useGitRepoFromDisk(disk: Disk): Repo {
-//   return useMemo(() => disk.NewGitRepo(), [disk]);
-// }
-// export function useGitRepo(fs: CommonFileSystem, dir: AbsPath = absPath("/"), branch: string = "main"): Repo {
-//   return useMemo(() => new Repo({ fs, dir, defaultBranch: branch }), [branch, dir, fs]);
-// }

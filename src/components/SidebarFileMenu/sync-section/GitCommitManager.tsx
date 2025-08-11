@@ -1,3 +1,4 @@
+import { useConfirm } from "@/components/Confirm";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -6,9 +7,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitConfirm, useGitConfirmCmd } from "@/features/git-repo/GitConfirm";
-import { GitPlaybook } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { Ellipsis, GitCommit, RotateCcw } from "lucide-react";
 import { useState } from "react";
@@ -28,28 +26,25 @@ export function GitCommitManager({
   refType: "branch" | "commit";
   currentCommit?: string;
 }) {
-  const { cmdRef, open: openConfirm } = useGitConfirmCmd();
-  const [open, setOpen] = useState(false);
-  // const cmdRef = useState<{ show: (text?: string) => void }>({ show: () => {} });
-
+  const { open: confirmOpen } = useConfirm();
   const resetToHeadHandler = () => {
-    openConfirm(
+    confirmOpen(
       resetToHead,
       "Reset to HEAD",
       "Are you sure you want to reset to HEAD? This will discard all changes made since the last commit."
     );
   };
   const resetToOrigHeadHandler = () => {
-    openConfirm(
+    confirmOpen(
       resetToOrigHead,
       "Reset to Previous Branch",
       "Are you sure you want to reset to the previous branch? This will discard all changes made since the last commit."
     );
   };
   /* select commit */
+  const [open, setOpen] = useState(false);
   return (
     <>
-      <GitConfirm cmdRef={cmdRef} />
       <CommitSelect
         commits={commits}
         value={currentCommit || commits[0]?.oid || ""}
@@ -62,11 +57,7 @@ export function GitCommitManager({
             <RotateCcw />
             Reset to HEAD
           </DropdownMenuItem>
-          <DropdownMenuItem
-            // disabled={refType === "branch"}
-            onClick={resetToOrigHeadHandler}
-            onSelect={resetToOrigHeadHandler}
-          >
+          <DropdownMenuItem onClick={resetToOrigHeadHandler} onSelect={resetToOrigHeadHandler}>
             <RotateCcw />
             Reset to Previous Branch
           </DropdownMenuItem>
@@ -151,41 +142,6 @@ function CommitSelect({
         </Select>
       </div>
       <div>{children}</div>
-    </div>
-  );
-}
-
-export function CommitManagerSection({
-  playbook,
-  commits = [],
-  currentCommit,
-  commitRef,
-  refType,
-}: {
-  playbook: GitPlaybook;
-  commits?: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
-  currentCommit?: string;
-  commitRef: React.RefObject<{ show: (text?: string) => void }>;
-  refType: "branch" | "commit";
-}) {
-  if (!commits || commits.length === 0) return null;
-
-  return (
-    <div className="px-4 w-full flex justify-center ">
-      <div className="flex flex-col items-center w-full">
-        <TooltipToast cmdRef={commitRef} durationMs={1000} sideOffset={0} />
-        <GitCommitManager
-          refType={refType}
-          commits={commits}
-          currentCommit={currentCommit}
-          resetToHead={playbook.resetToHead}
-          resetToOrigHead={playbook.resetToPrevBranch}
-          setCurrentCommit={async (commitOid) => {
-            await playbook.switchCommit(commitOid);
-            //  commitRef.current?.show("switched to commit");
-          }}
-        />
-      </div>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitPlaybook, Repo } from "@/features/git-repo/GitRepo";
+import { GitPlaybook, Repo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ellipsis, GitBranchIcon, GitPullRequestDraft, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
@@ -270,11 +270,13 @@ function BranchSelect({
 
 export function BranchManagerSection({
   repo,
+  info,
   currentGitRef,
   playbook,
   branches,
   branchRef,
 }: {
+  info: RepoInfoType;
   repo: Repo | Remote<Repo>;
   playbook: GitPlaybook;
   currentGitRef: GitRef | null;
@@ -282,28 +284,38 @@ export function BranchManagerSection({
   branchRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {
   if (!branches) return null;
+  const addGitBranch = (baseRef: GitRef, branch: GitBranchFormValue) => {
+    // For branches, use the branch name as base
+    // For commits, use the commit hash as base
+    void repo.addGitBranch({ branchName: branch.branch, symbolicRef: baseRef.value, checkout: true });
+    branchRef.current.show("branch added");
+  };
+  const replaceGitBranch = (remoteName: GitBranchFormValue, remote: GitBranchFormValue) => {
+    void playbook.replaceGitBranch(remoteName.branch, remote.branch);
+    branchRef.current.show("branch replaced");
+  };
+  const deleteGitBranch = (remoteName: string) => {
+    void repo.deleteGitBranch(remoteName);
+    branchRef.current.show("branch deleted");
+  };
+  const setCurrentBranch = (branch: string) => {
+    if (branch === currentGitRef?.value) return;
+    if (info.hasChanges) {
+    }
+    void playbook.switchBranch(branch);
+    branchRef.current.show(`switched to ${branch}`);
+  };
   return (
     <div className="px-4 w-full flex justify-center ">
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
           currentGitRef={currentGitRef}
-          setCurrentBranch={(branch) => playbook.switchBranch(branch)}
+          setCurrentBranch={setCurrentBranch}
           branches={branches}
-          replaceGitBranch={(remoteName, remote) => {
-            void playbook.replaceGitBranch(remoteName.branch, remote.branch);
-            branchRef.current.show("branch replaced");
-          }}
-          addGitBranch={(baseRef, remoteName) => {
-            // For branches, use the branch name as base
-            // For commits, use the commit hash as base
-            void repo.addGitBranch({ branchName: remoteName.branch, symbolicRef: baseRef.value, checkout: true });
-            branchRef.current.show("branch added");
-          }}
-          deleteGitBranch={(remoteName) => {
-            void repo.deleteGitBranch(remoteName);
-            branchRef.current.show("branch deleted");
-          }}
+          replaceGitBranch={replaceGitBranch}
+          addGitBranch={addGitBranch}
+          deleteGitBranch={deleteGitBranch}
         />
       </div>
     </div>

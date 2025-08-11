@@ -35,7 +35,7 @@ export function NewWorkspaceDialog({
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open) {
-      navigate({ to: -1 });
+      navigate({ to: "/" });
     }
   };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -48,7 +48,7 @@ export function NewWorkspaceDialog({
     setPending(false);
     setIsOpen(false);
 
-    navigate({ to: workspace.home() });
+    navigate({ to: String(workspace.home()) });
   };
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>

@@ -1,5 +1,5 @@
-import { createOAuthDeviceAuth } from "@octokit/auth-oauth-device";
-import { OAuthAppAuthentication, OnVerificationCallback } from "@octokit/auth-oauth-device/dist-types/types";
+import { createOAuthDeviceAuth, OAuthAppAuthentication } from "@octokit/auth-oauth-device";
+import { OnVerificationCallback } from "../../../node_modules/@octokit/auth-oauth-device/dist-types/types";
 // GithubVarer{
 //    device_code: "3584d83530557fdd1f46af8289938c8ef79f9dc5",
 //    user_code: "WDJB-MJHT",

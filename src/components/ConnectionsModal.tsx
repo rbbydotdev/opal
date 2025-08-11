@@ -16,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link } from "@tanstack/react-router";
 
 type ConnectionType = {
   id: string;
@@ -364,14 +363,14 @@ function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: Conn
       {Boolean(pin) && (
         <div className="rounded-md bg-muted p-4">
           <p className="text-sm mb-2">
-            <Link
+            <a
               className="hover:text-bold underline"
               href="https://github.com/login/device"
               target="_blank"
               rel="noopener noreferrer"
             >
               Navigate to {selectedConnection.name.split(" ")[0]}
-            </Link>{" "}
+            </a>{" "}
             and enter the device PIN below to authenticate.
           </p>
           <div className="flex justify-end gap-2 mt-4">
@@ -416,16 +415,16 @@ function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: Conn
         {Boolean(pin) && (
           <>
             <Button asChild type="button" className="flex items-center gap-2  hidden" variant={"outline"}>
-              <Link href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
                 Retrieve Auth
-              </Link>
+              </a>
             </Button>
             <Button asChild type="button" className="flex items-center gap-2">
-              <Link href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
                 {selectedConnection.icon}
                 Go to {selectedConnection.name.split(" ")[0]}
                 <ExternalLink className="ml-1 h-4 w-4" />
-              </Link>
+              </a>
             </Button>
           </>
         )}
