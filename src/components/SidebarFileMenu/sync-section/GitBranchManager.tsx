@@ -9,8 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TooltipToast } from "@/components/ui/TooltipToast";
 import { GitPlaybook, Repo } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Ellipsis, GitBranchIcon, GitPullRequestDraft, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { gitBranchSchema } from "@/components/SidebarFileMenu/sync-section/gitBranchSchema";
+import { Input } from "@/components/ui/input";
+import { Remote } from "comlink";
 
 export type GitRefType = "branch" | "commit";
 
@@ -304,37 +311,6 @@ export function BranchManagerSection({
 }
 
 ///------------
-import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-import { Input } from "@/components/ui/input";
-import { Remote } from "comlink";
-
-export const gitRefSchema = z.object({
-  value: z
-    .string()
-    .min(1, "Name is required")
-    .max(100, "Name is too long")
-    .regex(
-      /^(?!\/|.*([/.]\.|\/\/|@\{|\\))[^\x00-\x1f\x7f ~^:?*[]+(?<!\.lock|\/|\.| )$/,
-      "Invalid name: must not start/end with '/', contain spaces, or special characters"
-    ),
-  type: z.enum(["branch", "commit"]),
-});
-
-// Keep backward compatibility
-export const gitBranchSchema = z.object({
-  branch: z
-    .string()
-    .min(1, "Branch name is required")
-    .max(100, "Branch name is too long")
-    .regex(
-      /^(?!\/|.*([/.]\.|\/\/|@\{|\\))[^\x00-\x1f\x7f ~^:?*[]+(?<!\.lock|\/|\.| )$/,
-      "Invalid branch name: must not start/end with '/', contain spaces, or special characters"
-    ),
-});
 
 // type GitRefFormValue = z.infer<typeof gitRefSchema>;
 type GitBranchFormValue = z.infer<typeof gitBranchSchema>;
