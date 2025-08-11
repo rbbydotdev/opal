@@ -660,13 +660,15 @@ export class Repo {
       if (!authRecord) return undefined;
 
       if (isApiAuth(authRecord)) {
+        const { apiKey, apiSecret } = authRecord.data;
         return () => ({
-          username: authRecord.apiKey,
-          password: authRecord.apiSecret || authRecord.apiKey,
+          username: apiKey,
+          password: apiSecret || apiKey, //TODO i think wrong!!
         });
       } else if (isOAuthAuth(authRecord)) {
+        const { accessToken } = authRecord.data;
         return () => ({
-          username: authRecord.accessToken,
+          username: accessToken,
           password: "", // OAuth typically only needs the token as username
         });
       }
@@ -855,7 +857,6 @@ export class GitPlaybook {
   ) {}
 
   switchBranch = async (branchName: string) => {
-    console.log("Switching branch to:", branchName);
     if ((await this.repo.getCurrentBranch()) === branchName) return false;
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
@@ -929,6 +930,9 @@ export class GitPlaybook {
     const currentRef = await this.repo.currentRef();
     const newBranchName = `${prevBranch.replace("refs/heads/", "")}-${currentRef.slice(0, 6)}`;
     await this.repo.addGitBranch({ branchName: newBranchName, symbolicRef: currentRef, checkout: true });
+    await this.addAllCommit({
+      message: SYSTEM_COMMITS.SWITCH_BRANCH,
+    });
     return newBranchName;
   };
 

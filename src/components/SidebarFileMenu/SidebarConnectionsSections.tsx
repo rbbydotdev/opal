@@ -31,7 +31,7 @@ type ConnectionType = {
 };
 
 function ConnectionManager() {
-  const { remoteAuths, loading, deleteRemoteAuth, refetch } = useRemoteAuths();
+  const { remoteAuths, deleteRemoteAuth, refetch } = useRemoteAuths();
   const [editingConnection, setEditingConnection] = useState<ConnectionType | null>(null);
 
   const handleEdit = (connection: (typeof remoteAuths)[0]) => {
@@ -57,7 +57,7 @@ function ConnectionManager() {
   return (
     <>
       {/* Add Connection Modal */}
-      <ConnectionsModal onSuccess={refetch}>
+      <ConnectionsModal>
         <SidebarGroupAction className="top-1.5 p-3">
           <Plus /> <span className="sr-only">Add Connection</span>
         </SidebarGroupAction>
@@ -81,56 +81,50 @@ function ConnectionManager() {
 
       <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
         <SidebarMenu>
-          {loading && (
-            <div className="px-4 py-2">
-              <span className="text-sm text-muted-foreground">Loading...</span>
-            </div>
-          )}
-          {!loading && remoteAuths.length === 0 && (
+          {remoteAuths.length === 0 && (
             <div className="px-4 py-2">
               <EmptySidebarLabel label="no connections" />
             </div>
           )}
-          {!loading &&
-            remoteAuths.map((connection) => (
-              <SidebarMenuItem key={connection.guid}>
-                <div className="group flex items-center pr-1">
-                  <SidebarMenuButton className="flex-1 min-w-0 pl-8">
-                    <div className="flex items-center flex-1 min-w-0 gap-1">
-                      <ConnectionIcon authType={connection.authType} className="flex-shrink-0" />
-                      <span className="font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">
-                        {connection.name}
-                      </span>
-                      <span className="flex-shrink-0">{"/"}</span>
-                      <span className="text-xs text-muted-foreground capitalize font-mono overflow-hidden text-ellipsis whitespace-nowrap">
-                        {connection.authType}{" "}
-                      </span>
-                    </div>
-                  </SidebarMenuButton>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-4.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(connection)}>
-                        <Pencil className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => deleteRemoteAuth(connection.guid)}>
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </SidebarMenuItem>
-            ))}
+          {remoteAuths.map((connection) => (
+            <SidebarMenuItem key={connection.guid}>
+              <div className="group flex items-center pr-1">
+                <SidebarMenuButton className="flex-1 min-w-0 pl-8">
+                  <div className="flex items-center flex-1 min-w-0 gap-1">
+                    <ConnectionIcon authType={connection.authType} className="flex-shrink-0" />
+                    <span className="font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">
+                      {connection.name}
+                    </span>
+                    <span className="flex-shrink-0">{"/"}</span>
+                    <span className="text-xs text-muted-foreground capitalize font-mono overflow-hidden text-ellipsis whitespace-nowrap">
+                      {connection.authType}{" "}
+                    </span>
+                  </div>
+                </SidebarMenuButton>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-4.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleEdit(connection)}>
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => deleteRemoteAuth(connection.guid)}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </CollapsibleContent>
     </>

@@ -1,5 +1,5 @@
 import { HistoryDocRecord } from "@/Db/HistoryDAO";
-import { RemoteAuthCompoundType } from "@/Db/RemoteAuth";
+import { RemoteAuthRecord } from "@/Db/RemoteAuth";
 import { SettingsRecord } from "@/Db/SettingsRecord";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
@@ -8,7 +8,7 @@ import { WorkspaceRecord } from "./WorkspaceRecord";
 
 export class ClientIndexedDb extends Dexie {
   workspaces!: EntityTable<WorkspaceRecord, "guid">;
-  remoteAuths!: EntityTable<RemoteAuthCompoundType, "guid">;
+  remoteAuths!: EntityTable<RemoteAuthRecord, "guid">;
   settings!: EntityTable<SettingsRecord, "name">;
   disks!: EntityTable<DiskRecord, "guid">;
 

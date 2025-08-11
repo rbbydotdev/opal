@@ -2,6 +2,9 @@
 import { FlatCompat } from "@eslint/eslintrc";
 import typescriptEslintPlugin from "@typescript-eslint/eslint-plugin";
 import typescriptEslintParser from "@typescript-eslint/parser";
+import importPlugin from "eslint-plugin-import";
+import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
+import reactPlugin from "eslint-plugin-react";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -13,7 +16,7 @@ const compat = new FlatCompat({
 });
 
 const config = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...compat.extends("plugin:react/recommended", "plugin:jsx-a11y/recommended", "plugin:import/recommended"),
   {
     files: ["**/*.ts", "**/*.tsx", "*.ts"],
     languageOptions: {
@@ -24,11 +27,13 @@ const config = [
     },
     plugins: {
       "@typescript-eslint": typescriptEslintPlugin,
+      react: reactPlugin,
+      "jsx-a11y": jsxA11yPlugin,
+      import: importPlugin,
     },
     rules: {
       "react-hooks/exhaustive-deps": "warn",
       "@typescript-eslint/no-floating-promises": "error",
-      "@next/next/no-img-element": "off",
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -42,6 +47,10 @@ const config = [
           ignoreRestSiblings: true,
         },
       ],
+      // Example: enforce alt text on images
+      "jsx-a11y/alt-text": "error",
+      // Example: enforce valid anchor tags
+      "jsx-a11y/anchor-is-valid": "error",
     },
   },
 ];

@@ -1,5 +1,6 @@
 import { ClientDb } from "@/Db/instance";
-import { useEffect, useState } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { useState } from "react";
 
 export interface RemoteAuthOption {
   guid: string;
@@ -8,49 +9,33 @@ export interface RemoteAuthOption {
 }
 
 export function useRemoteAuths() {
-  const [remoteAuths, setRemoteAuths] = useState<RemoteAuthOption[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchRemoteAuths = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const auths = await ClientDb.remoteAuths.toArray();
-      const authOptions: RemoteAuthOption[] = auths.map((auth) => ({
-        //does not include secrets
-        guid: auth.guid,
-        name: auth.tag,
-        authType: auth.authType,
-      }));
-
-      setRemoteAuths(authOptions);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch remote auths");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const remoteAuths = useLiveQuery(
+    () =>
+      ClientDb.remoteAuths.toArray().then((remoteAuths) => {
+        return remoteAuths.map((ra) => ({
+          guid: ra.guid,
+          name: ra.tag,
+          authType: ra.authType,
+        }));
+      }),
+    [],
+    []
+  );
 
   const deleteRemoteAuth = async (id: string) => {
     try {
       await ClientDb.remoteAuths.delete(id);
-      await fetchRemoteAuths(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete remote auth");
     }
   };
 
-  useEffect(() => {
-    fetchRemoteAuths();
-  }, []);
-
   return {
     remoteAuths,
-    loading,
+    loading: false,
     error,
-    refetch: fetchRemoteAuths,
+    refetch: () => {},
     deleteRemoteAuth,
   };
 }
