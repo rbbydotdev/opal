@@ -612,17 +612,13 @@ export class Workspace {
     return unsub;
   }
 
-  // NewRepo(_onPathNoExists?: (path: AbsPath) => void): Repo {
-  //   return Repo.FromDisk(this.disk, `${this.id}/repo`);
-  // }
-
   getRemoteGitRepos() {
     return this.remoteAuths ?? [];
   }
 
-  //Not used, since we use web worker
   async RepoWorker() {
-    const worker = new Worker(new URL("/src/workers/RepoWorker/repo.ww.ts", import.meta.url), { type: "module" });
+    // const worker = new Worker(new URL("/src/workers/RepoWorker/repo.ww.ts", import.meta.url), { type: "module" });
+    const worker = new Worker(new URL("/repo.ww.js", import.meta.url), { type: "module" });
     const RepoApi = Comlink.wrap<typeof Repo>(worker);
     return {
       worker,
