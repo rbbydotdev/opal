@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitPlaybook, Repo, RepoInfoType } from "@/features/git-repo/GitRepo";
+import { GitPlaybook, Repo, RepoInfoType, SYSTEM_COMMITS } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ellipsis, GitBranchIcon, GitPullRequestDraft, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
@@ -15,6 +15,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useConfirm } from "@/components/Confirm";
 import { gitBranchSchema } from "@/components/SidebarFileMenu/sync-section/gitBranchSchema";
 import { Input } from "@/components/ui/input";
 import { Remote } from "comlink";
@@ -283,6 +284,7 @@ export function BranchManagerSection({
   branches: string[];
   branchRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {
+  const { open: openConfirm } = useConfirm();
   if (!branches) return null;
   const addGitBranch = (baseRef: GitRef, branch: GitBranchFormValue) => {
     // For branches, use the branch name as base
@@ -298,12 +300,19 @@ export function BranchManagerSection({
     void repo.deleteGitBranch(remoteName);
     branchRef.current.show("branch deleted");
   };
-  const setCurrentBranch = (branch: string) => {
+  const setCurrentBranch = async (branch: string) => {
     if (branch === currentGitRef?.value) return;
-    if (info.hasChanges) {
+    if (info.hasChanges && currentGitRef?.type === "commit") {
+      const _result = await openConfirm(
+        playbook.newBranchFromCurrentOrphan,
+        "Uncommitted Changes",
+        "You have uncommitted changes on an orphaned commit. Save as new branch?"
+      );
+      await playbook.addAllCommit({
+        message: SYSTEM_COMMITS.SWITCH_BRANCH,
+      });
     }
-    void playbook.switchBranch(branch);
-    branchRef.current.show(`switched to ${branch}`);
+    await playbook.switchBranch(branch);
   };
   return (
     <div className="px-4 w-full flex justify-center ">

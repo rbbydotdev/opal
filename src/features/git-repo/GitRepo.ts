@@ -1,4 +1,5 @@
 import { Disk, DiskJType, NullDisk } from "@/Db/Disk";
+import { ClientDb } from "@/Db/instance";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { deepEqual } from "@/lib/deepEqual";
@@ -10,8 +11,6 @@ import * as Comlink from "comlink";
 import Emittery from "emittery";
 import git, { AuthCallback } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
-import { ClientDb } from "@/Db/instance";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 //git remote is different from IRemote as its
 //more so just a Git remote as it appears in Git
 //
@@ -581,6 +580,7 @@ export class Repo {
       dir: this.dir,
     });
     const uniqueBranchName = getUniqueSlug(branchName, branches);
+    console.log("Creating new branch:", uniqueBranchName, "from", symbolicRef);
     await this.git.branch({
       fs: this.fs,
       dir: this.dir,
@@ -717,9 +717,18 @@ export class Repo {
     }
   };
 
+  currentRef = async (): Promise<string> => {
+    await this.mustBeInitialized();
+    return git.resolveRef({
+      fs: this.fs,
+      dir: this.dir,
+      ref: "HEAD",
+    });
+  };
+
   currentBranch = async ({ fullname = false }: { fullname: boolean }): Promise<string | void> => {
     await this.mustBeInitialized();
-    return await this.git.currentBranch({
+    return this.git.currentBranch({
       fs: this.fs,
       dir: this.dir,
       fullname,
@@ -774,7 +783,7 @@ export class Repo {
   };
 }
 
-const SYSTEM_COMMITS = {
+export const SYSTEM_COMMITS = {
   COMMIT: "opal@COMMIT",
   SWITCH_BRANCH: "opal@SWITCH_BRANCH",
   SWITCH_COMMIT: "opal@SWITCH_COMMIT",
@@ -838,9 +847,13 @@ export class RepoWithRemote extends Repo {
 export class GitPlaybook {
   //should probably dep inject shared mutex from somewhere rather than relying on repo's
   //rather should share mutex
-  constructor(private repo: Repo | Comlink.Remote<Repo>, private mutex = new Mutex()) {}
+  constructor(
+    private repo: Repo | Comlink.Remote<Repo>,
+    private mutex = new Mutex()
+  ) {}
 
   switchBranch = async (branchName: string) => {
+    console.log("Switching branch to:", branchName);
     if ((await this.repo.getCurrentBranch()) === branchName) return false;
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
@@ -892,6 +905,7 @@ export class GitPlaybook {
   }) {
     await this.repo.mustBeInitialized();
     if (!allowEmpty && !(await this.repo.hasChanges())) {
+      console.log("No changes to commit, skipping commit.");
       return false;
     }
     const statusMatrix = await this.repo.statusMatrix();
@@ -907,6 +921,14 @@ export class GitPlaybook {
     });
     return true;
   }
+
+  newBranchFromCurrentOrphan = async () => {
+    const prevBranch = (await this.repo.getPrevBranch()) ?? "unknown";
+    const currentRef = await this.repo.currentRef();
+    const newBranchName = `${prevBranch.replace("refs/heads/", "")}-${currentRef.slice(0, 6)}`;
+    await this.repo.addGitBranch({ branchName: newBranchName, symbolicRef: currentRef, checkout: true });
+    return newBranchName;
+  };
 
   resetToPrevBranch = async () => {
     const prevBranch = await this.repo.getPrevBranch();

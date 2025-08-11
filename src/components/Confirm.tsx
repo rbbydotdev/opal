@@ -12,7 +12,7 @@ import {
 import React, { createContext, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 type ConfirmContextType = {
-  open: (cb: () => void, title: string, description: string) => void;
+  open: <U extends () => unknown>(cb: U, title: string, description: string) => Promise<ReturnType<U>>;
 };
 
 const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
@@ -34,11 +34,16 @@ export function useConfirm() {
   return ctx;
 }
 
-export type ConfirmOpen = (cb: () => void, title: string, description: string) => void;
+export type ConfirmOpen<T extends unknown, U extends () => T> = U;
 export function useConfirmCmd() {
-  const cmdRef = useRef<{ open: ConfirmOpen }>({ open: () => {} });
+  const cmdRef = useRef<{
+    open: <U extends () => unknown>(cb: U, title: string, description: string) => Promise<ReturnType<U>>;
+  }>({
+    open: async () => undefined as any,
+  });
   return {
-    open: (cb: () => void, title: string, description: string) => cmdRef.current.open(cb, title, description),
+    open: <U extends () => unknown>(cb: U, title: string, description: string) =>
+      cmdRef.current.open(cb, title, description),
     cmdRef,
   };
 }
@@ -47,23 +52,27 @@ export function Confirm({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{
-    open: (cb: () => void, title: string, description: string) => void;
+    open: (cb: <T extends unknown>() => T, title: string, description: string) => void;
   }>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const deferredPromiseRef = useRef<PromiseWithResolvers<unknown> | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const openHandlerCb = useRef<() => void | null>(null);
+  const openHandlerCb = useRef<((resolve: "ok" | "cancel") => Promise<unknown>) | null>(null);
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    await openHandlerCb.current?.("cancel");
     setIsOpen(false);
     openHandlerCb.current = null;
+    deferredPromiseRef.current = null;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    await openHandlerCb.current?.("ok");
     setIsOpen(false);
-    openHandlerCb.current?.();
     openHandlerCb.current = null;
+    deferredPromiseRef.current = null;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -75,15 +84,29 @@ export function Confirm({
   useEffect(() => {
     return () => {
       openHandlerCb.current = null;
+      deferredPromiseRef.current = null;
     };
   }, []);
 
   useImperativeHandle(cmdRef, () => ({
-    open: (cb: () => void, title: string, description: string) => {
+    open: (cb: <T>() => T, title: string, description: string) => {
+      deferredPromiseRef.current = Promise.withResolvers();
       setTitle(title);
       setDescription(description);
       setIsOpen(true);
-      openHandlerCb.current = cb;
+      openHandlerCb.current = (okOrCancel) => {
+        try {
+          if (okOrCancel === "ok") {
+            deferredPromiseRef.current?.resolve(cb());
+          }
+          if (okOrCancel === "cancel") {
+            deferredPromiseRef.current?.resolve(null);
+          }
+        } catch (error) {
+          deferredPromiseRef.current?.reject(error);
+        }
+      };
+      return deferredPromiseRef.current.promise as Promise<ReturnType<typeof cb>>;
     },
   }));
 
