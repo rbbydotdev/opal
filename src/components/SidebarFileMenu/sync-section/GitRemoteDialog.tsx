@@ -166,6 +166,7 @@ export function GitRemoteDialog({
               mode={"add"}
               key={connModalKeyRef.current}
               onSuccess={(rad) => {
+                console.log(rad);
                 resetConnModal();
                 resetAuthSelect();
                 form.setValue("authId", rad?.guid ?? "");
