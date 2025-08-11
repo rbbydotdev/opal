@@ -85,9 +85,6 @@ export async function handleWorkspaceSearch({ workspaceName, searchTerm }: Works
         allWorkspaceMetas.map((ws) => SWWStore.tryWorkspace(ws.name).then((w) => w.initNoListen()))
       );
     } else {
-      if (!workspaceName) {
-        throw new NotFoundError(`Workspace name must be provided when all=false`);
-      }
       const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.init());
       workspacesToSearch = [workspace]; // Wrap the single workspace in an array.
     }

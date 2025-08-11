@@ -134,8 +134,8 @@ export class WorkspaceDAO {
 
     return new WorkspaceDAO({ ...workspace, remoteAuths, disk, thumbs });
   }
-  static async FetchByName(name: string) {
-    const ws = await ClientDb.workspaces.where("name").equals(name).first();
+  static async FetchByNameOrId(name: string) {
+    const ws = await ClientDb.workspaces.where("name").equals(name).or("guid").equals(name).first();
     if (!ws) throw new NotFoundError("Workspace not found: " + name);
     return new WorkspaceDAO(ws);
   }

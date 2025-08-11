@@ -1,14 +1,8 @@
-import { Workspace } from "@/Db/Workspace";
 import { IdenticonStr } from "@/components/IndenticonStr";
 import { SWWStore } from "./SWWStore";
 
-export async function handleFaviconRequest(event: FetchEvent): Promise<Response> {
-  const referrerPath = new URL(event.request.referrer).pathname;
-  const { workspaceId } = Workspace.parseWorkspacePathLegacy(referrerPath);
-  if (!workspaceId) {
-    return fetch(event.request);
-  }
-  const workspace = await SWWStore.tryWorkspace(workspaceId);
+export async function handleFaviconRequest(workspaceName: string): Promise<Response> {
+  const workspace = await SWWStore.tryWorkspace(workspaceName);
   return new Response(
     IdenticonStr({
       input: workspace.guid,

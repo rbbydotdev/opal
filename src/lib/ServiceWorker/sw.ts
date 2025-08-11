@@ -34,11 +34,11 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
   try {
     // const referrerPath = new URL(request.referrer).pathname;
-    const { workspaceId } = Workspace.parseWorkspacePathLegacy(request.referrer);
+    const { workspaceName } = Workspace.parseWorkspacePathLegacy(request.referrer);
 
     // Only handle requests originating from within our app and for a valid workspace
-    if (workspaceId && url.origin === self.location.origin) {
-      event.respondWith(routeRequest(event, workspaceId));
+    if (workspaceName && url.origin === self.location.origin) {
+      event.respondWith(routeRequest(event, workspaceName));
     } else {
       event.respondWith(defaultFetchHandler(event));
     }
