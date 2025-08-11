@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
-import { useWorkspaceRoute, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import {
   HistoryDocRecord,
   HistoryStorageInterface,
@@ -78,7 +78,7 @@ export function EditHistoryMenu({
 
   return (
     <div
-      className={cn("relative flex items-center bg-primary-foreground py-1 pl-2 gap-2 font-mono text-sm", {
+      className={cn("relative flex items-center bg-primary-foreground pl-2 gap-2 font-mono text-sm", {
         "opacity-50": disabled,
       })}
     >

@@ -2,10 +2,7 @@ import { EditorSelection, Extension } from "@codemirror/state";
 import { EditorView, ViewPlugin } from "@codemirror/view";
 import { checkSum } from "../../lib/checkSum";
 
-const codeMirrorSelectURLRangePlugin = (
-  hlRanges: [start: number, end: number, chsum?: number][] | null,
-  exactMatch = false
-) =>
+const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, chsum?: number][] | null) =>
   ViewPlugin.fromClass(
     class {
       private view: EditorView;
@@ -28,10 +25,6 @@ const codeMirrorSelectURLRangePlugin = (
                   this.view.state.doc.slice(start, end).toString()
                 )}`
               );
-              if (exactMatch) {
-                // If exact match is required, skip this range
-                return null;
-              }
             }
             // Clamp to valid range
             const s = Math.max(0, Math.min(start, docLength));
