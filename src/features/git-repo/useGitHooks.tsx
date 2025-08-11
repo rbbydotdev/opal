@@ -9,12 +9,13 @@ import {
   RepoInfoType,
   RepoWithRemote,
 } from "@/features/git-repo/GitRepo";
+import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import "@/workers/transferHandlers/disk.th";
 import "@/workers/transferHandlers/function.th";
 import "@/workers/transferHandlers/repo.th";
 import * as Comlink from "comlink";
 import { UnsubscribeFunction } from "emittery";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 export function useGitPlaybook(repo: Repo | Comlink.Remote<Repo>): GitPlaybook | GitRemotePlaybook {
   return useMemo(() => {
@@ -33,26 +34,24 @@ export function useWorkspaceRepo(workspace: Workspace, _onPathNoExists?: (path: 
   const repoRef = useRef<Comlink.Remote<Repo> | Repo>(new NullRepo());
   const [info, setInfo] = useState<RepoInfoType>(RepoDefaultInfo);
   const [playbook, setPlaybook] = useState<GitPlaybook>(new NullGitPlaybook());
-  useEffect(() => {
+  useAsyncEffect(async () => {
     const unsubs: UnsubscribeFunction[] = [];
-    void (async () => {
-      const repoWorker = await workspace.RepoWorker();
-      const repoInstance = repoWorker.repo;
-      unsubs.push(() => repoWorker.worker.terminate());
-      // const repoInstance = workspace.RepoMainThread();
-      await repoInstance.init();
-      unsubs.push(
-        ...(await Promise.all([
-          workspace.AttachRepo(repoInstance),
-          repoInstance.infoListener(async (newInfo) => {
-            if (newInfo) setInfo(newInfo);
-          }),
-        ]))
-      );
-      await repoInstance.sync();
-      repoRef.current = repoInstance;
-      setPlaybook(new GitPlaybook(repoInstance));
-    })();
+    const repoWorker = await workspace.RepoWorker();
+    const repoInstance = repoWorker.repo;
+    unsubs.push(() => repoWorker.worker.terminate());
+    // const repoInstance = workspace.RepoMainThread();
+    await repoInstance.init();
+    unsubs.push(
+      ...(await Promise.all([
+        workspace.AttachRepo(repoInstance),
+        repoInstance.infoListener(async (newInfo) => {
+          if (newInfo) setInfo(newInfo);
+        }),
+      ]))
+    );
+    await repoInstance.sync();
+    repoRef.current = repoInstance;
+    setPlaybook(new GitPlaybook(repoInstance));
     return () => {
       unsubs.forEach((unsub) => unsub());
       void repoRef.current?.tearDown();

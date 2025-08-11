@@ -59,16 +59,21 @@ export function useEditable<T extends TreeFile | TreeDir>({
       //ignore and allow for context menu
       return;
     }
+
     if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
-      //add single file to selection
       e.preventDefault();
       e.stopPropagation();
+      //add single file to selection
+      //if already selected, remove it
+      // const nextSelectedRange =
       setFileTreeCtx(({ selectedRange }) => ({
         editing: null,
         editType: null,
-        focused: treeNode.path,
+        focused: !selectedRange.includes(treeNode.path) ? treeNode.path : null,
         virtual: null,
-        selectedRange: Array.from(new Set([...selectedRange, treeNode.path])),
+        selectedRange: selectedRange.includes(treeNode.path)
+          ? selectedRange.filter((p) => p !== treeNode.path)
+          : Array.from(new Set([...selectedRange, treeNode.path])),
       }));
 
       return;
