@@ -23,18 +23,20 @@ import { cn } from "@/lib/utils";
 import { ChevronRight, Github, Key, MoreHorizontal, Pencil, Plus, Sparkle, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+type ConnectionType = {
+  guid: string;
+  name: string;
+  type: string;
+  authType: "api" | "oauth";
+};
+
 function ConnectionManager() {
   const { remoteAuths, loading, deleteRemoteAuth, refetch } = useRemoteAuths();
-  const [editingConnection, setEditingConnection] = useState<{
-    id: string;
-    name: string;
-    type: string;
-    authType: "api" | "oauth";
-  } | null>(null);
+  const [editingConnection, setEditingConnection] = useState<ConnectionType | null>(null);
 
   const handleEdit = (connection: (typeof remoteAuths)[0]) => {
     setEditingConnection({
-      id: connection.id,
+      guid: connection.guid,
       name: connection.name,
       type: connection.authType === "api" ? "github-api" : "github-oauth",
       authType: connection.authType,
@@ -91,7 +93,7 @@ function ConnectionManager() {
           )}
           {!loading &&
             remoteAuths.map((connection) => (
-              <SidebarMenuItem key={connection.id}>
+              <SidebarMenuItem key={connection.guid}>
                 <div className="group flex items-center pr-1">
                   <SidebarMenuButton className="flex-1 min-w-0 pl-8">
                     <div className="flex items-center flex-1 min-w-0 gap-1">
@@ -120,7 +122,7 @@ function ConnectionManager() {
                         <Pencil className="w-4 h-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => deleteRemoteAuth(connection.id)}>
+                      <DropdownMenuItem onClick={() => deleteRemoteAuth(connection.guid)}>
                         <Trash2 className="w-4 h-4 mr-2" />
                         Delete
                       </DropdownMenuItem>

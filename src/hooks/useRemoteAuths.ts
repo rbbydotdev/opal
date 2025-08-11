@@ -2,7 +2,7 @@ import { ClientDb } from "@/Db/instance";
 import { useEffect, useState } from "react";
 
 export interface RemoteAuthOption {
-  id: string;
+  guid: string;
   name: string;
   authType: "api" | "oauth";
 }
@@ -20,7 +20,7 @@ export function useRemoteAuths() {
       const auths = await ClientDb.remoteAuths.toArray();
       const authOptions: RemoteAuthOption[] = auths.map((auth) => ({
         //does not include secrets
-        id: auth.guid,
+        guid: auth.guid,
         name: auth.tag,
         authType: auth.authType,
       }));
