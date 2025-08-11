@@ -36,10 +36,10 @@ export function useWorkspaceRepo(workspace: Workspace, _onPathNoExists?: (path: 
   useEffect(() => {
     const unsubs: UnsubscribeFunction[] = [];
     void (async () => {
-      // const repoWorker = await workspace.RepoWorker();
-      // const repoInstance = repoWorker.repo;
-      // unsubs.push(() => repoWorker.worker.terminate());
-      const repoInstance = workspace.RepoMainThread();
+      const repoWorker = await workspace.RepoWorker();
+      const repoInstance = repoWorker.repo;
+      unsubs.push(() => repoWorker.worker.terminate());
+      // const repoInstance = workspace.RepoMainThread();
       await repoInstance.init();
       unsubs.push(
         ...(await Promise.all([

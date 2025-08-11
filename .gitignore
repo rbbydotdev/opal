@@ -55,3 +55,6 @@ public/assets/*.js
 CLAUDE.md
 .github
 .tanstack
+
+*.ww.js
+*.sw.js

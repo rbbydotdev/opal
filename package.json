@@ -6,9 +6,9 @@
   "scripts": {
     "dev:app": "vite",
     "dev:sw": "cross-env DEV_SW=true vite build",
+    "build:sw": "cross-env BUILD_SW=true vite build",
     "dev": "npm-run-all --parallel dev:app dev:sw",
     "build:app": "vite build",
-    "build:sw": "cross-env BUILD_SW=true vite build",
     "build": "npm run build:app && npm run build:sw",
     "preview": "vite preview",
     "dev:workerlog": "tsx ./src/workerlog",
@@ -21,7 +21,9 @@
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
-    "test:debug": "playwright test --debug"
+    "test:debug": "playwright test --debug",
+    "build:workers": "tsx vite-build-workers.ts",
+    "build:workers:dev": "tsx vite-build-workers.ts dev"
   },
   "overrides": {
     "dexie": "^4.0.10",
