@@ -2,6 +2,7 @@ import { NullWorkspace } from "@/Db/NullWorkspace";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
@@ -79,18 +80,15 @@ export function useFileContents({
     }, debounceMs);
   };
 
-  useEffect(() => {
-    void (async () => {
-      if (currentWorkspace && filePath) {
-        try {
-          setInitialContents(await currentWorkspace.disk.readFile(filePath));
-
-          setError(null);
-        } catch (error) {
-          setError(error as Error);
-        }
+  useAsyncEffect(async () => {
+    if (currentWorkspace && filePath) {
+      try {
+        setInitialContents(await currentWorkspace.disk.readFile(filePath));
+        setError(null);
+      } catch (error) {
+        setError(error as Error);
       }
-    })();
+    }
   }, [currentWorkspace, filePath, navigate]);
 
   useEffect(() => {
