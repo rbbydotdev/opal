@@ -6,7 +6,7 @@ import { getMimeType } from "@/lib/mimeType";
 import { absPath, decodePath } from "@/lib/paths2";
 import { SWWStore } from "./SWWStore";
 
-export async function handleImageRequest(event: FetchEvent, url: URL, workspaceId: string): Promise<Response> {
+export async function handleImageRequest(event: FetchEvent, url: URL, workspaceName: string): Promise<Response> {
   //TODO hoist controller logic up to the top level
   try {
     const decodedPathname = decodePath(url.pathname);
@@ -19,7 +19,7 @@ export async function handleImageRequest(event: FetchEvent, url: URL, workspaceI
   `);
     let cache: Cache;
     if (!decodedPathname.endsWith(".svg")) {
-      cache = await Workspace.newCache(workspaceId).getCache();
+      cache = await Workspace.newCache(workspaceName).getCache();
       const cachedResponse = await cache.match(event.request);
       if (cachedResponse) {
         console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
@@ -27,9 +27,9 @@ export async function handleImageRequest(event: FetchEvent, url: URL, workspaceI
       }
     }
     console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
-    const workspace = await SWWStore.tryWorkspace(workspaceId);
+    const workspace = await SWWStore.tryWorkspace(workspaceName);
 
-    if (!workspace) throw new Error("Workspace not found " + workspaceId);
+    if (!workspace) throw new Error("Workspace not found " + workspaceName);
     console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     const contents = isThumbnail

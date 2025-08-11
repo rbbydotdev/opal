@@ -3,20 +3,20 @@ import { SWWStore } from "./SWWStore";
 
 export async function handleMdImageReplace(
   url: URL,
-  workspaceId: string,
+  workspaceName: string,
   findReplace: [string, string][]
 ): Promise<Response> {
   try {
     console.log(`Intercepted WORKSPACE IMG REPLACE request for: 
     url.pathname: ${url.pathname}
     href: ${url.href}
-    workspace: ${workspaceId}
+    workspace: ${workspaceName}
   `);
-    const workspace = await SWWStore.tryWorkspace(workspaceId);
+    const workspace = await SWWStore.tryWorkspace(workspaceName);
     await workspace.rehydrateIndexCache();
     const resultPaths = !findReplace.length ? [] : await workspace.disk.findReplaceImgBatch(findReplace, url.origin);
 
-    if (!workspace) throw new Error("Workspace not found " + workspaceId);
+    if (!workspace) throw new Error("Workspace not found " + workspaceName);
     console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     return new Response(JSON.stringify(resultPaths), {

@@ -19,7 +19,7 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
     const sourceWorkspace =
       currentWorkspace.name === sourceWorkspaceId
         ? currentWorkspace
-        : await WorkspaceDAO.FetchByName(
+        : await WorkspaceDAO.FetchByNameOrId(
             sourceWorkspaceId ?? currentWorkspace.name /* todo should not be undefined but here we are */
           ).then((ws) => ws.toModel().init());
 

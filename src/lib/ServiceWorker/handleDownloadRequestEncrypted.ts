@@ -13,8 +13,8 @@ export interface DownloadOptions {
   password: string;
   encryption: "aes" | "zipcrypto";
 }
-export async function handleDownloadRequestEncrypted(workspaceId: string, event: FetchEvent): Promise<Response> {
-  const workspaceDirName = absPath(strictPathname(workspaceId));
+export async function handleDownloadRequestEncrypted(workspaceName: string, event: FetchEvent): Promise<Response> {
+  const workspaceDirName = absPath(strictPathname(workspaceName));
   const options: DownloadOptions = {
     password: event.request.headers.get(PassHeader)!,
     encryption: event.request.headers.get(EncHeader)! as "aes" | "zipcrypto",
@@ -34,7 +34,7 @@ export async function handleDownloadRequestEncrypted(workspaceId: string, event:
       zipWriterOptions.encryptionStrength = 3; // AES-256
     }
 
-    const workspace = await SWWStore.tryWorkspace(workspaceId);
+    const workspace = await SWWStore.tryWorkspace(workspaceName);
 
     // zip.js ZipWriter takes a WritableStreamDefaultWriter or a WritableStream
     const zipWriter = new ZipWriter(new BlobWriter("application/zip"), zipWriterOptions);

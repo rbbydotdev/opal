@@ -46,7 +46,7 @@ const routes: Route[] = [
   createRoute("GET", "/.*", imageHandler),
 ];
 
-export function routeRequest(event: FetchEvent, workspaceId: string) {
+export async function routeRequest(event: FetchEvent, workspaceParam: string) {
   const { request } = event;
   const url = new URL(request.url);
 
@@ -65,7 +65,7 @@ export function routeRequest(event: FetchEvent, workspaceId: string) {
         {} as Record<string, string>
       );
 
-      const context: RequestContext = { event, url, workspaceId, params };
+      const context: RequestContext = { event, url, workspaceName: workspaceParam, params };
       return route.handler(context);
     }
   }

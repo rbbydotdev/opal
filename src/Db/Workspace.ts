@@ -154,7 +154,7 @@ export class Workspace {
   // Deprecated: Use parseWorkspacePath instead
   static parseWorkspacePathLegacy(pathOrUrl: string) {
     const result = Workspace.parseWorkspacePath(pathOrUrl);
-    return { workspaceId: result.workspaceName, filePath: result.filePath };
+    return { workspaceName: result.workspaceName, filePath: result.filePath };
   }
 
   static async CreateNew(name: string, files: Record<string, string | Promise<string>> = {}, diskType?: DiskType) {
@@ -603,7 +603,7 @@ export class Workspace {
     fromWorkspaceName: string,
     toWorkspace: Workspace
   ) {
-    const fromWs = await WorkspaceDAO.FetchByName(fromWorkspaceName).then((ws) => ws.toModel().initNoListen());
+    const fromWs = await WorkspaceDAO.FetchByNameOrId(fromWorkspaceName).then((ws) => ws.toModel().initNoListen());
     return await Disk.TransferFiles(transferNodes, fromWs.disk, toWorkspace.disk);
   }
 

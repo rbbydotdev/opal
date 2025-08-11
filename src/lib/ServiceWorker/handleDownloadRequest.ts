@@ -7,9 +7,9 @@ import { signalRequest } from "@/lib/ServiceWorker/utils";
 import * as fflate from "fflate";
 import { SWWStore } from "./SWWStore";
 
-export async function handleDownloadRequest(workspaceId: string): Promise<Response> {
+export async function handleDownloadRequest(workspaceName: string): Promise<Response> {
   try {
-    const workspaceDirName = absPath(strictPathname(workspaceId));
+    const workspaceDirName = absPath(strictPathname(workspaceName));
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
 
@@ -23,7 +23,7 @@ export async function handleDownloadRequest(workspaceId: string): Promise<Respon
       if (final) await writer.close();
     });
 
-    const workspace = await SWWStore.tryWorkspace(workspaceId);
+    const workspace = await SWWStore.tryWorkspace(workspaceName);
 
     await workspace.disk.fileTree.index();
 

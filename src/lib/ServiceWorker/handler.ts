@@ -14,15 +14,15 @@ import { withRequestSignal } from "./utils"; // Assuming utils are in the same d
 export interface RequestContext {
   event: FetchEvent;
   url: URL;
-  workspaceId: string;
+  workspaceName: string;
   params: Record<string, string>;
 }
 
 // --- Route Handlers ---
 
 export const replaceMdImageHandler = withRequestSignal(async (context: RequestContext) => {
-  const { url, workspaceId } = context;
-  console.log(`Handling MD image replacement for: ${workspaceId}`);
+  const { url, workspaceName } = context;
+  console.log(`Handling MD image replacement for: ${workspaceName}`);
   //parse json bod
   const body = await context.event.request.json();
   if (!Array.isArray(body)) {
@@ -32,24 +32,24 @@ export const replaceMdImageHandler = withRequestSignal(async (context: RequestCo
   const findReplace: [string, string][] = body as [string, string][];
   console.log(`Replacing images in MD with: ${findReplace.length} pairs`);
 
-  return handleMdImageReplace(url, workspaceId, findReplace);
+  return handleMdImageReplace(url, workspaceName, findReplace);
 });
 
 export const uploadImageHandler = withRequestSignal((context: RequestContext) => {
-  const { event, url, workspaceId } = context;
+  const { event, url, workspaceName } = context;
   const filePath = absPath(decodePath(url.pathname).replace("/upload-image", ""));
   console.log(`Handling image upload for: ${url.pathname}`);
 
-  return handleImageUpload(event, url, filePath, workspaceId);
+  return handleImageUpload(event, url, filePath, workspaceName);
 });
 
 export const convertDocxHandler = withRequestSignal(async (context: RequestContext) => {
-  const { event, url, workspaceId } = context;
+  const { event, url, workspaceName } = context;
 
   const fullPathname = absPath(decodePath(url.pathname).replace("/upload-docx", ""));
   console.log(`Handling DOCX upload for: ${fullPathname}`);
 
-  return handleDocxUploadRequest(workspaceId, fullPathname, await event.request.arrayBuffer());
+  return handleDocxUploadRequest(workspaceName, fullPathname, await event.request.arrayBuffer());
 });
 
 export const workspaceSearchHandler = withRequestSignal(async (context: RequestContext) => {
@@ -70,25 +70,25 @@ export const workspaceSearchHandler = withRequestSignal(async (context: RequestC
 
 export const downloadEncryptedHandler = (context: RequestContext) => {
   console.log(`Handling encrypted download for: ${context.url.href}`);
-  return handleDownloadRequestEncrypted(context.workspaceId, context.event);
+  return handleDownloadRequestEncrypted(context.workspaceName, context.event);
 };
 
 export const downloadHandler = (context: RequestContext) => {
   console.log(`Handling download for: ${context.url.href}`);
-  return handleDownloadRequest(context.workspaceId);
+  return handleDownloadRequest(context.workspaceName);
 };
 
 export const faviconHandler = withRequestSignal((context: RequestContext) => {
   console.log(`Handling favicon request for: ${context.url.href}`);
-  return handleFaviconRequest(context.event);
+  return handleFaviconRequest(context.workspaceName);
 });
 
 export const imageHandler = withRequestSignal((context: RequestContext) => {
-  const { event, url, workspaceId } = context;
+  const { event, url, workspaceName } = context;
 
   if (event.request.destination === "image" || isImageType(url.pathname)) {
     console.log(`Handling image request for: ${url.pathname}`);
-    return handleImageRequest(event, url, workspaceId);
+    return handleImageRequest(event, url, workspaceName);
   }
   // Fallback to network if it's not a match we handle
   return fetch(event.request);

@@ -6,7 +6,7 @@ export async function handleImageUpload(
   event: FetchEvent,
   url: URL,
   filePath: AbsPath,
-  workspaceId: string
+  workspaceName: string
 ): Promise<Response> {
   try {
     const { request } = event;
@@ -15,9 +15,9 @@ export async function handleImageUpload(
     href: ${url.href}
     filePath: ${filePath}
   `);
-    const workspace = await SWWStore.tryWorkspace(workspaceId);
+    const workspace = await SWWStore.tryWorkspace(workspaceName);
 
-    if (!workspace) throw new Error("Workspace not found " + workspaceId);
+    if (!workspace) throw new Error("Workspace not found " + workspaceName);
     console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
     const resultPath = await workspace.NewImage(await request.arrayBuffer(), filePath);
 
