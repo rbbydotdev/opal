@@ -71,7 +71,7 @@ export function AuthSelect({
             </div>
           </SelectItem>
           {remoteAuths.map((auth) => (
-            <SelectItem key={auth.id} value={auth.id}>
+            <SelectItem key={auth.guid} value={auth.guid}>
               <div className="flex items-center gap-2">
                 <AuthIcon authType={auth.authType} />
                 <div className="flex justify-center items-center gap-2 font-mono">
