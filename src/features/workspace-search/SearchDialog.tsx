@@ -221,7 +221,7 @@ function SearchResults({
           />
           <Link
             onClick={onNavigate}
-            to={joinPath(WorkspaceDAO.rootRoute, workspaceName)}
+            to={joinPath(WorkspaceDAO.rootRoute, workspaceName).toString()}
             className="font-mono uppercase text-xs "
           >
             {workspaceName}
@@ -267,7 +267,7 @@ function SearchFile({
       <Link
         onClick={onNavigate}
         title={`${workspaceName}/${filePath}`}
-        to={href}
+        to={href.toString()}
         className="w-full flex items-center border rounded-t text-xs font-mono h-8 sticky top-0 z-10 bg-accent hover:bg-primary-foreground"
       >
         <div className="ml-1 flex items-center justify-center h-full gap-2 ">

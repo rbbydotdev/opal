@@ -17,7 +17,6 @@ import {
   createCommitRef,
   GitRef,
 } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
-import { CommitManagerSection } from "@/components/SidebarFileMenu/sync-section/GitCommitManager";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
@@ -29,6 +28,7 @@ import { useWorkspaceRepo, WorkspaceRepoType } from "@/features/git-repo/useGitH
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { useNavigate } from "@tanstack/react-router";
+import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
 function LatestInfo({ info }: { info: WorkspaceRepoType }) {
@@ -220,8 +220,9 @@ function SyncPullPushButtons() {
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
   const navigate = useNavigate();
-  const { repo, playbook, info } = useWorkspaceRepo(currentWorkspace, () => navigate({ to: currentWorkspace.href }));
-  // const { commit, isPending } = useUIGitPlaybook(repo);
+  const { repo, playbook, info } = useWorkspaceRepo(currentWorkspace, () =>
+    navigate({ to: currentWorkspace.href.toString() })
+  );
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
   const { cmdRef: remoteRef } = useTooltipToastCmd();
@@ -263,14 +264,6 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
           </SidebarMenuButton>
         </CollapsibleTrigger>
 
-        {/* <div className="group-data-[state=closed]/collapsible:hidden">
-          <ConnectionsModal>
-            <SidebarGroupAction className="top-1.5">
-              <Plus /> <span className="sr-only">Add Connection</span>
-            </SidebarGroupAction>
-          </ConnectionsModal>
-        </div> */}
-
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="gap-2">
             <div className="px-4 pt-2 gap-2 flex flex-col">
@@ -287,6 +280,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
             {exists && currentGitRef !== null && (
               <>
                 <BranchManagerSection
+                  info={info}
                   repo={repo}
                   playbook={playbook}
                   currentGitRef={currentGitRef}

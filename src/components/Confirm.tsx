@@ -9,17 +9,41 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 
-export function useGitConfirmCmd() {
-  const cmdRef = useRef<{ open: (cb: () => void, title: string, description: string) => void }>({ open: () => {} });
+type ConfirmContextType = {
+  open: (cb: () => void, title: string, description: string) => void;
+};
+
+const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
+
+export function ConfirmProvider({ children }: { children: React.ReactNode }) {
+  const { open, cmdRef } = useConfirmCmd();
+
+  return (
+    <ConfirmContext.Provider value={{ open }}>
+      {children}
+      <Confirm cmdRef={cmdRef} />
+    </ConfirmContext.Provider>
+  );
+}
+
+export function useConfirm() {
+  const ctx = useContext(ConfirmContext);
+  if (!ctx) throw new Error("useConfirm must be used within a ConfirmProvider");
+  return ctx;
+}
+
+export type ConfirmOpen = (cb: () => void, title: string, description: string) => void;
+export function useConfirmCmd() {
+  const cmdRef = useRef<{ open: ConfirmOpen }>({ open: () => {} });
   return {
     open: (cb: () => void, title: string, description: string) => cmdRef.current.open(cb, title, description),
     cmdRef,
   };
 }
 
-export function GitConfirm({
+export function Confirm({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{

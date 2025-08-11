@@ -1,6 +1,6 @@
 import { Channel } from "@/lib/channel";
-import { nanoid } from "nanoid";
 import { useSearch } from "@tanstack/react-router";
+import { nanoid } from "nanoid";
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef } from "react";
 
 // --- Types ---
@@ -57,7 +57,7 @@ export function sessionIdParam({ sessionId }: { sessionId: string }) {
 }
 
 export function useScrollChannelFromSearchParams() {
-  const search = useSearch({ from: '__root__' });
+  const search = useSearch({ from: "__root__" }) as { sessionId?: string | null };
   const sessionId = search?.sessionId || null;
   useEffect(() => {
     if (!sessionId) {

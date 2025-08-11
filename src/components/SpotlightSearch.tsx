@@ -231,7 +231,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
                 id={`spotlight-item-${index}`}
                 isActive={index === activeIndex}
                 onClick={handleClose}
-                to={joinPath(currentWorkspace.href, file.href)}
+                href={joinPath(currentWorkspace.href, file.href)}
                 title={file.element}
               />
             );

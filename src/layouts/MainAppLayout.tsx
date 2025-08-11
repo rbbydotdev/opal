@@ -1,6 +1,7 @@
 import { JotaiProvider } from "@/app/JotaiProvider";
 import { WorkspaceButtonBar } from "@/app/WorkSpaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
+import { ConfirmProvider } from "@/components/Confirm";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
 import { ThemeProvider } from "@/components/Editor/theme-provider";
@@ -41,16 +42,18 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                   <JotaiProvider>
                     <SidebarProvider>
                       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                        <RemoteMDXEditorRealmProvider>
-                          <div className="w-full flex">
-                            <ErrorBoundary fallback={ErrorPlaque}>
-                              <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
-                                <WorkspaceButtonBar />
-                              </div>
-                              <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                            </ErrorBoundary>
-                          </div>
-                        </RemoteMDXEditorRealmProvider>
+                        <ConfirmProvider>
+                          <RemoteMDXEditorRealmProvider>
+                            <div className="w-full flex">
+                              <ErrorBoundary fallback={ErrorPlaque}>
+                                <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
+                                  <WorkspaceButtonBar />
+                                </div>
+                                <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                              </ErrorBoundary>
+                            </div>
+                          </RemoteMDXEditorRealmProvider>
+                        </ConfirmProvider>
                       </ThemeProvider>
                     </SidebarProvider>
                   </JotaiProvider>

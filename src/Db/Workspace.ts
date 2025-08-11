@@ -89,7 +89,6 @@ export class Workspace {
 
   get href() {
     return joinPath(WorkspaceDAO.rootRoute, this.name);
-    // return `${WorkspaceDAO.rootRoute}/${this.name}` as AbsPath;
   }
   toJSON() {
     return {

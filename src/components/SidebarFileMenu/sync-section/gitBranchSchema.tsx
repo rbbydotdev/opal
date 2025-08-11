@@ -1,4 +1,4 @@
-import { z } from "../../../../node_modules/zod/v3/external.cjs";
+import z from "zod";
 
 export const gitRefSchema = z.object({
   value: z
