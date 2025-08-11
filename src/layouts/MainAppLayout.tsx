@@ -12,17 +12,12 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
-import { useEffect } from "react";
 
 interface MainAppLayoutProps {
   children: React.ReactNode;
 }
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
-  useEffect(() => {
-    // return RequestSignalsInstance.initAndWatch((_count) => {});
-  }, []);
-
   return (
     <>
       <div className="font-sans antialiased">
