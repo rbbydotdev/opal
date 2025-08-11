@@ -1,5 +1,4 @@
 import { ClientDb } from "@/Db/instance";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { useEffect, useState } from "react";
 
 export interface RemoteAuthOption {
@@ -17,14 +16,15 @@ export function useRemoteAuths() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const auths = await ClientDb.remoteAuths.toArray();
-      const authOptions: RemoteAuthOption[] = auths.map(auth => ({
+      const authOptions: RemoteAuthOption[] = auths.map((auth) => ({
+        //does not include secrets
         id: auth.guid,
         name: auth.tag,
         authType: auth.authType,
       }));
-      
+
       setRemoteAuths(authOptions);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch remote auths");
@@ -46,11 +46,11 @@ export function useRemoteAuths() {
     fetchRemoteAuths();
   }, []);
 
-  return { 
-    remoteAuths, 
-    loading, 
-    error, 
+  return {
+    remoteAuths,
+    loading,
+    error,
     refetch: fetchRemoteAuths,
-    deleteRemoteAuth
+    deleteRemoteAuth,
   };
 }

@@ -2,7 +2,9 @@ import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { routeRequest } from "@/lib/ServiceWorker/router";
-import { WHITELIST } from "@/lib/ServiceWorker/utils";
+import { EnableRemoteLogger, WHITELIST } from "@/lib/ServiceWorker/utils";
+
+EnableRemoteLogger();
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -32,7 +34,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
   try {
     // const referrerPath = new URL(request.referrer).pathname;
-    const workspaceId = Workspace.parseWorkspacePathLegacy(request.referrer).workspaceId;
+    const { workspaceId } = Workspace.parseWorkspacePathLegacy(request.referrer);
 
     // Only handle requests originating from within our app and for a valid workspace
     if (workspaceId && url.origin === self.location.origin) {

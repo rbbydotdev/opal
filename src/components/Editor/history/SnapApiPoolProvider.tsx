@@ -15,6 +15,7 @@ export async function createApiResource({
     filePath: "/preview-doc.md",
     workspaceId,
   });
+  // console.log("Creating iframe for preview worker with params:", searchParams.toString());
   iframe.src = "/doc-preview-image.html?" + searchParams.toString();
   iframe.style.transform = "translate(-9999px, -9999px)";
   iframe.style.position = "absolute";
