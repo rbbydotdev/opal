@@ -52,32 +52,6 @@ function ConnectionManager() {
     }
   };
 
-  // if (mode === "delete") {
-  //   return (
-  //     <div className="px-4 py-2 space-y-2">
-  //       <div className="flex items-center justify-between">
-  //         <span className="text-sm font-medium text-destructive">Delete Mode</span>
-  //         <Button size="sm" variant="outline" onClick={() => setMode("list")}>
-  //           Cancel
-  //         </Button>
-  //       </div>
-  //       {false &&
-  //         remoteAuths.map((connection) => (
-  //           <SidebarMenuItem key={connection.id}>
-  //             <SidebarMenuButton
-  //               className="text-destructive hover:text-destructive hover:bg-destructive/10"
-  //               onClick={() => handleDelete(connection.id)}
-  //             >
-  //               {getConnectionIcon(connection.authType)}
-  //               <span className="truncate">{connection.name}</span>
-  //               <Trash2 className="w-4 h-4 ml-auto" />
-  //             </SidebarMenuButton>
-  //           </SidebarMenuItem>
-  //         ))}
-  //     </div>
-  //   );
-  // }
-
   return (
     <>
       {/* Add Connection Modal */}

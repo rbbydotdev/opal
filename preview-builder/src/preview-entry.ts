@@ -18,7 +18,7 @@ async function snapshot(target: HTMLElement) {
             img.addEventListener(
               "error",
               (e) => {
-                console.error("Image failed to load:", img.src, e);
+                console.error("Image failed to load:", img.src);
                 onDone();
               },
               { once: true }

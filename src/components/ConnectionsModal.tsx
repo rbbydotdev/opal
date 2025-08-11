@@ -176,6 +176,7 @@ export function ConnectionsModalContent({
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>(
     editConnection?.type || connectionTypes[0]!.id
   );
+  // console.log(editConnection);
   const [apiName, setApiName] = useState(editConnection?.name || "");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");

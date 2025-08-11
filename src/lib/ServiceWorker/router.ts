@@ -57,10 +57,13 @@ export function routeRequest(event: FetchEvent, workspaceId: string) {
 
     const match = url.pathname.match(route.pattern);
     if (match) {
-      const params = route.paramNames.reduce((acc, name, index) => {
-        acc[name] = decodeURIComponent(match[index + 1]!);
-        return acc;
-      }, {} as Record<string, string>);
+      const params = route.paramNames.reduce(
+        (acc, name, index) => {
+          acc[name] = decodeURIComponent(match[index + 1]!);
+          return acc;
+        },
+        {} as Record<string, string>
+      );
 
       const context: RequestContext = { event, url, workspaceId, params };
       return route.handler(context);
