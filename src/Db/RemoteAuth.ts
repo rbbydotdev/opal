@@ -8,50 +8,64 @@ export type RemoteAuthRecord<T extends RemoteAuthTypes = RemoteAuthTypes> = {
   guid: string;
   authType: T;
   tag: string;
+  data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | null;
 };
 
-export type RemoteAuthCompoundApiType = RemoteAuthAPIRecordInternal & RemoteAuthRecord<"api">;
-export type RemoteAuthCompoundOAuthType = RemoteAuthOAuthRecordInternal & RemoteAuthRecord<"oauth">;
-export type RemoteAuthCompoundType = RemoteAuthCompoundApiType | RemoteAuthCompoundOAuthType;
+// export type RemoteAuthCompoundApiType = RemoteAuthAPIRecordInternal & RemoteAuthRecord<"api">;
+// export type RemoteAuthCompoundOAuthType = RemoteAuthOAuthRecordInternal & RemoteAuthRecord<"oauth">;
+// export type RemoteAuthCompoundType = RemoteAuthCompoundApiType | RemoteAuthCompoundOAuthType;
 
-export const isApiAuth = (record: RemoteAuthCompoundType): record is RemoteAuthCompoundApiType => {
+export const isApiAuth = (
+  record: RemoteAuthRecord
+): record is RemoteAuthRecord & { data: RemoteAuthAPIRecordInternal } => {
   return record.authType === "api";
 };
-export const isOAuthAuth = (record: RemoteAuthCompoundType): record is RemoteAuthCompoundOAuthType => {
+export const isOAuthAuth = (
+  record: RemoteAuthRecord
+): record is RemoteAuthRecord & { data: RemoteAuthOAuthRecordInternal } => {
   return record.authType === "oauth";
 };
+
+// type RemoteAuthDB
 
 export class RemoteAuthDAO {
   guid!: string;
   authType!: RemoteAuthTypes;
   tag!: string;
-
-  record: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | null = null;
+  data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | null = null;
 
   save() {
-    return ClientDb.remoteAuths.put({
-      ...this.record,
-      guid: this.guid,
-      authType: this.authType,
-      tag: this.tag,
-    });
+    return ClientDb.remoteAuths.put(
+      Object.entries({
+        data: this.data,
+        guid: this.guid,
+        authType: this.authType,
+        tag: this.tag,
+      }).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          //@ts-ignore
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as RemoteAuthJType)
+    );
   }
 
   constructor({
     guid,
     authType,
     tag,
-    record,
+    data: record,
   }: {
     guid: string;
     authType: RemoteAuthTypes;
     tag: string;
-    record?: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal;
+    data?: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | null;
   }) {
     this.guid = guid;
     this.tag = tag;
     this.authType = authType;
-    this.record = record || null;
+    this.data = record || null;
   }
 
   static guid = () => "__remoteauth__" + nanoid();
@@ -61,23 +75,23 @@ export class RemoteAuthDAO {
   static Create(
     authType: RemoteAuthTypes,
     tag: string,
-    record: RemoteAuthOAuthRecordInternal | RemoteAuthAPIRecordInternal
+    data: RemoteAuthOAuthRecordInternal | RemoteAuthAPIRecordInternal
   ): Promise<RemoteAuthDAO> {
     // static Create<T extends AuthTypes>(authType: AuthTypes, tag: string, record: RemoteAuthOAuthRecord | RemoteAuthAPIRecord) {
     const guid = RemoteAuthDAO.guid();
-    const dao = new RemoteAuthDAO({ guid, tag, authType, record });
+    const dao = new RemoteAuthDAO({ guid, tag, authType, data: data });
     return dao.save().then(() => dao);
   }
 
-  async load(forceReload = false) {
-    if (!forceReload && this.record) return this.record;
+  // async load(forceReload = false) {
+  //   if (!forceReload && this.data) return this.data;
 
-    const record = await ClientDb.remoteAuths.get({ guid: this.guid });
-    if (!record) throw new Error(`RemoteAuth with guid ${this.guid} not found`);
+  //   const record = await ClientDb.remoteAuths.get({ guid: this.guid });
+  //   if (!record) throw new Error(`RemoteAuth with guid ${this.guid} not found`);
 
-    this.record = record;
-    return this.record;
-  }
+  //   this.data = record;
+  //   return this.data;
+  // }
 
   toJSON() {
     return {
@@ -86,12 +100,12 @@ export class RemoteAuthDAO {
       authType: this.authType,
     } as RemoteAuthJType;
   }
-  static FromJSON(json: RemoteAuthJType, record?: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal) {
+  static FromJSON(json: RemoteAuthJType) {
     return new RemoteAuthDAO({
       tag: json.tag,
       guid: json.guid,
       authType: json.authType,
-      record,
+      data: json.data,
     });
   }
 }

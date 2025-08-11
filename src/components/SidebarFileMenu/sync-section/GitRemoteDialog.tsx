@@ -143,6 +143,7 @@ export function GitRemoteDialog({
       setShowConnModal(false);
       prevRef.current = null;
       modeRef.current = GitRemoteDialogModes.ADD;
+      form.reset(defaultValues);
     }
   }
 
@@ -166,11 +167,9 @@ export function GitRemoteDialog({
               mode={"add"}
               key={connModalKeyRef.current}
               onSuccess={(rad) => {
-                console.log(rad);
                 resetConnModal();
                 resetAuthSelect();
                 form.setValue("authId", rad?.guid ?? "");
-                console.log("Connection added:", rad);
               }}
               onOpenChange={(state) => {
                 if (!state && showConnectionModal) resetConnModal();

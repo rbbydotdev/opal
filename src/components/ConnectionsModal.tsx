@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 
 type ConnectionType = {
   id: string;
@@ -70,75 +71,10 @@ export function ConnectionsModal({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string>(editConnection?.type || "");
-  const [apiName, setApiName] = useState(editConnection?.name || "");
-  const [apiKey, setApiKey] = useState("");
-  const [apiSecret, setApiSecret] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const selectedConnection = connectionTypes.find((connection) => connection.id === selectedConnectionId);
-
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedConnection || !apiName.trim()) return;
-
-    setSubmitting(true);
-    try {
-      if (selectedConnection.type === "apikey") {
-        if (mode === "edit" && editConnection) {
-          // Update existing connection
-          const dao = RemoteAuthDAO.FromJSON(
-            {
-              guid: editConnection.guid,
-              authType: "api",
-              tag: apiName,
-            },
-            {
-              apiKey: apiKey,
-              apiSecret: apiSecret || apiKey,
-            }
-          );
-          await dao.save();
-        } else {
-          // Create new connection
-          await RemoteAuthDAO.Create("api", apiName, {
-            apiKey: apiKey,
-            apiSecret: apiSecret || apiKey,
-          });
-        }
-      }
-
-      onSuccess?.();
-      resetForm();
-      setIsOpen(false);
-    } catch (error) {
-      console.error("Error saving connection:", error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleOAuthConnect = () => {
-    // Handle OAuth flow initiation
-    console.log("Initiating OAuth flow for:", selectedConnection);
-    // In a real implementation, you would redirect to the OAuth provider here
-    // For demonstration purposes, we'll just close the modal
-    resetForm();
-    setIsOpen(false);
-  };
-
-  const resetForm = () => {
-    setSelectedConnectionId("");
-    setApiName("");
-    setApiKey("");
-    setApiSecret("");
-  };
-
-  // </Dialog>
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -191,29 +127,22 @@ export function ConnectionsModalContent({
     try {
       if (selectedConnection.type === "apikey") {
         if (mode === "edit" && editConnection) {
-          // Update existing connection
-          // RemoteAuthDAO.
-          const dao = RemoteAuthDAO.FromJSON(
-            {
-              guid: editConnection.guid,
-              authType: "api",
-              tag: apiName,
-            },
-            {
-              apiKey: apiKey,
-              apiSecret: apiSecret || apiKey,
-            }
-          );
+          const dao = RemoteAuthDAO.FromJSON({
+            guid: editConnection.guid,
+            authType: "api",
+            tag: apiName,
+            data: null,
+          });
+
           await dao.save();
           onSuccess?.(dao);
         } else {
           // Create new connection
-          onSuccess?.(
-            await RemoteAuthDAO.Create("api", apiName, {
-              apiKey: apiKey,
-              apiSecret: apiSecret || apiKey,
-            })
-          );
+          const result = await RemoteAuthDAO.Create("api", apiName, {
+            apiKey: apiKey,
+            apiSecret: apiSecret || apiKey,
+          });
+          onSuccess?.(result);
         }
       }
 
@@ -393,6 +322,16 @@ function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: Conn
             type="button"
             // variant=""
             onClick={() => {
+              GithubDeviceAuthFlow({
+                onVerification: (data) => {
+                  console.log("Verification data:", data);
+                  setPin(data.user_code);
+                },
+                onAuthentication: (auth) => {
+                  console.log("Authentication successful:", auth);
+                  // Handle successful authentication
+                },
+              });
               setState("loading");
               // Simulate loading the pin
               setTimeout(() => {

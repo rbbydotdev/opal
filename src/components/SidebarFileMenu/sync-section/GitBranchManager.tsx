@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitPlaybook, Repo, RepoInfoType, SYSTEM_COMMITS } from "@/features/git-repo/GitRepo";
+import { GitPlaybook, Repo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ellipsis, GitBranchIcon, GitPullRequestDraft, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
@@ -308,9 +308,6 @@ export function BranchManagerSection({
         "Uncommitted Changes",
         "You have uncommitted changes on an orphaned commit. Save as new branch?"
       );
-      await playbook.addAllCommit({
-        message: SYSTEM_COMMITS.SWITCH_BRANCH,
-      });
     }
     await playbook.switchBranch(branch);
   };
