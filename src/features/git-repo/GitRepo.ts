@@ -1,5 +1,6 @@
 import { Disk, DiskJType, NullDisk } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
+import { isApiAuth } from "@/Db/RemoteAuth";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { deepEqual } from "@/lib/deepEqual";
@@ -11,6 +12,7 @@ import * as Comlink from "comlink";
 import Emittery from "emittery";
 import git, { AuthCallback } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
+import { isOAuthAuth } from "../../Db/RemoteAuth";
 //git remote is different from IRemote as its
 //more so just a Git remote as it appears in Git
 //
@@ -657,12 +659,12 @@ export class Repo {
       const authRecord = await ClientDb.remoteAuths.get({ guid: authId });
       if (!authRecord) return undefined;
 
-      if (authRecord.authType === "api") {
+      if (isApiAuth(authRecord)) {
         return () => ({
           username: authRecord.apiKey,
           password: authRecord.apiSecret || authRecord.apiKey,
         });
-      } else if (authRecord.authType === "oauth") {
+      } else if (isOAuthAuth(authRecord)) {
         return () => ({
           username: authRecord.accessToken,
           password: "", // OAuth typically only needs the token as username
@@ -784,12 +786,12 @@ export class Repo {
 }
 
 export const SYSTEM_COMMITS = {
-  COMMIT: "opal@COMMIT",
-  SWITCH_BRANCH: "opal@SWITCH_BRANCH",
-  SWITCH_COMMIT: "opal@SWITCH_COMMIT",
-  RENAME_BRANCH: "opal@RENAME_BRANCH",
-  INIT: "opal@INIT",
-  PREPUSH: "opal@PREPUSH",
+  COMMIT: "opal / commit",
+  SWITCH_BRANCH: "opal /  switch branch",
+  SWITCH_COMMIT: "opal / switch commit",
+  RENAME_BRANCH: "opal / rename branch",
+  INIT: "opal / init",
+  PREPUSH: "opal / prepush",
 };
 export class RepoWithRemote extends Repo {
   readonly gitRemote: Remote;

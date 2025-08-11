@@ -61,7 +61,7 @@ export function ConnectionsModal({
   children: React.ReactNode;
   mode?: "add" | "edit";
   editConnection?: {
-    id: string;
+    guid: string;
     name: string;
     type: string;
     authType: "api" | "oauth";
@@ -91,21 +91,21 @@ export function ConnectionsModal({
       if (selectedConnection.type === "apikey") {
         if (mode === "edit" && editConnection) {
           // Update existing connection
-          const dao = RemoteAuthDAO.FromJSON({
-            guid: editConnection.id,
-            authType: "api",
-            tag: apiName,
-          });
-          dao.record = {
-            authType: "api",
-            apiKey: apiKey,
-            apiSecret: apiSecret || apiKey,
-          };
+          const dao = RemoteAuthDAO.FromJSON(
+            {
+              guid: editConnection.guid,
+              authType: "api",
+              tag: apiName,
+            },
+            {
+              apiKey: apiKey,
+              apiSecret: apiSecret || apiKey,
+            }
+          );
           await dao.save();
         } else {
           // Create new connection
-          await RemoteAuthDAO.Create(apiName, {
-            authType: "api",
+          await RemoteAuthDAO.Create("api", apiName, {
             apiKey: apiKey,
             apiSecret: apiSecret || apiKey,
           });
@@ -163,7 +163,7 @@ export function ConnectionsModalContent({
 }: {
   mode: "add" | "edit";
   editConnection?: {
-    id: string;
+    guid: string;
     name: string;
     type: string;
     authType: "api" | "oauth";
@@ -192,23 +192,24 @@ export function ConnectionsModalContent({
       if (selectedConnection.type === "apikey") {
         if (mode === "edit" && editConnection) {
           // Update existing connection
-          const dao = RemoteAuthDAO.FromJSON({
-            guid: editConnection.id,
-            authType: "api",
-            tag: apiName,
-          });
-          dao.record = {
-            authType: "api",
-            apiKey: apiKey,
-            apiSecret: apiSecret || apiKey,
-          };
+          // RemoteAuthDAO.
+          const dao = RemoteAuthDAO.FromJSON(
+            {
+              guid: editConnection.guid,
+              authType: "api",
+              tag: apiName,
+            },
+            {
+              apiKey: apiKey,
+              apiSecret: apiSecret || apiKey,
+            }
+          );
           await dao.save();
           onSuccess?.(dao);
         } else {
           // Create new connection
           onSuccess?.(
-            await RemoteAuthDAO.Create(apiName, {
-              authType: "api",
+            await RemoteAuthDAO.Create("api", apiName, {
               apiKey: apiKey,
               apiSecret: apiSecret || apiKey,
             })
@@ -240,8 +241,6 @@ export function ConnectionsModalContent({
     setApiSecret("");
   };
 
-  // <DialogContent className="sm:max-w-[26.5625rem]">
-  // </DialogContent>
   return (
     <div className={className}>
       <DialogHeader>
@@ -292,7 +291,7 @@ export function ConnectionsModalContent({
                   value={apiName}
                   onChange={(e) => setApiName(e.target.value)}
                   placeholder="My GitHub API"
-                  required
+                  required={mode === "add"}
                 />
               </div>
               <div className="space-y-2">
@@ -303,7 +302,7 @@ export function ConnectionsModalContent({
                   onChange={(e) => setApiKey(e.target.value)}
                   type="password"
                   placeholder="Enter your API key"
-                  required
+                  required={mode === "add"}
                 />
               </div>
               <div className="space-y-2">
