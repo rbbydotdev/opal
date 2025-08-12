@@ -34,8 +34,7 @@ const connectionTypes: ConnectionType[] = [
     type: "apikey",
     icon: <Github className="h-5 w-5" />,
   },
-
-  {
+  /*{
     id: "github-device",
     name: "GitHub Device Auth",
     description: "Connect using GitHub Device Authentication",
@@ -48,7 +47,7 @@ const connectionTypes: ConnectionType[] = [
     description: "Connect using GitHub OAuth",
     type: "oauth",
     icon: <Github className="h-5 w-5" />,
-  },
+  },*/
 ];
 
 export function ConnectionsModal({

@@ -17,6 +17,7 @@ export async function GithubDeviceAuthFlow({
   clientId?: string;
   scopes?: string[];
   onVerification: OnVerificationCallback;
+  onVerificationError?: (error: Error) => void;
   onAuthentication?: (auth: OAuthAppAuthentication) => void;
 }) {
   const auth = createOAuthDeviceAuth({
