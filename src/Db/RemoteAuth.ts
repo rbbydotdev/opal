@@ -23,6 +23,7 @@ export type RemoteAuthOAuthRecordInternal = {
 
 export type RemoteAuthGithubDeviceOAuthRecordInternal = {
   accessToken: string;
+  login: string;
   obtainedAt: number;
 };
 

@@ -3,29 +3,38 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Button } from "@/components/ui/button";
 import { FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
+import { RemoteAuthDAO, RemoteAuthGithubDeviceOAuthRecordInternal } from "@/Db/RemoteAuth";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { unwrapError } from "@/lib/errors";
 import { NotEnv } from "@/lib/notenv";
 import { CheckCircle2Icon, ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";
 
-export function ConnectionModalDeviceAuth({
+export function DeviceAuth({
   selectedConnection,
   onCancel,
-  onSuccess,
+  onSubmit,
 }: {
   selectedConnection: ConnectionType;
-  onSuccess?: () => void;
+  onSubmit: (remoteAuth: RemoteAuthDAO) => void;
   onCancel: () => void;
 }) {
-  const [state, setState] = useState<"idle" | "pin-loading" | "pin-loaded" | "auth-success" | "error">("idle");
+  const [state, setState] = useState<
+    "idle" | "pin-loading" | "pin-loaded" | "auth-success" | "pending-rad-save" | "error"
+  >("idle");
   const [verificationUri, setVerificationUri] = useState<string | null>(null);
   const [pin, setPin] = useState<string>("");
-  const remoteAuthRef = useRef<RemoteAuthDAO | null>(null);
+  const remoteAuthRef = useRef<RemoteAuthGithubDeviceOAuthRecordInternal | null>(null);
   const [corsProxy, setCorsProxy] = useState<string>(NotEnv.GithubCorsProxy || "");
   const [error, setError] = useState<string | null>(null);
   const [apiName, setApiName] = useState<string>("my-gh-auth");
+
+  async function handleSave() {
+    setState("pending-rad-save");
+    const remoteAuth = await RemoteAuthDAO.Create("github-device-oauth", apiName, remoteAuthRef.current!);
+    setState("idle");
+    onSubmit(remoteAuth);
+  }
 
   async function handleGithubDeviceAuth() {
     setError(null);
@@ -40,10 +49,12 @@ export function ConnectionModalDeviceAuth({
           setState("pin-loaded");
         },
         onAuthentication: async (auth) => {
-          remoteAuthRef.current = await RemoteAuthDAO.Create("github-device-oauth", apiName, {
+          // remoteAuthRef.current = await RemoteAuthDAO.Create("github-device-oauth", apiName, );
+          remoteAuthRef.current = {
             accessToken: auth.token,
+            login: auth.login,
             obtainedAt: Date.now(),
-          });
+          };
           setState("auth-success");
         },
       });
@@ -127,8 +138,9 @@ export function ConnectionModalDeviceAuth({
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        {state === "auth-success" && (
-          <Button type="button" variant="default" onClick={() => onSuccess?.()}>
+        {(state === "auth-success" || state === "pending-rad-save") && (
+          <Button type="button" variant="default" onClick={handleSave}>
+            {state === "pending-rad-save" && <Loader size={12} className="animate-spin animation-iteration-infinite" />}
             OK
           </Button>
         )}
