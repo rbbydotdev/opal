@@ -16,17 +16,16 @@ export function ConnectionModalDeviceAuth({
   onSuccess,
 }: {
   selectedConnection: ConnectionType;
-
-  onSuccess?: (rad: RemoteAuthDAO) => void;
+  onSuccess?: () => void;
   onCancel: () => void;
 }) {
-  const [state, setState] = useState<"idle" | "pin-loading" | "pin-loaded" | "auth-success" | "error">("auth-success"); //("idle");
+  const [state, setState] = useState<"idle" | "pin-loading" | "pin-loaded" | "auth-success" | "error">("idle");
   const [verificationUri, setVerificationUri] = useState<string | null>(null);
   const [pin, setPin] = useState<string>("");
   const remoteAuthRef = useRef<RemoteAuthDAO | null>(null);
   const [corsProxy, setCorsProxy] = useState<string>(NotEnv.GithubCorsProxy || "");
   const [error, setError] = useState<string | null>(null);
-  const [apiName, setApiName] = useState<string>(selectedConnection.name || "Github-API");
+  const [apiName, setApiName] = useState<string>("my-gh-auth");
 
   async function handleGithubDeviceAuth() {
     setError(null);
@@ -41,7 +40,7 @@ export function ConnectionModalDeviceAuth({
           setState("pin-loaded");
         },
         onAuthentication: async (auth) => {
-          remoteAuthRef.current = await RemoteAuthDAO.Create("gh-device-oauth", apiName, {
+          remoteAuthRef.current = await RemoteAuthDAO.Create("github-device-oauth", apiName, {
             accessToken: auth.token,
             obtainedAt: Date.now(),
           });
@@ -56,6 +55,17 @@ export function ConnectionModalDeviceAuth({
 
   return (
     <div className="space-y-4">
+      <FormItem>
+        <FormLabel className="text-sm font-medium">Connection Name</FormLabel>
+        <Input
+          type="text"
+          placeholder="API Name"
+          value={apiName}
+          onChange={(e) => setApiName(e.target.value)}
+          className="w-full"
+          required
+        />
+      </FormItem>
       <FormItem>
         <FormLabel className="text-sm font-medium">
           Github CORS Proxy URL (optional) <OptionalProbablyToolTip />
@@ -118,7 +128,7 @@ export function ConnectionModalDeviceAuth({
           Cancel
         </Button>
         {state === "auth-success" && (
-          <Button type="button" variant="default" onClick={() => onSuccess?.(remoteAuthRef.current!)}>
+          <Button type="button" variant="default" onClick={() => onSuccess?.()}>
             OK
           </Button>
         )}
