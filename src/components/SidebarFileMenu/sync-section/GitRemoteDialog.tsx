@@ -172,9 +172,9 @@ export function GitRemoteDialog({
                 resetAuthSelect();
                 form.setValue("authId", rad?.guid ?? "");
               }}
-              onOpenChange={(state) => {
-                if (!state && showConnectionModal) resetConnModal();
-              }}
+              // onOpenChange={(state) => {
+              //   if (!state && showConnectionModal) resetConnModal();
+              // }}
             />
           </div>
           <GitRemoteDialogInternal
