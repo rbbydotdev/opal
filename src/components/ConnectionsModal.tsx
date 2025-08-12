@@ -18,7 +18,7 @@ import {
 import { NotEnv } from "@/lib/notenv";
 
 // SHADCN FORM COMPONENTS
-import { ConnectionModalDeviceAuth } from "@/components/ConnectionModalDeviceAuth";
+import { ConnectionModalDeviceAuth } from "@/components/DeviceAuth";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -125,7 +125,7 @@ export function ConnectionsModalContent({
   const form = useForm<FormValues>({
     defaultValues: {
       connectionType: defaultType,
-      apiName: editConnection?.name || "Github-API",
+      apiName: editConnection?.name || "my-gh-api",
       apiKey: "",
       apiSecret: "",
       apiProxy: NotEnv.GithubCorsProxy || "",
@@ -303,7 +303,7 @@ export function ConnectionsModalContent({
 
             {selectedConnection?.type === "device" && (
               <ConnectionModalDeviceAuth
-                onSuccess={onSuccess}
+                onSuccess={() => onOpenChange(false)}
                 selectedConnection={selectedConnection}
                 onCancel={() => onOpenChange(false)}
               />
