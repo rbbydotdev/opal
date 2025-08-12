@@ -2,7 +2,7 @@ import type React from "react";
 import { useForm } from "react-hook-form";
 
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { ExternalLink, Github, Loader } from "lucide-react";
+import { Github } from "lucide-react";
 import { useState } from "react";
 
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
@@ -15,16 +15,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { NotEnv } from "@/lib/notenv";
 
 // SHADCN FORM COMPONENTS
+import { ConnectionModalDeviceAuth } from "@/components/ConnectionModalDeviceAuth";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mapToTypedError, unwrapError } from "@/lib/errors";
 
-type ConnectionType = {
+export type ConnectionType = {
   id: string;
   name: string;
   description: string;
@@ -126,7 +125,7 @@ export function ConnectionsModalContent({
   const form = useForm<FormValues>({
     defaultValues: {
       connectionType: defaultType,
-      apiName: editConnection?.name || "Github-API-RXTX",
+      apiName: editConnection?.name || "Github-API",
       apiKey: "",
       apiSecret: "",
       apiProxy: NotEnv.GithubCorsProxy || "",
@@ -177,16 +176,11 @@ export function ConnectionsModalContent({
     form.reset();
     onOpenChange(false);
   };
-
   return (
     <div className={className}>
       <DialogHeader>
         <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
-        <DialogDescription>
-          {mode === "edit"
-            ? "Update your connection details."
-            : "Connect your application to various APIs to extend its functionality."}
-        </DialogDescription>
+        <DialogDescription>{mode === "edit" ? "Update your connection details." : "Connect to API"}</DialogDescription>
       </DialogHeader>
       <div className="space-y-4 py-4">
         <Form {...form}>
@@ -308,7 +302,11 @@ export function ConnectionsModalContent({
             )}
 
             {selectedConnection?.type === "device" && (
-              <DeviceAuth selectedConnection={selectedConnection} onCancel={() => onOpenChange(false)} />
+              <ConnectionModalDeviceAuth
+                onSuccess={onSuccess}
+                selectedConnection={selectedConnection}
+                onCancel={() => onOpenChange(false)}
+              />
             )}
           </form>
         </Form>
@@ -318,115 +316,3 @@ export function ConnectionsModalContent({
 }
 
 // DeviceAuth remains unchanged, but you can also refactor it to use RHF if you want.
-
-function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: ConnectionType; onCancel: () => void }) {
-  const [state, setState] = useState<"idle" | "loading" | "loaded" | "pin-success" | "error">("idle");
-  const [pin, setPin] = useState<string>("");
-  const [corsProxy, setCorsProxy] = useState<string>(NotEnv.GithubCorsProxy || "");
-  const [error, setError] = useState<string | null>(null);
-  async function handleGithubDeviceAuth() {
-    try {
-      setState("loading");
-      const { token } = await GithubDeviceAuthFlow({
-        corsProxy,
-        clientId: NotEnv.PublicGithubClientID,
-        scopes: ["public_repo", "private_repo", "repo", "workflow"],
-        onVerification: (data) => {
-          setPin(data.user_code);
-          setState("loaded");
-        },
-        // onVerificationError: (error) => {
-        //   setError(error.message);
-        //   setState("idle");
-        // },
-        // onAuthentication: (auth) => {
-        //   // Handle successful authentication
-        //   console.log("Authenticated successfully:", auth);
-        //   // Authenticated successfully:
-        //   // Object { type: "token", tokenType: "oauth", clientType: "oauth-app", clientId: "Iv23lidn21uJW9mlXSsi", token: "ghu_*******", scopes: [] }
-        // },
-      });
-      setState("pin-success");
-    } catch (e) {
-      setState("error");
-      console.log(mapToTypedError(e));
-      console.log(unwrapError(e));
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <FormItem>
-        <FormLabel className="text-sm font-medium">
-          CORS Proxy URL (optional) <OptionalProbablyToolTip />
-        </FormLabel>
-        <Input
-          type="text"
-          placeholder="CORS Proxy URL"
-          value={corsProxy}
-          onChange={(e) => setCorsProxy(e.target.value)}
-          className="w-full"
-        />
-      </FormItem>
-      {Boolean(pin) && (
-        <div className="rounded-md bg-muted p-4">
-          <p className="text-sm mb-2">
-            <a
-              className="hover:text-bold underline"
-              href="https://github.com/login/device"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Navigate to {selectedConnection.name.split(" ")[0]}
-            </a>{" "}
-            and enter the device PIN below to authenticate.
-          </p>
-          <div className="flex justify-end gap-2 mt-4">
-            {Array.from(pin).map((char, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center justify-center rounded-lg bg-background border px-2 py-1 text-xl font-mono font-bold"
-              >
-                {char}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-
-        {!Boolean(pin) && (
-          <Button type="button" onClick={handleGithubDeviceAuth}>
-            {state === "loading" ? (
-              <>
-                <Loader size={12} className="animate-spin animation-iteration-infinite" />
-                Load Device PIN
-              </>
-            ) : (
-              "Load Device PIN"
-            )}
-          </Button>
-        )}
-        {Boolean(pin) && (
-          <>
-            <Button asChild type="button" className="flex items-center gap-2  hidden" variant={"outline"}>
-              <a href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
-                Retrieve Auth
-              </a>
-            </Button>
-            <Button asChild type="button" className="flex items-center gap-2">
-              <a href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
-                {selectedConnection.icon}
-                Go to {selectedConnection.name.split(" ")[0]}
-                <ExternalLink className="ml-1 h-4 w-4" />
-              </a>
-            </Button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}

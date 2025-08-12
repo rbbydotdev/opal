@@ -93,7 +93,7 @@ const handleRequest = async (request: Request): Promise<Response> => {
 		method: request.method,
 		headers: filterHeaders(request.headers),
 		body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,
-		redirect: 'follow' as RequestRedirect,
+		redirect: 'follow',
 	};
 
 	let response: Response;

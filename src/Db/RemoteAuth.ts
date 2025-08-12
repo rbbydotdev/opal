@@ -1,38 +1,65 @@
 import { ClientDb } from "@/Db/instance";
 import { nanoid } from "nanoid";
 
-export type RemoteAuthJType = RemoteAuthRecord;
+// 1. Add the new type to the union
+type RemoteAuthTypes = "api" | "oauth" | "gh-device-oauth";
 
-type RemoteAuthTypes = "api" | "oauth";
+// 2. Define all record types
+export type RemoteAuthAPIRecordInternal = {
+  apiKey: string;
+  apiSecret: string;
+  apiProxy: string | null;
+};
+
+export type RemoteAuthOAuthRecordInternal = {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  refreshToken: string;
+  scope: string;
+  obtainedAt: number;
+  idToken?: string;
+};
+
+export type RemoteAuthGithubDeviceOAuthRecordInternal = {
+  accessToken: string;
+  obtainedAt: number;
+};
+
+// 3. Main record type
 export type RemoteAuthRecord<T extends RemoteAuthTypes = RemoteAuthTypes> = {
   guid: string;
   authType: T;
   tag: string;
-  data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | null;
+  data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal | null;
 };
 
-// export type RemoteAuthCompoundApiType = RemoteAuthAPIRecordInternal & RemoteAuthRecord<"api">;
-// export type RemoteAuthCompoundOAuthType = RemoteAuthOAuthRecordInternal & RemoteAuthRecord<"oauth">;
-// export type RemoteAuthCompoundType = RemoteAuthCompoundApiType | RemoteAuthCompoundOAuthType;
-
+// 4. Type guards
 export const isApiAuth = (
   record: RemoteAuthRecord
 ): record is RemoteAuthRecord & { data: RemoteAuthAPIRecordInternal } => {
   return record.authType === "api";
 };
+
 export const isOAuthAuth = (
   record: RemoteAuthRecord
 ): record is RemoteAuthRecord & { data: RemoteAuthOAuthRecordInternal } => {
   return record.authType === "oauth";
 };
 
-// type RemoteAuthDB
+export const isGithubDeviceOAuthAuth = (
+  record: RemoteAuthRecord
+): record is RemoteAuthRecord & { data: RemoteAuthGithubDeviceOAuthRecordInternal } => {
+  return record.authType === "gh-device-oauth";
+};
 
+// 5. DAO class
 export class RemoteAuthDAO {
   guid!: string;
   authType!: RemoteAuthTypes;
   tag!: string;
-  data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | null = null;
+  data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal | null =
+    null;
 
   save() {
     return ClientDb.remoteAuths.put(
@@ -43,7 +70,7 @@ export class RemoteAuthDAO {
         tag: this.tag,
       }).reduce((acc, [key, value]) => {
         if (value !== undefined) {
-          //@ts-ignore
+          // @ts-ignore
           acc[key] = value;
         }
         return acc;
@@ -60,7 +87,11 @@ export class RemoteAuthDAO {
     guid: string;
     authType: RemoteAuthTypes;
     tag: string;
-    data?: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | null;
+    data?:
+      | RemoteAuthAPIRecordInternal
+      | RemoteAuthOAuthRecordInternal
+      | RemoteAuthGithubDeviceOAuthRecordInternal
+      | null;
   }) {
     this.guid = guid;
     this.tag = tag;
@@ -73,25 +104,19 @@ export class RemoteAuthDAO {
   static Create(authType: "api", tag: string, record: RemoteAuthAPIRecordInternal): Promise<RemoteAuthDAO>;
   static Create(authType: "oauth", tag: string, record: RemoteAuthOAuthRecordInternal): Promise<RemoteAuthDAO>;
   static Create(
+    authType: "gh-device-oauth",
+    tag: string,
+    record: RemoteAuthGithubDeviceOAuthRecordInternal
+  ): Promise<RemoteAuthDAO>;
+  static Create(
     authType: RemoteAuthTypes,
     tag: string,
-    data: RemoteAuthOAuthRecordInternal | RemoteAuthAPIRecordInternal
+    data: RemoteAuthOAuthRecordInternal | RemoteAuthAPIRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal
   ): Promise<RemoteAuthDAO> {
-    // static Create<T extends AuthTypes>(authType: AuthTypes, tag: string, record: RemoteAuthOAuthRecord | RemoteAuthAPIRecord) {
     const guid = RemoteAuthDAO.guid();
     const dao = new RemoteAuthDAO({ guid, tag, authType, data: data });
     return dao.save().then(() => dao);
   }
-
-  // async load(forceReload = false) {
-  //   if (!forceReload && this.data) return this.data;
-
-  //   const record = await ClientDb.remoteAuths.get({ guid: this.guid });
-  //   if (!record) throw new Error(`RemoteAuth with guid ${this.guid} not found`);
-
-  //   this.data = record;
-  //   return this.data;
-  // }
 
   toJSON() {
     return {
@@ -100,6 +125,7 @@ export class RemoteAuthDAO {
       authType: this.authType,
     } as RemoteAuthJType;
   }
+
   static FromJSON(json: RemoteAuthJType) {
     return new RemoteAuthDAO({
       tag: json.tag,
@@ -110,19 +136,16 @@ export class RemoteAuthDAO {
   }
 }
 
-export type RemoteAuthOAuthRecord = RemoteAuthOAuthRecordInternal & { authType: "oauth" };
-export type RemoteAuthApiRecord = RemoteAuthOAuthRecordInternal & { authType: "api" };
-export type RemoteAuthOAuthRecordInternal = {
-  accessToken: string;
-  tokenType: string;
-  expiresIn: number;
-  refreshToken: string;
-  scope: string;
-  obtainedAt: number;
-  idToken?: string;
+// 6. Type aliases for convenience (optional)
+export type RemoteAuthOAuthRecord = RemoteAuthOAuthRecordInternal & {
+  authType: "oauth";
 };
-export type RemoteAuthAPIRecordInternal = {
-  apiKey: string;
-  apiSecret: string;
-  apiProxy: string | null;
+export type RemoteAuthApiRecord = RemoteAuthAPIRecordInternal & {
+  authType: "api";
 };
+export type RemoteAuthGithubDeviceOAuthRecord = RemoteAuthGithubDeviceOAuthRecordInternal & {
+  authType: "gh-device-oauth";
+};
+
+// 7. Main exported type
+export type RemoteAuthJType = RemoteAuthRecord;
