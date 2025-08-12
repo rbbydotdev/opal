@@ -118,7 +118,7 @@ export default defineConfig(() => {
     define: {
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
       "process.version": JSON.stringify("v18.18.0"),
-      "process.env.PUBLIC_GITHUB_CLIENT_ID": JSON.stringify(process.env.PUBLIC_GITHUB_CLIENT_ID || "unknown"),
+      // "process.env.PUBLIC_GITHUB_CLIENT_ID": JSON.stringify(process.env.PUBLIC_GITHUB_CLIENT_ID || "unknown"),
     },
   };
 });

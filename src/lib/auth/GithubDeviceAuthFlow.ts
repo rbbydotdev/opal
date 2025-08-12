@@ -1,4 +1,6 @@
+import { NotEnv } from "@/lib/notenv";
 import { createOAuthDeviceAuth, OAuthAppAuthentication } from "@octokit/auth-oauth-device";
+import { request } from "@octokit/request";
 import { OnVerificationCallback } from "../../../node_modules/@octokit/auth-oauth-device/dist-types/types";
 // GithubVarer{
 //    device_code: "3584d83530557fdd1f46af8289938c8ef79f9dc5",
@@ -9,18 +11,26 @@ import { OnVerificationCallback } from "../../../node_modules/@octokit/auth-oaut
 //  };
 
 export async function GithubDeviceAuthFlow({
-  clientId = process.env.PUBLIC_GITHUB_CLIENT_ID!,
+  corsProxy,
+  clientId = NotEnv.PublicGithubClientID,
   scopes = ["public_repo", "private_repo", "repo", "workflow"],
   onVerification,
   onAuthentication,
 }: {
+  corsProxy?: string;
   clientId?: string;
   scopes?: string[];
   onVerification: OnVerificationCallback;
   onVerificationError?: (error: Error) => void;
   onAuthentication?: (auth: OAuthAppAuthentication) => void;
 }) {
+  const proxiedRequest = corsProxy
+    ? request.defaults({
+        baseUrl: corsProxy + "/github.com",
+      })
+    : undefined;
   const auth = createOAuthDeviceAuth({
+    request: proxiedRequest,
     clientType: "oauth-app",
     clientId,
     scopes,

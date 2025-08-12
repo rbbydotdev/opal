@@ -1,9 +1,11 @@
 import type React from "react";
+import { useForm } from "react-hook-form";
 
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { ExternalLink, Github, Loader } from "lucide-react";
 import { useState } from "react";
 
+import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,10 +15,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
+import { NotEnv } from "@/lib/notenv";
+
+// SHADCN FORM COMPONENTS
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { mapToTypedError, unwrapError } from "@/lib/errors";
 
 type ConnectionType = {
   id: string;
@@ -34,7 +40,7 @@ const connectionTypes: ConnectionType[] = [
     type: "apikey",
     icon: <Github className="h-5 w-5" />,
   },
-  /*{
+  {
     id: "github-device",
     name: "GitHub Device Auth",
     description: "Connect using GitHub Device Authentication",
@@ -47,8 +53,16 @@ const connectionTypes: ConnectionType[] = [
     description: "Connect using GitHub OAuth",
     type: "oauth",
     icon: <Github className="h-5 w-5" />,
-  },*/
+  },
 ];
+
+type FormValues = {
+  connectionType: string;
+  apiName: string;
+  apiKey: string;
+  apiSecret: string;
+  apiProxy: string;
+};
 
 export function ConnectionsModal({
   children,
@@ -107,20 +121,24 @@ export function ConnectionsModalContent({
   onSuccess?: (rad?: RemoteAuthDAO) => void;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string>(
-    editConnection?.type || connectionTypes[0]!.id
-  );
-  // console.log(editConnection);
-  const [apiName, setApiName] = useState(editConnection?.name || "");
-  const [apiKey, setApiKey] = useState("");
-  const [apiSecret, setApiSecret] = useState("");
+  const defaultType = editConnection?.type || connectionTypes[0]!.id;
+
+  const form = useForm<FormValues>({
+    defaultValues: {
+      connectionType: defaultType,
+      apiName: editConnection?.name || "Github-API-RXTX",
+      apiKey: "",
+      apiSecret: "",
+      apiProxy: NotEnv.GithubCorsProxy || "",
+    },
+  });
+
   const [submitting, setSubmitting] = useState(false);
 
-  const selectedConnection = connectionTypes.find((connection) => connection.id === selectedConnectionId);
+  const selectedConnection = connectionTypes.find((connection) => connection.id === form.watch("connectionType"));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedConnection || !apiName.trim()) return;
+  const handleSubmit = async (values: FormValues) => {
+    if (!selectedConnection || !values.apiName.trim()) return;
 
     setSubmitting(true);
     try {
@@ -129,23 +147,22 @@ export function ConnectionsModalContent({
           const dao = RemoteAuthDAO.FromJSON({
             guid: editConnection.guid,
             authType: "api",
-            tag: apiName,
+            tag: values.apiName,
             data: null,
           });
-
           await dao.save();
           onSuccess?.(dao);
         } else {
           // Create new connection
-          const result = await RemoteAuthDAO.Create("api", apiName, {
-            apiKey: apiKey,
-            apiSecret: apiSecret || apiKey,
+          const result = await RemoteAuthDAO.Create("api", values.apiName, {
+            apiKey: values.apiKey,
+            apiSecret: values.apiSecret || values.apiKey,
+            apiProxy: values.apiProxy,
           });
           onSuccess?.(result);
         }
       }
-
-      resetForm();
+      form.reset();
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving connection:", error);
@@ -157,16 +174,8 @@ export function ConnectionsModalContent({
   const handleOAuthConnect = () => {
     // Handle OAuth flow initiation
     console.log("Initiating OAuth flow for:", selectedConnection);
-    // In a real implementation, you would redirect to the OAuth provider here
-    resetForm();
+    form.reset();
     onOpenChange(false);
-  };
-
-  const resetForm = () => {
-    setSelectedConnectionId("");
-    setApiName("");
-    setApiKey("");
-    setApiSecret("");
   };
 
   return (
@@ -180,113 +189,185 @@ export function ConnectionsModalContent({
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label htmlFor="connection-type">Connection Type</Label>
-          <Select value={selectedConnectionId} onValueChange={setSelectedConnectionId}>
-            <SelectTrigger id="connection-type">
-              <SelectValue placeholder="Select a connection type" />
-            </SelectTrigger>
-            <SelectContent>
-              {connectionTypes.map((connection) => (
-                <SelectItem key={connection.id} value={connection.id}>
-                  <div className="flex items-center gap-2">
-                    {connection.icon}
-                    <div>
-                      <p className="text-sm font-medium">{connection.name}</p>
-                      <p className="text-xs text-muted-foreground">{connection.description}</p>
-                    </div>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" autoComplete="off">
+            <FormField
+              control={form.control}
+              name="connectionType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Connection Type</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="connection-type">
+                      <SelectValue placeholder="Select a connection type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {connectionTypes.map((connection) => (
+                        <SelectItem key={connection.id} value={connection.id}>
+                          <div className="flex items-center gap-2">
+                            {connection.icon}
+                            <div>
+                              <p className="text-sm font-medium">{connection.name}</p>
+                              <p className="text-xs text-muted-foreground">{connection.description}</p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {!Boolean(selectedConnection) && (
-          <div className="flex w-full justify-end">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-          </div>
-        )}
-        <div className="pt-2">
-          {selectedConnection?.type === "apikey" && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="api-name">Connection Name</Label>
-                <Input
-                  id="api-name"
-                  value={apiName}
-                  onChange={(e) => setApiName(e.target.value)}
-                  placeholder="My GitHub API"
-                  required={mode === "add"}
+            {selectedConnection?.type === "apikey" && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="apiName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Connection Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="My GitHub API" required={mode === "add"} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="api-key">API Key</Label>
-                <Input
-                  id="api-key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  type="password"
-                  placeholder="Enter your API key"
-                  required={mode === "add"}
+                <FormField
+                  control={form.control}
+                  name="apiProxy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Github API CORS Proxy (optional) <OptionalProbablyToolTip />
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="https://" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="api-secret">API Secret (Optional)</Label>
-                <Input
-                  id="api-secret"
-                  value={apiSecret}
-                  onChange={(e) => setApiSecret(e.target.value)}
-                  type="password"
-                  placeholder="Enter your API secret (if different from key)"
+                <FormField
+                  control={form.control}
+                  name="apiKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API Key</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" placeholder="Enter your API key" required={mode === "add"} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
+                <FormField
+                  control={form.control}
+                  name="apiSecret"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API Secret (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" placeholder="Enter your API secret (if different from key)" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? "Saving..." : mode === "edit" ? "Update" : "Connect"}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {selectedConnection?.type === "oauth" && (
+              <div className="space-y-4">
+                <div className="rounded-md bg-muted p-4">
+                  <p className="text-sm">
+                    You will be redirected to {selectedConnection.name.split(" ")[0]} to authorize this connection.
+                    After authorization, you will be redirected back to this application.
+                  </p>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={handleOAuthConnect} className="flex items-center gap-2">
+                    {selectedConnection.icon}
+                    Connect with {selectedConnection.name.split(" ")[0]}
+                  </Button>
+                </div>
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? "Saving..." : mode === "edit" ? "Update" : "Connect"}
-                </Button>
-              </div>
-            </form>
-          )}
-          {selectedConnection?.type === "oauth" && (
-            <div className="space-y-4">
-              <div className="rounded-md bg-muted p-4">
-                <p className="text-sm">
-                  You will be redirected to {selectedConnection.name.split(" ")[0]} to authorize this connection. After
-                  authorization, you will be redirected back to this application.
-                </p>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancel
-                </Button>
-                <Button type="button" onClick={handleOAuthConnect} className="flex items-center gap-2">
-                  {selectedConnection.icon}
-                  Connect with {selectedConnection.name.split(" ")[0]}
-                </Button>
-              </div>
-            </div>
-          )}
-          {selectedConnection?.type === "device" && (
-            <DeviceAuth selectedConnection={selectedConnection} onCancel={() => onOpenChange(false)} />
-          )}
-        </div>
+            )}
+
+            {selectedConnection?.type === "device" && (
+              <DeviceAuth selectedConnection={selectedConnection} onCancel={() => onOpenChange(false)} />
+            )}
+          </form>
+        </Form>
       </div>
     </div>
   );
 }
 
+// DeviceAuth remains unchanged, but you can also refactor it to use RHF if you want.
+
 function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: ConnectionType; onCancel: () => void }) {
-  const [state, setState] = useState<"idle" | "loading" | "loaded">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "loaded" | "pin-success" | "error">("idle");
   const [pin, setPin] = useState<string>("");
+  const [corsProxy, setCorsProxy] = useState<string>(NotEnv.GithubCorsProxy || "");
+  const [error, setError] = useState<string | null>(null);
+  async function handleGithubDeviceAuth() {
+    try {
+      setState("loading");
+      const { token } = await GithubDeviceAuthFlow({
+        corsProxy,
+        clientId: NotEnv.PublicGithubClientID,
+        scopes: ["public_repo", "private_repo", "repo", "workflow"],
+        onVerification: (data) => {
+          setPin(data.user_code);
+          setState("loaded");
+        },
+        // onVerificationError: (error) => {
+        //   setError(error.message);
+        //   setState("idle");
+        // },
+        // onAuthentication: (auth) => {
+        //   // Handle successful authentication
+        //   console.log("Authenticated successfully:", auth);
+        //   // Authenticated successfully:
+        //   // Object { type: "token", tokenType: "oauth", clientType: "oauth-app", clientId: "Iv23lidn21uJW9mlXSsi", token: "ghu_*******", scopes: [] }
+        // },
+      });
+      setState("pin-success");
+    } catch (e) {
+      setState("error");
+      console.log(mapToTypedError(e));
+      console.log(unwrapError(e));
+    }
+  }
 
   return (
     <div className="space-y-4">
+      <FormItem>
+        <FormLabel className="text-sm font-medium">
+          CORS Proxy URL (optional) <OptionalProbablyToolTip />
+        </FormLabel>
+        <Input
+          type="text"
+          placeholder="CORS Proxy URL"
+          value={corsProxy}
+          onChange={(e) => setCorsProxy(e.target.value)}
+          className="w-full"
+        />
+      </FormItem>
       {Boolean(pin) && (
         <div className="rounded-md bg-muted p-4">
           <p className="text-sm mb-2">
@@ -316,29 +397,9 @@ function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: Conn
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
+
         {!Boolean(pin) && (
-          <Button
-            type="button"
-            // variant=""
-            onClick={() => {
-              GithubDeviceAuthFlow({
-                onVerification: (data) => {
-                  console.log("Verification data:", data);
-                  setPin(data.user_code);
-                },
-                onAuthentication: (auth) => {
-                  console.log("Authentication successful:", auth);
-                  // Handle successful authentication
-                },
-              });
-              setState("loading");
-              // Simulate loading the pin
-              setTimeout(() => {
-                setPin("12345678"); // Replace with actual pin fetching logic
-                setState("loaded");
-              }, 2000); // Simulate a 2-second loading time
-            }}
-          >
+          <Button type="button" onClick={handleGithubDeviceAuth}>
             {state === "loading" ? (
               <>
                 <Loader size={12} className="animate-spin animation-iteration-infinite" />
@@ -369,27 +430,3 @@ function DeviceAuth({ selectedConnection, onCancel }: { selectedConnection: Conn
     </div>
   );
 }
-
-// function LoadDevicePin({ url, action }: { url: string; action: "post" | "get" }) {
-//   // This is a placeholder for the actual implementation of loading the device pin.
-//   // In a real application, you would fetch the pin from the server or generate it.
-
-//   if (state === "idle") {
-//     return (
-//       <Button
-//         variant="outline"
-//         onClick={() => {
-//           setState("loading");
-//           // Simulate loading the pin
-//           setTimeout(() => {
-//             setState("loaded");
-//           }, 2000); // Simulate a 2-second loading time
-//         }}
-//       >
-//         Load Device PIN
-//       </Button>
-//     );
-//   }
-
-//   return;
-// }

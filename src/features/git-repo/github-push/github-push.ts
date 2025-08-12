@@ -1,3 +1,4 @@
+import { NotEnv } from "@/lib/notenv";
 import LightningFS from "@isomorphic-git/lightning-fs";
 import * as git from "isomorphic-git";
 import http from "isomorphic-git/http/web";
@@ -15,7 +16,7 @@ export async function pushHelloWorldToGitHubPages({
   repo,
   token,
   branch = "main",
-  gitCorsProxy = "https://cors.isomorphic-git.org",
+  gitCorsProxy = NotEnv.GitCorsProxy,
 }: PushHelloWorldParams): Promise<void> {
   // 1. Setup FS
   const fs = new LightningFS("fs");
@@ -27,7 +28,7 @@ export async function pushHelloWorldToGitHubPages({
     fs: pfs,
     http,
     dir,
-    gitCorsProxy,
+    corsProxy: gitCorsProxy,
     url: `https://github.com/${owner}/${repo}.git`,
     ref: branch,
     singleBranch: true,
@@ -57,7 +58,8 @@ export async function pushHelloWorldToGitHubPages({
     fs: pfs,
     http,
     dir,
-    gitCorsProxy,
+    corsProxy: gitCorsProxy,
+
     remote: "origin",
     ref: branch,
     onAuth: () => ({ username: token, password: "" }),
