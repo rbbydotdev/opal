@@ -10,6 +10,9 @@ import { OnVerificationCallback } from "../../../node_modules/@octokit/auth-oaut
 //    interval: 5,
 //  };
 
+// corsProxy,
+// clientId: NotEnv.PublicGithubClientID,
+// scopes: ["public_repo", "private_repo", "repo", "workflow"],
 export async function GithubDeviceAuthFlow({
   corsProxy,
   clientId = NotEnv.PublicGithubClientID,
