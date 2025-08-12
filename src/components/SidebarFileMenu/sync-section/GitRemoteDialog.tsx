@@ -35,7 +35,7 @@ export const gitRemoteSchema = z.object({
     .min(1, "Remote URL is required")
     .url("Remote URL must be a valid URL")
     .regex(/^(https?|git|ssh|file):\/\/|^git@/, "Remote URL must be a valid Git URL"),
-  corsProxy: z
+  gitCorsProxy: z
     .string()
     .optional()
     .transform((val) => (val === "" ? undefined : val))
@@ -97,7 +97,7 @@ export function GitRemoteDialog({
   const defaultValues = {
     name: defaultName,
     url: "https://github.com/rbbydotdev/test123",
-    corsProxy: "https://cors.isomorphic-git.org",
+    gitCorsProxy: "https://cors.isomorphic-git.org",
   };
 
   const form = useForm<GitRemoteFormValues>({
@@ -253,11 +253,11 @@ function GitRemoteDialogInternal({
 
           <FormField
             control={form.control}
-            name="corsProxy"
+            name="gitCorsProxy"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  CORS Proxy <CorsProxyTooltip />
+                  Git CORS Proxy <GitCorsProxyTooltip />
                 </FormLabel>
                 <FormControl>
                   <Input autoComplete="off" placeholder="Optional" {...field} />
@@ -298,7 +298,7 @@ function GitRemoteDialogInternal({
   );
 }
 
-const CorsProxyTooltip = () => (
+const GitCorsProxyTooltip = () => (
   <Tooltip>
     <TooltipTrigger>
       <Info className="w-3.5 h-3.5" />
