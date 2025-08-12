@@ -19,7 +19,7 @@ import { isOAuthAuth } from "../../Db/RemoteAuth";
 export interface GitRemote {
   name: string;
   url: string;
-  corsProxy?: string;
+  gitCorsProxy?: string;
   authId?: string;
 }
 interface IRemote {
@@ -433,12 +433,12 @@ export class Repo {
     });
     return Promise.all(
       remotes.map(async (remote) => {
-        const corsProxy = await this.getCorsProxy(remote.remote);
+        const gitCorsProxy = await this.getGitCorsProxy(remote.remote);
         const authId = await this.getAuthId(remote.remote);
         return {
           name: remote.remote,
           url: remote.url,
-          corsProxy: corsProxy || undefined,
+          gitCorsProxy: gitCorsProxy || undefined,
           authId: authId || undefined,
         };
       })
@@ -637,11 +637,11 @@ export class Repo {
     });
   };
 
-  setCorsProxy = async (remoteName: string, corsProxy: string): Promise<void> => {
-    return this.setConfig(`remote.${remoteName}.corsProxy`, corsProxy);
+  setGitCorsProxy = async (remoteName: string, gitCorsProxy: string): Promise<void> => {
+    return this.setConfig(`remote.${remoteName}.gitCorsProxy`, gitCorsProxy);
   };
-  getCorsProxy = async (remoteName: string): Promise<string | null> => {
-    return this.getConfig(`remote.${remoteName}.corsProxy`);
+  getGitCorsProxy = async (remoteName: string): Promise<string | null> => {
+    return this.getConfig(`remote.${remoteName}.gitCorsProxy`);
   };
 
   setAuthId = async (remoteName: string, authId: string): Promise<void> => {
@@ -692,7 +692,7 @@ export class Repo {
       remote: uniqSlug,
       url: remote.url,
     });
-    if (remote.corsProxy) await this.setCorsProxy(uniqSlug, remote.corsProxy);
+    if (remote.gitCorsProxy) await this.setGitCorsProxy(uniqSlug, remote.gitCorsProxy);
     if (remote.authId) await this.setAuthId(uniqSlug, remote.authId);
   };
   replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {

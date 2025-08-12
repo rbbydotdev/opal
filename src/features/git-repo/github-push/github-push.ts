@@ -7,7 +7,7 @@ type PushHelloWorldParams = {
   repo: string;
   token: string;
   branch?: string; // default: 'main'
-  corsProxy?: string; // default: 'https://cors.isomorphic-git.org'
+  gitCorsProxy?: string; // default: 'https://cors.isomorphic-git.org'
 };
 
 export async function pushHelloWorldToGitHubPages({
@@ -15,7 +15,7 @@ export async function pushHelloWorldToGitHubPages({
   repo,
   token,
   branch = "main",
-  corsProxy = "https://cors.isomorphic-git.org",
+  gitCorsProxy = "https://cors.isomorphic-git.org",
 }: PushHelloWorldParams): Promise<void> {
   // 1. Setup FS
   const fs = new LightningFS("fs");
@@ -27,7 +27,7 @@ export async function pushHelloWorldToGitHubPages({
     fs: pfs,
     http,
     dir,
-    corsProxy,
+    gitCorsProxy,
     url: `https://github.com/${owner}/${repo}.git`,
     ref: branch,
     singleBranch: true,
@@ -57,7 +57,7 @@ export async function pushHelloWorldToGitHubPages({
     fs: pfs,
     http,
     dir,
-    corsProxy,
+    gitCorsProxy,
     remote: "origin",
     ref: branch,
     onAuth: () => ({ username: token, password: "" }),
