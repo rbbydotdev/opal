@@ -14,13 +14,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { GitBranch, Info } from "lucide-react";
+import { GitBranch } from "lucide-react";
 
 import { AuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
+import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GitRemote } from "@/features/git-repo/GitRepo";
+import { NotEnv } from "@/lib/notenv";
 import { cn } from "@/lib/utils";
 import { useImperativeHandle, useState } from "react";
 
@@ -97,7 +98,7 @@ export function GitRemoteDialog({
   const defaultValues = {
     name: defaultName,
     url: "https://github.com/rbbydotdev/test123",
-    gitCorsProxy: "https://cors.isomorphic-git.org",
+    gitCorsProxy: NotEnv.GitCorsProxy, //"https://cors.isomorphic-git.org",
   };
 
   const form = useForm<GitRemoteFormValues>({
@@ -257,7 +258,7 @@ function GitRemoteDialogInternal({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Git CORS Proxy <GitCorsProxyTooltip />
+                  Git CORS Proxy <OptionalProbablyToolTip />
                 </FormLabel>
                 <FormControl>
                   <Input autoComplete="off" placeholder="Optional" {...field} />
@@ -297,14 +298,3 @@ function GitRemoteDialogInternal({
     </div>
   );
 }
-
-const GitCorsProxyTooltip = () => (
-  <Tooltip>
-    <TooltipTrigger>
-      <Info className="w-3.5 h-3.5" />
-    </TooltipTrigger>
-    <TooltipContent>
-      <p>Optional, but probably required</p>
-    </TooltipContent>
-  </Tooltip>
-);

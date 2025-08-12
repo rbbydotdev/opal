@@ -124,4 +124,5 @@ export type RemoteAuthOAuthRecordInternal = {
 export type RemoteAuthAPIRecordInternal = {
   apiKey: string;
   apiSecret: string;
+  apiProxy: string | null;
 };

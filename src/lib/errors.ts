@@ -107,7 +107,10 @@ export class ApplicationError extends Error {
 
 export class NotFoundError extends ApplicationError {
   name = "NotFoundError" as const;
-  constructor(errorOrMessage: Error | string = "not found", public path?: string) {
+  constructor(
+    errorOrMessage: Error | string = "not found",
+    public path?: string
+  ) {
     super(errorOrMessage, 404);
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
@@ -233,4 +236,72 @@ export function errF(strings: TemplateStringsArray, ...values: unknown[]): Error
   }
 
   return error;
+}
+type ErrorMappingOptions = {
+  code?: number | string;
+  name?: string;
+  message?: string;
+  path?: string;
+  errors?: Error[];
+};
+
+export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {}): ApplicationError {
+  // Try to extract code, name, message from error or options
+  const err = toErrorWithMessage(error);
+  const code = options.code ?? (typeof (error as any)?.code === "number" ? (error as any).code : undefined);
+  const name = options.name ?? (typeof (error as any)?.name === "string" ? (error as any).name : undefined);
+  const message = options.message ?? err.message;
+
+  // Map by code (number) if present
+  switch (code) {
+    case 400:
+      return new BadRequestError(message);
+    case 401:
+      return new UnauthorizedError(message);
+    case 403:
+      return new ForbiddenError(message);
+    case 404:
+      return new NotFoundError(message, options.path);
+    case 409:
+      return new ConflictError(message);
+    case 500:
+      return new InternalServerError(message);
+    case 501:
+      return new NotImplementedError(message);
+    case 502:
+      return new BadGatewayError(message);
+    case 503:
+      return new ServiceUnavailableError(message);
+    case 504:
+      return new GatewayTimeoutError(message);
+  }
+
+  // Map by name if present
+  switch (name) {
+    case "NotFoundError":
+      return new NotFoundError(message, options.path);
+    case "ConflictError":
+      return new ConflictError(message);
+    case "BadGatewayError":
+      return new BadGatewayError(message);
+    case "UnauthorizedError":
+      return new UnauthorizedError(message);
+    case "BadRequestError":
+      return new BadRequestError(message);
+    case "ForbiddenError":
+      return new ForbiddenError(message);
+    case "InternalServerError":
+      return new InternalServerError(message);
+    case "ServiceUnavailableError":
+      return new ServiceUnavailableError(message);
+    case "GatewayTimeoutError":
+      return new GatewayTimeoutError(message);
+    case "NotImplementedError":
+      return new NotImplementedError(message);
+    case "AggregateApplicationError":
+      return new AggregateApplicationError(options.errors ?? [], message, typeof code === "number" ? code : 400);
+  }
+
+  // Fallback: wrap as ApplicationError
+  return new ApplicationError(message, typeof code === "number" ? code : 500);
 }
