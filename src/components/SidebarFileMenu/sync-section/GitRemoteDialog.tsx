@@ -55,22 +55,15 @@ const GitRemoteDialogModes = {
 } as const;
 type GitRemoteDialogModeType = (typeof GitRemoteDialogModes)[keyof typeof GitRemoteDialogModes];
 
-function descForMode(mode: GitRemoteDialogModeType) {
-  switch (mode) {
-    case GitRemoteDialogModes.ADD:
-      return "Add a new Git remote to your repository.";
-    case GitRemoteDialogModes.EDIT:
-      return "Edit an existing Git remote in your repository.";
-  }
-}
-function titleForMode(mode: GitRemoteDialogModeType) {
-  switch (mode) {
-    case GitRemoteDialogModes.ADD:
-      return "Add Git Remote";
-    case GitRemoteDialogModes.EDIT:
-      return "Edit Git Remote";
-  }
-}
+const DescForMode = {
+  [GitRemoteDialogModes.ADD]: "Add a new Git remote to your repository.",
+  [GitRemoteDialogModes.EDIT]: "Edit an existing Git remote in your repository.",
+};
+
+const TitleForMode = {
+  [GitRemoteDialogModes.ADD]: "Add Git Remote",
+  [GitRemoteDialogModes.EDIT]: "Edit Git Remote",
+};
 export function useGitRemoteDialogMode(
   defaultMode: GitRemoteDialogModeType = "add"
 ): [GitRemoteDialogModeType, (mode: GitRemoteDialogModeType) => void] {
@@ -160,11 +153,11 @@ export function GitRemoteDialog({
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[26.5625rem]">
-        <div className="grid relative">
+      <DialogContent>
+        <div className="grid relative max-w-full w-full">
           <div className="col-start-1 row-start-1">
             <ConnectionsModalContent
-              className={cn({ hidden: !showConnectionModal })}
+              className={cn("truncate w-full", { hidden: !showConnectionModal })}
               mode={"add"}
               key={connModalKeyRef.current}
               onSuccess={(rad) => {
@@ -213,9 +206,9 @@ function GitRemoteDialogInternal({
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
           <GitBranch className="h-5 w-5" />
-          {titleForMode(mode)}
+          {TitleForMode[mode]}
         </DialogTitle>
-        <DialogDescription>{descForMode(mode)}</DialogDescription>
+        <DialogDescription>{DescForMode[mode]}</DialogDescription>
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -272,7 +265,7 @@ function GitRemoteDialogInternal({
             control={form.control}
             name="authId"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Authentication</FormLabel>
                 <FormControl>
                   <AuthSelect
