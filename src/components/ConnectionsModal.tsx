@@ -20,7 +20,7 @@ import { RemoteAuthDAO, RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuth";
 import { Channel } from "@/lib/channel";
 import { NotEnv } from "@/lib/notenv";
 
-export type AuthType = "apikey" | "oauth" | "device";
+export type AuthType = "api" | "oauth" | "oauth-device";
 export type AdapterTemplate = {
   id: string;
   name: string;
@@ -34,14 +34,14 @@ const adapterTemplates: readonly AdapterTemplate[] = [
     id: "github-api",
     name: "GitHub API",
     description: "Connect using a GitHub API key",
-    type: "apikey",
+    type: "api",
     icon: <Github className="h-5 w-5" />,
   },
   {
     id: "github-device",
     name: "GitHub Device Auth",
     description: "Connect using GitHub Device Authentication",
-    type: "device",
+    type: "oauth-device",
     icon: <Github className="h-5 w-5" />,
   },
   {
@@ -74,7 +74,7 @@ type OAuthFormValues = BaseFormValues & {
 
 type DeviceAuthFormValues = BaseFormValues & {
   templateType: string;
-  authType: "device";
+  authType: "oauth-device";
   name: string;
 };
 
@@ -150,10 +150,10 @@ export function ConnectionsModalContent({
           authType: "oauth" as const,
           name: editConnection?.name || "my-oauth",
         };
-      case "device":
+      case "oauth-device":
         return {
           templateType,
-          authType: "device" as const,
+          authType: "oauth-device" as const,
           name: editConnection?.name || "my-device-auth",
         };
       // case "apikey":
@@ -222,7 +222,7 @@ export function ConnectionsModalContent({
             )}
           />
 
-          {selectedTemplate?.type === "apikey" && (
+          {selectedTemplate?.type === "api" && (
             <ApiKeyAuth
               form={form}
               selectedConnection={selectedTemplate}
@@ -243,7 +243,7 @@ export function ConnectionsModalContent({
               editConnection={editConnection}
             />
           )}
-          {selectedTemplate?.type === "device" && (
+          {selectedTemplate?.type === "oauth-device" && (
             <DeviceAuth
               form={form}
               selectedConnection={selectedTemplate}

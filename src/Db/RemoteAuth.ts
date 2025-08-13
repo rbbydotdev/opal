@@ -2,7 +2,7 @@ import { ClientDb } from "@/Db/instance";
 import { nanoid } from "nanoid";
 
 // 1. Add the new type to the union
-type RemoteAuthTypes = "api" | "oauth" | "github-device-oauth";
+export type RemoteAuthTypes = "api" | "oauth" | "oauth-device";
 
 // 2. Define all record types
 export type RemoteAuthAPIRecordInternal = {
@@ -51,7 +51,7 @@ export const isOAuthAuth = (
 export const isGithubDeviceOAuthAuth = (
   record: RemoteAuthRecord
 ): record is RemoteAuthRecord & { data: RemoteAuthGithubDeviceOAuthRecordInternal } => {
-  return record.authType === "github-device-oauth";
+  return record.authType === "oauth-device";
 };
 
 // 5. DAO class
@@ -105,7 +105,7 @@ export class RemoteAuthDAO {
   static Create(authType: "api", tag: string, record: RemoteAuthAPIRecordInternal): Promise<RemoteAuthDAO>;
   static Create(authType: "oauth", tag: string, record: RemoteAuthOAuthRecordInternal): Promise<RemoteAuthDAO>;
   static Create(
-    authType: "github-device-oauth",
+    authType: "oauth-device",
     tag: string,
     record: RemoteAuthGithubDeviceOAuthRecordInternal
   ): Promise<RemoteAuthDAO>;
@@ -145,7 +145,7 @@ export type RemoteAuthApiRecord = RemoteAuthAPIRecordInternal & {
   authType: "api";
 };
 export type RemoteAuthGithubDeviceOAuthRecord = RemoteAuthGithubDeviceOAuthRecordInternal & {
-  authType: "github-device-oauth";
+  authType: "oauth-device";
 };
 
 // 7. Main exported type

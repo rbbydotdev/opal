@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RemoteAuthTypes } from "@/Db/RemoteAuth";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { Github, Key, Plus, Shield } from "lucide-react";
 
@@ -10,8 +11,9 @@ interface AuthSelectProps {
   onAddAuth: () => void;
 }
 
-const AuthIcon = ({ authType }: { authType: "api" | "oauth" }) => {
-  switch (authType) {
+const AuthIcon = ({ authType }: { authType: RemoteAuthTypes }) => {
+  const simpleType = authType.split("/")[0];
+  switch (simpleType) {
     case "api":
       return <Key className="w-4 h-4" />;
     case "oauth":

@@ -59,7 +59,7 @@ export function Confirm({
   const deferredPromiseRef = useRef<PromiseWithResolvers<unknown> | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const openHandlerCb = useRef<((resolve: "ok" | "cancel") => Promise<unknown>) | null>(null);
+  const openHandlerCb = useRef<((resolve: "ok" | "cancel") => Promise<unknown> | unknown) | null>(null);
 
   const handleCancel = async () => {
     await openHandlerCb.current?.("cancel");
