@@ -58,10 +58,10 @@ export const isGithubDeviceOAuthAuth = (
 
 // 5. DAO class
 export class RemoteAuthDAO {
-  guid!: string;
-  type!: RemoteAuthType;
-  source!: RemoteAuthSource;
-  name!: string;
+  guid: string;
+  type: RemoteAuthType;
+  source: RemoteAuthSource;
+  name: string;
   data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal | null =
     null;
 
@@ -92,17 +92,19 @@ export class RemoteAuthDAO {
           acc[key] = value;
         }
         return acc;
-      }, {} as RemoteAuthJTypePrivte)
+      }, {} as RemoteAuthJTypePrivate)
     );
   }
 
   constructor({
     guid,
+    source,
     type,
     name: name,
     data: record,
   }: {
     guid: string;
+    source: RemoteAuthSource;
     type: RemoteAuthType;
     name: string;
     data?:
@@ -111,6 +113,7 @@ export class RemoteAuthDAO {
       | RemoteAuthGithubDeviceOAuthRecordInternal
       | null;
   }) {
+    this.source = source;
     this.guid = guid;
     this.name = name;
     this.type = type;
@@ -119,20 +122,32 @@ export class RemoteAuthDAO {
 
   static guid = () => "__remoteauth__" + nanoid();
 
-  static Create(type: "api", name: string, record: RemoteAuthAPIRecordInternal): Promise<RemoteAuthDAO>;
-  static Create(type: "oauth", name: string, record: RemoteAuthOAuthRecordInternal): Promise<RemoteAuthDAO>;
+  static Create(
+    type: "api",
+    source: RemoteAuthSource,
+    name: string,
+    record: RemoteAuthAPIRecordInternal
+  ): Promise<RemoteAuthDAO>;
+  static Create(
+    type: "oauth",
+    source: RemoteAuthSource,
+    name: string,
+    record: RemoteAuthOAuthRecordInternal
+  ): Promise<RemoteAuthDAO>;
   static Create(
     type: "oauth-device",
+    source: RemoteAuthSource,
     name: string,
     record: RemoteAuthGithubDeviceOAuthRecordInternal
   ): Promise<RemoteAuthDAO>;
   static Create(
     type: RemoteAuthType,
+    source: RemoteAuthSource,
     name: string,
     data: RemoteAuthOAuthRecordInternal | RemoteAuthAPIRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal
   ): Promise<RemoteAuthDAO> {
     const guid = RemoteAuthDAO.guid();
-    const dao = new RemoteAuthDAO({ guid, name: name, type, data: data });
+    const dao = new RemoteAuthDAO({ guid, source, name, type, data });
     return dao.save().then(() => dao);
   }
 
@@ -141,15 +156,29 @@ export class RemoteAuthDAO {
       name: this.name,
       guid: this.guid,
       type: this.type,
-    } as RemoteAuthJTypePrivte;
+      source: this.source,
+    } as RemoteAuthJTypePublic;
   }
 
-  static FromJSON(json: RemoteAuthJTypePrivte) {
+  load() {
+    return ClientDb.remoteAuths.get(this.guid).then((record) => {
+      if (record) {
+        this.data = record.data;
+        this.name = record.name;
+        this.type = record.type;
+        this.source = record.source;
+      }
+      return this;
+    });
+  }
+
+  static FromJSON(json: RemoteAuthJTypePrivate | RemoteAuthJTypePublic) {
     return new RemoteAuthDAO({
+      source: json.source,
       name: json.name,
       guid: json.guid,
       type: json.type,
-      data: json.data,
+      data: isRemoteAuthPrivate(json) ? json.data : null,
     });
   }
 }
@@ -166,5 +195,15 @@ export type RemoteAuthGithubDeviceOAuthRecord = RemoteAuthGithubDeviceOAuthRecor
 };
 
 // 7. Main exported type
-export type RemoteAuthJTypePrivte = RemoteAuthRecord;
+export type RemoteAuthJTypePrivate = RemoteAuthRecord;
+function isRemoteAuthPrivate(
+  record: RemoteAuthDAO | RemoteAuthJTypePublic | RemoteAuthJTypePrivate
+): record is RemoteAuthRecord {
+  return (record as RemoteAuthRecord).data !== undefined;
+}
+function isRemoteAuthPublic(
+  record: RemoteAuthDAO | RemoteAuthJTypePublic | RemoteAuthJTypePrivate
+): record is RemoteAuthRecord {
+  return (record as RemoteAuthRecord).data === undefined;
+}
 export type RemoteAuthJTypePublic = Omit<RemoteAuthRecord, "data">;
