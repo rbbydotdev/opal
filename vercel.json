@@ -4,6 +4,10 @@
     {
       "source": "/(.*).js",
       "destination": "/$1.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
