@@ -25,7 +25,7 @@ export function DeviceAuth({
   mode,
   editConnection,
 }: {
-  form: UseFormReturn<RemoteAuthFormValues & { type: "oauth-device" }>;
+  form: UseFormReturn<RemoteAuthFormValues>;
   source: RemoteAuthSource;
   onSuccess: (remoteAuth: RemoteAuthDAO) => void;
   onCancel: () => void;
@@ -38,7 +38,7 @@ export function DeviceAuth({
   const [verificationUri, setVerificationUri] = useState<string | null>(null);
   const [pin, setPin] = useState<string>("");
   const remoteAuthRef = useRef<RemoteAuthGithubDeviceOAuthRecordInternal | null>(null);
-  const [corsProxy, setCorsProxy] = useState<string>(NotEnv.GithubApiProxy || "");
+  const [corsProxy, setCorsProxy] = useState<string>(NotEnv.GithubCorsProxy || "");
   const [error, setError] = useState<string | null>(null);
   const [apiName, setApiName] = useState<string>(
     form ? form.getValues()?.name || editConnection?.name || "my-gh-auth" : "my-gh-auth"

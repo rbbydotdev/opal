@@ -211,7 +211,7 @@ function ApiKeyAuth({
 
       <FormField
         control={form.control}
-        name="data.apiProxy"
+        name="data.corsProxy"
         render={({ field }) => (
           <FormItem>
             <FormLabel>{capitalizeFirst(source)} CORS Proxy</FormLabel>
