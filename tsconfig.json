@@ -38,6 +38,8 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
+    "./github-api-proxy/**/*.ts",
+    "./git-protocol-proxy/**/*.ts",
     "./src/components/ui/calendar.tsx",
     "./node_modules",
     "./src/components/ui/input-otp.tsx",

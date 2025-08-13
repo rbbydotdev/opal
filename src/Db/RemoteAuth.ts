@@ -10,7 +10,7 @@ export type RemoteAuthSource = "github"; /*| "gitlab" | "bitbucket" | "custom";*
 export type RemoteAuthAPIRecordInternal = {
   apiKey: string;
   apiSecret: string;
-  apiProxy: string | null;
+  apiProxy?: string | null;
 };
 
 export type RemoteAuthOAuthRecordInternal = {
@@ -21,12 +21,14 @@ export type RemoteAuthOAuthRecordInternal = {
   scope: string;
   obtainedAt: number;
   idToken?: string;
+  oauthProxy?: string | null;
 };
 
 export type RemoteAuthGithubDeviceOAuthRecordInternal = {
   accessToken: string;
   login: string;
   obtainedAt: number;
+  deviceProxy?: string | null;
 };
 
 // 3. Main record type
@@ -37,12 +39,12 @@ export type RemoteAuthRecord = {
   name: string;
   data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal | null;
 };
-type RemoteAuthExplicitType =
+export type RemoteAuthExplicitType =
   | { type: "api"; data: RemoteAuthAPIRecordInternal }
   | { type: "oauth"; data: RemoteAuthOAuthRecordInternal }
   | { type: "oauth-device"; data: RemoteAuthGithubDeviceOAuthRecordInternal };
 
-type DataFor<T extends RemoteAuthExplicitType["type"]> = Extract<RemoteAuthExplicitType, { type: T }>["data"];
+// type DataFor<T extends RemoteAuthExplicitType["type"]> = Extract<RemoteAuthExplicitType, { type: T }>["data"];
 
 // 4. Type guards
 export const isApiAuth = (
@@ -93,13 +95,14 @@ export class RemoteAuthDAO {
         guid: this.guid,
         type: this.type,
         name: this.name,
+        source: this.source,
       }).reduce((acc, [key, value]) => {
         if (value !== undefined) {
           // @ts-ignore
           acc[key] = value;
         }
         return acc;
-      }, {} as RemoteAuthJTypePrivate)
+      }, {} as RemoteAuthJType)
     );
   }
 
@@ -153,7 +156,7 @@ export class RemoteAuthDAO {
       guid: this.guid,
       type: this.type,
       source: this.source,
-    } as RemoteAuthJTypePublic;
+    } as RemoteAuthJType;
   }
 
   load() {
@@ -168,7 +171,7 @@ export class RemoteAuthDAO {
     });
   }
 
-  static FromJSON(json: RemoteAuthJTypePrivate | RemoteAuthJTypePublic) {
+  static FromJSON(json: RemoteAuthJType | RemoteAuthJType) {
     return new RemoteAuthDAO({
       source: json.source,
       name: json.name,
@@ -179,30 +182,25 @@ export class RemoteAuthDAO {
   }
 }
 
-// 6. Type aliases for convenience (optional)
-export type RemoteAuthOAuthRecord = RemoteAuthOAuthRecordInternal & {
-  type: "oauth";
-};
-export type RemoteAuthApiRecord = RemoteAuthAPIRecordInternal & {
-  type: "api";
-};
-export type RemoteAuthGithubDeviceOAuthRecord = RemoteAuthGithubDeviceOAuthRecordInternal & {
-  type: "oauth-device";
-};
+// // 6. Type aliases for convenience (optional)
+// export type RemoteAuthOAuthRecord = RemoteAuthOAuthRecordInternal & {
+//   type: "oauth";
+// };
+// export type RemoteAuthApiRecord = RemoteAuthAPIRecordInternal & {
+//   type: "api";
+// };
+// export type RemoteAuthGithubDeviceOAuthRecord = RemoteAuthGithubDeviceOAuthRecordInternal & {
+//   type: "oauth-device";
+// };
 
 // 7. Main exported type
-export type RemoteAuthJTypePrivate = RemoteAuthRecord;
-function isRemoteAuthPrivate(
-  record: RemoteAuthDAO | RemoteAuthJTypePublic | RemoteAuthJTypePrivate
-): record is RemoteAuthRecord {
+function isRemoteAuthPrivate(record: RemoteAuthDAO | RemoteAuthJType | RemoteAuthJType): record is RemoteAuthRecord {
   return (record as RemoteAuthRecord).data !== undefined;
 }
-function isRemoteAuthPublic(
-  record: RemoteAuthDAO | RemoteAuthJTypePublic | RemoteAuthJTypePrivate
-): record is RemoteAuthRecord {
+function isRemoteAuthPublic(record: RemoteAuthDAO | RemoteAuthJType | RemoteAuthJType): record is RemoteAuthRecord {
   return (record as RemoteAuthRecord).data === undefined;
 }
-export type RemoteAuthJTypePublic = Omit<RemoteAuthRecord, "data">;
+export type RemoteAuthJType = RemoteAuthRecord;
 
 export type RemoteAuthDataFor<T extends RemoteAuthExplicitType["type"]> = Extract<
   RemoteAuthExplicitType,
