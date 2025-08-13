@@ -1,8 +1,8 @@
-import { Repo } from "@/features/git-repo/GitRepo";
 import * as Comlink from "comlink";
 
+import { Disk } from "@/Db/Disk";
 import "@/workers/transferHandlers/disk.th";
 import "@/workers/transferHandlers/function.th";
-import "@/workers/transferHandlers/repo.th";
+import "@/workers/transferHandlers/treeNode.th";
 
-Comlink.expose(Repo);
+Comlink.expose(Disk);

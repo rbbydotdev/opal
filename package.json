@@ -5,11 +5,9 @@
   "type": "module",
   "scripts": {
     "dev:app": "vite",
-    "dev:sw": "cross-env DEV_SW=true vite build",
-    "build:sw": "cross-env BUILD_SW=true vite build",
-    "dev": "npm-run-all --parallel dev:app dev:sw",
+    "dev": "npm-run-all --parallel dev:app build:workers:dev",
     "build:app": "vite build",
-    "build": "npm run build:app && npm run build:sw",
+    "build": "npm run build:app && npm run build:workers",
     "preview": "vite preview",
     "dev:workerlog": "tsx ./src/workerlog",
     "dev:tsc": "tsc --noEmit",

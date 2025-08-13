@@ -17,34 +17,36 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { RemoteAuthJTypePublic, RemoteAuthSource, RemoteAuthType } from "@/Db/RemoteAuth";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Github, Key, MoreHorizontal, Pencil, Plus, Sparkle, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-type ConnectionType = {
-  guid: string;
-  name: string;
-  type: string;
-  authType: "api" | "oauth";
-};
-
 function ConnectionManager() {
   const { remoteAuths, deleteRemoteAuth, refetch } = useRemoteAuths();
-  const [editingConnection, setEditingConnection] = useState<ConnectionType | null>(null);
+  const [editingConnection, setEditingConnection] = useState<RemoteAuthJTypePublic | null>(null);
 
   const handleEdit = (connection: (typeof remoteAuths)[0]) => {
     setEditingConnection({
       guid: connection.guid,
       name: connection.name,
-      type: connection.authType === "api" ? "github-api" : "github-oauth",
-      authType: connection.authType,
+      type: connection.type,
+      source: connection.source,
     });
   };
 
-  const ConnectionIcon = ({ authType, className }: { authType: "api" | "oauth"; className?: string }) => {
-    switch (authType) {
+  const ConnectionIcon = ({
+    type,
+    source,
+    className,
+  }: {
+    type: RemoteAuthType;
+    source: RemoteAuthSource;
+    className?: string;
+  }) => {
+    switch (type) {
       case "api":
         return <Key className={cn("w-4 h-4", className)} />;
       case "oauth":
@@ -91,13 +93,13 @@ function ConnectionManager() {
               <div className="group flex items-center pr-1">
                 <SidebarMenuButton className="flex-1 min-w-0 pl-8">
                   <div className="flex items-center flex-1 min-w-0 gap-1">
-                    <ConnectionIcon authType={connection.authType} className="flex-shrink-0" />
+                    <ConnectionIcon type={connection.type} source={connection.source} className="flex-shrink-0" />
                     <span className="max-w-[32ch] font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink">
                       {connection.name}
                     </span>
                     <span className="flex-shrink-0">{"/"}</span>
                     <span className="text-xs text-muted-foreground capitalize font-mono overflow-hidden text-ellipsis whitespace-nowrap">
-                      {connection.authType}{" "}
+                      {`${connection.type} ${connection.source}`.toLowerCase()}
                     </span>
                   </div>
                 </SidebarMenuButton>

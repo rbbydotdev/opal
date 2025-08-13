@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RemoteAuthTypes } from "@/Db/RemoteAuth";
+import { RemoteAuthType } from "@/Db/RemoteAuth";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { Github, Key, Plus, Shield } from "lucide-react";
 
@@ -11,8 +11,8 @@ interface AuthSelectProps {
   onAddAuth: () => void;
 }
 
-const AuthIcon = ({ authType }: { authType: RemoteAuthTypes }) => {
-  const simpleType = authType.split("/")[0];
+const AuthIcon = ({ type }: { type: RemoteAuthType }) => {
+  const simpleType = type.split("/")[0];
   switch (simpleType) {
     case "api":
       return <Key className="w-4 h-4" />;
@@ -29,7 +29,7 @@ export function AuthSelect({
   onAddAuth,
   placeholder = "Select authentication",
 }: AuthSelectProps) {
-  const { remoteAuths, loading, error } = useRemoteAuths();
+  const { remoteAuths } = useRemoteAuths();
 
   const handleValueChange = (selectedValue: string) => {
     if (selectedValue === "none") {
@@ -39,29 +39,10 @@ export function AuthSelect({
     }
   };
 
-  if (loading) {
-    return (
-      <Select disabled>
-        <SelectTrigger>
-          <SelectValue placeholder="Loading auths..." />
-        </SelectTrigger>
-      </Select>
-    );
-  }
-
-  if (error) {
-    return (
-      <Select disabled>
-        <SelectTrigger>
-          <SelectValue placeholder="Error loading auths" />
-        </SelectTrigger>
-      </Select>
-    );
-  }
-
+  const currentSelectValue = remoteAuths.find((auth) => auth.guid === value)?.guid || "none";
   return (
     <div className="flex items-center gap-2">
-      <Select value={value || "none"} onValueChange={handleValueChange}>
+      <Select value={currentSelectValue} onValueChange={handleValueChange}>
         <SelectTrigger className="min-w-0 ">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -75,12 +56,12 @@ export function AuthSelect({
           {remoteAuths.map((auth) => (
             <SelectItem key={auth.guid} value={auth.guid}>
               <div className="flex items-center gap-2 flex-grow">
-                <AuthIcon authType={auth.authType} />
+                <AuthIcon type={auth.type} />
                 <div className="flex w-full justify-center items-center gap-2 font-mono truncate ">
                   <div className="truncate ">
                     <span className="text-sm font-medium">{auth.name}</span>
                     <span>/</span>
-                    <span className="text-xs text-muted-foreground capitalize">{auth.authType}</span>
+                    <span className="text-xs text-muted-foreground capitalize">{auth.type}</span>
                   </div>
                 </div>
               </div>

@@ -3,6 +3,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
@@ -96,13 +97,16 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
             onClick={() =>
               Promise.all([
                 // deleteIDBs(),
+                RemoteAuthDAO.all().then((auths) => Promise.all(auths.map((auth) => auth.delete()))),
                 currentWorkspace.tearDown(),
                 WorkspaceDAO.all().then((workspaces) =>
-                  workspaces.map((ws) =>
-                    ws
-                      .toModel()
-                      .tearDown()
-                      .then((ws) => ws.delete())
+                  Promise.all(
+                    workspaces.map((ws) =>
+                      ws
+                        .toModel()
+                        .tearDown()
+                        .then((ws) => ws.delete())
+                    )
                   )
                 ),
                 unregisterServiceWorkers(),

@@ -38,6 +38,12 @@ const workers = [
     outFile: "repo.ww.js",
     outDir: "dist",
   },
+  {
+    name: "DiskWorker",
+    entry: resolve(__dirname, "src/workers/DiskWorker/disk.ww.ts"),
+    outFile: "disk.ww.js",
+    outDir: "dist",
+  },
 ];
 
 // Helper to create a worker config

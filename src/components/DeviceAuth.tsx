@@ -20,14 +20,14 @@ export function DeviceAuth({
 }: {
   form?: any; // UseFormReturn<DeviceAuthFormValues> - optional for backward compatibility
   selectedConnection: AdapterTemplate;
-  onSuccess: (remoteAuth: RemoteAuthDAO) => void;
-  onCancel: () => void;
+  onSuccess?: (remoteAuth: RemoteAuthDAO) => void;
+  onCancel?: () => void;
   mode?: "add" | "edit";
   editConnection?: {
     guid: string;
     name: string;
     type: string;
-    authType: "api" | "oauth" | "device";
+    type: "api" | "oauth" | "device";
   };
 }) {
   const [state, setState] = useState<
@@ -49,8 +49,8 @@ export function DeviceAuth({
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
           guid: editConnection.guid,
-          authType: "oauth-device",
-          tag: apiName,
+          type: "oauth-device",
+          name: apiName,
           data: remoteAuthRef.current!,
         });
         await dao.save();
@@ -64,7 +64,7 @@ export function DeviceAuth({
       }
 
       setState("idle");
-      onSuccess(remoteAuth);
+      onSuccess?.(remoteAuth);
     } catch (error) {
       console.error("Error saving device auth:", error);
       setState("error");

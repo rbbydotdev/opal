@@ -2,76 +2,12 @@
 
 import { tanstackRouter } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
-import path, { resolve } from "path";
-import { defineConfig, UserConfig } from "vite";
+import path from "path";
+import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
-// Service Worker Configuration (Production Build)
-const buildSwConfig: UserConfig = {
-  plugins: [
-    nodePolyfills({
-      // Whether to polyfill `node:` protocol imports.
-      protocolImports: false,
-    }),
-  ],
-  build: {
-    minify: true,
-    lib: {
-      entry: resolve(__dirname, "src/lib/ServiceWorker/sw.ts"),
-      name: "ServiceWorker",
-      fileName: () => "sw.js",
-      formats: ["iife"],
-    },
-    outDir: "dist",
-    emptyOutDir: false,
-  },
-
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-};
-
 // Service Worker Configuration (Development Watch)
-const devSwConfig: UserConfig = {
-  plugins: [
-    nodePolyfills({
-      // Whether to polyfill `node:` protocol imports.
-      protocolImports: false,
-    }),
-  ],
-  build: {
-    // plugin
-    lib: {
-      entry: resolve(__dirname, "src/lib/ServiceWorker/sw.ts"),
-      name: "ServiceWorker",
-      fileName: () => "sw.js",
-      formats: ["iife"],
-    },
-    // Output to the public directory so the dev server can serve it
-    outDir: "public",
-    emptyOutDir: false,
-    // Enable watch mode
-    watch: {},
-  },
-
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-};
-
 export default defineConfig(() => {
-  if (process.env.BUILD_SW) {
-    console.log("Building Service Worker for Production...");
-    return buildSwConfig;
-  } else if (process.env.DEV_SW) {
-    console.log("Watching Service Worker for Development...");
-    return devSwConfig;
-  }
-  console.log("Running/Building Application...");
   return {
     minify: true,
     plugins: [
