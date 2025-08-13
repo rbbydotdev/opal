@@ -12,37 +12,31 @@ const workers = [
     name: "ServiceWorker",
     entry: resolve(__dirname, "src/lib/ServiceWorker/sw.ts"),
     outFile: "sw.js",
-    outDir: "dist",
   },
   {
     name: "ImageWorker",
     entry: resolve(__dirname, "src/workers/ImageWorker/image.ww.ts"),
     outFile: "image.ww.js",
-    outDir: "dist",
   },
   {
     name: "ImageWorker3",
     entry: resolve(__dirname, "src/workers/ImageWorker/image3.ww.ts"),
     outFile: "image3.ww.js",
-    outDir: "dist",
   },
   {
     name: "SearchWorker",
     entry: resolve(__dirname, "src/workers/SearchWorker/search.ww.ts"),
     outFile: "search.ww.js",
-    outDir: "dist",
   },
   {
     name: "RepoWorker",
     entry: resolve(__dirname, "src/workers/RepoWorker/repo.ww.ts"),
     outFile: "repo.ww.js",
-    outDir: "dist",
   },
   {
     name: "DiskWorker",
     entry: resolve(__dirname, "src/workers/DiskWorker/disk.ww.ts"),
     outFile: "disk.ww.js",
-    outDir: "dist",
   },
 ];
 
@@ -51,10 +45,9 @@ interface WorkerConfig {
   name: string;
   entry: string;
   outFile: string;
-  outDir: string;
 }
 
-function createWorkerConfig({ name, entry, outFile, outDir }: WorkerConfig, isDev: boolean) {
+function createWorkerConfig({ name, entry, outFile }: WorkerConfig, isDev: boolean) {
   return defineConfig({
     plugins: [
       nodePolyfills({
@@ -69,7 +62,7 @@ function createWorkerConfig({ name, entry, outFile, outDir }: WorkerConfig, isDe
         fileName: () => outFile,
         formats: ["iife"],
       },
-      outDir: isDev ? "public" : outDir,
+      outDir: "public",
       emptyOutDir: false, // Don't wipe outDir for each worker
       ...(isDev ? { watch: {} } : {}),
     },
