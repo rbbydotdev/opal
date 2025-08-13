@@ -1,5 +1,6 @@
 // import { ConnectionsModal } from "@/components/connections-modal";
 import { ConnectionsModal } from "@/components/ConnectionsModal";
+import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -17,11 +18,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { RemoteAuthJType, RemoteAuthSource, RemoteAuthType } from "@/Db/RemoteAuth";
+import { RemoteAuthJType } from "@/Db/RemoteAuth";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
-import { cn } from "@/lib/utils";
-import { ChevronRight, Github, Key, MoreHorizontal, Pencil, Plus, Sparkle, Trash2 } from "lucide-react";
+import { ChevronRight, MoreHorizontal, Pencil, Plus, Sparkle, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 function ConnectionManager() {
@@ -32,24 +32,7 @@ function ConnectionManager() {
     setEditingConnection(connection);
   };
 
-  const ConnectionIcon = ({
-    type,
-    source,
-    className,
-  }: {
-    type: RemoteAuthType;
-    source: RemoteAuthSource;
-    className?: string;
-  }) => {
-    switch (type) {
-      case "api":
-        return <Key className={cn("w-4 h-4", className)} />;
-      case "oauth":
-        return <Github className={cn("w-4 h-4", className)} />;
-      default:
-        return <Key className={cn("w-4 h-4", className)} />;
-    }
-  };
+  // RemoteAuthSourceIcon[source]
 
   return (
     <>
@@ -80,13 +63,18 @@ function ConnectionManager() {
           {remoteAuths.map((connection) => (
             <SidebarMenuItem key={connection.guid}>
               <div className="group flex items-center pr-1">
-                <SidebarMenuButton className="flex-1 min-w-0 pl-8">
-                  <div className="flex items-center flex-1 min-w-0 gap-1">
-                    <ConnectionIcon type={connection.type} source={connection.source} className="flex-shrink-0" />
+                <SidebarMenuButton className="flex-1 min-w-0 pl-8" onClick={() => handleEdit(connection)}>
+                  <div className="flex items-center flex-1 min-w-0 gap-1 text-xs">
+                    <RemoteAuthSourceIconComponent
+                      type={connection.type}
+                      source={connection.source}
+                      size={8}
+                      className="flex-shrink-0"
+                    />
                     <span className="max-w-[32ch] font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink">
                       {connection.name}
                     </span>
-                    <span className="flex-shrink-0">{"/"}</span>
+                    <span className="flex-shrink-0 text-xs">{"/"}</span>
                     <span className="text-xs text-muted-foreground capitalize font-mono overflow-hidden text-ellipsis whitespace-nowrap">
                       {`${connection.type} ${connection.source}`.toLowerCase()}
                     </span>

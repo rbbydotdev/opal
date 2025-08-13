@@ -21,6 +21,7 @@ import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
 import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 
+export type ConnectionsModalMode = "add" | "edit" | "view";
 export function ConnectionsModal({
   children,
   mode = "add",
@@ -30,7 +31,7 @@ export function ConnectionsModal({
   onOpenChange,
 }: {
   children: React.ReactNode;
-  mode?: "add" | "edit";
+  mode?: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
   onSuccess?: () => void;
   open?: boolean;
@@ -63,7 +64,7 @@ export function ConnectionsModalContent({
   onClose = () => {},
   className,
 }: {
-  mode: "add" | "edit";
+  mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
   className?: string;
   onSuccess?: (rad: RemoteAuthDAO) => void;
@@ -189,7 +190,7 @@ function ApiKeyAuth({
   source: RemoteAuthSource;
   onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
-  mode: "add" | "edit";
+  mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
 }) {
   const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);

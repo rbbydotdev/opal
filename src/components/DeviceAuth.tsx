@@ -1,3 +1,4 @@
+import { ConnectionsModalMode } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIcon } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
@@ -31,7 +32,7 @@ export function DeviceAuth({
   source: RemoteAuthSource;
   onSuccess: (remoteAuth: RemoteAuthDAO) => void;
   onCancel: () => void;
-  mode: "add" | "edit";
+  mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
 }) {
   const [state, setState] = useState<

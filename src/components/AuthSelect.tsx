@@ -58,10 +58,10 @@ export function AuthSelect({
               <div className="flex items-center gap-2 flex-grow">
                 <AuthIcon type={auth.type} />
                 <div className="flex w-full justify-center items-center gap-2 font-mono truncate ">
-                  <div className="truncate ">
+                  <div className="truncate gap-2 flex justify-center items-center">
                     <span className="text-sm font-medium">{auth.name}</span>
                     <span>/</span>
-                    <span className="text-xs text-muted-foreground capitalize">{auth.type}</span>
+                    <span className="text-xs text-muted-foreground capitalize truncate">{auth.type}</span>
                   </div>
                 </div>
               </div>

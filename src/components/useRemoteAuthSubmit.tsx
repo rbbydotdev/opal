@@ -1,9 +1,10 @@
+import { ConnectionsModalMode } from "@/components/ConnectionsModal";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
 import { useState } from "react";
 
 export const useRemoteAuthSubmit = (
-  mode: "add" | "edit",
+  mode: ConnectionsModalMode,
   editConnection: RemoteAuthJType | undefined,
   onSuccess: (rad: RemoteAuthDAO) => void,
   onCancel: () => void
