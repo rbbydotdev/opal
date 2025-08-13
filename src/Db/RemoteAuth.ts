@@ -10,7 +10,7 @@ export type RemoteAuthSource = "github"; /*| "gitlab" | "bitbucket" | "custom";*
 export type RemoteAuthAPIRecordInternal = {
   apiKey: string;
   apiSecret: string;
-  apiProxy?: string | null;
+  corsProxy?: string | null;
 };
 
 export type RemoteAuthOAuthRecordInternal = {
@@ -21,14 +21,14 @@ export type RemoteAuthOAuthRecordInternal = {
   scope: string;
   obtainedAt: number;
   idToken?: string;
-  oauthProxy?: string | null;
+  corsProxy?: string | null;
 };
 
 export type RemoteAuthGithubDeviceOAuthRecordInternal = {
   accessToken: string;
   login: string;
   obtainedAt: number;
-  deviceProxy?: string | null;
+  corsProxy?: string | null;
 };
 
 // 3. Main record type

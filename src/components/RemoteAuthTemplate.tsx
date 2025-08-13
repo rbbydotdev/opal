@@ -8,19 +8,19 @@ import {
 import { NotEnv } from "@/lib/notenv";
 import { Github } from "lucide-react";
 
-export type RemoteAuthTemplate<T extends TemplateType = TemplateType> = {
+export type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = {
   name: string;
   description: string;
   source: RemoteAuthSource;
-  type: RemoteAuthType;
+  type: T;
   icon: React.ReactNode;
-  templateType: T;
-  data?: (RemoteAuthDefaultData[TemplateType] & { data: unknown })["data"];
+  templateType: `${T}/${RemoteAuthSource}`;
+  data?: Partial<Extract<RemoteAuthExplicitType, { type: T }>["data"]>;
 };
-export function template<T extends TemplateType>(
+export function template<T extends RemoteAuthType>(
   params: Omit<RemoteAuthTemplate<T>, "templateType">
-): RemoteAuthTemplate & { templateType: TemplateType } {
-  return { ...params, templateType: typeSource(params) satisfies TemplateType };
+): RemoteAuthTemplate<T> {
+  return { ...params, templateType: typeSource(params) as `${T}/${RemoteAuthSource}` };
 }
 export const typeSlug = ({ type, source }: { type: RemoteAuthType; source: RemoteAuthSource }) =>
   `${type}-${source}-connection`.toLowerCase().replace(/\s+/g, "-");
@@ -36,7 +36,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "api",
     icon: <Github className="h-5 w-5" />,
     data: {
-      apiProxy: NotEnv.GithubApiProxy,
+      corsProxy: NotEnv.GithubCorsProxy,
     },
   }),
   template({
@@ -46,7 +46,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "oauth-device",
     icon: <Github className="h-5 w-5" />,
     data: {
-      apiProxy: NotEnv.GithubApiProxy, //<---- this should fail
+      corsProxy: NotEnv.GithubCorsProxy,
     },
   }),
   template({
@@ -55,11 +55,15 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "github",
     type: "oauth",
     icon: <Github className="h-5 w-5" />,
+    data: {
+      corsProxy: NotEnv.GithubCorsProxy,
+    },
   }),
 ];
 
-export type RemoteAuthFormValues = RemoteAuthRecord & {
-  templateType: TemplateType;
+export type RemoteAuthFormValues<T extends RemoteAuthType = RemoteAuthType> = RemoteAuthRecord & {
+  templateType: TemplateType<T>;
+  type: T;
 };
 export type TemplateType<
   T extends RemoteAuthType = RemoteAuthType,
