@@ -89,7 +89,6 @@ export function ConnectionsModalContent({
     defaultValues,
   });
 
-  // form.def
   const selectedTemplate = RemoteAuthTemplates.find(
     (connection) => `${connection.type}/${connection.source}` === form.watch("templateType")
   );

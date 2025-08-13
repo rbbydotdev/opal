@@ -31,15 +31,17 @@ export function AuthSelect({
 }: AuthSelectProps) {
   const { remoteAuths } = useRemoteAuths();
 
+  const currentSelectValue = remoteAuths.find((auth) => auth.guid === value)?.guid ?? "none";
+
   const handleValueChange = (selectedValue: string) => {
+    if (selectedValue === "") return;
     if (selectedValue === "none") {
-      onValueChange(undefined);
+      onValueChange("");
     } else {
       onValueChange(selectedValue);
     }
   };
 
-  const currentSelectValue = remoteAuths.find((auth) => auth.guid === value)?.guid || "none";
   return (
     <div className="flex items-center gap-2">
       <Select value={currentSelectValue} onValueChange={handleValueChange}>
