@@ -154,10 +154,10 @@ export function GitRemoteDialog({
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
-        <div className="grid relative max-w-full w-full">
+        <div className="grid relative max-w-full w-full min-w-0">
           <div className="col-start-1 row-start-1">
             <ConnectionsModalContent
-              className={cn("truncate w-full", { hidden: !showConnectionModal })}
+              className={cn("w-full min-w-0", { hidden: !showConnectionModal })}
               mode={"add"}
               key={connModalKeyRef.current}
               onSuccess={(rad) => {
@@ -171,7 +171,7 @@ export function GitRemoteDialog({
             />
           </div>
           <GitRemoteDialogInternal
-            className={cn("col-start-1 row-start-1", { invisible: showConnectionModal })}
+            className={cn("col-start-1 row-start-1 min-w-0", { invisible: showConnectionModal })}
             mode={modeRef.current}
             form={form}
             onSubmit={handleFormSubmit}
@@ -211,15 +211,15 @@ function GitRemoteDialogInternal({
         <DialogDescription>{DescForMode[mode]}</DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 min-w-0">
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0">
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input autoComplete="off" placeholder="origin" {...field} />
+                  <Input autoComplete="off" placeholder="origin" className="truncate" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -229,7 +229,7 @@ function GitRemoteDialogInternal({
             control={form.control}
             name="url"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0">
                 <FormLabel>URL</FormLabel>
                 <FormControl>
                   <Input
@@ -237,6 +237,7 @@ function GitRemoteDialogInternal({
                     autoComplete="off"
                     autoFocus
                     placeholder="https://github.com/user/repo.git"
+                    className="truncate"
                     {...field}
                   />
                 </FormControl>
@@ -249,12 +250,12 @@ function GitRemoteDialogInternal({
             control={form.control}
             name="gitCorsProxy"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0">
                 <FormLabel>
                   Git CORS Proxy <OptionalProbablyToolTip />
                 </FormLabel>
                 <FormControl>
-                  <Input autoComplete="off" placeholder="Optional" {...field} />
+                  <Input autoComplete="off" placeholder="Optional" className="truncate" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -265,7 +266,7 @@ function GitRemoteDialogInternal({
             control={form.control}
             name="authId"
             render={({ field }) => (
-              <FormItem className="w-full">
+              <FormItem className="w-full min-w-0">
                 <FormLabel>Authentication</FormLabel>
                 <FormControl>
                   <AuthSelect
