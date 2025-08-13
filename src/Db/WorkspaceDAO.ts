@@ -1,6 +1,6 @@
 import { DiskJType, DiskType } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
-import { RemoteAuthDAO, RemoteAuthJTypePrivate } from "@/Db/RemoteAuth";
+import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
@@ -238,7 +238,7 @@ export class WorkspaceDAO {
     name: string;
     disk: DiskDAO | DiskJType;
     thumbs: DiskDAO | DiskJType;
-    remoteAuths: RemoteAuthJTypePrivate[];
+    remoteAuths: RemoteAuthJType[];
   }) {
     this.guid = guid;
     this.name = name;

@@ -17,7 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { RemoteAuthJTypePublic, RemoteAuthSource, RemoteAuthType } from "@/Db/RemoteAuth";
+import { RemoteAuthJType, RemoteAuthSource, RemoteAuthType } from "@/Db/RemoteAuth";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
@@ -25,16 +25,11 @@ import { ChevronRight, Github, Key, MoreHorizontal, Pencil, Plus, Sparkle, Trash
 import { useState } from "react";
 
 function ConnectionManager() {
-  const { remoteAuths, deleteRemoteAuth, refetch } = useRemoteAuths();
-  const [editingConnection, setEditingConnection] = useState<RemoteAuthJTypePublic | null>(null);
+  const { remoteAuths, deleteRemoteAuth } = useRemoteAuths();
+  const [editingConnection, setEditingConnection] = useState<RemoteAuthJType | null>(null);
 
   const handleEdit = (connection: (typeof remoteAuths)[0]) => {
-    setEditingConnection({
-      guid: connection.guid,
-      name: connection.name,
-      type: connection.type,
-      source: connection.source,
-    });
+    setEditingConnection(connection);
   };
 
   const ConnectionIcon = ({
@@ -58,14 +53,11 @@ function ConnectionManager() {
 
   return (
     <>
-      {/* Add Connection Modal */}
       <ConnectionsModal>
         <SidebarGroupAction className="top-1.5 p-3">
           <Plus /> <span className="sr-only">Add Connection</span>
         </SidebarGroupAction>
       </ConnectionsModal>
-
-      {/* Edit Connection Modal */}
       <ConnectionsModal
         mode="edit"
         editConnection={editingConnection!}
@@ -73,10 +65,7 @@ function ConnectionManager() {
         onOpenChange={(open) => {
           if (!open) setEditingConnection(null);
         }}
-        onSuccess={() => {
-          void refetch();
-          setEditingConnection(null);
-        }}
+        onSuccess={() => setEditingConnection(null)}
       >
         <div />
       </ConnectionsModal>

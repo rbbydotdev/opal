@@ -1,34 +1,36 @@
-import { SourceTemplate } from "@/components/ConnectionsModal";
+import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RemoteAuthDAO, RemoteAuthGithubDeviceOAuthRecordInternal } from "@/Db/RemoteAuth";
+import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
+import {
+  RemoteAuthDAO,
+  RemoteAuthGithubDeviceOAuthRecordInternal,
+  RemoteAuthJType,
+  RemoteAuthSource,
+} from "@/Db/RemoteAuth";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { unwrapError } from "@/lib/errors";
 import { NotEnv } from "@/lib/notenv";
 import { CheckCircle2Icon, ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";
+import { UseFormReturn } from "react-hook-form";
 
 export function DeviceAuth({
   form,
-  selectedConnection,
-  onSuccess,
-  onCancel,
+  source,
+  onSuccess = () => {},
+  onCancel = () => {},
   mode,
   editConnection,
 }: {
-  form?: any; // UseFormReturn<DeviceAuthFormValues> - optional for backward compatibility
-  selectedConnection: SourceTemplate;
-  onSuccess?: (remoteAuth: RemoteAuthDAO) => void;
-  onCancel?: () => void;
-  mode?: "add" | "edit";
-  editConnection?: {
-    guid: string;
-    name: string;
-    type: string;
-    type: "api" | "oauth" | "device";
-  };
+  form: UseFormReturn<RemoteAuthFormValues & { type: "oauth-device" }>;
+  source: RemoteAuthSource;
+  onSuccess: (remoteAuth: RemoteAuthDAO) => void;
+  onCancel: () => void;
+  mode: "add" | "edit";
+  editConnection?: RemoteAuthJType;
 }) {
   const [state, setState] = useState<
     "idle" | "pin-loading" | "pin-loaded" | "auth-success" | "pending-rad-save" | "error"
@@ -41,36 +43,7 @@ export function DeviceAuth({
   const [apiName, setApiName] = useState<string>(
     form ? form.getValues()?.name || editConnection?.name || "my-gh-auth" : "my-gh-auth"
   );
-
-  async function handleSave() {
-    setState("pending-rad-save");
-    try {
-      let remoteAuth: RemoteAuthDAO;
-      if (mode === "edit" && editConnection) {
-        const dao = RemoteAuthDAO.FromJSON({
-          guid: editConnection.guid,
-          type: "oauth-device",
-          name: apiName,
-          data: remoteAuthRef.current!,
-        });
-        await dao.save();
-        remoteAuth = dao;
-      } else {
-        remoteAuth = await RemoteAuthDAO.Create("oauth-device", apiName, remoteAuthRef.current!);
-      }
-
-      if (form) {
-        form.setValue("name", apiName);
-      }
-
-      setState("idle");
-      onSuccess?.(remoteAuth);
-    } catch (error) {
-      console.error("Error saving device auth:", error);
-      setState("error");
-      setError("Failed to save authentication");
-    }
-  }
+  const { handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
 
   async function handleGithubDeviceAuth() {
     setError(null);
@@ -168,7 +141,7 @@ export function DeviceAuth({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Navigate to {selectedConnection.name.split(" ")[0]}
+              Navigate to {source}
             </a>{" "}
             and enter the device PIN below to authenticate.
           </p>
@@ -198,7 +171,7 @@ export function DeviceAuth({
           Cancel
         </Button>
         {(state === "auth-success" || state === "pending-rad-save") && (
-          <Button type="button" variant="default" onClick={handleSave}>
+          <Button type="button" variant="default" onClick={() => form.handleSubmit(handleSubmit)()}>
             {state === "pending-rad-save" && <Loader size={12} className="animate-spin animation-iteration-infinite" />}
             OK
           </Button>
@@ -220,8 +193,8 @@ export function DeviceAuth({
         {state === "pin-loaded" && (
           <Button asChild type="button" className="flex items-center gap-2">
             <a href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
-              {selectedConnection.icon}
-              Go to {selectedConnection.name.split(" ")[0]}
+              {/* {selectedConnection.icon} */}
+              Go to {source}
               <ExternalLink className="ml-1 h-4 w-4" />
             </a>
           </Button>
