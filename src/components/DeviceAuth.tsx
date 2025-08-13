@@ -49,14 +49,14 @@ export function DeviceAuth({
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
           guid: editConnection.guid,
-          authType: "github-device-oauth",
+          authType: "oauth-device",
           tag: apiName,
           data: remoteAuthRef.current!,
         });
         await dao.save();
         remoteAuth = dao;
       } else {
-        remoteAuth = await RemoteAuthDAO.Create("github-device-oauth", apiName, remoteAuthRef.current!);
+        remoteAuth = await RemoteAuthDAO.Create("oauth-device", apiName, remoteAuthRef.current!);
       }
 
       if (form) {
@@ -85,7 +85,7 @@ export function DeviceAuth({
           setState("pin-loaded");
         },
         onAuthentication: async (auth) => {
-          // remoteAuthRef.current = await RemoteAuthDAO.Create("github-device-oauth", apiName, );
+          // remoteAuthRef.current = await RemoteAuthDAO.Create("oauth-device", apiName, );
           remoteAuthRef.current = {
             accessToken: auth.token,
             login: auth.login,
