@@ -2,12 +2,6 @@ import { ClientDb } from "@/Db/instance";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 
-export interface RemoteAuthOption {
-  guid: string;
-  name: string;
-  authType: "api" | "oauth";
-}
-
 export function useRemoteAuths() {
   const [error, setError] = useState<string | null>(null);
   const remoteAuths = useLiveQuery(

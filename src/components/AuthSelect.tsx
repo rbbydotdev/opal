@@ -60,7 +60,7 @@ export function AuthSelect({
   return (
     <div className="flex items-center gap-2">
       <Select value={value || "none"} onValueChange={handleValueChange}>
-        <SelectTrigger>
+        <SelectTrigger className="min-w-0 ">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -72,12 +72,14 @@ export function AuthSelect({
           </SelectItem>
           {remoteAuths.map((auth) => (
             <SelectItem key={auth.guid} value={auth.guid}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-grow">
                 <AuthIcon authType={auth.authType} />
-                <div className="flex justify-center items-center gap-2 font-mono">
-                  <span className="text-sm font-medium">{auth.name}</span>
-                  <span>/</span>
-                  <span className="text-xs text-muted-foreground capitalize">{auth.authType}</span>
+                <div className="flex w-full justify-center items-center gap-2 font-mono truncate ">
+                  <div className="truncate ">
+                    <span className="text-sm font-medium">{auth.name}</span>
+                    <span>/</span>
+                    <span className="text-xs text-muted-foreground capitalize">{auth.authType}</span>
+                  </div>
                 </div>
               </div>
             </SelectItem>
