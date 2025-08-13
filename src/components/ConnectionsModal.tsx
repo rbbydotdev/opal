@@ -202,7 +202,7 @@ function ApiKeyAuth({
           <FormItem>
             <FormLabel>API Name</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="API Name" />
+              <Input {...field} value={field.value ?? ""} placeholder="API Name" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -212,11 +212,11 @@ function ApiKeyAuth({
       <FormField
         control={form.control}
         name="data.corsProxy"
-        render={({ field: { value, ...rest } }) => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>{capitalizeFirst(source)} CORS Proxy</FormLabel>
             <FormControl>
-              <Input {...rest} value={value ?? ""} placeholder="Proxy URL (optional)" />
+              <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -229,7 +229,7 @@ function ApiKeyAuth({
           <FormItem>
             <FormLabel>API Key</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="API Key" />
+              <Input {...field} value={field.value ?? ""} placeholder="API Key" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -242,7 +242,7 @@ function ApiKeyAuth({
           <FormItem>
             <FormLabel>API Secret</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="API Secret (optional)" />
+              <Input {...field} value={field.value ?? ""} placeholder="API Secret (optional)" />
             </FormControl>
             <FormMessage />
           </FormItem>
