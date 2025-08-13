@@ -16,24 +16,32 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RemoteAuthDAO, RemoteAuthJTypePublic, RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuth";
+import {
+  RemoteAuthDAO,
+  RemoteAuthJTypePublic,
+  RemoteAuthOAuthRecordInternal,
+  RemoteAuthRecord,
+  RemoteAuthSource,
+  RemoteAuthType,
+} from "@/Db/RemoteAuth";
 import { Channel } from "@/lib/channel";
 import { NotEnv } from "@/lib/notenv";
 
-export type AuthType = "api" | "oauth" | "oauth-device";
-export type AdapterTemplate = {
+export type SourceTemplate = {
   id: string;
   name: string;
   description: string;
-  type: AuthType;
+  source: RemoteAuthSource;
+  type: RemoteAuthType;
   icon: React.ReactNode;
 };
 
-const adapterTemplates: readonly AdapterTemplate[] = [
+const adapterTemplates: readonly SourceTemplate[] = [
   {
     id: "github-api",
     name: "GitHub API",
     description: "Connect using a GitHub API key",
+    source: "github",
     type: "api",
     icon: <Github className="h-5 w-5" />,
   },
@@ -41,6 +49,7 @@ const adapterTemplates: readonly AdapterTemplate[] = [
     id: "github-device",
     name: "GitHub Device Auth",
     description: "Connect using GitHub Device Authentication",
+    source: "github",
     type: "oauth-device",
     icon: <Github className="h-5 w-5" />,
   },
@@ -48,6 +57,7 @@ const adapterTemplates: readonly AdapterTemplate[] = [
     id: "github-oauth",
     name: "GitHub OAuth",
     description: "Connect using GitHub OAuth",
+    source: "github",
     type: "oauth",
     icon: <Github className="h-5 w-5" />,
   },
@@ -57,28 +67,30 @@ type BaseFormValues = {
   templateType: string;
 };
 
-type ApiKeyFormValues = BaseFormValues & {
-  templateType: string;
-  type: "apikey";
-  name: string;
-  apiKey: string;
-  apiSecret: string;
-  apiProxy: string;
-};
+// type ApiKeyFormValues = BaseFormValues & {
+//   type: RemoteAuthType;
+//   source: RemoteAuthSource;
+//   name: string;
+//   apiKey: string;
+//   apiSecret: string;
+//   apiProxy: string;
+// };
 
-type OAuthFormValues = BaseFormValues & {
-  templateType: string;
-  type: "oauth";
-  name: string;
-};
+// type OAuthFormValues = BaseFormValues & {
+//   type: "oauth";
+//   name: string;
+//   source: RemoteAuthSource;
+// };
 
-type DeviceAuthFormValues = BaseFormValues & {
-  templateType: string;
-  type: "oauth-device";
-  name: string;
-};
+// type DeviceAuthFormValues = BaseFormValues & {
+//   type: "oauth-device";
+//   name: string;
+//   source: RemoteAuthSource;
+// };
 
-type FormValues = ApiKeyFormValues | OAuthFormValues | DeviceAuthFormValues;
+type FormValues = RemoteAuthRecord & {
+  templateType: string;
+};
 
 export function ConnectionsModal({
   children,
@@ -135,12 +147,14 @@ export function ConnectionsModalContent({
     const connection = adapterTemplates.find((ct) => ct.id === templateType);
     switch (connection?.type) {
       case "oauth":
+        //@ts-ignore
         return {
           templateType,
           type: "oauth" as const,
           name: editConnection?.name || "my-oauth",
         };
       case "oauth-device":
+        //@ts-ignore
         return {
           templateType,
           type: "oauth-device" as const,
@@ -150,6 +164,7 @@ export function ConnectionsModalContent({
       default:
         return {
           templateType,
+          //@ts-ignore
           type: "apikey" as const,
           name: editConnection?.name || "my-api",
           apiKey: "",
@@ -260,7 +275,7 @@ function ApiKeyAuth({
   editConnection,
 }: {
   form: any; // UseFormReturn<ApiKeyFormValues>
-  selectedConnection: AdapterTemplate;
+  selectedConnection: SourceTemplate;
   onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
   mode: "add" | "edit";
@@ -268,29 +283,22 @@ function ApiKeyAuth({
 }) {
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(data: ApiKeyFormValues) {
+  async function handleSubmit(formValues: FormValues) {
     setSubmitting(true);
     try {
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
+          source: "github",
           guid: editConnection.guid,
           type: editConnection.type,
-          source: "github",
-          name: data.name,
-          data: {
-            apiKey: data.apiKey,
-            apiSecret: data.apiSecret || data.apiKey,
-            apiProxy: data.apiProxy,
-          },
+          name: formValues.name,
+          data: formValues.data,
         });
         await dao.save();
         onSuccess(dao);
       } else {
-        const result = await RemoteAuthDAO.Create("api", "github", data.name, {
-          apiKey: data.apiKey,
-          apiSecret: data.apiSecret || data.apiKey,
-          apiProxy: data.apiProxy,
-        });
+        const { type, source, name, ...values } = formValues;
+        const result = await RemoteAuthDAO.Create(type, source, name, values.data!);
         onSuccess(result);
       }
       onCancel();
@@ -394,7 +402,7 @@ function OAuth({
   editConnection,
 }: {
   form: any; // UseFormReturn<OAuthFormValues>
-  selectedConnection: AdapterTemplate;
+  selectedConnection: SourceTemplate;
   onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
   mode: "add" | "edit";
@@ -423,7 +431,7 @@ function OAuth({
   const handleOAuthConnect = async () => {
     setSubmitting(true);
     try {
-      const values = form.getValues() as OAuthFormValues;
+      const values = form.getValues() as FormValues;
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
           guid: editConnection.guid,
