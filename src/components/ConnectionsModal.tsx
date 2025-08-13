@@ -1,8 +1,9 @@
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
+import { OAuth } from "@/components/OAuth";
 import { RemoteAuthFormValues, RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +18,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
-import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuth";
+import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
-import { Channel } from "@/lib/channel";
 
 export function ConnectionsModal({
   children,
@@ -44,7 +44,7 @@ export function ConnectionsModal({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[26.5625rem]">
+      <DialogContent className="sm:max-w-[26.5625rem] sm:min-h-[37rem]">
         <ConnectionsModalContent
           mode={mode}
           editConnection={editConnection}
@@ -212,11 +212,11 @@ function ApiKeyAuth({
       <FormField
         control={form.control}
         name="data.corsProxy"
-        render={({ field }) => (
+        render={({ field: { value, ...rest } }) => (
           <FormItem>
             <FormLabel>{capitalizeFirst(source)} CORS Proxy</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Proxy URL (optional)" />
+              <Input {...rest} value={value ?? ""} placeholder="Proxy URL (optional)" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -259,93 +259,6 @@ function ApiKeyAuth({
           className="w-full"
         >
           {submitting ? "Connecting..." : "Connect"}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-const OAuthCbEvents = {
-  SUCCESS: "success" as const,
-  ERROR: "error" as const,
-};
-
-type OAuthCbEventPayload = {
-  [OAuthCbEvents.SUCCESS]: RemoteAuthOAuthRecordInternal;
-  [OAuthCbEvents.ERROR]: string;
-};
-
-class OAuthCbChannel extends Channel<OAuthCbEventPayload> {}
-
-function OAuth({
-  form,
-  source,
-  onSuccess,
-  onCancel,
-  mode,
-  editConnection,
-}: {
-  form: UseFormReturn<RemoteAuthFormValues>;
-  source: RemoteAuthSource;
-  onSuccess: (rad: RemoteAuthDAO) => void;
-  onCancel: () => void;
-  mode: "add" | "edit";
-  editConnection?: RemoteAuthJType;
-}) {
-  const [submitting, setSubmitting] = useState(false);
-  const authRef = useRef<RemoteAuthOAuthRecordInternal | null>(null);
-
-  // use
-  useEffect(() => {
-    const channel = new OAuthCbChannel("oauth-callback" /* token id ? */);
-    channel.on(OAuthCbEvents.SUCCESS, (data) => {
-      authRef.current = data;
-      setSubmitting(false);
-    });
-    channel.on(OAuthCbEvents.ERROR, (error) => {
-      console.error("OAuth error:", error);
-      setSubmitting(false);
-    });
-
-    return () => {
-      channel.tearDown();
-    };
-  }, []);
-
-  const { handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
-
-  return (
-    <div className="space-y-4">
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>OAuth Connection Name</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="Connection Name" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <p className="text-sm text-muted-foreground">
-        To connect to {source}, you will be redirected to the OAuth provider's login page.
-      </p>
-
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="w-full">
-          Cancel
-        </Button>
-        <Button
-          type="button"
-          variant="default"
-          onClick={() => form.handleSubmit(handleSubmit)()}
-          disabled={submitting}
-          className="w-full"
-        >
-          {submitting ? "Connecting..." : `Connect with ${capitalizeFirst(source)}`}
         </Button>
       </div>
     </div>

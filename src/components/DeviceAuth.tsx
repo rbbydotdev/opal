@@ -1,3 +1,4 @@
+import { RemoteAuthSourceIcon } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { NotEnv } from "@/lib/notenv";
 import { CheckCircle2Icon, ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
+import { capitalizeFirst } from "../lib/capitalizeFirst";
 
 export function DeviceAuth({
   form,
@@ -194,7 +196,8 @@ export function DeviceAuth({
           <Button asChild type="button" className="flex items-center gap-2">
             <a href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
               {/* {selectedConnection.icon} */}
-              Go to {source}
+              {RemoteAuthSourceIcon[source] ?? ""}
+              Go to {capitalizeFirst(source)}
               <ExternalLink className="ml-1 h-4 w-4" />
             </a>
           </Button>
