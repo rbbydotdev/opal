@@ -87,7 +87,6 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
           </div>
         </Link>
       </div>
-
       {process.env.NODE_ENV === "development" ? (
         <>
           <BigButton

@@ -1,3 +1,4 @@
+import { ConnectionsModalMode } from "@/components/ConnectionsModal";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -32,7 +33,7 @@ export function OAuth({
   source: RemoteAuthSource;
   onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
-  mode: "add" | "edit";
+  mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
 }) {
   const [submitting, setSubmitting] = useState(false);
