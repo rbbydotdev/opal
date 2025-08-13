@@ -1,6 +1,5 @@
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
@@ -75,22 +74,18 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
   return (
     <div className="[&>*]:outline-none  max-h-full flex flex-col">
       <div className="flex justify-center flex-col items-center w-full ">
-        <ContextMenu>
-          <ContextMenuTrigger>
-            <Link to={"/"} className={cn("outline-none", { "animate-spin": pending })}>
-              <div className="rotate-12">
-                <div
-                  className="h-7 w-7 rounded-sm mt-4 mb-4"
-                  style={{
-                    backgroundImage: "url(/opal.svg)",
-                    backgroundRepeat: "repeat",
-                    backgroundSize: "auto",
-                  }}
-                ></div>
-              </div>
-            </Link>
-          </ContextMenuTrigger>
-        </ContextMenu>
+        <Link to={"/"} className={cn("outline-none", { "animate-spin": pending })}>
+          <div className="rotate-12">
+            <div
+              className="h-7 w-7 rounded-sm mt-4 mb-4"
+              style={{
+                backgroundImage: "url(/opal.svg)",
+                backgroundRepeat: "repeat",
+                backgroundSize: "auto",
+              }}
+            ></div>
+          </div>
+        </Link>
       </div>
 
       {process.env.NODE_ENV === "development" ? (
