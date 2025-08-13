@@ -1,4 +1,4 @@
-import { AdapterTemplate } from "@/components/ConnectionsModal";
+import { SourceTemplate } from "@/components/ConnectionsModal";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -19,7 +19,7 @@ export function DeviceAuth({
   editConnection,
 }: {
   form?: any; // UseFormReturn<DeviceAuthFormValues> - optional for backward compatibility
-  selectedConnection: AdapterTemplate;
+  selectedConnection: SourceTemplate;
   onSuccess?: (remoteAuth: RemoteAuthDAO) => void;
   onCancel?: () => void;
   mode?: "add" | "edit";

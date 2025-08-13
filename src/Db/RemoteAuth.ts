@@ -1,4 +1,5 @@
 import { ClientDb } from "@/Db/instance";
+// import { RemoteAuthJTypePrivate } from "@/Db/RemoteAuth";
 import { nanoid } from "nanoid";
 
 // 1. Add the new type to the union
@@ -36,6 +37,12 @@ export type RemoteAuthRecord = {
   name: string;
   data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal | null;
 };
+type RemoteAuthExplicitType =
+  | { type: "api"; data: RemoteAuthAPIRecordInternal }
+  | { type: "oauth"; data: RemoteAuthOAuthRecordInternal }
+  | { type: "oauth-device"; data: RemoteAuthGithubDeviceOAuthRecordInternal };
+
+type DataFor<T extends RemoteAuthExplicitType["type"]> = Extract<RemoteAuthExplicitType, { type: T }>["data"];
 
 // 4. Type guards
 export const isApiAuth = (
@@ -122,29 +129,18 @@ export class RemoteAuthDAO {
 
   static guid = () => "__remoteauth__" + nanoid();
 
-  static Create(
-    type: "api",
+  static Create<T extends RemoteAuthExplicitType["type"]>(
+    type: T,
     source: RemoteAuthSource,
     name: string,
-    record: RemoteAuthAPIRecordInternal
-  ): Promise<RemoteAuthDAO>;
-  static Create(
-    type: "oauth",
-    source: RemoteAuthSource,
-    name: string,
-    record: RemoteAuthOAuthRecordInternal
-  ): Promise<RemoteAuthDAO>;
-  static Create(
-    type: "oauth-device",
-    source: RemoteAuthSource,
-    name: string,
-    record: RemoteAuthGithubDeviceOAuthRecordInternal
-  ): Promise<RemoteAuthDAO>;
-  static Create(
-    type: RemoteAuthType,
-    source: RemoteAuthSource,
-    name: string,
-    data: RemoteAuthOAuthRecordInternal | RemoteAuthAPIRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal
+    data: RemoteAuthDataFor<T>
+    // data: T extends "api"
+    //   ? RemoteAuthAPIRecordInternal
+    //   : T extends "oauth"
+    //     ? RemoteAuthOAuthRecordInternal
+    //     : T extends "oauth-device"
+    //       ? RemoteAuthGithubDeviceOAuthRecordInternal
+    //       : never
   ): Promise<RemoteAuthDAO> {
     const guid = RemoteAuthDAO.guid();
     const dao = new RemoteAuthDAO({ guid, source, name, type, data });
@@ -207,3 +203,8 @@ function isRemoteAuthPublic(
   return (record as RemoteAuthRecord).data === undefined;
 }
 export type RemoteAuthJTypePublic = Omit<RemoteAuthRecord, "data">;
+
+export type RemoteAuthDataFor<T extends RemoteAuthExplicitType["type"]> = Extract<
+  RemoteAuthExplicitType,
+  { type: T }
+>["data"];
