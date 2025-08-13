@@ -620,7 +620,7 @@ export class Workspace {
     //TODO repo / repoworker should just be apart of workspace from the get go instead of being a separate thing
     //but it uses async instantiation so care is needed to make sure its torn down properly, think useAsyncEffct
     // const worker = new Worker(new URL("/src/workers/RepoWorker/repo.ww.ts", import.meta.url), { type: "module" });
-    const worker = new Worker(new URL("/repo.ww.js", import.meta.url), { type: "module" });
+    const worker = new Worker("/repo.ww.js");
     const RepoApi = Comlink.wrap<typeof Repo>(worker);
     this.unsubs.push(() => worker.terminate());
     const repo = await new RepoApi({
