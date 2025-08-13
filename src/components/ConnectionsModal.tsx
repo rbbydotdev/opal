@@ -16,13 +16,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  RemoteAuthDAO,
-  RemoteAuthJTypePublic,
-  RemoteAuthOAuthRecordInternal,
-  RemoteAuthSource,
-  RemoteAuthType,
-} from "@/Db/RemoteAuth";
+import { RemoteAuthDAO, RemoteAuthJTypePublic, RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuth";
 import { Channel } from "@/lib/channel";
 import { NotEnv } from "@/lib/notenv";
 
@@ -129,12 +123,7 @@ export function ConnectionsModalContent({
   className,
 }: {
   mode: "add" | "edit";
-  editConnection?: {
-    guid: string;
-    name: string;
-    type: string;
-    type: "api" | "oauth" | "device";
-  };
+  editConnection?: RemoteAuthJTypePublic;
   className?: string;
   onSuccess?: (rad: RemoteAuthDAO) => void;
   onClose?: () => void;
@@ -275,13 +264,7 @@ function ApiKeyAuth({
   onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
   mode: "add" | "edit";
-  editConnection?: {
-    guid: string;
-    name: string;
-    type: string;
-    type: RemoteAuthType;
-    source: RemoteAuthSource;
-  };
+  editConnection?: RemoteAuthJTypePublic;
 }) {
   const [submitting, setSubmitting] = useState(false);
 
@@ -291,7 +274,8 @@ function ApiKeyAuth({
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
           guid: editConnection.guid,
-          type: "api",
+          type: editConnection.type,
+          source: "github",
           name: data.name,
           data: {
             apiKey: data.apiKey,
@@ -302,7 +286,7 @@ function ApiKeyAuth({
         await dao.save();
         onSuccess(dao);
       } else {
-        const result = await RemoteAuthDAO.Create("api", data.name, {
+        const result = await RemoteAuthDAO.Create("api", "github", data.name, {
           apiKey: data.apiKey,
           apiSecret: data.apiSecret || data.apiKey,
           apiProxy: data.apiProxy,
@@ -414,12 +398,7 @@ function OAuth({
   onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
   mode: "add" | "edit";
-  editConnection?: {
-    guid: string;
-    name: string;
-    type: string;
-    type: "api" | "oauth" | "device";
-  };
+  editConnection?: RemoteAuthJTypePublic;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const authRef = useRef<RemoteAuthOAuthRecordInternal | null>(null);
@@ -448,6 +427,7 @@ function OAuth({
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
           guid: editConnection.guid,
+          source: "github",
           type: "oauth",
           name: values.name,
           data: null,
@@ -455,7 +435,7 @@ function OAuth({
         await dao.save();
         onSuccess(dao);
       } else {
-        const result = await RemoteAuthDAO.Create("oauth", values.name, authRef.current!);
+        const result = await RemoteAuthDAO.Create("oauth", "github", values.name, authRef.current!);
         onSuccess(result);
       }
       onCancel();
