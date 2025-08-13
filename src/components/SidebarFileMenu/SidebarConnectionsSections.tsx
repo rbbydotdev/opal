@@ -92,7 +92,7 @@ function ConnectionManager() {
                 <SidebarMenuButton className="flex-1 min-w-0 pl-8">
                   <div className="flex items-center flex-1 min-w-0 gap-1">
                     <ConnectionIcon authType={connection.authType} className="flex-shrink-0" />
-                    <span className="font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">
+                    <span className=" max-w-[60ch] font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink">
                       {connection.name}
                     </span>
                     <span className="flex-shrink-0">{"/"}</span>
