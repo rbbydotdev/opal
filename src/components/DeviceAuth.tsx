@@ -1,7 +1,7 @@
-import { ConnectionType } from "@/components/ConnectionsModal";
+import { AdapterTemplate } from "@/components/ConnectionsModal";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
-import { FormItem, FormLabel } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RemoteAuthDAO, RemoteAuthGithubDeviceOAuthRecordInternal } from "@/Db/RemoteAuth";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
@@ -11,13 +11,24 @@ import { CheckCircle2Icon, ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";
 
 export function DeviceAuth({
+  form,
   selectedConnection,
+  onSuccess,
   onCancel,
-  onSubmit,
+  mode,
+  editConnection,
 }: {
-  selectedConnection: ConnectionType;
-  onSubmit: (remoteAuth: RemoteAuthDAO) => void;
+  form?: any; // UseFormReturn<DeviceAuthFormValues> - optional for backward compatibility
+  selectedConnection: AdapterTemplate;
+  onSuccess: (remoteAuth: RemoteAuthDAO) => void;
   onCancel: () => void;
+  mode?: "add" | "edit";
+  editConnection?: {
+    guid: string;
+    name: string;
+    type: string;
+    authType: "api" | "oauth" | "device";
+  };
 }) {
   const [state, setState] = useState<
     "idle" | "pin-loading" | "pin-loaded" | "auth-success" | "pending-rad-save" | "error"
@@ -25,15 +36,40 @@ export function DeviceAuth({
   const [verificationUri, setVerificationUri] = useState<string | null>(null);
   const [pin, setPin] = useState<string>("");
   const remoteAuthRef = useRef<RemoteAuthGithubDeviceOAuthRecordInternal | null>(null);
-  const [corsProxy, setCorsProxy] = useState<string>(NotEnv.GithubCorsProxy || "");
+  const [corsProxy, setCorsProxy] = useState<string>(NotEnv.GithubApiProxy || "");
   const [error, setError] = useState<string | null>(null);
-  const [apiName, setApiName] = useState<string>("my-gh-auth");
+  const [apiName, setApiName] = useState<string>(
+    form ? form.getValues()?.name || editConnection?.name || "my-gh-auth" : "my-gh-auth"
+  );
 
   async function handleSave() {
     setState("pending-rad-save");
-    const remoteAuth = await RemoteAuthDAO.Create("github-device-oauth", apiName, remoteAuthRef.current!);
-    setState("idle");
-    onSubmit(remoteAuth);
+    try {
+      let remoteAuth: RemoteAuthDAO;
+      if (mode === "edit" && editConnection) {
+        const dao = RemoteAuthDAO.FromJSON({
+          guid: editConnection.guid,
+          authType: "github-device-oauth",
+          tag: apiName,
+          data: remoteAuthRef.current!,
+        });
+        await dao.save();
+        remoteAuth = dao;
+      } else {
+        remoteAuth = await RemoteAuthDAO.Create("github-device-oauth", apiName, remoteAuthRef.current!);
+      }
+
+      if (form) {
+        form.setValue("name", apiName);
+      }
+
+      setState("idle");
+      onSuccess(remoteAuth);
+    } catch (error) {
+      console.error("Error saving device auth:", error);
+      setState("error");
+      setError("Failed to save authentication");
+    }
   }
 
   async function handleGithubDeviceAuth() {
@@ -66,17 +102,40 @@ export function DeviceAuth({
 
   return (
     <div className="space-y-4">
-      <FormItem>
-        <FormLabel className="text-sm font-medium">Connection Name</FormLabel>
-        <Input
-          type="text"
-          placeholder="API Name"
-          value={apiName}
-          onChange={(e) => setApiName(e.target.value)}
-          className="w-full"
-          required
+      {form ? (
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Connection Name</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Connection Name"
+                  onChange={(e) => {
+                    field.onChange(e);
+                    setApiName(e.target.value);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </FormItem>
+      ) : (
+        <FormItem>
+          <FormLabel className="text-sm font-medium">Connection Name</FormLabel>
+          <Input
+            type="text"
+            placeholder="API Name"
+            value={apiName}
+            onChange={(e) => setApiName(e.target.value)}
+            className="w-full"
+            required
+          />
+        </FormItem>
+      )}
       <FormItem>
         <FormLabel className="text-sm font-medium">
           Github CORS Proxy URL (optional) <OptionalProbablyToolTip />

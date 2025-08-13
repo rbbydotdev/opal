@@ -1,6 +1,6 @@
 import { Github } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
@@ -16,18 +16,20 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
+import { RemoteAuthDAO, RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuth";
+import { Channel } from "@/lib/channel";
 import { NotEnv } from "@/lib/notenv";
 
-export type ConnectionType = {
+export type AuthType = "apikey" | "oauth" | "device";
+export type AdapterTemplate = {
   id: string;
   name: string;
   description: string;
-  type: "oauth" | "apikey" | "device";
+  type: AuthType;
   icon: React.ReactNode;
 };
 
-const connectionTypes: ConnectionType[] = [
+const adapterTemplates: readonly AdapterTemplate[] = [
   {
     id: "github-api",
     name: "GitHub API",
@@ -51,13 +53,32 @@ const connectionTypes: ConnectionType[] = [
   },
 ];
 
-type FormValues = {
-  connectionType: string;
-  apiName: string;
+type BaseFormValues = {
+  templateType: string;
+};
+
+type ApiKeyFormValues = BaseFormValues & {
+  templateType: string;
+  authType: "apikey";
+  name: string;
   apiKey: string;
   apiSecret: string;
   apiProxy: string;
 };
+
+type OAuthFormValues = BaseFormValues & {
+  templateType: string;
+  authType: "oauth";
+  name: string;
+};
+
+type DeviceAuthFormValues = BaseFormValues & {
+  templateType: string;
+  authType: "device";
+  name: string;
+};
+
+type FormValues = ApiKeyFormValues | OAuthFormValues | DeviceAuthFormValues;
 
 export function ConnectionsModal({
   children,
@@ -73,7 +94,7 @@ export function ConnectionsModal({
     guid: string;
     name: string;
     type: string;
-    authType: "api" | "oauth";
+    authType: "api" | "oauth" | "device";
   };
   onSuccess: () => void;
   open?: boolean;
@@ -111,19 +132,52 @@ export function ConnectionsModalContent({
     guid: string;
     name: string;
     type: string;
-    authType: "api" | "oauth";
+    authType: "api" | "oauth" | "device";
   };
   className?: string;
   onSuccess: (rad: RemoteAuthDAO) => void;
   onClose: () => void;
 }) {
-  const defaultType = editConnection?.type || connectionTypes[0]!.id;
+  const defaultType = editConnection?.type || adapterTemplates[0]!.id;
+  // const selectedtemplateType = adapterTemplates.find((ct) => ct.id === defaultType);
+
+  const getDefaultValues = (templateType: string): FormValues => {
+    const connection = adapterTemplates.find((ct) => ct.id === templateType);
+    switch (connection?.type) {
+      case "oauth":
+        return {
+          templateType,
+          authType: "oauth" as const,
+          name: editConnection?.name || "my-oauth",
+        };
+      case "device":
+        return {
+          templateType,
+          authType: "device" as const,
+          name: editConnection?.name || "my-device-auth",
+        };
+      // case "apikey":
+      default:
+        return {
+          templateType,
+          authType: "apikey" as const,
+          name: editConnection?.name || "my-api",
+          apiKey: "",
+          apiSecret: "",
+          apiProxy: NotEnv.GithubApiProxy || "",
+        };
+    }
+  };
+
   const form = useForm<FormValues>({
-    defaultValues: {
-      connectionType: defaultType,
-    },
+    defaultValues: getDefaultValues(defaultType),
   });
-  const selectedConnection = connectionTypes.find((connection) => connection.id === form.watch("connectionType"));
+  const selectedTemplate = adapterTemplates.find((connection) => connection.id === form.watch("templateType"));
+
+  const handletemplateTypeChange = (adapterClass: string) => {
+    const newDefaults = getDefaultValues(adapterClass);
+    form.reset(newDefaults);
+  };
 
   return (
     <div className={className}>
@@ -135,16 +189,22 @@ export function ConnectionsModalContent({
         <Form {...form}>
           <FormField
             control={form.control}
-            name="connectionType"
+            name="templateType"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Connection Type</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    handletemplateTypeChange(value);
+                  }}
+                >
                   <SelectTrigger id="connection-type">
                     <SelectValue placeholder="Select a connection type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {connectionTypes.map((connection) => (
+                    {adapterTemplates.map((connection) => (
                       <SelectItem key={connection.id} value={connection.id}>
                         <div className="flex items-center gap-2">
                           {connection.icon}
@@ -162,13 +222,36 @@ export function ConnectionsModalContent({
             )}
           />
 
-          {selectedConnection?.type === "apikey" && <ApiKeyAuth onSubmit={() => {}} onCancel={onClose} />}
-
-          {selectedConnection?.type === "oauth" && (
-            <OAuth selectedConnection={selectedConnection} onSubmit={() => {}} onCancel={() => {}} />
+          {selectedTemplate?.type === "apikey" && (
+            <ApiKeyAuth
+              form={form}
+              selectedConnection={selectedTemplate}
+              onSuccess={onSuccess}
+              onCancel={onClose}
+              mode={mode}
+              editConnection={editConnection}
+            />
           )}
-          {selectedConnection?.type === "device" && (
-            <DeviceAuth selectedConnection={selectedConnection} onSubmit={() => {}} onCancel={() => {}} />
+
+          {selectedTemplate?.type === "oauth" && (
+            <OAuth
+              form={form}
+              selectedConnection={selectedTemplate}
+              onSuccess={onSuccess}
+              onCancel={onClose}
+              mode={mode}
+              editConnection={editConnection}
+            />
+          )}
+          {selectedTemplate?.type === "device" && (
+            <DeviceAuth
+              form={form}
+              selectedConnection={selectedTemplate}
+              onSuccess={onSuccess}
+              onCancel={onClose}
+              mode={mode}
+              editConnection={editConnection}
+            />
           )}
           {/* </form> */}
         </Form>
@@ -178,62 +261,65 @@ export function ConnectionsModalContent({
 }
 
 // API Key Auth Section
-function ApiKeyAuth({ onSubmit, onCancel }: { onSubmit: (rad: RemoteAuthDAO) => void; onCancel: () => void }) {
-  const form = useForm<FormValues>({
-    defaultValues: {
-      apiKey: "",
-      apiSecret: "",
-      apiProxy: NotEnv.GithubCorsProxy || "",
-    },
-  });
+function ApiKeyAuth({
+  form,
+  selectedConnection,
+  onSuccess,
+  onCancel,
+  mode,
+  editConnection,
+}: {
+  form: any; // UseFormReturn<ApiKeyFormValues>
+  selectedConnection: AdapterTemplate;
+  onSuccess: (rad: RemoteAuthDAO) => void;
+  onCancel: () => void;
+  mode: "add" | "edit";
+  editConnection?: {
+    guid: string;
+    name: string;
+    type: string;
+    authType: "api" | "oauth" | "device";
+  };
+}) {
   const [submitting, setSubmitting] = useState(false);
-  async function handleSubmit(data: FormValues) {
+
+  async function handleSubmit(data: ApiKeyFormValues) {
     setSubmitting(true);
-    onSubmit(
-      await RemoteAuthDAO.Create("api", data.apiName, {
-        apiKey: data.apiKey,
-        apiSecret: data.apiSecret || data.apiKey,
-        apiProxy: data.apiProxy,
-      })
-    );
-    setSubmitting(false);
+    try {
+      if (mode === "edit" && editConnection) {
+        const dao = RemoteAuthDAO.FromJSON({
+          guid: editConnection.guid,
+          authType: "api",
+          tag: data.name,
+          data: {
+            apiKey: data.apiKey,
+            apiSecret: data.apiSecret || data.apiKey,
+            apiProxy: data.apiProxy,
+          },
+        });
+        await dao.save();
+        onSuccess(dao);
+      } else {
+        const result = await RemoteAuthDAO.Create("api", data.name, {
+          apiKey: data.apiKey,
+          apiSecret: data.apiSecret || data.apiKey,
+          apiProxy: data.apiProxy,
+        });
+        onSuccess(result);
+      }
+      onCancel();
+    } catch (error) {
+      console.error("Error saving connection:", error);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  // const handleApiKeySubmit = async (values: FormValues) => {
-  //   if (!selectedConnection || !values.apiName.trim()) return;
-  //   setSubmitting(true);
-  //   try {
-  //     if (mode === "edit" && editConnection) {
-  //       const dao = RemoteAuthDAO.FromJSON({
-  //         guid: editConnection.guid,
-  //         authType: "api",
-  //         tag: values.apiName,
-  //         data: null,
-  //       });
-  //       await dao.save();
-  //       onSuccess?.(dao);
-  //     } else {
-  //       const result = await RemoteAuthDAO.Create("api", values.apiName, {
-  //         apiKey: values.apiKey,
-  //         apiSecret: values.apiSecret || values.apiKey,
-  //         apiProxy: values.apiProxy,
-  //       });
-  //       onSuccess?.(result);
-  //     }
-  //     form.reset();
-  //     onClose();
-  //   } catch (error) {
-  //     console.error("Error saving connection:", error);
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
-
   return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" autoComplete="off">
+    <div className="space-y-4">
       <FormField
         control={form.control}
-        name="apiName"
+        name="name"
         render={({ field }) => (
           <FormItem>
             <FormLabel>API Name</FormLabel>
@@ -285,38 +371,127 @@ function ApiKeyAuth({ onSubmit, onCancel }: { onSubmit: (rad: RemoteAuthDAO) => 
         )}
       />
       <div className="flex gap-2">
-        <Button type="submit" disabled={submitting} className="w-full">
-          {submitting ? "Connecting..." : "Connect"}
-        </Button>
         <Button type="button" variant="outline" onClick={onCancel} className="w-full">
           Cancel
         </Button>
+        <Button
+          type="button"
+          onClick={() => form.handleSubmit(handleSubmit)()}
+          disabled={submitting}
+          className="w-full"
+        >
+          {submitting ? "Connecting..." : "Connect"}
+        </Button>
       </div>
-    </form>
+    </div>
   );
 }
 
+const OAuthCbEvents = {
+  SUCCESS: "success" as const,
+  ERROR: "error" as const,
+};
+
+type OAuthCbEventPayload = {
+  [OAuthCbEvents.SUCCESS]: RemoteAuthOAuthRecordInternal;
+  [OAuthCbEvents.ERROR]: string;
+};
+
+class OAuthCbChannel extends Channel<OAuthCbEventPayload> {}
 // OAuth Section
 function OAuth({
+  form,
   selectedConnection,
-  onSubmit: onConnect,
+  onSuccess,
   onCancel,
+  mode,
+  editConnection,
 }: {
-  selectedConnection: ConnectionType;
-  onSubmit: () => void;
+  form: any; // UseFormReturn<OAuthFormValues>
+  selectedConnection: AdapterTemplate;
+  onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
+  mode: "add" | "edit";
+  editConnection?: {
+    guid: string;
+    name: string;
+    type: string;
+    authType: "api" | "oauth" | "device";
+  };
 }) {
+  const [submitting, setSubmitting] = useState(false);
+  const authRef = useRef<RemoteAuthOAuthRecordInternal | null>(null);
+
+  // use
+  useEffect(() => {
+    const channel = new OAuthCbChannel("oauth-callback" /* token id ? */);
+    channel.on(OAuthCbEvents.SUCCESS, (data) => {
+      authRef.current = data;
+      setSubmitting(false);
+    });
+    channel.on(OAuthCbEvents.ERROR, (error) => {
+      console.error("OAuth error:", error);
+      setSubmitting(false);
+    });
+
+    return () => {
+      channel.tearDown();
+    };
+  }, []);
+
+  const handleOAuthConnect = async () => {
+    setSubmitting(true);
+    try {
+      const values = form.getValues() as OAuthFormValues;
+      if (mode === "edit" && editConnection) {
+        const dao = RemoteAuthDAO.FromJSON({
+          guid: editConnection.guid,
+          authType: "oauth",
+          tag: values.name,
+          data: null,
+        });
+        await dao.save();
+        onSuccess(dao);
+      } else {
+        const result = await RemoteAuthDAO.Create("oauth", values.name, authRef.current!);
+        onSuccess(result);
+      }
+      onCancel();
+    } catch (error) {
+      console.error("Error saving OAuth connection:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>OAuth Connection Name</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Connection Name" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <p className="text-sm text-muted-foreground">
         To connect to {selectedConnection.name}, you will be redirected to the OAuth provider's login page.
       </p>
-      <Button type="button" variant="default" onClick={onConnect} className="w-full">
-        Connect with {selectedConnection.name}
-      </Button>
-      <Button type="button" variant="outline" onClick={onCancel} className="w-full">
-        Cancel
-      </Button>
+
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full">
+          Cancel
+        </Button>
+        <Button type="button" variant="default" onClick={handleOAuthConnect} disabled={submitting} className="w-full">
+          {submitting ? "Connecting..." : `Connect with ${selectedConnection.name}`}
+        </Button>
+      </div>
     </div>
   );
 }
