@@ -98,7 +98,7 @@ export function GitRemoteDialog({
   const defaultValues = {
     name: defaultName,
     url: "https://github.com/rbbydotdev/test123",
-    gitCorsProxy: NotEnv.GitCorsProxy, //"https://cors.isomorphic-git.org",
+    gitCorsProxy: NotEnv.GitProtocolProxy, //"https://cors.isomorphic-git.org",
   };
 
   const form = useForm<GitRemoteFormValues>({

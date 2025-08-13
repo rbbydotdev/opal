@@ -16,7 +16,7 @@ export async function pushHelloWorldToGitHubPages({
   repo,
   token,
   branch = "main",
-  gitCorsProxy = NotEnv.GitCorsProxy,
+  gitCorsProxy = NotEnv.GitProtocolProxy,
 }: PushHelloWorldParams): Promise<void> {
   // 1. Setup FS
   const fs = new LightningFS("fs");
