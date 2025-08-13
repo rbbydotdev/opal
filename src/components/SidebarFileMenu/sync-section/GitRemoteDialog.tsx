@@ -100,16 +100,7 @@ export function GitRemoteDialog({
   });
   const prevRef = React.useRef<GitRemote | null>(null);
   const modeRef = React.useRef<GitRemoteDialogModeType>(GitRemoteDialogModes.ADD);
-  const connModalKeyRef = React.useRef<string>("0");
-  // const authSelectKeyRef = React.useRef<string>("0");
   const [showConnectionModal, setShowConnModal] = React.useState(false);
-  const resetConnModal = () => {
-    // connModalKeyRef.current = Date.now().toString();
-    setShowConnModal(false);
-  };
-  // const resetAuthSelect = () => {
-  //   authSelectKeyRef.current = Date.now().toString();
-  // };
 
   useImperativeHandle(
     cmdRef,
@@ -159,7 +150,6 @@ export function GitRemoteDialog({
             <ConnectionsModalContent
               className={cn("w-full min-w-0", { hidden: !showConnectionModal })}
               mode={"add"}
-              key={connModalKeyRef.current}
               onSuccess={(rad) => {
                 console.log("Selected connection:", rad.guid);
                 form.setValue("authId", rad.guid);
@@ -174,7 +164,6 @@ export function GitRemoteDialog({
             onSubmit={handleFormSubmit}
             onCancel={handleCancel}
             onAddAuth={() => setShowConnModal(true)}
-            authSelectKey={connModalKeyRef.current}
           />
         </div>
       </DialogContent>
@@ -186,12 +175,10 @@ function GitRemoteDialogInternal({
   mode,
   onSubmit,
   onAddAuth,
-  authSelectKey = "git-remote-auth-select",
   onCancel,
   form,
 }: {
   className?: string;
-  authSelectKey?: string;
   mode: GitRemoteDialogModeType;
   onSubmit: (values: GitRemoteFormValues) => void;
   onAddAuth: () => void;
@@ -267,7 +254,7 @@ function GitRemoteDialogInternal({
                 <FormLabel>Authentication</FormLabel>
                 <FormControl>
                   <AuthSelect
-                    key={authSelectKey}
+                    // key={authSelectKey}
                     value={field.value}
                     onValueChange={field.onChange}
                     placeholder="Optional - Select authentication"
