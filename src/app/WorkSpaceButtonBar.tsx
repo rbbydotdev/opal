@@ -1,6 +1,6 @@
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
@@ -12,7 +12,7 @@ import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { BombIcon, Check, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
+import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -72,52 +72,24 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const navigate = useNavigate();
-  const { storedValue: showSpin, setStoredValue: setShowSpin } = useLocalStorage2("BigButtonBar/ShowLoadingSpin", true);
   return (
     <div className="[&>*]:outline-none  max-h-full flex flex-col">
       <div className="flex justify-center flex-col items-center w-full ">
-        <div>
-          <Link to={"/"} className={cn("outline-none", { "animate-spin": pending })}>
-            <div className="rotate-12">
-              <div
-                className="h-7 w-7 rounded-sm mt-4 mb-4"
-                style={{
-                  backgroundImage: "url(/opal.svg)",
-                  backgroundRepeat: "repeat",
-                  backgroundSize: "auto",
-                }}
-              ></div>
-            </div>
-          </Link>
-        </div>
         <ContextMenu>
           <ContextMenuTrigger>
-            <div>
-              <Link to={"/"} className={cn("outline-none", { "animate-spin": pending })}>
-                <div className="rotate-12">
-                  <div
-                    className="h-7 w-7 rounded-sm mt-4 mb-4"
-                    style={{
-                      backgroundImage: "url(/opal.svg)",
-                      backgroundRepeat: "repeat",
-                      backgroundSize: "auto",
-                    }}
-                  ></div>
-                </div>
-              </Link>
-            </div>
+            <Link to={"/"} className={cn("outline-none", { "animate-spin": pending })}>
+              <div className="rotate-12">
+                <div
+                  className="h-7 w-7 rounded-sm mt-4 mb-4"
+                  style={{
+                    backgroundImage: "url(/opal.svg)",
+                    backgroundRepeat: "repeat",
+                    backgroundSize: "auto",
+                  }}
+                ></div>
+              </div>
+            </Link>
           </ContextMenuTrigger>
-          <ContextMenuContent>
-            {showSpin ? (
-              <ContextMenuItem onSelect={() => setShowSpin(false)}>
-                <Delete size={12} className="mr-2" /> No Spin{" "}
-              </ContextMenuItem>
-            ) : (
-              <ContextMenuItem onSelect={() => setShowSpin(true)}>
-                <Check size={12} className="mr-2" /> Show Spin{" "}
-              </ContextMenuItem>
-            )}
-          </ContextMenuContent>
         </ContextMenu>
       </div>
 
