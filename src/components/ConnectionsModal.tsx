@@ -16,7 +16,13 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RemoteAuthDAO, RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuth";
+import {
+  RemoteAuthDAO,
+  RemoteAuthJTypePublic,
+  RemoteAuthOAuthRecordInternal,
+  RemoteAuthSource,
+  RemoteAuthType,
+} from "@/Db/RemoteAuth";
 import { Channel } from "@/lib/channel";
 import { NotEnv } from "@/lib/notenv";
 
@@ -59,7 +65,7 @@ type BaseFormValues = {
 
 type ApiKeyFormValues = BaseFormValues & {
   templateType: string;
-  authType: "apikey";
+  type: "apikey";
   name: string;
   apiKey: string;
   apiSecret: string;
@@ -68,13 +74,13 @@ type ApiKeyFormValues = BaseFormValues & {
 
 type OAuthFormValues = BaseFormValues & {
   templateType: string;
-  authType: "oauth";
+  type: "oauth";
   name: string;
 };
 
 type DeviceAuthFormValues = BaseFormValues & {
   templateType: string;
-  authType: "oauth-device";
+  type: "oauth-device";
   name: string;
 };
 
@@ -90,12 +96,7 @@ export function ConnectionsModal({
 }: {
   children: React.ReactNode;
   mode?: "add" | "edit";
-  editConnection?: {
-    guid: string;
-    name: string;
-    type: string;
-    authType: "api" | "oauth" | "device";
-  };
+  editConnection?: RemoteAuthJTypePublic;
   onSuccess: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -123,8 +124,8 @@ export function ConnectionsModal({
 export function ConnectionsModalContent({
   mode,
   editConnection,
-  onSuccess,
-  onClose,
+  onSuccess = () => {},
+  onClose = () => {},
   className,
 }: {
   mode: "add" | "edit";
@@ -132,11 +133,11 @@ export function ConnectionsModalContent({
     guid: string;
     name: string;
     type: string;
-    authType: "api" | "oauth" | "device";
+    type: "api" | "oauth" | "device";
   };
   className?: string;
-  onSuccess: (rad: RemoteAuthDAO) => void;
-  onClose: () => void;
+  onSuccess?: (rad: RemoteAuthDAO) => void;
+  onClose?: () => void;
 }) {
   const defaultType = editConnection?.type || adapterTemplates[0]!.id;
   // const selectedtemplateType = adapterTemplates.find((ct) => ct.id === defaultType);
@@ -147,20 +148,20 @@ export function ConnectionsModalContent({
       case "oauth":
         return {
           templateType,
-          authType: "oauth" as const,
+          type: "oauth" as const,
           name: editConnection?.name || "my-oauth",
         };
       case "oauth-device":
         return {
           templateType,
-          authType: "oauth-device" as const,
+          type: "oauth-device" as const,
           name: editConnection?.name || "my-device-auth",
         };
       // case "apikey":
       default:
         return {
           templateType,
-          authType: "apikey" as const,
+          type: "apikey" as const,
           name: editConnection?.name || "my-api",
           apiKey: "",
           apiSecret: "",
@@ -278,7 +279,8 @@ function ApiKeyAuth({
     guid: string;
     name: string;
     type: string;
-    authType: "api" | "oauth" | "device";
+    type: RemoteAuthType;
+    source: RemoteAuthSource;
   };
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -289,8 +291,8 @@ function ApiKeyAuth({
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
           guid: editConnection.guid,
-          authType: "api",
-          tag: data.name,
+          type: "api",
+          name: data.name,
           data: {
             apiKey: data.apiKey,
             apiSecret: data.apiSecret || data.apiKey,
@@ -416,7 +418,7 @@ function OAuth({
     guid: string;
     name: string;
     type: string;
-    authType: "api" | "oauth" | "device";
+    type: "api" | "oauth" | "device";
   };
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -446,8 +448,8 @@ function OAuth({
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
           guid: editConnection.guid,
-          authType: "oauth",
-          tag: values.name,
+          type: "oauth",
+          name: values.name,
           data: null,
         });
         await dao.save();

@@ -101,15 +101,15 @@ export function GitRemoteDialog({
   const prevRef = React.useRef<GitRemote | null>(null);
   const modeRef = React.useRef<GitRemoteDialogModeType>(GitRemoteDialogModes.ADD);
   const connModalKeyRef = React.useRef<string>("0");
-  const authSelectKeyRef = React.useRef<string>("0");
+  // const authSelectKeyRef = React.useRef<string>("0");
   const [showConnectionModal, setShowConnModal] = React.useState(false);
   const resetConnModal = () => {
-    connModalKeyRef.current = Date.now().toString();
+    // connModalKeyRef.current = Date.now().toString();
     setShowConnModal(false);
   };
-  const resetAuthSelect = () => {
-    authSelectKeyRef.current = Date.now().toString();
-  };
+  // const resetAuthSelect = () => {
+  //   authSelectKeyRef.current = Date.now().toString();
+  // };
 
   useImperativeHandle(
     cmdRef,
@@ -129,7 +129,7 @@ export function GitRemoteDialog({
 
   function handleDialogOpenChange(isOpen: boolean) {
     if (showConnectionModal) {
-      resetConnModal();
+      setShowConnModal(false);
       return;
     }
     setOpen(isOpen);
@@ -161,13 +161,10 @@ export function GitRemoteDialog({
               mode={"add"}
               key={connModalKeyRef.current}
               onSuccess={(rad) => {
-                resetConnModal();
-                resetAuthSelect();
-                form.setValue("authId", rad?.guid ?? "");
+                console.log("Selected connection:", rad.guid);
+                form.setValue("authId", rad.guid);
+                setShowConnModal(false);
               }}
-              // onOpenChange={(state) => {
-              //   if (!state && showConnectionModal) resetConnModal();
-              // }}
             />
           </div>
           <GitRemoteDialogInternal

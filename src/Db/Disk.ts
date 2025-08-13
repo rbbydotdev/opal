@@ -310,7 +310,7 @@ export abstract class Disk {
     return new DiskConstructor(guid, indexCache ?? new TreeDirRoot());
   }
 
-  async *iteratorMutex(filter?: (node: TreeNode) => boolean): AsyncIterableIterator<TreeNode> {
+  private async *iteratorMutex(filter?: (node: TreeNode) => boolean): AsyncIterableIterator<TreeNode> {
     await this.ready;
     await this.mutex.acquire();
     for (const node of this.fileTree.iterator(filter)) {
@@ -874,7 +874,10 @@ export class OpFsDisk extends Disk {
   type = OpFsDisk.type;
   ready: Promise<void>;
   private internalFs: OPFSNamespacedFs;
-  constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
+  constructor(
+    public readonly guid: string,
+    indexCache?: TreeDirRootJType
+  ) {
     const mutex = new Mutex();
     const { promise, resolve } = Promise.withResolvers<void>();
     const patchedOPFS = new PatchedOPFS(
@@ -900,7 +903,10 @@ export class OpFsDisk extends Disk {
 export class DexieFsDbDisk extends Disk {
   static type: DiskType = "DexieFsDbDisk";
   type = DexieFsDbDisk.type;
-  constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
+  constructor(
+    public readonly guid: string,
+    indexCache?: TreeDirRootJType
+  ) {
     const fs = new DexieFsDb(guid);
     const mt = new Mutex();
     const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
@@ -911,7 +917,10 @@ export class DexieFsDbDisk extends Disk {
 export class IndexedDbDisk extends Disk {
   static type: DiskType = "IndexedDbDisk";
   type = IndexedDbDisk.type;
-  constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
+  constructor(
+    public readonly guid: string,
+    indexCache?: TreeDirRootJType
+  ) {
     const mutex = new Mutex();
     const fs = new LightningFs();
     const mutexFs = new MutexFs(fs.promises, mutex);
@@ -927,7 +936,10 @@ export class IndexedDbDisk extends Disk {
 export class MemDisk extends Disk {
   static type: DiskType = "MemDisk";
   type = MemDisk.type;
-  constructor(public readonly guid: string, indexCache?: TreeDirRootJType) {
+  constructor(
+    public readonly guid: string,
+    indexCache?: TreeDirRootJType
+  ) {
     const mt = new Mutex();
     const fs = memfs().fs;
     const ft = indexCache
@@ -941,7 +953,10 @@ export class MemDisk extends Disk {
 export class NullDisk extends Disk {
   static type: DiskType = "NullDisk";
   type = NullDisk.type;
-  constructor(public readonly guid = "null", _indexCache?: TreeDirRootJType) {
+  constructor(
+    public readonly guid = "null",
+    _indexCache?: TreeDirRootJType
+  ) {
     const fs = memfs().fs;
     const mt = new Mutex();
     const ft = new FileTree(fs.promises, guid, mt);

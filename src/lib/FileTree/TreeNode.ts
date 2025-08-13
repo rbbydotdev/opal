@@ -6,6 +6,8 @@ export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
 };
 
+export type TreeNodeJType = TreeFileJType | TreeNodeDirJType;
+
 export type TreeDirRootJType = TreeNodeDirJType;
 
 export type TreeNodeDirJType = ReturnType<TreeNode["toJSON"]> & {
@@ -61,7 +63,7 @@ export class TreeNode {
     return this.parent?.isHidden() || this.basename.startsWith(".");
   }
   closestDir(): TreeDir | null {
-    return this.isTreeDir() ? this : this.parent?.closestDir() ?? null;
+    return this.isTreeDir() ? this : (this.parent?.closestDir() ?? null);
   }
   closestDirPath(): AbsPath {
     return this.isTreeDir() ? this.path : dirname(this.path);

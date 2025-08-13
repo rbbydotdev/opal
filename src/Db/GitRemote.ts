@@ -6,12 +6,12 @@
 // type AuthTypes = "api" | "oauth";
 // export interface GitRemoteRecord {
 //   guid: string;
-//   authType: AuthTypes;
+//   type: AuthTypes;
 // }
 
 // export class GitRemoteDAO {
 //   guid!: string;
-//   authType!: AuthTypes;
+//   type!: AuthTypes;
 
 //   record: GitRemoteAPIRecord | GitRemoteOAuthRecord | null = null;
 
@@ -19,30 +19,30 @@
 //     return ClientDb.gitRemotes.put({
 //       ...this.record,
 //       guid: this.guid,
-//       authType: this.authType,
+//       type: this.type,
 //     });
 //   }
 
 //   constructor({
 //     guid,
-//     authType,
+//     type,
 //     record,
 //   }: {
 //     guid: string;
-//     authType: AuthTypes;
+//     type: AuthTypes;
 //     record?: GitRemoteAPIRecord | GitRemoteOAuthRecord;
 //   }) {
 //     this.guid = guid;
-//     this.authType = authType;
+//     this.type = type;
 //     this.record = record || null;
 //   }
 
 //   static guid = () => "__GitRemote__" + nanoid();
 //   static Create(record: GitRemoteOAuthRecord | GitRemoteAPIRecord) {
 //     const guid = GitRemoteDAO.guid();
-//     const authType = record.authType;
+//     const type = record.type;
 
-//     const dao = new GitRemoteDAO({ guid, authType, record });
+//     const dao = new GitRemoteDAO({ guid, type, record });
 //     return dao.save().then(() => dao);
 //   }
 
@@ -59,19 +59,19 @@
 //   toJSON() {
 //     return {
 //       guid: this.guid,
-//       authType: this.authType,
+//       type: this.type,
 //     } as GitRemoteJType;
 //   }
 //   static FromJSON(json: GitRemoteJType) {
 //     return new GitRemoteDAO({
 //       guid: json.guid,
-//       authType: json.authType,
+//       type: json.type,
 //     });
 //   }
 // }
 
 // export interface GitRemoteOAuthRecord {
-//   readonly authType: "oauth";
+//   readonly type: "oauth";
 //   accessToken: string;
 //   tokenType: string;
 //   expiresIn: number;
@@ -82,7 +82,7 @@
 //   // guid: string;
 // }
 // export interface GitRemoteAPIRecord {
-//   readonly authType: "api";
+//   readonly type: "api";
 //   // guid: string;
 //   apiKey: string;
 //   apiSecret: string;

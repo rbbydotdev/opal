@@ -1,4 +1,5 @@
 import { ClientDb } from "@/Db/instance";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 
@@ -9,8 +10,9 @@ export function useRemoteAuths() {
       ClientDb.remoteAuths.toArray().then((remoteAuths) => {
         return remoteAuths.map((ra) => ({
           guid: ra.guid,
-          name: ra.tag,
-          authType: ra.authType,
+          name: ra.name,
+          type: ra.type,
+          source: ra.source,
         }));
       }),
     [],
@@ -19,7 +21,7 @@ export function useRemoteAuths() {
 
   const deleteRemoteAuth = async (id: string) => {
     try {
-      await ClientDb.remoteAuths.delete(id);
+      await RemoteAuthDAO.deleteByGuid(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete remote auth");
     }
