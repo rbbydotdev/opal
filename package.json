@@ -7,7 +7,7 @@
     "dev:app": "vite",
     "dev": "npm-run-all --parallel dev:app build:workers:dev",
     "build:app": "vite build",
-    "build": "npm run build:app && npm run build:workers",
+    "build": "npm run build:workers && npm run build:app",
     "preview": "vite preview",
     "dev:workerlog": "tsx ./src/workerlog",
     "dev:tsc": "tsc --noEmit",
