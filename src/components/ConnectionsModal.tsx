@@ -4,7 +4,9 @@ import { useForm, UseFormReturn } from "react-hook-form";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
 import { OAuth } from "@/components/OAuth";
+import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues, RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
+import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -70,20 +72,12 @@ export function ConnectionsModalContent({
   onSuccess?: (rad: RemoteAuthDAO) => void;
   onClose?: () => void;
 }) {
-  //TODO: i dont think this matters?
   const defaultValues = editConnection
     ? {
         ...editConnection,
         templateType: typeSource(editConnection),
       }
     : RemoteAuthTemplates[0]!;
-  // {
-  //     type: RemoteAuthTemplates[1]!.type,
-  //     source: RemoteAuthTemplates[1]!.source,
-  //     templateType: typeSource(RemoteAuthTemplates[1]!),
-  //     // data: RemoteAuthTemplates[1]!.defaultData,
-  //     // name: typeSlug(RemoteAuthTemplates[1]!),
-  //   };
 
   const form = useForm<RemoteAuthFormValues>({
     defaultValues,
@@ -214,7 +208,9 @@ function ApiKeyAuth({
         name="data.corsProxy"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{capitalizeFirst(source)} CORS Proxy</FormLabel>
+            <FormLabel>
+              {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
+            </FormLabel>
             <FormControl>
               <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
             </FormControl>
@@ -258,7 +254,8 @@ function ApiKeyAuth({
           disabled={submitting}
           className="w-full"
         >
-          {submitting ? "Connecting..." : "Connect"}
+          <RemoteAuthSourceIconComponent size={12} source={source} />
+          Connect
         </Button>
       </div>
     </div>

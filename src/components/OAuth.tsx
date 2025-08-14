@@ -1,5 +1,7 @@
 import { ConnectionsModalMode } from "@/components/ConnectionsModal";
+import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
+import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -7,7 +9,7 @@ import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
 import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Channel } from "@/lib/channel";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
 
 const OAuthCbEvents = {
@@ -36,7 +38,6 @@ export function OAuth({
   mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
 }) {
-  const [submitting, setSubmitting] = useState(false);
   const authRef = useRef<RemoteAuthOAuthRecordInternal | null>(null);
 
   // use
@@ -44,11 +45,9 @@ export function OAuth({
     const channel = new OAuthCbChannel("oauth-callback" /* token id ? */);
     channel.on(OAuthCbEvents.SUCCESS, (data) => {
       authRef.current = data;
-      setSubmitting(false);
     });
     channel.on(OAuthCbEvents.ERROR, (error) => {
       console.error("OAuth error:", error);
-      setSubmitting(false);
     });
 
     return () => {
@@ -78,7 +77,9 @@ export function OAuth({
         name="data.corsProxy"
         render={({ field: { value, ...rest } }) => (
           <FormItem>
-            <FormLabel>{capitalizeFirst(source)} CORS Proxy</FormLabel>
+            <FormLabel>
+              {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
+            </FormLabel>
             <FormControl>
               <Input {...rest} value={value ?? ""} placeholder="Proxy URL (optional)" />
             </FormControl>
@@ -95,14 +96,9 @@ export function OAuth({
         <Button type="button" variant="outline" onClick={onCancel} className="w-full">
           Cancel
         </Button>
-        <Button
-          type="button"
-          variant="default"
-          onClick={() => form.handleSubmit(handleSubmit)()}
-          disabled={submitting}
-          className="w-full"
-        >
-          {submitting ? "Connecting..." : `Connect with ${capitalizeFirst(source)}`}
+        <Button type="button" variant="default" onClick={() => form.handleSubmit(handleSubmit)()} className="w-full">
+          <RemoteAuthSourceIconComponent size={12} source={source} />
+          Connect with {capitalizeFirst(source)}
         </Button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RemoteAuthType } from "@/Db/RemoteAuth";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Github, Key, Plus, Shield } from "lucide-react";
 
 interface AuthSelectProps {
@@ -60,10 +61,10 @@ export function AuthSelect({
               <div className="flex items-center gap-2 flex-grow">
                 <AuthIcon type={auth.type} />
                 <div className="flex w-full justify-center items-center gap-2 font-mono truncate ">
-                  <div className="truncate gap-2 flex justify-center items-center">
-                    <span className="text-sm font-medium">{auth.name}</span>
+                  <div className="truncate gap-2 flex justify-center items-center text-xs">
+                    <span className="text-xs font-medium">{auth.name}</span>
                     <span>/</span>
-                    <span className="text-xs text-muted-foreground capitalize truncate">{auth.type}</span>
+                    <span className="text-xs text-muted-foreground capitalize truncate">{`${auth.type} ${capitalizeFirst(auth.source)}`}</span>
                   </div>
                 </div>
               </div>

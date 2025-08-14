@@ -15,9 +15,9 @@ export function RemoteAuthSourceIconComponent({
   ...rest
 }: {
   source: RemoteAuthSource;
-  type: RemoteAuthType;
+  type?: RemoteAuthType;
   className?: string;
 } & LucideProps) {
-  const Icon = RemoteAuthSourceIcon[source];
+  const Icon = RemoteAuthSourceIcon[source]; /*@ts-ignore*/
   return React.cloneElement(Icon as React.ReactElement, { className, ...rest });
 }

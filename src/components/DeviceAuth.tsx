@@ -114,7 +114,7 @@ export function DeviceAuth({
       )}
       <FormItem>
         <FormLabel className="text-sm font-medium">
-          Github CORS Proxy URL (optional) <OptionalProbablyToolTip />
+          {capitalizeFirst(source)} CORS Proxy URL (optional) <OptionalProbablyToolTip />
         </FormLabel>
         <Input
           type="text"
@@ -168,6 +168,12 @@ export function DeviceAuth({
           </div>
         </div>
       )}
+      <div className="rounded-md bg-muted p-4">
+        <p className="text-sm flex items-center gap-2">
+          <Loader size={12} className="animate-spin animation-iteration-infinite" />
+          Waiting for user pin code entry on {capitalizeFirst(source)}
+        </p>
+      </div>
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
