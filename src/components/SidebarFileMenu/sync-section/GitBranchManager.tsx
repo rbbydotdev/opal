@@ -10,7 +10,16 @@ import { TooltipToast } from "@/components/ui/TooltipToast";
 import { GitPlaybook, Repo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Ellipsis, GitBranchIcon, GitPullRequestDraft, LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Ellipsis,
+  GitBranchIcon,
+  GitMergeIcon,
+  GitPullRequestDraft,
+  LockKeyhole,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -49,6 +58,7 @@ export function GitBranchManager({
   branches,
   addGitBranch,
   setCurrentBranch,
+  mergeGitBranch,
   replaceGitBranch,
   deleteGitBranch,
   currentGitRef,
@@ -56,20 +66,31 @@ export function GitBranchManager({
   branches: string[];
   addGitBranch: (baseRef: GitRef, branch: GitBranchFormValue) => void;
   replaceGitBranch: (previous: GitBranchFormValue, next: GitBranchFormValue) => void;
+  mergeGitBranch: (from: string, into: string) => void;
   setCurrentBranch: (branch: string) => void;
   deleteGitBranch: (remoteName: string) => void;
   currentGitRef: GitRef | null;
 }) {
-  const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  // const [selectValue, setSelectValue] = useState<string>(defaultBranch);
+  const [selectMode, setSelectMode] = useState<"select" | "delete" | "merge">("select");
   const [open, setOpen] = useState(false);
   const [inputMode, setInputMode] = useState<GitBranchInputModeType>(GitBranchInputModes.ADD);
   const [showInput, setShowInput] = useState(false);
-
-  if (selectMode === "delete") {
+  if (selectMode === "merge" && currentGitRef?.value) {
     return (
-      <BranchDelete
-        branches={branches}
+      <BranchSelectHighlight
+        itemClassName="focus:bg-ring focus:text-primary-foreground"
+        branches={branches.filter((b) => b !== currentGitRef?.value)}
+        cancel={() => setSelectMode("select")}
+        onSelect={(name: string) => {
+          mergeGitBranch(name, currentGitRef.value);
+        }}
+      />
+    );
+  } else if (selectMode === "delete") {
+    return (
+      <BranchSelectHighlight
+        itemClassName="focus:bg-destructive focus:text-primary-foreground"
+        branches={branches.filter((b) => !isLockedBranch(b))}
         cancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
           deleteGitBranch(name);
@@ -122,6 +143,15 @@ export function GitBranchManager({
             <Plus /> Add Branch
           </DropdownMenuItem>
           {branches.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
+            <DropdownMenuItem
+              onClick={() => {
+                setSelectMode("merge");
+              }}
+            >
+              <GitMergeIcon /> Merge With …
+            </DropdownMenuItem>
+          )}
+          {branches.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
             <DropdownMenuItem onClick={() => setSelectMode("delete")}>
               <Trash2 /> Delete Branch
             </DropdownMenuItem>
@@ -166,14 +196,18 @@ const GitBranchMenuDropDown = ({
     <DropdownMenuContent align="end">{children}</DropdownMenuContent>
   </DropdownMenu>
 );
-function BranchDelete({
+function BranchSelectHighlight({
   className,
+  itemClassName = "",
   branches,
+  placeholder = "Select Branch",
   cancel,
   onSelect,
 }: {
+  itemClassName?: string;
   className?: string;
   branches: string[];
+  placeholder?: string;
   cancel: () => void;
   onSelect: (branchName: string) => void;
 }) {
@@ -186,22 +220,18 @@ function BranchDelete({
       }}
     >
       <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
-        <SelectValue placeholder="Delete Branch" />
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {branches
-          .filter((b) => !isLockedBranch(b))
-          .map((branch) => (
-            <SelectItem
-              key={branch}
-              value={branch}
-              className={
-                "!text-xs focus:bg-destructive focus:text-primary-foreground w-full flex items-center justify-between"
-              }
-            >
-              {branch}
-            </SelectItem>
-          ))}
+        {branches.map((branch) => (
+          <SelectItem
+            key={branch}
+            value={branch}
+            className={cn(itemClassName, "!text-xs w-full flex items-center justify-between")}
+          >
+            {branch}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );
@@ -300,6 +330,14 @@ export function BranchManagerSection({
     void repo.deleteGitBranch(remoteName);
     branchRef.current.show("branch deleted");
   };
+  const mergeGitBranch = async (from: string, into: string) => {
+    const result = await repo.merge(from, into);
+    if (result) {
+      branchRef.current.show("branch merged");
+    } else {
+      branchRef.current.show("branch merge failed");
+    }
+  };
   const setCurrentBranch = async (branch: string) => {
     if (branch === currentGitRef?.value) return;
     if (info.hasChanges && currentGitRef?.type === "commit") {
@@ -321,6 +359,7 @@ export function BranchManagerSection({
           branches={branches}
           replaceGitBranch={replaceGitBranch}
           addGitBranch={addGitBranch}
+          mergeGitBranch={mergeGitBranch}
           deleteGitBranch={deleteGitBranch}
         />
       </div>

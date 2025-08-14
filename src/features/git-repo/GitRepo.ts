@@ -10,7 +10,7 @@ import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import * as Comlink from "comlink";
 import Emittery from "emittery";
-import git, { AuthCallback } from "isomorphic-git";
+import git, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 import { isOAuthAuth } from "../../Db/RemoteAuth";
 //git remote is different from IRemote as its
@@ -411,6 +411,13 @@ export class Repo {
     }
   };
 
+  async setAuthor({ name, email }: { name: string; email: string }) {
+    await this.mustBeInitialized();
+    this.author = { name, email };
+    await this.setConfig("user.name", name);
+    await this.setConfig("user.email", email);
+  }
+
   getBranches = async (): Promise<string[]> => {
     if (!(await this.exists())) return [];
     return await this.git.listBranches({
@@ -490,6 +497,21 @@ export class Repo {
       fs: this.fs,
       dir: this.dir,
       ref,
+    });
+  };
+
+  /*
+  Uncaught (in promise) MergeConflictError: Automatic merge failed with one or more merge conflicts in the following files: welcome.md. Fix conflicts then commit the result.
+    _BaseError index.js:347*/
+
+  merge = async (from: string, into: string): Promise<MergeResult> => {
+    await this.mustBeInitialized();
+    return this.git.merge({
+      fs: this.fs,
+      dir: this.dir,
+      ours: from,
+      author: this.author,
+      theirs: into,
     });
   };
 
