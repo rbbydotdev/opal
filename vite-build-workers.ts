@@ -38,6 +38,11 @@ const workers = [
     entry: resolve(__dirname, "src/workers/DiskWorker/disk.ww.ts"),
     outFile: "disk.ww.js",
   },
+  {
+    name: "WorkspaceWorker",
+    entry: resolve(__dirname, "src/workers/WorkspaceWorker/workspace.ww.ts"),
+    outFile: "workspace.ww.js",
+  },
 ];
 
 // Helper to create a worker config

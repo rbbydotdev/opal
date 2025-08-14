@@ -174,8 +174,6 @@ export abstract class Disk {
   mutex = new Mutex();
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
-  //rename log
-  //delete log
 
   constructor(
     public readonly guid: string,
