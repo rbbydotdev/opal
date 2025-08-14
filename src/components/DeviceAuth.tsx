@@ -124,7 +124,6 @@ export function DeviceAuth({
           className="w-full"
         />
       </FormItem>
-
       {state === "error" && (
         <div className="rounded-md bg-destructive p-4 text-destructive-foreground">
           <p className="mb-2 font-bold">Error</p>
@@ -134,7 +133,14 @@ export function DeviceAuth({
           </Button> */}
         </div>
       )}
-
+      {/* {state === "pin-loaded" && (
+        <div className="rounded-md bg-muted p-4">
+          <p className="text-sm flex items-center gap-2">
+            <Loader size={12} className="animate-spin animation-iteration-infinite" />
+            Waiting for user pin code entry on {capitalizeFirst(source)}
+          </p>
+        </div>
+      )} */}
       {state === "pin-loaded" && (
         <div className="rounded-md bg-muted p-4">
           <p className="text-sm mb-2">
@@ -160,7 +166,6 @@ export function DeviceAuth({
           </div>
         </div>
       )}
-
       {state === "auth-success" && (
         <div className="rounded-md bg-success p-4 text-success-foreground text-sm ">
           <div className="font-bold flex justify-start items-center gap-2  ">
@@ -168,13 +173,6 @@ export function DeviceAuth({
           </div>
         </div>
       )}
-      <div className="rounded-md bg-muted p-4">
-        <p className="text-sm flex items-center gap-2">
-          <Loader size={12} className="animate-spin animation-iteration-infinite" />
-          Waiting for user pin code entry on {capitalizeFirst(source)}
-        </p>
-      </div>
-
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
