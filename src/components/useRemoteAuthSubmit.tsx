@@ -1,6 +1,7 @@
 import { ConnectionsModalMode } from "@/components/ConnectionsModal";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
+import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { useState } from "react";
 
 export const useRemoteAuthSubmit = (
@@ -31,7 +32,9 @@ export const useRemoteAuthSubmit = (
         onSuccess(dao);
       } else {
         const { type, source, name, ...values } = formValues;
-        const result = await RemoteAuthDAO.Create(type, source, name, values.data!);
+        const existingNames = (await RemoteAuthDAO.all()).map((rad) => rad.name);
+        const uniq = getUniqueSlug(name, existingNames);
+        const result = await RemoteAuthDAO.Create(type, source, uniq, values.data!);
         onSuccess(result);
       }
       onCancel();
