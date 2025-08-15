@@ -46,9 +46,7 @@ export const MdxSearchToolbar = () => {
       replace={replace}
       replaceAll={replaceAll}
       onClose={handleSearchClose}
-      onChange={(searchTerm) => {
-        handleSearchChange(searchTerm);
-      }}
+      onChange={handleSearchChange}
       matchTotal={ranges.length}
     />,
     document.body
