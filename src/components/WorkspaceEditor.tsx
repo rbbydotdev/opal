@@ -14,13 +14,13 @@ import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
-import { useAsyncEffect } from "@/hooks/useAsyncEffect";
+import { useAsyncValue } from "@/hooks/useAsyncValue";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ComponentProps, useEffect, useRef, useState } from "react";
+import { ComponentProps, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
@@ -28,6 +28,8 @@ interface WorkspaceEditorProps extends Partial<MDXEditorProps> {
   currentWorkspace: Workspace;
   className?: string;
 }
+
+function ContentEditors() {}
 
 export function WorkspaceView(props: WorkspaceEditorProps) {
   /*
@@ -38,7 +40,6 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
   const { isImage, isSource, isBin, filePath, inTrash } = useCurrentFilepath();
 
   const navigate = useNavigate();
-  // const handleDropFilesEvent = handleDropFilesEventForNode({ currentWorkspace: props.currentWorkspace });
   if (isImage) {
     return (
       <>
@@ -73,25 +74,9 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
 
 const FileError = ({ error }: { error: Error & Partial<ApplicationError> }) => {
   const { currentWorkspace } = useWorkspaceContext();
-  const [tryFirstFile, setTryFirstFile] = useState<string | null>(null);
-
-  const [count, setCount] = useState(0);
-  const [name, setName] = useState("Alice");
-
-  // This effect depends on `count` and `name`
-  useEffect(() => {
-    console.log(`Count is ${count} and name is ${name}`);
-    if (count) {
-    }
-  }, []); // 👈 dependencies array
-
-  useAsyncEffect(async () => {
-    if (tryFirstFile) return; // already set
-    setTryFirstFile(await currentWorkspace.tryFirstFileUrl());
-  }, []);
-
+  const tryFirstFile = useAsyncValue(() => currentWorkspace.tryFirstFileUrl(), [currentWorkspace]);
   return (
-    <div className="w-full h-full flex items-center justify-center font-mono">
+    <div className="file-not-found-error w-full h-full flex items-center justify-center font-mono">
       <Card className="border-2 border-destructive border-dashed m-8 max-w-lg min-h-48  -rotate-3">
         <CardHeader>
           <h2 className="text-red-500 font-bold text-lg">⚠️ {error.code} Error</h2>
@@ -103,7 +88,7 @@ const FileError = ({ error }: { error: Error & Partial<ApplicationError> }) => {
         </CardContent>
         <CardFooter className="flex justify-center">
           <Button asChild variant="destructive">
-            <Link to={tryFirstFile}>Sorry!</Link>
+            <Link to={tryFirstFile ?? "/"}>Sorry!</Link>
           </Button>
         </CardFooter>
       </Card>

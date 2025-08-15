@@ -5,7 +5,7 @@ export function useAsyncEffect(effect: () => Promise<void | (() => void)>, deps:
 
   useEffect(() => {
     let isMounted = true;
-    (async () => {
+    void (async () => {
       const unsub = await effect();
       if (typeof unsub === "function") {
         if (isMounted) {
@@ -23,5 +23,6 @@ export function useAsyncEffect(effect: () => Promise<void | (() => void)>, deps:
         unsubRef.current = undefined;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }

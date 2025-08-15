@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export const SourceEditor = ({ className }: { className?: string }) => {
   const { currentWorkspace } = useWorkspaceContext();
   const { mimeType } = useCurrentFilepath();
-  const { initialContents, debouncedUpdate } = useFileContents({ currentWorkspace });
+  const { initialContents, debouncedUpdate, error } = useFileContents({ currentWorkspace });
   return (
     <CodeMirrorEditor
       mimeType={mimeType as "text/css" | "text/plain" | "text/markdown"}
