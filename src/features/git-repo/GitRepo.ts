@@ -1,6 +1,7 @@
-import { Disk, DiskJType, NullDisk } from "@/Db/Disk";
+import { Disk, DiskJType } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { isApiAuth } from "@/Db/RemoteAuth";
+// import { RepoWithRemote } from "@/features/git-repo/RepoWithRemote";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { deepEqual } from "@/lib/deepEqual";
@@ -8,10 +9,8 @@ import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
-import * as Comlink from "comlink";
 import Emittery from "emittery";
 import git, { AuthCallback, MergeResult } from "isomorphic-git";
-import http from "isomorphic-git/http/web";
 import { isOAuthAuth } from "../../Db/RemoteAuth";
 //git remote is different from IRemote as its
 //more so just a Git remote as it appears in Git
@@ -22,7 +21,7 @@ export interface GitRemote {
   gitCorsProxy?: string;
   authId?: string;
 }
-interface IRemote {
+export interface IRemote {
   branch: string;
   name: string;
   url: string;
@@ -33,56 +32,6 @@ export type GitRepoAuthor = {
   name: string;
   email: string;
 };
-
-type RemoteVerifyCodes = (typeof Remote.VERIFY_CODES)[keyof typeof Remote.VERIFY_CODES];
-class Remote implements IRemote {
-  branch: string;
-  name: string;
-  url: string;
-  auth?: AuthCallback;
-
-  constructor({ branch, name, url, auth }: IRemote) {
-    this.branch = branch;
-    this.name = name;
-    this.url = url;
-    this.auth = auth;
-  }
-
-  static VERIFY_CODES = {
-    SUCCESS: "SUCCESS" as const,
-    BRANCH_NOT_FOUND: "BRANCH_NOT_FOUND" as const,
-    NO_ACCESS: "NO_ACCESS" as const,
-    UNEXPECTED_ERROR: "UNEXPECTED_ERROR" as const,
-  };
-
-  async verifyRemote(): Promise<RemoteVerifyCodes> {
-    try {
-      const remoteRefs = await git.listServerRefs({
-        http,
-        url: this.url,
-        onAuth: this.auth,
-      });
-      const branchRef = `refs/heads/${this.branch}`;
-      if (remoteRefs.some((ref) => ref.ref === branchRef)) {
-        return Remote.VERIFY_CODES.SUCCESS;
-      } else {
-        return Remote.VERIFY_CODES.BRANCH_NOT_FOUND;
-      }
-    } catch (e) {
-      if (e instanceof git.Errors.HttpError) {
-        if (e.data.statusCode === 401 || e.data.statusCode === 403) {
-          return Remote.VERIFY_CODES.NO_ACCESS;
-        }
-        return Remote.VERIFY_CODES.UNEXPECTED_ERROR;
-      }
-      // NotFoundError can mean the repo doesn't exist or is private
-      if (e instanceof git.Errors.NotFoundError) {
-        return Remote.VERIFY_CODES.NO_ACCESS;
-      }
-      return Remote.VERIFY_CODES.UNEXPECTED_ERROR;
-    }
-  }
-}
 
 type GitHistoryType = Array<{
   oid: string;
@@ -129,6 +78,7 @@ export const RepoDefaultInfo = {
   }>,
   context: "" as "main" | "worker" | "",
   exists: false,
+  isMerging: false,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
 //--------------------------
@@ -153,6 +103,32 @@ export type RepoRemoteEventPayload = {
   [RepoEvents.INFO]: RepoInfoType;
 };
 export class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
+
+export function isMergeConflictError(result: unknown): result is InstanceType<typeof git.Errors.MergeConflictError> {
+  return result instanceof git.Errors.MergeConflictError;
+}
+// type MergeResult = {
+//     oid?: string;
+//     alreadyMerged?: boolean;
+//     fastForward?: boolean;
+//     mergeCommit?: boolean;
+//     tree?: string;
+// }
+export type MergeConflict = InstanceType<typeof git.Errors.MergeConflictError>["data"];
+export function isMergeConflict(data: unknown): data is MergeConflict {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "filepaths" in data &&
+    Array.isArray((data as any).filepaths) &&
+    "bothModified" in data &&
+    Array.isArray((data as any).bothModified) &&
+    "deleteByUs" in data &&
+    Array.isArray((data as any).deleteByUs) &&
+    "deleteByTheirs" in data &&
+    Array.isArray((data as any).deleteByTheirs)
+  );
+}
 
 export type RepoJType = {
   guid: string;
@@ -376,6 +352,18 @@ export class Repo {
     });
   };
 
+  isMerging = async (): Promise<boolean> => {
+    const mergeHead = await this.getMergeState();
+    return mergeHead !== null;
+  };
+  getMergeState = async () => {
+    if (!(await this.exists())) return null;
+    const mergeHead = await this.fs.readFile(joinPath(this.gitDir, "MERGE_HEAD")).catch(() => null);
+    if (mergeHead) {
+      return String(mergeHead).trim();
+    }
+    return null;
+  };
   tryInfo = async (): Promise<RepoInfoType> => {
     return {
       initialized: this.state.initialized,
@@ -387,6 +375,7 @@ export class Repo {
       commitHistory: await this.getCommitHistory({ depth: 20 }),
       context: isWebWorker() ? "worker" : "main",
       exists: await this.exists(),
+      isMerging: await this.isMerging(),
     };
   };
 
@@ -504,15 +493,32 @@ export class Repo {
   Uncaught (in promise) MergeConflictError: Automatic merge failed with one or more merge conflicts in the following files: welcome.md. Fix conflicts then commit the result.
     _BaseError index.js:347*/
 
-  merge = async (from: string, into: string): Promise<MergeResult> => {
+  merge = async (from: string, into: string): Promise<MergeResult | MergeConflict> => {
     await this.mustBeInitialized();
-    return this.git.merge({
-      fs: this.fs,
-      dir: this.dir,
-      ours: from,
-      author: this.author,
-      theirs: into,
-    });
+    return this.git
+      .merge({
+        fs: this.fs,
+        dir: this.dir,
+        author: this.author,
+        ours: from,
+        theirs: into,
+        abortOnConflict: false,
+      })
+      .catch(async (e) => {
+        if (isMergeConflictError(e)) {
+          console.log("Merge conflict detected:", { from, into }, e.data);
+          await this.fs.writeFile("/.git/MERGE_HEAD", await git.resolveRef({ fs: this.fs, dir: this.dir, ref: into }));
+          console.log(
+            await Promise.all(
+              e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
+            )
+          );
+
+          return structuredClone(e.data);
+        } else {
+          throw e;
+        }
+      });
   };
 
   mustBeInitialized = async (): Promise<boolean> => {
@@ -782,274 +788,30 @@ export class Repo {
     };
   };
 
-  withRemote = (remote: IRemote): RepoWithRemote => {
-    return new RepoWithRemote(
-      {
-        guid: this.guid,
-        disk: this.disk,
-        dir: this.dir,
-        branch: this.defaultMainBranch,
-        remoteBranch: remote.branch,
-        remoteName: remote.name,
-        url: remote.url,
-        auth: remote.auth,
-      },
-      remote
-    );
-  };
+  //commenting out for now because of circular dependency issues
+  // withRemote = (remote: IRemote): RepoWithRemote => {
+  //   return new RepoWithRemote(
+  //     {
+  //       guid: this.guid,
+  //       disk: this.disk,
+  //       dir: this.dir,
+  //       branch: this.defaultMainBranch,
+  //       remoteBranch: remote.branch,
+  //       remoteName: remote.name,
+  //       url: remote.url,
+  //       auth: remote.auth,
+  //     },
+  //     remote
+  //   );
+  // };
 
-  withGitRemote = async (gitRemote: GitRemote, branch: string): Promise<RepoWithRemote> => {
-    const iRemote = await this.convertGitRemoteToIRemote(gitRemote, branch);
-    return this.withRemote(iRemote);
-  };
+  // withGitRemote = async (gitRemote: GitRemote, branch: string): Promise<RepoWithRemote> => {
+  //   const iRemote = await this.convertGitRemoteToIRemote(gitRemote, branch);
+  //   return this.withRemote(iRemote);
+  // };
 
   tearDown = () => {
     this.unsubs.forEach((unsub) => unsub());
     this.gitEvents.clearListeners();
-  };
-}
-
-export const SYSTEM_COMMITS = {
-  COMMIT: "opal / commit",
-  SWITCH_BRANCH: "opal /  switch branch",
-  SWITCH_COMMIT: "opal / switch commit",
-  RENAME_BRANCH: "opal / rename branch",
-  INIT: "opal / init",
-  PREPUSH: "opal / prepush",
-};
-export class RepoWithRemote extends Repo {
-  readonly gitRemote: Remote;
-
-  state: {
-    initialized: boolean;
-    remoteOK: boolean;
-  } = {
-    initialized: false,
-    remoteOK: false,
-  };
-
-  constructor(
-    {
-      guid,
-      disk,
-      dir,
-      branch,
-    }: {
-      guid: string;
-      disk: Disk;
-      dir: AbsPath;
-      branch: string;
-      remoteBranch?: string;
-      remoteName: string;
-      url: string;
-      auth?: AuthCallback;
-    },
-    remote: IRemote | Remote
-  ) {
-    super({ guid, disk, dir, defaultBranch: branch });
-    this.gitRemote = remote instanceof Remote ? remote : new Remote(remote);
-  }
-
-  get isRemoteOk() {
-    return this.state.remoteOK;
-  }
-  async _ready() {
-    if (this.state.remoteOK && this.state.initialized) return true;
-    return (
-      (this.state.remoteOK = await this.assertRemoteOK()) && (this.state.initialized = await this.mustBeInitialized())
-    );
-  }
-
-  async assertRemoteOK({ verifyOrThrow }: { verifyOrThrow: boolean } = { verifyOrThrow: false }) {
-    if (this.state.remoteOK) return true;
-    const verifyCode = await this.gitRemote.verifyRemote();
-    if (verifyCode !== Remote.VERIFY_CODES.SUCCESS) {
-      if (verifyOrThrow) throw new Error(`Remote verification failed with code: ${verifyCode}`);
-      return (this.state.remoteOK = false);
-    }
-    return (this.state.remoteOK = true);
-  }
-}
-export class GitPlaybook {
-  //should probably dep inject shared mutex from somewhere rather than relying on repo's
-  //rather should share mutex
-  constructor(
-    private repo: Repo | Comlink.Remote<Repo>,
-    private mutex = new Mutex()
-  ) {}
-
-  switchBranch = async (branchName: string) => {
-    if ((await this.repo.getCurrentBranch()) === branchName) return false;
-    if (await this.repo.hasChanges()) {
-      await this.addAllCommit({
-        message: SYSTEM_COMMITS.SWITCH_BRANCH,
-      });
-    }
-    await this.repo.checkoutRef(branchName);
-    return true;
-  };
-
-  replaceGitBranch = async (symbolicRef: string, branchName: string) => {
-    if (symbolicRef === branchName) return;
-    if (await this.repo.hasChanges()) {
-      await this.addAllCommit({ message: SYSTEM_COMMITS.RENAME_BRANCH });
-    }
-    await this.repo.addGitBranch({ branchName, symbolicRef });
-    await this.repo.deleteGitBranch(symbolicRef);
-    await this.repo.checkoutRef(branchName);
-  };
-
-  resetToHead = async () => {
-    return this.repo.checkoutRef("HEAD");
-  };
-  switchCommit = async (commitOid: string) => {
-    await this.repo.rememberCurrentBranch();
-    if (await this.repo.hasChanges()) {
-      await this.addAllCommit({
-        message: SYSTEM_COMMITS.SWITCH_COMMIT,
-      });
-    }
-    await this.repo.checkoutRef(commitOid);
-    return true;
-  };
-  async initialCommit() {
-    await this.repo.mustBeInitialized();
-    await this.repo.add(".");
-    await this.repo.commit({
-      message: "Initial commit",
-    });
-  }
-  async addAllCommit({
-    message,
-    allowEmpty = false,
-    filepath = ".",
-  }: {
-    message: string;
-    filepath?: string;
-    allowEmpty?: boolean;
-  }) {
-    await this.repo.mustBeInitialized();
-    if (!allowEmpty && !(await this.repo.hasChanges())) {
-      console.log("No changes to commit, skipping commit.");
-      return false;
-    }
-    const statusMatrix = await this.repo.statusMatrix();
-
-    for (const [filepath, head, workdir] of statusMatrix) {
-      if (head && !workdir) {
-        await this.repo.remove(filepath);
-      }
-    }
-    await this.repo.add(filepath);
-    await this.repo.commit({
-      message,
-    });
-    return true;
-  }
-
-  newBranchFromCurrentOrphan = async () => {
-    const prevBranch = (await this.repo.getPrevBranch()) ?? "unknown";
-    const currentRef = await this.repo.currentRef();
-    const newBranchName = `${prevBranch.replace("refs/heads/", "")}-${currentRef.slice(0, 6)}`;
-    await this.repo.addGitBranch({ branchName: newBranchName, symbolicRef: currentRef, checkout: true });
-    await this.addAllCommit({
-      message: SYSTEM_COMMITS.SWITCH_BRANCH,
-    });
-    return newBranchName;
-  };
-
-  resetToPrevBranch = async () => {
-    const prevBranch = await this.repo.getPrevBranch();
-    if (prevBranch) {
-      try {
-        await this.repo.checkoutRef(prevBranch);
-        return true;
-      } catch (error) {
-        if (error instanceof git.Errors.NotFoundError) {
-          void this.repo.checkoutDefaultBranch();
-        } else {
-          console.error("Error switching to previous branch:", error);
-        }
-      }
-    }
-    return false;
-  };
-}
-export class NullGitPlaybook extends GitPlaybook {
-  constructor() {
-    super(new NullRepo());
-  }
-}
-
-export class GitRemotePlaybook extends GitPlaybook {
-  constructor(private remoteRepo: RepoWithRemote) {
-    super(remoteRepo);
-  }
-
-  private async precommandCheck() {
-    if (!this.remoteRepo.isRemoteOk) {
-      await this.remoteRepo.assertRemoteOK({ verifyOrThrow: true });
-    }
-    if (!(await this.remoteRepo._ready())) {
-    }
-  }
-  async push() {
-    await this.precommandCheck();
-    /*commit,push*/
-
-    if (await this.remoteRepo.hasChanges()) {
-      await this.addAllCommit({ message: SYSTEM_COMMITS.PREPUSH });
-    }
-    await git.push({
-      fs: this.remoteRepo.fs,
-      http,
-      dir: this.remoteRepo.dir,
-      remote: this.remoteRepo.gitRemote.name,
-      ref: this.remoteRepo.defaultMainBranch, // or any branch you want to push to
-      onAuth: this.remoteRepo.gitRemote.auth,
-    });
-  }
-  async pull() {
-    await this.precommandCheck();
-    /*fetch,merge*/
-    await git.fetch({
-      fs: this.remoteRepo.fs,
-      http,
-      dir: this.remoteRepo.dir,
-      remote: this.remoteRepo.gitRemote.name,
-      ref: this.remoteRepo.gitRemote.branch, // or any branch you want to fetch from
-      onAuth: this.remoteRepo.gitRemote.auth,
-    });
-    await git.merge({
-      fs: this.remoteRepo.fs,
-      dir: this.remoteRepo.dir,
-      ours: this.remoteRepo.defaultMainBranch, // or any branch you want to merge into
-      theirs: this.remoteRepo.gitRemote.branch, // or any branch you want to merge from
-      fastForwardOnly: true, // Set to false if you want to allow non-fast-forward merges
-    });
-  }
-  async syncWithRemote() {
-    await this.precommandCheck();
-    await this.remoteRepo._ready();
-    /*commit,fetch,merge,push*/
-    //check if the repo is initialized
-    // await
-    // await this.initRepo()
-    //   .then(() => this.pull())
-    //   .then(() => this.push())
-    //   .catch((error) => {
-    //     console.error("Error syncing with remote:", error);
-    //   });
-  }
-}
-
-export class NullRepo extends Repo {
-  constructor() {
-    super({ guid: "NullRepo", disk: new NullDisk(), dir: absPath("/"), defaultBranch: "main" });
-    this.state.initialized = true;
-  }
-
-  static FromJSON = (_json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): NullRepo => {
-    return new NullRepo();
   };
 }
