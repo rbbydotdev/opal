@@ -1,4 +1,4 @@
-import { handleUrlParamViewMode } from "@/components/Editor/handleUrlParamViewMode";
+import { handleUrlParamViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { realmPlugin, viewMode$ } from "@mdxeditor/editor";
 
 export const urlParamViewModePlugin = realmPlugin({

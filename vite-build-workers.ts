@@ -19,6 +19,11 @@ const workers = [
     outFile: "image.ww.js",
   },
   {
+    name: "ImageReplaceWorker",
+    entry: resolve(__dirname, "src/workers/ImageWorker/imageReplace.ww.ts"),
+    outFile: "imageReplace.ww.js",
+  },
+  {
     name: "ImageWorker3",
     entry: resolve(__dirname, "src/workers/ImageWorker/image3.ww.ts"),
     outFile: "image3.ww.js",

@@ -27,6 +27,10 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
+//TODO move ww to different place
+//consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
+import type { handleMdImageReplaceType } from "@/workers/ImageWorker/imageReplace.ww";
+import "@/workers/transferHandlers/workspace.th";
 import * as Comlink from "comlink";
 import { UnsubscribeFunction } from "emittery";
 import mime from "mime-types";
@@ -462,23 +466,7 @@ export class Workspace {
   resolveFileUrl = (filePath: AbsPath) => {
     return this.href + encodePath(filePath);
   };
-  // resolveEditorFileUrl = (filePath: AbsPath) => {
-  //   //get mime type
-  //   const mimeType = getMimeType(filePath);
-  //   if (mimeType.startsWith("image/")) {
-  //     return this.resolveFileUrl(filePath);
-  //   }
-  //   if (mimeType.startsWith("text/markdown")) {
-  //     return this.resolveFileUrl(filePath); /* + "?viewMode=rich-text" rich text is default */
-  //   }
-  //   if (mimeType.startsWith("text/css")) {
-  //     return this.resolveFileUrl(filePath) ;
-  //   }
-  //   if (mimeType.startsWith("text/plain")) {
-  //     return this.resolveFileUrl(filePath) + "?viewMode=source";
-  //   }
-  //   return this.resolveFileUrl(filePath) + "?viewMode=source";
-  // };
+
   async tryFirstFileUrl() {
     const ff = await this.getFirstFile();
     if (!ff) {
@@ -516,30 +504,23 @@ export class Workspace {
     }
     return this.newFile(dirname(filePath), relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
-
-  async renameMdImages(paths: [to: string, from: string][]) {
-    if (paths.length === 0 || !paths.flat().length) return [];
-    let res: AbsPath[] = [];
-    const response = await fetch("/replace-md-images", {
-      method: "POST",
-      body: JSON.stringify(paths),
-    });
-    if (response.ok) {
-      try {
-        res = (await response.clone().json()) as AbsPath[];
-      } catch (e) {
-        console.error(`Error parsing JSON from /replace-md-images\n\n${await response.clone().text()}`, e);
-        res = [];
+  async renameMdImages(paths: [to: string, from: string][], origin = window.location.origin) {
+    // handleMdImageReplace
+    console.debug("Renaming md images", paths);
+    const worker = new Worker("/imageReplace.ww.js");
+    const handleMdImageReplace = Comlink.wrap<handleMdImageReplaceType>(worker);
+    try {
+      const resultPaths = await handleMdImageReplace(this, origin, paths);
+      if (resultPaths.length) {
+        await this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
+          filePaths: resultPaths,
+        });
       }
-    } else {
-      const bodyText = await response.text();
-      console.error(`Error renaming md images: ${response.status} ${response.statusText}\n${bodyText}`);
-      res = [];
-    }
-    if (res.length) {
-      await this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
-        filePaths: res,
-      });
+      return resultPaths;
+    } catch (e) {
+      console.error("Error renaming md images", e);
+    } finally {
+      worker.terminate();
     }
   }
 

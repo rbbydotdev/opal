@@ -5,6 +5,7 @@ import { ConfirmProvider } from "@/components/Confirm";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
 import { ThemeProvider } from "@/components/Editor/theme-provider";
+import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserveViewModeURL";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { ErrorPopper } from "@/components/ui/error-popup";
@@ -18,6 +19,7 @@ interface MainAppLayoutProps {
 }
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
+  usePreserveViewModeURL();
   return (
     <>
       <div className="font-sans antialiased">
