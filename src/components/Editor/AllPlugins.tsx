@@ -4,9 +4,9 @@ import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelec
 import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
+import { handleUrlParamViewMode } from "@/components/Editor/handleUrlParamViewMode";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
-import { handleUrlParamViewMode } from "@/components/Editor/urlParamViewModePlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { useFileContents } from "@/context/WorkspaceHooks";
 import {
