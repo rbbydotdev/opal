@@ -1,14 +1,6 @@
 import { Workspace } from "@/Db/Workspace";
-import {
-  GitPlaybook,
-  GitRemotePlaybook,
-  NullGitPlaybook,
-  NullRepo,
-  Repo,
-  RepoDefaultInfo,
-  RepoInfoType,
-  RepoWithRemote,
-} from "@/features/git-repo/GitRepo";
+import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
+import { Repo, RepoDefaultInfo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import "@/workers/transferHandlers/disk.th";
 import "@/workers/transferHandlers/function.th";
@@ -16,6 +8,8 @@ import "@/workers/transferHandlers/repo.th";
 import * as Comlink from "comlink";
 import { UnsubscribeFunction } from "emittery";
 import { useMemo, useRef, useState } from "react";
+import { GitRemotePlaybook } from "./GitRemotePlaybook";
+import { RepoWithRemote } from "./RepoWithRemote";
 
 export function useGitPlaybook(repo: Repo | Comlink.Remote<Repo>): GitPlaybook | GitRemotePlaybook {
   return useMemo(() => {
