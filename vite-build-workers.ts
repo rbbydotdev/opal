@@ -14,6 +14,11 @@ const workers = [
     outFile: "sw.js",
   },
   {
+    name: "DocxWorker",
+    entry: resolve(__dirname, "src/workers/DocxWorker/docx.ww.ts"),
+    outFile: "docx.ww.js",
+  },
+  {
     name: "ImageWorker",
     entry: resolve(__dirname, "src/workers/ImageWorker/image.ww.ts"),
     outFile: "image.ww.js",

@@ -29,6 +29,8 @@ import {
 } from "@/lib/paths2";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
+import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
+import { DocxConvertType } from "@/workers/DocxWorker/docx.ww";
 import type { handleMdImageReplaceType } from "@/workers/ImageWorker/imageReplace.ww";
 import "@/workers/transferHandlers/workspace.th";
 import * as Comlink from "comlink";
@@ -239,9 +241,9 @@ export class Workspace {
       });
       await this.NewThumb(oldNode.path)
         .move(oldNode.path, newPath)
-        .catch(async (e) => {
-          console.error(`error moving thumb from ${oldNode.path} to ${newPath}`);
-          console.error(e);
+        .catch(async (_e) => {
+          console.warn(`error moving thumb from ${oldNode.path} to ${newPath}`);
+          // console.error(e);
         });
     }
   }
@@ -375,7 +377,21 @@ export class Workspace {
   }
 
   async uploadMultipleDocx(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    const results = await Workspace.UploadMultipleDocxs(files, targetDir, concurrency);
+    const queue: File[] = [];
+    const filesArr = Array.from(files);
+    while (queue.length <= concurrency && filesArr.length) queue.push(filesArr.pop()!);
+    const results: AbsPath[] = [];
+
+    const runWorker = async (file: File, worker?: Worker) => {
+      if (!worker) {
+        worker = new Worker("/docx.ww.js");
+        this.unsubs.push(() => worker!.terminate());
+      }
+      const docx = Comlink.wrap<DocxConvertType>(worker);
+      results.push(await docx(this, absPath(joinPath(targetDir, file!.name)), file));
+      if (filesArr.length) return runWorker(filesArr.pop()!, worker);
+    };
+    await Promise.all([...queue].map((file) => runWorker(file)));
     await this.indexAndEmitNewFiles(results);
     return results;
   }
@@ -504,9 +520,22 @@ export class Workspace {
     }
     return this.newFile(dirname(filePath), relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
+  // ConcurrentWorkers
+
+  async renameMdImages2222(paths: [to: string, from: string][], origin = window.location.origin) {
+    try {
+      return await ConcurrentWorkers(
+        () => Comlink.wrap<handleMdImageReplaceType>(new Worker("/imageReplace.ww.js")),
+        (worker, item) => worker(this, origin, item, false),
+        paths,
+        8
+      );
+    } catch (e) {
+      console.error("Error renaming md images", e);
+    }
+  }
+
   async renameMdImages(paths: [to: string, from: string][], origin = window.location.origin) {
-    // handleMdImageReplace
-    console.debug("Renaming md images", paths);
     const worker = new Worker("/imageReplace.ww.js");
     const handleMdImageReplace = Comlink.wrap<handleMdImageReplaceType>(worker);
     try {
@@ -519,37 +548,14 @@ export class Workspace {
       return resultPaths;
     } catch (e) {
       console.error("Error renaming md images", e);
-    } finally {
-      worker.terminate();
     }
   }
 
-  static async UploadMultipleDocxs(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    const results: AbsPath[] = [];
-    let index = 0;
-    const filesArr = Array.from(files);
-
-    const uploadNext = async () => {
-      if (index >= filesArr.length) return;
-      const current = index++;
-      const file = filesArr[current];
-      const res = await fetch(joinPath(absPath("/upload-docx"), targetDir, file!.name), {
-        method: "POST",
-        headers: {
-          "Content-Type": file!.type,
-        },
-        body: file,
-      });
-      results[current] = absPath(await res.text());
-      await uploadNext();
-    };
-
-    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
-    await Promise.all(workers);
-    return results;
-  }
-
-  static async UploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+  static async UploadMultipleImages___old(
+    files: Iterable<File>,
+    targetDir: AbsPath,
+    concurrency = 8
+  ): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
     const filesArr = Array.from(files);
