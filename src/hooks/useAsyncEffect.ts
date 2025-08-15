@@ -5,14 +5,14 @@ export function useAsyncEffect(effect: () => Promise<void | (() => void)>, deps:
 
   useEffect(() => {
     let isMounted = true;
-
     (async () => {
       const unsub = await effect();
-      if (isMounted) {
-        unsubRef.current = unsub;
-      } else if (typeof unsub === "function") {
-        // If unmounted before unsub is set, call it immediately
-        unsub();
+      if (typeof unsub === "function") {
+        if (isMounted) {
+          unsubRef.current = unsub;
+        } else {
+          unsub();
+        }
       }
     })();
 

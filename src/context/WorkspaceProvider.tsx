@@ -72,7 +72,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
           const navPath = details.filePaths
             .map((path) => currentWorkspace.nodeFromPath(path))
             .find((n) => n?.isTreeFile())?.path;
-          if (navPath) navigate({ to: currentWorkspace.resolveFileUrl(navPath) });
+          if (navPath) void navigate({ to: currentWorkspace.resolveFileUrl(navPath) });
         }
       }),
       currentWorkspace.deleteListener(async (details) => {
@@ -80,7 +80,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
           workspaceRoute.path &&
           details.filePaths.some((path) => isAncestor({ child: workspaceRoute.path, parent: path }))
         ) {
-          navigate({ to: await currentWorkspace.tryFirstFileUrl() });
+          void navigate({ to: await currentWorkspace.tryFirstFileUrl() });
         }
       }),
     ];

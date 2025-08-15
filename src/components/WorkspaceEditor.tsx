@@ -14,13 +14,13 @@ import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { ApplicationError, isError, NotFoundError } from "@/lib/errors";
 import { RootNode } from "@/lib/FileTree/TreeNode";
-import { withSuspense } from "@/lib/hoc/withSuspense";
 import { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ComponentProps, Suspense, use, useMemo, useRef } from "react";
+import { ComponentProps, useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
@@ -71,9 +71,24 @@ export function WorkspaceView(props: WorkspaceEditorProps) {
   );
 }
 
-const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationError> }) => {
+const FileError = ({ error }: { error: Error & Partial<ApplicationError> }) => {
   const { currentWorkspace } = useWorkspaceContext();
-  const tryFirstFile = use(useMemo(() => currentWorkspace.tryFirstFileUrl(), [currentWorkspace]));
+  const [tryFirstFile, setTryFirstFile] = useState<string | null>(null);
+
+  const [count, setCount] = useState(0);
+  const [name, setName] = useState("Alice");
+
+  // This effect depends on `count` and `name`
+  useEffect(() => {
+    console.log(`Count is ${count} and name is ${name}`);
+    if (count) {
+    }
+  }, []); // 👈 dependencies array
+
+  useAsyncEffect(async () => {
+    if (tryFirstFile) return; // already set
+    setTryFirstFile(await currentWorkspace.tryFirstFileUrl());
+  }, []);
 
   return (
     <div className="w-full h-full flex items-center justify-center font-mono">
@@ -94,7 +109,7 @@ const FileError = withSuspense(({ error }: { error: Error & Partial<ApplicationE
       </Card>
     </div>
   );
-});
+};
 
 export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props }: WorkspaceEditorProps) {
   const editorRef = useRef<MDXEditorMethods>(null);
@@ -105,7 +120,6 @@ export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props 
       editorRef.current?.setMarkdown(newContent ?? "");
     },
   });
-  // const [readOnlyMode, _setReadOnly] = useReadOnlyMode();
 
   const { id, path } = useWorkspaceRoute();
   const { mimeType } = useCurrentFilepath();
@@ -118,11 +132,7 @@ export function WorkspaceMarkdownEditor({ className, currentWorkspace, ...props 
 
   if (error) {
     if (isError(error, NotFoundError)) {
-      return (
-        <Suspense fallback={null}>
-          <FileError error={error} />
-        </Suspense>
-      );
+      return <FileError error={error} />;
     } else {
       throw error; // rethrow other errors to be caught by the nearest error boundary
     }
