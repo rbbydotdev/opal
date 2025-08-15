@@ -1,12 +1,15 @@
+// import { markdownWithFrontMatter } from "@/components/SourceEditor/markdowExt";
 import { cn } from "@/lib/utils";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
 import { javascript } from "@codemirror/lang-javascript";
-import { markdown } from "@codemirror/lang-markdown";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { yamlFrontmatter } from "@codemirror/lang-yaml";
+import { languages } from "@codemirror/language-data";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { basicSetup } from "codemirror";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript";
 
@@ -15,7 +18,12 @@ const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdo
     case "text/css":
       return css();
     case "text/markdown":
-      return markdown();
+      return yamlFrontmatter({
+        content: markdown({
+          base: markdownLanguage,
+          codeLanguages: languages,
+        }),
+      });
     case "text/javascript":
       return javascript();
     case "text/plain":
@@ -25,7 +33,6 @@ const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdo
 };
 
 export const CodeMirrorEditor = ({
-  // language = "text",
   mimeType,
   value,
   onChange,
@@ -42,6 +49,7 @@ export const CodeMirrorEditor = ({
 }) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const ext = useMemo(() => getLanguageExtension(mimeType), [mimeType]);
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -54,8 +62,8 @@ export const CodeMirrorEditor = ({
 
     const extensions: Extension[] = [
       basicSetup,
-      getLanguageExtension(mimeType),
       keymap.of([indentWithTab]),
+      ext,
       EditorView.updateListener.of((update) => {
         if (update.docChanged && onChange) {
           onChange(update.state.doc.toString());

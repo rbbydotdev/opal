@@ -1,11 +1,21 @@
 import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
-import { useCurrentFilepath, useFileContents, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useFileContents } from "@/context/WorkspaceHooks";
+import { Workspace } from "@/Db/Workspace";
 import { cn } from "@/lib/utils";
 
-export const SourceEditor = ({ className }: { className?: string }) => {
-  const { currentWorkspace } = useWorkspaceContext();
-  const { mimeType } = useCurrentFilepath();
+export const SourceEditor = ({
+  currentWorkspace,
+  className,
+  mimeType = "text/plain",
+}: {
+  currentWorkspace: Workspace;
+  className?: string;
+  mimeType?: string;
+}) => {
   const { initialContents, debouncedUpdate, error } = useFileContents({ currentWorkspace });
+  if (error) {
+    throw error;
+  }
   return (
     <CodeMirrorEditor
       mimeType={mimeType as "text/css" | "text/plain" | "text/markdown"}
