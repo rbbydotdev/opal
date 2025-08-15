@@ -14,7 +14,7 @@ export function renderMarkdownToHtml(source: string): string {
     .use(remarkDirective)
     // .use(remarkMdx)
     .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeRaw) // <-- This is crucial for HTML in markdown!
+    .use(rehypeRaw)
     .use(rehypeStringify, { allowDangerousHtml: true });
 
   const file = processor.processSync(source);

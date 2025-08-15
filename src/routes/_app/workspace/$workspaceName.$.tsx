@@ -31,10 +31,11 @@ function WorkspaceFilePage() {
     }
   }, [currentWorkspace, filePath, navigate]);
 
+  if (!filePath) return null;
+
   if (!currentWorkspace.isNull && currentWorkspace.nodeFromPath(filePath) === null) {
     throw new NotFoundError("File not found: " + filePath);
   }
-  if (!filePath) return null;
 
   return (
     <>

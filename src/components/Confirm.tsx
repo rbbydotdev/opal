@@ -34,7 +34,6 @@ export function useConfirm() {
   return ctx;
 }
 
-export type ConfirmOpen<T extends unknown, U extends () => T> = U;
 export function useConfirmCmd() {
   const cmdRef = useRef<{
     open: <U extends () => unknown>(cb: U, title: string, description: string) => Promise<ReturnType<U>>;
@@ -52,7 +51,7 @@ export function Confirm({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{
-    open: (cb: <T extends unknown>() => T, title: string, description: string) => void;
+    open: (cb: <T>() => T, title: string, description: string) => void;
   }>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -77,7 +76,7 @@ export function Confirm({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
-      handleCancel();
+      void handleCancel();
     }
   };
 
