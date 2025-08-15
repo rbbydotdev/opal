@@ -646,7 +646,7 @@ export class Workspace {
         // TODO, being navigated on a new file then going to a branch/commit where this files does not exist
         // need to cover this case
         repo.gitListener(async () => {
-          const currentPath = Workspace.parseWorkspacePath(window.location.href).filePath;
+          const { filePath: currentPath } = Workspace.parseWorkspacePath(window.location.href);
           if (await this.disk.pathExists(currentPath!)) {
             void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
               filePaths: [currentPath!],

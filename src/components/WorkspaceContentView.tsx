@@ -16,7 +16,7 @@ import { ComponentProps, useMemo, useRef } from "react";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
 export function WorkspaceContentView({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const viewModeOverride = useMemo(() => handleUrlParamViewMode("search", "viewMode"), []);
+  const viewModeOverride = useMemo(() => handleUrlParamViewMode("hash+search", "viewMode"), []);
   const { isMarkdown, filePath, inTrash, mimeType } = useCurrentFilepath();
   return (
     <>
