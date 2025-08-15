@@ -1,8 +1,8 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
-import { handleUrlParamViewMode } from "@/components/Editor/handleUrlParamViewMode";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
+import { handleUrlParamViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 import { TrashBanner } from "@/components/TrashBanner";

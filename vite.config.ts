@@ -10,6 +10,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 export default defineConfig(() => {
   return {
     minify: true,
+    // Disable Hot Module Replacement
     plugins: [
       react({
         // Exclude service worker and web worker files from React plugin

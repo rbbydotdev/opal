@@ -5,7 +5,7 @@ import {
   downloadHandler,
   faviconHandler,
   imageHandler,
-  replaceMdImageHandler,
+  // replaceMdImageHandler,
   RequestContext,
   uploadImageHandler,
   workspaceSearchHandler,
@@ -34,13 +34,14 @@ function createRoute(method: "GET" | "POST" | "ANY", path: string, handler: Hand
 
 // --- Route Definitions ---
 const routes: Route[] = [
-  createRoute("POST", "/replace-md-images", replaceMdImageHandler),
+  // createRoute("POST", "/replace-md-images", replaceMdImageHandler),
   createRoute("POST", "/upload-image/.*", uploadImageHandler),
   createRoute("POST", "/upload-docx/.*", convertDocxHandler),
   createRoute("GET", "/workspace-search/:workspaceName", workspaceSearchHandler),
   createRoute("POST", "/download-encrypted.zip", downloadEncryptedHandler),
   createRoute("GET", "/download.zip", downloadHandler),
   createRoute("GET", "/favicon.svg", faviconHandler),
+  createRoute("GET", "/src/app/icon.svg", faviconHandler),
   createRoute("GET", "/icon.svg", faviconHandler),
   // This is a catch-all for images, so it should be last among GETs
   createRoute("GET", "/.*", imageHandler),
