@@ -8,6 +8,7 @@ import { yamlFrontmatter } from "@codemirror/lang-yaml";
 import { languages } from "@codemirror/language-data";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
+import { basicLight } from "cm6-theme-basic-light";
 import { basicSetup } from "codemirror";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -62,6 +63,7 @@ export const CodeMirrorEditor = ({
 
     const extensions: Extension[] = [
       basicSetup,
+      basicLight,
       keymap.of([indentWithTab]),
       ext,
       EditorView.updateListener.of((update) => {

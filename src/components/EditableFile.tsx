@@ -59,7 +59,8 @@ export const EditableFile = ({
       linkRef?.current?.focus();
     }
   }, [isFocused, isEditing, linkRef]);
-
+  // const currentHash = typeof window !== undefined ? window.location.hash.replace(/^#/, "") : "";
+  // const currentSearch = typeof window !== undefined ? window.location.search : "";
   return (
     <div className="select-none">
       {!isEditing ? (
