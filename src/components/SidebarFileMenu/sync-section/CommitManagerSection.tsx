@@ -1,6 +1,7 @@
 import { GitCommitManager } from "@/components/SidebarFileMenu/sync-section/GitCommitManager";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitPlaybook } from "@/features/git-repo/GitRepo";
+import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
+import { RepoCommit } from "@/features/git-repo/GitRepo";
 
 export function CommitManagerSection({
   playbook,
@@ -10,7 +11,7 @@ export function CommitManagerSection({
   refType,
 }: {
   playbook: GitPlaybook;
-  commits?: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
+  commits: RepoCommit[];
   currentCommit?: string;
   commitRef: React.RefObject<{ show: (text?: string) => void }>;
   refType: "branch" | "commit";
