@@ -5,7 +5,6 @@ import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProv
 import { handleUrlParamViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
-import { TrashBanner } from "@/components/TrashBanner";
 import { useCurrentFilepath, useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
@@ -20,7 +19,6 @@ export function WorkspaceContentView({ currentWorkspace }: { currentWorkspace: W
   const { isMarkdown, filePath, inTrash, mimeType } = useCurrentFilepath();
   return (
     <>
-      {inTrash && <TrashBanner filePath={filePath} />}
       {!isMarkdown || viewModeOverride === "source" ? (
         <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} />
       ) : (

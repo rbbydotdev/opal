@@ -57,18 +57,20 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
   );
 }
 
-type CommitState = "init" | "commit" | "commit-disabled" | "enter-message" | "pending" | "detatched";
+type CommitState = "init" | "commit" | "merge-commit" | "commit-disabled" | "enter-message" | "pending" | "detatched";
 
 function CommitSection({
   exists,
   hasChanges,
   commit,
   initialCommit,
+  isMerging,
   commitRef,
   currentGitRef,
 }: {
   exists: boolean;
   hasChanges: boolean;
+  isMerging: boolean;
   commit: (message: string) => void;
   initialCommit: () => void;
   currentGitRef: GitRef | null;
@@ -80,6 +82,7 @@ function CommitSection({
   const [showMessageInput, setShowMessageInput] = useState(false);
 
   const commitState = ((): CommitState => {
+    if (isMerging) return "merge-commit";
     if (showMessageInput) return "enter-message";
     if (!exists) return "init";
     if (!hasChanges) return "commit-disabled";
@@ -88,6 +91,10 @@ function CommitSection({
   })();
 
   const handleButtonClick = async () => {
+    if (commitState === "merge-commit") {
+      commitRef.current?.show("You are in a merge state, please resolve conflicts first");
+      return;
+    }
     if (commitState === "init") {
       await initialCommit();
       commitRef.current?.show("Repository initialized");
@@ -153,6 +160,13 @@ function CommitSection({
 
 const GitActionButton = ({ commitState, exists }: { commitState?: CommitState; exists: boolean }) => {
   switch (commitState) {
+    case "merge-commit":
+      return (
+        <>
+          <GitMerge className="mr-1" />
+          Merge Commit
+        </>
+      );
     case "pending":
       return (
         <>
@@ -274,6 +288,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 exists={exists}
                 hasChanges={info.hasChanges}
                 commit={(message) => playbook.addAllCommit({ message })}
+                isMerging={info.isMerging}
                 initialCommit={() => playbook.initialCommit()}
                 commitRef={commitRef}
                 currentGitRef={currentGitRef}

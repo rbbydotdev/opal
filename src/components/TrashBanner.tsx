@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import { AbsPath } from "@/lib/paths2";
+import { cn } from "@/lib/utils";
 import { Delete, Trash2, Undo } from "lucide-react";
 import React from "react";
 
-export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
+export const TrashBanner = ({ filePath, className }: { filePath: AbsPath; className?: string }) => {
   const { currentWorkspace } = useWorkspaceContext();
   const untrashFile = React.useCallback(async () => {
     return currentWorkspace.untrashSingle(filePath);
@@ -14,7 +15,12 @@ export const TrashBanner = ({ filePath }: { filePath: AbsPath }) => {
   }, [currentWorkspace, filePath]);
 
   return (
-    <div className=" w-[30rem] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-50 flex justify-center items-center _font-mono _font-bold">
+    <div
+      className={cn(
+        "w-[30rem] text-sm text-ring pointer-events-none absolute left-0 right-0 m-auto top-16 z-50 flex justify-center items-center",
+        className
+      )}
+    >
       <Button
         tabIndex={0}
         title="Put Back"

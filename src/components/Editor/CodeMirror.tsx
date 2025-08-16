@@ -75,6 +75,9 @@ export const CodeMirrorEditor = ({
       EditorView.theme({
         "&": { height: "100%" }, // Make the editor fill its parent
         ".cm-scroller": { height: "100%" }, // Make the scroll area fill the editor
+        ".cm-content": {
+          padding: 0,
+        },
       }),
     ].filter(Boolean) as Extension[];
 
