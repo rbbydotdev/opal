@@ -1,4 +1,5 @@
 import { useConfirm } from "@/components/Confirm";
+import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,7 +10,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RepoCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
-import { Ellipsis, GitCommit, RotateCcw } from "lucide-react";
+import { ArrowBigLeftDashIcon, Ellipsis, GitCommit, RotateCcw } from "lucide-react";
 import { useState } from "react";
 
 export function GitCommitManager({
@@ -43,19 +44,20 @@ export function GitCommitManager({
     );
   };
 
-  const resetHardToCommit = () => {};
-
-  /* select commit */
   const [open, setOpen] = useState(false);
+  const [selectCommit, setSelectCommit] = useState(false);
 
-  // return (
-  //   <SelectHighlight
-  //     items={commits.map((commit) => ({ value: commit.oid, label: <CommitLabel commitData={commit} /> }))}
-  //     placeholder="Select Commit"
-  //     onSelect={() => {}}
-  //     onCancel={() => {}}
-  //   ></SelectHighlight>
-  // );
+  if (selectCommit) {
+    return (
+      <SelectHighlight
+        items={commits.map((commit) => ({ value: commit.oid, label: <CommitLabel commitData={commit} /> }))}
+        placeholder="Select Commit"
+        itemClassName={cn("focus:!bg-ring focus:!text-primary-foreground [&_*]:focus:text-primary-foreground")}
+        onSelect={() => setSelectCommit(false)}
+        onCancel={() => setSelectCommit(false)}
+      />
+    );
+  }
 
   return (
     <>
@@ -67,6 +69,10 @@ export function GitCommitManager({
         }}
       >
         <GitCommitMenuDropDown open={open} setOpen={setOpen}>
+          <DropdownMenuItem onClick={() => setSelectCommit(true)} onSelect={() => setSelectCommit(true)}>
+            <ArrowBigLeftDashIcon />
+            Reset HARD
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={resetToHeadHandler} onSelect={resetToHeadHandler}>
             <RotateCcw />
             Reset to HEAD
@@ -158,12 +164,12 @@ const formatCommitHash = (oid: string) => {
 
 function CommitLabel({ commitData }: { commitData: RepoCommit }) {
   return (
-    <div className="w-full truncate flex items-center">
-      <GitCommit className="p-1 mr-2 stroke-ring" />
-      <div className="flex flex-col">
-        <span className="text-xs font-mono">{formatCommitHash(commitData.oid)}</span>
-        <span className="text-xs">{formatCommitMessage(commitData.commit.message)}</span>
+    <>
+      <div className="flex gap-2 items-center justify-start">
+        <GitCommit size={12} className="flex-shrink-0" />
+        <span className="font-mono text-muted-foreground">{formatCommitHash(commitData.oid)}</span>
+        <span className="truncate">{formatCommitMessage(commitData.commit.message)}</span>
       </div>
-    </div>
+    </>
   );
 }
