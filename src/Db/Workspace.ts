@@ -385,10 +385,10 @@ export class Workspace {
     try {
       const result = await ConcurrentWorkers(
         () => Comlink.wrap<DocxConvertType>(new Worker("/docx.ww.js")),
-        (worker) => new Promise((rs) => setTimeout(rs, 1000)).then(worker.tearDown),
         (worker, file) => worker.docxConvert(this, absPath(joinPath(targetDir, file!.name)), file, false),
         files,
-        concurrency
+        concurrency,
+        (worker) => new Promise((rs) => setTimeout(rs, 1000)).then(worker.tearDown)
       );
       await this.indexAndEmitNewFiles(result);
       return result;
@@ -557,10 +557,10 @@ export class Workspace {
     try {
       return await ConcurrentWorkers(
         () => Comlink.wrap<handleMdImageReplaceType>(new Worker("/imageReplace.ww.js")),
-        (worker) => worker.tearDown(),
         (worker, item) => worker.handleMdImageReplace(this, origin, item, false),
         [paths],
-        8
+        8,
+        (worker) => worker.tearDown()
       );
     } catch (e) {
       console.error("Error renaming md images", e);
