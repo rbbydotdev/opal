@@ -66,12 +66,14 @@ function CommitSection({
   initialCommit,
   isMerging,
   commitRef,
+  mergeCommit,
   currentGitRef,
 }: {
   exists: boolean;
   hasChanges: boolean;
   isMerging: boolean;
   commit: (message: string) => void;
+  mergeCommit: () => void;
   initialCommit: () => void;
   currentGitRef: GitRef | null;
   commitRef: React.RefObject<{
@@ -80,8 +82,10 @@ function CommitSection({
 }) {
   const [commitMessage, setCommitMessage] = useState("");
   const [showMessageInput, setShowMessageInput] = useState(false);
+  const [pending, setPending] = useState(false);
 
   const commitState = ((): CommitState => {
+    if (pending) return "pending";
     if (isMerging) return "merge-commit";
     if (showMessageInput) return "enter-message";
     if (!exists) return "init";
@@ -90,27 +94,36 @@ function CommitSection({
     return "commit";
   })();
 
-  const handleButtonClick = async () => {
-    if (commitState === "merge-commit") {
-      commitRef.current?.show("You are in a merge state, please resolve conflicts first");
-      return;
-    }
-    if (commitState === "init") {
-      await initialCommit();
-      commitRef.current?.show("Repository initialized");
-    } else if (commitState === "commit") {
-      setShowMessageInput(true);
-    } else if (commitState === "detatched") {
-      // commitRef.current?.show("You are in a detatched state, please switch to a branch to commit");
-    }
+  const handleCommit = async (message: string) => {
+    setPending(true);
+    setShowMessageInput(false);
+    setCommitMessage("");
+    await commit(message);
+    setPending(false);
+    commitRef.current?.show("Committed");
+  };
+  const handleMergeCommit = async () => {
+    setPending(true);
+    await mergeCommit();
+    setPending(false);
+    commitRef.current?.show("Merge Committed");
+  };
+  const handleInitialCommit = async () => {
+    setPending(true);
+    await initialCommit();
+    setPending(false);
+    commitRef.current?.show("Repository initialized");
+  };
+
+  const handleButtonClick = () => {
+    if (commitState === "merge-commit") return handleMergeCommit();
+    if (commitState === "init") return handleInitialCommit();
+    if (commitState === "commit") return setShowMessageInput(true);
   };
 
   const handleMessageSubmit = async (message: string) => {
     if (message.trim()) {
-      setShowMessageInput(false);
-      setCommitMessage("");
-      await commit(message);
-      commitRef.current?.show("Committed");
+      return handleCommit(message);
     }
   };
 
@@ -288,6 +301,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 exists={exists}
                 hasChanges={info.hasChanges}
                 commit={(message) => playbook.addAllCommit({ message })}
+                mergeCommit={() => playbook.mergeCommit()}
                 isMerging={info.isMerging}
                 initialCommit={() => playbook.initialCommit()}
                 commitRef={commitRef}

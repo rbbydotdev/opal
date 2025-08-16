@@ -1,7 +1,7 @@
 import { Disk, NullDisk } from "@/Db/Disk";
 import { GitRepo, MergeConflict } from "@/features/git-repo/GitRepo";
 import { absPath, AbsPath } from "@/lib/paths2";
-import { Mutex } from "async-mutex";
+// import { Mutex } from "async-mutex";
 import { Remote } from "comlink";
 import * as git from "isomorphic-git";
 import { MergeResult } from "isomorphic-git";
@@ -19,8 +19,8 @@ export class GitPlaybook {
   //should probably dep inject shared mutex from somewhere rather than relying on repo's
   //rather should share mutex
   constructor(
-    private repo: GitRepo | Remote<GitRepo>,
-    private mutex = new Mutex()
+    private repo: GitRepo | Remote<GitRepo>
+    // private mutex = new Mutex()
   ) {}
 
   switchBranch = async (branchName: string) => {
@@ -68,19 +68,36 @@ export class GitPlaybook {
   async merge(from: string, into: string): Promise<MergeResult | MergeConflict> {
     return this.repo.merge(from, into);
   }
+  mergeCommit = async (): Promise<string | null> => {
+    const currentBranch = await this.repo.getCurrentBranch();
+    const mergeHead = await this.repo.getMergeState();
+    const mergeMsg = await this.repo.getMergeMsg();
+    const head = await this.repo.getHead();
+    console.log("mergeCommit", { currentBranch, mergeHead, mergeMsg, head });
+    if (!mergeHead || !head) {
+      throw new Error("Cannot merge commit, no merge head or current branch found");
+    }
+    return this.addAllCommit({
+      message: mergeMsg ?? "Merge commit",
+      parent: [head, mergeHead],
+    });
+  };
   async addAllCommit({
     message,
     allowEmpty = false,
     filepath = ".",
+    ref,
+    parent,
   }: {
     message: string;
     filepath?: string;
     allowEmpty?: boolean;
+    ref?: string;
+    parent?: string[];
   }) {
-    await this.repo.mustBeInitialized();
     if (!allowEmpty && !(await this.repo.hasChanges())) {
       console.log("No changes to commit, skipping commit.");
-      return false;
+      return null;
     }
     const statusMatrix = await this.repo.statusMatrix();
 
@@ -90,10 +107,11 @@ export class GitPlaybook {
       }
     }
     await this.repo.add(filepath);
-    await this.repo.commit({
+    return this.repo.commit({
+      ref,
       message,
+      parent,
     });
-    return true;
   }
 
   newBranchFromCurrentOrphan = async () => {
