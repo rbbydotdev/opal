@@ -17,12 +17,15 @@ export const SourceEditor = ({
     throw error;
   }
   return (
-    <CodeMirrorEditor
-      mimeType={mimeType as "text/css" | "text/plain" | "text/markdown"}
-      value={String(initialContents || "")}
-      onChange={debouncedUpdate}
-      readOnly={false}
-      className={cn("source-editor", "flex-grow", className)}
-    />
+    <div className="h-full">
+      <div className="bg-sidebar"></div>
+      <CodeMirrorEditor
+        mimeType={mimeType as "text/css" | "text/plain" | "text/markdown"}
+        value={String(initialContents || "")}
+        onChange={debouncedUpdate}
+        readOnly={false}
+        className={cn("source-editor", "flex-grow", className)}
+      />
+    </div>
   );
 };

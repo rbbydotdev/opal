@@ -357,6 +357,26 @@ export class GitRepo {
     const mergeHead = await this.getMergeState();
     return mergeHead !== null;
   };
+  setMergeMessage = async (message: string) => {
+    // if (!(await this.exists())) return;
+    if (!message) {
+      await this.fs.unlink(joinPath(this.gitDir, "MERGE_MSG")).catch(() => {
+        // Ignore if file does not exist
+      });
+      return;
+    }
+    await this.fs.writeFile(joinPath(this.gitDir, "MERGE_MSG"), message);
+  };
+  setMergeState = async (mergeHead: string | null) => {
+    // if (!(await this.exists())) return;
+    if (mergeHead) {
+      await this.fs.writeFile(joinPath(this.gitDir, "MERGE_HEAD"), mergeHead);
+    } else {
+      await this.fs.unlink(joinPath(this.gitDir, "MERGE_HEAD")).catch(() => {
+        // Ignore if file does not exist
+      });
+    }
+  };
   getMergeState = async () => {
     if (!(await this.exists())) return null;
     const mergeHead = await this.fs.readFile(joinPath(this.gitDir, "MERGE_HEAD")).catch(() => null);
