@@ -6,10 +6,10 @@
 
 export async function ConcurrentWorkers<TArg, TResource, TExecReturn>(
   build: () => TResource,
-  tearDown: (r: TResource) => void = () => {},
   exec: (r: TResource, i: TArg) => Promise<TExecReturn>,
   items: Iterable<TArg> | ArrayLike<TArg>,
-  concurrency = 8
+  concurrency = 8,
+  tearDown: (r: TResource) => void = () => {}
 ): Promise<TExecReturn[]> {
   const queue: TArg[] = [];
   const filesArr = Array.from(items);
