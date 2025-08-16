@@ -4,14 +4,10 @@
 //   R = unknown
 // >(
 
-export async function ConcurrentWorkers<
-  TArg,
-  TResource,
-  TExecReturn,
-  TExec extends (r: TResource, i: TArg) => Promise<TExecReturn>,
->(
+export async function ConcurrentWorkers<TArg, TResource, TExecReturn>(
   build: () => TResource,
-  exec: TExec,
+  tearDown: (r: TResource) => void = () => {},
+  exec: (r: TResource, i: TArg) => Promise<TExecReturn>,
   items: Iterable<TArg> | ArrayLike<TArg>,
   concurrency = 8
 ): Promise<TExecReturn[]> {
@@ -28,6 +24,8 @@ export async function ConcurrentWorkers<
     results.push(await exec(resource, item));
     if (filesArr.length) {
       return runWorker(filesArr.pop()!, resource);
+    } else {
+      tearDown(resource);
     }
   };
 

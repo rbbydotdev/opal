@@ -377,22 +377,53 @@ export class Workspace {
   }
 
   async uploadMultipleDocx(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    const queue: File[] = [];
-    const filesArr = Array.from(files);
-    while (queue.length <= concurrency && filesArr.length) queue.push(filesArr.pop()!);
-    const results: AbsPath[] = [];
+    const result = await Workspace.UploadMultipleDocxsFetch(files, targetDir, concurrency);
+    await this.indexAndEmitNewFiles(result);
+    return result;
+  }
+  async uploadMultipleDocxWorkers(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+    try {
+      const result = await ConcurrentWorkers(
+        () => Comlink.wrap<DocxConvertType>(new Worker("/docx.ww.js")),
+        (worker) => new Promise((rs) => setTimeout(rs, 1000)).then(worker.tearDown),
+        (worker, file) => worker.docxConvert(this, absPath(joinPath(targetDir, file!.name)), file, false),
+        files,
+        concurrency
+      );
+      await this.indexAndEmitNewFiles(result);
+      return result;
+    } catch (e) {
+      console.error("Error renaming md images", e);
+    }
+    return [];
+  }
 
-    const runWorker = async (file: File, worker?: Worker) => {
-      if (!worker) {
-        worker = new Worker("/docx.ww.js");
-        this.unsubs.push(() => worker!.terminate());
-      }
-      const docx = Comlink.wrap<DocxConvertType>(worker);
-      results.push(await docx(this, absPath(joinPath(targetDir, file!.name)), file));
-      if (filesArr.length) return runWorker(filesArr.pop()!, worker);
+  static async UploadMultipleDocxsFetch(
+    files: Iterable<File>,
+    targetDir: AbsPath,
+    concurrency = 8
+  ): Promise<AbsPath[]> {
+    const results: AbsPath[] = [];
+    let index = 0;
+    const filesArr = Array.from(files);
+
+    const uploadNext = async () => {
+      if (index >= filesArr.length) return;
+      const current = index++;
+      const file = filesArr[current];
+      const res = await fetch(joinPath(absPath("/upload-docx"), targetDir, file!.name), {
+        method: "POST",
+        headers: {
+          "Content-Type": file!.type,
+        },
+        body: file,
+      });
+      results[current] = absPath(await res.text());
+      await uploadNext();
     };
-    await Promise.all([...queue].map((file) => runWorker(file)));
-    await this.indexAndEmitNewFiles(results);
+
+    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
+    await Promise.all(workers);
     return results;
   }
 
@@ -522,12 +553,13 @@ export class Workspace {
   }
   // ConcurrentWorkers
 
-  async renameMdImages2222(paths: [to: string, from: string][], origin = window.location.origin) {
+  async renameMdImages(paths: [to: string, from: string][], origin = window.location.origin) {
     try {
       return await ConcurrentWorkers(
         () => Comlink.wrap<handleMdImageReplaceType>(new Worker("/imageReplace.ww.js")),
-        (worker, item) => worker(this, origin, item, false),
-        paths,
+        (worker) => worker.tearDown(),
+        (worker, item) => worker.handleMdImageReplace(this, origin, item, false),
+        [paths],
         8
       );
     } catch (e) {
@@ -535,27 +567,33 @@ export class Workspace {
     }
   }
 
-  async renameMdImages(paths: [to: string, from: string][], origin = window.location.origin) {
-    const worker = new Worker("/imageReplace.ww.js");
-    const handleMdImageReplace = Comlink.wrap<handleMdImageReplaceType>(worker);
-    try {
-      const resultPaths = await handleMdImageReplace(this, origin, paths);
-      if (resultPaths.length) {
-        await this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
-          filePaths: resultPaths,
-        });
+  async renameMdImagesFetch(paths: [to: string, from: string][]) {
+    if (paths.length === 0 || !paths.flat().length) return [];
+    let res: AbsPath[] = [];
+    const response = await fetch("/replace-md-images", {
+      method: "POST",
+      body: JSON.stringify(paths),
+    });
+    if (response.ok) {
+      try {
+        res = (await response.clone().json()) as AbsPath[];
+      } catch (e) {
+        console.error(`Error parsing JSON from /replace-md-images\n\n${await response.clone().text()}`, e);
+        res = [];
       }
-      return resultPaths;
-    } catch (e) {
-      console.error("Error renaming md images", e);
+    } else {
+      const bodyText = await response.text();
+      console.error(`Error renaming md images: ${response.status} ${response.statusText}\n${bodyText}`);
+      res = [];
+    }
+    if (res.length) {
+      await this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
+        filePaths: res,
+      });
     }
   }
 
-  static async UploadMultipleImages___old(
-    files: Iterable<File>,
-    targetDir: AbsPath,
-    concurrency = 8
-  ): Promise<AbsPath[]> {
+  static async UploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
     const filesArr = Array.from(files);
