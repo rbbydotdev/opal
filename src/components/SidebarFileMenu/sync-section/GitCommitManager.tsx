@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RepoCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { Ellipsis, GitCommit, RotateCcw } from "lucide-react";
 import { useState } from "react";
@@ -19,7 +20,7 @@ export function GitCommitManager({
   refType: _refType,
   currentCommit,
 }: {
-  commits: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
+  commits: RepoCommit[];
   setCurrentCommit: (commitOid: string) => void;
   resetToHead: () => void;
   resetToOrigHead: () => void;
@@ -28,21 +29,34 @@ export function GitCommitManager({
 }) {
   const { open: confirmOpen } = useConfirm();
   const resetToHeadHandler = () => {
-    confirmOpen(
+    void confirmOpen(
       resetToHead,
       "Reset to HEAD",
       "Are you sure you want to reset to HEAD? This will discard all changes made since the last commit."
     );
   };
   const resetToOrigHeadHandler = () => {
-    confirmOpen(
+    void confirmOpen(
       resetToOrigHead,
       "Reset to Previous Branch",
       "Are you sure you want to reset to the previous branch? This will discard all changes made since the last commit."
     );
   };
+
+  const resetHardToCommit = () => {};
+
   /* select commit */
   const [open, setOpen] = useState(false);
+
+  // return (
+  //   <SelectHighlight
+  //     items={commits.map((commit) => ({ value: commit.oid, label: <CommitLabel commitData={commit} /> }))}
+  //     placeholder="Select Commit"
+  //     onSelect={() => {}}
+  //     onCancel={() => {}}
+  //   ></SelectHighlight>
+  // );
+
   return (
     <>
       <CommitSelect
@@ -102,19 +116,10 @@ function CommitSelect({
 }: {
   className?: string;
   children?: React.ReactNode;
-  commits: Array<{ oid: string; commit: { message: string; author: { name: string; timestamp: number } } }>;
+  commits: RepoCommit[];
   onSelect: (value: string) => void;
   value: string;
 }) {
-  const formatCommitMessage = (message: string, maxLength = 40) => {
-    const firstLine = message.split("\n")[0] || "";
-    return firstLine.length > maxLength ? firstLine!.substring(0, maxLength) + "..." : firstLine;
-  };
-
-  const formatCommitHash = (oid: string) => {
-    return oid.substring(0, 7);
-  };
-
   return (
     <div className="w-full flex items-center justify-between space-x-2">
       <div className="w-full ">
@@ -131,17 +136,34 @@ function CommitSelect({
           <SelectContent>
             {commits.map((commitData) => (
               <SelectItem key={commitData.oid} value={commitData.oid} className={"!text-xs"}>
-                <div className="flex gap-2 items-center justify-start">
-                  <GitCommit size={12} className="flex-shrink-0" />
-                  <span className="font-mono text-muted-foreground">{formatCommitHash(commitData.oid)}</span>
-                  <span className="truncate">{formatCommitMessage(commitData.commit.message)}</span>
-                </div>
+                <CommitLabel commitData={commitData} />
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <div>{children}</div>
+    </div>
+  );
+}
+
+const formatCommitMessage = (message: string, maxLength = 40) => {
+  const firstLine = message.split("\n")[0] || "";
+  return firstLine.length > maxLength ? firstLine!.substring(0, maxLength) + "..." : firstLine;
+};
+
+const formatCommitHash = (oid: string) => {
+  return oid.substring(0, 7);
+};
+
+function CommitLabel({ commitData }: { commitData: RepoCommit }) {
+  return (
+    <div className="w-full truncate flex items-center">
+      <GitCommit className="p-1 mr-2 stroke-ring" />
+      <div className="flex flex-col">
+        <span className="text-xs font-mono">{formatCommitHash(commitData.oid)}</span>
+        <span className="text-xs">{formatCommitMessage(commitData.commit.message)}</span>
+      </div>
     </div>
   );
 }

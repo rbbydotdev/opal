@@ -26,6 +26,7 @@ import { z } from "zod";
 
 import { useConfirm } from "@/components/Confirm";
 import { gitBranchSchema } from "@/components/SidebarFileMenu/sync-section/gitBranchSchema";
+import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Input } from "@/components/ui/input";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Remote } from "comlink";
@@ -78,10 +79,11 @@ export function GitBranchManager({
   const [showInput, setShowInput] = useState(false);
   if (selectMode === "merge" && currentGitRef?.value) {
     return (
-      <BranchSelectHighlight
+      <SelectHighlight
+        placeholder="Select Branch to Merge"
         itemClassName="focus:bg-ring focus:text-primary-foreground"
-        branches={branches.filter((b) => b !== currentGitRef?.value)}
-        cancel={() => setSelectMode("select")}
+        items={branches.filter((b) => b !== currentGitRef?.value)}
+        onCancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
           mergeGitBranch(name, currentGitRef.value);
         }}
@@ -89,10 +91,11 @@ export function GitBranchManager({
     );
   } else if (selectMode === "delete") {
     return (
-      <BranchSelectHighlight
+      <SelectHighlight
+        placeholder="Select Branch to Delete"
         itemClassName="focus:bg-destructive focus:text-primary-foreground"
-        branches={branches.filter((b) => !isLockedBranch(b))}
-        cancel={() => setSelectMode("select")}
+        items={branches.filter((b) => !isLockedBranch(b))}
+        onCancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
           deleteGitBranch(name);
         }}
@@ -197,46 +200,6 @@ const GitBranchMenuDropDown = ({
     <DropdownMenuContent align="end">{children}</DropdownMenuContent>
   </DropdownMenu>
 );
-function BranchSelectHighlight({
-  className,
-  itemClassName = "",
-  branches,
-  placeholder = "Select Branch",
-  cancel,
-  onSelect,
-}: {
-  itemClassName?: string;
-  className?: string;
-  branches: string[];
-  placeholder?: string;
-  cancel: () => void;
-  onSelect: (branchName: string) => void;
-}) {
-  return (
-    <Select
-      defaultOpen={true}
-      onValueChange={onSelect}
-      onOpenChange={(open) => {
-        if (!open) cancel();
-      }}
-    >
-      <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {branches.map((branch) => (
-          <SelectItem
-            key={branch}
-            value={branch}
-            className={cn(itemClassName, "!text-xs w-full flex items-center justify-between")}
-          >
-            {branch}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
 
 const BranchSelectPlaceHolder = ({ currentGitRef }: { currentGitRef: GitRef | null }) => (
   <div className="w-full truncate flex items-center">

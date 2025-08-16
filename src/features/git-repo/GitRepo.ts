@@ -33,10 +33,8 @@ export type GitRepoAuthor = {
   email: string;
 };
 
-type GitHistoryType = Array<{
-  oid: string;
-  commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
-}>;
+// type GitHistoryType = Array<RepoCommit>;
+
 export type RepoLatestCommit = {
   oid: string;
   date: number;
@@ -47,6 +45,10 @@ export type RepoLatestCommit = {
     timestamp: number;
     timezoneOffset: number;
   };
+};
+export type RepoCommit = {
+  oid: string;
+  commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
 };
 export const RepoLatestCommitNull = {
   oid: "",
@@ -72,10 +74,7 @@ export const RepoDefaultInfo = {
     author: { name: "", email: "", timestamp: 0, timezoneOffset: 0 },
   },
   hasChanges: false,
-  commitHistory: [] as Array<{
-    oid: string;
-    commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
-  }>,
+  commitHistory: [] as Array<RepoCommit>,
   context: "" as "main" | "worker" | "",
   exists: false,
   isMerging: false,
@@ -485,7 +484,7 @@ export class GitRepo {
     };
   };
 
-  getCommitHistory = async (options?: { depth?: number; ref?: string; filepath?: string }): Promise<GitHistoryType> => {
+  getCommitHistory = async (options?: { depth?: number; ref?: string; filepath?: string }): Promise<RepoCommit[]> => {
     if (!(await this.exists())) return [];
 
     try {
