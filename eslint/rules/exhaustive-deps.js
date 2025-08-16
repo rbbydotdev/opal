@@ -83,9 +83,19 @@ export default {
         const usedVars = new Set();
         callbackScope.through.forEach((ref) => {
           const name = ref.identifier.name;
-          if (!stableVars.has(name)) {
-            usedVars.add(name);
+
+          // ✅ Ignore stable vars (setState, dispatch, etc.)
+          if (stableVars.has(name)) return;
+
+          // ✅ Ignore type-only references (TS)
+          if (
+            ref.resolved &&
+            ref.resolved.defs.every((def) => def.type === "Type" || def.type === "TSType" || def.type === "TypeName")
+          ) {
+            return;
           }
+
+          usedVars.add(name);
         });
 
         if (depsArg.type !== "ArrayExpression") return;

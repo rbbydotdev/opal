@@ -136,7 +136,7 @@ export type RepoJType = {
   dir: AbsPath;
   defaultBranch: string;
 };
-export class Repo {
+export class GitRepo {
   disk: Disk;
   dir: AbsPath = absPath("/");
   defaultMainBranch: string = "main";
@@ -257,6 +257,7 @@ export class Repo {
     if (emitRemote) {
       void this.remote.emit(RepoEvents.INFO, newInfo);
     }
+
     return newInfo;
   };
   // findParentBranchHead = async (ref: string): Promise<string | null> => {
@@ -297,8 +298,8 @@ export class Repo {
     dir: AbsPath = absPath("/"),
     branch: string = "main",
     author?: GitRepoAuthor
-  ): Repo {
-    return new Repo({ disk, guid, dir, defaultBranch: branch, author });
+  ): GitRepo {
+    return new GitRepo({ disk, guid, dir, defaultBranch: branch, author });
   }
 
   static FromDisk(
@@ -307,8 +308,8 @@ export class Repo {
     dir: AbsPath = absPath("/"),
     branch: string = "main",
     author?: GitRepoAuthor
-  ): Repo {
-    return new Repo({ guid, disk, dir, defaultBranch: branch, author });
+  ): GitRepo {
+    return new GitRepo({ guid, disk, dir, defaultBranch: branch, author });
   }
   constructor({
     guid,
@@ -343,8 +344,8 @@ export class Repo {
     };
   };
 
-  static FromJSON = (json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): Repo => {
-    return new Repo({
+  static FromJSON = (json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): GitRepo => {
+    return new GitRepo({
       guid: json.guid,
       disk: Disk.FromJSON(json.disk),
       dir: json.dir,
@@ -741,7 +742,7 @@ export class Repo {
   exists = async (): Promise<boolean> => {
     try {
       if (this.state.initialized) return true;
-      await this.fs.readFile(joinPath(this.dir, ".git"));
+      await this.fs.stat(joinPath(this.dir, ".git"));
       await git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
       return (this.state.initialized = true);
     } catch (_e) {

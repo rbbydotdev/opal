@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitRemote, Repo, RepoLatestCommit } from "@/features/git-repo/GitRepo";
+import { GitRemote, GitRepo, RepoLatestCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";
 import { Ellipsis, Pencil, Plus, SatelliteDishIcon, Trash2 } from "lucide-react";
@@ -223,7 +223,7 @@ export function RemoteManagerSection({
   info,
   remoteRef,
 }: {
-  repo: Repo | Comlink.Remote<Repo>;
+  repo: GitRepo | Comlink.Remote<GitRepo>;
   info: { latestCommit: RepoLatestCommit; remotes: GitRemote[] };
   remoteRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {

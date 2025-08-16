@@ -22,15 +22,20 @@ const config = [
     },
     rules: {
       // Keep normal exhaustive-deps for built-in hooks
-      "react-hooks/exhaustive-deps": ["warn"],
-
-      // Use our custom rule for our hooks
-      "myhooks/exhaustive-deps": [
+      "react-hooks/exhaustive-deps": [
         "warn",
         {
-          hooks: ["useAsyncEffect"], // list your custom hooks here
+          additionalHooks: "(useAsyncEffect)", // add any additional hooks you want to check
         },
       ],
+
+      // Use our custom rule for our hooks
+      // "myhooks/exhaustive-deps": [
+      //   "warn",
+      //   {
+      //     hooks: ["useAsyncEffect"], // list your custom hooks here
+      //   },
+      // ],
 
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/ban-ts-comment": "off",

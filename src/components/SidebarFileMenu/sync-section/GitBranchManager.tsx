@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitPlaybook, Repo, RepoInfoType } from "@/features/git-repo/GitRepo";
+import { GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -27,6 +27,7 @@ import { z } from "zod";
 import { useConfirm } from "@/components/Confirm";
 import { gitBranchSchema } from "@/components/SidebarFileMenu/sync-section/gitBranchSchema";
 import { Input } from "@/components/ui/input";
+import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Remote } from "comlink";
 
 export type GitRefType = "branch" | "commit";
@@ -308,7 +309,7 @@ export function BranchManagerSection({
   branchRef,
 }: {
   info: RepoInfoType;
-  repo: Repo | Remote<Repo>;
+  repo: GitRepo | Remote<GitRepo>;
   playbook: GitPlaybook;
   currentGitRef: GitRef | null;
   branches: string[];

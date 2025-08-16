@@ -80,6 +80,7 @@ export function useFileContents({
     }, debounceMs);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useAsyncEffect(async () => {
     if (currentWorkspace && filePath) {
       try {

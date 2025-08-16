@@ -1,10 +1,10 @@
 import { Disk } from "@/Db/Disk";
-import { IRemote, Repo } from "@/features/git-repo/GitRepo";
+import { GitRepo, IRemote } from "@/features/git-repo/GitRepo";
 import { Remote } from "@/features/git-repo/Remote";
 import { AbsPath } from "@/lib/paths2";
 import { AuthCallback } from "isomorphic-git";
 
-export class RepoWithRemote extends Repo {
+export class RepoWithRemote extends GitRepo {
   readonly gitRemote: Remote;
 
   state: {
