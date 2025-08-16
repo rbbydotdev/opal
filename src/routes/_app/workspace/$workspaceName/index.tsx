@@ -1,4 +1,3 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { Card } from "@/components/ui/card";
@@ -11,17 +10,17 @@ import {
 import { RootNode, TreeNode } from "@/lib/FileTree/TreeNode";
 import { Opal } from "@/lib/Opal";
 import { absPath } from "@/lib/paths2";
-import { useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-export const Route = createFileRoute('/_app/workspace/$workspaceName/')({
+export const Route = createFileRoute("/_app/workspace/$workspaceName/")({
   component: WorkspaceIndexPage,
-})
+});
 
 function WorkspaceIndexPage() {
   const { currentWorkspace } = useWorkspaceContext();
-  const navigate = useNavigate()
-  
+  // const navigate = useNavigate()
+
   const handleExternalDrop = useHandleDropFilesEventForNodeRedirect({ currentWorkspace });
 
   return (
@@ -71,7 +70,7 @@ function WorkspaceIndexPage() {
 }
 
 function FirstFileRedirect() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { currentWorkspace } = useWorkspaceContext();
   useEffect(() => {
     if (!currentWorkspace.isNull) {

@@ -353,19 +353,23 @@ export class GitRepo {
     const mergeHead = await this.getMergeState();
     return mergeHead !== null;
   };
-  setMergeMessage = async (message: string) => {
-    // if (!(await this.exists())) return;
-    if (!message) {
-      await this.fs.unlink(joinPath(this.gitDir, "MERGE_MSG")).catch(() => {
-        // Ignore if file does not exist
-      });
+  setMergeMsg = async (message: string | null) => {
+    if (message === null) {
+      await this.fs.unlink(joinPath(this.gitDir, "MERGE_MSG")).catch(() => {});
       return;
     }
     await this.fs.writeFile(joinPath(this.gitDir, "MERGE_MSG"), message);
   };
+  getMergeMsg = async (): Promise<string | null> => {
+    const mergeMsg = await this.fs.readFile(joinPath(this.gitDir, "MERGE_MSG")).catch(() => null);
+    if (mergeMsg) {
+      return String(mergeMsg).trim();
+    }
+    return null;
+  };
   setMergeState = async (mergeHead: string | null) => {
     // if (!(await this.exists())) return;
-    if (mergeHead) {
+    if (mergeHead !== null) {
       await this.fs.writeFile(joinPath(this.gitDir, "MERGE_HEAD"), mergeHead);
     } else {
       await this.fs.unlink(joinPath(this.gitDir, "MERGE_HEAD")).catch(() => {
@@ -509,26 +513,9 @@ export class GitRepo {
     });
   };
 
-  mergeCommit = async ({
-    from,
-    into,
-    author = this.author,
-  }: {
-    from: string;
-    into: string;
-    author?: GitRepoAuthor;
-  }): Promise<string> => {
-    const head = await git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
-    const mergeHead = (await this.fs.readFile(joinPath(this.dir, ".git", "MERGE_HEAD"))).toString().trim();
-    await this.setMergeState(null);
-    return git.commit({
-      fs: this.fs,
-      dir: this.dir,
-      author,
-      message: "Merge branch " + into + " into " + from,
-      parent: [head, mergeHead],
-    });
-  };
+  getHead() {
+    return git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
+  }
 
   merge = async (from: string, into: string): Promise<MergeResult | MergeConflict> => {
     await this.mustBeInitialized();
@@ -544,8 +531,9 @@ export class GitRepo {
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
           console.log("Merge conflict detected:", { from, into }, e.data);
-          // await this.fs.writeFile("/.git/MERGE_HEAD", await git.resolveRef({ fs: this.fs, dir: this.dir, ref: into }));
-          await this.setMergeState(await git.resolveRef({ fs: this.fs, dir: this.dir, ref: into }));
+          await this.setMergeState(await git.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
+
+          await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
           console.log(
             await Promise.all(
               e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
@@ -572,17 +560,33 @@ export class GitRepo {
     return (this.state.initialized = true);
   };
 
-  commit = async ({ message, author }: { message: string; author?: GitRepoAuthor }): Promise<string> => {
-    // await this.mustBeInitialized();
-    if (await this.isMerging()) {
-      await this.setMergeState(null);
-    }
-    return this.git.commit({
+  commit = async ({
+    message,
+    author,
+    parent,
+    ref,
+  }: {
+    message: string;
+    author?: GitRepoAuthor;
+    ref?: string;
+    parent?: string[];
+  }): Promise<string> => {
+    const result = await this.git.commit({
       fs: this.fs,
       dir: this.dir,
       author: author || this.author,
+      ref,
       message,
+      parent,
     });
+    if (await this.isMerging()) {
+      await this.resetMergeState();
+    }
+    return result;
+  };
+  private resetMergeState = async () => {
+    await this.setMergeState(null);
+    await this.setMergeMsg(null);
   };
 
   add = async (filepath: string | string[]): Promise<void> => {
@@ -614,10 +618,9 @@ export class GitRepo {
   };
 
   checkoutRef = async (ref: string): Promise<string | void> => {
-    //check if ref is ref or branch name
-    // await this.mustBeInitialized();
     if (await this.isMerging()) {
-      throw new Error("Cannot checkout while merging. Please resolve conflicts first.");
+      // throw new Error("Cannot checkout while merging. Please resolve conflicts first.");
+      await this.resetMergeState();
     }
     const currentBranch = await this.getCurrentBranch();
     if (currentBranch === ref) return; // No change needed

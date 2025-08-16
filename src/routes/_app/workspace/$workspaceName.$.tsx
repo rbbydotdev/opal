@@ -1,3 +1,4 @@
+import { FileError } from "@/components/FileError";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { TrashBanner } from "@/components/TrashBanner";
 import { WorkspaceContentView } from "@/components/WorkspaceContentView";
@@ -28,7 +29,6 @@ function WorkspaceFilePage() {
 
   useEffect(() => {
     if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
-      //Maybe a grid view of files? <DirectoryView /> ?
       void currentWorkspace.tryFirstFileUrl().then((path) => navigate({ to: path }));
     }
   }, [currentWorkspace, filePath, navigate]);
@@ -36,7 +36,8 @@ function WorkspaceFilePage() {
   if (!filePath) return null;
 
   if (!currentWorkspace.isNull && currentWorkspace.nodeFromPath(filePath) === null) {
-    throw new NotFoundError("File not found: " + filePath);
+    //todo: universal catch up the tree somewherE?
+    return <FileError error={new NotFoundError("File not found: " + filePath)} />;
   }
 
   return (
