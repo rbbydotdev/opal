@@ -32,7 +32,7 @@ import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
 function LatestInfo({ info }: { info: WorkspaceRepoType }) {
-  const { latestCommit, context, currentBranch, hasChanges } = info;
+  const { latestCommit, context, isMerging, currentBranch, hasChanges } = info;
   const timeAgo = useTimeAgoUpdater({ date: new Date(latestCommit.date) });
   if (!latestCommit) {
     return null;
@@ -51,6 +51,8 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
       <dd className="truncate">{timeAgo}</dd>
       <dt className="font-bold">context:</dt>
       <dd className="truncate">{context}</dd>
+      <dt className="font-bold">merge:</dt>
+      <dd className="truncate">{isMerging ? <b>true</b> : "false"}</dd>
     </dl>
   );
 }
