@@ -265,7 +265,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         </CollapsibleTrigger>
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
-          <SidebarMenu className="gap-2">
+          <SidebarMenu className="gap-2 pb-3">
             <div className="px-4 pt-2 gap-2 flex flex-col">
               {exists && <LatestInfo info={info} />}
               <CommitSection

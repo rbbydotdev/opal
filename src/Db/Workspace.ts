@@ -7,7 +7,7 @@ import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
 import { WorkspaceSeedFiles } from "@/Db/WorkspaceSeedFiles";
-import { Repo } from "@/features/git-repo/GitRepo";
+import { GitRepo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
 import { debounce } from "@/lib/debounce";
 import { BadRequestError } from "@/lib/errors";
@@ -56,7 +56,7 @@ export class Workspace {
   remoteAuths?: RemoteAuthDAO[];
   disk: Disk;
   thumbs: Disk;
-  repo: Repo | null = null; //TODO
+  repo: GitRepo | null = null; //TODO
 
   private unsubs: (() => void)[] = [];
 
@@ -646,7 +646,7 @@ export class Workspace {
     //but it uses async instantiation so care is needed to make sure its torn down properly, think useAsyncEffct
     // const worker = new Worker(new URL("/src/workers/RepoWorker/repo.ww.ts", import.meta.url), { type: "module" });
     const worker = new Worker("/repo.ww.js");
-    const RepoApi = Comlink.wrap<typeof Repo>(worker);
+    const RepoApi = Comlink.wrap<typeof GitRepo>(worker);
     this.unsubs.push(() => worker.terminate());
     const repo = await new RepoApi({
       guid: `${this.id}/repo`,
@@ -658,9 +658,9 @@ export class Workspace {
     };
   }
   RepoMainThread() {
-    return Repo.FromDisk(this.disk, `${this.id}/repo`);
+    return GitRepo.FromDisk(this.disk, `${this.id}/repo`);
   }
-  async AttachRepo(repo: Repo | Comlink.Remote<Repo>) {
+  async AttachRepo(repo: GitRepo | Comlink.Remote<GitRepo>) {
     const unsubs: UnsubscribeFunction[] = [];
     unsubs.push(this.dirtyListener(debounce(() => repo.sync(), 500)));
     unsubs.push(

@@ -1,4 +1,4 @@
-import { AbsPath, absPath, decodePath, encodePath, joinPath } from "@/lib/paths2";
+import { AbsPath, absPath, decodePath, joinPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
 import { CommonFileSystem } from "./CommonFileSystem";
@@ -27,30 +27,30 @@ export class NamespacedFs implements CommonFileSystem {
         }
     )[]
   > {
-    return this.fs.readdir(encodePath(joinPath(this.namespace, path)));
+    return this.fs.readdir(joinPath(this.namespace, path));
   }
 
   stat(path: string): Promise<{ isDirectory: () => boolean; isFile: () => boolean }> {
-    return this.fs.stat(encodePath(joinPath(this.namespace, path)));
+    return this.fs.stat(joinPath(this.namespace, path));
   }
   readFile(path: string, options?: { encoding?: "utf8" }): Promise<Uint8Array | Buffer | string> {
-    return this.fs.readFile(encodePath(joinPath(this.namespace, path)), options);
+    return this.fs.readFile(joinPath(this.namespace, path), options);
   }
   mkdir(path: string, options?: { recursive?: boolean; mode: number }): Promise<string | void> {
-    return this.fs.mkdir(encodePath(joinPath(this.namespace, path)), options);
+    return this.fs.mkdir(joinPath(this.namespace, path), options);
   }
   rename(oldPath: string, newPath: string): Promise<void> {
-    return this.fs.rename(encodePath(joinPath(this.namespace, oldPath)), encodePath(joinPath(this.namespace, newPath)));
+    return this.fs.rename(joinPath(this.namespace, oldPath), joinPath(this.namespace, newPath));
   }
   unlink(path: string): Promise<void> {
-    return this.fs.unlink(encodePath(joinPath(this.namespace, path)));
+    return this.fs.unlink(joinPath(this.namespace, path));
   }
   writeFile(
     path: string,
     data: Uint8Array | Buffer | string,
     options?: { encoding?: "utf8"; mode: number }
   ): Promise<void> {
-    return this.fs.writeFile(encodePath(joinPath(this.namespace, path)), data, options);
+    return this.fs.writeFile(joinPath(this.namespace, path), data, options);
   }
 
   async rmdir(path: AbsPath, options?: { recursive?: boolean }) {

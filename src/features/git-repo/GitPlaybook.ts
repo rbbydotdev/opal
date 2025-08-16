@@ -1,5 +1,5 @@
 import { Disk, NullDisk } from "@/Db/Disk";
-import { MergeConflict, Repo } from "@/features/git-repo/GitRepo";
+import { GitRepo, MergeConflict } from "@/features/git-repo/GitRepo";
 import { absPath, AbsPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import { Remote } from "comlink";
@@ -19,7 +19,7 @@ export class GitPlaybook {
   //should probably dep inject shared mutex from somewhere rather than relying on repo's
   //rather should share mutex
   constructor(
-    private repo: Repo | Remote<Repo>,
+    private repo: GitRepo | Remote<GitRepo>,
     private mutex = new Mutex()
   ) {}
 
@@ -130,7 +130,7 @@ export class NullGitPlaybook extends GitPlaybook {
   }
 }
 
-export class NullRepo extends Repo {
+export class NullRepo extends GitRepo {
   constructor() {
     super({ guid: "NullRepo", disk: new NullDisk(), dir: absPath("/"), defaultBranch: "main" });
     this.state.initialized = true;
