@@ -260,10 +260,6 @@ export class GitRepo {
 
     return newInfo;
   };
-  // findParentBranchHead = async (ref: string): Promise<string | null> => {
-  //check the reflog to find the parent
-
-  // }
 
   watch(callback: () => void) {
     const unsub: (() => void)[] = [];
@@ -289,7 +285,7 @@ export class GitRepo {
 
   init() {
     this.unsubs.push(this.initListeners());
-    return this.sync();
+    return this.sync({ emitRemote: false });
   }
 
   static New(
@@ -386,6 +382,9 @@ export class GitRepo {
     return null;
   };
   tryInfo = async (): Promise<RepoInfoType> => {
+    if (!(await this.exists())) {
+      return RepoDefaultInfo;
+    }
     return {
       initialized: this.state.initialized,
       currentBranch: await this.getCurrentBranch(),
@@ -401,7 +400,7 @@ export class GitRepo {
   };
 
   getCurrentBranch = async (): Promise<string | null> => {
-    if (!(await this.exists())) return null;
+    // if (!(await this.exists())) return null;
     return (
       (await this.git.currentBranch({
         fs: this.fs,
@@ -411,7 +410,7 @@ export class GitRepo {
   };
 
   hasChanges = async (): Promise<boolean> => {
-    if (!(await this.exists())) return false;
+    // if (!(await this.exists())) return false;
     try {
       const matrix = await this.mutex.runExclusive(() => git.statusMatrix({ fs: this.fs, dir: this.dir }));
       return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
@@ -422,14 +421,14 @@ export class GitRepo {
   };
 
   async setAuthor({ name, email }: { name: string; email: string }) {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     this.author = { name, email };
     await this.setConfig("user.name", name);
     await this.setConfig("user.email", email);
   }
 
   getBranches = async (): Promise<string[]> => {
-    if (!(await this.exists())) return [];
+    // if (!(await this.exists())) return [];
     return await this.git.listBranches({
       fs: this.fs,
       dir: this.dir,
@@ -510,9 +509,26 @@ export class GitRepo {
     });
   };
 
-  /*
-  Uncaught (in promise) MergeConflictError: Automatic merge failed with one or more merge conflicts in the following files: welcome.md. Fix conflicts then commit the result.
-    _BaseError index.js:347*/
+  mergeCommit = async ({
+    from,
+    into,
+    author = this.author,
+  }: {
+    from: string;
+    into: string;
+    author?: GitRepoAuthor;
+  }): Promise<string> => {
+    const head = await git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
+    const mergeHead = (await this.fs.readFile(joinPath(this.dir, ".git", "MERGE_HEAD"))).toString().trim();
+    await this.setMergeState(null);
+    return git.commit({
+      fs: this.fs,
+      dir: this.dir,
+      author,
+      message: "Merge branch " + into + " into " + from,
+      parent: [head, mergeHead],
+    });
+  };
 
   merge = async (from: string, into: string): Promise<MergeResult | MergeConflict> => {
     await this.mustBeInitialized();
@@ -528,7 +544,8 @@ export class GitRepo {
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
           console.log("Merge conflict detected:", { from, into }, e.data);
-          await this.fs.writeFile("/.git/MERGE_HEAD", await git.resolveRef({ fs: this.fs, dir: this.dir, ref: into }));
+          // await this.fs.writeFile("/.git/MERGE_HEAD", await git.resolveRef({ fs: this.fs, dir: this.dir, ref: into }));
+          await this.setMergeState(await git.resolveRef({ fs: this.fs, dir: this.dir, ref: into }));
           console.log(
             await Promise.all(
               e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
@@ -556,7 +573,10 @@ export class GitRepo {
   };
 
   commit = async ({ message, author }: { message: string; author?: GitRepoAuthor }): Promise<string> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
+    if (await this.isMerging()) {
+      await this.setMergeState(null);
+    }
     return this.git.commit({
       fs: this.fs,
       dir: this.dir,
@@ -566,7 +586,7 @@ export class GitRepo {
   };
 
   add = async (filepath: string | string[]): Promise<void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     return this.git.add({
       fs: this.fs,
       dir: this.dir,
@@ -575,7 +595,7 @@ export class GitRepo {
   };
 
   remove = async (filepath: string | string[]): Promise<void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     await this.mutex.runExclusive(() =>
       Promise.all(
         (Array.isArray(filepath) ? filepath : [filepath]).map((fp) =>
@@ -595,7 +615,10 @@ export class GitRepo {
 
   checkoutRef = async (ref: string): Promise<string | void> => {
     //check if ref is ref or branch name
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
+    if (await this.isMerging()) {
+      throw new Error("Cannot checkout while merging. Please resolve conflicts first.");
+    }
     const currentBranch = await this.getCurrentBranch();
     if (currentBranch === ref) return; // No change needed
     //TODO consider doing more mutex locks elsewhere
@@ -623,27 +646,32 @@ export class GitRepo {
     symbolicRef?: string;
     checkout?: boolean;
   }): Promise<string | void> => {
+    // await this.mustBeInitialized();
     symbolicRef = symbolicRef || this.defaultMainBranch;
     checkout = checkout ?? false;
-    await this.mustBeInitialized();
+
     const branches = await this.git.listBranches({
       fs: this.fs,
       dir: this.dir,
     });
     const uniqueBranchName = getUniqueSlug(branchName, branches);
     console.log("Creating new branch:", uniqueBranchName, "from", symbolicRef);
+    const isMerging = await this.isMerging();
+    if (isMerging) {
+      console.warn("Creating branch while merging, will not checkout.");
+    }
     await this.git.branch({
       fs: this.fs,
       dir: this.dir,
       ref: uniqueBranchName,
       object: symbolicRef, // The branch to base the new branch on
-      checkout,
+      checkout: isMerging ? false : checkout, // Don't checkout if merging
     });
     return uniqueBranchName;
   };
 
   deleteGitBranch = async (branchName: string): Promise<void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     const currentBranch = await this.getCurrentBranch();
 
     return this.mutex.runExclusive(async () => {
@@ -664,12 +692,12 @@ export class GitRepo {
   };
 
   statusMatrix = async (): Promise<Array<[string, number, number, number]>> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     return git.statusMatrix({ fs: this.fs, dir: this.dir });
   };
 
   setConfig = async (path: string, value: string): Promise<void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     await this.git.setConfig({
       fs: this.fs,
       dir: this.dir,
@@ -678,7 +706,7 @@ export class GitRepo {
     });
   };
   getConfig = async (path: string): Promise<string | null> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     return this.git.getConfig({
       fs: this.fs,
       dir: this.dir,
@@ -729,7 +757,7 @@ export class GitRepo {
   };
 
   addGitRemote = async (remote: GitRemote): Promise<void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
     const uniqSlug = getUniqueSlug(
       remote.name,
@@ -745,13 +773,13 @@ export class GitRepo {
     if (remote.authId) await this.setAuthId(uniqSlug, remote.authId);
   };
   replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     await this.deleteGitRemote(previous.name);
     await this.addGitRemote(remote);
   };
 
   deleteGitRemote = async (remoteName: string): Promise<void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     await this.git.deleteRemote({
       fs: this.fs,
       dir: this.dir,
@@ -766,12 +794,14 @@ export class GitRepo {
       await git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
       return (this.state.initialized = true);
     } catch (_e) {
+      // console.log(_e);
+
       return (this.state.initialized = false);
     }
   };
 
   currentRef = async (): Promise<string> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     return git.resolveRef({
       fs: this.fs,
       dir: this.dir,
@@ -780,7 +810,7 @@ export class GitRepo {
   };
 
   currentBranch = async ({ fullname = false }: { fullname: boolean }): Promise<string | void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     return this.git.currentBranch({
       fs: this.fs,
       dir: this.dir,
@@ -789,7 +819,7 @@ export class GitRepo {
   };
 
   writeRef = async ({ ref, value, force = false }: { ref: string; value: string; force: boolean }): Promise<void> => {
-    await this.mustBeInitialized();
+    // await this.mustBeInitialized();
     return this.git.writeRef({
       fs: this.fs,
       dir: this.dir,
@@ -808,28 +838,6 @@ export class GitRepo {
       auth,
     };
   };
-
-  //commenting out for now because of circular dependency issues
-  // withRemote = (remote: IRemote): RepoWithRemote => {
-  //   return new RepoWithRemote(
-  //     {
-  //       guid: this.guid,
-  //       disk: this.disk,
-  //       dir: this.dir,
-  //       branch: this.defaultMainBranch,
-  //       remoteBranch: remote.branch,
-  //       remoteName: remote.name,
-  //       url: remote.url,
-  //       auth: remote.auth,
-  //     },
-  //     remote
-  //   );
-  // };
-
-  // withGitRemote = async (gitRemote: GitRemote, branch: string): Promise<RepoWithRemote> => {
-  //   const iRemote = await this.convertGitRemoteToIRemote(gitRemote, branch);
-  //   return this.withRemote(iRemote);
-  // };
 
   tearDown = () => {
     this.unsubs.forEach((unsub) => unsub());

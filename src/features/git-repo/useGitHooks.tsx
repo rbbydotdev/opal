@@ -35,7 +35,6 @@ export function useWorkspaceRepo(workspace: Workspace, _onPathNoExists?: (path: 
     // const repoInstance = repoWorker.repo;
     // unsubs.push(() => repoWorker.worker.terminate());
     const repoInstance = workspace.RepoMainThread();
-    await repoInstance.init();
     unsubs.push(
       ...(await Promise.all([
         workspace.AttachRepo(repoInstance),
@@ -44,7 +43,7 @@ export function useWorkspaceRepo(workspace: Workspace, _onPathNoExists?: (path: 
         }),
       ]))
     );
-    await repoInstance.sync();
+    await repoInstance.init();
     repoRef.current = repoInstance;
     setPlaybook(new GitPlaybook(repoInstance));
     return () => {

@@ -952,13 +952,13 @@ export class NullDisk extends Disk {
   static type: DiskType = "NullDisk";
   type = NullDisk.type;
   constructor(
-    public readonly guid = "null",
+    public readonly guid = "__disk__NullDisk",
     _indexCache?: TreeDirRootJType
   ) {
     const fs = memfs().fs;
     const mt = new Mutex();
     const ft = new FileTree(fs.promises, guid, mt);
-    super("null", fs.promises, ft, DiskDAO.New(NullDisk.type, guid));
+    super("__disk__NullDisk", fs.promises, ft, DiskDAO.New(NullDisk.type, guid));
   }
   async init() {
     return () => {};
