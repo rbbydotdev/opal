@@ -1,4 +1,5 @@
 import { convertImage } from "@/lib/createImage";
+import { renderHtmlToMarkdown } from "@/lib/markdown/renderHtmlToMarkdown";
 import { AbsPath, basename, dirname, extname, joinPath, prefix, relPath, strictPathname } from "@/lib/paths2";
 import mammoth from "mammoth";
 import { SWWStore } from "./SWWStore";
@@ -6,7 +7,7 @@ import { SWWStore } from "./SWWStore";
 export async function handleDocxConvertRequest(
   workspaceId: string,
   fullPathname: AbsPath,
-  file: ArrayBuffer
+  arrayBuffer: ArrayBuffer
 ): Promise<Response> {
   const workspace = await SWWStore.tryWorkspace(workspaceId);
   const fileName = basename(fullPathname);
@@ -31,8 +32,9 @@ export async function handleDocxConvertRequest(
       });
     }),
   };
-  const { value: markdown } = await mammoth.convertToMarkdown({ arrayBuffer: file }, options);
 
+  const { value: html } = await mammoth.convertToHtml({ arrayBuffer }, options);
+  const markdown = renderHtmlToMarkdown(html);
   const resultPath = await workspace.newFile(docDir, relPath(`${docNamePrefix}.md`), markdown);
 
   return new Response(resultPath, {

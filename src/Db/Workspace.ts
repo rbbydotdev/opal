@@ -553,7 +553,7 @@ export class Workspace {
   }
   // ConcurrentWorkers
 
-  async renameMdImages(paths: [to: string, from: string][], origin = window.location.origin) {
+  async renameMdImagesWorker(paths: [to: string, from: string][], origin = window.location.origin) {
     try {
       return await ConcurrentWorkers(
         () => Comlink.wrap<handleMdImageReplaceType>(new Worker("/imageReplace.ww.js")),
@@ -567,7 +567,7 @@ export class Workspace {
     }
   }
 
-  async renameMdImagesFetch(paths: [to: string, from: string][]) {
+  async renameMdImages(paths: [to: string, from: string][]) {
     if (paths.length === 0 || !paths.flat().length) return [];
     let res: AbsPath[] = [];
     const response = await fetch("/replace-md-images", {
