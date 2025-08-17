@@ -7,25 +7,24 @@ import { absPath, AbsPath, absPathname, joinPath } from "@/lib/paths2";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
-import { FileTextIcon } from "lucide-react";
+import { CommandIcon, FileTextIcon } from "lucide-react";
 import mime from "mime-types";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState } from "react";
 import { basename } from "../lib/paths2";
 
-const SpotlightSearchItem = forwardRef<
+const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,
   {
     id: string;
     href: string | AbsPath;
     title: string | JSX.Element;
     isActive: boolean;
-    onClick: () => void;
+    onSelect: () => void;
   }
->(({ id, href, title, isActive, onClick }, ref) => {
+>(({ id, href, title, isActive, onSelect }, ref) => {
   const { filePath } = Workspace.parseWorkspacePath(absPathname(href));
 
   return (
-    // The `li` is for presentation only; the `a` tag is the menu item.
     <li role="presentation" className="flex w-full flex-col rounded p-1">
       <Link
         id={id}
@@ -33,12 +32,12 @@ const SpotlightSearchItem = forwardRef<
         to={href}
         role="menuitem"
         tabIndex={isActive ? 0 : -1} // Roving tabindex implementation
-        onClick={onClick}
+        onClick={onSelect}
         onKeyDown={(e) => {
           // `a` tags don't activate on Space by default, so we add it.
           if (e.key === " " || e.key === "Spacebar") {
             e.preventDefault();
-            onClick();
+            onSelect();
           }
         }}
         className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 border-sidebar bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
@@ -59,11 +58,67 @@ const SpotlightSearchItem = forwardRef<
     </li>
   );
 });
-SpotlightSearchItem.displayName = "SpotlightSearchItem";
+SpotlightSearchItemLink.displayName = "SpotlightSearchItemLink";
+
+const SpotlightSearchItemCmd = forwardRef<
+  HTMLButtonElement,
+  {
+    id: string;
+    cmd: string;
+    title: string | JSX.Element;
+    isActive: boolean;
+    onSelect: () => void;
+  }
+>(({ id, cmd: _cmd, title, isActive, onSelect }, ref) => {
+  return (
+    <li role="presentation" className="flex w-full flex-col rounded p-1">
+      <button
+        id={id}
+        ref={ref}
+        role="menuitem"
+        tabIndex={isActive ? 0 : -1} // Roving tabindex implementation
+        onClick={onSelect}
+        onKeyDown={(e) => {
+          // `a` tags don't activate on Space by default, so we add it.
+          if (e.key === " " || e.key === "Spacebar") {
+            e.preventDefault();
+            onSelect();
+          }
+        }}
+        className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 border-sidebar bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
+      >
+        <div className="w-6 h-6 flex justify-center items-center">
+          <CommandIcon className="mr-1 h-4 w-4 flex-shrink-0 flex-grow-0 text-ring" />
+        </div>
+        <div className="min-w-0 truncate text-md font-mono text-sidebar-foreground/70">{title}</div>
+      </button>
+    </li>
+  );
+});
+SpotlightSearchItemLink.displayName = "SpotlightSearchItem";
 
 export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const filesOnlyFilter = useRef((node: TreeNode) => node.isTreeFile());
-  const { flatTree } = useWatchWorkspaceFileTree(currentWorkspace, filesOnlyFilter.current!);
+  const { flatTree } = useWatchWorkspaceFileTree(currentWorkspace, (node: TreeNode) => node.isTreeFile());
+  return (
+    <SpotlightSearchInternal
+      basePath={currentWorkspace.href}
+      files={flatTree}
+      commands={["New File"]}
+      commandPrefix={">"}
+    />
+  );
+}
+function SpotlightSearchInternal({
+  basePath,
+  files,
+  commandPrefix = ">",
+  commands,
+}: {
+  basePath: AbsPath;
+  files: AbsPath[];
+  commandPrefix?: string;
+  commands: string[];
+}) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1); // -1 means input is active
@@ -82,19 +137,19 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
     }
   };
 
-  const visibleFilesOnly = useMemo(() => {
-    return flatTree.filter((file) => FilterOutSpecialDirs(file));
-  }, [flatTree]);
+  const visibleFilesAndCommands = useMemo(() => {
+    return [...files.filter((file) => FilterOutSpecialDirs(file)), ...commands.map((cmd) => commandPrefix + cmd)];
+  }, [commandPrefix, commands, files]);
 
   const sortedList = useMemo(() => {
     setActiveIndex(-1); // Reset index on new search results
     if (!search) {
-      return visibleFilesOnly.map((file) => ({
+      return visibleFilesAndCommands.map((file) => ({
         element: <>{file}</>,
         href: file,
       }));
     }
-    const results = fuzzysort.go(search, visibleFilesOnly, {
+    const results = fuzzysort.go(search, visibleFilesAndCommands, {
       // To prevent slow performance on large file lists
       limit: 50,
     });
@@ -108,7 +163,7 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
       ),
       href: result.target,
     }));
-  }, [search, visibleFilesOnly]);
+  }, [search, visibleFilesAndCommands]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
@@ -224,15 +279,31 @@ export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Worksp
           aria-labelledby="spotlight-search"
           className="mt-2 block max-h-48 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
         >
-          {sortedList.map((file, index) => {
+          {sortedList.map((item, index) => {
+            if (item.href.startsWith(commandPrefix)) {
+              return (
+                <SpotlightSearchItemCmd
+                  key={item.href}
+                  id={`spotlight-item-${index}`}
+                  cmd={item.href}
+                  title={item.element}
+                  isActive={index === activeIndex}
+                  onSelect={() => {
+                    handleClose();
+                    // Handle command execution here
+                    console.log("Executing command:", item.href);
+                  }}
+                />
+              );
+            }
             return (
-              <SpotlightSearchItem
-                key={file.href}
+              <SpotlightSearchItemLink
+                key={item.href}
                 id={`spotlight-item-${index}`}
                 isActive={index === activeIndex}
-                onClick={handleClose}
-                href={joinPath(currentWorkspace.href, file.href)}
-                title={file.element}
+                onSelect={handleClose}
+                href={joinPath(basePath, item.href)}
+                title={item.element}
               />
             );
           })}
