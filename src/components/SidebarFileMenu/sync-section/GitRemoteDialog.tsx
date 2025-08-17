@@ -21,7 +21,7 @@ import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { GitRemote } from "@/features/git-repo/GitRepo";
-import { NotEnv } from "@/lib/notenv";
+import { Env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useImperativeHandle, useState } from "react";
 
@@ -91,7 +91,7 @@ export function GitRemoteDialog({
   const defaultValues = {
     name: defaultName,
     url: "https://github.com/rbbydotdev/test123",
-    gitCorsProxy: NotEnv.GitProtocolProxy, //"https://cors.isomorphic-git.org",
+    gitCorsProxy: Env.GitProtocolProxy, //"https://cors.isomorphic-git.org",
   };
 
   const form = useForm<GitRemoteFormValues>({

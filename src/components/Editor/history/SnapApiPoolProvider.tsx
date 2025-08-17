@@ -25,15 +25,15 @@ export async function createApiResource({
   let api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
     Comlink.windowEndpoint(iframe.contentWindow!)
   );
-  const wrefApi = new WeakRef(api);
-  const wrefIframe = new WeakRef(iframe);
+  //TODO: profile this to see if its even needed
+  //me being paranoid about memory leaks
+  // const wrefApi = new WeakRef(api);
+  // const wrefIframe = new WeakRef(iframe);
   const terminate = () => {
-    //TODO: profile this to see if its even needed
-    //me being paranoid about memory leaks
     console.debug("terminating api resource");
-    (wrefIframe.deref()! || {}).src = "about:blank";
-    wrefApi.deref()?.[Comlink.releaseProxy]();
-    wrefIframe.deref()?.remove();
+    (iframe || { src: "" }).src = "about:blank";
+    api?.[Comlink.releaseProxy]();
+    iframe?.remove();
     api = null;
     iframe = null;
   };

@@ -36,7 +36,7 @@ export function SidebarTreeViewMenu() {
     return <EmptySidebarLabel label="markdown only" />;
   }
   if (!editor?.getRootElement()) {
-    return <EmptySidebarLabel label="no editor" />;
+    return <EmptySidebarLabel label="no editor / no rich-text" />;
   }
   if (!displayTree || !Boolean(displayTree.children?.length)) {
     return <EmptySidebarLabel label="empty" />;

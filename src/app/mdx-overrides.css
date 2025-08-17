@@ -40,7 +40,7 @@
   flex-direction: column;
 }
 
-.cm-selectionBackground {
+.mdxeditor .cm-selectionBackground {
   /* background: blue !important; */
   background-color: hsl(var(--search-highlight-bg)) !important;
   /* opacity: 0.5 !important; */

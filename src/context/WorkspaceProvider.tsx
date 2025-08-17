@@ -22,7 +22,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);
 
   useEffect(() => {
-    //todo hackish
     if (workspaceName === "new" || !workspaceName) {
       setCurrentWorkspace(NULL_WORKSPACE);
       return;
@@ -34,13 +33,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         return ws;
       })
       .catch(() => {
-        // router.replace("/newWorkspace");
-        // router.replace("/newWorkspace");
         window.location.href = "/";
-        // toss(e);
-        // notFound();
-        // throw e;
-        // return NULL_WORKSPACE;
       });
     return () => {
       void workspace.then((ws) => ws?.tearDown());
@@ -57,12 +50,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
             (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
           ) {
             if (newPath.startsWith(SpecialDirs.Trash)) {
-              navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
+              void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
               void currentWorkspace.tryFirstFileUrl().then((firstFileUrl) => {
-                navigate({ to: firstFileUrl });
+                void navigate({ to: firstFileUrl });
               });
             } else {
-              navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
+              void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
             }
           }
         }
@@ -97,6 +90,10 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         workspaceRoute,
         flatTree,
         fileTreeDir,
+        git: {
+          repo: currentWorkspace.repo,
+          playbook: currentWorkspace.playbook,
+        },
       }}
     >
       {children}

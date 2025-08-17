@@ -1,0 +1,18 @@
+.code-mirror-source-editor {
+  .cm-activeLine {
+    background-color: inherit !important;
+    & > * {
+      color: inherit !important;
+    }
+  }
+}
+
+.code-mirror-source-editor {
+  .cm-highlight-range,
+  .cm-selectionBackground {
+    background-color: hsl(var(--ring)) !important;
+    & > * {
+      color: red !important;
+    }
+  }
+}

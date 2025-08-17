@@ -1,5 +1,4 @@
 import { type SearchResultData } from "@/features/search/SearchResults";
-import { prettifyMarkdownSync } from "@/lib/markdown/prettifyMarkdown";
 import { checkSum } from "../../lib/checkSum";
 
 export interface Scannable<T> {
@@ -64,10 +63,8 @@ export class SearchTextScannable<MetaExtType extends object, Scanner extends Sca
   }> {
     for await (const item of this.scanner.scan()) {
       const { text, ...rest } = item;
-      const haystack = prettifyMarkdownSync(text.normalize("NFKD"));
-
+      const haystack = text.normalize("NFKD");
       if (!haystack) continue;
-
       const lineBreaks = this.computeLineBreaks(haystack);
       const results: SearchResultData[] = [];
 

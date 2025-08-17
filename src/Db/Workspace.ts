@@ -30,11 +30,11 @@ import {
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
+import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { DocxConvertType } from "@/workers/DocxWorker/docx.ww";
 import type { handleMdImageReplaceType } from "@/workers/ImageWorker/imageReplace.ww";
 import "@/workers/transferHandlers/workspace.th";
 import * as Comlink from "comlink";
-import { UnsubscribeFunction } from "emittery";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
@@ -56,7 +56,9 @@ export class Workspace {
   remoteAuths?: RemoteAuthDAO[];
   disk: Disk;
   thumbs: Disk;
-  repo: GitRepo | null = null; //TODO
+  repo: GitRepo;
+  playbook: GitPlaybook;
+  tornDown: boolean = false;
 
   private unsubs: (() => void)[] = [];
 
@@ -82,6 +84,8 @@ export class Workspace {
     this.disk = disk;
     this.thumbs = thumbs;
     this.imageCache = Workspace.newCache(this.name);
+    this.repo = GitRepo.FromDisk(this.disk, `${this.id}/repo`);
+    this.playbook = new GitPlaybook(this.repo);
   }
 
   get id() {
@@ -346,6 +350,12 @@ export class Workspace {
     }
   }
 
+  gitRepoListener(callback: Parameters<GitRepo["infoListener"]>[0]) {
+    const unsub = this.repo.infoListener(callback);
+    this.unsubs.push(unsub);
+    return unsub;
+  }
+
   renameListener(callback: (details: RenameDetails[]) => void) {
     const unsub = this.disk.renameListener(callback);
     this.unsubs.push(unsub);
@@ -482,8 +492,16 @@ export class Workspace {
   }
 
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
-    await this.disk.init({ skipListeners });
+    const unsubs: (() => void)[] = [];
+    unsubs.push(await this.disk.init({ skipListeners }));
+    unsubs.push(await this.initRepo({ skipListeners }));
     if (!skipListeners) await this.initImageFileListeners();
+    if (this.tornDown) {
+      //weird but totally race condition, if the workspace was torn down before the init completes
+      unsubs.forEach((unsub) => unsub());
+    } else {
+      this.unsubs.push(...unsubs);
+    }
     return this;
   }
   async initNoListen() {
@@ -493,6 +511,7 @@ export class Workspace {
   async tearDown() {
     await Promise.all([this.disk.tearDown(), this.thumbs.tearDown()]);
     this.unsubs.forEach((unsub) => unsub());
+    this.tornDown = true;
     return this;
   }
 
@@ -657,20 +676,19 @@ export class Workspace {
       repo,
     };
   }
-  RepoMainThread() {
-    return GitRepo.FromDisk(this.disk, `${this.id}/repo`);
-  }
-  async AttachRepo(repo: GitRepo | Comlink.Remote<GitRepo>) {
-    const unsubs: UnsubscribeFunction[] = [];
-    unsubs.push(this.dirtyListener(debounce(() => repo.sync(), 500)));
-    unsubs.push(
-      ...(await Promise.all([
-        repo.gitListener(() => {
+
+  private async initRepo({ skipListeners }: { skipListeners?: boolean } = {}) {
+    const unsubs: (() => void)[] = [];
+    await this.repo.init();
+    if (skipListeners !== true) {
+      unsubs.push(this.dirtyListener(debounce(() => this.repo.sync(), 500)));
+      unsubs.push(
+        this.repo.gitListener(() => {
           void this.disk.triggerIndex();
-        }),
-        // TODO, being navigated on a new file then going to a branch/commit where this files does not exist
-        // need to cover this case
-        repo.gitListener(async () => {
+        })
+      );
+      unsubs.push(
+        this.repo.gitListener(async () => {
           const { filePath: currentPath } = Workspace.parseWorkspacePath(window.location.href);
           if (await this.disk.pathExists(currentPath!)) {
             void this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
@@ -682,10 +700,14 @@ export class Workspace {
               details: { filePaths: [currentPath!] },
             });
           }
-        }),
-      ]))
-    );
-    return () => unsubs.forEach((unsub) => unsub());
+        })
+      );
+      await this.repo.sync();
+    }
+    return () => {
+      unsubs.forEach((unsub) => unsub());
+      void this.repo.tearDown();
+    };
   }
 }
 export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;

@@ -55,8 +55,9 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, c
     }
   );
 
-export function CodeMirrorHighlightURLRange(): Extension {
-  const hlRanges = getRangesFromURL(window.location.href, "search");
+export function CodeMirrorHighlightURLRange(
+  hlRanges = getHighlightRangesFromURL(window.location.href, "search")
+): Extension {
   return codeMirrorSelectURLRangePlugin(hlRanges);
 }
 
@@ -75,7 +76,7 @@ export function rangesToSearchParams(
   return params.toString();
 }
 
-function getRangesFromURL(
+export function getHighlightRangesFromURL(
   windowHref: string,
   type: "hash" | "search" = "hash"
 ): [start: number, end: number, chsum?: number][] | null {

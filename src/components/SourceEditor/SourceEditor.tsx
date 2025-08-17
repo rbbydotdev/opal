@@ -1,4 +1,5 @@
 import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
+import "@/components/SourceEditor/code-mirror-source-editor.css";
 import { useFileContents } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ export const SourceEditor = ({
         value={String(initialContents || "")}
         onChange={debouncedUpdate}
         readOnly={false}
-        className={cn("source-editor", "flex-grow", className)}
+        className={cn("code-mirror-source-editor", "flex-grow", className)}
       />
     </div>
   );
