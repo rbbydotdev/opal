@@ -183,7 +183,18 @@ export function useWorkspaceRoute() {
   );
 }
 
-export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: (node: TreeNode) => boolean) {
+// Branded type for file/dir filters
+type FileOnlyFilter = ((node: TreeNode) => boolean) & { __brand: "FileOnlyFilter" };
+type DirOnlyFilter = ((node: TreeNode) => boolean) & { __brand: "DirOnlyFilter" };
+
+export const FileOnlyFilter: FileOnlyFilter = Object.assign((node: TreeNode) => node.isTreeFile(), {
+  __brand: "FileOnlyFilter" as const,
+});
+
+export const DirOnlyFilter: DirOnlyFilter = Object.assign((node: TreeNode) => node.isTreeDir(), {
+  __brand: "DirOnlyFilter" as const,
+});
+export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: FileOnlyFilter | DirOnlyFilter) {
   const [fileTreeDir, setFileTree] = useState<TreeDirRoot>(NULL_TREE_ROOT);
   const [flatTree, setFlatTree] = useState<AbsPath[]>([]);
 
