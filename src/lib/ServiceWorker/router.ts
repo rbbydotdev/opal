@@ -65,8 +65,17 @@ export async function routeRequest(event: FetchEvent, workspaceParam: string) {
         },
         {} as Record<string, string>
       );
+      const searchParams = Object.fromEntries(
+        Array.from(url.searchParams.entries()).map(([key, value]) => {
+          try {
+            return [key, JSON.parse(value)];
+          } catch {
+            return [key, value];
+          }
+        })
+      );
 
-      const context: RequestContext = { event, url, workspaceName: workspaceParam, params };
+      const context: RequestContext = { event, url, workspaceName: workspaceParam, params, searchParams };
       return route.handler(context);
     }
   }

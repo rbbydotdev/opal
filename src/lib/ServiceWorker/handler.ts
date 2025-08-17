@@ -16,6 +16,7 @@ export interface RequestContext {
   url: URL;
   workspaceName: string;
   params: Record<string, string>;
+  searchParams: Record<string, unknown>;
 }
 
 // --- Route Handlers ---
