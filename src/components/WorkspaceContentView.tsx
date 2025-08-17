@@ -1,5 +1,4 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
-import { Editor } from "@/components/Editor/Editor";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
@@ -8,9 +7,11 @@ import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
-import { MDXEditorMethods } from "@mdxeditor/editor";
+import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { ComponentProps, useRef } from "react";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
+
+import "@mdxeditor/editor/style.css";
 
 export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const editorRef = useRef<MDXEditorMethods>(null);
@@ -60,20 +61,21 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
     </div>
   );
 }
-function EditorWithPlugins(props: ComponentProps<typeof Editor> & { currentWorkspace: Workspace; mimeType: string }) {
+
+function EditorWithPlugins(
+  props: ComponentProps<typeof MDXEditor> & {
+    currentWorkspace: Workspace;
+    mimeType: string;
+    editorRef: React.RefObject<MDXEditorMethods | null>;
+  }
+) {
   const plugins = useAllPlugins({
     currentWorkspace: props.currentWorkspace,
     realmId: MainEditorRealmId,
     mimeType: props.mimeType,
-    viewMode: props.mimeType === "text/markdown" ? "rich-text" : "source",
   });
+
   return (
-    <Editor
-      {...props}
-      plugins={plugins}
-      editorRef={props.editorRef}
-      onChange={props.onChange}
-      markdown={props.markdown}
-    />
+    <MDXEditor {...props} plugins={plugins} ref={props.editorRef} onChange={props.onChange} markdown={props.markdown} />
   );
 }
