@@ -4,7 +4,7 @@ import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, absPathname, joinPath } from "@/lib/paths2";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
 import { CommandIcon, FileTextIcon } from "lucide-react";
@@ -100,13 +100,21 @@ SpotlightSearchItemLink.displayName = "SpotlightSearchItem";
 
 function useCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir } = useWorkspaceFileMgmt(currentWorkspace);
+
+  const navigate = useNavigate();
   const cmdMap = useMemo(
     () => ({
-      "New Markdown File": () => newFile(absPath("newfile.md")),
-      "New Style CSS": () => newFile(absPath("styles.css")),
+      "New Markdown File": async () => {
+        const path = await newFile(absPath("newfile.md"));
+        void navigate({ to: currentWorkspace.resolveFileUrl(path) });
+      },
+      "New Style CSS": async () => {
+        const path = await newFile(absPath("styles.css"));
+        void navigate({ to: currentWorkspace.resolveFileUrl(path) });
+      },
       "New Dir": () => newDir(absPath("newdir")),
     }),
-    [newDir, newFile]
+    [currentWorkspace, navigate, newDir, newFile]
   );
   const execCommand = (cmd: keyof typeof cmdMap) => {
     if (cmdMap[cmd]) {
