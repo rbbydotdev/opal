@@ -30,8 +30,18 @@ export class GitPlaybook {
         message: SYSTEM_COMMITS.SWITCH_BRANCH,
       });
     }
-    await this.repo.checkoutRef(branchName);
+    await this.repo.checkoutRef({ ref: branchName });
     return true;
+  };
+
+  resetHard = async ({ ref }: { ref: string }) => {
+    const commitOid = await this.repo.resolveRef({ ref });
+    const currentBranch = (await this.repo.getCurrentBranch({ fullname: true }))!;
+    await this.repo.writeRef({ ref: currentBranch, value: commitOid, force: true });
+    await this.repo.checkoutRef({
+      ref: currentBranch,
+      force: true,
+    });
   };
 
   replaceGitBranch = async (symbolicRef: string, branchName: string) => {
@@ -41,11 +51,11 @@ export class GitPlaybook {
     }
     await this.repo.addGitBranch({ branchName, symbolicRef });
     await this.repo.deleteGitBranch(symbolicRef);
-    await this.repo.checkoutRef(branchName);
+    await this.repo.checkoutRef({ ref: branchName });
   };
 
   resetToHead = async () => {
-    return this.repo.checkoutRef("HEAD");
+    return this.repo.checkoutRef({ ref: "HEAD" });
   };
   switchCommit = async (commitOid: string) => {
     await this.repo.rememberCurrentBranch();
@@ -54,7 +64,7 @@ export class GitPlaybook {
         message: SYSTEM_COMMITS.SWITCH_COMMIT,
       });
     }
-    await this.repo.checkoutRef(commitOid);
+    await this.repo.checkoutRef({ ref: commitOid });
     return true;
   };
   async initialCommit() {
@@ -129,7 +139,7 @@ export class GitPlaybook {
     const prevBranch = await this.repo.getPrevBranch();
     if (prevBranch) {
       try {
-        await this.repo.checkoutRef(prevBranch);
+        await this.repo.checkoutRef({ ref: prevBranch });
         return true;
       } catch (error) {
         if (error instanceof git.Errors.NotFoundError) {

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
+import { GitRef, GitRepo, isBranchRef, isCommitRef, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -31,30 +31,9 @@ import { Input } from "@/components/ui/input";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Remote } from "comlink";
 
-export type GitRefType = "branch" | "commit";
-
-export interface GitRef {
-  value: string;
-  type: GitRefType;
-}
-
 const isLockedBranch = (branch: string) => {
   return ["master", "main"].includes(branch.toLowerCase());
 };
-
-// Utility functions for GitRef
-export const createBranchRef = (name: string): GitRef => ({
-  value: name,
-  type: "branch",
-});
-
-export const createCommitRef = (name: string): GitRef => ({
-  value: name,
-  type: "commit",
-});
-
-export const isCommitRef = (gitRef: GitRef): boolean => gitRef.type === "commit";
-export const isBranchRef = (gitRef: GitRef): boolean => gitRef.type === "branch";
 
 export function GitBranchManager({
   branches,

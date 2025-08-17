@@ -57,7 +57,7 @@ export function Confirm({
   const [isOpen, setIsOpen] = useState(false);
   const deferredPromiseRef = useRef<PromiseWithResolvers<unknown> | null>(null);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState<string>("");
   const openHandlerCb = useRef<((resolve: "ok" | "cancel") => Promise<unknown> | unknown) | null>(null);
 
   const handleCancel = async () => {
@@ -115,7 +115,11 @@ export function Confirm({
       <AlertDialogContent onKeyDown={handleKeyDown}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          {/<\/?[a-z][\s\S]*>/i.test(description) ? (
+            <AlertDialogDescription className="[&_*]:leading-8" dangerouslySetInnerHTML={{ __html: description }} />
+          ) : (
+            <AlertDialogDescription className="[&_*]:leading-8">{description}</AlertDialogDescription>
+          )}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleCancel} ref={(ref) => ref?.focus()}>

@@ -9,14 +9,9 @@ import {
   RefreshCw,
   Upload,
 } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 
-import {
-  BranchManagerSection,
-  createBranchRef,
-  createCommitRef,
-  GitRef,
-} from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
+import { BranchManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
@@ -24,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { GitRef } from "@/features/git-repo/GitRepo";
 import { useWorkspaceRepo, WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
@@ -51,8 +47,14 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
       <dd className="truncate">{timeAgo}</dd>
       <dt className="font-bold">context:</dt>
       <dd className="truncate">{context}</dd>
-      <dt className="font-bold">merge:</dt>
-      <dd className="truncate">{isMerging ? <b>true</b> : "false"}</dd>
+      {isMerging && (
+        <>
+          <dt className="font-bold">merging:</dt>
+          <dd className="truncate">
+            <b>true</b>
+          </dd>
+        </>
+      )}
     </dl>
   );
 }
@@ -258,15 +260,6 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: branchRef } = useTooltipToastCmd();
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
 
-  const currentGitRef = useMemo(() => {
-    if (info?.currentBranch) {
-      return createBranchRef(info.currentBranch);
-    } else if (info?.latestCommit?.oid) {
-      return createCommitRef(info?.latestCommit.oid);
-    }
-    return null;
-  }, [info]);
-
   const exists = info.exists;
 
   return (
@@ -305,21 +298,21 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 isMerging={info.isMerging}
                 initialCommit={() => playbook.initialCommit()}
                 commitRef={commitRef}
-                currentGitRef={currentGitRef}
+                currentGitRef={info.currentRef}
               />
             </div>
-            {exists && currentGitRef !== null && (
+            {exists && info.currentRef !== null && (
               <>
                 <BranchManagerSection
                   info={info}
                   repo={repo}
                   playbook={playbook}
-                  currentGitRef={currentGitRef}
+                  currentGitRef={info.currentRef}
                   branches={info.branches}
                   branchRef={branchRef}
                 />
                 <CommitManagerSection
-                  refType={currentGitRef.type}
+                  refType={info.currentRef.type}
                   playbook={playbook}
                   commits={info.commitHistory}
                   currentCommit={info.latestCommit?.oid}
