@@ -6,6 +6,8 @@ import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
+import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
+import { Button } from "@/components/ui/button";
 import { useFileContents } from "@/context/WorkspaceHooks";
 import {
   AdmonitionDirectiveDescriptor,
@@ -26,8 +28,19 @@ import {
   toolbarPlugin,
   useRemoteMDXEditorRealm,
 } from "@mdxeditor/editor";
+import { ChevronRightIcon, FileText } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { useWorkspaceDocumentId } from "./history/useWorkspaceDocumentId";
+
+const SourceEditorButton = () => (
+  <Button variant="outline" size="sm" onClick={() => setViewMode("source", "hash")}>
+    <span className="text-xs flex justify-center items-center gap-1">
+      Source
+      <FileText size={12} />
+      <ChevronRightIcon size={12} />
+    </span>
+  </Button>
+);
 
 export function useAllPlugins({
   currentWorkspace,
@@ -68,6 +81,7 @@ export function useAllPlugins({
                 realm={realm}
               />
               <LivePreviewButton disabled={mimeType !== "text/markdown"} />
+              <SourceEditorButton />
               <MdxSearchToolbar />
               <MdxToolbar />
             </>

@@ -12,6 +12,7 @@ import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander
 import { isContainer, isLeaf, LexicalTreeViewNode } from "@/lib/lexical/treeViewDisplayNodesLexical";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
+import { PlusIcon } from "lucide-react";
 import mdast from "mdast";
 import { twMerge } from "tailwind-merge";
 import unist from "unist";
@@ -118,6 +119,9 @@ export function SidebarTreeViewMenuContent({
                       <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
                         <span className="hover:underline" title={displayNode.type}>
                           {displayNode.displayText ?? displayNode.type}
+                          {displayNode.children && displayNode.children.length > 0 ? (
+                            <span className="text-xs ml-1 text-muted-foreground">({displayNode.children.length})</span>
+                          ) : null}
                         </span>
                       </HighlightNodeSelector>
                     </TreeViewMenuParent>
@@ -211,6 +215,7 @@ export const TreeViewMenuParent = ({
       <div className="flex w-full items-center truncate">
         <div className="flex justify-center items-center">
           <Bullet {...node} />
+          <PlusIcon className="text-xs mr-1" size={8} />
         </div>
         <div className="text-xs truncate w-full flex items-center">
           <div className="truncate text-2xs font-bold font-mono">{children}</div>
