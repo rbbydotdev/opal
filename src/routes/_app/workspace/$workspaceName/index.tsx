@@ -1,5 +1,5 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
-import { SpotlightSearch } from "@/components/SpotlightSearch";
+// import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { Card } from "@/components/ui/card";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import {
@@ -25,7 +25,7 @@ function WorkspaceIndexPage() {
 
   return (
     <>
-      <SpotlightSearch currentWorkspace={currentWorkspace} />
+      {/* <SpotlightSearch currentWorkspace={currentWorkspace} /> */}
       <div
         style={{
           backgroundImage: "url('/opal.svg')",

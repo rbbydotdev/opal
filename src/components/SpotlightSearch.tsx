@@ -2,6 +2,7 @@ import { FileOnlyFilter, useWatchWorkspaceFileTree } from "@/context/WorkspaceHo
 import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
+import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, absPathname, joinPath } from "@/lib/paths2";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
@@ -9,6 +10,7 @@ import fuzzysort from "fuzzysort";
 import { CommandIcon, FileTextIcon } from "lucide-react";
 import mime from "mime-types";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { basename } from "../lib/paths2";
 
 const SpotlightSearchItemLink = forwardRef<
@@ -96,19 +98,40 @@ const SpotlightSearchItemCmd = forwardRef<
 });
 SpotlightSearchItemLink.displayName = "SpotlightSearchItem";
 
+function useCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  const { newFile, newDir } = useWorkspaceFileMgmt(currentWorkspace);
+  const cmdMap = useMemo(
+    () => ({
+      "New Markdown File": () => newFile(absPath("newfile.md")),
+      "New Style CSS": () => newFile(absPath("styles.css")),
+      "New Dir": () => newDir(absPath("newdir")),
+    }),
+    [newDir, newFile]
+  );
+  const execCommand = (cmd: keyof typeof cmdMap) => {
+    if (cmdMap[cmd]) {
+      void cmdMap[cmd]();
+    } else {
+      console.warn(`Command "${cmd}" not found`);
+    }
+  };
+  return { execCommand, commands: Object.keys(cmdMap) as (keyof typeof cmdMap)[] };
+}
 export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { flatTree } = useWatchWorkspaceFileTree(currentWorkspace, FileOnlyFilter);
-  return (
+  const { execCommand, commands } = useCommandPalette({ currentWorkspace });
+
+  return createPortal(
     <SpotlightSearchInternal
       basePath={currentWorkspace.href}
       files={flatTree}
-      commands={["New Markdown File", "New Style CSS", "New Dir"]}
+      commands={commands}
       onCommandSelect={(cmd) => {
-        // Handle command execution here
-        console.log("Executing command " + cmd);
+        execCommand(cmd as any);
       }}
       commandPrefix={">"}
-    />
+    />,
+    document.body
   );
 }
 function SpotlightSearchInternal({
@@ -159,8 +182,7 @@ function SpotlightSearchInternal({
       }));
     }
     const results = fuzzysort.go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, {
-      // To prevent slow performance on large file lists
-      limit: 50,
+      // limit: 50,
     });
     return results.map((result) => ({
       element: (

@@ -6,6 +6,7 @@ import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/Sid
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
+import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { DisplayTreeProvider, useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { RootNode } from "@/lib/FileTree/TreeNode";
@@ -174,6 +175,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           <DndSlot dndId={"files"}>
             <div className="flex-shrink flex">
               <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace} filterRange={filterAllSpecialDirs}>
+                <SpotlightSearch currentWorkspace={currentWorkspace} />
                 <TreeExpanderProvider id="MainFiles" nodePaths={[]}>
                   <MainSidebarFileMenuFileSection />
                 </TreeExpanderProvider>
