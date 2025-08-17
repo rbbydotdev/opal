@@ -46,11 +46,11 @@ function WorkspaceFilePage() {
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView })} />}
       <SpotlightSearch currentWorkspace={currentWorkspace} />
       {isImage ? (
-        <WorkspaceImageView currentWorkspace={currentWorkspace} />
+        <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
       ) : isMarkdown && viewMode === "source" ? (
-        <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} />
+        <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} key={filePath} />
       ) : (
-        <WorkspaceMarkdownEditor currentWorkspace={currentWorkspace} />
+        <WorkspaceMarkdownEditor key={filePath} currentWorkspace={currentWorkspace} />
       )}
     </>
   );

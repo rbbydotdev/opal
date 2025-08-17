@@ -1,6 +1,5 @@
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
-// import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
