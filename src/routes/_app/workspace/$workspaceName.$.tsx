@@ -1,7 +1,8 @@
 import { FileError } from "@/components/FileError";
+import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { TrashBanner } from "@/components/TrashBanner";
-import { WorkspaceContentView } from "@/components/WorkspaceContentView";
+import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
 import { WorkspaceImageView } from "@/components/WorkspaceImageView";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceHooks";
 import useFavicon from "@/hooks/useFavicon";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceName/$")({
 
 function WorkspaceFilePage() {
   const { workspaceName } = Route.useParams();
-  const { filePath, isImage, inTrash, isSourceView } = useCurrentFilepath();
+  const { filePath, isImage, inTrash, isSourceView, viewMode, mimeType, isMarkdown } = useCurrentFilepath();
   const { currentWorkspace } = useWorkspaceContext();
   const navigate = useNavigate();
   useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
@@ -46,8 +47,10 @@ function WorkspaceFilePage() {
       <SpotlightSearch currentWorkspace={currentWorkspace} />
       {isImage ? (
         <WorkspaceImageView currentWorkspace={currentWorkspace} />
+      ) : isMarkdown && viewMode === "source" ? (
+        <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} />
       ) : (
-        <WorkspaceContentView key={filePath + workspaceName} currentWorkspace={currentWorkspace} />
+        <WorkspaceMarkdownEditor currentWorkspace={currentWorkspace} />
       )}
     </>
   );

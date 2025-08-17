@@ -2,7 +2,7 @@ import {
   BlockTypeSelect,
   BoldItalicUnderlineToggles,
   CreateLink,
-  DiffSourceToggleWrapper,
+  // DiffSourceToggleWrapper,
   InsertFrontmatter,
   InsertImage,
   InsertTable,
@@ -23,27 +23,27 @@ import { ReactNode } from "react";
 export const MdxToolbar = ({ children }: { children?: ReactNode }) => {
   return (
     <>
-      <DiffSourceToggleWrapper>
-        {children}
-        <UndoRedo />
-        <Separator />
-        <BoldItalicUnderlineToggles />
-        <Separator />
-        <BlockTypeSelect />
-        <Separator />
-        <ListsToggle />
-        <Separator />
-        <CreateLink />
-        <InsertImage />
-        <Separator />
-        <InsertThematicBreak />
-        <Separator />
-        <StrikeThroughSupSubToggles options={["Strikethrough"]} />
-        <Separator />
-        <InsertTable />
-        <Separator />
-        <InsertFrontmatter />
-      </DiffSourceToggleWrapper>
+      {/* <DiffSourceToggleWrapper>
+      </DiffSourceToggleWrapper> */}
+      {children}
+      <UndoRedo />
+      <Separator />
+      <BoldItalicUnderlineToggles />
+      <Separator />
+      <BlockTypeSelect />
+      <Separator />
+      <ListsToggle />
+      <Separator />
+      <CreateLink />
+      <InsertImage />
+      <Separator />
+      <InsertThematicBreak />
+      <Separator />
+      <StrikeThroughSupSubToggles options={["Strikethrough"]} />
+      <Separator />
+      <InsertTable />
+      <Separator />
+      <InsertFrontmatter />
     </>
   );
 };

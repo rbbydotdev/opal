@@ -2,31 +2,15 @@ import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { Editor } from "@/components/Editor/Editor";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
-import { handleUrlParamViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
-import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 import { useCurrentFilepath, useFileContents, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { MDXEditorMethods } from "@mdxeditor/editor";
-import { ComponentProps, useMemo, useRef } from "react";
+import { ComponentProps, useRef } from "react";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
-
-export function WorkspaceContentView({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const viewModeOverride = useMemo(() => handleUrlParamViewMode("hash+search", "viewMode"), []);
-  const { isMarkdown, filePath, inTrash, mimeType } = useCurrentFilepath();
-  return (
-    <>
-      {!isMarkdown || viewModeOverride === "source" ? (
-        <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} />
-      ) : (
-        <WorkspaceMarkdownEditor currentWorkspace={currentWorkspace} />
-      )}
-    </>
-  );
-}
 
 export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const editorRef = useRef<MDXEditorMethods>(null);
