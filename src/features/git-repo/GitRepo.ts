@@ -33,7 +33,19 @@ export type GitRepoAuthor = {
   email: string;
 };
 
-// type GitHistoryType = Array<RepoCommit>;
+// Utility functions for GitRef
+export const createBranchRef = (name: string): GitRef => ({
+  value: name,
+  type: "branch",
+});
+
+export const createCommitRef = (name: string): GitRef => ({
+  value: name,
+  type: "commit",
+});
+
+export const isCommitRef = (gitRef: GitRef): gitRef is GitRefCommit => gitRef.type === "commit";
+export const isBranchRef = (gitRef: GitRef): gitRef is GitRefBranch => gitRef.type === "branch";
 
 export type RepoLatestCommit = {
   oid: string;
@@ -62,6 +74,27 @@ export const RepoLatestCommitNull = {
   },
 };
 
+//   if (info?.currentBranch) {
+//     return createBranchRef(info.currentBranch);
+//   } else if (info?.latestCommit?.oid) {
+//     return createCommitRef(info?.latestCommit.oid);
+//   }
+
+export type GitRefType = "branch" | "commit";
+
+export type GitRef = {
+  value: string;
+  type: GitRefType;
+};
+
+export type GitRefBranch = {
+  value: string;
+  type: "branch";
+};
+export type GitRefCommit = {
+  value: string;
+  type: "commit";
+};
 export const RepoDefaultInfo = {
   currentBranch: null as null | string,
   initialized: false,
@@ -78,6 +111,7 @@ export const RepoDefaultInfo = {
   context: "" as "main" | "worker" | "",
   exists: false,
   isMerging: false,
+  currentRef: null as null | GitRef,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
 //--------------------------
@@ -388,26 +422,35 @@ export class GitRepo {
     if (!(await this.exists())) {
       return RepoDefaultInfo;
     }
+
+    const currentBranch = await this.getCurrentBranch();
+    const latestCommit = await this.getLatestCommit();
+    const currentRef = currentBranch
+      ? createBranchRef(currentBranch)
+      : latestCommit.oid
+        ? createCommitRef(latestCommit.oid)
+        : null;
     return {
       initialized: this.state.initialized,
-      currentBranch: await this.getCurrentBranch(),
+      currentBranch,
       branches: await this.getBranches(),
       remotes: await this.getRemotes(),
-      latestCommit: await this.getLatestCommit(),
+      latestCommit,
       hasChanges: await this.hasChanges(),
       commitHistory: await this.getCommitHistory({ depth: 20 }),
       context: isWebWorker() ? "worker" : "main",
       exists: await this.exists(),
       isMerging: await this.isMerging(),
+      currentRef,
     };
   };
 
-  getCurrentBranch = async (): Promise<string | null> => {
-    // if (!(await this.exists())) return null;
+  getCurrentBranch = async ({ fullname }: { fullname?: boolean } = {}): Promise<string | null> => {
     return (
       (await this.git.currentBranch({
         fs: this.fs,
         dir: this.dir,
+        fullname,
       })) || null
     );
   };
@@ -503,7 +546,7 @@ export class GitRepo {
     }
   };
 
-  resolveRef = async (ref: string): Promise<string> => {
+  resolveRef = async ({ ref }: { ref: string }): Promise<string> => {
     await this.mustBeInitialized();
     return this.git.resolveRef({
       fs: this.fs,
@@ -613,10 +656,10 @@ export class GitRepo {
   };
 
   checkoutDefaultBranch = async () => {
-    return await this.checkoutRef(this.defaultMainBranch);
+    return await this.checkoutRef({ ref: this.defaultMainBranch });
   };
 
-  checkoutRef = async (ref: string): Promise<string | void> => {
+  checkoutRef = async ({ ref, force = true }: { ref: string; force?: boolean }): Promise<string | void> => {
     if (await this.isMerging()) {
       // throw new Error("Cannot checkout while merging. Please resolve conflicts first.");
       await this.resetMergeState();
@@ -629,8 +672,7 @@ export class GitRepo {
         fs: this.fs,
         dir: this.dir,
         ref: ref,
-        force: true, // Force checkout if necessary
-        // noCheckout: false, // Ensure the working directory is updated
+        force,
       });
       if (await this.isBranchOrTag(ref)) {
         await this.rememberCurrentBranch();

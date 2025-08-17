@@ -54,4 +54,4 @@ export function useWorkspaceRepo(workspace: Workspace, _onPathNoExists?: (path: 
   return { repo: repoRef.current, info, playbook };
 }
 
-export type WorkspaceRepoType = DeepNonNullable<RepoInfoType, "currentBranch">;
+export type WorkspaceRepoType = DeepNonNullable<RepoInfoType, "currentBranch" | "currentRef">;

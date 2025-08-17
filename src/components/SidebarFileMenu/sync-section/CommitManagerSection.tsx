@@ -26,6 +26,7 @@ export function CommitManagerSection({
           <GitCommitManager
             refType={refType}
             commits={commits}
+            resetHard={(commitOid) => playbook.resetHard({ ref: commitOid })}
             currentCommit={currentCommit}
             resetToHead={playbook.resetToHead}
             resetToOrigHead={playbook.resetToPrevBranch}

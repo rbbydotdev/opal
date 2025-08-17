@@ -19,12 +19,14 @@ export function GitCommitManager({
   resetToHead,
   resetToOrigHead,
   refType: _refType,
+  resetHard,
   currentCommit,
 }: {
   commits: RepoCommit[];
   setCurrentCommit: (commitOid: string) => void;
   resetToHead: () => void;
   resetToOrigHead: () => void;
+  resetHard: (commitOid: string) => void;
   refType: "branch" | "commit";
   currentCommit?: string;
 }) {
@@ -44,6 +46,17 @@ export function GitCommitManager({
     );
   };
 
+  const handleResetHard = (commitOid: string) => {
+    setSelectCommit(false);
+    void confirmOpen(
+      () => resetHard(commitOid),
+      "Reset to Hard",
+      `Are you sure you want to reset to <i><b>${commitOid.slice(0, 12)}</b></i>?<br/><i><b>⚠️ THIS WILL DISCARD ALL CHANGES MADE SINCE THE LAST COMMIT</b></i>`
+    );
+  };
+
+  // const reset
+
   const [open, setOpen] = useState(false);
   const [selectCommit, setSelectCommit] = useState(false);
 
@@ -53,7 +66,8 @@ export function GitCommitManager({
         items={commits.map((commit) => ({ value: commit.oid, label: <CommitLabel commitData={commit} /> }))}
         placeholder="Select Commit"
         itemClassName={cn("focus:!bg-ring focus:!text-primary-foreground [&_*]:focus:text-primary-foreground")}
-        onSelect={() => setSelectCommit(false)}
+        onSelect={(commit) => handleResetHard(commit)}
+        // onSelect={(branch) => resetHard(branch)}
         onCancel={() => setSelectCommit(false)}
       />
     );
@@ -69,10 +83,6 @@ export function GitCommitManager({
         }}
       >
         <GitCommitMenuDropDown open={open} setOpen={setOpen}>
-          <DropdownMenuItem onClick={() => setSelectCommit(true)} onSelect={() => setSelectCommit(true)}>
-            <ArrowBigLeftDashIcon />
-            Reset HARD
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={resetToHeadHandler} onSelect={resetToHeadHandler}>
             <RotateCcw />
             Reset to HEAD
@@ -80,6 +90,10 @@ export function GitCommitManager({
           <DropdownMenuItem onClick={resetToOrigHeadHandler} onSelect={resetToOrigHeadHandler}>
             <RotateCcw />
             Reset to Previous Branch
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSelectCommit(true)} onSelect={() => setSelectCommit(true)}>
+            <ArrowBigLeftDashIcon className="text-ring" />
+            Reset <b>hard</b>
           </DropdownMenuItem>
         </GitCommitMenuDropDown>
       </CommitSelect>
