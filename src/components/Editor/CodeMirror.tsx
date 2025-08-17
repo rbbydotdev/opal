@@ -1,5 +1,8 @@
 // import { markdownWithFrontMatter } from "@/components/SourceEditor/markdowExt";
-import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import {
+  CodeMirrorHighlightURLRange,
+  getHighlightRangesFromURL,
+} from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -71,7 +74,7 @@ export const CodeMirrorEditor = ({
       EditorView.lineWrapping,
 
       // export function CodeMirrorHighlightURLRange(hlRanges = getRangesFromURL(window.location.href, "search")): Extension {
-      CodeMirrorHighlightURLRange(getRangesFromURL(window.location.href, "hash")),
+      CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),
       keymap.of([indentWithTab]),
       ext,
       EditorView.updateListener.of((update) => {
