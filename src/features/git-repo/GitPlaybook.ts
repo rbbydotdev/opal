@@ -79,11 +79,11 @@ export class GitPlaybook {
     return this.repo.merge(from, into);
   }
   mergeCommit = async (): Promise<string | null> => {
-    const currentBranch = await this.repo.getCurrentBranch();
+    // const currentBranch = await this.repo.getCurrentBranch();
     const mergeHead = await this.repo.getMergeState();
     const mergeMsg = await this.repo.getMergeMsg();
     const head = await this.repo.getHead();
-    console.log("mergeCommit", { currentBranch, mergeHead, mergeMsg, head });
+    // console.log("mergeCommit", { currentBranch, mergeHead, mergeMsg, head });
     if (!mergeHead || !head) {
       throw new Error("Cannot merge commit, no merge head or current branch found");
     }

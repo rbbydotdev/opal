@@ -3,6 +3,8 @@ import { NullWorkspace } from "@/Db/NullWorkspace";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
+import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
@@ -19,6 +21,10 @@ const defaultWorkspaceContext = {
   workspaces: [] as WorkspaceDAO[],
   flatTree: [] as string[],
   currentWorkspace: NULL_WORKSPACE as Workspace,
+  git: {
+    repo: new NullRepo() as GitRepo,
+    playbook: new NullGitPlaybook() as GitPlaybook,
+  },
   workspaceRoute: { id: null, path: null } as WorkspaceRouteType,
 };
 

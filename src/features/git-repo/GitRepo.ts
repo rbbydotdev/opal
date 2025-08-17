@@ -74,12 +74,6 @@ export const RepoLatestCommitNull = {
   },
 };
 
-//   if (info?.currentBranch) {
-//     return createBranchRef(info.currentBranch);
-//   } else if (info?.latestCommit?.oid) {
-//     return createCommitRef(info?.latestCommit.oid);
-//   }
-
 export type GitRefType = "branch" | "commit";
 
 export type GitRef = {
@@ -111,6 +105,7 @@ export const RepoDefaultInfo = {
   context: "" as "main" | "worker" | "",
   exists: false,
   isMerging: false,
+  unmergedFiles: [] as string[],
   currentRef: null as null | GitRef,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
@@ -140,13 +135,7 @@ export class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
 export function isMergeConflictError(result: unknown): result is InstanceType<typeof git.Errors.MergeConflictError> {
   return result instanceof git.Errors.MergeConflictError;
 }
-// type MergeResult = {
-//     oid?: string;
-//     alreadyMerged?: boolean;
-//     fastForward?: boolean;
-//     mergeCommit?: boolean;
-//     tree?: string;
-// }
+
 export type MergeConflict = InstanceType<typeof git.Errors.MergeConflictError>["data"];
 export function isMergeConflict(data: unknown): data is MergeConflict {
   return (
@@ -430,6 +419,7 @@ export class GitRepo {
       : latestCommit.oid
         ? createCommitRef(latestCommit.oid)
         : null;
+    const isMerging = await this.isMerging();
     return {
       initialized: this.state.initialized,
       currentBranch,
@@ -440,9 +430,23 @@ export class GitRepo {
       commitHistory: await this.getCommitHistory({ depth: 20 }),
       context: isWebWorker() ? "worker" : "main",
       exists: await this.exists(),
-      isMerging: await this.isMerging(),
+      isMerging,
       currentRef,
+      unmergedFiles: isMerging ? await this.getUnmergedFiles() : [],
     };
+  };
+
+  getUnmergedFiles = async (): Promise<string[]> => {
+    const mergeHead = await this.getMergeState();
+    if (mergeHead) {
+      const unmergedFiles = await this.statusMatrix({
+        ref: mergeHead,
+      });
+      return unmergedFiles
+        .filter(([, head, workdir, stage]) => head !== workdir || workdir !== stage)
+        .map(([filepath]) => joinPath(this.dir, filepath));
+    }
+    return [];
   };
 
   getCurrentBranch = async ({ fullname }: { fullname?: boolean } = {}): Promise<string | null> => {
@@ -699,7 +703,7 @@ export class GitRepo {
       dir: this.dir,
     });
     const uniqueBranchName = getUniqueSlug(branchName, branches);
-    console.log("Creating new branch:", uniqueBranchName, "from", symbolicRef);
+    // console.log("Creating new branch:", uniqueBranchName, "from", symbolicRef);
     const isMerging = await this.isMerging();
     if (isMerging) {
       console.warn("Creating branch while merging, will not checkout.");
@@ -735,9 +739,8 @@ export class GitRepo {
     });
   };
 
-  statusMatrix = async (): Promise<Array<[string, number, number, number]>> => {
-    // await this.mustBeInitialized();
-    return git.statusMatrix({ fs: this.fs, dir: this.dir });
+  statusMatrix = async ({ ref }: { ref?: string } = {}): Promise<Array<[string, number, number, number]>> => {
+    return git.statusMatrix({ fs: this.fs, dir: this.dir, ref });
   };
 
   setConfig = async (path: string, value: string): Promise<void> => {

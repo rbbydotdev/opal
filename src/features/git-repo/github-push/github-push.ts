@@ -1,4 +1,4 @@
-import { NotEnv } from "@/lib/notenv";
+import { Env } from "@/lib/env";
 import LightningFS from "@isomorphic-git/lightning-fs";
 import * as git from "isomorphic-git";
 import http from "isomorphic-git/http/web";
@@ -16,7 +16,7 @@ export async function pushHelloWorldToGitHubPages({
   repo,
   token,
   branch = "main",
-  gitCorsProxy = NotEnv.GitProtocolProxy,
+  gitCorsProxy = Env.GitProtocolProxy,
 }: PushHelloWorldParams): Promise<void> {
   // 1. Setup FS
   const fs = new LightningFS("fs");

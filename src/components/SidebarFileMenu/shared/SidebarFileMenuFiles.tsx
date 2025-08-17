@@ -46,14 +46,6 @@ export const SidebarFileMenuFiles = ({
   }, [currentWorkspace, fileTreeDir, scope]);
   const { expanderId } = useTreeExpanderContext();
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId);
-  // const handleExternalDropEvent =
-
-  // onDrop={(event) =>
-  //   handleDropFilesEventForNode({
-  //     currentWorkspace,
-  //     event,
-  //     targetNode: RootNode,
-  //   })
 
   const isEmpty = !Object.keys(treeNode.filterOutChildren(filter) ?? {}).length;
   return (

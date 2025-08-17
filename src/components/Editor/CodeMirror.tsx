@@ -1,4 +1,7 @@
 // import { markdownWithFrontMatter } from "@/components/SourceEditor/markdowExt";
+import { CodeMirrorHighlightURLRange } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
@@ -10,6 +13,7 @@ import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { basicLight } from "cm6-theme-basic-light";
 import { basicSetup } from "codemirror";
+import { ChevronLeftIcon, FileText } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
 export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript";
@@ -64,6 +68,10 @@ export const CodeMirrorEditor = ({
     const extensions: Extension[] = [
       basicSetup,
       basicLight,
+      EditorView.lineWrapping,
+
+      // export function CodeMirrorHighlightURLRange(hlRanges = getRangesFromURL(window.location.href, "search")): Extension {
+      CodeMirrorHighlightURLRange(getRangesFromURL(window.location.href, "hash")),
       keymap.of([indentWithTab]),
       ext,
       EditorView.updateListener.of((update) => {
@@ -112,5 +120,23 @@ export const CodeMirrorEditor = ({
     }
   }, [value]);
 
-  return <div className={cn("bg-background h-full", className)} ref={editorRef} />;
+  return (
+    <>
+      <CodeMirrorToolbar />
+      <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
+    </>
+  );
+};
+
+const CodeMirrorToolbar = () => {
+  return (
+    <div className="flex items-center justify-between p-2 bg-muted">
+      <Button variant="outline" size="sm" onClick={() => setViewMode("rich-text", "hash+search")}>
+        <span className="text-xs flex justify-center items-center gap-1">
+          <ChevronLeftIcon size={12} />
+          <FileText size={12} /> Rich Text
+        </span>
+      </Button>
+    </div>
+  );
 };

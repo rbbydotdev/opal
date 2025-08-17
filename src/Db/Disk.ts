@@ -262,6 +262,7 @@ export abstract class Disk {
     void this.hydrateIndexFromDisk(); //load first from cache
     if (isServiceWorker() || isWebWorker() || skipListeners) {
       console.debug("skipping remote listeners in service worker");
+      return () => {};
     } else {
       return this.setupRemoteListeners();
     }

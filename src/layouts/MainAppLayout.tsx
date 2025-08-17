@@ -40,6 +40,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                     <SidebarProvider>
                       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                         <ConfirmProvider>
+                          {/* <FileTreeGitFileAttributesProvider> */}
                           <RemoteMDXEditorRealmProvider>
                             <div className="w-full flex">
                               <ErrorBoundary fallback={ErrorPlaque}>
@@ -50,6 +51,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                               </ErrorBoundary>
                             </div>
                           </RemoteMDXEditorRealmProvider>
+                          {/* </FileTreeGitFileAttributesProvider> */}
                         </ConfirmProvider>
                       </ThemeProvider>
                     </SidebarProvider>

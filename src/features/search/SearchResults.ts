@@ -113,33 +113,33 @@ export class SearchResult {
       data.chsum
     );
   }
-  static New(
-    lineNumber: number,
-    lineStart: number,
-    lineEnd: number,
-    start: number,
-    end: number,
-    lineText: string,
-    relStart: number,
-    relEnd: number,
-    linesSpanned: number,
-    width: number = 90,
-    chsum: number = 0
-  ): SearchResult {
-    return new SearchResult(
-      lineNumber,
-      lineStart,
-      lineEnd,
-      start,
-      end,
-      lineText,
-      relStart,
-      relEnd,
-      linesSpanned,
-      width,
-      chsum
-    );
-  }
+  // static New(
+  //   lineNumber: number,
+  //   lineStart: number,
+  //   lineEnd: number,
+  //   start: number,
+  //   end: number,
+  //   lineText: string,
+  //   relStart: number,
+  //   relEnd: number,
+  //   linesSpanned: number,
+  //   width: number = 90,
+  //   chsum: number = 0
+  // ): SearchResult {
+  //   return new SearchResult(
+  //     lineNumber,
+  //     lineStart,
+  //     lineEnd,
+  //     start,
+  //     end,
+  //     lineText,
+  //     relStart,
+  //     relEnd,
+  //     linesSpanned,
+  //     width,
+  //     chsum
+  //   );
+  // }
 
   // Highlight the match in the lineText
   usingComponent(HighlightComponent: JSX.ElementType) {

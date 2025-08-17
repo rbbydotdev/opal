@@ -109,7 +109,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     }
     if (searchTerm)
       return (
-        <div className="w-full  justify-center items-center flex font-mono h-12 gap-2">
+        <div className="w-full justify-center items-center flex font-mono h-12 gap-2">
           <SearchXIcon />
           {"no results"}
         </div>
@@ -341,7 +341,7 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
   });
   return (
     // 1. Use flexbox to align the line number and the text content
-    <a href={href + "?" + sp} onClick={onClick}>
+    <a href={href + "#" + sp} onClick={onClick}>
       <div className="border-b-4 last-of-type:border-none border-background flex items-start p-1 py-1 bg-primary-foreground font-mono text-xs group hover:bg-ring/80 cursor-pointer hover:text-primary-foreground">
         {/* 2. Create a container for the line number and badge */}
         <div className="relative min-w-8 text-right font-bold mr-2">
