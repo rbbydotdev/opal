@@ -42,7 +42,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     async (path: AbsPath, content = "", options: { redirect?: boolean } = {}) => {
       const result = await currentWorkspace.newFile(dirname(path), basename(path), content);
       if (options.redirect) {
-        navigate({ to: currentWorkspace.resolveFileUrl(result) });
+        void navigate({ to: currentWorkspace.resolveFileUrl(result) });
       }
       return result;
     },

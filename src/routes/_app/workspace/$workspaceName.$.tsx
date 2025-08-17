@@ -1,6 +1,6 @@
 import { FileError } from "@/components/FileError";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
-import { SpotlightSearch } from "@/components/SpotlightSearch";
+// import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { TrashBanner } from "@/components/TrashBanner";
 import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
 import { WorkspaceImageView } from "@/components/WorkspaceImageView";
@@ -44,7 +44,7 @@ function WorkspaceFilePage() {
   return (
     <>
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView })} />}
-      <SpotlightSearch currentWorkspace={currentWorkspace} />
+      {/* <SpotlightSearch currentWorkspace={currentWorkspace} /> */}
       {isImage ? (
         <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
       ) : isMarkdown && viewMode === "source" ? (
