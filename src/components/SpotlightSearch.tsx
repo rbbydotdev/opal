@@ -1,8 +1,7 @@
-import { useWatchWorkspaceFileTree } from "@/context/WorkspaceHooks";
+import { FileOnlyFilter, useWatchWorkspaceFileTree } from "@/context/WorkspaceHooks";
 import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, absPathname, joinPath } from "@/lib/paths2";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
@@ -98,12 +97,16 @@ const SpotlightSearchItemCmd = forwardRef<
 SpotlightSearchItemLink.displayName = "SpotlightSearchItem";
 
 export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const { flatTree } = useWatchWorkspaceFileTree(currentWorkspace, (node: TreeNode) => node.isTreeFile());
+  const { flatTree } = useWatchWorkspaceFileTree(currentWorkspace, FileOnlyFilter);
   return (
     <SpotlightSearchInternal
       basePath={currentWorkspace.href}
       files={flatTree}
-      commands={["New File"]}
+      commands={["New Markdown File", "New Style CSS", "New Dir"]}
+      onCommandSelect={(cmd) => {
+        // Handle command execution here
+        console.log("Executing command " + cmd);
+      }}
       commandPrefix={">"}
     />
   );
@@ -112,11 +115,13 @@ function SpotlightSearchInternal({
   basePath,
   files,
   commandPrefix = ">",
+  onCommandSelect,
   commands,
 }: {
   basePath: AbsPath;
   files: AbsPath[];
   commandPrefix?: string;
+  onCommandSelect: (command: string) => void;
   commands: string[];
 }) {
   const [open, setOpen] = useState(false);
@@ -260,6 +265,14 @@ function SpotlightSearchInternal({
         <input
           ref={inputRef}
           value={search}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && activeIndex === -1) {
+              //if first item, select first item in the list
+              if (sortedList.length > 0) {
+                setActiveIndex(0);
+              }
+            }
+          }}
           onChange={(e) => setSearch(e.target.value)}
           id="spotlight-search"
           type="text"
@@ -290,8 +303,7 @@ function SpotlightSearchInternal({
                   isActive={index === activeIndex}
                   onSelect={() => {
                     handleClose();
-                    // Handle command execution here
-                    console.log("Executing command:", item.href);
+                    onCommandSelect(item.href.replace(commandPrefix, ""));
                   }}
                 />
               );
