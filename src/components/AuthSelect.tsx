@@ -1,9 +1,9 @@
+import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RemoteAuthType } from "@/Db/RemoteAuth";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
-import { Github, Key, Plus, Shield } from "lucide-react";
+import { Plus, Shield } from "lucide-react";
 
 interface AuthSelectProps {
   value?: string;
@@ -12,17 +12,17 @@ interface AuthSelectProps {
   onAddAuth: () => void;
 }
 
-const AuthIcon = ({ type }: { type: RemoteAuthType }) => {
-  const simpleType = type.split("/")[0];
-  switch (simpleType) {
-    case "api":
-      return <Key className="w-4 h-4" />;
-    case "oauth":
-      return <Github className="w-4 h-4" />;
-    default:
-      return <Shield className="w-4 h-4" />;
-  }
-};
+// const AuthIcon = ({ type }: { type: RemoteAuthType }) => {
+//   const simpleType = type.split("/")[0];
+//   switch (simpleType) {
+//     case "api":
+//       return <Key className="w-4 h-4" />;
+//     case "oauth":
+//       return <Github className="w-4 h-4" />;
+//     default:
+//       return <Shield className="w-4 h-4" />;
+//   }
+// };
 
 export function AuthSelect({
   value,
@@ -59,7 +59,7 @@ export function AuthSelect({
           {remoteAuths.map((auth) => (
             <SelectItem key={auth.guid} value={auth.guid}>
               <div className="flex items-center gap-2 flex-grow">
-                <AuthIcon type={auth.type} />
+                <RemoteAuthSourceIconComponent source={auth.source} type={auth.type} className="w-4 h-4" />
                 <div className="flex w-full justify-center items-center gap-2 font-mono truncate ">
                   <div className="truncate gap-2 flex justify-center items-center text-xs">
                     <span className="text-xs font-medium">{auth.name}</span>

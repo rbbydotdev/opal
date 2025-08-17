@@ -142,19 +142,23 @@ function SpotlightSearchInternal({
     }
   };
 
-  const visibleFilesAndCommands = useMemo(() => {
-    return [...files.filter((file) => FilterOutSpecialDirs(file)), ...commands.map((cmd) => commandPrefix + cmd)];
-  }, [commandPrefix, commands, files]);
+  const visibleFiles = useMemo(() => {
+    return [...files.filter((file) => FilterOutSpecialDirs(file))];
+  }, [files]);
+
+  const commandList = useMemo(() => {
+    return commands.map((cmd) => commandPrefix + cmd);
+  }, [commandPrefix, commands]);
 
   const sortedList = useMemo(() => {
     setActiveIndex(-1); // Reset index on new search results
     if (!search) {
-      return visibleFilesAndCommands.map((file) => ({
+      return visibleFiles.map((file) => ({
         element: <>{file}</>,
         href: file,
       }));
     }
-    const results = fuzzysort.go(search, visibleFilesAndCommands, {
+    const results = fuzzysort.go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, {
       // To prevent slow performance on large file lists
       limit: 50,
     });
@@ -168,7 +172,7 @@ function SpotlightSearchInternal({
       ),
       href: result.target,
     }));
-  }, [search, visibleFilesAndCommands]);
+  }, [commandList, commandPrefix, search, visibleFiles]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
