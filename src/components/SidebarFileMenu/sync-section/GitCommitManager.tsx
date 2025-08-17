@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RepoCommit } from "@/features/git-repo/GitRepo";
+import { GitRefType, RepoCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { ArrowBigLeftDashIcon, Ellipsis, GitCommit, RotateCcw } from "lucide-react";
 import { useState } from "react";
@@ -18,7 +18,7 @@ export function GitCommitManager({
   setCurrentCommit,
   resetToHead,
   resetToOrigHead,
-  refType: _refType,
+  refType,
   resetHard,
   currentCommit,
 }: {
@@ -27,7 +27,7 @@ export function GitCommitManager({
   resetToHead: () => void;
   resetToOrigHead: () => void;
   resetHard: (commitOid: string) => void;
-  refType: "branch" | "commit";
+  refType: GitRefType;
   currentCommit?: string;
 }) {
   const { open: confirmOpen } = useConfirm();
@@ -91,10 +91,14 @@ export function GitCommitManager({
             <RotateCcw />
             Reset to Previous Branch
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSelectCommit(true)} onSelect={() => setSelectCommit(true)}>
-            <ArrowBigLeftDashIcon className="text-ring" />
-            Reset <b>hard</b>
-          </DropdownMenuItem>
+          {refType === "branch" && (
+            <DropdownMenuItem onClick={() => setSelectCommit(true)} onSelect={() => setSelectCommit(true)}>
+              <ArrowBigLeftDashIcon className="text-ring" />
+              <span>
+                Reset <b>hard</b>
+              </span>
+            </DropdownMenuItem>
+          )}
         </GitCommitMenuDropDown>
       </CommitSelect>
     </>

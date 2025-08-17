@@ -1,4 +1,4 @@
-import { handleUrlParamViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
+import { useWatchViewMode } from "@/components/Editor/view-mode/useWatchViewMode";
 import { NullWorkspace } from "@/Db/NullWorkspace";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
@@ -127,9 +127,11 @@ export function useFileContents({
     debouncedUpdate,
   };
 }
+
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
+  const viewMode = useWatchViewMode("hash+search");
 
   if (filePath === null || currentWorkspace.isNull) {
     return {
@@ -151,7 +153,10 @@ export function useCurrentFilepath() {
     isSource: !mimeType.startsWith("text/markdown") && mimeType.startsWith("text/"),
     isBin: mimeType.startsWith("application/octet-stream"),
     inTrash: filePath.startsWith(SpecialDirs.Trash),
-    isSourceView: handleUrlParamViewMode("hash+search", "viewMode") === "source",
+    isSourceView: viewMode === "source",
+    isRichView: viewMode === "rich-text",
+    isDiffView: viewMode === "diff",
+    viewMode: viewMode,
   };
 }
 

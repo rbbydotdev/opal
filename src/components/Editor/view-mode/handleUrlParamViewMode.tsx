@@ -2,9 +2,10 @@ import { ViewMode } from "@mdxeditor/editor";
 
 export const viewModeHash = (vm: ViewMode) => `#viewMode="${vm}"`;
 
-export function handleUrlParamViewMode(
-  type: "search" | "hash" | "hash+search" = "hash+search",
-  key = "viewMode"
+export type ViewModeParamType = "hash+search" | "hash" | "search";
+export function getViewMode(
+  key = "viewMode",
+  type: ViewModeParamType = "hash+search"
 ): "rich-text" | "source" | "diff" | null {
   const windowHref = window.location.href;
   const url = new URL(windowHref);
@@ -28,3 +29,21 @@ export function handleUrlParamViewMode(
     return null;
   }
 }
+
+export const setViewMode = (viewMode: ViewMode | null, viewModeParamType: ViewModeParamType) => {
+  if (viewMode === null) {
+    window.history.replaceState({}, "", window.location.pathname);
+    return;
+  }
+  const viewModeHash = `#viewMode="${viewMode}"`;
+  if (viewModeParamType === "hash") {
+    window.location.hash = viewModeHash;
+  } else if (viewModeParamType === "search") {
+    const url = new URL(window.location.href);
+    url.searchParams.set("viewMode", viewMode);
+    window.history.replaceState({}, "", url.toString());
+  } else {
+    // "hash+search"
+    window.location.hash = viewModeHash;
+  }
+};

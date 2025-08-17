@@ -3,7 +3,14 @@
 }
 .content-editable {
   max-width: 100%;
+  height: 100%;
   /* height: calc(100vh - var(--editor-toolbar-height)); */
+}
+/* _contentEditable_sects_380 max-w-full content-editable prose bg-background */
+/* _rootContentEditableWrapper_sects_1114 mdxeditor-root-contenteditable */
+.mdxeditor-root-contenteditable {
+  height: 100%;
+  flex-grow: 1;
 }
 .mdxeditor {
   overflow-y: scroll;
