@@ -9,8 +9,7 @@ import {
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { RootNode, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName/")({
   component: WorkspaceIndexPage,
@@ -55,7 +54,6 @@ function WorkspaceIndexPage() {
               pointerEvents: "none",
             }}
           />
-          <FirstFileRedirect />
           <OpalCard />
         </ConditionalDropzone>
       </div>
@@ -63,13 +61,13 @@ function WorkspaceIndexPage() {
   );
 }
 
-function FirstFileRedirect() {
-  const navigate = useNavigate();
-  const { currentWorkspace } = useWorkspaceContext();
-  useEffect(() => {
-    if (!currentWorkspace.isNull) {
-      // void currentWorkspace.tryFirstFileUrl().then((ff) => navigate({ to: ff }));
-    }
-  }, [currentWorkspace, navigate]);
-  return null;
-}
+// function FirstFileRedirect() {
+//   const navigate = useNavigate();
+//   const { currentWorkspace } = useWorkspaceContext();
+//   useEffect(() => {
+//     if (!currentWorkspace.isNull) {
+//       void currentWorkspace.tryFirstFileUrl().then((ff) => navigate({ to: ff }));
+//     }
+//   }, [currentWorkspace, navigate]);
+//   return null;
+// }

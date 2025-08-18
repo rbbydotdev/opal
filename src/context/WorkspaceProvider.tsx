@@ -11,6 +11,7 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { isAncestor } from "@/lib/paths2";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import React, { useEffect, useState } from "react";
+import { decodePath } from "../lib/paths2";
 
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
   const workspaces = useLiveWorkspaces();
@@ -45,8 +46,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const listeners = [
       currentWorkspace.renameListener((CHANGES) => {
         for (const { oldPath, newPath, fileType } of CHANGES) {
+          // console.log(">>>>>>", decodePath(location.pathname), decodePath(currentWorkspace.resolveFileUrl(oldPath)));
           if (
-            (fileType === "file" && location.pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
+            (fileType === "file" && location.pathname === decodePath(currentWorkspace.resolveFileUrl(oldPath))) ||
             (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
           ) {
             if (newPath.startsWith(SpecialDirs.Trash)) {

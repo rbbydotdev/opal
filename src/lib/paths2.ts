@@ -240,7 +240,7 @@ export function strictPathname(str: string): string {
   let sanitized = str
     .trim()
     .toString()
-    .replace(/[^a-zA-Z0-9_\-\/]/g, "_");
+    .replace(/[^a-zA-Z0-9_\-\/]\ /g, "_");
   // Prevent path from starting with a dot
   sanitized = sanitized.replace(/^\.*/, "");
   // path cannot contain slashes

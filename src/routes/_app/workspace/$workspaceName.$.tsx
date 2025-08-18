@@ -92,7 +92,6 @@ function WorkspaceFilePage() {
   if (!filePath) return null;
 
   if (!currentWorkspace.isNull && currentWorkspace.nodeFromPath(filePath) === null) {
-    //todo: universal catch up the tree somewherE?
     return <FileError error={new NotFoundError("File not found: " + filePath)} />;
   }
 
