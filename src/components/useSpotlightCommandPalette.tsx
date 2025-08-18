@@ -84,7 +84,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     () =>
       ({
         //
-        // --- File Commands ---
+        // MARK: File Commands
         //
         "New Markdown File": [
           NewCmdPrompt("markdown_file_name", "Enter markdown file name"),
@@ -111,6 +111,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             });
           }),
         ],
+        "Delete File": [NewCmdExec(async () => {})],
 
         "New Dir": [
           NewCmdPrompt("dir_name", "Enter new directory name"),
@@ -128,7 +129,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         ],
 
         //
-        // --- View Mode Commands ---
+        // MARK: View Mode Commands ---
         //
         "Source View": [
           NewCmdExec(async () => {
@@ -142,7 +143,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         ],
 
         //
-        // --- Git Commands ---
+        // MARK: Git Commands
         //
         "Git Merge Commit": [
           NewCmdExec(async () => {
@@ -170,7 +171,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         ],
 
         //
-        // --- Example Select Command ---
+        // MARK: Select Command ---
         //
         "Change Theme": [
           NewCmdSelect("theme", "Select a theme", ["Light", "Dark", "Solarized"]),
