@@ -1,4 +1,5 @@
 import { ClientDb } from "@/Db/instance";
+import { AuthCallback } from "isomorphic-git";
 // import { RemoteAuthJTypePrivate } from "@/Db/RemoteAuth";
 import { nanoid } from "nanoid";
 
@@ -137,13 +138,6 @@ export class RemoteAuthDAO {
     source: RemoteAuthSource,
     name: string,
     data: RemoteAuthDataFor<T>
-    // data: T extends "api"
-    //   ? RemoteAuthAPIRecordInternal
-    //   : T extends "oauth"
-    //     ? RemoteAuthOAuthRecordInternal
-    //     : T extends "oauth-device"
-    //       ? RemoteAuthGithubDeviceOAuthRecordInternal
-    //       : never
   ): Promise<RemoteAuthDAO> {
     const guid = RemoteAuthDAO.guid();
     const dao = new RemoteAuthDAO({ guid, source, name, type, data });
@@ -159,16 +153,47 @@ export class RemoteAuthDAO {
     } as RemoteAuthJType;
   }
 
-  load() {
-    return ClientDb.remoteAuths.get(this.guid).then((record) => {
+  static GetByGuid(guid: string): Promise<RemoteAuthDAO | null> {
+    return ClientDb.remoteAuths.get(guid).then((record) => {
       if (record) {
-        this.data = record.data;
-        this.name = record.name;
-        this.type = record.type;
-        this.source = record.source;
+        return RemoteAuthDAO.FromJSON(record);
       }
-      return this;
+      return null;
     });
+  }
+
+  isoGitOnAuth = (): AuthCallback | undefined => {
+    try {
+      if (isApiAuth(this)) {
+        const { apiKey, apiSecret } = this.data;
+        return () => ({
+          username: apiKey,
+          password: apiSecret || apiKey, //TODO i think wrong!!
+        });
+      } else if (isOAuthAuth(this)) {
+        const { accessToken } = this.data;
+        return () => ({
+          username: accessToken,
+          password: "", // OAuth typically only needs the token as username
+        });
+      }
+    } catch (error) {
+      console.warn(`Failed to load auth for remote ${this?.name}:`, error);
+    }
+    return undefined;
+  };
+
+  load() {
+    throw new Error("RemoteAuthDAO.load() is deprecated, use ClientDb.remoteAuths.get(guid) instead");
+    // return ClientDb.remoteAuths.get(this.guid).then((record) => {
+    //   if (record) {
+    //     this.data = record.data;
+    //     this.name = record.name;
+    //     this.type = record.type;
+    //     this.source = record.source;
+    //   }
+    //   return this;
+    // });
   }
 
   static FromJSON(json: RemoteAuthJType | RemoteAuthJType) {
@@ -182,18 +207,6 @@ export class RemoteAuthDAO {
   }
 }
 
-// // 6. Type aliases for convenience (optional)
-// export type RemoteAuthOAuthRecord = RemoteAuthOAuthRecordInternal & {
-//   type: "oauth";
-// };
-// export type RemoteAuthApiRecord = RemoteAuthAPIRecordInternal & {
-//   type: "api";
-// };
-// export type RemoteAuthGithubDeviceOAuthRecord = RemoteAuthGithubDeviceOAuthRecordInternal & {
-//   type: "oauth-device";
-// };
-
-// 7. Main exported type
 function isRemoteAuthPrivate(record: RemoteAuthDAO | RemoteAuthJType | RemoteAuthJType): record is RemoteAuthRecord {
   return (record as RemoteAuthRecord).data !== undefined;
 }

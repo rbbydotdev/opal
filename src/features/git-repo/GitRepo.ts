@@ -1,7 +1,5 @@
 import { Disk, DiskJType } from "@/Db/Disk";
-import { ClientDb } from "@/Db/instance";
-import { isApiAuth } from "@/Db/RemoteAuth";
-// import { RepoWithRemote } from "@/features/git-repo/RepoWithRemote";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { deepEqual } from "@/lib/deepEqual";
@@ -11,10 +9,8 @@ import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import git, { AuthCallback, MergeResult } from "isomorphic-git";
-import { isOAuthAuth } from "../../Db/RemoteAuth";
-//git remote is different from IRemote as its
-//more so just a Git remote as it appears in Git
-//
+import http from "isomorphic-git/http/web";
+
 export interface GitRemote {
   name: string;
   url: string;
@@ -258,6 +254,31 @@ export class GitRepo {
     await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
   };
 
+  async push({
+    remote,
+    ref,
+    remoteRef,
+    corsProxy,
+    onAuth,
+  }: {
+    remote: string;
+    ref: string;
+    remoteRef?: string;
+    corsProxy?: string;
+    onAuth?: AuthCallback;
+  }) {
+    return this.git.push({
+      fs: this.fs,
+      http,
+      dir: this.dir,
+      remote,
+      ref,
+      remoteRef,
+      corsProxy,
+      onAuth,
+    });
+  }
+
   rememberCurrentBranch = async () => {
     const currentBranch = await this.currentBranch({ fullname: true });
     if (currentBranch) {
@@ -488,6 +509,18 @@ export class GitRepo {
     const branches = await this.getBranches();
     const tags = await git.listTags({ fs: this.fs, dir: this.dir });
     return branches.includes(ref) || tags.includes(ref);
+  };
+
+  getRemote = async (name: string): Promise<(GitRemote & { RemoteAuth: RemoteAuthDAO | null }) | null> => {
+    const remotes = await this.getRemotes();
+    const remote = remotes.find((r) => r.name === name);
+    if (remote) {
+      if (remote.authId) {
+        return { ...remote, RemoteAuth: await RemoteAuthDAO.GetByGuid(remote.authId) };
+      }
+      return { RemoteAuth: null, ...remote };
+    }
+    return null;
   };
 
   getRemotes = async (): Promise<GitRemote[]> => {
@@ -787,33 +820,33 @@ export class GitRepo {
     return this.getConfig(`remote.${remoteName}.authId`);
   };
 
-  getRemoteAuthCallback = async (remoteName: string): Promise<AuthCallback | undefined> => {
-    const authId = await this.getAuthId(remoteName);
-    if (!authId) return undefined;
+  // private getRemoteAuthCallback = async (remoteName: string): Promise<AuthCallback | undefined> => {
+  //   const authId = await this.getAuthId(remoteName);
+  //   if (!authId) return undefined;
 
-    try {
-      const authRecord = await ClientDb.remoteAuths.get({ guid: authId });
-      if (!authRecord) return undefined;
+  //   try {
+  //     const authRecord = await ClientDb.remoteAuths.get({ guid: authId });
+  //     if (!authRecord) return undefined;
 
-      if (isApiAuth(authRecord)) {
-        const { apiKey, apiSecret } = authRecord.data;
-        return () => ({
-          username: apiKey,
-          password: apiSecret || apiKey, //TODO i think wrong!!
-        });
-      } else if (isOAuthAuth(authRecord)) {
-        const { accessToken } = authRecord.data;
-        return () => ({
-          username: accessToken,
-          password: "", // OAuth typically only needs the token as username
-        });
-      }
-    } catch (error) {
-      console.warn(`Failed to load auth for remote ${remoteName}:`, error);
-    }
+  //     if (isApiAuth(authRecord)) {
+  //       const { apiKey, apiSecret } = authRecord.data;
+  //       return () => ({
+  //         username: apiKey,
+  //         password: apiSecret || apiKey, //TODO i think wrong!!
+  //       });
+  //     } else if (isOAuthAuth(authRecord)) {
+  //       const { accessToken } = authRecord.data;
+  //       return () => ({
+  //         username: accessToken,
+  //         password: "", // OAuth typically only needs the token as username
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.warn(`Failed to load auth for remote ${remoteName}:`, error);
+  //   }
 
-    return undefined;
-  };
+  //   return undefined;
+  // };
 
   addGitRemote = async (remote: GitRemote): Promise<void> => {
     // await this.mustBeInitialized();
@@ -886,16 +919,6 @@ export class GitRepo {
       value,
       force,
     });
-  };
-
-  convertGitRemoteToIRemote = async (gitRemote: GitRemote, branch: string): Promise<IRemote> => {
-    const auth = await this.getRemoteAuthCallback(gitRemote.name);
-    return {
-      branch,
-      name: gitRemote.name,
-      url: gitRemote.url,
-      auth,
-    };
   };
 
   tearDown = () => {

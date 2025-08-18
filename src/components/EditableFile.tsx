@@ -12,6 +12,7 @@ import clsx from "clsx";
 import { FileCode2, FileText } from "lucide-react";
 import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
+import { RelPath } from "../lib/paths2";
 
 export const EditableFile = ({
   depth,
@@ -119,7 +120,7 @@ export const EditableFile = ({
               className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full "
               type="text"
               value={fileName}
-              onChange={(e) => setFileName(relPath(e.target.value))}
+              onChange={(e) => setFileName((!e.target.value ? "" : relPath(e.target.value)) as RelPath)}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
             />

@@ -53,9 +53,15 @@
   }
 }
 
-.mdxeditor-popup-container [class^="_dialogContent_"] {
+.mdxeditor-popup-container [class*="_dialogContent_"] {
   flex-direction: column;
 }
+/* 
+.mdxeditor [class*="_placeholder_sects_"] p {
+  width: 1rem !important;
+  height: 1.25rem !important;
+  border-left: 1px solid black !important;
+} */
 
 .mdxeditor {
   [data-editor-block-type="image"] {
