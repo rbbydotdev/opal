@@ -5,6 +5,7 @@ import { ClientDb } from "@/Db/instance";
 import { MutexFs } from "@/Db/MutexFs";
 import { PatchedOPFS } from "@/Db/NamespacedFs";
 import { UnwrapScannable } from "@/features/search/SearchScannable";
+import { BrowserAbility } from "@/lib/BrowserAbility";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
@@ -44,6 +45,14 @@ export const DiskLabelMap: Record<DiskType, string> = {
   NullDisk: "Null",
   OpFsDisk: "OPFS (origin private file system)",
   ZenWebstorageFSDbDisk: "ZenWebstorageFSDb",
+};
+export const DiskCanUseMap: Record<DiskType, () => boolean> = {
+  MemDisk: () => true,
+  NullDisk: () => true,
+  IndexedDbDisk: () => BrowserAbility.canUseIndexedDB(), //typeof indexedDB !== "undefined",
+  DexieFsDbDisk: () => false, //typeof DexieFsDb !== "undefined",
+  OpFsDisk: () => BrowserAbility.canUseOPFS(),
+  ZenWebstorageFSDbDisk: () => false, // typeof ZenWebstorageFSDb !== "undefined",
 };
 
 export type DiskType = (typeof DiskTypes)[number];
