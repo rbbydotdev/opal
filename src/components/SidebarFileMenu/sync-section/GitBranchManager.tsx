@@ -152,7 +152,7 @@ export function GitBranchManager({
               }}
             >
               <Pencil />
-              Edit Branch
+              Rename Branch
             </DropdownMenuItem>
           ) : null}
         </GitBranchMenuDropDown>
@@ -265,9 +265,9 @@ export function BranchManagerSection({
     void repo.addGitBranch({ branchName: branch.branch, symbolicRef: baseRef.value, checkout: true });
     branchRef.current.show("branch added");
   };
-  const replaceGitBranch = (remoteName: GitBranchFormValue, remote: GitBranchFormValue) => {
+  const renameGitBranch = (remoteName: GitBranchFormValue, remote: GitBranchFormValue) => {
     void playbook.replaceGitBranch(remoteName.branch, remote.branch);
-    branchRef.current.show("branch replaced");
+    branchRef.current.show("branch renamed");
   };
   const deleteGitBranch = (remoteName: string) => {
     void repo.deleteGitBranch(remoteName);
@@ -300,7 +300,7 @@ export function BranchManagerSection({
           currentGitRef={currentGitRef}
           setCurrentBranch={setCurrentBranch}
           branches={branches}
-          replaceGitBranch={replaceGitBranch}
+          replaceGitBranch={renameGitBranch}
           addGitBranch={addGitBranch}
           mergeGitBranch={mergeGitBranch}
           deleteGitBranch={deleteGitBranch}
