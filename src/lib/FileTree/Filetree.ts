@@ -38,7 +38,11 @@ export class FileTree {
 
   */
 
-  constructor(private fs: CommonFileSystem, guid: string, private fsMutex: Mutex) {
+  constructor(
+    private fs: CommonFileSystem,
+    guid: string,
+    private fsMutex: Mutex
+  ) {
     this.guid = `${guid}/FileTree`;
     this.cacheId = `${this.guid}/cache`;
   }

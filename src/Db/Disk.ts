@@ -251,7 +251,7 @@ export abstract class Disk {
     });
   }
 
-  async rehydrateIndexCache() {
+  async refresh() {
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot());
   }

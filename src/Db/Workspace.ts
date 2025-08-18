@@ -437,8 +437,8 @@ export class Workspace {
     return results;
   }
 
-  async rehydrateIndexCache() {
-    await this.disk.rehydrateIndexCache();
+  async refreshDisk() {
+    await this.disk.refresh();
   }
 
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
