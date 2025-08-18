@@ -9,7 +9,7 @@ import {
   RefreshCw,
   Upload,
 } from "lucide-react";
-import React, { useState, useSyncExternalStore } from "react";
+import React, { useState } from "react";
 
 import { BranchManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,9 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
-import { GitRef, RepoDefaultInfo } from "@/features/git-repo/GitRepo";
+import { GitRef } from "@/features/git-repo/GitRepo";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
+import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { CommitManagerSection } from "./CommitManagerSection";
@@ -249,7 +250,8 @@ function SyncPullPushButtons() {
 
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { repo, playbook } = useWorkspaceContext().git;
-  const info = useSyncExternalStore(repo.infoListener, () => repo.getInfo()) ?? RepoDefaultInfo;
+  // const info = useSyncExternalStore(repo.infoListener, () => repo.getInfo()) ?? RepoDefaultInfo;
+  const info = useRepoInfo(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
   const { cmdRef: remoteRef } = useTooltipToastCmd();
