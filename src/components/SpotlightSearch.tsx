@@ -2,8 +2,10 @@ import {
   CmdMap,
   CmdMapMember,
   CmdPrompt,
+  CmdSelect,
   isCmdExec,
   isCmdPrompt,
+  isCmdSelect,
   useSpotlightCommandPalette,
 } from "@/components/useSpotlightCommandPalette";
 import { FileOnlyFilter, useWatchWorkspaceFileTree } from "@/context/WorkspaceHooks";
@@ -88,11 +90,13 @@ const SpotlightSearchItemCmd = forwardRef<
     </li>
   );
 });
-SpotlightSearchItemLink.displayName = "SpotlightSearchItem";
+SpotlightSearchItemCmd.displayName = "SpotlightSearchItemCmd";
 
 export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { flatTree } = useWatchWorkspaceFileTree(currentWorkspace, FileOnlyFilter);
-  const { cmdMap, commands } = useSpotlightCommandPalette({ currentWorkspace });
+  const { cmdMap, commands } = useSpotlightCommandPalette({
+    currentWorkspace,
+  });
 
   return createPortal(
     <SpotlightSearchInternal
@@ -122,9 +126,9 @@ function SpotlightSearchInternal({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [state, setState] = useState<"spotlight" | "prompt">("spotlight");
+  const [state, setState] = useState<"spotlight" | "prompt" | "select">("spotlight");
   const [promptPlaceholder, setPromptPlaceholder] = useState("Enter value...");
-  const [currentPrompt, setCurrentPrompt] = useState<CmdPrompt | null>(null);
+  const [currentPrompt, setCurrentPrompt] = useState<CmdPrompt | CmdSelect | null>(null);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLUListElement | null>(null);
@@ -136,21 +140,25 @@ function SpotlightSearchInternal({
 
   const runNextStep = async () => {
     if (!execQueue.current || execQueue.current.length === 0) {
-      handleClose(); // ✅ only close when sequence is done
+      handleClose();
       return;
     }
     const step = execQueue.current.shift()!;
     if (isCmdPrompt(step)) {
-      if (!open) {
-        setOpen(true); //TODO: i am not sure if this is the right move!
-      }
       setState("prompt");
       setPromptPlaceholder(step.description);
       setCurrentPrompt(step);
       setSearch("");
       inputRef.current?.focus();
+    } else if (isCmdSelect(step)) {
+      setState("select");
+      setPromptPlaceholder(step.description);
+      setCurrentPrompt(step);
+      setSearch("");
+      execContext.current.__selectOptions = step.options;
+      inputRef.current?.focus();
     } else if (isCmdExec(step)) {
-      setOpen(false); //TODO: i am not sure if this is the right move!
+      setOpen(false);
       await step.exec(execContext.current);
       return await runNextStep();
     }
@@ -170,7 +178,6 @@ function SpotlightSearchInternal({
     setSearch("");
     setActiveIndex(-1);
     setCurrentPrompt(null);
-    //clear the exec queue
     execQueue.current = null;
     execContext.current = {};
     if (triggerRef.current instanceof HTMLElement) {
@@ -188,12 +195,34 @@ function SpotlightSearchInternal({
 
   const sortedList = useMemo(() => {
     setActiveIndex(-1);
+
+    // Handle select state
+    if (state === "select" && currentPrompt && "options" in currentPrompt) {
+      const options = (currentPrompt as any).options as string[];
+      if (!search.trim()) {
+        return options.map((opt) => ({ element: <>{opt}</>, href: opt }));
+      }
+      const results = fuzzysort.go(search, options, { limit: 50 });
+      return results.map((result) => ({
+        element: (
+          <>
+            {result.highlight((m, i) => (
+              <b key={i}>{m}</b>
+            ))}
+          </>
+        ),
+        href: result.target,
+      }));
+    }
+
+    // Spotlight state
     if (!search.trim()) {
       return visibleFiles.map((file) => ({
         element: <>{file}</>,
         href: file,
       }));
     }
+
     const results = fuzzysort.go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 });
     return results.map((result) => ({
       element: (
@@ -205,7 +234,7 @@ function SpotlightSearchInternal({
       ),
       href: result.target,
     }));
-  }, [commandList, commandPrefix, search, visibleFiles]);
+  }, [state, currentPrompt, commandList, commandPrefix, search, visibleFiles]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
@@ -220,6 +249,18 @@ function SpotlightSearchInternal({
           setState("spotlight");
           setCurrentPrompt(null);
           return runNextStep();
+        }
+        if (state === "select" && currentPrompt) {
+          e.preventDefault();
+          if (activeIndex === -1) return;
+          const selected = sortedList[activeIndex]?.href;
+          if (selected) {
+            execContext.current[currentPrompt.name] = selected;
+            setSearch("");
+            setState("spotlight");
+            setCurrentPrompt(null);
+            return runNextStep();
+          }
         }
         if (activeIndex === -1) return;
         e.preventDefault();
@@ -326,14 +367,14 @@ function SpotlightSearchInternal({
           id="spotlight-search"
           type="text"
           autoComplete="off"
-          placeholder={state === "prompt" ? promptPlaceholder : "Spotlight Search..."}
+          placeholder={state === "prompt" || state === "select" ? promptPlaceholder : "Spotlight Search..."}
           className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
           aria-controls="spotlight-menu"
           aria-haspopup="true"
           aria-activedescendant={activeIndex > -1 ? `spotlight-item-${activeIndex}` : undefined}
         />
       </div>
-      {state === "spotlight" && Boolean(sortedList.length) && (
+      {(state === "spotlight" || state === "select") && Boolean(sortedList.length) && (
         <ul
           ref={menuRef}
           id="spotlight-menu"
@@ -342,7 +383,7 @@ function SpotlightSearchInternal({
           className="mt-2 block max-h-48 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
         >
           {sortedList.map((item, index) => {
-            if (item.href.startsWith(commandPrefix)) {
+            if (state === "spotlight" && item.href.startsWith(commandPrefix)) {
               return (
                 <SpotlightSearchItemCmd
                   key={item.href}
@@ -359,8 +400,18 @@ function SpotlightSearchInternal({
                 key={item.href}
                 id={`spotlight-item-${index}`}
                 isActive={index === activeIndex}
-                onSelect={handleClose}
-                href={joinPath(basePath, item.href)}
+                onSelect={
+                  state === "select"
+                    ? () => {
+                        execContext.current[currentPrompt!.name] = item.href;
+                        setSearch("");
+                        setState("spotlight");
+                        setCurrentPrompt(null);
+                        void runNextStep();
+                      }
+                    : handleClose
+                }
+                href={state === "select" ? (item.href as AbsPath) : joinPath(basePath, item.href)}
                 title={item.element}
               />
             );

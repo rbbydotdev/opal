@@ -8,34 +8,70 @@ import { absPath, AbsPath, basename, joinPath, prefix, strictPrefix } from "@/li
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-export type CmdMapMember = CmdPrompt | CmdExec;
+//
+// ---- Types ----
+//
+export type CmdMapMember = CmdPrompt | CmdExec | CmdSelect;
+
 export type CmdMap = {
   [key: string]: CmdMapMember[];
 };
+
 export type CmdPrompt = {
   name: string;
   description: string;
   type: "prompt";
 };
-type CmdExec = {
+
+export type CmdExec = {
   exec: (context: Record<string, unknown>) => void | Promise<void>;
   type: "exec";
 };
+
+export type CmdSelect = {
+  name: string;
+  description: string;
+  options: string[];
+  type: "select";
+};
+
+//
+// ---- Constructors ----
+//
 const NewCmdExec = (exec: (context: Record<string, unknown>) => void | Promise<void>): CmdExec => ({
   exec,
   type: "exec",
 });
+
 const NewCmdPrompt = (name: string, description: string): CmdPrompt => ({
   name,
   description,
   type: "prompt",
 });
+
+export const NewCmdSelect = (name: string, description: string, options: string[]): CmdSelect => ({
+  name,
+  description,
+  options,
+  type: "select",
+});
+
+//
+// ---- Type Guards ----
+//
 export function isCmdPrompt(cmd: CmdMapMember): cmd is CmdPrompt {
   return cmd.type === "prompt";
 }
 export function isCmdExec(cmd: CmdMapMember): cmd is CmdExec {
   return cmd.type === "exec";
 }
+export function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
+  return cmd.type === "select";
+}
+
+//
+// ---- Hook ----
+//
 export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir } = useWorkspaceFileMgmt(currentWorkspace);
   const { repo, playbook } = currentWorkspace;
@@ -47,6 +83,9 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const cmdMap = useMemo(
     () =>
       ({
+        //
+        // --- File Commands ---
+        //
         "New Markdown File": [
           NewCmdPrompt("markdown_file_name", "Enter markdown file name"),
           NewCmdExec(async (context) => {
@@ -58,15 +97,39 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             const fileName = absPath(strictPrefix(name) + ".md");
             const dir = currentWorkspace.nodeFromPath(focused || currentPath)?.closestDirPath() ?? ("/" as AbsPath);
             const path = await newFile(joinPath(dir, fileName));
-            void navigate({ to: currentWorkspace.resolveFileUrl(path) });
+            void navigate({
+              to: currentWorkspace.resolveFileUrl(path),
+            });
           }),
         ],
+
         "New Style CSS": [
           NewCmdExec(async () => {
             const path = await newFile(absPath("styles.css"));
-            void navigate({ to: currentWorkspace.resolveFileUrl(path) });
+            void navigate({
+              to: currentWorkspace.resolveFileUrl(path),
+            });
           }),
         ],
+
+        "New Dir": [
+          NewCmdPrompt("dir_name", "Enter new directory name"),
+          NewCmdExec(async (context) => {
+            const name = context.dir_name as string;
+            if (!name) {
+              console.warn("No directory name provided");
+              return;
+            }
+            const dir = currentWorkspace.nodeFromPath(currentPath)?.closestDirPath() ?? ("/" as AbsPath);
+            const dirName = joinPath(dir, prefix(basename(name || "newdir")));
+            const path = await newDir(absPath(strictPrefix(dirName)));
+            console.log("New directory created at:", path);
+          }),
+        ],
+
+        //
+        // --- View Mode Commands ---
+        //
         "Source View": [
           NewCmdExec(async () => {
             setViewMode("source", "hash");
@@ -78,6 +141,9 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           }),
         ],
 
+        //
+        // --- Git Commands ---
+        //
         "Git Merge Commit": [
           NewCmdExec(async () => {
             if (!repo.getInfo()?.initialized) {
@@ -102,25 +168,25 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             await playbook.addAllCommit({ message });
           }),
         ],
-        "New Dir": [
-          NewCmdPrompt("dir_name", "Enter new directory name"),
+
+        //
+        // --- Example Select Command ---
+        //
+        "Change Theme": [
+          NewCmdSelect("theme", "Select a theme", ["Light", "Dark", "Solarized"]),
           NewCmdExec(async (context) => {
-            const name = context.dir_name as string;
-            if (!name) {
-              console.warn("No directory name provided");
-              return;
-            }
-            const dir = currentWorkspace.nodeFromPath(currentPath)?.closestDirPath() ?? ("/" as AbsPath);
-            const dirName = joinPath(dir, prefix(basename(name || "newdir")));
-            const path = await newDir(absPath(strictPrefix(dirName)));
-            console.log("New directory created at:", path);
-            //TOAAAST????
+            const theme = context.theme as string;
+            console.log("Theme selected:", theme);
+            // TODO: apply theme here
           }),
         ],
       }) as const,
     [currentPath, currentWorkspace, focused, navigate, newDir, newFile, playbook, repo]
   );
 
+  //
+  // --- Filtering based on context ---
+  //
   const gitRepoInfo = useRepoInfo(repo);
 
   const filterOutKeys = useMemo(() => {
@@ -137,11 +203,12 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     }
     return cmds;
   }, [isMarkdown, gitRepoInfo]);
+
   const filteredCmds = useMemo(() => {
     return Object.entries(cmdMap)
       .filter(([key]) => !filterOutKeys.has(key))
       .reduce((acc, [key, value]) => {
-        //@ts-ignore
+        // @ts-ignore
         acc[key] = value;
         return acc;
       }, {} as CmdMap);
