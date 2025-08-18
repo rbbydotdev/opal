@@ -46,9 +46,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const listeners = [
       currentWorkspace.renameListener((CHANGES) => {
         for (const { oldPath, newPath, fileType } of CHANGES) {
-          // console.log(">>>>>>", decodePath(location.pathname), decodePath(currentWorkspace.resolveFileUrl(oldPath)));
           if (
-            (fileType === "file" && location.pathname === decodePath(currentWorkspace.resolveFileUrl(oldPath))) ||
+            (fileType === "file" &&
+              decodePath(location.pathname) === decodePath(currentWorkspace.resolveFileUrl(oldPath))) ||
             (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
           ) {
             if (newPath.startsWith(SpecialDirs.Trash)) {

@@ -152,6 +152,29 @@ export class GitPlaybook {
     }
     return false;
   };
+
+  async push({ remote, ref }: { remote: string; ref: string }) {
+    if (await this.repo.hasChanges()) {
+      await this.addAllCommit({
+        message: SYSTEM_COMMITS.PREPUSH,
+      });
+    }
+    const remoteObj = await this.repo.getRemote(remote);
+    if (!remoteObj) {
+      throw new Error(`Remote ${remote} not found`);
+    }
+    if (remoteObj.authId && !remoteObj.RemoteAuth) {
+      throw new Error(`Remote ${remote} has authId but no RemoteAuth object found`);
+    }
+    const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
+
+    await this.repo.push({
+      ref,
+      remote,
+      corsProxy,
+      onAuth: RemoteAuth?.isoGitOnAuth(),
+    });
+  }
 }
 export class NullGitPlaybook extends GitPlaybook {
   constructor() {
