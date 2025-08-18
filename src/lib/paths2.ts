@@ -283,9 +283,9 @@ export function filterOutAncestor(paths: AbsPath[]) {
 }
 
 export function strictPrefix(path: string): string {
-  return strictPathname(prefix(basename(path)));
+  return strictPathname(prefix(basename(path.trim())));
 }
 
 export function newFileName(fullPath: string, fileName: string): RelPath {
-  return basename(changePrefix(fullPath as AbsPath, strictPathname(prefix(fileName))));
+  return basename(changePrefix(fullPath.trim() as AbsPath, strictPathname(prefix(fileName.trim()))));
 }
