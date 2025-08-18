@@ -1,3 +1,4 @@
+import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { FileError } from "@/components/FileError";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
@@ -32,13 +33,55 @@ function WorkspaceFilePage() {
     const handleCmdE = (e: KeyboardEvent) => {
       if (e.key === "e" && (e.metaKey || e.ctrlKey)) {
         const editor =
-          document.querySelector(".content-editable") ?? document.querySelector(".code-mirror-source-editor");
+          document.querySelector(".content-editable") ??
+          document.querySelector(".code-mirror-source-editor .cm-content");
         (editor as HTMLElement)?.focus();
       }
     };
+    const handleEscEsc = (() => {
+      let lastEscTime = 0;
+      return (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          // Check if focus is inside the editor
+          const isEditorFocused =
+            document.activeElement?.closest(".content-editable, .code-mirror-source-editor") !== null;
+
+          if (!isEditorFocused) return;
+
+          const now = Date.now();
+          if (now - lastEscTime < 500) {
+            // 500ms threshold for double Escape
+            e.preventDefault();
+            // Clear any selection
+            window.getSelection()?.removeAllRanges();
+            // Remove focus from any active element
+            (document.activeElement as HTMLElement)?.blur();
+          }
+          lastEscTime = now;
+        }
+      };
+    })();
+
+    const handleCmdSlash = (e: KeyboardEvent) => {
+      if (isMarkdown && e.key === "/" && (e.metaKey || e.ctrlKey)) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (isSourceView) {
+          setViewMode("rich-text", "hash");
+        } else {
+          setViewMode("source", "hash");
+        }
+      }
+    };
     window.addEventListener("keydown", handleCmdE);
-    return () => window.removeEventListener("keydown", handleCmdE);
-  }, []);
+    window.addEventListener("keydown", handleCmdSlash);
+    window.addEventListener("keydown", handleEscEsc);
+    return () => {
+      window.removeEventListener("keydown", handleCmdSlash);
+      window.removeEventListener("keydown", handleCmdE);
+      window.removeEventListener("keydown", handleEscEsc);
+    };
+  }, [isMarkdown, isSourceView]);
 
   useEffect(() => {
     if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {

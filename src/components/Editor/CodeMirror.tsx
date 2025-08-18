@@ -74,9 +74,17 @@ export const CodeMirrorEditor = ({
       basicLight,
       EditorView.lineWrapping,
 
-      // export function CodeMirrorHighlightURLRange(hlRanges = getRangesFromURL(window.location.href, "search")): Extension {
       CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),
-      keymap.of([indentWithTab]),
+      keymap.of([
+        indentWithTab,
+        // {
+        //   key: "Mod-e", // "Mod" = Cmd on Mac, Ctrl on Windows/Linux
+        //   run: (view) => {
+        //     view.focus();
+        //     return true; // prevent default
+        //   },
+        // },
+      ]),
       ext,
       EditorView.updateListener.of((update) => {
         if (update.docChanged && onChange) {

@@ -82,10 +82,10 @@ function MarkdownRender() {
   const { scrollRef } = useScrollSync();
   return (
     <div
-      className="mt-[10px] border-[2px] rounded shadow-lg border-black max-w-[980px] min-w-[600px] p-4 m-0 h-[calc(100vh-20px)] overflow-y-scroll"
+      className="mt-[10px] prose border-[2px] rounded shadow-lg border-black max-w-[980px] min-w-[600px] p-4 m-0 h-[calc(100vh-20px)] overflow-y-scroll"
       ref={scrollRef as RefObject<HTMLDivElement>}
     >
-      <div className="markdown-body" dangerouslySetInnerHTML={{ __html: html }}></div>
+      <div className="prose markdown-body" dangerouslySetInnerHTML={{ __html: html }}></div>
     </div>
   );
 }

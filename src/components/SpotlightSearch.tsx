@@ -1,21 +1,23 @@
-import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { usePrompt } from "@/components/Prompt";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FileOnlyFilter, useWatchWorkspaceFileTree, useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import {
+  CmdMap,
+  CmdMapMember,
+  CmdPrompt,
+  isCmdExec,
+  isCmdPrompt,
+  useSpotlightCommandPalette,
+} from "@/components/useSpotlightCommandPalette";
+import { FileOnlyFilter, useWatchWorkspaceFileTree } from "@/context/WorkspaceHooks";
 import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { absPath, AbsPath, absPathname, joinPath, prefix, strictPrefix } from "@/lib/paths2";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { absPath, AbsPath, absPathname, basename, joinPath } from "@/lib/paths2";
+import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
 import { CommandIcon, FileTextIcon } from "lucide-react";
 import mime from "mime-types";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { basename } from "../lib/paths2";
 
 const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,
@@ -36,7 +38,7 @@ const SpotlightSearchItemLink = forwardRef<
         ref={ref}
         to={href}
         role="menuitem"
-        tabIndex={isActive ? 0 : -1} // Roving tabindex implementation
+        tabIndex={isActive ? 0 : -1}
         onClick={onSelect}
         className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 border-sidebar bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
       >
@@ -74,7 +76,7 @@ const SpotlightSearchItemCmd = forwardRef<
         id={id}
         ref={ref}
         role="menuitem"
-        tabIndex={isActive ? 0 : -1} // Roving tabindex implementation
+        tabIndex={isActive ? 0 : -1}
         onClick={onSelect}
         className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 border-sidebar bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
       >
@@ -88,177 +90,78 @@ const SpotlightSearchItemCmd = forwardRef<
 });
 SpotlightSearchItemLink.displayName = "SpotlightSearchItem";
 
-type CmdType = "exec" | "prompt";
-type CmdMapMember = CmdPrompt | CmdExec;
-type CmdMap = {
-  [key: string]: CmdMapMember[];
-};
-
-type CmdPrompt = {
-  name: string;
-  description: string;
-  type: "prompt";
-};
-type CmdExec = {
-  exec: (context: Record<string, unknown>) => void | Promise<void>;
-  type: "exec";
-};
-const NewCmdExec = (exec: (context: Record<string, unknown>) => void | Promise<void>): CmdExec => ({
-  exec,
-  type: "exec",
-});
-const NewCmdPrompt = (name: string, description: string): CmdPrompt => ({
-  name,
-  description,
-  type: "prompt",
-});
-
-function isCmdPrompt(cmd: CmdMapMember): cmd is CmdPrompt {
-  return cmd.type === "prompt";
-}
-function isCmdExec(cmd: CmdMapMember): cmd is CmdExec {
-  return cmd.type === "exec";
-}
-function MyForm({ defaultValue }: { defaultValue?: string }) {
-  return (
-    <>
-      <Input name="username" defaultValue={defaultValue} />
-      <Button>Submit</Button>
-    </>
-  );
-}
-
-function useCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const { newFile, newDir } = useWorkspaceFileMgmt(currentWorkspace);
-  const { focused } = useFileTreeMenuCtx();
-  const { path: currentPath } = useWorkspaceRoute();
-
-  const { open: promptOpen } = usePrompt();
-  const navigate = useNavigate();
-  const cmdMap: CmdMap = useMemo(
-    () => ({
-      //TODO: need these commands from sidebar menu actions
-      "New Markdown File": [
-        NewCmdPrompt("markdown_file_name", "Create a new markdown file"),
-        NewCmdExec(async (context) => {
-          const name = context.markdown_file_name as string;
-          if (!name) {
-            console.warn("No file name provided for new markdown file");
-            return;
-          }
-          const fileName = absPath(strictPrefix(name) + ".md");
-          const dir = currentWorkspace.nodeFromPath(focused || currentPath)?.closestDirPath() ?? ("/" as AbsPath);
-          const path = await newFile(joinPath(dir, fileName));
-          void navigate({ to: currentWorkspace.resolveFileUrl(path) });
-        }),
-      ],
-      "New Style CSS": [
-        NewCmdExec(async () => {
-          const path = await newFile(absPath("styles.css"));
-          void navigate({ to: currentWorkspace.resolveFileUrl(path) });
-        }),
-      ],
-      "New Dir": [
-        NewCmdPrompt("dir_name", "Create a new directory file"),
-        NewCmdExec(async (context) => {
-          const name = context.dir_name as string;
-          if (!name) {
-            console.warn("No file name provided for new markdown file");
-            return;
-          }
-
-          const dir = currentWorkspace.nodeFromPath(currentPath)?.closestDirPath() ?? ("/" as AbsPath);
-          const dirName = joinPath(dir, prefix(basename(name || "newdir")));
-          const path = await newDir(absPath(strictPrefix(dirName)));
-          void navigate({ to: currentWorkspace.resolveFileUrl(path) });
-        }),
-      ],
-    }),
-    [currentPath, currentWorkspace, focused, navigate, newDir, newFile]
-  );
-  const execCommand = async (cmd: keyof typeof cmdMap, doPrompt: (placeholder: string) => Promise<unknown>) => {
-    if (cmdMap[cmd]) {
-      const context: Record<string, unknown> = {};
-      for (const member of cmdMap[cmd]) {
-        if (isCmdPrompt(member)) {
-          console.log(`Prompting for ${member.name}: ${member.description}`);
-          const value = await doPrompt(member.description);
-          if (value) {
-            context[member.name] = value;
-          }
-        } else if (isCmdExec(member)) {
-          await member.exec(context);
-        }
-      }
-    } else {
-      console.warn(`Command "${cmd}" not found`);
-    }
-  };
-  return { execCommand, commands: Object.keys(cmdMap) };
-}
 export function SpotlightSearch({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { flatTree } = useWatchWorkspaceFileTree(currentWorkspace, FileOnlyFilter);
-  const { execCommand, commands } = useCommandPalette({ currentWorkspace });
+  const { cmdMap, commands } = useSpotlightCommandPalette({ currentWorkspace });
 
   return createPortal(
     <SpotlightSearchInternal
       basePath={currentWorkspace.href}
       files={flatTree}
       commands={commands}
-      onCommandSelect={execCommand}
+      cmdMap={cmdMap}
       commandPrefix={">"}
     />,
     document.querySelector("#spotlight-slot") ?? document.body
   );
 }
 
-// type PromiseWithResolvers<T> = {
-//   promise: Promise<T>;
-//   resolve: (value: T) => void;
-//   reject: (reason?: any) => void;
-// // };
-// const p = Promise.withResolvers();
 function SpotlightSearchInternal({
   basePath,
   files,
   commandPrefix = ">",
-  onCommandSelect,
   commands,
+  cmdMap,
 }: {
   basePath: AbsPath;
   files: AbsPath[];
   commandPrefix?: string;
-  onCommandSelect: (command: string, prompt: (placeholder: string) => Promise<string>) => void;
   commands: string[];
+  cmdMap: CmdMap;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [activeIndex, setActiveIndex] = useState(-1); // -1 means input is active
-  const promptPromise = useRef<PromiseWithResolvers<string> | null>(null);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [state, setState] = useState<"spotlight" | "prompt">("spotlight");
+  const [promptPlaceholder, setPromptPlaceholder] = useState("Enter value...");
+  const [currentPrompt, setCurrentPrompt] = useState<CmdPrompt | null>(null);
+
   const inputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLUListElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const triggerRef = useRef<Element | null>(null); // To store what element triggered the dialog
+  const triggerRef = useRef<Element | null>(null);
 
-  const handlePromptSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const formData = new FormData(e.currentTarget);
-    const value = formData.get("prompt") as string;
-    setState("spotlight");
-    setOpen(false);
-    console.log(value);
-    promptPromise.current?.resolve(value);
-    promptPromise.current = null; // Clear the promise after resolving
+  const execQueue = useRef<CmdMapMember[] | null>(null);
+  const execContext = useRef<Record<string, unknown>>({});
+
+  const runNextStep = async () => {
+    if (!execQueue.current || execQueue.current.length === 0) {
+      handleClose(); // ✅ only close when sequence is done
+      return;
+    }
+    const step = execQueue.current.shift()!;
+    if (isCmdPrompt(step)) {
+      if (!open) {
+        setOpen(true); //TODO: i am not sure if this is the right move!
+      }
+      setState("prompt");
+      setPromptPlaceholder(step.description);
+      setCurrentPrompt(step);
+      setSearch("");
+      inputRef.current?.focus();
+    } else if (isCmdExec(step)) {
+      setOpen(false); //TODO: i am not sure if this is the right move!
+      await step.exec(execContext.current);
+      return await runNextStep();
+    }
   };
-  const handlePrompt = (placeholder: string): Promise<string> => {
-    const $p = Promise.withResolvers<string>();
-    promptPromise.current = $p;
-    setState("prompt");
-    setSearch(""); // Clear search when entering prompt state
-    // inputRef.current?.focus();
-    return $p.promise;
+
+  const handleCommandSelect = (cmd: string) => {
+    const members = cmdMap[cmd];
+    if (!members) return;
+    execQueue.current = [...members];
+    execContext.current = {};
+    return runNextStep();
   };
 
   const handleClose = () => {
@@ -266,7 +169,10 @@ function SpotlightSearchInternal({
     setState("spotlight");
     setSearch("");
     setActiveIndex(-1);
-    // Restore focus to the element that opened the dialog
+    setCurrentPrompt(null);
+    //clear the exec queue
+    execQueue.current = null;
+    execContext.current = {};
     if (triggerRef.current instanceof HTMLElement) {
       triggerRef.current.focus();
     }
@@ -281,16 +187,14 @@ function SpotlightSearchInternal({
   }, [commandPrefix, commands]);
 
   const sortedList = useMemo(() => {
-    setActiveIndex(-1); // Reset index on new search results
-    if (!search) {
+    setActiveIndex(-1);
+    if (!search.trim()) {
       return visibleFiles.map((file) => ({
         element: <>{file}</>,
         href: file,
       }));
     }
-    const results = fuzzysort.go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, {
-      limit: 50,
-    });
+    const results = fuzzysort.go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 });
     return results.map((result) => ({
       element: (
         <>
@@ -307,13 +211,20 @@ function SpotlightSearchInternal({
     const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
     const itemsLength = menuItems?.length ?? 0;
 
-    if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      inputRef.current?.select();
-      return;
-    }
-
     switch (e.key) {
+      case "Enter":
+        if (state === "prompt" && currentPrompt) {
+          e.preventDefault();
+          execContext.current[currentPrompt.name] = search;
+          setSearch("");
+          setState("spotlight");
+          setCurrentPrompt(null);
+          return runNextStep();
+        }
+        if (activeIndex === -1) return;
+        e.preventDefault();
+        (menuItems?.[activeIndex] as HTMLElement)?.click();
+        break;
       case "Tab":
         e.preventDefault();
         if (e.shiftKey) {
@@ -338,34 +249,41 @@ function SpotlightSearchInternal({
         e.preventDefault();
         setActiveIndex(itemsLength - 1);
         break;
-      case " ":
-      case "Enter":
-        if (activeIndex === -1) return;
-        e.preventDefault();
-        (menuItems?.[activeIndex] as HTMLAnchorElement)?.click();
-        break;
       case "Escape":
         e.preventDefault();
         handleClose();
         break;
       default:
-        // Only handle regular character keys, not meta/control keys
-        if (e.key.length === 1 && !(document.activeElement === inputRef.current)) {
-          e.preventDefault();
-          e.stopPropagation();
-          setSearch((prev) => prev + e.key);
-          inputRef.current?.focus();
+        if (document.activeElement !== inputRef.current) {
+          if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputRef.current?.focus();
+          } else if (e.key === "Backspace") {
+            e.preventDefault();
+            e.stopPropagation();
+            setSearch((prev) => prev.slice(0, -1));
+            inputRef.current?.focus();
+          } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            e.preventDefault();
+            e.stopPropagation();
+            inputRef.current?.focus();
+          } else if (e.key.length === 1) {
+            e.preventDefault();
+            e.stopPropagation();
+            setSearch((prev) => prev + e.key);
+            inputRef.current?.focus();
+          }
         }
     }
   };
 
-  // Effect to handle opening the search palette
   useEffect(() => {
     const handleOpenKeydown = (e: KeyboardEvent) => {
       if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         e.stopImmediatePropagation();
-        triggerRef.current = document.activeElement; // Store focus
+        triggerRef.current = document.activeElement;
         setOpen(true);
       }
     };
@@ -373,7 +291,6 @@ function SpotlightSearchInternal({
     return () => window.removeEventListener("keydown", handleOpenKeydown);
   }, []);
 
-  // Effect to manage focus when the component opens or activeIndex changes
   useEffect(() => {
     if (!open) return;
     if (activeIndex === -1) {
@@ -383,6 +300,7 @@ function SpotlightSearchInternal({
       menuItem?.focus();
     }
   }, [open, activeIndex]);
+
   if (!open) return null;
 
   return (
@@ -395,7 +313,6 @@ function SpotlightSearchInternal({
       )}
       onKeyDown={handleKeyDown}
       onBlur={(e) => {
-        // Close if focus moves outside the component
         if (!containerRef.current?.contains(e.relatedTarget as Node)) {
           handleClose();
         }
@@ -405,39 +322,24 @@ function SpotlightSearchInternal({
         <input
           ref={inputRef}
           value={search}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && activeIndex === -1) {
-              if (sortedList.length > 0) {
-                setActiveIndex(0);
-              }
-            }
-          }}
           onChange={(e) => setSearch(e.target.value)}
           id="spotlight-search"
           type="text"
           autoComplete="off"
-          placeholder="Spotlight Search..."
+          placeholder={state === "prompt" ? promptPlaceholder : "Spotlight Search..."}
           className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
           aria-controls="spotlight-menu"
           aria-haspopup="true"
           aria-activedescendant={activeIndex > -1 ? `spotlight-item-${activeIndex}` : undefined}
         />
       </div>
-      {Boolean(sortedList.length) && (
+      {state === "spotlight" && Boolean(sortedList.length) && (
         <ul
           ref={menuRef}
           id="spotlight-menu"
           role="menu"
           aria-labelledby="spotlight-search"
           className="mt-2 block max-h-48 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
-          onKeyDown={(e) => {
-            // Handle typing while a menu item is focused
-            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              e.preventDefault();
-              setSearch((prev) => prev + e.key);
-              inputRef.current?.focus();
-            }
-          }}
         >
           {sortedList.map((item, index) => {
             if (item.href.startsWith(commandPrefix)) {
@@ -448,10 +350,7 @@ function SpotlightSearchInternal({
                   cmd={item.href}
                   title={item.element}
                   isActive={index === activeIndex}
-                  onSelect={() => {
-                    handleClose();
-                    onCommandSelect(item.href.replace(commandPrefix, ""), handlePrompt);
-                  }}
+                  onSelect={() => handleCommandSelect(item.href.replace(commandPrefix, ""))}
                 />
               );
             }
