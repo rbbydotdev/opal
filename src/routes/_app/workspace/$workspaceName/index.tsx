@@ -1,6 +1,6 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
+import { OpalCard } from "@/components/OpalCard";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
-import { Card } from "@/components/ui/card";
 import { useWorkspaceContext } from "@/context/WorkspaceHooks";
 import {
   handleDropFilesEventForNode,
@@ -8,7 +8,6 @@ import {
   useHandleDropFilesEventForNodeRedirect,
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { RootNode, TreeNode } from "@/lib/FileTree/TreeNode";
-import { Opal } from "@/lib/Opal";
 import { absPath } from "@/lib/paths2";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -57,12 +56,7 @@ function WorkspaceIndexPage() {
             }}
           />
           <FirstFileRedirect />
-          <Card className="rounded-xl p-8 border w-96 h-96 flex items-center flex-col gap-4 justify-center relative z-10">
-            <div className="rotate-12">
-              <Opal size={78} />
-            </div>
-            <div className="font-thin text-2xl font-mono text-center">Opal</div>
-          </Card>
+          <OpalCard />
         </ConditionalDropzone>
       </div>
     </>
