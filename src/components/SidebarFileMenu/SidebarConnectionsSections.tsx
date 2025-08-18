@@ -62,7 +62,7 @@ function ConnectionManager() {
           )}
           {remoteAuths.map((connection) => (
             <SidebarMenuItem key={connection.guid}>
-              <div className="group flex items-center pr-1">
+              <div className="group flex items-center pr-1 my-1">
                 <SidebarMenuButton className="flex-1 min-w-0 pl-8" onClick={() => handleEdit(connection)}>
                   <div className="flex items-center flex-1 min-w-0 gap-1 text-xs">
                     <RemoteAuthSourceIconComponent
