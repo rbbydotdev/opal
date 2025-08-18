@@ -77,6 +77,16 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             setViewMode("rich-text", "hash");
           }),
         ],
+
+        "Git Merge Commit": [
+          NewCmdExec(async () => {
+            if (!repo.getInfo()?.initialized) {
+              console.warn("Git repository is not initialized");
+              return;
+            }
+            await playbook.mergeCommit();
+          }),
+        ],
         "Git Commit": [
           NewCmdPrompt("git_commit_msg", "Enter Git Commit Message"),
           NewCmdExec(async (context) => {
@@ -119,8 +129,11 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       cmds.add("Rich Text View");
       cmds.add("Source View");
     }
-    if (!gitRepoInfo.initialized || !gitRepoInfo?.hasChanges) {
+    if (!gitRepoInfo.initialized || !gitRepoInfo?.hasChanges || gitRepoInfo.unmergedFiles.length) {
       cmds.add("Git Commit");
+    }
+    if (!gitRepoInfo.unmergedFiles.length) {
+      cmds.add("Git Merge Commit");
     }
     return cmds;
   }, [isMarkdown, gitRepoInfo]);

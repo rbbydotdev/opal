@@ -75,9 +75,10 @@ export class GitPlaybook {
     });
   }
 
-  async merge(from: string, into: string): Promise<MergeResult | MergeConflict> {
-    return this.repo.merge(from, into);
-  }
+  merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
+    const result = await this.repo.merge({ from, into });
+    return result;
+  };
   mergeCommit = async (): Promise<string | null> => {
     // const currentBranch = await this.repo.getCurrentBranch();
     const mergeHead = await this.repo.getMergeState();

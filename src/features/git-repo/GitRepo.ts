@@ -460,7 +460,6 @@ export class GitRepo {
   };
 
   hasChanges = async (): Promise<boolean> => {
-    // if (!(await this.exists())) return false;
     try {
       const matrix = await this.mutex.runExclusive(() => git.statusMatrix({ fs: this.fs, dir: this.dir }));
       return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
@@ -563,15 +562,18 @@ export class GitRepo {
     return git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
   }
 
-  merge = async (from: string, into: string): Promise<MergeResult | MergeConflict> => {
+  merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
     await this.mustBeInitialized();
-    return this.git
+    console.log("currentRef", await this.currentRef());
+    console.log("merge from", from, "into", into);
+    const result = await this.git
       .merge({
         fs: this.fs,
         dir: this.dir,
         author: this.author,
-        ours: from,
-        theirs: into,
+        ours: into,
+        fastForward: true,
+        theirs: from,
         abortOnConflict: false,
       })
       .catch(async (e) => {
@@ -591,6 +593,16 @@ export class GitRepo {
           throw e;
         }
       });
+
+    if (!isMergeConflict(result)) {
+      await this.git.checkout({
+        fs: this.fs,
+        dir: this.dir,
+        ref: into,
+        force: true, // overwrite workdir with index
+      });
+    }
+    return result;
   };
 
   mustBeInitialized = async (): Promise<boolean> => {
