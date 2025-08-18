@@ -1,6 +1,6 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
@@ -39,58 +39,78 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const { newFile, newDir } = useWorkspaceFileMgmt(currentWorkspace);
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath } = useWorkspaceRoute();
+  const { isMarkdown } = useCurrentFilepath();
   const navigate = useNavigate();
 
-  const cmdMap: CmdMap = useMemo(
-    () => ({
-      "New Markdown File": [
-        NewCmdPrompt("markdown_file_name", "Enter markdown file name"),
-        NewCmdExec(async (context) => {
-          const name = context.markdown_file_name as string;
-          if (!name) {
-            console.warn("No file name provided for new markdown file");
-            return;
-          }
-          const fileName = absPath(strictPrefix(name) + ".md");
-          const dir = currentWorkspace.nodeFromPath(focused || currentPath)?.closestDirPath() ?? ("/" as AbsPath);
-          const path = await newFile(joinPath(dir, fileName));
-          void navigate({ to: currentWorkspace.resolveFileUrl(path) });
-        }),
-      ],
-      "New Style CSS": [
-        NewCmdExec(async () => {
-          const path = await newFile(absPath("styles.css"));
-          void navigate({ to: currentWorkspace.resolveFileUrl(path) });
-        }),
-      ],
-      "Source View": [
-        NewCmdExec(async () => {
-          setViewMode("source", "hash");
-        }),
-      ],
-      "Rich Text View": [
-        NewCmdExec(async () => {
-          setViewMode("rich-text", "hash");
-        }),
-      ],
-      "New Dir": [
-        NewCmdPrompt("dir_name", "Enter new directory name"),
-        NewCmdExec(async (context) => {
-          const name = context.dir_name as string;
-          if (!name) {
-            console.warn("No directory name provided");
-            return;
-          }
-          const dir = currentWorkspace.nodeFromPath(currentPath)?.closestDirPath() ?? ("/" as AbsPath);
-          const dirName = joinPath(dir, prefix(basename(name || "newdir")));
-          const path = await newDir(absPath(strictPrefix(dirName)));
-          console.log("New directory created at:", path);
-          //TOAAAST????
-        }),
-      ],
-    }),
+  const cmdMap = useMemo(
+    () =>
+      ({
+        "New Markdown File": [
+          NewCmdPrompt("markdown_file_name", "Enter markdown file name"),
+          NewCmdExec(async (context) => {
+            const name = context.markdown_file_name as string;
+            if (!name) {
+              console.warn("No file name provided for new markdown file");
+              return;
+            }
+            const fileName = absPath(strictPrefix(name) + ".md");
+            const dir = currentWorkspace.nodeFromPath(focused || currentPath)?.closestDirPath() ?? ("/" as AbsPath);
+            const path = await newFile(joinPath(dir, fileName));
+            void navigate({ to: currentWorkspace.resolveFileUrl(path) });
+          }),
+        ],
+        "New Style CSS": [
+          NewCmdExec(async () => {
+            const path = await newFile(absPath("styles.css"));
+            void navigate({ to: currentWorkspace.resolveFileUrl(path) });
+          }),
+        ],
+        "Source View": [
+          NewCmdExec(async () => {
+            setViewMode("source", "hash");
+          }),
+        ],
+        "Rich Text View": [
+          NewCmdExec(async () => {
+            setViewMode("rich-text", "hash");
+          }),
+        ],
+        "Git Commit": [NewCmdExec(async () => {})],
+        "New Dir": [
+          NewCmdPrompt("dir_name", "Enter new directory name"),
+          NewCmdExec(async (context) => {
+            const name = context.dir_name as string;
+            if (!name) {
+              console.warn("No directory name provided");
+              return;
+            }
+            const dir = currentWorkspace.nodeFromPath(currentPath)?.closestDirPath() ?? ("/" as AbsPath);
+            const dirName = joinPath(dir, prefix(basename(name || "newdir")));
+            const path = await newDir(absPath(strictPrefix(dirName)));
+            console.log("New directory created at:", path);
+            //TOAAAST????
+          }),
+        ],
+      }) as const,
     [currentPath, currentWorkspace, focused, navigate, newDir, newFile]
   );
+  const filterOutKeys = useMemo(() => {
+    const cmds = new Set<keyof typeof cmdMap>();
+    if (!isMarkdown) {
+      cmds.add("Rich Text View");
+      cmds.add("Source View");
+    }
+    return cmds;
+  }, [isMarkdown]);
+  const filteredCmds = useMemo(() => {
+    return Object.entries(cmdMap)
+      .filter(([key]) => !filterOutKeys.has(key))
+      .reduce((acc, [key, value]) => {
+        //@ts-ignore
+        acc[key] = value;
+        return acc;
+      }, {} as CmdMap);
+  }, [cmdMap, filterOutKeys]);
 
-  return { cmdMap, commands: Object.keys(cmdMap) };
+  return { cmdMap: filteredCmds, commands: Object.keys(filteredCmds) };
 }
