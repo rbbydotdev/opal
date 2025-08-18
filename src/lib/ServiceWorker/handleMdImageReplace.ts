@@ -13,7 +13,7 @@ export async function handleMdImageReplace(
     workspace: ${workspaceName}
   `);
     const workspace = await SWWStore.tryWorkspace(workspaceName);
-    await workspace.rehydrateIndexCache();
+    await workspace.refreshDisk();
     const resultPaths = !findReplace.length ? [] : await workspace.disk.findReplaceImgBatch(findReplace, url.origin);
 
     if (!workspace) throw new Error("Workspace not found " + workspaceName);
