@@ -2,6 +2,7 @@ import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMod
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { Workspace } from "@/Db/Workspace";
+import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
@@ -37,6 +38,7 @@ export function isCmdExec(cmd: CmdMapMember): cmd is CmdExec {
 }
 export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir } = useWorkspaceFileMgmt(currentWorkspace);
+  const { repo, playbook } = currentWorkspace;
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
@@ -75,7 +77,21 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             setViewMode("rich-text", "hash");
           }),
         ],
-        "Git Commit": [NewCmdExec(async () => {})],
+        "Git Commit": [
+          NewCmdPrompt("git_commit_msg", "Enter Git Commit Message"),
+          NewCmdExec(async (context) => {
+            const message = context.git_commit_msg as string;
+            if (!repo.getInfo()?.initialized) {
+              console.warn("Git repository is not initialized");
+              return;
+            }
+            if (!message) {
+              console.warn("No commit message provided");
+              return;
+            }
+            await playbook.addAllCommit({ message });
+          }),
+        ],
         "New Dir": [
           NewCmdPrompt("dir_name", "Enter new directory name"),
           NewCmdExec(async (context) => {
@@ -92,16 +108,22 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           }),
         ],
       }) as const,
-    [currentPath, currentWorkspace, focused, navigate, newDir, newFile]
+    [currentPath, currentWorkspace, focused, navigate, newDir, newFile, playbook, repo]
   );
+
+  const gitRepoInfo = useRepoInfo(repo);
+
   const filterOutKeys = useMemo(() => {
     const cmds = new Set<keyof typeof cmdMap>();
     if (!isMarkdown) {
       cmds.add("Rich Text View");
       cmds.add("Source View");
     }
+    if (!gitRepoInfo.initialized || !gitRepoInfo?.hasChanges) {
+      cmds.add("Git Commit");
+    }
     return cmds;
-  }, [isMarkdown]);
+  }, [isMarkdown, gitRepoInfo]);
   const filteredCmds = useMemo(() => {
     return Object.entries(cmdMap)
       .filter(([key]) => !filterOutKeys.has(key))

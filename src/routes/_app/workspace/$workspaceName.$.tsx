@@ -99,7 +99,7 @@ function WorkspaceFilePage() {
   return (
     <>
       {/* <SpotlightSearch currentWorkspace={currentWorkspace} /> */}
-      {/* <div id="spotlight-slot"></div> */}
+      <div id="spotlight-slot"></div>
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView })} />}
       {isImage ? (
         <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />

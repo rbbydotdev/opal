@@ -183,7 +183,7 @@ function SpotlightSearchInternal({
   }, [files]);
 
   const commandList = useMemo(() => {
-    return commands.map((cmd) => commandPrefix + cmd);
+    return commands.map((cmd) => `${commandPrefix} ${cmd}`);
   }, [commandPrefix, commands]);
 
   const sortedList = useMemo(() => {
@@ -350,7 +350,7 @@ function SpotlightSearchInternal({
                   cmd={item.href}
                   title={item.element}
                   isActive={index === activeIndex}
-                  onSelect={() => handleCommandSelect(item.href.replace(commandPrefix, ""))}
+                  onSelect={() => handleCommandSelect(item.href.replace(commandPrefix, "").trim())}
                 />
               );
             }
