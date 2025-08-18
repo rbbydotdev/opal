@@ -7,6 +7,7 @@ import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMod
 import { Button } from "@/components/ui/button";
 import { useCurrentFilepath } from "@/context/WorkspaceHooks";
 import { cn } from "@/lib/utils";
+import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
 import { javascript } from "@codemirror/lang-javascript";
@@ -72,6 +73,7 @@ export const CodeMirrorEditor = ({
     const extensions: Extension[] = [
       basicSetup,
       basicLight,
+      autocompletion(), // enables autocomplete
       EditorView.lineWrapping,
 
       CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),
@@ -92,13 +94,18 @@ export const CodeMirrorEditor = ({
         }
       }),
       EditorView.editable.of(!readOnly),
-      EditorView.theme({
-        "&": { height: "100%" }, // Make the editor fill its parent
-        ".cm-scroller": { height: "100%" }, // Make the scroll area fill the editor
-        ".cm-content": {
-          padding: 0,
+      EditorView.theme(
+        {
+          "&": { height: "100%" }, // Make the editor fill its parent
+          ".cm-scroller": { height: "100%" }, // Make the scroll area fill the editor
+          ".cm-content": {
+            padding: 0,
+          },
         },
-      }),
+        {
+          dark: false,
+        }
+      ),
     ].filter(Boolean) as Extension[];
 
     const state = EditorState.create({

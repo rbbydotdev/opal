@@ -15,7 +15,15 @@ const SNAP_POINT_COLLAPSE_THRESHOLD = 100;
 const LOCAL_STORAGE_KEY_OPEN_WIDTH = "resizableSidebarOpenWidth";
 const LOCAL_STORAGE_KEY_IS_COLLAPSED = "resizableSidebarIsCollapsed";
 
-export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNode; main: React.ReactNode }) => {
+export const EditorSidebarLayout = ({
+  sidebar,
+  main,
+  renderHiddenSidebar,
+}: {
+  sidebar: React.ReactNode;
+  main: React.ReactNode;
+  renderHiddenSidebar?: boolean;
+}) => {
   // `persistedOpenWidth` stores the width the sidebar should have when it's *not* collapsed.
   // This value is saved to localStorage and restored.
   const [persistedOpenWidth, setPersistedOpenWidth] = useState<number>(DEFAULT_OPEN_WIDTH);
@@ -154,7 +162,7 @@ export const EditorSidebarLayout = ({ sidebar, main }: { sidebar: React.ReactNod
         className="relative flex-shrink-0 overflow-y-auto " // Added transition for smoother snap
       >
         {/* Render sidebar content only if not fully collapsed to save resources, or always render if COLLAPSED_STATE_WIDTH > 0 */}
-        {currentDisplayWidth > 0 || COLLAPSED_STATE_WIDTH > 0 ? sidebar : null}
+        {currentDisplayWidth > 0 || COLLAPSED_STATE_WIDTH > 0 || renderHiddenSidebar === true ? sidebar : null}
       </aside>
 
       <div

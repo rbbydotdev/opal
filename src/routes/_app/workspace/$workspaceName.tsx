@@ -23,7 +23,11 @@ function WorkspaceLayout() {
     <>
       <Toaster />
       <div className="min-w-0 h-full flex w-full">
-        <EditorSidebarLayout sidebar={<EditorSidebar className="main-editor-sidebar" />} main={<Outlet />} />
+        <EditorSidebarLayout
+          renderHiddenSidebar={true}
+          sidebar={<EditorSidebar className="main-editor-sidebar" />}
+          main={<Outlet />}
+        />
       </div>
     </>
   );
