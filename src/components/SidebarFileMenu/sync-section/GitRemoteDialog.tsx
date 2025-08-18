@@ -155,6 +155,7 @@ export function GitRemoteDialog({
                 form.setValue("authId", rad.guid);
                 setShowConnModal(false);
               }}
+              onClose={() => setShowConnModal(false)}
             />
           </div>
           <GitRemoteDialogInternal
