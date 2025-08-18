@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type IdleCallbackHandle = number;
 type TimeoutHandle = ReturnType<typeof setTimeout>;
@@ -21,7 +21,7 @@ export function useDebouncedIdleCallback<T extends unknown[]>(
   });
 
   // Cancel any pending callbacks
-  const cancel = () => {
+  const cancel = useCallback(() => {
     if (handleRef.current.timeout !== null) {
       clearTimeout(handleRef.current.timeout);
       handleRef.current.timeout = null;
@@ -34,7 +34,7 @@ export function useDebouncedIdleCallback<T extends unknown[]>(
       handleRef.current.cancel();
       handleRef.current.cancel = null;
     }
-  };
+  }, []);
 
   // Debounced function
   const debounced = (...args: T) => {

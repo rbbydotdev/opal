@@ -3,9 +3,10 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { basename, changePrefix, prefix, RelPath, relPath, strictPathname } from "@/lib/paths2";
+import { basename, newFileName, prefix, RelPath, relPath } from "@/lib/paths2";
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+
 export function useEditable<T extends TreeFile | TreeDir>({
   treeNode,
   expand,
@@ -139,7 +140,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
           (["new", "duplicate"].includes(editType) || prefix(fileName) !== prefix(basename(fullPath)))
         ) {
           e.stopPropagation();
-          const wantPath = basename(changePrefix(fullPath, strictPathname(prefix(fileName))));
+          const wantPath = newFileName(fullPath, fileName); //basename(changePrefix(fullPath, strictPathname(prefix(fileName))));
           const gotPath = await commitChange(treeNode, wantPath, editType);
           const newFocused = gotPath ?? fullPath;
           if (gotPath !== null) {

@@ -34,7 +34,7 @@ export function useConfirm() {
   return ctx;
 }
 
-export function useConfirmCmd() {
+function useConfirmCmd() {
   const cmdRef = useRef<{
     open: <U extends () => unknown>(cb: U, title: string, description: string) => Promise<ReturnType<U>>;
   }>({

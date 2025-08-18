@@ -41,7 +41,6 @@ export function useFileTreeMenuCtx() {
 }
 type EditType = "rename" | "new" | "duplicate";
 
-// filterFromRangeSelect={SpecialDirs.allSpecialDirsExcept(SpecialDirs.Trash)}
 export const FileTreeMenuCtxProvider = ({
   children,
   currentWorkspace,

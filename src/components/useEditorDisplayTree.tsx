@@ -1,8 +1,9 @@
 import { MainEditorRealmId } from "@/components/Editor/EditorConst";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
+import { debounce } from "@/lib/debounce";
 import { LexicalTreeViewNode, lexicalToTreeView } from "@/lib/lexical/treeViewDisplayNodesLexical";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 export const DisplayTreeContext = React.createContext<{
   displayTree: LexicalTreeViewNode | null;
@@ -36,29 +37,33 @@ export function useEditorDisplayTree(editorRealmId = MainEditorRealmId) {
   const editor = useCellValueForRealm(rootEditor$, realm);
   const [displayTree, setDisplayTree] = useState<LexicalTreeViewNode | null>(null);
   const [flatTree, setFlatTree] = useState<string[]>([]);
-  function updateDisplayTree(displayTree: LexicalTreeViewNode | null) {
-    setDisplayTree(displayTree);
-    const tree: string[] = [];
-    const nodes = !displayTree ? [] : [displayTree];
-    while (nodes.length > 0) {
-      const node = nodes.shift()!;
-      tree.push(node.id);
-      if (node.children && node.children.length > 0) {
-        nodes.push(...node.children);
+
+  const updateDisplayTree = useCallback(
+    function (displayTree: LexicalTreeViewNode | null) {
+      setDisplayTree(displayTree);
+      const tree: string[] = [];
+      const nodes = !displayTree ? [] : [displayTree];
+      while (nodes.length > 0) {
+        const node = nodes.shift()!;
+        tree.push(node.id);
+        if (node.children && node.children.length > 0) {
+          nodes.push(...node.children);
+        }
       }
-    }
-    setFlatTree(Array.from(new Set(tree)));
-  }
-  useEffect(
-    () => editor?.getEditorState()?.read(() => updateDisplayTree(lexicalToTreeView(lexical.$getRoot()))),
-    [editor]
+      setFlatTree(Array.from(new Set(tree)));
+    },
+    [setDisplayTree, setFlatTree]
   );
-  useEffect(
-    () =>
-      editor?.registerUpdateListener(({ editorState }) =>
-        editorState?.read(() => updateDisplayTree(lexicalToTreeView(lexical.$getRoot())))
-      ),
-    [editor]
-  );
+
+  useEffect(() => {
+    editor?.getEditorState()?.read(() => updateDisplayTree(lexicalToTreeView(lexical.$getRoot())));
+  }, [editor, updateDisplayTree]);
+
+  useEffect(() => {
+    const debouncedUpdateListener = debounce(({ editorState }: { editorState: lexical.EditorState }) => {
+      editorState?.read(() => updateDisplayTree(lexicalToTreeView(lexical.$getRoot())));
+    }, 500);
+    return editor?.registerUpdateListener(debouncedUpdateListener);
+  }, [editor, updateDisplayTree]);
   return { displayTree, flatTree };
 }
