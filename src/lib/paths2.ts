@@ -237,7 +237,10 @@ export function strictPathname(str: string): string {
   // Replace any character that is not a-z, A-Z, 0-9, _, -, /, or . with "_"
   // const pre = prefix(str);
   // const ext = extname(str);
-  let sanitized = str; //.toString().replace(/[^a-zA-Z0-9_\-\/\ ]/g, "_");
+  let sanitized = str
+    .trim()
+    .toString()
+    .replace(/[^a-zA-Z0-9_\-\/]/g, "_");
   // Prevent path from starting with a dot
   sanitized = sanitized.replace(/^\.*/, "");
   // path cannot contain slashes
@@ -277,4 +280,12 @@ export function filterOutAncestor(paths: AbsPath[]) {
   return (path: AbsPath) => {
     return !paths.some((ancestor) => isAncestor({ child: path, parent: ancestor }));
   };
+}
+
+export function strictPrefix(path: string): string {
+  return strictPathname(prefix(basename(path)));
+}
+
+export function newFileName(fullPath: string, fileName: string): RelPath {
+  return basename(changePrefix(fullPath as AbsPath, strictPathname(prefix(fileName))));
 }

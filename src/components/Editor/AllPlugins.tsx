@@ -72,6 +72,7 @@ export function useAllPlugins({
         toolbarPlugin({
           toolbarContents: () => (
             <>
+              <SourceEditorButton />
               <EditHistoryMenu
                 documentId={documentId}
                 historyStorage={historyDB}
@@ -81,7 +82,6 @@ export function useAllPlugins({
                 realm={realm}
               />
               <LivePreviewButton disabled={mimeType !== "text/markdown"} />
-              <SourceEditorButton />
               <MdxSearchToolbar />
               <MdxToolbar />
             </>

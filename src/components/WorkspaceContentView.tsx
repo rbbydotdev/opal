@@ -51,7 +51,7 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
                 editorRef={editorRef}
                 onChange={debouncedUpdate}
                 markdown={String(initialContents || "")}
-                className={"bg-background flex-grow  flex-col"}
+                className={"bg-background flex-grow  flex-col h-full"}
                 contentEditableClassName="max-w-full content-editable prose bg-background"
               />
             </DropCommanderProvider>

@@ -5,6 +5,7 @@ import {
 } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { Button } from "@/components/ui/button";
+import { useCurrentFilepath } from "@/context/WorkspaceHooks";
 import { cn } from "@/lib/utils";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
@@ -132,14 +133,17 @@ export const CodeMirrorEditor = ({
 };
 
 const CodeMirrorToolbar = () => {
+  const { isMarkdown } = useCurrentFilepath();
   return (
-    <div className="flex items-center justify-between p-2 bg-muted">
-      <Button variant="outline" size="sm" onClick={() => setViewMode("rich-text", "hash+search")}>
-        <span className="text-xs flex justify-center items-center gap-1">
-          <ChevronLeftIcon size={12} />
-          <FileText size={12} /> Rich Text
-        </span>
-      </Button>
+    <div className="flex items-center justify-between p-2 bg-muted h-12">
+      {isMarkdown && (
+        <Button variant="outline" size="sm" onClick={() => setViewMode("rich-text", "hash+search")}>
+          <span className="text-xs flex justify-center items-center gap-1">
+            <ChevronLeftIcon size={12} />
+            <FileText size={12} /> Rich Text
+          </span>
+        </Button>
+      )}
     </div>
   );
 };

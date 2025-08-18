@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceName/$")({
 
 function WorkspaceFilePage() {
   const { workspaceName } = Route.useParams();
-  const { filePath, isImage, inTrash, isSourceView, viewMode, mimeType, isMarkdown } = useCurrentFilepath();
+  const { filePath, isImage, inTrash, isSourceView, mimeType, isMarkdown } = useCurrentFilepath();
   const { currentWorkspace } = useWorkspaceContext();
   const navigate = useNavigate();
   useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
@@ -27,6 +27,18 @@ function WorkspaceFilePage() {
       document.title = workspaceName;
     }
   }, [workspaceName]);
+
+  useEffect(() => {
+    const handleCmdE = (e: KeyboardEvent) => {
+      if (e.key === "e" && (e.metaKey || e.ctrlKey)) {
+        const editor =
+          document.querySelector(".content-editable") ?? document.querySelector(".code-mirror-source-editor");
+        (editor as HTMLElement)?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleCmdE);
+    return () => window.removeEventListener("keydown", handleCmdE);
+  }, []);
 
   useEffect(() => {
     if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
@@ -43,11 +55,12 @@ function WorkspaceFilePage() {
 
   return (
     <>
-      {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView })} />}
       {/* <SpotlightSearch currentWorkspace={currentWorkspace} /> */}
+      {/* <div id="spotlight-slot"></div> */}
+      {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView })} />}
       {isImage ? (
         <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
-      ) : isMarkdown && viewMode === "source" ? (
+      ) : !isMarkdown || isSourceView ? (
         <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} key={filePath} />
       ) : (
         <WorkspaceMarkdownEditor key={filePath} currentWorkspace={currentWorkspace} />
