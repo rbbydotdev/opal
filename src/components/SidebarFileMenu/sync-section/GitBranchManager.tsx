@@ -47,7 +47,7 @@ export function GitBranchManager({
   branches: string[];
   addGitBranch: (baseRef: GitRef, branch: GitBranchFormValue) => void;
   replaceGitBranch: (previous: GitBranchFormValue, next: GitBranchFormValue) => void;
-  mergeGitBranch: (from: string, into: string) => void;
+  mergeGitBranch: ({ from, into }: { from: string; into: string }) => void;
   setCurrentBranch: (branch: string) => void;
   deleteGitBranch: (remoteName: string) => void;
   currentGitRef: GitRef | null;
@@ -64,7 +64,7 @@ export function GitBranchManager({
         items={branches.filter((b) => b !== currentGitRef?.value)}
         onCancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
-          mergeGitBranch(name, currentGitRef.value);
+          mergeGitBranch({ from: name, into: currentGitRef.value });
         }}
       />
     );
@@ -273,8 +273,8 @@ export function BranchManagerSection({
     void repo.deleteGitBranch(remoteName);
     branchRef.current.show("branch deleted");
   };
-  const mergeGitBranch = async (from: string, into: string) => {
-    const result = await repo.merge(from, into);
+  const mergeGitBranch = async ({ from, into }: { from: string; into: string }) => {
+    const result = await playbook.merge({ from, into });
     if (result) {
       branchRef.current.show("branch merged");
     } else {
