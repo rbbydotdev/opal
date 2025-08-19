@@ -16,10 +16,10 @@ import "@mdxeditor/editor/style.css";
 
 export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const editorRef = useRef<MDXEditorMethods>(null);
-  const { initialContents, debouncedUpdate, error } = useFileContents({
+  const { initialContents, updateDebounce, error } = useFileContents({
     currentWorkspace,
     listenerCb: (newContent) => {
-      //this is for out of editor updates like via tab or image path updates
+      //this is for out of editor updates like via another opened window or image path updates
       editorRef.current?.setMarkdown(newContent ?? "");
     },
   });
@@ -50,7 +50,7 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
                 mimeType={mimeType}
                 currentWorkspace={currentWorkspace}
                 editorRef={editorRef}
-                onChange={debouncedUpdate}
+                onChange={updateDebounce}
                 markdown={String(initialContents || "")}
                 className={"bg-background flex-grow  flex-col h-full"}
                 contentEditableClassName="max-w-full content-editable prose bg-background"

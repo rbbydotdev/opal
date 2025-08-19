@@ -21,11 +21,9 @@ export function useFileContents({
   const navigate = useNavigate();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    return () => clearTimeout(debounceRef.current!);
-  }, []);
+  useEffect(() => () => clearTimeout(debounceRef.current!), []);
 
-  const updateContents = (updates: string) => {
+  const writeFileContents = (updates: string) => {
     if (filePath && currentWorkspace) {
       void currentWorkspace?.disk.writeFile(filePath, updates);
       //DO NOT EMIT THIS, IT MESSES UP THE EDITOR VIA TEXT-MD-TEXT TOMFOOLERY -> void currentWorkspace.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
@@ -36,13 +34,13 @@ export function useFileContents({
     }
   };
 
-  const debouncedUpdate = (content: string | null) => {
+  const updateDebounce = (content: string | null) => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
       if (content !== null) {
-        updateContents(String(content));
+        writeFileContents(String(content));
       }
     }, debounceMs);
   };
@@ -80,16 +78,16 @@ export function useFileContents({
     }
   }, [currentWorkspace, filePath]);
 
-  // contents will not reflect the latest changes via updateContents, the state must be tracked somewhere else
+  // contents will not reflect the latest changes via writeFileContents, the state must be tracked somewhere else
   // this avoids glitchy behavior in the editor et all
   // the editor should use contents as initialContents
-  // the editor will track the contents state itself, writes using debouncedUpdate WILL write to file
+  // the editor will track the contents state itself, writes using onUpdate WILL write to file
   return {
     error,
     filePath,
     initialContents: initialContents !== null ? String(initialContents) : null,
     mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
-    updateContents,
-    debouncedUpdate,
+    writeFileContents,
+    updateDebounce,
   };
 }
