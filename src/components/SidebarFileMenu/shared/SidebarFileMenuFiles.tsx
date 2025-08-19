@@ -80,7 +80,7 @@ export const SidebarFileMenuFiles = ({
                   </SidebarGroupLabel>
                 </SidebarMenuButton>
               </CollapsibleTrigger>
-              {<div>{children}</div>}
+              <div>{children}</div>
             </SidebarGroupLabel>
 
             <CollapsibleContent className="min-h-0 flex-shrink">

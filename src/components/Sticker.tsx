@@ -127,7 +127,7 @@ export const Sticker = memo(function Sticker() {
           </filter>
         </svg>
         <div class="sticker" style="filter:url(#sticker);display:flex;justify-content:center;">
-          <svg width="120" height="120" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" stroke="none">
+          <svg width="120" height="80" viewBox="0 0 28 30" xmlns="http://www.w3.org/2000/svg" stroke="none">
             <defs>
               <mask id="opal-mask">
                 <path d="M 14, 0 C 4, 0, 0, 4, 0, 14 S 4, 28, 14, 28 S 28, 24, 28, 14 S 24, 0, 14, 0 Z" fill="white" />
