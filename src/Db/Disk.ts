@@ -2,6 +2,7 @@ import { CommonFileSystem, OPFSNamespacedFs } from "@/Db/CommonFileSystem";
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
+import { KVFileSystem, LocalStorageStore } from "@/Db/KVFs";
 import { MutexFs } from "@/Db/MutexFs";
 import { PatchedOPFS } from "@/Db/NamespacedFs";
 import { UnwrapScannable } from "@/features/search/SearchScannable";
@@ -35,11 +36,13 @@ export const DiskTypes = [
   "NullDisk",
   "OpFsDisk",
   "ZenWebstorageFSDbDisk",
+  "LocalStorageFsDisk",
 ] as const;
 
-export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk"] as const;
+export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk", "LocalStorageFsDisk"] as const;
 export const DiskLabelMap: Record<DiskType, string> = {
   IndexedDbDisk: "IndexedDB (Recommended)",
+  LocalStorageFsDisk: "Local Storage FS",
   MemDisk: "Memory",
   DexieFsDbDisk: "DexieFS",
   NullDisk: "Null",
@@ -49,6 +52,7 @@ export const DiskLabelMap: Record<DiskType, string> = {
 export const DiskCanUseMap: Record<DiskType, () => boolean> = {
   MemDisk: () => true,
   NullDisk: () => true,
+  LocalStorageFsDisk: () => BrowserAbility.canUseLocalStorage(),
   IndexedDbDisk: () => BrowserAbility.canUseIndexedDB(), //typeof indexedDB !== "undefined",
   DexieFsDbDisk: () => false, //typeof DexieFsDb !== "undefined",
   OpFsDisk: () => BrowserAbility.canUseOPFS(),
@@ -310,6 +314,7 @@ export abstract class Disk {
       [DexieFsDbDisk.type]: DexieFsDbDisk,
       [NullDisk.type]: NullDisk,
       [OpFsDisk.type]: OpFsDisk,
+      [LocalStorageFsDisk.type]: LocalStorageFsDisk,
     };
     if (!DiskMap[type]) throw new Error("invalid disk type " + type);
     const DiskConstructor = DiskMap[type] satisfies {
@@ -919,6 +924,21 @@ export class DexieFsDbDisk extends Disk {
     const mt = new Mutex();
     const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
     super(guid, fs, ft, DiskDAO.New(DexieFsDbDisk.type, guid, indexCache));
+  }
+}
+// const fs = new KVFileSystem(new LocalStorageStore("myvolume1"));
+
+export class LocalStorageFsDisk extends Disk {
+  static type: DiskType = "LocalStorageFsDisk";
+  type = LocalStorageFsDisk.type;
+  constructor(
+    public readonly guid: string,
+    indexCache?: TreeDirRootJType
+  ) {
+    const fs = new KVFileSystem(new LocalStorageStore(guid));
+    const mt = new Mutex();
+    const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
+    super(guid, fs, ft, DiskDAO.New(LocalStorageFsDisk.type, guid, indexCache));
   }
 }
 
