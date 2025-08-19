@@ -137,7 +137,7 @@ export const CodeMirrorEditor = ({
     }
   }, [value]);
 
-  const { debouncedUpdate } = useFileContents({ currentWorkspace });
+  const { updateDebounce } = useFileContents({ currentWorkspace });
 
   const historyDB = useSnapHistoryDB();
 
@@ -160,7 +160,7 @@ export const CodeMirrorEditor = ({
     <>
       <CodeMirrorToolbar>
         <EditHistoryMenu
-          finalizeRestore={(md) => debouncedUpdate(md)}
+          finalizeRestore={(md) => updateDebounce(md)}
           disabled={mimeType !== "text/markdown"}
           edits={edits}
           selectedEdit={selectedEdit}

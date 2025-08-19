@@ -1,10 +1,11 @@
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
+import { MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
-import { useEditorHistoryPlugin2WithRealm } from "@/components/Editor/history/useEditorHistoryPlugin2WithRealm";
+import { useEditorHistoryPlugin2WithContentWatch } from "@/components/Editor/history/useEditorHistoryPlugin2WithContentWatch";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
@@ -27,11 +28,9 @@ import {
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
-  useRemoteMDXEditorRealm,
 } from "@mdxeditor/editor";
 import { ChevronRightIcon, FileText } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import { useWorkspaceDocumentId } from "./history/useWorkspaceDocumentId";
 
 const SourceEditorButton = () => (
   <Button variant="outline" size="sm" onClick={() => setViewMode("source", "hash")}>
@@ -43,6 +42,9 @@ const SourceEditorButton = () => (
   </Button>
 );
 
+function MdxEditorInFocus() {
+  return Boolean(document.activeElement?.closest(MdxEditorSelector));
+}
 export function useAllPlugins({
   currentWorkspace,
   realmId,
@@ -52,11 +54,12 @@ export function useAllPlugins({
   realmId: string;
   mimeType: string;
 }) {
-  const { initialContents, debouncedUpdate } = useFileContents({ currentWorkspace });
+  // const { initialContents, debouncedUpdate } = useFileContents({ currentWorkspace });
+  const { updateDebounce } = useFileContents({ currentWorkspace });
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
-  //TODO heal documentId or prevent erasure
-  const documentId = useWorkspaceDocumentId(String(initialContents || ""));
-  const realm = useRemoteMDXEditorRealm(realmId);
+  // //TODO heal documentId or prevent erasure
+  // const documentId = useWorkspaceDocumentId(String(initialContents || ""));
+  // const realm = useRemoteMDXEditorRealm(realmId);
   const historyDB = useSnapHistoryDB();
 
   useEffect(() => {
@@ -77,13 +80,29 @@ export function useAllPlugins({
     clearAll,
     rebaseHistory,
     resetAndRestore,
-  } = useEditorHistoryPlugin2WithRealm({
+  } = useEditorHistoryPlugin2WithContentWatch({
     workspaceId: currentWorkspace.id,
-    documentId,
     historyStorage: historyDB,
-    rootMarkdown: String(initialContents ?? ""),
-    realm,
+    shouldTrigger: MdxEditorInFocus,
   });
+
+  // const {
+  //   triggerSave,
+  //   isRestoreState,
+  //   edits,
+  //   selectedEdit,
+  //   selectedEditMd,
+  //   setEdit,
+  //   clearAll,
+  //   rebaseHistory,
+  //   resetAndRestore,
+  // } = useEditorHistoryPlugin2WithRealm({
+  //   workspaceId: currentWorkspace.id,
+  //   documentId,
+  //   historyStorage: historyDB,
+  //   rootMarkdown: String(initialContents ?? ""),
+  //   realm,
+  // });
 
   return useMemo(
     () =>
@@ -93,7 +112,7 @@ export function useAllPlugins({
             <>
               <SourceEditorButton />
               <EditHistoryMenu
-                finalizeRestore={(md) => debouncedUpdate(md)}
+                finalizeRestore={(md) => updateDebounce(md)}
                 disabled={mimeType !== "text/markdown"}
                 edits={edits}
                 selectedEdit={selectedEdit}
@@ -140,7 +159,7 @@ export function useAllPlugins({
       ].filter(Boolean),
     [
       clearAll,
-      debouncedUpdate,
+      updateDebounce,
       edits,
       isRestoreState,
       mimeType,

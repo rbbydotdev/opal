@@ -7,15 +7,20 @@ import { useEffect, useRef } from "react";
 export function useEditorHistoryPlugin2WithContentWatch({
   workspaceId,
   historyStorage,
+  shouldTrigger,
 }: {
   workspaceId: string;
   historyStorage: HistoryStorageInterface;
+  shouldTrigger?: () => boolean;
 }) {
   const cbRef = useRef<(md: string) => void>(() => {});
   const { currentWorkspace } = useWorkspaceContext();
-  const { initialContents, updateContents } = useFileContents({
+  const { initialContents, writeFileContents } = useFileContents({
     currentWorkspace,
-    listenerCb: (md) => cbRef.current(md || ""),
+    listenerCb: (md) => {
+      console.log(md);
+      cbRef.current(md || "");
+    },
   });
 
   const documentId = useWorkspaceDocumentId(String(initialContents || ""));
@@ -35,16 +40,18 @@ export function useEditorHistoryPlugin2WithContentWatch({
     documentId,
     historyStorage,
     rootMarkdown: initialContents || "",
+    shouldTrigger,
   });
 
   useEffect(() => {
     historyOutputInput(
-      (md) => updateContents(md),
+      (md) => writeFileContents(md),
       (setMarkdown) => {
+        // console.log(setMarkdown);
         cbRef.current = setMarkdown;
       }
     );
-  }, [historyOutputInput, updateContents]);
+  }, [historyOutputInput, writeFileContents]);
 
   return {
     edits,
