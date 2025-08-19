@@ -1,4 +1,3 @@
-import { MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
 import { debounce } from "@/lib/debounce";
 import { Mutex } from "async-mutex";
@@ -64,9 +63,11 @@ export class HistoryPlugin2 {
   private latestMarkdown: string = "";
   private selectedEditMd: string | null = null;
   private selectedEdit: HistoryDocRecord | null = null;
+  private outsideMarkdown: string | null = null;
   private saveThreshold = 0.7;
   private debounceMs = 2_000;
   private edits: HistoryDocRecord[] = [];
+  private shouldTrigger: (() => boolean) | undefined;
 
   set $edits(edits: HistoryDocRecord[]) {
     // console.debug(`Setting edits for ${this.documentId}`, edits.length);
@@ -93,11 +94,13 @@ export class HistoryPlugin2 {
     documentId,
     historyStorage,
     rootMarkdown,
+    shouldTrigger,
   }: {
     workspaceId: string;
     documentId: string;
     historyStorage: HistoryStorageInterface;
     rootMarkdown: string;
+    shouldTrigger?: () => boolean;
   }) {
     this.workspaceId = workspaceId;
     this.documentId = documentId;
@@ -105,6 +108,7 @@ export class HistoryPlugin2 {
     this.rootMarkdown = rootMarkdown;
     this.latestMarkdown = rootMarkdown;
     this.selectedEditMd = null;
+    this.shouldTrigger = shouldTrigger;
   }
   private lastState: {
     edits: HistoryDocRecord[];
@@ -144,10 +148,15 @@ export class HistoryPlugin2 {
       this.$edits = edits;
     });
 
+    this.events.on(HistoryEvents.OUTSIDE_MARKDOWN, (md) => {
+      this.outsideMarkdown = md;
+    });
+
     this.events.on(HistoryEvents.OUTSIDE_MARKDOWN, () => {
       //on editor change de-select edit by setting to null
       if (this.selectedEdit && !this.muteChange) this.clearSelectedEdit();
     });
+
     this.events.on(HistoryEvents.SELECTED_EDIT_MD, async (md) => {
       if (md !== null) {
         await this.publishMuted(md, false);
@@ -164,8 +173,9 @@ export class HistoryPlugin2 {
 
     this.events.on(HistoryEvents.OUTSIDE_MARKDOWN, (md) => {
       //attempt to determine the editor change was done by the user
-      const editorInFocus = Boolean(document.activeElement?.closest(MdxEditorSelector));
-      if (!this.muteChange && editorInFocus) debouncedMdUpdate(md);
+      // const editorInFocus = Boolean(document.activeElement?.closest(MdxEditorSelector));
+      if (this.shouldTrigger && this.shouldTrigger() === false) return;
+      if (!this.muteChange) debouncedMdUpdate(md);
     });
 
     return this;
@@ -212,9 +222,6 @@ export class HistoryPlugin2 {
       if (headEdit) {
         const headEditDoc = await this.historyStorage.reconstructDocumentFromEdit(headEdit);
         if (headEditDoc === newMarkdown) {
-          // console.log(headEditDoc);
-          // console.log("----------------");
-          // console.log(newMarkdown);
           return console.debug("Skipping redundant edit save");
         }
       }
@@ -241,7 +248,6 @@ export class HistoryPlugin2 {
   };
 
   rebaseHistory = (md: string) => {
-    // console.log(md);
     this.latestMarkdown = md;
     this.$selectedEdit = null;
     this.$selectedEditMd = null;
@@ -250,7 +256,6 @@ export class HistoryPlugin2 {
   resetAndRestore = () => {
     this.$selectedEdit = null;
     this.$selectedEditMd = null;
-    // this.events.emit(HistoryEvents.INSIDE_MARKDOWN, this.latestMarkdown);
     return this.publishMuted(this.latestMarkdown, false);
   };
 
@@ -262,9 +267,9 @@ export class HistoryPlugin2 {
     });
   }
 
-  triggerSave = async (newMarkdown: string) => {
-    if (newMarkdown) {
-      await this.saveNewEdit(newMarkdown);
+  triggerSave = async () => {
+    if (this.outsideMarkdown) {
+      await this.saveNewEdit(this.outsideMarkdown);
     } else {
       console.warn("No latest markdown to save");
     }

@@ -1,8 +1,7 @@
 import { HistoryPlugin2 } from "@/components/Editor/history/historyPlugin2";
-import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { HistoryStorageInterface } from "@/Db/HistoryDAO";
-import { Cell, markdown$, markdownSourceEditorValue$, Realm, setMarkdown$ } from "@mdxeditor/editor";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const allMarkdown$ = Cell("", (realm) => {
   realm.sub(markdown$, (md) => {
@@ -18,44 +17,62 @@ export function useEditHistoryPlugin2({
   documentId,
   historyStorage,
   rootMarkdown,
-  realm,
+  shouldTrigger,
 }: {
   workspaceId: string;
   documentId: string;
   historyStorage: HistoryStorageInterface;
   rootMarkdown: string;
-  realm: Realm | undefined;
+  shouldTrigger?: () => boolean;
 }) {
+  const shouldTriggerFn = useRef(shouldTrigger);
   const history = useMemo(
-    () => new HistoryPlugin2({ workspaceId, documentId, historyStorage, rootMarkdown }),
+    () =>
+      new HistoryPlugin2({
+        workspaceId,
+        documentId,
+        historyStorage,
+        rootMarkdown,
+        shouldTrigger: shouldTriggerFn.current,
+      }),
     [documentId, historyStorage, rootMarkdown, workspaceId]
   );
-  useEffect(() => {
-    if (realm) {
-      history.init();
-      realm.singletonSub(allMarkdown$, history.setMarkdown);
-      history.handleMarkdown((md) => realm.pub(setMarkdown$, md));
-    }
-    return () => {
-      history.teardown();
-    };
-  }, [history, realm]);
+
   const [{ edits, selectedEdit, selectedEditMd }, setInfoState] = useState(() => history.getState());
+  const unsubs = useRef<(() => void)[]>([]);
   const isRestoreState = selectedEdit !== null;
+
   useEffect(() => {
     return history.onStateUpdate(() => {
       setInfoState({ ...history.getState() });
     });
   }, [history]);
 
-  const allMd = useCellValueForRealm(allMarkdown$, realm);
+  useEffect(() => {
+    history.init();
+    return () => {
+      history.teardown();
+      unsubs.current.forEach((unsub) => unsub());
+      unsubs.current = [];
+    };
+  }, [history]);
+
   const triggerSave = useCallback(() => {
-    if (allMd) {
-      void history.triggerSave(allMd);
-    } else {
-      console.warn("attempt to trigger save when allMd is null");
+    void history.triggerSave();
+  }, [history]);
+
+  function historyOutputInput(
+    onOutput: (md: string) => void,
+    onInput: (setMarkdown: (md: string) => void) => void | (() => void)
+  ) {
+    history.handleMarkdown(onOutput);
+    const unsub = onInput((md) => {
+      history.setMarkdown(md);
+    });
+    if (typeof unsub === "function") {
+      unsubs.current.push(unsub);
     }
-  }, [history, allMd]);
+  }
 
   return {
     edits: edits ?? [],
@@ -69,5 +86,6 @@ export function useEditHistoryPlugin2({
     setEdit: history.setSelectedEdit,
     reset: history.clearSelectedEdit,
     clearAll: history.clearAll,
+    historyOutputInput,
   };
 }

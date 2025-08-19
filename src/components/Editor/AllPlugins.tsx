@@ -4,11 +4,12 @@ import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
+import { useEditorHistoryPlugin2WithRealm } from "@/components/Editor/history/useEditorHistoryPlugin2WithRealm";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { Button } from "@/components/ui/button";
-import { useFileContents } from "@/context/WorkspaceHooks";
+import { useFileContents } from "@/context/useFileContents";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
@@ -66,6 +67,24 @@ export function useAllPlugins({
     };
   }, [mimeType]);
 
+  const {
+    triggerSave,
+    isRestoreState,
+    edits,
+    selectedEdit,
+    selectedEditMd,
+    setEdit,
+    clearAll,
+    rebaseHistory,
+    resetAndRestore,
+  } = useEditorHistoryPlugin2WithRealm({
+    workspaceId: currentWorkspace.id,
+    documentId,
+    historyStorage: historyDB,
+    rootMarkdown: String(initialContents ?? ""),
+    realm,
+  });
+
   return useMemo(
     () =>
       [
@@ -74,12 +93,17 @@ export function useAllPlugins({
             <>
               <SourceEditorButton />
               <EditHistoryMenu
-                documentId={documentId}
-                historyStorage={historyDB}
-                rootMarkdown={String(initialContents ?? "")}
                 finalizeRestore={(md) => debouncedUpdate(md)}
                 disabled={mimeType !== "text/markdown"}
-                realm={realm}
+                edits={edits}
+                selectedEdit={selectedEdit}
+                setEdit={setEdit}
+                rebaseHistory={rebaseHistory}
+                resetAndRestore={resetAndRestore}
+                clearAll={clearAll}
+                triggerSave={triggerSave}
+                isRestoreState={isRestoreState}
+                selectedEditMd={selectedEditMd}
               />
               <LivePreviewButton disabled={mimeType !== "text/markdown"} />
               <MdxSearchToolbar />
@@ -114,6 +138,20 @@ export function useAllPlugins({
         }),*/
         markdownShortcutPlugin(),
       ].filter(Boolean),
-    [debouncedUpdate, documentId, historyDB, initialContents, mimeType, realm, realmId, workspaceImagesPlugin]
+    [
+      clearAll,
+      debouncedUpdate,
+      edits,
+      isRestoreState,
+      mimeType,
+      realmId,
+      rebaseHistory,
+      resetAndRestore,
+      selectedEdit,
+      selectedEditMd,
+      setEdit,
+      triggerSave,
+      workspaceImagesPlugin,
+    ]
   );
 }

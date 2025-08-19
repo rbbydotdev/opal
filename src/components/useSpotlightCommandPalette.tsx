@@ -145,6 +145,11 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         //
         // MARK: Git Commands
         //
+        "Git Initialize Repo": [
+          NewCmdExec(async () => {
+            await playbook.initialCommit();
+          }),
+        ],
         "Git Merge Commit": [
           NewCmdExec(async () => {
             if (!repo.getInfo()?.initialized) {
@@ -195,6 +200,9 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     if (!isMarkdown) {
       cmds.add("Rich Text View");
       cmds.add("Source View");
+    }
+    if (gitRepoInfo.initialized) {
+      cmds.add("Git Init");
     }
     if (!gitRepoInfo.initialized || !gitRepoInfo?.hasChanges || gitRepoInfo.unmergedFiles.length) {
       cmds.add("Git Commit");

@@ -1,6 +1,6 @@
 import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
 import "@/components/SourceEditor/code-mirror-source-editor.css";
-import { useFileContents } from "@/context/WorkspaceHooks";
+import { useFileContents } from "@/context/useFileContents";
 import { Workspace } from "@/Db/Workspace";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ export const SourceEditor = ({
     <div className="h-full">
       <div className="bg-sidebar"></div>
       <CodeMirrorEditor
+        currentWorkspace={currentWorkspace}
         mimeType={mimeType as "text/css" | "text/plain" | "text/markdown"}
         value={String(initialContents || "")}
         onChange={debouncedUpdate}
