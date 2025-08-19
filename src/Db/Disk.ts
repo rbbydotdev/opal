@@ -39,7 +39,7 @@ export const DiskTypes = [
   "LocalStorageFsDisk",
 ] as const;
 
-export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk", "LocalStorageFsDisk"] as const;
+export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk"] as const;
 export const DiskLabelMap: Record<DiskType, string> = {
   IndexedDbDisk: "IndexedDB (Recommended)",
   LocalStorageFsDisk: "Local Storage FS",

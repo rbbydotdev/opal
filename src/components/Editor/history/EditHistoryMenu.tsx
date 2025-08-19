@@ -1,6 +1,5 @@
 // EditHistoryMenu.tsx;
 import { EditViewImage } from "@/components/Editor/history/EditViewImage";
-import { useEditHistoryPlugin2 } from "@/components/Editor/history/useEditHistory";
 import { useSelectedItemScroll } from "@/components/Editor/history/useSelectedItemScroll";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,58 +11,58 @@ import {
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
-import {
-  HistoryDocRecord,
-  HistoryStorageInterface,
-  useSnapHistoryDB,
-  useSnapHistoryPendingSave,
-} from "@/Db/HistoryDAO";
+import { HistoryDocRecord, useSnapHistoryDB, useSnapHistoryPendingSave } from "@/Db/HistoryDAO";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
-import { Realm } from "@mdxeditor/editor";
+import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
 import { ChevronDown, History } from "lucide-react";
 import { useState } from "react";
 import { timeAgo } from "short-time-ago";
 
+export const allMarkdown$ = Cell("", (realm) => {
+  realm.sub(markdown$, (md) => {
+    realm.pub(allMarkdown$, md);
+  });
+  realm.sub(markdownSourceEditorValue$, (md) => {
+    realm.pub(allMarkdown$, md);
+  });
+  realm.pub(allMarkdown$, realm.getValue(markdown$));
+});
+
 export function EditHistoryMenu({
   finalizeRestore,
   disabled,
-  documentId,
-  historyStorage,
-  rootMarkdown,
-  realm,
+  edits,
+  selectedEdit,
+  setEdit,
+  rebaseHistory,
+  resetAndRestore,
+  clearAll,
+  triggerSave,
+  isRestoreState,
+  selectedEditMd,
 }: {
   finalizeRestore: (md: string) => void;
   disabled?: boolean;
-  documentId: string;
-  historyStorage: HistoryStorageInterface;
-  rootMarkdown: string;
-  realm: Realm | undefined;
+  edits: HistoryDocRecord[];
+  selectedEdit: HistoryDocRecord | null;
+  setEdit: (edit: HistoryDocRecord) => Promise<void>;
+  rebaseHistory: (md: string) => void;
+  resetAndRestore: () => Promise<void>;
+  clearAll: () => Promise<void>;
+  triggerSave: () => void;
+  isRestoreState: boolean;
+  selectedEditMd: string | null;
 }) {
-  const { path: filePath } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
   const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
-  const {
-    edits,
-    selectedEdit,
-    setEdit,
-    rebaseHistory,
-    resetAndRestore,
-    clearAll,
-    triggerSave,
-    isRestoreState,
-    selectedEditMd,
-  } = useEditHistoryPlugin2({
-    workspaceId: workspaceId!,
-    documentId,
-    historyStorage,
-    rootMarkdown,
-    realm,
-  });
+  const { path: filePath } = useWorkspaceRoute();
+
   const historyDB = useSnapHistoryDB();
   const pendingSave = useSnapHistoryPendingSave({ historyDB });
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
+
   const finalizeAndRestore = () => {
     if (selectedEditMd) {
       console.debug("Finalizing restore with edit:", selectedEditMd.length);
