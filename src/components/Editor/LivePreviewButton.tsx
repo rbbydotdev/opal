@@ -1,6 +1,6 @@
 import { sessionIdParam, useScrollSync } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
-import { useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { absPath, joinPath } from "@/lib/paths2";
 import { Link } from "@tanstack/react-router";
 import { Zap } from "lucide-react";

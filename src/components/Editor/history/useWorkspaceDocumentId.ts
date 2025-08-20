@@ -1,4 +1,4 @@
-import { useWorkspaceRoute, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { getMarkdownData } from "@/lib/markdown/frontMatter";
 import { absPath, joinPath } from "@/lib/paths2";
 

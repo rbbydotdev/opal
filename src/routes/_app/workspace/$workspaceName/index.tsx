@@ -1,7 +1,7 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { OpalCard } from "@/components/OpalCard";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import {
   handleDropFilesEventForNode,
   isExternalFileDrop,

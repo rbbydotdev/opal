@@ -2,7 +2,7 @@ import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";

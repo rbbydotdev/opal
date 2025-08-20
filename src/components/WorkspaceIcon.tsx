@@ -1,5 +1,5 @@
 import { Identicon } from "@/components/Identicon";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { twMerge } from "tailwind-merge";
 
 export function CurrentWorkspaceIcon(props: Omit<React.ComponentProps<typeof Identicon>, "input">) {

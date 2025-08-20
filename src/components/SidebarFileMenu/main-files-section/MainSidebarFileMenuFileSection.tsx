@@ -2,7 +2,7 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { Button } from "@/components/ui/button";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";

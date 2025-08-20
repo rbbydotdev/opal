@@ -1,6 +1,6 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { RootNode } from "@/lib/FileTree/TreeNode";

@@ -1,4 +1,4 @@
-import { DEFAULT_MIME_TYPE, useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { DEFAULT_MIME_TYPE, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/Db/Workspace";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { getMimeType } from "@/lib/mimeType";

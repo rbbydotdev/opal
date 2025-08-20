@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
 import { SearchResult } from "@/features/search/SearchResults";

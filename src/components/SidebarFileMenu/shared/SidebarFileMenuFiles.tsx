@@ -4,7 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
@@ -48,13 +48,10 @@ export const SidebarFileMenuFiles = ({
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId);
 
   const isEmpty = !Object.keys(treeNode.filterOutChildren(filter) ?? {}).length;
+  const fileTreeRoot = useMemo(() => currentWorkspace.getFileTreeRoot(), [currentWorkspace]);
   return (
     <>
-      <FileItemContextMenu
-        disabled={!isEmpty}
-        fileNode={currentWorkspace.getFileTreeRoot()}
-        currentWorkspace={currentWorkspace}
-      >
+      <FileItemContextMenu disabled={!isEmpty} fileNode={fileTreeRoot} currentWorkspace={currentWorkspace}>
         <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
           <Collapsible
             className="group/collapsible flex flex-col min-h-0"

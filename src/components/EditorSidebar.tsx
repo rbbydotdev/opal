@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { CurrentWorkspaceIcon } from "@/components/WorkspaceIcon";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Opal } from "@/lib/Opal";
 import { Link } from "@tanstack/react-router";
 import React from "react";

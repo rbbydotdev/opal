@@ -5,7 +5,7 @@ import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 import { TrashBanner } from "@/components/TrashBanner";
 import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
 import { WorkspaceImageView } from "@/components/WorkspaceImageView";
-import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
 import useFavicon from "@/hooks/useFavicon";
 import { NotFoundError } from "@/lib/errors";
 import { cn } from "@/lib/utils";

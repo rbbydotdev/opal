@@ -1,6 +1,6 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
