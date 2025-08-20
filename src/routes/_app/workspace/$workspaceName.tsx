@@ -2,12 +2,12 @@ import { EditorSidebarLayout } from "@/app/EditorSidebarLayout";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
 import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe";
-import { Toaster } from "@/components/ui/toaster";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import useFavicon from "@/hooks/useFavicon";
 import { prefix } from "@/lib/paths2";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
+import { Toaster } from "sonner";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName")({
   component: WorkspaceLayout,

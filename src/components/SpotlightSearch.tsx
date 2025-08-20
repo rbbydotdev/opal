@@ -165,7 +165,13 @@ function SpotlightSearchInternal({
       inputRef.current?.focus();
     } else if (isCmdExec(step)) {
       setOpen(false);
-      await step.exec(execContext.current);
+      // const $p = Promise.withResolvers();
+      let aborted = false;
+      await step.exec(execContext.current, () => (aborted = true));
+      if (aborted) {
+        handleClose();
+        return;
+      }
       return await runNextStep();
     }
   };
