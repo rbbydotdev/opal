@@ -4,12 +4,36 @@ import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/Sideba
 import { Button } from "@/components/ui/button";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/Db/SpecialDirs";
+import { Workspace } from "@/Db/Workspace";
+import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
+import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
+import { cn } from "@/lib/utils";
 import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Trash2 } from "lucide-react";
+import { useState } from "react";
 
+const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
+  const [dragEnter, setDragEnter] = useState(false);
+  const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
+  const { handleDrop } = useFileTreeDragDrop({ currentWorkspace, onMoveMultiple: renameDirOrFileMultiple });
+  return (
+    <div
+      className={cn(
+        "group/banner w-full h-10 z-10 border-dashed hover:border-black border font-mono text-2xs flex justify-center items-center",
+        { "border-black": dragEnter }
+      )}
+      onDrop={(e) => handleDrop(e, RootNode)}
+      onDragEnter={() => setDragEnter(true)}
+      onDragLeave={() => setDragEnter(false)}
+      onMouseLeave={() => setDragEnter(false)}
+    >
+      <span className={cn("group-hover/banner:block hidden", { block: dragEnter })}>root</span>
+    </div>
+  );
+};
 export function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { focused } = useFileTreeMenuCtx();
@@ -23,6 +47,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
       FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
       title={"Files"}
       className={className}
+      contentBanner={<Banner currentWorkspace={currentWorkspace} />}
       filter={SpecialDirs.All} // Exclude trash and git directories etc
     >
       <span className="block group-data-[state=closed]/collapsible:hidden">

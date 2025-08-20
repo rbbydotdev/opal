@@ -81,7 +81,7 @@ export function useHandleDropFilesEventForNodeRedirect({ currentWorkspace }: { c
     return handleDropFilesEventForNode({ currentWorkspace, event, targetNode }).then(([file]) => {
       if (file) {
         const filePath = currentWorkspace.resolveFileUrl(file);
-        navigate({ to: filePath });
+        void navigate({ to: filePath });
       } else {
         console.warn("No file returned from dropFilesHandler.");
       }

@@ -21,10 +21,12 @@ export const SidebarFileMenuFiles = ({
   title,
   Icon = Files,
   scope,
+  contentBanner = null,
   FileItemContextMenu,
   ...rest
 }: {
   className?: string;
+  contentBanner?: React.ReactNode | null;
   title: JSX.Element | string;
   children: React.ReactNode;
   scope?: AbsPath;
@@ -82,25 +84,28 @@ export const SidebarFileMenuFiles = ({
 
             <CollapsibleContent className="min-h-0 flex-shrink">
               <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden border-l-2 group">
-                {isEmpty ? (
-                  <div
-                    className="w-full px-4 py-2"
-                    onDrop={(event) => handleDropFilesEventForNode({ currentWorkspace, event, targetNode: RootNode })}
-                  >
-                    <EmptySidebarLabel label={"empty"} />
-                  </div>
-                ) : (
-                  <FileTreeMenu
-                    fileTreeDir={treeNode as TreeDir}
-                    expand={expandSingle}
-                    filter={filter}
-                    renameDirOrFileMultiple={renameDirOrFileMultiple}
-                    expandForNode={expandForNode}
-                    FileItemContextMenu={FileItemContextMenu}
-                    expanded={expanded}
-                    depth={0}
-                  />
-                )}
+                <>
+                  {contentBanner}
+                  {isEmpty ? (
+                    <div
+                      className="w-full px-4 py-2"
+                      onDrop={(event) => handleDropFilesEventForNode({ currentWorkspace, event, targetNode: RootNode })}
+                    >
+                      <EmptySidebarLabel label={"empty"} />
+                    </div>
+                  ) : (
+                    <FileTreeMenu
+                      fileTreeDir={treeNode as TreeDir}
+                      expand={expandSingle}
+                      filter={filter}
+                      renameDirOrFileMultiple={renameDirOrFileMultiple}
+                      expandForNode={expandForNode}
+                      FileItemContextMenu={FileItemContextMenu}
+                      expanded={expanded}
+                      depth={0}
+                    />
+                  )}
+                </>
               </SidebarContent>
             </CollapsibleContent>
           </Collapsible>
