@@ -103,9 +103,10 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
 
   return (
     <div
-      className="bg-inherit prose mt-[10px] _flex _flex-col _items-center w-full _border-[2px] _rounded _shadow-lg  p-4 m-0 h-[calc(100vh-20px)] overflow-y-scroll"
       ref={scrollRef as RefObject<HTMLDivElement>}
-      dangerouslySetInnerHTML={{ __html: html }}
-    ></div>
+      className="pt-4 bg-inherit flex justify-center mt-12 w-full  p-4 m-0 h-[calc(100vh-48px)] overflow-y-scroll"
+    >
+      <div className="prose" dangerouslySetInnerHTML={{ __html: html }}></div>
+    </div>
   );
 }

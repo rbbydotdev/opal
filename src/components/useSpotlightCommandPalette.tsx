@@ -87,7 +87,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       ({
         // MARK: Editor Commands
 
-        "Open Preview": [
+        "Open External Preview": [
           NewCmdExec(() => {
             window.open(previewURL!, "_blank", "noopener,noreferrer");
           }),
@@ -225,7 +225,19 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           }),
         ],
       }) as const,
-    [currentPath, currentWorkspace, focused, navigate, newDir, newFile, playbook, renameDirOrFile, repo, trashFile]
+    [
+      currentPath,
+      currentWorkspace,
+      focused,
+      navigate,
+      newDir,
+      newFile,
+      playbook,
+      previewURL,
+      renameDirOrFile,
+      repo,
+      trashFile,
+    ]
   );
 
   //
@@ -239,7 +251,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     if (!currentFile?.isTreeFile()) {
       cmds.add("Rename Current File");
       cmds.add("Trash File");
-      cmds.add("Open Preview");
+      cmds.add("Open External Preview");
     }
     if (!isMarkdown) {
       cmds.add("Rich Text View");
