@@ -1,5 +1,6 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
@@ -74,8 +75,8 @@ export function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
 //
 export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir, renameDirOrFile, trashFile } = useWorkspaceFileMgmt(currentWorkspace);
-  // joinPath(dirname(origNode.path), relPath(fileName));
   const { repo, playbook } = currentWorkspace;
+  const previewURL = useWorkspacePathPreviewURL();
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
@@ -84,6 +85,13 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const cmdMap = useMemo(
     () =>
       ({
+        // MARK: Editor Commands
+
+        "Open Preview": [
+          NewCmdExec(() => {
+            window.open(previewURL, "_blank", "noopener,noreferrer");
+          }),
+        ],
         //
         // MARK: File Commands
         //
@@ -231,6 +239,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     if (!currentFile?.isTreeFile()) {
       cmds.add("Rename Current File");
       cmds.add("Trash File");
+      cmds.add("Open Preview");
     }
     if (!isMarkdown) {
       cmds.add("Rich Text View");

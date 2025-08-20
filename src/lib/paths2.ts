@@ -245,7 +245,6 @@ export function strictPathname(str: string): string {
   sanitized = sanitized.replace(/^\.*/, "");
   // path cannot contain slashes
   sanitized = sanitized.replace(/\/+/g, "/");
-  console.log("sanitized", sanitized);
   return relPath(sanitized);
 }
 

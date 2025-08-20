@@ -1,9 +1,9 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
-import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
+import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
-import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
@@ -26,10 +26,9 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
 
   if (error) throw error;
 
-  const { id, path } = useWorkspaceRoute();
   const { mimeType } = useCurrentFilepath();
 
-  const { scrollEmitter, sessionId } = useScrollChannel({ sessionId: `${id}${path}` });
+  const { scrollEmitter, sessionId } = useWorkspacePathScrollChannel();
 
   const mdxEditorElement = useWatchElement(MdxEditorSelector);
 
@@ -37,14 +36,10 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
 
   if (initialContents === null || !currentWorkspace) return null;
   return (
-    <div className="flex flex-col h-full relative">
-      <SnapApiPoolProvider max={1}>
-        <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
-          <ScrollSyncProvider
-            scrollEl={mdxEditorElement as HTMLElement}
-            scrollEmitter={scrollEmitter}
-            sessionId={sessionId}
-          >
+    <ScrollSyncProvider scrollEl={mdxEditorElement as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
+      <div className="flex flex-col h-full relative">
+        <SnapApiPoolProvider max={1}>
+          <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
             <DropCommanderProvider>
               <EditorWithPlugins
                 mimeType={mimeType}
@@ -56,10 +51,10 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
                 contentEditableClassName="max-w-full content-editable prose bg-background"
               />
             </DropCommanderProvider>
-          </ScrollSyncProvider>
-        </HistorySnapDBProvider>
-      </SnapApiPoolProvider>
-    </div>
+          </HistorySnapDBProvider>
+        </SnapApiPoolProvider>
+      </div>
+    </ScrollSyncProvider>
   );
 }
 

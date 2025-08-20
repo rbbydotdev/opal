@@ -14,6 +14,8 @@ const SNAP_POINT_COLLAPSE_THRESHOLD = 100;
 // localStorage keys
 const LOCAL_STORAGE_KEY_OPEN_WIDTH = "resizableSidebarOpenWidth";
 const LOCAL_STORAGE_KEY_IS_COLLAPSED = "resizableSidebarIsCollapsed";
+const PREVIEW_PANE_ID = "preview-pane-id"; // ID for the preview pane
+export const GetPreviewPaneElement = () => document.getElementById(PREVIEW_PANE_ID);
 
 export const EditorSidebarLayout = ({
   sidebar,
@@ -177,6 +179,7 @@ export const EditorSidebarLayout = ({
       ></div>
 
       <main className="relative min-w-0 flex-col flex flex-grow overflow-hidden ">{main}</main>
+      <div id={PREVIEW_PANE_ID} className="border-l-4 border-black w-[500px] h-full bg-blue-500"></div>
     </div>
   );
 };

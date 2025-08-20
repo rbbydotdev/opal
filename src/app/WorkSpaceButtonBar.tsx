@@ -3,11 +3,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { DiskDAO } from "@/Db/DiskDAO";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { clearAllCaches } from "@/lib/clearAllCaches";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
@@ -96,6 +98,8 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
             onClick={() =>
               Promise.all([
                 // deleteIDBs(),
+                clearAllCaches(),
+                DiskDAO.all().then((disks) => Promise.all(disks.map((disk) => disk.delete()))),
                 RemoteAuthDAO.all().then((auths) => Promise.all(auths.map((auth) => auth.delete()))),
                 currentWorkspace.tearDown(),
                 WorkspaceDAO.all().then((workspaces) =>

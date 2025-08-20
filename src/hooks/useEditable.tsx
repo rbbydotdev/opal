@@ -23,7 +23,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const fullPath = treeNode.path;
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { path: currentFile } = useWorkspaceRoute();
+  const currentFile = useWorkspaceRoute().path;
   const { commitChange, trashSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
   const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
@@ -172,6 +172,10 @@ export function useEditable<T extends TreeFile | TreeDir>({
           selectedRange: [treeNode.path],
         });
       }
+    } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !isEditing && focused) {
+      console.log("arrow key down/up", e.key);
+      e.preventDefault();
+      e.stopPropagation();
     } else if (e.key === " " && !isEditing) {
       e.preventDefault();
       linkRef.current?.click();

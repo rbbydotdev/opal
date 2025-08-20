@@ -51,6 +51,11 @@ export class DiskDAO {
     return ClientDb.disks.update(this.guid, properties);
   }
 
+  static async all() {
+    const disks = await ClientDb.disks.toArray();
+    return disks.map((disk) => DiskDAO.FromJSON(disk));
+  }
+
   updateIndexCache(indexCache: TreeDirRoot) {
     this.indexCache = indexCache.toJSON();
   }

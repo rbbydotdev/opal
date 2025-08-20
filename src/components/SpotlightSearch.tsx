@@ -94,6 +94,7 @@ SpotlightSearchItemCmd.displayName = "SpotlightSearchItemCmd";
 
 export function SpotlightSearch() {
   const { currentWorkspace, fileTreeDir } = useWorkspaceContext();
+
   const flatTree = useMemo(
     () => Array.from(fileTreeDir.iterator(FileOnlyFilter)).map((node) => node.toString()),
     [fileTreeDir]
