@@ -6,11 +6,13 @@ import {
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { useEditorHistoryPlugin2WithContentWatch } from "@/components/Editor/history/useEditorHistoryPlugin2WithContentWatch";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
+import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
+import { useWatchElement } from "@/hooks/useWatchElement";
 import { cn } from "@/lib/utils";
 import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
@@ -174,24 +176,28 @@ export const CodeMirrorEditor = ({
     historyStorage: historyDB,
   });
 
+  const { scrollEmitter, sessionId } = useWorkspacePathScrollChannel();
+  const cmScroller = useWatchElement(".cm-scroller");
   return (
     <>
-      <CodeMirrorToolbar>
-        <EditHistoryMenu
-          finalizeRestore={(md) => updateDebounce(md)}
-          disabled={mimeType !== "text/markdown"}
-          edits={edits}
-          selectedEdit={selectedEdit}
-          setEdit={setEdit}
-          rebaseHistory={rebaseHistory}
-          resetAndRestore={resetAndRestore}
-          clearAll={clearAll}
-          triggerSave={triggerSave}
-          isRestoreState={isRestoreState}
-          selectedEditMd={selectedEditMd}
-        />
-      </CodeMirrorToolbar>
-      <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
+      <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
+        <CodeMirrorToolbar>
+          <EditHistoryMenu
+            finalizeRestore={(md) => updateDebounce(md)}
+            disabled={mimeType !== "text/markdown"}
+            edits={edits}
+            selectedEdit={selectedEdit}
+            setEdit={setEdit}
+            rebaseHistory={rebaseHistory}
+            resetAndRestore={resetAndRestore}
+            clearAll={clearAll}
+            triggerSave={triggerSave}
+            isRestoreState={isRestoreState}
+            selectedEditMd={selectedEditMd}
+          />
+        </CodeMirrorToolbar>
+        <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
+      </ScrollSyncProvider>
     </>
   );
 };
