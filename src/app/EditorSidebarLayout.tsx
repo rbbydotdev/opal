@@ -31,11 +31,13 @@ export const EditorSidebarLayout = ({
   main,
   rightPane,
   renderHiddenSidebar,
+  rightPaneEnabled = true,
 }: {
   sidebar: React.ReactNode;
   main: React.ReactNode;
   rightPane?: React.ReactNode;
   renderHiddenSidebar?: boolean;
+  rightPaneEnabled?: boolean;
 }) => {
   // Left sidebar state
   const [persistedOpenWidth, setPersistedOpenWidth] = useState<number>(DEFAULT_OPEN_WIDTH);
@@ -75,8 +77,8 @@ export const EditorSidebarLayout = ({
           return newCollapsed;
         });
       }
-      // Cmd+Shift+B to toggle right pane
-      else if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "b") {
+      // Cmd+Shift+B to toggle right pane (only if enabled)
+      else if (rightPaneEnabled && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "b") {
         e.preventDefault();
         e.stopPropagation();
         setRightPaneIsCollapsed((prev) => {
@@ -92,7 +94,7 @@ export const EditorSidebarLayout = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [persistedOpenWidth, rightPanePersistedWidth]);
+  }, [persistedOpenWidth, rightPanePersistedWidth, rightPaneEnabled]);
 
   // Effect to load stored sidebar and right pane state from localStorage on initial mount
   useEffect(() => {
@@ -115,25 +117,31 @@ export const EditorSidebarLayout = ({
     setIsCollapsed(initialLoadedIsCollapsed);
     setCurrentDisplayWidth(initialLoadedIsCollapsed ? COLLAPSED_STATE_WIDTH : initialLoadedOpenWidth);
 
-    // Right pane initialization
-    let initialRightPaneWidth = DEFAULT_RIGHT_PANE_WIDTH;
-    const storedRightPaneWidth = localStorage.getItem(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH);
-    if (storedRightPaneWidth) {
-      const numWidth = parseInt(storedRightPaneWidth, 10);
-      if (!isNaN(numWidth)) {
-        initialRightPaneWidth = Math.max(MIN_RIGHT_PANE_WIDTH, Math.min(numWidth, MAX_RIGHT_PANE_WIDTH));
+    // Right pane initialization (only if enabled)
+    if (rightPaneEnabled) {
+      let initialRightPaneWidth = DEFAULT_RIGHT_PANE_WIDTH;
+      const storedRightPaneWidth = localStorage.getItem(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH);
+      if (storedRightPaneWidth) {
+        const numWidth = parseInt(storedRightPaneWidth, 10);
+        if (!isNaN(numWidth)) {
+          initialRightPaneWidth = Math.max(MIN_RIGHT_PANE_WIDTH, Math.min(numWidth, MAX_RIGHT_PANE_WIDTH));
+        }
       }
-    }
-    setRightPanePersistedWidth(initialRightPaneWidth);
+      setRightPanePersistedWidth(initialRightPaneWidth);
 
-    let initialRightPaneCollapsed = false;
-    const storedRightPaneCollapsed = localStorage.getItem(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED);
-    if (storedRightPaneCollapsed) {
-      initialRightPaneCollapsed = storedRightPaneCollapsed === "true";
+      let initialRightPaneCollapsed = false;
+      const storedRightPaneCollapsed = localStorage.getItem(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED);
+      if (storedRightPaneCollapsed) {
+        initialRightPaneCollapsed = storedRightPaneCollapsed === "true";
+      }
+      setRightPaneIsCollapsed(initialRightPaneCollapsed);
+      setRightPaneCurrentWidth(initialRightPaneCollapsed ? RIGHT_PANE_COLLAPSED_WIDTH : initialRightPaneWidth);
+    } else {
+      // When disabled, ensure right pane is collapsed
+      setRightPaneIsCollapsed(true);
+      setRightPaneCurrentWidth(RIGHT_PANE_COLLAPSED_WIDTH);
     }
-    setRightPaneIsCollapsed(initialRightPaneCollapsed);
-    setRightPaneCurrentWidth(initialRightPaneCollapsed ? RIGHT_PANE_COLLAPSED_WIDTH : initialRightPaneWidth);
-  }, []);
+  }, [rightPaneEnabled]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -268,7 +276,7 @@ export const EditorSidebarLayout = ({
       <aside
         ref={rightPaneRef}
         style={{ width: `${rightPaneCurrentWidth}px` }}
-        className="relative flex-shrink-0 overflow-y-auto"
+        className={`relative flex-shrink-0 overflow-y-auto ${rightPaneIsResizing ? 'pointer-events-none' : ''}`}
       >
         {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0 ? (
           rightPane || <div id={PREVIEW_PANE_ID} className="w-full h-full border-l border-border"></div>
