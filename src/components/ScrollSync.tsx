@@ -1,4 +1,6 @@
+import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Channel } from "@/lib/channel";
+import { absPath, joinPath } from "@/lib/paths2";
 import { useSearch } from "@tanstack/react-router";
 import { nanoid } from "nanoid";
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef } from "react";
@@ -22,6 +24,7 @@ type ScrollEventPayload = {
 interface ScrollSyncContextValue {
   scrollRef: RefObject<HTMLElement | null>;
   sessionId?: string;
+  previewURL: string;
 }
 const ScrollSyncCtx = createContext<ScrollSyncContextValue | null>(null);
 
@@ -69,6 +72,34 @@ export function useScrollChannelFromSearchParams() {
   });
 }
 
+export function workspacePathSessionId({ workspaceId, filePath }: { workspaceId: string; filePath: string }): string {
+  return `${workspaceId}${filePath}`;
+}
+export function useWorkspacePathPreviewURL() {
+  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
+  if (!workspaceId || !filePath) {
+    throw new Error("useWorkspacePathPreviewURL must be used within a WorkspaceRoute context with valid id and path");
+  }
+
+  const previewURL = joinPath(
+    absPath("preview"),
+    workspaceId!,
+    filePath! + `?${sessionIdParam({ sessionId: workspacePathSessionId({ workspaceId, filePath }) })}`
+  ) as string;
+  return previewURL;
+}
+
+export function useWorkspacePathScrollChannel() {
+  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
+  if (!workspaceId || !filePath) {
+    throw new Error(
+      "useWorkspacePathScrollChannel must be used within a WorkspaceRoute context with valid id and path"
+    );
+  }
+  return useScrollChannel({
+    sessionId: workspacePathSessionId({ workspaceId, filePath }),
+  });
+}
 // --- useScrollChannel hook ---
 export function useScrollChannel({ sessionId }: { sessionId?: string | null } = {}) {
   const sId = useMemo(() => sessionId ?? `scroll-sync-${nanoid()}`, [sessionId]);
@@ -96,6 +127,8 @@ export function ScrollSyncProvider({
 }) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const scrollPause = useRef(false);
+
+  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
 
   useEffect(() => {
     const sRef = scrollEl ?? scrollRef.current;
@@ -133,5 +166,7 @@ export function ScrollSyncProvider({
     }
   }, [scrollEl, scrollEmitter]);
 
-  return <ScrollSyncCtx.Provider value={{ scrollRef, sessionId }}>{children}</ScrollSyncCtx.Provider>;
+  const previewURL = useWorkspacePathPreviewURL();
+
+  return <ScrollSyncCtx.Provider value={{ scrollRef, sessionId, previewURL }}>{children}</ScrollSyncCtx.Provider>;
 }

@@ -451,6 +451,9 @@ export class Workspace {
     return this.disk.indexAndEmitNewFiles(files);
   }
 
+  getFileTree() {
+    return this.disk.fileTree;
+  }
   getFileTreeRoot() {
     return this.disk.fileTree.root;
   }

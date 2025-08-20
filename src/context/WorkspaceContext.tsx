@@ -5,6 +5,7 @@ import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
+import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import { useLocation } from "@tanstack/react-router";
@@ -15,7 +16,8 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 export const NULL_WORKSPACE = new NullWorkspace();
 
 const defaultWorkspaceContext = {
-  fileTreeDir: NULL_TREE_ROOT,
+  fileTree: NULL_FILE_TREE as FileTree,
+  fileTreeDir: NULL_TREE_ROOT as TreeDir,
   workspaces: [] as WorkspaceDAO[],
   flatTree: [] as AbsPath[],
   currentWorkspace: NULL_WORKSPACE as Workspace,
@@ -110,20 +112,22 @@ export const DirOnlyFilter: DirOnlyFilter = Object.assign((node: TreeNode) => no
   __brand: "DirOnlyFilter" as const,
 });
 export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: FileOnlyFilter | DirOnlyFilter) {
-  const [fileTreeDir, setFileTree] = useState<TreeDirRoot>(NULL_TREE_ROOT);
+  const [fileTreeDir, setFileTreeDir] = useState<TreeDirRoot>(() => currentWorkspace.getFileTreeRoot());
   const [flatTree, setFlatTree] = useState<AbsPath[]>([]);
+  const [fileTree, setFileTree] = useState(() => currentWorkspace.getFileTree());
 
   useEffect(() => {
     if (currentWorkspace) {
       return currentWorkspace.watchDiskIndex((fileTreeDir: TreeDir) => {
         const newTree = new TreeDirRoot(fileTreeDir);
         //if getFlateTree() === flatTree [they are the same] do not update
-        setFileTree(newTree);
+        setFileTreeDir(newTree);
         setFlatTree(currentWorkspace.getFlatTree(filter));
+        setFileTree(currentWorkspace.getFileTree());
       });
     }
   }, [currentWorkspace, filter]);
-  return { fileTreeDir, flatTree };
+  return { fileTreeDir, fileTree, flatTree };
 }
 
 export function useLiveWorkspaces() {

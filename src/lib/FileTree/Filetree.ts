@@ -265,3 +265,23 @@ function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name
     });
   }
 }
+class NullFileTree extends FileTree {
+  constructor() {
+    super({} as CommonFileSystem, "NullFileTree", new Mutex());
+    this.root = new TreeDirRoot();
+  }
+
+  async index() {
+    return this.root;
+  }
+
+  async *indexIter() {
+    yield this.root;
+  }
+
+  nodeFromPath() {
+    return null;
+  }
+}
+
+export const NULL_FILE_TREE = new NullFileTree();
