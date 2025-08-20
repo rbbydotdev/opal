@@ -6,14 +6,15 @@ import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFil
 import { useEffect } from "react";
 
 export function useFileTreeClipboardEventListeners({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const { focused, selectedFocused, setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
+  const { focused, editing, selectedFocused, setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
   const handlePaste = useFileMenuPaste({ currentWorkspace });
 
+  //check editing or else copying filenames gives the node not the name!
   useEffect(() => {
     const handlePasteEvent = async (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
       const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]);
-      if (target?.closest?.("[data-sidebar-file-menu]")) {
+      if (target?.closest?.("[data-sidebar-file-menu]") && !editing) {
         await handlePaste({ targetNode, data: new MetaDataTransfer(event.clipboardData!) });
         setFileTreeCtx({
           editing: null,
@@ -26,7 +27,7 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
     };
     const handleCutEvent = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest?.("[data-sidebar-file-menu]")) {
+      if (target?.closest?.("[data-sidebar-file-menu]") && !editing) {
         return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
           action: "cut",
@@ -36,7 +37,7 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
     };
     const handleCopyEvent = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest?.("[data-sidebar-file-menu]")) {
+      if (target?.closest?.("[data-sidebar-file-menu]") && !editing) {
         return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
           action: "copy",

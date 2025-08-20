@@ -165,6 +165,15 @@ export function isImage(path: AbsPath | RelPath | TreeNode | string): boolean {
 export function isMarkdown(path: AbsPath | RelPath | TreeNode | string): boolean {
   return isMarkdownType(getPathMimeType(relPath(String(path))));
 }
+export function isText(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return getPathMimeType(relPath(String(path))).startsWith("text/");
+}
+export function isCss(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return getPathMimeType(relPath(String(path))) === "text/css";
+}
+export function isSource(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return !isMarkdown(path) && !isImage(path) && !isCss(path);
+}
 
 // --- Ancestor/Lineage Utilities ---
 export function isAncestor({

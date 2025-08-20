@@ -8,6 +8,10 @@ import {
   dirname,
   depth as getDepth,
   incPath,
+  isCss,
+  isImage,
+  isMarkdown,
+  isText,
   joinPath,
   prefix,
   relPath,
@@ -78,22 +82,24 @@ export class TreeNode {
   closestDir(): TreeDir | null {
     return this.isTreeDir() ? this : (this.parent?.closestDir() ?? null);
   }
-  siblings(filter: Parameters<(typeof TreeNode)["filterOutChildren"]> = {}): TreeNode[] {
-    // currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
-    return this.parent ? this.parent.filterOutChildren((child) => child !== this) : [];
-    // return this.parent ? Object.values(this.parent.children).filter((child) => child !== this) : [];
+  siblings(filterIn: (() => boolean) | AbsPath[] = () => true): TreeNode[] {
+    const filterFn = Array.isArray(filterIn) ? (node: TreeNode) => filterIn.includes(node.path) : filterIn;
+    return this.parent ? Object.values(this.parent.children).filter((child) => child !== this && filterFn(child)) : [];
   }
   closestDirPath(): AbsPath {
     return this.isTreeDir() ? this.path : dirname(this.path);
   }
   isMarkdownFile() {
-    return this.getMimeType() === "text/markdown";
+    return isMarkdown(this.path);
   }
   isTextFile() {
-    return this.getMimeType().startsWith("text/");
+    return isText(this.path);
   }
   isCssFile() {
-    return this.getMimeType() === "text/css";
+    return isCss(this.path);
+  }
+  isImageFile() {
+    return isImage(this.path);
   }
   toString() {
     return this.path;
