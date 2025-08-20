@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { toast } from "@/hooks/useToast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
 const workspaceFormSchema = z.object({
@@ -43,18 +43,17 @@ function WorkspaceSettingsPage() {
   }, [currentWorkspace, form]);
 
   function onSubmit(data: WorkspaceFormValues) {
-    toast({
-      title: "Workspace updated",
+    toast("Workspace updated", {
       description: "Your workspace settings have been updated.",
+      // className:
     });
     console.log(data);
   }
 
   function handleDeleteWorkspace() {
-    toast({
-      variant: "destructive",
-      title: "Workspace deletion requested",
+    toast("Workspace deletion requested", {
       description: "This action would delete your workspace.",
+      className: "destructive group border-destructive bg-destructive text-destructive-foreground",
     });
   }
 

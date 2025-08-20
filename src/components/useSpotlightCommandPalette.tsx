@@ -8,6 +8,7 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { toast } from "sonner";
 
 //
 // ---- Types ----
@@ -25,7 +26,7 @@ export type CmdPrompt = {
 };
 
 export type CmdExec = {
-  exec: (context: Record<string, unknown>) => void | Promise<void>;
+  exec: (context: Record<string, unknown>, abort: () => void) => (void | boolean) | Promise<void | boolean>;
   type: "exec";
 };
 
@@ -39,7 +40,7 @@ export type CmdSelect = {
 //
 // ---- Constructors ----
 //
-const NewCmdExec = (exec: (context: Record<string, unknown>) => void | Promise<void>): CmdExec => ({
+const NewCmdExec = (exec: (context: Record<string, unknown>, abort: () => void) => void | Promise<void>): CmdExec => ({
   exec,
   type: "exec",
 });
@@ -198,6 +199,14 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           }),
         ],
         "Git Commit": [
+          NewCmdExec(async (_context, abort) => {
+            if (!repo.getInfo()?.hasChanges) {
+              toast("No changes to commit", {
+                description: "There are no changes in the repository to commit.",
+              });
+              return abort();
+            }
+          }),
           NewCmdPrompt("git_commit_msg", "Enter Git Commit Message"),
           NewCmdExec(async (context) => {
             const message = context.git_commit_msg as string;
@@ -236,6 +245,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       previewURL,
       renameDirOrFile,
       repo,
+      toast,
       trashFile,
     ]
   );
@@ -261,7 +271,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       cmds.add("Git Initialize Repo");
     }
     if (!gitRepoInfo.initialized || !gitRepoInfo?.hasChanges || gitRepoInfo.unmergedFiles.length) {
-      cmds.add("Git Commit");
+      // cmds.add("Git Commit");
     }
     if (!gitRepoInfo.unmergedFiles.length) {
       cmds.add("Git Merge Commit");
