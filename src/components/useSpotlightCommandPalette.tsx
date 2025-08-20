@@ -202,6 +202,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           NewCmdExec(async (_context, abort) => {
             if (!repo.getInfo()?.hasChanges) {
               toast("No changes to commit", {
+                position: "top-center",
                 description: "There are no changes in the repository to commit.",
               });
               return abort();

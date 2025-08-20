@@ -176,7 +176,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
             <div className="flex-shrink flex">
               <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace} filterRange={filterAllSpecialDirs}>
                 <SpotlightSearch />
-                <TreeExpanderProvider id="MainFiles" nodePaths={[]}>
+                <TreeExpanderProvider id="MainFiles">
                   <MainSidebarFileMenuFileSection />
                 </TreeExpanderProvider>
               </FileTreeMenuCtxProvider>
