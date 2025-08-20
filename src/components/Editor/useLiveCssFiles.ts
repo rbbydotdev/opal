@@ -3,38 +3,53 @@ import { Workspace } from "@/Db/Workspace";
 import { isMarkdown } from "@/lib/paths2";
 import { useEffect, useRef, useState } from "react";
 
+const noCached = (filePath: string): string => {
+  return filePath.split("?c=")[0]!;
+};
 export function useLiveCssFiles({ path, currentWorkspace }: { path: string | null; currentWorkspace: Workspace }) {
   const [cssFiles, setCssFiles] = useState<string[]>([]);
-  const cacheBuster = useRef(0);
+  const cacheBuster = useRef(Date.now());
+  const cached = (filePath: string) => {
+    return `${filePath}?c=${cacheBuster.current}`;
+  };
 
   useEffect(() => {
-    if (path && currentWorkspace && !currentWorkspace.isNull && isMarkdown(path)) {
-      setCssFiles(
-        Object.values(
-          currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
-        ).map((node) => node.path)
-      );
+    if (Boolean(path) && Boolean(currentWorkspace) && !currentWorkspace.isNull && isMarkdown(path!)) {
+      const css = Object.values(
+        currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
+      ).map((node) => cached(node.path));
+      setCssFiles(css);
       return currentWorkspace.dirtyListener((trigger) => {
         if (isFilePathsPayload(trigger)) {
-          cacheBuster.current += 1; // Increment cache buster to force reload
-          setCssFiles(trigger.filePaths.filter((filePath) => filePath.endsWith(".css")));
+          const updated = new Set(trigger.filePaths.filter((filePath) => filePath.endsWith(".css")));
+          if (updated.size === 0) return;
+          setCssFiles((prev) => {
+            const newCss = [...new Set(prev.map(noCached)).difference(updated)].map(cached);
+            cacheBuster.current += Date.now();
+            return [...newCss, ...updated.values().map(cached)];
+          });
         } else if (trigger !== undefined) {
           if (trigger.type === "create") {
             cacheBuster.current += 1; // Increment cache buster to force reload
             setCssFiles((prev) => [
-              ...prev,
+              ...prev.map(noCached),
               ...trigger.details.filePaths.filter((filePath) => filePath.endsWith(".css")),
             ]);
           }
           if (trigger.type === "delete") {
-            setCssFiles((prev) => prev.filter((filePath) => !trigger.details.filePaths.includes(filePath)));
+            setCssFiles((prev) =>
+              prev
+                .map(noCached)
+                .filter((filePath) => !trigger.details.filePaths.includes(filePath))
+                .map(cached)
+            );
           }
           if (trigger.type === "rename") {
             cacheBuster.current += 1; // Increment cache buster to force reload
             setCssFiles((prev) =>
-              prev.map((filePath) => {
+              prev.map(noCached).map((filePath) => {
                 const renamedFile = trigger.details.find(({ oldPath }) => oldPath === filePath);
-                return renamedFile ? renamedFile.newPath : filePath;
+                return cached(renamedFile ? renamedFile.newPath : filePath);
               })
             );
           }
@@ -42,5 +57,5 @@ export function useLiveCssFiles({ path, currentWorkspace }: { path: string | nul
       });
     }
   }, [currentWorkspace, path]);
-  return cssFiles.map((filePath) => filePath + `?c=${cacheBuster.current}`);
+  return cssFiles.map((filePath) => filePath);
 }

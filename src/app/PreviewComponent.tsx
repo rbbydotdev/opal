@@ -1,3 +1,4 @@
+import { LinkTag } from "@/app/LinkTag";
 import { useRenamePathAdjuster } from "@/app/useRenamePathAdjuster";
 import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
@@ -8,7 +9,7 @@ import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isImage, isMarkdown } from "@/lib/paths2";
 import { useRouter, useSearch } from "@tanstack/react-router";
-import "github-markdown-css/github-markdown-light.css";
+// import "github-markdown-css/github-markdown-light.css";
 import { RefObject, useEffect, useMemo, useState } from "react";
 
 export function PreviewComponent() {
@@ -52,9 +53,13 @@ function PreviewComponentInternal() {
   if (isMarkdown(path)) {
     return (
       <>
+        <div className="w-full h-48 absolute top-0 right-0 text-2xs bg-slate-200 z-20 hidden">
+          cssFiles: {cssFiles.join(", ")}
+        </div>
         <ScrollSyncProvider scrollEmitter={scrollEmitter}>
           {cssFiles.map((stylePath) => (
-            <link key={stylePath} rel="stylesheet" href={stylePath} />
+            <LinkTag key={stylePath} href={stylePath} />
+            // <link rel="stylesheet" key={stylePath} href={stylePath} />
           ))}
           <MarkdownRender path={path} />
         </ScrollSyncProvider>
@@ -98,10 +103,9 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
 
   return (
     <div
-      className="mt-[10px] w-full _border-[2px] _rounded _shadow-lg  p-4 m-0 h-[calc(100vh-20px)] overflow-y-scroll"
+      className="bg-inherit prose mt-[10px] _flex _flex-col _items-center w-full _border-[2px] _rounded _shadow-lg  p-4 m-0 h-[calc(100vh-20px)] overflow-y-scroll"
       ref={scrollRef as RefObject<HTMLDivElement>}
-    >
-      <div className="prose markdown-body flex flex-col items-center" dangerouslySetInnerHTML={{ __html: html }}></div>
-    </div>
+      dangerouslySetInnerHTML={{ __html: html }}
+    ></div>
   );
 }

@@ -19,30 +19,25 @@ function WorkspaceLayout() {
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
 
-  const previewPath = useMemo(() => {
+  const previewNode = useMemo(() => {
     if (!path) return null;
     const currentNode = currentWorkspace.nodeFromPath(path);
-    if (currentNode?.isCssFile()) {
-      return (
-        currentNode.siblings().find((node) => node.isMarkdownFile() && prefix(node.path) === prefix(path))?.path ||
-        currentNode.siblings().find((node) => node.isMarkdownFile())?.path ||
-        path
-      );
-    } else {
-      return path;
-    }
+    if (currentNode?.isMarkdownFile()) return currentNode;
+    if (currentNode?.isImageFile()) return null;
+    return (
+      currentNode?.siblings().find((node) => node.isMarkdownFile() && prefix(node.path) === prefix(path)) ||
+      currentNode?.siblings().find((node) => node.isMarkdownFile()) ||
+      currentNode
+    );
   }, [currentWorkspace, path]);
 
-  // const path = isMarkdown  ?
-  console.log("previewPath", previewPath);
-  const previewURL = useWorkspacePathPreviewURL(previewPath!);
+  const previewURL = useWorkspacePathPreviewURL(previewNode?.path);
 
   useEffect(() => {
     if (workspaceName) {
       document.title = workspaceName;
     }
   }, [workspaceName]);
-
   return (
     <>
       <Toaster />
@@ -51,8 +46,8 @@ function WorkspaceLayout() {
           renderHiddenSidebar={true}
           sidebar={<EditorSidebar className="main-editor-sidebar" />}
           main={<Outlet />}
-          rightPaneEnabled={!!previewURL}
-          rightPane={previewURL ? <PreviewIFrame previewURL={previewURL} /> : null}
+          rightPaneEnabled={Boolean(previewURL) && Boolean(previewNode?.isMarkdownFile())}
+          rightPane={previewURL ? <PreviewIFrame previewPath={previewNode?.path} previewURL={previewURL} /> : null}
         />
       </div>
     </>
