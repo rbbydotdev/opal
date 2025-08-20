@@ -1,6 +1,19 @@
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, RelPath, absPath, basename, dirname, depth as getDepth, incPath, relPath } from "@/lib/paths2";
+import {
+  AbsPath,
+  RelPath,
+  absPath,
+  basename,
+  dirname,
+  depth as getDepth,
+  incPath,
+  joinPath,
+  prefix,
+  relPath,
+  strictPrefix,
+} from "@/lib/paths2";
+import { extname } from "path";
 
 export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
@@ -195,6 +208,18 @@ export class TreeNode {
     this.dirname = absPath(dirname(this.path));
     this.name = relPath(basename(this.path));
     this.basename = relPath(basename(this.path));
+    return this;
+  }
+  renamePrefix(newBasename: RelPath | string) {
+    this.basename = relPath(prefix(relPath(newBasename)) + extname(this.basename));
+    this.name = relPath(this.basename);
+    this.path = absPath(joinPath(this.dirname, this.basename));
+    return this;
+  }
+  renameStrictPrefix(newBasename: RelPath | string) {
+    this.basename = relPath(strictPrefix(relPath(newBasename)) + extname(this.basename));
+    this.name = relPath(this.basename);
+    this.path = absPath(joinPath(this.dirname, this.basename));
     return this;
   }
   rename(path: AbsPath) {

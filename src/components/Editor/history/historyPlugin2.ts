@@ -22,6 +22,12 @@ class HistoryEventEmitter extends EventEmitter {
   on<K extends keyof HistoryEventMap>(event: K, callback: (...args: HistoryEventMap[K]) => void): this {
     return super.on(event, callback);
   }
+  listen<K extends keyof HistoryEventMap>(event: K, callback: (...args: HistoryEventMap[K]) => void): () => void {
+    super.on(event, callback);
+    return () => {
+      this.off(event, callback);
+    };
+  }
   awaitEvent<K extends keyof HistoryEventMap>(event: K): Promise<HistoryEventMap[K]> {
     return new Promise((resolve) => {
       const handler = (...args: HistoryEventMap[K]) => {
@@ -279,8 +285,10 @@ export class HistoryPlugin2 {
   };
   handleMarkdown = (callback: (md: string) => void) => {
     this.events.on(HistoryEvents.INSIDE_MARKDOWN, callback);
+    return () => this.events.removeListener(HistoryEvents.INSIDE_MARKDOWN, callback);
   };
   handleSelectedEdit = (callback: (edit: HistoryDocRecord | null) => void) => {
     this.events.on(HistoryEvents.SELECTED_EDIT, callback);
+    return () => this.events.removeListener(HistoryEvents.SELECTED_EDIT, callback);
   };
 }

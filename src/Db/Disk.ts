@@ -435,17 +435,14 @@ export abstract class Disk {
   dirtyListener(cb: () => void) {
     return this.local.on([DiskEvents.INSIDE_WRITE, DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], cb);
   }
-  updateListenerAll(fn: (details: FilePathsType) => void) {
-    return this.local.on(DiskEvents.OUTSIDE_WRITE, fn);
-  }
 
-  remoteUpdateListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-    return this.remote.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
-      if (filePaths.includes(watchFilePath)) {
-        fn(String(await this.readFile(absPath(watchFilePath))));
-      }
-    });
-  }
+  // remoteUpdateListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
+  //   return this.remote.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
+  //     if (filePaths.includes(watchFilePath)) {
+  //       fn(String(await this.readFile(absPath(watchFilePath))));
+  //     }
+  //   });
+  // }
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
     if (nodes.length === 0) return [];

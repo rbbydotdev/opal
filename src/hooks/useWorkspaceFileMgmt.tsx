@@ -7,15 +7,14 @@ import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { setFrontmatter } from "@/lib/markdown/frontMatter";
 import {
   AbsPath,
-  RelPath,
   absPath,
   basename,
-  decodePath,
   dirname,
   duplicatePath,
   isAncestor,
   joinPath,
   reduceLineage,
+  RelPath,
   relPath,
 } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
@@ -234,8 +233,14 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   );
 
   const renameDirOrFile = useCallback(
-    async (origNode: TreeNode, newFullPath: TreeNode | AbsPath) => {
-      const result = await renameDirOrFileMultiple([[origNode, newFullPath]] as [TreeNode, TreeNode | AbsPath][]);
+    async (origNode: TreeNode, newPath: TreeNode | AbsPath | RelPath) => {
+      if (origNode.path === newPath) {
+        return null; // No change needed
+      }
+      // const finalPath = isRelPath(newPath.toString())
+      //   ? joinPath(absPath(origNode.parent ?? RootNode), String(newPath))
+      //   : newPath;
+      const result = await renameDirOrFileMultiple([[origNode, newPath]] as [TreeNode, TreeNode | AbsPath][]);
       if (result.length <= 0) return null;
       return result[0]!.newPath;
     },
@@ -244,7 +249,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
 
   const commitChange = useCallback(
     async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new" | "duplicate"): Promise<AbsPath | null> => {
-      const wantPath = joinPath(dirname(origNode.path), relPath(decodePath(fileName)));
+      const wantPath = joinPath(dirname(origNode.path), relPath(fileName));
       if (type === "new") {
         if (origNode.isTreeFile()) {
           return newFile(wantPath, defaultFileContent(wantPath), {

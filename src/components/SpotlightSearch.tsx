@@ -123,6 +123,7 @@ function SpotlightSearchInternal({
   commands: string[];
   cmdMap: CmdMap;
 }) {
+  //MARK: State / hooks
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -196,13 +197,13 @@ function SpotlightSearchInternal({
   const sortedList = useMemo(() => {
     setActiveIndex(-1);
 
-    // Handle select state
+    // MARK: Handle select state
     if (state === "select" && currentPrompt && "options" in currentPrompt) {
       const options = (currentPrompt as any).options as string[];
       if (!search.trim()) {
         return options.map((opt) => ({ element: <>{opt}</>, href: opt }));
       }
-      const results = fuzzysort.go(search, options, { limit: 50 });
+      const results = fuzzysort.go(search, options, { limit: 50 }).toReversed();
       return results.map((result) => ({
         element: (
           <>
@@ -215,7 +216,7 @@ function SpotlightSearchInternal({
       }));
     }
 
-    // Spotlight state
+    // MARK: Spotlight state
     if (!search.trim()) {
       return visibleFiles.map((file) => ({
         element: <>{file}</>,
@@ -223,7 +224,9 @@ function SpotlightSearchInternal({
       }));
     }
 
-    const results = fuzzysort.go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 });
+    const results = fuzzysort
+      .go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 })
+      .toReversed();
     return results.map((result) => ({
       element: (
         <>
@@ -236,6 +239,7 @@ function SpotlightSearchInternal({
     }));
   }, [state, currentPrompt, commandList, commandPrefix, search, visibleFiles]);
 
+  //MARK: Handle Keys
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
     const itemsLength = menuItems?.length ?? 0;
@@ -344,6 +348,7 @@ function SpotlightSearchInternal({
 
   if (!open) return null;
 
+  // MARK: Render
   return (
     <div
       ref={containerRef}

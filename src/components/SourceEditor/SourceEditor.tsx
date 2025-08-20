@@ -13,7 +13,7 @@ export const SourceEditor = ({
   className?: string;
   mimeType?: string;
 }) => {
-  const { initialContents, updateDebounce: onUpdate, error } = useFileContents({ currentWorkspace });
+  const { initialContents, updateDebounce, error } = useFileContents({ currentWorkspace });
   if (error) {
     throw error;
   }
@@ -23,8 +23,8 @@ export const SourceEditor = ({
       <CodeMirrorEditor
         currentWorkspace={currentWorkspace}
         mimeType={mimeType as "text/css" | "text/plain" | "text/markdown"}
-        value={String(initialContents || "")}
-        onChange={onUpdate}
+        value={String(initialContents ?? "")}
+        onChange={updateDebounce}
         readOnly={false}
         className={cn("code-mirror-source-editor", "flex-grow", className)}
       />

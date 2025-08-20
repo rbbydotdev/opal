@@ -65,13 +65,18 @@ export function useEditHistoryPlugin2({
     onOutput: (md: string) => void,
     onInput: (setMarkdown: (md: string) => void) => void | (() => void)
   ) {
-    history.handleMarkdown(onOutput);
-    const unsub = onInput((md) => {
-      history.setMarkdown(md);
-    });
-    if (typeof unsub === "function") {
-      unsubs.current.push(unsub);
-    }
+    const us: unknown[] = [];
+    us.push(history.handleMarkdown(onOutput));
+    us.push(
+      onInput((md) => {
+        console.log(md);
+        history.setMarkdown(md);
+      })
+    );
+    unsubs.current.push(...(us.filter((u) => typeof u === "function") as (() => void)[]));
+    return () => {
+      us.filter((u) => typeof u === "function").forEach((us) => us());
+    };
   }
 
   return {
