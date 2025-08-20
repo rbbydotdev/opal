@@ -185,8 +185,8 @@ export const EditorSidebarLayout = ({
         }
       }
 
-      // Handle right pane resize
-      if (rightPaneIsResizing && rightPaneDragStartInfoRef.current) {
+      // Handle right pane resize (only if enabled)
+      if (rightPaneEnabled && rightPaneIsResizing && rightPaneDragStartInfoRef.current) {
         const { startX, initialDisplayWidth } = rightPaneDragStartInfoRef.current;
         const dx = startX - e.clientX; // Reversed direction for right pane
         const potentialNewWidth = initialDisplayWidth + dx;
@@ -211,7 +211,7 @@ export const EditorSidebarLayout = ({
         dragStartInfoRef.current = null;
       }
 
-      if (rightPaneIsResizing) {
+      if (rightPaneEnabled && rightPaneIsResizing) {
         setRightPaneIsResizing(false);
         localStorage.setItem(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH, rightPanePersistedWidth.toString());
         localStorage.setItem(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, rightPaneIsCollapsed.toString());
@@ -237,7 +237,7 @@ export const EditorSidebarLayout = ({
       document.body.classList.remove("select-none");
       document.body.style.cursor = "";
     };
-  }, [isResizing, rightPaneIsResizing, isCollapsed, persistedOpenWidth, rightPaneIsCollapsed, rightPanePersistedWidth]);
+  }, [isResizing, rightPaneIsResizing, isCollapsed, persistedOpenWidth, rightPaneIsCollapsed, rightPanePersistedWidth, rightPaneEnabled]);
 
   return (
     <div className="flex h-screen w-full overflow-clip">
@@ -262,26 +262,30 @@ export const EditorSidebarLayout = ({
 
       <main className="relative min-w-0 flex-col flex flex-grow overflow-hidden">{main}</main>
 
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-valuenow={rightPaneCurrentWidth}
-        aria-valuemin={RIGHT_PANE_COLLAPSED_WIDTH}
-        aria-valuemax={MAX_RIGHT_PANE_WIDTH}
-        onMouseDown={handleRightPaneMouseDown}
-        className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
-        title="Resize right pane"
-      ></div>
+      {rightPaneEnabled && (
+        <>
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-valuenow={rightPaneCurrentWidth}
+            aria-valuemin={RIGHT_PANE_COLLAPSED_WIDTH}
+            aria-valuemax={MAX_RIGHT_PANE_WIDTH}
+            onMouseDown={handleRightPaneMouseDown}
+            className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
+            title="Resize right pane"
+          ></div>
 
-      <aside
-        ref={rightPaneRef}
-        style={{ width: `${rightPaneCurrentWidth}px` }}
-        className={`relative flex-shrink-0 overflow-y-auto ${rightPaneIsResizing ? 'pointer-events-none' : ''}`}
-      >
-        {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0 ? (
-          rightPane || <div id={PREVIEW_PANE_ID} className="w-full h-full border-l border-border"></div>
-        ) : null}
-      </aside>
+          <aside
+            ref={rightPaneRef}
+            style={{ width: `${rightPaneCurrentWidth}px` }}
+            className={`relative flex-shrink-0 overflow-y-auto ${rightPaneIsResizing ? 'pointer-events-none' : ''}`}
+          >
+            {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0 ? (
+              rightPane || <div id={PREVIEW_PANE_ID} className="w-full h-full border-l border-border"></div>
+            ) : null}
+          </aside>
+        </>
+      )}
     </div>
   );
 };
