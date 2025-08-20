@@ -64,7 +64,24 @@ export class FileTree {
   dirs() {
     return Array.from(this.root.iterator((node) => node.isTreeDir()));
   }
+  prev(node: TreeNode) {
+    const allNodes = this.all();
+    const index = allNodes.indexOf(node);
+    if (index > 0) {
+      return allNodes[index - 1];
+    }
+    return null;
+  }
+  next(node: TreeNode) {
+    const allNodes = this.all();
+    const index = allNodes.indexOf(node);
+    if (index < allNodes.length - 1) {
+      return allNodes[index + 1];
+    }
+    return null;
+  }
   all() {
+    //TODO>>>>>>>>>>>>>  this is better cache i think this.map.values();
     return Array.from(this.root.iterator());
   }
 

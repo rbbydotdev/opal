@@ -52,7 +52,7 @@ export const EditableDir = ({
     expand,
   });
 
-  const { setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
+  const { setFileTreeCtx } = useFileTreeMenuCtx();
 
   useEffect(() => {
     //weird edge case hmmmmmmm keeps focus after editing

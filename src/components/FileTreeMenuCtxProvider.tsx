@@ -13,7 +13,6 @@ export const FileTreeMenuCtx = React.createContext<{
   setDragOver: (node: TreeNode | null) => void;
   scopedTreeNode: TreeNode;
   dragOver: TreeNode | null;
-
   setFileTreeCtx: React.Dispatch<
     React.SetStateAction<{
       editing: AbsPath | null;

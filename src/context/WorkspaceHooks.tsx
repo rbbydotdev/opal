@@ -17,7 +17,7 @@ export const NULL_WORKSPACE = new NullWorkspace();
 const defaultWorkspaceContext = {
   fileTreeDir: NULL_TREE_ROOT,
   workspaces: [] as WorkspaceDAO[],
-  flatTree: [] as string[],
+  flatTree: [] as AbsPath[],
   currentWorkspace: NULL_WORKSPACE as Workspace,
   git: {
     repo: new NullRepo() as GitRepo,

@@ -18,6 +18,7 @@ export const EditableFile = ({
   depth,
   fullPath,
   treeNode,
+
   currentWorkspace,
   className,
   workspaceRoute,
