@@ -1,10 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { toast } from "@/hooks/useToast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -23,9 +23,9 @@ const defaultValues: Partial<WorkspaceFormValues> = {
   workspaceName: "",
 };
 
-export const Route = createFileRoute('/_app/workspace/$workspaceName/settings')({
+export const Route = createFileRoute("/_app/workspace/$workspaceName/settings")({
   component: WorkspaceSettingsPage,
-})
+});
 
 function WorkspaceSettingsPage() {
   const { currentWorkspace } = useWorkspaceContext();

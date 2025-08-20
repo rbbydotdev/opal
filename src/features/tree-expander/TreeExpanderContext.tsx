@@ -1,4 +1,4 @@
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useTreeExpander } from "@/features/tree-expander/useTreeExpander";
 import { createContext, ReactNode } from "react";
 

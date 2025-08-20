@@ -8,7 +8,7 @@ import { useEditorHistoryPlugin2WithContentWatch } from "@/components/Editor/his
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { Button } from "@/components/ui/button";
 import { useFileContents } from "@/context/useFileContents";
-import { useCurrentFilepath } from "@/context/WorkspaceHooks";
+import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { cn } from "@/lib/utils";

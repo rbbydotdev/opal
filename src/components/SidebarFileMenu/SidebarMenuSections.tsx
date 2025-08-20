@@ -15,7 +15,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
 import React, { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
-import { useWorkspaceContext } from "../../context/WorkspaceHooks";
+import { useWorkspaceContext } from "../../context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeExpanderProvider } from "../../features/tree-expander/TreeExpanderContext";
 import useLocalStorage2 from "../../hooks/useLocalStorage2";

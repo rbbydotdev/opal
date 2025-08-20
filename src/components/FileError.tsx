@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useAsyncValue } from "@/hooks/useAsyncValue";
 import { ApplicationError } from "@/lib/errors";
 import { Link } from "@tanstack/react-router";

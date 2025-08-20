@@ -4,7 +4,7 @@ import {
   useWatchWorkspaceFileTree,
   useWorkspaceRoute,
   WorkspaceContext,
-} from "@/context/WorkspaceHooks";
+} from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { Delete, Trash2, Undo } from "lucide-react";

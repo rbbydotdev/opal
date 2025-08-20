@@ -1,6 +1,6 @@
 import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
-import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";

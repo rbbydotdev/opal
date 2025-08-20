@@ -1,6 +1,6 @@
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { useWorkspaceContext } from "@/context/WorkspaceHooks";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/TreeExpanderContext";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";

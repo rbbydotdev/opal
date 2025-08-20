@@ -19,7 +19,7 @@ import { CommandIcon, FileTextIcon } from "lucide-react";
 import mime from "mime-types";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FileOnlyFilter, useWorkspaceContext } from "../context/WorkspaceHooks";
+import { FileOnlyFilter, useWorkspaceContext } from "../context/WorkspaceContext";
 
 const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,
