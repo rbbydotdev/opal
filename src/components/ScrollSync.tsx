@@ -24,7 +24,7 @@ type ScrollEventPayload = {
 interface ScrollSyncContextValue {
   scrollRef: RefObject<HTMLElement | null>;
   sessionId?: string;
-  previewURL: string;
+  previewURL: string | null;
 }
 const ScrollSyncCtx = createContext<ScrollSyncContextValue | null>(null);
 
@@ -75,10 +75,11 @@ export function useScrollChannelFromSearchParams() {
 export function workspacePathSessionId({ workspaceId, filePath }: { workspaceId: string; filePath: string }): string {
   return `${workspaceId}${filePath}`;
 }
-export function useWorkspacePathPreviewURL() {
-  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
+export function useWorkspacePathPreviewURL(filePathOverride?: string) {
+  const { id: workspaceId, path } = useWorkspaceRoute();
+  const filePath = filePathOverride || path;
   if (!workspaceId || !filePath) {
-    throw new Error("useWorkspacePathPreviewURL must be used within a WorkspaceRoute context with valid id and path");
+    return null;
   }
 
   const previewURL = joinPath(

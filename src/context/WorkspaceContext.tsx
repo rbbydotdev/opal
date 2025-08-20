@@ -54,10 +54,11 @@ export function useCurrentFilepath() {
     return {
       filePath: null,
       mimeType: DEFAULT_MIME_TYPE,
-      isImage: null,
-      isMarkdown: null,
-      inTrash: null,
-      isSource: null,
+      isImage: false,
+      isMarkdown: false,
+      isCssFile: false,
+      isSource: false,
+      inTrash: false,
     };
   }
   const mimeType = mime.lookup(filePath) || DEFAULT_MIME_TYPE;
@@ -68,6 +69,7 @@ export function useCurrentFilepath() {
     isMarkdown: mimeType.startsWith("text/markdown"),
     isImage: mimeType.startsWith("image/"),
     isSource: !mimeType.startsWith("text/markdown") && mimeType.startsWith("text/"),
+    isCssFile: mimeType === "text/css",
     isBin: mimeType.startsWith("application/octet-stream"),
     inTrash: filePath.startsWith(SpecialDirs.Trash),
     isSourceView: viewMode === "source",

@@ -2,6 +2,7 @@ import { DEFAULT_MIME_TYPE, useWorkspaceRoute } from "@/context/WorkspaceContext
 import { Workspace } from "@/Db/Workspace";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { getMimeType } from "@/lib/mimeType";
+import { AbsPath } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
 import EventEmitter from "events";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -43,13 +44,15 @@ export function useFileContents({
   currentWorkspace,
   listenerCb,
   debounceMs = 250,
+  path,
 }: {
   currentWorkspace: Workspace;
   listenerCb?: (content: string | null) => void;
   debounceMs?: number;
+  path?: AbsPath | null;
 }) {
   const listenerCbRef = useRef(listenerCb);
-  const { path: filePath } = useWorkspaceRoute();
+  const { path: currentRoutePath } = useWorkspaceRoute();
   const [initialContents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
   const [error, setError] = useState<null | Error>(null);
   const navigate = useNavigate();
@@ -57,6 +60,12 @@ export function useFileContents({
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => clearTimeout(debounceRef.current!), []);
+
+  const filePath = useMemo(() => {
+    if (path) return path;
+    if (currentRoutePath) return currentRoutePath;
+    return null;
+  }, [currentRoutePath, path]);
 
   const writeFileContents = (updates: string) => {
     if (filePath && currentWorkspace) {

@@ -78,6 +78,11 @@ export class TreeNode {
   closestDir(): TreeDir | null {
     return this.isTreeDir() ? this : (this.parent?.closestDir() ?? null);
   }
+  siblings(filter: Parameters<(typeof TreeNode)["filterOutChildren"]> = {}): TreeNode[] {
+    // currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
+    return this.parent ? this.parent.filterOutChildren((child) => child !== this) : [];
+    // return this.parent ? Object.values(this.parent.children).filter((child) => child !== this) : [];
+  }
   closestDirPath(): AbsPath {
     return this.isTreeDir() ? this.path : dirname(this.path);
   }
@@ -253,7 +258,7 @@ export class TreeNode {
     });
   }
 
-  copy() {
+  copy(): TreeNode {
     if (isTreeDir(this)) {
       return new TreeDir({
         name: this.name,

@@ -1,4 +1,5 @@
 // import { markdownWithFrontMatter } from "@/components/SourceEditor/markdowExt";
+// import { basicLight } from "@/components/Editor/codeMirrorBasicLightTheme";
 import {
   CodeMirrorHighlightURLRange,
   getHighlightRangesFromURL,
@@ -23,7 +24,7 @@ import { yamlFrontmatter } from "@codemirror/lang-yaml";
 import { languages } from "@codemirror/language-data";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
-import { basicLight } from "cm6-theme-basic-light";
+// import { basicLight } from "cm6-theme-basic-light";
 import { basicSetup } from "codemirror";
 import { ChevronLeftIcon, FileText } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
@@ -84,10 +85,10 @@ export const CodeMirrorEditor = ({
       viewRef.current.destroy();
       viewRef.current = null;
     }
+    // console.log(basicLight);
 
     const extensions: Extension[] = [
       basicSetup,
-      basicLight,
       autocompletion(),
       EditorView.lineWrapping,
       CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),

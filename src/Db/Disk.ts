@@ -144,12 +144,22 @@ export type DiskRemoteEventPayload = {
   //therefore inside writes should never do anything which impacts the editor
   [DiskEvents.INSIDE_WRITE]: FilePathsType;
 };
+
+export function isFilePathsPayload(
+  payload: DiskRemoteEventPayload[keyof DiskRemoteEventPayload]
+): payload is FilePathsType {
+  return typeof payload === "object" && payload !== null && "filePaths" in payload;
+}
+
 export class DiskEventsRemote extends Channel<DiskRemoteEventPayload> {}
 
 export const SIGNAL_ONLY = undefined;
 export const DiskEvents = {
   INSIDE_WRITE: "inside-write" as const, //for writes done by the editor or local process
+  //outside write will return contents for the watched file
   OUTSIDE_WRITE: "outside-write" as const,
+  //outside update will return filepath only, not contents, "*" is possible
+  // OUTSIDE_UPDATE: "outside-update" as const,
   INDEX: "index" as const,
   RENAME: "rename" as const,
   CREATE: "create" as const,
@@ -159,6 +169,7 @@ export const DiskEvents = {
 type DiskLocalEventPayload = {
   [DiskEvents.RENAME]: RenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
+  // [DiskEvents.OUTSIDE_UPDATE]: FilePathsType;
   [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
   [DiskEvents.INSIDE_WRITE]: FilePathsType;
 };
@@ -418,6 +429,13 @@ export abstract class Disk {
     // return () => unsubs.forEach((unsub) => unsub());
   }
 
+  // outsideUpdateListener(watchFilePath: AbsPath | "*", fn: (filePaths: AbsPath[]) => void): () => void {
+  //   return this.local.on(DiskEvents.OUTSIDE_UPDATE, async ({ filePaths }) => {
+  //     if (filePaths.includes(watchFilePath) || watchFilePath === "*") {
+  //       fn(filePaths);
+  //     }
+  //   });
+  // }
   outsideWriteListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
     return this.local.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
@@ -432,7 +450,7 @@ export abstract class Disk {
       }
     });
   }
-  dirtyListener(cb: () => void) {
+  dirtyListener(cb: (trigger: FilePathsType | IndexTrigger | undefined) => void) {
     return this.local.on([DiskEvents.INSIDE_WRITE, DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], cb);
   }
 

@@ -75,6 +75,9 @@ export function EditHistoryMenu({
 
   const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
 
+  if (disabled) {
+    return null;
+  }
   return (
     <div
       className={cn("relative flex items-center bg-primary-foreground pl-2 gap-2 font-mono text-sm", {
