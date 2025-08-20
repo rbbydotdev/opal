@@ -7,7 +7,7 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
   return (
     <div className="relative w-full h-full flex-col">
       <div className="absolute truncate w-full h-12 bg-sidebar z-10 flex justify-center text-sm py-2 font-bold gap-2">
-        <span className="font-light font-mono">[ PREVIEW ]</span>
+        <span className="font-light font-mono before:content-['['] after:content-[']']"> PREVIEW </span>
         {" / "}
         <span className="truncate font-mono">{relPath(previewPath!)}</span>
       </div>

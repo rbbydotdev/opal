@@ -326,8 +326,8 @@ export class GitRepo {
     };
   }
 
-  init() {
-    this.unsubs.push(this.initListeners());
+  init({ skipListeners = false } = {}) {
+    if (!skipListeners) this.unsubs.push(this.initListeners());
     return this.sync({ emitRemote: false });
   }
 

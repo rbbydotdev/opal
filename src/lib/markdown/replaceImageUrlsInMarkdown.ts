@@ -44,6 +44,7 @@ export function replaceImageUrlsInMarkdown(
       fences: true,
       listItemIndent: "one",
     })
+    .use(remarkGfm)
     .stringify(tree);
 
   return [processed, changed];
