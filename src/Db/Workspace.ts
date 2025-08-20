@@ -653,7 +653,7 @@ export class Workspace {
     return await Disk.TransferFiles(transferNodes, fromWs.disk, toWorkspace.disk);
   }
 
-  dirtyListener(callback: (trigger?: IndexTrigger) => void) {
+  dirtyListener(callback: Parameters<typeof this.disk.dirtyListener>[0]) {
     const unsub = this.disk.dirtyListener(callback);
     this.unsubs.push(unsub);
     return unsub;

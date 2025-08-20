@@ -7,6 +7,7 @@ import {
   imageHandler,
   replaceMdImageHandler,
   RequestContext,
+  styleSheetHandler,
   uploadImageHandler,
   workspaceSearchHandler,
 } from "@/lib/ServiceWorker/handler";
@@ -23,12 +24,27 @@ interface Route {
 // Helper to create routes from simple path strings
 function createRoute(method: "GET" | "POST" | "ANY", path: string, handler: HandlerFunction): Route {
   const paramNames: string[] = [];
-  const pattern = new RegExp(
-    `^${path.replace(/:(\w+)/g, (_, name) => {
-      paramNames.push(name);
-      return "([^/]+)";
-    })}$`
-  );
+
+  // Replace :paramName with a capturing group while storing param names
+  let patternSource = path.replace(/:(\w+)/g, (_, name) => {
+    paramNames.push(name);
+    return "([^/]+)";
+  });
+
+  // Support wildcard multi-extension syntax:
+  //  - *.{jpg,jpeg,webp}
+  //  - *.{jpg|jpeg|webp}
+  // Converts to a non-capturing group matching any filename with those extensions.
+  patternSource = patternSource.replace(/\*\.\{([^}]+)\}/g, (_, exts) => {
+    const extGroup = exts
+      .split(/[,|]/)
+      .map((e: string) => e.trim())
+      .filter(Boolean)
+      .join("|");
+    return `.*\\.(?:${extGroup})`;
+  });
+
+  const pattern = new RegExp(`^${patternSource}$`);
   return { method, pattern, handler, paramNames };
 }
 
@@ -41,10 +57,10 @@ const routes: Route[] = [
   createRoute("POST", "/download-encrypted.zip", downloadEncryptedHandler),
   createRoute("GET", "/download.zip", downloadHandler),
   createRoute("GET", "/favicon.svg", faviconHandler),
+  createRoute("GET", "/.*.{css}", styleSheetHandler),
   createRoute("GET", "/src/app/icon.svg", faviconHandler),
   createRoute("GET", "/icon.svg", faviconHandler),
-  // This is a catch-all for images, so it should be last among GETs
-  createRoute("GET", "/.*", imageHandler),
+  createRoute("GET", "/.*.{jpg|webp|jpeg|png|svg}", imageHandler),
 ];
 
 export async function routeRequest(event: FetchEvent, workspaceParam: string) {

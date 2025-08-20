@@ -89,7 +89,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
 
         "Open Preview": [
           NewCmdExec(() => {
-            window.open(previewURL, "_blank", "noopener,noreferrer");
+            window.open(previewURL!, "_blank", "noopener,noreferrer");
           }),
         ],
         //

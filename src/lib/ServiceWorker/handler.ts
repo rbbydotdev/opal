@@ -7,6 +7,7 @@ import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
 import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
 import { handleImageUpload } from "@/lib/ServiceWorker/handleImageUpload";
 import { handleMdImageReplace } from "@/lib/ServiceWorker/handleMdImageReplace";
+import { handleStyleSheetRequest } from "@/lib/ServiceWorker/handleStyleSheetRequest";
 import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
 import { withRequestSignal } from "./utils"; // Assuming utils are in the same dir
 
@@ -69,6 +70,14 @@ export const faviconHandler = withRequestSignal((context: RequestContext) => {
   return handleFaviconRequest(context.workspaceName);
 });
 
+export const styleSheetHandler = withRequestSignal((context: RequestContext) => {
+  const { url, workspaceName, event } = context;
+  if (event.request.destination === "style") {
+    console.log(`Handling stylesheet request for: ${url.href}`);
+    return handleStyleSheetRequest(url, workspaceName);
+  }
+  return fetch(event.request);
+});
 export const imageHandler = withRequestSignal((context: RequestContext) => {
   const { event, url, workspaceName } = context;
 

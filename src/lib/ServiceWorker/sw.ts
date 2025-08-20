@@ -2,7 +2,9 @@ import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { routeRequest } from "@/lib/ServiceWorker/router";
-import { WHITELIST } from "@/lib/ServiceWorker/utils";
+import { EnableRemoteLogger, WHITELIST } from "@/lib/ServiceWorker/utils";
+
+EnableRemoteLogger();
 
 // EnableRemoteLogger();
 

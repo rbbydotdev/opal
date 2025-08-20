@@ -3,9 +3,11 @@ import { EditorSidebar } from "@/components/EditorSidebar";
 import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
 import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe";
 import { Toaster } from "@/components/ui/toaster";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import useFavicon from "@/hooks/useFavicon";
+import { prefix } from "@/lib/paths2";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName")({
   component: WorkspaceLayout,
@@ -14,8 +16,27 @@ export const Route = createFileRoute("/_app/workspace/$workspaceName")({
 function WorkspaceLayout() {
   const { workspaceName } = Route.useParams();
   useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
+  const { path } = useWorkspaceRoute();
+  const { currentWorkspace } = useWorkspaceContext();
 
-  const previewURL = useWorkspacePathPreviewURL();
+  const previewPath = useMemo(() => {
+    if (!path) return null;
+    const currentNode = currentWorkspace.nodeFromPath(path);
+    if (currentNode?.isCssFile()) {
+      return (
+        currentNode.siblings().find((node) => node.isMarkdownFile() && prefix(node.path) === prefix(path))?.path ||
+        currentNode.siblings().find((node) => node.isMarkdownFile())?.path ||
+        path
+      );
+    } else {
+      return path;
+    }
+  }, [currentWorkspace, path]);
+
+  // const path = isMarkdown  ?
+  console.log("previewPath", previewPath);
+  const previewURL = useWorkspacePathPreviewURL(previewPath!);
+
   useEffect(() => {
     if (workspaceName) {
       document.title = workspaceName;
@@ -30,7 +51,8 @@ function WorkspaceLayout() {
           renderHiddenSidebar={true}
           sidebar={<EditorSidebar className="main-editor-sidebar" />}
           main={<Outlet />}
-          rightPane={<PreviewIFrame previewURL={previewURL} />}
+          rightPaneEnabled={!!previewURL}
+          rightPane={previewURL ? <PreviewIFrame previewURL={previewURL} /> : null}
         />
       </div>
     </>

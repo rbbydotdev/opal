@@ -1,10 +1,12 @@
+import { useRenamePathAdjuster } from "@/app/useRenamePathAdjuster";
+import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { isImage, isMarkdown } from "@/lib/paths2";
+import { AbsPath, isImage, isMarkdown } from "@/lib/paths2";
 import { useRouter, useSearch } from "@tanstack/react-router";
 import "github-markdown-css/github-markdown-light.css";
 import { RefObject, useEffect, useMemo, useState } from "react";
@@ -21,14 +23,18 @@ export function PreviewComponent() {
 
 function PreviewComponentInternal() {
   const { path } = useWorkspaceRoute();
+  // const { isCssFile } = useCurrentFilepath();
   const { sessionId } = useSearch({
     strict: false,
   }) as { sessionId: string };
   const { currentWorkspace } = useWorkspaceContext();
   const router = useRouter();
+
+  useRenamePathAdjuster({ path, currentWorkspace });
+
   useEffect(() => {
     //TODO this should just be a reusable hook somewhere
-    currentWorkspace.renameListener((details) => {
+    return currentWorkspace.renameListener((details) => {
       const pathRename = details.find(({ oldPath }) => oldPath === path);
       if (pathRename) {
         router.history.replace(
@@ -37,28 +43,22 @@ function PreviewComponentInternal() {
       }
     });
   }, [currentWorkspace, path, router]);
-  const cssFiles = useMemo(
-    () =>
-      Object.values(
-        currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
-      ).map((node) => node.path),
-    [currentWorkspace, path]
-  );
 
-  // const sessionId = searchParams.get("sessionId") ?? "UNKNOWN_SESSION_ID";
+  const cssFiles = useLiveCssFiles({ path, currentWorkspace });
+
   const { scrollEmitter } = useScrollChannel({ sessionId });
   if (!path) return null;
+
   if (isMarkdown(path)) {
     return (
-      <ScrollSyncProvider scrollEmitter={scrollEmitter}>
-        {/* {cssFiles.map((p) => (
-          <style key={p} data-css-path={p}>
-            {currentWorkspace.getFileContentsSync(p) || ""}
-          </style>
-        ))} */}
-
-        <MarkdownRender />
-      </ScrollSyncProvider>
+      <>
+        <ScrollSyncProvider scrollEmitter={scrollEmitter}>
+          {cssFiles.map((stylePath) => (
+            <link key={stylePath} rel="stylesheet" href={stylePath} />
+          ))}
+          <MarkdownRender path={path} />
+        </ScrollSyncProvider>
+      </>
     );
   }
   if (isImage(path)) {
@@ -80,11 +80,12 @@ function ImageRender() {
   );
 }
 
-function MarkdownRender() {
+function MarkdownRender({ path }: { path: AbsPath | null }) {
   const [contents, setContents] = useState<string | null>(null);
   const { currentWorkspace } = useWorkspaceContext();
   const { initialContents } = useFileContents({
     currentWorkspace,
+    path,
     listenerCb: (contents) => {
       setContents(stripFrontmatter(String(contents)));
     },
@@ -94,12 +95,13 @@ function MarkdownRender() {
     [contents, initialContents]
   );
   const { scrollRef } = useScrollSync();
+
   return (
     <div
-      className="mt-[10px] w-full border-[2px] rounded shadow-lg  p-4 m-0 h-[calc(100vh-20px)] overflow-y-scroll"
+      className="mt-[10px] w-full _border-[2px] _rounded _shadow-lg  p-4 m-0 h-[calc(100vh-20px)] overflow-y-scroll"
       ref={scrollRef as RefObject<HTMLDivElement>}
     >
-      <div className="prose markdown-body" dangerouslySetInnerHTML={{ __html: html }}></div>
+      <div className="prose markdown-body flex flex-col items-center" dangerouslySetInnerHTML={{ __html: html }}></div>
     </div>
   );
 }
