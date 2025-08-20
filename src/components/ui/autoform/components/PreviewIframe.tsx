@@ -6,7 +6,7 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
   const [showSpinner, setShowSpinner] = useState(true);
   return (
     <div className="relative w-full h-full flex-col">
-      <div className="absolute truncate w-full h-8 bg-sidebar z-10 flex justify-center text-sm py-2 font-bold gap-2">
+      <div className="absolute truncate w-full h-12 bg-sidebar z-10 flex justify-center text-sm py-2 font-bold gap-2">
         <span className="font-light font-mono">[ PREVIEW ]</span>
         {" / "}
         <span className="truncate font-mono">{relPath(previewPath!)}</span>
@@ -20,7 +20,7 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
       </div>
       <iframe
         src={previewURL}
-        className="border-0 absolute inset-0 w-full h-full top-8"
+        className="border-0 absolute inset-0 w-full h-full"
         title="Preview"
         onLoad={() => setShowSpinner(false)}
       />
