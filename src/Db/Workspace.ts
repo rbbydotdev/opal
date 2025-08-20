@@ -682,7 +682,7 @@ export class Workspace {
 
   private async initRepo({ skipListeners }: { skipListeners?: boolean } = {}) {
     const unsubs: (() => void)[] = [];
-    await this.repo.init();
+    await this.repo.init({ skipListeners });
     if (skipListeners !== true) {
       unsubs.push(this.dirtyListener(debounce(() => this.repo.sync(), 500)));
       unsubs.push(

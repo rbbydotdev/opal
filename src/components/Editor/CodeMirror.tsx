@@ -125,7 +125,7 @@ export const CodeMirrorEditor = ({
       EditorView.editable.of(!readOnly),
       EditorView.theme(
         {
-          "&": { height: "100%" },
+          "&": { height: "calc(100% - 4rem)" },
           ".cm-scroller": { height: "100%" },
           ".cm-content": { padding: 0 },
         },

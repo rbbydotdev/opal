@@ -34,10 +34,10 @@ function formatConsoleMsg(msg: unknown): string {
 
 export function EnableRemoteLogger() {
   const RL = RemoteLogger("ServiceWorker");
-  console.log = (msg: unknown) => RL(formatConsoleMsg(msg), "log");
-  console.debug = (msg: unknown) => RL(formatConsoleMsg(msg), "debug");
-  console.error = (msg: unknown) => RL(formatConsoleMsg(msg), "error");
-  console.warn = (msg: unknown) => RL(formatConsoleMsg(msg), "warn");
+  console.log = (...msg: unknown[]) => RL(formatConsoleMsg(msg.join(" ")), "log");
+  console.debug = (...msg: unknown[]) => RL(formatConsoleMsg(msg.join(" ")), "debug");
+  console.error = (...msg: unknown[]) => RL(formatConsoleMsg(msg.join(" ")), "error");
+  console.warn = (...msg: unknown[]) => RL(formatConsoleMsg(msg.join(" ")), "warn");
 }
 
 // --- Request Signaling ---
