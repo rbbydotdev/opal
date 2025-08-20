@@ -37,6 +37,13 @@ function PreviewComponentInternal() {
       }
     });
   }, [currentWorkspace, path, router]);
+  const cssFiles = useMemo(
+    () =>
+      Object.values(
+        currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
+      ).map((node) => node.path),
+    [currentWorkspace, path]
+  );
 
   // const sessionId = searchParams.get("sessionId") ?? "UNKNOWN_SESSION_ID";
   const { scrollEmitter } = useScrollChannel({ sessionId });
@@ -44,6 +51,12 @@ function PreviewComponentInternal() {
   if (isMarkdown(path)) {
     return (
       <ScrollSyncProvider scrollEmitter={scrollEmitter}>
+        {/* {cssFiles.map((p) => (
+          <style key={p} data-css-path={p}>
+            {currentWorkspace.getFileContentsSync(p) || ""}
+          </style>
+        ))} */}
+
         <MarkdownRender />
       </ScrollSyncProvider>
     );

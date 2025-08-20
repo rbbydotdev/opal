@@ -156,7 +156,7 @@ export const EditorSidebarLayout = ({
 
   const handleRightPaneMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (rightPaneRef.current) {
+    if (rightPaneEnabled && rightPaneRef.current) {
       rightPaneDragStartInfoRef.current = {
         startX: e.clientX,
         initialDisplayWidth: rightPaneRef.current.offsetWidth,
