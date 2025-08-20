@@ -15,7 +15,7 @@ export function useEditorHistoryPlugin2WithContentWatch({
 }) {
   const cbRef = useRef<(md: string) => void>(() => {});
   const { currentWorkspace } = useWorkspaceContext();
-  const { initialContents, writeFileContents } = useFileContents({
+  const { initialContents, writeFileContents, contentEmitter } = useFileContents({
     currentWorkspace,
     listenerCb: (md) => {
       console.log(md);
@@ -44,10 +44,9 @@ export function useEditorHistoryPlugin2WithContentWatch({
   });
 
   useEffect(() => {
-    historyOutputInput(
+    return historyOutputInput(
       (md) => writeFileContents(md),
       (setMarkdown) => {
-        // console.log(setMarkdown);
         cbRef.current = setMarkdown;
       }
     );

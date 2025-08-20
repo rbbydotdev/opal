@@ -73,7 +73,8 @@ export function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
 // ---- Hook ----
 //
 export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const { newFile, newDir } = useWorkspaceFileMgmt(currentWorkspace);
+  const { newFile, newDir, renameDirOrFile, trashFile } = useWorkspaceFileMgmt(currentWorkspace);
+  // joinPath(dirname(origNode.path), relPath(fileName));
   const { repo, playbook } = currentWorkspace;
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath } = useWorkspaceRoute();
@@ -86,6 +87,60 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         //
         // MARK: File Commands
         //
+        "Rename Current File": [
+          NewCmdPrompt("new_name", "Enter new file name"),
+          NewCmdExec(async (context) => {
+            const newName = context.new_name as string;
+            if (!newName) {
+              console.warn("No new name provided for renaming");
+              return;
+            }
+            if (!currentPath) {
+              console.warn("No current path available for renaming");
+              return;
+            }
+            const currentFile = currentWorkspace.nodeFromPath(currentPath);
+            if (!currentFile) {
+              console.warn("Current file not found");
+              return;
+            }
+            const wantPath = currentFile.copy().renameStrictPrefix(newName).toString();
+            await renameDirOrFile(currentFile, wantPath);
+          }),
+        ],
+        "New Style CSS": [
+          NewCmdExec(async () => {
+            const path = await newFile(absPath("styles.css"));
+            void navigate({
+              to: currentWorkspace.resolveFileUrl(path),
+            });
+          }),
+        ],
+        "Trash File": [
+          NewCmdExec(async () => {
+            if (!currentPath) {
+              console.warn("No current file to trash");
+              return;
+            }
+            await trashFile(currentPath);
+          }),
+        ],
+
+        "New Dir": [
+          NewCmdPrompt("dir_name", "Enter new directory name"),
+          NewCmdExec(async (context) => {
+            const name = context.dir_name as string;
+            if (!name) {
+              console.warn("No directory name provided");
+              return;
+            }
+            const dir = currentWorkspace.nodeFromPath(currentPath)?.closestDirPath() ?? ("/" as AbsPath);
+            const dirName = joinPath(dir, prefix(basename(name || "newdir")));
+            const path = await newDir(absPath(strictPrefix(dirName)));
+            console.log("New directory created at:", path);
+          }),
+        ],
+
         "New Markdown File": [
           NewCmdPrompt("markdown_file_name", "Enter markdown file name"),
           NewCmdExec(async (context) => {
@@ -100,31 +155,6 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             void navigate({
               to: currentWorkspace.resolveFileUrl(path),
             });
-          }),
-        ],
-
-        "New Style CSS": [
-          NewCmdExec(async () => {
-            const path = await newFile(absPath("styles.css"));
-            void navigate({
-              to: currentWorkspace.resolveFileUrl(path),
-            });
-          }),
-        ],
-        "Delete File": [NewCmdExec(async () => {})],
-
-        "New Dir": [
-          NewCmdPrompt("dir_name", "Enter new directory name"),
-          NewCmdExec(async (context) => {
-            const name = context.dir_name as string;
-            if (!name) {
-              console.warn("No directory name provided");
-              return;
-            }
-            const dir = currentWorkspace.nodeFromPath(currentPath)?.closestDirPath() ?? ("/" as AbsPath);
-            const dirName = joinPath(dir, prefix(basename(name || "newdir")));
-            const path = await newDir(absPath(strictPrefix(dirName)));
-            console.log("New directory created at:", path);
           }),
         ],
 
@@ -187,7 +217,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           }),
         ],
       }) as const,
-    [currentPath, currentWorkspace, focused, navigate, newDir, newFile, playbook, repo]
+    [currentPath, currentWorkspace, focused, navigate, newDir, newFile, playbook, renameDirOrFile, repo, trashFile]
   );
 
   //
@@ -197,12 +227,17 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
 
   const filterOutKeys = useMemo(() => {
     const cmds = new Set<keyof typeof cmdMap>();
+    const currentFile = currentWorkspace.nodeFromPath(currentPath);
+    if (!currentFile?.isTreeFile()) {
+      cmds.add("Rename Current File");
+      cmds.add("Trash File");
+    }
     if (!isMarkdown) {
       cmds.add("Rich Text View");
       cmds.add("Source View");
     }
     if (gitRepoInfo.initialized) {
-      cmds.add("Git Init");
+      cmds.add("Git Initialize Repo");
     }
     if (!gitRepoInfo.initialized || !gitRepoInfo?.hasChanges || gitRepoInfo.unmergedFiles.length) {
       cmds.add("Git Commit");
@@ -211,7 +246,14 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       cmds.add("Git Merge Commit");
     }
     return cmds;
-  }, [isMarkdown, gitRepoInfo]);
+  }, [
+    currentWorkspace,
+    currentPath,
+    isMarkdown,
+    gitRepoInfo.initialized,
+    gitRepoInfo?.hasChanges,
+    gitRepoInfo.unmergedFiles.length,
+  ]);
 
   const filteredCmds = useMemo(() => {
     return Object.entries(cmdMap)

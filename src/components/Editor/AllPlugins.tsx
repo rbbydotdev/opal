@@ -43,6 +43,7 @@ const SourceEditorButton = () => (
 );
 
 function MdxEditorInFocus() {
+  console.log(Boolean(document.activeElement?.closest(MdxEditorSelector)));
   return Boolean(document.activeElement?.closest(MdxEditorSelector));
 }
 export function useAllPlugins({
@@ -145,16 +146,10 @@ export function useAllPlugins({
           defaultCodeBlockLanguage: "js",
           codeBlockEditorDescriptors: [{ priority: -10, match: (_) => true, Editor: CodeMirrorEditor }],
         }),
-        // sandpackPlugin({ sandpackConfig: virtuosoSampleSandpackConfig }),
         codeMirrorPlugin({
           codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
         }),
         directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
-        /*diffSourcePlugin({
-          viewMode: finalViewMode,
-          diffMarkdown: String(initialContents ?? ""),
-          codeMirrorExtensions: [CodeMirrorHighlightURLRange()],
-        }),*/
         markdownShortcutPlugin(),
       ].filter(Boolean),
     [

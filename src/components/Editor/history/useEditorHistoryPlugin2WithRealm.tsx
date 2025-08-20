@@ -42,15 +42,13 @@ export function useEditorHistoryPlugin2WithRealm({
 
   const markdown$Ref = useRef(
     Cell("", (realm) => {
-      realm.sub(markdown$, (md) => {
-        realm.pub(markdown$Ref.current, md);
-      });
+      realm.sub(markdown$, (md) => realm.pub(markdown$Ref.current, md));
     })
   );
 
   useEffect(() => {
     if (realm) {
-      historyOutputInput(
+      return historyOutputInput(
         (md) => realm.pub(setMarkdown$, md),
         (setMarkdown) => realm.singletonSub(markdown$Ref.current, (md) => setMarkdown(md))
       );

@@ -26,6 +26,9 @@ import { basicSetup } from "codemirror";
 import { ChevronLeftIcon, FileText } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
+const noCommentKeymap = keymap.of([
+  { key: "Mod-/", run: () => true }, // return true = handled, but do nothing
+]);
 export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript";
 
 const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | string) => {
@@ -58,16 +61,19 @@ export const CodeMirrorEditor = ({
 }: {
   mimeType: "text/css" | "text/plain" | "text/markdown" | string;
   value: string;
-  onChange?: (value: string) => void;
+  onChange: (value: string) => void;
   readOnly?: boolean;
   height?: string;
   className?: string;
   currentWorkspace: Workspace;
 }) => {
+  const valueRef = useRef(value);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const ext = useMemo(() => getLanguageExtension(mimeType), [mimeType]);
 
+  valueRef.current = value;
+  // Mount editor once
   useEffect(() => {
     if (!editorRef.current) return;
 
@@ -80,34 +86,52 @@ export const CodeMirrorEditor = ({
     const extensions: Extension[] = [
       basicSetup,
       basicLight,
-      autocompletion(), // enables autocomplete
+      autocompletion(),
       EditorView.lineWrapping,
-
       CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),
+      noCommentKeymap,
       keymap.of([indentWithTab]),
       ext,
+      // how to determine user change vs programmatic change
+      // EditorView.updateListener.of((update) => {
+      //         if (update.docChanged) {
+      //           // Check if this was a user event
+      //           const userEvent = update.transactions.some((tr) =>
+      //             tr.annotation(Transaction.userEvent)
+      //           );
+
+      //           if (userEvent) {
+      //             console.log("User change:", userEvent);
+      //             // userEvent will be strings like "input", "delete", "paste", "dragdrop"
+      //           } else {
+      //             console.log("Programmatic change");
+      //           }
+      //         }
+      //       }),
+
       EditorView.updateListener.of((update) => {
-        if (update.docChanged && onChange) {
-          onChange(update.state.doc.toString());
+        if (update.docChanged) {
+          const docStr = update.state.doc.toString();
+          // const prevStr = update.startState.doc.toString();
+          // if (docStr !== prevStr && onChange) {
+          if (docStr !== valueRef.current) {
+            onChange(docStr);
+          }
         }
       }),
       EditorView.editable.of(!readOnly),
       EditorView.theme(
         {
-          "&": { height: "100%" }, // Make the editor fill its parent
-          ".cm-scroller": { height: "100%" }, // Make the scroll area fill the editor
-          ".cm-content": {
-            padding: 0,
-          },
+          "&": { height: "100%" },
+          ".cm-scroller": { height: "100%" },
+          ".cm-content": { padding: 0 },
         },
-        {
-          dark: false,
-        }
+        { dark: false }
       ),
     ].filter(Boolean) as Extension[];
 
     const state = EditorState.create({
-      doc: value,
+      doc: valueRef.current, // controlled value at mount
       extensions,
     });
 
@@ -120,27 +144,21 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-    // Only run on mount/unmount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorRef, readOnly, height]);
+  }, [editorRef, readOnly, height, ext, value, onChange]);
 
-  // Update content if value prop changes
+  // Sync external value → editor
+
   useEffect(() => {
     if (viewRef.current && value !== viewRef.current.state.doc.toString()) {
       viewRef.current.dispatch({
-        changes: {
-          from: 0,
-          to: viewRef.current.state.doc.length,
-          insert: value,
-        },
+        changes: { from: 0, to: viewRef.current.state.doc.length, insert: value },
       });
     }
   }, [value]);
 
+  // history + toolbar stuff
   const { updateDebounce } = useFileContents({ currentWorkspace });
-
   const historyDB = useSnapHistoryDB();
-
   const {
     triggerSave,
     isRestoreState,

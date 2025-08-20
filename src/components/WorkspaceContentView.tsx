@@ -24,6 +24,8 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
     },
   });
 
+  if (error) throw error;
+
   const { id, path } = useWorkspaceRoute();
   const { mimeType } = useCurrentFilepath();
 
@@ -32,8 +34,6 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
   const mdxEditorElement = useWatchElement(MdxEditorSelector);
 
   const documentId = useWorkspaceDocumentId(initialContents) ?? "unknown";
-
-  if (error) throw error;
 
   if (initialContents === null || !currentWorkspace) return null;
   return (
