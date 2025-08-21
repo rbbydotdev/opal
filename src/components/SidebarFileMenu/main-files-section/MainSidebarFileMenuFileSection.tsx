@@ -18,17 +18,35 @@ import { useState } from "react";
 const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   const [dragEnter, setDragEnter] = useState(false);
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
+
+  const { setFileTreeCtx } = useFileTreeMenuCtx();
+  const handleClick = () => {
+    setFileTreeCtx({
+      editing: null,
+      editType: null,
+      focused: absPath("/"),
+      virtual: null,
+      selectedRange: [],
+    });
+  };
   const { handleDrop } = useFileTreeDragDrop({ currentWorkspace, onMoveMultiple: renameDirOrFileMultiple });
   return (
     <div
       className={cn(
-        "group/banner w-full h-10 z-10 border-dashed hover:border-black border font-mono text-2xs flex justify-center items-center",
-        { "border-black": dragEnter }
+        "cursor-pointer group/banner w-full h-4 z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
+        { "border-black border h-8": dragEnter }
       )}
       onDrop={(e) => handleDrop(e, RootNode)}
       onDragEnter={() => setDragEnter(true)}
       onDragLeave={() => setDragEnter(false)}
       onMouseLeave={() => setDragEnter(false)}
+      onClick={handleClick}
+      // onFocus={handleFocus}
+      // onMouseUp={handleMouseUp}
+      // onMouseDown={handleMouseDown}
+      // onKeyDown={(e) => handleKeyDown(e)}
+      // onClick={handleClick}
+      title={"File Tree Root"}
     >
       <span className={cn("group-hover/banner:block hidden", { block: dragEnter })}>root</span>
     </div>
