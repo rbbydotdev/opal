@@ -113,10 +113,8 @@ export function Prompt({
     console.log(formData);
     const values = Object.fromEntries(formData.entries());
     handleSubmit(values);
-    //@ts-ignore
-    if (FormElement.props.onSubmit) {
-      //@ts-ignore
-      FormElement.props.onSubmit(e);
+    if (FormElement?.props?.onSubmit) {
+      FormElement.props.onSubmit?.(e);
     }
   };
   return (
