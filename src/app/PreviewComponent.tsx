@@ -1,4 +1,4 @@
-import { LinkTag } from "@/app/LinkTag";
+import { Links } from "@/app/Links";
 import { useRenamePathAdjuster } from "@/app/useRenamePathAdjuster";
 import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
@@ -57,10 +57,8 @@ function PreviewComponentInternal() {
           cssFiles: {cssFiles.join(", ")}
         </div>
         <ScrollSyncProvider scrollEmitter={scrollEmitter}>
-          {cssFiles.map((stylePath) => (
-            <LinkTag key={stylePath} href={stylePath} />
-            // <link rel="stylesheet" key={stylePath} href={stylePath} />
-          ))}
+          <Links hrefs={cssFiles} />
+
           <MarkdownRender path={path} />
         </ScrollSyncProvider>
       </>
