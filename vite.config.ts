@@ -13,6 +13,9 @@ export default defineConfig(() => {
     // Disable Hot Module Replacement
     plugins: [
       react({
+        babel: {
+          plugins: ["babel-plugin-react-compiler"],
+        },
         // Exclude service worker and web worker files from React plugin
         exclude: [/\.ww\.(ts|js)$/, /sw\.(ts|js)$/],
       }),
