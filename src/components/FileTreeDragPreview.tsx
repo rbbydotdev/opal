@@ -21,7 +21,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
   return (
     <DragPreviewNode
       ref={ref}
-      className="grid place-items-center relative w-24 h-24"
+      className="grid place-items-center relative w-36 h-36"
       style={{ gridTemplateAreas: "'stack'" }}
     >
       {count > 1 && (
