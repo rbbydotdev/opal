@@ -440,10 +440,10 @@ function SpotlightSearchInternal({
                 id={`spotlight-item-${index}`}
                 isActive={index === activeIndex}
                 onSelect={(e: any) => {
-                  e.preventDefault();
-                  e.stopPropagation();
                   return state === "select"
                     ? (() => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         execContext.current[currentPrompt!.name] = item.href;
                         setSearch("");
                         setState("spotlight");

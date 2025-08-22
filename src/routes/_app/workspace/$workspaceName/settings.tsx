@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import * as z from "zod";
 
 const workspaceFormSchema = z.object({
@@ -43,17 +43,19 @@ function WorkspaceSettingsPage() {
   }, [currentWorkspace, form]);
 
   function onSubmit(data: WorkspaceFormValues) {
-    toast("Workspace updated", {
+    toast({
+      title: "Workspace updated",
       description: "Your workspace settings have been updated.",
-      // className:
+      type: "success",
     });
     console.log(data);
   }
 
   function handleDeleteWorkspace() {
-    toast("Workspace deletion requested", {
+    toast({
+      title: "Workspace deletion requested",
       description: "This action would delete your workspace.",
-      className: "destructive group border-destructive bg-destructive text-destructive-foreground",
+      type: "error",
     });
   }
 

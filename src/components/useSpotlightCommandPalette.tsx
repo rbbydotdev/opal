@@ -1,6 +1,7 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
+import { toast } from "@/components/ui/sonner";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
@@ -9,7 +10,6 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { toast } from "sonner";
 
 //
 // ---- Types ----
@@ -203,10 +203,11 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         "Git Commit": [
           NewCmdExec(async (_context, abort) => {
             if (!repo.getInfo()?.hasChanges) {
-              toast("No changes to commit", {
-                // position: "top-center",
-                position: "top-right",
+              toast({
+                title: "No changes to commit",
                 description: "There are no changes in the repository to commit.",
+                type: "info",
+                position: "top-right",
               });
               return abort();
             }
@@ -223,6 +224,13 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
               return;
             }
             await playbook.addAllCommit({ message });
+
+            toast({
+              title: "Commit successful",
+              description: message ? `Committed changes: "${message}"` : "Committed changes",
+              type: "success",
+              position: "top-right",
+            });
           }),
         ],
 
@@ -232,7 +240,9 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         "Toggle Light/Dark Mode": [
           NewCmdExec(() => {
             toggleMode();
-            toast(`Switched to ${mode === "light" ? "dark" : "light"} mode`, {
+            toast({
+              title: `Switched to ${mode === "light" ? "dark" : "light"} mode`,
+              type: "success",
               position: "top-right",
             });
           }),
@@ -243,7 +253,9 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           NewCmdExec(async (context) => {
             const selectedTheme = context.theme as string;
             setTheme(selectedTheme);
-            toast(`Applied theme: ${selectedTheme}`, {
+            toast({
+              title: `Applied theme: ${selectedTheme}`,
+              type: "success",
               position: "top-right",
             });
           }),
