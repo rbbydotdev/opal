@@ -225,7 +225,7 @@ function ApiKeyAuth({
           <FormItem>
             <FormLabel>API Key</FormLabel>
             <FormControl>
-              <Input {...field} value={field.value ?? ""} placeholder="API Key" />
+              <Input {...field} value={field.value ?? ""} placeholder="API Key" required />
             </FormControl>
             <FormMessage />
           </FormItem>
