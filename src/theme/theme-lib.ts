@@ -17,6 +17,44 @@ export interface ThemeRegistryItem {
     theme?: Record<string, string>;
   };
 }
+const ALL_VARS = new Set([
+  "accent",
+  "accent-foreground",
+  "background",
+  "border",
+  "card",
+  "card-foreground",
+  "destructive",
+  "destructive-foreground",
+  "font-mono",
+  "font-sans",
+  "font-serif",
+  "foreground",
+  "input",
+  "letter-spacing",
+  "muted",
+  "muted-foreground",
+  "popover",
+  "popover-foreground",
+  "primary",
+  "primary-foreground",
+  "radius",
+  "ring",
+  "secondary",
+  "secondary-foreground",
+  "shadow-color",
+  "shadow-opacity",
+  "sidebar",
+  "sidebar-accent",
+  "sidebar-accent-foreground",
+  "sidebar-border",
+  "sidebar-foreground",
+  "sidebar-primary",
+  "sidebar-primary-foreground",
+  "sidebar-ring",
+  "spacing",
+  "tracking-normal",
+]);
 
 export interface ApplyThemeOptions {
   theme: string;
@@ -24,23 +62,41 @@ export interface ApplyThemeOptions {
   rootElement?: HTMLElement;
 }
 
-/**
- * Apply a theme to the root element
- * @param registry - Your imported registry.json (annotated with ThemeRegistry type)
- * @param options - Theme name, mode, and optional root element
- */
+function themePrefersMode(theme: ThemeRegistryItem): "light" | "dark" {
+  //check which mode has the most variables defined
+  if (theme.name.includes("light")) {
+    return "light";
+  }
+  if (theme.name.includes("dark")) {
+    return "dark";
+  }
+  const lightCount = Object.keys(theme.cssVars.light || {}).length;
+  const darkCount = Object.keys(theme.cssVars.dark || {}).length;
+  const themeCount = Object.keys(theme.cssVars.theme || {}).length;
+  return lightCount >= darkCount && lightCount >= themeCount ? "light" : "dark";
+}
+export function getThemeModePrefers(themeName: string, registry: ThemeRegistry): "light" | "dark" | null {
+  const themeItem = registry.items.find((item) => item.name === themeName);
+  if (!themeItem) {
+    console.warn(`Theme "${themeName}" not found in registry`);
+    return null;
+  }
+  return themePrefersMode(themeItem);
+}
+
 export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions): void {
   const { theme: themeName, mode, rootElement = document.documentElement } = options;
 
+  const defaultTheme = registry.items.find((item) => item.name === "default");
   // Find the theme in registry
   let themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
     console.warn(`Theme "${themeName}" not found in registry`);
   }
   if (!themeItem) {
-    themeItem = registry.items.find((item) => item.name === "default");
+    themeItem = defaultTheme;
     console.warn(`Theme default not found in registry`);
-    return;
+    return; //{ preferMode: null };
   }
 
   // Apply dark/light class
@@ -55,17 +111,22 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
   // Apply theme CSS variables
   const variables = {
     ...themeItem.cssVars.theme, // Common variables
-
+    ...(defaultTheme?.cssVars[mode] ?? defaultTheme?.cssVars["light"] ?? defaultTheme?.cssVars["dark"] ?? {}),
     ...(themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
-
     ...(themeItem.cssVars[mode] ?? themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
   };
   // console.log(mode, JSON.stringify(variables, null, 4));
+
+  //clear previous theme variables
+  ALL_VARS.forEach((key) => {
+    rootElement.style.removeProperty(`--${key}`);
+  });
 
   // Set CSS custom properties
   Object.entries(variables).forEach(([key, value]) => {
     rootElement.style.setProperty(`--${key}`, value);
   });
+  // return { preferMode: themePrefersMode(themeItem) };
 }
 
 /**

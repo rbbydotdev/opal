@@ -35,19 +35,14 @@ const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   return (
     <div
       className={cn(
-        "cursor-pointer group/banner w-full h-4 z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
-        { "border-black border h-8": dragEnter }
+        "cursor-pointer group/banner w-[calc(100%-2rem)] h-4 z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
+        { "border h-8": dragEnter }
       )}
       onDrop={(e) => handleDrop(e, RootNode)}
       onDragEnter={() => setDragEnter(true)}
       onDragLeave={() => setDragEnter(false)}
       onMouseLeave={() => setDragEnter(false)}
       onClick={handleClick}
-      // onFocus={handleFocus}
-      // onMouseUp={handleMouseUp}
-      // onMouseDown={handleMouseDown}
-      // onKeyDown={(e) => handleKeyDown(e)}
-      // onClick={handleClick}
       title={"File Tree Root"}
     >
       <span className={cn("group-hover/banner:block hidden", { block: dragEnter })}>root</span>
