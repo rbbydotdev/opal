@@ -368,7 +368,7 @@ function SpotlightSearchInternal({
     <div
       ref={containerRef}
       className={clsx(
-        "absolute left-0 right-0 top-4 z-20 m-auto flex w-[36rem] flex-col items-center justify-center",
+        "absolute left-0 right-0 top-4 z-50 m-auto flex w-[36rem] flex-col items-center justify-center",
         "translate-y-12",
         { "animate-in": open }
       )}

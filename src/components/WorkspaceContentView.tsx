@@ -12,8 +12,6 @@ import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { ComponentProps, useRef } from "react";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
-import "@mdxeditor/editor/style.css";
-
 export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const editorRef = useRef<MDXEditorMethods>(null);
   const { initialContents, updateDebounce, error } = useFileContents({

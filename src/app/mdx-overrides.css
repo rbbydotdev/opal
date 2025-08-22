@@ -1,3 +1,5 @@
+@import "@mdxeditor/editor/style.css";
+
 .mdxeditor-popup-container {
   z-index: 10 !important;
 }
@@ -130,5 +132,114 @@
     width: 100%;
     margin-top: 1rem;
     margin-bottom: 1rem;
+  }
+}
+
+/* MDXEditor Theme Integration with Shadcn Colors */
+.mdxeditor {
+  /* Base colors - using shadcn muted/background colors */
+  --baseBase: var(--background) !important;
+  --baseBgSubtle: var(--muted) !important;
+  --baseBg: var(--card) !important;
+  --baseBgHover: var(--accent) !important;
+  --baseBgActive: var(--accent) !important;
+  --baseLine: var(--border) !important;
+  --baseBorder: var(--border) !important;
+  --baseBorderHover: var(--input) !important;
+  --baseSolid: var(--muted-foreground) !important;
+  --baseSolidHover: var(--foreground) !important;
+  --baseText: var(--foreground) !important;
+  --baseTextContrast: var(--foreground) !important;
+
+  /* Accent colors - using shadcn primary colors */
+  --accentBase: var(--primary) !important;
+  --accentBgSubtle: var(--secondary) !important;
+  --accentBg: var(--secondary) !important;
+  --accentBgHover: var(--secondary) !important;
+  --accentBgActive: var(--secondary) !important;
+  --accentLine: var(--primary) !important;
+  --accentBorder: var(--primary) !important;
+  --accentBorderHover: var(--primary) !important;
+  --accentSolid: var(--primary) !important;
+  --accentSolidHover: var(--primary) !important;
+  --accentText: var(--primary) !important;
+  --accentTextContrast: var(--primary-foreground) !important;
+
+  /* Admonition colors - using available shadcn colors */
+  --admonitionTipBg: var(--secondary) !important;
+  --admonitionTipBorder: var(--border) !important;
+
+  --admonitionInfoBg: var(--secondary) !important;
+  --admonitionInfoBorder: var(--border) !important;
+
+  --admonitionCautionBg: var(--secondary) !important;
+  --admonitionCautionBorder: var(--border) !important;
+
+  --admonitionDangerBg: var(--destructive) !important;
+  --admonitionDangerBorder: var(--destructive) !important;
+
+  --admonitionNoteBg: var(--muted) !important;
+  --admonitionNoteBorder: var(--border) !important;
+
+  /* Typography - using shadcn font variables if available */
+  font-family: var(
+    --font-sans,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif
+  ) !important;
+  --font-mono: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace
+  ) !important;
+
+  /* Background and text colors */
+  color: var(--foreground) !important;
+  --basePageBg: var(--background) !important;
+  background: var(--background) !important;
+
+  /* Force text color inheritance for dark mode */
+  p,
+  div,
+  span,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  li,
+  td,
+  th,
+  blockquote,
+  pre,
+  code {
+    color: var(--foreground) !important;
+  }
+
+  /* Ensure proper contrast in content editable */
+  .mdxeditor-root-contenteditable {
+    color: var(--foreground) !important;
+  }
+
+  /* Fix caret color */
+  .mdxeditor-root-contenteditable,
+  .content-editable {
+    caret-color: var(--foreground) !important;
   }
 }
