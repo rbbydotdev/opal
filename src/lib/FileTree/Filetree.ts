@@ -49,6 +49,7 @@ export class FileTree {
 
   walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
   asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
+  asyncWalkIterator = (...args: Parameters<TreeDirRoot["asyncWalkIterator"]>) => this.root.asyncWalkIterator(...args);
 
   getRootTree() {
     return this.root;
@@ -81,7 +82,6 @@ export class FileTree {
     return null;
   }
   all() {
-    //TODO>>>>>>>>>>>>>  this is better cache i think this.map.values();
     return Array.from(this.root.iterator());
   }
 
@@ -190,6 +190,7 @@ export class FileTree {
   }
 
   allChildrenArray = (parent: TreeDir): TreeNode[] => {
+    // return ([...parent.iterator()])
     const result: TreeNode[] = [];
     parent.walk((node) => {
       result.push(node);

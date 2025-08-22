@@ -8,118 +8,28 @@ body {
 
 @layer base {
   :root {
-    /* --off-white: rgb(255, 248, 240); */
-    --off-white: 32 100% 97.06%;
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 32 100% 97.06%;
-    --secondary-foreground: 212 100% 10%;
-    --card: var(--background);
-    --card-foreground: var(--secondary-foreground);
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --success: 155 48.5% 45.7%;
-    --success-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262.1 83.3% 57.8%;
-    --highlight: 43 83.3% 57.8%;
-    --highlight-focus: var(--ring);
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    /* --sidebar-ring: 217.2 91.2% 59.8%; */
-    --sidebar-ring: var(--ring);
+    /* Non-color variables that won't be overridden by theme registry */
     --navbar-height: 2.5rem;
     --editor-toolbar-height: 3.5rem;
-    --search-bg: 240 6% 12%; /*#1e1e1e*/
-    --search-border: 240 4% 24%; /* #3c3c3c */
-    --search-header-bg: 240 4% 18%; /* #2d2d30 */
-    --search-row-hover: 240 6% 22%; /* #37373d */
-    --search-match-hover: 168 4% 17%; /* #2a2d2e */
-    --search-highlight-fg: 35 100% 19%; /* #613a00 */
-    --search-highlight-bg: 48 100% 50%; /* #ffcc02 */
-    --search-muted: 220 5% 70%; /* #d1d5db (gray-300) */
-    --search-muted-2: 220 5% 50%; /* #6b7280 (gray-500) */
-    --search-icon: var(--ring);
-    --chart-6: 221 100% 70%; /* rgb(102, 153, 255) */
-    --chart-7: 320 100% 70%; /* rgb(255, 102, 178) */
-    --chart-8: 150 100% 70%; /* rgb(102, 255, 178) */
-    --chart-9: 210 100% 70%; /* rgb(102, 178, 255) */
-    --chart-10: 32 100% 70%; /* rgb(255, 178, 102) */
-    --chart-11: 270 100% 70%; /* rgb(178, 102, 255) */
-    --chart-12: 140 100% 70%; /* rgb(102, 255, 102) */
-    --chart-13: 60 100% 70%; /* rgb(255, 255, 102) */
-    --chart-14: 160 100% 70%; /* rgb(102, 255, 178) */
-    --chart-15: 0 100% 70%; /* rgb(255, 102, 102) */
-    --chart-16: 180 100% 70%; /* rgb(102, 255, 255) */
-    --chart-17: 260 100% 70%; /* rgb(153, 102, 255) */
-    --chart-18: 300 100% 80%; /* rgb(255, 153, 255) */
-    --chart-19: 120 100% 70%; /* rgb(102, 255, 102) */
-    --chart-20: 270 100% 70%; /* rgb(178, 102, 255) */
-    --chart-21: 210 100% 70%; /* rgb(102, 178, 255) */
-  }
-  .dark__disabled {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark__disabled {
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Missing variables that map to existing theme colors */
+    --success: var(--primary);
+    --success-foreground: var(--primary-foreground);
+    --highlight: var(--ring);
+    --highlight-focus: var(--ring);
+    --sidebar-background: var(--sidebar);
+
+    /* Search variables that map to theme colors */
+    --search-bg: var(--muted);
+    --search-border: var(--border);
+    --search-header-bg: var(--card);
+    --search-row-hover: var(--accent);
+    --search-match-hover: var(--secondary);
+    --search-highlight-fg: var(--accent-foreground);
+    --search-highlight-bg: var(--accent);
+    --search-muted: var(--muted-foreground);
+    --search-muted-2: var(--foreground);
+    --search-icon: var(--primary);
   }
 }
 

@@ -154,8 +154,8 @@ function ErrorDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="border-2 border-red-500 sm:max-w-md">
-        <DialogHeader className="flex flex-row items-center gap-2 text-red-600">
+      <DialogContent className="border-2 border-destructive sm:max-w-md">
+        <DialogHeader className="flex flex-row items-center gap-2 text-destructive">
           <AlertCircle className="h-6 w-6" />
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

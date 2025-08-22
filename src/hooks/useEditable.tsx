@@ -28,7 +28,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
 
   const { flatTree } = useFileTree();
   const { commitChange, trashSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
-  const { editing, editType, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
+  const { editing, editType, anchorIndex, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
   const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
   const isSelected = fullPath === currentFile;
   const isEditing = fullPath === editing;
@@ -70,8 +70,8 @@ export function useEditable<T extends TreeFile | TreeDir>({
       e.stopPropagation();
       //add single file to selection
       //if already selected, remove it
-      // const nextSelectedRange =
       setFileTreeCtx(({ selectedRange }) => ({
+        anchorIndex: anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex,
         editing: null,
         editType: null,
         focused: !selectedRange.includes(treeNode.path) ? treeNode.path : null,
@@ -86,19 +86,25 @@ export function useEditable<T extends TreeFile | TreeDir>({
       //select range of files
       e.preventDefault();
       e.stopPropagation();
-      const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
-      const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode!) ?? [];
-      setFileTreeCtx({
+      // const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
+      // const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode!) ?? [];
+      const range1 = flatTree.findIndex((p) => p === treeNode.path);
+      const range2 = anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex;
+      const range = flatTree.slice(Math.min(range1, range2), Math.max(range1, range2) + 1);
+
+      setFileTreeCtx(({ anchorIndex }) => ({
+        anchorIndex,
         editing: null,
         editType: null,
         focused: treeNode.path,
         virtual: null,
         selectedRange: range,
-      });
+      }));
     } else if (!isEditing && !e.shiftKey && !isSelectedRange) {
       //select single file
       //ignore if within selection to allow for drag
       setFileTreeCtx(() => ({
+        anchorIndex: flatTree.indexOf(treeNode.path),
         editing: null,
         editType: null,
         focused: treeNode.path,
@@ -113,13 +119,14 @@ export function useEditable<T extends TreeFile | TreeDir>({
     }
     if (!e.shiftKey) {
       linkRef.current?.focus();
-      setFileTreeCtx({
+      setFileTreeCtx(() => ({
+        anchorIndex: flatTree.indexOf(treeNode.path),
         editing: null,
         editType: null,
         focused: treeNode.path,
         virtual: null,
         selectedRange: [treeNode.path],
-      });
+      }));
     }
   };
 
@@ -130,6 +137,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
         currentWorkspace.removeVirtualfile(virtual);
       }
       setFileTreeCtx({
+        anchorIndex: -1,
         editing: null,
         editType: null,
         virtual: null,
@@ -151,6 +159,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
             setFileName(basename(gotPath));
           }
           return setFileTreeCtx({
+            anchorIndex: -1,
             editing: null,
             editType: null,
             virtual: null,
@@ -159,6 +168,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
           });
         } else {
           return setFileTreeCtx({
+            anchorIndex: -1,
             editing: null,
             editType: null,
             virtual: null,
@@ -168,6 +178,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
         }
       } /*is not editing  time to edit! */ else {
         return setFileTreeCtx({
+          anchorIndex: -1,
           editing: treeNode.path,
           editType: "rename",
           virtual: null,
@@ -178,13 +189,21 @@ export function useEditable<T extends TreeFile | TreeDir>({
     } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !isEditing && focused) {
       e.preventDefault();
       e.stopPropagation();
-      const path = flatTree[flatTree.indexOf(treeNode.path) - (e.key === "ArrowDown" ? -1 : 1)];
-      if (path) {
-        // const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode!) ?? [];
-        setFileTreeCtx(({ selectedRange, ...rest }) => ({
-          ...rest,
-          selectedRange: [...selectedRange, path],
-        }));
+      const nextPath = flatTree[flatTree.indexOf(treeNode.path) - (e.key === "ArrowDown" ? -1 : 1)];
+      if (nextPath) {
+        const nextAnchorIndex = anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex;
+        setFileTreeCtx(({ selectedRange, anchorIndex, ...rest }) => {
+          const nextIndex = flatTree.indexOf(nextPath);
+          const start = Math.min(nextIndex, anchorIndex);
+          const end = Math.max(nextIndex, anchorIndex) + 1;
+          const range = e.shiftKey ? flatTree.slice(start, end) : selectedRange;
+          return {
+            ...rest,
+            anchorIndex: e.shiftKey ? nextAnchorIndex : nextIndex,
+            focused: nextPath,
+            selectedRange: range,
+          };
+        });
       }
     } else if (e.key === " " && !isEditing) {
       e.preventDefault();
@@ -201,6 +220,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
       return;
     }
     setFileTreeCtx({
+      anchorIndex: anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex,
       editing,
       editType,
       virtual,
@@ -212,7 +232,8 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const handleBlur = (_e: React.FocusEvent<HTMLInputElement | HTMLAnchorElement>) => {
     if (virtual) currentWorkspace.removeVirtualfile(virtual);
 
-    setFileTreeCtx(({ focused, selectedRange }) => ({
+    setFileTreeCtx(({ anchorIndex, focused, selectedRange }) => ({
+      anchorIndex,
       editing: null,
       editType: null,
       virtual: null,

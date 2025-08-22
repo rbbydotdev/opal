@@ -69,7 +69,6 @@ export function useEditHistoryPlugin2({
     us.push(history.handleMarkdown(onOutput));
     us.push(
       onInput((md) => {
-        console.log(md);
         history.setMarkdown(md);
       })
     );

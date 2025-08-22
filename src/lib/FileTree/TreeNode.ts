@@ -155,6 +155,12 @@ export class TreeNode {
     }
   }
 
+  async *asyncWalkIterator(node: TreeNode = this, depth = 0): AsyncIterableIterator<TreeNode> {
+    for (const childNode of Object.values((node as TreeDir).children ?? {})) {
+      yield* await childNode.asyncWalkIterator(childNode, depth + 1);
+    }
+  }
+
   iterator(filter?: (n: TreeNode) => boolean): IterableIterator<TreeNode> {
     function* gen(node: TreeNode): IterableIterator<TreeNode> {
       if (!filter || filter(node)) yield node;

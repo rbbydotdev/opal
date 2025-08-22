@@ -185,6 +185,7 @@ function SpotlightSearchInternal({
   };
 
   const handleClose = () => {
+    // throw new Error("SpotlightSearch: handleClose is not implemented");
     setOpen(false);
     setState("spotlight");
     setSearch("");
@@ -396,7 +397,7 @@ function SpotlightSearchInternal({
           id="spotlight-menu"
           role="menu"
           aria-labelledby="spotlight-search"
-          className="mt-2 block max-h-48 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
+          className="mt-2 block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
         >
           {sortedList.map((item, index) => {
             if (state === "spotlight" && item.href.startsWith(commandPrefix)) {

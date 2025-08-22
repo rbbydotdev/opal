@@ -321,6 +321,12 @@ export class Workspace {
       findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
       await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
     });
+
+    // for await (const child of newNode.asyncWalkIterator()) {
+    //   findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
+    //   await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
+    // }
+
     await this.renameMdImages(findStrReplaceStr);
 
     return newNode;
