@@ -40,14 +40,19 @@ export const SidebarFileMenuFiles = ({
   const { fileTreeDir } = useFileTree();
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
 
-  const treeNode = useMemo(() => {
-    const node =
-      typeof scope === "undefined" ? fileTreeDir : (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT);
-    if (!node.isTreeDir()) {
-      throw new Error("SidebarFileMenuFiles: scoped node is not a TreeDir");
-    }
-    return node;
-  }, [currentWorkspace, fileTreeDir, scope]);
+  //TODO i dont think this is updating when it should
+  const treeNode = scope ? (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT) : fileTreeDir;
+  if (!treeNode.isTreeDir()) {
+    throw new Error("SidebarFileMenuFiles: scoped node is not a TreeDir");
+  }
+  // const treeNode = useMemo(() => {
+  //   const node =
+  //     typeof scope === "undefined" ? fileTreeDir : (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT);
+  //   if (!node.isTreeDir()) {
+  //     throw new Error("SidebarFileMenuFiles: scoped node is not a TreeDir");
+  //   }
+  //   return node;
+  // }, [currentWorkspace, fileTreeDir, scope]);
 
   const { expanderId } = useTreeExpanderContext();
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId);

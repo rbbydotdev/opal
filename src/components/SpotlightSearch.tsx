@@ -164,7 +164,10 @@ function SpotlightSearchInternal({
       execContext.current.__selectOptions = step.options;
       inputRef.current?.focus();
     } else if (isCmdExec(step)) {
-      setOpen(false);
+      // Only close spotlight if there are no more steps after this exec
+      if (execQueue.current.length === 0) {
+        setOpen(false);
+      }
       // const $p = Promise.withResolvers();
       let aborted = false;
       await step.exec(execContext.current, () => (aborted = true));
