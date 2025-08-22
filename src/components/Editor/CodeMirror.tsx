@@ -183,19 +183,21 @@ export const CodeMirrorEditor = ({
     <>
       <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
         <CodeMirrorToolbar>
-          <EditHistoryMenu
-            finalizeRestore={(md) => updateDebounce(md)}
-            disabled={mimeType !== "text/markdown"}
-            edits={edits}
-            selectedEdit={selectedEdit}
-            setEdit={setEdit}
-            rebaseHistory={rebaseHistory}
-            resetAndRestore={resetAndRestore}
-            clearAll={clearAll}
-            triggerSave={triggerSave}
-            isRestoreState={isRestoreState}
-            selectedEditMd={selectedEditMd}
-          />
+          {false && (
+            <EditHistoryMenu
+              finalizeRestore={(md) => updateDebounce(md)}
+              disabled={mimeType !== "text/markdown"}
+              edits={edits}
+              selectedEdit={selectedEdit}
+              setEdit={setEdit}
+              rebaseHistory={rebaseHistory}
+              resetAndRestore={resetAndRestore}
+              clearAll={clearAll}
+              triggerSave={triggerSave}
+              isRestoreState={isRestoreState}
+              selectedEditMd={selectedEditMd}
+            />
+          )}
         </CodeMirrorToolbar>
         <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
       </ScrollSyncProvider>

@@ -28,7 +28,7 @@ const SpotlightSearchItemLink = forwardRef<
     href: string | AbsPath;
     title: string | JSX.Element;
     isActive: boolean;
-    onSelect: () => void;
+    onSelect: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => void;
   }
 >(({ id, href, title, isActive, onSelect }, ref) => {
   const { filePath } = Workspace.parseWorkspacePath(absPathname(href));
@@ -218,12 +218,14 @@ function SpotlightSearchInternal({
       if (!search.trim()) {
         return options.map((opt) => ({ element: <>{opt}</>, href: opt }));
       }
-      const results = fuzzysort.go(search, options, { limit: 50 }).toReversed();
+      const results = fuzzysort.go(search, options, { limit: 50 }); /*.toReversed();*/
       return results.map((result) => ({
         element: (
           <>
             {result.highlight((m, i) => (
-              <b key={i}>{m}</b>
+              <b className="text-highlight" key={i}>
+                {m}
+              </b>
             ))}
           </>
         ),
@@ -239,9 +241,8 @@ function SpotlightSearchInternal({
       }));
     }
 
-    const results = fuzzysort
-      .go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 })
-      .toReversed();
+    const results = fuzzysort.go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 });
+    //.toReversed();
     return results.map((result) => ({
       element: (
         <>
@@ -420,17 +421,19 @@ function SpotlightSearchInternal({
                 key={item.href}
                 id={`spotlight-item-${index}`}
                 isActive={index === activeIndex}
-                onSelect={
-                  state === "select"
-                    ? () => {
+                onSelect={(e: any) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return state === "select"
+                    ? (() => {
                         execContext.current[currentPrompt!.name] = item.href;
                         setSearch("");
                         setState("spotlight");
                         setCurrentPrompt(null);
                         void runNextStep();
-                      }
-                    : handleClose
-                }
+                      })()
+                    : handleClose();
+                }}
                 href={state === "select" ? (item.href as AbsPath) : joinPath(basePath, item.href)}
                 title={item.element}
               />

@@ -112,19 +112,21 @@ export function useAllPlugins({
           toolbarContents: () => (
             <>
               <SourceEditorButton />
-              <EditHistoryMenu
-                finalizeRestore={(md) => updateDebounce(md)}
-                disabled={mimeType !== "text/markdown"}
-                edits={edits}
-                selectedEdit={selectedEdit}
-                setEdit={setEdit}
-                rebaseHistory={rebaseHistory}
-                resetAndRestore={resetAndRestore}
-                clearAll={clearAll}
-                triggerSave={triggerSave}
-                isRestoreState={isRestoreState}
-                selectedEditMd={selectedEditMd}
-              />
+              {false && (
+                <EditHistoryMenu
+                  finalizeRestore={(md) => updateDebounce(md)}
+                  disabled={mimeType !== "text/markdown"}
+                  edits={edits}
+                  selectedEdit={selectedEdit}
+                  setEdit={setEdit}
+                  rebaseHistory={rebaseHistory}
+                  resetAndRestore={resetAndRestore}
+                  clearAll={clearAll}
+                  triggerSave={triggerSave}
+                  isRestoreState={isRestoreState}
+                  selectedEditMd={selectedEditMd}
+                />
+              )}
               <LivePreviewButton disabled={mimeType !== "text/markdown"} />
               <MdxSearchToolbar />
               <MdxToolbar />

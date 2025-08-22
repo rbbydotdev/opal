@@ -5,7 +5,7 @@ import { useState } from "react";
 export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string; previewPath?: string | null }) {
   const [showSpinner, setShowSpinner] = useState(true);
   return (
-    <div className="relative w-full h-full flex-col">
+    <div className="relative w-full h-full flex-col text-primary-foreground">
       <div className="absolute truncate w-full h-12 bg-sidebar z-10 flex justify-center text-sm py-2 font-bold gap-2">
         <span className="font-light font-mono before:content-['['] after:content-[']']"> PREVIEW </span>
         {" / "}
@@ -20,7 +20,7 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
       </div>
       <iframe
         src={previewURL}
-        className="border-0 absolute inset-0 w-full h-full"
+        className="border-0 absolute inset-0 w-full h-full bg-white"
         title="Preview"
         onLoad={() => setShowSpinner(false)}
       />
