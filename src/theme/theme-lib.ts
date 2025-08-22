@@ -52,6 +52,7 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
     ...themeItem.cssVars.theme, // Common variables
     ...themeItem.cssVars[mode], // Mode-specific variables
   };
+  console.log(variables);
 
   // Set CSS custom properties
   Object.entries(variables).forEach(([key, value]) => {

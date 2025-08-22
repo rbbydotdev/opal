@@ -1,5 +1,4 @@
-// import { markdownWithFrontMatter } from "@/components/SourceEditor/markdowExt";
-// import { basicLight } from "@/components/Editor/codeMirrorBasicLightTheme";
+import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
 import {
   CodeMirrorHighlightURLRange,
   getHighlightRangesFromURL,
@@ -89,6 +88,7 @@ export const CodeMirrorEditor = ({
 
     const extensions: Extension[] = [
       basicSetup,
+      customCodeMirrorTheme,
       autocompletion(),
       EditorView.lineWrapping,
       CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),
