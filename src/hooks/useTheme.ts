@@ -24,6 +24,7 @@ export function useTheme() {
     DEFAULT_THEME_STATE,
     { initializeWithValue: true }
   );
+  // console.log(themeState, "useTheme state");
 
   const setMode = useCallback(
     (mode: ThemeMode) => {
