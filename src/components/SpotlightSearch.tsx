@@ -132,7 +132,7 @@ function SpotlightSearchInternal({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [deferredSearch, setDeferredSearch] = useState(""); // NEW
-  const [isPending, startTransition] = useTransition(); // NEW
+  const [_isPending, startTransition] = useTransition(); // NEW
 
   const [activeIndex, setActiveIndex] = useState(-1);
   const [state, setState] = useState<"spotlight" | "prompt" | "select">("spotlight");
@@ -164,6 +164,7 @@ function SpotlightSearchInternal({
       setPromptPlaceholder(step.description);
       setCurrentPrompt(step);
       setSearch("");
+      setDeferredSearch("");
       execContext.current.__selectOptions = step.options;
       inputRef.current?.focus();
     } else if (isCmdExec(step)) {
@@ -224,6 +225,7 @@ function SpotlightSearchInternal({
     // MARK: Handle select state
     if (state === "select" && currentPrompt && "options" in currentPrompt) {
       const options = (currentPrompt as any).options as string[];
+      console.log(deferredSearch);
       if (!deferredSearch.trim()) {
         return options.map((opt) => ({ element: <>{opt}</>, href: opt }));
       }
@@ -243,29 +245,31 @@ function SpotlightSearchInternal({
     }
 
     // MARK: Spotlight state
-    if (!deferredSearch.trim()) {
+    else if (!deferredSearch.trim()) {
       return visibleFiles.map((file) => ({
         element: <>{file}</>,
         href: file,
       }));
+    } else {
+      const results = fuzzysort.go(
+        deferredSearch,
+        deferredSearch.startsWith(commandPrefix) ? commandList : visibleFiles,
+        { limit: 50 }
+      );
+
+      return results.map((result) => ({
+        element: (
+          <>
+            {result.highlight((m, i) => (
+              <b className="text-highlight" key={i}>
+                {m}
+              </b>
+            ))}
+          </>
+        ),
+        href: result.target,
+      }));
     }
-
-    const results = fuzzysort.go(
-      deferredSearch,
-      deferredSearch.startsWith(commandPrefix) ? commandList : visibleFiles,
-      { limit: 50 }
-    );
-
-    return results.map((result) => ({
-      element: (
-        <>
-          {result.highlight((m, i) => (
-            <b key={i}>{m}</b>
-          ))}
-        </>
-      ),
-      href: result.target,
-    }));
   }, [state, currentPrompt, commandList, commandPrefix, deferredSearch, visibleFiles]);
 
   //MARK: Handle Keys
