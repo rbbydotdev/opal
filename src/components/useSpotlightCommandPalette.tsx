@@ -4,9 +4,9 @@ import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
+import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
-import { useTheme } from "@/hooks/useTheme";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { toast } from "sonner";
@@ -152,7 +152,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           }),
         ],
 
-        "New Markdown File": [
+        "New File (Markdown)": [
           NewCmdPrompt("markdown_file_name", "Enter markdown file name"),
           NewCmdExec(async (context) => {
             const name = context.markdown_file_name as string;
@@ -237,13 +237,9 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             });
           }),
         ],
-        
+
         "Select Theme": [
-          NewCmdSelect(
-            "theme",
-            "Select a theme",
-            availableThemes
-          ),
+          NewCmdSelect("theme", "Select a theme", availableThemes),
           NewCmdExec(async (context) => {
             const selectedTheme = context.theme as string;
             setTheme(selectedTheme);
