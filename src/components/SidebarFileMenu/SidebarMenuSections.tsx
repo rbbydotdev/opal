@@ -7,7 +7,7 @@ import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/tr
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
-import { DisplayTreeProvider, useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
+import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { IS_MAC } from "@/lib/isMac";
@@ -148,7 +148,9 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           <DndSlot dndId={"treeview"}>
             <div className="flex-shrink flex min-h-8">
               <DisplayTreeProvider>
-                <TreeMenuSection id="TreeView" />
+                <TreeExpanderProvider id="TreeView">
+                  <SidebarMenuTreeSection />
+                </TreeExpanderProvider>
               </DisplayTreeProvider>
             </div>
           </DndSlot>
@@ -185,14 +187,5 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         </SidebarDndList>
       </div>
     </SidebarGroup>
-  );
-}
-
-function TreeMenuSection({ id }: { id: string }) {
-  const { flatTree } = useEditorDisplayTreeCtx();
-  return (
-    <TreeExpanderProvider nodePaths={flatTree} id={id}>
-      <SidebarMenuTreeSection />
-    </TreeExpanderProvider>
   );
 }

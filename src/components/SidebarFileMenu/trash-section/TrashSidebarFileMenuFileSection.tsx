@@ -32,7 +32,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
             title={"Trash"}
             className={className}
             scope={SpecialDirs.Trash}
-            contentBanner={<div className="h-2"></div>}
+            contentBanner={hasTrash ? <div className="h-2"></div> : null}
           >
             {hasTrash ? <TinyNotice /> : null}
           </SidebarFileMenuFiles>
