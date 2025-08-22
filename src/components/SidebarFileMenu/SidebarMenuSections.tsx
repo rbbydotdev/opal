@@ -157,10 +157,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
 
           <DndSlot dndId={"trash"}>
             <div className="min-h-8 flex-shrink flex">
-              <FileTreeMenuCtxProvider
-                currentWorkspace={currentWorkspace}
-                filterRange={filterAllSpecialDirsExceptTrash}
-              >
+              <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace}>
                 <TrashSidebarFileMenuFileSection />
               </FileTreeMenuCtxProvider>
             </div>
@@ -176,7 +173,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
 
           <DndSlot dndId={"files"}>
             <div className="flex-shrink flex">
-              <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace} filterRange={filterAllSpecialDirs}>
+              <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace}>
                 <SpotlightSearch />
                 <TreeExpanderProvider id="MainFiles">
                   <MainSidebarFileMenuFileSection />

@@ -48,12 +48,11 @@ export const FileTreeMenuCtxProvider = ({
   scope,
   // filterRange is needed since selecting ranges will include hidden files in the range
   // so they need filtered out
-  filterRange,
+  // filterRange, TODO - i don't think we need this anymore
 }: {
   children: React.ReactNode;
   currentWorkspace: Workspace;
   scope?: AbsPath;
-  filterRange?: (path: AbsPath) => boolean;
 }) => {
   const location = useLocation();
 
@@ -61,7 +60,6 @@ export const FileTreeMenuCtxProvider = ({
   const [dragOver, setDragOver] = useState<TreeNode | null>(null);
   const [draggingNode, setDraggingNode] = useState<TreeNode | null>(null);
   const [draggingNodes, setDraggingNodes] = useState<TreeNode[]>([]);
-  // useWatchWorkspaceFileTree({ currentWorkspace });
 
   const scopedTreeNode = useMemo(
     () =>
@@ -94,9 +92,7 @@ export const FileTreeMenuCtxProvider = ({
       editing: currentWorkspace.nodeFromPath(fileTreeCtx.editing)?.path ?? null,
       focused: currentWorkspace.nodeFromPath(fileTreeCtx.focused)?.path ?? null,
       virtual: fileTreeCtx.virtual,
-      selectedRange: fileTreeCtx.selectedRange
-        .filter((path) => currentWorkspace.nodeFromPath(path) !== null)
-        .filter(filterRange ?? (() => true)),
+      selectedRange: fileTreeCtx.selectedRange.filter((path) => currentWorkspace.nodeFromPath(path) !== null),
       editType: fileTreeCtx.editType,
     };
   }, [
@@ -107,7 +103,6 @@ export const FileTreeMenuCtxProvider = ({
     fileTreeCtx.selectedRange,
     fileTreeCtx.virtual,
     fileTreeCtx.anchorIndex,
-    filterRange,
   ]);
 
   const resetEditing = () => {
