@@ -6,6 +6,7 @@ import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
+import { useTheme } from "@/hooks/useTheme";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { toast } from "sonner";
@@ -82,6 +83,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const { path: currentPath } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
   const navigate = useNavigate();
+  const { themeName, mode, setTheme, toggleMode, availableThemes } = useTheme();
 
   const cmdMap = useMemo(
     () =>
@@ -202,7 +204,8 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           NewCmdExec(async (_context, abort) => {
             if (!repo.getInfo()?.hasChanges) {
               toast("No changes to commit", {
-                position: "top-center",
+                // position: "top-center",
+                position: "top-right",
                 description: "There are no changes in the repository to commit.",
               });
               return abort();
@@ -224,21 +227,38 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         ],
 
         //
-        // MARK: Select Command ---
+        // MARK: Theme Commands ---
         //
-        "Change Theme": [
-          NewCmdSelect("theme", "Select a theme", ["Light", "Dark", "Solarized"]),
+        "Toggle Light/Dark Mode": [
+          NewCmdExec(() => {
+            toggleMode();
+            toast(`Switched to ${mode === "light" ? "dark" : "light"} mode`, {
+              position: "top-right",
+            });
+          }),
+        ],
+        
+        "Select Theme": [
+          NewCmdSelect(
+            "theme",
+            "Select a theme",
+            availableThemes
+          ),
           NewCmdExec(async (context) => {
-            const theme = context.theme as string;
-            console.log("Theme selected:", theme);
-            // TODO: apply theme here
+            const selectedTheme = context.theme as string;
+            setTheme(selectedTheme);
+            toast(`Applied theme: ${selectedTheme}`, {
+              position: "top-right",
+            });
           }),
         ],
       }) as const,
     [
+      availableThemes,
       currentPath,
       currentWorkspace,
       focused,
+      mode,
       navigate,
       newDir,
       newFile,
@@ -246,7 +266,8 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       previewURL,
       renameDirOrFile,
       repo,
-      toast,
+      setTheme,
+      toggleMode,
       trashFile,
     ]
   );
@@ -274,7 +295,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     if (!gitRepoInfo.initialized || !gitRepoInfo?.hasChanges || gitRepoInfo.unmergedFiles.length) {
       // cmds.add("Git Commit");
     }
-    if (!gitRepoInfo.unmergedFiles.length) {
+    if (!gitRepoInfo.unmergedFiles.length || !gitRepoInfo.initialized) {
       cmds.add("Git Merge Commit");
     }
     return cmds;

@@ -12,11 +12,11 @@ export const FileError = ({ error }: { error: Error & Partial<ApplicationError> 
     <div className="file-not-found-error w-full h-full flex items-center justify-center font-mono">
       <Card className="border-2 border-destructive border-dashed m-8 max-w-lg min-h-48  -rotate-3">
         <CardHeader>
-          <h2 className="text-red-500 font-bold text-lg">⚠️ {error.code} Error</h2>
+          <h2 className="text-destructive font-bold text-lg">⚠️ {error.code} Error</h2>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center break-words break-all whitespace-pre-wrap">
-            <p className="text-red-500">Error: {error.message}</p>
+            <p className="text-destructive">Error: {error.message}</p>
           </div>
         </CardContent>
         <CardFooter className="flex justify-center">

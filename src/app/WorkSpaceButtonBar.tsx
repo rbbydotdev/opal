@@ -37,12 +37,12 @@ function BigButton({
         <Link
           {...restProps}
           className={twMerge(
-            "text-3xs py-2 cursor-pointer w-full hover:bg-slate-800 gap-2 stroke-slate-500 text-slate-500 hover:stroke-white hover:text-white bg-secondary-foreground flex items-center",
+            "text-3xs py-2 cursor-pointer w-full gap-2 stroke-muted-foreground text-muted-foreground bg-accent flex items-center workspace-button-subtle-hover",
             restProps.className
           )}
         >
           <div className="w-full items-center">
-            {isActive && <div className="w-0.5 h-full bg-white ml-1"></div>}
+            {isActive && <div className="w-0.5 h-full bg-primary ml-1"></div>}
             <div className="flex flex-col items-center justify-center">
               {icon}
               {typeof title === "string" ? (
@@ -174,7 +174,7 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
           title={coalescedWorkspace.name}
           to={coalescedWorkspace.href}
           truncate={true}
-          className="text-white big-button-active whitespace-nowrap truncate"
+          className="text-foreground big-button-active whitespace-nowrap truncate"
         />
       )}
 
@@ -185,11 +185,10 @@ function WorkspaceButtonBarInternal({ pending }: { pending: boolean }) {
           onOpenChange={setExpand}
         >
           <CollapsibleTrigger
-            className="mt-2 h-8 flex-shrink-0 group w-full hover:bg-slate-800 stroke-slate-500 text-slate-500 hover:stroke-slate-200
-  hover:text-slate-200 bg-secondary-foreground flex items-center relative "
+            className="mt-2 h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground bg-accent flex items-center relative workspace-button-subtle-hover"
           >
             <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
-            <div className=" group-data-[state=open]:hidden text-white absolute top-0 right-2 rounded-full bg-slate-700 w-[1.25rem] p-0 flex justify-center items-center h-[1.25rem] text-xs">
+            <div className=" group-data-[state=open]:hidden text-primary-foreground absolute top-0 right-2 rounded-full bg-primary w-[1.25rem] p-0 flex justify-center items-center h-[1.25rem] text-xs">
               {otherWorkspacesCount}
             </div>
             <div className="absolute group-data-[state=open]:hidden flex w-full justify-center ">

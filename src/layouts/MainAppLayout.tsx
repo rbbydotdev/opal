@@ -9,6 +9,7 @@ import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserv
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { PromptProvider } from "@/components/Prompt";
+import { useTheme } from "@/hooks/useTheme";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
@@ -21,6 +22,8 @@ interface MainAppLayoutProps {
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();
+  // Initialize theme to ensure it loads globally
+  useTheme();
   return (
     <>
       <div className="font-sans antialiased">
@@ -46,7 +49,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                             <RemoteMDXEditorRealmProvider>
                               <div className="w-full flex">
                                 <ErrorBoundary fallback={ErrorPlaque}>
-                                  <div className="w-20 flex flex-col flex-shrink-0 bg-secondary-foreground overflow-clip  flex-grow-0 max-h-screen">
+                                  <div className="w-20 flex flex-col flex-shrink-0 bg-accent overflow-clip  flex-grow-0 max-h-screen">
                                     <WorkspaceButtonBar />
                                   </div>
                                   <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>

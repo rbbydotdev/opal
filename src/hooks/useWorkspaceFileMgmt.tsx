@@ -73,6 +73,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         focused: null,
         virtual: null,
         selectedRange: [],
+        anchorIndex: -1,
       });
     },
     [currentWorkspace, setFileTreeCtx]
@@ -101,6 +102,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         focused: null,
         virtual: null,
         selectedRange: [],
+
+        anchorIndex: -1,
       });
     },
     [currentWorkspace, removeFiles, setFileTreeCtx]
@@ -136,6 +139,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         focused: null,
         virtual: null,
         selectedRange: [],
+
+        anchorIndex: -1,
       });
       return currentWorkspace.untrashMultiple(flatUniqNodeArgs(filePaths));
     },
@@ -153,6 +158,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       focused: null,
       virtual: null,
       selectedRange: [],
+
+      anchorIndex: -1,
     });
     const alreadyTrashedNowDelete = range.filter((path) => isAncestor({ parent: SpecialDirs.Trash, child: path }));
     if (alreadyTrashedNowDelete.length) {
@@ -184,6 +191,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         focused: newNode.path,
         virtual: newNode.path,
         selectedRange: [],
+
+        anchorIndex: -1,
       });
 
       return newNode;
@@ -209,6 +218,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         focused: newNode.path,
         virtual: newNode.path,
         selectedRange: [],
+
+        anchorIndex: -1,
       });
       return newNode;
     },
@@ -226,6 +237,8 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         focused: null,
         virtual: null,
         selectedRange: [],
+
+        anchorIndex: -1,
       });
       return result;
     },

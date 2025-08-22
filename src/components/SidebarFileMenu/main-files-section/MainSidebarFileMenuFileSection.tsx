@@ -23,6 +23,7 @@ const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   const { setFileTreeCtx } = useFileTreeMenuCtx();
   const handleClick = () => {
     setFileTreeCtx({
+      anchorIndex: -1,
       editing: null,
       editType: null,
       focused: absPath("/"),

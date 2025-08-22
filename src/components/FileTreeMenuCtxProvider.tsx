@@ -5,6 +5,7 @@ import { useLocation } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
 
 export const FileTreeMenuCtx = React.createContext<{
+  anchorIndex: number;
   editing: AbsPath | null;
   editType: "rename" | "new" | "duplicate" | null;
   focused: AbsPath | null;
@@ -20,6 +21,7 @@ export const FileTreeMenuCtx = React.createContext<{
       focused: AbsPath | null;
       virtual: AbsPath | null;
       selectedRange: AbsPath[];
+      anchorIndex: number;
     }>
   >;
   selectedFocused: AbsPath[];
@@ -75,17 +77,20 @@ export const FileTreeMenuCtxProvider = ({
     focused: AbsPath | null;
     virtual: AbsPath | null;
     selectedRange: AbsPath[];
+    anchorIndex: number;
   }>({
     editing: null,
     editType: null,
     focused: filePath ?? null,
     virtual: null,
     selectedRange: [],
+    anchorIndex: -1,
   });
 
   //sync fileTreeCtx with the current workspace,
-  const { editing, focused, virtual, selectedRange, editType } = useMemo(() => {
+  const { editing, anchorIndex, focused, virtual, selectedRange, editType } = useMemo(() => {
     return {
+      anchorIndex: fileTreeCtx.anchorIndex,
       editing: currentWorkspace.nodeFromPath(fileTreeCtx.editing)?.path ?? null,
       focused: currentWorkspace.nodeFromPath(fileTreeCtx.focused)?.path ?? null,
       virtual: fileTreeCtx.virtual,
@@ -101,6 +106,7 @@ export const FileTreeMenuCtxProvider = ({
     fileTreeCtx.focused,
     fileTreeCtx.selectedRange,
     fileTreeCtx.virtual,
+    fileTreeCtx.anchorIndex,
     filterRange,
   ]);
 
@@ -111,6 +117,7 @@ export const FileTreeMenuCtxProvider = ({
       focused: dirname(focused ?? "/"),
       virtual: null,
       selectedRange: [],
+      anchorIndex: -1,
     }));
   };
 
@@ -137,6 +144,7 @@ export const FileTreeMenuCtxProvider = ({
           focused: null,
           virtual: null,
           selectedRange: [],
+          anchorIndex: -1,
         }));
       }
     };
@@ -151,6 +159,7 @@ export const FileTreeMenuCtxProvider = ({
   return (
     <FileTreeMenuCtx.Provider
       value={{
+        anchorIndex,
         selectedRange,
         setFileTreeCtx,
         scopedTreeNode,

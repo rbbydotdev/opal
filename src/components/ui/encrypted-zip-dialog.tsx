@@ -80,7 +80,7 @@ export function EncryptedZipDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <LockIcon className="h-5 w-5 text-amber-500" />
+            <LockIcon className="h-5 w-5 text-primary" />
             Encrypted File
           </DialogTitle>
           <DialogDescription>Enter and confirm your password to encrypt</DialogDescription>
@@ -90,7 +90,7 @@ export function EncryptedZipDialog({
           {error && (
             <Alert variant="destructive" className="py-2">
               <AlertDescription>
-                <span className="font-mono text-red-600">{error}</span>
+                <span className="font-mono text-destructive">{error}</span>
               </AlertDescription>
             </Alert>
           )}
@@ -135,7 +135,7 @@ export function EncryptedZipDialog({
                 placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`pr-10 ${passwordsMismatch ? "border-red-500 focus:border-red-500" : ""}`}
+                className={`pr-10 ${passwordsMismatch ? "border-destructive focus:border-destructive" : ""}`}
                 autoComplete="off"
               />
               <Button
@@ -151,7 +151,7 @@ export function EncryptedZipDialog({
               </Button>
             </div>
             {passwordsMismatch && (
-              <span className="block text-xs font-mono text-red-600 mt-1">Passwords do not match</span>
+              <span className="block text-xs font-mono text-destructive mt-1">Passwords do not match</span>
             )}
           </div>
 
