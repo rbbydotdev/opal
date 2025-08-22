@@ -111,8 +111,8 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
   // Apply theme CSS variables
   const variables = {
     ...themeItem.cssVars.theme, // Common variables
-    ...(defaultTheme?.cssVars[mode] ?? defaultTheme?.cssVars["light"] ?? defaultTheme?.cssVars["dark"] ?? {}),
-    ...(themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
+    // ...(defaultTheme?.cssVars[mode] ?? defaultTheme?.cssVars["light"] ?? defaultTheme?.cssVars["dark"] ?? {}),
+    // ...(themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
     ...(themeItem.cssVars[mode] ?? themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
   };
   // console.log(mode, JSON.stringify(variables, null, 4));

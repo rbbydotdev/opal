@@ -1,5 +1,6 @@
 // import themeRegistry from "@/theme/registry.json";
-import themeRegistry from "@/theme/vscode-themes.json";
+// import themeRegistry from "@/theme/vscode-themes.json";
+import themeRegistry from "@/theme/themes.json";
 
 import { applyTheme, getThemeModePrefers, type ThemeRegistry } from "@/theme/theme-lib";
 import { useCallback, useEffect } from "react";
@@ -37,18 +38,16 @@ export function useTheme() {
   );
   const setTheme = useCallback(
     (themeName: string) => {
-      const newState = { ...themeState, themeName };
+      const preferMode = getThemeModePrefers(themeName, themeRegistry as unknown as ThemeRegistry);
+      console.debug("theme prefers mode:", preferMode);
+      const newState = { ...themeState, themeName, mode: preferMode || themeState.mode };
       setThemeState(newState);
       applyTheme(themeRegistry as unknown as ThemeRegistry, {
         theme: themeName,
         mode: newState.mode,
       });
-      const preferMode = getThemeModePrefers(themeName, themeRegistry as unknown as ThemeRegistry);
-      if (preferMode) {
-        setMode(preferMode);
-      }
     },
-    [themeState, setThemeState, setMode]
+    [themeState, setThemeState]
   );
 
   const toggleMode = useCallback(() => {

@@ -17,7 +17,7 @@ import clsx from "clsx";
 import fuzzysort from "fuzzysort";
 import { CommandIcon, FileTextIcon } from "lucide-react";
 import mime from "mime-types";
-import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState } from "react";
+import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { FileOnlyFilter, useWorkspaceContext } from "../context/WorkspaceContext";
 
@@ -131,6 +131,9 @@ function SpotlightSearchInternal({
   //MARK: State / hooks
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [deferredSearch, setDeferredSearch] = useState(""); // NEW
+  const [isPending, startTransition] = useTransition(); // NEW
+
   const [activeIndex, setActiveIndex] = useState(-1);
   const [state, setState] = useState<"spotlight" | "prompt" | "select">("spotlight");
   const [promptPlaceholder, setPromptPlaceholder] = useState("Enter value...");
@@ -164,11 +167,9 @@ function SpotlightSearchInternal({
       execContext.current.__selectOptions = step.options;
       inputRef.current?.focus();
     } else if (isCmdExec(step)) {
-      // Only close spotlight if there are no more steps after this exec
       if (execQueue.current.length === 0) {
         setOpen(false);
       }
-      // const $p = Promise.withResolvers();
       let aborted = false;
       await step.exec(execContext.current, () => (aborted = true));
       if (aborted) {
@@ -188,7 +189,6 @@ function SpotlightSearchInternal({
   };
 
   const handleClose = () => {
-    // throw new Error("SpotlightSearch: handleClose is not implemented");
     setOpen(false);
     setState("spotlight");
     setSearch("");
@@ -209,16 +209,25 @@ function SpotlightSearchInternal({
     return commands.map((cmd) => `${commandPrefix} ${cmd}`);
   }, [commandPrefix, commands]);
 
+  // NEW: input handler that defers heavy search
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearch(value);
+    startTransition(() => {
+      setDeferredSearch(value);
+    });
+  };
+
   const sortedList = useMemo(() => {
     setActiveIndex(-1);
 
     // MARK: Handle select state
     if (state === "select" && currentPrompt && "options" in currentPrompt) {
       const options = (currentPrompt as any).options as string[];
-      if (!search.trim()) {
+      if (!deferredSearch.trim()) {
         return options.map((opt) => ({ element: <>{opt}</>, href: opt }));
       }
-      const results = fuzzysort.go(search, options, { limit: 50 }); /*.toReversed();*/
+      const results = fuzzysort.go(deferredSearch, options, { limit: 50 });
       return results.map((result) => ({
         element: (
           <>
@@ -234,15 +243,19 @@ function SpotlightSearchInternal({
     }
 
     // MARK: Spotlight state
-    if (!search.trim()) {
+    if (!deferredSearch.trim()) {
       return visibleFiles.map((file) => ({
         element: <>{file}</>,
         href: file,
       }));
     }
 
-    const results = fuzzysort.go(search, search.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 });
-    //.toReversed();
+    const results = fuzzysort.go(
+      deferredSearch,
+      deferredSearch.startsWith(commandPrefix) ? commandList : visibleFiles,
+      { limit: 50 }
+    );
+
     return results.map((result) => ({
       element: (
         <>
@@ -253,7 +266,7 @@ function SpotlightSearchInternal({
       ),
       href: result.target,
     }));
-  }, [state, currentPrompt, commandList, commandPrefix, search, visibleFiles]);
+  }, [state, currentPrompt, commandList, commandPrefix, deferredSearch, visibleFiles]);
 
   //MARK: Handle Keys
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -380,11 +393,11 @@ function SpotlightSearchInternal({
         }
       }}
     >
-      <div className="flex h-12 w-full items-center justify-center rounded-lg border bg-background p-2 _text-sidebar-foreground/70 shadow-lg">
+      <div className="flex h-12 w-full items-center justify-center rounded-lg border bg-background p-2 _text-sidebar-foreground/70 shadow-lg relative">
         <input
           ref={inputRef}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleInputChange}
           id="spotlight-search"
           type="text"
           autoComplete="off"
@@ -394,6 +407,7 @@ function SpotlightSearchInternal({
           aria-haspopup="true"
           aria-activedescendant={activeIndex > -1 ? `spotlight-item-${activeIndex}` : undefined}
         />
+        {/* {isPending && <div className="absolute right-3 text-xs text-muted-foreground">Searching...</div>} */}
       </div>
       {(state === "spotlight" || state === "select") && Boolean(sortedList.length) && (
         <ul
