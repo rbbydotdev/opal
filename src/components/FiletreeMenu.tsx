@@ -172,7 +172,7 @@ export function FileTreeMenu({
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, fileTreeDir)}
         onDragEnter={(e) => handleDragEnter(e, "/")}
-        className={cn({ "pt-4 -mt-4": depth === 0 })}
+        className={cn({ "-mt-4": depth === 0 })}
       >
         {/* <FileItemContextMenu fileNode={fileNode} currentWorkspace={currentWorkspace}> */}
         {fileNodeChildren.map((fileNode) => (

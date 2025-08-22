@@ -345,7 +345,8 @@ export class TreeDir extends TreeNode {
   }
 
   //mutates
-  pruneMutate(filterOut: ((n: TreeNode) => boolean) | AbsPath[]): this {
+  pruneMutate(filterOut?: ((n: TreeNode) => boolean) | AbsPath[]): this {
+    if (!filterOut) return this;
     const filterFn = Array.isArray(filterOut) ? (node: TreeNode) => filterOut.includes(node.path) : filterOut;
     for (const [key, child] of Object.entries(this.children)) {
       if (filterFn(child)) {

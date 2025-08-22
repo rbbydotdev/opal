@@ -457,11 +457,21 @@ export class Workspace {
   getFileTreeRoot() {
     return this.disk.fileTree.root;
   }
-  getFlatTree(filter?: (node: TreeNode) => boolean) {
-    if (filter) {
+  getFlatTree({
+    filterIn,
+    filterOut,
+  }: {
+    filterIn?: (node: TreeNode) => boolean;
+    filterOut?: (node: TreeNode) => boolean;
+  }) {
+    if (filterIn || filterOut) {
       return this.disk.fileTree
         .all()
-        .filter(filter)
+        .filter((node) => {
+          if (filterIn && !filterIn(node)) return false;
+          if (filterOut && filterOut(node)) return false;
+          return true;
+        })
         .map((node) => node.path);
     }
     return this.disk.fileTree.all().map((node) => node.path);

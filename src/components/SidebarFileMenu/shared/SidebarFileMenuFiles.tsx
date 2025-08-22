@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
+import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
@@ -13,7 +14,7 @@ import { NULL_TREE_ROOT, RootNode, TreeDir, TreeNode } from "@/lib/FileTree/Tree
 import { AbsPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { ChevronRight, Files } from "lucide-react";
-import React, { JSX, useMemo } from "react";
+import React, { ComponentProps, JSX, useMemo } from "react";
 export const SidebarFileMenuFiles = ({
   children,
   className,
@@ -33,9 +34,10 @@ export const SidebarFileMenuFiles = ({
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
   FileItemContextMenu: FileItemContextMenuComponentType;
-}) => {
+} & ComponentProps<typeof SidebarGroup>) => {
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
-  const { fileTreeDir, currentWorkspace } = useWorkspaceContext();
+  const { currentWorkspace } = useWorkspaceContext();
+  const { fileTreeDir } = useFileTree();
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
 
   const treeNode = useMemo(() => {
@@ -46,6 +48,7 @@ export const SidebarFileMenuFiles = ({
     }
     return node;
   }, [currentWorkspace, fileTreeDir, scope]);
+
   const { expanderId } = useTreeExpanderContext();
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId);
 

@@ -284,7 +284,7 @@ function SpotlightSearchInternal({
       case "Tab":
         e.preventDefault();
         if (e.shiftKey) {
-          setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
+          setActiveIndex((prev) => (prev >= 0 ? prev - 1 : itemsLength - 1));
         } else {
           setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
         }

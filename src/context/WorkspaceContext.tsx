@@ -113,7 +113,15 @@ export const FileOnlyFilter: FileOnlyFilter = Object.assign((node: TreeNode) => 
 export const DirOnlyFilter: DirOnlyFilter = Object.assign((node: TreeNode) => node.isTreeDir(), {
   __brand: "DirOnlyFilter" as const,
 });
-export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: FileOnlyFilter | DirOnlyFilter) {
+export function useWatchWorkspaceFileTree({
+  currentWorkspace,
+  filterIn,
+  filterOut,
+}: {
+  currentWorkspace: Workspace;
+  filterIn?: FileOnlyFilter | DirOnlyFilter | ((node: TreeNode) => boolean);
+  filterOut?: FileOnlyFilter | DirOnlyFilter | ((node: TreeNode) => boolean);
+}) {
   const [fileTreeDir, setFileTreeDir] = useState<TreeDirRoot>(() => currentWorkspace.getFileTreeRoot());
   const [flatTree, setFlatTree] = useState<AbsPath[]>([]);
   const [fileTree, setFileTree] = useState(() => currentWorkspace.getFileTree());
@@ -121,14 +129,17 @@ export function useWatchWorkspaceFileTree(currentWorkspace: Workspace, filter?: 
   useEffect(() => {
     if (currentWorkspace) {
       return currentWorkspace.watchDiskIndex((fileTreeDir: TreeDir) => {
-        const newTree = new TreeDirRoot(fileTreeDir);
-        //if getFlateTree() === flatTree [they are the same] do not update
+        const newTree = new TreeDirRoot(fileTreeDir).pruneMutate((treeNode) => {
+          if (filterIn && !filterIn(treeNode)) return true; // filterIn
+          if (filterOut && filterOut(treeNode)) return true; // filterOut
+          return false;
+        });
         setFileTreeDir(newTree);
-        setFlatTree(currentWorkspace.getFlatTree(filter));
+        setFlatTree(currentWorkspace.getFlatTree({ filterIn, filterOut }));
         setFileTree(currentWorkspace.getFileTree());
       });
     }
-  }, [currentWorkspace, filter]);
+  }, [currentWorkspace, filterIn, filterOut]);
   return { fileTreeDir, fileTree, flatTree };
 }
 
