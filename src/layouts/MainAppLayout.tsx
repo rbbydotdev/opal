@@ -9,10 +9,10 @@ import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserv
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { PromptProvider } from "@/components/Prompt";
-import { useTheme } from "@/hooks/useTheme";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
+import { useTheme } from "@/hooks/useTheme";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 

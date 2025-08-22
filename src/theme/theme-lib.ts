@@ -33,9 +33,14 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
   const { theme: themeName, mode, rootElement = document.documentElement } = options;
 
   // Find the theme in registry
-  const themeItem = registry.items.find((item) => item.name === themeName);
+  let themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
-    throw new Error(`Theme "${themeName}" not found in registry`);
+    console.warn(`Theme "${themeName}" not found in registry`);
+  }
+  if (!themeItem) {
+    themeItem = registry.items.find((item) => item.name === "default");
+    console.warn(`Theme default not found in registry`);
+    return;
   }
 
   // Apply dark/light class
@@ -50,9 +55,12 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
   // Apply theme CSS variables
   const variables = {
     ...themeItem.cssVars.theme, // Common variables
-    ...themeItem.cssVars[mode], // Mode-specific variables
+
+    ...(themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
+
+    ...(themeItem.cssVars[mode] ?? themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
   };
-  console.log(variables);
+  // console.log(mode, JSON.stringify(variables, null, 4));
 
   // Set CSS custom properties
   Object.entries(variables).forEach(([key, value]) => {
