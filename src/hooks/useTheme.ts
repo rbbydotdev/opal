@@ -1,7 +1,7 @@
 // import themeRegistry from "@/theme/registry.json";
 import themeRegistry from "@/theme/vscode-themes.json";
 
-import { applyTheme, type ThemeRegistry } from "@/theme/theme-lib";
+import { applyTheme, getThemeModePrefers, type ThemeRegistry } from "@/theme/theme-lib";
 import { useCallback, useEffect } from "react";
 import useLocalStorage2 from "./useLocalStorage2";
 
@@ -13,7 +13,7 @@ interface ThemeState {
 }
 
 const DEFAULT_THEME_STATE: ThemeState = {
-  themeName: "modern-minimal",
+  themeName: "default",
   mode: "light",
 };
 
@@ -22,18 +22,6 @@ export function useTheme() {
     "app-theme",
     DEFAULT_THEME_STATE,
     { initializeWithValue: true }
-  );
-
-  const setTheme = useCallback(
-    (themeName: string) => {
-      const newState = { ...themeState, themeName };
-      setThemeState(newState);
-      applyTheme(themeRegistry as unknown as ThemeRegistry, {
-        theme: themeName,
-        mode: newState.mode,
-      });
-    },
-    [themeState, setThemeState]
   );
 
   const setMode = useCallback(
@@ -46,6 +34,21 @@ export function useTheme() {
       });
     },
     [themeState, setThemeState]
+  );
+  const setTheme = useCallback(
+    (themeName: string) => {
+      const newState = { ...themeState, themeName };
+      setThemeState(newState);
+      applyTheme(themeRegistry as unknown as ThemeRegistry, {
+        theme: themeName,
+        mode: newState.mode,
+      });
+      const preferMode = getThemeModePrefers(themeName, themeRegistry as unknown as ThemeRegistry);
+      if (preferMode) {
+        setMode(preferMode);
+      }
+    },
+    [themeState, setThemeState, setMode]
   );
 
   const toggleMode = useCallback(() => {
