@@ -26,11 +26,13 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
       <ContextMenu>
         <ContextMenuTrigger disabled={!currentWorkspace.hasTrash()} asChild>
           <SidebarFileMenuFiles
+            data-trash-sidebar
             FileItemContextMenu={TrashFileTreeContextMenu} //<TrashFileTreeContextMenu ...
             Icon={Trash2}
             title={"Trash"}
             className={className}
             scope={SpecialDirs.Trash}
+            contentBanner={<div className="h-2"></div>}
           >
             {hasTrash ? <TinyNotice /> : null}
           </SidebarFileMenuFiles>

@@ -1,4 +1,3 @@
-import { useWatchWorkspaceFileTree } from "@/context/WorkspaceContext";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";
@@ -60,7 +59,7 @@ export const FileTreeMenuCtxProvider = ({
   const [dragOver, setDragOver] = useState<TreeNode | null>(null);
   const [draggingNode, setDraggingNode] = useState<TreeNode | null>(null);
   const [draggingNodes, setDraggingNodes] = useState<TreeNode[]>([]);
-  useWatchWorkspaceFileTree(currentWorkspace);
+  // useWatchWorkspaceFileTree({ currentWorkspace });
 
   const scopedTreeNode = useMemo(
     () =>

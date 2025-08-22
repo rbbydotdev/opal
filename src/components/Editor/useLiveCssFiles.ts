@@ -1,6 +1,6 @@
 import { isFilePathsPayload } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
-import { isMarkdown } from "@/lib/paths2";
+import { absPath, isMarkdown } from "@/lib/paths2";
 import { useEffect, useRef, useState } from "react";
 
 const noCached = (filePath: string): string => {
@@ -18,7 +18,13 @@ export function useLiveCssFiles({ path, currentWorkspace }: { path: string | nul
       const css = Object.values(
         currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
       ).map((node) => cached(node.path));
+
+      if (!css.find((href) => href.startsWith("/global.css")) && currentWorkspace.nodeFromPath(absPath("global.css"))) {
+        css.push(cached(absPath("global.css")));
+      }
+
       setCssFiles(css);
+
       return currentWorkspace.dirtyListener((trigger) => {
         if (isFilePathsPayload(trigger)) {
           const updated = new Set(trigger.filePaths.filter((filePath) => filePath.endsWith(".css")));

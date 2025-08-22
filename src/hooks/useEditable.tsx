@@ -1,5 +1,6 @@
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -24,6 +25,8 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const currentFile = useWorkspaceRoute().path;
+
+  const { flatTree } = useFileTree();
   const { commitChange, trashSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
   const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
@@ -173,9 +176,16 @@ export function useEditable<T extends TreeFile | TreeDir>({
         });
       }
     } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !isEditing && focused) {
-      console.log("arrow key down/up", e.key);
       e.preventDefault();
       e.stopPropagation();
+      const path = flatTree[flatTree.indexOf(treeNode.path) - (e.key === "ArrowDown" ? -1 : 1)];
+      if (path) {
+        // const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode!) ?? [];
+        setFileTreeCtx(({ selectedRange, ...rest }) => ({
+          ...rest,
+          selectedRange: [...selectedRange, path],
+        }));
+      }
     } else if (e.key === " " && !isEditing) {
       e.preventDefault();
       linkRef.current?.click();

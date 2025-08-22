@@ -17,7 +17,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaces = useLiveWorkspaces();
   const workspaceRoute = useWorkspaceRoute();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
-  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree(currentWorkspace);
+  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ currentWorkspace });
   const location = useLocation();
   const navigate = useNavigate();
   const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);
