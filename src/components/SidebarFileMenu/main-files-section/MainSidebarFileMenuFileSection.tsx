@@ -2,9 +2,9 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { Button } from "@/components/ui/button";
-import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
+import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { FilterInSpecialDirs, SpecialDirs } from "@/Db/SpecialDirs";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
@@ -60,26 +60,24 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
   useFileTreeClipboardEventListeners({ currentWorkspace });
 
   return (
-    <FileTreeProvider currentWorkspace={currentWorkspace} filterOut={FilterInSpecialDirs}>
-      <SidebarFileMenuFiles
-        data-main-sidebar
-        FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
-        title={"Files"}
-        className={className}
-        contentBanner={!fileTreeDir.isEmpty ? <Banner currentWorkspace={currentWorkspace} /> : null}
-        filter={SpecialDirs.All} // Exclude trash and git directories etc
-      >
-        <span className="block group-data-[state=closed]/collapsible:hidden">
-          <SidebarFileMenuFilesActions
-            trashSelectedFiles={trashSelectedFiles}
-            addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
-            addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
-            addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
-            setExpandAll={setExpandAll}
-          />
-        </span>
-      </SidebarFileMenuFiles>
-    </FileTreeProvider>
+    <SidebarFileMenuFiles
+      data-main-sidebar
+      FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
+      title={"Files"}
+      className={className}
+      contentBanner={!fileTreeDir.isEmpty() ? <Banner currentWorkspace={currentWorkspace} /> : null}
+      filter={SpecialDirs.All} // Exclude trash and git directories etc
+    >
+      <span className="block group-data-[state=closed]/collapsible:hidden">
+        <SidebarFileMenuFilesActions
+          trashSelectedFiles={trashSelectedFiles}
+          addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
+          addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
+          addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
+          setExpandAll={setExpandAll}
+        />
+      </span>
+    </SidebarFileMenuFiles>
   );
 }
 
