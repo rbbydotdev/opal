@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
 import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
+import { useMemo } from "react";
 
 export type ConnectionsModalMode = "add" | "edit" | "view";
 export function ConnectionsModal({
@@ -83,8 +84,13 @@ export function ConnectionsModalContent({
     defaultValues,
   });
 
-  const selectedTemplate = RemoteAuthTemplates.find(
-    (connection) => `${connection.type}/${connection.source}` === form.watch("templateType")
+  const selectedTemplate = useMemo(
+    () =>
+      RemoteAuthTemplates.find(
+        (connection) => `${connection.type}/${connection.source}` === form.watch()["templateType"]
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [form.watch()["templateType"], form]
   );
 
   return (
@@ -104,10 +110,7 @@ export function ConnectionsModalContent({
                 <Select
                   defaultValue={field.value}
                   onValueChange={(value: typeof field.value) => {
-                    // field.onChange(value);
-                    form.reset({
-                      ...RemoteAuthTemplates.find((t) => typeSource(t) === value),
-                    });
+                    form.reset(RemoteAuthTemplates.find((t) => typeSource(t) === value));
                   }}
                 >
                   <SelectTrigger id="connection-type">
@@ -192,6 +195,7 @@ function ApiKeyAuth({
       <FormField
         control={form.control}
         name="name"
+        rules={{ required: "API Name is required" }}
         render={({ field }) => (
           <FormItem>
             <FormLabel>API Name</FormLabel>
@@ -221,6 +225,7 @@ function ApiKeyAuth({
       <FormField
         control={form.control}
         name="data.apiKey"
+        rules={{ required: "API Key is required" }}
         render={({ field }) => (
           <FormItem>
             <FormLabel>API Key</FormLabel>
