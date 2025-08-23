@@ -8,7 +8,8 @@ import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-s
 import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
-import { SpecialDirs } from "@/Db/SpecialDirs";
+import { FileTreeProvider } from "@/context/FileTreeProvider";
+import { FilterInSpecialDirs, SpecialDirs } from "@/Db/SpecialDirs";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { IS_MAC } from "@/lib/isMac";
 import { Slot } from "@radix-ui/react-slot";
@@ -176,7 +177,9 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
               <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace}>
                 <SpotlightSearch />
                 <TreeExpanderProvider id="MainFiles">
-                  <MainSidebarFileMenuFileSection />
+                  <FileTreeProvider currentWorkspace={currentWorkspace} filterOut={FilterInSpecialDirs}>
+                    <MainSidebarFileMenuFileSection />
+                  </FileTreeProvider>
                 </TreeExpanderProvider>
               </FileTreeMenuCtxProvider>
             </div>
