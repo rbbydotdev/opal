@@ -152,7 +152,7 @@ export function EditHistoryMenu({
                         )}
 
                         {new Date(EDIT.timestamp).toLocaleString()}
-                        <span className="text-black">
+                        <span className="text-primary">
                           &nbsp;
                           <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
                         </span>

@@ -49,7 +49,7 @@ const SpotlightSearchItemLink = forwardRef<
           <img
             src={Thumb.pathToURL(absPath(filePath!))}
             alt=""
-            className="mr-2 h-6 w-6 flex-shrink-0 border border-black bg-white"
+            className="mr-2 h-6 w-6 flex-shrink-0 border border-border bg-white"
           />
         ) : (
           <div className="w-6 h-6 flex justify-center items-center">

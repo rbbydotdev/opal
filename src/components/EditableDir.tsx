@@ -105,7 +105,7 @@ export const EditableDir = ({
             {isEditing ? (
               <input
                 ref={inputRef}
-                className={"bg-transparent outline-none border-b border-dashed border-black w-full"}
+                className={"bg-transparent outline-none border-b border-dashed border-border w-full"}
                 type="text"
                 value={fileName}
                 onChange={(e) => setFileName((!e.target.value ? "" : relPath(e.target.value)) as RelPath)}
