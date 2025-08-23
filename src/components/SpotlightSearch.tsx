@@ -19,7 +19,8 @@ import { CommandIcon, FileTextIcon } from "lucide-react";
 import mime from "mime-types";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { FileOnlyFilter, useWorkspaceContext } from "../context/WorkspaceContext";
+import { useFileTree } from "../context/FileTreeProvider";
+import { useWorkspaceContext } from "../context/WorkspaceContext";
 
 const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,
@@ -93,12 +94,8 @@ const SpotlightSearchItemCmd = forwardRef<
 SpotlightSearchItemCmd.displayName = "SpotlightSearchItemCmd";
 
 export function SpotlightSearch() {
-  const { currentWorkspace, fileTreeDir } = useWorkspaceContext();
-
-  const flatTree = useMemo(
-    () => Array.from(fileTreeDir.iterator(FileOnlyFilter)).map((node) => node.toString()),
-    [fileTreeDir]
-  );
+  const { currentWorkspace } = useWorkspaceContext();
+  const { flatTree } = useFileTree();
   const { cmdMap, commands } = useSpotlightCommandPalette({
     currentWorkspace,
   });
