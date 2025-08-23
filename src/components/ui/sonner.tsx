@@ -63,7 +63,7 @@ function Toast(props: ToastProps) {
       <div className="flex flex-1 items-center min-h-0">
         <div className="w-full flex flex-col justify-center">
           {title && (
-            <p className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
+            <div className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
               <div
                 className={cn("rounded-full w-2 h-2", {
                   "bg-success": type === "success",
@@ -84,7 +84,7 @@ function Toast(props: ToastProps) {
                 ></div>
               </div>
               {title}
-            </p>
+            </div>
           )}
           {description && <p className="mt-1 text-sm text-muted-foreground leading-tight">{description}</p>}
         </div>

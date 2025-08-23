@@ -15,8 +15,10 @@ body {
     /* Missing variables that map to existing theme colors */
     --success: var(--primary);
     --success-foreground: var(--primary-foreground);
-    --highlight: var(--ring);
+    --highlight: var(--muted);
+    --highlight-foreground: var(--muted-foreground);
     --highlight-focus: var(--ring);
+    --highlight-focus-foreground: var(--foreground);
     --sidebar-background: var(--sidebar);
 
     /* Search variables that map to theme colors */

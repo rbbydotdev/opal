@@ -238,7 +238,7 @@ function SpotlightSearchInternal({
         ) : (
           <>
             {result.highlight((m, i) => (
-              <b className="text-highlight" key={i}>
+              <b className="text-highlight-focus bg-highlight-focus" key={i}>
                 {m}
               </b>
             ))}
@@ -265,7 +265,7 @@ function SpotlightSearchInternal({
         element: (
           <>
             {result.highlight((m, i) => (
-              <b className="text-highlight" key={i}>
+              <b className="text-highlight-foreground" key={i}>
                 {m}
               </b>
             ))}

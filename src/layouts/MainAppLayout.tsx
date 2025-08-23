@@ -70,16 +70,16 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
       </div>
       <style>{`
         ::highlight(${MDX_SEARCH_NAME}) {
-          background-color: hsl(var(--highlight));
-          color: hsl(var(--background));
+          background-color: var(--highlight);
+          color: var(--highlight-foreground);
         }
         ::highlight(${MDX_FOCUS_SEARCH_NAME}) {
-          background-color: hsl(var(--highlight-focus));
-          color: hsl(var(--background));
+          background-color: var(--highlight-focus);
+          color: var(--highlight-focus-foreground);
         }
         ::highlight(${MDX_TREE_HIGHLIGHT_NAME}) {
-          background-color: hsl(var(--highlight-focus));
-          color: hsl(var(--background));
+          background-color: var(--highlight-focus);
+          color: var(--highlight-focus-foreground);
         }
       `}</style>
     </>
