@@ -293,8 +293,9 @@ function SpotlightSearchInternal({
         }
         if (state === "select" && currentPrompt) {
           e.preventDefault();
-          if (activeIndex === -1) return;
-          const selected = sortedList[activeIndex]?.href;
+          const selected = sortedList[activeIndex]?.href ?? 0;
+          // if (activeIndex === -1) return;
+          // const selected = sortedList[activeIndex]?.href;
           if (selected) {
             execContext.current[currentPrompt.name] = selected;
             setSearch("");
@@ -303,7 +304,11 @@ function SpotlightSearchInternal({
             return runNextStep();
           }
         }
-        if (activeIndex === -1) return;
+        if (activeIndex === -1) {
+          //if no item is active select first item
+          setActiveIndex(0);
+          return;
+        }
         e.preventDefault();
         (menuItems?.[activeIndex] as HTMLElement)?.click();
         break;
@@ -548,7 +553,7 @@ const ThemePreview = ({ themeName, currentTheme }: { themeName: string; currentT
   return (
     <div className="flex items-center gap-2">
       {currentTheme === themeName && (
-        <span className="text-2xs px-1 py-0.5 font-mono bg-green-600 text-white rounded">Current</span>
+        <span className="text-2xs px-1 py-0.5 font-mono bg-success text-success-foreground rounded">Current</span>
       )}
       {/* Light mode preview */}
       <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: palette.lightBg }}>
