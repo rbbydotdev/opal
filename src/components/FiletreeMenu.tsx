@@ -73,13 +73,14 @@ export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { curren
       action: "cut",
       workspaceId: currentWorkspace.id,
     }).then(() => {
-      setFileTreeCtx({
+      setFileTreeCtx(({ anchorIndex }) => ({
+        anchorIndex,
         editing: null,
         editType: null,
         focused: null,
         virtual: null,
         selectedRange: [],
-      });
+      }));
     });
   const paste = async (fileNode: TreeNode) => {
     const data = await MetaDataTransfer.fromClipboard(await navigator.clipboard.read());
@@ -88,23 +89,25 @@ export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { curren
       data,
     });
 
-    return setFileTreeCtx({
+    return setFileTreeCtx(({ anchorIndex }) => ({
+      anchorIndex,
       editing: null,
       editType: null,
       focused: null,
       virtual: null,
       selectedRange: [],
-    });
+    }));
   };
   const duplicate = (fileNode: TreeNode) => duplicateDirFile(fileNode.type, fileNode);
   const rename = (fileNode: TreeNode) =>
-    setFileTreeCtx({
+    setFileTreeCtx(({ anchorIndex }) => ({
+      anchorIndex,
       editing: fileNode.path,
       editType: "rename",
       focused: fileNode.path,
       virtual: null,
       selectedRange: [fileNode.path],
-    });
+    }));
   const untrash = (...fileNodes: (TreeNode | AbsPath | AbsPath[] | TreeNode[])[]) =>
     untrashFiles(flatUniqNodeArgs(fileNodes));
   const remove = (...fileNodes: (TreeNode | AbsPath | AbsPath[] | TreeNode[])[]) =>

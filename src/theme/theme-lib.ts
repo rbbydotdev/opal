@@ -4,6 +4,8 @@
  * No dependencies - just import your registry.json
  */
 
+import { invertColor } from "@/lib/colorUtils";
+
 // Types - annotate your registry.json import with these
 export interface ThemeRegistry {
   items: ThemeRegistryItem[];
@@ -88,15 +90,14 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
   const { theme: themeName, mode, rootElement = document.documentElement } = options;
 
   const defaultTheme = registry.items.find((item) => item.name === "default");
-  // Find the theme in registry
   let themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
     console.warn(`Theme "${themeName}" not found in registry`);
-  }
-  if (!themeItem) {
     themeItem = defaultTheme;
-    console.warn(`Theme default not found in registry`);
-    return; //{ preferMode: null };
+    if (!themeItem) {
+      console.warn(`Theme default not found in registry`);
+      return;
+    }
   }
 
   // Apply dark/light class
@@ -108,16 +109,33 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
     rootElement.classList.add("light");
   }
 
-  // Apply theme CSS variables
-  const variables = {
-    ...themeItem.cssVars.theme, // Common variables
-    // ...(defaultTheme?.cssVars[mode] ?? defaultTheme?.cssVars["light"] ?? defaultTheme?.cssVars["dark"] ?? {}),
-    // ...(themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
-    ...(themeItem.cssVars[mode] ?? themeItem.cssVars["light"] ?? themeItem.cssVars["dark"]),
-  };
-  // console.log(mode, JSON.stringify(variables, null, 4));
+  const oppositeMode = mode === "light" ? "dark" : "light";
 
-  //clear previous theme variables
+  // Build variables with healing
+  const variables: Record<string, string> = {};
+
+  ALL_VARS.forEach((key) => {
+    let value: string | undefined;
+
+    // 1. Current mode
+    value = themeItem!.cssVars[mode]?.[key];
+
+    // 2. Opposite mode (inverted)
+    if (!value && themeItem!.cssVars[oppositeMode]?.[key]) {
+      value = invertColor(themeItem!.cssVars[oppositeMode]![key]!);
+    }
+
+    // 3. Shared theme vars
+    if (!value && themeItem!.cssVars.theme?.[key]) {
+      value = themeItem!.cssVars.theme[key];
+    }
+
+    if (value) {
+      variables[key] = value;
+    }
+  });
+
+  // Clear previous theme variables
   ALL_VARS.forEach((key) => {
     rootElement.style.removeProperty(`--${key}`);
   });
@@ -126,7 +144,6 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
   Object.entries(variables).forEach(([key, value]) => {
     rootElement.style.setProperty(`--${key}`, value);
   });
-  // return { preferMode: themePrefersMode(themeItem) };
 }
 
 /**
