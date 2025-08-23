@@ -130,6 +130,37 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
       value = themeItem!.cssVars.theme[key];
     }
 
+    // 4. Sidebar variable healing - fallback to base equivalents
+    if (!value && key.startsWith("sidebar-")) {
+      const baseKey = key.replace("sidebar-", "");
+      
+      // Try base equivalent in current mode
+      if (themeItem!.cssVars[mode]?.[baseKey]) {
+        value = themeItem!.cssVars[mode]![baseKey];
+      }
+      // Try base equivalent in opposite mode (inverted)
+      else if (themeItem!.cssVars[oppositeMode]?.[baseKey]) {
+        value = invertColor(themeItem!.cssVars[oppositeMode]![baseKey]!);
+      }
+      // Try shared theme base equivalent
+      else if (themeItem!.cssVars.theme?.[baseKey]) {
+        value = themeItem!.cssVars.theme[baseKey];
+      }
+    }
+
+    // 5. Special sidebar fallbacks
+    if (!value) {
+      if (key === "sidebar") {
+        value = variables["background"] || themeItem!.cssVars[mode]?.["background"];
+      } else if (key === "sidebar-foreground") {
+        value = variables["foreground"] || themeItem!.cssVars[mode]?.["foreground"];
+      } else if (key === "sidebar-border") {
+        value = variables["border"] || themeItem!.cssVars[mode]?.["border"];
+      } else if (key === "sidebar-ring") {
+        value = variables["ring"] || themeItem!.cssVars[mode]?.["ring"];
+      }
+    }
+
     if (value) {
       variables[key] = value;
     }

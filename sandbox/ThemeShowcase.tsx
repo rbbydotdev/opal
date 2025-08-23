@@ -94,7 +94,7 @@ const ThemeShowcase: React.FC = () => {
               </span>
               <span className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded-full bg-gray-100"></div>
-                Sidebar
+                Secondary
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-3">
