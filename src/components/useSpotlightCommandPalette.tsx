@@ -83,7 +83,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const { path: currentPath } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
   const navigate = useNavigate();
-  const { themeName, mode, setTheme, toggleMode, availableThemes } = useTheme();
+  const { mode, setTheme, toggleMode, availableThemes } = useTheme();
 
   const cmdMap = useMemo(
     () =>

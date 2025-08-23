@@ -14,7 +14,7 @@ import { NULL_TREE_ROOT, RootNode, TreeDir, TreeNode } from "@/lib/FileTree/Tree
 import { AbsPath } from "@/lib/paths2";
 import clsx from "clsx";
 import { ChevronRight, Files } from "lucide-react";
-import React, { ComponentProps, JSX, useMemo } from "react";
+import React, { ComponentProps, JSX } from "react";
 export const SidebarFileMenuFiles = ({
   children,
   className,
@@ -40,28 +40,19 @@ export const SidebarFileMenuFiles = ({
   const { fileTreeDir } = useFileTree();
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
 
-  //TODO i dont think this is updating when it should
   const treeNode = scope ? (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT) : fileTreeDir;
   if (!treeNode.isTreeDir()) {
     throw new Error("SidebarFileMenuFiles: scoped node is not a TreeDir");
   }
-  // const treeNode = useMemo(() => {
-  //   const node =
-  //     typeof scope === "undefined" ? fileTreeDir : (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT);
-  //   if (!node.isTreeDir()) {
-  //     throw new Error("SidebarFileMenuFiles: scoped node is not a TreeDir");
-  //   }
-  //   return node;
-  // }, [currentWorkspace, fileTreeDir, scope]);
 
   const { expanderId } = useTreeExpanderContext();
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId);
 
   const isEmpty = !Object.keys(treeNode.filterOutChildren(filter) ?? {}).length;
-  const fileTreeRoot = useMemo(() => currentWorkspace.getFileTreeRoot(), [currentWorkspace]);
+
   return (
     <>
-      <FileItemContextMenu disabled={!isEmpty} fileNode={fileTreeRoot} currentWorkspace={currentWorkspace}>
+      <FileItemContextMenu disabled={!isEmpty} fileNode={fileTreeDir} currentWorkspace={currentWorkspace}>
         <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
           <Collapsible
             className="group/collapsible flex flex-col min-h-0"

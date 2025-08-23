@@ -335,11 +335,11 @@ export class Workspace {
     return this.disk.readFile(filePath);
   };
 
-  watchDiskIndex(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
+  watchDiskIndex = (callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) => {
     const unsub = this.disk.latestIndexListener(callback);
     this.unsubs.push(unsub);
     return unsub;
-  }
+  };
 
   copyMultipleFiles(copyNodes: [from: TreeNode, to: AbsPath | TreeNode][]) {
     return this.disk.copyMultiple(copyNodes);
@@ -460,9 +460,9 @@ export class Workspace {
   getFileTree() {
     return this.disk.fileTree;
   }
-  getFileTreeRoot() {
+  getFileTreeRoot = () => {
     return this.disk.fileTree.root;
-  }
+  };
   getFlatTree({
     filterIn,
     filterOut,
