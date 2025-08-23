@@ -22,8 +22,6 @@ export function template<T extends RemoteAuthType>(
 ): RemoteAuthTemplate<T> {
   return { ...params, templateType: typeSource(params) as `${T}/${RemoteAuthSource}` };
 }
-export const typeSlug = ({ type, source }: { type: RemoteAuthType; source: RemoteAuthSource }) =>
-  `${type}-${source}-connection`.toLowerCase().replace(/\s+/g, "-");
 
 export const typeSource = ({ type, source }: { type: RemoteAuthType; source: RemoteAuthSource }): TemplateType =>
   `${type}/${source}` satisfies TemplateType;
@@ -68,22 +66,10 @@ export type RemoteAuthFormValues<T extends RemoteAuthType = RemoteAuthType> = Re
 export type TemplateType<
   T extends RemoteAuthType = RemoteAuthType,
   U extends RemoteAuthSource = RemoteAuthSource,
-> = `${RemoteAuthType}/${RemoteAuthSource}`;
+> = `${T}/${U}`;
 
 export type RemoteAuthDefaultData = Partial<{
   [T in RemoteAuthExplicitType["type"] as `${T}/${string}`]: {
     data: Partial<RemoteAuthDataFor<T>>;
   };
 }>;
-
-// const getTypeSource = (value: `${RemoteAuthType}/${RemoteAuthSource}` | string) => {
-//   return value.split("/") as [RemoteAuthType, RemoteAuthSource];
-// };
-// RemoteAuthExplicitType
-// export type ExtractTemplateParams<T extends string> = T extends `${infer AuthType}/${infer AuthSource}`
-//   ? AuthType extends RemoteAuthType
-//     ? AuthSource extends RemoteAuthSource
-//       ? [AuthType, AuthSource]
-//       : never
-//     : never
-//   : never;

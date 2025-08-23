@@ -1,12 +1,10 @@
-import { ConnectionsModalMode } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
-import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuth";
+import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Channel } from "@/lib/channel";
 import { useEffect, useRef } from "react";
@@ -26,17 +24,11 @@ class OAuthCbChannel extends Channel<OAuthCbEventPayload> {}
 export function OAuth({
   form,
   source,
-  onSuccess,
   onCancel,
-  mode,
-  editConnection,
 }: {
   form: UseFormReturn<RemoteAuthFormValues>;
   source: RemoteAuthSource;
-  onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
-  mode: ConnectionsModalMode;
-  editConnection?: RemoteAuthJType;
 }) {
   const authRef = useRef<RemoteAuthOAuthRecordInternal | null>(null);
 
@@ -55,7 +47,7 @@ export function OAuth({
     };
   }, []);
 
-  const { handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
+  // const { handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
 
   return (
     <div className="space-y-4">
@@ -96,7 +88,7 @@ export function OAuth({
         <Button type="button" variant="outline" onClick={onCancel} className="w-full">
           Cancel
         </Button>
-        <Button type="button" variant="default" onClick={() => form.handleSubmit(handleSubmit)()} className="w-full">
+        <Button type="submit" variant="default" className="w-full">
           <RemoteAuthSourceIconComponent size={12} source={source} />
           Connect with {capitalizeFirst(source)}
         </Button>
