@@ -1,67 +1,92 @@
-"use client"
+"use client";
 
-import React from "react"
-import { toast as sonnerToast, Toaster as SonnerToaster } from "sonner"
+import { cn } from "@/lib/utils";
+import React from "react";
+import { toast as sonnerToast, Toaster as SonnerToaster } from "sonner";
 
-type ToasterProps = React.ComponentProps<typeof SonnerToaster>
+type ToasterProps = React.ComponentProps<typeof SonnerToaster>;
 
 interface ToastProps {
-  id: string | number
-  title?: string
-  description?: string
-  type?: "default" | "success" | "error" | "warning" | "info"
+  id: string | number;
+  title?: string;
+  description?: string;
+  type?: "default" | "success" | "error" | "warning" | "info";
   action?: {
-    label: string
-    onClick: () => void
-  }
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastOptions extends Omit<ToastProps, "id"> {
-  position?: "top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right"
+  position?: "top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right";
 }
 
 function toast(toastData: ToastOptions) {
-  return sonnerToast.custom((id) => (
-    <Toast
-      id={id}
-      title={toastData.title}
-      description={toastData.description}
-      type={toastData.type || "default"}
-      action={toastData.action}
-    />
-  ), {
-    position: toastData.position
-  })
+  return sonnerToast.custom(
+    (id) => (
+      <Toast
+        id={id}
+        title={toastData.title}
+        description={toastData.description}
+        type={toastData.type || "default"}
+        action={toastData.action}
+      />
+    ),
+    {
+      position: toastData.position,
+    }
+  );
 }
 
 function Toast(props: ToastProps) {
-  const { title, description, action, id, type = "default" } = props
+  const { title, description, action, id, type = "default" } = props;
 
   const getTypeStyles = () => {
     switch (type) {
       case "success":
-        return "bg-card border-primary/20"
+        return "bg-card border-primary/20";
       case "error":
-        return "bg-destructive/10 border-destructive/20"
+        return "bg-destructive/10 border-destructive/20";
       case "warning":
-        return "bg-card border-secondary/20"
+        return "bg-card border-secondary/20";
       case "info":
-        return "bg-card border-accent/20"
+        return "bg-card border-accent/20";
       default:
-        return "bg-card border-border"
+        return "bg-card border-border";
     }
-  }
+  };
 
   return (
-    <div className={`flex rounded-lg shadow-lg border w-full max-w-md min-w-[20rem] min-h-[4rem] items-center p-4 ${getTypeStyles()}`}>
+    <div
+      className={`flex rounded-lg shadow-lg border w-full max-w-md min-w-[20rem] min-h-[4rem] items-center p-4 ${getTypeStyles()}`}
+    >
       <div className="flex flex-1 items-center min-h-0">
         <div className="w-full flex flex-col justify-center">
           {title && (
-            <p className="text-sm font-medium text-foreground leading-tight">{title}</p>
+            <p className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
+              <div
+                className={cn("rounded-full w-2 h-2", {
+                  "bg-green-500": type === "success",
+                  "bg-red-500": type === "error",
+                  "bg-yellow-500": type === "warning",
+                  "bg-blue-500": type === "info",
+                  "bg-gray-500": type === "default",
+                })}
+              >
+                <div
+                  className={cn("w-2 h-2 animate-ping rounded-full", {
+                    "bg-green-500": type === "success",
+                    "bg-red-500": type === "error",
+                    "bg-yellow-500": type === "warning",
+                    "bg-blue-500": type === "info",
+                    "bg-gray-500": type === "default",
+                  })}
+                ></div>
+              </div>
+              {title}
+            </p>
           )}
-          {description && (
-            <p className="mt-1 text-sm text-muted-foreground leading-tight">{description}</p>
-          )}
+          {description && <p className="mt-1 text-sm text-muted-foreground leading-tight">{description}</p>}
         </div>
       </div>
       {action && (
@@ -69,8 +94,8 @@ function Toast(props: ToastProps) {
           <button
             className="rounded bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
             onClick={() => {
-              action.onClick()
-              sonnerToast.dismiss(id)
+              action.onClick();
+              sonnerToast.dismiss(id);
             }}
           >
             {action.label}
@@ -78,16 +103,11 @@ function Toast(props: ToastProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  return (
-    <SonnerToaster
-      className="toaster group"
-      {...props}
-    />
-  )
-}
+  return <SonnerToaster className="toaster group" {...props} />;
+};
 
-export { Toaster, toast }
+export { toast, Toaster };
