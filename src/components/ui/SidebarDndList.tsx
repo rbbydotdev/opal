@@ -54,7 +54,7 @@ export function SidebarDndList({
     return React.cloneElement(child, {
       key: id,
       className: clsx(child.props.className, {
-        "bg-sidebar-accent outline outline-black outline-[0.0625rem] m-[0.0625rem]": dragOver === index,
+        "bg-sidebar-accent outline outline-primary outline-[0.0625rem] m-[0.0625rem]": dragOver === index,
       }),
       draggable: true,
       onDragStart: (e: React.DragEvent<HTMLDivElement>) => {

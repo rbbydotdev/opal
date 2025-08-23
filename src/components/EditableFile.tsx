@@ -111,14 +111,14 @@ export const EditableFile = ({
               <img
                 src={Thumb.resolveURLFromNode(treeNode)}
                 alt=""
-                className="w-3 h-3 border border-black flex-shrink-0 bg-white mr-2"
+                className="w-3 h-3 border border-border flex-shrink-0 bg-white mr-2"
               />
             ) : (
               <FileText className="w-3 h-3 flex-shrink-0 mr-2" />
             )}
             <input
               ref={inputRef}
-              className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-black text-xs w-full "
+              className="bg-transparent py-2 outline-none font-bold border-b border-dashed border-border text-xs w-full "
               type="text"
               value={fileName}
               onChange={(e) => setFileName((!e.target.value ? "" : relPath(e.target.value)) as RelPath)}

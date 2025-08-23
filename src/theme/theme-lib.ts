@@ -265,3 +265,41 @@ export function getThemePreviewPalette(
     dark: darkColors,
   };
 }
+
+export function previewTheme(registry: ThemeRegistry, options: ApplyThemeOptions): () => void {
+  const { rootElement = document.documentElement } = options;
+
+  // Save current state
+  const prevClassList = {
+    dark: rootElement.classList.contains("dark"),
+    light: rootElement.classList.contains("light"),
+  };
+
+  const prevVars: Record<string, string> = {};
+  ALL_VARS.forEach((key) => {
+    const value = rootElement.style.getPropertyValue(`--${key}`);
+    if (value) {
+      prevVars[key] = value;
+    }
+  });
+
+  // Apply new theme
+  applyTheme(registry, options);
+
+  // Return revert function
+  return () => {
+    // Restore classes
+    rootElement.classList.toggle("dark", prevClassList.dark);
+    rootElement.classList.toggle("light", prevClassList.light);
+
+    // Clear all theme vars
+    ALL_VARS.forEach((key) => {
+      rootElement.style.removeProperty(`--${key}`);
+    });
+
+    // Restore previous vars
+    Object.entries(prevVars).forEach(([key, value]) => {
+      rootElement.style.setProperty(`--${key}`, value);
+    });
+  };
+}
