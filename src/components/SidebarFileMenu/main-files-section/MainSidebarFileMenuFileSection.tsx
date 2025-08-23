@@ -2,7 +2,7 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { Button } from "@/components/ui/button";
-import { FileTreeProvider } from "@/context/FileTreeProvider";
+import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { FilterInSpecialDirs, SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
@@ -55,6 +55,8 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
   const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
   const { setExpandAll, expandForNode } = useTreeExpanderContext();
 
+  const { fileTreeDir } = useFileTree();
+
   useFileTreeClipboardEventListeners({ currentWorkspace });
 
   return (
@@ -64,7 +66,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
         FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
         title={"Files"}
         className={className}
-        contentBanner={<Banner currentWorkspace={currentWorkspace} />}
+        contentBanner={!fileTreeDir.isEmpty ? <Banner currentWorkspace={currentWorkspace} /> : null}
         filter={SpecialDirs.All} // Exclude trash and git directories etc
       >
         <span className="block group-data-[state=closed]/collapsible:hidden">

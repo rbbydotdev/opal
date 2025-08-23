@@ -176,3 +176,52 @@ export function removeTheme(registry: ThemeRegistry, rootElement: HTMLElement = 
     rootElement.style.removeProperty(`--${key}`);
   });
 }
+
+/**
+ * Get 8-color palette for theme preview with mode healing
+ * Returns 4 colors for light mode and 4 colors for dark mode
+ * @param registry - Your imported registry.json
+ * @param themeName - Name of the theme
+ * @returns Object with light and dark arrays of colors, or null if theme not found
+ */
+export function getThemePreviewPalette(
+  registry: ThemeRegistry,
+  themeName: string
+): {
+  light: string[];
+  dark: string[];
+} | null {
+  const themeItem = registry.items.find((item) => item.name === themeName);
+  if (!themeItem) {
+    return null;
+  }
+
+  const colorKeys = ["primary", "foreground", "background", "sidebar"];
+
+  const getColorWithHealing = (mode: "light" | "dark", key: string): string | null => {
+    const oppositeMode = mode === "light" ? "dark" : "light";
+
+    // 1. Current mode
+    let value = themeItem.cssVars[mode]?.[key];
+
+    // 2. Opposite mode (inverted)
+    if (!value && themeItem.cssVars[oppositeMode]?.[key]) {
+      value = invertColor(themeItem.cssVars[oppositeMode][key]);
+    }
+
+    // 3. Shared theme vars
+    if (!value && themeItem.cssVars.theme?.[key]) {
+      value = themeItem.cssVars.theme[key];
+    }
+
+    return value || null;
+  };
+
+  const lightColors = colorKeys.map((key) => getColorWithHealing("light", key)).filter(Boolean) as string[];
+  const darkColors = colorKeys.map((key) => getColorWithHealing("dark", key)).filter(Boolean) as string[];
+
+  return {
+    light: lightColors,
+    dark: darkColors,
+  };
+}

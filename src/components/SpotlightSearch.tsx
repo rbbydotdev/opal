@@ -224,14 +224,21 @@ function SpotlightSearchInternal({
 
     // MARK: Handle select state
     if (state === "select" && currentPrompt && "options" in currentPrompt) {
-      const options = (currentPrompt as any).options as string[];
-      console.log(deferredSearch);
+      const selectPrompt = currentPrompt as any;
+      const options = selectPrompt.options as string[];
+      const renderItem = selectPrompt.renderItem as ((option: string) => React.ReactNode) | undefined;
+
       if (!deferredSearch.trim()) {
-        return options.map((opt) => ({ element: <>{opt}</>, href: opt }));
+        return options.map((opt) => ({
+          element: renderItem ? renderItem(opt) : <>{opt}</>,
+          href: opt,
+        }));
       }
       const results = fuzzysort.go(deferredSearch, options, { limit: 50 });
       return results.map((result) => ({
-        element: (
+        element: renderItem ? (
+          renderItem(result.target)
+        ) : (
           <>
             {result.highlight((m, i) => (
               <b className="text-highlight" key={i}>
