@@ -15,23 +15,24 @@ export const customTheme = EditorView.theme(
       caretColor: "var(--foreground)",
     },
 
-    ".cm-cursor, .cm-dropCursor": { 
-      borderLeftColor: "var(--foreground)" 
-    },
-    
-    "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": {
-      backgroundColor: "var(--accent)",
+    ".cm-cursor, .cm-dropCursor": {
+      borderLeftColor: "var(--foreground)",
     },
 
-    ".cm-panels": { 
-      backgroundColor: "var(--muted)", 
-      color: "var(--muted-foreground)" 
+    "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection":
+      {
+        backgroundColor: "var(--ring)",
+      },
+
+    ".cm-panels": {
+      backgroundColor: "var(--muted)",
+      color: "var(--muted-foreground)",
     },
-    ".cm-panels.cm-panels-top": { 
-      borderBottom: "2px solid var(--border)" 
+    ".cm-panels.cm-panels-top": {
+      borderBottom: "2px solid var(--border)",
     },
-    ".cm-panels.cm-panels-bottom": { 
-      borderTop: "2px solid var(--border)" 
+    ".cm-panels.cm-panels-bottom": {
+      borderTop: "2px solid var(--border)",
     },
 
     ".cm-searchMatch": {
@@ -42,11 +43,11 @@ export const customTheme = EditorView.theme(
       backgroundColor: "var(--search-match-hover)",
     },
 
-    ".cm-activeLine": { 
-      backgroundColor: "var(--muted)" 
+    ".cm-activeLine": {
+      backgroundColor: "var(--muted)",
     },
-    ".cm-selectionMatch": { 
-      backgroundColor: "var(--secondary)" 
+    ".cm-selectionMatch": {
+      backgroundColor: "var(--secondary)",
     },
 
     "&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket": {

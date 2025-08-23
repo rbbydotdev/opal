@@ -40,4 +40,7 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  *::selection {
+    @apply bg-ring text-primary-foreground !important;
+  }
 }

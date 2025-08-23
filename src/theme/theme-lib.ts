@@ -133,7 +133,7 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
     // 4. Sidebar variable healing - fallback to base equivalents
     if (!value && key.startsWith("sidebar-")) {
       const baseKey = key.replace("sidebar-", "");
-      
+
       // Try base equivalent in current mode
       if (themeItem!.cssVars[mode]?.[baseKey]) {
         value = themeItem!.cssVars[mode]![baseKey];
@@ -221,13 +221,15 @@ export function getThemePreviewPalette(
 ): {
   light: string[];
   dark: string[];
+  lightBg: string;
+  darkBg: string;
 } | null {
   const themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
     return null;
   }
 
-  const colorKeys = ["primary", "foreground", "background", "sidebar"];
+  const colorKeys = [, "sidebar", "primary", "foreground", "background", "muted", "accent"];
 
   const getColorWithHealing = (mode: "light" | "dark", key: string): string | null => {
     const oppositeMode = mode === "light" ? "dark" : "light";
@@ -247,11 +249,18 @@ export function getThemePreviewPalette(
 
     return value || null;
   };
+  const sidebarIndex = colorKeys.indexOf("sidebar");
 
-  const lightColors = colorKeys.map((key) => getColorWithHealing("light", key)).filter(Boolean) as string[];
-  const darkColors = colorKeys.map((key) => getColorWithHealing("dark", key)).filter(Boolean) as string[];
+  const lightColors = colorKeys
+    .map((key) => getColorWithHealing("light", key!))
+    .map((color, _, a) => (!color ? a[sidebarIndex] : color)) as string[];
+  const darkColors = colorKeys
+    .map((key) => getColorWithHealing("dark", key!))
+    .map((color, _, a) => (!color ? a[sidebarIndex] : color)) as string[];
 
   return {
+    lightBg: lightColors[sidebarIndex] || "#000000",
+    darkBg: darkColors[sidebarIndex] || "#ffffff",
     light: lightColors,
     dark: darkColors,
   };
