@@ -9,7 +9,9 @@ import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
+import themeRegistry from "@/theme/themes.json";
+import { type ThemeRegistry, getThemePreviewPalette } from "@/theme/theme-lib";
 
 //
 // ---- Types ----
@@ -36,6 +38,7 @@ export type CmdSelect = {
   description: string;
   options: string[];
   type: "select";
+  renderItem?: (option: string) => React.ReactNode;
 };
 
 //
@@ -52,11 +55,17 @@ const NewCmdPrompt = (name: string, description: string): CmdPrompt => ({
   type: "prompt",
 });
 
-export const NewCmdSelect = (name: string, description: string, options: string[]): CmdSelect => ({
+export const NewCmdSelect = (
+  name: string, 
+  description: string, 
+  options: string[], 
+  renderItem?: (option: string) => React.ReactNode
+): CmdSelect => ({
   name,
   description,
   options,
   type: "select",
+  renderItem,
 });
 
 //
@@ -71,6 +80,47 @@ export function isCmdExec(cmd: CmdMapMember): cmd is CmdExec {
 export function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
   return cmd.type === "select";
 }
+
+//
+// ---- Theme Preview Component ----
+//
+const ThemePreview: React.FC<{ themeName: string }> = ({ themeName }) => {
+  const palette = getThemePreviewPalette(themeRegistry as unknown as ThemeRegistry, themeName);
+  
+  if (!palette) {
+    return <span>{themeName}</span>;
+  }
+  
+  return (
+    <div className="flex items-center gap-2">
+      {/* Light mode preview */}
+      <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: 'white' }}>
+        {palette.light.map((color, index) => (
+          <div
+            key={`light-${index}`}
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: color }}
+            title={`Light mode color ${index + 1}`}
+          />
+        ))}
+      </div>
+      
+      {/* Dark mode preview */}
+      <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: 'black' }}>
+        {palette.dark.map((color, index) => (
+          <div
+            key={`dark-${index}`}
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: color }}
+            title={`Dark mode color ${index + 1}`}
+          />
+        ))}
+      </div>
+      
+      <span>{themeName}</span>
+    </div>
+  );
+};
 
 //
 // ---- Hook ----
@@ -249,7 +299,9 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         ],
 
         "Select Theme": [
-          NewCmdSelect("theme", "Select a theme", availableThemes),
+          NewCmdSelect("theme", "Select a theme", availableThemes, (themeName) => (
+            <ThemePreview themeName={themeName} />
+          )),
           NewCmdExec(async (context) => {
             const selectedTheme = context.theme as string;
             setTheme(selectedTheme);
