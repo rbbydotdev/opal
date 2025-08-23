@@ -2,35 +2,46 @@ import { ClientDb } from "@/Db/instance";
 import { AuthCallback } from "isomorphic-git";
 // import { RemoteAuthJTypePrivate } from "@/Db/RemoteAuth";
 import { nanoid } from "nanoid";
+import { z } from "zod";
 
 // 1. Add the new type to the union
 export type RemoteAuthType = "api" | "oauth" | "oauth-device";
 export type RemoteAuthSource = "github"; /*| "gitlab" | "bitbucket" | "custom";*/
 
-// 2. Define all record types
-export type RemoteAuthAPIRecordInternal = {
-  apiKey: string;
-  apiSecret: string;
-  corsProxy?: string | null;
-};
+// 2. Define all record schemas
+export const RemoteAuthAPIRecordInternalSchema = z.object({
+  apiKey: z.string(),
+  apiSecret: z.string(),
+  corsProxy: z.string().url().nullable().optional(),
+});
+export type RemoteAuthAPIRecordInternal = z.infer<typeof RemoteAuthAPIRecordInternalSchema>;
 
-export type RemoteAuthOAuthRecordInternal = {
-  accessToken: string;
-  tokenType: string;
-  expiresIn: number;
-  refreshToken: string;
-  scope: string;
-  obtainedAt: number;
-  idToken?: string;
-  corsProxy?: string | null;
-};
+export const RemoteAuthOAuthRecordInternalSchema = z.object({
+  accessToken: z.string(),
+  tokenType: z.string(),
+  expiresIn: z.number(),
+  refreshToken: z.string(),
+  scope: z.string(),
+  obtainedAt: z.number(),
+  idToken: z.string().optional(),
+  corsProxy: z.string().url().nullable().optional(),
+});
+export type RemoteAuthOAuthRecordInternal = z.infer<typeof RemoteAuthOAuthRecordInternalSchema>;
 
-export type RemoteAuthGithubDeviceOAuthRecordInternal = {
-  accessToken: string;
-  login: string;
-  obtainedAt: number;
-  corsProxy?: string | null;
-};
+export const RemoteAuthGithubDeviceOAuthRecordInternalSchema = z.object({
+  accessToken: z.string(),
+  login: z.string(),
+  obtainedAt: z.number(),
+  corsProxy: z.string().url().nullable().optional(),
+});
+
+export const RemoteAuthSchemaMap = {
+  api: RemoteAuthAPIRecordInternalSchema,
+  oauth: RemoteAuthOAuthRecordInternalSchema,
+  "oauth-device": RemoteAuthGithubDeviceOAuthRecordInternalSchema,
+} as const;
+
+export type RemoteAuthGithubDeviceOAuthRecordInternal = z.infer<typeof RemoteAuthGithubDeviceOAuthRecordInternalSchema>;
 
 // 3. Main record type
 export type RemoteAuthRecord = {

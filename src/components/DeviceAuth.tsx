@@ -1,17 +1,10 @@
-import { ConnectionsModalMode } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIcon } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
-import {
-  RemoteAuthDAO,
-  RemoteAuthGithubDeviceOAuthRecordInternal,
-  RemoteAuthJType,
-  RemoteAuthSource,
-} from "@/Db/RemoteAuth";
+import { RemoteAuthGithubDeviceOAuthRecordInternal, RemoteAuthJType, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { Env } from "@/lib/env";
 import { unwrapError } from "@/lib/errors";
@@ -23,16 +16,12 @@ import { capitalizeFirst } from "../lib/capitalizeFirst";
 export function DeviceAuth({
   form,
   source,
-  onSuccess = () => {},
   onCancel = () => {},
-  mode,
   editConnection,
 }: {
   form: UseFormReturn<RemoteAuthFormValues>;
   source: RemoteAuthSource;
-  onSuccess: (remoteAuth: RemoteAuthDAO) => void;
   onCancel: () => void;
-  mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
 }) {
   const [state, setState] = useState<
@@ -46,7 +35,6 @@ export function DeviceAuth({
   const [apiName, setApiName] = useState<string>(
     form ? form.getValues()?.name || editConnection?.name || "my-gh-auth" : "my-gh-auth"
   );
-  const { handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
 
   async function handleGithubDeviceAuth() {
     setError(null);
@@ -178,7 +166,7 @@ export function DeviceAuth({
           Cancel
         </Button>
         {(state === "auth-success" || state === "pending-rad-save") && (
-          <Button type="button" variant="default" onClick={() => form.handleSubmit(handleSubmit)()}>
+          <Button type="submit" variant="default">
             {state === "pending-rad-save" && <Loader size={12} className="animate-spin animation-iteration-infinite" />}
             OK
           </Button>

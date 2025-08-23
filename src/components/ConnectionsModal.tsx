@@ -20,9 +20,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
-import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthSource } from "@/Db/RemoteAuth";
+import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
+import z from "zod";
 
 export type ConnectionsModalMode = "add" | "edit" | "view";
 export function ConnectionsModal({
@@ -82,6 +84,14 @@ export function ConnectionsModalContent({
 
   const form = useForm<RemoteAuthFormValues>({
     defaultValues,
+    // RemoteAuthTemplates
+    resolver: (values, opt1, opt2) => {
+      return zodResolver(z.object({ data: RemoteAuthSchemaMap[values.type] }).passthrough())(
+        values as any,
+        opt1,
+        opt2 as any
+      );
+    },
   });
 
   const selectedTemplate = useMemo(
@@ -92,6 +102,23 @@ export function ConnectionsModalContent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [form.watch()["templateType"], form]
   );
+  const cancelReset = () => {
+    form.reset();
+    onClose();
+  };
+
+  const { handleSubmit } = useRemoteAuthSubmit(
+    mode,
+    editConnection,
+    (f) => {
+      onSuccess(f);
+      form.reset();
+    },
+    () => {
+      onClose();
+      form.reset();
+    }
+  );
 
   return (
     <div className={className}>
@@ -101,72 +128,58 @@ export function ConnectionsModalContent({
       </DialogHeader>
       <div className="space-y-4 py-4">
         <Form {...form}>
-          <FormField
-            control={form.control}
-            name="templateType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Connection Type</FormLabel>
-                <Select
-                  defaultValue={field.value}
-                  onValueChange={(value: typeof field.value) => {
-                    form.reset(RemoteAuthTemplates.find((t) => typeSource(t) === value));
-                  }}
-                >
-                  <SelectTrigger id="connection-type">
-                    <SelectValue placeholder="Select a connection type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RemoteAuthTemplates.map((connection) => (
-                      <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
-                        <div className="flex items-center gap-2">
-                          {connection.icon}
-                          <div>
-                            <p className="text-sm font-medium">{connection.name}</p>
-                            <p className="text-xs text-muted-foreground">{connection.description}</p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              return form.handleSubmit(handleSubmit)();
+            }}
+          >
+            <FormField
+              control={form.control}
+              name="templateType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Connection Type</FormLabel>
+                  <Select
+                    defaultValue={field.value}
+                    onValueChange={(value: typeof field.value) => {
+                      form.reset(RemoteAuthTemplates.find((t) => typeSource(t) === value));
+                    }}
+                  >
+                    <SelectTrigger id="connection-type">
+                      <SelectValue placeholder="Select a connection type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RemoteAuthTemplates.map((connection) => (
+                        <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
+                          <div className="flex items-center gap-2">
+                            {connection.icon}
+                            <div>
+                              <p className="text-sm font-medium">{connection.name}</p>
+                              <p className="text-xs text-muted-foreground">{connection.description}</p>
+                            </div>
                           </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {selectedTemplate?.type === "api" && (
+              <ApiKeyAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
             )}
-          />
 
-          {selectedTemplate?.type === "api" && (
-            <ApiKeyAuth
-              form={form}
-              source={selectedTemplate.source}
-              onSuccess={onSuccess}
-              onCancel={onClose}
-              mode={mode}
-              editConnection={editConnection}
-            />
-          )}
-
-          {selectedTemplate?.type === "oauth" && (
-            <OAuth
-              form={form}
-              source={selectedTemplate.source}
-              onSuccess={onSuccess}
-              onCancel={onClose}
-              mode={mode}
-              editConnection={editConnection}
-            />
-          )}
-          {selectedTemplate?.type === "oauth-device" && (
-            <DeviceAuth
-              form={form}
-              source={selectedTemplate.source}
-              onSuccess={onSuccess}
-              onCancel={onClose}
-              mode={mode}
-              editConnection={editConnection}
-            />
-          )}
-          {/* </form> */}
+            {selectedTemplate?.type === "oauth" && (
+              <OAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+            )}
+            {selectedTemplate?.type === "oauth-device" && (
+              <DeviceAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+            )}
+          </form>
         </Form>
       </div>
     </div>
@@ -177,19 +190,13 @@ export function ConnectionsModalContent({
 function ApiKeyAuth({
   form,
   source,
-  onSuccess,
   onCancel,
-  mode,
-  editConnection,
 }: {
   form: UseFormReturn<RemoteAuthFormValues>;
   source: RemoteAuthSource;
-  onSuccess: (rad: RemoteAuthDAO) => void;
   onCancel: () => void;
-  mode: ConnectionsModalMode;
-  editConnection?: RemoteAuthJType;
 }) {
-  const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
+  // const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
   return (
     <div className="space-y-4">
       <FormField
@@ -253,12 +260,7 @@ function ApiKeyAuth({
         <Button type="button" variant="outline" onClick={onCancel} className="w-full">
           Cancel
         </Button>
-        <Button
-          type="button"
-          onClick={() => form.handleSubmit(handleSubmit)()}
-          disabled={submitting}
-          className="w-full"
-        >
+        <Button type="submit" className="w-full">
           <RemoteAuthSourceIconComponent size={12} source={source} />
           Connect
         </Button>
