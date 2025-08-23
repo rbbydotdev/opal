@@ -66,20 +66,20 @@ function Toast(props: ToastProps) {
             <p className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
               <div
                 className={cn("rounded-full w-2 h-2", {
-                  "bg-green-500": type === "success",
-                  "bg-red-500": type === "error",
-                  "bg-yellow-500": type === "warning",
-                  "bg-blue-500": type === "info",
-                  "bg-gray-500": type === "default",
+                  "bg-success": type === "success",
+                  "bg-destructive": type === "error",
+                  "bg-chart-1": type === "warning",
+                  "bg-chart-2": type === "info",
+                  "bg-chart-3": type === "default",
                 })}
               >
                 <div
                   className={cn("w-2 h-2 animate-ping rounded-full", {
-                    "bg-green-500": type === "success",
-                    "bg-red-500": type === "error",
-                    "bg-yellow-500": type === "warning",
-                    "bg-blue-500": type === "info",
-                    "bg-gray-500": type === "default",
+                    "bg-success": type === "success",
+                    "bg-destructive": type === "error",
+                    "bg-chart-1": type === "warning",
+                    "bg-chart-2": type === "info",
+                    "bg-chart-3": type === "default",
                   })}
                 ></div>
               </div>

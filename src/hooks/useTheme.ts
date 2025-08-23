@@ -70,6 +70,12 @@ export function useTheme() {
     setTheme,
     setMode,
     toggleMode,
-    availableThemes: themeRegistry.items.map((item) => item.name),
+    availableThemes: themeRegistry.items
+      .map((item) => item.name)
+      .sort((a, b) => {
+        if (a === themeState.themeName) return -1;
+        if (b === themeState.themeName) return 1;
+        return a.localeCompare(b);
+      }),
   };
 }
