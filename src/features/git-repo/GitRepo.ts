@@ -713,9 +713,6 @@ export class GitRepo {
       // throw new Error("Cannot checkout while merging. Please resolve conflicts first.");
       await this.resetMergeState();
     }
-    const currentBranch = await this.getCurrentBranch();
-    if (currentBranch === ref) return; // No change needed
-    //TODO consider doing more mutex locks elsewhere
     await this.mutex.runExclusive(async () => {
       await this.git.checkout({
         fs: this.fs,

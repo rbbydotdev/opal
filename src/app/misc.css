@@ -26,3 +26,17 @@
 html {
   font-size: 0.75rem; /* 14px */
 }
+
+.opalSvgDark {
+  display: none;
+}
+.dark .opalSvgDark {
+  display: block;
+}
+
+.opalSvgLight {
+  display: none;
+}
+.light .opalSvgLight {
+  display: block;
+}

@@ -55,7 +55,8 @@ export class GitPlaybook {
   };
 
   resetToHead = async () => {
-    return this.repo.checkoutRef({ ref: "HEAD" });
+    const currentBranch = await this.repo.getCurrentBranch();
+    return this.repo.checkoutRef({ ref: currentBranch ?? "HEAD" });
   };
   switchCommit = async (commitOid: string) => {
     await this.repo.rememberCurrentBranch();
