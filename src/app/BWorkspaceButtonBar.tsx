@@ -45,7 +45,7 @@ function BigButton({
         <Link
           {...restProps}
           className={twMerge(
-            "w-full hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground bg-accent",
+            "w-full hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground _bg-accent",
             isSmall ? "w-4 h-4 justify-center rounded-sm" : "py-2 gap-2 flex-col",
             restProps.className
           )}
@@ -232,7 +232,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
               open={expand}
               onOpenChange={setExpand}
             >
-              <CollapsibleTrigger className="mt-2 h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground bg-accent flex items-center relative ">
+              <CollapsibleTrigger className="mt-2 h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground _bg-accent flex items-center relative ">
                 <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
                 <div
                   className={cn(

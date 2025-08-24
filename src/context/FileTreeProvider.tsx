@@ -20,8 +20,8 @@ export const useFileTree = () => {
 
 export function FileTreeProvider({
   currentWorkspace,
-  filterIn = () => true,
-  filterOut = () => false,
+  filterIn,
+  filterOut,
   children,
 }: {
   filterIn?: (node: TreeNode) => boolean;

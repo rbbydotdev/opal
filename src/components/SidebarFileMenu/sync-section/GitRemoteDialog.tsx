@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { GitBranch } from "lucide-react";
+import { GitBranch, Search } from "lucide-react";
 
 import { AuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
@@ -186,6 +186,10 @@ function GitRemoteDialogInternal({
   onCancel: () => void;
   form: ReturnType<typeof useForm<GitRemoteFormValues>>;
 }) {
+  function queryRemoteForRepos() {
+    //TODO
+  }
+
   return (
     <div className={className}>
       <DialogHeader>
@@ -210,26 +214,55 @@ function GitRemoteDialogInternal({
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
-            name="url"
+            name="authId"
             render={({ field }) => (
-              <FormItem className="min-w-0">
-                <FormLabel>URL</FormLabel>
+              <FormItem className="w-full min-w-0">
+                <FormLabel>Authentication</FormLabel>
                 <FormControl>
-                  <Input
-                    required
-                    autoComplete="off"
-                    autoFocus
-                    placeholder="https://github.com/user/repo.git"
-                    className="truncate"
-                    {...field}
+                  <AuthSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Optional - Select authentication"
+                    onAddAuth={onAddAuth}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          <div className="flex items-end gap-2 justify-end w-full">
+            <FormField
+              control={form.control}
+              name="url"
+              render={({ field }) => (
+                <FormItem className="min-w-0 w-full">
+                  <FormLabel>URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      required
+                      autoComplete="off"
+                      autoFocus
+                      placeholder="https://github.com/user/repo.git"
+                      className="truncate"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              variant="outline"
+              onClick={(e) => {
+                e.preventDefault();
+              }}
+            >
+              <Search />
+            </Button>
+          </div>
 
           <FormField
             control={form.control}
@@ -247,25 +280,6 @@ function GitRemoteDialogInternal({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="authId"
-            render={({ field }) => (
-              <FormItem className="w-full min-w-0">
-                <FormLabel>Authentication</FormLabel>
-                <FormControl>
-                  <AuthSelect
-                    // key={authSelectKey}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    placeholder="Optional - Select authentication"
-                    onAddAuth={onAddAuth}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <DialogFooter className="flex justify-between gap-2">
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel

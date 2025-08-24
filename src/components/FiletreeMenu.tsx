@@ -198,7 +198,7 @@ export function FileTreeMenu({
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton asChild>
                         <EditableDir
-                          className="my-0.5 pl-8"
+                          className="my-0.5 pl-3"
                           workspaceRoute={workspaceRoute}
                           currentWorkspace={currentWorkspace}
                           depth={depth}

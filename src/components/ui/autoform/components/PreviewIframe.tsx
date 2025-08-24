@@ -20,7 +20,7 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
       </div>
       <iframe
         src={previewURL}
-        className="border-0 absolute inset-0 w-full h-full bg-white"
+        className="border-0 absolute inset-0 w-full h-full bg-foreground"
         title="Preview"
         onLoad={() => setShowSpinner(false)}
       />

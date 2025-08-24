@@ -5,7 +5,7 @@ import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
-import { useWorkspaceContext, useWorkspaceRoute, FileOnlyFilter } from "@/context/WorkspaceContext";
+import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import useFavicon from "@/hooks/useFavicon";
 import { prefix } from "@/lib/paths2";
 import { createFileRoute, Outlet } from "@tanstack/react-router";

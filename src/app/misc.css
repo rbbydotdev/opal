@@ -40,3 +40,17 @@ html {
 .light .opalSvgLight {
   display: block;
 }
+
+.dark .sticker-dark {
+  display: flex !important;
+}
+.dark .sticker-light {
+  display: none !important;
+}
+
+.light .sticker-dark {
+  display: none !important;
+}
+.light .sticker-light {
+  display: flex !important;
+}
