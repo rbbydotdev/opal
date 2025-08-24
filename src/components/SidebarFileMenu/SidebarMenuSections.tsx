@@ -8,19 +8,18 @@ import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-s
 import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
 import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
-import { FilterInSpecialDirs, SpecialDirs } from "@/Db/SpecialDirs";
+import { FilterInSpecialDirs } from "@/Db/SpecialDirs";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { IS_MAC } from "@/lib/isMac";
 import { Slot } from "@radix-ui/react-slot";
 import { Ellipsis, List, ListXIcon } from "lucide-react";
-import React, { useMemo } from "react";
+import React from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceContext } from "../../context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeExpanderProvider } from "../../features/tree-expander/TreeExpanderContext";
 import useLocalStorage2 from "../../hooks/useLocalStorage2";
 import { capitalizeFirst } from "../../lib/capitalizeFirst";
-import { filterOutAncestor } from "../../lib/paths2";
 import { FileTreeMenuCtxProvider } from "../FileTreeMenuCtxProvider";
 import {
   DropdownMenu,
@@ -58,13 +57,6 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
     }
   };
 
-  const filterAllSpecialDirs = useMemo(() => filterOutAncestor(SpecialDirs.All), []);
-  const filterAllSpecialDirsExceptTrash = useMemo(
-    () => filterOutAncestor(SpecialDirs.allSpecialDirsExcept(SpecialDirs.Trash)),
-    []
-  );
-  // filterOutAncestor(SpecialDirs.allSpecialDirsExcept(SpecialDirs.Trash))
-  //todo do not need this
   return (
     <SidebarGroup
       {...props}

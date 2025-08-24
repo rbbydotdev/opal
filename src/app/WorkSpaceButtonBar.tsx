@@ -15,7 +15,7 @@ import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
-import React from "react";
+import React, { useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 type ButtonVariant = "lg" | "sm";
@@ -44,8 +44,11 @@ function BigButton({
       <TooltipTrigger asChild>
         <Link
           {...restProps}
+          onClick={(e) => {
+            if ((restProps.href || restProps.to || "#").startsWith("#")) e.preventDefault();
+          }}
           className={twMerge(
-            "cursor-pointer flex items-center workspace-button-subtle-hover text-muted-foreground stroke-muted-foreground bg-accent",
+            "hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground bg-accent",
             isSmall ? "w-4 h-4 justify-center rounded-sm" : "w-20 py-2 gap-2 flex-col",
             restProps.className
           )}
@@ -97,21 +100,22 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const navigate = useNavigate();
 
-  // variant is controlled by shrink
   const variant: ButtonVariant = shrink ? "sm" : "lg";
 
   return (
-    <div
-      className={cn(
-        "[&>*]:outline-none max-h-full flex flex-col gap-4 justify-center items-center",
-        shrink ? "w-6" : "w-24"
-      )}
-    >
-      <div className="flex justify-center flex-col items-center w-full ">
-        <Link to={"/"}>
-          <div className="rotate-12">
-            <div className={cn("outline-none", { "animate-spin": pending })}>
-              <div
+    <div className="flex relative">
+      <div
+        className={cn(
+          "[&>*]:outline-none [&>*]:select-none relative max-h-full flex flex-col gap-4 justify-center items-center",
+          shrink ? "w-6" : "w-20"
+        )}
+      >
+        <div className="flex justify-center flex-col items-center w-full mt-4">
+          <Link to={"/"}>
+            <div className="rotate-12">
+              <div className={cn("outline-none", { "animate-spin": pending })}>
+                <OpalSvg className={cn("rounded overflow-clip", { "h-5 w-5": shrink, "h-7 w-7": !shrink })} />
+                {/* <div
                 className={cn("rounded-sm mt-4", {
                   "h-7 w-7 mb-4": !shrink,
                   "h-4 w-4": shrink,
@@ -121,142 +125,211 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
                   backgroundRepeat: "repeat",
                   backgroundSize: "auto",
                 }}
-              ></div>
+              ></div> */}
+              </div>
             </div>
-          </div>
-        </Link>
-      </div>
-      <div
-        className={cn("max-h-full gap-4 flex justify-center flex-col items-center w-full", {
-          "_mt-3": shrink,
-        })}
-      >
-        {process.env.NODE_ENV === "development" ? (
-          <>
-            <BigButton
-              variant={variant}
-              icon={<BombIcon stroke="current" className="w-full h-full" />}
-              title={"Destroy All"}
-              to="#"
-              onClick={() =>
-                Promise.all([
-                  clearAllCaches(),
-                  DiskDAO.all().then((disks) => Promise.all(disks.map((disk) => disk.delete()))),
-                  RemoteAuthDAO.all().then((auths) => Promise.all(auths.map((auth) => auth.delete()))),
-                  currentWorkspace.tearDown(),
-                  WorkspaceDAO.all().then((workspaces) =>
-                    Promise.all(
-                      workspaces.map((ws) =>
-                        ws
-                          .toModel()
-                          .tearDown()
-                          .then((ws) => ws.delete())
+          </Link>
+        </div>
+        <div
+          className={cn("max-h-full gap-4 flex justify-center flex-col items-center w-full", {
+            "_mt-3": shrink,
+          })}
+        >
+          {process.env.NODE_ENV === "__development" ? (
+            <>
+              <BigButton
+                variant={variant}
+                icon={<BombIcon stroke="current" className="w-full h-full" />}
+                title={"Destroy All"}
+                to="#"
+                onClick={() =>
+                  Promise.all([
+                    clearAllCaches(),
+                    DiskDAO.all().then((disks) => Promise.all(disks.map((disk) => disk.delete()))),
+                    RemoteAuthDAO.all().then((auths) => Promise.all(auths.map((auth) => auth.delete()))),
+                    currentWorkspace.tearDown(),
+                    WorkspaceDAO.all().then((workspaces) =>
+                      Promise.all(
+                        workspaces.map((ws) =>
+                          ws
+                            .toModel()
+                            .tearDown()
+                            .then((ws) => ws.delete())
+                        )
                       )
-                    )
-                  ),
-                  unregisterServiceWorkers(),
-                ]).then(() => navigate({ to: "/newWorkspace" }))
-              }
-            />
+                    ),
+                    unregisterServiceWorkers(),
+                  ]).then(() => navigate({ to: "/newWorkspace" }))
+                }
+              />
+              <BigButton
+                variant={variant}
+                icon={<Delete stroke="current" className="w-full h-full" />}
+                title={"Delete All"}
+                to="#"
+                onClick={() => Workspace.DeleteAll().then(() => navigate({ to: "/newWorkspace" }))}
+              />
+              <BigButton
+                variant={variant}
+                icon={<Delete stroke="current" className="w-full h-full" />}
+                title={"Unregister Services"}
+                to="#"
+                onClick={() => {
+                  const promises: Promise<boolean>[] = [];
+                  void navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+                    for (const registration of registrations) {
+                      promises.push(registration.unregister());
+                    }
+                    await Promise.all(promises);
+                    alert("All service workers unregistered!");
+                  });
+                }}
+              />
+            </>
+          ) : null}
+
+          <WorkspaceSearchDialog>
             <BigButton
               variant={variant}
-              icon={<Delete stroke="current" className="w-full h-full" />}
-              title={"Delete All"}
+              icon={<SearchIcon stroke="current" className="w-full h-full" />}
+              title="search"
               to="#"
-              onClick={() => Workspace.DeleteAll().then(() => navigate({ to: "/newWorkspace" }))}
             />
+          </WorkspaceSearchDialog>
+
+          <BigButton
+            variant={variant}
+            className="hidden"
+            icon={<Zap stroke="current" className="w-full h-full" />}
+            title="connections"
+            to="/connections"
+          />
+          <BigButton
+            variant={variant}
+            className="hidden"
+            icon={<Settings stroke="current" className="w-full h-full" />}
+            title="settings"
+            to="/settings"
+          />
+          <BigButton
+            variant={variant}
+            icon={<CirclePlus stroke="current" className="w-full h-full" />}
+            title="new workspace"
+            href={"/newWorkspace"}
+          />
+
+          {coalescedWorkspace && (
             <BigButton
               variant={variant}
-              icon={<Delete stroke="current" className="w-full h-full" />}
-              title={"Unregister Services"}
-              to="#"
-              onClick={() => {
-                const promises: Promise<boolean>[] = [];
-                void navigator.serviceWorker.getRegistrations().then(async (registrations) => {
-                  for (const registration of registrations) {
-                    promises.push(registration.unregister());
-                  }
-                  await Promise.all(promises);
-                  alert("All service workers unregistered!");
-                });
-              }}
+              icon={<WorkspaceIcon scale={shrink ? 3 : 7} input={coalescedWorkspace.guid} />}
+              title={coalescedWorkspace.name}
+              to={coalescedWorkspace.href}
+              truncate={true}
+              className="text-foreground big-button-active whitespace-nowrap truncate"
             />
-          </>
-        ) : null}
+          )}
 
-        <WorkspaceSearchDialog>
-          <BigButton
-            variant={variant}
-            icon={<SearchIcon stroke="current" className="w-full h-full" />}
-            title="search"
-            to="#"
-          />
-        </WorkspaceSearchDialog>
+          {otherWorkspacesCount > 0 && (
+            <Collapsible
+              className="w-full flex flex-col justify-start pb-0 scrollbar-thin items-center min-h-0 "
+              open={expand}
+              onOpenChange={setExpand}
+            >
+              <CollapsibleTrigger className="mt-2 h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground bg-accent flex items-center relative ">
+                <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
+                <div
+                  className={cn(
+                    { "w-[1.25rem] h-[1.25rem] text-xs": !shrink, "w-3 h-3 text-2xs": shrink },
+                    "z-10 group-data-[state=open]:hidden text-primary-foreground absolute top-0 right-2 rounded-full bg-primary p-0 flex justify-center items-center "
+                  )}
+                >
+                  {otherWorkspacesCount}
+                </div>
+                <div className="absolute group-data-[state=open]:hidden flex w-full justify-center ">
+                  <div>
+                    <OpalSvg
+                      className={cn("rounded overflow-clip rotate-12", {
+                        "w-9": !shrink,
+                        "w-3": shrink,
+                      })}
+                    />
+                  </div>
+                </div>
+              </CollapsibleTrigger>
 
-        <BigButton
-          variant={variant}
-          className="hidden"
-          icon={<Zap stroke="current" className="w-full h-full" />}
-          title="connections"
-          to="/connections"
-        />
-        <BigButton
-          variant={variant}
-          className="hidden"
-          icon={<Settings stroke="current" className="w-full h-full" />}
-          title="settings"
-          to="/settings"
-        />
-        <BigButton
-          variant={variant}
-          icon={<CirclePlus stroke="current" className="w-full h-full" />}
-          title="new workspace"
-          href={"/newWorkspace"}
-        />
-
-        {coalescedWorkspace && (
-          <BigButton
-            variant={variant}
-            icon={<WorkspaceIcon input={coalescedWorkspace.guid} />}
-            title={coalescedWorkspace.name}
-            to={coalescedWorkspace.href}
-            truncate={true}
-            className="text-foreground big-button-active whitespace-nowrap truncate"
-          />
-        )}
-
-        {otherWorkspacesCount > 0 && (
-          <Collapsible
-            className="w-full flex flex-col justify-start pb-0 scrollbar-thin items-center min-h-0 "
-            open={expand}
-            onOpenChange={setExpand}
-          >
-            <CollapsibleTrigger className="mt-2 h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground bg-accent flex items-center relative workspace-button-subtle-hover">
-              <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
-              <div className=" group-data-[state=open]:hidden text-primary-foreground absolute top-0 right-2 rounded-full bg-primary w-[1.25rem] p-0 flex justify-center items-center h-[1.25rem] text-xs">
-                {otherWorkspacesCount}
-              </div>
-              <div className="absolute group-data-[state=open]:hidden flex w-full justify-center ">
-                <OpalSvg className={cn("rounded overflow-clip rotate-12")} />
-              </div>
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="w-full min-h-0 max-h-full overflow-y-scroll no-scrollbar">
-              {workspaces.map((workspace) => (
-                <BigButton
-                  variant={variant}
-                  icon={<WorkspaceIcon input={workspace.guid} />}
-                  to={workspace.href}
-                  truncate={true}
-                  className="whitespace-nowrap"
-                  title={workspace.name}
-                  key={workspace.guid}
-                />
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+              <CollapsibleContent className="w-full min-h-0 max-h-full overflow-y-scroll no-scrollbar flex justify-center gap-2 flex-col items-center">
+                {workspaces.map((workspace) => (
+                  <BigButton
+                    variant={variant}
+                    icon={<WorkspaceIcon scale={shrink ? 3 : 7} input={workspace.guid} />}
+                    to={workspace.href}
+                    truncate={true}
+                    className="whitespace-nowrap"
+                    title={workspace.name}
+                    key={workspace.guid}
+                  />
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+        </div>
       </div>
+
+      <DragCollapseBar />
     </div>
+  );
+}
+
+function DragCollapseBar() {
+  const THRESHOLD = 5;
+  const startXRef = React.useRef(0);
+  const { setStoredValue, storedValue: shrink } = useLocalStorage2("BigButtonBar/shrink", true);
+  const draggingRef = useRef({ isDragging: false, shrink: (_v: boolean) => {}, cleanup: () => {} });
+  draggingRef.current.shrink = setStoredValue;
+
+  const onMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    startXRef.current = e.clientX;
+    draggingRef.current.isDragging = true;
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mouseleave", onMouseUp);
+    draggingRef.current.cleanup = () => {
+      draggingRef.current.isDragging = false;
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("mouseleave", onMouseUp);
+    };
+  };
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!draggingRef.current) {
+      return;
+    }
+    const delta = e.clientX - startXRef.current;
+    if ((!shrink && delta < -1 * THRESHOLD) || (shrink && delta > THRESHOLD)) {
+      draggingRef.current.shrink(!shrink);
+      draggingRef.current.cleanup();
+    }
+  };
+
+  const onMouseUp = (e: MouseEvent) => {
+    if (draggingRef.current) {
+      const delta = e.clientX - startXRef.current;
+      if (delta < -5) {
+        draggingRef.current.shrink(true);
+      }
+    }
+    draggingRef.current.cleanup();
+  };
+
+  return (
+    <div
+      onMouseDown={onMouseDown}
+      className={cn("bg-primary absolute right-0 hover:w-2 h-36 w-0.5 select-none", {
+        "cursor-w-resize": !shrink,
+        "cursor-e-resize": shrink,
+      })}
+    />
   );
 }

@@ -1,3 +1,4 @@
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
@@ -8,7 +9,7 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
 import { Lock } from "lucide-react";
 
-import { ChevronRight, Download, Info } from "lucide-react";
+import { Download, Info } from "lucide-react";
 import React from "react";
 // import { useWorkspaceContext } from "../../context/WorkspaceHooks";
 // import { useSingleItemExpander } from "../../features/tree-expander/useSingleItemExpander";
@@ -22,14 +23,7 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
         <CollapsibleTrigger asChild>
           <SidebarMenuButton>
             <SidebarGroupLabel>
-              <div className="flex items-center">
-                <ChevronRight
-                  size={14}
-                  className={
-                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                  }
-                />
-              </div>
+              <SidebarGripChevron />
               <div className="w-full">
                 <div className="flex justify-center items-center">
                   <Download size={12} className="mr-2" />

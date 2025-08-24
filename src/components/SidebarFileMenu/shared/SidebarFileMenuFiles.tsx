@@ -3,6 +3,7 @@ import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -13,7 +14,7 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { NULL_TREE_ROOT, RootNode, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import clsx from "clsx";
-import { ChevronRight, Files } from "lucide-react";
+import { Files } from "lucide-react";
 import React, { ComponentProps, JSX } from "react";
 export const SidebarFileMenuFiles = ({
   children,
@@ -63,14 +64,7 @@ export const SidebarFileMenuFiles = ({
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton>
                   <SidebarGroupLabel className="pl-0">
-                    <div className="flex items-center">
-                      <ChevronRight
-                        size={14}
-                        className={
-                          "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                        }
-                      />
-                    </div>
+                    <SidebarGripChevron />
                     <div className="flex justify-center items-center">
                       <Icon className="mr-2" size={12} />
                       {title}
