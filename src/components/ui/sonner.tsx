@@ -61,11 +61,11 @@ function Toast(props: ToastProps) {
       className={`flex rounded-lg shadow-lg border w-full max-w-md min-w-[20rem] min-h-[4rem] items-center p-4 ${getTypeStyles()}`}
     >
       <div className="flex flex-1 items-center min-h-0">
-        <div className="w-full flex flex-col justify-center">
+        <p className="w-full flex flex-col justify-center">
           {title && (
-            <div className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
-              <div
-                className={cn("rounded-full w-2 h-2", {
+            <span className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
+              <span
+                className={cn("block rounded-full w-2 h-2", {
                   "bg-success": type === "success",
                   "bg-destructive": type === "error",
                   "bg-chart-1": type === "warning",
@@ -73,21 +73,21 @@ function Toast(props: ToastProps) {
                   "bg-chart-3": type === "default",
                 })}
               >
-                <div
-                  className={cn("w-2 h-2 animate-ping rounded-full", {
+                <span
+                  className={cn("block w-2 h-2 animate-ping rounded-full", {
                     "bg-success": type === "success",
                     "bg-destructive": type === "error",
                     "bg-chart-1": type === "warning",
                     "bg-chart-2": type === "info",
                     "bg-chart-3": type === "default",
                   })}
-                ></div>
-              </div>
+                ></span>
+              </span>
               {title}
-            </div>
+            </span>
           )}
           {description && <p className="mt-1 text-sm text-muted-foreground leading-tight">{description}</p>}
-        </div>
+        </p>
       </div>
       {action && (
         <div className="ml-4 shrink-0 flex items-center">

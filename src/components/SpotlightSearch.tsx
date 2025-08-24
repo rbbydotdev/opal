@@ -27,7 +27,7 @@ const SpotlightSearchItemLink = forwardRef<
   {
     id: string;
     href: string | AbsPath;
-    title: string | JSX.Element;
+    title: string | JSX.Element | React.ReactNode;
     isActive: boolean;
     onSelect: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => void;
   }
@@ -68,7 +68,7 @@ const SpotlightSearchItemCmd = forwardRef<
   {
     id: string;
     cmd: string;
-    title: string | JSX.Element;
+    title: string | JSX.Element | React.ReactNode;
     isActive: boolean;
     onSelect: () => void;
   }
@@ -190,6 +190,7 @@ function SpotlightSearchInternal({
     setOpen(false);
     setState("spotlight");
     setSearch("");
+    setDeferredSearch("");
     setActiveIndex(-1);
     setCurrentPrompt(null);
     execQueue.current = null;
@@ -227,7 +228,7 @@ function SpotlightSearchInternal({
 
       if (!deferredSearch.trim()) {
         return options.map((opt) => ({
-          element: renderItem ? renderItem(opt) : <>{opt}</>,
+          element: renderItem ? renderItem(opt) : opt,
           href: opt,
         }));
       }

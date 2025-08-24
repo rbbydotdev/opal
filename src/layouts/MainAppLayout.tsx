@@ -1,5 +1,5 @@
 import { JotaiProvider } from "@/app/JotaiProvider";
-import { WorkspaceButtonBar } from "@/app/WorkSpaceButtonBar";
+import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
 import { ConfirmProvider } from "@/components/Confirm";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
@@ -14,6 +14,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { useTheme } from "@/hooks/useTheme";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
+import { cn } from "@/lib/utils";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 
 interface MainAppLayoutProps {
@@ -23,6 +24,7 @@ interface MainAppLayoutProps {
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();
   // Initialize theme to ensure it loads globally
+
   useTheme();
   return (
     <>
@@ -49,7 +51,11 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                             <RemoteMDXEditorRealmProvider>
                               <div className="w-full flex">
                                 <ErrorBoundary fallback={ErrorPlaque}>
-                                  <div className="w-20 flex flex-col flex-shrink-0 bg-accent overflow-clip  flex-grow-0 max-h-screen">
+                                  <div
+                                    className={cn(
+                                      "flex flex-col flex-shrink-0 bg-accent overflow-clip  flex-grow-0 max-h-screen"
+                                    )}
+                                  >
                                     <WorkspaceButtonBar />
                                   </div>
                                   <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
