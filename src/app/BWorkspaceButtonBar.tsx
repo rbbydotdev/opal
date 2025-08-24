@@ -222,7 +222,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
               title={coalescedWorkspace.name}
               to={coalescedWorkspace.href}
               truncate={true}
-              className="text-foreground big-button-active whitespace-nowrap truncate"
+              className="text-muted-foreground big-button-active whitespace-nowrap truncate"
             />
           )}
 
@@ -237,7 +237,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
                 <div
                   className={cn(
                     { "w-[1.25rem] h-[1.25rem] text-xs": !shrink, "w-3 h-3 text-2xs": shrink },
-                    "z-10 group-data-[state=open]:hidden text-primary-foreground absolute top-0 right-2 rounded-full bg-primary p-0 flex justify-center items-center "
+                    "z-10 group-data-[state=open]:hidden text-muted-foreground absolute top-0 right-2 rounded-full bg-primary p-0 flex justify-center items-center "
                   )}
                 >
                   {otherWorkspacesCount}
@@ -261,7 +261,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
                     icon={<WorkspaceIcon scale={shrink ? 3 : 7} input={workspace.guid} />}
                     to={workspace.href}
                     truncate={true}
-                    className="whitespace-nowrap"
+                    className="whitespace-nowrap text-muted-foreground"
                     title={workspace.name}
                     key={workspace.guid}
                   />

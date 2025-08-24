@@ -84,7 +84,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
 
   const renderSearchResults = useMemo(() => {
     if (error) {
-      return <div className="text-center text-destructive py-8 text-sm font-mono">{error}</div>;
+      return <div className="py-8 text-center text-sm font-mono text-destructive">{error}</div>;
     }
     if (hasResults) {
       return workspaceResults.map(([workspaceName, items]) => (
@@ -100,16 +100,16 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     }
     if (isSearching) {
       return (
-        <div className="flex justify-center items-center text-muted-foreground py-8 text-sm font-mono w-full h-full">
+        <div className="flex h-full w-full items-center justify-center py-8 font-mono text-sm text-muted-foreground">
           <div className="animate-spin">
-            <Loader className="w-6 h-6" />
+            <Loader className="h-6 w-6" />
           </div>
         </div>
       );
     }
     if (searchTerm)
       return (
-        <div className="w-full justify-center items-center flex font-mono h-12 gap-2">
+        <div className="flex h-12 w-full items-center justify-center gap-2 font-mono">
           <SearchXIcon />
           {"no results"}
         </div>
@@ -128,38 +128,38 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
       {/* ... The rest of your JSX remains the same ... */}
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
-        className="sm:max-w-[45rem] max-h-[80svh] flex flex-col top-[15vh] translate-y-0"
+        className="top-[15vh] flex max-h-[80svh] translate-y-0 flex-col sm:max-w-[45rem]"
         onEscapeKeyDown={(event) => {
           if (document.activeElement?.hasAttribute("data-search-file-expand")) {
             event.preventDefault();
           }
         }}
       >
-        <DialogTitle className="font-mono font-thin text-xs flex items-center gap-2 -mt-4 -ml-4 mb-2">
+        <DialogTitle className="-ml-4 -mt-4 mb-2 flex items-center gap-2 font-mono text-xs font-thin">
           <Search size={16} /> search
         </DialogTitle>
         <Collapsible className="group/collapsible" open={isOptionsOpen} onOpenChange={(state) => setOptionsOpen(state)}>
           <div className="flex">
-            <CollapsibleTrigger className="text-xs flex items-center -ml-3 mr-1 outline-none" asChild>
+            <CollapsibleTrigger className="-ml-3 mr-1 flex items-center text-xs outline-none" asChild>
               <button className="ouline-none" type="button">
                 <ChevronRight
                   size={14}
                   className={
-                    "outline-none w-4 transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-2"
+                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-2 w-4 outline-none"
                   }
                 />
               </button>
             </CollapsibleTrigger>
             <Input
               autoFocus
-              className="md:text-xs text-xs outline-ring border bg-sidebar font-mono"
+              className="border bg-muted font-mono text-xs outline-ring md:text-xs"
               placeholder="search workspace..."
               value={searchTerm}
               onChange={(e) => handleInputChange(e.target.value)}
             />
           </div>
           <CollapsibleContent>
-            <div className="flex items-center gap-2 mt-4">
+            <div className="mt-4 flex items-center gap-2">
               <SelectWorkspaceComplete
                 initialValue={optionsValue.workspace}
                 defaultValue={ALL_WS_KEY}
@@ -167,7 +167,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
                 onChange={handleWorkspaceChange}
               />
               <RadioGroup
-                className="_flex items-center gap-2 ml-4 hidden TODO-SOMEDAY"
+                className="_flex ml-4 hidden items-center gap-2 TODO-SOMEDAY"
                 defaultValue={optionsValue.type}
                 onValueChange={(type: "markdown" | "rich") => {
                   setOptionsValue((prev) => ({ ...prev, type }));
@@ -176,18 +176,18 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
                 }}
               >
                 <RadioGroupItem id="markdown_option" value="markdown" className="scale-75" />
-                <Label className="text-2xs font-mono text-primary flex items-center gap-1" htmlFor="markdown_option">
+                <Label className="flex items-center gap-1 font-mono text-2xs text-primary" htmlFor="markdown_option">
                   <span>markdown</span>
                 </Label>
                 <RadioGroupItem id="rich_text_option" value="rich" className="scale-75" />
-                <Label className="text-2xs font-mono text-primary flex items-center gap-1" htmlFor="rich_text_option">
+                <Label className="flex items-center gap-1 font-mono text-2xs text-primary" htmlFor="rich_text_option">
                   <span>rich text</span>
                 </Label>
               </RadioGroup>
             </div>
           </CollapsibleContent>
         </Collapsible>
-        <div className="h-full overflow-y-scroll no-scrollbar mt-2">{renderSearchResults}</div>
+        <div className="no-scrollbar mt-2 h-full overflow-y-scroll">{renderSearchResults}</div>
       </DialogContent>
     </Dialog>
   );
@@ -206,12 +206,12 @@ function SearchResults({
   workspaceName: string;
 }) {
   if (results.length === 0) {
-    return <div className="text-center text-muted-foreground py-8 text-sm font-mono">No results found</div>;
+    return <div className="py-8 text-center font-mono text-sm text-muted-foreground">No results found</div>;
   }
   return (
     <div>
-      <div className="text-md bold underline mb-1 w-full justify-start items-center flex">
-        <div className="flex items-center justify-start gap-2 mb-1">
+      <div className="mb-1 flex w-full items-center justify-start text-lg font-bold underline">
+        <div className="mb-1 flex items-center justify-start gap-2">
           <WorkspaceIcon
             variant="round"
             size={3}
@@ -222,7 +222,7 @@ function SearchResults({
           <Link
             onClick={onNavigate}
             to={joinPath(WorkspaceDAO.rootRoute, workspaceName).toString()}
-            className="font-mono uppercase text-xs "
+            className="font-mono text-xs uppercase "
           >
             {workspaceName}
           </Link>
@@ -268,15 +268,15 @@ function SearchFile({
         onClick={onNavigate}
         title={`${workspaceName}/${filePath}`}
         to={href.toString()}
-        className="w-full flex items-center border rounded-t text-xs font-mono h-8 sticky top-0 z-10 bg-accent hover:bg-primary-foreground"
+        className="sticky top-0 z-10 flex h-8 w-full items-center rounded-t border-sidebar-border bg-sidebar font-mono text-xs text-sidebar-foreground hover:bg-sidebar-primary"
       >
-        <div className="ml-1 flex items-center justify-center h-full gap-2 ">
-          <FileTextIcon size={12} className="text-ring h-4" />
+        <div className="ml-1 flex h-full items-center justify-center gap-2 ">
+          <FileTextIcon size={12} className="h-4 text-sidebar-ring" />
         </div>
-        <div className="flex-1 min-w-0 truncate px-2 py-2">{filePath}</div>
+        <div className="min-w-0 flex-1 truncate px-2 py-2">{filePath}</div>
         <Button
           variant="ghost"
-          className="flex-shrink-0 h-5 w-5 p-0 mr-1 ml-2 scale-150 rounded-none"
+          className="mr-1 ml-2 h-5 w-5 flex-shrink-0 scale-150 rounded-none p-0"
           onClick={(e) => {
             closeFile();
             e.preventDefault();
@@ -307,7 +307,7 @@ function SearchFile({
             size="sm"
             tabIndex={0}
             data-search-file-expand
-            className="!rounded-b-lg w-full flex justify-center h-4 items-center bg-primary/5 mt-1 rounded-none"
+            className="!rounded-b-lg mt-1 flex h-4 w-full items-center justify-center rounded-none bg-primary/5"
             onClick={() => setExpanded(!expanded)}
             onMouseUp={() => buttonRef.current?.focus()}
             onKeyDown={(e) => {
@@ -325,7 +325,7 @@ function SearchFile({
             }}
             ref={buttonRef}
           >
-            <span className="p-0.5 text-primary/80 text-3xs font-mono">
+            <span className="p-0.5 font-mono text-3xs text-primary/80">
               {expanded ? "collapse" : `expand ${matches.length - MAX_MATCHES_SHOWN} more`}
             </span>
           </Button>
@@ -340,25 +340,22 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
     viewMode: "source",
   });
   return (
-    // 1. Use flexbox to align the line number and the text content
     <a href={href + "#" + sp} onClick={onClick}>
-      <div className="border-b-4 last-of-type:border-none border-background flex items-start p-1 py-1 bg-primary-foreground font-mono text-xs group hover:bg-ring/80 cursor-pointer hover:text-primary-foreground">
-        {/* 2. Create a container for the line number and badge */}
-        <div className="relative min-w-8 text-right font-bold mr-2">
-          {/* 3. Conditionally render the linesSpanned badge */}
+      <div className="group flex cursor-pointer items-start border-b-4 border-background bg-sidebar-foreground p-1 py-1 font-mono text-xs text-sidebar last-of-type:border-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+        <div className="relative mr-2 min-w-8 text-right font-bold">
           {match.linesSpanned > 0 && (
-            <div className="group-hover:text-white group-hover:bg-ring bg-primary-foreground w-8 left-4 absolute -top-2.5 -right-2 flex items-center justify-center rounded-full text-ring scale-75 text-[0.625rem] font-bold">
+            <div className="absolute -top-2.5 -right-2 flex h-auto w-8 items-center justify-center rounded-full bg-sidebar-foreground text-[0.625rem] font-bold text-sidebar-ring scale-75 group-hover:bg-sidebar-ring group-hover:text-sidebar-primary-foreground">
               +{match.linesSpanned}
             </div>
           )}
-          {/* 4. The line number is now a real span */}
           <span>{match.lineNumber}:</span>
         </div>
 
-        {/* 5. The text content is in its own div to handle truncation */}
-        <div className="truncate whitespace-nowrap ml-2">
+        <div className="ml-2 truncate whitespace-nowrap">
           {match.startText}
-          <span className="bg-search-highlight-bg text-search-highlight-fg">{match.middleText}</span>
+          <span className="rounded-sm bg-sidebar-primary px-0.5 text-sidebar-primary-foreground">
+            {match.middleText}
+          </span>
           {match.endText}
         </div>
       </div>
