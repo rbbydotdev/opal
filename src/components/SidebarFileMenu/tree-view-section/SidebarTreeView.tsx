@@ -1,10 +1,11 @@
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { SidebarTreeViewMenu } from "@/components/TreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import clsx from "clsx";
-import { ChevronRight, CopyMinus, LucideGitBranch } from "lucide-react";
+import { CopyMinus, LucideGitBranch } from "lucide-react";
 
 export function SidebarTreeView({
   className,
@@ -26,14 +27,7 @@ export function SidebarTreeView({
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="peer">
               <SidebarGroupLabel>
-                <div className="flex items-center">
-                  <ChevronRight
-                    size={14}
-                    className={
-                      "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                    }
-                  />
-                </div>
+                <SidebarGripChevron />
                 <div className="w-full">
                   <div className="flex justify-center items-center">
                     <LucideGitBranch size={14} className="mr-2" />

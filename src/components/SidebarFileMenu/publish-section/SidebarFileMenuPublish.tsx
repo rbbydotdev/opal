@@ -1,8 +1,9 @@
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { ChevronRight, Code2, FileTextIcon, UploadCloud, UploadCloudIcon } from "lucide-react";
+import { Code2, FileTextIcon, UploadCloud, UploadCloudIcon } from "lucide-react";
 
 export function SidebarFileMenuPublish(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleItemExpander("publish");
@@ -12,14 +13,7 @@ export function SidebarFileMenuPublish(props: React.ComponentProps<typeof Sideba
         <CollapsibleTrigger asChild>
           <SidebarMenuButton>
             <SidebarGroupLabel>
-              <div className="flex items-center">
-                <ChevronRight
-                  size={14}
-                  className={
-                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                  }
-                />
-              </div>
+              <SidebarGripChevron />
               <div className="w-full">
                 <div className="flex justify-center items-center">
                   <UploadCloudIcon size={12} className="mr-2" />

@@ -2,6 +2,7 @@
 import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -21,7 +22,7 @@ import {
 import { RemoteAuthJType } from "@/Db/RemoteAuth";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
-import { ChevronRight, MoreHorizontal, Pencil, Plus, Sparkle, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Sparkle, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 function ConnectionManager() {
@@ -119,14 +120,7 @@ export function SidebarConnectionsSection(props: React.ComponentProps<typeof Sid
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="pl-0">
             <SidebarGroupLabel className="pl-2">
-              <div className="flex items-center">
-                <ChevronRight
-                  size={14}
-                  className={
-                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                  }
-                />
-              </div>
+              <SidebarGripChevron />
               <div className="w-full">
                 <div className="flex justify-center items-center">
                   <Sparkle size={12} className="mr-2" />

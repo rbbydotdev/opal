@@ -1,5 +1,4 @@
 import {
-  ChevronRight,
   Download,
   GitBranchIcon,
   GitMerge,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { BranchManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -266,14 +266,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="pl-0">
             <SidebarGroupLabel className="pl-2">
-              <div className="flex items-center">
-                <ChevronRight
-                  size={14}
-                  className={
-                    "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-0.5"
-                  }
-                />
-              </div>
+              <SidebarGripChevron />
               <div className="w-full">
                 <div className="flex justify-center items-center">
                   <GitBranchIcon size={12} className="mr-2" />
