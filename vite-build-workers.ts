@@ -89,8 +89,24 @@ function createWorkerConfig({ name, entry, outFile }: WorkerConfig, isDev: boole
   });
 }
 
+const BuildList = [
+  "SearchWorker",
+  "ServiceWorker",
+  "DocxWorker",
+  // "ImageWorker",
+  // "ImageReplaceWorker",
+  // "ImageWorker3",
+  // "RepoWorker",
+  // "DiskWorker",
+  // "WorkspaceWorker",
+];
+
 async function buildAllWorkers(isDev = false) {
   for (const worker of workers) {
+    if (!BuildList.includes(worker.name)) {
+      console.log(`Skipping build of ${worker.name}`);
+      continue;
+    }
     const config = createWorkerConfig(worker, isDev);
     await build(config);
     console.log(`${isDev ? "Watching" : "Built"} ${worker.name} -> ${worker.outFile}`);
