@@ -49,6 +49,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   );
   const newDir = useCallback(
     async (path: AbsPath) => {
+      console.log("newDir", path);
       return currentWorkspace.newDir(dirname(path), basename(path));
     },
     [currentWorkspace]

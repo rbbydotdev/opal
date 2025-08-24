@@ -38,7 +38,7 @@ function ConnectionManager() {
   return (
     <>
       <ConnectionsModal>
-        <SidebarGroupAction className="top-1.5 p-3">
+        <SidebarGroupAction className="top-1.5 p-0">
           <Plus /> <span className="sr-only">Add Connection</span>
         </SidebarGroupAction>
       </ConnectionsModal>

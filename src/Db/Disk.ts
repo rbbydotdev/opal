@@ -370,7 +370,7 @@ export abstract class Disk {
   //TODO use search ?
 
   async mkdirRecursive(filePath: AbsPath) {
-    await this.ready;
+    // await this.ready;
     //make recursive dir if or if not exists
     const segments = encodePath(filePath).split("/").slice(1);
     for (let i = 1; i <= segments.length; i++) {
@@ -564,10 +564,12 @@ export abstract class Disk {
   }
 
   async newDir(fullPath: AbsPath) {
-    await this.ready;
+    // await this.ready;
+
     while (await this.pathExists(fullPath)) {
       fullPath = incPath(fullPath);
     }
+    console.debug("Creating new dir at", fullPath);
     await this.mkdirRecursive(fullPath);
     await this.fileTreeIndex();
 

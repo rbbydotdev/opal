@@ -237,7 +237,15 @@ export const EditorSidebarLayout = ({
       document.body.classList.remove("select-none");
       document.body.style.cursor = "";
     };
-  }, [isResizing, rightPaneIsResizing, isCollapsed, persistedOpenWidth, rightPaneIsCollapsed, rightPanePersistedWidth, rightPaneEnabled]);
+  }, [
+    isResizing,
+    rightPaneIsResizing,
+    isCollapsed,
+    persistedOpenWidth,
+    rightPaneIsCollapsed,
+    rightPanePersistedWidth,
+    rightPaneEnabled,
+  ]);
 
   return (
     <div className="flex h-screen w-full overflow-clip">
@@ -256,7 +264,7 @@ export const EditorSidebarLayout = ({
         aria-valuemin={COLLAPSED_STATE_WIDTH}
         aria-valuemax={MAX_RESIZABLE_WIDTH}
         onMouseDown={handleMouseDown}
-        className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
+        className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar border-r-2 hover:bg-sidebar-accent active:bg-sidebar-primary"
         title="Resize sidebar"
       ></div>
 
@@ -278,11 +286,11 @@ export const EditorSidebarLayout = ({
           <aside
             ref={rightPaneRef}
             style={{ width: `${rightPaneCurrentWidth}px` }}
-            className={`relative flex-shrink-0 overflow-y-auto ${rightPaneIsResizing ? 'pointer-events-none' : ''}`}
+            className={`relative flex-shrink-0 overflow-y-auto ${rightPaneIsResizing ? "pointer-events-none" : ""}`}
           >
-            {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0 ? (
-              rightPane || <div id={PREVIEW_PANE_ID} className="w-full h-full border-l border-border"></div>
-            ) : null}
+            {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0
+              ? rightPane || <div id={PREVIEW_PANE_ID} className="w-full h-full border-l border-border"></div>
+              : null}
           </aside>
         </>
       )}

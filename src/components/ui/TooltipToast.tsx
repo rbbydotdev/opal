@@ -57,7 +57,7 @@ export function TooltipToast({
         <TooltipContent {...props} className={className}>
           <div>
             {messageText}
-            <TooltipPrimitive.TooltipArrow className="fill-inherit" />
+            <TooltipPrimitive.TooltipArrow className="fill-primary" />
           </div>
         </TooltipContent>
       </Tooltip>

@@ -43,7 +43,6 @@ const SourceEditorButton = () => (
 );
 
 function MdxEditorInFocus() {
-  console.log(Boolean(document.activeElement?.closest(MdxEditorSelector)));
   return Boolean(document.activeElement?.closest(MdxEditorSelector));
 }
 export function useAllPlugins({

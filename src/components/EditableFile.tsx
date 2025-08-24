@@ -138,7 +138,7 @@ export function SelectedMark({ selected = false }: { selected?: boolean }) {
       className={clsx(
         { flex: selected },
         { hidden: !selected },
-        "absolute w-2 h-2 flex justify-center items-center text-ring text-xs -ml-3"
+        "absolute w-2 h-2 flex justify-center items-center text-ring text-xs -ml-[1.075rem] mr-2"
       )}
     >
       {"✦"}
@@ -179,7 +179,7 @@ function ImageNodeIcon({ treeNode }: { treeNode: TreeNode }) {
       <img
         src={Thumb.resolveURLFromNode(treeNode)}
         alt=""
-        className="w-6 h-6 border border-white flex-shrink-0 bg-white mr-2 object-cover"
+        className="w-6 h-6 border border-foreground flex-shrink-0 bg-foreground mr-2 object-cover"
       />
     </ImageFileHoverCard>
   );

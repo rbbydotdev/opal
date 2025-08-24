@@ -129,7 +129,7 @@ export function useWatchWorkspaceFileTree({
   useEffect(() => {
     if (currentWorkspace) {
       return currentWorkspace.watchDiskIndex((fileTreeDir: TreeDir) => {
-        const newTree = new TreeDirRoot(fileTreeDir).pruneMutate((treeNode) => {
+        const newTree = new TreeDirRoot(fileTreeDir.deepCopy() as TreeDir).pruneMutate((treeNode) => {
           if (filterIn && !filterIn(treeNode)) return true; // filterIn
           if (filterOut && filterOut(treeNode)) return true; // filterOut
           return false;
@@ -140,6 +140,7 @@ export function useWatchWorkspaceFileTree({
       });
     }
   }, [currentWorkspace, filterIn, filterOut]);
+
   return { fileTreeDir, fileTree, flatTree };
 }
 

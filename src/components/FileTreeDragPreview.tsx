@@ -16,16 +16,15 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
   const Y_OFFSET_PER_ITEM = 4;
   // ---
 
-  // const count = reduceLineage(draggingNodes.map((n) => n.path)).length;
   const count = draggingNodes.length;
   return (
     <DragPreviewNode
       ref={ref}
-      className="grid place-items-center relative w-36 h-36"
+      className="grid place-items-center w-36 h-36 relative"
       style={{ gridTemplateAreas: "'stack'" }}
     >
       {count > 1 && (
-        <div className="rounded-full flex justify-center z-10 w-6 h-6 bg-destructive text-destructive-foreground absolute right-1 top-3">
+        <div className="rounded-full flex justify-center z-10 w-6 h-6 bg-destructive text-destructive-foreground absolute right-7 top-10">
           {count}
         </div>
       )}
@@ -49,7 +48,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <div
               key={treeNode.path}
-              className="p-1 border-2 border-foreground/80 bg-background rounded-lg"
+              className="w-12 h-12 border border-foreground/80 bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
@@ -63,7 +62,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <div
               key={treeNode.path}
-              className="p-1 border-2 border-foreground/80 bg-background rounded-lg"
+              className="w-16 h-16  overflow-hidden border border-foreground/80 bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
@@ -72,7 +71,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               <img
                 src={Thumb.resolveURLFromNode(treeNode)}
                 alt=""
-                className="w-12 h-12 object-cover rounded border border-black bg-background"
+                className="w-full h-full object-cover bg-background ascpect-square"
               />
             </div>
           );
@@ -81,7 +80,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
         return (
           <div
             key={treeNode.path}
-            className="p-1 border-2 border-foreground/80 bg-background rounded-lg"
+            className="w-12 h-12 border border-foreground/80 rounded-lg"
             style={{
               ...transformStyle,
               boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
@@ -92,7 +91,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               size={48}
               strokeWidth={1}
               fill="white"
-              className="text-ring rounded bg-white"
+              className="text-ring rounded bg-background"
             />
           </div>
         );
