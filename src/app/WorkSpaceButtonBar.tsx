@@ -44,9 +44,6 @@ function BigButton({
       <TooltipTrigger asChild>
         <Link
           {...restProps}
-          onClick={(e) => {
-            if ((restProps.href || restProps.to || "#").startsWith("#")) e.preventDefault();
-          }}
           className={twMerge(
             "hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground bg-accent",
             isSmall ? "w-4 h-4 justify-center rounded-sm" : "w-20 py-2 gap-2 flex-col",
@@ -135,7 +132,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
             "_mt-3": shrink,
           })}
         >
-          {process.env.NODE_ENV === "__development" ? (
+          {process.env.NODE_ENV === "development" ? (
             <>
               <BigButton
                 variant={variant}

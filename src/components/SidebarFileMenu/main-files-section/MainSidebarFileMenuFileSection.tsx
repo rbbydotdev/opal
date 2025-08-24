@@ -35,8 +35,8 @@ const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   return (
     <div
       className={cn(
-        "cursor-pointer group/banner w-[calc(100%-2rem)] h-4 z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
-        { "border h-8": dragEnter }
+        "cursor-pointer transition-all group/banner w-[calc(100%-2rem)] h-4 z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
+        { "border h-8 bg-sidebar": dragEnter }
       )}
       onDrop={(e) => handleDrop(e, RootNode)}
       onDragEnter={() => setDragEnter(true)}

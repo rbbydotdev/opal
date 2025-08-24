@@ -20,11 +20,14 @@ async function* fetchQuerySearch({
   const url = new URL(joinPath(absPath("workspace-search"), workspaceName ?? ""), window.location.origin);
 
   url.searchParams.set("searchTerm", searchTerm);
+  url.searchParams.set("workspaceName", workspaceName);
   console.debug(`query search url = ${url.toString()}`);
 
   let res = null;
   try {
-    res = await fetch(url.toString(), { signal });
+    res = await fetch(url.toString(), {
+      signal,
+    });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       return; // Request was aborted, exit gracefully

@@ -27,6 +27,21 @@ import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
+function InfoCollapsible({ info }: { info: WorkspaceRepoType }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Collapsible className="w-full" open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger asChild>
+        <Button className="w-full" size="sm" variant="outline">
+          {open ? "Hide Info" : "Show Info"}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="w-full mt-2">
+        <LatestInfo info={info} />
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 function LatestInfo({ info }: { info: WorkspaceRepoType }) {
   const { latestCommit, context, isMerging, currentBranch, hasChanges } = info;
   const timeAgo = useTimeAgoUpdater({ date: new Date(latestCommit.date) });

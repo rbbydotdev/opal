@@ -58,10 +58,10 @@ export function SelectWorkspaceComplete({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[12.5rem] justify-between truncate">
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[12.5rem] justify-between flex">
           {value ? (
             <>
-              {currWs?.icon} {currWs?.label}
+              {currWs?.icon} <span className="min-w-0 truncate">{currWs?.label}</span>
             </>
           ) : (
             "Select Workspace..."
@@ -86,7 +86,7 @@ export function SelectWorkspaceComplete({
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {workspace.icon}
-                    <span className="truncate">{workspace.label}</span>
+                    <span className="truncate min-w-0">{workspace.label}</span>
                   </div>
                   <Check className={cn("ml-auto", value === workspace.value ? "opacity-100" : "opacity-0")} />
                 </CommandItem>
