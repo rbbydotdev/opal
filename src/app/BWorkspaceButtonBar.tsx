@@ -14,7 +14,7 @@ import { clearAllCaches } from "@/lib/clearAllCaches";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { BombIcon, ChevronDown, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
+import { BombIcon, ChevronDown, ChevronLeft, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
 import React, { useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -45,8 +45,8 @@ function BigButton({
         <Link
           {...restProps}
           className={twMerge(
-            "hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground bg-accent",
-            isSmall ? "w-4 h-4 justify-center rounded-sm" : "w-20 py-2 gap-2 flex-col",
+            "w-full hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground bg-accent",
+            isSmall ? "w-4 h-4 justify-center rounded-sm" : "py-2 gap-2 flex-col",
             restProps.className
           )}
         >
@@ -104,7 +104,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
       <div
         className={cn(
           "[&>*]:outline-none [&>*]:select-none relative max-h-full flex flex-col gap-4 justify-center items-center",
-          shrink ? "w-6" : "w-20"
+          shrink ? "w-6" : "w-16"
         )}
       >
         <div className="flex justify-center flex-col items-center w-full mt-4">
@@ -322,11 +322,23 @@ function DragCollapseBar() {
 
   return (
     <div
+      onDoubleClick={() => setStoredValue(!shrink)}
       onMouseDown={onMouseDown}
-      className={cn("bg-primary absolute right-0 hover:w-2 h-36 w-0.5 select-none", {
-        "cursor-w-resize": !shrink,
-        "cursor-e-resize": shrink,
-      })}
-    />
+      className={cn(
+        "group bg-primary absolute right-0 hover:w-2 h-36 w-0.5 select-none flex justify-center items-center",
+        {
+          "cursor-w-resize": !shrink,
+          "cursor-e-resize": shrink,
+        }
+      )}
+    >
+      <ChevronLeft
+        size={12}
+        className={cn("flex-shrink-0 group-hover:block hidden", {
+          "rotate-180": shrink,
+        })}
+        strokeWidth={2}
+      />
+    </div>
   );
 }
