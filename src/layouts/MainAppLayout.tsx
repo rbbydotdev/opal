@@ -1,5 +1,5 @@
+import { WorkspaceButtonBar } from "@/app/BWorkspaceButtonBar";
 import { JotaiProvider } from "@/app/JotaiProvider";
-import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
 import { ConfirmProvider } from "@/components/Confirm";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
