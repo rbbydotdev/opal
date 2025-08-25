@@ -126,13 +126,14 @@ export function ConnectionsModalContent({
         <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
         <DialogDescription>{mode === "edit" ? "Update your connection details." : "Connect to API"}</DialogDescription>
       </DialogHeader>
-      <div className="space-y-4 py-4">
+      <div>
         <Form {...form}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               return form.handleSubmit(handleSubmit)();
             }}
+            className="space-y-4 py-4"
           >
             <FormField
               control={form.control}
@@ -178,6 +179,10 @@ export function ConnectionsModalContent({
             )}
             {selectedTemplate?.type === "oauth-device" && (
               <DeviceAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+            )}
+
+            {selectedTemplate?.type === "basic-auth" && (
+              <BasicAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
             )}
           </form>
         </Form>
@@ -269,4 +274,73 @@ function ApiKeyAuth({
   );
 }
 
-// DeviceAuth remains unchanged, but you can refactor it similarly if needed.
+// API Key Auth Section
+function BasicAuth({
+  form,
+  source,
+  onCancel,
+}: {
+  form: UseFormReturn<RemoteAuthFormValues>;
+  source: RemoteAuthSource;
+  onCancel: () => void;
+}) {
+  // const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
+  return (
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="data.corsProxy"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>
+              {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
+            </FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="data.username"
+        rules={{ required: "Username is required" }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Username</FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} placeholder="Username" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="data.password"
+        rules={{ required: "Password is required" }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Password</FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} placeholder="Password" required />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full">
+          Cancel
+        </Button>
+        <Button type="submit" className="w-full">
+          <RemoteAuthSourceIconComponent size={12} source={source} />
+          Connect
+        </Button>
+      </div>
+    </div>
+  );
+}

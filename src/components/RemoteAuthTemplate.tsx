@@ -6,7 +6,7 @@ import {
   RemoteAuthType,
 } from "@/Db/RemoteAuth";
 import { Env } from "@/lib/env";
-import { Github } from "lucide-react";
+import { Github, KeyIcon } from "lucide-react";
 
 export type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = {
   name: string;
@@ -27,6 +27,16 @@ export const typeSource = ({ type, source }: { type: RemoteAuthType; source: Rem
   `${type}/${source}` satisfies TemplateType;
 
 export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
+  template({
+    name: "Basic Auth",
+    description: "Connect using Basic Auth",
+    source: "private",
+    type: "basic-auth",
+    icon: <KeyIcon className="h-5 w-5" />,
+    data: {
+      corsProxy: Env.PrivateCorsProxy,
+    },
+  }),
   template({
     name: "GitHub API",
     description: "Connect using a GitHub API key",

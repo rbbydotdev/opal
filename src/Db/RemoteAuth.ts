@@ -1,12 +1,11 @@
 import { ClientDb } from "@/Db/instance";
-import { AuthCallback } from "isomorphic-git";
 // import { RemoteAuthJTypePrivate } from "@/Db/RemoteAuth";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
 // 1. Add the new type to the union
-export type RemoteAuthType = "api" | "oauth" | "oauth-device";
-export type RemoteAuthSource = "github"; /*| "gitlab" | "bitbucket" | "custom";*/
+export type RemoteAuthType = "api" | "oauth" | "oauth-device" | "basic-auth";
+export type RemoteAuthSource = "github" | "private"; /*| "gitlab" | "bitbucket" | "custom";*/
 
 // 2. Define all record schemas
 export const RemoteAuthAPIRecordInternalSchema = z.object({
@@ -15,6 +14,14 @@ export const RemoteAuthAPIRecordInternalSchema = z.object({
   corsProxy: z.string().url().nullable().optional(),
 });
 export type RemoteAuthAPIRecordInternal = z.infer<typeof RemoteAuthAPIRecordInternalSchema>;
+
+export const RemoteAuthBasicAuthRecordInternalSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+  corsProxy: z.string().url().nullable().optional(),
+});
+
+export type RemoteAuthBasicAuthRecordInternal = z.infer<typeof RemoteAuthBasicAuthRecordInternalSchema>;
 
 export const RemoteAuthOAuthRecordInternalSchema = z.object({
   accessToken: z.string(),
@@ -39,22 +46,29 @@ export const RemoteAuthSchemaMap = {
   api: RemoteAuthAPIRecordInternalSchema,
   oauth: RemoteAuthOAuthRecordInternalSchema,
   "oauth-device": RemoteAuthGithubDeviceOAuthRecordInternalSchema,
+  "basic-auth": RemoteAuthBasicAuthRecordInternalSchema,
 } as const;
 
 export type RemoteAuthGithubDeviceOAuthRecordInternal = z.infer<typeof RemoteAuthGithubDeviceOAuthRecordInternalSchema>;
 
 // 3. Main record type
-export type RemoteAuthRecord = {
+export interface RemoteAuthRecord {
   guid: string;
   type: RemoteAuthType;
   source: RemoteAuthSource;
   name: string;
-  data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal | null;
-};
+  data:
+    | RemoteAuthAPIRecordInternal
+    | RemoteAuthOAuthRecordInternal
+    | RemoteAuthBasicAuthRecordInternal
+    | RemoteAuthGithubDeviceOAuthRecordInternal
+    | null;
+}
 export type RemoteAuthExplicitType =
   | { type: "api"; data: RemoteAuthAPIRecordInternal }
   | { type: "oauth"; data: RemoteAuthOAuthRecordInternal }
-  | { type: "oauth-device"; data: RemoteAuthGithubDeviceOAuthRecordInternal };
+  | { type: "oauth-device"; data: RemoteAuthGithubDeviceOAuthRecordInternal }
+  | { type: "basic-auth"; data: RemoteAuthBasicAuthRecordInternal };
 
 // type DataFor<T extends RemoteAuthExplicitType["type"]> = Extract<RemoteAuthExplicitType, { type: T }>["data"];
 
@@ -78,13 +92,12 @@ export const isGithubDeviceOAuthAuth = (
 };
 
 // 5. DAO class
-export class RemoteAuthDAO {
+export class RemoteAuthDAO implements RemoteAuthRecord {
   guid: string;
   type: RemoteAuthType;
   source: RemoteAuthSource;
   name: string;
-  data: RemoteAuthAPIRecordInternal | RemoteAuthOAuthRecordInternal | RemoteAuthGithubDeviceOAuthRecordInternal | null =
-    null;
+  data: RemoteAuthRecord["data"] | null = null;
 
   /* connector: ClientDb.remoteAuths  */
 
@@ -118,23 +131,7 @@ export class RemoteAuthDAO {
     );
   }
 
-  constructor({
-    guid,
-    source,
-    type,
-    name: name,
-    data: record,
-  }: {
-    guid: string;
-    source: RemoteAuthSource;
-    type: RemoteAuthType;
-    name: string;
-    data?:
-      | RemoteAuthAPIRecordInternal
-      | RemoteAuthOAuthRecordInternal
-      | RemoteAuthGithubDeviceOAuthRecordInternal
-      | null;
-  }) {
+  constructor({ guid, source, type, name: name, data: record }: RemoteAuthRecord) {
     this.source = source;
     this.guid = guid;
     this.name = name;
@@ -173,26 +170,28 @@ export class RemoteAuthDAO {
     });
   }
 
-  isoGitOnAuth = (): AuthCallback | undefined => {
-    try {
-      if (isApiAuth(this)) {
-        const { apiKey, apiSecret } = this.data;
-        return () => ({
-          username: apiKey,
-          password: apiSecret || apiKey, //TODO i think wrong!!
-        });
-      } else if (isOAuthAuth(this)) {
-        const { accessToken } = this.data;
-        return () => ({
-          username: accessToken,
-          password: "", // OAuth typically only needs the token as username
-        });
-      }
-    } catch (error) {
-      console.warn(`Failed to load auth for remote ${this?.name}:`, error);
-    }
-    return undefined;
-  };
+  // isoGitOnAuth = (): AuthCallback | undefined => {
+  //   try {
+  //     if (isApiAuth(this)) {
+  //       const { apiKey, apiSecret } = this.data;
+  //       return () => ({
+  //         username: apiKey,
+  //         password: apiSecret || apiKey, //TODO i think wrong!!
+  //       });
+  //     } else if (isOAuthAuth(this)) {
+  //       const { accessToken } = this.data;
+  //       return () => ({
+  //         username: accessToken,
+  //         password: "", // OAuth typically only needs the token as username
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.warn(`Failed to load auth for remote ${this?.name}:`, error);
+  //   }
+  //   return undefined;
+  // };
+
+  toModel() {}
 
   load() {
     throw new Error("RemoteAuthDAO.load() is deprecated, use ClientDb.remoteAuths.get(guid) instead");
@@ -218,15 +217,61 @@ export class RemoteAuthDAO {
   }
 }
 
-function isRemoteAuthPrivate(record: RemoteAuthDAO | RemoteAuthJType | RemoteAuthJType): record is RemoteAuthRecord {
+function isRemoteAuthPrivate(record: RemoteAuthDAO | RemoteAuthJType): record is RemoteAuthRecord {
   return (record as RemoteAuthRecord).data !== undefined;
 }
-function isRemoteAuthPublic(record: RemoteAuthDAO | RemoteAuthJType | RemoteAuthJType): record is RemoteAuthRecord {
-  return (record as RemoteAuthRecord).data === undefined;
-}
+// function isRemoteAuthPublic(record: RemoteAuthDAO | RemoteAuthJType): record is RemoteAuthRecord {
+//   return (record as RemoteAuthRecord).data === undefined;
+// }
+
 export type RemoteAuthJType = RemoteAuthRecord;
 
 export type RemoteAuthDataFor<T extends RemoteAuthExplicitType["type"]> = Extract<
   RemoteAuthExplicitType,
   { type: T }
 >["data"];
+
+export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & {
+  source: "private";
+  type: "basic-auth";
+  data: RemoteAuthBasicAuthRecordInternal;
+};
+export function isBasicAuthRemoteAuthDAO(
+  record: RemoteAuthDAO
+): record is RemoteAuthDAO & { source: "private"; type: "basic-auth"; data: RemoteAuthBasicAuthRecordInternal } {
+  return record.type === "basic-auth" && record.source === "private";
+}
+
+export type GithubAPIRemoteAuthDAO = RemoteAuthDAO & {
+  source: "github";
+  type: "api";
+  data: RemoteAuthAPIRecordInternal;
+};
+export function isGithubAPIRemoteAuthDAO(
+  record: RemoteAuthDAO
+): record is RemoteAuthDAO & { source: "github"; type: "api"; data: RemoteAuthAPIRecordInternal } {
+  return record.type === "api" && record.source === "github";
+}
+
+export type GithubOAuthRemoteAuthDAO = RemoteAuthDAO & {
+  source: "github";
+  type: "oauth";
+  data: RemoteAuthOAuthRecordInternal;
+};
+export function isGithubOAuthRemoteAuthDAO(
+  record: RemoteAuthDAO
+): record is RemoteAuthDAO & { source: "github"; type: "oauth"; data: RemoteAuthOAuthRecordInternal } {
+  return record.type === "oauth" && record.source === "github";
+}
+export type GithubDeviceOAuthRemoteAuthDAO = RemoteAuthDAO & {
+  source: "github";
+  type: "oauth-device";
+  data: RemoteAuthGithubDeviceOAuthRecordInternal;
+};
+export function isGithubDeviceOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is RemoteAuthDAO & {
+  source: "github";
+  type: "oauth-device";
+  data: RemoteAuthGithubDeviceOAuthRecordInternal;
+} {
+  return record.type === "oauth-device" && record.source === "github";
+}

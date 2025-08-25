@@ -1,4 +1,5 @@
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { useResource } from "@/hooks/useResource";
 import { Channel } from "@/lib/channel";
 import { absPath, joinPath } from "@/lib/paths2";
 import { useSearch } from "@tanstack/react-router";
@@ -104,14 +105,7 @@ export function useWorkspacePathScrollChannel() {
 // --- useScrollChannel hook ---
 export function useScrollChannel({ sessionId }: { sessionId?: string | null } = {}) {
   const sId = useMemo(() => sessionId ?? `scroll-sync-${nanoid()}`, [sessionId]);
-  const scrollEmitter = useMemo(() => new ScrollBroadcastChannel(sId), [sId]);
-  useEffect(() => {
-    const cleanup = scrollEmitter.init();
-    return () => {
-      cleanup();
-      scrollEmitter.tearDown();
-    };
-  }, [scrollEmitter]);
+  const scrollEmitter = useResource(() => new ScrollBroadcastChannel(sId), [sId]);
   return { scrollEmitter, sessionId: sId };
 }
 

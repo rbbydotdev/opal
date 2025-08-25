@@ -1,4 +1,5 @@
 import { Disk, NullDisk } from "@/Db/Disk";
+import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
 import { GitRepo, MergeConflict } from "@/features/git-repo/GitRepo";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
@@ -169,11 +170,12 @@ export class GitPlaybook {
     }
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
 
+    const onAuth = RemoteAuth ? IsoGitApiCallbackForRemoteAuth(RemoteAuth) : undefined;
     await this.repo.push({
       ref,
       remote,
       corsProxy,
-      onAuth: RemoteAuth?.isoGitOnAuth(),
+      onAuth,
     });
   }
 }

@@ -93,13 +93,14 @@ export const EditableDir = ({
             className="truncate text-xs"
             onDoubleClick={() => {
               if (isEditing) return;
-              setFileTreeCtx({
+              setFileTreeCtx(({ anchorIndex }) => ({
+                anchorIndex,
                 editing: fullPath,
                 editType: "rename",
                 virtual: null,
                 focused: fullPath,
                 selectedRange: [],
-              });
+              }));
             }}
           >
             {isEditing ? (
