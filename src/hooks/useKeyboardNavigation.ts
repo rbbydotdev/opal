@@ -44,6 +44,8 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
           // Default behavior: click the active item
           (menuItems?.[activeIndex] as HTMLElement)?.click();
         }
+        // Call onSelect callback if provided
+        onSelect?.(activeIndex);
         break;
 
       case "Tab":

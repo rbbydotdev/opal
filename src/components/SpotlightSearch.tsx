@@ -7,6 +7,7 @@ import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
@@ -26,12 +27,14 @@ const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,
   {
     id: string;
+    role: string;
+    tabIndex: number;
     href: string | AbsPath;
     title: string | JSX.Element | React.ReactNode;
     isActive: boolean;
     onSelect: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => void;
   }
->(({ id, href, title, isActive, onSelect }, ref) => {
+>(({ id, role, tabIndex, href, title, isActive, onSelect }, ref) => {
   const { filePath } = Workspace.parseWorkspacePath(absPathname(href));
 
   return (
@@ -40,8 +43,8 @@ const SpotlightSearchItemLink = forwardRef<
         id={id}
         ref={ref}
         to={href}
-        role="menuitem"
-        tabIndex={isActive ? 0 : -1}
+        role={role}
+        tabIndex={tabIndex}
         onClick={onSelect}
         className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _border-sidebar _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
       >
@@ -67,19 +70,21 @@ const SpotlightSearchItemCmd = forwardRef<
   HTMLButtonElement,
   {
     id: string;
+    role: string;
+    tabIndex: number;
     cmd: string;
     title: string | JSX.Element | React.ReactNode;
     isActive: boolean;
     onSelect: () => void;
   }
->(({ id, cmd: _cmd, title, isActive, onSelect }, ref) => {
+>(({ id, role, tabIndex, cmd: _cmd, title, isActive, onSelect }, ref) => {
   return (
     <li role="presentation" className="flex w-full flex-col rounded p-1">
       <button
         id={id}
         ref={ref}
-        role="menuitem"
-        tabIndex={isActive ? 0 : -1}
+        role={role}
+        tabIndex={tabIndex}
         onClick={onSelect}
         className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _border-sidebar _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
       >
@@ -131,18 +136,73 @@ function SpotlightSearchInternal({
   const [deferredSearch, setDeferredSearch] = useState(""); // NEW
   const [_isPending, startTransition] = useTransition(); // NEW
 
-  const [activeIndex, setActiveIndex] = useState(-1);
   const [state, setState] = useState<"spotlight" | "prompt" | "select">("spotlight");
   const [promptPlaceholder, setPromptPlaceholder] = useState("Enter value...");
   const [currentPrompt, setCurrentPrompt] = useState<CmdPrompt | CmdSelect | null>(null);
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const menuRef = useRef<HTMLUListElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<Element | null>(null);
 
   const execQueue = useRef<CmdMapMember[] | null>(null);
   const execContext = useRef<Record<string, unknown>>({});
+  const handleClose = () => {
+    setOpen(false);
+    setState("spotlight");
+    setSearch("");
+    setDeferredSearch("");
+    resetActiveIndex();
+    setCurrentPrompt(null);
+    execQueue.current = null;
+    execContext.current = {};
+    if (triggerRef.current instanceof HTMLElement) {
+      triggerRef.current.focus();
+    }
+  };
+
+  // Keyboard navigation hook
+  const {
+    activeIndex,
+    resetActiveIndex,
+    containerRef,
+    inputRef,
+    menuRef,
+    handleKeyDown: baseHandleKeyDown,
+    getInputProps,
+    getMenuProps,
+    getItemProps,
+  } = useKeyboardNavigation({
+    onEnter: (activeIndex) => {
+      const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
+      if (state === "prompt" && currentPrompt) {
+        execContext.current[currentPrompt.name] = search;
+        setSearch("");
+        setState("spotlight");
+        setCurrentPrompt(null);
+        return runNextStep();
+      }
+      if (state === "select" && currentPrompt) {
+        const selected = sortedList[activeIndex]?.href;
+        if (selected) {
+          execContext.current[currentPrompt.name] = selected;
+          setSearch("");
+          setState("spotlight");
+          setCurrentPrompt(null);
+          return runNextStep();
+        }
+      }
+      if (activeIndex >= 0 && menuItems) {
+        (menuItems[activeIndex] as HTMLElement)?.click();
+      }
+    },
+    onEscape: handleClose,
+    searchValue: search,
+    onSearchChange: (value) => {
+      setSearch(value);
+      startTransition(() => {
+        setDeferredSearch(value);
+      });
+    },
+    wrapAround: true,
+  });
 
   const runNextStep = async () => {
     if (!execQueue.current || execQueue.current.length === 0) {
@@ -186,20 +246,6 @@ function SpotlightSearchInternal({
     return runNextStep();
   };
 
-  const handleClose = () => {
-    setOpen(false);
-    setState("spotlight");
-    setSearch("");
-    setDeferredSearch("");
-    setActiveIndex(-1);
-    setCurrentPrompt(null);
-    execQueue.current = null;
-    execContext.current = {};
-    if (triggerRef.current instanceof HTMLElement) {
-      triggerRef.current.focus();
-    }
-  };
-
   const visibleFiles = useMemo(() => {
     return [...files.filter((file) => FilterOutSpecialDirs(file))];
   }, [files]);
@@ -208,17 +254,8 @@ function SpotlightSearchInternal({
     return commands.map((cmd) => `${commandPrefix} ${cmd}`);
   }, [commandPrefix, commands]);
 
-  // NEW: input handler that defers heavy search
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearch(value);
-    startTransition(() => {
-      setDeferredSearch(value);
-    });
-  };
-
   const sortedList = useMemo(() => {
-    setActiveIndex(-1);
+    resetActiveIndex();
 
     // MARK: Handle select state
     if (state === "select" && currentPrompt && "options" in currentPrompt) {
@@ -275,95 +312,22 @@ function SpotlightSearchInternal({
         href: result.target,
       }));
     }
-  }, [state, currentPrompt, commandList, commandPrefix, deferredSearch, visibleFiles]);
+  }, [resetActiveIndex, state, currentPrompt, deferredSearch, visibleFiles, commandPrefix, commandList]);
 
-  //MARK: Handle Keys
+  // Custom key handler that wraps the base handler for Cmd+P support
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
-    const itemsLength = menuItems?.length ?? 0;
-
-    switch (e.key) {
-      case "Enter":
-        if (state === "prompt" && currentPrompt) {
-          e.preventDefault();
-          execContext.current[currentPrompt.name] = search;
-          setSearch("");
-          setState("spotlight");
-          setCurrentPrompt(null);
-          return runNextStep();
-        }
-        if (state === "select" && currentPrompt) {
-          e.preventDefault();
-          const selected = sortedList[activeIndex]?.href ?? 0;
-          // if (activeIndex === -1) return;
-          // const selected = sortedList[activeIndex]?.href;
-          if (selected) {
-            execContext.current[currentPrompt.name] = selected;
-            setSearch("");
-            setState("spotlight");
-            setCurrentPrompt(null);
-            return runNextStep();
-          }
-        }
-        if (activeIndex === -1) {
-          //if no item is active select first item
-          setActiveIndex(0);
-          return;
-        }
+    // Handle Cmd+P / Ctrl+P when not focused on input
+    if (document.activeElement !== inputRef.current) {
+      if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        (menuItems?.[activeIndex] as HTMLElement)?.click();
-        break;
-      case "Tab":
-        e.preventDefault();
-        if (e.shiftKey) {
-          setActiveIndex((prev) => (prev >= 0 ? prev - 1 : itemsLength - 1));
-        } else {
-          setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
-        }
-        break;
-      case "ArrowDown":
-        e.preventDefault();
-        setActiveIndex((prev) => (prev < itemsLength - 1 ? prev + 1 : -1));
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
-        break;
-      case "Home":
-        e.preventDefault();
-        setActiveIndex(-1);
-        break;
-      case "End":
-        e.preventDefault();
-        setActiveIndex(itemsLength - 1);
-        break;
-      case "Escape":
-        e.preventDefault();
-        handleClose();
-        break;
-      default:
-        if (document.activeElement !== inputRef.current) {
-          if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
-            e.preventDefault();
-            e.stopPropagation();
-            inputRef.current?.focus();
-          } else if (e.key === "Backspace") {
-            e.preventDefault();
-            e.stopPropagation();
-            setSearch((prev) => prev.slice(0, -1));
-            inputRef.current?.focus();
-          } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-            e.preventDefault();
-            e.stopPropagation();
-            inputRef.current?.focus();
-          } else if (e.key.length === 1) {
-            e.preventDefault();
-            e.stopPropagation();
-            setSearch((prev) => prev + e.key);
-            inputRef.current?.focus();
-          }
-        }
+        e.stopPropagation();
+        inputRef.current?.focus();
+        return;
+      }
     }
+
+    // Delegate to the base handler from the hook
+    baseHandleKeyDown(e);
   };
 
   useEffect(() => {
@@ -379,15 +343,12 @@ function SpotlightSearchInternal({
     return () => window.removeEventListener("keydown", handleOpenKeydown);
   }, []);
 
+  // Focus input when spotlight opens
   useEffect(() => {
-    if (!open) return;
-    if (activeIndex === -1) {
+    if (open) {
       inputRef.current?.focus();
-    } else {
-      const menuItem = menuRef.current?.querySelector<HTMLAnchorElement>(`#spotlight-item-${activeIndex}`);
-      menuItem?.focus();
     }
-  }, [open, activeIndex]);
+  }, [inputRef, open]);
 
   if (!open) return null;
 
@@ -409,25 +370,25 @@ function SpotlightSearchInternal({
     >
       <div className="flex h-12 w-full items-center justify-center rounded-lg border bg-background p-2 _text-sidebar-foreground/70 shadow-lg relative">
         <input
-          ref={inputRef}
+          {...getInputProps()}
           value={search}
-          onChange={handleInputChange}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            startTransition(() => {
+              setDeferredSearch(e.target.value);
+            });
+          }}
           id="spotlight-search"
           type="text"
           autoComplete="off"
           placeholder={state === "prompt" || state === "select" ? promptPlaceholder : "Spotlight Search..."}
           className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
-          aria-controls="spotlight-menu"
-          aria-haspopup="true"
-          aria-activedescendant={activeIndex > -1 ? `spotlight-item-${activeIndex}` : undefined}
         />
         {/* {isPending && <div className="absolute right-3 text-xs text-muted-foreground">Searching...</div>} */}
       </div>
       {(state === "spotlight" || state === "select") && Boolean(sortedList.length) && (
         <ul
-          ref={menuRef}
-          id="spotlight-menu"
-          role="menu"
+          {...getMenuProps()}
           aria-labelledby="spotlight-search"
           className="mt-2 block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
         >
@@ -436,7 +397,7 @@ function SpotlightSearchInternal({
               return (
                 <SpotlightSearchItemCmd
                   key={item.href}
-                  id={`spotlight-item-${index}`}
+                  {...getItemProps(index)}
                   cmd={item.href}
                   title={item.element}
                   isActive={index === activeIndex}
@@ -447,7 +408,7 @@ function SpotlightSearchInternal({
             return (
               <SpotlightSearchItemLink
                 key={item.href}
-                id={`spotlight-item-${index}`}
+                {...getItemProps(index)}
                 isActive={index === activeIndex}
                 onSelect={(e: any) => {
                   return state === "select"
