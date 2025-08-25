@@ -25,6 +25,7 @@ import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import z from "zod";
+// import { CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "cmdk";
 
 export type ConnectionsModalMode = "add" | "edit" | "view";
 export function ConnectionsModal({

@@ -24,6 +24,7 @@ import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { Env } from "@/lib/env";
+import { relPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useImperativeHandle, useState } from "react";
 
@@ -79,6 +80,14 @@ export function useGitRemoteDialogCmd() {
     open: () => {},
   });
 }
+const TryPathname = (url: string) => {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url;
+  }
+};
+const REPO_URL_SEARCH_ID = "repo-url-search";
 export function GitRemoteDialog({
   children,
   defaultName = "origin",
@@ -146,7 +155,13 @@ export function GitRemoteDialog({
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
+      <DialogContent
+        onEscapeKeyDown={(event) => {
+          if (event.target instanceof HTMLElement && event.target.closest(`#${REPO_URL_SEARCH_ID}`)) {
+            event.preventDefault();
+          }
+        }}
+      >
         <div className="grid relative max-w-full w-full min-w-0">
           <div className="col-start-1 row-start-1">
             <ConnectionsModalContent
@@ -248,31 +263,53 @@ function GitRemoteDialogInternal({
             )}
           />
           <div className="flex items-end gap-2 justify-end w-full">
-            <FormField
-              control={form.control}
-              name="url"
-              render={({ field }) => (
-                <FormItem className="min-w-0 w-full">
-                  <FormLabel>URL</FormLabel>
-                  <FormControl>
+            <div id={REPO_URL_SEARCH_ID} className="w-full">
+              <FormItem className="min-w-0 w-full">
+                <FormLabel>{urlMode === "manual" ? "URL" : "Repo Name"}</FormLabel>
+                {urlMode === "search" && (
+                  <div className="w-full relative">
                     <Input
-                      required
-                      autoComplete="off"
                       autoFocus
-                      placeholder="https://github.com/user/repo.git"
-                      className="truncate"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setUrlMode("manual");
+                        }
+                      }}
+                      // onBlur={(e) => setUrlMode("manual")}
+                      defaultValue={relPath(TryPathname(form.getValues("url")))}
+                    ></Input>
+                    <RepoDropDown />
+                  </div>
+                )}
+                {urlMode === "manual" && (
+                  <FormField
+                    control={form.control}
+                    name="url"
+                    render={({ field }) => (
+                      <>
+                        <FormControl>
+                          <Input
+                            required
+                            autoComplete="off"
+                            autoFocus
+                            placeholder="https://github.com/user/repo.git"
+                            className="truncate"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </>
+                    )}
+                  />
+                )}
+              </FormItem>
+            </div>
             <Button
-              variant="outline"
+              variant={urlMode === "manual" ? "outline" : "default"}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={(e) => {
                 e.preventDefault();
-                form.setFocus("url");
+                setUrlMode(urlMode === "manual" ? "search" : "manual");
               }}
             >
               <Search />
@@ -303,6 +340,27 @@ function GitRemoteDialogInternal({
           </DialogFooter>
         </form>
       </Form>
+    </div>
+  );
+}
+
+function RepoDropDown() {
+  return (
+    <div className="absolute max-h-32 overflow-y-scroll no-scrollbar bg-sidebar rounded-b-lg w-full top-10 flex-col">
+      {new Array(5).fill(0).map((_, i) => (
+        <div
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.currentTarget.click();
+            }
+          }}
+          key={i}
+          tabIndex={0}
+          className="rounded py-2 px-2 mx-1 text-sm my-1 flex items-center justify-start mono focus:ring-ring focus:ring-1 hover:ring-ring hover:ring-1 cursor-pointer"
+        >
+          something/something
+        </div>
+      ))}
     </div>
   );
 }
