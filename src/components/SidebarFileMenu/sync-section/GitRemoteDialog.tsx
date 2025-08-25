@@ -23,10 +23,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { Env } from "@/lib/env";
 import { relPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
-import { useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useMemo, useState } from "react";
 
 export const gitRemoteSchema = z.object({
   name: z
@@ -267,19 +268,14 @@ function GitRemoteDialogInternal({
               <FormItem className="min-w-0 w-full">
                 <FormLabel>{urlMode === "manual" ? "URL" : "Repo Name"}</FormLabel>
                 {urlMode === "search" && (
-                  <div className="w-full relative">
-                    <Input
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          setUrlMode("manual");
-                        }
-                      }}
-                      // onBlur={(e) => setUrlMode("manual")}
-                      defaultValue={relPath(TryPathname(form.getValues("url")))}
-                    ></Input>
-                    <RepoDropDown />
-                  </div>
+                  <RepoSearchContainer
+                    defaultValue={relPath(TryPathname(form.getValues("url")))}
+                    onClose={() => setUrlMode("manual")}
+                    onSelect={(repoName) => {
+                      form.setValue("url", `https://github.com/${repoName}.git`);
+                      setUrlMode("manual");
+                    }}
+                  />
                 )}
                 {urlMode === "manual" && (
                   <FormField
@@ -344,23 +340,135 @@ function GitRemoteDialogInternal({
   );
 }
 
-function RepoDropDown() {
+function RepoSearchContainer({
+  defaultValue,
+  onClose,
+  onSelect,
+}: {
+  defaultValue: string;
+  onClose: () => void;
+  onSelect: (repoName: string) => void;
+}) {
+  const [searchValue, setSearchValue] = useState(defaultValue);
+
   return (
-    <div className="absolute max-h-32 overflow-y-scroll no-scrollbar bg-sidebar rounded-b-lg w-full top-10 flex-col">
-      {new Array(5).fill(0).map((_, i) => (
-        <div
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.currentTarget.click();
-            }
-          }}
-          key={i}
-          tabIndex={0}
-          className="rounded py-2 px-2 mx-1 text-sm my-1 flex items-center justify-start mono focus:ring-ring focus:ring-1 hover:ring-ring hover:ring-1 cursor-pointer"
+    <div className="w-full relative">
+      <RepoDropDown searchValue={searchValue} onSearchChange={setSearchValue} onClose={onClose} onSelect={onSelect} />
+    </div>
+  );
+}
+
+function RepoDropDown({
+  searchValue,
+  onSearchChange,
+  onClose,
+  onSelect,
+}: {
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  onClose: () => void;
+  onSelect: (repoName: string) => void;
+}) {
+  // Dummy data - you can replace this with actual repo data
+  const allRepos = useMemo(
+    () => [
+      "facebook/react",
+      "microsoft/vscode",
+      "vercel/next.js",
+      "angular/angular",
+      "vuejs/vue",
+      "nodejs/node",
+      "denoland/deno",
+      "rust-lang/rust",
+      "golang/go",
+      "python/cpython",
+      "something/something",
+      "user/example-repo",
+      "company/project-name",
+      "developer/awesome-lib",
+      "team/web-app",
+    ],
+    []
+  );
+
+  // Filter repos based on search
+  const filteredRepos = useMemo(() => {
+    if (!searchValue.trim()) return allRepos.slice(0, 8); // Show first 8 when no search
+    return allRepos.filter((repo) => repo.toLowerCase().includes(searchValue.toLowerCase())).slice(0, 8); // Limit to 8 results
+  }, [allRepos, searchValue]);
+
+  const {
+    activeIndex,
+    resetActiveIndex,
+    containerRef,
+    handleKeyDown,
+    getInputProps,
+    getMenuProps,
+    getItemProps,
+    isItemActive,
+  } = useKeyboardNavigation({
+    onEnter: (activeIndex) => {
+      if (activeIndex >= 0 && activeIndex < filteredRepos.length) {
+        onSelect(filteredRepos[activeIndex]!);
+      }
+    },
+    onEscape: onClose,
+    searchValue,
+    onSearchChange,
+    wrapAround: true,
+  });
+
+  // Reset active index when filtered repos change
+  React.useEffect(() => {
+    resetActiveIndex();
+  }, [filteredRepos, resetActiveIndex]);
+
+  const handleItemClick = (repo: string) => {
+    onSelect(repo);
+  };
+
+  const handleBlur = (e: React.FocusEvent) => {
+    // Close dropdown if focus moves outside the component
+    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+      onClose();
+    }
+  };
+
+  return (
+    <div ref={containerRef} className="w-full relative" onKeyDown={handleKeyDown} onBlur={handleBlur}>
+      <Input
+        {...getInputProps()}
+        autoFocus
+        value={searchValue}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Search repositories..."
+        className="w-full"
+      />
+
+      {filteredRepos.length > 0 && (
+        <ul
+          {...getMenuProps()}
+          className="mt-2 block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg absolute top-10 z-10"
         >
-          something/something
+          {filteredRepos.map((repo, index) => (
+            <li key={repo} role="presentation" className="flex w-full flex-col rounded p-1">
+              <button
+                {...getItemProps(index)}
+                onClick={() => handleItemClick(repo)}
+                className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _border-sidebar _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
+              >
+                <div className="min-w-0 truncate text-md font-mono _text-sidebar-foreground/70">{repo}</div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {filteredRepos.length === 0 && searchValue && (
+        <div className="absolute w-full top-10 z-10 bg-sidebar border border-t-0 rounded-b-lg shadow-lg">
+          <div className="px-3 py-2 text-sm text-muted-foreground">No repositories found</div>
         </div>
-      ))}
+      )}
     </div>
   );
 }
