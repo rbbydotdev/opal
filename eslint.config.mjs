@@ -21,6 +21,7 @@ const config = [
       myhooks: myLocalPlugin, // <-- register local plugin
     },
     rules: {
+      "@typescript-eslint/no-base-to-string": "error",
       // Keep normal exhaustive-deps for built-in hooks
       "react-hooks/exhaustive-deps": [
         "warn",

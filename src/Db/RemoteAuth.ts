@@ -10,7 +10,7 @@ export type RemoteAuthSource = "github" | "private"; /*| "gitlab" | "bitbucket" 
 // 2. Define all record schemas
 export const RemoteAuthAPIRecordInternalSchema = z.object({
   apiKey: z.string(),
-  apiSecret: z.string(),
+  apiSecret: z.string().optional(),
   corsProxy: z.string().url().nullable().optional(),
 });
 export type RemoteAuthAPIRecordInternal = z.infer<typeof RemoteAuthAPIRecordInternalSchema>;
@@ -170,40 +170,8 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
     });
   }
 
-  // isoGitOnAuth = (): AuthCallback | undefined => {
-  //   try {
-  //     if (isApiAuth(this)) {
-  //       const { apiKey, apiSecret } = this.data;
-  //       return () => ({
-  //         username: apiKey,
-  //         password: apiSecret || apiKey, //TODO i think wrong!!
-  //       });
-  //     } else if (isOAuthAuth(this)) {
-  //       const { accessToken } = this.data;
-  //       return () => ({
-  //         username: accessToken,
-  //         password: "", // OAuth typically only needs the token as username
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.warn(`Failed to load auth for remote ${this?.name}:`, error);
-  //   }
-  //   return undefined;
-  // };
-
-  toModel() {}
-
   load() {
     throw new Error("RemoteAuthDAO.load() is deprecated, use ClientDb.remoteAuths.get(guid) instead");
-    // return ClientDb.remoteAuths.get(this.guid).then((record) => {
-    //   if (record) {
-    //     this.data = record.data;
-    //     this.name = record.name;
-    //     this.type = record.type;
-    //     this.source = record.source;
-    //   }
-    //   return this;
-    // });
   }
 
   static FromJSON(json: RemoteAuthJType | RemoteAuthJType) {
@@ -220,9 +188,6 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
 function isRemoteAuthPrivate(record: RemoteAuthDAO | RemoteAuthJType): record is RemoteAuthRecord {
   return (record as RemoteAuthRecord).data !== undefined;
 }
-// function isRemoteAuthPublic(record: RemoteAuthDAO | RemoteAuthJType): record is RemoteAuthRecord {
-//   return (record as RemoteAuthRecord).data === undefined;
-// }
 
 export type RemoteAuthJType = RemoteAuthRecord;
 
@@ -236,9 +201,7 @@ export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & {
   type: "basic-auth";
   data: RemoteAuthBasicAuthRecordInternal;
 };
-export function isBasicAuthRemoteAuthDAO(
-  record: RemoteAuthDAO
-): record is RemoteAuthDAO & { source: "private"; type: "basic-auth"; data: RemoteAuthBasicAuthRecordInternal } {
+export function isBasicAuthRemoteAuthDAO(record: RemoteAuthDAO): record is BasicAuthRemoteAuthDAO {
   return record.type === "basic-auth" && record.source === "private";
 }
 
@@ -247,9 +210,7 @@ export type GithubAPIRemoteAuthDAO = RemoteAuthDAO & {
   type: "api";
   data: RemoteAuthAPIRecordInternal;
 };
-export function isGithubAPIRemoteAuthDAO(
-  record: RemoteAuthDAO
-): record is RemoteAuthDAO & { source: "github"; type: "api"; data: RemoteAuthAPIRecordInternal } {
+export function isGithubAPIRemoteAuthDAO(record: RemoteAuthDAO): record is GithubAPIRemoteAuthDAO {
   return record.type === "api" && record.source === "github";
 }
 
@@ -258,9 +219,7 @@ export type GithubOAuthRemoteAuthDAO = RemoteAuthDAO & {
   type: "oauth";
   data: RemoteAuthOAuthRecordInternal;
 };
-export function isGithubOAuthRemoteAuthDAO(
-  record: RemoteAuthDAO
-): record is RemoteAuthDAO & { source: "github"; type: "oauth"; data: RemoteAuthOAuthRecordInternal } {
+export function isGithubOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is GithubOAuthRemoteAuthDAO {
   return record.type === "oauth" && record.source === "github";
 }
 export type GithubDeviceOAuthRemoteAuthDAO = RemoteAuthDAO & {
@@ -268,10 +227,6 @@ export type GithubDeviceOAuthRemoteAuthDAO = RemoteAuthDAO & {
   type: "oauth-device";
   data: RemoteAuthGithubDeviceOAuthRecordInternal;
 };
-export function isGithubDeviceOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is RemoteAuthDAO & {
-  source: "github";
-  type: "oauth-device";
-  data: RemoteAuthGithubDeviceOAuthRecordInternal;
-} {
+export function isGithubDeviceOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is GithubDeviceOAuthRemoteAuthDAO {
   return record.type === "oauth-device" && record.source === "github";
 }

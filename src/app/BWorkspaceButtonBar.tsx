@@ -1,6 +1,7 @@
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -10,11 +11,24 @@ import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { BombIcon, ChevronDown, ChevronLeft, CirclePlus, Delete, SearchIcon, Settings, Zap } from "lucide-react";
+import {
+  BombIcon,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  CirclePlus,
+  Delete,
+  Moon,
+  SearchIcon,
+  Settings,
+  Sun,
+  Zap,
+} from "lucide-react";
 import React, { useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -95,6 +109,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
+  const { value, setPreference } = useThemeSettings();
   const navigate = useNavigate();
 
   const variant: ButtonVariant = shrink ? "sm" : "lg";
@@ -110,16 +125,37 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
         <div
           className={cn("flex justify-center flex-col items-center w-full", {
             "mt-[1.35rem]": shrink,
-            "mb-4  mt-4": !shrink,
+            "mb-4  mt-8": !shrink,
           })}
         >
-          <Link to={"/"}>
-            <div className="rotate-12">
+          <div className="relative w-full justify-center flex items-center">
+            <ContextMenu>
+              <ContextMenuTrigger>
+                <Link to={"/"} className="absolute z-50 inset-0 -top-6 h-12 w-full cursor-pointer "></Link>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem className="gap-2" onClick={() => setPreference("light")}>
+                  {value === "light" ? <Check size={12} /> : <div className="w-4"></div>}
+                  <Sun size={12} /> Light
+                </ContextMenuItem>
+                <ContextMenuItem className="gap-2" onClick={() => setPreference("dark")}>
+                  {value === "dark" ? <Check size={12} /> : <div className="w-4"></div>}
+                  <Moon size={12} />
+                  Dark
+                </ContextMenuItem>
+                <ContextMenuItem className="gap-2" onClick={() => setPreference("system")}>
+                  {value === "system" ? <Check size={12} /> : <div className="w-4"></div>}
+                  <Settings size={12} />
+                  System
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+            <div className={cn("rotate-12 absolute inset-0 m-auto", { "h-5 w-5": shrink, "h-7 w-7": !shrink })}>
               <div className={cn("outline-none", { "animate-spin": pending })}>
-                <OpalSvg className={cn("rounded overflow-clip", { "h-5 w-5": shrink, "h-7 w-7": !shrink })} />
+                <OpalSvg className={"rounded overflow-clip"} />
               </div>
             </div>
-          </Link>
+          </div>
         </div>
         <div
           className={cn("max-h-full gap-4 flex justify-center flex-col items-center w-full", {

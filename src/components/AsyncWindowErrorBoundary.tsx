@@ -1,20 +1,20 @@
 import { ErrorPlaque } from "@/components/ErrorPlaque";
 import { useEscapeKeyClose } from "@/hooks/useEscapeKeyClose";
 import { useLocation } from "@tanstack/react-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 export const AsyncWindowErrorBoundary = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<Error | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const reset = () => {
+  const reset = useCallback(() => {
     setError(null);
     setIsOpen(false);
-  };
+  }, []);
 
-  const promiseRejectionHandler = (event: PromiseRejectionEvent) => {
+  const promiseRejectionHandler = useCallback((event: PromiseRejectionEvent) => {
     setError(event.reason);
     setIsOpen(true);
-  };
+  }, []);
 
   const location = useLocation();
   useEffect(() => {
