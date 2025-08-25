@@ -4,7 +4,6 @@ import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary"
 import { ConfirmProvider } from "@/components/Confirm";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
-import { ThemeProvider } from "@/components/Editor/theme-provider";
 import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserveViewModeURL";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorPlaque } from "@/components/ErrorPlaque";
@@ -13,6 +12,7 @@ import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { useTheme } from "@/hooks/useTheme";
+import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { cn } from "@/lib/utils";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
@@ -38,13 +38,13 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
           }}
           className="w-full h-full flex items-center justify-center bg-background"
         >
-          <ServiceWorker>
-            <AsyncWindowErrorBoundary>
-              <ErrorPopper>
-                <WorkspaceProvider>
-                  <JotaiProvider>
-                    <SidebarProvider>
-                      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeProvider>
+            <ServiceWorker>
+              <AsyncWindowErrorBoundary>
+                <ErrorPopper>
+                  <WorkspaceProvider>
+                    <JotaiProvider>
+                      <SidebarProvider>
                         <PromptProvider>
                           <ConfirmProvider>
                             {/* <FileTreeGitFileAttributesProvider> */}
@@ -65,13 +65,13 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                             {/* </FileTreeGitFileAttributesProvider> */}
                           </ConfirmProvider>
                         </PromptProvider>
-                      </ThemeProvider>
-                    </SidebarProvider>
-                  </JotaiProvider>
-                </WorkspaceProvider>
-              </ErrorPopper>
-            </AsyncWindowErrorBoundary>
-          </ServiceWorker>
+                      </SidebarProvider>
+                    </JotaiProvider>
+                  </WorkspaceProvider>
+                </ErrorPopper>
+              </AsyncWindowErrorBoundary>
+            </ServiceWorker>
+          </ThemeProvider>
         </div>
       </div>
       <style>{`

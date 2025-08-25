@@ -11,7 +11,7 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
-import { type ThemeRegistry, getThemePreviewPalette } from "@/theme/theme-lib";
+import { type ThemeRegistry, getThemePreviewPalette, toggleLightOrDarkClass } from "@/theme/theme-lib";
 import themeRegistry from "@/theme/themes.json";
 import { Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
@@ -726,7 +726,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         //
         "Toggle Light/Dark Mode": [
           NewCmdExec(() => {
-            toggleMode();
+            toggleLightOrDarkClass();
             toast({
               title: `Switched to ${mode === "light" ? "dark" : "light"} mode`,
               type: "success",
@@ -765,7 +765,6 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       renameDirOrFile,
       repo,
       setTheme,
-      toggleMode,
       trashFile,
     ]
   );

@@ -26,6 +26,11 @@ const ALL_VARS = new Set([
   "border",
   "card",
   "card-foreground",
+  "chart-1",
+  "chart-2",
+  "chart-3",
+  "chart-4",
+  "chart-5",
   "destructive",
   "destructive-foreground",
   "font-mono",
@@ -44,8 +49,20 @@ const ALL_VARS = new Set([
   "ring",
   "secondary",
   "secondary-foreground",
+  "shadow",
+  "shadow-2xl",
+  "shadow-2xs",
+  "shadow-blur",
   "shadow-color",
+  "shadow-lg",
+  "shadow-md",
+  "shadow-offset-x",
+  "shadow-offset-y",
   "shadow-opacity",
+  "shadow-sm",
+  "shadow-spread",
+  "shadow-xl",
+  "shadow-xs",
   "sidebar",
   "sidebar-accent",
   "sidebar-accent-foreground",
@@ -86,8 +103,30 @@ export function getThemeModePrefers(themeName: string, registry: ThemeRegistry):
   return themePrefersMode(themeItem);
 }
 
+export function toggleLightOrDarkClass(root: HTMLElement = document.documentElement): void {
+  if (root.classList.contains("dark")) {
+    root.classList.remove("dark");
+    root.classList.add("light");
+  } else if (root.classList.contains("light")) {
+    root.classList.remove("light");
+    root.classList.add("dark");
+  } else {
+    // Default to dark if no class is set
+    root.classList.add("dark");
+  }
+}
+export function setLightOrDarkClass(mode: "light" | "dark", root: HTMLElement = document.documentElement) {
+  if (mode === "dark") {
+    root.classList.add("dark");
+    root.classList.remove("light");
+  } else {
+    root.classList.add("light");
+    root.classList.remove("dark");
+  }
+}
+
 export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions): void {
-  const { theme: themeName, mode, rootElement = document.documentElement } = options;
+  const { theme: themeName } = options;
 
   const defaultTheme = registry.items.find((item) => item.name === "default");
   let themeItem = registry.items.find((item) => item.name === themeName);
@@ -100,81 +139,37 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
     }
   }
 
-  // Apply dark/light class
-  if (mode === "dark") {
-    rootElement.classList.add("dark");
-    rootElement.classList.remove("light");
-  } else {
-    rootElement.classList.remove("dark");
-    rootElement.classList.add("light");
-  }
+  // Remove any old theme style tag
+  const oldStyle = document.getElementById("theme-style");
+  if (oldStyle) oldStyle.remove();
 
-  const oppositeMode = mode === "light" ? "dark" : "light";
-
-  // Build variables with healing
-  const variables: Record<string, string> = {};
-
-  ALL_VARS.forEach((key) => {
-    let value: string | undefined;
-
-    // 1. Current mode
-    value = themeItem!.cssVars[mode]?.[key];
-
-    // 2. Opposite mode (inverted)
-    if (!value && themeItem!.cssVars[oppositeMode]?.[key]) {
-      value = invertColor(themeItem!.cssVars[oppositeMode]![key]!);
-    }
-
-    // 3. Shared theme vars
-    if (!value && themeItem!.cssVars.theme?.[key]) {
-      value = themeItem!.cssVars.theme[key];
-    }
-
-    // 4. Sidebar variable healing - fallback to base equivalents
-    if (!value && key.startsWith("sidebar-")) {
-      const baseKey = key.replace("sidebar-", "");
-
-      // Try base equivalent in current mode
-      if (themeItem!.cssVars[mode]?.[baseKey]) {
-        value = themeItem!.cssVars[mode]![baseKey];
+  // Build CSS for light and dark
+  const buildVars = (mode: "light" | "dark") => {
+    const vars: string[] = [];
+    ALL_VARS.forEach((key) => {
+      const value = themeItem!.cssVars[mode]?.[key] ?? themeItem!.cssVars.theme?.[key] ?? "";
+      if (value) {
+        vars.push(`--${key}: ${value};`);
       }
-      // Try base equivalent in opposite mode (inverted)
-      else if (themeItem!.cssVars[oppositeMode]?.[baseKey]) {
-        value = invertColor(themeItem!.cssVars[oppositeMode]![baseKey]!);
-      }
-      // Try shared theme base equivalent
-      else if (themeItem!.cssVars.theme?.[baseKey]) {
-        value = themeItem!.cssVars.theme[baseKey];
-      }
+    });
+    return vars.join("\n");
+  };
+
+  const lightVars = buildVars("light");
+  const darkVars = buildVars("dark");
+
+  // Inject style tag
+  const style = document.createElement("style");
+  style.id = "theme-style";
+  style.innerHTML = `
+    :root {
+      ${lightVars}
     }
-
-    // 5. Special sidebar fallbacks
-    if (!value) {
-      if (key === "sidebar") {
-        value = variables["background"] || themeItem!.cssVars[mode]?.["background"];
-      } else if (key === "sidebar-foreground") {
-        value = variables["foreground"] || themeItem!.cssVars[mode]?.["foreground"];
-      } else if (key === "sidebar-border") {
-        value = variables["border"] || themeItem!.cssVars[mode]?.["border"];
-      } else if (key === "sidebar-ring") {
-        value = variables["ring"] || themeItem!.cssVars[mode]?.["ring"];
-      }
+    .dark {
+      ${darkVars}
     }
-
-    if (value) {
-      variables[key] = value;
-    }
-  });
-
-  // Clear previous theme variables
-  ALL_VARS.forEach((key) => {
-    rootElement.style.removeProperty(`--${key}`);
-  });
-
-  // Set CSS custom properties
-  Object.entries(variables).forEach(([key, value]) => {
-    rootElement.style.setProperty(`--${key}`, value);
-  });
+  `;
+  document.head.appendChild(style);
 }
 
 /**
@@ -229,7 +224,7 @@ export function getThemePreviewPalette(
     return null;
   }
 
-  const colorKeys = [, "sidebar", "primary", "foreground", "background", "muted", "accent"];
+  const colorKeys = ["sidebar", "primary", "foreground", "background", "muted", "accent"];
 
   const getColorWithHealing = (mode: "light" | "dark", key: string): string | null => {
     const oppositeMode = mode === "light" ? "dark" : "light";

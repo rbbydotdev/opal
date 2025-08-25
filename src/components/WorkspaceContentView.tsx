@@ -46,7 +46,7 @@ export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace
                 onChange={updateDebounce}
                 markdown={String(initialContents || "")}
                 className={"bg-background flex-grow  flex-col h-full"}
-                contentEditableClassName="max-w-full content-editable prose bg-background"
+                contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
               />
             </DropCommanderProvider>
           </HistorySnapDBProvider>
