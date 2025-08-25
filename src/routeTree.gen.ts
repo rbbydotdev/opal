@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PreviewRouteImport } from './routes/preview'
+import { Route as AllSettingsRouteImport } from './routes/all-settings'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as PreviewSplatRouteImport } from './routes/preview/$'
+import { Route as AllSettingsSplatRouteImport } from './routes/all-settings/$'
 import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSandboxRouteImport } from './routes/_app/sandbox'
@@ -28,6 +30,11 @@ const PreviewRoute = PreviewRouteImport.update({
   path: '/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AllSettingsRoute = AllSettingsRouteImport.update({
+  id: '/all-settings',
+  path: '/all-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -41,6 +48,11 @@ const PreviewSplatRoute = PreviewSplatRouteImport.update({
   id: '/$',
   path: '/$',
   getParentRoute: () => PreviewRoute,
+} as any)
+const AllSettingsSplatRoute = AllSettingsSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => AllSettingsRoute,
 } as any)
 const AppWorkspaceRoute = AppWorkspaceRouteImport.update({
   id: '/workspace',
@@ -93,12 +105,14 @@ const AppWorkspaceWorkspaceNameSplatRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/all-settings': typeof AllSettingsRouteWithChildren
   '/preview': typeof PreviewRouteWithChildren
   '/connections': typeof AppConnectionsRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/sandbox': typeof AppSandboxRoute
   '/settings': typeof AppSettingsRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
+  '/all-settings/$': typeof AllSettingsSplatRoute
   '/preview/$': typeof PreviewSplatRoute
   '/': typeof AppIndexRoute
   '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
@@ -107,12 +121,14 @@ export interface FileRoutesByFullPath {
   '/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
 }
 export interface FileRoutesByTo {
+  '/all-settings': typeof AllSettingsRouteWithChildren
   '/preview': typeof PreviewRouteWithChildren
   '/connections': typeof AppConnectionsRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/sandbox': typeof AppSandboxRoute
   '/settings': typeof AppSettingsRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
+  '/all-settings/$': typeof AllSettingsSplatRoute
   '/preview/$': typeof PreviewSplatRoute
   '/': typeof AppIndexRoute
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
@@ -122,12 +138,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/all-settings': typeof AllSettingsRouteWithChildren
   '/preview': typeof PreviewRouteWithChildren
   '/_app/connections': typeof AppConnectionsRoute
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
   '/_app/sandbox': typeof AppSandboxRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/workspace': typeof AppWorkspaceRouteWithChildren
+  '/all-settings/$': typeof AllSettingsSplatRoute
   '/preview/$': typeof PreviewSplatRoute
   '/_app/': typeof AppIndexRoute
   '/_app/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
@@ -138,12 +156,14 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/all-settings'
     | '/preview'
     | '/connections'
     | '/newWorkspace'
     | '/sandbox'
     | '/settings'
     | '/workspace'
+    | '/all-settings/$'
     | '/preview/$'
     | '/'
     | '/workspace/$workspaceName'
@@ -152,12 +172,14 @@ export interface FileRouteTypes {
     | '/workspace/$workspaceName/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/all-settings'
     | '/preview'
     | '/connections'
     | '/newWorkspace'
     | '/sandbox'
     | '/settings'
     | '/workspace'
+    | '/all-settings/$'
     | '/preview/$'
     | '/'
     | '/workspace/$workspaceName/$'
@@ -166,12 +188,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/all-settings'
     | '/preview'
     | '/_app/connections'
     | '/_app/newWorkspace'
     | '/_app/sandbox'
     | '/_app/settings'
     | '/_app/workspace'
+    | '/all-settings/$'
     | '/preview/$'
     | '/_app/'
     | '/_app/workspace/$workspaceName'
@@ -182,6 +206,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  AllSettingsRoute: typeof AllSettingsRouteWithChildren
   PreviewRoute: typeof PreviewRouteWithChildren
 }
 
@@ -192,6 +217,13 @@ declare module '@tanstack/react-router' {
       path: '/preview'
       fullPath: '/preview'
       preLoaderRoute: typeof PreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/all-settings': {
+      id: '/all-settings'
+      path: '/all-settings'
+      fullPath: '/all-settings'
+      preLoaderRoute: typeof AllSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -214,6 +246,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/preview/$'
       preLoaderRoute: typeof PreviewSplatRouteImport
       parentRoute: typeof PreviewRoute
+    }
+    '/all-settings/$': {
+      id: '/all-settings/$'
+      path: '/$'
+      fullPath: '/all-settings/$'
+      preLoaderRoute: typeof AllSettingsSplatRouteImport
+      parentRoute: typeof AllSettingsRoute
     }
     '/_app/workspace': {
       id: '/_app/workspace'
@@ -332,6 +371,18 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AllSettingsRouteChildren {
+  AllSettingsSplatRoute: typeof AllSettingsSplatRoute
+}
+
+const AllSettingsRouteChildren: AllSettingsRouteChildren = {
+  AllSettingsSplatRoute: AllSettingsSplatRoute,
+}
+
+const AllSettingsRouteWithChildren = AllSettingsRoute._addFileChildren(
+  AllSettingsRouteChildren,
+)
+
 interface PreviewRouteChildren {
   PreviewSplatRoute: typeof PreviewSplatRoute
 }
@@ -345,6 +396,7 @@ const PreviewRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  AllSettingsRoute: AllSettingsRouteWithChildren,
   PreviewRoute: PreviewRouteWithChildren,
 }
 export const routeTree = rootRouteImport

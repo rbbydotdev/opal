@@ -27,7 +27,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
 
   useTheme();
   return (
-    <>
+    <ThemeProvider>
       <div className="font-sans antialiased">
         <div
           style={{
@@ -38,40 +38,38 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
           }}
           className="w-full h-full flex items-center justify-center bg-background"
         >
-          <ThemeProvider>
-            <ServiceWorker>
-              <AsyncWindowErrorBoundary>
-                <ErrorPopper>
-                  <WorkspaceProvider>
-                    <JotaiProvider>
-                      <SidebarProvider>
-                        <PromptProvider>
-                          <ConfirmProvider>
-                            {/* <FileTreeGitFileAttributesProvider> */}
-                            <RemoteMDXEditorRealmProvider>
-                              <div className="w-full flex">
-                                <ErrorBoundary fallback={ErrorPlaque}>
-                                  <div
-                                    className={cn(
-                                      "flex flex-col flex-shrink-0 bg-accent overflow-clip  flex-grow-0 max-h-screen"
-                                    )}
-                                  >
-                                    <WorkspaceButtonBar />
-                                  </div>
-                                  <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                </ErrorBoundary>
-                              </div>
-                            </RemoteMDXEditorRealmProvider>
-                            {/* </FileTreeGitFileAttributesProvider> */}
-                          </ConfirmProvider>
-                        </PromptProvider>
-                      </SidebarProvider>
-                    </JotaiProvider>
-                  </WorkspaceProvider>
-                </ErrorPopper>
-              </AsyncWindowErrorBoundary>
-            </ServiceWorker>
-          </ThemeProvider>
+          <ServiceWorker>
+            <AsyncWindowErrorBoundary>
+              <ErrorPopper>
+                <WorkspaceProvider>
+                  <JotaiProvider>
+                    <SidebarProvider>
+                      <PromptProvider>
+                        <ConfirmProvider>
+                          {/* <FileTreeGitFileAttributesProvider> */}
+                          <RemoteMDXEditorRealmProvider>
+                            <div className="w-full flex">
+                              <ErrorBoundary fallback={ErrorPlaque}>
+                                <div
+                                  className={cn(
+                                    "flex flex-col flex-shrink-0 bg-accent overflow-clip  flex-grow-0 max-h-screen"
+                                  )}
+                                >
+                                  <WorkspaceButtonBar />
+                                </div>
+                                <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                              </ErrorBoundary>
+                            </div>
+                          </RemoteMDXEditorRealmProvider>
+                          {/* </FileTreeGitFileAttributesProvider> */}
+                        </ConfirmProvider>
+                      </PromptProvider>
+                    </SidebarProvider>
+                  </JotaiProvider>
+                </WorkspaceProvider>
+              </ErrorPopper>
+            </AsyncWindowErrorBoundary>
+          </ServiceWorker>
         </div>
       </div>
       <style>{`
@@ -88,6 +86,6 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
           color: var(--highlight-focus-foreground);
         }
       `}</style>
-    </>
+    </ThemeProvider>
   );
 }

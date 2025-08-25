@@ -147,7 +147,12 @@ export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions):
   const buildVars = (mode: "light" | "dark") => {
     const vars: string[] = [];
     ALL_VARS.forEach((key) => {
-      const value = themeItem!.cssVars[mode]?.[key] ?? themeItem!.cssVars.theme?.[key] ?? "";
+      const value =
+        themeItem!.cssVars[mode]?.[key] ??
+        themeItem!.cssVars.theme?.[key] ??
+        invertColor(themeItem!.cssVars[mode === "light" ? "dark" : "light"]?.[key] ?? "") ??
+        invertColor(themeItem!.cssVars[mode]?.[key]!) ??
+        "";
       if (value) {
         vars.push(`--${key}: ${value};`);
       }

@@ -15,11 +15,27 @@ export interface IRemoteAuthAgent {
   getApiToken(): string;
 }
 
-class RepoSearchResults {
-  created = Date.now();
-  results: any[] = [];
-  fuzzysortedResults: Fuzzysort.KeysResults<any> | null = null;
-}
+// interface Fetcher {
+//   nextPage(): Promise<any[]>;
+//   hasMore(): boolean;
+//   isStale(): boolean;
+// }
+// class SearchResults {
+//   created = Date.now();
+//   results: any[] = [];
+//   async searchResults(searchTerm: string): any[] {
+
+//   fuzzysort.go(deferredSearch, this.results, { limit: 50 })
+//   }
+//   async fetch(){
+
+//         fetcher().then((results) => {
+//       this.results = results;
+//     });
+//   }
+//   constructor(fetcher: ) {
+//   }
+// }
 
 export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
   private _octokit!: Octokit;
