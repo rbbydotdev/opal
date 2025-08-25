@@ -86,7 +86,7 @@ function Toast(props: ToastProps) {
               {title}
             </span>
           )}
-          {description && <p className="mt-1 text-sm text-muted-foreground leading-tight">{description}</p>}
+          {description && <span className="mt-1 text-sm text-muted-foreground leading-tight">{description}</span>}
         </p>
       </div>
       {action && (

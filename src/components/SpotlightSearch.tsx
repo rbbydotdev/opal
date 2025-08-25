@@ -171,27 +171,15 @@ function SpotlightSearchInternal({
     getItemProps,
   } = useKeyboardNavigation({
     onEnter: (activeIndex) => {
-      const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
-      if (state === "prompt" && currentPrompt) {
-        execContext.current[currentPrompt.name] = search;
-        setSearch("");
-        setState("spotlight");
-        setCurrentPrompt(null);
-        return runNextStep();
-      }
-      if (state === "select" && currentPrompt) {
-        const selected = sortedList[activeIndex]?.href;
-        if (selected) {
-          execContext.current[currentPrompt.name] = selected;
-          setSearch("");
-          setState("spotlight");
-          setCurrentPrompt(null);
-          return runNextStep();
+      // Only handle spotlight state - let existing logic handle prompt/select
+      if (state === "spotlight") {
+        const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
+        if (activeIndex >= 0 && menuItems) {
+          (menuItems[activeIndex] as HTMLElement)?.click();
         }
       }
-      if (activeIndex >= 0 && menuItems) {
-        (menuItems[activeIndex] as HTMLElement)?.click();
-      }
+      // For prompt and select states, we need to handle them with the existing logic
+      // This will be handled by the custom handleKeyDown function
     },
     onEscape: handleClose,
     searchValue: search,
@@ -314,8 +302,32 @@ function SpotlightSearchInternal({
     }
   }, [resetActiveIndex, state, currentPrompt, deferredSearch, visibleFiles, commandPrefix, commandList]);
 
-  // Custom key handler that wraps the base handler for Cmd+P support
+  // Custom key handler that wraps the base handler for Cmd+P support and handles prompt/select states
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Handle Enter key for prompt and select states before delegating to base handler
+    if (e.key === "Enter") {
+      if (state === "prompt" && currentPrompt) {
+        e.preventDefault();
+        execContext.current[currentPrompt.name] = search;
+        setSearch("");
+        setState("spotlight");
+        setCurrentPrompt(null);
+        return runNextStep();
+      }
+      if (state === "select" && currentPrompt) {
+        e.preventDefault();
+        const selected = sortedList[activeIndex]?.href;
+        if (selected) {
+          execContext.current[currentPrompt.name] = selected;
+          setSearch("");
+          setState("spotlight");
+          setCurrentPrompt(null);
+          return runNextStep();
+        }
+      }
+      // For spotlight state, let the base handler deal with it
+    }
+
     // Handle Cmd+P / Ctrl+P when not focused on input
     if (document.activeElement !== inputRef.current) {
       if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
