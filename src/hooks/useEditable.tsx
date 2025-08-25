@@ -220,7 +220,8 @@ export function useEditable<T extends TreeFile | TreeDir>({
       return;
     }
     setFileTreeCtx({
-      anchorIndex: anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex,
+      // anchorIndex: anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex,
+      anchorIndex: flatTree.indexOf(treeNode.path),
       editing,
       editType,
       virtual,

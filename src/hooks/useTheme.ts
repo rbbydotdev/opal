@@ -2,6 +2,7 @@
 // import themeRegistry from "@/theme/vscode-themes.json";
 import themeRegistry from "@/theme/themes.json";
 
+import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { applyTheme, getThemeModePrefers, type ThemeRegistry } from "@/theme/theme-lib";
 import { useCallback, useEffect } from "react";
 import useLocalStorage2 from "./useLocalStorage2";
@@ -19,24 +20,13 @@ const DEFAULT_THEME_STATE: ThemeState = {
 };
 
 export function useTheme() {
+  const { value, setPreference } = useThemeSettings();
   const { storedValue: themeState, setStoredValue: setThemeState } = useLocalStorage2<ThemeState>(
     "app-theme",
     DEFAULT_THEME_STATE,
     { initializeWithValue: true }
   );
-  // console.log(themeState, "useTheme state");
 
-  const setMode = useCallback(
-    (mode: ThemeMode) => {
-      const newState = { ...themeState, mode };
-      setThemeState(newState);
-      applyTheme(themeRegistry as unknown as ThemeRegistry, {
-        theme: newState.themeName,
-        mode,
-      });
-    },
-    [themeState, setThemeState]
-  );
   const setTheme = useCallback(
     (themeName: string) => {
       const preferMode = getThemeModePrefers(themeName, themeRegistry as unknown as ThemeRegistry);
@@ -51,11 +41,6 @@ export function useTheme() {
     [themeState, setThemeState]
   );
 
-  const toggleMode = useCallback(() => {
-    const newMode = themeState.mode === "light" ? "dark" : "light";
-    setMode(newMode);
-  }, [themeState.mode, setMode]);
-
   // Apply theme on mount and when theme state changes
   useEffect(() => {
     applyTheme(themeRegistry as unknown as ThemeRegistry, {
@@ -66,10 +51,9 @@ export function useTheme() {
 
   return {
     themeName: themeState.themeName,
-    mode: themeState.mode,
+    mode: value,
+    setMode: setPreference,
     setTheme,
-    setMode,
-    toggleMode,
     availableThemes: themeRegistry.items
       .map((item) => item.name)
       .sort((a, b) => {

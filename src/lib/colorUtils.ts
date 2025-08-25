@@ -181,6 +181,7 @@ function oklchToRgb(l: number, c: number, h: number): [number, number, number] {
 }
 
 export function invertColor(color: string): string {
+  if (!color) return color;
   const rgb = parseCssColor(color);
   if (!rgb) return color;
   const [r, g, b] = rgb;

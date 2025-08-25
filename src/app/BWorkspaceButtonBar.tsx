@@ -1,7 +1,13 @@
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -24,6 +30,7 @@ import {
   CirclePlus,
   Delete,
   Moon,
+  RefreshCcw,
   SearchIcon,
   Settings,
   Sun,
@@ -107,6 +114,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
   const { pending } = useRequestSignals();
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
+  const { storedValue: spin, setStoredValue: setSpin } = useLocalStorage2("WorkspaceButtonBar/spin", true);
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const { value, setPreference } = useThemeSettings();
@@ -118,7 +126,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
     <div className="flex relative">
       <div
         className={cn(
-          "[&>*]:outline-none [&>*]:select-none relative max-h-full flex flex-col gap-4 justify-center items-center",
+          "[&>*]:outline-none transition-all [&>*]:select-none relative max-h-full flex flex-col gap-4 justify-center items-center",
           shrink ? "w-6" : "w-16"
         )}
       >
@@ -131,7 +139,13 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
           <div className="relative w-full justify-center flex items-center">
             <ContextMenu>
               <ContextMenuTrigger>
-                <Link to={"/"} className="absolute z-50 inset-0 -top-6 h-12 w-full cursor-pointer "></Link>
+                <Link
+                  to={"/"}
+                  className={cn("absolute z-50 -top-6 h-12 left-0 cursor-pointer _bg-red-700 opacity-25", {
+                    "w-4": shrink,
+                    "w-14": !shrink,
+                  })}
+                ></Link>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 <ContextMenuItem className="gap-2" onClick={() => setPreference("light")}>
@@ -148,10 +162,16 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
                   <Settings size={12} />
                   System
                 </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem className="gap-2" onClick={() => setSpin((prev) => !prev)}>
+                  {spin ? <Check size={12} /> : <div className="w-4"></div>}
+                  <RefreshCcw size={12} />
+                  Spinner
+                </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
-            <div className={cn("rotate-12 absolute inset-0 m-auto", { "h-5 w-5": shrink, "h-7 w-7": !shrink })}>
-              <div className={cn("outline-none", { "animate-spin": pending })}>
+            <div className={cn("rotate-12 absolute inset-0 m-auto", { "h-5 w-5 mt-0": shrink, "h-7 w-7": !shrink })}>
+              <div className={cn("outline-none", { "animate-spin": spin && pending })}>
                 <OpalSvg className={"rounded overflow-clip"} />
               </div>
             </div>

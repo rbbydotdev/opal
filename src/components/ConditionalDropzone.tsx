@@ -103,6 +103,7 @@ export function ConditionalDropzone({
             "absolute inset-0 transition-colors duration-200 border-2 border-dashed border-transparent z-[999]",
             // This is the key: toggle pointer-events based on state
             {
+              //TODO, on drag active stop not always firing and its killing the scroll
               "pointer-events-auto": isDragActive,
               "pointer-events-none": !isDragActive,
             },
