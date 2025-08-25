@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,9 @@ import { AuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { GitRemote } from "@/features/git-repo/GitRepo";
+import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { Env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useImperativeHandle, useState } from "react";
@@ -171,6 +173,17 @@ export function GitRemoteDialog({
     </Dialog>
   );
 }
+function useRemoteAuthForm(authId: string | undefined) {
+  const [remoteAuth, setRemoteAuth] = useState<null | RemoteAuthDAO>(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useAsyncEffect(async () => {
+    if (authId) {
+      console.log(authId);
+      setRemoteAuth(await RemoteAuthDAO.GetByGuid(authId));
+    }
+  }, [authId]);
+  return remoteAuth;
+}
 function GitRemoteDialogInternal({
   className,
   mode,
@@ -186,9 +199,10 @@ function GitRemoteDialogInternal({
   onCancel: () => void;
   form: ReturnType<typeof useForm<GitRemoteFormValues>>;
 }) {
-  function queryRemoteForRepos() {
-    //TODO
-  }
+  const [urlMode, setUrlMode] = useState<"manual" | "search">("manual");
+
+  const authId = useWatch({ name: "authId", control: form.control });
+  const remoteAuth = useRemoteAuthForm(authId);
 
   return (
     <div className={className}>
@@ -258,6 +272,7 @@ function GitRemoteDialogInternal({
               variant="outline"
               onClick={(e) => {
                 e.preventDefault();
+                form.setFocus("url");
               }}
             >
               <Search />

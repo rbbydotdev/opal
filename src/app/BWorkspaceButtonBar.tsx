@@ -107,29 +107,23 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
           shrink ? "w-6" : "w-16"
         )}
       >
-        <div className="flex justify-center flex-col items-center w-full mt-4">
+        <div
+          className={cn("flex justify-center flex-col items-center w-full", {
+            "mt-[1.35rem]": shrink,
+            "mb-4  mt-4": !shrink,
+          })}
+        >
           <Link to={"/"}>
             <div className="rotate-12">
               <div className={cn("outline-none", { "animate-spin": pending })}>
                 <OpalSvg className={cn("rounded overflow-clip", { "h-5 w-5": shrink, "h-7 w-7": !shrink })} />
-                {/* <div
-                className={cn("rounded-sm mt-4", {
-                  "h-7 w-7 mb-4": !shrink,
-                  "h-4 w-4": shrink,
-                })}
-                style={{
-                  backgroundImage: "url(/opal.svg)",
-                  backgroundRepeat: "repeat",
-                  backgroundSize: "auto",
-                }}
-              ></div> */}
               </div>
             </div>
           </Link>
         </div>
         <div
           className={cn("max-h-full gap-4 flex justify-center flex-col items-center w-full", {
-            "_mt-3": shrink,
+            "mt-8": shrink,
           })}
         >
           {process.env.NODE_ENV === "development" ? (
@@ -322,15 +316,12 @@ function DragCollapseBar() {
 
   return (
     <div
-      onDoubleClick={() => setStoredValue(!shrink)}
+      onClick={() => setStoredValue(!shrink)}
       onMouseDown={onMouseDown}
-      className={cn(
-        "group bg-primary absolute right-0 hover:w-2 h-36 w-0.5 select-none flex justify-center items-center",
-        {
-          "cursor-w-resize": !shrink,
-          "cursor-e-resize": shrink,
-        }
-      )}
+      className={cn("group bg-primary absolute right-0 hover:w-2 w-0.5 select-none flex justify-center items-center", {
+        "cursor-w-resize h-16": !shrink,
+        "cursor-e-resize h-16": shrink,
+      })}
     >
       <ChevronLeft
         size={12}
