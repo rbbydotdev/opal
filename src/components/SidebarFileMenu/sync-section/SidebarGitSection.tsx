@@ -163,7 +163,12 @@ function CommitSection({
   };
   const handleRemoteInit = () => {
     initialRepo();
-    addRemoteCmdRef.current.open("add");
+    void addRemoteCmdRef.current.open("add").then(async (result) => {
+      if (!result) return;
+      const { next: remote } = result;
+      await repo.addGitRemote(remote);
+      commitRef.current?.show("Remote added");
+    });
   };
 
   const handleMessageSubmit = async (message: string) => {
@@ -202,10 +207,12 @@ function CommitSection({
     <>
       <GitRemoteDialog
         cmdRef={addRemoteCmdRef}
-        onSubmit={({ next }) => {
-          // console.log(next)
-          void repo.addGitRemote(next);
-        }}
+        // onSubmit={({ next }) => {
+        //   // console.log(next)
+        //   void repo.addGitRemote(next).then((remote) => {
+        //     console.log(remote);
+        //   });
+        // }}
       />
       <Button
         className="w-full disabled:cursor-pointer h-8"
