@@ -21,6 +21,8 @@ import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
+import { FAVORITE_THEMES } from "@/theme/theme-lib";
+import { ThemePreview } from "@/theme/ThemePreview";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   BombIcon,
@@ -66,7 +68,7 @@ function BigButton({
         <Link
           {...restProps}
           className={twMerge(
-            "w-full hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground _bg-accent",
+            "w-full hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground _bg-muted",
             isSmall ? "w-4 h-4 justify-center rounded-sm" : "py-2 gap-2 flex-col",
             restProps.className
           )}
@@ -110,14 +112,61 @@ export function WorkspaceButtonBar() {
   return <WorkspaceButtonBarInternal shrink={shrink} />;
 }
 
+function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
+  const { storedValue: spin, setStoredValue: setSpin } = useLocalStorage2("WorkspaceButtonBar/spin", true);
+  const { value, setPreference, setTheme } = useThemeSettings();
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <Link
+          to={"/"}
+          className={cn("absolute z-50 -top-6 h-12 left-0 cursor-pointer _bg-red-700 opacity-25", {
+            "w-4": shrink,
+            "w-14": !shrink,
+          })}
+        ></Link>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem className="gap-2" onClick={() => setPreference("light")}>
+          {value === "light" ? <Check size={12} /> : <div className="w-4"></div>}
+          <Sun size={12} /> <span className="pr-4">Light</span>
+        </ContextMenuItem>
+        <ContextMenuItem className="gap-2" onClick={() => setPreference("dark")}>
+          {value === "dark" ? <Check size={12} /> : <div className="w-4"></div>}
+          <Moon size={12} />
+          <span className="pr-4"> Dark</span>
+        </ContextMenuItem>
+        <ContextMenuItem className="gap-2" onClick={() => setPreference("system")}>
+          {value === "system" ? <Check size={12} /> : <div className="w-4"></div>}
+          <Settings size={12} />
+          <span className="pr-4">System</span>
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem className="gap-2" onClick={() => setSpin((prev) => !prev)}>
+          {spin ? <Check size={12} /> : <div className="w-4"></div>}
+          <RefreshCcw size={12} />
+          <span className="pr-4"> Spinner</span>
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        {FAVORITE_THEMES.map((themeName) => (
+          <ContextMenuItem className="gap-2" key={themeName} onClick={() => setTheme(themeName)}>
+            {value === themeName ? <Check size={12} /> : <div className="w-4"></div>}
+            <ThemePreview themeName={themeName} />
+          </ContextMenuItem>
+        ))}
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+}
+
 function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
   const { pending } = useRequestSignals();
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
-  const { storedValue: spin, setStoredValue: setSpin } = useLocalStorage2("WorkspaceButtonBar/spin", true);
+  const { storedValue: spin } = useLocalStorage2("WorkspaceButtonBar/spin", true);
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
-  const { value, setPreference } = useThemeSettings();
   const navigate = useNavigate();
 
   const variant: ButtonVariant = shrink ? "sm" : "lg";
@@ -137,39 +186,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
           })}
         >
           <div className="relative w-full justify-center flex items-center">
-            <ContextMenu>
-              <ContextMenuTrigger>
-                <Link
-                  to={"/"}
-                  className={cn("absolute z-50 -top-6 h-12 left-0 cursor-pointer _bg-red-700 opacity-25", {
-                    "w-4": shrink,
-                    "w-14": !shrink,
-                  })}
-                ></Link>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuItem className="gap-2" onClick={() => setPreference("light")}>
-                  {value === "light" ? <Check size={12} /> : <div className="w-4"></div>}
-                  <Sun size={12} /> Light
-                </ContextMenuItem>
-                <ContextMenuItem className="gap-2" onClick={() => setPreference("dark")}>
-                  {value === "dark" ? <Check size={12} /> : <div className="w-4"></div>}
-                  <Moon size={12} />
-                  Dark
-                </ContextMenuItem>
-                <ContextMenuItem className="gap-2" onClick={() => setPreference("system")}>
-                  {value === "system" ? <Check size={12} /> : <div className="w-4"></div>}
-                  <Settings size={12} />
-                  System
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem className="gap-2" onClick={() => setSpin((prev) => !prev)}>
-                  {spin ? <Check size={12} /> : <div className="w-4"></div>}
-                  <RefreshCcw size={12} />
-                  Spinner
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
+            <WorkspaceButtonBarContextMenu shrink={shrink} />
             <div className={cn("rotate-12 absolute inset-0 m-auto", { "h-5 w-5 mt-0": shrink, "h-7 w-7": !shrink })}>
               <div className={cn("outline-none", { "animate-spin": spin && pending })}>
                 <OpalSvg className={"rounded overflow-clip"} />
@@ -282,7 +299,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
               open={expand}
               onOpenChange={setExpand}
             >
-              <CollapsibleTrigger className="mt-2 h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground _bg-accent flex items-center relative ">
+              <CollapsibleTrigger className="mt-2 h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground _bg-muted flex items-center relative ">
                 <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
                 <div
                   className={cn(

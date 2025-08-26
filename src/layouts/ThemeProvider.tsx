@@ -1,7 +1,7 @@
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { applyTheme, getThemeModePrefers, type ThemeRegistry } from "@/theme/theme-lib";
 import themeRegistry from "@/theme/themes.json";
-import React, { createContext, ReactNode, useCallback, useContext, useLayoutEffect, useState, useEffect } from "react";
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
 
 type ResolvedTheme = "light" | "dark";
 type ThemePreference = ResolvedTheme | "system";
@@ -23,7 +23,7 @@ interface ThemeContextValue {
   preference: ThemePreference;
   setPreference: (pref: ThemePreference) => void;
   toggleTheme: () => void;
-  
+
   // Theme selection
   themeName: string;
   mode: ResolvedTheme;
@@ -48,8 +48,11 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // Light/dark mode preference
-  const { storedValue: modePreference, setStoredValue: setModePreference } = useLocalStorage2<ThemePreference>("theme/lightdark", "system");
-  
+  const { storedValue: modePreference, setStoredValue: setModePreference } = useLocalStorage2<ThemePreference>(
+    "theme/lightdark",
+    "system"
+  );
+
   // Theme selection state
   const { storedValue: themeState, setStoredValue: setThemeState } = useLocalStorage2<ThemeState>(
     "app-theme",
@@ -84,7 +87,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   // Apply theme styles when theme name or mode changes
   useEffect(() => {
-    applyTheme(themeRegistry as unknown as ThemeRegistry, {
+    applyTheme({
       theme: themeState.themeName,
       mode: resolvedMode,
     });
@@ -95,7 +98,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const preferMode = getThemeModePrefers(themeName, themeRegistry as unknown as ThemeRegistry);
       const newState = { ...themeState, themeName, mode: preferMode || resolvedMode };
       setThemeState(newState);
-      applyTheme(themeRegistry as unknown as ThemeRegistry, {
+      applyTheme({
         theme: themeName,
         mode: newState.mode,
       });
@@ -122,7 +125,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     preference: modePreference,
     setPreference: setModePreference,
     toggleTheme,
-    
+
     // Theme selection
     themeName: themeState.themeName,
     mode: resolvedMode,

@@ -48,7 +48,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                               <ErrorBoundary fallback={ErrorPlaque}>
                                 <div
                                   className={cn(
-                                    "flex flex-col flex-shrink-0 bg-accent overflow-clip  flex-grow-0 max-h-screen"
+                                    "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
                                   )}
                                 >
                                   <WorkspaceButtonBar />

@@ -115,7 +115,6 @@ function CommitSection({
   const [pending, setPending] = useState(false);
 
   const commitState = ((): CommitState => {
-    // if (
     if (bareInitialized) return "bare-init";
     if (pending) return "pending";
     if (isMerging) return "merge-commit";
@@ -197,7 +196,7 @@ function CommitSection({
         variant="outline"
         disabled={commitState === "pending" || commitState === "commit-disabled" || commitState === "detatched"}
       >
-        <GitActionButtonLabel commitState={commitState} exists={exists} />
+        <GitActionButtonLabel commitState={commitState} /*exists={exists}*/ />
       </Button>
       {commitState === "init" && (
         <Button className="w-full disabled:cursor-pointer h-8" onClick={handleRemoteInit} size="sm" variant="outline">
@@ -218,65 +217,40 @@ function CommitSection({
   );
 }
 
-const GitActionButtonLabel = ({ commitState, exists }: { commitState?: CommitState; exists: boolean }) => {
-  switch (commitState) {
-    case "merge-commit":
-      return (
-        <>
-          <GitMerge className="mr-1" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Merge Commit</span>
-        </>
-      );
-    case "pending":
-      return (
-        <>
-          <Loader className="mr-1 animate-spin" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">
-            {exists ? "Committing..." : "Initializing..."}
-          </span>
-        </>
-      );
-    case "bare-init":
-      return (
-        <>
-          <PlusIcon className="mr-1" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Initial Commit</span>
-        </>
-      );
-    case "init":
-      return (
-        <>
-          <PlusIcon className="mr-1" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Initialize Git Repo</span>
-        </>
-      );
-    case "commit":
-      return (
-        <>
-          <GitMerge className="mr-1" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Commit</span>
-        </>
-      );
-    case "commit-disabled":
-      return (
-        <>
-          <GitMerge className="mr-1" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">No Changes to Commit</span>
-        </>
-      );
-    case "detatched":
-      return (
-        <>
-          <GitPullRequestDraftIcon className="mr-1" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Detatched</span>
-        </>
-      );
-    default:
-      return null;
-  }
+const ActionButtonIcons = {
+  commit: GitMerge,
+  "merge-commit": GitMerge,
+  "commit-disabled": GitMerge,
+  "enter-message": GitMerge,
+  pending: Loader,
+  init: PlusIcon,
+  "bare-init": PlusIcon,
+  detatched: GitPullRequestDraftIcon,
+};
+const ActionButtonLabels = {
+  commit: "Commit",
+  "merge-commit": "Merge Commit",
+  "commit-disabled": "No Changes to Commit",
+  "enter-message": "Enter Commit Message",
+  pending: "Committing...",
+  init: "Initialize Git Repo",
+  "bare-init": "Initial Commit",
+  detatched: "Detatched",
 };
 
-// 4. SyncPullPushButtons
+const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) => {
+  if (!commitState) return null;
+  const Icon = ActionButtonIcons[commitState];
+  const labelStr = ActionButtonLabels[commitState];
+  if (!Icon || !labelStr) return null;
+  return (
+    <>
+      <Icon className="mr-1" />
+      <span className="flex-1 min-w-0 truncate flex justify-center items-center">{labelStr}</span>
+    </>
+  );
+};
+
 function SyncPullPushButtons() {
   return (
     <>
