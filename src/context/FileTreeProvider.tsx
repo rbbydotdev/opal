@@ -4,6 +4,7 @@ import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import { createContext, useContext } from "react";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const defaultFileTreeContext = {
   fileTreeDir: NULL_TREE_ROOT as TreeDirRoot,
   flatTree: [] as AbsPath[],

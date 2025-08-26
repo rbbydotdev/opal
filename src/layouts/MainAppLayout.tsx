@@ -1,4 +1,3 @@
-import { JotaiProvider } from "@/app/JotaiProvider";
 import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
 import { ConfirmProvider } from "@/components/Confirm";
@@ -7,6 +6,7 @@ import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/sear
 import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserveViewModeURL";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/ErrorPlaque";
+import { GitPullingStatusProvider } from "@/components/GitPullingStatusModal";
 import { PromptProvider } from "@/components/Prompt";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -38,7 +38,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
             <AsyncWindowErrorBoundary>
               <ErrorPopper>
                 <WorkspaceProvider>
-                  <JotaiProvider>
+                  <GitPullingStatusProvider>
                     <SidebarProvider>
                       <PromptProvider>
                         <ConfirmProvider>
@@ -63,7 +63,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                         </ConfirmProvider>
                       </PromptProvider>
                     </SidebarProvider>
-                  </JotaiProvider>
+                  </GitPullingStatusProvider>
                 </WorkspaceProvider>
               </ErrorPopper>
             </AsyncWindowErrorBoundary>
