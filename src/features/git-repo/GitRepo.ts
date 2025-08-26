@@ -820,7 +820,7 @@ export class GitRepo {
     return this.getConfig(`remote.${remoteName}.authId`);
   };
 
-  addGitRemote = async (remote: GitRemote): Promise<void> => {
+  addGitRemote = async (remote: GitRemote): Promise<GitRemote> => {
     const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
     const uniqSlug = getUniqueSlug(
       remote.name,
@@ -834,6 +834,7 @@ export class GitRepo {
     });
     if (remote.gitCorsProxy) await this.setGitCorsProxy(uniqSlug, remote.gitCorsProxy);
     if (remote.authId) await this.setAuthId(uniqSlug, remote.authId);
+    return remote;
   };
   replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {
     await this.deleteGitRemote(previous.name);
