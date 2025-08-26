@@ -397,6 +397,7 @@ export class GitRepo {
   };
 
   isMerging = async (): Promise<boolean> => {
+    if ((await this.fullInitialized()) === false) return false;
     const mergeHead = await this.getMergeState();
     return mergeHead !== null;
   };
@@ -433,9 +434,9 @@ export class GitRepo {
   };
   tryInfo = async (): Promise<RepoInfoType> => {
     try {
-      if (!(await this.fullInitialized())) {
-        return RepoDefaultInfo;
-      }
+      // if (!(await this.fullInitialized())) {
+      //   return RepoDefaultInfo;
+      // }
       const currentBranch = await this.getCurrentBranch();
       const latestCommit = await this.getLatestCommit();
       const currentRef = currentBranch
@@ -468,6 +469,7 @@ export class GitRepo {
   };
 
   getUnmergedFiles = async (): Promise<string[]> => {
+    if ((await this.fullInitialized()) === false) return [];
     const mergeHead = await this.getMergeState();
     if (mergeHead) {
       const unmergedFiles = await this.statusMatrix({
@@ -481,6 +483,7 @@ export class GitRepo {
   };
 
   getCurrentBranch = async ({ fullname }: { fullname?: boolean } = {}): Promise<string | null> => {
+    if ((await this.fullInitialized()) === false) return null;
     return (
       (await this.git.currentBranch({
         fs: this.fs,
@@ -491,6 +494,7 @@ export class GitRepo {
   };
 
   hasChanges = async (): Promise<boolean> => {
+    if ((await this.fullInitialized()) === false) return false;
     try {
       const matrix = await this.mutex.runExclusive(() => GIT.statusMatrix({ fs: this.fs, dir: this.dir }));
       return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);

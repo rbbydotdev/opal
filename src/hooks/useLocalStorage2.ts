@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 declare global {
   interface WindowEventMap {
@@ -134,7 +134,7 @@ export default function useLocalStorage2<T>(
     window.dispatchEvent(new StorageEvent("local-storage", { key }));
   }, [key]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setStateValue(readValue());
   }, [key, readValue]);
 
@@ -148,7 +148,7 @@ export default function useLocalStorage2<T>(
     [key, readValue]
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     addEventListener("storage", handleStorageChange);
     // this is a custom event, triggered in writeValueToLocalStorage
     addEventListener("local-storage", handleStorageChange);

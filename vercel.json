@@ -6,7 +6,19 @@
       "destination": "/$1.js"
     },
     {
-      "source": "/(.*)",
+      "source": "/workspace/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/preview/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/preview",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/settings",
       "destination": "/index.html"
     }
   ],

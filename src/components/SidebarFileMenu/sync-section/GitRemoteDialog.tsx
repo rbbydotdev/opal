@@ -393,7 +393,7 @@ function RepoSearchContainer({
   return (
     <div className="w-full relative">
       <RepoDropDown
-        isLoading={isLoading}
+        isLoading={isLoading || (debouncedSearchValue !== searchValue && Boolean(searchValue))}
         allRepos={searchResults}
         searchValue={searchValue}
         onSearchChange={updateSearch}

@@ -96,6 +96,7 @@ function CommitSection({
   mergeCommit,
   currentGitRef,
   bareInitialized,
+  fullInitialized,
 }: {
   exists: boolean;
   hasChanges: boolean;
@@ -109,21 +110,23 @@ function CommitSection({
     show: (text?: string) => void;
   }>;
   bareInitialized: boolean;
+  fullInitialized: boolean;
 }) {
   const [commitMessage, setCommitMessage] = useState("");
   const [showMessageInput, setShowMessageInput] = useState(false);
   const [pending, setPending] = useState(false);
 
   const commitState = ((): CommitState => {
-    if (bareInitialized) return "bare-init";
     if (pending) return "pending";
     if (isMerging) return "merge-commit";
     if (showMessageInput) return "enter-message";
+    if (bareInitialized && !fullInitialized) return "bare-init";
     if (!exists) return "init";
     if (!hasChanges) return "commit-disabled";
     if (currentGitRef?.type === "commit") return "detatched";
     return "commit";
   })();
+  console.log(commitState);
 
   const handleCommit = async (message: string) => {
     setPending(true);
@@ -199,11 +202,14 @@ function CommitSection({
         <GitActionButtonLabel commitState={commitState} /*exists={exists}*/ />
       </Button>
       {commitState === "init" && (
-        <Button className="w-full disabled:cursor-pointer h-8" onClick={handleRemoteInit} size="sm" variant="outline">
+        <Button
+          className="w-full disabled:cursor-pointer h-8 truncate"
+          onClick={handleRemoteInit}
+          size="sm"
+          variant="outline"
+        >
           <SquareArrowOutUpRightIcon className="mr-1" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">
-            Initialize Git Repo From Remote
-          </span>
+          <span className="flex-1 min-w-0 truncate">Initialize Git Repo From Remote</span>
         </Button>
       )}
       {commitState === "bare-init" && (
@@ -311,7 +317,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               {exists && <LatestInfo info={info} />}
               <CommitSection
                 exists={exists}
-                bareInitialized={repo.state.bareInitialized}
+                bareInitialized={info.bareInitialized}
                 hasChanges={info.hasChanges}
                 commit={(message) => playbook.addAllCommit({ message })}
                 mergeCommit={() => playbook.mergeCommit()}
@@ -320,6 +326,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 initialRepo={() => repo.mustBeInitialized()}
                 commitRef={commitRef}
                 currentGitRef={info.currentRef}
+                fullInitialized={info.fullInitialized}
               />
             </div>
             {exists && info.currentRef !== null && (

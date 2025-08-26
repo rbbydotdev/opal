@@ -1,30 +1,39 @@
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import React, { useEffect, useRef, useState } from "react";
 
 // --- Configuration Constants ---
-// Left sidebar configuration
-const MIN_RESIZABLE_WIDTH = 200; // Minimum width when the sidebar is open and resizable
-const MAX_RESIZABLE_WIDTH = 600; // Maximum width when the sidebar is open and resizable
-const DEFAULT_OPEN_WIDTH = 260; // Initial width when the sidebar is open
-const COLLAPSED_STATE_WIDTH = 0; // Width of the sidebar when it's fully collapsed (can be > 0 for an icon bar)
+const MIN_RESIZABLE_WIDTH = 200;
+const MAX_RESIZABLE_WIDTH = 600;
+const DEFAULT_OPEN_WIDTH = 260;
+const COLLAPSED_STATE_WIDTH = 0;
 
-// Right pane configuration
-const MIN_RIGHT_PANE_WIDTH = 200; // Minimum width when the right pane is open and resizable
-const MAX_RIGHT_PANE_WIDTH = 800; // Maximum width when the right pane is open and resizable
-const DEFAULT_RIGHT_PANE_WIDTH = 500; // Initial width when the right pane is open
-const RIGHT_PANE_COLLAPSED_WIDTH = 0; // Width of the right pane when it's fully collapsed
+const MIN_RIGHT_PANE_WIDTH = 200;
+const MAX_RIGHT_PANE_WIDTH = 800;
+const DEFAULT_RIGHT_PANE_WIDTH = 500;
+const RIGHT_PANE_COLLAPSED_WIDTH = 0;
 
-// Snap behavior thresholds
-// If sidebar is open and dragged narrower than this, it will snap to COLLAPSED_STATE_WIDTH
 const SNAP_POINT_COLLAPSE_THRESHOLD = 100;
-const RIGHT_PANE_SNAP_THRESHOLD = 100; // If right pane is dragged narrower than this, it will snap closed
+const RIGHT_PANE_SNAP_THRESHOLD = 100;
 
-// localStorage keys
 const LOCAL_STORAGE_KEY_OPEN_WIDTH = "resizableSidebarOpenWidth";
 const LOCAL_STORAGE_KEY_IS_COLLAPSED = "resizableSidebarIsCollapsed";
 const LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH = "resizableRightPaneOpenWidth";
 const LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED = "resizableRightPaneIsCollapsed";
-const PREVIEW_PANE_ID = "preview-pane-id"; // ID for the preview pane
+
+const PREVIEW_PANE_ID = "preview-pane-id";
 export const getPreviewPaneElement = () => document.getElementById(PREVIEW_PANE_ID);
+
+export function useLeftCollapsed() {
+  return useLocalStorage2(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
+}
+export const useSidebarWidth = () => {
+  const collapsed = useLeftCollapsed().setStoredValue;
+  const width = useLocalStorage2(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH).storedValue;
+  return { collapsed, width };
+};
+export const useLeftWidth = () => {
+  return useLocalStorage2<number>(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH);
+};
 
 export const EditorSidebarLayout = ({
   sidebar,
@@ -39,110 +48,89 @@ export const EditorSidebarLayout = ({
   renderHiddenSidebar?: boolean;
   rightPaneEnabled?: boolean;
 }) => {
-  // Left sidebar state
-  const [persistedOpenWidth, setPersistedOpenWidth] = useState<number>(DEFAULT_OPEN_WIDTH);
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const [currentDisplayWidth, setCurrentDisplayWidth] = useState<number>(DEFAULT_OPEN_WIDTH);
-  const [isResizing, setIsResizing] = useState<boolean>(false);
-  const sidebarRef = useRef<HTMLElement>(null);
+  // --- Left Sidebar State (persisted) ---
+  const { storedValue: persistedOpenWidth, setStoredValue: setPersistedOpenWidth } = useLeftWidth();
+  const { storedValue: isCollapsed, setStoredValue: setIsCollapsed } = useLeftCollapsed();
 
-  // Right pane state
-  const [rightPanePersistedWidth, setRightPanePersistedWidth] = useState<number>(DEFAULT_RIGHT_PANE_WIDTH);
-  const [rightPaneIsCollapsed, setRightPaneIsCollapsed] = useState<boolean>(false);
-  const [rightPaneCurrentWidth, setRightPaneCurrentWidth] = useState<number>(DEFAULT_RIGHT_PANE_WIDTH);
-  const [rightPaneIsResizing, setRightPaneIsResizing] = useState<boolean>(false);
+  // --- Right Pane State (persisted) ---
+  const { storedValue: rightPanePersistedWidth, setStoredValue: setRightPanePersistedWidth } = useLocalStorage2<number>(
+    LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH,
+    DEFAULT_RIGHT_PANE_WIDTH
+  );
+
+  const { storedValue: rightPaneIsCollapsed, setStoredValue: setRightPaneIsCollapsed } = useLocalStorage2<boolean>(
+    LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED,
+    false
+  );
+
+  // --- Local UI State ---
+  const [isResizing, setIsResizing] = useState(false);
+  const [rightPaneIsResizing, setRightPaneIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
   const rightPaneRef = useRef<HTMLElement>(null);
 
-  // Stores information about the drag operation's start.
+  // --- Derived Values ---
+  // REFACTOR: Instead of separate state, derive the display width directly
+  // from the persisted `isCollapsed` and `persistedOpenWidth` values.
+  // This makes the local storage hook the single source of truth.
+  const currentDisplayWidth = isCollapsed ? COLLAPSED_STATE_WIDTH : persistedOpenWidth;
+  const rightPaneCurrentWidth = rightPaneIsCollapsed ? RIGHT_PANE_COLLAPSED_WIDTH : rightPanePersistedWidth;
+
+  // --- Drag State ---
   const dragStartInfoRef = useRef<{
-    startX: number; // Mouse X position at the start of the drag
-    initialDisplayWidth: number; // The sidebar's display width when dragging started
+    startX: number;
+    initialDisplayWidth: number;
   } | null>(null);
 
   const rightPaneDragStartInfoRef = useRef<{
-    startX: number; // Mouse X position at the start of the drag
-    initialDisplayWidth: number; // The right pane's display width when dragging started
+    startX: number;
+    initialDisplayWidth: number;
   } | null>(null);
 
+  // --- Controls Ref (to avoid stale closures in event listeners) ---
+  const controlsRef = useRef<any>({});
+  controlsRef.current = {
+    // REFACTOR: Removed currentDisplayWidth and its setter.
+    // The ref now only holds the primary state setters.
+    persistedOpenWidth,
+    setPersistedOpenWidth,
+    isCollapsed,
+    setIsCollapsed,
+    rightPanePersistedWidth,
+    setRightPanePersistedWidth,
+    rightPaneIsCollapsed,
+    setRightPaneIsCollapsed,
+    rightPaneEnabled,
+  };
+
+  // --- Keyboard Shortcuts ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+B to toggle left sidebar
+      const $c = controlsRef.current;
+      if (!$c) return;
+
+      // Cmd+B toggle left sidebar
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b" && !e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
-        setIsCollapsed((prev) => {
-          const newCollapsed = !prev;
-          localStorage.setItem(LOCAL_STORAGE_KEY_IS_COLLAPSED, newCollapsed.toString());
-          setCurrentDisplayWidth(newCollapsed ? COLLAPSED_STATE_WIDTH : persistedOpenWidth);
-          return newCollapsed;
-        });
+        // REFACTOR: Simply toggle the collapsed state. The width will be
+        // derived automatically on the next render.
+        $c.setIsCollapsed((prev: boolean) => !prev);
       }
-      // Cmd+Shift+B to toggle right pane (only if enabled)
-      else if (rightPaneEnabled && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "b") {
+      // Cmd+Shift+B toggle right pane
+      else if ($c.rightPaneEnabled && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "b") {
         e.preventDefault();
         e.stopPropagation();
-        setRightPaneIsCollapsed((prev) => {
-          const newCollapsed = !prev;
-          localStorage.setItem(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, newCollapsed.toString());
-          setRightPaneCurrentWidth(newCollapsed ? RIGHT_PANE_COLLAPSED_WIDTH : rightPanePersistedWidth);
-          return newCollapsed;
-        });
+        // REFACTOR: Simply toggle the collapsed state.
+        $c.setRightPaneIsCollapsed((prev: boolean) => !prev);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [persistedOpenWidth, rightPanePersistedWidth, rightPaneEnabled]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []); // Empty dependency array is correct here
 
-  // Effect to load stored sidebar and right pane state from localStorage on initial mount
-  useEffect(() => {
-    // Left sidebar initialization
-    let initialLoadedOpenWidth = DEFAULT_OPEN_WIDTH;
-    const storedOpenWidth = localStorage.getItem(LOCAL_STORAGE_KEY_OPEN_WIDTH);
-    if (storedOpenWidth) {
-      const numWidth = parseInt(storedOpenWidth, 10);
-      if (!isNaN(numWidth)) {
-        initialLoadedOpenWidth = Math.max(MIN_RESIZABLE_WIDTH, Math.min(numWidth, MAX_RESIZABLE_WIDTH));
-      }
-    }
-    setPersistedOpenWidth(initialLoadedOpenWidth);
-
-    let initialLoadedIsCollapsed = false;
-    const storedIsCollapsed = localStorage.getItem(LOCAL_STORAGE_KEY_IS_COLLAPSED);
-    if (storedIsCollapsed) {
-      initialLoadedIsCollapsed = storedIsCollapsed === "true";
-    }
-    setIsCollapsed(initialLoadedIsCollapsed);
-    setCurrentDisplayWidth(initialLoadedIsCollapsed ? COLLAPSED_STATE_WIDTH : initialLoadedOpenWidth);
-
-    // Right pane initialization (only if enabled)
-    if (rightPaneEnabled) {
-      let initialRightPaneWidth = DEFAULT_RIGHT_PANE_WIDTH;
-      const storedRightPaneWidth = localStorage.getItem(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH);
-      if (storedRightPaneWidth) {
-        const numWidth = parseInt(storedRightPaneWidth, 10);
-        if (!isNaN(numWidth)) {
-          initialRightPaneWidth = Math.max(MIN_RIGHT_PANE_WIDTH, Math.min(numWidth, MAX_RIGHT_PANE_WIDTH));
-        }
-      }
-      setRightPanePersistedWidth(initialRightPaneWidth);
-
-      let initialRightPaneCollapsed = false;
-      const storedRightPaneCollapsed = localStorage.getItem(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED);
-      if (storedRightPaneCollapsed) {
-        initialRightPaneCollapsed = storedRightPaneCollapsed === "true";
-      }
-      setRightPaneIsCollapsed(initialRightPaneCollapsed);
-      setRightPaneCurrentWidth(initialRightPaneCollapsed ? RIGHT_PANE_COLLAPSED_WIDTH : initialRightPaneWidth);
-    } else {
-      // When disabled, ensure right pane is collapsed
-      setRightPaneIsCollapsed(true);
-      setRightPaneCurrentWidth(RIGHT_PANE_COLLAPSED_WIDTH);
-    }
-  }, [rightPaneEnabled]);
-
+  // --- Mouse Down Handlers ---
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (sidebarRef.current) {
@@ -165,63 +153,55 @@ export const EditorSidebarLayout = ({
     }
   };
 
-  // Effect for managing global mousemove and mouseup event listeners during resize
+  // --- Resize Logic ---
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      // Handle left sidebar resize
+      const c = controlsRef.current;
+      if (!c) return;
+
+      // Left sidebar resize
       if (isResizing && dragStartInfoRef.current) {
         const { startX, initialDisplayWidth } = dragStartInfoRef.current;
         const dx = e.clientX - startX;
         const potentialNewWidth = initialDisplayWidth + dx;
 
+        // REFACTOR: Directly update the persisted state.
+        // Removed calls to setCurrentDisplayWidth.
         if (potentialNewWidth < SNAP_POINT_COLLAPSE_THRESHOLD) {
-          setIsCollapsed(true);
-          setCurrentDisplayWidth(COLLAPSED_STATE_WIDTH);
+          c.setIsCollapsed(true);
         } else {
-          setIsCollapsed(false);
+          c.setIsCollapsed(false);
           const newOpenWidth = Math.max(MIN_RESIZABLE_WIDTH, Math.min(potentialNewWidth, MAX_RESIZABLE_WIDTH));
-          setCurrentDisplayWidth(newOpenWidth);
-          setPersistedOpenWidth(newOpenWidth);
+          c.setPersistedOpenWidth(newOpenWidth);
         }
       }
 
-      // Handle right pane resize (only if enabled)
-      if (rightPaneEnabled && rightPaneIsResizing && rightPaneDragStartInfoRef.current) {
+      // Right pane resize
+      if (c.rightPaneEnabled && rightPaneIsResizing && rightPaneDragStartInfoRef.current) {
         const { startX, initialDisplayWidth } = rightPaneDragStartInfoRef.current;
-        const dx = startX - e.clientX; // Reversed direction for right pane
+        const dx = startX - e.clientX;
         const potentialNewWidth = initialDisplayWidth + dx;
 
+        // REFACTOR: Directly update the persisted state.
+        // Removed calls to setRightPaneCurrentWidth.
         if (potentialNewWidth < RIGHT_PANE_SNAP_THRESHOLD) {
-          setRightPaneIsCollapsed(true);
-          setRightPaneCurrentWidth(RIGHT_PANE_COLLAPSED_WIDTH);
+          c.setRightPaneIsCollapsed(true);
         } else {
-          setRightPaneIsCollapsed(false);
+          c.setRightPaneIsCollapsed(false);
           const newWidth = Math.max(MIN_RIGHT_PANE_WIDTH, Math.min(potentialNewWidth, MAX_RIGHT_PANE_WIDTH));
-          setRightPaneCurrentWidth(newWidth);
-          setRightPanePersistedWidth(newWidth);
+          c.setRightPanePersistedWidth(newWidth);
         }
       }
     };
 
     const handleMouseUp = () => {
-      if (isResizing) {
-        setIsResizing(false);
-        localStorage.setItem(LOCAL_STORAGE_KEY_OPEN_WIDTH, persistedOpenWidth.toString());
-        localStorage.setItem(LOCAL_STORAGE_KEY_IS_COLLAPSED, isCollapsed.toString());
-        dragStartInfoRef.current = null;
-      }
-
-      if (rightPaneEnabled && rightPaneIsResizing) {
-        setRightPaneIsResizing(false);
-        localStorage.setItem(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH, rightPanePersistedWidth.toString());
-        localStorage.setItem(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, rightPaneIsCollapsed.toString());
-        rightPaneDragStartInfoRef.current = null;
-      }
-
-      if (isResizing || rightPaneIsResizing) {
-        document.body.classList.remove("select-none");
-        document.body.style.cursor = "";
-      }
+      setIsResizing(false);
+      setRightPaneIsResizing(false);
+      dragStartInfoRef.current = null;
+      rightPaneDragStartInfoRef.current = null;
+      // Clean up body styles regardless of which pane was resizing
+      document.body.classList.remove("select-none");
+      document.body.style.cursor = "";
     };
 
     if (isResizing || rightPaneIsResizing) {
@@ -234,18 +214,11 @@ export const EditorSidebarLayout = ({
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      // Ensure cleanup happens on unmount as well
       document.body.classList.remove("select-none");
       document.body.style.cursor = "";
     };
-  }, [
-    isResizing,
-    rightPaneIsResizing,
-    isCollapsed,
-    persistedOpenWidth,
-    rightPaneIsCollapsed,
-    rightPanePersistedWidth,
-    rightPaneEnabled,
-  ]);
+  }, [isResizing, rightPaneIsResizing, rightPaneEnabled]);
 
   return (
     <div className="flex h-screen w-full overflow-clip">
@@ -264,7 +237,7 @@ export const EditorSidebarLayout = ({
         aria-valuemin={COLLAPSED_STATE_WIDTH}
         aria-valuemax={MAX_RESIZABLE_WIDTH}
         onMouseDown={handleMouseDown}
-        className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar border-r-2 hover:bg-sidebar-accent active:bg-sidebar-primary"
+        className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip border-r-2 bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
         title="Resize sidebar"
       ></div>
 
@@ -289,7 +262,7 @@ export const EditorSidebarLayout = ({
             className={`relative flex-shrink-0 overflow-y-auto ${rightPaneIsResizing ? "pointer-events-none" : ""}`}
           >
             {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0
-              ? rightPane || <div id={PREVIEW_PANE_ID} className="w-full h-full border-l border-border"></div>
+              ? rightPane || <div id={PREVIEW_PANE_ID} className="h-full w-full border-l border-border"></div>
               : null}
           </aside>
         </>

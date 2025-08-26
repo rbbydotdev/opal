@@ -6,7 +6,7 @@ import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
 import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserveViewModeURL";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ErrorPlaque } from "@/components/ErrorPlaque";
+import { ErrorMiniPlaque, ErrorPlaque } from "@/components/ErrorPlaque";
 import { PromptProvider } from "@/components/Prompt";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -51,7 +51,9 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                                     "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
                                   )}
                                 >
-                                  <WorkspaceButtonBar />
+                                  <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                    <WorkspaceButtonBar />
+                                  </ErrorBoundary>
                                 </div>
                                 <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
                               </ErrorBoundary>
