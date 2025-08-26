@@ -7,7 +7,9 @@
 import { invertColor } from "@/lib/colorUtils";
 
 // Import registry.json and type it as ThemeRegistry
-import registryJson from "./registry.json";
+import registryJson from "./themes.json";
+
+export const ALL_THEMES = registryJson.items.map((item) => item.name);
 
 export const registry: ThemeRegistry = registryJson as unknown as ThemeRegistry;
 // Types - annotate your registry.json import with these
@@ -154,7 +156,7 @@ function themePrefersMode(theme: ThemeRegistryItem): "light" | "dark" {
   const themeCount = Object.keys(theme.cssVars.theme || {}).length;
   return lightCount >= darkCount && lightCount >= themeCount ? "light" : "dark";
 }
-export function getThemeModePrefers(themeName: string, registry: ThemeRegistry): "light" | "dark" | null {
+export function getThemeModePrefers(themeName: string): "light" | "dark" | null {
   const themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
     console.warn(`Theme "${themeName}" not found in registry`);

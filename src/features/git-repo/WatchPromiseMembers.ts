@@ -5,12 +5,12 @@ type PromiseReturningFunctionKeys<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => Promise<any> ? K : never;
 }[keyof T];
 
-type EventKeys<K> = `${K & string}:start` | `${K & string}:end` | "*" | "*:start" | "*:end";
+type EventKeys<K> = `${K & string}:start` | `${K & string}:end` | "*" | "*:start" | "*:end" | (K & string);
 type WatcherEvents<T> = {
   [K in PromiseReturningFunctionKeys<T> as EventKeys<K>]: keyof T & string;
 };
 
-export class WatchPromiseMembers<T extends object> {
+export class WatchPromiseMembers<T extends Record<string, unknown>> {
   public readonly events: Emittery<WatcherEvents<T>>;
 
   public readonly watched: T;
@@ -32,20 +32,23 @@ export class WatchPromiseMembers<T extends object> {
             // Check if the result is a Promise (i.e., "thenable")
             if (result && typeof result.then === "function") {
               const eventName = prop.toString() as keyof WatcherEvents<T>;
-              const payload = prop.toString() as WatcherEvents<T>[typeof eventName];
+              const payload = prop.toString();
 
-              void this.events.emit("*" as any, payload);
-              void this.events.emit("*:start" as any, payload);
+              void this.events.emit("*" as any, eventName as WatcherEvents<T>[typeof eventName]);
+              void this.events.emit("*:start" as any, `${payload}:start` as WatcherEvents<T>[typeof eventName]);
               // We can cast here because our types ensure `prop` will
               // be a valid key if the function returns a promise.
               void this.events.emit(
-                `${String(eventName)}:start` as any,
+                `${String(payload)}:start` as any,
                 prop.toString() as WatcherEvents<T>[typeof eventName]
               );
 
               return result.finally(() => {
-                void this.events.emit(`${String(eventName)}:end` as any, payload);
-                void this.events.emit("*:end" as any, payload);
+                void this.events.emit(
+                  `${String(payload)}:end` as any,
+                  `${payload}:end` as WatcherEvents<T>[typeof eventName]
+                );
+                void this.events.emit("*:end" as any, `${payload}:end` as WatcherEvents<T>[typeof eventName]);
               });
             }
 

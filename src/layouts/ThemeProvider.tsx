@@ -1,6 +1,6 @@
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
-import { applyTheme, getThemeModePrefers, type ThemeRegistry } from "@/theme/theme-lib";
-import themeRegistry from "@/theme/themes.json";
+import { ALL_THEMES, applyTheme, getThemeModePrefers } from "@/theme/theme-lib";
+// import themeRegistry from "@/theme/themes.json";
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
 
 type ResolvedTheme = "light" | "dark";
@@ -95,7 +95,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   const setTheme = useCallback(
     (themeName: string) => {
-      const preferMode = getThemeModePrefers(themeName, themeRegistry as unknown as ThemeRegistry);
+      const preferMode = getThemeModePrefers(themeName);
       const newState = { ...themeState, themeName, mode: preferMode || resolvedMode };
       setThemeState(newState);
       applyTheme({
@@ -110,13 +110,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     setModePreference(resolvedMode === "light" ? "dark" : "light");
   }, [resolvedMode, setModePreference]);
 
-  const availableThemes = themeRegistry.items
-    .map((item) => item.name)
-    .sort((a, b) => {
-      if (a === themeState.themeName) return -1;
-      if (b === themeState.themeName) return 1;
-      return a.localeCompare(b);
-    });
+  const availableThemes = ALL_THEMES.sort((a, b) => {
+    if (a === themeState.themeName) return -1;
+    if (b === themeState.themeName) return 1;
+    return a.localeCompare(b);
+  });
 
   const value: ThemeContextValue = {
     // Theme mode (light/dark) settings

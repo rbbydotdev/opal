@@ -1,3 +1,4 @@
+import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { createFileRoute } from "@tanstack/react-router";
@@ -11,6 +12,9 @@ function ThemeTestComponent() {
   return (
     <div className="p-6 space-y-6">
       <h2 className="text-2xl font-bold text-foreground">Theme Test Component</h2>
+      <div className="w-96 h-96">
+        <ErrorMiniPlaque />
+      </div>
 
       {/* Basic colors */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

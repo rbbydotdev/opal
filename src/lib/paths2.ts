@@ -298,3 +298,18 @@ export function strictPrefix(path: string): string {
 export function newFileName(fullPath: string, fileName: string): RelPath {
   return basename(changePrefix(fullPath.trim() as AbsPath, strictPathname(prefix(fileName.trim()))));
 }
+export const stringifyEntry = (
+  entry:
+    | string
+    | Buffer<ArrayBufferLike>
+    | { name: string | Buffer<ArrayBufferLike>; isDirectory: () => boolean; isFile: () => boolean }
+) => {
+  if (typeof entry === "object" && entry !== null && "name" in entry) {
+    return String(entry.name);
+  } else if (typeof entry === "string") {
+    return entry;
+  } else if (entry instanceof Buffer) {
+    return entry.toString();
+  }
+  return String(entry);
+};

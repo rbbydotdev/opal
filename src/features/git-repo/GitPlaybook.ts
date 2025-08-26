@@ -86,7 +86,6 @@ export class GitPlaybook {
     const mergeHead = await this.repo.getMergeState();
     const mergeMsg = await this.repo.getMergeMsg();
     const head = await this.repo.getHead();
-    // console.log("mergeCommit", { currentBranch, mergeHead, mergeMsg, head });
     if (!mergeHead || !head) {
       throw new Error("Cannot merge commit, no merge head or current branch found");
     }

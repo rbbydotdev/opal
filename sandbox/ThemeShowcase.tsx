@@ -1,10 +1,10 @@
 import React from "react";
+import { type ThemeRegistry, getThemeNames, getThemePreviewPalette } from "../src/theme/theme-lib";
 import themeRegistry from "../src/theme/themes.json";
-import { type ThemeRegistry, getThemePreviewPalette, getThemeNames } from "../src/theme/theme-lib";
 
 const ThemePreviewCard: React.FC<{ themeName: string }> = ({ themeName }) => {
-  const palette = getThemePreviewPalette(themeRegistry as unknown as ThemeRegistry, themeName);
-  
+  const palette = getThemePreviewPalette(themeName);
+
   if (!palette) {
     return (
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
@@ -13,35 +13,35 @@ const ThemePreviewCard: React.FC<{ themeName: string }> = ({ themeName }) => {
       </div>
     );
   }
-  
+
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
       <h3 className="text-lg font-semibold text-gray-900 mb-4 capitalize">{themeName}</h3>
-      
+
       <div className="flex items-center gap-4">
         {/* Light mode preview */}
         <div className="flex items-center gap-2">
-          <div className="flex gap-1 p-2 rounded border" style={{ backgroundColor: 'white' }}>
+          <div className="flex gap-1 p-2 rounded border" style={{ backgroundColor: "white" }}>
             {palette.light.map((color, index) => (
               <div
                 key={`light-${index}`}
                 className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200"
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: color.value }}
                 title={`Light mode color ${index + 1}`}
               />
             ))}
           </div>
           <span className="text-sm text-gray-600 font-medium">Light</span>
         </div>
-        
+
         {/* Dark mode preview */}
         <div className="flex items-center gap-2">
-          <div className="flex gap-1 p-2 rounded border border-gray-700" style={{ backgroundColor: 'black' }}>
+          <div className="flex gap-1 p-2 rounded border border-gray-700" style={{ backgroundColor: "black" }}>
             {palette.dark.map((color, index) => (
               <div
                 key={`dark-${index}`}
                 className="w-4 h-4 rounded-full flex-shrink-0"
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: color.value }}
                 title={`Dark mode color ${index + 1}`}
               />
             ))}
@@ -55,7 +55,7 @@ const ThemePreviewCard: React.FC<{ themeName: string }> = ({ themeName }) => {
 
 const ThemeShowcase: React.FC = () => {
   const themeNames = getThemeNames(themeRegistry as unknown as ThemeRegistry);
-  
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -68,13 +68,13 @@ const ThemeShowcase: React.FC = () => {
             Showing {themeNames.length} themes with 4 colors each for light and dark modes
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {themeNames.map((themeName) => (
             <ThemePreviewCard key={themeName} themeName={themeName} />
           ))}
         </div>
-        
+
         <div className="mt-12 text-center">
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 inline-block">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Color Key</h3>
@@ -97,9 +97,7 @@ const ThemeShowcase: React.FC = () => {
                 Secondary
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-3">
-              * Missing colors are automatically healed using mode inversion
-            </p>
+            <p className="text-xs text-gray-500 mt-3">* Missing colors are automatically healed using mode inversion</p>
           </div>
         </div>
       </div>

@@ -200,7 +200,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
           <span className="pr-4"> Auto-hide Dock</span>
         </ContextMenuItem>
         <ContextMenuItem className="gap-2" onClick={() => setCollapsed((v) => !v)}>
-          {collapsed ? <Check size={12} /> : <div className="w-4"></div>}
+          {!collapsed ? <Check size={12} /> : <div className="w-4"></div>}
           <Sidebar size={12} />
           <span className="pr-4"> Show Sidebar</span>
         </ContextMenuItem>

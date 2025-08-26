@@ -21,7 +21,7 @@ import { memfs } from "memfs";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeDirRootJType, TreeNode } from "../lib/FileTree/TreeNode";
-import { reduceLineage } from "../lib/paths2";
+import { reduceLineage, stringifyEntry } from "../lib/paths2";
 import { RequestSignalsInstance } from "../lib/RequestSignals";
 
 // TODO: Lazy load modules based on disk
@@ -724,8 +724,8 @@ export abstract class Disk {
     await this.mkdirRecursive(absPath(dirname(newFullPath)));
     const entries = await this.fs.readdir(encodePath(oldFullPath));
     for (const entry of entries) {
-      const oldEntryPath = joinPath(oldFullPath, String(entry));
-      const newEntryPath = joinPath(newFullPath, String(entry));
+      const oldEntryPath = joinPath(oldFullPath, stringifyEntry(entry));
+      const newEntryPath = joinPath(newFullPath, stringifyEntry(entry));
       if (typeof entry === "string" || entry instanceof String) {
         if ((await this.fs.stat(encodePath(oldEntryPath))).isDirectory()) {
           await this.copyDirQuiet(oldEntryPath, newEntryPath, overWrite);
@@ -733,7 +733,7 @@ export abstract class Disk {
           await this.copyFileQuiet(oldEntryPath, newEntryPath, overWrite);
         }
       } else {
-        console.warn(`Skipping non-string entry: ${entry}`);
+        console.warn(`Skipping non-string entry: ${stringifyEntry(entry)}`);
       }
     }
     await this.fileTreeIndex();
