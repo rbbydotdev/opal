@@ -188,7 +188,7 @@ export class NullGitPlaybook extends GitPlaybook {
 export class NullRepo extends GitRepo {
   constructor() {
     super({ guid: "NullRepo", disk: new NullDisk(), dir: absPath("/"), defaultBranch: "main" });
-    this.state.initialized = true;
+    this.state.fullInitialized = true;
   }
 
   static FromJSON = (_json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): NullRepo => {

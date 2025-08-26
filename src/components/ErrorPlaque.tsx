@@ -7,17 +7,20 @@ export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {
   return (
     <div
       onClick={reset}
-      className="cursor-pointer w-full h-full bg-destructive opacity-50 border border-destructive text-destructive rounded gap-4 flex items-center justify-center"
+      className="relative overflow-hidden cursor-pointer w-full h-full bg-destructive opacity-50 border border-destructive text-destructive rounded gap-4 flex items-center justify-center"
     >
       <button
-        className="top-2 right-2 text-destructive-foreground bg-destructive h-16 w-16 border-destructive-foreground block m-4 border rounded p-4 active:scale-90 transition-all"
+        className="top-2 z-10 right-2 text-destructive-foreground bg-destructive h-16 w-16 border-destructive-foreground block m-4 border rounded p-4 active:scale-90 transition-all"
         onClick={() => {
           reset?.();
         }}
       >
         <RotateCcw />
       </button>
-      <div className="text-destructive-foreground mono font-xs">error / check console / retry?</div>
+      <div className="absolute rotate-12 scale-150 inset-0 overflow-hidden opacity-45 text-xs">
+        <div className="text-white absolute">{"error ".repeat(500)}</div>
+      </div>
+      <div className="bg-destructive  whitespace-nowrap z-10 text-destructive-foreground mono font-xs"></div>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
-import git, { AuthCallback, MergeResult } from "isomorphic-git";
+import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 
 export interface GitRemote {
@@ -88,7 +88,7 @@ export type GitRefCommit = {
 export const RepoDefaultInfo = {
   currentBranch: null as null | string,
   bareInitialized: false,
-  initialized: false,
+  fullInitialized: false,
   branches: [] as string[],
   remotes: [] as GitRemote[],
   latestCommit: {
@@ -129,11 +129,11 @@ export type RepoRemoteEventPayload = {
 };
 export class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
 
-export function isMergeConflictError(result: unknown): result is InstanceType<typeof git.Errors.MergeConflictError> {
-  return result instanceof git.Errors.MergeConflictError;
+export function isMergeConflictError(result: unknown): result is InstanceType<typeof GIT.Errors.MergeConflictError> {
+  return result instanceof GIT.Errors.MergeConflictError;
 }
 
-export type MergeConflict = InstanceType<typeof git.Errors.MergeConflictError>["data"];
+export type MergeConflict = InstanceType<typeof GIT.Errors.MergeConflictError>["data"];
 export function isMergeConflict(data: unknown): data is MergeConflict {
   return (
     typeof data === "object" &&
@@ -169,7 +169,7 @@ export class GitRepo {
   private unsubs: (() => void)[] = [];
   private info: RepoInfoType | null = null;
 
-  private gitWpm = new WatchPromiseMembers(git);
+  private gitWpm = new WatchPromiseMembers(GIT);
   readonly git = this.gitWpm.watched;
   private readonly gitEvents = this.gitWpm.events;
 
@@ -179,10 +179,10 @@ export class GitRepo {
   };
 
   state: {
-    initialized: boolean;
+    fullInitialized: boolean;
     bareInitialized: boolean;
   } = {
-    initialized: false,
+    fullInitialized: false,
     bareInitialized: false,
   };
 
@@ -237,8 +237,9 @@ export class GitRepo {
         "branch:end",
         "deleteBranch:end",
         "deleteRemote:end",
+        "init:end",
       ],
-      () => {
+      (propName) => {
         void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
         void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
         void this.sync();
@@ -423,7 +424,7 @@ export class GitRepo {
     }
   };
   getMergeState = async () => {
-    if (!(await this.initialized())) return null;
+    if (!(await this.fullInitialized())) return null;
     const mergeHead = await this.fs.readFile(joinPath(this.gitDir, "MERGE_HEAD")).catch(() => null);
     if (mergeHead) {
       return String(mergeHead).trim();
@@ -431,33 +432,39 @@ export class GitRepo {
     return null;
   };
   tryInfo = async (): Promise<RepoInfoType> => {
-    if (!(await this.initialized())) {
+    try {
+      if (!(await this.fullInitialized())) {
+        return RepoDefaultInfo;
+      }
+      const currentBranch = await this.getCurrentBranch();
+      const latestCommit = await this.getLatestCommit();
+      const currentRef = currentBranch
+        ? createBranchRef(currentBranch)
+        : latestCommit.oid
+          ? createCommitRef(latestCommit.oid)
+          : null;
+      const isMerging = await this.isMerging();
+      return {
+        fullInitialized: this.state.fullInitialized,
+        bareInitialized: this.state.bareInitialized,
+        currentBranch,
+        branches: await this.getBranches(),
+        remotes: await this.getRemotes(),
+        latestCommit,
+        hasChanges: await this.hasChanges(),
+        commitHistory: await this.getCommitHistory({ depth: 20 }),
+        context: isWebWorker() ? "worker" : "main",
+        exists: await this.fullInitialized(),
+        isMerging,
+        currentRef,
+        unmergedFiles: isMerging ? await this.getUnmergedFiles() : [],
+      };
+    } catch (e) {
+      if (!(e instanceof GIT.Errors.NotFoundError)) {
+        console.warn(e);
+      }
       return RepoDefaultInfo;
     }
-
-    const currentBranch = await this.getCurrentBranch();
-    const latestCommit = await this.getLatestCommit();
-    const currentRef = currentBranch
-      ? createBranchRef(currentBranch)
-      : latestCommit.oid
-        ? createCommitRef(latestCommit.oid)
-        : null;
-    const isMerging = await this.isMerging();
-    return {
-      initialized: this.state.initialized,
-      bareInitialized: this.state.bareInitialized,
-      currentBranch,
-      branches: await this.getBranches(),
-      remotes: await this.getRemotes(),
-      latestCommit,
-      hasChanges: await this.hasChanges(),
-      commitHistory: await this.getCommitHistory({ depth: 20 }),
-      context: isWebWorker() ? "worker" : "main",
-      exists: await this.initialized(),
-      isMerging,
-      currentRef,
-      unmergedFiles: isMerging ? await this.getUnmergedFiles() : [],
-    };
   };
 
   getUnmergedFiles = async (): Promise<string[]> => {
@@ -485,7 +492,7 @@ export class GitRepo {
 
   hasChanges = async (): Promise<boolean> => {
     try {
-      const matrix = await this.mutex.runExclusive(() => git.statusMatrix({ fs: this.fs, dir: this.dir }));
+      const matrix = await this.mutex.runExclusive(() => GIT.statusMatrix({ fs: this.fs, dir: this.dir }));
       return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
     } catch (error) {
       console.error("Error checking for changes:", error);
@@ -508,7 +515,7 @@ export class GitRepo {
 
   isBranchOrTag = async (ref: string) => {
     const branches = await this.getBranches();
-    const tags = await git.listTags({ fs: this.fs, dir: this.dir });
+    const tags = await GIT.listTags({ fs: this.fs, dir: this.dir });
     return branches.includes(ref) || tags.includes(ref);
   };
 
@@ -525,7 +532,7 @@ export class GitRepo {
   };
 
   getRemotes = async (): Promise<GitRemote[]> => {
-    if (!(await this.initialized())) return [];
+    if (!(await this.fullInitialized())) return [];
     const remotes = await this.git.listRemotes({
       fs: this.fs,
       dir: this.dir,
@@ -545,7 +552,7 @@ export class GitRepo {
   };
 
   getLatestCommit = async (): Promise<RepoLatestCommit> => {
-    if (!(await this.initialized())) return RepoLatestCommitNull;
+    if (!(await this.fullInitialized())) return RepoLatestCommitNull;
     const commitOid = await this.git.resolveRef({
       fs: this.fs,
       dir: this.dir,
@@ -565,7 +572,7 @@ export class GitRepo {
   };
 
   getCommitHistory = async (options?: { depth?: number; ref?: string; filepath?: string }): Promise<RepoCommit[]> => {
-    if (!(await this.initialized())) return [];
+    if (!(await this.fullInitialized())) return [];
 
     try {
       const commits = await this.git.log({
@@ -584,7 +591,6 @@ export class GitRepo {
   };
 
   resolveRef = async ({ ref }: { ref: string }): Promise<string> => {
-    await this.mustBeInitialized();
     return this.git.resolveRef({
       fs: this.fs,
       dir: this.dir,
@@ -593,11 +599,10 @@ export class GitRepo {
   };
 
   getHead() {
-    return git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
+    return GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
-    await this.mustBeInitialized();
     console.log("currentRef", await this.currentRef());
     console.log("merge from", from, "into", into);
     const result = await this.git
@@ -613,7 +618,7 @@ export class GitRepo {
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
           console.log("Merge conflict detected:", { from, into }, e.data);
-          await this.setMergeState(await git.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
+          await this.setMergeState(await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
 
           await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
           console.log(
@@ -640,9 +645,9 @@ export class GitRepo {
   };
 
   mustBeInitialized = async (): Promise<boolean> => {
-    if (this.state.initialized) return true;
-    if (!(await this.initialized())) {
-      await git.init({
+    if (this.state.fullInitialized) return true;
+    if (!(await this.fullInitialized())) {
+      await this.git.init({
         fs: this.fs,
         dir: this.dir,
         defaultBranch: this.defaultMainBranch,
@@ -650,7 +655,7 @@ export class GitRepo {
       await this.sync();
     }
     this.state.bareInitialized = true;
-    return (this.state.initialized = true);
+    return (this.state.fullInitialized = true);
   };
 
   commit = async ({
@@ -780,7 +785,7 @@ export class GitRepo {
   };
 
   statusMatrix = async ({ ref }: { ref?: string } = {}): Promise<Array<[string, number, number, number]>> => {
-    return git.statusMatrix({ fs: this.fs, dir: this.dir, ref });
+    return GIT.statusMatrix({ fs: this.fs, dir: this.dir, ref });
   };
 
   setConfig = async (path: string, value: string): Promise<void> => {
@@ -842,7 +847,6 @@ export class GitRepo {
   };
 
   bareInitialized = async (): Promise<boolean> => {
-    console.log("Checking bareInitialized, current state:", this.state.bareInitialized);
     try {
       if (this.state.bareInitialized) return true;
       await this.fs.stat(joinPath(this.dir, ".git"));
@@ -851,21 +855,20 @@ export class GitRepo {
       return (this.state.bareInitialized = false);
     }
   };
-  initialized = async (): Promise<boolean> => {
+  fullInitialized = async (): Promise<boolean> => {
     try {
-      if (this.state.initialized) return true;
+      if (this.state.fullInitialized) return true;
+      if (!(await this.bareInitialized())) throw new Error("Not bare initialized");
       await this.fs.stat(joinPath(this.dir, ".git"));
-      await git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
-      this.state.bareInitialized = true;
-      return (this.state.initialized = true);
+      await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
+      return (this.state.fullInitialized = true);
     } catch (_e) {
-      this.state.bareInitialized = false;
-      return (this.state.initialized = false);
+      return (this.state.fullInitialized = false);
     }
   };
 
   currentRef = async (): Promise<string> => {
-    return git.resolveRef({
+    return GIT.resolveRef({
       fs: this.fs,
       dir: this.dir,
       ref: "HEAD",
