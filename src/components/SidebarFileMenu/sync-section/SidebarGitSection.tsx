@@ -163,9 +163,7 @@ function CommitSection({
   };
   const handleRemoteInit = () => {
     initialRepo();
-    addRemoteCmdRef.current.open("add").then((result) => {
-      console.log(result);
-    });
+    addRemoteCmdRef.current.open("add");
   };
 
   const handleMessageSubmit = async (message: string) => {
@@ -205,6 +203,7 @@ function CommitSection({
       <GitRemoteDialog
         cmdRef={addRemoteCmdRef}
         onSubmit={({ next }) => {
+          // console.log(next)
           void repo.addGitRemote(next);
         }}
       />
