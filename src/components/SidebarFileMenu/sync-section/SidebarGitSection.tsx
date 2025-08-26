@@ -3,6 +3,7 @@ import {
   GitBranchIcon,
   GitMerge,
   GitPullRequestDraftIcon,
+  Import,
   Loader,
   PlusIcon,
   RefreshCw,
@@ -162,7 +163,9 @@ function CommitSection({
   };
   const handleRemoteInit = () => {
     initialRepo();
-    addRemoteCmdRef.current.open("add");
+    addRemoteCmdRef.current.open("add").then((result) => {
+      console.log(result);
+    });
   };
 
   const handleMessageSubmit = async (message: string) => {
@@ -227,7 +230,7 @@ function CommitSection({
       )}
       {commitState === "bare-init" && !hasRemotes && (
         <Button className="w-full disabled:cursor-pointer h-8" onClick={handleRemoteInit} size="sm" variant="outline">
-          <SquareArrowOutUpRightIcon className="mr-1" />
+          <Import className="mr-1" />
           <span className="flex-1 min-w-0 truncate flex justify-center items-center">Add Remote</span>
         </Button>
       )}

@@ -35,9 +35,9 @@ const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; h
   return (
     <div
       className={cn(
-        "cursor-pointer transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
+        "cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
         { "border h-8 bg-sidebar scale-110 mt-1": dragEnter },
-        { "mb-[10px] visible h-4": hasDepth },
+        { "mb-[5px] visible": hasDepth },
         { "invisible h-2": !hasDepth }
       )}
       onDrop={(e) => handleDrop(e, RootNode)}

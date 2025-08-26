@@ -177,12 +177,12 @@ export function FileTreeMenu({
         onDragEnter={(e) => handleDragEnter(e, "/")}
         className={cn({ "-mt-4": depth === 0 })}
       >
-        {/* <FileItemContextMenu fileNode={fileNode} currentWorkspace={currentWorkspace}> */}
         {fileNodeChildren.map((fileNode) => (
           <SidebarMenuItem
             key={fileNode.path}
             className={cn({
-              ["bg-sidebar-accent"]: fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
+              // "bg-sidebar-accent": fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
+              "bg-sidebar-accent": highlightDragover(fileNode),
             })}
             onDragOver={(e) => handleDragOver(e, fileNode)}
             onDrop={(e) => handleDrop(e, fileNode)}
