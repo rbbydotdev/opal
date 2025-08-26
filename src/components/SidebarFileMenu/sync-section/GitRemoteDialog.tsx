@@ -14,10 +14,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { GitBranch, Loader, Search } from "lucide-react";
+import { Ban, GitBranch, Loader, Search } from "lucide-react";
 
 import { AuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useDebounce } from "@/context/useDebounce";
@@ -170,21 +172,22 @@ export function GitRemoteDialog({
               className={cn("w-full min-w-0", { hidden: !showConnectionModal })}
               mode={"add"}
               onSuccess={(rad) => {
-                console.log("Selected connection:", rad.guid);
                 form.setValue("authId", rad.guid);
                 setShowConnModal(false);
               }}
               onClose={() => setShowConnModal(false)}
             />
           </div>
-          <GitRemoteDialogInternal
-            className={cn("col-start-1 row-start-1 min-w-0", { invisible: showConnectionModal })}
-            mode={modeRef.current}
-            form={form}
-            onSubmit={handleFormSubmit}
-            onCancel={handleCancel}
-            onAddAuth={() => setShowConnModal(true)}
-          />
+          <ErrorBoundary fallback={ErrorMiniPlaque}>
+            <GitRemoteDialogInternal
+              className={cn("col-start-1 row-start-1 min-w-0", { invisible: showConnectionModal })}
+              mode={modeRef.current}
+              form={form}
+              onSubmit={handleFormSubmit}
+              onCancel={handleCancel}
+              onAddAuth={() => setShowConnModal(true)}
+            />
+          </ErrorBoundary>
         </div>
       </DialogContent>
     </Dialog>
@@ -194,10 +197,7 @@ function useRemoteAuthForm(authId: string | undefined) {
   const [remoteAuth, setRemoteAuth] = useState<null | RemoteAuthDAO>(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useAsyncEffect(async () => {
-    if (authId) {
-      console.log(authId);
-      setRemoteAuth(await RemoteAuthDAO.GetByGuid(authId));
-    }
+    if (authId) setRemoteAuth(await RemoteAuthDAO.GetByGuid(authId));
   }, [authId]);
   return remoteAuth;
 }
@@ -220,7 +220,6 @@ function GitRemoteDialogInternal({
 
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
-  throw new Error("!!");
 
   return (
     <div className={className}>
@@ -272,8 +271,8 @@ function GitRemoteDialogInternal({
                   {urlMode === "manual" ? (
                     <>
                       URL
-                      <span className={cn({ hidden: authId }, "text-xs mono ml-2")}>
-                        (Select an authentication to search)
+                      <span className={cn({ hidden: authId && remoteAuth?.hasRemoteApi() }, "text-xs mono ml-2")}>
+                        (Select a remote authentication to search)
                       </span>
                     </>
                   ) : (
@@ -323,7 +322,7 @@ function GitRemoteDialogInternal({
                 e.preventDefault();
                 setUrlMode(urlMode === "manual" ? "search" : "manual");
               }}
-              className={cn({ invisible: !authId })} // Hide button if no auth selected
+              className={cn({ invisible: !authId || !remoteAuth?.hasRemoteApi() })} // Hide button if no auth selected
             >
               <Search />
             </Button>
@@ -376,7 +375,7 @@ function RepoSearchContainer({
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
   const agent = useMemo(() => remoteAuth?.toAgent() || null, [remoteAuth]);
-  const { isLoading, results } = useRepoSearch(agent, debouncedSearchValue);
+  const { isLoading, results, error } = useRepoSearch(agent, debouncedSearchValue);
   const searchResults = useMemo(
     () =>
       results.map((repo) => ({
@@ -399,6 +398,7 @@ function RepoSearchContainer({
         searchValue={searchValue}
         onSearchChange={updateSearch}
         onClose={onClose}
+        error={error}
         onSelect={onSelect}
       />
     </div>
@@ -412,12 +412,14 @@ function RepoDropDown({
   onClose,
   onSelect,
   allRepos,
+  error,
 }: {
   isLoading: boolean;
   searchValue: string;
   onSearchChange: (value: string) => void;
   onClose: () => void;
   onSelect: (repo: GithubSearchReposResult) => void;
+  error?: string | null;
   allRepos: GithubSearchReposResult[];
 }) {
   const {
@@ -456,6 +458,7 @@ function RepoDropDown({
       onClose();
     }
   };
+  const hasError = !!error;
 
   return (
     <div ref={containerRef} className="w-full p-0 relative" onKeyDown={handleKeyDown} onBlur={handleBlur}>
@@ -467,7 +470,20 @@ function RepoDropDown({
         placeholder="Search repositories..."
         className="w-full"
       />
-      {isLoading && (
+      {hasError && (
+        <ul
+          {...getMenuProps()}
+          className="absolute z-20 text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg top-10"
+        >
+          <li className="flex w-full flex-col rounded p-1 ">
+            <div className="group flex h-8 min-w-0 items-center rounded-md justify-start border-destructive border px-2 py-5">
+              <Ban className="text-destructive h-4 w-4 mr-2" />
+              <span className="text-md font-mono truncate min-w-0">Error {error}</span>
+            </div>
+          </li>
+        </ul>
+      )}
+      {!hasError && isLoading && (
         <ul
           {...getMenuProps()}
           className="absolute z-20 text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg top-10"
@@ -481,7 +497,7 @@ function RepoDropDown({
         </ul>
       )}
 
-      {!isLoading && allRepos.length > 0 && (
+      {!hasError && !isLoading && allRepos.length > 0 && (
         <ul
           {...getMenuProps()}
           className="text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg absolute top-10 z-10"

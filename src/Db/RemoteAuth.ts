@@ -118,6 +118,9 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
     //but the interface will be the same, getRepos etc
     return RemoteAuthAgentForRemoteAuth(this);
   }
+  hasRemoteApi() {
+    return this.type === "api" || this.type === "oauth" || this.type === "oauth-device";
+  }
 
   save() {
     return ClientDb.remoteAuths.put(
