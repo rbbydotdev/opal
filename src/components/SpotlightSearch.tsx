@@ -637,7 +637,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         ],
         "Git Merge Commit": [
           NewCmdExec(async () => {
-            if (!repo.getInfo()?.initialized) {
+            if (!repo.getInfo()?.fullInitialized) {
               console.warn("Git repository is not initialized");
               return;
             }
@@ -659,7 +659,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           NewCmdPrompt("git_commit_msg", "Enter Git Commit Message"),
           NewCmdExec(async (context) => {
             const message = context.git_commit_msg as string;
-            if (!repo.getInfo()?.initialized) {
+            if (!repo.getInfo()?.fullInitialized) {
               console.warn("Git repository is not initialized");
               return;
             }
@@ -744,13 +744,13 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       cmds.add("Rich Text View");
       cmds.add("Source View");
     }
-    if (gitRepoInfo.initialized) {
+    if (gitRepoInfo.fullInitialized) {
       cmds.add("Git Initialize Repo");
     }
-    if (!gitRepoInfo.initialized || !gitRepoInfo?.hasChanges || gitRepoInfo.unmergedFiles.length) {
+    if (!gitRepoInfo.fullInitialized || !gitRepoInfo?.hasChanges || gitRepoInfo.unmergedFiles.length) {
       // cmds.add("Git Commit");
     }
-    if (!gitRepoInfo.unmergedFiles.length || !gitRepoInfo.initialized) {
+    if (!gitRepoInfo.unmergedFiles.length || !gitRepoInfo.fullInitialized) {
       cmds.add("Git Merge Commit");
     }
     return cmds;
@@ -758,7 +758,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     currentWorkspace,
     currentPath,
     isMarkdown,
-    gitRepoInfo.initialized,
+    gitRepoInfo.fullInitialized,
     gitRepoInfo?.hasChanges,
     gitRepoInfo.unmergedFiles.length,
   ]);
