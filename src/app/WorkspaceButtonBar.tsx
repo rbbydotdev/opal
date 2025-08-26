@@ -1,3 +1,4 @@
+import { useLeftCollapsed, useSidebarWidth } from "@/app/EditorSidebarLayout";
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -39,13 +40,21 @@ import {
   RefreshCcw,
   SearchIcon,
   Settings,
+  Sidebar,
   Sun,
   Zap,
 } from "lucide-react";
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 type ButtonVariant = "lg" | "sm";
+
+function useShrink() {
+  return useLocalStorage2("BigButtonBar/shrink", true);
+}
+function useAutoHide() {
+  return useLocalStorage2("BigButtonBar/autohide", true);
+}
 
 function BigButton({
   icon,
@@ -112,13 +121,45 @@ function BigButton({
 }
 
 export function WorkspaceButtonBar() {
-  const { storedValue: shrink } = useLocalStorage2("BigButtonBar/shrink", true);
+  const { storedValue: shrink, setStoredValue: setShrink } = useShrink();
+  const { storedValue: autoHide } = useAutoHide();
+
+  const setShrinkRef = useRef(setShrink);
+  const { width: sidebarWidth, collapsed } = useSidebarWidth();
+  setShrinkRef.current = setShrink;
+  useEffect(() => {
+    if (!autoHide) return;
+    //create dock hidden behavior for left side of screen
+    const thresholdExpand = 50;
+    const thresholdShrink = sidebarWidth + 50;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const onMouseMove = (e: MouseEvent) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (e.clientX < thresholdExpand && shrink) {
+          //expand
+          setShrinkRef.current?.(false);
+        }
+        if (e.clientX > thresholdShrink && !shrink) {
+          //shrink
+          setShrinkRef.current?.(true);
+        }
+      }, 250);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+    };
+  }, [autoHide, collapsed, setShrink, shrink, sidebarWidth]);
+
   return <WorkspaceButtonBarInternal shrink={shrink} />;
 }
 
 function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { storedValue: spin, setStoredValue: setSpin } = useLocalStorage2("WorkspaceButtonBar/spin", true);
-  const { value, setPreference, setTheme } = useThemeSettings();
+  const { mode, value, themeName, setPreference, setTheme } = useThemeSettings();
+  const { setStoredValue: setAutoHide, storedValue: autoHide } = useAutoHide();
+  const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
 
   return (
     <ContextMenu>
@@ -153,16 +194,27 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
           <span className="pr-4"> Spinner</span>
         </ContextMenuItem>
         <ContextMenuSeparator />
+        <ContextMenuItem className="gap-2" onClick={() => setAutoHide((v) => !v)}>
+          {autoHide ? <Check size={12} /> : <div className="w-4"></div>}
+          <Sidebar size={12} />
+          <span className="pr-4"> Auto-hide Dock</span>
+        </ContextMenuItem>
+        <ContextMenuItem className="gap-2" onClick={() => setCollapsed((v) => !v)}>
+          {collapsed ? <Check size={12} /> : <div className="w-4"></div>}
+          <Sidebar size={12} />
+          <span className="pr-4"> Show Sidebar</span>
+        </ContextMenuItem>
+        <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger className="pl-8 gap-2">
             <Palette size={12} />
             Themes
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            {FAVORITE_THEMES.map((themeName) => (
-              <ContextMenuItem className="gap-2" key={themeName} onClick={() => setTheme(themeName)}>
-                {value === themeName ? <Check size={12} /> : <div className="w-4"></div>}
-                <ThemePreview themeName={themeName} />
+            {FAVORITE_THEMES.map((theme) => (
+              <ContextMenuItem className="gap-2" key={theme} onClick={() => setTheme(theme)}>
+                {themeName === theme ? <Check size={12} /> : <div className="w-4"></div>}
+                <ThemePreview themeName={theme} mode={mode} />
               </ContextMenuItem>
             ))}
           </ContextMenuSubContent>
@@ -180,7 +232,6 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const navigate = useNavigate();
-
   const variant: ButtonVariant = shrink ? "sm" : "lg";
 
   return (
@@ -359,7 +410,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
 function DragCollapseBar() {
   const THRESHOLD = 5;
   const startXRef = React.useRef(0);
-  const { setStoredValue, storedValue: shrink } = useLocalStorage2("BigButtonBar/shrink", true);
+  const { setStoredValue, storedValue: shrink } = useShrink();
   const draggingRef = useRef({ isDragging: false, shrink: (_v: boolean) => {}, cleanup: () => {} });
   draggingRef.current.shrink = setStoredValue;
 

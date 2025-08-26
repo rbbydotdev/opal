@@ -102,7 +102,7 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
   return (
     <div
       ref={scrollRef as RefObject<HTMLDivElement>}
-      className="pt-4 bg-inherit flex justify-center mt-12 w-full  p-4 m-0 h-[calc(100vh-48px)] overflow-y-scroll"
+      className="pt-4 bg-inherit flex justify-center mt-12 w-full  p-4 m-0 h-[calc(100vh-48px)] overflow-y-scroll bg-white"
     >
       <div className="prose" dangerouslySetInnerHTML={{ __html: html }}></div>
     </div>
