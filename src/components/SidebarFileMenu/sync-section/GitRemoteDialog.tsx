@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -14,14 +14,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { GitBranch, Search } from "lucide-react";
+import { GitBranch, Loader, Search } from "lucide-react";
 
 import { AuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useDebounce } from "@/context/useDebounce";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { isGithubRemoteAuth, RemoteGithubAgentForRemoteAuth } from "@/Db/RemoteAuthAgent";
+import { useRepoSearch } from "@/Db/useGithubRepoSearch";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
@@ -219,6 +220,7 @@ function GitRemoteDialogInternal({
 
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
+  throw new Error("!!");
 
   return (
     <div className={className}>
@@ -269,7 +271,10 @@ function GitRemoteDialogInternal({
                 <FormLabel>
                   {urlMode === "manual" ? (
                     <>
-                      URL<span className="text-xs mono ml-2">(Select an authentication to search)</span>
+                      URL
+                      <span className={cn({ hidden: authId }, "text-xs mono ml-2")}>
+                        (Select an authentication to search)
+                      </span>
                     </>
                   ) : (
                     "Repo Name"
@@ -277,7 +282,7 @@ function GitRemoteDialogInternal({
                 </FormLabel>
                 {urlMode === "search" && (
                   <RepoSearchContainer
-                    withAuth={remoteAuth}
+                    remoteAuth={remoteAuth}
                     defaultValue={TryPathname(form.getValues("url"))
                       .replace(/^\//, "")
                       .replace(/\.git$/, "")}
@@ -318,6 +323,7 @@ function GitRemoteDialogInternal({
                 e.preventDefault();
                 setUrlMode(urlMode === "manual" ? "search" : "manual");
               }}
+              className={cn({ invisible: !authId })} // Hide button if no auth selected
             >
               <Search />
             </Button>
@@ -351,41 +357,47 @@ function GitRemoteDialogInternal({
   );
 }
 
+type GithubSearchReposResult = {
+  label: string;
+  value: string;
+  element: React.ReactNode;
+};
 function RepoSearchContainer({
-  withAuth,
+  remoteAuth,
   defaultValue,
   onClose,
   onSelect,
 }: {
-  withAuth: null | RemoteAuthDAO;
+  remoteAuth: null | RemoteAuthDAO;
   defaultValue: string;
   onClose: () => void;
-  onSelect: (repo: GithubRepo) => void;
+  onSelect: (repo: GithubSearchReposResult) => void;
 }) {
-  const [searchValue, setSearchValue] = useState(defaultValue);
-  const [repos, setRepos] = useState<GithubRepo[]>([]);
-  useEffect(() => {
-    if (withAuth && isGithubRemoteAuth(withAuth)) {
-      void RemoteGithubAgentForRemoteAuth(withAuth)
-        .searchRepos(searchValue)
-        .then((repos) => {
-          console.log(repos);
-          setRepos(
-            repos.map(({ full_name, html_url }) => ({
-              label: full_name,
-              value: html_url,
-            }))
-          );
-        });
-    }
-  }, [searchValue, withAuth]);
+  const [searchValue, updateSearch] = useState(defaultValue);
+  const debouncedSearchValue = useDebounce(searchValue, 500);
+  const agent = useMemo(() => remoteAuth?.toAgent() || null, [remoteAuth]);
+  const { isLoading, results } = useRepoSearch(agent, debouncedSearchValue);
+  const searchResults = useMemo(
+    () =>
+      results.map((repo) => ({
+        label: repo.obj.full_name,
+        value: repo.obj.html_url,
+        element: repo.highlight((m, i) => (
+          <b className="text-highlight-foreground" key={i}>
+            {m}
+          </b>
+        )),
+      })),
+    [results]
+  );
 
   return (
     <div className="w-full relative">
       <RepoDropDown
-        allRepos={repos}
+        isLoading={isLoading}
+        allRepos={searchResults}
         searchValue={searchValue}
-        onSearchChange={setSearchValue}
+        onSearchChange={updateSearch}
         onClose={onClose}
         onSelect={onSelect}
       />
@@ -393,28 +405,21 @@ function RepoSearchContainer({
   );
 }
 
-export type GithubRepo = { label: string; value: string };
-
 function RepoDropDown({
+  isLoading,
   searchValue,
   onSearchChange,
   onClose,
   onSelect,
   allRepos,
 }: {
+  isLoading: boolean;
   searchValue: string;
   onSearchChange: (value: string) => void;
   onClose: () => void;
-  onSelect: (repo: GithubRepo) => void;
-  allRepos: GithubRepo[];
+  onSelect: (repo: GithubSearchReposResult) => void;
+  allRepos: GithubSearchReposResult[];
 }) {
-  // Filter repos based on search
-  const filteredRepos = useMemo(() => {
-    // if (!searchValue.trim()) return allRepos.slice(0, 8); // Show first 8 when no search
-    // return allRepos.filter((repo) => repo.name.toLowerCase().includes(searchValue.trim().toLowerCase())).slice(0, 8); // Limit to 8 results
-    return allRepos.slice(0, 20);
-  }, [allRepos]);
-
   const {
     // activeIndex,
     resetActiveIndex,
@@ -426,8 +431,8 @@ function RepoDropDown({
     // isItemActive,
   } = useKeyboardNavigation({
     onEnter: (activeIndex) => {
-      if (activeIndex >= 0 && activeIndex < filteredRepos.length) {
-        onSelect(filteredRepos[activeIndex]!);
+      if (activeIndex >= 0 && activeIndex < allRepos.length) {
+        onSelect(allRepos[activeIndex]!);
       }
     },
     onEscape: onClose,
@@ -439,9 +444,9 @@ function RepoDropDown({
   // Reset active index when filtered repos change
   React.useEffect(() => {
     resetActiveIndex();
-  }, [filteredRepos, resetActiveIndex]);
+  }, [resetActiveIndex]);
 
-  const handleItemClick = (repo: GithubRepo) => {
+  const handleItemClick = (repo: GithubSearchReposResult) => {
     onSelect(repo);
   };
 
@@ -462,27 +467,40 @@ function RepoDropDown({
         placeholder="Search repositories..."
         className="w-full"
       />
-
-      {filteredRepos.length > 0 && (
+      {isLoading && (
         <ul
           {...getMenuProps()}
-          className="mt-1 text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg absolute top-10 z-10"
+          className="absolute z-20 text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg top-10"
         >
-          {filteredRepos.map((repo, index) => (
+          <li className="flex w-full flex-col rounded p-1">
+            <div className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2  px-2 py-5">
+              <Loader className="animate-spin h-4 w-4 text-muted-foreground mr-2" />
+              <span className="text-md font-mono shimmer-text">Loading...</span>
+            </div>
+          </li>
+        </ul>
+      )}
+
+      {!isLoading && allRepos.length > 0 && (
+        <ul
+          {...getMenuProps()}
+          className="text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg absolute top-10 z-10"
+        >
+          {allRepos.map((repo, index) => (
             <li key={repo.value} role="presentation" className="flex w-full flex-col rounded p-1">
               <button
                 {...getItemProps(index)}
                 onClick={() => handleItemClick(repo)}
                 className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _border-sidebar _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
               >
-                <div className="min-w-0 truncate text-md font-mono _text-sidebar-foreground/70">{repo.label}</div>
+                <div className="min-w-0 truncate text-md font-mono _text-sidebar-foreground/70">{repo.element}</div>
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      {filteredRepos.length === 0 && searchValue && (
+      {allRepos.length === 0 && searchValue && (
         <div className="absolute w-full top-10 z-10 bg-sidebar border border-t-0 rounded-b-lg shadow-lg">
           <div className="px-3 py-2 text-sm text-muted-foreground">No repositories found</div>
         </div>

@@ -568,9 +568,8 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
-  const { themeName: currentTheme } = useTheme();
   const navigate = useNavigate();
-  const { mode, setTheme, setMode, availableThemes } = useTheme();
+  const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useTheme();
 
   const cmdMap = useMemo(
     () =>
@@ -726,8 +725,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         //
         "Toggle Light/Dark Mode": [
           NewCmdExec(() => {
-            // toggleLightOrDarkClass();
-
+            setMode(mode === "light" ? "dark" : "light");
             toast({
               title: `Switched to ${mode === "light" ? "dark" : "light"} mode`,
               type: "success",
@@ -765,6 +763,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       previewURL,
       renameDirOrFile,
       repo,
+      setMode,
       setTheme,
       trashFile,
     ]

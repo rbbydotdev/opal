@@ -1,16 +1,15 @@
 import tailwindProse from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
+
 export default {
   darkMode: ["class"],
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Geist', 'system-ui', 'sans-serif'],
-        mono: ['Geist Mono', 'ui-monospace', 'monospace'],
+        sans: ["Geist", "system-ui", "sans-serif"],
+        mono: ["Geist Mono", "ui-monospace", "monospace"],
       },
       scrollbar: {
         thin: "thin",
@@ -107,25 +106,22 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 2s linear infinite",
       },
     },
   },
@@ -143,7 +139,7 @@ export default {
     },
 
     function ({ matchUtilities, theme }) {
-      const durations = theme("transitionDuration"); // or define your own presets
+      const durations = theme("transitionDuration");
       matchUtilities(
         {
           "animation-duration": (value) => ({
@@ -168,6 +164,22 @@ export default {
         },
       });
     },
+
+    // ✨ Single shimmer-text utility
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        ".shimmer-text": {
+          background:
+            "linear-gradient(90deg, var(--shimmer-from, var(--foreground)) 25%, var(--shimmer-via, var(--muted-foreground)) 50%, var(--shimmer-to, var(--muted-foreground)) 75%)",
+          backgroundSize: "200% 100%",
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          color: "transparent",
+          animation: "shimmer 4s linear infinite",
+        },
+      });
+    }),
+
     tailwindProse,
     require("tailwindcss-animate"),
   ],

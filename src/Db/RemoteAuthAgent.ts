@@ -15,28 +15,6 @@ export interface IRemoteAuthAgent {
   getApiToken(): string;
 }
 
-// interface Fetcher {
-//   nextPage(): Promise<any[]>;
-//   hasMore(): boolean;
-//   isStale(): boolean;
-// }
-// class SearchResults {
-//   created = Date.now();
-//   results: any[] = [];
-//   async searchResults(searchTerm: string): any[] {
-
-//   fuzzysort.go(deferredSearch, this.results, { limit: 50 })
-//   }
-//   async fetch(){
-
-//         fetcher().then((results) => {
-//       this.results = results;
-//     });
-//   }
-//   constructor(fetcher: ) {
-//   }
-// }
-
 export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
   private _octokit!: Octokit;
   get octokit() {
@@ -47,17 +25,58 @@ export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
       }))
     );
   }
+  async getRepos({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
+    const allRepos: Repo[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await this.octokit.request("GET /user/repos", {
+        page,
+        per_page: 100,
+        affiliation: "owner,collaborator",
+        request: { signal },
+      });
+
+      allRepos.push(
+        ...response.data.map((r) => ({
+          id: r.id,
+          name: r.name,
+          full_name: r.full_name,
+          description: r.description,
+          html_url: r.html_url,
+        }))
+      );
+
+      hasMore = response.data.length === 100;
+      page++;
+    }
+
+    return allRepos;
+  }
+
+  async hasUpdates(
+    etag: string | null,
+    { signal }: { signal?: AbortSignal } = {}
+  ): Promise<{ updated: boolean; newEtag: string | null }> {
+    try {
+      const response = await this.octokit.request("GET /user/repos", {
+        per_page: 1,
+        headers: { "If-None-Match": etag ?? undefined },
+        request: { signal },
+      });
+
+      return { updated: true, newEtag: response.headers.etag || null };
+    } catch (error: any) {
+      if (error.status === 304) {
+        return { updated: false, newEtag: etag };
+      }
+      throw error;
+    }
+  }
+
   abstract getUsername(): string;
   abstract getApiToken(): string;
-
-  async searchRepos(searchTerm?: string) {
-    const result = await this.octokit.request("GET /user/repos", {
-      per_page: 100,
-      affiliation: "owner,collaborator", // repos you own OR can push to
-      direction: "desc", // newest first
-    });
-    return result.data.items;
-  }
 }
 
 export class RemoteAuthBasicAuthAgent {
@@ -125,7 +144,7 @@ export function isGithubRemoteAuth(remoteAuth: RemoteAuthDAO): remoteAuth is Git
   );
 }
 
-export function RemoteAuthAgentForRemoteAuth(remoteAuth: RemoteAuthDAO): IRemoteAuthAgent {
+export function RemoteAuthAgentForRemoteAuth(remoteAuth: RemoteAuthDAO) {
   if (isGithubAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthGithubAPIAgent(remoteAuth);
   }
@@ -138,15 +157,18 @@ export function RemoteAuthAgentForRemoteAuth(remoteAuth: RemoteAuthDAO): IRemote
   throw new Error(`No RemoteAuthGitAgent for remoteAuth type: ${remoteAuth.type} source: ${remoteAuth.source}`);
 }
 
-export function RemoteGithubAgentForRemoteAuth(remoteAuth: RemoteAuthDAO): IRemoteAuthGithubAgent {
-  if (isGithubAPIRemoteAuthDAO(remoteAuth)) {
-    return new RemoteAuthGithubAPIAgent(remoteAuth);
-  }
-  if (isGithubOAuthRemoteAuthDAO(remoteAuth)) {
-    return new RemoteAuthGithubOAuthAgent(remoteAuth);
-  }
-  if (isGithubDeviceOAuthRemoteAuthDAO(remoteAuth)) {
-    return new RemoteAuthGithubDeviceOAuthAgent(remoteAuth);
-  }
-  throw new Error(`No RemoteAuthGitAgent for remoteAuth type: ${remoteAuth.type} source: ${remoteAuth.source}`);
+export interface Repo {
+  id: string | number;
+  name: string;
+  full_name: string;
+  description: string | null;
+  html_url: string;
+}
+export interface IGitProviderAgent {
+  getRepos(options?: { signal?: AbortSignal }): Promise<Repo[]>;
+
+  hasUpdates(
+    etag: string | null,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ updated: boolean; newEtag: string | null }>;
 }

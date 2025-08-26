@@ -1,6 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApplicationError } from "@/lib/errors";
+import { Ban, RotateCcw } from "lucide-react";
+
+export function ErrorMiniPlaque({ reset }: { reset: () => void }) {
+  return (
+    <div className="w-full h-full bg-destructive-foreground border border-destructive text-destructive rounded gap-4 flex items-center justify-center">
+      <Ban size={24} />
+      <Button variant="outline" onClick={reset}>
+        <RotateCcw />
+      </Button>
+    </div>
+  );
+}
 
 export function ErrorPlaque({
   error = new ApplicationError("Unknown"),
