@@ -145,6 +145,7 @@
     "sonner": "^2.0.6",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "thememirror": "^2.0.1",
     "tsx": "^4.20.3",
     "unified": "^11.0.5",
     "unist": "^0.0.1",

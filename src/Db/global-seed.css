@@ -1,0 +1,144 @@
+/* Import playful Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap");
+
+body {
+  font-family: "Comic Neue", cursive, sans-serif;
+  background: #fff8f0;
+  color: #333;
+  line-height: 1.7;
+  padding: 2rem;
+  max-width: 800px;
+  margin: auto;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Fredoka One", cursive, sans-serif;
+  font-weight: 700;
+  color: #ff4d6d;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  text-shadow: 2px 2px #ffd6e0;
+}
+
+h1 {
+  font-size: 2.5rem;
+  border-bottom: 4px dashed #ffb347;
+  padding-bottom: 0.3em;
+}
+
+h2 {
+  font-size: 2rem;
+  color: #ff914d;
+}
+
+h3 {
+  font-size: 1.6rem;
+  color: #ffb347;
+}
+
+/* Paragraphs */
+p {
+  margin: 1em 0;
+  font-size: 1.1rem;
+}
+
+/* Links */
+a {
+  color: #00b4d8;
+  font-weight: bold;
+  text-decoration: none;
+  border-bottom: 2px solid #90e0ef;
+  transition: all 0.2s ease-in-out;
+}
+
+a:hover {
+  color: #0077b6;
+  border-bottom-color: #0077b6;
+}
+
+/* Lists */
+ul,
+ol {
+  padding-left: 1.5em;
+  margin: 1em 0;
+}
+
+li {
+  margin: 0.5em 0;
+  position: relative;
+}
+
+ul li::before {
+  content: "✨";
+  position: absolute;
+  left: -1.5em;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 6px solid #ff4d6d;
+  background: #ffe6eb;
+  padding: 1em;
+  margin: 1.5em 0;
+  border-radius: 10px;
+  font-style: italic;
+  color: #444;
+}
+
+/* Code blocks */
+pre {
+  background: #222;
+  color: #f8f8f2;
+  padding: 1em;
+  border-radius: 10px;
+  overflow-x: auto;
+  font-family: "Fira Code", monospace;
+  font-size: 0.95rem;
+}
+
+code {
+  background: #ffe6eb;
+  color: #d6336c;
+  padding: 0.2em 0.4em;
+  border-radius: 5px;
+  font-family: "Fira Code", monospace;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th,
+td {
+  border: 2px solid #ffb347;
+  padding: 0.8em;
+  text-align: left;
+}
+
+th {
+  background: #ff914d;
+  color: white;
+  font-family: "Fredoka One", cursive, sans-serif;
+}
+
+tr:nth-child(even) {
+  background: #fff0e6;
+}
+
+/* Horizontal rule */
+hr {
+  border: none;
+  border-top: 4px dotted #ffb347;
+  margin: 2em 0;
+}
