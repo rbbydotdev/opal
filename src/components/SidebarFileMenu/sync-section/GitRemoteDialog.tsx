@@ -77,11 +77,11 @@ export function useGitRemoteDialogMode(
   return useState<GitRemoteDialogModeType>(defaultMode);
 }
 type GitRemoteDialogCmdRefType = {
-  open: (mode: GitRemoteDialogModeType, previous?: GitRemote) => Promise<GitRemote | null>;
+  open: (mode: GitRemoteDialogModeType, previous?: GitRemote) => void;
 };
 export function useGitRemoteDialogCmd() {
   return React.useRef<GitRemoteDialogCmdRefType>({
-    open: async () => null,
+    open: () => {},
   });
 }
 const TryPathname = (url: string) => {
