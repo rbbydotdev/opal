@@ -1,6 +1,6 @@
 import { Disk, NullDisk } from "@/Db/Disk";
 import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
-import { GitRepo, MergeConflict } from "@/features/git-repo/GitRepo";
+import { GitRemote, GitRepo, MergeConflict } from "@/features/git-repo/GitRepo";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
 import { Remote } from "comlink";
@@ -153,6 +153,11 @@ export class GitPlaybook {
     }
     return false;
   };
+
+  async addRemoteAndPull(remote: GitRemote) {
+    // addGitRemote = async (remote: GitRemote): Promise<void> => {
+    await this.repo.addGitRemote(remote);
+  }
 
   async push({ remote, ref }: { remote: string; ref: string }) {
     if (await this.repo.hasChanges()) {

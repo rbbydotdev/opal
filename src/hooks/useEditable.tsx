@@ -20,7 +20,6 @@ export function useEditable<T extends TreeFile | TreeDir>({
   href?: string;
   expand: (node: TreeNode, value: boolean) => void;
 }) {
-  // const { fileTreeDir } = useWorkspaceContext();
   const fullPath = treeNode.path;
   const linkRef = useRef<HTMLAnchorElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);

@@ -4,7 +4,7 @@ import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/Sideba
 import { Button } from "@/components/ui/button";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { FilterInSpecialDirs, SpecialDirs } from "@/Db/SpecialDirs";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
@@ -35,9 +35,10 @@ const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; h
   return (
     <div
       className={cn(
-        "cursor-pointer mb-[5px] transition-all group/banner w-[calc(100%-2rem)] h-4 z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
+        "cursor-pointer transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
         { "border h-8 bg-sidebar scale-110 mt-1": dragEnter },
-        { "mb-[5px]": hasDepth }
+        { "mb-[10px] visible h-4": hasDepth },
+        { "invisible h-2": !hasDepth }
       )}
       onDrop={(e) => handleDrop(e, RootNode)}
       onDragEnter={() => setDragEnter(true)}
@@ -60,10 +61,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
 
   useFileTreeClipboardEventListeners({ currentWorkspace });
 
-  const hasDepth = useMemo(
-    () => Boolean(Object.values(fileTreeDir.children).filter(FilterInSpecialDirs).length > 0),
-    [fileTreeDir.children]
-  );
+  const hasDepth = useMemo(() => fileTreeDir.hasDepth(), [fileTreeDir]);
   return (
     <SidebarFileMenuFiles
       data-main-sidebar

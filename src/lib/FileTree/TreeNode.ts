@@ -439,6 +439,9 @@ export class TreeDirRoot extends TreeDir {
       parent: null,
     });
   }
+  hasDepth() {
+    return Object.values(this.children).filter((n) => n.isTreeDir()).length > 0;
+  }
   trash() {
     return new TreeDirRoot({
       ...this,
