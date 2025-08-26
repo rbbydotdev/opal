@@ -87,6 +87,7 @@ export type GitRefCommit = {
 };
 export const RepoDefaultInfo = {
   currentBranch: null as null | string,
+  bareInitialized: false,
   initialized: false,
   branches: [] as string[],
   remotes: [] as GitRemote[],
@@ -179,8 +180,10 @@ export class GitRepo {
 
   state: {
     initialized: boolean;
+    bareInitialized: boolean;
   } = {
     initialized: false,
+    bareInitialized: false,
   };
 
   onTearDown = (fn: () => void) => {
@@ -411,7 +414,6 @@ export class GitRepo {
     return null;
   };
   setMergeState = async (mergeHead: string | null) => {
-    // if (!(await this.exists())) return;
     if (mergeHead !== null) {
       await this.fs.writeFile(joinPath(this.gitDir, "MERGE_HEAD"), mergeHead);
     } else {
@@ -421,7 +423,7 @@ export class GitRepo {
     }
   };
   getMergeState = async () => {
-    if (!(await this.exists())) return null;
+    if (!(await this.initialized())) return null;
     const mergeHead = await this.fs.readFile(joinPath(this.gitDir, "MERGE_HEAD")).catch(() => null);
     if (mergeHead) {
       return String(mergeHead).trim();
@@ -429,7 +431,7 @@ export class GitRepo {
     return null;
   };
   tryInfo = async (): Promise<RepoInfoType> => {
-    if (!(await this.exists())) {
+    if (!(await this.initialized())) {
       return RepoDefaultInfo;
     }
 
@@ -443,6 +445,7 @@ export class GitRepo {
     const isMerging = await this.isMerging();
     return {
       initialized: this.state.initialized,
+      bareInitialized: this.state.bareInitialized,
       currentBranch,
       branches: await this.getBranches(),
       remotes: await this.getRemotes(),
@@ -450,7 +453,7 @@ export class GitRepo {
       hasChanges: await this.hasChanges(),
       commitHistory: await this.getCommitHistory({ depth: 20 }),
       context: isWebWorker() ? "worker" : "main",
-      exists: await this.exists(),
+      exists: await this.initialized(),
       isMerging,
       currentRef,
       unmergedFiles: isMerging ? await this.getUnmergedFiles() : [],
@@ -491,14 +494,12 @@ export class GitRepo {
   };
 
   async setAuthor({ name, email }: { name: string; email: string }) {
-    // await this.mustBeInitialized();
     this.author = { name, email };
     await this.setConfig("user.name", name);
     await this.setConfig("user.email", email);
   }
 
   getBranches = async (): Promise<string[]> => {
-    // if (!(await this.exists())) return [];
     return await this.git.listBranches({
       fs: this.fs,
       dir: this.dir,
@@ -524,7 +525,7 @@ export class GitRepo {
   };
 
   getRemotes = async (): Promise<GitRemote[]> => {
-    if (!(await this.exists())) return [];
+    if (!(await this.initialized())) return [];
     const remotes = await this.git.listRemotes({
       fs: this.fs,
       dir: this.dir,
@@ -544,7 +545,7 @@ export class GitRepo {
   };
 
   getLatestCommit = async (): Promise<RepoLatestCommit> => {
-    if (!(await this.exists())) return RepoLatestCommitNull;
+    if (!(await this.initialized())) return RepoLatestCommitNull;
     const commitOid = await this.git.resolveRef({
       fs: this.fs,
       dir: this.dir,
@@ -564,7 +565,7 @@ export class GitRepo {
   };
 
   getCommitHistory = async (options?: { depth?: number; ref?: string; filepath?: string }): Promise<RepoCommit[]> => {
-    if (!(await this.exists())) return [];
+    if (!(await this.initialized())) return [];
 
     try {
       const commits = await this.git.log({
@@ -640,7 +641,7 @@ export class GitRepo {
 
   mustBeInitialized = async (): Promise<boolean> => {
     if (this.state.initialized) return true;
-    if (!(await this.exists())) {
+    if (!(await this.initialized())) {
       await git.init({
         fs: this.fs,
         dir: this.dir,
@@ -648,6 +649,7 @@ export class GitRepo {
       });
       await this.sync();
     }
+    this.state.bareInitialized = true;
     return (this.state.initialized = true);
   };
 
@@ -681,7 +683,6 @@ export class GitRepo {
   };
 
   add = async (filepath: string | string[]): Promise<void> => {
-    // await this.mustBeInitialized();
     return this.git.add({
       fs: this.fs,
       dir: this.dir,
@@ -690,7 +691,6 @@ export class GitRepo {
   };
 
   remove = async (filepath: string | string[]): Promise<void> => {
-    // await this.mustBeInitialized();
     await this.mutex.runExclusive(() =>
       Promise.all(
         (Array.isArray(filepath) ? filepath : [filepath]).map((fp) =>
@@ -736,7 +736,6 @@ export class GitRepo {
     symbolicRef?: string;
     checkout?: boolean;
   }): Promise<string | void> => {
-    // await this.mustBeInitialized();
     symbolicRef = symbolicRef || this.defaultMainBranch;
     checkout = checkout ?? false;
 
@@ -761,7 +760,6 @@ export class GitRepo {
   };
 
   deleteGitBranch = async (branchName: string): Promise<void> => {
-    // await this.mustBeInitialized();
     const currentBranch = await this.getCurrentBranch();
 
     return this.mutex.runExclusive(async () => {
@@ -786,7 +784,6 @@ export class GitRepo {
   };
 
   setConfig = async (path: string, value: string): Promise<void> => {
-    // await this.mustBeInitialized();
     await this.git.setConfig({
       fs: this.fs,
       dir: this.dir,
@@ -795,7 +792,6 @@ export class GitRepo {
     });
   };
   getConfig = async (path: string): Promise<string | null> => {
-    // await this.mustBeInitialized();
     return this.git.getConfig({
       fs: this.fs,
       dir: this.dir,
@@ -817,36 +813,7 @@ export class GitRepo {
     return this.getConfig(`remote.${remoteName}.authId`);
   };
 
-  // private getRemoteAuthCallback = async (remoteName: string): Promise<AuthCallback | undefined> => {
-  //   const authId = await this.getAuthId(remoteName);
-  //   if (!authId) return undefined;
-
-  //   try {
-  //     const authRecord = await ClientDb.remoteAuths.get({ guid: authId });
-  //     if (!authRecord) return undefined;
-
-  //     if (isApiAuth(authRecord)) {
-  //       const { apiKey, apiSecret } = authRecord.data;
-  //       return () => ({
-  //         username: apiKey,
-  //         password: apiSecret || apiKey, //TODO i think wrong!!
-  //       });
-  //     } else if (isOAuthAuth(authRecord)) {
-  //       const { accessToken } = authRecord.data;
-  //       return () => ({
-  //         username: accessToken,
-  //         password: "", // OAuth typically only needs the token as username
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.warn(`Failed to load auth for remote ${remoteName}:`, error);
-  //   }
-
-  //   return undefined;
-  // };
-
   addGitRemote = async (remote: GitRemote): Promise<void> => {
-    // await this.mustBeInitialized();
     const remotes = await this.git.listRemotes({ fs: this.fs, dir: this.dir });
     const uniqSlug = getUniqueSlug(
       remote.name,
@@ -862,13 +829,11 @@ export class GitRepo {
     if (remote.authId) await this.setAuthId(uniqSlug, remote.authId);
   };
   replaceGitRemote = async (previous: GitRemote, remote: GitRemote): Promise<void> => {
-    // await this.mustBeInitialized();
     await this.deleteGitRemote(previous.name);
     await this.addGitRemote(remote);
   };
 
   deleteGitRemote = async (remoteName: string): Promise<void> => {
-    // await this.mustBeInitialized();
     await this.git.deleteRemote({
       fs: this.fs,
       dir: this.dir,
@@ -876,21 +841,30 @@ export class GitRepo {
     });
   };
 
-  exists = async (): Promise<boolean> => {
+  bareInitialized = async (): Promise<boolean> => {
+    console.log("Checking bareInitialized, current state:", this.state.bareInitialized);
+    try {
+      if (this.state.bareInitialized) return true;
+      await this.fs.stat(joinPath(this.dir, ".git"));
+      return (this.state.bareInitialized = true);
+    } catch (_e) {
+      return (this.state.bareInitialized = false);
+    }
+  };
+  initialized = async (): Promise<boolean> => {
     try {
       if (this.state.initialized) return true;
       await this.fs.stat(joinPath(this.dir, ".git"));
       await git.resolveRef({ fs: this.fs, dir: this.dir, ref: "HEAD" });
+      this.state.bareInitialized = true;
       return (this.state.initialized = true);
     } catch (_e) {
-      // console.log(_e);
-
+      this.state.bareInitialized = false;
       return (this.state.initialized = false);
     }
   };
 
   currentRef = async (): Promise<string> => {
-    // await this.mustBeInitialized();
     return git.resolveRef({
       fs: this.fs,
       dir: this.dir,
@@ -899,7 +873,6 @@ export class GitRepo {
   };
 
   currentBranch = async ({ fullname = false }: { fullname: boolean }): Promise<string | void> => {
-    // await this.mustBeInitialized();
     return this.git.currentBranch({
       fs: this.fs,
       dir: this.dir,
@@ -908,7 +881,6 @@ export class GitRepo {
   };
 
   writeRef = async ({ ref, value, force = false }: { ref: string; value: string; force: boolean }): Promise<void> => {
-    // await this.mustBeInitialized();
     return this.git.writeRef({
       fs: this.fs,
       dir: this.dir,

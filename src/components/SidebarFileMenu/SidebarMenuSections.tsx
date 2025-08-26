@@ -1,3 +1,5 @@
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
 import { SidebarFileMenuExport } from "@/components/SidebarFileMenu/export-section/SidebarFileMenuExport";
 import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/main-files-section/MainSidebarFileMenuFileSection";
 import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-section/SidebarFileMenuPublish";
@@ -34,7 +36,11 @@ import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "../ui/sideb
 import { SidebarDndList } from "../ui/SidebarDndList";
 
 function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
-  return <Slot {...rest}>{children}</Slot>;
+  return (
+    <ErrorBoundary fallback={ErrorMiniPlaque}>
+      <Slot {...rest}>{children}</Slot>
+    </ErrorBoundary>
+  );
 }
 const dndSections = ["publish", "git", "export", "trash", "files", "treeview", "upload", "connections"];
 type DndSectionType = "publish" | "git" | "export" | "trash" | "files" | "treeview" | "upload" | "connections";

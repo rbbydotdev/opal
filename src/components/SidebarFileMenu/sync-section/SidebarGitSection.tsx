@@ -6,6 +6,7 @@ import {
   Loader,
   PlusIcon,
   RefreshCw,
+  SquareArrowOutUpRightIcon,
   Upload,
 } from "lucide-react";
 import React, { useState } from "react";
@@ -74,17 +75,27 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
   );
 }
 
-type CommitState = "init" | "commit" | "merge-commit" | "commit-disabled" | "enter-message" | "pending" | "detatched";
+type CommitState =
+  | "init"
+  | "bare-init"
+  | "commit"
+  | "merge-commit"
+  | "commit-disabled"
+  | "enter-message"
+  | "pending"
+  | "detatched";
 
 function CommitSection({
   exists,
   hasChanges,
   commit,
   initialCommit,
+  initialRepo,
   isMerging,
   commitRef,
   mergeCommit,
   currentGitRef,
+  bareInitialized,
 }: {
   exists: boolean;
   hasChanges: boolean;
@@ -92,16 +103,20 @@ function CommitSection({
   commit: (message: string) => void;
   mergeCommit: () => void;
   initialCommit: () => void;
+  initialRepo: () => void;
   currentGitRef: GitRef | null;
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
+  bareInitialized: boolean;
 }) {
   const [commitMessage, setCommitMessage] = useState("");
   const [showMessageInput, setShowMessageInput] = useState(false);
   const [pending, setPending] = useState(false);
 
   const commitState = ((): CommitState => {
+    // if (
+    if (bareInitialized) return "bare-init";
     if (pending) return "pending";
     if (isMerging) return "merge-commit";
     if (showMessageInput) return "enter-message";
@@ -134,14 +149,15 @@ function CommitSection({
 
   const handleButtonClick = () => {
     if (commitState === "merge-commit") return handleMergeCommit();
-    if (commitState === "init") return handleInitialCommit();
+    if (commitState === "init" || commitState == "bare-init") return handleInitialCommit();
     if (commitState === "commit") return setShowMessageInput(true);
+  };
+  const handleRemoteInit = () => {
+    initialRepo();
   };
 
   const handleMessageSubmit = async (message: string) => {
-    if (message.trim()) {
-      return handleCommit(message);
-    }
+    if (message.trim()) return handleCommit(message);
   };
 
   const handleMessageCancel = () => {
@@ -175,61 +191,84 @@ function CommitSection({
   return (
     <>
       <Button
-        className="w-full disabled:cursor-pointer"
+        className="w-full disabled:cursor-pointer h-8"
         onClick={handleButtonClick}
         size="sm"
         variant="outline"
         disabled={commitState === "pending" || commitState === "commit-disabled" || commitState === "detatched"}
       >
-        <GitActionButton commitState={commitState} exists={exists} />
+        <GitActionButtonLabel commitState={commitState} exists={exists} />
       </Button>
+      {commitState === "init" && (
+        <Button className="w-full disabled:cursor-pointer h-8" onClick={handleRemoteInit} size="sm" variant="outline">
+          <SquareArrowOutUpRightIcon className="mr-1" />
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">
+            Initialize Git Repo From Remote
+          </span>
+        </Button>
+      )}
+      {commitState === "bare-init" && (
+        <Button className="w-full disabled:cursor-pointer h-8" onClick={handleRemoteInit} size="sm" variant="outline">
+          <SquareArrowOutUpRightIcon className="mr-1" />
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Add Remote</span>
+        </Button>
+      )}
       <TooltipToast cmdRef={commitRef} message="Operation completed" durationMs={1000} sideOffset={10} />
     </>
   );
 }
 
-const GitActionButton = ({ commitState, exists }: { commitState?: CommitState; exists: boolean }) => {
+const GitActionButtonLabel = ({ commitState, exists }: { commitState?: CommitState; exists: boolean }) => {
   switch (commitState) {
     case "merge-commit":
       return (
         <>
           <GitMerge className="mr-1" />
-          Merge Commit
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Merge Commit</span>
         </>
       );
     case "pending":
       return (
         <>
           <Loader className="mr-1 animate-spin" />
-          {exists ? "Committing..." : "Initializing..."}
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">
+            {exists ? "Committing..." : "Initializing..."}
+          </span>
+        </>
+      );
+    case "bare-init":
+      return (
+        <>
+          <PlusIcon className="mr-1" />
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Initial Commit</span>
         </>
       );
     case "init":
       return (
         <>
           <PlusIcon className="mr-1" />
-          Initialize Git Repo
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Initialize Git Repo</span>
         </>
       );
     case "commit":
       return (
         <>
           <GitMerge className="mr-1" />
-          Commit
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Commit</span>
         </>
       );
     case "commit-disabled":
       return (
         <>
           <GitMerge className="mr-1" />
-          No Changes to Commit
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">No Changes to Commit</span>
         </>
       );
     case "detatched":
       return (
         <>
           <GitPullRequestDraftIcon className="mr-1" />
-          Detatched
+          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Detatched</span>
         </>
       );
     default:
@@ -298,11 +337,13 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               {exists && <LatestInfo info={info} />}
               <CommitSection
                 exists={exists}
+                bareInitialized={repo.state.bareInitialized}
                 hasChanges={info.hasChanges}
                 commit={(message) => playbook.addAllCommit({ message })}
                 mergeCommit={() => playbook.mergeCommit()}
                 isMerging={info.isMerging}
                 initialCommit={() => playbook.initialCommit()}
+                initialRepo={() => repo.mustBeInitialized()}
                 commitRef={commitRef}
                 currentGitRef={info.currentRef}
               />

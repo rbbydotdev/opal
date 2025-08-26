@@ -5,7 +5,10 @@ import { RotateCcw } from "lucide-react";
 
 export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {
   return (
-    <div className="w-full h-full bg-destructive border border-destructive text-destructive rounded gap-4 flex items-center justify-center">
+    <div
+      onClick={reset}
+      className="cursor-pointer w-full h-full bg-destructive opacity-50 border border-destructive text-destructive rounded gap-4 flex items-center justify-center"
+    >
       <button
         className="top-2 right-2 text-destructive-foreground bg-destructive h-16 w-16 border-destructive-foreground block m-4 border rounded p-4 active:scale-90 transition-all"
         onClick={() => {
