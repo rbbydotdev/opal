@@ -6,6 +6,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -32,6 +35,7 @@ import {
   CirclePlus,
   Delete,
   Moon,
+  Palette,
   RefreshCcw,
   SearchIcon,
   Settings,
@@ -149,12 +153,20 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
           <span className="pr-4"> Spinner</span>
         </ContextMenuItem>
         <ContextMenuSeparator />
-        {FAVORITE_THEMES.map((themeName) => (
-          <ContextMenuItem className="gap-2" key={themeName} onClick={() => setTheme(themeName)}>
-            {value === themeName ? <Check size={12} /> : <div className="w-4"></div>}
-            <ThemePreview themeName={themeName} />
-          </ContextMenuItem>
-        ))}
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="pl-8 gap-2">
+            <Palette size={12} />
+            Themes
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent>
+            {FAVORITE_THEMES.map((themeName) => (
+              <ContextMenuItem className="gap-2" key={themeName} onClick={() => setTheme(themeName)}>
+                {value === themeName ? <Check size={12} /> : <div className="w-4"></div>}
+                <ThemePreview themeName={themeName} />
+              </ContextMenuItem>
+            ))}
+          </ContextMenuSubContent>
+        </ContextMenuSub>
       </ContextMenuContent>
     </ContextMenu>
   );
