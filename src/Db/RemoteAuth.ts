@@ -1,4 +1,5 @@
 import { ClientDb } from "@/Db/instance";
+import { RemoteAuthAgentForRemoteAuth } from "@/Db/RemoteAuthAgent";
 // import { RemoteAuthJTypePrivate } from "@/Db/RemoteAuth";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -111,6 +112,11 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
 
   static deleteByGuid(guid: string) {
     return ClientDb.remoteAuths.delete(guid);
+  }
+  toAgent() {
+    //for other providers we will be returning a different agent,
+    //but the interface will be the same, getRepos etc
+    return RemoteAuthAgentForRemoteAuth(this);
   }
 
   save() {

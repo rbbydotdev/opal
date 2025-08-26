@@ -16,7 +16,7 @@ import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
 import { ChevronDown, History } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export const allMarkdown$ = Cell("", (realm) => {
@@ -132,7 +132,7 @@ export function EditHistoryMenu({
                 </div>
               )}
               {edits.map((EDIT, index) => (
-                <div key={EDIT.edit_id}>
+                <Fragment key={EDIT.edit_id}>
                   <DropdownMenuItem
                     ref={selectedEdit?.edit_id === EDIT.edit_id ? updateSelectedItemRef : null}
                     onSelect={() => setEdit(EDIT)}
@@ -160,7 +160,7 @@ export function EditHistoryMenu({
                     </div>
                   </DropdownMenuItem>
                   {index < edits.length - 1 && <Separator />}
-                </div>
+                </Fragment>
               ))}
             </div>
           </ScrollAreaViewportRef>

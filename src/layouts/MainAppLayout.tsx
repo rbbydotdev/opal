@@ -11,7 +11,6 @@ import { PromptProvider } from "@/components/Prompt";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { WorkspaceProvider } from "@/context/WorkspaceProvider";
-import { useTheme } from "@/hooks/useTheme";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { cn } from "@/lib/utils";
@@ -23,9 +22,6 @@ interface MainAppLayoutProps {
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();
-  // Initialize theme to ensure it loads globally
-
-  useTheme();
   return (
     <ThemeProvider>
       <div className="font-sans antialiased">
