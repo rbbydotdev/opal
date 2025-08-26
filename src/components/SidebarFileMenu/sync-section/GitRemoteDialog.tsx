@@ -322,7 +322,7 @@ function GitRemoteDialogInternal({
                 e.preventDefault();
                 setUrlMode(urlMode === "manual" ? "search" : "manual");
               }}
-              className={cn({ invisible: !authId || !remoteAuth?.hasRemoteApi() })} // Hide button if no auth selected
+              className={cn({ hidden: !authId || !remoteAuth?.hasRemoteApi() })} // Hide button if no auth selected
             >
               <Search />
             </Button>

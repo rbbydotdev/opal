@@ -186,7 +186,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
             <>
               <BigButton
                 variant={variant}
-                icon={<BombIcon stroke="current" className="w-full h-full" />}
+                icon={<BombIcon strokeWidth="1" stroke="current" className="w-full h-full" />}
                 title={"Destroy All"}
                 to="#"
                 onClick={() =>
@@ -211,14 +211,14 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
               />
               <BigButton
                 variant={variant}
-                icon={<Delete stroke="current" className="w-full h-full" />}
+                icon={<Delete strokeWidth="1" stroke="current" className="w-full h-full" />}
                 title={"Delete All"}
                 to="#"
                 onClick={() => Workspace.DeleteAll().then(() => navigate({ to: "/newWorkspace" }))}
               />
               <BigButton
                 variant={variant}
-                icon={<Delete stroke="current" className="w-full h-full" />}
+                icon={<Delete strokeWidth="1" stroke="current" className="w-full h-full" />}
                 title={"Unregister Services"}
                 to="#"
                 onClick={() => {
@@ -238,7 +238,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
           <WorkspaceSearchDialog>
             <BigButton
               variant={variant}
-              icon={<SearchIcon stroke="current" className="w-full h-full" />}
+              icon={<SearchIcon strokeWidth="1" stroke="current" className="w-full h-full" />}
               title="search"
               to="#"
             />
@@ -247,20 +247,20 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
           <BigButton
             variant={variant}
             className="hidden"
-            icon={<Zap stroke="current" className="w-full h-full" />}
+            icon={<Zap stroke="current" strokeWidth="1" className="w-full h-full" />}
             title="connections"
             to="/connections"
           />
           <BigButton
             variant={variant}
             className="hidden"
-            icon={<Settings stroke="current" className="w-full h-full" />}
+            icon={<Settings stroke="current" strokeWidth="1" className="w-full h-full" />}
             title="settings"
             to="/settings"
           />
           <BigButton
             variant={variant}
-            icon={<CirclePlus stroke="current" className="w-full h-full" />}
+            icon={<CirclePlus stroke="current" strokeWidth="1" className="w-full h-full" />}
             title="new workspace"
             href={"/newWorkspace"}
           />
