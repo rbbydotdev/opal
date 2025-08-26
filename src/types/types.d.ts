@@ -5,8 +5,8 @@ type DeepNonNullable<T extends object, K extends keyof T = never> = {
   [P in keyof T]: P extends K
     ? T[P]
     : NonNullable<T[P]> extends T
-    ? DeepNonNullable<NonNullable<T[P]>, K>
-    : NonNullable<T[P]>;
+      ? DeepNonNullable<NonNullable<T[P]>, K>
+      : NonNullable<T[P]>;
 };
 
 type GenYieldType<T extends (...args: any) => Generator<any, any, any>> = T extends (
@@ -55,3 +55,13 @@ type ClassPropertiesOnly<T> = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   [K in keyof T as T[K] extends Function ? never : K]: T[K];
 };
+
+declare module "*.md?raw" {
+  const content: string;
+  export default content;
+}
+
+declare module "*.css?raw" {
+  const content: string;
+  export default content;
+}

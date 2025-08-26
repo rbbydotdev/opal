@@ -1,4 +1,4 @@
-import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
+// import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
 import {
   CodeMirrorHighlightURLRange,
   getHighlightRangesFromURL,
@@ -23,7 +23,9 @@ import { yamlFrontmatter } from "@codemirror/lang-yaml";
 import { languages } from "@codemirror/language-data";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
+import { ayuLight, dracula } from "thememirror";
 // import { basicLight } from "cm6-theme-basic-light";
+import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { basicSetup } from "codemirror";
 import { ChevronLeftIcon, FileText } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
@@ -73,6 +75,7 @@ export const CodeMirrorEditor = ({
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const ext = useMemo(() => getLanguageExtension(mimeType), [mimeType]);
+  const { mode } = useThemeSettings();
 
   valueRef.current = value;
   // Mount editor once
@@ -88,7 +91,7 @@ export const CodeMirrorEditor = ({
 
     const extensions: Extension[] = [
       basicSetup,
-      customCodeMirrorTheme,
+      mode === "dark" ? dracula : ayuLight,
       autocompletion(),
       EditorView.lineWrapping,
       CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),
