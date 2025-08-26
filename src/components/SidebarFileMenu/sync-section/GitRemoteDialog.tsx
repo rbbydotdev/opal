@@ -302,7 +302,6 @@ function GitRemoteDialogInternal({
                           <Input
                             required
                             autoComplete="off"
-                            autoFocus
                             placeholder="https://github.com/user/repo.git"
                             className="truncate"
                             {...field}

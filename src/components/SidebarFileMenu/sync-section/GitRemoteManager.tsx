@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitRemote, GitRepo, RepoLatestCommit } from "@/features/git-repo/GitRepo";
+import { GitRemote, GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";
 import { Ellipsis, Pencil, Plus, SatelliteDishIcon, Trash2 } from "lucide-react";
@@ -27,16 +27,17 @@ export function GitRemoteManager({
 }) {
   const defaultRemote = remotes.find((r) => r.name === "origin") || remotes[0];
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  const [selectValue, setSelectValue] = useState<string>(defaultRemote?.name ?? "");
+  const [selectValue, setSelectValue] = useState<string | null>(defaultRemote?.name ?? null);
   const [selectOpen, setSelectOpen] = useState(false);
   const cmdRef = useGitRemoteDialogCmd();
+  const finalSelectValue = selectValue || defaultRemote?.name || remotes[0]?.name || null;
 
   return selectMode === "delete" ? (
     <RemoteDelete
       remotes={remotes}
       cancel={() => setSelectMode("select")}
       onSelect={(name: string) => {
-        if (name === selectValue) setSelectValue("");
+        if (name === finalSelectValue) setSelectValue("");
         deleteGitRemote(name);
       }}
     />
@@ -57,7 +58,7 @@ export function GitRemoteManager({
       <RemoteSelect
         onOpenButEmpty={() => setSelectOpen(true)}
         remotes={remotes}
-        value={selectValue}
+        value={finalSelectValue}
         onSelect={setSelectValue}
       >
         <GitAddDeleteEditDropDown open={selectOpen} setOpen={setSelectOpen}>
@@ -69,10 +70,12 @@ export function GitRemoteManager({
               <Trash2 /> Delete Remote
             </DropdownMenuItem>
           )}
-          {Boolean(selectValue) ? (
+          {Boolean(finalSelectValue) ? (
             <DropdownMenuItem
               onClick={() =>
-                cmdRef.current.open("edit", { ...((remotes.find((r) => r.name === selectValue) || {}) as GitRemote) })
+                cmdRef.current.open("edit", {
+                  ...((remotes.find((r) => r.name === finalSelectValue) || {}) as GitRemote),
+                })
               }
             >
               <Pencil />
@@ -172,7 +175,7 @@ function RemoteSelect({
   children?: React.ReactNode;
   remotes: GitRemote[];
   onSelect: (value: string) => void;
-  value: string;
+  value: string | null;
   onOpenButEmpty?: () => void; // Optional callback when opening select with no remotes
 }) {
   const [open, setOpen] = useState(false);
@@ -187,7 +190,7 @@ function RemoteSelect({
           }}
           key={value}
           onValueChange={(value) => onSelect(value)}
-          value={value}
+          value={value ?? undefined}
         >
           <SelectTrigger
             title="select remote"
@@ -224,7 +227,7 @@ export function RemoteManagerSection({
   remoteRef,
 }: {
   repo: GitRepo | Comlink.Remote<GitRepo>;
-  info: { latestCommit: RepoLatestCommit; remotes: GitRemote[] };
+  info: RepoInfoType; //{ latestCommit: RepoLatestCommit; remotes: GitRemote[] };
   remoteRef: React.RefObject<{ show: (text?: string) => void }>;
 }) {
   return (

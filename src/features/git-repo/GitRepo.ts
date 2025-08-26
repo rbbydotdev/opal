@@ -240,6 +240,7 @@ export class GitRepo {
         "init:end",
       ],
       (propName) => {
+        console.debug("git repo event: " + propName);
         void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
         void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
         void this.sync();
@@ -536,7 +537,7 @@ export class GitRepo {
   };
 
   getRemotes = async (): Promise<GitRemote[]> => {
-    if (!(await this.fullInitialized())) return [];
+    if (!(await this.bareInitialized())) return [];
     const remotes = await this.git.listRemotes({
       fs: this.fs,
       dir: this.dir,
@@ -607,8 +608,6 @@ export class GitRepo {
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
-    console.log("currentRef", await this.currentRef());
-    console.log("merge from", from, "into", into);
     const result = await this.git
       .merge({
         fs: this.fs,
@@ -656,10 +655,10 @@ export class GitRepo {
         dir: this.dir,
         defaultBranch: this.defaultMainBranch,
       });
+      this.state.bareInitialized = true;
       await this.sync();
     }
-    this.state.bareInitialized = true;
-    return (this.state.fullInitialized = true);
+    return (this.state.bareInitialized = true);
   };
 
   commit = async ({
@@ -753,7 +752,6 @@ export class GitRepo {
       dir: this.dir,
     });
     const uniqueBranchName = getUniqueSlug(branchName, branches);
-    // console.log("Creating new branch:", uniqueBranchName, "from", symbolicRef);
     const isMerging = await this.isMerging();
     if (isMerging) {
       console.warn("Creating branch while merging, will not checkout.");

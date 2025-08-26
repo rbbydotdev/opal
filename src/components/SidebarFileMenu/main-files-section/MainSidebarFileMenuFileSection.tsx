@@ -4,7 +4,7 @@ import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/Sideba
 import { Button } from "@/components/ui/button";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { SpecialDirs } from "@/Db/SpecialDirs";
+import { FilterInSpecialDirs, SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
@@ -14,9 +14,9 @@ import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
+const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; hasDepth: boolean }) => {
   const [dragEnter, setDragEnter] = useState(false);
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
 
@@ -35,8 +35,9 @@ const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   return (
     <div
       className={cn(
-        "cursor-pointer transition-all group/banner w-[calc(100%-2rem)] h-4 z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
-        { "border h-8 bg-sidebar scale-110 mt-1": dragEnter }
+        "cursor-pointer mb-[5px] transition-all group/banner w-[calc(100%-2rem)] h-4 z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
+        { "border h-8 bg-sidebar scale-110 mt-1": dragEnter },
+        { "mb-[5px]": hasDepth }
       )}
       onDrop={(e) => handleDrop(e, RootNode)}
       onDragEnter={() => setDragEnter(true)}
@@ -59,13 +60,17 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
 
   useFileTreeClipboardEventListeners({ currentWorkspace });
 
+  const hasDepth = useMemo(
+    () => Boolean(Object.values(fileTreeDir.children).filter(FilterInSpecialDirs).length > 0),
+    [fileTreeDir.children]
+  );
   return (
     <SidebarFileMenuFiles
       data-main-sidebar
       FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
       title={"Files"}
       className={className}
-      contentBanner={!fileTreeDir.isEmpty() ? <Banner currentWorkspace={currentWorkspace} /> : null}
+      contentBanner={!fileTreeDir.isEmpty() ? <Banner hasDepth={hasDepth} currentWorkspace={currentWorkspace} /> : null}
       filter={SpecialDirs.All} // Exclude trash and git directories etc
     >
       <span className="block group-data-[state=closed]/collapsible:hidden">

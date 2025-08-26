@@ -14,6 +14,7 @@ export const ThemePreview = ({
   if (!palette) {
     return <span>{themeName}</span>;
   }
+  if (themeName === "andromeda") console.log({ palette });
 
   return (
     <div className="flex items-center gap-2">

@@ -7,20 +7,28 @@ export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {
   return (
     <div
       onClick={reset}
-      className="relative overflow-hidden cursor-pointer w-full h-full bg-destructive opacity-50 border border-destructive text-destructive rounded gap-4 flex items-center justify-center"
+      className="relative overflow-hidden cursor-pointer w-full h-full bg-destructive opacity-100 border border-destructive text-destructive rounded flex items-center justify-center"
     >
+      {/* Centered button */}
       <button
-        className="top-2 z-10 right-2 text-destructive-foreground bg-destructive h-16 w-16 border-destructive-foreground block m-4 border rounded p-4 active:scale-90 transition-all"
+        className="hover:scale-110 z-10 text-white bg-destructive h-16 w-16 border-white border rounded p-4 active:scale-90 transition-all"
         onClick={() => {
           reset?.();
         }}
       >
         <RotateCcw />
       </button>
-      <div className="absolute rotate-12 scale-150 inset-0 overflow-hidden opacity-45 text-xs">
-        <div className="text-white absolute">{"error ".repeat(500)}</div>
-      </div>
-      <div className="bg-destructive  whitespace-nowrap z-10 text-destructive-foreground mono font-xs"></div>
+
+      {/* Background pattern */}
+      <div
+        className="absolute rotate-12 scale-150 inset-0 overflow-hidden opacity-45 text-xs animate-drift"
+        style={{
+          backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='20'><text x='0' y='20' font-size='12' fill='white' font-family='monospace'>error</text></svg>")`,
+        }}
+      ></div>
+
+      {/* Optional overlay text (currently empty) */}
+      <div className="bg-destructive whitespace-nowrap z-10 text-destructive-foreground font-mono text-xs"></div>
     </div>
   );
 }

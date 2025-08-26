@@ -13,6 +13,7 @@ import React, { useState } from "react";
 
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { BranchManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
+import { GitRemoteDialog, useGitRemoteDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitRemoteDialog";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { GitRef } from "@/features/git-repo/GitRepo";
+import { GitRef, GitRepo } from "@/features/git-repo/GitRepo";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
@@ -97,6 +98,8 @@ function CommitSection({
   currentGitRef,
   bareInitialized,
   fullInitialized,
+  hasRemotes,
+  repo,
 }: {
   exists: boolean;
   hasChanges: boolean;
@@ -109,8 +112,10 @@ function CommitSection({
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
+  hasRemotes?: boolean;
   bareInitialized: boolean;
   fullInitialized: boolean;
+  repo: GitRepo;
 }) {
   const [commitMessage, setCommitMessage] = useState("");
   const [showMessageInput, setShowMessageInput] = useState(false);
@@ -126,7 +131,8 @@ function CommitSection({
     if (currentGitRef?.type === "commit") return "detatched";
     return "commit";
   })();
-  console.log(commitState);
+
+  const addRemoteCmdRef = useGitRemoteDialogCmd();
 
   const handleCommit = async (message: string) => {
     setPending(true);
@@ -156,6 +162,7 @@ function CommitSection({
   };
   const handleRemoteInit = () => {
     initialRepo();
+    addRemoteCmdRef.current.open("add");
   };
 
   const handleMessageSubmit = async (message: string) => {
@@ -192,6 +199,12 @@ function CommitSection({
 
   return (
     <>
+      <GitRemoteDialog
+        cmdRef={addRemoteCmdRef}
+        onSubmit={({ next }) => {
+          void repo.addGitRemote(next);
+        }}
+      />
       <Button
         className="w-full disabled:cursor-pointer h-8"
         onClick={handleButtonClick}
@@ -212,7 +225,7 @@ function CommitSection({
           <span className="flex-1 min-w-0 truncate">Initialize Git Repo From Remote</span>
         </Button>
       )}
-      {commitState === "bare-init" && (
+      {commitState === "bare-init" && !hasRemotes && (
         <Button className="w-full disabled:cursor-pointer h-8" onClick={handleRemoteInit} size="sm" variant="outline">
           <SquareArrowOutUpRightIcon className="mr-1" />
           <span className="flex-1 min-w-0 truncate flex justify-center items-center">Add Remote</span>
@@ -318,6 +331,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               <CommitSection
                 exists={exists}
                 bareInitialized={info.bareInitialized}
+                hasRemotes={info.remotes.length > 0}
                 hasChanges={info.hasChanges}
                 commit={(message) => playbook.addAllCommit({ message })}
                 mergeCommit={() => playbook.mergeCommit()}
@@ -327,9 +341,10 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 commitRef={commitRef}
                 currentGitRef={info.currentRef}
                 fullInitialized={info.fullInitialized}
+                repo={repo}
               />
             </div>
-            {exists && info.currentRef !== null && (
+            {info.fullInitialized && info.currentRef && (
               <>
                 <BranchManagerSection
                   info={info}
@@ -350,6 +365,9 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
                 <SyncPullPushButtons />
               </>
+            )}
+            {!info.fullInitialized && info.bareInitialized && (
+              <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
             )}
           </SidebarMenu>
         </CollapsibleContent>
