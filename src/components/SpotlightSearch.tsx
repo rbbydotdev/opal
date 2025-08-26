@@ -11,8 +11,7 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
-import { type ThemeRegistry, getThemePreviewPalette } from "@/theme/theme-lib";
-import themeRegistry from "@/theme/themes.json";
+import { ThemePreview } from "@/theme/ThemePreview";
 import { Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
@@ -517,47 +516,6 @@ export function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
 //
 // ---- Theme Preview Component ----
 //
-const ThemePreview = ({ themeName, currentTheme }: { themeName: string; currentTheme: string }) => {
-  const palette = getThemePreviewPalette(themeRegistry as unknown as ThemeRegistry, themeName);
-
-  if (!palette) {
-    return <span>{themeName}</span>;
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      {currentTheme === themeName && (
-        <span className="text-2xs px-1 py-0.5 font-mono bg-success text-success-foreground rounded">Current</span>
-      )}
-      {/* Light mode preview */}
-      <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: palette.lightBg }}>
-        {palette.light.map((color, index) => (
-          <div
-            key={`light-${index}`}
-            className="w-3 h-3 rounded-full flex-shrink-0"
-            style={{ backgroundColor: color }}
-            title={`Light mode color ${index + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Dark mode preview */}
-      <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: palette.darkBg }}>
-        {palette.dark.map((color, index) => (
-          <div
-            key={`dark-${index}`}
-            className="w-3 h-3 rounded-full flex-shrink-0"
-            style={{ backgroundColor: color }}
-            title={`Dark mode color ${index + 1}`}
-          />
-        ))}
-      </div>
-
-      <span>{themeName}</span>
-    </div>
-  );
-};
-
 //
 // ---- Hook ----
 //

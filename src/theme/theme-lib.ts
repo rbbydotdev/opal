@@ -6,6 +6,10 @@
 
 import { invertColor } from "@/lib/colorUtils";
 
+// Import registry.json and type it as ThemeRegistry
+import registryJson from "./registry.json";
+
+export const registry: ThemeRegistry = registryJson as unknown as ThemeRegistry;
 // Types - annotate your registry.json import with these
 export interface ThemeRegistry {
   items: ThemeRegistryItem[];
@@ -19,6 +23,62 @@ export interface ThemeRegistryItem {
     theme?: Record<string, string>;
   };
 }
+
+export const FAVORITE_THEMES = [
+  "default",
+  "modern-minimal",
+  "t3-chat",
+  "twitter",
+  "mocha-mousse",
+  "catppuccin",
+  "graphite",
+  "perpetuity",
+  "kodama-grove",
+  "claude",
+  "mono",
+  "vercel",
+];
+
+export const MAJOR_THEMES = [
+  "default",
+  "modern-minimal",
+  "t3-chat",
+  "twitter",
+  "mocha-mousse",
+  "bubblegum",
+  "doom-64",
+  "catppuccin",
+  "graphite",
+  "perpetuity",
+  "kodama-grove",
+  "cosmic-night",
+  "tangerine",
+  "quantum-rose",
+  "nature",
+  "bold-tech",
+  "elegant-luxury",
+  "amber-minimal",
+  "supabase",
+  "neo-brutalism",
+  "solar-dusk",
+  "claymorphism",
+  "cyberpunk",
+  "pastel-dreams",
+  "clean-slate",
+  "caffeine",
+  "ocean-breeze",
+  "retro-arcade",
+  "midnight-bloom",
+  "candyland",
+  "northern-lights",
+  "vintage-paper",
+  "sunset-horizon",
+  "starry-night",
+  "claude",
+  "vercel",
+  "mono",
+  "default-classic",
+];
 const ALL_VARS = new Set([
   "accent",
   "accent-foreground",
@@ -125,7 +185,12 @@ export function setLightOrDarkClass(mode: "light" | "dark", root: HTMLElement = 
   }
 }
 
-export function applyTheme(registry: ThemeRegistry, options: ApplyThemeOptions): void {
+// export function getMainThemes(): ThemeRegistryItem[] {
+//   const mainThemes = new Set("default");
+//   // return registry.items.filter((item) => mainThemes.has(item.name)).map
+// }
+
+export function applyTheme(options: ApplyThemeOptions): void {
   const { theme: themeName } = options;
 
   const defaultTheme = registry.items.find((item) => item.name === "default");
@@ -208,21 +273,13 @@ export function removeTheme(registry: ThemeRegistry, rootElement: HTMLElement = 
   });
 }
 
-/**
- * Get 8-color palette for theme preview with mode healing
- * Returns 4 colors for light mode and 4 colors for dark mode
- * @param registry - Your imported registry.json
- * @param themeName - Name of the theme
- * @returns Object with light and dark arrays of colors, or null if theme not found
- */
-export function getThemePreviewPalette(
-  registry: ThemeRegistry,
-  themeName: string
-): {
-  light: string[];
-  dark: string[];
-  lightBg: string;
-  darkBg: string;
+type ThemeColor = { key: string; value: string };
+
+export function getThemePreviewPalette(themeName: string): {
+  light: ThemeColor[];
+  dark: ThemeColor[];
+  lightBg: ThemeColor;
+  darkBg: ThemeColor;
 } | null {
   const themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
@@ -234,72 +291,135 @@ export function getThemePreviewPalette(
   const getColorWithHealing = (mode: "light" | "dark", key: string): string | null => {
     const oppositeMode = mode === "light" ? "dark" : "light";
 
-    // 1. Current mode
+    // 1. Mode specific
     let value = themeItem.cssVars[mode]?.[key];
 
-    // 2. Opposite mode (inverted)
+    // 2. Opposite mode (invert)
     if (!value && themeItem.cssVars[oppositeMode]?.[key]) {
       value = invertColor(themeItem.cssVars[oppositeMode][key]);
     }
 
-    // 3. Shared theme vars
+    // 3. Shared
     if (!value && themeItem.cssVars.theme?.[key]) {
       value = themeItem.cssVars.theme[key];
     }
 
     return value || null;
   };
-  const sidebarIndex = colorKeys.indexOf("sidebar");
 
-  const lightColors = colorKeys
-    .map((key) => getColorWithHealing("light", key!))
-    .map((color, _, a) => (!color ? a[sidebarIndex] : color)) as string[];
-  const darkColors = colorKeys
-    .map((key) => getColorWithHealing("dark", key!))
-    .map((color, _, a) => (!color ? a[sidebarIndex] : color)) as string[];
+  // Resolve sidebar first for fallback
+  const sidebarLight = getColorWithHealing("light", "sidebar") || "#000000";
+  const sidebarDark = getColorWithHealing("dark", "sidebar") || "#ffffff";
+
+  const light: ThemeColor[] = colorKeys.map((key) => ({
+    key,
+    value: getColorWithHealing("light", key) || sidebarLight,
+  }));
+
+  const dark: ThemeColor[] = colorKeys.map((key) => ({
+    key,
+    value: getColorWithHealing("dark", key) || sidebarDark,
+  }));
 
   return {
-    lightBg: lightColors[sidebarIndex] || "#000000",
-    darkBg: darkColors[sidebarIndex] || "#ffffff",
-    light: lightColors,
-    dark: darkColors,
+    light,
+    dark,
+    lightBg: { key: "sidebar", value: sidebarLight },
+    darkBg: { key: "sidebar", value: sidebarDark },
   };
 }
 
-export function previewTheme(registry: ThemeRegistry, options: ApplyThemeOptions): () => void {
-  const { rootElement = document.documentElement } = options;
-
-  // Save current state
-  const prevClassList = {
-    dark: rootElement.classList.contains("dark"),
-    light: rootElement.classList.contains("light"),
-  };
-
-  const prevVars: Record<string, string> = {};
-  ALL_VARS.forEach((key) => {
-    const value = rootElement.style.getPropertyValue(`--${key}`);
-    if (value) {
-      prevVars[key] = value;
-    }
-  });
-
-  // Apply new theme
-  applyTheme(registry, options);
-
-  // Return revert function
-  return () => {
-    // Restore classes
-    rootElement.classList.toggle("dark", prevClassList.dark);
-    rootElement.classList.toggle("light", prevClassList.light);
-
-    // Clear all theme vars
-    ALL_VARS.forEach((key) => {
-      rootElement.style.removeProperty(`--${key}`);
-    });
-
-    // Restore previous vars
-    Object.entries(prevVars).forEach(([key, value]) => {
-      rootElement.style.setProperty(`--${key}`, value);
-    });
+// Generic base theme type
+export interface GenericTheme<TCss = Record<string, any>> {
+  name: string;
+  type: string;
+  title: string;
+  description?: string;
+  css?: TCss;
+  cssVars: {
+    theme?: ThemeSharedVars;
+    light?: ThemeModeVars;
+    dark?: ThemeModeVars;
   };
 }
+
+// Vintage Paper theme using the generic (can still narrow name if desired)
+export type VintagePaperTheme<
+  TCss = {
+    "@layer base"?: {
+      body?: {
+        "letter-spacing"?: string;
+      };
+    };
+  },
+> = GenericTheme<TCss>;
+
+// Shared vars for a single color mode (light or dark)
+export type ThemeModeVars = {
+  background?: string;
+  foreground?: string;
+  card?: string;
+  "card-foreground"?: string;
+  popover?: string;
+  "popover-foreground"?: string;
+  primary?: string;
+  "primary-foreground"?: string;
+  secondary?: string;
+  "secondary-foreground"?: string;
+  muted?: string;
+  "muted-foreground"?: string;
+  accent?: string;
+  "accent-foreground"?: string;
+  destructive?: string;
+  "destructive-foreground"?: string;
+  border?: string;
+  input?: string;
+  ring?: string;
+  "chart-1"?: string;
+  "chart-2"?: string;
+  "chart-3"?: string;
+  "chart-4"?: string;
+  "chart-5"?: string;
+  radius?: string;
+  sidebar?: string;
+  "sidebar-foreground"?: string;
+  "sidebar-primary"?: string;
+  "sidebar-primary-foreground"?: string;
+  "sidebar-accent"?: string;
+  "sidebar-accent-foreground"?: string;
+  "sidebar-border"?: string;
+  "sidebar-ring"?: string;
+  "font-sans"?: string;
+  "font-serif"?: string;
+  "font-mono"?: string;
+  "shadow-color"?: string;
+  "shadow-opacity"?: string;
+  "shadow-blur"?: string;
+  "shadow-spread"?: string;
+  "shadow-offset-x"?: string;
+  "shadow-offset-y"?: string;
+  "letter-spacing"?: string;
+  spacing?: string;
+  "shadow-2xs"?: string;
+  "shadow-xs"?: string;
+  "shadow-sm"?: string;
+  shadow?: string;
+  "shadow-md"?: string;
+  "shadow-lg"?: string;
+  "shadow-xl"?: string;
+  "shadow-2xl"?: string;
+  "tracking-normal"?: string;
+};
+
+// Vars that are shared across modes (theme scope)
+export type ThemeSharedVars = {
+  "font-sans"?: string;
+  "font-mono"?: string;
+  "font-serif"?: string;
+  radius?: string;
+  "tracking-tighter"?: string;
+  "tracking-tight"?: string;
+  "tracking-wide"?: string;
+  "tracking-wider"?: string;
+  "tracking-widest"?: string;
+};
