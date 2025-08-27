@@ -13,7 +13,7 @@ import {
 import React, { useState } from "react";
 
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
-import { BranchManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
+import { RefsManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { GitRemoteDialog, useGitRemoteDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitRemoteDialog";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -238,19 +238,19 @@ const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) =>
 function SyncPullPushButtons() {
   return (
     <>
-      <div className="px-4">
+      <div>
         <Button className="w-full" size="sm" variant="outline">
           <RefreshCw className="mr-1" onClick={() => {}} />
           Sync Now
         </Button>
       </div>
-      <div className="px-4">
+      <div>
         <Button className="w-full" size="sm" variant="outline">
           <Download className="mr-1" />
           Pull
         </Button>
       </div>
-      <div className="px-4">
+      <div>
         <Button className="w-full" size="sm" variant="outline">
           <Upload className="mr-1" />
           Push
@@ -299,17 +299,22 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const addRemoteCmdRef = useGitRemoteDialogCmd();
   // const remoteSelectState = useRemoteSelectState(info.remotes);
 
-  const handleFetchRemote = async (remoteName?: string) => {
-    if (!remoteName) return;
-    const remote = await repo.getRemote(remoteName);
-    if (!remote) {
-      return tossError(new NotFoundError("Remote not found"));
+  const handleFetchRemote = async () => {
+    try {
+      const remoteName = selectRemote;
+      if (!remoteName) return;
+      const remote = await repo.getRemote(remoteName);
+      if (!remote) {
+        throw new NotFoundError("Remote not found");
+      }
+      const result = await repo.fetch({
+        url: remote.url,
+        corsProxy: remote.gitCorsProxy,
+      });
+      console.log("Fetch result:", result);
+    } catch (e) {
+      tossError(e as Error);
     }
-    const result = await repo.fetch({
-      url: remote.url,
-      corsProxy: remote.gitCorsProxy,
-    });
-    console.log("Fetch result:", result);
     // repo.info.
     // const currentRemote: GitRemote = {};
     // repo.fetch();
@@ -350,7 +355,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
           <SidebarMenu className="gap-2 pb-3">
             <div className="px-4 pt-2 gap-4 flex flex-col">
               {exists && <LatestInfo info={info} />}
-              {commitState === "bare-init" && !hasRemotes ? (
+              {commitState === "bare-init" && !hasRemotes && (
                 <Button
                   className="w-full disabled:cursor-pointer h-8"
                   onClick={handleRemoteInit}
@@ -358,19 +363,20 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   variant="outline"
                 >
                   <Import className="mr-1" />
-                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">Add Remote</span>
-                </Button>
-              ) : (
-                <Button
-                  className="w-full disabled:cursor-pointer h-8"
-                  onClick={handleFetchRemote}
-                  size="sm"
-                  variant="outline"
-                >
-                  <Import className="mr-1" />
-                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">Fetch Remote</span>
+                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">Add+Fetch Remote</span>
                 </Button>
               )}
+
+              <Button
+                className="w-full disabled:cursor-pointer h-8"
+                onClick={handleFetchRemote}
+                size="sm"
+                variant="outline"
+              >
+                <Import className="mr-1" />
+                <span className="flex-1 min-w-0 truncate flex justify-center items-center">Fetch Remote</span>
+              </Button>
+
               <CommitSection
                 commitState={commitState}
                 commit={(message) => playbook.addAllCommit({ message })}
@@ -381,47 +387,48 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 setShowMessageInput={setShowMessageInput}
                 setPending={setPending}
               />
-            </div>
-            {(info.fullInitialized || info.bareInitialized) && (
-              <BranchManagerSection
-                info={info}
-                repo={repo}
-                playbook={playbook}
-                currentGitRef={info.currentRef}
-                branches={info.branches}
-                branchRef={branchRef}
-              />
-            )}
-            {info.fullInitialized && info.currentRef && (
-              <>
-                <CommitManagerSection
-                  refType={info.currentRef.type}
+              {(info.fullInitialized || info.bareInitialized) && (
+                <RefsManagerSection
+                  remoteRefs={info.remoteRefs}
+                  info={info}
+                  repo={repo}
                   playbook={playbook}
-                  commits={info.commitHistory}
-                  currentCommit={info.latestCommit?.oid}
-                  commitRef={commitManagerRef}
+                  currentGitRef={info.currentRef}
+                  branches={info.branches}
+                  branchRef={branchRef}
                 />
-                <Separator className="my-2" />
+              )}
+              {info.fullInitialized && info.currentRef && (
+                <>
+                  <CommitManagerSection
+                    refType={info.currentRef.type}
+                    playbook={playbook}
+                    commits={info.commitHistory}
+                    currentCommit={info.latestCommit?.oid}
+                    commitRef={commitManagerRef}
+                  />
+                  <Separator className="my-2" />
+                  <RemoteManagerSection
+                    repo={repo}
+                    info={info}
+                    remoteRef={remoteRef}
+                    setSelectRemote={setSelectRemote}
+                    selectRemote={selectRemote}
+                  />
+                  <SyncPullPushButtons />
+                </>
+              )}
+              {!info.fullInitialized && info.bareInitialized && (
                 <RemoteManagerSection
+                  className="mt-2"
                   repo={repo}
                   info={info}
                   remoteRef={remoteRef}
                   setSelectRemote={setSelectRemote}
                   selectRemote={selectRemote}
                 />
-                <SyncPullPushButtons />
-              </>
-            )}
-            {!info.fullInitialized && info.bareInitialized && (
-              <RemoteManagerSection
-                className="mt-2"
-                repo={repo}
-                info={info}
-                remoteRef={remoteRef}
-                setSelectRemote={setSelectRemote}
-                selectRemote={selectRemote}
-              />
-            )}
+              )}
+            </div>
           </SidebarMenu>
         </CollapsibleContent>
       </Collapsible>

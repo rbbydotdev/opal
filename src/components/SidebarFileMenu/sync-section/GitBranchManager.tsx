@@ -36,7 +36,7 @@ const isLockedBranch = (branch: string) => {
 };
 
 export function GitBranchManager({
-  branches,
+  refs,
   addGitBranch,
   setCurrentBranch,
   mergeGitBranch,
@@ -44,7 +44,7 @@ export function GitBranchManager({
   deleteGitBranch,
   currentGitRef,
 }: {
-  branches: string[];
+  refs: string[];
   addGitBranch: (baseRef: GitRef, branch: GitBranchFormValue) => void;
   replaceGitBranch: (previous: GitBranchFormValue, next: GitBranchFormValue) => void;
   mergeGitBranch: ({ from, into }: { from: string; into: string }) => void;
@@ -61,7 +61,7 @@ export function GitBranchManager({
       <SelectHighlight
         placeholder="Select Branch to Merge"
         itemClassName="focus:bg-ring focus:text-primary-foreground"
-        items={branches.filter((b) => b !== currentGitRef?.value)}
+        items={refs.filter((b) => b !== currentGitRef?.value)}
         onCancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
           mergeGitBranch({ from: name, into: currentGitRef.value });
@@ -73,7 +73,7 @@ export function GitBranchManager({
       <SelectHighlight
         placeholder="Select Branch to Delete"
         itemClassName="focus:bg-destructive focus:text-primary-foreground"
-        items={branches.filter((b) => !isLockedBranch(b))}
+        items={refs.filter((b) => !isLockedBranch(b))}
         onCancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
           deleteGitBranch(name);
@@ -101,12 +101,10 @@ export function GitBranchManager({
     /* select branch */
     return (
       <BranchSelect
-        branches={branches}
+        branches={refs}
         currentGitRef={currentGitRef}
         value={
-          currentGitRef && isBranchRef(currentGitRef) && branches.includes(currentGitRef.value)
-            ? currentGitRef.value
-            : null
+          currentGitRef && isBranchRef(currentGitRef) && refs.includes(currentGitRef.value) ? currentGitRef.value : null
         }
         onSelect={(value: string) => {
           setCurrentBranch(value);
@@ -125,7 +123,7 @@ export function GitBranchManager({
           >
             <Plus /> Add Branch
           </DropdownMenuItem>
-          {branches.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
+          {refs.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
             <DropdownMenuItem
               onClick={() => {
                 setSelectMode("merge");
@@ -134,7 +132,7 @@ export function GitBranchManager({
               <GitMergeIcon /> Merge With …
             </DropdownMenuItem>
           )}
-          {branches.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
+          {refs.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
             <DropdownMenuItem onClick={() => setSelectMode("delete")}>
               <Trash2 /> Delete Branch
             </DropdownMenuItem>
@@ -242,14 +240,16 @@ function BranchSelect({
   );
 }
 
-export function BranchManagerSection({
+export function RefsManagerSection({
   repo,
   info,
+  remoteRefs,
   currentGitRef,
   playbook,
   branches,
   branchRef,
 }: {
+  remoteRefs?: string[];
   info: RepoInfoType;
   repo: GitRepo | Remote<GitRepo>;
   playbook: GitPlaybook;
@@ -293,13 +293,13 @@ export function BranchManagerSection({
     await playbook.switchBranch(branch);
   };
   return (
-    <div className="px-4 w-full flex justify-center ">
+    <div className="w-full flex justify-center ">
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
           currentGitRef={currentGitRef}
           setCurrentBranch={setCurrentBranch}
-          branches={branches}
+          refs={[...(remoteRefs ?? []), ...branches]}
           replaceGitBranch={renameGitBranch}
           addGitBranch={addGitBranch}
           mergeGitBranch={mergeGitBranch}

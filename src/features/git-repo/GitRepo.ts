@@ -3,6 +3,7 @@ import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { deepEqual } from "@/lib/deepEqual";
+import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
@@ -557,16 +558,20 @@ export class GitRepo {
     return branches.includes(ref) || tags.includes(ref);
   };
 
-  getRemote = async (name: string): Promise<(GitRemote & { RemoteAuth: RemoteAuthDAO | null }) | null> => {
+  getRemote = async (
+    name: string
+  ): Promise<(GitRemote & { RemoteAuth: RemoteAuthDAO | null; onAuth?: AuthCallback }) | null> => {
     const remotes = await this.getRemotes();
     const remote = remotes.find((r) => r.name === name);
-    if (remote) {
-      if (remote.authId) {
-        return { ...remote, RemoteAuth: await RemoteAuthDAO.GetByGuid(remote.authId) };
+    if (!remote) return null;
+    if (remote.authId) {
+      const RemoteAuth = await RemoteAuthDAO.GetByGuid(remote.authId);
+      if (!RemoteAuth) {
+        throw new NotFoundError("Remote auth not found");
       }
-      return { RemoteAuth: null, ...remote };
+      return { ...remote, RemoteAuth, onAuth: RemoteAuth?.toAgent()?.onAuth };
     }
-    return null;
+    return { ...remote, RemoteAuth: null };
   };
 
   getRemotes = async (): Promise<GitRemote[]> => {

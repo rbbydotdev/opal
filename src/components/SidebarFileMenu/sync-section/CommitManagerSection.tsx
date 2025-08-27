@@ -20,7 +20,7 @@ export function CommitManagerSection({
 
   return (
     <>
-      <div className="px-4 w-full flex justify-center ">
+      <div className="w-full flex justify-center ">
         <div className="flex flex-col items-center w-full">
           <TooltipToast cmdRef={commitRef} durationMs={1000} sideOffset={0} />
           <GitCommitManager

@@ -24,7 +24,7 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useDebounce } from "@/context/useDebounce";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { useRepoSearch } from "@/Db/useGithubRepoSearch";
+import { isFuzzyResult, useRepoSearch } from "@/Db/useGithubRepoSearch";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
@@ -410,19 +410,27 @@ function RepoSearchContainer({
   const debouncedSearchValue = useDebounce(searchValue, 500);
   const agent = useMemo(() => remoteAuth?.toAgent() || null, [remoteAuth]);
   const { isLoading, results, error } = useRepoSearch(agent, debouncedSearchValue);
-  const searchResults = useMemo(
-    () =>
-      results.map((repo) => ({
-        label: repo.obj.full_name,
-        value: repo.obj.html_url,
-        element: repo.highlight((m, i) => (
-          <b className="text-highlight-foreground" key={i}>
-            {m}
-          </b>
-        )),
-      })),
-    [results]
-  );
+  const searchResults = useMemo(() => {
+    return results.map((repo) => {
+      if (isFuzzyResult(repo)) {
+        return {
+          label: repo.obj.full_name,
+          value: repo.obj.html_url,
+          element: repo.highlight((m, i) => (
+            <b className="text-highlight-foreground" key={i}>
+              {m}
+            </b>
+          )),
+        };
+      } else {
+        return {
+          label: repo.full_name,
+          value: repo.html_url,
+          element: repo.full_name,
+        };
+      }
+    });
+  }, [results]);
 
   return (
     <div className="w-full relative">

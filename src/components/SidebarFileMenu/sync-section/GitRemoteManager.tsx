@@ -240,7 +240,7 @@ export function RemoteManagerSection({
   setSelectRemote: (remote: string) => void;
 }) {
   return (
-    <div className={cn("px-4 w-full flex justify-center flex-col items-center", className)}>
+    <div className={cn("w-full flex justify-center flex-col items-center", className)}>
       <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
       <GitRemoteManager
         remotes={info.remotes}

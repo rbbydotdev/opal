@@ -5,10 +5,13 @@ import { useEffect, useRef, useState } from "react";
 const EMPTY_SEARCH_RESULT: Fuzzysort.KeyResults<Repo> = Object.assign([], {
   total: 0,
 });
+export const isFuzzyResult = (result: unknown): result is Fuzzysort.KeyResult<Repo> => {
+  return (result as Fuzzysort.KeyResult<Repo>).highlight !== undefined;
+};
 
 export function useRepoSearch(agent: IGitProviderAgent | null, searchTerm: string) {
   const [isLoading, setIsLoading] = useState(true);
-  const [results, setResults] = useState<Fuzzysort.KeyResults<Repo>>(EMPTY_SEARCH_RESULT);
+  const [results, setResults] = useState<Fuzzysort.KeyResults<Repo> | Repo[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const cache = useRef<{
@@ -20,7 +23,7 @@ export function useRepoSearch(agent: IGitProviderAgent | null, searchTerm: strin
   const requestIdRef = useRef(0);
 
   useEffect(() => {
-    if (!searchTerm || !agent) {
+    if (!agent) {
       setResults(EMPTY_SEARCH_RESULT);
       setIsLoading(false);
       setError(null);
@@ -49,7 +52,10 @@ export function useRepoSearch(agent: IGitProviderAgent | null, searchTerm: strin
         }
 
         if (requestIdRef.current === currentRequestId) {
-          const searchResults = fuzzysort.go(searchTerm, cache.current.allRepos, { key: "full_name" });
+          const searchResults = !searchTerm
+            ? cache.current.allRepos
+            : fuzzysort.go(searchTerm, cache.current.allRepos, { key: "full_name" });
+          // searchResults.map(r=>r.
           setResults(searchResults);
           setIsLoading(false);
           setError(null);
@@ -72,7 +78,10 @@ export function useRepoSearch(agent: IGitProviderAgent | null, searchTerm: strin
 
     void performSearch();
 
-    return () => controller.abort();
+    return () => {
+      fuzzysort.cleanup();
+      controller.abort();
+    };
   }, [searchTerm, agent]);
 
   return { results, isLoading, error, clearError: () => setError(null) };
