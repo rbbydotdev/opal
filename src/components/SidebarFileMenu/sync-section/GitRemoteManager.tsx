@@ -29,18 +29,16 @@ export function GitRemoteManager({
   setSelectRemote: (remote: string) => void;
   selectRemote: string | null;
 }) {
-  const defaultRemote = remotes.find((r) => r.name === "origin") || remotes[0];
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [selectOpen, setSelectOpen] = useState(false);
   const cmdRef = useGitRemoteDialogCmd();
-  const finalSelectValue = selectRemote || defaultRemote?.name || remotes[0]?.name || null;
 
   return selectMode === "delete" ? (
     <RemoteDelete
       remotes={remotes}
       cancel={() => setSelectMode("select")}
       onSelect={(name: string) => {
-        if (name === finalSelectValue) setSelectRemote("");
+        if (name === selectRemote) setSelectRemote("");
         deleteGitRemote(name);
       }}
     />
@@ -61,7 +59,7 @@ export function GitRemoteManager({
       <RemoteSelect
         onOpenButEmpty={() => setSelectOpen(true)}
         remotes={remotes}
-        value={finalSelectValue}
+        value={selectRemote}
         onSelect={setSelectRemote}
       >
         <GitAddDeleteEditDropDown open={selectOpen} setOpen={setSelectOpen}>
@@ -73,11 +71,11 @@ export function GitRemoteManager({
               <Trash2 /> Delete Remote
             </DropdownMenuItem>
           )}
-          {Boolean(finalSelectValue) ? (
+          {Boolean(selectRemote) ? (
             <DropdownMenuItem
               onClick={() =>
                 cmdRef.current.open("edit", {
-                  ...((remotes.find((r) => r.name === finalSelectValue) || {}) as GitRemote),
+                  ...((remotes.find((r) => r.name === selectRemote) || {}) as GitRemote),
                 })
               }
             >

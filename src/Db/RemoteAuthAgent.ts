@@ -27,12 +27,12 @@ export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
     );
   }
 
-  onAuth() {
+  onAuth = () => {
     return {
       username: this.getUsername(),
       password: this.getApiToken(),
     };
-  }
+  };
   async getRepos({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
     const allRepos: Repo[] = [];
     let page = 1;
@@ -106,7 +106,7 @@ export class RemoteAuthBasicAuthAgent implements IRemoteAuthAgent {
 
 export class RemoteAuthGithubOAuthAgent extends IRemoteAuthGithubAgent {
   getUsername(): string {
-    return "";
+    return "x-access-token";
   }
   getApiToken(): string {
     return this.remoteAuth.data.accessToken;
@@ -119,7 +119,7 @@ export class RemoteAuthGithubOAuthAgent extends IRemoteAuthGithubAgent {
 
 export class RemoteAuthGithubAPIAgent extends IRemoteAuthGithubAgent {
   getUsername = () => {
-    return "";
+    return "x-access-token";
   };
   getApiToken = () => {
     return this.remoteAuth.data.apiKey;
@@ -130,7 +130,7 @@ export class RemoteAuthGithubAPIAgent extends IRemoteAuthGithubAgent {
 }
 export class RemoteAuthGithubDeviceOAuthAgent extends IRemoteAuthGithubAgent {
   getUsername(): string {
-    return "";
+    return "x-access-token";
   }
   getApiToken(): string {
     return this.remoteAuth.data.accessToken;

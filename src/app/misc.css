@@ -19,12 +19,12 @@
     @apply bg-background text-foreground;
   }
   ::selection {
-    @apply bg-ring text-white;
+    @apply bg-ring text-foreground;
   }
 }
 
 html {
-  font-size: 0.75rem; /* 14px */
+  font-size: 0.75rem;
 }
 
 .opalSvgDark {

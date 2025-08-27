@@ -38,6 +38,8 @@ export type RemoteAuthOAuthRecordInternal = z.infer<typeof RemoteAuthOAuthRecord
 
 export const RemoteAuthGithubDeviceOAuthRecordInternalSchema = z.object({
   accessToken: z.string(),
+  refreshToken: z.string().optional(),
+  expiresIn: z.number().optional(),
   login: z.string(),
   obtainedAt: z.number(),
   corsProxy: z.string().url().nullable().optional(),
