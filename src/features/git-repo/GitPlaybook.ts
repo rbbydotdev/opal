@@ -157,6 +157,7 @@ export class GitPlaybook {
   async addRemoteAndPull(remote: GitRemote) {
     // addGitRemote = async (remote: GitRemote): Promise<void> => {
     await this.repo.addGitRemote(remote);
+    await this.repo.pull({});
   }
 
   async push({ remote, ref }: { remote: string; ref: string }) {

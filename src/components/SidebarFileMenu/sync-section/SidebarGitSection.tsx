@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRef, GitRepo } from "@/features/git-repo/GitRepo";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
@@ -101,6 +102,7 @@ function CommitSection({
   fullInitialized,
   hasRemotes,
   repo,
+  playbook,
 }: {
   exists: boolean;
   hasChanges: boolean;
@@ -117,6 +119,7 @@ function CommitSection({
   bareInitialized: boolean;
   fullInitialized: boolean;
   repo: GitRepo;
+  playbook: GitPlaybook;
 }) {
   const [commitMessage, setCommitMessage] = useState("");
   const [showMessageInput, setShowMessageInput] = useState(false);
@@ -163,11 +166,10 @@ function CommitSection({
   };
   const handleRemoteInit = () => {
     initialRepo();
-    void addRemoteCmdRef.current.open("add").then(async (result) => {
-      if (!result) return;
-      const { next: remote } = result;
-      await repo.addGitRemote(remote);
-      commitRef.current?.show("Remote added");
+    void addRemoteCmdRef.current.open("add").then(async ({ next }) => {
+      if (!next) return;
+      await playbook.addRemoteAndPull(next);
+      // commitRef.current?.show("Remote added");
     });
   };
 

@@ -78,16 +78,21 @@ export function useGitRemoteDialogMode(
 }
 type GitRemoteDialogResult = {
   previous: null | GitRemote;
-  next: GitRemote;
+  next: GitRemote | null;
   mode: GitRemoteDialogModeType;
+};
+const NULL_GIT_REMOTE_DIALOG_RESULT: GitRemoteDialogResult = {
+  previous: null,
+  next: null,
+  mode: GitRemoteDialogModes.ADD,
 };
 
 type GitRemoteDialogCmdRefType = {
-  open: (mode: GitRemoteDialogModeType, previous?: GitRemote) => Promise<GitRemoteDialogResult | null>;
+  open: (mode: GitRemoteDialogModeType, previous?: GitRemote) => Promise<GitRemoteDialogResult>;
 };
 export function useGitRemoteDialogCmd() {
   return React.useRef<GitRemoteDialogCmdRefType>({
-    open: async () => null,
+    open: async () => NULL_GIT_REMOTE_DIALOG_RESULT,
   });
 }
 const TryPathname = (url: string) => {
@@ -106,7 +111,7 @@ export function GitRemoteDialog({
 }: {
   children?: React.ReactNode;
   defaultName?: string;
-  onSubmit?: (values: { previous: null | GitRemote; next: GitRemote; mode: GitRemoteDialogModeType }) => void;
+  onSubmit?: (values: GitRemoteDialogResult & { next: GitRemote }) => void;
   cmdRef: React.RefObject<GitRemoteDialogCmdRefType>;
 }) {
   const defaultValues = {
@@ -122,7 +127,7 @@ export function GitRemoteDialog({
   const prevRef = React.useRef<GitRemote | null>(null);
   const modeRef = React.useRef<GitRemoteDialogModeType>(GitRemoteDialogModes.ADD);
   const [showConnectionModal, setShowConnModal] = React.useState(false);
-  const deferredPromiseRef = React.useRef<PromiseWithResolvers<GitRemoteDialogResult | null> | null>(null);
+  const deferredPromiseRef = React.useRef<PromiseWithResolvers<GitRemoteDialogResult> | null>(null);
 
   useImperativeHandle(
     cmdRef,
@@ -145,7 +150,7 @@ export function GitRemoteDialog({
   // Cleanup effect to ensure promise is always resolved
   React.useEffect(() => {
     return () => {
-      deferredPromiseRef.current?.resolve(null);
+      deferredPromiseRef.current?.resolve(NULL_GIT_REMOTE_DIALOG_RESULT);
       deferredPromiseRef.current = null;
     };
   }, []);
@@ -158,7 +163,7 @@ export function GitRemoteDialog({
     setOpen(isOpen);
     if (!isOpen) {
       // Dialog is closing - resolve promise with null (cancelled)
-      deferredPromiseRef.current?.resolve(null);
+      deferredPromiseRef.current?.resolve(NULL_GIT_REMOTE_DIALOG_RESULT);
       deferredPromiseRef.current = null;
       setShowConnModal(false);
       prevRef.current = null;
@@ -169,10 +174,10 @@ export function GitRemoteDialog({
 
   function handleFormSubmit(values: GitRemoteFormValues) {
     const result = { previous: prevRef.current, next: values, mode: modeRef.current };
-    
+
     // Call legacy onSubmit if provided for backward compatibility
     onSubmit?.(result);
-    
+
     // Resolve promise with result
     deferredPromiseRef.current?.resolve(result);
     deferredPromiseRef.current = null;
@@ -181,7 +186,7 @@ export function GitRemoteDialog({
 
   function handleCancel() {
     // Resolve promise with null (cancelled)
-    deferredPromiseRef.current?.resolve(null);
+    deferredPromiseRef.current?.resolve(NULL_GIT_REMOTE_DIALOG_RESULT);
     deferredPromiseRef.current = null;
     setOpen(false);
   }
