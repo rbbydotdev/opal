@@ -48,6 +48,7 @@ export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
 
       allRepos.push(
         ...response.data.map((r) => ({
+          updated_at: new Date(r.updated_at ?? Date.now()),
           id: r.id,
           name: r.name,
           full_name: r.full_name,
@@ -177,6 +178,7 @@ export interface Repo {
   full_name: string;
   description: string | null;
   html_url: string;
+  updated_at: Date;
 }
 export interface IGitProviderAgent {
   getRepos(options?: { signal?: AbortSignal }): Promise<Repo[]>;
