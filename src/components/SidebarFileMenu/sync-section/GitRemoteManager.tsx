@@ -14,48 +14,33 @@ import * as Comlink from "comlink";
 import { Ellipsis, Pencil, Plus, SatelliteDishIcon, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-export function useRemoteSelectState(remotes: GitRemote[]) {
-  const defaultRemote = remotes.find((r) => r.name === "origin") || remotes[0];
-  const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  const [selectValue, setSelectValue] = useState<string | null>(defaultRemote?.name ?? null);
-  const [selectOpen, setSelectOpen] = useState(false);
-  const finalSelectValue = selectValue || defaultRemote?.name || remotes[0]?.name || null;
-
-  return {
-    selectMode,
-    setSelectMode,
-    selectValue,
-    setSelectValue,
-    selectOpen,
-    setSelectOpen,
-    finalSelectValue,
-    defaultRemote,
-  };
-}
-
 export function GitRemoteManager({
   remotes,
   addGitRemote,
   replaceGitRemote,
   deleteGitRemote,
-  remoteSelectState,
+  setSelectRemote,
+  selectRemote,
 }: {
   remotes: GitRemote[];
   addGitRemote: (remote: GitRemote) => void;
   replaceGitRemote: (previous: GitRemote, next: GitRemote) => void;
   deleteGitRemote: (remoteName: string) => void;
-  remoteSelectState: ReturnType<typeof useRemoteSelectState>;
+  setSelectRemote: (remote: string) => void;
+  selectRemote: string | null;
 }) {
-  const { selectMode, setSelectMode, selectValue, setSelectValue, selectOpen, setSelectOpen, finalSelectValue } =
-    remoteSelectState;
+  const defaultRemote = remotes.find((r) => r.name === "origin") || remotes[0];
+  const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
+  const [selectOpen, setSelectOpen] = useState(false);
   const cmdRef = useGitRemoteDialogCmd();
+  const finalSelectValue = selectRemote || defaultRemote?.name || remotes[0]?.name || null;
 
   return selectMode === "delete" ? (
     <RemoteDelete
       remotes={remotes}
       cancel={() => setSelectMode("select")}
       onSelect={(name: string) => {
-        if (name === finalSelectValue) setSelectValue("");
+        if (name === finalSelectValue) setSelectRemote("");
         deleteGitRemote(name);
       }}
     />
@@ -70,14 +55,14 @@ export function GitRemoteManager({
           if (mode === "edit") {
             replaceGitRemote(previous!, next);
           }
-          setSelectValue(next.name);
+          setSelectRemote(next.name);
         }}
       />
       <RemoteSelect
         onOpenButEmpty={() => setSelectOpen(true)}
         remotes={remotes}
         value={finalSelectValue}
-        onSelect={setSelectValue}
+        onSelect={setSelectRemote}
       >
         <GitAddDeleteEditDropDown open={selectOpen} setOpen={setSelectOpen}>
           <DropdownMenuItem onClick={() => cmdRef.current.open("add")}>
@@ -244,22 +229,23 @@ export function RemoteManagerSection({
   info,
   remoteRef,
   className,
-  remoteSelectState,
+  selectRemote,
+  setSelectRemote,
 }: {
   repo: GitRepo | Comlink.Remote<GitRepo>;
   info: RepoInfoType; //{ latestCommit: RepoLatestCommit; remotes: GitRemote[] };
   remoteRef: React.RefObject<{ show: (text?: string) => void }>;
   className?: string;
-  remoteSelectState?: ReturnType<typeof useRemoteSelectState>;
+  selectRemote: string | null;
+  setSelectRemote: (remote: string) => void;
 }) {
-  const localRemoteSelectState = useRemoteSelectState(info.remotes);
-  const effectiveRemoteSelectState = remoteSelectState || localRemoteSelectState;
-
   return (
     <div className={cn("px-4 w-full flex justify-center flex-col items-center", className)}>
       <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
       <GitRemoteManager
         remotes={info.remotes}
+        selectRemote={selectRemote}
+        setSelectRemote={setSelectRemote}
         replaceGitRemote={(previousRemote, nextRemote) => {
           void repo.replaceGitRemote(previousRemote, nextRemote);
           remoteRef.current.show("remote replaced");
@@ -272,7 +258,6 @@ export function RemoteManagerSection({
           void repo.deleteGitRemote(remote);
           remoteRef.current.show("remote deleted");
         }}
-        remoteSelectState={effectiveRemoteSelectState}
       />
     </div>
   );

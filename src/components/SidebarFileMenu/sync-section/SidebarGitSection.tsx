@@ -29,7 +29,7 @@ import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { CommitManagerSection } from "./CommitManagerSection";
-import { RemoteManagerSection, useRemoteSelectState } from "./GitRemoteManager";
+import { RemoteManagerSection } from "./GitRemoteManager";
 
 function InfoCollapsible({ info }: { info: WorkspaceRepoType }) {
   const [open, setOpen] = useState(false);
@@ -282,6 +282,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   // Commit state logic hoisted from CommitSection
   const [showMessageInput, setShowMessageInput] = useState(false);
   const [pending, setPending] = useState(false);
+  const [selectRemote, setSelectRemote] = useState<string | null>(null);
 
   const commitState = ((): CommitState => {
     if (pending) return "pending";
@@ -296,11 +297,11 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
 
   // Remote management functions
   const addRemoteCmdRef = useGitRemoteDialogCmd();
-  const remoteSelectState = useRemoteSelectState(info.remotes);
+  // const remoteSelectState = useRemoteSelectState(info.remotes);
 
-  const handleFetchRemote = async () => {
-    if (!remoteSelectState.selectValue) return;
-    const remote = await repo.getRemote(remoteSelectState.selectValue);
+  const handleFetchRemote = async (remoteName?: string) => {
+    if (!remoteName) return;
+    const remote = await repo.getRemote(remoteName);
     if (!remote) {
       return tossError(new NotFoundError("Remote not found"));
     }
@@ -308,6 +309,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
       url: remote.url,
       corsProxy: remote.gitCorsProxy,
     });
+    console.log("Fetch result:", result);
     // repo.info.
     // const currentRemote: GitRemote = {};
     // repo.fetch();
@@ -380,16 +382,18 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 setPending={setPending}
               />
             </div>
+            {(info.fullInitialized || info.bareInitialized) && (
+              <BranchManagerSection
+                info={info}
+                repo={repo}
+                playbook={playbook}
+                currentGitRef={info.currentRef}
+                branches={info.branches}
+                branchRef={branchRef}
+              />
+            )}
             {info.fullInitialized && info.currentRef && (
               <>
-                <BranchManagerSection
-                  info={info}
-                  repo={repo}
-                  playbook={playbook}
-                  currentGitRef={info.currentRef}
-                  branches={info.branches}
-                  branchRef={branchRef}
-                />
                 <CommitManagerSection
                   refType={info.currentRef.type}
                   playbook={playbook}
@@ -402,7 +406,8 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   repo={repo}
                   info={info}
                   remoteRef={remoteRef}
-                  remoteSelectState={remoteSelectState}
+                  setSelectRemote={setSelectRemote}
+                  selectRemote={selectRemote}
                 />
                 <SyncPullPushButtons />
               </>
@@ -413,7 +418,8 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 repo={repo}
                 info={info}
                 remoteRef={remoteRef}
-                remoteSelectState={remoteSelectState}
+                setSelectRemote={setSelectRemote}
+                selectRemote={selectRemote}
               />
             )}
           </SidebarMenu>

@@ -13,6 +13,7 @@ import { Octokit } from "@octokit/core";
 export interface IRemoteAuthAgent {
   getUsername(): string;
   getApiToken(): string;
+  onAuth(): { username: string; password: string };
 }
 
 export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
@@ -24,6 +25,13 @@ export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
         auth: this.getApiToken(),
       }))
     );
+  }
+
+  onAuth() {
+    return {
+      username: this.getUsername(),
+      password: this.getApiToken(),
+    };
   }
   async getRepos({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
     const allRepos: Repo[] = [];
@@ -79,7 +87,7 @@ export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
   abstract getApiToken(): string;
 }
 
-export class RemoteAuthBasicAuthAgent {
+export class RemoteAuthBasicAuthAgent implements IRemoteAuthAgent {
   getUsername(): string {
     return this.remoteAuth.data.username;
   }
@@ -87,6 +95,12 @@ export class RemoteAuthBasicAuthAgent {
     return this.remoteAuth.data.password;
   }
   constructor(private remoteAuth: BasicAuthRemoteAuthDAO) {}
+  onAuth(): { username: string; password: string } {
+    return {
+      username: this.getUsername(),
+      password: this.getApiToken(),
+    };
+  }
 }
 
 export class RemoteAuthGithubOAuthAgent extends IRemoteAuthGithubAgent {

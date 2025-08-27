@@ -18,7 +18,7 @@ export function useEditorHistoryPlugin2WithContentWatch({
   const { initialContents, writeFileContents, contentEmitter } = useFileContents({
     currentWorkspace,
     listenerCb: (md) => {
-      console.log(md);
+      // console.log(md);
       cbRef.current(md || "");
     },
   });
