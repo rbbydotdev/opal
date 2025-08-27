@@ -9,7 +9,9 @@ import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-sign
 // if (match) {
 // new RegExp(`^${}$`)
 export const WHITELIST = [
+  "/preview/.*",
   "/editview/.*",
+  "/assets/.*",
   "/opal.svg",
   "/opal-blank.svg",
   "/favicon.ico",
@@ -26,9 +28,11 @@ function formatConsoleMsg(msg: unknown): string {
     try {
       return JSON.stringify(msg, null, 2);
     } catch {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       return String(msg);
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return String(msg);
 }
 

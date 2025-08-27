@@ -82,7 +82,7 @@ function BigButton({
           {...restProps}
           className={twMerge(
             "w-full hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground _bg-muted",
-            isSmall ? "w-4 h-4 justify-center rounded-sm" : "py-2 gap-2 flex-col",
+            isSmall ? "w-6 h-6 justify-center rounded-sm" : "py-2 gap-2 flex-col",
             restProps.className
           )}
         >
@@ -94,7 +94,7 @@ function BigButton({
             {isActive && !isSmall && <div className="w-0.5 h-full bg-primary ml-1 absolute left-0"></div>}
             <div
               className={cn("flex items-center justify-center", {
-                "w-4 h-4": isSmall,
+                "w-6 h-6": isSmall,
                 "w-8 h-8": !isSmall,
               })}
             >
@@ -166,8 +166,8 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
       <ContextMenuTrigger>
         <Link
           to={"/"}
-          className={cn("absolute z-50 -top-6 h-12 left-0 cursor-pointer _bg-red-700 opacity-25", {
-            "w-4": shrink,
+          className={cn("absolute z-50 -top-8 h-14 left-0 cursor-pointer _bg-red-700 _opacity-25", {
+            "w-6": shrink,
             "w-14": !shrink,
           })}
         ></Link>
@@ -239,7 +239,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
       <div
         className={cn(
           "[&>*]:outline-none transition-all [&>*]:select-none relative max-h-full flex flex-col gap-4 justify-center items-center",
-          shrink ? "w-6" : "w-16"
+          shrink ? "w-8" : "w-16"
         )}
       >
         <div
@@ -348,7 +348,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
           {coalescedWorkspace && (
             <BigButton
               variant={variant}
-              icon={<WorkspaceIcon scale={shrink ? 3 : 7} input={coalescedWorkspace.guid} />}
+              icon={<WorkspaceIcon scale={shrink ? 5 : 7} input={coalescedWorkspace.guid} />}
               title={coalescedWorkspace.name}
               to={coalescedWorkspace.href}
               truncate={true}

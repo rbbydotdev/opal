@@ -58,7 +58,7 @@ function Toast(props: ToastProps) {
 
   return (
     <div
-      className={`flex rounded-lg shadow-lg border w-full max-w-md min-w-[20rem] min-h-[4rem] items-center p-4 ${getTypeStyles()}`}
+      className={`flex rounded-lg shadow-lg border w-full max-w-md min-w-[20rem] min-h-16 items-center p-4 ${getTypeStyles()}`}
     >
       <div className="flex flex-1 items-center min-h-0">
         <p className="w-full flex flex-col justify-center">

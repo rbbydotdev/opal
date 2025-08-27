@@ -12,7 +12,7 @@ interface ThemeState {
 }
 
 const DEFAULT_THEME_STATE: ThemeState = {
-  themeName: "default",
+  themeName: "claude",
   mode: "light",
 };
 
