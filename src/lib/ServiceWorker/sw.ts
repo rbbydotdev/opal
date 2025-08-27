@@ -27,7 +27,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const whiteListMatch = WHITELIST.some((pattern) => pattern.test(url.pathname));
   // If there's no referrer, it's likely a direct navigation or non-app request.
   // Let the browser handle it directly.
-  if (!request.referrer || whiteListMatch) {
+  if (!request.referrer || whiteListMatch || request.mode === "navigate") {
     return event.respondWith(defaultFetchHandler(event));
   }
 

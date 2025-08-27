@@ -59,7 +59,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
 
   const { fileTreeDir } = useFileTree();
 
-  useFileTreeClipboardEventListeners({ currentWorkspace });
+  useFileTreeClipboardEventListeners({ currentWorkspace, elementSelector: "[data-sidebar-file-menu]" });
 
   const hasDepth = useMemo(() => fileTreeDir.hasDepth(), [fileTreeDir]);
   return (

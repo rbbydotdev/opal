@@ -5,7 +5,13 @@ import { Workspace } from "@/Db/Workspace";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { useEffect } from "react";
 
-export function useFileTreeClipboardEventListeners({ currentWorkspace }: { currentWorkspace: Workspace }) {
+export function useFileTreeClipboardEventListeners({
+  currentWorkspace,
+  elementSelector = "[data-sidebar-file-menu]",
+}: {
+  currentWorkspace: Workspace;
+  elementSelector?: string;
+}) {
   const { focused, editing, selectedFocused, setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
   const handlePaste = useFileMenuPaste({ currentWorkspace });
 
@@ -14,20 +20,21 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
     const handlePasteEvent = async (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
       const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]);
-      if (target?.closest?.("[data-sidebar-file-menu]") && !editing) {
+      if (target?.closest?.(elementSelector) && !editing) {
         await handlePaste({ targetNode, data: new MetaDataTransfer(event.clipboardData!) });
-        setFileTreeCtx({
+        setFileTreeCtx(() => ({
+          anchorIndex: -1,
           editing: null,
           editType: null,
           focused: null,
           virtual: null,
           selectedRange: [],
-        });
+        }));
       }
     };
     const handleCutEvent = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest?.("[data-sidebar-file-menu]") && !editing) {
+      if (target?.closest?.(elementSelector) && !editing) {
         return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
           action: "cut",
@@ -37,7 +44,7 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
     };
     const handleCopyEvent = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest?.("[data-sidebar-file-menu]") && !editing) {
+      if (target?.closest?.(elementSelector) && !editing) {
         return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
           action: "copy",
@@ -54,5 +61,5 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
       window.removeEventListener("cut", handleCutEvent);
       window.removeEventListener("copy", handleCopyEvent);
     };
-  }, [currentWorkspace, focused, selectedFocused, setFileTreeCtx, handlePaste]);
+  }, [currentWorkspace, focused, selectedFocused, setFileTreeCtx, handlePaste, editing, elementSelector]);
 }

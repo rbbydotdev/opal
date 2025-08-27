@@ -13,6 +13,7 @@ import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { useWatchElement } from "@/hooks/useWatchElement";
+import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { cn } from "@/lib/utils";
 import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
@@ -23,12 +24,10 @@ import { yamlFrontmatter } from "@codemirror/lang-yaml";
 import { languages } from "@codemirror/language-data";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
-import { ayuLight, dracula } from "thememirror";
-// import { basicLight } from "cm6-theme-basic-light";
-import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { basicSetup } from "codemirror";
 import { ChevronLeftIcon, FileText } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
+import { ayuLight, dracula } from "thememirror";
 
 const noCommentKeymap = keymap.of([
   { key: "Mod-/", run: () => true }, // return true = handled, but do nothing
@@ -79,9 +78,17 @@ export const CodeMirrorEditor = ({
 
   valueRef.current = value;
   // Mount editor once
+  useEffect(() => {
+    if (!editorRef.current) return;
 
-  const extensions = useMemo<Extension[]>(() => {
-    return [
+    // Clean up previous view
+    if (viewRef.current) {
+      viewRef.current.destroy();
+      viewRef.current = null;
+    }
+    // console.log(basicLight);
+
+    const extensions: Extension[] = [
       basicSetup,
       mode === "dark" ? dracula : ayuLight,
       autocompletion(),
@@ -90,36 +97,43 @@ export const CodeMirrorEditor = ({
       noCommentKeymap,
       keymap.of([indentWithTab]),
       ext,
+      // how to determine user change vs programmatic change
+      // EditorView.updateListener.of((update) => {
+      //         if (update.docChanged) {
+      //           // Check if this was a user event
+      //           const userEvent = update.transactions.some((tr) =>
+      //             tr.annotation(Transaction.userEvent)
+      //           );
+
+      //           if (userEvent) {
+      //             console.log("User change:", userEvent);
+      //             // userEvent will be strings like "input", "delete", "paste", "dragdrop"
+      //           } else {
+      //             console.log("Programmatic change");
+      //           }
+      //         }
+      //       }),
+
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const docStr = update.state.doc.toString();
+          // const prevStr = update.startState.doc.toString();
+          // if (docStr !== prevStr && onChange) {
           if (docStr !== valueRef.current) {
             onChange(docStr);
           }
         }
       }),
       EditorView.editable.of(!readOnly),
-      EditorView.theme(
-        {
-          "&": { height: "calc(100% - 4rem)" },
-          ".cm-scroller": { height: "100%" },
-          ".cm-content": { padding: 0 },
-        },
-        { dark: false }
-      ),
+      EditorView.theme({
+        "&": { height: "calc(100% - 4rem)" },
+        ".cm-scroller": { height: "100%" },
+        ".cm-content": { padding: 0 },
+      }),
     ].filter(Boolean) as Extension[];
-  }, [mode, ext, onChange, readOnly]);
-
-  useEffect(() => {
-    if (!editorRef.current) return;
-
-    if (viewRef.current) {
-      viewRef.current.destroy();
-      viewRef.current = null;
-    }
 
     const state = EditorState.create({
-      doc: valueRef.current,
+      doc: valueRef.current, // controlled value at mount
       extensions,
     });
 
@@ -132,7 +146,7 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [editorRef, extensions, value]);
+  }, [editorRef, readOnly, height, ext, value, onChange, mode]);
 
   // Sync external value → editor
 
