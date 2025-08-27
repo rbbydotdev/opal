@@ -241,24 +241,26 @@ export function RemoteManagerSection({
 }) {
   return (
     <div className={cn("w-full flex justify-center flex-col items-center", className)}>
-      <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
-      <GitRemoteManager
-        remotes={info.remotes}
-        selectRemote={selectRemote}
-        setSelectRemote={setSelectRemote}
-        replaceGitRemote={(previousRemote, nextRemote) => {
-          void repo.replaceGitRemote(previousRemote, nextRemote);
-          remoteRef.current.show("remote replaced");
-        }}
-        addGitRemote={(remote) => {
-          void repo.addGitRemote(remote);
-          remoteRef.current.show("remote added");
-        }}
-        deleteGitRemote={(remote) => {
-          void repo.deleteGitRemote(remote);
-          remoteRef.current.show("remote deleted");
-        }}
-      />
+      <>
+        <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
+        <GitRemoteManager
+          remotes={info.remotes}
+          selectRemote={selectRemote}
+          setSelectRemote={setSelectRemote}
+          replaceGitRemote={(previousRemote, nextRemote) => {
+            void repo.replaceGitRemote(previousRemote, nextRemote);
+            remoteRef.current.show("remote replaced");
+          }}
+          addGitRemote={(remote) => {
+            void repo.addGitRemote(remote);
+            remoteRef.current.show("remote added");
+          }}
+          deleteGitRemote={(remote) => {
+            void repo.deleteGitRemote(remote);
+            remoteRef.current.show("remote deleted");
+          }}
+        />
+      </>
     </div>
   );
 }
