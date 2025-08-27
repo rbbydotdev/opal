@@ -97,6 +97,7 @@ export const RepoDefaultInfo = {
     message: "",
     author: { name: "", email: "", timestamp: 0, timezoneOffset: 0 },
   },
+  remoteRefs: [] as string[],
   hasChanges: false,
   commitHistory: [] as Array<RepoCommit>,
   context: "" as "main" | "worker" | "",
@@ -260,16 +261,19 @@ export class GitRepo {
     await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
   };
 
-  async fetch({ url, corsProxy }: { url: string; corsProxy?: string }) {
-    return this.git.fetch({
-      fs: this.fs,
-      http,
-      corsProxy,
-      url,
-      dir: this.dir,
-      singleBranch: false,
+  fetch = async ({ url, corsProxy, onAuth }: { url: string; corsProxy?: string; onAuth?: AuthCallback }) => {
+    return this.mutex.runExclusive(async () => {
+      return this.git.fetch({
+        fs: this.fs,
+        http,
+        corsProxy,
+        url,
+        dir: this.dir,
+        onAuth: onAuth,
+        singleBranch: false,
+      });
     });
-  }
+  };
 
   // async pull({ ref }: { ref: string }) {
   //   return this.git.pull({
@@ -455,6 +459,12 @@ export class GitRepo {
     }
     return null;
   };
+  getRemoteRefs = async (remote?: string) => {
+    if (!(await this.bareInitialized())) return [];
+    return GIT.listRefs({ fs: this.fs, dir: this.dir, filepath: `refs/remotes${remote ? "/" + remote : ""}` }).catch(
+      () => []
+    );
+  };
   tryInfo = async (): Promise<RepoInfoType> => {
     try {
       // if (!(await this.fullInitialized())) {
@@ -471,6 +481,7 @@ export class GitRepo {
       return {
         fullInitialized: this.state.fullInitialized,
         bareInitialized: this.state.bareInitialized,
+        remoteRefs: await this.getRemoteRefs(),
         currentBranch,
         branches: await this.getBranches(),
         remotes: await this.getRemotes(),

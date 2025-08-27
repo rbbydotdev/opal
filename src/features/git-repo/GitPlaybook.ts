@@ -154,6 +154,22 @@ export class GitPlaybook {
     return false;
   };
 
+  async fetchRemote(remote: string) {
+    const remoteObj = await this.repo.getRemote(remote);
+    if (!remoteObj) {
+      throw new Error(`Remote ${remote} not found`);
+    }
+    const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
+    const onAuth = RemoteAuth ? IsoGitApiCallbackForRemoteAuth(RemoteAuth) : undefined;
+    const result = await this.repo.fetch({
+      url: remoteObj.url,
+      corsProxy,
+      onAuth,
+    });
+    console.log("Fetch result:", result);
+    return result;
+  }
+
   async addRemoteAndFetch(remote: GitRemote) {
     await this.repo.addGitRemote(remote);
     const result = await this.repo.fetch({
