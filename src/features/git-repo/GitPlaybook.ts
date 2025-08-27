@@ -154,10 +154,14 @@ export class GitPlaybook {
     return false;
   };
 
-  async addRemoteAndPull(remote: GitRemote) {
-    // addGitRemote = async (remote: GitRemote): Promise<void> => {
+  async addRemoteAndFetch(remote: GitRemote) {
     await this.repo.addGitRemote(remote);
-    await this.repo.pull({});
+    const result = await this.repo.fetch({
+      url: remote.url,
+      corsProxy: remote.gitCorsProxy,
+    });
+    console.log("Fetch result:", result);
+    return result;
   }
 
   async push({ remote, ref }: { remote: string; ref: string }) {

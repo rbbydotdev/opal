@@ -20,10 +20,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
-import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
+import { useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
-import { GitRef, GitRepo } from "@/features/git-repo/GitRepo";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
@@ -89,54 +87,27 @@ type CommitState =
   | "detatched";
 
 function CommitSection({
-  exists,
-  hasChanges,
+  commitState,
   commit,
   initialCommit,
   initialRepo,
-  isMerging,
   commitRef,
   mergeCommit,
-  currentGitRef,
-  bareInitialized,
-  fullInitialized,
-  hasRemotes,
-  repo,
-  playbook,
+  setShowMessageInput,
+  setPending,
 }: {
-  exists: boolean;
-  hasChanges: boolean;
-  isMerging: boolean;
+  commitState: CommitState;
   commit: (message: string) => void;
   mergeCommit: () => void;
   initialCommit: () => void;
   initialRepo: () => void;
-  currentGitRef: GitRef | null;
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
-  hasRemotes?: boolean;
-  bareInitialized: boolean;
-  fullInitialized: boolean;
-  repo: GitRepo;
-  playbook: GitPlaybook;
+  setShowMessageInput: (show: boolean) => void;
+  setPending: (pending: boolean) => void;
 }) {
   const [commitMessage, setCommitMessage] = useState("");
-  const [showMessageInput, setShowMessageInput] = useState(false);
-  const [pending, setPending] = useState(false);
-
-  const commitState = ((): CommitState => {
-    if (pending) return "pending";
-    if (isMerging) return "merge-commit";
-    if (showMessageInput) return "enter-message";
-    if (bareInitialized && !fullInitialized) return "bare-init";
-    if (!exists) return "init";
-    if (!hasChanges) return "commit-disabled";
-    if (currentGitRef?.type === "commit") return "detatched";
-    return "commit";
-  })();
-
-  const addRemoteCmdRef = useGitRemoteDialogCmd();
 
   const handleCommit = async (message: string) => {
     setPending(true);
@@ -164,13 +135,10 @@ function CommitSection({
     if (commitState === "init" || commitState == "bare-init") return handleInitialCommit();
     if (commitState === "commit") return setShowMessageInput(true);
   };
+
   const handleRemoteInit = () => {
     initialRepo();
-    void addRemoteCmdRef.current.open("add").then(async ({ next }) => {
-      if (!next) return;
-      await playbook.addRemoteAndPull(next);
-      // commitRef.current?.show("Remote added");
-    });
+    // Remote handling is now in parent component
   };
 
   const handleMessageSubmit = async (message: string) => {
@@ -207,15 +175,6 @@ function CommitSection({
 
   return (
     <>
-      <GitRemoteDialog
-        cmdRef={addRemoteCmdRef}
-        // onSubmit={({ next }) => {
-        //   // console.log(next)
-        //   void repo.addGitRemote(next).then((remote) => {
-        //     console.log(remote);
-        //   });
-        // }}
-      />
       <Button
         className="w-full disabled:cursor-pointer h-8"
         onClick={handleButtonClick}
@@ -236,13 +195,6 @@ function CommitSection({
           <span className="flex-1 min-w-0 truncate">Initialize Git Repo From Remote</span>
         </Button>
       )}
-      {commitState === "bare-init" && !hasRemotes && (
-        <Button className="w-full disabled:cursor-pointer h-8" onClick={handleRemoteInit} size="sm" variant="outline">
-          <Import className="mr-1" />
-          <span className="flex-1 min-w-0 truncate flex justify-center items-center">Add Remote</span>
-        </Button>
-      )}
-      <TooltipToast cmdRef={commitRef} message="Operation completed" durationMs={1000} sideOffset={10} />
     </>
   );
 }
@@ -317,6 +269,44 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
 
   const exists = info.exists;
+  const hasChanges = info.hasChanges;
+  const isMerging = info.isMerging;
+  const currentGitRef = info.currentRef;
+  const bareInitialized = info.bareInitialized;
+  const fullInitialized = info.fullInitialized;
+  const hasRemotes = info.remotes.length > 0;
+
+  // Commit state logic hoisted from CommitSection
+  const [showMessageInput, setShowMessageInput] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  const commitState = ((): CommitState => {
+    if (pending) return "pending";
+    if (isMerging) return "merge-commit";
+    if (showMessageInput) return "enter-message";
+    if (bareInitialized && !fullInitialized) return "bare-init";
+    if (!exists) return "init";
+    if (!hasChanges) return "commit-disabled";
+    if (currentGitRef?.type === "commit") return "detatched";
+    return "commit";
+  })();
+
+  // Remote management functions
+  const addRemoteCmdRef = useGitRemoteDialogCmd();
+
+  const handleFetchRemote = async () => {
+    // repo.playbook();
+    await playbook.addRemoteAndFetch(next);
+  };
+
+  const handleRemoteInit = () => {
+    void repo.mustBeInitialized();
+    void addRemoteCmdRef.current.open("add").then(async ({ next }) => {
+      if (!next) return;
+      await playbook.addRemoteAndFetch(next);
+      commitRef.current?.show("Remote added and fetched");
+    });
+  };
 
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
@@ -337,22 +327,38 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="gap-2 pb-3">
-            <div className="px-4 pt-2 gap-2 flex flex-col">
+            <div className="px-4 pt-2 gap-4 flex flex-col">
               {exists && <LatestInfo info={info} />}
+              {commitState === "bare-init" && !hasRemotes ? (
+                <Button
+                  className="w-full disabled:cursor-pointer h-8"
+                  onClick={handleRemoteInit}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Import className="mr-1" />
+                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">Add Remote</span>
+                </Button>
+              ) : (
+                <Button
+                  className="w-full disabled:cursor-pointer h-8"
+                  onClick={handleFetchRemote}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Import className="mr-1" />
+                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">Fetch Remote</span>
+                </Button>
+              )}
               <CommitSection
-                exists={exists}
-                bareInitialized={info.bareInitialized}
-                hasRemotes={info.remotes.length > 0}
-                hasChanges={info.hasChanges}
+                commitState={commitState}
                 commit={(message) => playbook.addAllCommit({ message })}
                 mergeCommit={() => playbook.mergeCommit()}
-                isMerging={info.isMerging}
                 initialCommit={() => playbook.initialCommit()}
                 initialRepo={() => repo.mustBeInitialized()}
                 commitRef={commitRef}
-                currentGitRef={info.currentRef}
-                fullInitialized={info.fullInitialized}
-                repo={repo}
+                setShowMessageInput={setShowMessageInput}
+                setPending={setPending}
               />
             </div>
             {info.fullInitialized && info.currentRef && (
@@ -378,11 +384,12 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               </>
             )}
             {!info.fullInitialized && info.bareInitialized && (
-              <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
+              <RemoteManagerSection className="mt-2" repo={repo} info={info} remoteRef={remoteRef} />
             )}
           </SidebarMenu>
         </CollapsibleContent>
       </Collapsible>
+      <GitRemoteDialog cmdRef={addRemoteCmdRef} />
     </SidebarGroup>
   );
 }

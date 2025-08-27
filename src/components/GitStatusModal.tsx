@@ -1,39 +1,33 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader } from "lucide-react";
 import React, { createContext, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 
-type GitPullingStatusContextType = {
+type GitStatusContextType = {
   open: (options?: { onCancel?: () => void }) => Promise<"cancelled" | "completed">;
   close: () => void;
 };
 
-const GitPullingStatusContext = createContext<GitPullingStatusContextType | undefined>(undefined);
+const GitStatusContext = createContext<GitStatusContextType | undefined>(undefined);
 
-export function GitPullingStatusProvider({ children }: { children: React.ReactNode }) {
-  const { open, close, cmdRef } = useGitPullingStatusCmd();
+export function GitStatusProvider({ children }: { children: React.ReactNode }) {
+  const { open, close, cmdRef } = useGitStatusCmd();
 
   return (
-    <GitPullingStatusContext.Provider value={{ open, close }}>
+    <GitStatusContext.Provider value={{ open, close }}>
       {children}
-      <GitPullingStatusModal cmdRef={cmdRef} />
-    </GitPullingStatusContext.Provider>
+      <GitStatusModal cmdRef={cmdRef} />
+    </GitStatusContext.Provider>
   );
 }
 
-export function useGitPullingStatus() {
-  const ctx = useContext(GitPullingStatusContext);
-  if (!ctx) throw new Error("useGitPullingStatus must be used within a GitPullingStatusProvider");
+export function useGitStatus() {
+  const ctx = useContext(GitStatusContext);
+  if (!ctx) throw new Error("useGitStatus must be used within a GitStatusProvider");
   return ctx;
 }
 
-function useGitPullingStatusCmd() {
+function useGitStatusCmd() {
   const cmdRef = useRef<{
     open: (options?: { onCancel?: () => void }) => Promise<"cancelled" | "completed">;
     close: () => void;
@@ -49,7 +43,7 @@ function useGitPullingStatusCmd() {
   };
 }
 
-export function GitPullingStatusModal({
+export function GitStatusModal({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{
@@ -112,11 +106,9 @@ export function GitPullingStatusModal({
         <DialogHeader className="text-center">
           <DialogTitle className="flex items-center justify-center gap-3">
             <Loader className="h-5 w-5 animate-spin" />
-            Pulling Changes
+            DOING CHANGES
           </DialogTitle>
-          <DialogDescription>
-            Fetching the latest changes from the remote repository...
-          </DialogDescription>
+          <DialogDescription>WORKING...</DialogDescription>
         </DialogHeader>
         <div className="flex justify-center pt-4">
           <Button variant="outline" onClick={handleCancel}>

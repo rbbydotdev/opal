@@ -79,17 +79,9 @@ export const CodeMirrorEditor = ({
 
   valueRef.current = value;
   // Mount editor once
-  useEffect(() => {
-    if (!editorRef.current) return;
 
-    // Clean up previous view
-    if (viewRef.current) {
-      viewRef.current.destroy();
-      viewRef.current = null;
-    }
-    // console.log(basicLight);
-
-    const extensions: Extension[] = [
+  const extensions = useMemo<Extension[]>(() => {
+    return [
       basicSetup,
       mode === "dark" ? dracula : ayuLight,
       autocompletion(),
@@ -98,28 +90,9 @@ export const CodeMirrorEditor = ({
       noCommentKeymap,
       keymap.of([indentWithTab]),
       ext,
-      // how to determine user change vs programmatic change
-      // EditorView.updateListener.of((update) => {
-      //         if (update.docChanged) {
-      //           // Check if this was a user event
-      //           const userEvent = update.transactions.some((tr) =>
-      //             tr.annotation(Transaction.userEvent)
-      //           );
-
-      //           if (userEvent) {
-      //             console.log("User change:", userEvent);
-      //             // userEvent will be strings like "input", "delete", "paste", "dragdrop"
-      //           } else {
-      //             console.log("Programmatic change");
-      //           }
-      //         }
-      //       }),
-
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const docStr = update.state.doc.toString();
-          // const prevStr = update.startState.doc.toString();
-          // if (docStr !== prevStr && onChange) {
           if (docStr !== valueRef.current) {
             onChange(docStr);
           }
@@ -135,9 +108,18 @@ export const CodeMirrorEditor = ({
         { dark: false }
       ),
     ].filter(Boolean) as Extension[];
+  }, [mode, ext, onChange, readOnly]);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    if (viewRef.current) {
+      viewRef.current.destroy();
+      viewRef.current = null;
+    }
 
     const state = EditorState.create({
-      doc: valueRef.current, // controlled value at mount
+      doc: valueRef.current,
       extensions,
     });
 
@@ -150,7 +132,7 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [editorRef, readOnly, height, ext, value, onChange]);
+  }, [editorRef, extensions, value]);
 
   // Sync external value → editor
 

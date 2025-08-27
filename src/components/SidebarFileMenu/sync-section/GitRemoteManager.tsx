@@ -225,31 +225,31 @@ export function RemoteManagerSection({
   repo,
   info,
   remoteRef,
+  className,
 }: {
   repo: GitRepo | Comlink.Remote<GitRepo>;
   info: RepoInfoType; //{ latestCommit: RepoLatestCommit; remotes: GitRemote[] };
   remoteRef: React.RefObject<{ show: (text?: string) => void }>;
+  className?: string;
 }) {
   return (
-    <div className="px-4 w-full flex justify-center ">
-      <div className="flex flex-col items-center w-full">
-        <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
-        <GitRemoteManager
-          remotes={info.remotes}
-          replaceGitRemote={(previousRemote, nextRemote) => {
-            void repo.replaceGitRemote(previousRemote, nextRemote);
-            remoteRef.current.show("remote replaced");
-          }}
-          addGitRemote={(remote) => {
-            void repo.addGitRemote(remote);
-            remoteRef.current.show("remote added");
-          }}
-          deleteGitRemote={(remote) => {
-            void repo.deleteGitRemote(remote);
-            remoteRef.current.show("remote deleted");
-          }}
-        />
-      </div>
+    <div className={cn("px-4 w-full flex justify-center flex-col items-center", className)}>
+      <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
+      <GitRemoteManager
+        remotes={info.remotes}
+        replaceGitRemote={(previousRemote, nextRemote) => {
+          void repo.replaceGitRemote(previousRemote, nextRemote);
+          remoteRef.current.show("remote replaced");
+        }}
+        addGitRemote={(remote) => {
+          void repo.addGitRemote(remote);
+          remoteRef.current.show("remote added");
+        }}
+        deleteGitRemote={(remote) => {
+          void repo.deleteGitRemote(remote);
+          remoteRef.current.show("remote deleted");
+        }}
+      />
     </div>
   );
 }
