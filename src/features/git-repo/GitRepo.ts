@@ -259,6 +259,15 @@ export class GitRepo {
     await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
   };
 
+  async pull({ ref }: { ref: string }) {
+    return this.git.pull({
+      fs: this.fs,
+      http,
+      dir: this.dir,
+      ref,
+    });
+  }
+
   async push({
     remote,
     ref,
@@ -317,6 +326,7 @@ export class GitRepo {
           "commit:end",
           "checkout:end",
           "pull:end",
+          "push:end",
           "merge:end",
           "addRemote:end",
           "branch:end",
