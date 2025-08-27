@@ -1,7 +1,7 @@
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { MdxEditorSelector } from "@/components/Editor/EditorConst";
-import { LivePreviewButton } from "@/components/Editor/LivePreviewButton";
+import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
@@ -33,7 +33,7 @@ import { ChevronRightIcon, FileText } from "lucide-react";
 import { useEffect, useMemo } from "react";
 
 const SourceEditorButton = () => (
-  <Button variant="outline" size="sm" onClick={() => setViewMode("source", "hash")}>
+  <Button variant="outline" onClick={() => setViewMode("source", "hash")}>
     <span className="text-xs flex justify-center items-center gap-1">
       Source
       <FileText size={12} />
@@ -126,7 +126,7 @@ export function useAllPlugins({
                   selectedEditMd={selectedEditMd}
                 />
               )}
-              <LivePreviewButton disabled={mimeType !== "text/markdown"} />
+              <LivePreviewButtons />
               <MdxSearchToolbar />
               <MdxToolbar />
             </>

@@ -11,7 +11,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { RefsManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
@@ -248,21 +248,113 @@ function SyncPullPushButtons() {
   );
 }
 
+function useInPlaceConfirmCmd() {
+  const cmdRef = useRef<{
+    open: <U extends () => unknown>(
+      message: string,
+      cb?: U,
+      options?: {
+        variant?: "destructive" | "default";
+        confirmText?: string;
+        cancelText?: string;
+      }
+    ) => Promise<ReturnType<U> | null>;
+  }>({
+    open: async () => null,
+  });
+
+  return {
+    open: <U extends () => unknown>(
+      message: string,
+      cb?: U,
+      options?: {
+        variant?: "destructive" | "default";
+        confirmText?: string;
+        cancelText?: string;
+      }
+    ) => cmdRef.current.open(message, cb, options),
+    cmdRef,
+  };
+}
+
 function InPlaceConfirmSection({
-  message,
-  onConfirm,
-  onCancel,
-  variant = "destructive",
-  confirmText = "OK",
-  cancelText = "Cancel",
+  cmdRef,
 }: {
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  variant?: "destructive" | "default";
-  confirmText?: string;
-  cancelText?: string;
+  cmdRef: React.ForwardedRef<{
+    open: <U extends () => unknown>(
+      message: string,
+      cb?: U,
+      options?: {
+        variant?: "destructive" | "default";
+        confirmText?: string;
+        cancelText?: string;
+      }
+    ) => Promise<ReturnType<U> | null>;
+  }>;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [variant, setVariant] = useState<"destructive" | "default">("destructive");
+  const [confirmText, setConfirmText] = useState("OK");
+  const [cancelText, setCancelText] = useState("Cancel");
+  const deferredPromiseRef = useRef<PromiseWithResolvers<unknown> | null>(null);
+  const openHandlerCb = useRef<((resolve: "ok" | "cancel") => Promise<unknown> | unknown) | null>(null);
+
+  const handleCancel = async () => {
+    await openHandlerCb.current?.("cancel");
+    setIsOpen(false);
+    openHandlerCb.current = null;
+    deferredPromiseRef.current = null;
+  };
+
+  const handleConfirm = async () => {
+    await openHandlerCb.current?.("ok");
+    setIsOpen(false);
+    openHandlerCb.current = null;
+    deferredPromiseRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      openHandlerCb.current = null;
+      deferredPromiseRef.current = null;
+    };
+  }, []);
+
+  useImperativeHandle(cmdRef, () => ({
+    open: <U extends () => unknown>(
+      message: string,
+      cb?: U,
+      options?: {
+        variant?: "destructive" | "default";
+        confirmText?: string;
+        cancelText?: string;
+      }
+    ) => {
+      deferredPromiseRef.current = Promise.withResolvers();
+      setMessage(message);
+      setVariant(options?.variant || "destructive");
+      setConfirmText(options?.confirmText || "OK");
+      setCancelText(options?.cancelText || "Cancel");
+      setIsOpen(true);
+      openHandlerCb.current = (okOrCancel) => {
+        try {
+          if (okOrCancel === "ok") {
+            deferredPromiseRef.current?.resolve(cb ? cb() : null);
+          }
+          if (okOrCancel === "cancel") {
+            deferredPromiseRef.current?.resolve(null);
+          }
+        } catch (error) {
+          deferredPromiseRef.current?.reject(error);
+        }
+      };
+      return deferredPromiseRef.current.promise as Promise<ReturnType<typeof cb> | null>;
+    },
+  }));
+
+  if (!isOpen) return null;
+
   return (
     <div
       className={cn("w-full border p-4 rounded-lg gap-4 flex flex-wrap justify-center items-center", {
@@ -272,10 +364,10 @@ function InPlaceConfirmSection({
     >
       <div className="text-2xs mb-2 uppercase min-w-[50%]">{message}</div>
       <div className="flex justify-end gap-2">
-        <Button size="sm" variant="outline" onClick={onCancel}>
+        <Button size="sm" variant="outline" onClick={handleCancel}>
           {cancelText}
         </Button>
-        <Button size="sm" variant={variant} onClick={onConfirm}>
+        <Button size="sm" variant={variant} onClick={handleConfirm}>
           {confirmText}
         </Button>
       </div>
@@ -311,7 +403,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const [selectRemote, setSelectRemote] = useState<string | null>(null);
   const coalescedRemote =
     selectRemote || info.remotes.find((r) => r.name === "origin")?.name || info.remotes[0]?.name || null;
-  const [showFetchErrorPane, setShowFetchErrorPane] = useState(false);
+  const { open: openConfirmPane, cmdRef: confirmPaneRef } = useInPlaceConfirmCmd();
 
   const [fetchPending, setFetchPending] = useState(false);
   const commitState = ((): CommitState => {
@@ -464,14 +556,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                     <TooltipToast cmdRef={fetchRef} sideOffset={10} />
                     Fetch Remote
                   </Button>
-                  {showFetchErrorPane && (
-                    <InPlaceConfirmSection
-                      message="Are you sure you want to delete this remote?"
-                      onConfirm={() => {}}
-                      onCancel={() => setShowFetchErrorPane(false)}
-                      variant="destructive"
-                    />
-                  )}
+                  <InPlaceConfirmSection cmdRef={confirmPaneRef} />
                 </div>
               )}
               {info.fullInitialized && info.currentRef && <SyncPullPushButtons />}
@@ -498,3 +583,5 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
     </SidebarGroup>
   );
 }
+
+// export { useInPlaceConfirmCmd };

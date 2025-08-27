@@ -6,7 +6,14 @@ import { useEffect, useRef, useState } from "react";
 const noCached = (filePath: string): string => {
   return filePath.split("?c=")[0]!;
 };
-export function useLiveCssFiles({ path, currentWorkspace }: { path: string | null; currentWorkspace: Workspace }) {
+export function useLiveCssFiles({
+  path,
+  currentWorkspace,
+}: {
+  path: string | null;
+  currentWorkspace: Workspace;
+  domElement?: HTMLElement | null;
+}) {
   const [cssFiles, setCssFiles] = useState<string[]>([]);
   const cacheBuster = useRef(Date.now());
   const cached = (filePath: string) => {
