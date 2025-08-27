@@ -134,7 +134,7 @@ export type IndexTrigger =
 export type ListenerCallback<T extends "create" | "rename" | "delete"> = Parameters<Disk[`${T}Listener`]>[0];
 
 export type DiskRemoteEventPayload = {
-  [DiskEvents.RENAME]: RemoteRenameFileType[];
+  // [DiskEvents.RENAME]: RemoteRenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   //for remotes or 'processes'(img node src replace on file move etc)
   //that write 'outside' not intended for local writes done via the editor
@@ -167,7 +167,7 @@ export const DiskEvents = {
 };
 
 type DiskLocalEventPayload = {
-  [DiskEvents.RENAME]: RenameFileType[];
+  // [DiskEvents.RENAME]: RenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   // [DiskEvents.OUTSIDE_UPDATE]: FilePathsType;
   [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
@@ -293,25 +293,32 @@ export abstract class Disk {
   }
 
   async setupRemoteListeners() {
+    const handleRename = async (data: RemoteRenameFileType[]) => {
+      // void this.local.emit(DiskEvents.RENAME, data.map(RenameFileType.New));
+      await this.fileTreeIndex();
+      void this.local.emit(DiskEvents.INDEX, {
+        type: "rename",
+        details: data,
+      });
+      console.debug("remote rename", JSON.stringify(data, null, 4));
+    };
+    const handleIndex = async (data: IndexTrigger | undefined) => {
+      await this.fileTreeIndex();
+      void this.local.emit(DiskEvents.INDEX, data);
+    };
+
+    const handleOutsideWrite = async ({ filePaths }: FilePathsType) => {
+      void this.local.emit(DiskEvents.OUTSIDE_WRITE, { filePaths });
+    };
+
     const listeners = [
       this.remote.init(),
-      this.remote.on(DiskEvents.RENAME, async (data) => {
-        void this.local.emit(DiskEvents.RENAME, data.map(RenameFileType.New));
-        await this.fileTreeIndex();
-        void this.local.emit(DiskEvents.INDEX, {
-          type: "rename",
-          details: data,
-        });
-        console.debug("remote rename", JSON.stringify(data, null, 4));
-      }),
-      this.remote.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
-        void this.local.emit(DiskEvents.OUTSIDE_WRITE, { filePaths });
-      }),
-
+      this.remote.on(DiskEvents.OUTSIDE_WRITE, handleOutsideWrite),
+      // >>>>>>>> this.remote.on(DiskEvents.RENAME, handleRename),
       this.remote.on(DiskEvents.INDEX, async (data) => {
-        await this.fileTreeIndex();
-        void this.local.emit(DiskEvents.INDEX, data);
+        if (data?.type === "rename") return handleRename(data.details);
       }),
+      this.remote.on(DiskEvents.INDEX, handleIndex),
     ];
     return () => listeners.forEach((p) => p());
   }
@@ -554,8 +561,12 @@ export abstract class Disk {
 
   private async broadcastRename(change: RenameFileType[]) {
     await this.fileTreeIndex();
-    void this.remote.emit(DiskEvents.RENAME, change);
-    void this.local.emit(DiskEvents.RENAME, change);
+    // void this.remote.emit(DiskEvents.RENAME, change);
+    void this.remote.emit(DiskEvents.INDEX, {
+      type: "rename",
+      details: change,
+    });
+    // void this.local.emit(DiskEvents.RENAME, change);
     void this.local.emit(DiskEvents.INDEX, {
       type: "rename",
       details: change,
