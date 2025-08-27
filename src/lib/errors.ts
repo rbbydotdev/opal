@@ -224,6 +224,7 @@ export function errF(strings: TemplateStringsArray, ...values: unknown[]): Error
       formattedValue = value !== undefined ? value : "";
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return result + formattedValue + str;
   }, "");
 

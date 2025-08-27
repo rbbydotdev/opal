@@ -46,7 +46,8 @@ export function GitRemoteManager({
   deleteGitRemote: (remoteName: string) => void;
   remoteSelectState: ReturnType<typeof useRemoteSelectState>;
 }) {
-  const { selectMode, setSelectMode, selectValue, setSelectValue, selectOpen, setSelectOpen, finalSelectValue } = remoteSelectState;
+  const { selectMode, setSelectMode, selectValue, setSelectValue, selectOpen, setSelectOpen, finalSelectValue } =
+    remoteSelectState;
   const cmdRef = useGitRemoteDialogCmd();
 
   return selectMode === "delete" ? (
