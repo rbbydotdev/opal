@@ -23,6 +23,39 @@ const LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED = "resizableRightPaneIsCollapsed";
 const PREVIEW_PANE_ID = "preview-pane-id";
 export const getPreviewPaneElement = () => document.getElementById(PREVIEW_PANE_ID);
 
+// Combined hook for managing both left and right pane states
+export const useSidebarPanes = () => {
+  // Left pane state
+  const leftWidth = useLocalStorage2<number>(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH);
+  const leftCollapsed = useLocalStorage2<boolean>(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
+  
+  // Right pane state
+  const rightWidth = useLocalStorage2<number>(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH, DEFAULT_RIGHT_PANE_WIDTH);
+  const rightCollapsed = useLocalStorage2<boolean>(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, false);
+
+  // Derived values for display
+  const leftDisplayWidth = leftCollapsed.storedValue ? COLLAPSED_STATE_WIDTH : leftWidth.storedValue;
+  const rightDisplayWidth = rightCollapsed.storedValue ? RIGHT_PANE_COLLAPSED_WIDTH : rightWidth.storedValue;
+
+  return {
+    left: {
+      width: leftWidth.storedValue,
+      setWidth: leftWidth.setStoredValue,
+      isCollapsed: leftCollapsed.storedValue,
+      setIsCollapsed: leftCollapsed.setStoredValue,
+      displayWidth: leftDisplayWidth,
+    },
+    right: {
+      width: rightWidth.storedValue,
+      setWidth: rightWidth.setStoredValue,
+      isCollapsed: rightCollapsed.storedValue,
+      setIsCollapsed: rightCollapsed.setStoredValue,
+      displayWidth: rightDisplayWidth,
+    },
+  };
+};
+
+// Legacy hooks for backward compatibility
 export function useLeftCollapsed() {
   return useLocalStorage2(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
 }
@@ -48,20 +81,8 @@ export const EditorSidebarLayout = ({
   renderHiddenSidebar?: boolean;
   rightPaneEnabled?: boolean;
 }) => {
-  // --- Left Sidebar State (persisted) ---
-  const { storedValue: persistedOpenWidth, setStoredValue: setPersistedOpenWidth } = useLeftWidth();
-  const { storedValue: isCollapsed, setStoredValue: setIsCollapsed } = useLeftCollapsed();
-
-  // --- Right Pane State (persisted) ---
-  const { storedValue: rightPanePersistedWidth, setStoredValue: setRightPanePersistedWidth } = useLocalStorage2<number>(
-    LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH,
-    DEFAULT_RIGHT_PANE_WIDTH
-  );
-
-  const { storedValue: rightPaneIsCollapsed, setStoredValue: setRightPaneIsCollapsed } = useLocalStorage2<boolean>(
-    LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED,
-    false
-  );
+  // --- Pane States (persisted) ---
+  const panes = useSidebarPanes();
 
   // --- Local UI State ---
   const [isResizing, setIsResizing] = useState(false);
@@ -70,11 +91,8 @@ export const EditorSidebarLayout = ({
   const rightPaneRef = useRef<HTMLElement>(null);
 
   // --- Derived Values ---
-  // REFACTOR: Instead of separate state, derive the display width directly
-  // from the persisted `isCollapsed` and `persistedOpenWidth` values.
-  // This makes the local storage hook the single source of truth.
-  const currentDisplayWidth = isCollapsed ? COLLAPSED_STATE_WIDTH : persistedOpenWidth;
-  const rightPaneCurrentWidth = rightPaneIsCollapsed ? RIGHT_PANE_COLLAPSED_WIDTH : rightPanePersistedWidth;
+  const currentDisplayWidth = panes.left.displayWidth;
+  const rightPaneCurrentWidth = panes.right.displayWidth;
 
   // --- Drag State ---
   const dragStartInfoRef = useRef<{
@@ -90,16 +108,14 @@ export const EditorSidebarLayout = ({
   // --- Controls Ref (to avoid stale closures in event listeners) ---
   const controlsRef = useRef<any>({});
   controlsRef.current = {
-    // REFACTOR: Removed currentDisplayWidth and its setter.
-    // The ref now only holds the primary state setters.
-    persistedOpenWidth,
-    setPersistedOpenWidth,
-    isCollapsed,
-    setIsCollapsed,
-    rightPanePersistedWidth,
-    setRightPanePersistedWidth,
-    rightPaneIsCollapsed,
-    setRightPaneIsCollapsed,
+    leftWidth: panes.left.width,
+    setLeftWidth: panes.left.setWidth,
+    leftIsCollapsed: panes.left.isCollapsed,
+    setLeftIsCollapsed: panes.left.setIsCollapsed,
+    rightWidth: panes.right.width,
+    setRightWidth: panes.right.setWidth,
+    rightIsCollapsed: panes.right.isCollapsed,
+    setRightIsCollapsed: panes.right.setIsCollapsed,
     rightPaneEnabled,
   };
 
@@ -113,16 +129,13 @@ export const EditorSidebarLayout = ({
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b" && !e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
-        // REFACTOR: Simply toggle the collapsed state. The width will be
-        // derived automatically on the next render.
-        $c.setIsCollapsed((prev: boolean) => !prev);
+        $c.setLeftIsCollapsed((prev: boolean) => !prev);
       }
       // Cmd+Shift+B toggle right pane
       else if ($c.rightPaneEnabled && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "b") {
         e.preventDefault();
         e.stopPropagation();
-        // REFACTOR: Simply toggle the collapsed state.
-        $c.setRightPaneIsCollapsed((prev: boolean) => !prev);
+        $c.setRightIsCollapsed((prev: boolean) => !prev);
       }
     };
 
@@ -165,14 +178,12 @@ export const EditorSidebarLayout = ({
         const dx = e.clientX - startX;
         const potentialNewWidth = initialDisplayWidth + dx;
 
-        // REFACTOR: Directly update the persisted state.
-        // Removed calls to setCurrentDisplayWidth.
         if (potentialNewWidth < SNAP_POINT_COLLAPSE_THRESHOLD) {
-          c.setIsCollapsed(true);
+          c.setLeftIsCollapsed(true);
         } else {
-          c.setIsCollapsed(false);
+          c.setLeftIsCollapsed(false);
           const newOpenWidth = Math.max(MIN_RESIZABLE_WIDTH, Math.min(potentialNewWidth, MAX_RESIZABLE_WIDTH));
-          c.setPersistedOpenWidth(newOpenWidth);
+          c.setLeftWidth(newOpenWidth);
         }
       }
 
@@ -182,14 +193,12 @@ export const EditorSidebarLayout = ({
         const dx = startX - e.clientX;
         const potentialNewWidth = initialDisplayWidth + dx;
 
-        // REFACTOR: Directly update the persisted state.
-        // Removed calls to setRightPaneCurrentWidth.
         if (potentialNewWidth < RIGHT_PANE_SNAP_THRESHOLD) {
-          c.setRightPaneIsCollapsed(true);
+          c.setRightIsCollapsed(true);
         } else {
-          c.setRightPaneIsCollapsed(false);
+          c.setRightIsCollapsed(false);
           const newWidth = Math.max(MIN_RIGHT_PANE_WIDTH, Math.min(potentialNewWidth, MAX_RIGHT_PANE_WIDTH));
-          c.setRightPanePersistedWidth(newWidth);
+          c.setRightWidth(newWidth);
         }
       }
     };

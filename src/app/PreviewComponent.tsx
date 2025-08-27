@@ -53,12 +53,8 @@ function PreviewComponentInternal() {
   if (isMarkdown(path)) {
     return (
       <>
-        <div className="w-full h-48 absolute top-0 right-0 text-2xs bg-slate-200 z-20 hidden">
-          cssFiles: {cssFiles.join(", ")}
-        </div>
         <ScrollSyncProvider scrollEmitter={scrollEmitter}>
           <Links hrefs={cssFiles} />
-
           <MarkdownRender path={path} />
         </ScrollSyncProvider>
       </>

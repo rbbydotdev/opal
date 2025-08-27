@@ -117,10 +117,12 @@ export function SidebarTreeViewMenuContent({
                   <SidebarMenuButton asChild className="h-6">
                     <TreeViewMenuParent depth={depth} node={displayNode}>
                       <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
-                        <span className="hover:underline" title={displayNode.type}>
+                        <span className="hover:underline flex" title={displayNode.type}>
                           {displayNode.displayText ?? displayNode.type}
                           {displayNode.children && displayNode.children.length > 0 ? (
-                            <span className="text-xs ml-1 text-muted-foreground">({displayNode.children.length})</span>
+                            <span className="text-xs ml-1 text-muted-foreground min-w-0 truncate">
+                              ({displayNode.children.length})
+                            </span>
                           ) : null}
                         </span>
                       </HighlightNodeSelector>

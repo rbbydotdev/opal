@@ -12,7 +12,17 @@ interface LinksProps {
   debounceMs?: number;
 }
 
-export const Links: React.FC<LinksProps> = ({ hrefs, debounceMs = 300 }) => {
+// domElement?: HTMLElement | null;
+
+export const Links: React.FC<LinksProps> = ({
+  hrefs,
+  debounceMs = 300,
+  domElement = document.head,
+}: {
+  hrefs: string[];
+  debounceMs?: number;
+  domElement?: HTMLElement | null;
+}) => {
   // Use the debounced version of the hrefs prop.
   // The effect below will only run after the user stops changing the hrefs
   // for the duration of debounceMs.
@@ -24,14 +34,14 @@ export const Links: React.FC<LinksProps> = ({ hrefs, debounceMs = 300 }) => {
     // --- Step 1: Add or Swap links based on the debounced hrefs array ---
     debouncedHrefs.forEach((newHref) => {
       const baseHref = getBaseHref(newHref);
-      const oldLink = document.querySelector<HTMLLinkElement>(`link[data-managed-href="${baseHref}"]`);
+      const oldLink = domElement?.querySelector<HTMLLinkElement>(`link[data-managed-href="${baseHref}"]`);
 
       if (!oldLink) {
         const newLink = document.createElement("link");
         newLink.rel = "stylesheet";
         newLink.href = newHref;
         newLink.setAttribute("data-managed-href", baseHref);
-        document.head.appendChild(newLink);
+        domElement?.appendChild(newLink);
       } else if (oldLink.href !== newHref) {
         const newLink = document.createElement("link");
         newLink.rel = "stylesheet";
@@ -46,7 +56,7 @@ export const Links: React.FC<LinksProps> = ({ hrefs, debounceMs = 300 }) => {
 
         newLink.addEventListener("load", handleLoadOrError);
         newLink.addEventListener("error", handleLoadOrError);
-        document.head.appendChild(newLink);
+        domElement?.appendChild(newLink);
       }
     });
 
@@ -59,7 +69,7 @@ export const Links: React.FC<LinksProps> = ({ hrefs, debounceMs = 300 }) => {
         link.remove();
       }
     });
-  }, [debouncedHrefs]); // The key change: this effect now depends on the debounced value.
+  }, [debouncedHrefs, domElement]); // The key change: this effect now depends on the debounced value.
 
   return null;
 };

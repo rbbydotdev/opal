@@ -156,6 +156,11 @@ export class GitPlaybook {
   };
 
   async fetchRemote(remote: string) {
+    //if no master or main branch, create one
+    // if (!(await this.repo.getBranch("main")) && !(await this.repo.getBranch("master"))) {
+    //   await this.repo.addGitBranch({ branchName: "main", checkout: true });
+    //   await this.initialCommit();
+    // }
     const remoteObj = await this.repo.getRemote(remote);
     if (!remoteObj) {
       throw new Error(`Remote ${remote} not found`);
@@ -172,6 +177,12 @@ export class GitPlaybook {
   }
 
   async addRemoteAndFetch(remote: GitRemote) {
+    //if no master or main branch, create one
+    // if (!(await this.repo.getBranch("main")) && !(await this.repo.getBranch("master"))) {
+    //   await this.repo.addGitBranch({ branchName: "main", checkout: true });
+    //   await this.initialCommit();
+    // }
+    const currentBranches = await this.repo.getBranches();
     await this.repo.addGitRemote(remote);
     const RemoteAuth = remote.authId ? await RemoteAuthDAO.GetByGuid(remote.authId) : null;
     const onAuth = RemoteAuth?.toAgent()?.onAuth;
