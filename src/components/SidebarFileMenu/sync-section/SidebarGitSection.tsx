@@ -27,7 +27,7 @@ import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { CommitManagerSection } from "./CommitManagerSection";
-import { RemoteManagerSection } from "./GitRemoteManager";
+import { RemoteManagerSection, useRemoteSelectState } from "./GitRemoteManager";
 
 function InfoCollapsible({ info }: { info: WorkspaceRepoType }) {
   const [open, setOpen] = useState(false);
@@ -293,10 +293,10 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
 
   // Remote management functions
   const addRemoteCmdRef = useGitRemoteDialogCmd();
+  const remoteSelectState = useRemoteSelectState(info.remotes);
 
   const handleFetchRemote = async () => {
-    // repo.playbook();
-    await playbook.addRemoteAndFetch(next);
+    console.error('not yet implemented');
   };
 
   const handleRemoteInit = () => {
@@ -379,12 +379,12 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   commitRef={commitManagerRef}
                 />
                 <Separator className="my-2" />
-                <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} />
+                <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} remoteSelectState={remoteSelectState} />
                 <SyncPullPushButtons />
               </>
             )}
             {!info.fullInitialized && info.bareInitialized && (
-              <RemoteManagerSection className="mt-2" repo={repo} info={info} remoteRef={remoteRef} />
+              <RemoteManagerSection className="mt-2" repo={repo} info={info} remoteRef={remoteRef} remoteSelectState={remoteSelectState} />
             )}
           </SidebarMenu>
         </CollapsibleContent>

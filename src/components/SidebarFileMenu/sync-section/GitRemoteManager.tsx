@@ -14,23 +14,40 @@ import * as Comlink from "comlink";
 import { Ellipsis, Pencil, Plus, SatelliteDishIcon, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+export function useRemoteSelectState(remotes: GitRemote[]) {
+  const defaultRemote = remotes.find((r) => r.name === "origin") || remotes[0];
+  const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
+  const [selectValue, setSelectValue] = useState<string | null>(defaultRemote?.name ?? null);
+  const [selectOpen, setSelectOpen] = useState(false);
+  const finalSelectValue = selectValue || defaultRemote?.name || remotes[0]?.name || null;
+
+  return {
+    selectMode,
+    setSelectMode,
+    selectValue,
+    setSelectValue,
+    selectOpen,
+    setSelectOpen,
+    finalSelectValue,
+    defaultRemote,
+  };
+}
+
 export function GitRemoteManager({
   remotes,
   addGitRemote,
   replaceGitRemote,
   deleteGitRemote,
+  remoteSelectState,
 }: {
   remotes: GitRemote[];
   addGitRemote: (remote: GitRemote) => void;
   replaceGitRemote: (previous: GitRemote, next: GitRemote) => void;
   deleteGitRemote: (remoteName: string) => void;
+  remoteSelectState: ReturnType<typeof useRemoteSelectState>;
 }) {
-  const defaultRemote = remotes.find((r) => r.name === "origin") || remotes[0];
-  const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  const [selectValue, setSelectValue] = useState<string | null>(defaultRemote?.name ?? null);
-  const [selectOpen, setSelectOpen] = useState(false);
+  const { selectMode, setSelectMode, selectValue, setSelectValue, selectOpen, setSelectOpen, finalSelectValue } = remoteSelectState;
   const cmdRef = useGitRemoteDialogCmd();
-  const finalSelectValue = selectValue || defaultRemote?.name || remotes[0]?.name || null;
 
   return selectMode === "delete" ? (
     <RemoteDelete
@@ -226,12 +243,17 @@ export function RemoteManagerSection({
   info,
   remoteRef,
   className,
+  remoteSelectState,
 }: {
   repo: GitRepo | Comlink.Remote<GitRepo>;
   info: RepoInfoType; //{ latestCommit: RepoLatestCommit; remotes: GitRemote[] };
   remoteRef: React.RefObject<{ show: (text?: string) => void }>;
   className?: string;
+  remoteSelectState?: ReturnType<typeof useRemoteSelectState>;
 }) {
+  const localRemoteSelectState = useRemoteSelectState(info.remotes);
+  const effectiveRemoteSelectState = remoteSelectState || localRemoteSelectState;
+
   return (
     <div className={cn("px-4 w-full flex justify-center flex-col items-center", className)}>
       <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
@@ -249,6 +271,7 @@ export function RemoteManagerSection({
           void repo.deleteGitRemote(remote);
           remoteRef.current.show("remote deleted");
         }}
+        remoteSelectState={effectiveRemoteSelectState}
       />
     </div>
   );
