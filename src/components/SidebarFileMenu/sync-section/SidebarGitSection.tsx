@@ -26,6 +26,8 @@ import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
+import { NotFoundError } from "@/lib/errors";
+import { useErrorToss } from "@/lib/errorToss";
 import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection, useRemoteSelectState } from "./GitRemoteManager";
 
@@ -267,6 +269,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: remoteRef } = useTooltipToastCmd();
   const { cmdRef: branchRef } = useTooltipToastCmd();
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
+  const tossError = useErrorToss();
 
   const exists = info.exists;
   const hasChanges = info.hasChanges;
@@ -296,15 +299,31 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const remoteSelectState = useRemoteSelectState(info.remotes);
 
   const handleFetchRemote = async () => {
-    console.error('not yet implemented');
+    if (!remoteSelectState.selectValue) return;
+    const remote = await repo.getRemote(remoteSelectState.selectValue);
+    if (!remote) {
+      return tossError(new NotFoundError("Remote not found"));
+    }
+    const result = await repo.fetch({
+      url: remote.url,
+      corsProxy: remote.gitCorsProxy,
+    });
+    // repo.info.
+    // const currentRemote: GitRemote = {};
+    // repo.fetch();
+    // console.error('not yet implemented');
   };
 
   const handleRemoteInit = () => {
     void repo.mustBeInitialized();
     void addRemoteCmdRef.current.open("add").then(async ({ next }) => {
-      if (!next) return;
-      await playbook.addRemoteAndFetch(next);
-      commitRef.current?.show("Remote added and fetched");
+      try {
+        if (!next) return;
+        await playbook.addRemoteAndFetch(next);
+        commitRef.current?.show("Remote added and fetched");
+      } catch (err) {
+        tossError(err as Error);
+      }
     });
   };
 
@@ -379,12 +398,23 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   commitRef={commitManagerRef}
                 />
                 <Separator className="my-2" />
-                <RemoteManagerSection repo={repo} info={info} remoteRef={remoteRef} remoteSelectState={remoteSelectState} />
+                <RemoteManagerSection
+                  repo={repo}
+                  info={info}
+                  remoteRef={remoteRef}
+                  remoteSelectState={remoteSelectState}
+                />
                 <SyncPullPushButtons />
               </>
             )}
             {!info.fullInitialized && info.bareInitialized && (
-              <RemoteManagerSection className="mt-2" repo={repo} info={info} remoteRef={remoteRef} remoteSelectState={remoteSelectState} />
+              <RemoteManagerSection
+                className="mt-2"
+                repo={repo}
+                info={info}
+                remoteRef={remoteRef}
+                remoteSelectState={remoteSelectState}
+              />
             )}
           </SidebarMenu>
         </CollapsibleContent>
