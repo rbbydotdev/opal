@@ -1,4 +1,5 @@
 import { Disk, NullDisk } from "@/Db/Disk";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
 import { GitRemote, GitRepo, MergeConflict } from "@/features/git-repo/GitRepo";
 import { absPath, AbsPath } from "@/lib/paths2";
@@ -160,21 +161,24 @@ export class GitPlaybook {
       throw new Error(`Remote ${remote} not found`);
     }
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
-    const onAuth = RemoteAuth ? IsoGitApiCallbackForRemoteAuth(RemoteAuth) : undefined;
+    const onAuth = RemoteAuth?.toAgent()?.onAuth;
+    console.log(onAuth?.());
     const result = await this.repo.fetch({
       url: remoteObj.url,
       corsProxy,
       onAuth,
     });
-    console.log("Fetch result:", result);
     return result;
   }
 
   async addRemoteAndFetch(remote: GitRemote) {
     await this.repo.addGitRemote(remote);
+    const RemoteAuth = remote.authId ? await RemoteAuthDAO.GetByGuid(remote.authId) : null;
+    const onAuth = RemoteAuth?.toAgent()?.onAuth;
     const result = await this.repo.fetch({
       url: remote.url,
       corsProxy: remote.gitCorsProxy,
+      onAuth,
     });
     console.log("Fetch result:", result);
     return result;

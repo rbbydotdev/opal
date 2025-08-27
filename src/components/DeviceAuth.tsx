@@ -49,7 +49,6 @@ export function DeviceAuth({
           setState("pin-loaded");
         },
         onAuthentication: async (auth) => {
-          // remoteAuthRef.current = await RemoteAuthDAO.Create("oauth-device", apiName, );
           remoteAuthRef.current = {
             accessToken: auth.token,
             login: auth.login,

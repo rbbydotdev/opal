@@ -1,4 +1,5 @@
 import {
+  Check,
   Download,
   GitBranchIcon,
   GitMerge,
@@ -8,6 +9,7 @@ import {
   PlusIcon,
   RefreshCw,
   Upload,
+  X,
 } from "lucide-react";
 import React, { useState } from "react";
 
@@ -19,7 +21,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
-import { useTooltipToastCmd } from "@/components/ui/TooltipToast";
+import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
@@ -27,6 +29,7 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
+import { cn } from "@/lib/utils";
 import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
@@ -91,7 +94,6 @@ function CommitSection({
   commitState,
   commit,
   initialCommit,
-  initialRepo,
   commitRef,
   mergeCommit,
   setShowMessageInput,
@@ -101,7 +103,6 @@ function CommitSection({
   commit: (message: string) => void;
   mergeCommit: () => void;
   initialCommit: () => void;
-  initialRepo: () => void;
   commitRef: React.RefObject<{
     show: (text?: string) => void;
   }>;
@@ -226,7 +227,7 @@ function SyncPullPushButtons() {
   return (
     <>
       <div>
-        <Button className="w-full" size="sm" variant="outline">
+        <Button className="w-full flex" size="sm" variant="outline">
           <RefreshCw className="mr-1" onClick={() => {}} />
           Sync Now
         </Button>
@@ -247,6 +248,41 @@ function SyncPullPushButtons() {
   );
 }
 
+function InPlaceConfirmSection({
+  message,
+  onConfirm,
+  onCancel,
+  variant = "destructive",
+  confirmText = "OK",
+  cancelText = "Cancel",
+}: {
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  variant?: "destructive" | "default";
+  confirmText?: string;
+  cancelText?: string;
+}) {
+  return (
+    <div
+      className={cn("w-full border p-4 rounded-lg gap-4 flex flex-wrap justify-center items-center", {
+        "border-destructive": variant === "destructive",
+        "border-border": variant === "default",
+      })}
+    >
+      <div className="text-2xs mb-2 uppercase min-w-[50%]">{message}</div>
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant="outline" onClick={onCancel}>
+          {cancelText}
+        </Button>
+        <Button size="sm" variant={variant} onClick={onConfirm}>
+          {confirmText}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { repo, playbook } = useWorkspaceContext().git;
   // const info = useSyncExternalStore(repo.infoListener, () => repo.getInfo()) ?? RepoDefaultInfo;
@@ -256,6 +292,9 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: remoteRef } = useTooltipToastCmd();
   const { cmdRef: branchRef } = useTooltipToastCmd();
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
+  const { cmdRef: fetchRef } = useTooltipToastCmd();
+  const { cmdRef: initFromRemoteRef } = useTooltipToastCmd();
+
   const tossError = useErrorToss();
 
   const exists = info.exists;
@@ -270,7 +309,11 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const [showMessageInput, setShowMessageInput] = useState(false);
   const [pending, setPending] = useState(false);
   const [selectRemote, setSelectRemote] = useState<string | null>(null);
+  const coalescedRemote =
+    selectRemote || info.remotes.find((r) => r.name === "origin")?.name || info.remotes[0]?.name || null;
+  const [showFetchErrorPane, setShowFetchErrorPane] = useState(false);
 
+  const [fetchPending, setFetchPending] = useState(false);
   const commitState = ((): CommitState => {
     if (pending) return "pending";
     if (isMerging) return "merge-commit";
@@ -287,25 +330,36 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   // const remoteSelectState = useRemoteSelectState(info.remotes);
 
   const handleFetchRemote = async () => {
+    let remote = null;
     try {
-      const remoteName = selectRemote;
-      if (!remoteName) return;
-      const remote = await repo.getRemote(remoteName);
-      if (!remote) {
-        throw new NotFoundError("Remote not found");
-      }
-      const result = await repo.fetch({
-        url: remote.url,
-        corsProxy: remote.gitCorsProxy,
-      });
-      console.log("Fetch result:", result);
+      const remoteName = coalescedRemote;
+      if (!remoteName) return console.error("No remote selected");
+      remote = await repo.getRemote(remoteName);
+      if (!remote) throw new NotFoundError("remote not found");
     } catch (e) {
-      tossError(e as Error);
+      return tossError(e as Error);
     }
-    // repo.info.
-    // const currentRemote: GitRemote = {};
-    // repo.fetch();
-    // console.error('not yet implemented');
+    try {
+      setFetchPending(true);
+      await playbook.fetchRemote(remote.name);
+      fetchRef.current?.show(
+        <span className="flex items-center gap-2 justify-center">
+          <Check size={10} />
+          Fetch completed
+        </span>
+      );
+    } catch (err) {
+      fetchRef.current?.show(
+        <span className="flex items-center gap-2 justify-center w-full h-full">
+          <X size={10} />
+          Error Fetching!
+        </span>,
+        "destructive"
+      );
+      console.error("Error fetching remote:", err);
+    } finally {
+      setFetchPending(false);
+    }
   };
 
   const handleRemoteInit = () => {
@@ -316,7 +370,9 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         await playbook.addRemoteAndFetch(next);
         commitRef.current?.show("Remote added and fetched");
       } catch (err) {
-        tossError(err as Error);
+        // tossError(err as Error);
+        console.error(err);
+        commitRef.current?.show("Could not fetch from remote", "destructive");
       }
     });
   };
@@ -359,7 +415,6 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 commit={(message) => playbook.addAllCommit({ message })}
                 mergeCommit={() => playbook.mergeCommit()}
                 initialCommit={() => playbook.initialCommit()}
-                initialRepo={() => repo.mustBeInitialized()}
                 commitRef={commitRef}
                 setShowMessageInput={setShowMessageInput}
                 setPending={setPending}
@@ -385,25 +440,41 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                     commitRef={commitManagerRef}
                   />
                   <Separator />
-                  <RemoteManagerSection
-                    repo={repo}
-                    info={info}
-                    remoteRef={remoteRef}
-                    setSelectRemote={setSelectRemote}
-                    selectRemote={selectRemote}
-                  />
-                  <SyncPullPushButtons />
                 </>
               )}
-              {!info.fullInitialized && info.bareInitialized && (
+              {(info.bareInitialized || info.currentRef) && (
                 <RemoteManagerSection
                   repo={repo}
                   info={info}
                   remoteRef={remoteRef}
                   setSelectRemote={setSelectRemote}
-                  selectRemote={selectRemote}
+                  selectRemote={coalescedRemote}
                 />
               )}
+              {hasRemotes && (
+                <div className="flex justify-center items-center w-full flex-col gap-4">
+                  <Button
+                    className="w-full disabled:cursor-pointer h-8"
+                    onClick={handleFetchRemote}
+                    size="sm"
+                    disabled={fetchPending}
+                    variant="outline"
+                  >
+                    {fetchPending ? <Loader className="mr-1 animate-spin" /> : <Import className="mr-1" />}
+                    <TooltipToast cmdRef={fetchRef} sideOffset={10} />
+                    Fetch Remote
+                  </Button>
+                  {showFetchErrorPane && (
+                    <InPlaceConfirmSection
+                      message="Are you sure you want to delete this remote?"
+                      onConfirm={() => {}}
+                      onCancel={() => setShowFetchErrorPane(false)}
+                      variant="destructive"
+                    />
+                  )}
+                </div>
+              )}
+              {info.fullInitialized && info.currentRef && <SyncPullPushButtons />}
 
               {((commitState === "bare-init" && !hasRemotes) || commitState === "init") && (
                 <Button
@@ -414,19 +485,9 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                 >
                   <Import className="mr-1" />
                   <span className="flex-1 min-w-0 truncate flex justify-center items-center">
+                    <TooltipToast cmdRef={initFromRemoteRef} sideOffset={10} />
                     {commitState === "bare-init" ? "Add Remote" : "Init From Remote"}
                   </span>
-                </Button>
-              )}
-              {commitState === "bare-init" && hasRemotes && (
-                <Button
-                  className="w-full disabled:cursor-pointer h-8"
-                  onClick={handleFetchRemote}
-                  size="sm"
-                  variant="outline"
-                >
-                  <Import className="mr-1" />
-                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">Fetch Remote</span>
                 </Button>
               )}
             </div>

@@ -210,20 +210,48 @@ export function applyTheme(options: ApplyThemeOptions): void {
   const oldStyle = document.getElementById("theme-style");
   if (oldStyle) oldStyle.remove();
 
+  // varObject
   // Build CSS for light and dark
-  const buildVars = (mode: "light" | "dark") => {
-    const vars: string[] = [];
-    ALL_VARS.forEach((key) => {
-      const value =
+  const buildVarObj = (mode: "light" | "dark") => {
+    const vars: Record<string, string> = {};
+    for (const key of ALL_VARS) {
+      vars[key] =
         themeItem!.cssVars[mode]?.[key] ??
         themeItem!.cssVars.theme?.[key] ??
         invertColor(themeItem!.cssVars[mode === "light" ? "dark" : "light"]?.[key] ?? "") ??
         invertColor(themeItem!.cssVars[mode]?.[key]!) ??
         "";
-      if (value) {
-        vars.push(`--${key}: ${value};`);
+    }
+    return vars;
+  };
+  const buildVars = (mode: "light" | "dark") => {
+    const vars: string[] = [];
+    const varObj = buildVarObj(mode);
+    // General healer for any base + -foreground / -background pair
+    const healAffixes = (vo: Record<string, string>, mode: "light" | "dark") => {
+      const isHex = (v?: string) => !!v && /^#([0-9a-f]{3,8})$/i.test(v.trim());
+      for (const key of Object.keys(vo)) {
+        const match = key.match(/^(.*)-(foreground|background)$/);
+        if (!match) continue;
+        const base = match[1];
+        if (!vo[base!]) continue;
+
+        const current = vo[key];
+        const baseVal = vo[base!];
+
+        if (!current || current.toLowerCase() === (baseVal ?? "").toLowerCase()) {
+          const inverted = isHex(baseVal) ? invertColor(baseVal ?? "") : "";
+          vo[key] = inverted || (mode === "light" ? "#fff" : "#000");
+        }
       }
-    });
+    };
+    healAffixes(varObj, mode);
+    for (const key of ALL_VARS) {
+      if (varObj[key]) {
+        vars.push(`--${key}: ${varObj[key]};`);
+      }
+    }
+
     return vars.join("\n");
   };
 
