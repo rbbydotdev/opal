@@ -10,9 +10,9 @@
 .code-mirror-source-editor {
   .cm-highlight-range,
   .cm-selectionBackground {
-    background-color: hsl(var(--ring)) !important;
+    background-color: var(--ring) !important;
     & > * {
-      color: red !important;
+      color: var(--foreground) !important;
     }
   }
 }

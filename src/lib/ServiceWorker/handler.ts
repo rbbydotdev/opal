@@ -72,11 +72,11 @@ export const faviconHandler = withRequestSignal((context: RequestContext) => {
 
 export const styleSheetHandler = withRequestSignal((context: RequestContext) => {
   const { url, workspaceName } = context;
-  // if (event.request.destination === "style" || true) {
+  // if (event.request.destination === "document") {
+  //   return fetch(event.request);
+  // }
   console.log(`Handling stylesheet request for: ${url.href}`);
   return handleStyleSheetRequest(url, workspaceName);
-  // }
-  // return fetch(event.request);
 });
 export const imageHandler = withRequestSignal((context: RequestContext) => {
   const { event, url, workspaceName } = context;
