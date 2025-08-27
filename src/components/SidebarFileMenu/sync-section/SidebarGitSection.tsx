@@ -7,7 +7,6 @@ import {
   Loader,
   PlusIcon,
   RefreshCw,
-  SquareArrowOutUpRightIcon,
   Upload,
 } from "lucide-react";
 import React, { useState } from "react";
@@ -138,10 +137,9 @@ function CommitSection({
     if (commitState === "commit") return setShowMessageInput(true);
   };
 
-  const handleRemoteInit = () => {
-    initialRepo();
-    // Remote handling is now in parent component
-  };
+  // const handleRemoteInit = () => {
+  //   initialRepo();
+  // };
 
   const handleMessageSubmit = async (message: string) => {
     if (message.trim()) return handleCommit(message);
@@ -186,17 +184,6 @@ function CommitSection({
       >
         <GitActionButtonLabel commitState={commitState} /*exists={exists}*/ />
       </Button>
-      {commitState === "init" && (
-        <Button
-          className="w-full disabled:cursor-pointer h-8 truncate"
-          onClick={handleRemoteInit}
-          size="sm"
-          variant="outline"
-        >
-          <SquareArrowOutUpRightIcon className="mr-1" />
-          <span className="flex-1 min-w-0 truncate">Initialize Git Repo From Remote</span>
-        </Button>
-      )}
     </>
   );
 }
@@ -352,30 +339,20 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         </CollapsibleTrigger>
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
-          <SidebarMenu className="gap-2 pb-3">
+          <SidebarMenu className="pb-3">
             <div className="px-4 pt-2 gap-4 flex flex-col">
               {exists && <LatestInfo info={info} />}
-              {commitState === "bare-init" && !hasRemotes && (
+              {/* {commitState === "init" && (
                 <Button
-                  className="w-full disabled:cursor-pointer h-8"
+                  className="w-full disabled:cursor-pointer h-8 truncate"
                   onClick={handleRemoteInit}
                   size="sm"
                   variant="outline"
                 >
-                  <Import className="mr-1" />
-                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">Add+Fetch Remote</span>
+                  <SquareArrowOutUpRightIcon className="mr-1" />
+                  <span className="flex-1 min-w-0 truncate">Initialize Git Repo From Remote</span>
                 </Button>
-              )}
-
-              <Button
-                className="w-full disabled:cursor-pointer h-8"
-                onClick={handleFetchRemote}
-                size="sm"
-                variant="outline"
-              >
-                <Import className="mr-1" />
-                <span className="flex-1 min-w-0 truncate flex justify-center items-center">Fetch Remote</span>
-              </Button>
+              )} */}
 
               <CommitSection
                 commitState={commitState}
@@ -407,7 +384,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                     currentCommit={info.latestCommit?.oid}
                     commitRef={commitManagerRef}
                   />
-                  <Separator className="my-2" />
+                  <Separator />
                   <RemoteManagerSection
                     repo={repo}
                     info={info}
@@ -420,13 +397,37 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               )}
               {!info.fullInitialized && info.bareInitialized && (
                 <RemoteManagerSection
-                  className="mt-2"
                   repo={repo}
                   info={info}
                   remoteRef={remoteRef}
                   setSelectRemote={setSelectRemote}
                   selectRemote={selectRemote}
                 />
+              )}
+
+              {((commitState === "bare-init" && !hasRemotes) || commitState === "init") && (
+                <Button
+                  className="w-full disabled:cursor-pointer h-8"
+                  onClick={handleRemoteInit}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Import className="mr-1" />
+                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">
+                    {commitState === "bare-init" ? "Add Remote" : "Init From Remote"}
+                  </span>
+                </Button>
+              )}
+              {commitState === "bare-init" && hasRemotes && (
+                <Button
+                  className="w-full disabled:cursor-pointer h-8"
+                  onClick={handleFetchRemote}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Import className="mr-1" />
+                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">Fetch Remote</span>
+                </Button>
               )}
             </div>
           </SidebarMenu>
