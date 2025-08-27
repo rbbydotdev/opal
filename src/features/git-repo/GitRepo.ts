@@ -232,6 +232,7 @@ export class GitRepo {
         "commit:end",
         "checkout:end",
         "pull:end",
+        "fetch:end",
         "merge:end",
         "addRemote:end",
         "branch:end",
@@ -259,14 +260,25 @@ export class GitRepo {
     await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
   };
 
-  async pull({ ref }: { ref: string }) {
-    return this.git.pull({
+  async fetch({ url, corsProxy }: { url: string; corsProxy?: string }) {
+    return this.git.fetch({
       fs: this.fs,
       http,
+      corsProxy,
+      url,
       dir: this.dir,
-      ref,
+      singleBranch: false,
     });
   }
+
+  // async pull({ ref }: { ref: string }) {
+  //   return this.git.pull({
+  //     fs: this.fs,
+  //     http,
+  //     dir: this.dir,
+  //     ref,
+  //   });
+  // }
 
   async push({
     remote,
