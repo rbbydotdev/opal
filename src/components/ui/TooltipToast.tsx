@@ -4,10 +4,11 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { useEffect, useImperativeHandle, useRef, useState } from "react";
 export function useTooltipToastCmd() {
   const cmdRef = useRef<{
-    show: (text?: string | React.ReactNode, variant?: "info" | "success" | "destructive") => void;
+    show: (text?: string | React.ReactNode, variant?: "info" | "success" | "destructive", duration?: number) => void;
   }>({ show: () => {} });
   return {
-    show: (text?: string, variant?: "info" | "success" | "destructive") => cmdRef.current.show(text, variant),
+    show: (text?: string, variant?: "info" | "success" | "destructive", duration?: number) =>
+      cmdRef.current.show(text, variant, duration),
     cmdRef,
   };
 }
@@ -24,7 +25,7 @@ export function TooltipToast({
   children?: React.ReactNode;
   className?: string;
   cmdRef: React.ForwardedRef<{
-    show: (text?: string, variant?: "info" | "success" | "destructive") => void;
+    show: (text?: string, variant?: "info" | "success" | "destructive", duration?: number) => void;
   }>;
 } & React.ComponentProps<typeof TooltipContent>) {
   const [visible, setVisible] = useState(false);
@@ -34,7 +35,7 @@ export function TooltipToast({
   useImperativeHandle(
     cmdRef,
     () => ({
-      show: (text?: string | React.ReactNode, variant?: "info" | "success" | "destructive") => {
+      show: (text?: string | React.ReactNode, variant?: "info" | "success" | "destructive", duration?: number) => {
         if (text) setText(text);
         setVisible(true);
         setVariant(variant || "info");
@@ -45,7 +46,7 @@ export function TooltipToast({
           setVisible(false);
           setText(messageText);
           setVariant("info");
-        }, durationMs);
+        }, duration ?? durationMs);
       },
     }),
     [durationMs, messageText]

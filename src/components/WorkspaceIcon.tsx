@@ -33,8 +33,8 @@ export function WorkspaceIcon({
   ...props
 }: WorkspaceIconProps & { variant?: keyof typeof variants }) {
   return (
-    <div className={twMerge(variants[variant ?? "square"], "inline-block overflow-clip", className)}>
+    <span className={twMerge(variants[variant ?? "square"], "inline-block overflow-clip", className)}>
       <Identicon {...props} size={props.size ?? 4} scale={props.scale ?? 5} />
-    </div>
+    </span>
   );
 }

@@ -104,7 +104,7 @@ function CommitSection({
   mergeCommit: () => void;
   initialCommit: () => void;
   commitRef: React.RefObject<{
-    show: (text?: string) => void;
+    show: (text?: string, variant?: "destructive" | "info" | "success") => void;
   }>;
   setShowMessageInput: (show: boolean) => void;
   setPending: (pending: boolean) => void;
@@ -133,9 +133,15 @@ function CommitSection({
   };
 
   const handleButtonClick = () => {
-    if (commitState === "merge-commit") return handleMergeCommit();
-    if (commitState === "init" || commitState == "bare-init") return handleInitialCommit();
-    if (commitState === "commit") return setShowMessageInput(true);
+    try {
+      if (commitState === "merge-commit") return handleMergeCommit();
+      if (commitState === "init" || commitState == "bare-init") return handleInitialCommit();
+      if (commitState === "commit") return setShowMessageInput(true);
+    } catch (error) {
+      console.error("Error during commit action:", error);
+      setPending(false);
+      commitRef.current?.show("Error during commit action");
+    }
   };
 
   // const handleRemoteInit = () => {
@@ -217,7 +223,7 @@ const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) =>
   if (!Icon || !labelStr) return null;
   return (
     <>
-      <Icon className="mr-1" />
+      <Icon className="mr-1 !w-5 !h-5" />
       <span className="flex-1 min-w-0 truncate flex justify-center items-center">{labelStr}</span>
     </>
   );
@@ -569,7 +575,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   size="sm"
                   variant="outline"
                 >
-                  <Import className="mr-1" />
+                  <Import className="mr-1 !w-5 !h-5" />
                   <span className="flex-1 min-w-0 truncate flex justify-center items-center">
                     <TooltipToast cmdRef={initFromRemoteRef} sideOffset={10} />
                     {commitState === "bare-init" ? "Add Remote" : "Init From Remote"}
