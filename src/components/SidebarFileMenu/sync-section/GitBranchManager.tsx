@@ -53,6 +53,7 @@ export function GitBranchManager({
   deleteGitBranch: (remoteName: string) => void;
   currentGitRef: GitRef | null;
 }) {
+  const [selectKey, setSelectKey] = useState(0);
   const [selectMode, setSelectMode] = useState<"select" | "delete" | "merge">("select");
   const [open, setOpen] = useState(false);
   const [inputMode, setInputMode] = useState<GitBranchInputModeType>(GitBranchInputModes.ADD);
@@ -65,7 +66,7 @@ export function GitBranchManager({
         items={refs.filter((b) => b !== currentGitRef?.value)}
         onCancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
-          mergeGitBranch({ from: name, into: currentGitRef.value });
+          mergeGitBranch({ from: name, into: currentGitRef.value }); //.catch(() => setCurrentBranch(""));
         }}
       />
     );
@@ -179,14 +180,24 @@ const GitBranchMenuDropDown = ({
   </DropdownMenu>
 );
 
-const BranchSelectPlaceHolder = ({ currentGitRef }: { currentGitRef: GitRef | null }) => (
+const BranchSelectPlaceHolder = ({
+  currentGitRef,
+  hasBranches,
+}: {
+  currentGitRef: GitRef | null;
+  hasBranches: boolean;
+}) => (
   <div className="w-full truncate flex items-center">
     <div className="p-1 mr-2">
       <GitPullRequestDraft className="stroke-ring flex-shrink-0 w-4 h-4" />
     </div>
-    {currentGitRef && isCommitRef(currentGitRef)
-      ? `Detached at ${currentGitRef.value.slice(0, 7) || currentGitRef.value}`
-      : "Detached"}
+    <div className="min-w-0 truncate">
+      {!hasBranches
+        ? "Bare Repo"
+        : currentGitRef && isCommitRef(currentGitRef)
+          ? `Detached at ${currentGitRef.value.slice(0, 7) || currentGitRef.value}`
+          : "Detached"}
+    </div>
   </div>
 );
 
@@ -209,16 +220,18 @@ function BranchSelect({
     <div className="w-full flex items-center justify-between space-x-2">
       <div className="w-full ">
         <Select key={value} onValueChange={(v) => onSelect(v)} value={value !== null ? value : undefined}>
-          {/* <SelectTrigger className={cn(className, "whitespace-normal truncate max-w-full bg-background text-xs h-8")}> */}
-
           <SelectTrigger
-            title="select branch"
+            title="Select Branch"
+            disabled={branches.length === 0}
             className={cn(
               className,
               "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"
             )}
           >
-            <SelectValue className="w-full" placeholder={<BranchSelectPlaceHolder currentGitRef={currentGitRef} />} />
+            <SelectValue
+              className="w-full"
+              placeholder={<BranchSelectPlaceHolder hasBranches={!!branches.length} currentGitRef={currentGitRef} />}
+            />
           </SelectTrigger>
           <SelectContent>
             {branches.map((branch) => (
@@ -256,10 +269,19 @@ export function RefsManagerSection({
   playbook: GitPlaybook;
   currentGitRef: GitRef | null;
   branches: string[];
-  branchRef: React.RefObject<{ show: (text?: string) => void }>;
+  branchRef: React.RefObject<{
+    show: (text?: string, variant?: "info" | "destructive" | "success", duration?: number) => void;
+  }>;
 }) {
   const { open: openConfirm } = useConfirm();
+  const [selectKey, setSelectKey] = useState(0);
   if (!branches) return null;
+
+  const handleError = (e: unknown, action: string) => {
+    console.error(e);
+    branchRef.current.show(`${action} failed - ` + unwrapError(e), "destructive", 10_000);
+    setSelectKey((k) => k + 1);
+  };
   const addGitBranch = (baseRef: GitRef, branch: GitBranchFormValue) => {
     try {
       // For branches, use the branch name as base
@@ -267,7 +289,7 @@ export function RefsManagerSection({
       void repo.addGitBranch({ branchName: branch.branch, symbolicRef: baseRef.value, checkout: true });
       branchRef.current.show("branch added");
     } catch (e) {
-      branchRef.current.show("checkout failed " + unwrapError(e));
+      handleError(e, "Add branch");
     }
   };
   const renameGitBranch = (remoteName: GitBranchFormValue, remote: GitBranchFormValue) => {
@@ -275,7 +297,7 @@ export function RefsManagerSection({
       void playbook.replaceGitBranch(remoteName.branch, remote.branch);
       branchRef.current.show("branch renamed");
     } catch (e) {
-      branchRef.current.show("checkout failed " + unwrapError(e));
+      handleError(e, "Rename branch");
     }
   };
   const deleteGitBranch = (remoteName: string) => {
@@ -288,10 +310,10 @@ export function RefsManagerSection({
       if (result) {
         branchRef.current.show("branch merged");
       } else {
-        branchRef.current.show("branch merge failed");
+        handleError("Merge failed", "Merge branch");
       }
     } catch (e) {
-      branchRef.current.show("checkout failed " + unwrapError(e));
+      handleError(e, "Merge branch");
     }
   };
   const setCurrentBranch = async (branch: string) => {
@@ -306,7 +328,7 @@ export function RefsManagerSection({
       }
       await playbook.switchBranch(branch);
     } catch (e) {
-      branchRef.current.show("checkout failed " + unwrapError(e));
+      handleError(e, "Switch branch");
     }
   };
   return (
@@ -314,6 +336,7 @@ export function RefsManagerSection({
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
+          key={selectKey}
           currentGitRef={currentGitRef}
           setCurrentBranch={setCurrentBranch}
           refs={[...(remoteRefs ?? []), ...branches]}

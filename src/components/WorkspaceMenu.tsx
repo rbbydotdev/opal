@@ -53,9 +53,9 @@ export function WorkspaceMenu({
 
 const CurrentWorkspaceBadge = ({ name, workspaceId }: { name: string; workspaceId: string }) => {
   return (
-    <div className="rounded p-1 px-2 flex items-center gap-2 border-2 border-secondary-foreground shadow-md text-foreground">
+    <span className="rounded p-1 px-2 inline-flex items-center gap-2 border-2 border-secondary-foreground shadow-md text-foreground">
       <WorkspaceIcon variant="round" input={workspaceId} />
       {name}
-    </div>
+    </span>
   );
 };
