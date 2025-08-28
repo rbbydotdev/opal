@@ -159,15 +159,8 @@ export function SidebarTreeViewMenuContent({
 }
 
 function BulletSquare({ children }: { children: React.ReactNode }) {
-  // if (asChild) {
-  //   return (
-  //     <Slot className="text-3xs mr-1 items-center flex justify-center w-3.5 h-3.5  p-0.5 rounded-sm bg-sidebar-primary/70 text-primary-foreground">
-  //       {children}
-  //     </Slot>
-  //   );
-  // }
   return (
-    <span className="text-3xs mr-1 items-center flex justify-center w-3.5 h-3.5  p-0.5 rounded-sm bg-sidebar-primary/70 text-primary-foreground">
+    <span className="text-3xs mr-1 items-center flex justify-center w-3.5 h-3.5  p-0.5 rounded-sm bg-sidebar-primary text-primary-foreground">
       {children}
     </span>
   );
