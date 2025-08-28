@@ -8,9 +8,9 @@ import { WorkspaceProvider } from "@/context/WorkspaceProvider";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isImage, isMarkdown } from "@/lib/paths2";
-import { useRouter, useSearch } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 // import "github-markdown-css/github-markdown-light.css";
-import { RefObject, useEffect, useMemo, useState } from "react";
+import { RefObject, useMemo, useState } from "react";
 
 export function PreviewComponent() {
   return (
@@ -29,21 +29,21 @@ function PreviewComponentInternal() {
     strict: false,
   }) as { sessionId: string };
   const { currentWorkspace } = useWorkspaceContext();
-  const router = useRouter();
 
   useRenamePathAdjuster({ path, currentWorkspace });
 
-  useEffect(() => {
-    //TODO this should just be a reusable hook somewhere
-    return currentWorkspace.renameListener((details) => {
-      const pathRename = details.find(({ oldPath }) => oldPath === path);
-      if (pathRename) {
-        router.history.replace(
-          window.location.pathname.replace(pathRename.oldPath, pathRename.newPath) + window.location.search
-        );
-      }
-    });
-  }, [currentWorkspace, path, router]);
+  // const router = useRouter();
+  // useEffect(() => {
+  //   //TODO this should just be a reusable hook somewhere
+  //   return currentWorkspace.renameListener((details) => {
+  //     const pathRename = details.find(({ oldPath }) => oldPath === path);
+  //     if (pathRename) {
+  //       router.history.replace(
+  //         window.location.pathname.replace(pathRename.oldPath, pathRename.newPath) + window.location.search
+  //       );
+  //     }
+  //   });
+  // }, [currentWorkspace, path, router]);
 
   const cssFiles = useLiveCssFiles({ path, currentWorkspace });
 

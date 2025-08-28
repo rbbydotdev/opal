@@ -1,13 +1,18 @@
 import { useSidebarPanes } from "@/app/EditorSidebarLayout";
 import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { useResolvePathForPreview } from "@/lib/useResolvePathForPreview";
 import { Link } from "@tanstack/react-router";
 import { SquareArrowUpRightIcon, X, Zap } from "lucide-react";
 
 export function LivePreviewButtons() {
   const { right } = useSidebarPanes();
+  const { path } = useWorkspaceRoute();
+  const { currentWorkspace } = useWorkspaceContext();
+  const previewNode = useResolvePathForPreview({ path, currentWorkspace });
 
-  const previewURL = useWorkspacePathPreviewURL();
+  const previewURL = useWorkspacePathPreviewURL(previewNode?.path);
   return (
     <div className={"flex  items-center justify-center flex-nowrap "}>
       <Button

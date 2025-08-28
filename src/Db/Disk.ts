@@ -899,7 +899,7 @@ export abstract class Disk {
     }
   }
 
-  async delete() {
+  async destroy() {
     return this.connector.delete();
   }
 
@@ -936,7 +936,7 @@ export class OpFsDisk extends Disk {
     this.ready = promise;
   }
 
-  async delete() {
+  async destroy() {
     await Promise.all([this.internalFs.tearDown(), ClientDb.disks.delete(this.guid)]);
   }
 }

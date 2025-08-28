@@ -349,7 +349,8 @@ function InPlaceConfirmSection({
           deferredPromiseRef.current?.reject(error);
         }
       };
-      return deferredPromiseRef.current.promise as Promise<ReturnType<typeof cb> | null>;
+      // Use NonNullable to ensure a function type when deriving ReturnType
+      return deferredPromiseRef.current.promise as Promise<ReturnType<NonNullable<typeof cb>> | null>;
     },
   }));
 

@@ -13,7 +13,6 @@ export function useRenamePathAdjuster({
   const router = useRouter();
 
   useEffect(() => {
-    //TODO this should just be a reusable hook somewhere
     if (path && currentWorkspace && !currentWorkspace.isNull) {
       return currentWorkspace.renameListener((details) => {
         const pathRename = details.find(({ oldPath }) => oldPath === path);

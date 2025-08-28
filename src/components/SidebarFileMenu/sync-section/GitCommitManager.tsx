@@ -51,7 +51,16 @@ export function GitCommitManager({
     void confirmOpen(
       () => resetHard(commitOid),
       "Reset to Hard",
-      `Are you sure you want to reset to <i><b>${commitOid.slice(0, 12)}</b></i>?<br/><i><b>⚠️ THIS WILL DISCARD ALL CHANGES MADE SINCE THE LAST COMMIT</b></i>`
+      <>
+        Are you sure you want to reset to
+        <i>
+          <b>{commitOid.slice(0, 12)}</b>
+        </i>
+        ?<br />
+        <i>
+          <b>⚠️ THIS WILL DISCARD ALL CHANGES MADE SINCE THE LAST COMMIT</b>
+        </i>
+      </>
     );
   };
 

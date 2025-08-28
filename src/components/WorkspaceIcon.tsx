@@ -2,15 +2,18 @@ import { Identicon } from "@/components/Identicon";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { twMerge } from "tailwind-merge";
 
-export function CurrentWorkspaceIcon(props: Omit<React.ComponentProps<typeof Identicon>, "input">) {
+export function CurrentWorkspaceIcon(
+  props: Omit<React.ComponentProps<typeof Identicon>, "input"> & { className?: string; variant?: keyof typeof variants }
+) {
   const { currentWorkspace } = useWorkspaceContext();
   if (currentWorkspace.isNull) return null;
 
-  return (
-    <div className="inline-block rounded-sm overflow-clip">
-      <Identicon input={currentWorkspace.guid} {...props} size={props.size ?? 4} scale={props.scale ?? 7} />
-    </div>
-  );
+  return <WorkspaceIcon input={currentWorkspace.guid} className={props.className} variant={props.variant} />;
+  // return (
+  //   <div className="inline-block rounded-sm overflow-clip">
+  //     <Identicon input={currentWorkspace.guid} {...props} size={props.size ?? 4} scale={props.scale ?? 7} />
+  //   </div>
+  // );
 }
 
 type WorkspaceIconProps = Omit<React.ComponentProps<typeof Identicon>, "size" | "scale"> & {

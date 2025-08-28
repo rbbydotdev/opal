@@ -20,6 +20,7 @@ export const SourceEditor = ({
   return (
     <div className="h-full">
       <div className="bg-sidebar"></div>
+
       <CodeMirrorEditor
         currentWorkspace={currentWorkspace}
         mimeType={mimeType as "text/css" | "text/plain" | "text/markdown"}

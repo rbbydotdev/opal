@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/context-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
+import { WorkspaceMenu } from "@/components/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { DiskDAO } from "@/Db/DiskDAO";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
@@ -281,7 +282,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
                           ws
                             .toModel()
                             .tearDown()
-                            .then((ws) => ws.delete())
+                            .then((ws) => ws.destroy())
                         )
                       )
                     ),
@@ -346,14 +347,16 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
           />
 
           {coalescedWorkspace && (
-            <BigButton
-              variant={variant}
-              icon={<WorkspaceIcon scale={shrink ? 5 : 7} input={coalescedWorkspace.guid} />}
-              title={coalescedWorkspace.name}
-              to={coalescedWorkspace.href}
-              truncate={true}
-              className="text-muted-foreground big-button-active whitespace-nowrap truncate"
-            />
+            <WorkspaceMenu workspace={coalescedWorkspace} key={coalescedWorkspace.guid}>
+              <BigButton
+                variant={variant}
+                icon={<WorkspaceIcon scale={shrink ? 5 : 7} input={coalescedWorkspace.guid} />}
+                title={coalescedWorkspace.name}
+                to={coalescedWorkspace.href}
+                truncate={true}
+                className="text-muted-foreground big-button-active whitespace-nowrap truncate"
+              />
+            </WorkspaceMenu>
           )}
 
           {otherWorkspacesCount > 0 && (
@@ -386,15 +389,16 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
 
               <CollapsibleContent className="w-full min-h-0 max-h-full overflow-y-scroll no-scrollbar flex justify-center gap-2 flex-col items-center">
                 {workspaces.map((workspace) => (
-                  <BigButton
-                    variant={variant}
-                    icon={<WorkspaceIcon scale={shrink ? 3 : 7} input={workspace.guid} />}
-                    to={workspace.href}
-                    truncate={true}
-                    className="whitespace-nowrap text-muted-foreground"
-                    title={workspace.name}
-                    key={workspace.guid}
-                  />
+                  <WorkspaceMenu workspace={workspace} key={workspace.guid}>
+                    <BigButton
+                      variant={variant}
+                      icon={<WorkspaceIcon scale={shrink ? 3 : 7} input={workspace.guid} />}
+                      to={workspace.href}
+                      truncate={true}
+                      className="whitespace-nowrap text-muted-foreground"
+                      title={workspace.name}
+                    />
+                  </WorkspaceMenu>
                 ))}
               </CollapsibleContent>
             </Collapsible>

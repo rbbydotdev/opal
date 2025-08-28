@@ -133,7 +133,7 @@ function SpotlightSearchInternal({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [deferredSearch, setDeferredSearch] = useState(""); // NEW
-  const [_isPending, startTransition] = useTransition(); // NEW
+  const [isPending, startTransition] = useTransition(); // NEW
 
   const [state, setState] = useState<"spotlight" | "prompt" | "select">("spotlight");
   const [promptPlaceholder, setPromptPlaceholder] = useState("Enter value...");
@@ -241,65 +241,68 @@ function SpotlightSearchInternal({
     return commands.map((cmd) => `${commandPrefix} ${cmd}`);
   }, [commandPrefix, commands]);
 
-  const sortedList = useMemo(() => {
-    resetActiveIndex();
+  const [sortedList, setSortedList] = useState<any[]>([]);
+  useEffect(() => {
+    startTransition(() => {
+      resetActiveIndex();
+      // MARK: Handle select state
+      if (state === "select" && currentPrompt && "options" in currentPrompt) {
+        const selectPrompt = currentPrompt as any;
+        const options = selectPrompt.options as string[];
+        const renderItem = selectPrompt.renderItem as ((option: string) => React.ReactNode) | undefined;
+        if (!deferredSearch.trim()) {
+          return setSortedList(
+            options.map((opt) => ({
+              element: renderItem ? renderItem(opt) : opt,
+              href: opt,
+            }))
+          );
+        }
 
-    // MARK: Handle select state
-    if (state === "select" && currentPrompt && "options" in currentPrompt) {
-      const selectPrompt = currentPrompt as any;
-      const options = selectPrompt.options as string[];
-      const renderItem = selectPrompt.renderItem as ((option: string) => React.ReactNode) | undefined;
-
-      if (!deferredSearch.trim()) {
-        return options.map((opt) => ({
-          element: renderItem ? renderItem(opt) : opt,
-          href: opt,
-        }));
+        return setSortedList(
+          fuzzysort.go(deferredSearch, options, { limit: 50 }).map((result) => ({
+            element: renderItem ? (
+              renderItem(result.target)
+            ) : (
+              <>
+                {result.highlight((m, i) => (
+                  <b className="text-highlight-focus bg-highlight-focus" key={i}>
+                    {m}
+                  </b>
+                ))}
+              </>
+            ),
+            href: result.target,
+          }))
+        );
+      } else if (!deferredSearch.trim()) {
+        // MARK: Spotlight state
+        return setSortedList(
+          visibleFiles.map((file) => ({
+            element: <>{file}</>,
+            href: file,
+          }))
+        );
+      } else {
+        return setSortedList(
+          fuzzysort
+            .go(deferredSearch, deferredSearch.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 })
+            .map((result) => ({
+              element: (
+                <>
+                  {result.highlight((m, i) => (
+                    <b className="text-highlight-foreground" key={i}>
+                      {m}
+                    </b>
+                  ))}
+                </>
+              ),
+              href: result.target,
+            }))
+        );
       }
-      const results = fuzzysort.go(deferredSearch, options, { limit: 50 });
-      return results.map((result) => ({
-        element: renderItem ? (
-          renderItem(result.target)
-        ) : (
-          <>
-            {result.highlight((m, i) => (
-              <b className="text-highlight-focus bg-highlight-focus" key={i}>
-                {m}
-              </b>
-            ))}
-          </>
-        ),
-        href: result.target,
-      }));
-    }
-
-    // MARK: Spotlight state
-    else if (!deferredSearch.trim()) {
-      return visibleFiles.map((file) => ({
-        element: <>{file}</>,
-        href: file,
-      }));
-    } else {
-      const results = fuzzysort.go(
-        deferredSearch,
-        deferredSearch.startsWith(commandPrefix) ? commandList : visibleFiles,
-        { limit: 50 }
-      );
-
-      return results.map((result) => ({
-        element: (
-          <>
-            {result.highlight((m, i) => (
-              <b className="text-highlight-foreground" key={i}>
-                {m}
-              </b>
-            ))}
-          </>
-        ),
-        href: result.target,
-      }));
-    }
-  }, [resetActiveIndex, state, currentPrompt, deferredSearch, visibleFiles, commandPrefix, commandList]);
+    });
+  }, [commandList, commandPrefix, currentPrompt, deferredSearch, resetActiveIndex, state, visibleFiles]);
 
   // Custom key handler that wraps the base handler for Cmd+P support and handles prompt/select states
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
