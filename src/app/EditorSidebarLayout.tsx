@@ -24,11 +24,15 @@ const PREVIEW_PANE_ID = "preview-pane-id";
 export const getPreviewPaneElement = () => document.getElementById(PREVIEW_PANE_ID);
 
 // Combined hook for managing both left and right pane states
-export const useSidebarPanes = () => {
+export const useSidebarPanes = ({
+  registerKeyboardListeners = false,
+}: {
+  registerKeyboardListeners?: boolean;
+} = {}) => {
   // Left pane state
   const leftWidth = useLocalStorage2<number>(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH);
   const leftCollapsed = useLocalStorage2<boolean>(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
-  
+
   // Right pane state
   const rightWidth = useLocalStorage2<number>(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH, DEFAULT_RIGHT_PANE_WIDTH);
   const rightCollapsed = useLocalStorage2<boolean>(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, false);
@@ -37,7 +41,7 @@ export const useSidebarPanes = () => {
   const leftDisplayWidth = leftCollapsed.storedValue ? COLLAPSED_STATE_WIDTH : leftWidth.storedValue;
   const rightDisplayWidth = rightCollapsed.storedValue ? RIGHT_PANE_COLLAPSED_WIDTH : rightWidth.storedValue;
 
-  return {
+  const controls = {
     left: {
       width: leftWidth.storedValue,
       setWidth: leftWidth.setStoredValue,
@@ -53,6 +57,31 @@ export const useSidebarPanes = () => {
       displayWidth: rightDisplayWidth,
     },
   };
+
+  const controlsRef = useRef(controls);
+
+  useEffect(() => {
+    if (!registerKeyboardListeners) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+B toggle left sidebar
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b" && !e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        controlsRef.current.left.setIsCollapsed((prev: boolean) => !prev);
+      }
+      // Cmd+Shift+B toggle right pane
+      else if (/*$c.rightPaneEnabled &&*/ (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        e.stopPropagation();
+        controlsRef.current.right.setIsCollapsed((prev: boolean) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [controls.left, controls.right, registerKeyboardListeners]); // Empty dependency array is correct here
+
+  return controls;
 };
 
 // Legacy hooks for backward compatibility
@@ -82,7 +111,7 @@ export const EditorSidebarLayout = ({
   rightPaneEnabled?: boolean;
 }) => {
   // --- Pane States (persisted) ---
-  const panes = useSidebarPanes();
+  const panes = useSidebarPanes({ registerKeyboardListeners: true });
 
   // --- Local UI State ---
   const [isResizing, setIsResizing] = useState(false);
@@ -118,30 +147,6 @@ export const EditorSidebarLayout = ({
     setRightIsCollapsed: panes.right.setIsCollapsed,
     rightPaneEnabled,
   };
-
-  // --- Keyboard Shortcuts ---
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const $c = controlsRef.current;
-      if (!$c) return;
-
-      // Cmd+B toggle left sidebar
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b" && !e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        $c.setLeftIsCollapsed((prev: boolean) => !prev);
-      }
-      // Cmd+Shift+B toggle right pane
-      else if ($c.rightPaneEnabled && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "b") {
-        e.preventDefault();
-        e.stopPropagation();
-        $c.setRightIsCollapsed((prev: boolean) => !prev);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []); // Empty dependency array is correct here
 
   // --- Mouse Down Handlers ---
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {

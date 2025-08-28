@@ -27,8 +27,8 @@ export function EditorSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <WorkspaceMenu workspace={currentWorkspace}>
-              <SidebarMenuButton className="_cursor-pointer pr-0" size="lg" asChild>
+            <WorkspaceMenu workspaceName={currentWorkspace.name} workspaceGuid={currentWorkspace.guid}>
+              <SidebarMenuButton className="pr-0" size="lg" asChild>
                 <Link
                   to="/workspace/$workspaceName"
                   params={{ workspaceName: currentWorkspace.name }}

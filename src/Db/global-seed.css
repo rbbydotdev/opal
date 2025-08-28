@@ -142,3 +142,9 @@ hr {
   border-top: 4px dotted #ffb347;
   margin: 2em 0;
 }
+
+img {
+  max-width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}

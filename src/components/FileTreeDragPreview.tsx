@@ -48,13 +48,18 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <div
               key={treeNode.path}
-              className="w-12 h-12 border border-foreground/80 bg-background rounded-lg"
+              className="w-12 h-12 border-2 border-foreground bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
               }}
             >
-              <Folder key={treeNode.path} size={48} strokeWidth={1} className="text-ring rounded" fill="white" />
+              <Folder
+                fill="var(--foreground)"
+                key={treeNode.path}
+                strokeWidth={1}
+                className="text-ring rounded w-full h-full"
+              />
             </div>
           );
         }
@@ -62,7 +67,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <div
               key={treeNode.path}
-              className="w-16 h-16  overflow-hidden border border-foreground/80 bg-background rounded-lg"
+              className="w-16 h-16  overflow-hidden border-2 border-foreground bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
@@ -80,7 +85,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
         return (
           <div
             key={treeNode.path}
-            className="w-12 h-12 border border-foreground/80 rounded-lg"
+            className="w-12 h-12 border-2 border-foreground rounded-lg"
             style={{
               ...transformStyle,
               boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
@@ -88,10 +93,9 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           >
             <FileTextIcon
               key={treeNode.path}
-              size={48}
               strokeWidth={1}
-              fill="white"
-              className="text-ring rounded bg-background"
+              fill="var(--foreground)"
+              className="text-ring rounded bg-background w-full h-full"
             />
           </div>
         );

@@ -105,7 +105,7 @@ function WorkspaceFilePage() {
       ) : !isMarkdown || isSourceView ? (
         <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} key={filePath} />
       ) : (
-        <WorkspaceMarkdownEditor key={filePath} currentWorkspace={currentWorkspace} />
+        <WorkspaceMarkdownEditor path={filePath} currentWorkspace={currentWorkspace} />
       )}
     </>
   );

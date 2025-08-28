@@ -82,10 +82,10 @@ function ImageRender() {
 function MarkdownRender({ path }: { path: AbsPath | null }) {
   const [contents, setContents] = useState<string | null>(null);
   const { currentWorkspace } = useWorkspaceContext();
-  const { initialContents } = useFileContents({
+  const { contents: initialContents } = useFileContents({
     currentWorkspace,
     path,
-    listenerCb: (contents) => {
+    onContentChange: (contents) => {
       setContents(stripFrontmatter(String(contents)));
     },
   });
@@ -94,13 +94,13 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
     [contents, initialContents]
   );
   const { scrollRef } = useScrollSync();
-
+  // useSidebarPanes({ registerKeyboardListeners: window.self !== window.top });
   return (
     <div
       ref={scrollRef as RefObject<HTMLDivElement>}
       className="pt-4 bg-inherit flex justify-center mt-12 w-full  p-4 m-0 h-[calc(100vh-48px)] overflow-y-scroll"
     >
-      <div className="_prose" dangerouslySetInnerHTML={{ __html: html }}></div>
+      <div dangerouslySetInnerHTML={{ __html: html }}></div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ export const SourceEditor = ({
   className?: string;
   mimeType?: string;
 }) => {
-  const { initialContents, updateDebounce, error } = useFileContents({ currentWorkspace });
+  const { contents: initialContents, updateDebounce, error } = useFileContents({ currentWorkspace });
   if (error) {
     throw error;
   }
