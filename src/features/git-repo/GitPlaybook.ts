@@ -191,6 +191,23 @@ export class GitPlaybook {
       corsProxy: remote.gitCorsProxy,
       onAuth,
     });
+    if (result.defaultBranch && !currentBranches.includes(result.defaultBranch)) {
+      await this.repo.setDefaultBranch(result.defaultBranch);
+      //check if default branch exists in remote refs
+      const remoteRef = `refs/remotes/${remote.name}/${result.defaultBranch}`;
+      console.log("Checking if remote ref exists:", remoteRef);
+      const remoteRefExists = await this.repo
+        .resolveRef({ ref: remoteRef })
+        .then(() => true)
+        .catch(() => false);
+      console.log("Remote ref exists:", remoteRefExists);
+      if (remoteRefExists) {
+        console.log("Adding local branch for remote default branch:", result.defaultBranch);
+        await this.repo.addGitBranch({ branchName: result.defaultBranch, symbolicRef: remoteRef });
+      } else {
+        console.log("Remote default branch does not exist in remote refs:", result.defaultBranch);
+      }
+    }
     console.log("Fetch result:", result);
     return result;
   }

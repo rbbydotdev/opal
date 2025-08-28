@@ -90,6 +90,7 @@ export const RepoDefaultInfo = {
   currentBranch: null as null | string,
   bareInitialized: false,
   fullInitialized: false,
+  defaultBranch: "main",
   branches: [] as string[],
   remotes: [] as GitRemote[],
   latestCommit: {
@@ -480,6 +481,7 @@ export class GitRepo {
           : null;
       const isMerging = await this.isMerging();
       return {
+        defaultBranch: await this.getDefaultBranch(),
         fullInitialized: this.state.fullInitialized,
         bareInitialized: this.state.bareInitialized,
         remoteRefs: await this.getRemoteRefs(),
@@ -694,6 +696,7 @@ export class GitRepo {
         defaultBranch: this.defaultMainBranch,
       });
       this.state.bareInitialized = true;
+      await this.setDefaultBranch(this.defaultMainBranch);
       await this.sync();
     }
     return (this.state.bareInitialized = true);
@@ -844,6 +847,15 @@ export class GitRepo {
     });
   };
 
+  setDefaultBranch = async (branchName: string): Promise<void> => {
+    await this.setConfig("defaultBranch.name", branchName);
+    this.defaultMainBranch = branchName;
+  };
+  getDefaultBranch = async (): Promise<string> => {
+    const branch = (await this.getConfig("defaultBranch.name")) || this.defaultMainBranch;
+    this.defaultMainBranch = branch;
+    return branch;
+  };
   setGitCorsProxy = async (remoteName: string, gitCorsProxy: string): Promise<void> => {
     return this.setConfig(`remote.${remoteName}.gitCorsProxy`, gitCorsProxy);
   };

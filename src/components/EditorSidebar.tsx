@@ -9,11 +9,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { CurrentWorkspaceIcon } from "@/components/WorkspaceIcon";
+import { WorkspaceMenu } from "@/components/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Opal } from "@/lib/Opal";
 import { Link } from "@tanstack/react-router";
 import React from "react";
 import { twMerge } from "tailwind-merge";
+
 export function EditorSidebar({
   className,
   ...restProps
@@ -25,22 +27,26 @@ export function EditorSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="_cursor-pointer pr-0" size="lg" asChild>
-              <Link
-                to="/workspace/$workspaceName"
-                params={{ workspaceName: currentWorkspace.name }}
-                className="flex items-center w-full"
-              >
-                <div className="flex items-center gap-2 border-2 border-secondary-foreground rounded p-2 shadow-md w-full">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
-                    <CurrentWorkspaceIcon size={4} scale={7} />
+            <WorkspaceMenu workspace={currentWorkspace}>
+              <SidebarMenuButton className="_cursor-pointer pr-0" size="lg" asChild>
+                <Link
+                  to="/workspace/$workspaceName"
+                  params={{ workspaceName: currentWorkspace.name }}
+                  className="flex items-center w-full"
+                >
+                  <div className="flex items-center gap-2 border-2 border-secondary-foreground rounded p-2 shadow-md w-full">
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
+                      <CurrentWorkspaceIcon size={4} scale={7} />
+                    </div>
+                    <div className="flex flex-col gap-0.5 leading-none truncate">
+                      <div className="whitespace-nowrap w-full truncate uppercase font-mono">
+                        {currentWorkspace.name}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-0.5 leading-none truncate">
-                    <div className="whitespace-nowrap w-full truncate uppercase font-mono">{currentWorkspace.name}</div>
-                  </div>
-                </div>
-              </Link>
-            </SidebarMenuButton>
+                </Link>
+              </SidebarMenuButton>
+            </WorkspaceMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

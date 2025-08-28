@@ -94,7 +94,7 @@ export class Workspace {
 
   static async DeleteAll() {
     const workspaces = await WorkspaceDAO.all();
-    return Promise.all(workspaces.map((workspace) => workspace.toModel().delete()));
+    return Promise.all(workspaces.map((workspace) => workspace.toModel().destroy()));
   }
 
   get href() {
@@ -534,14 +534,14 @@ export class Workspace {
     return this;
   }
 
-  async delete() {
+  async destroy() {
     return Promise.all([
       HistoryDAO.removeAllForWorkspaceId(this.id),
       this.disk.tearDown(),
       this.connector.delete(),
-      this.disk.delete(),
-      this.thumbs.delete(),
-      this.imageCache.delete(),
+      this.disk.destroy(),
+      this.thumbs.destroy(),
+      this.imageCache.destroy(),
     ]);
   }
 

@@ -5,6 +5,7 @@ import {
 } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { useEditorHistoryPlugin2WithContentWatch } from "@/components/Editor/history/useEditorHistoryPlugin2WithContentWatch";
+import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
@@ -204,18 +205,20 @@ export const CodeMirrorEditor = ({
   );
 };
 
+const SourceButton = () => (
+  <Button variant="outline" size="sm" onClick={() => setViewMode("rich-text", "hash+search")}>
+    <span className="text-xs flex justify-center items-center gap-1">
+      <ChevronLeftIcon size={12} />
+      <FileText size={12} /> Rich Text
+    </span>
+  </Button>
+);
 const CodeMirrorToolbar = ({ children }: { children?: React.ReactNode }) => {
   const { isMarkdown } = useCurrentFilepath();
   return (
     <div className="flex items-center justify-start p-2 bg-muted h-12">
-      {isMarkdown && (
-        <Button variant="outline" size="sm" onClick={() => setViewMode("rich-text", "hash+search")}>
-          <span className="text-xs flex justify-center items-center gap-1">
-            <ChevronLeftIcon size={12} />
-            <FileText size={12} /> Rich Text
-          </span>
-        </Button>
-      )}
+      {isMarkdown && <SourceButton />}
+      <LivePreviewButtons />
       {children}
     </div>
   );

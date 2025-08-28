@@ -4,12 +4,11 @@ import { MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
+import { SourceEditorButton } from "@/components/Editor/SourceEditorButton";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { useEditorHistoryPlugin2WithContentWatch } from "@/components/Editor/history/useEditorHistoryPlugin2WithContentWatch";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
-import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
-import { Button } from "@/components/ui/button";
 import { useFileContents } from "@/context/useFileContents";
 import {
   AdmonitionDirectiveDescriptor,
@@ -29,18 +28,7 @@ import {
   thematicBreakPlugin,
   toolbarPlugin,
 } from "@mdxeditor/editor";
-import { ChevronRightIcon, FileText } from "lucide-react";
 import { useEffect, useMemo } from "react";
-
-const SourceEditorButton = () => (
-  <Button variant="outline" onClick={() => setViewMode("source", "hash")}>
-    <span className="text-xs flex justify-center items-center gap-1">
-      Source
-      <FileText size={12} />
-      <ChevronRightIcon size={12} />
-    </span>
-  </Button>
-);
 
 function MdxEditorInFocus() {
   return Boolean(document.activeElement?.closest(MdxEditorSelector));

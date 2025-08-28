@@ -16,7 +16,7 @@ export class ImageCache {
   getCache() {
     return (this._cache ??= ImageCache.getCache(this.getCacheId()));
   }
-  delete = async () => {
+  destroy = async () => {
     await caches.delete(this.getCacheId());
   };
 }

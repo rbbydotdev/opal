@@ -12,7 +12,11 @@ import {
 import React, { createContext, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 type ConfirmContextType = {
-  open: <U extends () => unknown>(cb: U, title: string, description: string) => Promise<ReturnType<U>>;
+  open: <U extends () => unknown>(
+    cb: U,
+    title: React.ReactNode,
+    description: React.ReactNode
+  ) => Promise<ReturnType<U>>;
 };
 
 const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
@@ -36,12 +40,16 @@ export function useConfirm() {
 
 function useConfirmCmd() {
   const cmdRef = useRef<{
-    open: <U extends () => unknown>(cb: U, title: string, description: string) => Promise<ReturnType<U>>;
+    open: <U extends () => unknown>(
+      cb: U,
+      title: React.ReactNode,
+      description: React.ReactNode
+    ) => Promise<ReturnType<U>>;
   }>({
     open: async () => undefined as any,
   });
   return {
-    open: <U extends () => unknown>(cb: U, title: string, description: string) =>
+    open: <U extends () => unknown>(cb: U, title: React.ReactNode, description: React.ReactNode) =>
       cmdRef.current.open(cb, title, description),
     cmdRef,
   };
@@ -51,13 +59,13 @@ export function Confirm({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{
-    open: (cb: <T>() => T, title: string, description: string) => void;
+    open: (cb: <T>() => T, title: React.ReactNode, description: React.ReactNode) => void;
   }>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const deferredPromiseRef = useRef<PromiseWithResolvers<unknown> | null>(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState<string>("");
+  const [title, setTitle] = useState<React.ReactNode>(null);
+  const [description, setDescription] = useState<React.ReactNode>();
   const openHandlerCb = useRef<((resolve: "ok" | "cancel") => Promise<unknown> | unknown) | null>(null);
 
   const handleCancel = async () => {
@@ -88,7 +96,7 @@ export function Confirm({
   }, []);
 
   useImperativeHandle(cmdRef, () => ({
-    open: (cb: <T>() => T, title: string, description: string) => {
+    open: (cb: <T>() => T, title: React.ReactNode, description: React.ReactNode) => {
       deferredPromiseRef.current = Promise.withResolvers();
       setTitle(title);
       setDescription(description);
@@ -115,11 +123,7 @@ export function Confirm({
       <AlertDialogContent onKeyDown={handleKeyDown}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          {/<\/?[a-z][\s\S]*>/i.test(description) ? (
-            <AlertDialogDescription className="[&_*]:leading-8" dangerouslySetInnerHTML={{ __html: description }} />
-          ) : (
-            <AlertDialogDescription className="[&_*]:leading-8">{description}</AlertDialogDescription>
-          )}
+          <AlertDialogDescription className="[&_*]:leading-8">{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleCancel} ref={(ref) => ref?.focus()}>

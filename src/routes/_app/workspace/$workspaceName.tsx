@@ -7,9 +7,9 @@ import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import useFavicon from "@/hooks/useFavicon";
-import { prefix } from "@/lib/paths2";
+import { useResolvePathForPreview } from "@/lib/useResolvePathForPreview";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Toaster } from "sonner";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName")({
@@ -22,17 +22,7 @@ function WorkspaceLayout() {
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
 
-  const previewNode = useMemo(() => {
-    if (!path) return null;
-    const currentNode = currentWorkspace.nodeFromPath(path);
-    if (currentNode?.isMarkdownFile()) return currentNode;
-    if (currentNode?.isImageFile()) return null;
-    return (
-      currentNode?.siblings().find((node) => node.isMarkdownFile() && prefix(node.path) === prefix(path)) ||
-      currentNode?.siblings().find((node) => node.isMarkdownFile()) ||
-      currentNode
-    );
-  }, [currentWorkspace, path]);
+  const previewNode = useResolvePathForPreview({ path, currentWorkspace });
 
   const previewURL = useWorkspacePathPreviewURL(previewNode?.path);
 
