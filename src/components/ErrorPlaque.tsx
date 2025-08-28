@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApplicationError } from "@/lib/errors";
-import { RotateCcw } from "lucide-react";
+// import { RotateCcw } from "lucide-react";
 
 export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {
   return (
@@ -10,14 +10,14 @@ export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {
       className="relative overflow-hidden cursor-pointer w-full h-full bg-destructive opacity-100 border border-destructive text-destructive rounded flex items-center justify-center"
     >
       {/* Centered button */}
-      <button
+      {/* <button
         className="hover:scale-110 z-10 text-white bg-destructive h-16 w-16 border-white border rounded p-4 active:scale-90 transition-all"
         onClick={() => {
           reset?.();
         }}
       >
         <RotateCcw />
-      </button>
+      </button> */}
 
       {/* Background pattern */}
       <div

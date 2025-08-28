@@ -31,18 +31,19 @@ export function WorkspaceMenu({
                 }
               },
               "Delete Workspace",
-              <div className="text-lg flex flex-col gap-2">
-                <div>⚠️ Are you sure you want to delete this workspace ?</div>
-                <div>
+              <span className="text-lg flex flex-col gap-2">
+                <span>⚠️ Are you sure you want to delete this workspace ?</span>
+                <span>
                   <CurrentWorkspaceBadge name={workspaceName} workspaceId={workspaceGuid} />
-                </div>
+                </span>
                 <b>This action cannot be undone.</b>
-              </div>
+              </span>
             );
           }}
         >
-          <div className="gap-2 flex items-center justify-center w-full">
-            <Delete className="text-destructive" size={12} /> <div>Delete</div>
+          <div className="gap-2 flex items-center justify-center w-full h-full">
+            <Delete className="text-destructive w-5 h-5" size={12} strokeWidth={1} />
+            Delete
           </div>
         </ContextMenuItem>
       </ContextMenuContent>
