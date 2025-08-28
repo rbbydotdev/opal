@@ -1,30 +1,21 @@
 import { useConfirm } from "@/components/Confirm";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { CurrentWorkspaceIcon } from "@/components/WorkspaceIcon";
-import { Workspace } from "@/Db/Workspace";
+import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { useRouter } from "@tanstack/react-router";
 import { Delete } from "lucide-react";
-import { useMemo } from "react";
 
 export function WorkspaceMenu({
   children,
-  workspace,
+  workspaceGuid,
+  workspaceName,
 }: {
   children: React.ReactNode;
-  workspace: Workspace | WorkspaceDAO;
+  workspaceName: string;
+  workspaceGuid: string;
 }) {
   const router = useRouter();
   const { open } = useConfirm();
-  const ws = useMemo(() => {
-    if (workspace instanceof Workspace) {
-      return workspace;
-    } else {
-      return workspace.toModel();
-    }
-  }, [workspace]);
-  const currentWorkspace = ws;
-  if (currentWorkspace.isNull) return null;
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -33,6 +24,7 @@ export function WorkspaceMenu({
           onClick={() => {
             void open(
               async () => {
+                const currentWorkspace = await WorkspaceDAO.FetchByGuid(workspaceGuid).then((ws) => ws.toModel());
                 await currentWorkspace.destroy();
                 if (currentWorkspace.href === window.location.pathname) {
                   void router.navigate({ to: "/" });
@@ -40,9 +32,9 @@ export function WorkspaceMenu({
               },
               "Delete Workspace",
               <div className="text-lg flex flex-col gap-2">
-                <div>⚠️ Are you sure you want to delete workspace ?</div>
+                <div>⚠️ Are you sure you want to delete this workspace ?</div>
                 <div>
-                  <CurrentWorkspaceBadge name={currentWorkspace.name} />
+                  <CurrentWorkspaceBadge name={workspaceName} workspaceId={workspaceGuid} />
                 </div>
                 <b>This action cannot be undone.</b>
               </div>
@@ -58,10 +50,10 @@ export function WorkspaceMenu({
   );
 }
 
-const CurrentWorkspaceBadge = ({ name }: { name: string }) => {
+const CurrentWorkspaceBadge = ({ name, workspaceId }: { name: string; workspaceId: string }) => {
   return (
-    <div className="rounded p-1 px-2 flex items-center gap-2 border-2 border-secondary-foreground shadow-md">
-      <CurrentWorkspaceIcon variant="round" />
+    <div className="rounded p-1 px-2 flex items-center gap-2 border-2 border-secondary-foreground shadow-md text-foreground">
+      <WorkspaceIcon variant="round" input={workspaceId} />
       {name}
     </div>
   );

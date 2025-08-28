@@ -109,14 +109,6 @@ It’s rich, comforting, and perfect for a cozy meal.
 
 ---
 
-## Math Example
-
-The cooking ratio for onions to broth is approximately:
-
-$$ \text{Onions} : \text{Broth} = 1 : 2 $$
-
----
-
 ## Blockquote with Nested List
 
 > Cooking French Onion Soup requires:  

@@ -8,18 +8,21 @@ import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
+import { AbsPath } from "@/lib/paths2";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { ComponentProps, useRef } from "react";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
-export function WorkspaceMarkdownEditor({ currentWorkspace }: { currentWorkspace: Workspace }) {
+export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
   const editorRef = useRef<MDXEditorMethods>(null);
-  const { initialContents, updateDebounce, error } = useFileContents({
+  const {
+    contents: initialContents,
+    updateDebounce,
+    error,
+  } = useFileContents({
+    path,
     currentWorkspace,
-    listenerCb: (newContent) => {
-      //this is for out of editor updates like via another opened window or image path updates
-      editorRef.current?.setMarkdown(newContent ?? "");
-    },
+    onContentChange: (c) => editorRef.current?.setMarkdown(c),
   });
 
   if (error) throw error;

@@ -15,12 +15,9 @@ export function useEditorHistoryPlugin2WithContentWatch({
 }) {
   const cbRef = useRef<(md: string) => void>(() => {});
   const { currentWorkspace } = useWorkspaceContext();
-  const { initialContents, writeFileContents, contentEmitter } = useFileContents({
+  const { contents: initialContents, writeFileContents } = useFileContents({
     currentWorkspace,
-    listenerCb: (md) => {
-      // console.log(md);
-      cbRef.current(md || "");
-    },
+    onContentChange: (c) => cbRef.current(c),
   });
 
   const documentId = useWorkspaceDocumentId(String(initialContents || ""));

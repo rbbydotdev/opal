@@ -10,11 +10,13 @@ import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMod
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
 import { useFileContents } from "@/context/useFileContents";
-import { useCurrentFilepath } from "@/context/WorkspaceContext";
+import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
+import { AbsPath } from "@/lib/paths2";
+import { useResolvePathForPreview } from "@/lib/useResolvePathForPreview";
 import { cn } from "@/lib/utils";
 import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
@@ -25,6 +27,7 @@ import { yamlFrontmatter } from "@codemirror/lang-yaml";
 import { languages } from "@codemirror/language-data";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
+import { useRouter } from "@tanstack/react-router";
 import { basicSetup } from "codemirror";
 import { ChevronLeftIcon, FileText } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
@@ -176,13 +179,14 @@ export const CodeMirrorEditor = ({
     workspaceId: currentWorkspace.id,
     historyStorage: historyDB,
   });
+  const { path } = useWorkspaceRoute();
 
   const { scrollEmitter, sessionId } = useWorkspacePathScrollChannel();
   const cmScroller = useWatchElement(".cm-scroller");
   return (
     <>
       <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
-        <CodeMirrorToolbar>
+        <CodeMirrorToolbar currentWorkspace={currentWorkspace} path={path}>
           {false && (
             <EditHistoryMenu
               finalizeRestore={(md) => updateDebounce(md)}
@@ -205,19 +209,33 @@ export const CodeMirrorEditor = ({
   );
 };
 
-const SourceButton = () => (
-  <Button variant="outline" size="sm" onClick={() => setViewMode("rich-text", "hash+search")}>
+const SourceButton = ({ onClick }: { onClick: () => void }) => (
+  <Button variant="outline" size="sm" onClick={onClick}>
     <span className="text-xs flex justify-center items-center gap-1">
       <ChevronLeftIcon size={12} />
       <FileText size={12} /> Rich Text
     </span>
   </Button>
 );
-const CodeMirrorToolbar = ({ children }: { children?: React.ReactNode }) => {
+const CodeMirrorToolbar = ({
+  children,
+  path,
+  currentWorkspace,
+}: {
+  children?: React.ReactNode;
+  path: AbsPath | null;
+  currentWorkspace: Workspace;
+}) => {
   const { isMarkdown } = useCurrentFilepath();
+  const previewNode = useResolvePathForPreview({ path, currentWorkspace });
+  const router = useRouter();
   return (
-    <div className="flex items-center justify-start p-2 bg-muted h-12">
-      {isMarkdown && <SourceButton />}
+    <div className="flex items-center justify-start p-2 bg-muted h-12 gap-2">
+      {isMarkdown && <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />}
+      {!isMarkdown && previewNode?.isMarkdownFile() && (
+        <SourceButton onClick={() => router.navigate({ to: currentWorkspace.resolveFileUrl(previewNode.path) })} />
+      )}
+
       <LivePreviewButtons />
       {children}
     </div>

@@ -347,7 +347,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
           />
 
           {coalescedWorkspace && (
-            <WorkspaceMenu workspace={coalescedWorkspace} key={coalescedWorkspace.guid}>
+            <WorkspaceMenu workspaceGuid={coalescedWorkspace.guid} workspaceName={coalescedWorkspace.name}>
               <BigButton
                 variant={variant}
                 icon={<WorkspaceIcon scale={shrink ? 5 : 7} input={coalescedWorkspace.guid} />}
@@ -389,7 +389,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
 
               <CollapsibleContent className="w-full min-h-0 max-h-full overflow-y-scroll no-scrollbar flex justify-center gap-2 flex-col items-center">
                 {workspaces.map((workspace) => (
-                  <WorkspaceMenu workspace={workspace} key={workspace.guid}>
+                  <WorkspaceMenu workspaceGuid={workspace.guid} key={workspace.guid} workspaceName={workspace.name}>
                     <BigButton
                       variant={variant}
                       icon={<WorkspaceIcon scale={shrink ? 3 : 7} input={workspace.guid} />}

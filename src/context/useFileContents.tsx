@@ -42,18 +42,18 @@ export function useContentEmitter() {
 
 export function useFileContents({
   currentWorkspace,
-  listenerCb,
+  onContentChange,
   debounceMs = 250,
   path,
 }: {
   currentWorkspace: Workspace;
-  listenerCb?: (content: string | null) => void;
+  onContentChange?: (content: string) => void;
   debounceMs?: number;
   path?: AbsPath | null;
 }) {
-  const listenerCbRef = useRef(listenerCb);
+  const onContentChangeRef = useRef(onContentChange);
   const { path: currentRoutePath } = useWorkspaceRoute();
-  const [initialContents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
+  const [contents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
   const [error, setError] = useState<null | Error>(null);
   const navigate = useNavigate();
   const contentEmitter = useContentEmitter();
@@ -101,12 +101,17 @@ export function useFileContents({
     }
   }, [currentWorkspace, filePath, navigate]);
 
-  // useEffect(() => {
-  //   //Mount Remote Listener
-  //   if (filePath) {
-  //     return currentWorkspace.disk.remoteUpdateListener(filePath, setInitialContents);
-  //   }
-  // }, [currentWorkspace.disk, filePath]);
+  useEffect(() => {
+    return onContentChangeRef.current?.(String(contents ?? ""));
+  }, [contents]);
+  useEffect(() => {
+    //hmmmmmmmmmmmmmmmmmmmmmmmm
+    return contentEmitter.listen(ContentEvents.UPDATE, (c) => {
+      if (c !== contents) {
+        onContentChangeRef.current?.(String(c ?? ""));
+      }
+    });
+  });
 
   useEffect(() => {
     //Mount Local Listener
@@ -115,13 +120,6 @@ export function useFileContents({
     }
   }, [currentWorkspace.disk, filePath]);
 
-  // useEffect(() => {
-  //   //mount additional listener
-  //   if (listenerCbRef.current && filePath) {
-  //     return currentWorkspace.disk.outsideWriteListener(filePath, listenerCbRef.current);
-  //   }
-  // }, [currentWorkspace, filePath]);
-
   useEffect(() => {
     if (filePath) {
       return currentWorkspace.disk.outsideWriteListener(filePath, (content) =>
@@ -129,11 +127,13 @@ export function useFileContents({
       );
     }
   }, [contentEmitter, currentWorkspace.disk, filePath]);
-  useEffect(() => {
-    if (listenerCbRef.current && filePath) {
-      return contentEmitter.listen(ContentEvents.UPDATE, listenerCbRef.current);
-    }
-  }, [contentEmitter, filePath]);
+
+  // DEPRECATED
+  // useEffect(() => {
+  //   if (listenerCbRef.current && filePath) {
+  //     return contentEmitter.listen(ContentEvents.UPDATE, listenerCbRef.current);
+  //   }
+  // }, [contentEmitter, filePath]);
 
   // function insideListener(cb: (content: string | null) => void) {
   //   return contentEmitter.on(ContentEvents.UPDATE, cb);
@@ -148,7 +148,7 @@ export function useFileContents({
     contentEmitter,
     error,
     filePath,
-    initialContents: initialContents !== null ? String(initialContents) : null,
+    contents: contents !== null ? String(contents) : null,
     mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
     writeFileContents,
     updateDebounce,
