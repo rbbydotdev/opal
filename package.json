@@ -100,6 +100,7 @@
     "codemirror": "^6.0.2",
     "comlink": "^4.4.2",
     "comlink-async-generator": "^0.0.1",
+    "culori": "^4.0.2",
     "dexie": "^4.0.10",
     "dexie-encrypted": "^2.0.0",
     "dexie-react-hooks": "^1.1.7",

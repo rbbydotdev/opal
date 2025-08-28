@@ -1,7 +1,9 @@
 import { Disk, NullDisk } from "@/Db/Disk";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
+import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitRemote, GitRepo, MergeConflict } from "@/features/git-repo/GitRepo";
+import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
 import { Remote } from "comlink";
@@ -73,8 +75,14 @@ export class GitPlaybook {
   async initialCommit() {
     await this.repo.mustBeInitialized();
     await this.repo.add(".");
+
+    //for bare initialized with remote branch we do not want a collision
+    const branches = await this.repo.getBranches().catch(() => []);
+    const main = await this.repo.defaultMainBranch;
+
     await this.repo.commit({
       message: "Initial commit",
+      ref: getUniqueSlug(main, branches),
     });
   }
 
@@ -167,7 +175,6 @@ export class GitPlaybook {
     }
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
     const onAuth = RemoteAuth?.toAgent()?.onAuth;
-    console.log(onAuth?.());
     const result = await this.repo.fetch({
       url: remoteObj.url,
       corsProxy,
@@ -194,7 +201,9 @@ export class GitPlaybook {
     if (result.defaultBranch && !currentBranches.includes(result.defaultBranch)) {
       await this.repo.setDefaultBranch(result.defaultBranch);
       //check if default branch exists in remote refs
-      const remoteRef = `refs/remotes/${remote.name}/${result.defaultBranch}`;
+      // abbreviateRef
+      const defaultBranchShort = gitAbbreviateRef(result.defaultBranch)!; //.split("/").at(-1)!;
+      const remoteRef = `refs/remotes/${remote.name}/${defaultBranchShort}`;
       console.log("Checking if remote ref exists:", remoteRef);
       const remoteRefExists = await this.repo
         .resolveRef({ ref: remoteRef })
@@ -203,7 +212,7 @@ export class GitPlaybook {
       console.log("Remote ref exists:", remoteRefExists);
       if (remoteRefExists) {
         console.log("Adding local branch for remote default branch:", result.defaultBranch);
-        await this.repo.addGitBranch({ branchName: result.defaultBranch, symbolicRef: remoteRef });
+        await this.repo.addGitBranch({ branchName: defaultBranchShort, symbolicRef: remoteRef, checkout: false });
       } else {
         console.log("Remote default branch does not exist in remote refs:", result.defaultBranch);
       }

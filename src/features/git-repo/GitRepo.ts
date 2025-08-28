@@ -690,6 +690,8 @@ export class GitRepo {
   mustBeInitialized = async (): Promise<boolean> => {
     if (this.state.fullInitialized) return true;
     if (!(await this.fullInitialized())) {
+      //if we are bare intialized we may have fetched refs we dont want to collide with
+      // const branches = await this.getBranches().catch(() => []);
       await this.git.init({
         fs: this.fs,
         dir: this.dir,
@@ -699,7 +701,8 @@ export class GitRepo {
       await this.setDefaultBranch(this.defaultMainBranch);
       await this.sync();
     }
-    return (this.state.bareInitialized = true);
+    this.state.bareInitialized = true;
+    return true;
   };
 
   commit = async ({
@@ -757,7 +760,7 @@ export class GitRepo {
     return await this.checkoutRef({ ref: this.defaultMainBranch });
   };
 
-  checkoutRef = async ({ ref, force = true }: { ref: string; force?: boolean }): Promise<string | void> => {
+  checkoutRef = async ({ ref, force = false }: { ref: string; force?: boolean }): Promise<string | void> => {
     if (await this.isMerging()) {
       // throw new Error("Cannot checkout while merging. Please resolve conflicts first.");
       await this.resetMergeState();

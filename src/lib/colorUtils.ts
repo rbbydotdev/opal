@@ -196,3 +196,70 @@ export function invertColor(color: string): string {
       .join("")
   );
 }
+
+export type ColorFormat = "hex" | "rgb" | "hsl" | "oklch" | "lch" | "hwb";
+
+// import {
+// } from "culori";
+// Conversion functions
+// Function 	Conversion
+// convertA98ToXyz65(color) → color 	a98 → xyz65
+// convertCubehelixToRgb(color) → color 	cubehelix → rgb
+// convertDlchToLab65(color) → color 	dlch → lab65
+// convertHsiToRgb(color) → color 	hsi → rgb
+// convertHslToRgb(color) → color 	hsl → rgb
+// convertHsvToRgb(color) → color 	hsv → rgb
+// convertHwbToRgb(color) → color 	hwb → rgb
+// convertJabToJch(color) → color 	jab → jch
+// convertJabToRgb(color) → color 	jab → rgb
+// convertJabToXyz65(color) → color 	jab → xyz65
+// convertJchToJab(color) → color 	jch → jab
+// convertLab65ToDlch(color) → color 	lab65 → dlch
+// convertLab65ToRgb(color) → color 	lab65 → rgb
+// convertLab65ToXyz65(color) → color 	lab65 → xyz65
+// convertLabToLch(color) → color 	lab → lch
+// convertLabToRgb(color) → color 	lab → rgb
+// convertLabToXyz50(color) → color 	lab → xyz50
+// convertLchToLab(color) → color 	lch → lab
+// convertLchuvToLuv(color) → color 	lchuv → luv
+// convertLrgbToOklab(color) → color 	lrgb → oklab
+// convertLrgbToRgb(color) → color 	lrgb → rgb
+// convertLuvToLchuv(color) → color 	luv → lchuv
+// convertLuvToXyz50(color) → color 	luv → xyz50
+// convertOkhslToOklab(color) → color 	okhsl → oklab
+// convertOkhsvToOklab(color) → color 	okhsv → oklab
+// convertOklabToLrgb(color) → color 	oklab → lrgb
+// convertOklabToOkhsl(color) → color 	oklab → okhsl
+// convertOklabToOkhsv(color) → color 	oklab → okhsv
+// convertOklabToRgb(color) → color 	oklab → rgb
+// convertP3ToXyz65(color) → color 	p3 → xyz65
+// convertProphotoToXyz50(color) → color 	prophoto → xyz50
+// convertRec2020ToXyz65(color) → color 	rec2020 → xyz65
+// convertRgbToCubehelix(color) → color 	rgb → cubehelix
+// convertRgbToHsi(color) → color 	rgb → hsi
+// convertRgbToHsl(color) → color 	rgb → hsl
+// convertRgbToHsv(color) → color 	rgb → hsv
+// convertRgbToHwb(color) → color 	rgb → hwb
+// convertRgbToJab(color) → color 	rgb → jab
+// convertRgbToLab65(color) → color 	rgb → lab65
+// convertRgbToLab(color) → color 	rgb → lab
+// convertRgbToLrgb(color) → color 	rgb → lrgb
+// convertRgbToOklab(color) → color 	rgb → oklab
+// convertRgbToXyb(color) → color 	rgb → xyb
+// convertRgbToXyz50(color) → color 	rgb → xyz50
+// convertRgbToXyz65(color) → color 	rgb → xyz65
+// convertRgbToYiq(color) → color 	rgb → yiq
+// convertXybToRgb(color) → color 	xyb → rgb
+// convertXyz50ToLab(color) → color 	xyz50 → lab
+// convertXyz50ToLuv(color) → color 	xyz50 → luv
+// convertXyz50ToProphoto(color) → color 	xyz50 → prophoto
+// convertXyz50ToRgb(color) → color 	xyz50 → rgb
+// convertXyz50ToXyz65(color) → color 	xyz50 → xyz65
+// convertXyz65ToA98(color) → color 	xyz65 → a98
+// convertXyz65ToJab(color) → color 	xyz65 → jab
+// convertXyz65ToLab65(color) → color 	xyz65 → lab65
+// convertXyz65ToP3(color) → color 	xyz65 → p3
+// convertXyz65ToRec2020(color) → color 	xyz65 → rec2020
+// convertXyz65ToRgb(color) → color 	xyz65 → rgb
+// convertXyz65ToXyz50(color) → color 	xyz65 → xyz50
+// convertYiqToRgb(color) → color 	yiq → rgb

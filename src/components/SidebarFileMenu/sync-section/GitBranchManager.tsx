@@ -29,6 +29,7 @@ import { gitBranchSchema } from "@/components/SidebarFileMenu/sync-section/gitBr
 import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Input } from "@/components/ui/input";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
+import { unwrapError } from "@/lib/errors";
 import { Remote } from "comlink";
 
 const isLockedBranch = (branch: string) => {
@@ -260,37 +261,53 @@ export function RefsManagerSection({
   const { open: openConfirm } = useConfirm();
   if (!branches) return null;
   const addGitBranch = (baseRef: GitRef, branch: GitBranchFormValue) => {
-    // For branches, use the branch name as base
-    // For commits, use the commit hash as base
-    void repo.addGitBranch({ branchName: branch.branch, symbolicRef: baseRef.value, checkout: true });
-    branchRef.current.show("branch added");
+    try {
+      // For branches, use the branch name as base
+      // For commits, use the commit hash as base
+      void repo.addGitBranch({ branchName: branch.branch, symbolicRef: baseRef.value, checkout: true });
+      branchRef.current.show("branch added");
+    } catch (e) {
+      branchRef.current.show("checkout failed " + unwrapError(e));
+    }
   };
   const renameGitBranch = (remoteName: GitBranchFormValue, remote: GitBranchFormValue) => {
-    void playbook.replaceGitBranch(remoteName.branch, remote.branch);
-    branchRef.current.show("branch renamed");
+    try {
+      void playbook.replaceGitBranch(remoteName.branch, remote.branch);
+      branchRef.current.show("branch renamed");
+    } catch (e) {
+      branchRef.current.show("checkout failed " + unwrapError(e));
+    }
   };
   const deleteGitBranch = (remoteName: string) => {
     void repo.deleteGitBranch(remoteName);
     branchRef.current.show("branch deleted");
   };
   const mergeGitBranch = async ({ from, into }: { from: string; into: string }) => {
-    const result = await playbook.merge({ from, into });
-    if (result) {
-      branchRef.current.show("branch merged");
-    } else {
-      branchRef.current.show("branch merge failed");
+    try {
+      const result = await playbook.merge({ from, into });
+      if (result) {
+        branchRef.current.show("branch merged");
+      } else {
+        branchRef.current.show("branch merge failed");
+      }
+    } catch (e) {
+      branchRef.current.show("checkout failed " + unwrapError(e));
     }
   };
   const setCurrentBranch = async (branch: string) => {
-    if (branch === currentGitRef?.value) return;
-    if (info.hasChanges && currentGitRef?.type === "commit") {
-      const _result = await openConfirm(
-        playbook.newBranchFromCurrentOrphan,
-        "Uncommitted Changes",
-        "You have uncommitted changes on an orphaned commit. Save as new branch?"
-      );
+    try {
+      if (branch === currentGitRef?.value) return;
+      if (info.hasChanges && currentGitRef?.type === "commit") {
+        const _result = await openConfirm(
+          playbook.newBranchFromCurrentOrphan,
+          "Uncommitted Changes",
+          "You have uncommitted changes on an orphaned commit. Save as new branch?"
+        );
+      }
+      await playbook.switchBranch(branch);
+    } catch (e) {
+      branchRef.current.show("checkout failed " + unwrapError(e));
     }
-    await playbook.switchBranch(branch);
   };
   return (
     <div className="w-full flex justify-center ">
