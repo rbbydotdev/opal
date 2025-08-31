@@ -17,12 +17,13 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
       workspaceId: sourceWorkspaceId,
     } = data.getDataAsJson<TreeNodeDataTransferJType>(INTERNAL_NODE_FILE_TYPE);
     const sourceWorkspace =
-      currentWorkspace.name === sourceWorkspaceId
+      currentWorkspace.id === sourceWorkspaceId
         ? currentWorkspace
         : await WorkspaceDAO.FetchByNameOrId(
-            sourceWorkspaceId ?? currentWorkspace.name /* todo should not be undefined but here we are */
+            sourceWorkspaceId ?? currentWorkspace.id /* todo should not be undefined but here we are */
           ).then((ws) => ws.toModel().init());
 
+    // console.log(reduceLineage(fileNodes!));
     if (action && fileNodes) {
       try {
         const copyNodes: [from: TreeNode, to: AbsPath][] = fileNodes.map(
@@ -34,15 +35,13 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
         );
         if (copyNodes.length === 0) return;
 
-        if (sourceWorkspaceId && currentWorkspace.name !== sourceWorkspaceId) {
+        if (sourceWorkspaceId && currentWorkspace.id !== sourceWorkspaceId) {
           //Transfer Across Workspace
-          // console.debug(`transfering files across workspaces ${sourceWorkspace} to ${currentWorkspace.name}`);
           //can make this just do a plain copy when workids are the same
           await currentWorkspace.transferFiles(copyNodes, sourceWorkspaceId, currentWorkspace);
           //TOAST
         } else {
           //some redundancy with transferFiles
-          // console.debug(`copying files within workspace ${currentWorkspace.name}`);
           // TODO: rename images in markdown && expand menu for item
           await currentWorkspace.copyMultipleFiles(copyNodes);
 

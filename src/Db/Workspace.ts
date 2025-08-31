@@ -341,7 +341,7 @@ export class Workspace {
     return unsub;
   };
 
-  copyMultipleFiles(copyNodes: [from: TreeNode, to: AbsPath | TreeNode][]) {
+  copyMultipleFiles(copyNodes: [from: TreeNode, toRoot: AbsPath | TreeNode][]) {
     return this.disk.copyMultiple(copyNodes);
   }
   copyFile(source: AbsPath | TreeNode, targetPath: AbsPath, overWrite = false) {
