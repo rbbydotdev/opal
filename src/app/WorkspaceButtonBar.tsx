@@ -77,7 +77,7 @@ function BigButton({
   const isSmall = variant === "sm";
 
   return (
-    <Tooltip>
+    <Tooltip open={isSmall ? undefined : false}>
       <TooltipTrigger asChild>
         <Link
           {...restProps}
@@ -112,11 +112,9 @@ function BigButton({
           </div>
         </Link>
       </TooltipTrigger>
-      {isSmall && title ? (
-        <TooltipContent side="right" align="center" className="uppercase">
-          {title}
-        </TooltipContent>
-      ) : null}
+      <TooltipContent side="right" align="center" className="uppercase">
+        {title}
+      </TooltipContent>
     </Tooltip>
   );
 }
