@@ -10,6 +10,7 @@ import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTr
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
+import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Trash2 } from "lucide-react";
@@ -18,8 +19,6 @@ import { useMemo, useState } from "react";
 const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; hasDepth: boolean }) => {
   const [dragEnter, setDragEnter] = useState(false);
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
-
-  const rootNode = useMemo(() => currentWorkspace.nodeFromPath(absPath("/"))!, [currentWorkspace]);
 
   const { setFileTreeCtx } = useFileTreeMenuCtx();
   const handleClick = () => {
@@ -34,7 +33,7 @@ const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; h
   };
   const { handleDrop } = useFileTreeDragDrop({ currentWorkspace, onMoveMultiple: renameDirOrFileMultiple });
   return (
-    <MainFileTreeContextMenu fileNode={rootNode} currentWorkspace={currentWorkspace}>
+    <MainFileTreeContextMenu fileNode={RootNode} currentWorkspace={currentWorkspace}>
       <div
         className={cn(
           "cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
@@ -42,7 +41,7 @@ const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; h
           { "mb-[5px] visible": hasDepth },
           { "invisible h-2": !hasDepth }
         )}
-        onDrop={(e) => handleDrop(e, rootNode)}
+        onDrop={(e) => handleDrop(e, RootNode)}
         onDragEnter={() => setDragEnter(true)}
         onDragLeave={() => setDragEnter(false)}
         onMouseLeave={() => setDragEnter(false)}
@@ -71,6 +70,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
       FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
       title={"Files"}
       className={className}
+      // contentBanner={<Banner hasDepth={hasDepth} currentWorkspace={currentWorkspace} />}
       contentBanner={!fileTreeDir.isEmpty() ? <Banner hasDepth={hasDepth} currentWorkspace={currentWorkspace} /> : null}
       filter={SpecialDirs.All} // Exclude trash and git directories etc
     >

@@ -76,7 +76,7 @@ export const SidebarFileMenuFiles = ({
             </SidebarGroupLabel>
 
             <CollapsibleContent className="min-h-0 flex-shrink">
-              <SidebarContent className="overflow-y-auto h-full flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden border-l-2 group">
+              <SidebarContent className="overflow-y-auto h-full flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden _border-l-2 group">
                 <>
                   {contentBanner}
                   {isEmpty ? (
@@ -87,16 +87,18 @@ export const SidebarFileMenuFiles = ({
                       <EmptySidebarLabel label={"empty"} />
                     </div>
                   ) : (
-                    <FileTreeMenu
-                      fileTreeDir={treeNode as TreeDir}
-                      expand={expandSingle}
-                      filter={filter}
-                      renameDirOrFileMultiple={renameDirOrFileMultiple}
-                      expandForNode={expandForNode}
-                      FileItemContextMenu={FileItemContextMenu}
-                      expanded={expanded}
-                      depth={0}
-                    />
+                    <div className="w-full min-w-0">
+                      <FileTreeMenu
+                        fileTreeDir={treeNode as TreeDir}
+                        expand={expandSingle}
+                        filter={filter}
+                        renameDirOrFileMultiple={renameDirOrFileMultiple}
+                        expandForNode={expandForNode}
+                        FileItemContextMenu={FileItemContextMenu}
+                        expanded={expanded}
+                        depth={0}
+                      />
+                    </div>
                   )}
                 </>
               </SidebarContent>

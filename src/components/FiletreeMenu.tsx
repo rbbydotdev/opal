@@ -181,7 +181,8 @@ export function FileTreeMenu({
           <SidebarMenuItem
             key={fileNode.path}
             className={cn({
-              // "bg-sidebar-accent": fileNode.path === workspaceRoute.path || highlightDragover(fileNode),
+              "ml-[0.577rem]": depth === 0,
+
               "bg-sidebar-accent": highlightDragover(fileNode),
             })}
             onDragOver={(e) => handleDragOver(e, fileNode)}

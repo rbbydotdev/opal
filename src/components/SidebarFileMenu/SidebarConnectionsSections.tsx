@@ -65,14 +65,14 @@ function ConnectionManager() {
             <SidebarMenuItem key={connection.guid}>
               <div className="group flex items-center pr-1 my-1">
                 <SidebarMenuButton className="flex-1 min-w-0 pl-8" onClick={() => handleEdit(connection)}>
-                  <div className="flex items-center flex-1 min-w-0 gap-1 text-xs">
+                  <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
                     <RemoteAuthSourceIconComponent
                       type={connection.type}
                       source={connection.source}
-                      size={8}
+                      size={12}
                       className="flex-shrink-0"
                     />
-                    <span className="max-w-[32ch] font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink">
+                    <span className="max-w-[32ch] font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink ml-1">
                       {connection.name}
                     </span>
                     <span className="flex-shrink-0 text-xs">{"/"}</span>

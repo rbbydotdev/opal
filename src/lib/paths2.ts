@@ -32,7 +32,7 @@ export function isRelPath(path: AbsPath | RelPath | string): path is RelPath {
 
 // --- Path Utilities ---
 export function extname(path: AbsPath | RelPath | TreeNode | string): string {
-  return pathModule.extname(basename(String(path)));
+  return pathModule.extname(String(path));
 }
 
 export function prefix(path: AbsPath | RelPath | TreeNode | string): string {

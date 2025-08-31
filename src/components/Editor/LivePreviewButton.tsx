@@ -24,12 +24,12 @@ export function LivePreviewButtons() {
         <div>
           {right.isCollapsed ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="h-full flex justify-center items-center border-1 border-blue-600">Open Preview</div>{" "}
-              <Zap size={36} className="!w-5 !h-5" strokeWidth={2} />
+              <div className="h-full flex justify-center items-center border-1 ">Open Preview</div>{" "}
+              <Zap size={36} className="!w-5 !h-5 stroke-primary-foreground" strokeWidth={2} />
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
-              <X size={36} className="!w-5 !h-5" strokeWidth={2} />
+              <X size={36} className="!w-5 !h-5 stroke-primary-foreground" strokeWidth={2} />
               Close Preview
             </div>
           )}

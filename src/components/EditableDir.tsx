@@ -1,13 +1,12 @@
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { WorkspaceRouteType } from "@/context/WorkspaceContext";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, RelPath, relPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
-import { ComponentProps, useEffect } from "react";
+import { useEffect } from "react";
 export const EditableDir = ({
   depth,
   className,
@@ -30,7 +29,7 @@ export const EditableDir = ({
   expand: (node: TreeNode, value: boolean) => void;
 
   fullPath: AbsPath;
-} & ComponentProps<typeof SidebarMenuButton>) => {
+}) => {
   const {
     isFocused,
     isSelectedRange,
@@ -79,14 +78,16 @@ export const EditableDir = ({
       )}
       onKeyDown={(e) => handleKeyDown(e)}
     >
-      <div className="flex w-full items-center truncate" style={{ paddingLeft: depth + "rem" }}>
+      <div className="flex w-full items-center truncate" style={{ paddingLeft: depth + 0.15 + "rem" }}>
         <div className="mr-1">
           <ChevronRight
             size={14}
-            className={"transition-transform duration-100 rotate-0 group-data-[state=open]/dir:rotate-90 -ml-0.5"}
+            className={
+              "transition-transform duration-100 rotate-0 group-data-[state=open]/dir:rotate-90 -ml-[0.175rem]"
+            }
           />
         </div>
-        <div className="text-xs truncate w-full flex items-center">
+        <div className="text-xs truncate w-full flex items-center pl-[0.175rem]">
           <FolderOpen className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=open]/dir:block hidden" />
           <Folder className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=closed]/dir:block hidden" />
           <div
