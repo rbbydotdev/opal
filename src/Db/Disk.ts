@@ -637,21 +637,21 @@ export abstract class Disk {
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
   }
   addVirtualFileFromSource(
-    props: Pick<TreeNode, "type" | "name"> & { sourceNode: TreeNode },
+    props: Pick<TreeNode, "type" | "basename"> & { sourceNode: TreeNode },
     parentNode: TreeNode | null
   ): VirtualDupTreeNode {
     const parent = parentNode || this.fileTree.root;
     const node = this.fileTree
-      .insertClosestVirtualNode({ type: props.type, name: props.name }, parent)
+      .insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent)
       .tagSource(props.sourceNode);
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return node;
   }
 
-  addVirtualFile(props: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null): TreeNode {
+  addVirtualFile(props: Pick<TreeNode, "type" | "basename">, selectedNode: TreeNode | null): TreeNode {
     const parent = selectedNode || this.fileTree.root;
 
-    const node = this.fileTree.insertClosestVirtualNode({ type: props.type, name: props.name }, parent);
+    const node = this.fileTree.insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent);
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return node;
   }
@@ -830,6 +830,12 @@ export abstract class Disk {
   ): Promise<AbsPath[]> {
     await this.ready;
     const result: AbsPath[] = [];
+    // console.log(copyPaths);
+    for (const [from, to] of copyPaths) {
+      console.log(from.path, "->", to instanceof TreeNode ? to.path : to);
+    }
+
+    // return [];
     for (const [from, to] of copyPaths) {
       let fullPath = to;
       if (await this.pathExists(from)) {

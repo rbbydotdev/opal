@@ -232,13 +232,13 @@ export class FileTree {
   replaceNode(oldNode: TreeNode, newNode: TreeNode) {
     const parent = oldNode.parent;
     if (!parent) return;
-    parent.children[newNode.name] = newNode as TreeNodeType;
+    parent.children[newNode.basename] = newNode as TreeNodeType;
     this.map.delete(oldNode.path);
     this.map.set(newNode.path, newNode);
   }
-  insertClosestVirtualNode(node: Pick<TreeNode, "name" | "type">, selectedNode: TreeNode) {
+  insertClosestVirtualNode(node: Pick<TreeNode, "basename" | "type">, selectedNode: TreeNode) {
     const parent = selectedNode.closestDir() ?? this.root;
-    const newNode = newVirtualTreeNode({ name: node.name, type: node.type, parent });
+    const newNode = newVirtualTreeNode({ basename: node.basename, type: node.type, parent });
     while (this.nodeWithPathExists(newNode.path)) newNode.inc();
     return this.insertNode(parent, newNode);
   }
@@ -249,30 +249,28 @@ export class FileTree {
 }
 
 function spliceNode<T extends VirtualTreeNode | TreeNode>(targetNode: TreeDir, newNode: T) {
-  targetNode.children = Object.fromEntries([...Object.entries(targetNode.children), [newNode.name, newNode]]);
+  targetNode.children = Object.fromEntries([...Object.entries(targetNode.children), [newNode.basename, newNode]]);
   return newNode;
 }
 
-function newVirtualTreeNode({ type, parent, name }: { type: "file" | "dir"; name: RelPath; parent: TreeDir }) {
-  const path = joinPath(parent.path, name);
-  const depth = parent.depth + 1;
-  if (type === "dir") {
+function newVirtualTreeNode(props: { type: "file" | "dir"; basename: RelPath; parent: TreeDir }) {
+  const path = joinPath(props.parent.path, props.basename);
+  const depth = props.parent.depth + 1;
+  if (props.type === "dir") {
     return new VirtualDirTreeNode({
-      name: relPath(basename(path)),
       dirname: absPath(dirname(path)),
       basename: relPath(basename(path)),
       path,
-      parent,
+      parent: props.parent,
       depth,
       children: {},
     });
   } else {
     return new VirtualFileTreeNode({
-      name: relPath(basename(path)),
       dirname: absPath(dirname(path)),
       basename: relPath(basename(path)),
       path,
-      parent,
+      parent: props.parent,
       depth,
     });
   }

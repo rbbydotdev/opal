@@ -42,10 +42,40 @@ export class TreeNode {
   depth: number;
   children?: Record<string, TreeNode>;
 
-  name: RelPath;
-  dirname: AbsPath;
-  basename: RelPath;
-  path: AbsPath;
+  private _dirname: AbsPath;
+  private _basename: RelPath;
+  private _path: AbsPath;
+
+  get dirname(): AbsPath {
+    return this._dirname;
+  }
+
+  set dirname(value: AbsPath) {
+    this._dirname = value;
+    this._path = absPath(joinPath(this._dirname, this._basename));
+    this.adjustChildrenPaths();
+  }
+
+  get basename(): RelPath {
+    return this._basename;
+  }
+
+  set basename(value: RelPath) {
+    this._basename = value;
+    this._path = absPath(joinPath(this._dirname, this._basename));
+    this.adjustChildrenPaths();
+  }
+
+  get path(): AbsPath {
+    return this._path;
+  }
+
+  set path(value: AbsPath) {
+    this._path = value;
+    this._dirname = absPath(dirname(this._path));
+    this._basename = relPath(basename(this._path));
+    this.adjustChildrenPaths();
+  }
 
   get length() {
     return this.path.length;
@@ -91,15 +121,19 @@ export class TreeNode {
     return this.isTreeDir() ? this.path : dirname(this.path);
   }
   isMarkdownFile() {
+    if (this.isTreeDir()) return false;
     return isMarkdown(this.path);
   }
   isTextFile() {
+    if (this.isTreeDir()) return false;
     return isText(this.path);
   }
   isCssFile() {
+    if (this.isTreeDir()) return false;
     return isCss(this.path);
   }
   isImageFile() {
+    if (this.isTreeDir()) return false;
     return isImage(this.path);
   }
   toString() {
@@ -113,13 +147,11 @@ export class TreeNode {
   }
 
   static FromPath(path: AbsPath, type: "dir" | "file", parent: TreeDir | null = null) {
-    const name = relPath(basename(path));
     const pathDirname = absPath(dirname(path));
     const pathBasename = relPath(basename(path));
     const pathDepth = getDepth(path);
     return type === "dir"
       ? new TreeDir({
-          name,
           dirname: pathDirname,
           basename: pathBasename,
           path,
@@ -127,15 +159,14 @@ export class TreeNode {
           parent,
           children: {},
         })
-      : new TreeFile({ name, dirname: pathDirname, basename: pathBasename, path, depth: pathDepth, parent });
+      : new TreeFile({ dirname: pathDirname, basename: pathBasename, path, depth: pathDepth, parent });
   }
 
   replaceWith(newNode: TreeNode) {
-    this.name = newNode.name;
     this.type = newNode.type;
-    this.dirname = newNode.dirname;
-    this.basename = newNode.basename;
-    this.path = newNode.path;
+    this._dirname = newNode._dirname;
+    this._basename = newNode._basename;
+    this._path = newNode._path;
     this.depth = newNode.depth;
     this.parent = newNode.parent;
     this.children = newNode.children;
@@ -188,7 +219,6 @@ export class TreeNode {
     }
   }
   constructor({
-    name,
     type,
     dirname,
     basename,
@@ -197,7 +227,6 @@ export class TreeNode {
     depth,
     source,
   }: {
-    name: RelPath | string;
     type: "dir" | "file";
     dirname: AbsPath | string;
     basename: RelPath | string;
@@ -206,12 +235,11 @@ export class TreeNode {
     depth?: number;
     source?: AbsPath;
   }) {
-    this.name = typeof name === "string" ? relPath(name) : name;
     this.type = type;
-    this.dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
-    this.basename = typeof basename === "string" ? relPath(basename) : basename;
-    this.path = typeof path === "string" ? absPath(path) : path;
-    this.depth = typeof depth !== "undefined" ? depth : getDepth(this.path);
+    this._dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
+    this._basename = typeof basename === "string" ? relPath(basename) : basename;
+    this._path = typeof path === "string" ? absPath(path) : path;
+    this.depth = typeof depth !== "undefined" ? depth : getDepth(this._path);
     this.parent = parent;
     this.source = source;
     if (isTreeFile(this)) return this;
@@ -219,17 +247,17 @@ export class TreeNode {
   }
 
   remove() {
-    if (this.parent && this.name in this.parent.children) {
-      delete this.parent.children[this.name];
+    if (this.parent && this.basename in this.parent.children) {
+      delete this.parent.children[this.basename];
       return true;
     }
     return false;
   }
-  private adjustChildrenPaths() {
+  private adjustChildrenPaths(): this {
     if (this.isTreeDir()) {
       for (const child of Object.values(this.children ?? {})) {
-        child.dirname = this.path;
-        child.path = absPath(joinPath(child.dirname, child.basename));
+        child._dirname = this._path;
+        child._path = absPath(joinPath(child._dirname, child._basename));
         if (child.isTreeDir()) {
           child.adjustChildrenPaths();
         }
@@ -239,41 +267,33 @@ export class TreeNode {
   }
 
   inc() {
-    this.path = incPath(this.path);
-    this.name = relPath(basename(this.path));
-    this.basename = relPath(basename(this.path));
-    // if (this.isTreeDir()) {
-    //   this.walk((node) => {
-    //     if (node === this) return;
-    //     node.dirname = node.parent!.path;
-    //     node.path = absPath(joinPath(node.dirname, node.basename));
-    //   });
-    // }
+    this._path = incPath(this._path);
+    this._basename = relPath(basename(this._path));
+    this.adjustChildrenPaths();
     return this;
   }
   renamePrefix(newBasename: RelPath | string) {
-    this.basename = relPath(prefix(relPath(newBasename)) + extname(this.basename));
-    this.name = relPath(this.basename);
-    this.path = absPath(joinPath(this.dirname, this.basename));
+    this._basename = relPath(prefix(relPath(newBasename)) + extname(this._basename));
+    this._path = absPath(joinPath(this._dirname, this._basename));
+    this.adjustChildrenPaths();
     return this;
   }
   renameStrictPrefix(newBasename: RelPath | string) {
-    this.basename = relPath(strictPrefix(relPath(newBasename)) + extname(this.basename));
-    this.name = relPath(this.basename);
-    this.path = absPath(joinPath(this.dirname, this.basename));
+    this._basename = relPath(strictPrefix(relPath(newBasename)) + extname(this._basename));
+    this._path = absPath(joinPath(this._dirname, this._basename));
+    this.adjustChildrenPaths();
     return this;
   }
   rename(path: AbsPath) {
     this.path = path;
-    this.dirname = absPath(dirname(this.path));
-    this.name = relPath(basename(this.path));
-    this.basename = relPath(basename(this.path));
+    // this._dirname = absPath(dirname(this._path));
+    // this._basename = relPath(basename(this._path));
+    // this.adjustChildrenPaths();
     return this;
   }
   deepCopy(): TreeNode {
     if (isTreeDir(this)) {
       return new TreeDir({
-        name: this.name,
         dirname: this.dirname,
         basename: this.basename,
         parent: this.parent,
@@ -286,7 +306,6 @@ export class TreeNode {
       } as TreeDir & { children: Record<string, TreeNode> });
     }
     return new TreeFile({
-      name: this.name,
       dirname: this.dirname,
       basename: this.basename,
       parent: this.parent,
@@ -299,10 +318,9 @@ export class TreeNode {
   isSourcedNode(): this is TreeNode & { source: AbsPath } {
     return typeof this.source === "string" && this.source.length > 0;
   }
-  splice(newParent: TreeDir) {
+  splice(newParent: TreeDir): this {
     this.source = this.path;
     this.parent = newParent;
-    this.dirname = newParent.path;
     this.path = absPath(joinPath(newParent.path, this.basename));
     this.depth = getDepth(this.path);
     if (isTreeDir(this)) {
@@ -316,7 +334,6 @@ export class TreeNode {
   copy(): TreeNode {
     if (isTreeDir(this)) {
       return new TreeDir({
-        name: this.name,
         dirname: this.dirname,
         basename: this.basename,
         parent: this.parent,
@@ -327,7 +344,6 @@ export class TreeNode {
       });
     }
     return new TreeFile({
-      name: this.name,
       dirname: this.dirname,
       basename: this.basename,
       parent: this.parent,
@@ -352,7 +368,6 @@ export class TreeNode {
     return this.type === "file";
   }
   toJSON(): {
-    name: string;
     type: "dir" | "file";
     dirname: string;
     basename: string;
@@ -360,7 +375,6 @@ export class TreeNode {
     depth: number;
   } {
     return {
-      name: this.name,
       type: this.type,
       dirname: this.dirname,
       basename: this.basename,
@@ -379,7 +393,7 @@ export class TreeDir extends TreeNode {
     n.isImageFile() ? 0 : 1,
     n.isMarkdownFile() ? 0 : 1,
     n.isTextFile() ? 0 : 1,
-    n.name.toLowerCase(),
+    n.basename.toLowerCase(),
   ];
   //@ts-ignore
   get children() {
@@ -417,7 +431,6 @@ export class TreeDir extends TreeNode {
   }
 
   constructor({
-    name,
     dirname,
     basename,
     path,
@@ -426,7 +439,6 @@ export class TreeDir extends TreeNode {
     parent,
     source,
   }: {
-    name: RelPath;
     dirname: AbsPath;
     basename: RelPath;
     parent: TreeDir | null;
@@ -435,7 +447,7 @@ export class TreeDir extends TreeNode {
     source?: AbsPath;
     children: TreeDir["children"];
   }) {
-    super({ name, type: "dir", dirname, parent, basename, path, depth, source });
+    super({ type: "dir", dirname, parent, basename, path, depth, source });
     this.children = children;
   }
 
@@ -469,7 +481,6 @@ export class TreeDir extends TreeNode {
     }
 
     return new TreeDir({
-      name: this.name,
       dirname: this.dirname,
       basename: this.basename,
       path: this.path,
@@ -503,7 +514,10 @@ export class TreeDir extends TreeNode {
 
   static FromJSON(json: TreeNodeDirJType, parent: TreeDir | null = null): TreeDir {
     const parentNode = new TreeDir({
-      ...TreeNode.FromJSON({ ...json, type: "file" }),
+      dirname: absPath(json.dirname),
+      basename: relPath(json.basename),
+      path: absPath(json.path),
+      depth: json.depth,
       parent,
       children: {},
     });
@@ -520,7 +534,6 @@ export class TreeDirRoot extends TreeDir {
   type = "dir" as const;
   constructor({ children = {} }: { children: TreeDir["children"] } = { children: {} }) {
     super({
-      name: relPath(":root"),
       dirname: absPath("/"),
       basename: relPath(":root"),
       path: absPath("/"),
@@ -572,7 +585,6 @@ export class TreeFile extends TreeNode {
   type = "file" as const;
 
   constructor({
-    name,
     dirname,
     basename,
     path,
@@ -580,7 +592,6 @@ export class TreeFile extends TreeNode {
     parent,
     source,
   }: {
-    name: RelPath;
     dirname: AbsPath;
     basename: RelPath;
     path: AbsPath;
@@ -588,10 +599,16 @@ export class TreeFile extends TreeNode {
     parent: TreeDir | null;
     source?: AbsPath;
   }) {
-    super({ name, type: "file", parent, dirname, basename, path, depth, source });
+    super({ type: "file", parent, dirname, basename, path, depth, source });
   }
   static FromJSON(json: TreeFileJType, parent: TreeDir | null = null): TreeFile {
-    return new TreeNode({ ...json, parent: parent }) as TreeFile;
+    return new TreeFile({
+      dirname: absPath(json.dirname),
+      basename: relPath(json.basename),
+      path: absPath(json.path),
+      depth: json.depth,
+      parent: parent,
+    });
   }
 }
 

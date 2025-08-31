@@ -190,6 +190,24 @@ export function isAncestor({
   return pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i]);
 }
 
+/**
+ * Replace the leading ancestor (root) portion of oldPath with newPath.
+ *
+ * Behavior:
+ * - If oldPath === root, returns newPath.
+ * - If oldPath has root as its leading path segments (i.e. root is an ancestor),
+ *   returns newPath plus the remaining trailing segments from oldPath.
+ * - Otherwise returns oldPath unchanged.
+ *
+ * Example:
+ * replaceAncestor('/a', '/a/b/c', '/x') => '/x/b/c'
+ * replaceAncestor('/a/b', '/a/b', '/z') => '/z'
+ * replaceAncestor('/a/b', '/a/c/d', '/z') => '/a/c/d' (unchanged)
+ *
+ * Notes:
+ * - Null checks are present but root/oldPath are typed as non-null (legacy safeguard).
+ * - Returned path is normalized via absPath + joinPath.
+ */
 export function replaceAncestor(
   root: AbsPath | string,
   oldPath: AbsPath | string,

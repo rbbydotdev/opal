@@ -192,15 +192,15 @@ export class Workspace {
     return this.disk.newFiles(files);
   }
 
-  addVirtualFile({ type, name }: Pick<TreeNode, "type" | "name">, selectedNode: TreeNode | null) {
-    return this.disk.addVirtualFile({ type, name }, selectedNode);
+  addVirtualFile({ type, basename }: Pick<TreeNode, "type" | "basename">, selectedNode: TreeNode | null) {
+    return this.disk.addVirtualFile({ type, basename }, selectedNode);
   }
 
   addVirtualFileFromSource(
-    { type, name, sourceNode }: Pick<TreeNode, "type" | "name"> & { sourceNode: TreeNode },
+    { type, basename, sourceNode }: Pick<TreeNode, "type" | "basename"> & { sourceNode: TreeNode },
     parentNode: TreeNode | null
   ) {
-    return this.disk.addVirtualFileFromSource({ type, name, sourceNode }, parentNode);
+    return this.disk.addVirtualFileFromSource({ type, basename, sourceNode }, parentNode);
   }
   removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
@@ -341,6 +341,7 @@ export class Workspace {
     return unsub;
   };
 
+  copySourceNodes(nodes: SourceTreeNode[]) {}
   copyMultipleFiles(copyNodes: [from: TreeNode, toRoot: AbsPath | TreeNode][]) {
     return this.disk.copyMultiple(copyNodes);
   }
