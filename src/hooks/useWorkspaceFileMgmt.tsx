@@ -181,7 +181,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       }
 
       const newNode = currentWorkspace.addVirtualFileFromSource(
-        { type, name: basename(duplicatePath(fromNode.path)), sourceNode: fromNode },
+        { type, basename: basename(duplicatePath(fromNode.path)), sourceNode: fromNode },
         fromNode.parent ?? fromNode
       );
 
@@ -211,7 +211,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       }
       /** --------- end ------ */
       const name = fileName || (type === "dir" ? "newdir" : "newfile.md");
-      const newNode = currentWorkspace.addVirtualFile({ type, name: relPath(name) }, parentNode);
+      const newNode = currentWorkspace.addVirtualFile({ type, basename: relPath(name) }, parentNode);
       setFileTreeCtx({
         editing: newNode.path,
         editType: "new",
