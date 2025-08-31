@@ -38,7 +38,7 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
               <a href="/download.zip">
-                <Download className="mr-1" />
+                <Download className="mr-1 !w-4 !h-4 stroke-1" />
                 Download Zip
               </a>
             </Button>
@@ -47,9 +47,14 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
                 downloadEncryptedZipHelper({ password, encryption: "aes", name: currentWorkspace.name })
               }
             >
-              <Button className="w-full text-xs relative group" size="sm" variant="outline" asChild>
+              <Button
+                className="whitespace-normal text-center w-full text-xs relative group"
+                size="sm"
+                variant="outline"
+                asChild
+              >
                 <div>
-                  <Lock className="inline" />
+                  <Lock className="inline !w-4 !h-4 stroke-1" />
                   <div className="absolute -top-0 right-0 group-hover:block hidden">
                     <Tooltip>
                       <TooltipTrigger>

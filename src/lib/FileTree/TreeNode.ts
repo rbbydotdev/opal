@@ -326,8 +326,50 @@ export class TreeNode {
 }
 
 export class TreeDir extends TreeNode {
-  children: Record<string, TreeFile | TreeDir> = {};
   type = "dir" as const;
+  _children: Record<string, TreeFile | TreeDir> = {};
+
+  static sortOrder = (n: TreeNode) => [
+    n.isTreeDir() ? 0 : 1,
+    n.isImageFile() ? 0 : 1,
+    n.isMarkdownFile() ? 0 : 1,
+    n.isTextFile() ? 0 : 1,
+    n.name.toLowerCase(),
+  ];
+  //@ts-ignore
+  get children() {
+    return this._children;
+  }
+
+  set children(value: Record<string, TreeFile | TreeDir>) {
+    // Convert to entries so we can sort
+    const entries = Object.entries(value);
+
+    // Sort using the sortOrder tuple
+    entries.sort(([, aNode], [, bNode]) => {
+      const keyA = TreeDir.sortOrder(aNode);
+      const keyB = TreeDir.sortOrder(bNode);
+
+      for (let i = 0; i < keyA.length; i++) {
+        if (typeof keyA[i] === "string" && typeof keyB[i] === "string") {
+          const cmp = (keyA[i] as string).localeCompare(keyB[i] as string);
+          if (cmp !== 0) return cmp;
+        } else {
+          if (keyA[i]! < keyB[i]!) return -1;
+          if (keyA[i]! > keyB[i]!) return 1;
+        }
+      }
+      return 0;
+    });
+
+    // Rebuild the object in sorted order
+    this._children = Object.fromEntries(entries);
+
+    // Set parent references
+    for (const child of Object.values(this._children)) {
+      child.parent = this;
+    }
+  }
 
   constructor({
     name,

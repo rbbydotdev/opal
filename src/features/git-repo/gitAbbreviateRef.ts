@@ -7,8 +7,8 @@ export function gitAbbreviateRef(ref: string) {
     if (match[1] === "remotes/" && ref.endsWith("/HEAD")) {
       return match[2]!.slice(0, -5);
     } else {
-      return match[2];
+      return match[2]!;
     }
   }
-  return ref;
+  return ref!;
 }

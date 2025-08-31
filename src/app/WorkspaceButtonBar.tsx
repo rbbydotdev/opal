@@ -151,7 +151,7 @@ export function WorkspaceButtonBar() {
     };
   }, [autoHide, collapsed, setShrink, shrink, sidebarWidth]);
 
-  return <WorkspaceButtonBarInternal shrink={shrink} />;
+  return <WorkspaceButtonBarInternal shrink={shrink} autoHide={autoHide} />;
 }
 
 function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
@@ -223,7 +223,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   );
 }
 
-function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
+function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; autoHide: boolean }) {
   const { pending } = useRequestSignals();
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
@@ -404,7 +404,7 @@ function WorkspaceButtonBarInternal({ shrink }: { shrink: boolean }) {
         </div>
       </div>
 
-      <DragCollapseBar />
+      {!autoHide && <DragCollapseBar />}
     </div>
   );
 }

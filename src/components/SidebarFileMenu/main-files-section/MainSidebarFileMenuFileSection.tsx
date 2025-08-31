@@ -10,7 +10,6 @@ import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTr
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
-import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Trash2 } from "lucide-react";
@@ -19,6 +18,8 @@ import { useMemo, useState } from "react";
 const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; hasDepth: boolean }) => {
   const [dragEnter, setDragEnter] = useState(false);
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
+
+  const rootNode = useMemo(() => currentWorkspace.nodeFromPath(absPath("/"))!, [currentWorkspace]);
 
   const { setFileTreeCtx } = useFileTreeMenuCtx();
   const handleClick = () => {
@@ -33,22 +34,24 @@ const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; h
   };
   const { handleDrop } = useFileTreeDragDrop({ currentWorkspace, onMoveMultiple: renameDirOrFileMultiple });
   return (
-    <div
-      className={cn(
-        "cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
-        { "border h-8 bg-sidebar scale-110 mt-1": dragEnter },
-        { "mb-[5px] visible": hasDepth },
-        { "invisible h-2": !hasDepth }
-      )}
-      onDrop={(e) => handleDrop(e, RootNode)}
-      onDragEnter={() => setDragEnter(true)}
-      onDragLeave={() => setDragEnter(false)}
-      onMouseLeave={() => setDragEnter(false)}
-      onClick={handleClick}
-      title={"File Tree Root"}
-    >
-      <span className={cn("group-hover/banner:block hidden", { block: dragEnter })}>root</span>
-    </div>
+    <MainFileTreeContextMenu fileNode={rootNode} currentWorkspace={currentWorkspace}>
+      <div
+        className={cn(
+          "cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
+          { "border h-8 bg-sidebar scale-110 mt-1": dragEnter },
+          { "mb-[5px] visible": hasDepth },
+          { "invisible h-2": !hasDepth }
+        )}
+        onDrop={(e) => handleDrop(e, rootNode)}
+        onDragEnter={() => setDragEnter(true)}
+        onDragLeave={() => setDragEnter(false)}
+        onMouseLeave={() => setDragEnter(false)}
+        onClick={handleClick}
+        title={"File Tree Root"}
+      >
+        <span className={cn("group-hover/banner:block hidden", { block: dragEnter })}>root</span>
+      </div>
+    </MainFileTreeContextMenu>
   );
 };
 export function MainSidebarFileMenuFileSection({ className }: { className?: string }) {

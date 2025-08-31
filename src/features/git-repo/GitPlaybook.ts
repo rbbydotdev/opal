@@ -72,18 +72,30 @@ export class GitPlaybook {
     await this.repo.checkoutRef({ ref: commitOid });
     return true;
   };
+  async initialCommit_() {
+    await this.repo.mustBeInitialized();
+    await this.repo.add(".");
+    await this.repo.commit({
+      message: "Initial commit",
+    });
+  }
   async initialCommit() {
     await this.repo.mustBeInitialized();
     await this.repo.add(".");
 
-    //for bare initialized with remote branch we do not want a collision
+    //if were are in a bare repo some special things need to be done
+    //i think i need to create a slop branch for the working directory
     const branches = await this.repo.getBranches().catch(() => []);
-    const main = await this.repo.defaultMainBranch;
-
+    const main = gitAbbreviateRef(await this.repo.defaultMainBranch);
+    const newBranch = getUniqueSlug(main, branches);
+    await this.repo.addGitBranch({
+      branchName: newBranch,
+    });
     await this.repo.commit({
       message: "Initial commit",
-      ref: getUniqueSlug(main, branches),
+      ref: newBranch,
     });
+    await this.repo.checkoutRef({ ref: newBranch });
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {

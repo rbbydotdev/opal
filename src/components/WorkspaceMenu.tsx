@@ -26,7 +26,7 @@ export function WorkspaceMenu({
               async () => {
                 const currentWorkspace = await WorkspaceDAO.FetchByGuid(workspaceGuid).then((ws) => ws.toModel());
                 await currentWorkspace.destroy();
-                if (currentWorkspace.href === window.location.pathname) {
+                if (window.location.pathname.startsWith(currentWorkspace.href)) {
                   void router.navigate({ to: "/" });
                 }
               },

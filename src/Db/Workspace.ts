@@ -591,7 +591,7 @@ export class Workspace {
   }
   // ConcurrentWorkers
 
-  async renameMdImagesWorker(paths: [to: string, from: string][], origin = window.location.origin) {
+  async _____________renameMdImagesWorker(paths: [to: string, from: string][], origin = window.location.origin) {
     try {
       return await ConcurrentWorkers(
         () => Comlink.wrap<handleMdImageReplaceType>(new Worker("/imageReplace.ww.js")),
@@ -679,7 +679,7 @@ export class Workspace {
     return this.remoteAuths ?? [];
   }
 
-  async RepoWorker() {
+  async __________RepoWorker() {
     //TODO repo / repoworker should just be apart of workspace from the get go instead of being a separate thing
     //but it uses async instantiation so care is needed to make sure its torn down properly, think useAsyncEffct
     // const worker = new Worker(new URL("/src/workers/RepoWorker/repo.ww.ts", import.meta.url), { type: "module" });

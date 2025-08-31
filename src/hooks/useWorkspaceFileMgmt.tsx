@@ -21,7 +21,6 @@ import { useNavigate } from "@tanstack/react-router";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { useCallback } from "react";
-import { isVirtualDupNode } from "../lib/FileTree/TreeNode";
 
 function defaultFileContent(path: AbsPath) {
   if (mime.lookup(path) === "text/css") {
@@ -273,11 +272,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
           return newDir(wantPath);
         }
       } else if (type === "duplicate") {
-        if (isVirtualDupNode(origNode)) {
-          return currentWorkspace.copyFile(origNode.source, wantPath);
-        } else {
-          throw new Error("Cannot duplicate a non-virtual node");
-        }
+        console.log(origNode);
+        return currentWorkspace.copyFile(origNode.source!, wantPath);
+        // if (isVirtualDupNode(origNode)) {
+        //   return currentWorkspace.copyFile(origNode.source, wantPath);
+        // } else {
+        //   throw new Error("Cannot duplicate a non-virtual node");
+        // }
       } else if (type === "rename") {
         return renameDirOrFile(origNode, wantPath);
       } else {
