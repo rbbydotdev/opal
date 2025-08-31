@@ -37,14 +37,15 @@ export type TreeNodeType = TreeFile | TreeDir;
 export class TreeNode {
   isVirtual?: boolean;
   source?: AbsPath; // For virtual nodes, this is the source path of the original file
-  name: RelPath;
   type: "dir" | "file";
-  dirname: AbsPath;
-  basename: RelPath;
   parent: TreeDir | null;
-  path: AbsPath;
   depth: number;
   children?: Record<string, TreeNode>;
+
+  name: RelPath;
+  dirname: AbsPath;
+  basename: RelPath;
+  path: AbsPath;
 
   get length() {
     return this.path.length;
@@ -139,6 +140,7 @@ export class TreeNode {
     this.parent = newNode.parent;
     this.children = newNode.children;
     this.isVirtual = newNode.isVirtual;
+    this.source = newNode.source;
   }
 
   async asyncWalk(
@@ -164,6 +166,7 @@ export class TreeNode {
   iterator(filter?: (n: TreeNode) => boolean): IterableIterator<TreeNode> {
     function* gen(node: TreeNode): IterableIterator<TreeNode> {
       if (!filter || filter(node)) yield node;
+      // if (node.isTreeFile()) return node;
       for (const childNode of Object.values((node as TreeDir).children ?? {})) {
         yield* gen.bind(node)(childNode);
       }
@@ -192,6 +195,7 @@ export class TreeNode {
     path,
     parent,
     depth,
+    source,
   }: {
     name: RelPath | string;
     type: "dir" | "file";
@@ -200,6 +204,7 @@ export class TreeNode {
     parent: TreeDir | null;
     path: AbsPath | string;
     depth?: number;
+    source?: AbsPath;
   }) {
     this.name = typeof name === "string" ? relPath(name) : name;
     this.type = type;
@@ -208,6 +213,7 @@ export class TreeNode {
     this.path = typeof path === "string" ? absPath(path) : path;
     this.depth = typeof depth !== "undefined" ? depth : getDepth(this.path);
     this.parent = parent;
+    this.source = source;
     if (isTreeFile(this)) return this;
     if (isTreeDir(this)) return this;
   }
@@ -255,6 +261,7 @@ export class TreeNode {
         parent: this.parent,
         path: this.path,
         depth: this.depth,
+        source: this.source,
         children: Object.fromEntries(
           Object.entries(this.children ?? {}).map(([key, child]) => [key, child.deepCopy()])
         ),
@@ -267,7 +274,25 @@ export class TreeNode {
       parent: this.parent,
       path: this.path,
       depth: this.depth,
+      source: this.source,
     });
+  }
+
+  isSourcedNode(): this is TreeNode & { source: AbsPath } {
+    return typeof this.source === "string" && this.source.length > 0;
+  }
+  splice(newParent: TreeDir): VirtualTreeNode {
+    this.source = this.path;
+    this.parent = newParent;
+    this.dirname = newParent.path;
+    this.path = absPath(joinPath(newParent.path, this.basename));
+    this.depth = getDepth(this.path);
+    if (isTreeDir(this)) {
+      for (const child of Object.values(this.children ?? {})) {
+        child.splice(this);
+      }
+    }
+    return this as unknown as VirtualTreeNode;
   }
 
   copy(): TreeNode {
@@ -280,6 +305,7 @@ export class TreeNode {
         path: this.path,
         depth: this.depth,
         children: this.children ?? {},
+        source: this.source,
       });
     }
     return new TreeFile({
@@ -289,6 +315,7 @@ export class TreeNode {
       parent: this.parent,
       path: this.path,
       depth: this.depth,
+      source: this.source,
     });
   }
   static FromJSON(json: TreeFileJType | TreeNodeDirJType, parent: TreeDir | null = null): TreeFile | TreeDir {
@@ -379,6 +406,7 @@ export class TreeDir extends TreeNode {
     depth,
     children = {},
     parent,
+    source,
   }: {
     name: RelPath;
     dirname: AbsPath;
@@ -386,9 +414,10 @@ export class TreeDir extends TreeNode {
     parent: TreeDir | null;
     path: AbsPath;
     depth: number;
+    source?: AbsPath;
     children: TreeDir["children"];
   }) {
-    super({ name, type: "dir", dirname, parent, basename, path, depth });
+    super({ name, type: "dir", dirname, parent, basename, path, depth, source });
     this.children = children;
   }
 
@@ -428,6 +457,7 @@ export class TreeDir extends TreeNode {
       path: this.path,
       depth: this.depth,
       parent: this.parent,
+      source: this.source,
       children: newChildren,
     });
   }
@@ -530,6 +560,7 @@ export class TreeFile extends TreeNode {
     path,
     depth,
     parent,
+    source,
   }: {
     name: RelPath;
     dirname: AbsPath;
@@ -537,8 +568,9 @@ export class TreeFile extends TreeNode {
     path: AbsPath;
     depth: number;
     parent: TreeDir | null;
+    source?: AbsPath;
   }) {
-    super({ name, type: "file", parent, dirname, basename, path, depth });
+    super({ name, type: "file", parent, dirname, basename, path, depth, source });
   }
   static FromJSON(json: TreeFileJType, parent: TreeDir | null = null): TreeFile {
     return new TreeNode({ ...json, parent: parent }) as TreeFile;
@@ -558,7 +590,6 @@ export class VirtualFileTreeNode extends TreeFile {
   isVirtual = true;
   tagSource(sourceNode: TreeNode) {
     this.source = sourceNode.path;
-    // replaceNde/
     return this as VirtualDupTreeNode;
   }
 }
