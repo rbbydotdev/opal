@@ -11,6 +11,7 @@ import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
+import { gitAbbreviateRef } from "./gitAbbreviateRef";
 
 export interface GitRemote {
   name: string;
@@ -762,7 +763,6 @@ export class GitRepo {
 
   checkoutRef = async ({ ref, force = false }: { ref: string; force?: boolean }): Promise<string | void> => {
     if (await this.isMerging()) {
-      // throw new Error("Cannot checkout while merging. Please resolve conflicts first.");
       await this.resetMergeState();
     }
     await this.mutex.runExclusive(async () => {
@@ -852,7 +852,7 @@ export class GitRepo {
 
   setDefaultBranch = async (branchName: string): Promise<void> => {
     await this.setConfig("defaultBranch.name", branchName);
-    this.defaultMainBranch = branchName;
+    this.defaultMainBranch = gitAbbreviateRef(branchName)!;
   };
   getDefaultBranch = async (): Promise<string> => {
     const branch = (await this.getConfig("defaultBranch.name")) || this.defaultMainBranch;
@@ -931,7 +931,7 @@ export class GitRepo {
     });
   };
 
-  currentBranch = async ({ fullname = false }: { fullname: boolean }): Promise<string | void> => {
+  currentBranch = async ({ fullname = false }: { fullname?: boolean } = {}): Promise<string | void> => {
     return this.git.currentBranch({
       fs: this.fs,
       dir: this.dir,

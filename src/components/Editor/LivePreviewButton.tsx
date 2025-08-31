@@ -17,22 +17,23 @@ export function LivePreviewButtons() {
     <div className={"flex  items-center justify-center flex-nowrap "}>
       <Button
         size="sm"
-        className="active:scale-95  rounded-r-none"
+        className="active:scale-95 rounded-r-none"
         onClick={() => right.setIsCollapsed((prev) => !prev)}
         asChild
       >
-        <span>
+        <div>
           {right.isCollapsed ? (
-            <span className="flex items-center justify-center gap-2">
-              Open Preview <Zap size={36} className="!w-5 !h-5" strokeWidth={2} />
-            </span>
+            <div className="flex items-center justify-center gap-2">
+              <div className="h-full flex justify-center items-center border-1 border-blue-600">Open Preview</div>{" "}
+              <Zap size={36} className="!w-5 !h-5" strokeWidth={2} />
+            </div>
           ) : (
-            <span className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <X size={36} className="!w-5 !h-5" strokeWidth={2} />
               Close Preview
-            </span>
+            </div>
           )}
-        </span>
+        </div>
       </Button>
       <Button size="sm" className={"active:scale-95 text-secondary rounded-l-none border-l-border "} asChild>
         <Link to={previewURL!} target="_blank" rel="noopener noreferrer">

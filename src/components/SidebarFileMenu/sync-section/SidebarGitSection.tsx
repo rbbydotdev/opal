@@ -213,7 +213,7 @@ const ActionButtonLabels = {
   pending: "Committing...",
   init: "Initialize Git Repo",
   "bare-init": "Initial Commit",
-  detatched: "Detatched",
+  detatched: "detatched",
 };
 
 const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) => {
@@ -384,7 +384,6 @@ function InPlaceConfirmSection({
 
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
   const { repo, playbook } = useWorkspaceContext().git;
-  // const info = useSyncExternalStore(repo.infoListener, () => repo.getInfo()) ?? RepoDefaultInfo;
   const info = useRepoInfo(repo);
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
@@ -414,6 +413,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
 
   const [fetchPending, setFetchPending] = useState(false);
   const commitState = ((): CommitState => {
+    // console.log(bareInitialized, fullInitialized);
     if (pending) return "pending";
     if (isMerging) return "merge-commit";
     if (showMessageInput) return "enter-message";
@@ -423,6 +423,13 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
     if (currentGitRef?.type === "commit") return "detatched";
     return "commit";
   })();
+
+  // console.log(repo.br);
+  // useEffect(() => {
+  //   void (async () => {
+  //     console.log(info.bareInitialized, await repo.fullInitialized(), await repo.currentBranch().catch(() => null));
+  //   })();
+  // }, [info, repo]);
 
   // Remote management functions
   const addRemoteCmdRef = useGitRemoteDialogCmd();
@@ -448,6 +455,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         </span>
       );
     } catch (err) {
+      // openConfirmPane("error fetching");
       fetchRef.current?.show(
         <span className="flex items-center gap-2 justify-center w-full h-full">
           <X size={10} />
@@ -559,7 +567,11 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                     disabled={fetchPending}
                     variant="outline"
                   >
-                    {fetchPending ? <Loader className="mr-1 animate-spin" /> : <Import className="mr-1" />}
+                    {fetchPending ? (
+                      <Loader className="mr-1 animate-spin" />
+                    ) : (
+                      <Import className="mr-1 !h-4 !w-4 !stroke-1" />
+                    )}
                     <TooltipToast cmdRef={fetchRef} sideOffset={10} />
                     Fetch Remote
                   </Button>

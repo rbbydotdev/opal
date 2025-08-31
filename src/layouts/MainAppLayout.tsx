@@ -10,7 +10,7 @@ import { GitStatusProvider } from "@/components/GitStatusModal";
 import { PromptProvider } from "@/components/Prompt";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { WorkspaceProvider } from "@/context/WorkspaceProvider";
+import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { cn } from "@/lib/utils";

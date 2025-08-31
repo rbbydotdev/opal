@@ -214,23 +214,25 @@
   background: var(--background) !important;
 
   /* Force text color inheritance for dark mode */
-  p,
-  div,
-  span,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  li,
-  td,
-  th,
-  blockquote,
-  pre,
-  code {
-    color: var(--foreground) !important;
-  }
+  /* .contenteditable {
+    p,
+    div,
+    span,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    li,
+    td,
+    th,
+    blockquote,
+    pre,
+    code {
+      color: var(--foreground) !important;
+    }
+  } */
 
   /* Ensure proper contrast in content editable */
   .mdxeditor-root-contenteditable {

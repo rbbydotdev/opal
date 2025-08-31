@@ -636,6 +636,12 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         "Git Initialize Repo": [
           NewCmdExec(async () => {
             await playbook.initialCommit();
+            toast({
+              title: "Git repository initialized",
+              description: "A new Git repository has been initialized in this workspace.",
+              type: "success",
+              position: "top-right",
+            });
           }),
         ],
         "Git Merge Commit": [

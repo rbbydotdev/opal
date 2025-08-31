@@ -7,11 +7,12 @@ import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitP
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath } from "@/lib/paths2";
-import { useLocation } from "@tanstack/react-router";
+import { AbsPath, isAncestor } from "@/lib/paths2";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import mime from "mime-types";
 import React, { useContext, useEffect, useMemo, useState } from "react";
+import { decodePath } from "../lib/paths2";
 
 export const NULL_WORKSPACE = new NullWorkspace();
 
@@ -156,3 +157,94 @@ export function useLiveWorkspaces() {
 export function useWorkspaceContext() {
   return useContext(WorkspaceContext);
 }
+
+export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
+  const workspaces = useLiveWorkspaces();
+  const workspaceRoute = useWorkspaceRoute();
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
+  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ currentWorkspace });
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);
+
+  useEffect(() => {
+    if (workspaceName === "new" || !workspaceName) {
+      setCurrentWorkspace(NULL_WORKSPACE);
+      return;
+    }
+    const workspace = WorkspaceDAO.FetchModelFromNameAndInit(workspaceName)
+      .then((ws) => {
+        setCurrentWorkspace(ws);
+        console.debug("Initialize Workspace:" + ws.name);
+        return ws;
+      })
+      .catch(() => {
+        window.location.href = "/";
+      });
+    return () => {
+      void workspace.then((ws) => ws?.tearDown());
+    };
+  }, [navigate, workspaceName]);
+
+  useEffect(() => {
+    if (!currentWorkspace) return;
+    const listeners = [
+      currentWorkspace.renameListener((CHANGES) => {
+        for (const { oldPath, newPath, fileType } of CHANGES) {
+          if (
+            (fileType === "file" &&
+              decodePath(location.pathname) === decodePath(currentWorkspace.resolveFileUrl(oldPath))) ||
+            (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
+          ) {
+            if (newPath.startsWith(SpecialDirs.Trash)) {
+              void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
+              void currentWorkspace.tryFirstFileUrl().then((firstFileUrl) => {
+                void navigate({ to: firstFileUrl });
+              });
+            } else {
+              void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
+            }
+          }
+        }
+      }),
+      currentWorkspace.createListener(async (details) => {
+        if (workspaceRoute.path === null) {
+          const navPath = details.filePaths
+            .map((path) => currentWorkspace.nodeFromPath(path))
+            .find((n) => n?.isTreeFile())?.path;
+          if (navPath) void navigate({ to: currentWorkspace.resolveFileUrl(navPath) });
+        }
+      }),
+      currentWorkspace.deleteListener(async (details) => {
+        if (
+          workspaceRoute.path &&
+          details.filePaths.some((path) => isAncestor({ child: workspaceRoute.path, parent: path }))
+        ) {
+          void navigate({ to: await currentWorkspace.tryFirstFileUrl() });
+        }
+      }),
+    ];
+    return () => {
+      listeners.forEach((listener) => listener());
+    };
+  }, [currentWorkspace, location.pathname, navigate, workspaceRoute.path]);
+
+  return (
+    <WorkspaceContext.Provider
+      value={{
+        workspaces,
+        currentWorkspace,
+        workspaceRoute,
+        flatTree,
+        fileTree,
+        fileTreeDir,
+        git: {
+          repo: currentWorkspace.repo,
+          playbook: currentWorkspace.playbook,
+        },
+      }}
+    >
+      {children}
+    </WorkspaceContext.Provider>
+  );
+};
