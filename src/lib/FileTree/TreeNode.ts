@@ -225,12 +225,30 @@ export class TreeNode {
     }
     return false;
   }
+  private adjustChildrenPaths() {
+    if (this.isTreeDir()) {
+      for (const child of Object.values(this.children ?? {})) {
+        child.dirname = this.path;
+        child.path = absPath(joinPath(child.dirname, child.basename));
+        if (child.isTreeDir()) {
+          child.adjustChildrenPaths();
+        }
+      }
+    }
+    return this;
+  }
 
   inc() {
     this.path = incPath(this.path);
-    this.dirname = absPath(dirname(this.path));
     this.name = relPath(basename(this.path));
     this.basename = relPath(basename(this.path));
+    // if (this.isTreeDir()) {
+    //   this.walk((node) => {
+    //     if (node === this) return;
+    //     node.dirname = node.parent!.path;
+    //     node.path = absPath(joinPath(node.dirname, node.basename));
+    //   });
+    // }
     return this;
   }
   renamePrefix(newBasename: RelPath | string) {
@@ -281,7 +299,7 @@ export class TreeNode {
   isSourcedNode(): this is TreeNode & { source: AbsPath } {
     return typeof this.source === "string" && this.source.length > 0;
   }
-  splice(newParent: TreeDir): VirtualTreeNode {
+  splice(newParent: TreeDir) {
     this.source = this.path;
     this.parent = newParent;
     this.dirname = newParent.path;
@@ -292,7 +310,7 @@ export class TreeNode {
         child.splice(this);
       }
     }
-    return this as unknown as VirtualTreeNode;
+    return this;
   }
 
   copy(): TreeNode {

@@ -272,13 +272,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
           return newDir(wantPath);
         }
       } else if (type === "duplicate") {
-        console.log(origNode);
-        return currentWorkspace.copyFile(origNode.source!, wantPath);
+        // console.log(origNode);
         // if (isVirtualDupNode(origNode)) {
         //   return currentWorkspace.copyFile(origNode.source, wantPath);
         // } else {
         //   throw new Error("Cannot duplicate a non-virtual node");
         // }
+        return currentWorkspace.copyFile(origNode.source!, wantPath);
       } else if (type === "rename") {
         return renameDirOrFile(origNode, wantPath);
       } else {

@@ -15,40 +15,38 @@ import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, basename, joinPath } from "@/lib/paths2";
+import { AbsPath } from "@/lib/paths2";
 import cn from "clsx";
 import React from "react";
-import { tryParseCopyNodesPayload } from "../features/filetree-copy-paste/copyFileNodesToClipboard";
 
 export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
 
 export type NodeDataJType = { nodes: TreeFileJType[] };
 export type NodeDataType = { nodes: TreeNode[] };
 
-export async function handleFileTreeNodePaste(
+export async function handleFileTreeNodePaste_______DEPRECATED(
   currentWorkspace: Workspace,
   items: ClipboardItems,
   targetNode: TreeNode
 ) {
-  for (const item of items) {
-    if (item.types.includes(INTERNAL_NODE_FILE_TYPE)) {
-      const clipboardText = String(await item.getType(INTERNAL_NODE_FILE_TYPE).then((blob) => blob.text()));
-
-      const payload = tryParseCopyNodesPayload(clipboardText);
-      if (!payload || payload.workspaceId !== currentWorkspace.id) continue;
-      const { fileNodes, action } = payload;
-      const copyNodes: [TreeNode, AbsPath][] = fileNodes
-        .map((path) => [
-          currentWorkspace.nodeFromPath(String(path))!,
-          joinPath(targetNode.closestDirPath(), basename(path)),
-        ])
-        .filter(([from, to]) => String(from) !== to) as [TreeNode, AbsPath][];
-      await currentWorkspace.copyMultipleFiles(copyNodes);
-      if (action === "cut") {
-        return currentWorkspace.removeMultiple(copyNodes.map(([from]) => from));
-      }
-    }
-  }
+  // for (const item of items) {
+  //   if (item.types.includes(INTERNAL_NODE_FILE_TYPE)) {
+  //     const clipboardText = String(await item.getType(INTERNAL_NODE_FILE_TYPE).then((blob) => blob.text()));
+  //     const payload = tryParseCopyNodesPayload(clipboardText);
+  //     if (!payload || payload.workspaceId !== currentWorkspace.id) continue;
+  //     const { fileNodes, action } = payload;
+  //     const copyNodes: [TreeNode, AbsPath][] = fileNodes
+  //       .map((path) => [
+  //         currentWorkspace.nodeFromPath(String(path))!,
+  //         joinPath(targetNode.closestDirPath(), basename(path)),
+  //       ])
+  //       .filter(([from, to]) => String(from) !== to) as [TreeNode, AbsPath][];
+  //     await currentWorkspace.copyMultipleFiles(copyNodes);
+  //     if (action === "cut") {
+  //       return currentWorkspace.removeMultiple(copyNodes.map(([from]) => from));
+  //     }
+  //   }
+  // }
 }
 
 export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { currentWorkspace: Workspace }) {
