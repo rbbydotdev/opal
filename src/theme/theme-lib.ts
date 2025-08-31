@@ -9,8 +9,6 @@ import { invertColor } from "@/lib/colorUtils";
 // Import registry.json and type it as ThemeRegistry
 import registryJson from "./themes.json";
 
-export const ALL_THEMES = registryJson.items.map((item) => item.name);
-
 export const registry: ThemeRegistry = registryJson as unknown as ThemeRegistry;
 // Types - annotate your registry.json import with these
 export interface ThemeRegistry {
@@ -27,18 +25,42 @@ export interface ThemeRegistryItem {
 }
 
 export const FAVORITE_THEMES = [
-  "default",
   "modern-minimal",
   "t3-chat",
   "twitter",
   "mocha-mousse",
+  "bubblegum",
+  "doom-64",
   "catppuccin",
   "graphite",
   "perpetuity",
   "kodama-grove",
+  "cosmic-night",
+  "tangerine",
+  "quantum-rose",
+  "nature",
+  "bold-tech",
+  "elegant-luxury",
+  "amber-minimal",
+  "supabase",
+  "neo-brutalism",
+  "solar-dusk",
+  "claymorphism",
+  "cyberpunk",
+  "pastel-dreams",
+  "clean-slate",
+  "caffeine",
+  "ocean-breeze",
+  "retro-arcade",
+  "midnight-bloom",
+  "candyland",
+  "northern-lights",
+  "vintage-paper",
+  "sunset-horizon",
+  "starry-night",
   "claude",
-  "mono",
   "vercel",
+  "mono",
 ];
 
 export const MAJOR_THEMES = [
@@ -136,6 +158,8 @@ const ALL_VARS = new Set([
   "spacing",
   "tracking-normal",
 ]);
+
+export const ALL_THEMES = FAVORITE_THEMES; //registryJson.items.map((item) => item.name);
 
 export interface ApplyThemeOptions {
   theme: string;

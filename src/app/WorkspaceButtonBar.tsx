@@ -209,7 +209,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
             <Palette size={12} />
             Themes
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent>
+          <ContextMenuSubContent className="max-h-48 overflow-y-auto">
             {FAVORITE_THEMES.map((theme) => (
               <ContextMenuItem className="gap-2" key={theme} onClick={() => setTheme(theme)}>
                 {themeName === theme ? <Check size={12} /> : <div className="w-4"></div>}
@@ -363,17 +363,17 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
               open={expand}
               onOpenChange={setExpand}
             >
-              <CollapsibleTrigger className="mt-2 h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground _bg-muted flex items-center relative ">
+              <CollapsibleTrigger className="h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground _bg-muted flex items-center relative ">
                 <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
                 <div
                   className={cn(
                     { "w-[1.25rem] h-[1.25rem] text-xs": !shrink, "w-3 h-3 text-2xs": shrink },
-                    "z-10 group-data-[state=open]:hidden text-muted-foreground absolute top-0 right-2 rounded-full bg-primary p-0 flex justify-center items-center "
+                    "z-10 group-data-[state=open]:hidden text-primary-foreground absolute top-0 right-1 rounded-full bg-destructive p-0 flex justify-center items-center "
                   )}
                 >
                   {otherWorkspacesCount}
                 </div>
-                <div className="absolute group-data-[state=open]:hidden flex w-full justify-center ">
+                <div className="top-2 absolute group-data-[state=open]:hidden flex w-full justify-center ">
                   <div>
                     <OpalSvg
                       className={cn("rounded overflow-clip rotate-12", {

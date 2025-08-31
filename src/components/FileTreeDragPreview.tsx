@@ -48,14 +48,14 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <div
               key={treeNode.path}
-              className="w-12 h-12 border-2 border-foreground bg-background rounded-lg"
+              className="w-12 h-12 border-2 border-primary-foreground bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
               }}
             >
               <Folder
-                fill="var(--foreground)"
+                fill="var(--primary-foreground)"
                 key={treeNode.path}
                 strokeWidth={1}
                 className="text-ring rounded w-full h-full"
@@ -67,7 +67,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <div
               key={treeNode.path}
-              className="w-16 h-16  overflow-hidden border-2 border-foreground bg-background rounded-lg"
+              className="w-16 h-16  overflow-hidden border-2 border-primary-foreground bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
@@ -85,7 +85,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
         return (
           <div
             key={treeNode.path}
-            className="w-12 h-12 border-2 border-foreground rounded-lg"
+            className="w-12 h-12 border-2 border-primary-foreground rounded-lg"
             style={{
               ...transformStyle,
               boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
@@ -94,7 +94,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
             <FileTextIcon
               key={treeNode.path}
               strokeWidth={1}
-              fill="var(--foreground)"
+              fill="var(--primary-foreground)"
               className="text-ring rounded bg-background w-full h-full"
             />
           </div>

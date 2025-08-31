@@ -12,7 +12,18 @@ import {
   VirtualFileTreeNode,
   VirtualTreeNode,
 } from "@/lib/FileTree/TreeNode";
-import { AbsPath, absPath, basename, decodePath, dirname, encodePath, joinPath, RelPath, relPath } from "@/lib/paths2";
+import {
+  AbsPath,
+  absPath,
+  basename,
+  decodePath,
+  dirname,
+  encodePath,
+  joinPath,
+  RelPath,
+  relPath,
+  stringifyEntry,
+} from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 
 export class FileTree {
@@ -161,7 +172,7 @@ export class FileTree {
   ): AsyncGenerator<TreeNode, void, unknown> {
     const dir = parent.path;
     try {
-      const entries = (await this.fs.readdir(encodePath(dir))).map((e) => relPath(decodePath(e.toString())));
+      const entries = (await this.fs.readdir(encodePath(dir))).map((e) => relPath(decodePath(stringifyEntry(e))));
       for (const entry of entries) {
         const fullPath = joinPath(dir, entry);
         try {
