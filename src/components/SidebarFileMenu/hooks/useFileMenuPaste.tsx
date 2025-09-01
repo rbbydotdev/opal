@@ -5,7 +5,7 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { TreeNodeDataTransferJType } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { handleDropFilesForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, basename, joinPath } from "@/lib/paths2";
+import { reduceLineage } from "@/lib/paths2";
 
 export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Workspace }) {
   // const uploadFilesToWorkspace =
@@ -23,34 +23,18 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
             sourceWorkspaceId ?? currentWorkspace.id /* todo should not be undefined but here we are */
           ).then((ws) => ws.toModel().init());
 
-    // console.log(reduceLineage(fileNodes!));
     if (action && fileNodes) {
       try {
-        const copyNodes: [from: TreeNode, to: AbsPath][] = fileNodes.map(
-          (path) =>
-            [
-              sourceWorkspace.nodeFromPath(path)!, // from
-              joinPath(targetNode.closestDirPath(), basename(path)), // to
-            ] as const
+        const sourceNodes = reduceLineage(fileNodes.map((path) => sourceWorkspace.nodeFromPath(path)!)).map((node) =>
+          node.splice(targetNode.closestDir()!)
         );
-        if (copyNodes.length === 0) return;
+        await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.getDisk());
 
-        if (sourceWorkspaceId && currentWorkspace.id !== sourceWorkspaceId) {
-          //Transfer Across Workspace
-          //can make this just do a plain copy when workids are the same
-          await currentWorkspace.transferFiles(copyNodes, sourceWorkspaceId, currentWorkspace);
+        if (action === "cut") {
+          await sourceWorkspace.removeMultiple(sourceNodes.map((n) => n.source));
+          // Clear the clipboard to prevent pasting the same "cut" content again.
+          void navigator.clipboard.writeText("");
           //TOAST
-        } else {
-          //some redundancy with transferFiles
-          // TODO: rename images in markdown && expand menu for item
-          await currentWorkspace.copyMultipleFiles(copyNodes);
-
-          if (action === "cut") {
-            await currentWorkspace.removeMultiple(copyNodes.map(([from]) => from));
-            // Clear the clipboard to prevent pasting the same "cut" content again.
-            void navigator.clipboard.writeText("");
-            //TOAST
-          }
         }
       } catch (error) {
         console.error("Failed to parse internal node data:", error);

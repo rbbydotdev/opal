@@ -85,6 +85,7 @@
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-toggle-group": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@replit/codemirror-vim": "^6.3.0",
     "@tanstack/react-router": "^1.131.2",
     "@tanstack/router-devtools": "^1.131.2",
     "@tanstack/router-vite-plugin": "^1.131.2",

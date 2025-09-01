@@ -10,7 +10,7 @@ import { BrowserAbility } from "@/lib/BrowserAbility";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
-import { TreeDirRoot, TreeNodeDirJType, VirtualDupTreeNode } from "@/lib/FileTree/TreeNode";
+import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType, VirtualDupTreeNode } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
 import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
@@ -256,7 +256,7 @@ export abstract class Disk {
     return newIndex;
   };
 
-  getFirstFile() {
+  getFirstFile(): TreeNode | null {
     for (const node of this.fileTree.iterator((node) => !node.isHidden())) {
       if (node.isTreeFile()) return node;
     }
@@ -824,6 +824,32 @@ export abstract class Disk {
     return fullPath;
   }
 
+  async copyMultipleSourceNodes(sourceNodes: SourceTreeNode[], fromDisk: Disk): Promise<AbsPath[]> {
+    await this.ready;
+    let result: AbsPath[] = [];
+    sourceNodes = reduceLineage(sourceNodes);
+    for (const node of sourceNodes) {
+      node.path = await this.nextPath(node.path);
+      for (const n of node.iterator()) {
+        if (n.isTreeDir()) result.push(await this.mkdirRecursive(n.path));
+        else {
+          await this.writeFile(n.path, await fromDisk.readFile(n.source));
+          result.push(n.path);
+        }
+      }
+    }
+
+    await this.fileTreeIndex();
+    void this.local.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: result },
+    });
+    void this.remote.emit(DiskEvents.INDEX, {
+      type: "create",
+      details: { filePaths: result },
+    });
+    return result;
+  }
   async copyMultiple(
     copyPaths: [from: TreeNode, to: AbsPath | TreeNode][],
     options?: { overWrite?: boolean }

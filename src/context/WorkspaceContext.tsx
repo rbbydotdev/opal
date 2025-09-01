@@ -239,8 +239,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         fileTree,
         fileTreeDir,
         git: {
-          repo: currentWorkspace.repo,
-          playbook: currentWorkspace.playbook,
+          repo: currentWorkspace.getRepo(),
+          playbook: currentWorkspace.getPlaybook(),
         },
       }}
     >

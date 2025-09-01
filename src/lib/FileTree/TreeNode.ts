@@ -164,9 +164,7 @@ export class TreeNode {
 
   replaceWith(newNode: TreeNode) {
     this.type = newNode.type;
-    this._dirname = newNode._dirname;
-    this._basename = newNode._basename;
-    this._path = newNode._path;
+    this.path = newNode.path;
     this.depth = newNode.depth;
     this.parent = newNode.parent;
     this.children = newNode.children;
@@ -194,15 +192,15 @@ export class TreeNode {
     }
   }
 
-  iterator(filter?: (n: TreeNode) => boolean): IterableIterator<TreeNode> {
-    function* gen(node: TreeNode): IterableIterator<TreeNode> {
+  iterator(filter?: (n: TreeNode) => boolean): IterableIterator<this> {
+    function* gen(node: TreeNode): IterableIterator<unknown> {
       if (!filter || filter(node)) yield node;
       // if (node.isTreeFile()) return node;
       for (const childNode of Object.values((node as TreeDir).children ?? {})) {
         yield* gen.bind(node)(childNode);
       }
     }
-    return gen.bind(this)(this);
+    return gen.bind(this)(this) as IterableIterator<this>;
   }
 
   walk(
@@ -242,8 +240,8 @@ export class TreeNode {
     this.depth = typeof depth !== "undefined" ? depth : getDepth(this._path);
     this.parent = parent;
     this.source = source;
-    if (isTreeFile(this)) return this;
-    if (isTreeDir(this)) return this;
+    // if (isTreeFile(this)) return this;
+    // if (isTreeDir(this)) return this;
   }
 
   remove() {
@@ -256,39 +254,26 @@ export class TreeNode {
   private adjustChildrenPaths(): this {
     if (this.isTreeDir()) {
       for (const child of Object.values(this.children ?? {})) {
-        child._dirname = this._path;
-        child._path = absPath(joinPath(child._dirname, child._basename));
-        if (child.isTreeDir()) {
-          child.adjustChildrenPaths();
-        }
+        child.dirname = this._path;
       }
     }
     return this;
   }
 
   inc() {
-    this._path = incPath(this._path);
-    this._basename = relPath(basename(this._path));
-    this.adjustChildrenPaths();
+    this.path = incPath(this.path);
     return this;
   }
   renamePrefix(newBasename: RelPath | string) {
-    this._basename = relPath(prefix(relPath(newBasename)) + extname(this._basename));
-    this._path = absPath(joinPath(this._dirname, this._basename));
-    this.adjustChildrenPaths();
+    this.basename = relPath(prefix(relPath(newBasename)) + extname(this.basename));
     return this;
   }
   renameStrictPrefix(newBasename: RelPath | string) {
-    this._basename = relPath(strictPrefix(relPath(newBasename)) + extname(this._basename));
-    this._path = absPath(joinPath(this._dirname, this._basename));
-    this.adjustChildrenPaths();
+    this.basename = relPath(strictPrefix(relPath(newBasename)) + extname(this.basename));
     return this;
   }
   rename(path: AbsPath) {
     this.path = path;
-    // this._dirname = absPath(dirname(this._path));
-    // this._basename = relPath(basename(this._path));
-    // this.adjustChildrenPaths();
     return this;
   }
   deepCopy(): TreeNode {
@@ -315,20 +300,15 @@ export class TreeNode {
     });
   }
 
-  isSourcedNode(): this is TreeNode & { source: AbsPath } {
+  isSourceNode(): this is SourceTreeNode {
     return typeof this.source === "string" && this.source.length > 0;
   }
-  splice(newParent: TreeDir): this {
-    this.source = this.path;
-    this.parent = newParent;
-    this.path = absPath(joinPath(newParent.path, this.basename));
-    this.depth = getDepth(this.path);
-    if (isTreeDir(this)) {
-      for (const child of Object.values(this.children ?? {})) {
-        child.splice(this);
-      }
-    }
-    return this;
+  splice(newParent: TreeDir): SourceDirTreeNode | SourceFileTreeNode {
+    const clone = this.deepCopy();
+    const stn = SourceTreeNode.New(clone, clone.path);
+    stn.path = absPath(joinPath(newParent.path, clone.basename));
+    stn.parent = newParent;
+    return stn;
   }
 
   copy(): TreeNode {
@@ -646,6 +626,48 @@ export class VirtualDupTreeNode extends VirtualTreeNode {
 
 export function isVirtualDupNode(node: TreeNode): node is VirtualDupTreeNode {
   return isVirtualNode(node) && typeof node.source !== "undefined";
+}
+
+export class SourceTreeNode extends TreeNode {
+  static New(node: TreeNode, source: AbsPath): SourceDirTreeNode | SourceFileTreeNode {
+    if (isTreeDir(node)) {
+      return new SourceDirTreeNode(node, source);
+    }
+    return new SourceFileTreeNode(node, source);
+  }
+  constructor(
+    props: ConstructorParameters<typeof TreeNode>[0],
+    public source: AbsPath
+  ) {
+    super(props);
+  }
+}
+export class SourceFileTreeNode extends TreeFile {
+  constructor(
+    props: ConstructorParameters<typeof TreeFile>[0],
+    public source: AbsPath
+  ) {
+    super(props);
+  }
+}
+export class SourceDirTreeNode extends TreeDir {
+  get children(): Record<string, SourceFileTreeNode | SourceDirTreeNode> {
+    return this._children as Record<string, SourceFileTreeNode | SourceDirTreeNode>;
+  }
+
+  set children(value: Record<string, SourceFileTreeNode | SourceDirTreeNode>) {
+    super.children = value as Record<string, TreeFile | TreeDir>;
+  }
+
+  constructor(
+    props: ConstructorParameters<typeof TreeDir>[0],
+    public source: AbsPath
+  ) {
+    super(props);
+    this.children = Object.fromEntries(
+      Object.entries(props.children).map(([key, child]) => [key, SourceTreeNode.New(child, child.path)])
+    );
+  }
 }
 
 export const RootNode = TreeNode.FromPath(absPath("/"), "dir");
