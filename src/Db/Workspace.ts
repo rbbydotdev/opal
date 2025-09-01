@@ -37,7 +37,7 @@ import "@/workers/transferHandlers/workspace.th";
 import * as Comlink from "comlink";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
-import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
+import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage } from "../lib/paths2";
 
 // type DiskScan = UnwrapScannable<Disk>;
@@ -53,14 +53,30 @@ export class Workspace {
 
   name: string;
   guid: string;
-  remoteAuths?: RemoteAuthDAO[];
-  disk: Disk;
-  thumbs: Disk;
-  repo: GitRepo;
-  playbook: GitPlaybook;
+  private remoteAuths?: RemoteAuthDAO[];
+  private disk: Disk;
+  private thumbs: Disk;
+  private repo: GitRepo;
+  private playbook: GitPlaybook;
   tornDown: boolean = false;
 
   private unsubs: (() => void)[] = [];
+
+  getDisk() {
+    return this.disk;
+  }
+  getRepo() {
+    return this.repo;
+  }
+  getPlaybook() {
+    return this.playbook;
+  }
+  getThumbsDisk() {
+    return this.thumbs;
+  }
+  getRemoteAuths() {
+    return this.remoteAuths ?? [];
+  }
 
   constructor(
     {
@@ -341,7 +357,10 @@ export class Workspace {
     return unsub;
   };
 
-  copySourceNodes(nodes: SourceTreeNode[]) {}
+  copyMultipleSourceNodes(sourceNodes: (SourceDirTreeNode | SourceFileTreeNode)[], fromDisk: Disk) {
+    return this.disk.copyMultipleSourceNodes(sourceNodes, fromDisk);
+  }
+
   copyMultipleFiles(copyNodes: [from: TreeNode, toRoot: AbsPath | TreeNode][]) {
     return this.disk.copyMultiple(copyNodes);
   }

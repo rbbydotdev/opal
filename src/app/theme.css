@@ -48,12 +48,14 @@ body {
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--border);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
   }
   *::selection {
-    @apply bg-ring text-primary-foreground !important;
+    background-color: var(--ring);
+    color: var(--primary-foreground) !important;
   }
 }

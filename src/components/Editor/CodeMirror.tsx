@@ -13,6 +13,7 @@ import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { AbsPath } from "@/lib/paths2";
@@ -27,6 +28,7 @@ import { yamlFrontmatter } from "@codemirror/lang-yaml";
 import { languages } from "@codemirror/language-data";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
+import { vim } from "@replit/codemirror-vim";
 import { useRouter } from "@tanstack/react-router";
 import { basicSetup } from "codemirror";
 import { ChevronLeftIcon, FileText } from "lucide-react";
@@ -74,6 +76,7 @@ export const CodeMirrorEditor = ({
   className?: string;
   currentWorkspace: Workspace;
 }) => {
+  const { storedValue: vimMode, setStoredValue: setVimMode } = useLocalStorage2("CodeMirrorEditor/vimMode", false);
   const valueRef = useRef(value);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -81,18 +84,15 @@ export const CodeMirrorEditor = ({
   const { mode } = useThemeSettings();
 
   valueRef.current = value;
-  // Mount editor once
   useEffect(() => {
     if (!editorRef.current) return;
-
-    // Clean up previous view
     if (viewRef.current) {
       viewRef.current.destroy();
       viewRef.current = null;
     }
-    // console.log(basicLight);
 
     const extensions: Extension[] = [
+      vimMode ? vim() : null,
       basicSetup,
       mode === "dark" ? dracula : ayuLight,
       autocompletion(),
@@ -101,6 +101,7 @@ export const CodeMirrorEditor = ({
       noCommentKeymap,
       keymap.of([indentWithTab]),
       ext,
+
       // how to determine user change vs programmatic change
       // EditorView.updateListener.of((update) => {
       //         if (update.docChanged) {
@@ -121,11 +122,7 @@ export const CodeMirrorEditor = ({
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const docStr = update.state.doc.toString();
-          // const prevStr = update.startState.doc.toString();
-          // if (docStr !== prevStr && onChange) {
-          if (docStr !== valueRef.current) {
-            onChange(docStr);
-          }
+          if (docStr !== valueRef.current) onChange(docStr);
         }
       }),
       EditorView.editable.of(!readOnly),
@@ -137,7 +134,7 @@ export const CodeMirrorEditor = ({
     ].filter(Boolean) as Extension[];
 
     const state = EditorState.create({
-      doc: valueRef.current, // controlled value at mount
+      doc: valueRef.current,
       extensions,
     });
 
@@ -150,9 +147,7 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [editorRef, readOnly, height, ext, value, onChange, mode]);
-
-  // Sync external value → editor
+  }, [editorRef, readOnly, height, ext, value, onChange, mode, vimMode]);
 
   useEffect(() => {
     if (viewRef.current && value !== viewRef.current.state.doc.toString()) {
@@ -162,7 +157,6 @@ export const CodeMirrorEditor = ({
     }
   }, [value]);
 
-  // history + toolbar stuff
   const { updateDebounce } = useFileContents({ currentWorkspace });
   const historyDB = useSnapHistoryDB();
   const {
@@ -186,7 +180,7 @@ export const CodeMirrorEditor = ({
   return (
     <>
       <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
-        <CodeMirrorToolbar currentWorkspace={currentWorkspace} path={path}>
+        <CodeMirrorToolbar setVimMode={setVimMode} vimMode={vimMode} currentWorkspace={currentWorkspace} path={path}>
           {false && (
             <EditHistoryMenu
               finalizeRestore={(md) => updateDebounce(md)}
@@ -221,10 +215,14 @@ const CodeMirrorToolbar = ({
   children,
   path,
   currentWorkspace,
+  vimMode,
+  setVimMode,
 }: {
   children?: React.ReactNode;
   path: AbsPath | null;
   currentWorkspace: Workspace;
+  vimMode: boolean;
+  setVimMode: (value: boolean) => void;
 }) => {
   const { isMarkdown } = useCurrentFilepath();
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
@@ -237,6 +235,14 @@ const CodeMirrorToolbar = ({
       )}
 
       <LivePreviewButtons />
+      <span className="select-none text-sm">Vim Mode</span>
+      <input
+        type="checkbox"
+        className="ml-1"
+        checked={vimMode}
+        onChange={(e) => setVimMode(e.target.checked)}
+        aria-label="Enable Vim mode"
+      />
       {children}
     </div>
   );
