@@ -1,6 +1,7 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { useFileMenuPaste } from "@/components/SidebarFileMenu/hooks/useFileMenuPaste";
+import { toast } from "@/components/ui/sonner";
 import { Workspace } from "@/Db/Workspace";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { useEffect } from "react";
@@ -22,6 +23,13 @@ export function useFileTreeClipboardEventListeners({
       const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]);
       if (target?.closest?.(elementSelector) && !editing) {
         await handlePaste({ targetNode, data: new MetaDataTransfer(event.clipboardData!) });
+
+        toast({
+          title: "File Menu",
+          description: `Pasted ${selectedFocused.length} file${selectedFocused.length > 1 ? "s" : ""}.`,
+          type: "info",
+          position: "top-right",
+        });
         setFileTreeCtx(() => ({
           anchorIndex: -1,
           editing: null,
@@ -34,6 +42,13 @@ export function useFileTreeClipboardEventListeners({
     };
     const handleCutEvent = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
+
+      toast({
+        title: "File Menu",
+        description: `Cut ${selectedFocused.length} file${selectedFocused.length > 1 ? "s" : ""} to clipboard.`,
+        type: "info",
+        position: "top-right",
+      });
       if (target?.closest?.(elementSelector) && !editing) {
         return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
@@ -45,6 +60,12 @@ export function useFileTreeClipboardEventListeners({
     const handleCopyEvent = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest?.(elementSelector) && !editing) {
+        toast({
+          title: "File Menu",
+          description: `Copied ${selectedFocused.length} file${selectedFocused.length > 1 ? "s" : ""} to clipboard.`,
+          type: "info",
+          position: "top-right",
+        });
         return copyFileNodesToClipboard({
           fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
           action: "copy",
