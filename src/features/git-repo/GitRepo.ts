@@ -558,7 +558,19 @@ export class GitRepo {
   isBranchOrTag = async (ref: string) => {
     const branches = await this.getBranches();
     const tags = await GIT.listTags({ fs: this.fs, dir: this.dir });
-    return branches.includes(ref) || tags.includes(ref);
+    const isBranch = branches.includes(ref);
+    const isTag = tags.includes(ref);
+    
+    console.log("isBranchOrTag debug:", {
+      ref,
+      branches,
+      tags,
+      isBranch,
+      isTag,
+      result: isBranch || isTag
+    });
+    
+    return isBranch || isTag;
   };
 
   getRemote = async (
@@ -763,18 +775,36 @@ export class GitRepo {
   };
 
   checkoutRef = async ({ ref, force = false }: { ref: string; force?: boolean }): Promise<string | void> => {
+    console.log("checkoutRef called with ref:", ref);
+    
     if (await this.isMerging()) {
       await this.resetMergeState();
     }
+    
+    const isBranchOrTag = await this.isBranchOrTag(ref);
+    console.log("is branch or tag:", isBranchOrTag, "for ref:", ref);
+    
     await this.mutex.runExclusive(async () => {
+      console.log("executing git.checkout with ref:", ref);
+      
+      // If it's a branch, use the full branch reference to avoid detached HEAD
+      const checkoutRef = isBranchOrTag && !ref.startsWith('refs/') ? `refs/heads/${ref}` : ref;
+      console.log("using checkout ref:", checkoutRef);
+      
       await this.git.checkout({
         fs: this.fs,
         dir: this.dir,
-        ref: ref,
+        ref: checkoutRef,
         force,
       });
-      if (await this.isBranchOrTag(ref)) {
+      
+      console.log("checkout completed, current branch is:", await this.getCurrentBranch());
+      
+      if (isBranchOrTag) {
+        console.log("remembering current branch");
         await this.rememberCurrentBranch();
+      } else {
+        console.log("not a branch or tag, not remembering");
       }
     });
     return ref;
@@ -801,6 +831,7 @@ export class GitRepo {
     if (isMerging) {
       console.warn("Creating branch while merging, will not checkout.");
     }
+    
     await this.git.branch({
       fs: this.fs,
       dir: this.dir,
