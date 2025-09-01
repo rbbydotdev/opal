@@ -22,11 +22,12 @@ export function useFileTreeClipboardEventListeners({
       const target = event.target as HTMLElement | null;
       const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]);
       if (target?.closest?.(elementSelector) && !editing) {
-        await handlePaste({ targetNode, data: new MetaDataTransfer(event.clipboardData!) });
+        const dataTransfer = new MetaDataTransfer(event.clipboardData!);
+        const resultCount = await handlePaste({ targetNode, data: dataTransfer });
 
         toast({
           title: "File Menu",
-          description: `Pasted ${selectedFocused.length} file${selectedFocused.length > 1 ? "s" : ""}.`,
+          description: `Pasted ${resultCount} file${resultCount > 1 ? "s" : ""} from clipboard.`,
           type: "info",
           position: "top-right",
         });
