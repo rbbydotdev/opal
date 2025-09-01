@@ -688,7 +688,7 @@ export class GitRepo {
     return result;
   };
 
-  mustBeInitialized = async (): Promise<boolean> => {
+  mustBeInitialized = async (defaultBranch = this.defaultMainBranch): Promise<boolean> => {
     if (this.state.fullInitialized) return true;
     if (!(await this.fullInitialized())) {
       //if we are bare intialized we may have fetched refs we dont want to collide with
@@ -696,10 +696,11 @@ export class GitRepo {
       await this.git.init({
         fs: this.fs,
         dir: this.dir,
-        defaultBranch: this.defaultMainBranch,
+        defaultBranch,
       });
       this.state.bareInitialized = true;
-      await this.setDefaultBranch(this.defaultMainBranch);
+      await this.setDefaultBranch(gitAbbreviateRef(defaultBranch));
+
       await this.sync();
     }
     this.state.bareInitialized = true;

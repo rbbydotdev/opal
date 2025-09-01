@@ -32,20 +32,18 @@ import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { unwrapError } from "@/lib/errors";
 import { Remote } from "comlink";
 
-const isLockedBranch = (branch: string) => {
-  return ["master", "main"].includes(branch.toLowerCase());
-};
-
 export function GitBranchManager({
   refs,
   addGitBranch,
   setCurrentBranch,
+  defaultBranch,
   mergeGitBranch,
   replaceGitBranch,
   deleteGitBranch,
   currentGitRef,
 }: {
   refs: string[];
+  defaultBranch: string;
   addGitBranch: (baseRef: GitRef, branch: GitBranchFormValue) => void;
   replaceGitBranch: (previous: GitBranchFormValue, next: GitBranchFormValue) => void;
   mergeGitBranch: ({ from, into }: { from: string; into: string }) => void;
@@ -53,7 +51,7 @@ export function GitBranchManager({
   deleteGitBranch: (remoteName: string) => void;
   currentGitRef: GitRef | null;
 }) {
-  const [selectKey, setSelectKey] = useState(0);
+  // const [selectKey, setSelectKey] = useState(0);
   const [selectMode, setSelectMode] = useState<"select" | "delete" | "merge">("select");
   const [open, setOpen] = useState(false);
   const [inputMode, setInputMode] = useState<GitBranchInputModeType>(GitBranchInputModes.ADD);
@@ -75,7 +73,7 @@ export function GitBranchManager({
       <SelectHighlight
         placeholder="Select Branch to Delete"
         itemClassName="focus:bg-destructive focus:text-primary-foreground"
-        items={refs.filter((b) => !isLockedBranch(b))}
+        items={refs.filter((b) => b !== defaultBranch)}
         onCancel={() => setSelectMode("select")}
         onSelect={(name: string) => {
           deleteGitBranch(name);
@@ -103,6 +101,7 @@ export function GitBranchManager({
     /* select branch */
     return (
       <BranchSelect
+        defaultBranch={defaultBranch}
         branches={refs}
         currentGitRef={currentGitRef}
         value={
@@ -141,7 +140,7 @@ export function GitBranchManager({
           )}
           {currentGitRef && isBranchRef(currentGitRef) ? (
             <DropdownMenuItem
-              disabled={isLockedBranch(currentGitRef.value)}
+              disabled={currentGitRef.value === defaultBranch}
               onClick={() => {
                 setInputMode("edit");
                 setShowInput(true);
@@ -207,16 +206,18 @@ function BranchSelect({
   branches,
   onSelect,
   value,
+  defaultBranch,
   currentGitRef,
 }: {
   className?: string;
+  defaultBranch: string;
   children?: React.ReactNode;
   branches: string[];
   onSelect: (value: string) => void;
   value: string | null;
   currentGitRef: GitRef | null;
 }) {
-  // console.log(branches);
+  console.log(branches);
   return (
     <div className="w-full flex items-center justify-between space-x-2">
       <div className="w-full ">
@@ -238,7 +239,7 @@ function BranchSelect({
             {branches.map((branch) => (
               <SelectItem key={branch} value={branch} className={"!text-xs"}>
                 <div className="flex gap-2 items-center justify-start ">
-                  {isLockedBranch(branch) ? (
+                  {branch === defaultBranch ? (
                     <LockKeyhole className="flex-shrink-0 w-4 h-4" />
                   ) : (
                     <GitBranchIcon className="flex-shrink-0 w-4 h-4" />
@@ -337,6 +338,7 @@ export function RefsManagerSection({
       <div className="flex flex-col items-center w-full">
         <TooltipToast cmdRef={branchRef} durationMs={1000} sideOffset={0} />
         <GitBranchManager
+          defaultBranch={info.defaultBranch}
           key={selectKey}
           currentGitRef={currentGitRef}
           setCurrentBranch={setCurrentBranch}
