@@ -95,7 +95,7 @@ export class GitPlaybook {
       message: "Initial commit",
       ref: newBranch,
     });
-    await this.repo.checkoutRef({ ref: newBranch });
+    // await this.repo.checkoutRef({ ref: newBranch });
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
@@ -211,10 +211,10 @@ export class GitPlaybook {
       onAuth,
     });
     if (result.defaultBranch && !currentBranches.includes(result.defaultBranch)) {
-      await this.repo.setDefaultBranch(result.defaultBranch);
       //check if default branch exists in remote refs
       // abbreviateRef
       const defaultBranchShort = gitAbbreviateRef(result.defaultBranch)!; //.split("/").at(-1)!;
+      await this.repo.setDefaultBranch(defaultBranchShort);
       const remoteRef = `refs/remotes/${remote.name}/${defaultBranchShort}`;
       console.log("Checking if remote ref exists:", remoteRef);
       const remoteRefExists = await this.repo
