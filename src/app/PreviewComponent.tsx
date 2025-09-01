@@ -51,12 +51,12 @@ function PreviewComponentInternal() {
 
   if (isMarkdown(path)) {
     return (
-      <>
+      <div className="absolute inset-0">
         <ScrollSyncProvider scrollEmitter={scrollEmitter}>
           <Links hrefs={cssFiles} />
           <MarkdownRender path={path} />
         </ScrollSyncProvider>
-      </>
+      </div>
     );
   }
   if (isImage(path)) {
