@@ -95,6 +95,8 @@ export class GitPlaybook {
       message: "Initial commit",
       ref: newBranch,
     });
+    // console.log(newBranch);
+    // this.repo.checkoutRef
     // await this.repo.checkoutRef({ ref: newBranch });
   }
 
