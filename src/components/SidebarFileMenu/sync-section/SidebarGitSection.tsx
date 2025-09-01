@@ -223,7 +223,7 @@ const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) =>
   if (!Icon || !labelStr) return null;
   return (
     <>
-      <Icon className="mr-1 !w-5 !h-5" />
+      <Icon className="mr-1 !w-4 !h-4" />
       <span className="flex-1 min-w-0 truncate flex justify-center items-center">{labelStr}</span>
     </>
   );
@@ -587,7 +587,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   size="sm"
                   variant="outline"
                 >
-                  <Import className="mr-1 !w-5 !h-5" />
+                  <Import className="mr-1 !w-4 !h-4" />
                   <span className="flex-1 min-w-0 truncate flex justify-center items-center">
                     <TooltipToast cmdRef={initFromRemoteRef} sideOffset={10} />
                     {commitState === "bare-init" ? "Add Remote" : "Init From Remote"}
