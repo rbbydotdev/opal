@@ -242,7 +242,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
       <div
         className={cn(
           "[&>*]:outline-none transition-all [&>*]:select-none relative min-h-0 flex flex-col gap-4 justify-center items-center ",
-          shrink ? "w-8" : "w-16"
+          shrink ? "w-8" : "w-20"
         )}
       >
         <div
@@ -265,7 +265,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
             "mt-8": shrink,
           })}
         >
-          <div className="w-full _px-2">
+          <div className="w-full _px-2 flex flex-col gap-4">
             {process.env.NODE_ENV === "development" ? (
               <>
                 <BigButton
@@ -374,7 +374,10 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                 <div
                   className={cn(
                     { "w-[1.25rem] h-[1.25rem] text-xs": !shrink, "w-3 h-3 text-2xs": shrink },
-                    "z-10 group-data-[state=open]:hidden text-primary-foreground absolute top-0 right-1 rounded-full bg-destructive p-0 flex justify-center items-center "
+                    "z-10 group-data-[state=open]:hidden text-primary-foreground absolute top-0 right-1 rounded-full bg-destructive p-0 flex justify-center items-center ",
+                    {
+                      "-right-1": shrink,
+                    }
                   )}
                 >
                   {otherWorkspacesCount}
@@ -384,7 +387,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                     <OpalSvg
                       className={cn("rounded overflow-clip rotate-12", {
                         "w-9": !shrink,
-                        "w-3": shrink,
+                        "w-5": shrink,
                       })}
                     />
                   </div>
@@ -396,7 +399,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                   <WorkspaceMenu workspaceGuid={workspace.guid} key={workspace.guid} workspaceName={workspace.name}>
                     <BigButton
                       variant={variant}
-                      icon={<WorkspaceIcon scale={shrink ? 3 : 7} input={workspace.guid} />}
+                      icon={<WorkspaceIcon scale={shrink ? 5 : 7} input={workspace.guid} />}
                       to={workspace.href}
                       truncate={true}
                       className="_whitespace-nowrap text-muted-foreground"

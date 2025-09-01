@@ -524,7 +524,10 @@ export function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
 //
 export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir, renameDirOrFile, trashFile } = useWorkspaceFileMgmt(currentWorkspace);
-  const { repo, playbook } = currentWorkspace;
+  const [repo, playbook] = useMemo(
+    () => [currentWorkspace.getRepo(), currentWorkspace.getPlaybook()] as const,
+    [currentWorkspace]
+  );
   const previewURL = useWorkspacePathPreviewURL();
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath } = useWorkspaceRoute();
