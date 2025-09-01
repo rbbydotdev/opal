@@ -217,7 +217,6 @@ function BranchSelect({
   value: string | null;
   currentGitRef: GitRef | null;
 }) {
-  console.log(branches, currentGitRef);
   return (
     <div className="w-full flex items-center justify-between space-x-2">
       <div className="w-full ">

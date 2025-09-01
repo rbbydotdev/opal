@@ -28,13 +28,22 @@ export class GitPlaybook {
   ) {}
 
   switchBranch = async (branchName: string) => {
-    if ((await this.repo.getCurrentBranch()) === branchName) return false;
+    console.log("switchBranch called with:", branchName);
+    const currentBranch = await this.repo.getCurrentBranch();
+    console.log("current branch before switch:", currentBranch);
+    
+    if (currentBranch === branchName) return false;
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.SWITCH_BRANCH,
       });
     }
+    
+    console.log("about to checkout ref:", branchName);
     await this.repo.checkoutRef({ ref: branchName });
+    
+    const newCurrentBranch = await this.repo.getCurrentBranch();
+    console.log("current branch after switch:", newCurrentBranch);
     return true;
   };
 
@@ -88,16 +97,21 @@ export class GitPlaybook {
     const branches = await this.repo.getBranches().catch(() => []);
     const main = gitAbbreviateRef(await this.repo.defaultMainBranch);
     const newBranch = getUniqueSlug(main, branches);
-    await this.repo.addGitBranch({
-      branchName: newBranch,
-    });
-    await this.repo.commit({
+
+    // First commit to create the initial commit
+    const commitOid = await this.repo.commit({
       message: "Initial commit",
       ref: newBranch,
     });
-    // console.log(newBranch);
-    // this.repo.checkoutRef
-    // await this.repo.checkoutRef({ ref: newBranch });
+
+    // Now create the branch pointing to this commit
+    await this.repo.addGitBranch({
+      branchName: newBranch,
+      symbolicRef: commitOid,
+      checkout: false,
+    });
+
+    await this.repo.checkoutRef({ ref: newBranch });
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {

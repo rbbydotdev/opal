@@ -1,6 +1,8 @@
 import { IRemote } from "@/features/git-repo/GitRepo";
 import git, { AuthCallback } from "isomorphic-git";
 
+import http from "isomorphic-git/http/web";
+
 type RemoteVerifyCodes = (typeof Remote.VERIFY_CODES)[keyof typeof Remote.VERIFY_CODES];
 export class Remote implements IRemote {
   branch: string;
