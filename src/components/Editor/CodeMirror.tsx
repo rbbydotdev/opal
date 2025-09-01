@@ -1,4 +1,4 @@
-// import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
+import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
 import {
   CodeMirrorHighlightURLRange,
   getHighlightRangesFromURL,
@@ -6,6 +6,7 @@ import {
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { useEditorHistoryPlugin2WithContentWatch } from "@/components/Editor/history/useEditorHistoryPlugin2WithContentWatch";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
+import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
@@ -23,9 +24,6 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
 import { javascript } from "@codemirror/lang-javascript";
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { yamlFrontmatter } from "@codemirror/lang-yaml";
-import { languages } from "@codemirror/language-data";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
@@ -33,7 +31,6 @@ import { useRouter } from "@tanstack/react-router";
 import { basicSetup } from "codemirror";
 import { ChevronLeftIcon, FileText } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
-import { ayuLight, dracula } from "thememirror";
 
 const noCommentKeymap = keymap.of([
   { key: "Mod-/", run: () => true }, // return true = handled, but do nothing
@@ -45,12 +42,7 @@ const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdo
     case "text/css":
       return css();
     case "text/markdown":
-      return yamlFrontmatter({
-        content: markdown({
-          base: markdownLanguage,
-          codeLanguages: languages,
-        }),
-      });
+      return enhancedMarkdownExtension(true);
     case "text/javascript":
       return javascript();
     case "text/plain":
@@ -94,7 +86,7 @@ export const CodeMirrorEditor = ({
     const extensions: Extension[] = [
       vimMode ? vim() : null,
       basicSetup,
-      mode === "dark" ? dracula : ayuLight,
+      customCodeMirrorTheme,
       autocompletion(),
       EditorView.lineWrapping,
       CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),

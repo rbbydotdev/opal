@@ -1,3 +1,4 @@
+/* beware: vibe coded */
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
@@ -97,102 +98,149 @@ export const customTheme = EditorView.theme(
   { dark: false }
 );
 
+// Import contrast utilities from markdown highlighting
+import { getContrastSafeColor } from "./markdownHighlighting";
+
+// Create a contrast-safe version of the highlighting style
+const createContrastSafeGeneralHighlightStyle = (codeMirrorBackground: string = "--background") => {
+  return HighlightStyle.define([
+    { tag: t.keyword, color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})` },
+    {
+      tag: [t.name, t.deleted, t.character, t.propertyName, t.macroName],
+      color: `var(${getContrastSafeColor("--chart-2", "--destructive", codeMirrorBackground)})`,
+    },
+    { tag: [t.variableName], color: `var(${getContrastSafeColor("--chart-3", "--foreground", codeMirrorBackground)})` },
+    {
+      tag: [t.function(t.variableName)],
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.labelName],
+      color: `var(${getContrastSafeColor("--chart-4", "--secondary-foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.color, t.constant(t.name), t.standard(t.name)],
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.definition(t.name), t.separator],
+      color: `var(${getContrastSafeColor("--chart-5", "--accent-foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.brace],
+      color: `var(${getContrastSafeColor("--muted-foreground", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.annotation],
+      color: `var(${getContrastSafeColor("--destructive", "--chart-2", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.number, t.changed, t.annotation, t.modifier, t.self, t.namespace],
+      color: `var(${getContrastSafeColor("--chart-1", "--primary", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.typeName, t.className],
+      color: `var(${getContrastSafeColor("--chart-2", "--destructive", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.operator, t.operatorKeyword],
+      color: "var(--foreground)",
+    },
+    {
+      tag: [t.tagName],
+      color: `var(${getContrastSafeColor("--chart-3", "--primary", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.squareBracket],
+      color: `var(${getContrastSafeColor("--chart-4", "--destructive", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.angleBracket],
+      color: `var(${getContrastSafeColor("--chart-5", "--destructive", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.attributeName],
+      color: `var(${getContrastSafeColor("--chart-2", "--destructive", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.regexp],
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.quote],
+      color: `var(${getContrastSafeColor("--muted-foreground", "--foreground", codeMirrorBackground)})`,
+    },
+    { tag: [t.string], color: `var(${getContrastSafeColor("--chart-5", "--chart-1", codeMirrorBackground)})` },
+    {
+      tag: t.link,
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+      textDecoration: "underline",
+      textUnderlinePosition: "under",
+    },
+    {
+      tag: [t.url, t.escape, t.special(t.string)],
+      color: `var(${getContrastSafeColor("--chart-5", "--chart-1", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.meta],
+      color: `var(${getContrastSafeColor("--muted-foreground", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.comment],
+      color: `var(${getContrastSafeColor("--muted-foreground", "--foreground", codeMirrorBackground)})`,
+      fontStyle: "italic",
+    },
+    { tag: t.strong, fontWeight: "bold", color: "var(--foreground)" },
+    { tag: t.emphasis, fontStyle: "italic", color: "var(--foreground)" },
+    { tag: t.strikethrough, textDecoration: "line-through" },
+    {
+      tag: t.heading,
+      fontWeight: "bold",
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: t.special(t.heading1),
+      fontWeight: "bold",
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: t.heading1,
+      fontWeight: "bold",
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.heading2, t.heading3, t.heading4],
+      fontWeight: "bold",
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.heading5, t.heading6],
+      color: `var(${getContrastSafeColor("--primary", "--foreground", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.atom, t.bool, t.special(t.variableName)],
+      color: `var(${getContrastSafeColor("--chart-1", "--primary", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.processingInstruction, t.inserted],
+      color: `var(${getContrastSafeColor("--chart-5", "--primary", codeMirrorBackground)})`,
+    },
+    {
+      tag: [t.contentSeparator],
+      color: `var(${getContrastSafeColor("--chart-2", "--destructive", codeMirrorBackground)})`,
+    },
+    { tag: t.invalid, color: "var(--destructive-foreground)", backgroundColor: "var(--destructive)" },
+  ]);
+};
+
 /// The highlighting style for code that uses CSS variables from our app theme.
-export const customHighlightStyle = HighlightStyle.define([
-  { tag: t.keyword, color: "var(--primary)" },
-  {
-    tag: [t.name, t.deleted, t.character, t.propertyName, t.macroName],
-    color: "var(--chart-2, var(--destructive))",
-  },
-  { tag: [t.variableName], color: "var(--chart-3, var(--foreground))" },
-  { tag: [t.function(t.variableName)], color: "var(--primary)" },
-  { tag: [t.labelName], color: "var(--chart-4, var(--secondary-foreground))" },
-  {
-    tag: [t.color, t.constant(t.name), t.standard(t.name)],
-    color: "var(--primary)",
-  },
-  { tag: [t.definition(t.name), t.separator], color: "var(--chart-5, var(--accent-foreground))" },
-  { tag: [t.brace], color: "var(--muted-foreground)" },
-  {
-    tag: [t.annotation],
-    color: "var(--destructive)",
-  },
-  {
-    tag: [t.number, t.changed, t.annotation, t.modifier, t.self, t.namespace],
-    color: "var(--chart-1, var(--primary))",
-  },
-  {
-    tag: [t.typeName, t.className],
-    color: "var(--chart-2, var(--destructive))",
-  },
-  {
-    tag: [t.operator, t.operatorKeyword],
-    color: "var(--foreground)",
-  },
-  {
-    tag: [t.tagName],
-    color: "var(--chart-3, var(--primary))",
-  },
-  {
-    tag: [t.squareBracket],
-    color: "var(--chart-4, var(--destructive))",
-  },
-  {
-    tag: [t.angleBracket],
-    color: "var(--chart-5, var(--destructive))",
-  },
-  {
-    tag: [t.attributeName],
-    color: "var(--chart-2, var(--destructive))",
-  },
-  {
-    tag: [t.regexp],
-    color: "var(--primary)",
-  },
-  {
-    tag: [t.quote],
-    color: "var(--muted-foreground)",
-  },
-  { tag: [t.string], color: "var(--chart-5, var(--chart-1))" },
-  {
-    tag: t.link,
-    color: "var(--primary)",
-    textDecoration: "underline",
-    textUnderlinePosition: "under",
-  },
-  {
-    tag: [t.url, t.escape, t.special(t.string)],
-    color: "var(--chart-5, var(--chart-1))",
-  },
-  { tag: [t.meta], color: "var(--muted-foreground)" },
-  { tag: [t.comment], color: "var(--muted-foreground)", fontStyle: "italic" },
-  { tag: t.strong, fontWeight: "bold", color: "var(--foreground)" },
-  { tag: t.emphasis, fontStyle: "italic", color: "var(--foreground)" },
-  { tag: t.strikethrough, textDecoration: "line-through" },
-  { tag: t.heading, fontWeight: "bold", color: "var(--primary)" },
-  { tag: t.special(t.heading1), fontWeight: "bold", color: "var(--primary)" },
-  { tag: t.heading1, fontWeight: "bold", color: "var(--primary)" },
-  {
-    tag: [t.heading2, t.heading3, t.heading4],
-    fontWeight: "bold",
-    color: "var(--primary)",
-  },
-  {
-    tag: [t.heading5, t.heading6],
-    color: "var(--primary)",
-  },
-  { tag: [t.atom, t.bool, t.special(t.variableName)], color: "var(--chart-1, var(--primary))" },
-  {
-    tag: [t.processingInstruction, t.inserted],
-    color: "var(--chart-5, var(--primary))",
-  },
-  {
-    tag: [t.contentSeparator],
-    color: "var(--chart-2, var(--destructive))",
-  },
-  { tag: t.invalid, color: "var(--destructive-foreground)", backgroundColor: "var(--destructive)" },
-]);
+export const customHighlightStyle = createContrastSafeGeneralHighlightStyle();
 
 /// Extension to enable the custom theme (both the editor theme and
 /// the highlight style) that uses CSS variables from our app theme.
 export const customCodeMirrorTheme: Extension = [customTheme, syntaxHighlighting(customHighlightStyle)];
+
+/// Create a contrast-safe custom theme with a specific background variable
+export const createContrastSafeCustomTheme = (codeMirrorBackground: string = "--background"): Extension => {
+  return [customTheme, syntaxHighlighting(createContrastSafeGeneralHighlightStyle(codeMirrorBackground))];
+};

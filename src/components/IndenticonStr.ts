@@ -1,3 +1,4 @@
+/* beware: vibe coded */
 // @ts-nocheck
 import crypto from "crypto";
 // Helper function to convert RGB to HSL
