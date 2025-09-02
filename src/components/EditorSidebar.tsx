@@ -13,7 +13,7 @@ import { WorkspaceMenu } from "@/components/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Opal } from "@/lib/Opal";
 import { Link } from "@tanstack/react-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 export function EditorSidebar({
@@ -22,6 +22,10 @@ export function EditorSidebar({
 }: { className?: string } & React.ComponentProps<typeof Sidebar>) {
   const { currentWorkspace } = useWorkspaceContext();
   const [workspaceTitleMode, setWorkspaceTitleMode] = useState<"display" | "edit">("display");
+  const fnRef = useRef<null | (() => void)>(null);
+  const deferredFn = (fn: () => void) => {
+    return () => (fnRef.current = fn);
+  };
 
   return (
     <Sidebar collapsible="none" className={twMerge("flex min-h-full w-full", className)} {...restProps}>
@@ -31,7 +35,14 @@ export function EditorSidebar({
             <WorkspaceMenu
               workspaceName={currentWorkspace.name}
               workspaceGuid={currentWorkspace.guid}
-              onRename={() => setWorkspaceTitleMode("edit")}
+              onRename={deferredFn(() => setWorkspaceTitleMode("edit"))}
+              onCloseAutoFocus={(event) => {
+                if (fnRef.current) {
+                  event.preventDefault();
+                  fnRef.current();
+                  fnRef.current = null;
+                }
+              }}
             >
               <SidebarMenuButton className="pr-0" size="lg" asChild>
                 <Link
@@ -47,9 +58,8 @@ export function EditorSidebar({
                       {workspaceTitleMode === "edit" ? (
                         <input
                           autoFocus
+                          ref={(ref) => ref?.select()}
                           type="text"
-                          // value={currentWorkspace.name}
-
                           tabIndex={0}
                           defaultValue={currentWorkspace.name}
                           // onChange={(e) => currentWorkspace.rename(e.target.value)}
