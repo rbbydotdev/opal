@@ -7,6 +7,7 @@ import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
+import { getUniqueSlug } from "../lib/getUniqueSlug";
 import { DiskDAO } from "./DiskDAO";
 
 export type WorkspaceGuid = Brand<string, "WorkspaceGuid">;
@@ -209,6 +210,17 @@ export class WorkspaceDAO {
       },
       this
     );
+  }
+  rename(name: string) {
+    return ClientDb.transaction("rw", ClientDb.workspaces, async () => {
+      const all = await WorkspaceDAO.all();
+      const newName = getUniqueSlug(
+        name,
+        all.map((ws) => ws.name)
+      );
+      this.name = newName;
+      await this.save();
+    });
   }
 
   delete() {
