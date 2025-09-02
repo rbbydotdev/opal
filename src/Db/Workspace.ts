@@ -565,6 +565,10 @@ export class Workspace {
     ]);
   }
 
+  rename(name: string) {
+    return this.connector.rename(WorkspaceDAO.Slugify(name));
+  }
+
   home() {
     return this.href;
   }

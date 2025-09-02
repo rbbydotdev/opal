@@ -13,7 +13,7 @@ import { WorkspaceMenu } from "@/components/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Opal } from "@/lib/Opal";
 import { Link } from "@tanstack/react-router";
-import React from "react";
+import React, { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 export function EditorSidebar({
@@ -21,13 +21,18 @@ export function EditorSidebar({
   ...restProps
 }: { className?: string } & React.ComponentProps<typeof Sidebar>) {
   const { currentWorkspace } = useWorkspaceContext();
+  const [workspaceTitleMode, setWorkspaceTitleMode] = useState<"display" | "edit">("display");
 
   return (
     <Sidebar collapsible="none" className={twMerge("flex min-h-full w-full", className)} {...restProps}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <WorkspaceMenu workspaceName={currentWorkspace.name} workspaceGuid={currentWorkspace.guid}>
+            <WorkspaceMenu
+              workspaceName={currentWorkspace.name}
+              workspaceGuid={currentWorkspace.guid}
+              onRename={() => setWorkspaceTitleMode("edit")}
+            >
               <SidebarMenuButton className="pr-0" size="lg" asChild>
                 <Link
                   to="/workspace/$workspaceName"
@@ -38,10 +43,34 @@ export function EditorSidebar({
                     <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
                       <CurrentWorkspaceIcon size={4} scale={7} />
                     </div>
-                    <div className="flex flex-col gap-0.5 leading-none truncate">
-                      <div className="whitespace-nowrap w-full truncate uppercase font-mono">
-                        {currentWorkspace.name}
-                      </div>
+                    <div className="flex flex-col gap-0.5 leading-none truncate w-full">
+                      {workspaceTitleMode === "edit" ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          // value={currentWorkspace.name}
+
+                          tabIndex={0}
+                          defaultValue={currentWorkspace.name}
+                          // onChange={(e) => currentWorkspace.rename(e.target.value)}
+                          onBlur={() => setWorkspaceTitleMode("display")}
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                            if (e.key === "Enter") {
+                              (e.target as HTMLInputElement).blur();
+                              console.log("renaming to", (e.target as HTMLInputElement).value);
+                              // return currentWorkspace.rename(e.target.value);
+                            }
+                          }}
+                          className="uppercase w-full bg-transparent outline-none _border-0 border-2 border-green-600 p-0 m-0 font-mono truncate"
+                        />
+                      ) : (
+                        <div className="whitespace-nowrap w-full truncate uppercase font-mono">
+                          {currentWorkspace.name}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
