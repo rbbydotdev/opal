@@ -9,12 +9,14 @@ export function CommitManagerSection({
   currentCommit,
   commitRef,
   refType,
+  hasChanges,
 }: {
   playbook: GitPlaybook;
   commits: RepoCommit[];
   currentCommit?: string;
   commitRef: React.RefObject<{ show: (text?: string) => void }>;
   refType: GitRefType;
+  hasChanges: boolean;
 }) {
   if (!commits || commits.length === 0) return null;
 
@@ -31,6 +33,7 @@ export function CommitManagerSection({
             resetToHead={playbook.resetToHead}
             resetToOrigHead={playbook.resetToPrevBranch}
             setCurrentCommit={(commitOid) => playbook.switchCommit(commitOid)}
+            hasChanges={hasChanges}
           />
         </div>
       </div>

@@ -33,7 +33,7 @@ function toast(toastData: ToastOptions) {
       />
     ),
     {
-      position: toastData.position,
+      position: toastData.position || "top-right",
     }
   );
 }
@@ -44,15 +44,11 @@ function Toast(props: ToastProps) {
   const getTypeStyles = () => {
     switch (type) {
       case "success":
-        return "bg-card border-primary/20";
       case "error":
-        return "bg-destructive/10 border-destructive/20";
       case "warning":
-        return "bg-card border-secondary/20";
       case "info":
-        return "bg-card border-accent/20";
       default:
-        return "bg-card border-border";
+        return "bg-card border-accent";
     }
   };
 

@@ -3,16 +3,18 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { useRouter } from "@tanstack/react-router";
-import { Delete } from "lucide-react";
+import { Delete, Pencil } from "lucide-react";
 
 export function WorkspaceMenu({
   children,
   workspaceGuid,
   workspaceName,
+  onRename,
 }: {
   children: React.ReactNode;
   workspaceName: string;
   workspaceGuid: string;
+  onRename?: () => void;
 }) {
   const router = useRouter();
   const { open } = useConfirm();
@@ -20,6 +22,12 @@ export function WorkspaceMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent>
+        {Boolean(onRename) && (
+          <ContextMenuItem className="w-full gap-4 flex items-center justify-start h-full" onClick={onRename}>
+            <Pencil className="w-5 h-5" size={12} strokeWidth={1} />
+            <span>Rename</span>
+          </ContextMenuItem>
+        )}
         <ContextMenuItem
           onClick={() => {
             void open(
@@ -41,7 +49,7 @@ export function WorkspaceMenu({
             );
           }}
         >
-          <div className="gap-2 flex items-center justify-center w-full h-full">
+          <div className="gap-4 flex items-center justify-start w-full h-full">
             <Delete className="text-destructive w-5 h-5" size={12} strokeWidth={1} />
             Delete
           </div>
