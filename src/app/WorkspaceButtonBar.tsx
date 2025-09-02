@@ -28,7 +28,7 @@ import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
 import { FAVORITE_THEMES } from "@/theme/theme-lib";
 import { ThemePreview } from "@/theme/ThemePreview";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   BombIcon,
   Check,
@@ -43,6 +43,7 @@ import {
   Settings,
   Sidebar,
   Sun,
+  X,
   Zap,
 } from "lucide-react";
 import React, { useEffect, useRef } from "react";
@@ -123,7 +124,7 @@ function BigButton({
   );
 }
 
-export function WorkspaceButtonBar() {
+export function WorkspaceButtonBar({}: {}) {
   const { storedValue: shrink, setStoredValue: setShrink } = useShrink();
   const { storedValue: autoHide } = useAutoHide();
 
@@ -163,6 +164,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { mode, value, themeName, setPreference, setTheme } = useThemeSettings();
   const { setStoredValue: setAutoHide, storedValue: autoHide } = useAutoHide();
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
+  const router = useRouter();
 
   return (
     <ContextMenu>
@@ -222,6 +224,26 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
             ))}
           </ContextMenuSubContent>
         </ContextMenuSub>
+        <ContextMenuSeparator />
+        <ContextMenuItem
+          className="gap-2 flex justify-center"
+          onClick={async () =>
+            Promise.all([...(await WorkspaceDAO.all().then((wss) => wss.map((ws) => ws.toModel().destroy())))]).then(
+              () => {
+                // toast({
+                //   description: "",
+                //   title: "All workspaces deleted",
+                //   type: "error",
+                //   position: "top-right",
+                // });
+                void router.navigate({ to: "/newWorkspace" });
+              }
+            )
+          }
+        >
+          <X size={12} className="text-destructive" />
+          <span className="pr-4 text-3xs text-destructive uppercase"> delete all workspaces</span>
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );
@@ -248,7 +270,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
         <div
           className={cn("flex justify-center flex-col items-center w-full min-h-0", {
             "mt-[1.35rem]": shrink,
-            "mb-4  mt-8": !shrink,
+            "mb-4 mt-8": !shrink,
           })}
         >
           <div className="relative w-full justify-center flex items-center ">

@@ -28,22 +28,13 @@ export class GitPlaybook {
   ) {}
 
   switchBranch = async (branchName: string) => {
-    console.log("switchBranch called with:", branchName);
-    const currentBranch = await this.repo.getCurrentBranch();
-    console.log("current branch before switch:", currentBranch);
-    
-    if (currentBranch === branchName) return false;
+    if ((await this.repo.getCurrentBranch()) === branchName) return false;
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.SWITCH_BRANCH,
       });
     }
-    
-    console.log("about to checkout ref:", branchName);
     await this.repo.checkoutRef({ ref: branchName });
-    
-    const newCurrentBranch = await this.repo.getCurrentBranch();
-    console.log("current branch after switch:", newCurrentBranch);
     return true;
   };
 
@@ -229,8 +220,9 @@ export class GitPlaybook {
     if (result.defaultBranch && !currentBranches.includes(result.defaultBranch)) {
       //check if default branch exists in remote refs
       // abbreviateRef
-      const defaultBranchShort = gitAbbreviateRef(result.defaultBranch)!; //.split("/").at(-1)!;
+      const defaultBranchShort = gitAbbreviateRef(result.defaultBranch)!;
       await this.repo.setDefaultBranch(defaultBranchShort);
+      // Use the repo's helper method for consistent remote ref construction
       const remoteRef = `refs/remotes/${remote.name}/${defaultBranchShort}`;
       console.log("Checking if remote ref exists:", remoteRef);
       const remoteRefExists = await this.repo

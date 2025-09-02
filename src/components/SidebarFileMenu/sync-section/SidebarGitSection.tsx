@@ -545,6 +545,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                     commits={info.commitHistory}
                     currentCommit={info.latestCommit?.oid}
                     commitRef={commitManagerRef}
+                    hasChanges={info.hasChanges}
                   />
                   <Separator />
                 </>

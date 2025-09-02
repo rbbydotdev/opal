@@ -6,6 +6,8 @@ import { Workspace } from "@/Db/Workspace";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { useEffect } from "react";
 
+const files = (count: number) => (count > 1 ? "files" : "file");
+
 export function useFileTreeClipboardEventListeners({
   currentWorkspace,
   elementSelector = "[data-sidebar-file-menu]",
@@ -26,8 +28,8 @@ export function useFileTreeClipboardEventListeners({
         const resultCount = await handlePaste({ targetNode, data: dataTransfer });
 
         toast({
-          title: "File Menu",
-          description: `Pasted ${resultCount} file${resultCount > 1 ? "s" : ""} from clipboard.`,
+          title: "Files",
+          description: `Pasted ${resultCount} ${files(resultCount)} from clipboard.`,
           type: "info",
           position: "top-right",
         });
@@ -45,8 +47,8 @@ export function useFileTreeClipboardEventListeners({
       const target = event.target as HTMLElement | null;
 
       toast({
-        title: "File Menu",
-        description: `Cut ${selectedFocused.length} file${selectedFocused.length > 1 ? "s" : ""} to clipboard.`,
+        title: "Files",
+        description: `Cut ${selectedFocused.length} ${files(selectedFocused.length)} to clipboard.`,
         type: "info",
         position: "top-right",
       });
@@ -62,8 +64,8 @@ export function useFileTreeClipboardEventListeners({
       const target = event.target as HTMLElement | null;
       if (target?.closest?.(elementSelector) && !editing) {
         toast({
-          title: "File Menu",
-          description: `Copied ${selectedFocused.length} file${selectedFocused.length > 1 ? "s" : ""} to clipboard.`,
+          title: "Files",
+          description: `Copied ${selectedFocused.length} ${files(selectedFocused.length)} to clipboard.`,
           type: "info",
           position: "top-right",
         });

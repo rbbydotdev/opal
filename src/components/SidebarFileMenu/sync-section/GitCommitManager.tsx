@@ -12,6 +12,7 @@ import { GitRefType, RepoCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { ArrowBigLeftDashIcon, Ellipsis, GitCommit, RotateCcw } from "lucide-react";
 import { useState } from "react";
+import { timeAgo } from "short-time-ago";
 
 export function GitCommitManager({
   commits,
@@ -21,6 +22,7 @@ export function GitCommitManager({
   refType,
   resetHard,
   currentCommit,
+  hasChanges,
 }: {
   commits: RepoCommit[];
   setCurrentCommit: (commitOid: string) => void;
@@ -29,9 +31,11 @@ export function GitCommitManager({
   resetHard: (commitOid: string) => void;
   refType: GitRefType;
   currentCommit?: string;
+  hasChanges: boolean;
 }) {
   const { open: confirmOpen } = useConfirm();
   const resetToHeadHandler = () => {
+    if (!hasChanges) return resetToHead();
     void confirmOpen(
       resetToHead,
       "Reset to HEAD",
@@ -39,6 +43,7 @@ export function GitCommitManager({
     );
   };
   const resetToOrigHeadHandler = () => {
+    if (!hasChanges) resetToOrigHead();
     void confirmOpen(
       resetToOrigHead,
       "Reset to Previous Branch",
@@ -48,6 +53,7 @@ export function GitCommitManager({
 
   const handleResetHard = (commitOid: string) => {
     setSelectCommit(false);
+    if (!hasChanges) return resetHard(commitOid);
     void confirmOpen(
       () => resetHard(commitOid),
       "Reset to Hard",
@@ -76,7 +82,6 @@ export function GitCommitManager({
         placeholder="Select Commit"
         itemClassName={cn("focus:!bg-ring focus:!text-primary-foreground [&_*]:focus:text-primary-foreground")}
         onSelect={(commit) => handleResetHard(commit)}
-        // onSelect={(branch) => resetHard(branch)}
         onCancel={() => setSelectCommit(false)}
       />
     );
@@ -134,11 +139,31 @@ const GitCommitMenuDropDown = ({
 );
 
 const CommitSelectPlaceHolder = (
-  <div className="w-full truncate flex items-center">
-    <GitCommit className="p-1 mr-2 stroke-ring" />
-    Commit
+  <div className="w-full truncate flex items-center gap-2">
+    <GitCommit size={12} className="flex-shrink-0" />
+    <span className="truncate">Select Commit</span>
   </div>
 );
+
+function CompactCommitLabel({ commitData }: { commitData: RepoCommit }) {
+  const timestamp = new Date(commitData.commit.author.timestamp * 1000);
+  return (
+    <div className="flex items-center gap-2 " title={`${timestamp} - ${commitData.commit.message}`}>
+      <GitCommit size={12} className="flex-shrink-0" />
+      <span className="uppercase border rounded-full size-5 text-2xs flex-shrink-0 flex justify-center items-center bg-sidebar-background">
+        {commitData.commit.author.name
+          .split(" ")
+          .slice(0, 2)
+          .map((n) => n[0])
+          .join("")}
+      </span>
+
+      <span className="text-2xs whitespace-nowrap ">{timeAgo(timestamp)}</span>
+      <span className="font-mono text-muted-foreground">{formatCommitHash(commitData.oid)}</span>
+      <span className="truncate">{formatCommitMessage(commitData.commit.message)}</span>
+    </div>
+  );
+}
 
 function CommitSelect({
   className,
@@ -164,14 +189,22 @@ function CommitSelect({
               "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"
             )}
           >
-            <SelectValue className="w-full" placeholder={CommitSelectPlaceHolder} />
+            <SelectValue className="w-full" placeholder={CommitSelectPlaceHolder}>
+              {value && commits.find((c) => c.oid === value) ? (
+                <CompactCommitLabel commitData={commits.find((c) => c.oid === value)!} />
+              ) : (
+                CommitSelectPlaceHolder
+              )}
+            </SelectValue>
           </SelectTrigger>
-          <SelectContent>
-            {commits.map((commitData) => (
-              <SelectItem key={commitData.oid} value={commitData.oid} className={"!text-xs"}>
-                <CommitLabel commitData={commitData} />
-              </SelectItem>
-            ))}
+          <SelectContent className="min-w-max max-h-96 ">
+            <div className="grid">
+              {commits.flat().map((commitData) => (
+                <SelectItem key={commitData.oid} value={commitData.oid} className={"!text-xs"}>
+                  <CommitLabel commitData={commitData} />
+                </SelectItem>
+              ))}
+            </div>
           </SelectContent>
         </Select>
       </div>
@@ -190,13 +223,25 @@ const formatCommitHash = (oid: string) => {
 };
 
 function CommitLabel({ commitData }: { commitData: RepoCommit }) {
+  const timestamp = new Date(commitData.commit.author.timestamp * 1000);
+  // const timezoneOffset = commitData.commit.author.timezoneOffset;
   return (
-    <>
-      <div className="flex gap-2 items-center justify-start">
-        <GitCommit size={12} className="flex-shrink-0" />
-        <span className="font-mono text-muted-foreground">{formatCommitHash(commitData.oid)}</span>
-        <span className="truncate">{formatCommitMessage(commitData.commit.message)}</span>
-      </div>
-    </>
+    <div
+      className="grid grid-cols-[auto_auto_5rem_4rem_10rem] gap-2 items-center"
+      title={`${timestamp} - ${commitData.commit.message}`}
+    >
+      <GitCommit size={12} className="flex-shrink-0" />
+
+      <span className="uppercase border rounded-full size-5 text-2xs flex-shrink-0 flex justify-center items-center bg-sidebar-background">
+        {commitData.commit.author.name
+          .split(" ")
+          .slice(0, 2)
+          .map((n) => n[0])
+          .join("")}
+      </span>
+      <span className="text-2xs whitespace-nowrap truncate">{timeAgo(timestamp)}</span>
+      <span className="font-mono text-muted-foreground truncate">{formatCommitHash(commitData.oid)}</span>
+      <span className="truncate">{formatCommitMessage(commitData.commit.message)}</span>
+    </div>
   );
 }
