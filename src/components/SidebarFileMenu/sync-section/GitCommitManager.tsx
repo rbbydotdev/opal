@@ -197,8 +197,8 @@ function CommitSelect({
               )}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="min-w-max max-h-96 ">
-            <div className="grid">
+          <SelectContent className="_min-w-max max-h-96 min-w-72 max-w-96 truncate">
+            <div className="grid truncate">
               {commits.flat().map((commitData) => (
                 <SelectItem key={commitData.oid} value={commitData.oid} className={"!text-xs"}>
                   <CommitLabel commitData={commitData} />
@@ -227,7 +227,7 @@ function CommitLabel({ commitData }: { commitData: RepoCommit }) {
   // const timezoneOffset = commitData.commit.author.timezoneOffset;
   return (
     <div
-      className="grid grid-cols-[auto_auto_5rem_4rem_10rem] gap-2 items-center"
+      className="grid grid-cols-[auto_1rem_5rem_4rem_1fr] gap-1 items-center min-w-0"
       title={`${timestamp} - ${commitData.commit.message}`}
     >
       <GitCommit size={12} className="flex-shrink-0" />
@@ -239,9 +239,9 @@ function CommitLabel({ commitData }: { commitData: RepoCommit }) {
           .map((n) => n[0])
           .join("")}
       </span>
-      <span className="text-2xs whitespace-nowrap truncate">{timeAgo(timestamp)}</span>
-      <span className="font-mono text-muted-foreground truncate">{formatCommitHash(commitData.oid)}</span>
-      <span className="truncate">{formatCommitMessage(commitData.commit.message)}</span>
+      <span className="pl-1 text-2xs whitespace-nowrap truncate">{timeAgo(timestamp)}</span>
+      <span className="font-mono text-muted-foreground">{formatCommitHash(commitData.oid)}</span>
+      <span className="truncate min-w-0">{formatCommitMessage(commitData.commit.message)}</span>
     </div>
   );
 }
