@@ -10,18 +10,20 @@ export function WorkspaceMenu({
   workspaceGuid,
   workspaceName,
   onRename,
+  onCloseAutoFocus,
 }: {
   children: React.ReactNode;
   workspaceName: string;
   workspaceGuid: string;
   onRename?: () => void;
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
   const router = useRouter();
   const { open } = useConfirm();
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent>
+      <ContextMenuContent onCloseAutoFocus={onCloseAutoFocus}>
         {Boolean(onRename) && (
           <ContextMenuItem className="w-full gap-4 flex items-center justify-start h-full" onClick={onRename}>
             <Pencil className="w-5 h-5" size={12} strokeWidth={1} />
