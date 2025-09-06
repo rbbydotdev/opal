@@ -949,6 +949,7 @@ export abstract class Disk {
   }
 
   async destroy() {
+    void this.tearDown();
     return this.connector.delete();
   }
 

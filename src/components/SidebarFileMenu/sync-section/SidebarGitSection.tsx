@@ -503,7 +503,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="pb-3">
-            <div className="px-4 pt-2 gap-4 flex flex-col">
+            <div className="px-4 pt-2 gap-2 flex flex-col">
               {exists && <LatestInfo info={info} />}
               {/* {commitState === "init" && (
                 <Button

@@ -31,16 +31,30 @@ import {
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
+import { Channel } from "@/lib/channel";
 import { DocxConvertType } from "@/workers/DocxWorker/docx.ww";
 import type { handleMdImageReplaceType } from "@/workers/ImageWorker/imageReplace.ww";
 import "@/workers/transferHandlers/workspace.th";
 import * as Comlink from "comlink";
+import Emittery from "emittery";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage } from "../lib/paths2";
 
-// type DiskScan = UnwrapScannable<Disk>;
+const WorkspaceEvents = {
+  RENAME: "rename",
+  DELETE: "delete",
+} as const;
+type RenameTrigger = { id: string; oldName: string; newName: string };
+type DeleteTrigger = { id: string };
+export class WorkspaceEventsRemote extends Channel<WorkspaceRemoteEventPayload> {}
+export class WorkspaceEventsLocal extends Emittery<WorkspaceRemoteEventPayload> {}
+export type WorkspaceRemoteEventPayload = {
+  [WorkspaceEvents.RENAME]: RenameTrigger;
+  [WorkspaceEvents.DELETE]: DeleteTrigger;
+};
+
 export class Workspace {
   imageCache: ImageCache;
   memid = nanoid();
@@ -59,6 +73,8 @@ export class Workspace {
   private repo: GitRepo;
   private playbook: GitPlaybook;
   tornDown: boolean = false;
+  local = new WorkspaceEventsLocal();
+  remote = new WorkspaceEventsRemote(this.id);
 
   private unsubs: (() => void)[] = [];
 
@@ -102,6 +118,8 @@ export class Workspace {
     this.imageCache = Workspace.newCache(this.name);
     this.repo = GitRepo.FromDisk(this.disk, `${this.id}/repo`);
     this.playbook = new GitPlaybook(this.repo);
+    //TODO: >>>>>>>>>>>>>>>>>>>>>>>>>> MOVE THIS OUT !
+    this.unsubs.push(this.remote.init());
   }
 
   get id() {
@@ -376,6 +394,17 @@ export class Workspace {
     }
   }
 
+  deleteWorkspaceListener(cb: () => void) {
+    const unsub = this.local.on(WorkspaceEvents.DELETE, cb);
+    this.unsubs.push(unsub);
+    return unsub;
+  }
+  renameWorkspaceListener(cb: (details: RenameTrigger) => void) {
+    const unsub = this.local.on(WorkspaceEvents.RENAME, cb);
+    this.unsubs.push(unsub);
+    return unsub;
+  }
+
   gitRepoListener(callback: Parameters<GitRepo["infoListener"]>[0]) {
     const unsub = this.repo.infoListener(callback);
     this.unsubs.push(unsub);
@@ -534,7 +563,11 @@ export class Workspace {
     const unsubs: (() => void)[] = [];
     unsubs.push(await this.disk.init({ skipListeners }));
     unsubs.push(await this.initRepo({ skipListeners }));
-    if (!skipListeners) await this.initImageFileListeners();
+    if (!skipListeners) {
+      unsubs.push(await this.initImageFileListeners());
+      this.remote.on(WorkspaceEvents.RENAME, (payload) => this.local.emit(WorkspaceEvents.RENAME, payload));
+      this.remote.on(WorkspaceEvents.DELETE, (payload) => this.local.emit(WorkspaceEvents.DELETE, payload));
+    }
     if (this.tornDown) {
       //weird but totally race condition, if the workspace was torn down before the init completes
       unsubs.forEach((unsub) => unsub());
@@ -551,13 +584,16 @@ export class Workspace {
     await Promise.all([this.disk.tearDown(), this.thumbs.tearDown()]);
     this.unsubs.forEach((unsub) => unsub());
     this.tornDown = true;
+    this.remote.clearListeners();
+    this.local.clearListeners();
     return this;
   }
 
   async destroy() {
+    void this.local.emit(WorkspaceEvents.DELETE, { id: this.id });
+    void this.remote.emit(WorkspaceEvents.DELETE, { id: this.id });
     return Promise.all([
       HistoryDAO.removeAllForWorkspaceId(this.id),
-      this.disk.tearDown(),
       this.connector.delete(),
       this.disk.destroy(),
       this.thumbs.destroy(),
@@ -565,8 +601,12 @@ export class Workspace {
     ]);
   }
 
-  rename(name: string) {
-    return this.connector.rename(WorkspaceDAO.Slugify(name));
+  async rename(name: string) {
+    const newName = await this.connector.rename(WorkspaceDAO.Slugify(name));
+    this.name = newName;
+    void this.local.emit(WorkspaceEvents.RENAME, { id: this.id, oldName: this.name, newName });
+    void this.remote.emit(WorkspaceEvents.RENAME, { id: this.id, oldName: this.name, newName });
+    return newName;
   }
 
   home() {
