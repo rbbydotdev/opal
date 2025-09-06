@@ -26,7 +26,14 @@ export function EditorSidebar({
   const deferredFn = (fn: () => void) => {
     return () => (fnRef.current = fn);
   };
+  // const router = useRouter();
 
+  const handleRename = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    (e.target as HTMLInputElement).blur();
+    await currentWorkspace.rename((e.target as HTMLInputElement).value.toLowerCase());
+    //  const result =
+    // return router.navigate({ to: "/workspace/$workspaceName", params: { workspaceName: result } });
+  };
   return (
     <Sidebar collapsible="none" className={twMerge("flex min-h-full w-full", className)} {...restProps}>
       <SidebarHeader>
@@ -65,16 +72,10 @@ export function EditorSidebar({
                           // onChange={(e) => currentWorkspace.rename(e.target.value)}
                           onBlur={() => setWorkspaceTitleMode("display")}
                           onKeyDown={(e) => {
-                            if (e.key === "Escape") {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                            if (e.key === "Enter") {
-                              (e.target as HTMLInputElement).blur();
-                              console.log("renaming to", (e.target as HTMLInputElement).value);
-                              // return currentWorkspace.rename(e.target.value);
-                            }
+                            if (e.key === "Escape") (e.target as HTMLInputElement).blur();
+                            if (e.key === "Enter") return handleRename(e);
                           }}
-                          className="uppercase w-full bg-transparent outline-none _border-0 border-2 border-green-600 p-0 m-0 font-mono truncate"
+                          className="w-full bg-transparent outline-none _border-0  uppercase p-0 m-0 font-mono truncate"
                         />
                       ) : (
                         <div className="whitespace-nowrap w-full truncate uppercase font-mono">

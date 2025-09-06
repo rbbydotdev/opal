@@ -220,6 +220,7 @@ export class WorkspaceDAO {
       );
       this.name = newName;
       await this.save();
+      return newName;
     });
   }
 

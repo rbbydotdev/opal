@@ -178,38 +178,73 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         ></Link>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem className="gap-2" onClick={() => setPreference("light")}>
-          {value === "light" ? <Check size={12} /> : <div className="w-4"></div>}
-          <Sun size={12} /> <span className="pr-4">Light</span>
+        {/* Light */}
+        <ContextMenuItem
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
+          onClick={() => setPreference("light")}
+        >
+          {value === "light" ? <Check size={12} /> : <div className="w-4" />}
+          <Sun size={12} />
+          <span className="pr-4">Light</span>
         </ContextMenuItem>
-        <ContextMenuItem className="gap-2" onClick={() => setPreference("dark")}>
-          {value === "dark" ? <Check size={12} /> : <div className="w-4"></div>}
+
+        {/* Dark */}
+        <ContextMenuItem
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
+          onClick={() => setPreference("dark")}
+        >
+          {value === "dark" ? <Check size={12} /> : <div className="w-4" />}
           <Moon size={12} />
-          <span className="pr-4"> Dark</span>
+          <span className="pr-4">Dark</span>
         </ContextMenuItem>
-        <ContextMenuItem className="gap-2" onClick={() => setPreference("system")}>
-          {value === "system" ? <Check size={12} /> : <div className="w-4"></div>}
+
+        {/* System */}
+        <ContextMenuItem
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
+          onClick={() => setPreference("system")}
+        >
+          {value === "system" ? <Check size={12} /> : <div className="w-4" />}
           <Settings size={12} />
           <span className="pr-4">System</span>
         </ContextMenuItem>
+
         <ContextMenuSeparator />
-        <ContextMenuItem className="gap-2" onClick={() => setSpin((prev) => !prev)}>
-          {spin ? <Check size={12} /> : <div className="w-4"></div>}
+
+        {/* Spinner */}
+        <ContextMenuItem
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
+          onClick={() => setSpin((prev) => !prev)}
+        >
+          {spin ? <Check size={12} /> : <div className="w-4" />}
           <RefreshCcw size={12} />
-          <span className="pr-4"> Spinner</span>
+          <span className="pr-4">Spinner</span>
         </ContextMenuItem>
+
         <ContextMenuSeparator />
-        <ContextMenuItem className="gap-2" onClick={() => setAutoHide((v) => !v)}>
-          {autoHide ? <Check size={12} /> : <div className="w-4"></div>}
+
+        {/* Auto-hide Dock */}
+        <ContextMenuItem
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
+          onClick={() => setAutoHide((v) => !v)}
+        >
+          {autoHide ? <Check size={12} /> : <div className="w-4" />}
           <Sidebar size={12} />
-          <span className="pr-4"> Auto-hide Dock</span>
+          <span className="pr-4">Auto-hide Dock</span>
         </ContextMenuItem>
-        <ContextMenuItem className="gap-2" onClick={() => setCollapsed((v) => !v)}>
-          {!collapsed ? <Check size={12} /> : <div className="w-4"></div>}
+
+        {/* Show Sidebar */}
+        <ContextMenuItem
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
+          onClick={() => setCollapsed((v) => !v)}
+        >
+          {!collapsed ? <Check size={12} /> : <div className="w-4" />}
           <Sidebar size={12} />
-          <span className="pr-4"> Show Sidebar</span>
+          <span className="pr-4">Show Sidebar</span>
         </ContextMenuItem>
+
         <ContextMenuSeparator />
+
+        {/* Themes Submenu */}
         <ContextMenuSub>
           <ContextMenuSubTrigger className="pl-8 gap-2">
             <Palette size={12} />
@@ -217,32 +252,33 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="max-h-48 overflow-y-auto">
             {FAVORITE_THEMES.map((theme) => (
-              <ContextMenuItem className="gap-2" key={theme} onClick={() => setTheme(theme)}>
+              <ContextMenuItem
+                className="grid grid-cols-[1rem_1fr] items-center gap-2"
+                key={theme}
+                onClick={() => setTheme(theme)}
+              >
                 {themeName === theme ? <Check size={12} /> : <div className="w-4"></div>}
                 <ThemePreview themeName={theme} mode={mode} />
               </ContextMenuItem>
             ))}
           </ContextMenuSubContent>
         </ContextMenuSub>
+
         <ContextMenuSeparator />
+
+        {/* Delete All Workspaces */}
         <ContextMenuItem
-          className="gap-2 flex justify-center"
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2 text-destructive"
           onClick={async () =>
             Promise.all([...(await WorkspaceDAO.all().then((wss) => wss.map((ws) => ws.toModel().destroy())))]).then(
               () => {
-                // toast({
-                //   description: "",
-                //   title: "All workspaces deleted",
-                //   type: "error",
-                //   position: "top-right",
-                // });
                 void router.navigate({ to: "/newWorkspace" });
               }
             )
           }
         >
           <X size={12} className="text-destructive" />
-          <span className="pr-4 text-3xs text-destructive uppercase"> delete all workspaces</span>
+          <span className="col-span-2 pr-4 text-3xs uppercase">Delete all workspaces</span>
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

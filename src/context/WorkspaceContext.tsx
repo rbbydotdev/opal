@@ -215,6 +215,10 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
           if (navPath) void navigate({ to: currentWorkspace.resolveFileUrl(navPath) });
         }
       }),
+      currentWorkspace.renameWorkspaceListener((payload) =>
+        navigate({ to: "/workspace/$workspaceName/$", params: { workspaceName: payload.newName } })
+      ),
+      currentWorkspace.deleteWorkspaceListener(() => navigate({ to: "/" })),
       currentWorkspace.deleteListener(async (details) => {
         if (
           workspaceRoute.path &&

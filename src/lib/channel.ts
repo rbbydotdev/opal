@@ -40,7 +40,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
       const { eventData, eventName, senderId } = event.data;
       if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
-      // console.debug("bcast incoming:", eventName);
+      console.debug("bcast incoming:", eventName);
       void super.emit(eventName, eventData);
     };
     return () => {
@@ -56,7 +56,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   ): Promise<void> {
     if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
-    // console.debug("broadcast outgoing:", eventName);
+    console.debug("broadcast outgoing:", eventName);
     try {
       //TODO:
       if (this.channel) {
