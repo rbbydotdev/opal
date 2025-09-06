@@ -3,6 +3,8 @@ import { nanoid } from "nanoid";
 
 const ChannelSet = new Map<string, Channel>();
 
+const DEBUG_CHANNELS = false;
+
 export class Channel<EventData = Record<string, unknown>> extends Emittery<EventData> {
   private channel: BroadcastChannel | null = null;
   private contextId: string = nanoid();
@@ -40,7 +42,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
       const { eventData, eventName, senderId } = event.data;
       if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
-      console.debug("bcast incoming:", eventName);
+      if (DEBUG_CHANNELS) console.debug("bcast incoming:", eventName);
       void super.emit(eventName, eventData);
     };
     return () => {
@@ -56,7 +58,7 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   ): Promise<void> {
     if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
-    console.debug("broadcast outgoing:", eventName);
+    if (DEBUG_CHANNELS) console.debug("broadcast outgoing:", eventName);
     try {
       //TODO:
       if (this.channel) {
@@ -71,9 +73,9 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
 
   tearDown = () => {
     if (typeof window !== "undefined" && window.location) {
-      console.debug("channel tearDown in " + window.location.href); //TODO:
+      if (DEBUG_CHANNELS) console.debug("channel tearDown in " + window.location.href); //TODO:
     } else {
-      console.debug("channel tearDown (window not available)");
+      if (DEBUG_CHANNELS) console.debug("channel tearDown (window not available)");
     }
     ChannelSet.delete(this.channelName);
     if (this.channel) {
