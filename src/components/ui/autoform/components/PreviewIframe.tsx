@@ -8,25 +8,24 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
 
   return (
     <div className="relative w-full h-full flex-col text-foreground">
-      <div className="absolute truncate w-full h-12 bg-sidebar z-10 flex justify-center text-sm py-2 font-bold gap-2">
+      <div className="_absolute truncate w-full h-12 bg-sidebar z-10 flex justify-center text-sm py-2 font-bold gap-2">
         <span className="font-light font-mono before:content-['['] after:content-[']']">PREVIEW</span>
         {" / "}
         <span className="truncate font-mono">{relPath(previewPath!)}</span>
       </div>
-
-      <div className="w-full h-full flex m-auto inset-0 absolute justify-center items-center bg-background">
-        {showSpinner && (
+      {showSpinner && (
+        <div className="w-full h-full flex m-auto inset-0 absolute justify-center items-center bg-background">
           <div className="animate-spin animation-iteration-infinite">
             <Loader size={24} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <iframe
         ref={iframeRef}
         tabIndex={-1}
         src={previewURL}
-        className="border-0 absolute inset-0 w-full h-full bg-foreground"
+        className="border-0 _absolute inset-0 w-full h-full bg-foreground"
         title="Preview"
         onLoad={() => {
           setShowSpinner(false);
