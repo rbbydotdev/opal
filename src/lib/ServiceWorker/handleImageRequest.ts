@@ -7,7 +7,7 @@ import { absPath, decodePath } from "@/lib/paths2";
 import { SWWStore } from "./SWWStore";
 
 export async function handleImageRequest(event: FetchEvent, url: URL, workspaceName: string): Promise<Response> {
-  //TODO hoist controller logic up to the top level
+  // TODO hoist controller logic up to the top level
   try {
     const decodedPathname = decodePath(url.pathname);
     const isThumbnail = Thumb.isThumbURL(url);

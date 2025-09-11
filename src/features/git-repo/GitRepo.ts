@@ -13,6 +13,11 @@ import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 import { gitAbbreviateRef } from "./gitAbbreviateRef";
 
+export const OPAL_AUTHOR: GitRepoAuthor = {
+  name: "Opal Editor",
+  email: "user@opaleditor.com",
+};
+
 export interface GitRemote {
   name: string;
   url: string;
@@ -183,10 +188,7 @@ export class GitRepo {
   readonly git = this.gitWpm.watched;
   private readonly gitEvents = this.gitWpm.events;
 
-  author: GitRepoAuthor = {
-    name: "Opal Editor",
-    email: "user@opaleditor.com",
-  };
+  author: GitRepoAuthor = OPAL_AUTHOR;
 
   state: {
     fullInitialized: boolean;

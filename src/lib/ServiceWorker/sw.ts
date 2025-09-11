@@ -2,9 +2,9 @@ import { Workspace } from "@/Db/Workspace";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { routeRequest } from "@/lib/ServiceWorker/router";
-import { WHITELIST } from "@/lib/ServiceWorker/utils";
+import { EnableRemoteLogger, WHITELIST } from "@/lib/ServiceWorker/utils";
 
-// EnableRemoteLogger();
+EnableRemoteLogger();
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -27,13 +27,20 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const whiteListMatch = WHITELIST.some((pattern) => pattern.test(url.pathname));
   // If there's no referrer, it's likely a direct navigation or non-app request.
   // Let the browser handle it directly.
-  if (!request.referrer || whiteListMatch || request.mode === "navigate") {
+  if (!request.referrer || whiteListMatch || request.mode === "navigate" || event.request.destination === "script") {
     return event.respondWith(defaultFetchHandler(event));
   }
 
   try {
     let workspaceName =
       Workspace.parseWorkspacePathLegacy(request.referrer).workspaceName || url.searchParams.get("workspaceName");
+
+    {
+      const allHeaders: Record<string, string> = {};
+      for (const [k, v] of event.request.headers.entries()) {
+        allHeaders[k] = v;
+      }
+    }
 
     // Only handle requests originating from within our app and for a valid workspace
     if (workspaceName && url.origin === self.location.origin) {

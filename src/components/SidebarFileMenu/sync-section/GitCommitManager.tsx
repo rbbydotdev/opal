@@ -1,4 +1,5 @@
 import { useConfirm } from "@/components/Confirm";
+import { OpalSvg } from "@/components/OpalSvg";
 import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GitRefType, RepoCommit } from "@/features/git-repo/GitRepo";
+import { GitRefType, OPAL_AUTHOR, RepoCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { ArrowBigLeftDashIcon, Ellipsis, GitCommit, RotateCcw } from "lucide-react";
 import { useState } from "react";
@@ -144,28 +145,37 @@ const CommitSelectPlaceHolder = (
     <span className="truncate">Select Commit</span>
   </div>
 );
+const OpalAvatar = () => <OpalSvg />;
 function CommitAvatar({ author }: { author: RepoCommit["commit"]["author"] }) {
-  return (
-    <span className="uppercase border rounded-full size-5 text-2xs flex-shrink-0 flex justify-center items-center bg-sidebar-background">
-      {author.name
-        .split(" ")
-        .slice(0, 2)
-        .map((n) => n[0])
-        .join("")}
-    </span>
-  );
+  if (author.email === OPAL_AUTHOR.email) {
+    return (
+      <span className="w-5 h-5 flex-shrink-0 flex justify-center items-center ">
+        <OpalAvatar />
+      </span>
+    );
+  } else {
+    return (
+      <span className="uppercase border rounded-full w-5 h-5 text-2xs flex-shrink-0 flex justify-center items-center bg-sidebar-background">
+        {author.name
+          .split(" ")
+          .slice(0, 2)
+          .map((n) => n[0])
+          .join("")}
+      </span>
+    );
+  }
 }
 
 function CompactCommitLabel({ commitData }: { commitData: RepoCommit }) {
   const timestamp = new Date(commitData.commit.author.timestamp * 1000);
   return (
-    <div className="flex items-center gap-2 " title={`${timestamp} - ${commitData.commit.message}`}>
+    <div className="flex items-center gap-2 truncate min-w-0" title={`${timestamp} - ${commitData.commit.message}`}>
       <GitCommit size={12} className="flex-shrink-0" />
       <CommitAvatar author={commitData.commit.author} />
 
       <span className="text-2xs whitespace-nowrap ">{timeAgo(timestamp)}</span>
-      <span className="font-mono text-muted-foreground">{formatCommitHash(commitData.oid)}</span>
-      <span className="truncate">{formatCommitMessage(commitData.commit.message)}</span>
+      <span className="font-mono text-muted-foreground truncate min-w-0">{formatCommitHash(commitData.oid)}</span>
+      <span className="truncate min-w-0">{formatCommitMessage(commitData.commit.message)}</span>
     </div>
   );
 }
@@ -229,22 +239,10 @@ const formatCommitHash = (oid: string) => {
 
 function CommitLabel({ commitData }: { commitData: RepoCommit }) {
   const timestamp = new Date(commitData.commit.author.timestamp * 1000);
-  // const timezoneOffset = commitData.commit.author.timezoneOffset;
   return (
-    <div
-      // className="grid grid-cols-[auto_1rem_5rem_4rem_1fr] gap-1 items-center min-w-0"
-      className="flex gap-2 items-center min-w-0"
-      title={`${timestamp} - ${commitData.commit.message}`}
-    >
+    <div className="flex gap-2 items-center min-w-0" title={`${timestamp} - ${commitData.commit.message}`}>
       <GitCommit size={12} className="flex-shrink-0" />
-
-      <span className="uppercase border rounded-full size-5 text-2xs flex-shrink-0 flex justify-center items-center bg-sidebar-background">
-        {commitData.commit.author.name
-          .split(" ")
-          .slice(0, 2)
-          .map((n) => n[0])
-          .join("")}
-      </span>
+      <CommitAvatar author={commitData.commit.author} />
       <span className="pl-1 text-2xs whitespace-nowrap truncate">{timeAgo(timestamp)}</span>
       <span className="font-mono text-muted-foreground">{formatCommitHash(commitData.oid)}</span>
       <span className="truncate min-w-0">{formatCommitMessage(commitData.commit.message)}</span>
