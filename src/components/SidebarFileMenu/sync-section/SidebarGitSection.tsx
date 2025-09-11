@@ -213,7 +213,7 @@ const ActionButtonLabels = {
   pending: "Committing...",
   init: "Initialize Git Repo",
   "bare-init": "Initial Commit",
-  detatched: "detatched",
+  detatched: "Detatched",
 };
 
 const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) => {
@@ -504,6 +504,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="pb-3">
             <div className="px-4 pt-2 gap-2 flex flex-col">
+              <InPlaceConfirmSection cmdRef={confirmPaneRef} />
               {exists && <LatestInfo info={info} />}
               {/* {commitState === "init" && (
                 <Button
@@ -576,7 +577,6 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                     <TooltipToast cmdRef={fetchRef} sideOffset={10} />
                     Fetch Remote
                   </Button>
-                  <InPlaceConfirmSection cmdRef={confirmPaneRef} />
                 </div>
               )}
               {info.fullInitialized && info.currentRef && <SyncPullPushButtons />}
@@ -595,6 +595,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   </span>
                 </Button>
               )}
+              <Button onClick={() => openConfirmPane("foobar")}>Foo Bar</Button>
             </div>
           </SidebarMenu>
         </CollapsibleContent>

@@ -5,9 +5,8 @@ import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-sign
 
 // --- Constants ---
 
-// const match = url.pathname.match(route.pattern);
-// if (match) {
-// new RegExp(`^${}$`)
+//TODO: possibly have to make this forbidden names on main, because of weird bugs
+
 export const WHITELIST = [
   "/preview/.*",
   "/editview/.*",
@@ -16,6 +15,8 @@ export const WHITELIST = [
   "/opal-blank.svg",
   "/favicon.ico",
   "/icon.svg",
+  "/node_modules/.*",
+  "/src/.*",
   "/opal-lite.svg",
 ].map((path) => new RegExp(`^${path}$`));
 

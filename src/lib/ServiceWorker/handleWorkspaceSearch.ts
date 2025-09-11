@@ -74,7 +74,7 @@ export async function handleWorkspaceSearch({ workspaceName, searchTerm }: Works
       return new Response(null, { status: 204 });
     }
 
-    const timeoutSignal = AbortSignal.timeout(10_000);
+    const timeoutSignal = AbortSignal.timeout(5_000);
     const combinedSignal = AbortSignal.any([searchController.signal, timeoutSignal]);
 
     // 2. Prepare the list of workspaces to search.
@@ -85,7 +85,7 @@ export async function handleWorkspaceSearch({ workspaceName, searchTerm }: Works
         allWorkspaceMetas.map((ws) => SWWStore.tryWorkspace(ws.name).then((w) => w.initNoListen()))
       );
     } else {
-      const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.init());
+      const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.initNoListen());
       workspacesToSearch = [workspace]; // Wrap the single workspace in an array.
     }
 

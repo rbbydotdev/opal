@@ -55,7 +55,7 @@ function useShrink() {
   return useLocalStorage2("BigButtonBar/shrink", true);
 }
 function useAutoHide() {
-  return useLocalStorage2("BigButtonBar/autohide", true);
+  return useLocalStorage2("BigButtonBar/autohide", false);
 }
 
 function BigButton({
@@ -83,7 +83,7 @@ function BigButton({
         <Link
           {...restProps}
           className={twMerge(
-            "w-full hover:scale-105 scale-95 transition-transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground _bg-muted",
+            "w-full border-l-2 hover:border-ring border-transparent duration-500 transition-colors transform cursor-pointer flex items-center text-muted-foreground stroke-muted-foreground _bg-muted",
             isSmall ? "w-6 h-6 justify-center rounded-sm" : "py-2 gap-2 flex-col",
             restProps.className
           )}
