@@ -92,7 +92,7 @@ export class FileTree {
     }
     return null;
   }
-  all() {
+  all(): TreeNode[] {
     return Array.from(this.root.iterator());
   }
 

@@ -594,22 +594,22 @@ export class TreeFile extends TreeNode {
 
 export type TreeList = Array<string>;
 
-function tagSource(this: TreeNode, sourceNode: TreeNode) {
+function tagSource<T extends TreeNode>(this: T, sourceNode: TreeNode) {
   this.source = sourceNode.path;
   return this;
 }
 
 export class VirtualTreeNode extends TreeNode {
   isVirtual = true;
-  tagSource = tagSource;
+  tagSource = tagSource<VirtualTreeNode>;
 }
 export class VirtualFileTreeNode extends TreeFile {
   isVirtual = true;
-  tagSource = tagSource;
+  tagSource = tagSource<VirtualTreeNode>;
 }
 export class VirtualDirTreeNode extends TreeDir {
   isVirtual = true;
-  tagSource = tagSource;
+  tagSource = tagSource<VirtualTreeNode>;
 }
 
 export function isVirtualNode(node: TreeNode): node is VirtualTreeNode {

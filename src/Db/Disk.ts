@@ -10,7 +10,7 @@ import { BrowserAbility } from "@/lib/BrowserAbility";
 import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
-import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType, VirtualDupTreeNode } from "@/lib/FileTree/TreeNode";
+import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
 import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
@@ -639,13 +639,12 @@ export abstract class Disk {
   addVirtualFileFromSource(
     props: Pick<TreeNode, "type" | "basename"> & { sourceNode: TreeNode },
     parentNode: TreeNode | null
-  ): VirtualDupTreeNode {
+  ) {
     const parent = parentNode || this.fileTree.root;
-    const node = this.fileTree
+    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+    return this.fileTree
       .insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent)
       .tagSource(props.sourceNode);
-    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
-    return node;
   }
 
   addVirtualFile(props: Pick<TreeNode, "type" | "basename">, selectedNode: TreeNode | null): TreeNode {

@@ -691,6 +691,22 @@ export class GitRepo {
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
+    const fromOid = await this.resolveRef({ ref: from }).catch(() => null);
+    if (!fromOid) {
+      throw new NotFoundError(`Source ref '${from}' not found`);
+    }
+    const intoOid = await this.resolveRef({ ref: into }).catch(() => null);
+    if (!intoOid) {
+      throw new NotFoundError(`Target ref '${into}' not found`);
+    }
+
+    const mergeBase = await this.git.findMergeBase({
+      fs: this.fs,
+      dir: this.dir,
+      oids: [intoOid, fromOid],
+    });
+    console.log("Merge base:", mergeBase);
+
     const result = await this.git
       .merge({
         fs: this.fs,
@@ -704,21 +720,44 @@ export class GitRepo {
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
           console.log("Merge conflict detected:", { from, into }, e.data);
-          await this.setMergeState(await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
+          await this.setMergeState(fromOid);
 
           await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
-          console.log(
-            await Promise.all(
-              e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
-            )
-          );
+          // console.log(
+          //   await Promise.all(
+          //     e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
+          //   )
+          // );
 
           return structuredClone(e.data);
         } else if (isMergeNotSupportedError(e)) {
+          // await this.git.findMergeBase   mergeBase({
+          //   fs,
+          //   dir,
+          //   oids: [oursOid, theirsOid],
+          // });
+
           console.log("Merge not supported (likely unrelated histories), attempting manual merge:", { from, into });
 
           // Attempt manual merge for unrelated histories
           const manualMergeResult = await this.handleUnrelatedHistoriesMerge({ from, into });
+          //manual merge result could possibly have NO conflicts and therefore we should return a successful merge result
+          if (manualMergeResult.filepaths.length === 0) {
+            //  * @typedef {Object} MergeResult - Returns an object with a schema like this:
+            //  * @property {string} [oid] - The SHA-1 object id that is now at the head of the branch. Absent only if `dryRun` was specified and `mergeCommit` is true.
+            //  * @property {boolean} [alreadyMerged] - True if the branch was already merged so no changes were made
+            //  * @property {boolean} [fastForward] - True if it was a fast-forward merge
+            //  * @property {boolean} [mergeCommit] - True if merge resulted in a merge commit
+            //  * @property {string} [tree] - The SHA-1 object id of the tree resulting from a merge commit
+            return {
+              oid: intoOid,
+              alreadyMerged: false,
+              fastForward: false,
+              mergeCommit: true,
+              tree: undefined,
+              // tree: null,
+            };
+          }
           return manualMergeResult;
         } else {
           console.error("Merge error:", e);
@@ -795,6 +834,19 @@ ${fromContent}
       }
 
       console.log("Manual merge complete. Conflicting files:", conflictingFiles);
+      // if (conflictingFiles.length === 0) {
+      //   // If no conflicts, finalize the merge by adding all andd committing
+
+      //   await this.commit({
+      //     message: `Merge '${from}' into '${into}' (unrelated histories)`,
+      //   });
+      //   return {
+      //     filepaths: [],
+      //     bothModified: [],
+      //     deleteByUs: [],
+      //     deleteByTheirs: [],
+      //   };
+      // }
 
       // Return merge conflict structure
       return {

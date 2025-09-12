@@ -9,9 +9,9 @@ export class NullWorkspace extends Workspace {
   async init() {
     return this;
   }
-  getFileTreeRoot() {
+  getFileTreeRoot = () => {
     return NULL_TREE_ROOT;
-  }
+  };
   getFileTree() {
     return NULL_FILE_TREE;
   }
