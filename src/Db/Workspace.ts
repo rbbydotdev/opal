@@ -74,7 +74,7 @@ export class Workspace {
   private playbook: GitPlaybook;
   tornDown: boolean = false;
   local = new WorkspaceEventsLocal();
-  remote = new WorkspaceEventsRemote(this.id);
+  remote: WorkspaceEventsRemote;
 
   private unsubs: (() => void)[] = [];
 
@@ -118,8 +118,7 @@ export class Workspace {
     this.imageCache = Workspace.newCache(this.name);
     this.repo = GitRepo.FromDisk(this.disk, `${this.id}/repo`);
     this.playbook = new GitPlaybook(this.repo);
-    //TODO: >>>>>>>>>>>>>>>>>>>>>>>>>> MOVE THIS OUT !
-    this.unsubs.push(this.remote.init());
+    this.remote = new WorkspaceEventsRemote(this.guid);
   }
 
   get id() {
@@ -561,9 +560,11 @@ export class Workspace {
 
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     const unsubs: (() => void)[] = [];
+
     unsubs.push(await this.disk.init({ skipListeners }));
     unsubs.push(await this.initRepo({ skipListeners }));
     if (!skipListeners) {
+      unsubs.push(this.remote.init());
       unsubs.push(await this.initImageFileListeners());
       this.remote.on(WorkspaceEvents.RENAME, (payload) => this.local.emit(WorkspaceEvents.RENAME, payload));
       this.remote.on(WorkspaceEvents.DELETE, (payload) => this.local.emit(WorkspaceEvents.DELETE, payload));

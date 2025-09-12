@@ -107,6 +107,11 @@ export class GitPlaybook {
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
     const result = await this.repo.merge({ from, into });
+
+    // return this.addAllCommit({
+    //   message: mergeMsg ?? "Merge commit",
+    //   parent: [head, mergeHead],
+    // });
     return result;
   };
   mergeCommit = async (): Promise<string | null> => {
