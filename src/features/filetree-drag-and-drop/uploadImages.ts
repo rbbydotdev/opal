@@ -71,7 +71,7 @@ export async function uploadImages2(
 
   const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
   await Promise.all(workers);
-  await workspace.disk.indexAndEmitNewFiles(results);
+  await workspace.getDisk().indexAndEmitNewFiles(results);
   return results;
 }
 
@@ -109,6 +109,6 @@ export async function uploadImages(
   const pool = Array.from({ length: poolSize }, () => workerTask());
   await Promise.all(pool);
 
-  await currentWorkspace.disk.indexAndEmitNewFiles(results);
+  await currentWorkspace.getDisk().indexAndEmitNewFiles(results);
   return results;
 }

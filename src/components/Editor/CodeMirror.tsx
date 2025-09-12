@@ -3,16 +3,12 @@ import {
   CodeMirrorHighlightURLRange,
   getHighlightRangesFromURL,
 } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
-import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
-import { useEditorHistoryPlugin2WithContentWatch } from "@/components/Editor/history/useEditorHistoryPlugin2WithContentWatch";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
-import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
@@ -74,8 +70,6 @@ export const CodeMirrorEditor = ({
   const viewRef = useRef<EditorView | null>(null);
   const ext = useMemo(() => getLanguageExtension(mimeType), [mimeType]);
   const { mode } = useThemeSettings();
-
-  valueRef.current = value;
   useEffect(() => {
     if (!editorRef.current) return;
     if (viewRef.current) {
@@ -114,7 +108,10 @@ export const CodeMirrorEditor = ({
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const docStr = update.state.doc.toString();
-          if (docStr !== valueRef.current) onChange(docStr);
+          if (docStr !== valueRef.current) {
+            valueRef.current = docStr;
+            onChange(docStr);
+          }
         }
       }),
       EditorView.editable.of(!readOnly),
@@ -149,22 +146,22 @@ export const CodeMirrorEditor = ({
     }
   }, [value]);
 
-  const { updateDebounce } = useFileContents({ currentWorkspace });
-  const historyDB = useSnapHistoryDB();
-  const {
-    triggerSave,
-    isRestoreState,
-    edits,
-    selectedEdit,
-    selectedEditMd,
-    setEdit,
-    clearAll,
-    rebaseHistory,
-    resetAndRestore,
-  } = useEditorHistoryPlugin2WithContentWatch({
-    workspaceId: currentWorkspace.id,
-    historyStorage: historyDB,
-  });
+  // const { updateDebounce } = useFileContents({ currentWorkspace });
+  // const historyDB = useSnapHistoryDB();
+  // const {
+  //   triggerSave,
+  //   isRestoreState,
+  //   edits,
+  //   selectedEdit,
+  //   selectedEditMd,
+  //   setEdit,
+  //   clearAll,
+  //   rebaseHistory,
+  //   resetAndRestore,
+  // } = useEditorHistoryPlugin2WithContentWatch({
+  // workspaceId: currentWorkspace.id,
+  // historyStorage: historyDB,
+  // });
   const { path } = useWorkspaceRoute();
 
   const { scrollEmitter, sessionId } = useWorkspacePathScrollChannel();
@@ -173,7 +170,7 @@ export const CodeMirrorEditor = ({
     <>
       <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
         <CodeMirrorToolbar setVimMode={setVimMode} vimMode={vimMode} currentWorkspace={currentWorkspace} path={path}>
-          {false && (
+          {/* {false && (
             <EditHistoryMenu
               finalizeRestore={(md) => updateDebounce(md)}
               disabled={mimeType !== "text/markdown"}
@@ -187,7 +184,7 @@ export const CodeMirrorEditor = ({
               isRestoreState={isRestoreState}
               selectedEditMd={selectedEditMd}
             />
-          )}
+          )} */}
         </CodeMirrorToolbar>
         <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
       </ScrollSyncProvider>
