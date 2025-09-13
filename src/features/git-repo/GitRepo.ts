@@ -179,8 +179,8 @@ export class GitRepo {
 
   local = new RepoEventsLocal();
   remote: RepoEventsRemote;
-  private readonly $p = Promise.withResolvers<RepoInfoType>();
-  public readonly ready = this.$p.promise;
+  // private readonly $p = Promise.withResolvers<RepoInfoType>();
+  // public readonly ready = this.$p.promise;
   private unsubs: (() => void)[] = [];
   private info: RepoInfoType | null = null;
 
@@ -236,6 +236,52 @@ export class GitRepo {
 
   private toFullRemoteRef(remote: string, branch: string): string {
     return `refs/remotes/${remote}/${this.toShortBranchName(branch)}`;
+  }
+
+  private async normalizeRef({ ref }: { ref: string }) {
+    if (ref.startsWith("refs/")) {
+      return ref;
+    }
+
+    // Case 2: shorthand for remote branch `"origin/main"`
+    if (ref.includes("/")) {
+      const [remote, branch] = ref.split("/", 2);
+      const remoteRef = `refs/remotes/${remote}/${branch}`;
+      try {
+        await this.resolveRef({ ref: remoteRef });
+        return remoteRef;
+      } catch {
+        /* fall through if not valid */
+      }
+    }
+
+    // Case 3: local branch
+    const localRef = `refs/heads/${ref}`;
+    try {
+      await this.resolveRef({ ref: localRef });
+      return localRef;
+    } catch {
+      /* fall through */
+    }
+
+    // Case 4: tag
+    const tagRef = `refs/tags/${ref}`;
+    try {
+      await this.resolveRef({ ref: tagRef });
+      return tagRef;
+    } catch {
+      /* fall through */
+    }
+
+    // Case 5: maybe it's actually an OID
+    try {
+      await this.git.readCommit({ fs: this.fs, dir: this.dir, oid: ref });
+      return ref; // it's a valid commit oid
+    } catch {
+      // nope
+    }
+
+    throw new Error(`Unable to resolve ref "${ref}" to a branch, remote, tag, or commit oid`);
   }
 
   private toFullTagRef(tag: string): string {
@@ -366,7 +412,7 @@ export class GitRepo {
 
   sync = async ({ emitRemote = true } = {}) => {
     const newInfo = { ...(await this.tryInfo()) };
-    await this.$p.resolve(newInfo);
+    // await this.$p.resolve(newInfo);
     if (deepEqual(this.info, newInfo)) {
       return this.info; // No changes, return current info
     }
@@ -378,6 +424,10 @@ export class GitRepo {
 
     return newInfo;
   };
+
+  async isCleanFs() {
+    return (await this.fs.readdir(this.dir)).length === 0;
+  }
 
   watch(callback: () => void) {
     const unsub: (() => void)[] = [];
@@ -659,6 +709,12 @@ export class GitRepo {
     };
   };
 
+  async hasHEAD() {
+    return this.resolveRef({ ref: "HEAD" })
+      .catch(() => false)
+      .then(() => true);
+  }
+
   getCommitHistory = async (options?: { depth?: number; ref?: string; filepath?: string }): Promise<RepoCommit[]> => {
     if (!(await this.fullInitialized())) return [];
 
@@ -691,21 +747,65 @@ export class GitRepo {
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
-    const fromOid = await this.resolveRef({ ref: from }).catch(() => null);
-    if (!fromOid) {
-      throw new NotFoundError(`Source ref '${from}' not found`);
-    }
-    const intoOid = await this.resolveRef({ ref: into }).catch(() => null);
-    if (!intoOid) {
-      throw new NotFoundError(`Target ref '${into}' not found`);
-    }
-
-    const mergeBase = await this.git.findMergeBase({
+    console.log({
       fs: this.fs,
       dir: this.dir,
-      oids: [intoOid, fromOid],
+      author: this.author,
+      ours: await this.normalizeRef({ ref: into }),
+      fastForward: true,
+      theirs: await this.normalizeRef({ ref: from }),
+      abortOnConflict: false,
+      allowUnrelatedHistories: true,
     });
-    console.log("Merge base:", mergeBase);
+    const result = await this.git
+      .merge({
+        fs: this.fs,
+        dir: this.dir,
+        author: this.author,
+        ours: await this.normalizeRef({ ref: into }),
+        fastForward: true,
+        theirs: await this.normalizeRef({ ref: from }),
+        abortOnConflict: false,
+        allowUnrelatedHistories: true,
+      })
+      .catch(async (e) => {
+        if (isMergeConflictError(e)) {
+          console.log("Merge conflict detected:", { from, into }, e.data);
+          await this.setMergeState(await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
+
+          await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
+          console.log(
+            await Promise.all(
+              e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
+            )
+          );
+
+          return structuredClone(e.data);
+        } else {
+          throw e;
+        }
+      });
+
+    if (!isMergeConflict(result)) {
+      await this.git.checkout({
+        fs: this.fs,
+        dir: this.dir,
+        ref: await this.normalizeRef({ ref: into }),
+        force: true, // overwrite workdir with index
+      });
+    }
+    return result;
+  };
+
+  ______________merge = async ({
+    from,
+    into,
+  }: {
+    from: string;
+    into: string;
+  }): Promise<MergeResult | MergeConflict> => {
+    const fromOid = await this.resolveRef({ ref: from });
+    const intoOid = await this.resolveRef({ ref: into });
 
     const result = await this.git
       .merge({
@@ -716,49 +816,16 @@ export class GitRepo {
         fastForward: true,
         theirs: from,
         abortOnConflict: false,
+        allowUnrelatedHistories: true,
       })
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
           console.log("Merge conflict detected:", { from, into }, e.data);
-          await this.setMergeState(fromOid);
+          await this.setMergeState(from);
 
           await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
-          // console.log(
-          //   await Promise.all(
-          //     e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
-          //   )
-          // );
 
           return structuredClone(e.data);
-        } else if (isMergeNotSupportedError(e)) {
-          // await this.git.findMergeBase   mergeBase({
-          //   fs,
-          //   dir,
-          //   oids: [oursOid, theirsOid],
-          // });
-
-          console.log("Merge not supported (likely unrelated histories), attempting manual merge:", { from, into });
-
-          // Attempt manual merge for unrelated histories
-          const manualMergeResult = await this.handleUnrelatedHistoriesMerge({ from, into });
-          //manual merge result could possibly have NO conflicts and therefore we should return a successful merge result
-          if (manualMergeResult.filepaths.length === 0) {
-            //  * @typedef {Object} MergeResult - Returns an object with a schema like this:
-            //  * @property {string} [oid] - The SHA-1 object id that is now at the head of the branch. Absent only if `dryRun` was specified and `mergeCommit` is true.
-            //  * @property {boolean} [alreadyMerged] - True if the branch was already merged so no changes were made
-            //  * @property {boolean} [fastForward] - True if it was a fast-forward merge
-            //  * @property {boolean} [mergeCommit] - True if merge resulted in a merge commit
-            //  * @property {string} [tree] - The SHA-1 object id of the tree resulting from a merge commit
-            return {
-              oid: intoOid,
-              alreadyMerged: false,
-              fastForward: false,
-              mergeCommit: true,
-              tree: undefined,
-              // tree: null,
-            };
-          }
-          return manualMergeResult;
         } else {
           console.error("Merge error:", e);
           throw e;
@@ -766,150 +833,36 @@ export class GitRepo {
       });
 
     if (!isMergeConflict(result)) {
+      await this.writeRef({
+        ref: into,
+        value: result.oid!,
+        force: true,
+      });
+      await this.writeRef({
+        ref: "HEAD",
+        value: into,
+        force: true,
+      });
+      console.log("Merge successful, checking out:", into);
       await this.git.checkout({
         fs: this.fs,
         dir: this.dir,
-        ref: into,
-        force: true, // overwrite workdir with index
       });
     }
     return result;
   };
 
-  private handleUnrelatedHistoriesMerge = async ({
-    from,
-    into,
-  }: {
-    from: string;
-    into: string;
-  }): Promise<MergeConflict> => {
-    try {
-      // Get the current state of both refs
-      const fromOid = await this.resolveRef({ ref: from });
-      const intoOid = await this.resolveRef({ ref: into });
+  // getRemoteInfo = async (gitRemote: GitRemote | string) => {
 
-      console.log("Manual merge - resolving refs:", { from, fromOid, into, intoOid });
-
-      // Set up merge state for manual resolution
-      await this.setMergeState(fromOid);
-      await this.setMergeMsg(`Merge '${from}' into '${into}' (unrelated histories)`);
-
-      // Get file trees from both commits to identify conflicts
-      const fromTree = await this.getFileTreeForCommit(fromOid);
-      const intoTree = await this.getFileTreeForCommit(intoOid);
-
-      // Find files that exist in both trees and might conflict
-      const conflictingFiles: string[] = [];
-      const fromFiles = new Set(fromTree.map((f) => f.path));
-      const intoFiles = new Set(intoTree.map((f) => f.path));
-
-      // Check for files that exist in both trees
-      for (const file of fromFiles) {
-        if (intoFiles.has(file)) {
-          // Get content from both trees and compare
-          const fromContent = await this.getFileContentFromCommit(fromOid, file);
-          const intoContent = await this.getFileContentFromCommit(intoOid, file);
-
-          if (fromContent !== intoContent) {
-            conflictingFiles.push(file);
-
-            // Create conflict markers in the working directory
-            const conflictContent = `<<<<<<< ${into}
-${intoContent}
-=======
-${fromContent}
->>>>>>> ${from}`;
-
-            await this.fs.writeFile(joinPath(this.dir, file), conflictContent);
-          }
-        }
-      }
-
-      // Add files that only exist in the "from" commit
-      for (const file of fromFiles) {
-        if (!intoFiles.has(file)) {
-          const content = await this.getFileContentFromCommit(fromOid, file);
-          await this.fs.writeFile(joinPath(this.dir, file), content);
-        }
-      }
-
-      console.log("Manual merge complete. Conflicting files:", conflictingFiles);
-      // if (conflictingFiles.length === 0) {
-      //   // If no conflicts, finalize the merge by adding all andd committing
-
-      //   await this.commit({
-      //     message: `Merge '${from}' into '${into}' (unrelated histories)`,
-      //   });
-      //   return {
-      //     filepaths: [],
-      //     bothModified: [],
-      //     deleteByUs: [],
-      //     deleteByTheirs: [],
-      //   };
-      // }
-
-      // Return merge conflict structure
-      return {
-        filepaths: conflictingFiles,
-        bothModified: conflictingFiles,
-        deleteByUs: [],
-        deleteByTheirs: [],
-      };
-    } catch (error) {
-      console.error("Error in manual merge:", error);
-      throw error;
-    }
-  };
-
-  private getFileTreeForCommit = async (commitOid: string) => {
-    const commit = await GIT.readCommit({ fs: this.fs, dir: this.dir, oid: commitOid });
-    return await this.walkTree(commit.commit.tree);
-  };
-
-  private walkTree = async (treeOid: string, basePath = ""): Promise<Array<{ path: string; oid: string }>> => {
-    const tree = await GIT.readTree({ fs: this.fs, dir: this.dir, oid: treeOid });
-    const files: Array<{ path: string; oid: string }> = [];
-
-    for (const entry of tree.tree) {
-      const fullPath = basePath ? `${basePath}/${entry.path}` : entry.path;
-
-      if (entry.type === "blob") {
-        files.push({ path: fullPath, oid: entry.oid });
-      } else if (entry.type === "tree") {
-        const subFiles = await this.walkTree(entry.oid, fullPath);
-        files.push(...subFiles);
-      }
-    }
-
-    return files;
-  };
-
-  private getFileContentFromCommit = async (commitOid: string, filePath: string): Promise<string> => {
-    const commit = await GIT.readCommit({ fs: this.fs, dir: this.dir, oid: commitOid });
-
-    // Navigate through the tree to find the file
-    let currentTreeOid = commit.commit.tree;
-    const pathParts = filePath.split("/");
-
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      const tree = await GIT.readTree({ fs: this.fs, dir: this.dir, oid: currentTreeOid });
-      const entry = tree.tree.find((e) => e.path === pathParts[i]);
-      if (!entry || entry.type !== "tree") {
-        throw new Error(`Path not found: ${pathParts.slice(0, i + 1).join("/")}`);
-      }
-      currentTreeOid = entry.oid;
-    }
-
-    const tree = await GIT.readTree({ fs: this.fs, dir: this.dir, oid: currentTreeOid });
-    const fileEntry = tree.tree.find((e) => e.path === pathParts[pathParts.length - 1]);
-
-    if (!fileEntry || fileEntry.type !== "blob") {
-      throw new Error(`File not found: ${filePath}`);
-    }
-
-    const blob = await GIT.readBlob({ fs: this.fs, dir: this.dir, oid: fileEntry.oid });
-    return new TextDecoder().decode(blob.blob);
-  };
+  //   const remote = await this.getRemote(typeof gitRemote === "string" ? gitRemote : gitRemote.name);
+  //   if (!remote) throw new NotFoundError("Remote not found");
+  //   return this.git.getRemoteInfo({
+  //     url: remote.url,
+  //     corsProxy: remote.gitCorsProxy,
+  //     onAuth: remote?.onAuth,
+  //     http: http,
+  //   });
+  // };
 
   mustBeInitialized = async (defaultBranch = this.defaultMainBranch): Promise<boolean> => {
     if (this.state.fullInitialized) return true;
@@ -928,6 +881,12 @@ ${fromContent}
     }
     this.state.bareInitialized = true;
     return true;
+  };
+
+  reset = async () => {
+    await this.disk.removeFile(this.gitDir);
+    this.state = { bareInitialized: false, fullInitialized: false };
+    await this.sync();
   };
 
   commit = async ({
@@ -985,49 +944,38 @@ ${fromContent}
     return await this.checkoutRef({ ref: this.defaultMainBranch });
   };
 
-  checkoutRef = async ({ ref, force = false }: { ref: string; force?: boolean }): Promise<string | void> => {
-    if (await this.isMerging()) {
-      await this.resetMergeState();
-    }
-
-    // Always normalize to short name first for consistency
-    const shortRef = this.toShortBranchName(ref);
-    const isBranchOrTag = await this.isBranchOrTag(shortRef);
-
+  checkoutRef = async ({
+    ref,
+    force = false,
+    remote,
+  }: {
+    ref: string;
+    force?: boolean;
+    remote?: string;
+  }): Promise<string | void> => {
+    if (await this.isMerging()) await this.resetMergeState();
+    const fullRef = await this.normalizeRef({ ref });
     await this.mutex.runExclusive(async () => {
-      // Always use full ref for checkout to avoid detached HEAD
-      let checkoutRef: string;
-
-      if (isBranchOrTag) {
-        // For branches and tags, use full ref
-        const branches = await this.getBranches();
-        const tags = await GIT.listTags({ fs: this.fs, dir: this.dir });
-
-        if (branches.includes(shortRef)) {
-          checkoutRef = this.toFullBranchRef(shortRef);
-        } else if (tags.includes(shortRef)) {
-          checkoutRef = this.toFullTagRef(shortRef);
-        } else {
-          // Fallback to original ref if not found in branches/tags
-          checkoutRef = ref;
-        }
-      } else {
-        // For commits or other refs, use as-is
-        checkoutRef = ref;
-      }
-
       await this.git.checkout({
         fs: this.fs,
         dir: this.dir,
-        ref: checkoutRef,
+        ref: fullRef,
+        remote,
         force,
       });
-
-      if (isBranchOrTag) {
+      if (fullRef.startsWith("refs/heads/") || fullRef.startsWith("refs/tags/")) {
         await this.rememberCurrentBranch();
       }
+      console.log(fullRef);
+      await this.git.checkout({
+        fs: this.fs,
+        dir: this.dir,
+        ref: fullRef,
+        remote,
+        force,
+      });
     });
-    return shortRef; // Return the short name for consistency
+    return fullRef;
   };
 
   addGitBranch = async ({
@@ -1038,7 +986,7 @@ ${fromContent}
     branchName: string;
     symbolicRef?: string;
     checkout?: boolean;
-  }): Promise<string | void> => {
+  }): Promise<string> => {
     symbolicRef = symbolicRef || this.defaultMainBranch;
     checkout = checkout ?? false;
 
@@ -1191,7 +1139,17 @@ ${fromContent}
     });
   };
 
-  writeRef = async ({ ref, value, force = false }: { ref: string; value: string; force: boolean }): Promise<void> => {
+  writeRef = async ({
+    ref,
+    value,
+    force = false,
+    symbolic,
+  }: {
+    ref: string;
+    value: string;
+    force?: boolean;
+    symbolic?: boolean;
+  }): Promise<void> => {
     // Normalize ref to full format for writeRef
     const shortRef = this.toShortBranchName(ref);
     const branches: string[] = await this.getBranches().catch(() => []);
@@ -1203,6 +1161,7 @@ ${fromContent}
       ref: fullRef,
       value,
       force,
+      symbolic,
     });
   };
 
