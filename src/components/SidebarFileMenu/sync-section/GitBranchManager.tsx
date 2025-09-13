@@ -217,10 +217,18 @@ function BranchSelect({
   value: string | null;
   currentGitRef: GitRef | null;
 }) {
+  const keyRef = React.useRef(0);
   return (
     <div className="w-full flex items-center justify-between space-x-2">
       <div className="w-full ">
-        <Select key={value} onValueChange={(v) => onSelect(v)} value={value !== null ? value : undefined}>
+        <Select
+          value={value ?? undefined}
+          key={String(value) + keyRef.current}
+          onValueChange={(v) => {
+            keyRef.current += 1;
+            onSelect(v);
+          }}
+        >
           <SelectTrigger
             title="Select Branch"
             disabled={branches.length === 0}
@@ -318,10 +326,11 @@ export function RefsManagerSection({
     }
   };
   const setCurrentBranch = async (branch: string) => {
+    // console.log("setCurrentBranch", branch);
     try {
       if (branch === currentGitRef?.value) return;
       if (info.hasChanges && currentGitRef?.type === "commit") {
-        const _result = await openConfirm(
+        await openConfirm(
           playbook.newBranchFromCurrentOrphan,
           "Uncommitted Changes",
           "You have uncommitted changes on an orphaned commit. Save as new branch?"

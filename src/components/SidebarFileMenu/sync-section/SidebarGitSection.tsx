@@ -1,6 +1,7 @@
 import {
   Check,
   Download,
+  Ellipsis,
   GitBranchIcon,
   GitMerge,
   GitPullRequestDraftIcon,
@@ -8,6 +9,7 @@ import {
   Loader,
   PlusIcon,
   RefreshCw,
+  RotateCcw,
   Upload,
   X,
 } from "lucide-react";
@@ -18,9 +20,21 @@ import { RefsManagerSection } from "@/components/SidebarFileMenu/sync-section/Gi
 import { GitRemoteDialog, useGitRemoteDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitRemoteDialog";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from "@/components/ui/sidebar";
+import {
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+} from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
@@ -30,6 +44,8 @@ import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { cn } from "@/lib/utils";
+import { RepoInfoType } from "../../../features/git-repo/GitRepo";
+import { useConfirm } from "../../Confirm";
 import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
@@ -470,14 +486,13 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   };
 
   const handleRemoteInit = () => {
-    void repo.mustBeInitialized();
+    // void repo.mustBeInitialized();
     void addRemoteCmdRef.current.open("add").then(async ({ next }) => {
       try {
         if (!next) return;
-        await playbook.addRemoteAndFetch(next);
+        await playbook.initFromRemote(next);
         commitRef.current?.show("Remote added and fetched");
       } catch (err) {
-        // tossError(err as Error);
         console.error(err);
         commitRef.current?.show("Could not fetch from remote", "destructive");
       }
@@ -500,6 +515,10 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
             </SidebarGroupLabel>
           </SidebarMenuButton>
         </CollapsibleTrigger>
+
+        <div className="group-data-[state=closed]/collapsible:hidden">
+          <GitManager info={info} resetRepo={repo.reset} initRepo={() => playbook.initialCommit()} />
+        </div>
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="pb-3">
@@ -595,7 +614,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   </span>
                 </Button>
               )}
-              <Button onClick={() => openConfirmPane("foobar")}>Foo Bar</Button>
+              {/* <Button onClick={() => openConfirmPane("foobar")}>Foo Bar</Button> */}
             </div>
           </SidebarMenu>
         </CollapsibleContent>
@@ -606,3 +625,42 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
 }
 
 // export { useInPlaceConfirmCmd };
+
+function GitManager({
+  info,
+  initRepo,
+  resetRepo,
+}: {
+  info: RepoInfoType;
+  initRepo: () => void;
+  resetRepo: () => void;
+}) {
+  const { open } = useConfirm();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarGroupAction className="top-1.5 p-0">
+          <Ellipsis />
+        </SidebarGroupAction>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem disabled={info.bareInitialized} onClick={initRepo}>
+          <PlusIcon /> Initialize Repo
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={!info.bareInitialized}
+          onClick={() =>
+            open(
+              resetRepo,
+              "Reset Repo",
+              "Are you sure you want to reset the repository? This action cannot be undone."
+            )
+          }
+        >
+          <RotateCcw /> Reset Repo
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

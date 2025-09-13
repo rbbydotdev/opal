@@ -212,7 +212,7 @@ function CommitSelect({
               )}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="_min-w-max max-h-96 min-w-72 max-w-96 truncate">
+          <SelectContent className="_min-w-max max-h-96 min-w-72 _max-w-96 truncate">
             <div className="grid truncate">
               {commits.flat().map((commitData) => (
                 <SelectItem key={commitData.oid} value={commitData.oid} className={"!text-xs"}>
