@@ -2,6 +2,7 @@ import { useConfirm } from "@/components/Confirm";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { cn } from "@/lib/utils";
 import { useRouter } from "@tanstack/react-router";
 import { Delete, Pencil } from "lucide-react";
 
@@ -61,9 +62,22 @@ export function WorkspaceMenu({
   );
 }
 
-const CurrentWorkspaceBadge = ({ name, workspaceId }: { name: string; workspaceId: string }) => {
+const CurrentWorkspaceBadge = ({
+  name,
+  workspaceId,
+  className,
+}: {
+  name: string;
+  workspaceId: string;
+  className?: string;
+}) => {
   return (
-    <span className="rounded p-1 px-2 inline-flex items-center gap-2 border-2 border-secondary-foreground shadow-md text-foreground">
+    <span
+      className={cn(
+        "rounded p-1 px-2 inline-flex items-center gap-2 border-2 border-secondary-foreground shadow-md text-foreground",
+        className
+      )}
+    >
       <WorkspaceIcon variant="round" input={workspaceId} />
       {name}
     </span>
