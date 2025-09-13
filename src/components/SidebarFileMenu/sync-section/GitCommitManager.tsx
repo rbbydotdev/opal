@@ -44,7 +44,7 @@ export function GitCommitManager({
     );
   };
   const resetToOrigHeadHandler = () => {
-    if (!hasChanges) resetToOrigHead();
+    if (!hasChanges) return resetToOrigHead();
     void confirmOpen(
       resetToOrigHead,
       "Reset to Previous Branch",

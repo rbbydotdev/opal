@@ -2,13 +2,12 @@ import { Disk, NullDisk } from "@/Db/Disk";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
-import { GitRemote, GitRepo, MergeConflict } from "@/features/git-repo/GitRepo";
+import { GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
 import { Remote } from "comlink";
 import * as git from "isomorphic-git";
-import { MergeResult } from "isomorphic-git";
 
 export const SYSTEM_COMMITS = {
   COMMIT: "opal / commit",
@@ -72,13 +71,13 @@ export class GitPlaybook {
     await this.repo.checkoutRef({ ref: commitOid });
     return true;
   };
-  async initialCommit_() {
-    await this.repo.mustBeInitialized();
-    await this.repo.add(".");
-    await this.repo.commit({
-      message: "Initial commit",
-    });
-  }
+  // async initialCommit_() {
+  //   await this.repo.mustBeInitialized();
+  //   await this.repo.add(".");
+  //   await this.repo.commit({
+  //     message: "Initial commit",
+  //   });
+  // }
   async initialCommit() {
     await this.repo.mustBeInitialized();
     await this.repo.add(".");
@@ -105,15 +104,12 @@ export class GitPlaybook {
     await this.repo.checkoutRef({ ref: newBranch });
   }
 
-  merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
-    const result = await this.repo.merge({ from, into });
+  // merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
+  //   return this.repo.merge({ from, into });
+  // };
 
-    // return this.addAllCommit({
-    //   message: mergeMsg ?? "Merge commit",
-    //   parent: [head, mergeHead],
-    // });
-    return result;
-  };
+  merge = this.repo.merge.bind(this);
+
   mergeCommit = async (): Promise<string | null> => {
     // const currentBranch = await this.repo.getCurrentBranch();
     const mergeHead = await this.repo.getMergeState();
@@ -207,43 +203,51 @@ export class GitPlaybook {
     return result;
   }
 
+  async initFromRemote(remote: GitRemote) {
+    await this.repo.mustBeInitialized();
+    //adding remote and fetching
+    const result = await this.addRemoteAndFetch(remote);
+    //determine default branch
+    const defaultBranch = result.defaultBranch ?? "main";
+
+    await this.repo.setDefaultBranch(defaultBranch);
+
+    //if there are files around we need to save them in a commit
+    //of the name default branch
+    if (!(await this.repo.isCleanFs())) {
+      const defaultBranchRef = await this.repo
+        .resolveRef({ ref: defaultBranch })
+        .catch(() => this.repo.addGitBranch({ branchName: defaultBranch, checkout: true }));
+      //branch does not exist we need to create initial commit
+      //save current files in initial commit on default branch
+      await this.repo.add(".");
+      await this.repo.commit({
+        message: "Initial commit",
+        ref: defaultBranchRef,
+      });
+
+      await this.repo.merge({
+        from: `refs/remotes/${remote.name}/${gitAbbreviateRef(defaultBranch)}`,
+        into: defaultBranch,
+      });
+    } else {
+      //otherwise just checkout remote
+      await this.repo.checkoutRef({
+        ref: gitAbbreviateRef(defaultBranch),
+        remote: remote.name,
+      });
+    }
+  }
+
   async addRemoteAndFetch(remote: GitRemote) {
-    //if no master or main branch, create one
-    // if (!(await this.repo.getBranch("main")) && !(await this.repo.getBranch("master"))) {
-    //   await this.repo.addGitBranch({ branchName: "main", checkout: true });
-    //   await this.initialCommit();
-    // }
-    const currentBranches = await this.repo.getBranches();
     await this.repo.addGitRemote(remote);
     const RemoteAuth = remote.authId ? await RemoteAuthDAO.GetByGuid(remote.authId) : null;
     const onAuth = RemoteAuth?.toAgent()?.onAuth;
-    const result = await this.repo.fetch({
+    return await this.repo.fetch({
       url: remote.url,
       corsProxy: remote.gitCorsProxy,
       onAuth,
     });
-    if (result.defaultBranch && !currentBranches.includes(result.defaultBranch)) {
-      //check if default branch exists in remote refs
-      // abbreviateRef
-      const defaultBranchShort = gitAbbreviateRef(result.defaultBranch)!;
-      await this.repo.setDefaultBranch(defaultBranchShort);
-      // Use the repo's helper method for consistent remote ref construction
-      const remoteRef = `refs/remotes/${remote.name}/${defaultBranchShort}`;
-      console.log("Checking if remote ref exists:", remoteRef);
-      const remoteRefExists = await this.repo
-        .resolveRef({ ref: remoteRef })
-        .then(() => true)
-        .catch(() => false);
-      console.log("Remote ref exists:", remoteRefExists);
-      if (remoteRefExists) {
-        console.log("Adding local branch for remote default branch:", result.defaultBranch);
-        await this.repo.addGitBranch({ branchName: defaultBranchShort, symbolicRef: remoteRef, checkout: false });
-      } else {
-        console.log("Remote default branch does not exist in remote refs:", result.defaultBranch);
-      }
-    }
-    console.log("Fetch result:", result);
-    return result;
   }
 
   async push({ remote, ref }: { remote: string; ref: string }) {
