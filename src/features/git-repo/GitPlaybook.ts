@@ -33,7 +33,7 @@ export class GitPlaybook {
         message: SYSTEM_COMMITS.SWITCH_BRANCH,
       });
     }
-    await this.repo.checkoutRef({ ref: branchName });
+    await this.repo.checkoutRef({ ref: branchName, force: true });
     return true;
   };
 
@@ -54,12 +54,12 @@ export class GitPlaybook {
     }
     await this.repo.addGitBranch({ branchName, symbolicRef });
     await this.repo.deleteGitBranch(symbolicRef);
-    await this.repo.checkoutRef({ ref: branchName });
+    await this.repo.checkoutRef({ ref: branchName, force: true });
   };
 
   resetToHead = async () => {
     const currentBranch = await this.repo.getCurrentBranch();
-    return this.repo.checkoutRef({ ref: currentBranch ?? "HEAD" });
+    return this.repo.checkoutRef({ ref: currentBranch ?? "HEAD", force: true });
   };
   switchCommit = async (commitOid: string) => {
     await this.repo.rememberCurrentBranch();
@@ -68,7 +68,7 @@ export class GitPlaybook {
         message: SYSTEM_COMMITS.SWITCH_COMMIT,
       });
     }
-    await this.repo.checkoutRef({ ref: commitOid });
+    await this.repo.checkoutRef({ ref: commitOid, force: true });
     return true;
   };
   // async initialCommit_() {
@@ -101,7 +101,7 @@ export class GitPlaybook {
       checkout: false,
     });
 
-    await this.repo.checkoutRef({ ref: newBranch });
+    await this.repo.checkoutRef({ ref: newBranch, force: true });
   }
 
   // merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
@@ -170,7 +170,7 @@ export class GitPlaybook {
     const prevBranch = await this.repo.getPrevBranch();
     if (prevBranch) {
       try {
-        await this.repo.checkoutRef({ ref: prevBranch });
+        await this.repo.checkoutRef({ ref: prevBranch, force: true });
         return true;
       } catch (error) {
         if (error instanceof git.Errors.NotFoundError) {
@@ -235,6 +235,7 @@ export class GitPlaybook {
       await this.repo.checkoutRef({
         ref: gitAbbreviateRef(defaultBranch),
         remote: remote.name,
+        force: true,
       });
     }
   }

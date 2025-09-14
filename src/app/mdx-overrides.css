@@ -19,14 +19,6 @@
 }
 .mdxeditor-toolbar {
   flex-shrink: 0;
-  /* height: var(--editor-toolbar-height); */
-  /* min-height: var(--editor-toolbar-height); */
-  /* border-radius: 0 !important; */
-  /* align-items: start !important; */
-  /* display: flex; */
-  /* mdxeditor-toolbar: */
-  /* scrollbar-width: thin; */
-  /* overflow-x: visible !impor; */
   &::-webkit-scrollbar {
     display: none;
   }
@@ -35,17 +27,13 @@
 }
 
 .mdxeditor {
-  /* overflow: scroll; */
-  /* max-height: 100%; */
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
 .mdxeditor .cm-selectionBackground {
-  /* background: blue !important; */
   background-color: hsl(var(--search-highlight-bg)) !important;
-  /* opacity: 0.5 !important; */
 }
 
 .mdxeditor .cm-highlight-range {
@@ -58,12 +46,6 @@
 .mdxeditor-popup-container [class*="_dialogContent_"] {
   flex-direction: column;
 }
-/* 
-.mdxeditor [class*="_placeholder_sects_"] p {
-  width: 1rem !important;
-  height: 1.25rem !important;
-  border-left: 1px solid black !important;
-} */
 
 .mdxeditor {
   [data-editor-block-type="image"] {
@@ -213,27 +195,6 @@
   --basePageBg: var(--background) !important;
   background: var(--background) !important;
 
-  /* Force text color inheritance for dark mode */
-  /* .contenteditable {
-    p,
-    div,
-    span,
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6,
-    li,
-    td,
-    th,
-    blockquote,
-    pre,
-    code {
-      color: var(--foreground) !important;
-    }
-  } */
-
   /* Ensure proper contrast in content editable */
   .mdxeditor-root-contenteditable {
     color: var(--foreground) !important;
@@ -244,4 +205,17 @@
   .content-editable {
     caret-color: var(--foreground) !important;
   }
+}
+
+.mdxeditor {
+  img {
+    max-width: 32rem;
+    margin: auto;
+    display: block;
+  }
+}
+.mdxeditor.center-images p span[data-lexical-decorator]:has(img) {
+  display: block;
+  margin: auto;
+  text-align: center;
 }

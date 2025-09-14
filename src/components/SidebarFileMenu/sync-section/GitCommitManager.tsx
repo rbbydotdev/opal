@@ -98,16 +98,16 @@ export function GitCommitManager({
         }}
       >
         <GitCommitMenuDropDown open={open} setOpen={setOpen}>
-          <DropdownMenuItem onClick={resetToHeadHandler} onSelect={resetToHeadHandler}>
+          <DropdownMenuItem onSelect={resetToHeadHandler}>
             <RotateCcw />
             Reset to HEAD
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={resetToOrigHeadHandler} onSelect={resetToOrigHeadHandler}>
+          <DropdownMenuItem onSelect={resetToOrigHeadHandler}>
             <RotateCcw />
             Reset to Previous Branch
           </DropdownMenuItem>
           {refType === "branch" && (
-            <DropdownMenuItem onClick={() => setSelectCommit(true)} onSelect={() => setSelectCommit(true)}>
+            <DropdownMenuItem onSelect={() => setSelectCommit(true)}>
               <ArrowBigLeftDashIcon className="text-ring" />
               <span>
                 Reset <b>hard</b>
