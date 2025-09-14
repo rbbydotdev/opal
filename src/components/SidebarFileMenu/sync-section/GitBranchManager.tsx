@@ -171,8 +171,8 @@ const GitBranchMenuDropDown = ({
 }) => (
   <DropdownMenu onOpenChange={setOpen} open={open}>
     <DropdownMenuTrigger asChild>
-      <Button variant="outline" className="h-8" size="sm">
-        <Ellipsis />
+      <Button variant="outline" className="h-8" size="sm" title="Branch Menu">
+        <Ellipsis /> <span className="sr-only">Branch Menu</span>
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">{children}</DropdownMenuContent>

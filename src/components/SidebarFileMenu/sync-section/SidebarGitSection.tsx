@@ -639,8 +639,8 @@ function GitManager({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <SidebarGroupAction className="top-1.5 p-0">
-          <Ellipsis />
+        <SidebarGroupAction className="top-1.5 p-0" title="Git Menu">
+          <Ellipsis /> <span className="sr-only">Git Menu</span>
         </SidebarGroupAction>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

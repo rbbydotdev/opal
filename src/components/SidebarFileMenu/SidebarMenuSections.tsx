@@ -123,8 +123,9 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         </DropdownMenuContent>
         <SidebarGroupLabel className="h-6">
           <DropdownMenuTrigger asChild>
-            <SidebarGroupAction className="mr-2 -mt-2">
+            <SidebarGroupAction className="mr-2 -mt-2" title="Sidebar Menu">
               <Ellipsis />
+              <span className="sr-only">Sidebar Menu</span>
             </SidebarGroupAction>
           </DropdownMenuTrigger>
         </SidebarGroupLabel>

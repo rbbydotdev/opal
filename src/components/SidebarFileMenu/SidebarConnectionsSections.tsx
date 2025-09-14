@@ -1,4 +1,5 @@
 // import { ConnectionsModal } from "@/components/connections-modal";
+import { useConfirm } from "@/components/Confirm";
 import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
@@ -19,29 +20,126 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { RemoteAuthJType } from "@/Db/RemoteAuth";
+import { RemoteAuthJType, RemoteAuthRecord } from "@/Db/RemoteAuth";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
-import { MoreHorizontal, Pencil, Plus, Sparkle, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { Check, Delete, Ellipsis, MoreHorizontal, Pencil, Plus, Sparkle, SquareDashed, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 function ConnectionManager() {
   const { remoteAuths, deleteRemoteAuth } = useRemoteAuths();
   const [editingConnection, setEditingConnection] = useState<RemoteAuthJType | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const toggleSelected = (id: string) =>
+    isSelected(id) ? setSelected((prev) => prev.filter((i) => i !== id)) : setSelected((prev) => [...prev, id]);
+  const isSelected = (id: string) => selected.includes(id);
+  const sectionRef = useRef<HTMLDivElement | null>(null);
 
-  const handleEdit = (connection: (typeof remoteAuths)[0]) => {
+  const { open: openConfirm } = useConfirm();
+
+  const handleEdit = (connection: RemoteAuthRecord) => {
     setEditingConnection(connection);
   };
 
-  // RemoteAuthSourceIcon[source]
+  useEffect(() => {
+    if (!sectionRef?.current) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selected.length) setSelected([]);
+    };
+    sectionRef.current.addEventListener("keydown", handleEscape, { passive: true });
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [sectionRef, selected.length]);
+
+  const handleDeleteAll = () =>
+    openConfirm(
+      () => {
+        selected.forEach((id) => deleteRemoteAuth(id));
+        setSelected([]);
+      },
+      "Delete Connections",
+      `Are you sure you want to delete ${selected.length} connection(s)? This action cannot be undone.`
+    );
+
+  const handleSelect = (
+    sectionRef: React.RefObject<HTMLDivElement | null>,
+    event: React.MouseEvent,
+    connection: RemoteAuthRecord
+  ) => {
+    event.preventDefault();
+
+    if (event.metaKey || event.ctrlKey) {
+      if (sectionRef?.current) sectionRef.current.focus();
+      toggleSelected(connection.guid);
+    } else {
+      handleEdit(connection);
+    }
+  };
 
   return (
     <>
-      <ConnectionsModal>
-        <SidebarGroupAction className="top-1.5 p-0">
-          <Plus /> <span className="sr-only">Add Connection</span>
-        </SidebarGroupAction>
-      </ConnectionsModal>
+      {/* <div ref={sectionRef} tabIndex={0}> */}
+      <div>
+        <ConnectionsModal>
+          <SidebarGroupAction className={cn("top-1.5 p-0", { "right-8": remoteAuths.length })} title="Add Connection">
+            <Plus className="w-4 h-4" /> <span className="sr-only">Add Connection</span>
+          </SidebarGroupAction>
+        </ConnectionsModal>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {remoteAuths.length && (
+              <SidebarGroupAction className="top-1.5 p-0 right-0" title="Connections Menu">
+                <Ellipsis /> <span className="sr-only">Connections Menu</span>
+              </SidebarGroupAction>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => setSelected(remoteAuths.map((r) => r.guid))}
+              className="grid grid-cols-[auto_1fr] items-center gap-2"
+              disabled={remoteAuths.length === selected.length}
+            >
+              <Check className="w-4 h-4" />
+              <span>Select All</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setSelected([])}
+              className="grid grid-cols-[auto_1fr] items-center gap-2"
+              disabled={!selected.length}
+            >
+              <SquareDashed className="w-4 h-4" />
+              <span>Deselect All</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={handleDeleteAll}
+              className="grid grid-cols-[auto_1fr] items-center gap-2"
+              disabled={!selected.length}
+            >
+              <Delete className="w-4 h-4 text-destructive" />
+              <span>Delete Selected</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {/* <div ref={sectionRef} tabIndex={0}>
+        {!!selected.length && (
+          <>
+            <SidebarGroupAction className="top-1.5 p-0 right-16" onClick={() => setSelected([])} title="Deselect All">
+              <SquareDashed /> <span className="sr-only">Deselect All</span>
+            </SidebarGroupAction>
+            <SidebarGroupAction className="top-1.5 p-0 right-8" onClick={handleDeleteAll} title="Delete Selected">
+              <Minus /> <span className="sr-only">Delete Selected</span>
+            </SidebarGroupAction>
+          </>
+        )}
+        <ConnectionsModal>
+          <SidebarGroupAction className="top-1.5 p-0">
+            <Plus /> <span className="sr-only">Add Connection</span>
+          </SidebarGroupAction>
+        </ConnectionsModal>
+      </div> */}
+
       <ConnectionsModal
         mode="edit"
         editConnection={editingConnection!}
@@ -64,8 +162,14 @@ function ConnectionManager() {
           {remoteAuths.map((connection) => (
             <SidebarMenuItem key={connection.guid}>
               <div className="group flex items-center pr-1 my-1">
-                <SidebarMenuButton className="flex-1 min-w-0 pl-8" onClick={() => handleEdit(connection)}>
+                <SidebarMenuButton
+                  className="flex-1 min-w-0 pl-4"
+                  onClick={(e) => handleSelect(sectionRef, e, connection)}
+                >
                   <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
+                    <div className="w-4 h-4 flex justify-center items-center  mr-0.5">
+                      {isSelected(connection.guid) && <Check className="w-3 h-3 rounded-full _bg-accent _border" />}
+                    </div>
                     <RemoteAuthSourceIconComponent
                       type={connection.type}
                       source={connection.source}

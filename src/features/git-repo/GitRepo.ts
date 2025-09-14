@@ -747,16 +747,6 @@ export class GitRepo {
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
-    console.log({
-      fs: this.fs,
-      dir: this.dir,
-      author: this.author,
-      ours: await this.normalizeRef({ ref: into }),
-      fastForward: true,
-      theirs: await this.normalizeRef({ ref: from }),
-      abortOnConflict: false,
-      allowUnrelatedHistories: true,
-    });
     const result = await this.git
       .merge({
         fs: this.fs,
@@ -770,15 +760,15 @@ export class GitRepo {
       })
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
-          console.log("Merge conflict detected:", { from, into }, e.data);
+          // console.log("Merge conflict detected:", { from, into }, e.data);
           await this.setMergeState(await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
 
           await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
-          console.log(
-            await Promise.all(
-              e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
-            )
-          );
+          // console.log(
+          //   await Promise.all(
+          //     e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
+          //   )
+          // );
 
           return structuredClone(e.data);
         } else {
@@ -796,73 +786,6 @@ export class GitRepo {
     }
     return result;
   };
-
-  ______________merge = async ({
-    from,
-    into,
-  }: {
-    from: string;
-    into: string;
-  }): Promise<MergeResult | MergeConflict> => {
-    const fromOid = await this.resolveRef({ ref: from });
-    const intoOid = await this.resolveRef({ ref: into });
-
-    const result = await this.git
-      .merge({
-        fs: this.fs,
-        dir: this.dir,
-        author: this.author,
-        ours: into,
-        fastForward: true,
-        theirs: from,
-        abortOnConflict: false,
-        allowUnrelatedHistories: true,
-      })
-      .catch(async (e) => {
-        if (isMergeConflictError(e)) {
-          console.log("Merge conflict detected:", { from, into }, e.data);
-          await this.setMergeState(from);
-
-          await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
-
-          return structuredClone(e.data);
-        } else {
-          console.error("Merge error:", e);
-          throw e;
-        }
-      });
-
-    if (!isMergeConflict(result)) {
-      await this.writeRef({
-        ref: into,
-        value: result.oid!,
-        force: true,
-      });
-      await this.writeRef({
-        ref: "HEAD",
-        value: into,
-        force: true,
-      });
-      console.log("Merge successful, checking out:", into);
-      await this.git.checkout({
-        fs: this.fs,
-        dir: this.dir,
-      });
-    }
-    return result;
-  };
-
-  // getRemoteInfo = async (gitRemote: GitRemote | string) => {
-
-  //   const remote = await this.getRemote(typeof gitRemote === "string" ? gitRemote : gitRemote.name);
-  //   if (!remote) throw new NotFoundError("Remote not found");
-  //   return this.git.getRemoteInfo({
-  //     url: remote.url,
-  //     corsProxy: remote.gitCorsProxy,
-  //     onAuth: remote?.onAuth,
-  //     http: http,
-  //   });
-  // };
 
   mustBeInitialized = async (defaultBranch = this.defaultMainBranch): Promise<boolean> => {
     if (this.state.fullInitialized) return true;
