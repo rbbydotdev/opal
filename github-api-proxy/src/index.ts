@@ -1,3 +1,5 @@
+// DONT FORGET TO SET GITHUB_CLIENT_SECRET in your Cloudflare Workers environment variables!
+
 const ALLOWED_ORIGINS = ['https://opal-editor.com', 'http://localhost:3000'];
 const ALLOWED_HOSTS = ['github.com', 'api.github.com', '*.github.com'];
 
@@ -47,7 +49,11 @@ function corsHeaders(origin: string | null): Record<string, string> {
 	};
 }
 
-const handleRequest = async (request: Request): Promise<Response> => {
+interface Env {
+	GITHUB_CLIENT_SECRET?: string;
+}
+
+const handleRequest = async (request: Request, env: Env): Promise<Response> => {
 	const url = new URL(request.url);
 	const origin = request.headers.get('origin');
 	const referer = request.headers.get('referer');
@@ -86,6 +92,54 @@ const handleRequest = async (request: Request): Promise<Response> => {
 		return new Response(null, {
 			status: 204,
 			headers: corsHeaders(origin),
+		});
+	}
+
+	// Handle GitHub OAuth token exchange - inject client secret
+	if (host === 'github.com' && path === '/login/oauth/access_token' && request.method === 'POST') {
+		if (!env.GITHUB_CLIENT_SECRET) {
+			return new Response('Server configuration error: GitHub client secret not configured', {
+				status: 500,
+				headers: corsHeaders(origin),
+			});
+		}
+
+		const body = await request.text();
+		const params = new URLSearchParams(body);
+
+		// Add the client secret to the request
+		params.set('client_secret', env.GITHUB_CLIENT_SECRET);
+
+		const fetchInit = {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'User-Agent': 'OpalEditorProxy/1.0',
+			},
+			body: params.toString(),
+		};
+
+		let response: Response;
+		try {
+			response = await fetch(targetUrl, fetchInit);
+		} catch (err) {
+			return new Response('GitHub OAuth request failed', {
+				status: 502,
+				headers: corsHeaders(origin),
+			});
+		}
+
+		const responseBody = await response.arrayBuffer();
+		const respHeaders = new Headers(response.headers);
+		for (const [key, value] of Object.entries(corsHeaders(origin))) {
+			respHeaders.set(key, value);
+		}
+
+		return new Response(responseBody, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: respHeaders,
 		});
 	}
 

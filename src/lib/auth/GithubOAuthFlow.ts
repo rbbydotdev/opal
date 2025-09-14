@@ -81,21 +81,20 @@ export async function exchangeCodeForToken({
   corsProxy?: string;
   clientId?: string;
 }): Promise<GithubOAuthFlowPayload> {
-  console.log("=== Starting OAuth token exchange ===");
+  // console.log("=== Starting OAuth token exchange ===");
 
   try {
     const baseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/github.com` : "https://github.com";
     const tokenUrl = `${baseUrl}/login/oauth/access_token`;
 
     const params = new URLSearchParams();
-    params.append("client_id", "Ov23lipqkfiZDSS9HrCI");
+    params.append("client_id", clientId);
     params.append("code", code);
     params.append("code_verifier", codeVerifier);
-    params.append("client_secret", "acf3a6c6242a21d28ed66d957b1fa7adaff948e6"); // 👈 dummy secret for PKCE workaround
     if (redirectUri) params.append("redirect_uri", redirectUri);
 
-    console.log("Token exchange URL:", tokenUrl);
-    console.log("Token request params:", Object.fromEntries(params));
+    // console.log("Token exchange URL:", tokenUrl);
+    // console.log("Token request params:", Object.fromEntries(params));
 
     const tokenResponse = await fetch(tokenUrl, {
       method: "POST",
@@ -105,7 +104,7 @@ export async function exchangeCodeForToken({
       body: params,
     });
 
-    console.log("Fetch completed. Response status:", tokenResponse.status, tokenResponse.statusText);
+    // console.log("Fetch completed. Response status:", tokenResponse.status, tokenResponse.statusText);
 
     const tokenData = (await tokenResponse.json()) as {
       access_token?: string;
@@ -114,7 +113,7 @@ export async function exchangeCodeForToken({
       error?: string;
       error_description?: string;
     };
-    console.log("Token response data:", tokenData);
+    // console.log("Token response data:", tokenData);
 
     if (tokenData.error) {
       throw new Error(`OAuth error: ${tokenData.error_description || tokenData.error}`);
@@ -125,7 +124,7 @@ export async function exchangeCodeForToken({
       throw new Error("No access token received in response");
     }
 
-    console.log("Token received, fetching user info...");
+    // console.log("Token received, fetching user info...");
 
     const apiBaseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/api.github.com` : undefined;
 
@@ -135,7 +134,7 @@ export async function exchangeCodeForToken({
     });
 
     const { data: user } = await octokit.request("GET /user");
-    console.log("User data received:", { login: user.login, id: user.id });
+    // console.log("User data received:", { login: user.login, id: user.id });
 
     return {
       login: user.login,
@@ -143,7 +142,7 @@ export async function exchangeCodeForToken({
       obtainedAt: Date.now(),
     };
   } catch (e) {
-    console.error("=== OAuth token exchange failed ===", e);
+    // console.error("=== OAuth token exchange failed ===", e);
     throw mapToTypedError(e);
   }
 }
