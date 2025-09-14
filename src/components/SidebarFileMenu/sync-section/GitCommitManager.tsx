@@ -131,8 +131,8 @@ const GitCommitMenuDropDown = ({
 }) => (
   <DropdownMenu onOpenChange={setOpen} open={open}>
     <DropdownMenuTrigger asChild>
-      <Button variant="outline" className="h-8" size="sm">
-        <Ellipsis />
+      <Button variant="outline" className="h-8" size="sm" title="Commit Menu">
+        <Ellipsis /> <span className="sr-only">Commit Menu</span>
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">{children}</DropdownMenuContent>
@@ -149,7 +149,7 @@ const OpalAvatar = () => <OpalSvg />;
 function CommitAvatar({ author }: { author: RepoCommit["commit"]["author"] }) {
   if (author.email === OPAL_AUTHOR.email) {
     return (
-      <span className="w-5 h-5 flex-shrink-0 flex justify-center items-center ">
+      <span className="w-5 h-5 flex-shrink-0 flex justify-center items-center rounded-full overflow-clip ">
         <OpalAvatar />
       </span>
     );
@@ -212,8 +212,8 @@ function CommitSelect({
               )}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="_min-w-max max-h-96 min-w-72 _max-w-96 truncate">
-            <div className="grid truncate">
+          <SelectContent className="max-h-96 min-w-72 truncate">
+            <div className="truncate">
               {commits.flat().map((commitData) => (
                 <SelectItem key={commitData.oid} value={commitData.oid} className={"!text-xs"}>
                   <CommitLabel commitData={commitData} />

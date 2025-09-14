@@ -100,8 +100,9 @@ const GitAddDeleteEditDropDown = ({
 }) => (
   <DropdownMenu open={open} onOpenChange={setOpen}>
     <DropdownMenuTrigger asChild>
-      <Button variant="outline" className="h-8" size="sm">
+      <Button variant="outline" className="h-8" size="sm" title="Remote Menu">
         <Ellipsis />
+        <span className="sr-only">Remote Menu</span>
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">{children}</DropdownMenuContent>

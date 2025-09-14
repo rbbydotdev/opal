@@ -477,52 +477,10 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
 }
 
 function DragCollapseBar() {
-  const THRESHOLD = 5;
-  const startXRef = React.useRef(0);
   const { setStoredValue, storedValue: shrink } = useShrink();
-  const draggingRef = useRef({ isDragging: false, shrink: (_v: boolean) => {}, cleanup: () => {} });
-  draggingRef.current.shrink = setStoredValue;
-
-  const onMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    startXRef.current = e.clientX;
-    draggingRef.current.isDragging = true;
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("mouseleave", onMouseUp);
-    draggingRef.current.cleanup = () => {
-      draggingRef.current.isDragging = false;
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mouseleave", onMouseUp);
-    };
-  };
-
-  const onMouseMove = (e: MouseEvent) => {
-    if (!draggingRef.current) {
-      return;
-    }
-    const delta = e.clientX - startXRef.current;
-    if ((!shrink && delta < -1 * THRESHOLD) || (shrink && delta > THRESHOLD)) {
-      draggingRef.current.shrink(!shrink);
-      draggingRef.current.cleanup();
-    }
-  };
-
-  const onMouseUp = (e: MouseEvent) => {
-    if (draggingRef.current) {
-      const delta = e.clientX - startXRef.current;
-      if (delta < -5) {
-        draggingRef.current.shrink(true);
-      }
-    }
-    draggingRef.current.cleanup();
-  };
-
   return (
     <div
       onClick={() => setStoredValue(!shrink)}
-      onMouseDown={onMouseDown}
       className={cn("group bg-primary absolute right-0 hover:w-2 w-0.5 select-none flex justify-center items-center", {
         "cursor-w-resize h-16": !shrink,
         "cursor-e-resize h-16": shrink,

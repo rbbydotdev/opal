@@ -35,6 +35,7 @@ export function ConnectionsModal({
   onSuccess = () => {},
   open,
   onOpenChange,
+  onSelect,
 }: {
   children: React.ReactNode;
   mode?: ConnectionsModalMode;
@@ -42,6 +43,7 @@ export function ConnectionsModal({
   onSuccess?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onSelect?: () => void;
 }) {
   // Modal open state is managed here only if not controlled
   const [internalOpen, setInternalOpen] = useState(false);
@@ -51,7 +53,7 @@ export function ConnectionsModal({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[26.5625rem] sm:min-h-[37rem]">
+      <DialogContent className="sm:max-w-[26.5625rem] sm:min-h-[37rem]" onSelect={onSelect}>
         <ConnectionsModalContent
           mode={mode}
           editConnection={editConnection}
