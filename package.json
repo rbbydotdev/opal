@@ -58,6 +58,7 @@
     "@milkdown/crepe": "^7.15.3",
     "@octokit/auth-oauth-device": "^8.0.1",
     "@octokit/core": "^7.0.3",
+    "@octokit/oauth-app": "^8.0.1",
     "@octokit/request": "^10.0.3",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.14",

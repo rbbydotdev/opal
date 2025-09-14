@@ -105,10 +105,11 @@ export function ConnectionsModalContent({
   );
   const cancelReset = () => {
     form.reset();
+    reset(); // Reset the error state from useRemoteAuthSubmit
     onClose();
   };
 
-  const { handleSubmit } = useRemoteAuthSubmit(
+  const { handleSubmit, reset, error } = useRemoteAuthSubmit(
     mode,
     editConnection,
     (f) => {
@@ -118,6 +119,7 @@ export function ConnectionsModalContent({
     () => {
       onClose();
       form.reset();
+      reset(); // Reset the error state
     }
   );
 
@@ -170,6 +172,13 @@ export function ConnectionsModalContent({
                 </FormItem>
               )}
             />
+
+            {error && (
+              <div className="rounded-md bg-destructive p-4 text-destructive-foreground">
+                <p className="mb-2 font-bold">Connection Error</p>
+                <p className="mb-2">{error}</p>
+              </div>
+            )}
 
             {selectedTemplate?.type === "api" && (
               <ApiKeyAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
