@@ -14,6 +14,7 @@ import { Route as AllSettingsRouteImport } from './routes/all-settings'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as PreviewSplatRouteImport } from './routes/preview/$'
+import { Route as AuthGithubRouteImport } from './routes/auth.github'
 import { Route as AllSettingsSplatRouteImport } from './routes/all-settings/$'
 import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppThemesRouteImport } from './routes/_app/themes'
@@ -48,6 +49,11 @@ const PreviewSplatRoute = PreviewSplatRouteImport.update({
   id: '/$',
   path: '/$',
   getParentRoute: () => PreviewRoute,
+} as any)
+const AuthGithubRoute = AuthGithubRouteImport.update({
+  id: '/auth/github',
+  path: '/auth/github',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AllSettingsSplatRoute = AllSettingsSplatRouteImport.update({
   id: '/$',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/themes': typeof AppThemesRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
+  '/auth/github': typeof AuthGithubRoute
   '/preview/$': typeof PreviewSplatRoute
   '/': typeof AppIndexRoute
   '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/themes': typeof AppThemesRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
+  '/auth/github': typeof AuthGithubRoute
   '/preview/$': typeof PreviewSplatRoute
   '/': typeof AppIndexRoute
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/_app/themes': typeof AppThemesRoute
   '/_app/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
+  '/auth/github': typeof AuthGithubRoute
   '/preview/$': typeof PreviewSplatRoute
   '/_app/': typeof AppIndexRoute
   '/_app/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/themes'
     | '/workspace'
     | '/all-settings/$'
+    | '/auth/github'
     | '/preview/$'
     | '/'
     | '/workspace/$workspaceName'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/themes'
     | '/workspace'
     | '/all-settings/$'
+    | '/auth/github'
     | '/preview/$'
     | '/'
     | '/workspace/$workspaceName/$'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/_app/themes'
     | '/_app/workspace'
     | '/all-settings/$'
+    | '/auth/github'
     | '/preview/$'
     | '/_app/'
     | '/_app/workspace/$workspaceName'
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AllSettingsRoute: typeof AllSettingsRouteWithChildren
   PreviewRoute: typeof PreviewRouteWithChildren
+  AuthGithubRoute: typeof AuthGithubRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/preview/$'
       preLoaderRoute: typeof PreviewSplatRouteImport
       parentRoute: typeof PreviewRoute
+    }
+    '/auth/github': {
+      id: '/auth/github'
+      path: '/auth/github'
+      fullPath: '/auth/github'
+      preLoaderRoute: typeof AuthGithubRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/all-settings/$': {
       id: '/all-settings/$'
@@ -398,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AllSettingsRoute: AllSettingsRouteWithChildren,
   PreviewRoute: PreviewRouteWithChildren,
+  AuthGithubRoute: AuthGithubRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
