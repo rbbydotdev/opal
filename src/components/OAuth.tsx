@@ -53,6 +53,13 @@ export function OAuth({
     setAuthError(null);
     authRef.current = null;
     codeVerifierRef.current = null;
+
+    // Clean up channel
+    if (channelRef.current) {
+      channelRef.current.tearDown();
+      channelRef.current = null;
+    }
+    channelNameRef.current = null;
   };
 
   // Reset state when component mounts (modal opens) and unmounts (modal closes)
@@ -92,6 +99,12 @@ export function OAuth({
     setAuthSuccess(false);
 
     try {
+      // Clean up any existing channel first
+      if (channelRef.current) {
+        channelRef.current.tearDown();
+        channelRef.current = null;
+      }
+
       // Use simple fixed channel name and generate PKCE parameters
       const channelName = "oauth-callback";
       channelNameRef.current = channelName;
@@ -100,7 +113,7 @@ export function OAuth({
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       codeVerifierRef.current = codeVerifier;
 
-      console.log("Parent: Creating channel with name:", channelName);
+      // console.log("Parent: Creating channel with name:", channelName);
 
       // Create and initialize the channel
       const channel = new OAuthCbChannel(channelName);
@@ -108,12 +121,12 @@ export function OAuth({
       channel.init();
 
       // Set up channel listeners
-      channel.on(OAuthCbEvents.SUCCESS, handleAuthSuccess);
-      channel.on(OAuthCbEvents.ERROR, handleAuthError);
+      void channel.once(OAuthCbEvents.SUCCESS).then(handleAuthSuccess);
+      void channel.once(OAuthCbEvents.ERROR).then(handleAuthError);
 
       // Handle authorization code from callback window
-      channel.on(OAuthCbEvents.AUTHORIZATION_CODE, async ({ code, state }) => {
-        console.log("Parent: Received authorization code from callback");
+      void channel.once(OAuthCbEvents.AUTHORIZATION_CODE).then(async ({ code, state }) => {
+        // console.log("Parent: Received authorization code from callback");
 
         try {
           if (!codeVerifierRef.current) {
@@ -121,7 +134,7 @@ export function OAuth({
           }
 
           const corsProxy = form.getValues()?.data?.corsProxy;
-          console.log("Parent: Starting token exchange with PKCE");
+          // console.log("Parent: Starting token exchange with PKCE");
 
           // Do the token exchange in the main window with PKCE
           const authData = await exchangeCodeForToken({
@@ -142,7 +155,7 @@ export function OAuth({
           // Trigger success
           handleAuthSuccess(oauthData);
         } catch (error) {
-          console.error("Parent: Token exchange failed:", error);
+          // console.error("Parent: Token exchange failed:", error);
           handleAuthError(error instanceof Error ? error.message : "Token exchange failed");
         }
       });
@@ -157,7 +170,7 @@ export function OAuth({
         scopes: ["public_repo", "private_repo", "repo", "workflow"],
       });
 
-      console.log("Parent: Opening popup with URL:", authUrl);
+      // console.log("Parent: Opening popup with URL:", authUrl);
 
       // Open popup window
       const popup = window.open(authUrl, "oauth-popup", "width=600,height=700,scrollbars=yes,resizable=yes");

@@ -29,8 +29,8 @@ function OAuthCallback() {
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
-      console.log("=== OAuth Callback Started ===");
-      console.log("Current URL:", window.location.href);
+      // console.log("=== OAuth Callback Started ===");
+      // console.log("Current URL:", window.location.href);
 
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get("code");
@@ -38,17 +38,17 @@ function OAuthCallback() {
       const error = urlParams.get("error");
       const errorDescription = urlParams.get("error_description");
 
-      console.log("URL parameters:", {
-        code: code?.substring(0, 10) + "...",
-        state,
-        error,
-        errorDescription,
-      });
+      // console.log("URL parameters:", {
+      //   code: code?.substring(0, 10) + "...",
+      //   state,
+      //   error,
+      //   errorDescription,
+      // });
 
       const channelName = "oauth-callback";
-      console.log("Callback: Creating channel with name:", channelName);
+      // console.log("Callback: Creating channel with name:", channelName);
       const channel = new OAuthCbChannel(channelName);
-      console.log("Callback: Initializing channel...");
+      // console.log("Callback: Initializing channel...");
       channel.init();
 
       if (error) {
@@ -86,13 +86,13 @@ function OAuthCallback() {
       }
 
       try {
-        console.log("Callback: Sending authorization code to parent window");
+        // console.log("Callback: Sending authorization code to parent window");
 
         // Send the authorization code to parent window for token exchange
         await channel.emit(OAuthCbEvents.AUTHORIZATION_CODE, { code, state: state || "" });
 
         setStatus("success");
-        console.log("Callback: Authorization code sent successfully");
+        // console.log("Callback: Authorization code sent successfully");
 
         setTimeout(() => {
           window.close();
