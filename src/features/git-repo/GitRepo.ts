@@ -889,7 +889,6 @@ export class GitRepo {
       if (fullRef.startsWith("refs/heads/") || fullRef.startsWith("refs/tags/")) {
         await this.rememberCurrentBranch();
       }
-      console.log(fullRef);
       await this.git.checkout({
         fs: this.fs,
         dir: this.dir,

@@ -695,45 +695,6 @@ export abstract class Disk {
     });
   }
 
-  static async TransferFiles(
-    transferNodes: [from: TreeNode, to: AbsPath][],
-    fromDisk: Disk,
-    toDisk: Disk,
-    removeSourceNodes: boolean = false
-  ) {
-    console.log(JSON.stringify(transferNodes, null, 4));
-
-    for (const [node, targetPath] of transferNodes) {
-      const content = await fromDisk.readFile(node.path);
-      await toDisk.nextPath(targetPath);
-      // await toDisk.newFiles([[targetPath, content]]);
-      // if (removeSourceNodes) {
-      //   await fromDisk.removeFile(node.path);
-      // }
-    }
-
-    return [];
-    // console.debug(`Transferring ${transferNodes.length} files from ${fromDisk.guid} to ${toDisk.guid}`);
-    // const dirs = await Promise.all(
-    //   transferNodes.filter(([node]) => node.isTreeDir()).map(([_node, targetPath]) => toDisk.mkdirRecursive(targetPath))
-    // );
-
-    // const paths = await toDisk.newFiles(
-    //   transferNodes
-    //     .filter(([node]) => node.isTreeFile())
-    //     .map(([node, targetPath]) => [
-    //       joinPath(dirname(targetPath), basename(targetPath)),
-    //       fromDisk.readFile(node.path),
-    //     ])
-    // );
-
-    // if (removeSourceNodes) {
-    //   console.debug(`Removing ${transferNodes.length} files from ${fromDisk.guid}`);
-    //   await fromDisk.removeMultipleFiles(transferNodes.map(([node]) => node.path));
-    // }
-    // return [...dirs, ...paths];
-  }
-
   private async copyDirQuiet(oldFullPath: AbsPath | TreeNode, newFullPath: AbsPath | TreeNode, overWrite?: boolean) {
     const _oldFullPath = absPath(oldFullPath);
     let _newFullPath = absPath(newFullPath);

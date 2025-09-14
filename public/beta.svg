@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="60">
+  <rect
+    x="2"
+    y="2"
+    width="146"
+    height="56"
+    rx="6"
+    ry="6"
+    fill="none"
+    stroke="#c00"
+    stroke-width="4"
+  />
+  <text
+    x="50%"
+    y="50%"
+    dominant-baseline="middle"
+    text-anchor="middle"
+    font-family="Arial, sans-serif"
+    font-weight="bold"
+    font-size="28"
+    fill="#c00"
+  >
+    BETA
+  </text>
+</svg>

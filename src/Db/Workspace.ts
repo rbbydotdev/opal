@@ -725,15 +725,6 @@ export class Workspace {
     return this.disk.mkdirRecursive(path);
   }
 
-  async transferFiles(
-    transferNodes: [from: TreeNode, to: AbsPath][],
-    fromWorkspaceName: string,
-    toWorkspace: Workspace
-  ) {
-    const fromWs = await WorkspaceDAO.FetchByNameOrId(fromWorkspaceName).then((ws) => ws.toModel().initNoListen());
-    return await Disk.TransferFiles(transferNodes, fromWs.disk, toWorkspace.disk);
-  }
-
   dirtyListener(callback: Parameters<typeof this.disk.dirtyListener>[0]) {
     const unsub = this.disk.dirtyListener(callback);
     this.unsubs.push(unsub);

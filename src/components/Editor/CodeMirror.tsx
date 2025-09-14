@@ -8,6 +8,7 @@ import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlight
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/Db/Workspace";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
@@ -224,8 +225,11 @@ const CodeMirrorToolbar = ({
       )}
 
       <LivePreviewButtons />
-      <span className="select-none text-sm">Vim Mode</span>
+      <Label htmlFor="vimMode" className="ml-auto flex items-center gap-1 select-none">
+        <span className="text-sm">Vim Mode</span>
+      </Label>
       <input
+        id="vimMode"
         type="checkbox"
         className="ml-1"
         checked={vimMode}
