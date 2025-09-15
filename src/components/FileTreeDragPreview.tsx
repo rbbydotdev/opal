@@ -20,11 +20,11 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
   return (
     <DragPreviewNode
       ref={ref}
-      className="grid place-items-center w-36 h-36 relative"
+      className="grid place-items-center w-36 h-36 relative border border-transparent"
       style={{ gridTemplateAreas: "'stack'" }}
     >
       {count > 1 && (
-        <div className="rounded-full flex justify-center z-10 w-6 h-6 bg-destructive text-destructive-foreground absolute right-7 top-10">
+        <div className="rounded-full text-xs items-center flex justify-center z-10 w-5 h-5 bg-destructive text-destructive-foreground absolute right-8 top-10">
           {count}
         </div>
       )}
@@ -67,15 +67,16 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
           return (
             <div
               key={treeNode.path}
-              className="w-16 h-16  overflow-hidden border-2 border-primary-foreground bg-background rounded-lg"
+              className="w-12 h-12 overflow-hidden border-2 border-primary-foreground bg-background rounded-lg"
               style={{
                 ...transformStyle,
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
               }}
             >
               <img
+                //IMAGE PREVIEW BREAKS WHEN CONSOLE NO-CACHE IS ON
                 src={Thumb.resolveURLFromNode(treeNode)}
-                alt=""
+                alt="preview"
                 className="w-full h-full object-cover bg-background ascpect-square"
               />
             </div>

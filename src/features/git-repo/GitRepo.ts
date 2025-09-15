@@ -383,20 +383,42 @@ export class GitRepo {
     onAuth,
   }: {
     remote: string;
-    ref: string;
+    ref?: string;
     remoteRef?: string;
     corsProxy?: string;
     onAuth?: AuthCallback;
   }) {
+    const finalRef = ref || (await this.currentBranch()) || null;
+    if (!finalRef) throw new Error("No current branch to push");
     return this.git.push({
       fs: this.fs,
       http,
       dir: this.dir,
       remote,
-      ref,
+      ref: await this.normalizeRef({ ref: finalRef }),
       remoteRef,
       corsProxy,
       onAuth,
+    });
+  }
+
+  async pull({ remote, ref }: { remote: string; ref?: string }) {
+    const finalRef = ref || (await this.currentBranch()) || null;
+    if (!finalRef) throw new Error("No current branch to pull");
+    const remoteObj = await this.getRemote(remote);
+    if (!remoteObj) throw new NotFoundError(`Remote ${remote} not found`);
+    return this.mutex.runExclusive(async () => {
+      return this.git.pull({
+        fs: this.fs,
+        http,
+        dir: this.dir,
+        ref: await this.normalizeRef({ ref: finalRef }),
+        remote,
+        singleBranch: true,
+        fastForwardOnly: false,
+        onAuth: remoteObj.onAuth,
+        corsProxy: remoteObj.gitCorsProxy,
+      });
     });
   }
 

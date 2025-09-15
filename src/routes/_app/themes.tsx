@@ -1,26 +1,21 @@
-import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
-import { 
-  SidebarProvider, 
-  Sidebar, 
-  SidebarContent, 
-  SidebarHeader, 
-  SidebarMenu, 
-  SidebarMenuItem, 
-  SidebarMenuButton,
-  SidebarFooter
-} from "@/components/ui/sidebar";
 // import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
 import { useTheme } from "@/hooks/useTheme";
 import { createFileRoute } from "@tanstack/react-router";
+import { AlertCircle, CheckCircle, FileText, Home, Search, Settings, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Search, FileText, Settings, Home, Palette, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/themes")({
   component: ThemesPage,
@@ -36,7 +31,7 @@ const oklchToRgb = (oklchStr: string): [number, number, number] | null => {
   // Simple approximation - in real implementation you'd use proper color conversion
   const match = oklchStr.match(/oklch\(([^)]+)\)/);
   if (!match) return null;
-  const [l, c, h] = match[1].split(' ').map(parseFloat);
+  const [l, c, h] = match[1].split(" ").map(parseFloat);
   // Rough approximation - convert to RGB
   const r = Math.round(l * 255);
   const g = Math.round(l * 255);
@@ -89,15 +84,22 @@ function ContrastBadge({ ratio, className }: ContrastBadgeProps) {
   return (
     <div className={`flex items-center gap-1 text-xs ${className}`}>
       <Icon className={`w-3 h-3 ${color}`} />
-      <span className={color}>{ratio.toFixed(1)} ({level})</span>
+      <span className={color}>
+        {ratio.toFixed(1)} ({level})
+      </span>
     </div>
   );
 }
 
-function ColorSwatch({ colorVar, bgVar, label, textColor = "white" }: { 
-  colorVar: string; 
-  bgVar?: string; 
-  label: string; 
+function ColorSwatch({
+  colorVar,
+  bgVar,
+  label,
+  textColor = "white",
+}: {
+  colorVar: string;
+  bgVar?: string;
+  label: string;
   textColor?: string;
 }) {
   const [ratio, setRatio] = useState<number>(1);
@@ -105,10 +107,10 @@ function ColorSwatch({ colorVar, bgVar, label, textColor = "white" }: {
   useEffect(() => {
     // Get computed styles to calculate contrast
     const computedColor = getComputedStyle(document.documentElement).getPropertyValue(colorVar);
-    const computedBg = bgVar 
+    const computedBg = bgVar
       ? getComputedStyle(document.documentElement).getPropertyValue(bgVar)
-      : getComputedStyle(document.documentElement).getPropertyValue('--background');
-    
+      : getComputedStyle(document.documentElement).getPropertyValue("--background");
+
     if (computedColor && computedBg) {
       setRatio(getContrastRatio(computedColor.trim(), computedBg.trim()));
     }
@@ -116,18 +118,16 @@ function ColorSwatch({ colorVar, bgVar, label, textColor = "white" }: {
 
   return (
     <div className="space-y-2">
-      <div 
+      <div
         className="p-4 rounded-lg relative"
-        style={{ 
+        style={{
           backgroundColor: `var(${colorVar})`,
-          color: textColor
+          color: textColor,
         }}
       >
         <div className="font-semibold">{label}</div>
         <div className="text-sm opacity-75">{colorVar}</div>
-        {bgVar && (
-          <div className="text-xs opacity-60">on {bgVar}</div>
-        )}
+        {bgVar && <div className="text-xs opacity-60">on {bgVar}</div>}
         <div className="absolute top-2 right-2">
           <ContrastBadge ratio={ratio} />
         </div>
@@ -184,10 +184,7 @@ function SearchDialogPreview() {
           <Search className="w-4 h-4" />
           <span className="font-mono text-xs">search</span>
         </div>
-        <Input 
-          placeholder="search workspace..." 
-          className="bg-search-primary border-search-border text-foreground"
-        />
+        <Input placeholder="search workspace..." className="bg-search-primary border-search-border text-foreground" />
       </div>
       <div className="p-2 space-y-1">
         <div className="p-2 rounded hover:bg-search-row-hover cursor-pointer">
@@ -245,8 +242,8 @@ function ThemeTestComponent() {
       <div className="space-y-4">
         <h2 className="text-3xl font-bold text-foreground">Theme Testing Ground</h2>
         <p className="text-muted-foreground">
-          Test color combinations, contrast ratios, and UI components across different themes.
-          Contrast ratios are shown as badges: AAA (7+), AA (4.5+), AA Large (3+), or FAIL (&lt;3).
+          Test color combinations, contrast ratios, and UI components across different themes. Contrast ratios are shown
+          as badges: AAA (7+), AA (4.5+), AA Large (3+), or FAIL (&lt;3).
         </p>
       </div>
 
@@ -284,18 +281,13 @@ function ThemeTestComponent() {
               <div className="flex gap-2 p-4 bg-background rounded border">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="space-y-2">
-                    <div 
+                    <div
                       className="w-16 h-16 rounded flex items-end p-1"
                       style={{ backgroundColor: `oklch(var(--chart-${i}))` }}
                     >
                       <span className="text-xs text-white font-mono">#{i}</span>
                     </div>
-                    <ContrastBadge 
-                      ratio={getContrastRatio(
-                        `oklch(var(--chart-${i}))`, 
-                        `var(--background)`
-                      )} 
-                    />
+                    <ContrastBadge ratio={getContrastRatio(`oklch(var(--chart-${i}))`, `var(--background)`)} />
                   </div>
                 ))}
               </div>
@@ -307,18 +299,13 @@ function ThemeTestComponent() {
               <div className="flex gap-2 p-4 bg-card rounded border">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="space-y-2">
-                    <div 
+                    <div
                       className="w-16 h-16 rounded flex items-end p-1"
                       style={{ backgroundColor: `oklch(var(--chart-${i}))` }}
                     >
                       <span className="text-xs text-white font-mono">#{i}</span>
                     </div>
-                    <ContrastBadge 
-                      ratio={getContrastRatio(
-                        `oklch(var(--chart-${i}))`, 
-                        `var(--card)`
-                      )} 
-                    />
+                    <ContrastBadge ratio={getContrastRatio(`oklch(var(--chart-${i}))`, `var(--card)`)} />
                   </div>
                 ))}
               </div>
@@ -421,9 +408,7 @@ function ThemeTestComponent() {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Theme Test Dialog</DialogTitle>
-                    <DialogDescription>
-                      This dialog tests the popover colors and contrast.
-                    </DialogDescription>
+                    <DialogDescription>This dialog tests the popover colors and contrast.</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <Input placeholder="Input in dialog" />
@@ -448,8 +433,18 @@ function ThemeTestComponent() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <ColorSwatch colorVar="--search-bg" label="Search Background" />
-            <ColorSwatch colorVar="--search-primary" bgVar="--search-bg" label="Search Primary" textColor="var(--foreground)" />
-            <ColorSwatch colorVar="--search-border" bgVar="--background" label="Search Border" textColor="var(--foreground)" />
+            <ColorSwatch
+              colorVar="--search-primary"
+              bgVar="--search-bg"
+              label="Search Primary"
+              textColor="var(--foreground)"
+            />
+            <ColorSwatch
+              colorVar="--search-border"
+              bgVar="--background"
+              label="Search Border"
+              textColor="var(--foreground)"
+            />
             <ColorSwatch colorVar="--search-row-hover" label="Row Hover" textColor="var(--foreground)" />
             <ColorSwatch colorVar="--search-highlight-bg" label="Highlight BG" textColor="var(--search-highlight-fg)" />
           </div>
@@ -466,10 +461,28 @@ function ThemeTestComponent() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <ColorSwatch colorVar="--sidebar-background" label="Sidebar BG" textColor="var(--sidebar-foreground)" />
             <ColorSwatch colorVar="--sidebar-foreground" bgVar="--sidebar-background" label="Sidebar Text" />
-            <ColorSwatch colorVar="--sidebar-primary" label="Sidebar Primary" textColor="var(--sidebar-primary-foreground)" />
-            <ColorSwatch colorVar="--sidebar-accent" label="Sidebar Accent" textColor="var(--sidebar-accent-foreground)" />
-            <ColorSwatch colorVar="--sidebar-border" bgVar="--sidebar-background" label="Sidebar Border" textColor="var(--sidebar-foreground)" />
-            <ColorSwatch colorVar="--sidebar-ring" bgVar="--sidebar-background" label="Sidebar Ring" textColor="var(--sidebar-foreground)" />
+            <ColorSwatch
+              colorVar="--sidebar-primary"
+              label="Sidebar Primary"
+              textColor="var(--sidebar-primary-foreground)"
+            />
+            <ColorSwatch
+              colorVar="--sidebar-accent"
+              label="Sidebar Accent"
+              textColor="var(--sidebar-accent-foreground)"
+            />
+            <ColorSwatch
+              colorVar="--sidebar-border"
+              bgVar="--sidebar-background"
+              label="Sidebar Border"
+              textColor="var(--sidebar-foreground)"
+            />
+            <ColorSwatch
+              colorVar="--sidebar-ring"
+              bgVar="--sidebar-background"
+              label="Sidebar Ring"
+              textColor="var(--sidebar-foreground)"
+            />
           </div>
         </CardContent>
       </Card>

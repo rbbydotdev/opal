@@ -4,14 +4,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
+import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRemote, GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";
-import { Ellipsis, Pencil, Plus, SatelliteDishIcon, Trash2 } from "lucide-react";
+import { Download, Ellipsis, Pencil, Plus, RefreshCw, SatelliteDishIcon, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 
 export function GitRemoteManager({
@@ -21,6 +23,10 @@ export function GitRemoteManager({
   deleteGitRemote,
   setSelectRemote,
   selectRemote,
+  pushRepo,
+  pullRepo,
+  fetchRepo,
+  syncRepo,
 }: {
   remotes: GitRemote[];
   addGitRemote: (remote: GitRemote) => void;
@@ -28,6 +34,10 @@ export function GitRemoteManager({
   deleteGitRemote: (remoteName: string) => void;
   setSelectRemote: (remote: string) => void;
   selectRemote: string | null;
+  pushRepo: () => void;
+  pullRepo: () => void;
+  fetchRepo: () => void;
+  syncRepo: () => void;
 }) {
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [selectOpen, setSelectOpen] = useState(false);
@@ -62,7 +72,7 @@ export function GitRemoteManager({
         value={selectRemote}
         onSelect={setSelectRemote}
       >
-        <GitAddDeleteEditDropDown open={selectOpen} setOpen={setSelectOpen}>
+        <GitRemoteManagerDropDown open={selectOpen} setOpen={setSelectOpen}>
           <DropdownMenuItem onClick={() => cmdRef.current.open("add")}>
             <Plus /> Add Remote
           </DropdownMenuItem>
@@ -71,6 +81,7 @@ export function GitRemoteManager({
               <Trash2 /> Delete Remote
             </DropdownMenuItem>
           )}
+
           {Boolean(selectRemote) ? (
             <DropdownMenuItem
               onClick={() =>
@@ -83,13 +94,30 @@ export function GitRemoteManager({
               Edit Remote
             </DropdownMenuItem>
           ) : null}
-        </GitAddDeleteEditDropDown>
+          {Boolean(selectRemote) && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={syncRepo}>
+                <RefreshCw /> Sync Now
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={pushRepo}>
+                <Upload /> Push
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={pullRepo}>
+                <Download /> Pull
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={fetchRepo}>
+                <Download /> Fetch
+              </DropdownMenuItem>
+            </>
+          )}
+        </GitRemoteManagerDropDown>
       </RemoteSelect>
     </>
   );
 }
 
-const GitAddDeleteEditDropDown = ({
+const GitRemoteManagerDropDown = ({
   children,
   open,
   setOpen,
@@ -232,18 +260,59 @@ export function RemoteManagerSection({
   setSelectRemote,
 }: {
   repo: GitRepo | Comlink.Remote<GitRepo>;
-  info: RepoInfoType; //{ latestCommit: RepoLatestCommit; remotes: GitRemote[] };
+  info: RepoInfoType;
   remoteRef: React.RefObject<{ show: (text?: string) => void }>;
   className?: string;
   selectRemote: string | null;
   setSelectRemote: (remote: string) => void;
 }) {
+  const handlePush = async () => {
+    if (!selectRemote) return;
+    try {
+      await repo.push(selectRemote);
+      remoteRef.current.show("push successful");
+    } catch (e) {
+      remoteRef.current.show("push failed");
+      console.error(e);
+    }
+  };
+  const handlePull = async () => {
+    try {
+      await repo.pull(selectRemote);
+      remoteRef.current.show("pull successful");
+    } catch (e) {
+      remoteRef.current.show("pull failed");
+      console.error(e);
+    }
+  };
+  const handleFetch = async () => {
+    try {
+      await repo.fetch(selectRemote);
+      remoteRef.current.show("fetch successful");
+    } catch (e) {
+      remoteRef.current.show("fetch failed");
+      console.error(e);
+    }
+  };
+  const handleSync = async () => {
+    try {
+      await repo.sync(selectRemote);
+      remoteRef.current.show("sync successful");
+    } catch (e) {
+      remoteRef.current.show("sync failed");
+      console.error(e);
+    }
+  };
   return (
     <div className={cn("w-full flex justify-center flex-col items-center", className)}>
       <>
         <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
         <GitRemoteManager
           remotes={info.remotes}
+          pushRepo={() => void repo.push(selectRemote)}
+          pullRepo={() => void repo.pull(selectRemote)}
+          fetchRepo={() => void repo.fetch(selectRemote)}
+          syncRepo={() => void repo.sync(selectRemote)}
           selectRemote={selectRemote}
           setSelectRemote={setSelectRemote}
           replaceGitRemote={(previousRemote, nextRemote) => {
@@ -262,4 +331,40 @@ export function RemoteManagerSection({
       </>
     </div>
   );
+}
+
+function useRepoActionHandlers({
+  playbook,
+  onSucces,
+  onError,
+}: {
+  playbook: GitPlaybook | Comlink.Remote<GitPlaybook>;
+  onSucces: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  return {
+    push: async (selectRemote: string | null) => {
+      if (!selectRemote) return;
+      try {
+        void playbook.push({ remote: selectRemote });
+      } catch (e) {
+        onError("push failed");
+        console.error(e);
+        return;
+      }
+      onSucces("push successful");
+    },
+    pull: () => {
+      if (!selectRemote) return;
+      void repo.pull(selectRemote);
+    },
+    fetch: () => {
+      if (!selectRemote) return;
+      void repo.fetch(selectRemote);
+    },
+    sync: () => {
+      if (!selectRemote) return;
+      void repo.sync(selectRemote);
+    },
+  };
 }

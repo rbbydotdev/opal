@@ -72,18 +72,18 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
   }
   return (
     <dl className="mb-4 grid [grid-template-columns:max-content_1fr] gap-x-2 font-mono text-2xs text-left">
-      <dt className="font-bold">commit:</dt>
-      <dd className="truncate">{latestCommit.oid}</dd>
       <dt className="font-bold">branch:</dt>
       <dd className="truncate">{currentBranch || <i>none / detached</i>}</dd>
+      <dt className="font-bold">commit:</dt>
+      <dd className="truncate">{latestCommit.oid}</dd>
       <dt className="font-bold">has changes:</dt>
       <dd className="truncate">{hasChanges ? <b className="font-bold">yes</b> : "no"}</dd>
       <dt className="font-bold">date:</dt>
       <dd className="truncate">{new Date(latestCommit.date).toLocaleString()}</dd>
       <dt className="font-bold">time ago:</dt>
       <dd className="truncate">{timeAgo}</dd>
-      <dt className="font-bold">context:</dt>
-      <dd className="truncate">{context}</dd>
+      {/* <dt className="font-bold">context:</dt>
+      <dd className="truncate">{context}</dd> */}
       {isMerging && (
         <>
           <dt className="font-bold">merging:</dt>
