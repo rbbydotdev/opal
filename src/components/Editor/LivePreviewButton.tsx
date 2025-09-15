@@ -24,7 +24,7 @@ export function LivePreviewButtons() {
         <div>
           {right.isCollapsed ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="h-full flex justify-center items-center border-1 ">Open Preview</div>{" "}
+              <div className="h-full flex justify-center items-center border-1 ">Open Preview</div>
               <Zap size={36} className="!w-5 !h-5 stroke-primary-foreground" strokeWidth={2} />
             </div>
           ) : (
@@ -35,7 +35,7 @@ export function LivePreviewButtons() {
           )}
         </div>
       </Button>
-      <Button size="sm" className={"active:scale-95 text-secondary rounded-l-none border-l-border "} asChild>
+      <Button size="sm" className={"active:scale-95 text-secondary rounded-l-none border-l-border"} asChild>
         <Link to={previewURL!} target="_blank" rel="noopener noreferrer">
           <span>
             <SquareArrowUpRightIcon size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />

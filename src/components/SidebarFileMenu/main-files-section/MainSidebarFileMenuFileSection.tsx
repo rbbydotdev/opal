@@ -1,6 +1,7 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
+import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
 import { Button } from "@/components/ui/button";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -14,9 +15,9 @@ import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
-const Banner = ({ currentWorkspace, hasDepth }: { currentWorkspace: Workspace; hasDepth: boolean }) => {
+const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   const [dragEnter, setDragEnter] = useState(false);
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
 
@@ -63,27 +64,28 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
 
   useFileTreeClipboardEventListeners({ currentWorkspace, elementSelector: "[data-sidebar-file-menu]" });
 
-  const hasDepth = useMemo(() => fileTreeDir.hasDepth(), [fileTreeDir]);
   return (
-    <SidebarFileMenuFiles
-      data-main-sidebar
-      FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
-      title={"Files"}
-      className={className}
-      // contentBanner={<Banner hasDepth={hasDepth} currentWorkspace={currentWorkspace} />}
-      contentBanner={!fileTreeDir.isEmpty() ? <Banner hasDepth={hasDepth} currentWorkspace={currentWorkspace} /> : null}
-      filter={SpecialDirs.All} // Exclude trash and git directories etc
-    >
-      <span className="block group-data-[state=closed]/collapsible:hidden">
-        <SidebarFileMenuFilesActions
-          trashSelectedFiles={trashSelectedFiles}
-          addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
-          addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
-          addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
-          setExpandAll={setExpandAll}
-        />
-      </span>
-    </SidebarFileMenuFiles>
+    <>
+      <SidebarFileMenuFiles
+        data-main-sidebar
+        FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
+        title={"Files"}
+        className={className}
+        contentBanner={!fileTreeDir.isEmpty() ? <Banner currentWorkspace={currentWorkspace} /> : null}
+        filter={SpecialDirs.All} // Exclude trash and git directories etc
+      >
+        <span className="block group-data-[state=closed]/collapsible:hidden">
+          <SidebarFileMenuFilesActions
+            trashSelectedFiles={trashSelectedFiles}
+            addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
+            addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
+            addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
+            setExpandAll={setExpandAll}
+          />
+        </span>
+        <TinyNotice />
+      </SidebarFileMenuFiles>
+    </>
   );
 }
 

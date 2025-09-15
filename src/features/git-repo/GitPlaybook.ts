@@ -251,7 +251,35 @@ export class GitPlaybook {
     });
   }
 
-  async push({ remote, ref }: { remote: string; ref: string }) {
+  async pull({ remote, ref }: { remote: string; ref?: string }) {
+    if (await this.repo.hasChanges()) {
+      await this.addAllCommit({
+        message: SYSTEM_COMMITS.PREPUSH,
+      });
+    }
+    // const remoteObj = await this.repo.getRemote(remote);
+    // if (!remoteObj) {
+    //   throw new Error(`Remote ${remote} not found`);
+    // }
+    // if (remoteObj.authId && !remoteObj.RemoteAuth) {
+    //   throw new Error(`Remote ${remote} has authId but no RemoteAuth object found`);
+    // }
+    // const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
+    // const onAuth = RemoteAuth ? IsoGitApiCallbackForRemoteAuth(RemoteAuth) : undefined;
+    // if (!ref) {
+    //   const currentBranch = await this.repo.getCurrentBranch();
+    //   if (!currentBranch) {
+    //     throw new Error("No current branch to pull");
+    //   }
+    //   ref = currentBranch;
+    // }
+    return this.repo.pull({
+      ref,
+      remote,
+    });
+  }
+
+  async push({ remote, ref }: { remote: string; ref?: string }) {
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.PREPUSH,

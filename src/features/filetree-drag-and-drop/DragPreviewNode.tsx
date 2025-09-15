@@ -13,10 +13,10 @@ export const DragPreviewNode = forwardRef<
       {...rest}
       style={{
         position: "absolute",
-        top: -1000,
+        // top: -1000,
         minWidth: "5px",
         minHeight: "50px",
-        left: -1000,
+        // left: -1000,
         pointerEvents: "none", // Ensure it doesn't interfere with mouse events.
         ...(rest.style ? { ...rest.style } : {}),
       }}

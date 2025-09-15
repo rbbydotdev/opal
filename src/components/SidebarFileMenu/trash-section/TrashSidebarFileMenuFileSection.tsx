@@ -1,4 +1,5 @@
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
+import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -8,8 +9,6 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { Delete, Trash2 } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import { TrashFileTreeContextMenu } from "../../../lib/FileTree/TrashFileTreeContextMenu";
-export const TinyNotice = () => <div className="ml-1 mb-2 bg-ring w-[0.3125rem] h-[0.3125rem] rounded-full"></div>;
-
 export function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { removeFile } = useWorkspaceFileMgmt(currentWorkspace);
