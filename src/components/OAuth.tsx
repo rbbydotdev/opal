@@ -45,6 +45,7 @@ export function OAuth({
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  // const channelRef = useRef<OAuthCbChannel | null>(null);
 
   // Reset OAuth state
   const resetOAuthState = () => {
@@ -65,13 +66,18 @@ export function OAuth({
   // Reset state when component mounts (modal opens) and unmounts (modal closes)
   useEffect(() => {
     resetOAuthState();
-    return () => {
-      resetOAuthState();
-    };
+    return () => resetOAuthState();
   }, []);
 
   const channelNameRef = useRef<string | null>(null);
   const channelRef = useRef<OAuthCbChannel | null>(null);
+
+  useEffect(() => {
+    return () => {
+      // Clean up channel on unmount
+      channelRef.current?.tearDown();
+    };
+  }, []);
 
   const handleAuthSuccess = (data: RemoteAuthOAuthRecordInternal) => {
     authRef.current = data;

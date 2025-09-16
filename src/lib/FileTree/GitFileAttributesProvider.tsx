@@ -1,6 +1,6 @@
-import { createFileTreeAttributesContext } from "@/lib/FileTree/FileTreeAttributesProvider";
+// import { createFileTreeAttributesContext } from "@/lib/FileTree/FileTreeAttributesProvider";
 
-export type GitFileAttributes = "merge-conflict";
+// export type GitFileAttributes = "merge-conflict";
 
-export const { Provider: FileTreeGitFileAttributesProvider, useFileTreeAttributes: useFileTreeGitAttributes } =
-  createFileTreeAttributesContext<GitFileAttributes>();
+// export const { Provider: FileTreeGitFileAttributesProvider, useFileTreeAttributes: useFileTreeGitAttributes } =
+//   createFileTreeAttributesContext<GitFileAttributes>();
