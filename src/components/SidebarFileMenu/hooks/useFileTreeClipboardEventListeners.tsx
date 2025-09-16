@@ -77,13 +77,15 @@ export function useFileTreeClipboardEventListeners({
       }
     };
     //should i just listen on "[data-sidebar-file-menu] ???
-    window.addEventListener("paste", handlePasteEvent);
-    window.addEventListener("cut", handleCutEvent);
-    window.addEventListener("copy", handleCopyEvent);
+    const sidebarElement = document.querySelector(elementSelector) as HTMLElement | null;
+    if (!sidebarElement) return;
+    sidebarElement.addEventListener("paste", handlePasteEvent);
+    sidebarElement.addEventListener("cut", handleCutEvent);
+    sidebarElement.addEventListener("copy", handleCopyEvent);
     return () => {
-      window.removeEventListener("paste", handlePasteEvent);
-      window.removeEventListener("cut", handleCutEvent);
-      window.removeEventListener("copy", handleCopyEvent);
+      sidebarElement.removeEventListener("paste", handlePasteEvent);
+      sidebarElement.removeEventListener("cut", handleCutEvent);
+      sidebarElement.removeEventListener("copy", handleCopyEvent);
     };
   }, [currentWorkspace, focused, selectedFocused, setFileTreeCtx, handlePaste, editing, elementSelector]);
 }

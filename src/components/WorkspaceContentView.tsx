@@ -10,7 +10,8 @@ import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCom
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
-import { ComponentProps, useRef } from "react";
+import matter from "gray-matter";
+import { ComponentProps, useMemo, useRef } from "react";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
 export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
@@ -36,6 +37,10 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
   const documentId = useWorkspaceDocumentId(initialContents) ?? "unknown";
 
   if (initialContents === null || !currentWorkspace) return null;
+
+  const markdown = String(initialContents || "");
+  const { data, content } = useMemo(() => matter(markdown), [markdown]);
+  console.log(content);
   return (
     <ScrollSyncProvider scrollEl={mdxEditorElement as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
       <div className="flex flex-col h-full relative">
@@ -46,8 +51,8 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
                 mimeType={mimeType}
                 currentWorkspace={currentWorkspace}
                 editorRef={editorRef}
-                onChange={updateDebounce}
-                markdown={String(initialContents || "")}
+                onChange={(md) => updateDebounce(matter.stringify(md, data))}
+                markdown={content}
                 className={"bg-background flex-grow  flex-col h-full"}
                 contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
               />

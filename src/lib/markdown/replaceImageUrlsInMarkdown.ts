@@ -1,4 +1,5 @@
 import { decodePath, encodePath } from "@/lib/paths2";
+import graymatter from "gray-matter";
 import mdast from "mdast";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
@@ -11,10 +12,12 @@ export function replaceImageUrlsInMarkdown(
   findReplace: [fromUrl: string, toUrl: string][],
   _origin = ""
 ): [content: string, changed: boolean] {
+  const { data, content } = graymatter(markdown);
+
   const processor = unified().use(remarkParse).use(remarkGfm).use(remarkDirective);
 
   // Parse the markdown into an AST
-  const tree = processor.parse(markdown);
+  const tree = processor.parse(content);
   let changed = false;
 
   // Visit all image nodes and replace URLs as needed
@@ -38,14 +41,18 @@ export function replaceImageUrlsInMarkdown(
   });
 
   // Stringify the AST back to markdown
-  const processed = unified()
-    .use(remarkStringify, {
-      bullet: "-",
-      fences: true,
-      listItemIndent: "one",
-    })
-    .use(remarkGfm)
-    .stringify(tree);
+  const processed = graymatter.stringify(
+    unified()
+      .use(remarkStringify, {
+        bullet: "-",
+        fences: true,
+        listItemIndent: "one",
+      })
+      .use(remarkGfm)
+
+      .stringify(tree),
+    data
+  );
 
   return [processed, changed];
 }

@@ -3,6 +3,7 @@ import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { NotFoundError } from "@/lib/errors";
+import { useErrorToss } from "@/lib/errorToss";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { setFrontmatter } from "@/lib/markdown/frontMatter";
 import {
@@ -34,6 +35,7 @@ function defaultFileContent(path: AbsPath) {
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   const { setFileTreeCtx, selectedRange, resetEditing, focused } = useFileTreeMenuCtx();
+  const tossError = useErrorToss();
   const navigate = useNavigate();
 
   const newFile = useCallback(
@@ -48,7 +50,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
   );
   const newDir = useCallback(
     async (path: AbsPath) => {
-      console.log("newDir", path);
       return currentWorkspace.newDir(dirname(path), basename(path));
     },
     [currentWorkspace]
@@ -272,12 +273,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
           return newDir(wantPath);
         }
       } else if (type === "duplicate") {
-        // console.log(origNode);
-        // if (isVirtualDupNode(origNode)) {
-        //   return currentWorkspace.copyFile(origNode.source, wantPath);
-        // } else {
-        //   throw new Error("Cannot duplicate a non-virtual node");
-        // }
         return currentWorkspace.copyFile(origNode.source!, wantPath);
       } else if (type === "rename") {
         return renameDirOrFile(origNode, wantPath);
