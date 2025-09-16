@@ -98,7 +98,7 @@ export function GitCommitManager({
         }}
       >
         <GitCommitMenuDropDown open={open} setOpen={setOpen}>
-          <DropdownMenuItem onSelect={resetToHeadHandler}>
+          <DropdownMenuItem onSelect={resetToHeadHandler} /*disabled={refType !== "branch"}*/>
             <RotateCcw />
             Reset to HEAD
           </DropdownMenuItem>

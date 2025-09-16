@@ -132,8 +132,8 @@ function SpotlightSearchInternal({
   //MARK: State / hooks
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [deferredSearch, setDeferredSearch] = useState(""); // NEW
-  const [isPending, startTransition] = useTransition(); // NEW
+  const [deferredSearch, setDeferredSearch] = useState("");
+  const [_isPending, startTransition] = useTransition();
 
   const [state, setState] = useState<"spotlight" | "prompt" | "select">("spotlight");
   const [promptPlaceholder, setPromptPlaceholder] = useState("Enter value...");
@@ -368,83 +368,86 @@ function SpotlightSearchInternal({
 
   // MARK: Render
   return (
-    <div
-      ref={containerRef}
-      className={clsx(
-        "absolute left-0 right-0 top-4 z-50 m-auto flex w-[36rem] flex-col items-center justify-center",
-        "translate-y-12",
-        { "animate-in": open }
-      )}
-      onKeyDown={handleKeyDown}
-      onBlur={(e) => {
-        if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-          handleClose();
-        }
-      }}
-    >
-      <div className="flex h-12 w-full items-center justify-center rounded-lg border bg-background p-2 _text-sidebar-foreground/70 shadow-lg relative">
-        <input
-          {...getInputProps()}
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            startTransition(() => {
-              setDeferredSearch(e.target.value);
-            });
-          }}
-          id="spotlight-search"
-          type="text"
-          autoComplete="off"
-          placeholder={state === "prompt" || state === "select" ? promptPlaceholder : "Spotlight Search..."}
-          className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
-        />
-        {/* {isPending && <div className="absolute right-3 text-xs text-muted-foreground">Searching...</div>} */}
-      </div>
-      {(state === "spotlight" || state === "select") && Boolean(sortedList.length) && (
-        <ul
-          {...getMenuProps()}
-          aria-labelledby="spotlight-search"
-          className="mt-2 block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
-        >
-          {sortedList.map((item, index) => {
-            if (state === "spotlight" && item.href.startsWith(commandPrefix)) {
+    <>
+      {createPortal(<div className="inset-0 absolute backdrop-blur-sm"></div>, document.body)}
+      <div
+        ref={containerRef}
+        className={clsx(
+          "absolute left-0 right-0 top-4 z-50 m-auto flex w-[36rem] flex-col items-center justify-center",
+          "translate-y-12",
+          { "animate-in": open }
+        )}
+        onKeyDown={handleKeyDown}
+        onBlur={(e) => {
+          if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+            handleClose();
+          }
+        }}
+      >
+        <div className="flex h-12 w-full items-center justify-center rounded-lg border bg-background p-2 _text-sidebar-foreground/70 shadow-lg relative">
+          <input
+            {...getInputProps()}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              startTransition(() => {
+                setDeferredSearch(e.target.value);
+              });
+            }}
+            id="spotlight-search"
+            type="text"
+            autoComplete="off"
+            placeholder={state === "prompt" || state === "select" ? promptPlaceholder : "Spotlight Search..."}
+            className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
+          />
+          {/* {isPending && <div className="absolute right-3 text-xs text-muted-foreground">Searching...</div>} */}
+        </div>
+        {(state === "spotlight" || state === "select") && Boolean(sortedList.length) && (
+          <ul
+            {...getMenuProps()}
+            aria-labelledby="spotlight-search"
+            className="mt-2 block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
+          >
+            {sortedList.map((item, index) => {
+              if (state === "spotlight" && item.href.startsWith(commandPrefix)) {
+                return (
+                  <SpotlightSearchItemCmd
+                    key={item.href}
+                    {...getItemProps(index)}
+                    cmd={item.href}
+                    title={item.element}
+                    isActive={index === activeIndex}
+                    onSelect={() => handleCommandSelect(item.href.replace(commandPrefix, "").trim())}
+                  />
+                );
+              }
               return (
-                <SpotlightSearchItemCmd
+                <SpotlightSearchItemLink
                   key={item.href}
                   {...getItemProps(index)}
-                  cmd={item.href}
-                  title={item.element}
                   isActive={index === activeIndex}
-                  onSelect={() => handleCommandSelect(item.href.replace(commandPrefix, "").trim())}
+                  onSelect={(e: any) => {
+                    return state === "select"
+                      ? (() => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          execContext.current[currentPrompt!.name] = item.href;
+                          setSearch("");
+                          setState("spotlight");
+                          setCurrentPrompt(null);
+                          void runNextStep();
+                        })()
+                      : handleClose();
+                  }}
+                  href={state === "select" ? (item.href as AbsPath) : joinPath(basePath, item.href)}
+                  title={item.element}
                 />
               );
-            }
-            return (
-              <SpotlightSearchItemLink
-                key={item.href}
-                {...getItemProps(index)}
-                isActive={index === activeIndex}
-                onSelect={(e: any) => {
-                  return state === "select"
-                    ? (() => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        execContext.current[currentPrompt!.name] = item.href;
-                        setSearch("");
-                        setState("spotlight");
-                        setCurrentPrompt(null);
-                        void runNextStep();
-                      })()
-                    : handleClose();
-                }}
-                href={state === "select" ? (item.href as AbsPath) : joinPath(basePath, item.href)}
-                title={item.element}
-              />
-            );
-          })}
-        </ul>
-      )}
-    </div>
+            })}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }
 
