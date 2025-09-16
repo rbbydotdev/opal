@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef } from "react";
 import { twMerge } from "tailwind-merge";
+import { useConfirm } from "../components/Confirm";
 
 type ButtonVariant = "lg" | "sm";
 
@@ -165,6 +166,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { setStoredValue: setAutoHide, storedValue: autoHide } = useAutoHide();
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
   const router = useRouter();
+  const { open } = useConfirm();
 
   return (
     <ContextMenu>
@@ -269,11 +271,16 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         {/* Delete All Workspaces */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2 text-destructive"
-          onClick={async () =>
-            Promise.all([...(await WorkspaceDAO.all().then((wss) => wss.map((ws) => ws.toModel().destroy())))]).then(
-              () => {
-                void router.navigate({ to: "/newWorkspace" });
-              }
+          onClick={() =>
+            open(
+              async () =>
+                Promise.all([
+                  ...(await WorkspaceDAO.all().then((wss) => wss.map((ws) => ws.toModel().destroy()))),
+                ]).then(() => {
+                  void router.navigate({ to: "/newWorkspace" });
+                }),
+              "Delete all workspaces",
+              "This will delete all workspaces and cannot be undone. Are you sure you want to continue?"
             )
           }
         >
