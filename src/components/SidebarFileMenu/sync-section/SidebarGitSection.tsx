@@ -199,7 +199,7 @@ function CommitSection({
   return (
     <>
       <Button
-        className="w-full disabled:cursor-pointer h-8"
+        className="w-full disabled:cursor-pointer h-8 grid grid-cols-[auto_1fr] items-center justify-center"
         onClick={handleButtonClick}
         size="sm"
         variant="outline"
@@ -232,6 +232,24 @@ const ActionButtonLabels = {
   detatched: "Detatched",
 };
 
+// Reusable grid-based button component for consistent icon + text layout
+const GridButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button> & {
+    icon: React.ComponentType<{ className?: string }>;
+    iconClassName?: string;
+    children: React.ReactNode;
+  }
+>(({ icon: Icon, iconClassName, children, className, ...props }, ref) => {
+  return (
+    <Button ref={ref} className={cn("grid grid-cols-[auto_1fr] items-center justify-center", className)} {...props}>
+      <Icon className={cn("justify-self-center", iconClassName)} />
+      <span>{children}</span>
+    </Button>
+  );
+});
+GridButton.displayName = "GridButton";
+
 const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) => {
   if (!commitState) return null;
   const Icon = ActionButtonIcons[commitState];
@@ -239,8 +257,8 @@ const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) =>
   if (!Icon || !labelStr) return null;
   return (
     <>
-      <Icon className="mr-1 !w-4 !h-4" />
-      <span className="flex-1 min-w-0 truncate flex justify-center items-center">{labelStr}</span>
+      <Icon className="_justify-self-center" />
+      <span className="truncate">{labelStr}</span>
     </>
   );
 };
@@ -248,20 +266,17 @@ const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) =>
 function SyncPullPushButtons() {
   return (
     <div className="grid gap-2 grid-cols-1">
-      <Button className="grid grid-cols-[auto_1fr] items-center justify-center" size="sm" variant="outline">
-        <RefreshCw className="justify-self-center" />
-        <span>Sync Now</span>
-      </Button>
+      <GridButton icon={RefreshCw} size="sm" variant="outline">
+        Sync Now
+      </GridButton>
 
-      <Button className="grid grid-cols-[auto_1fr] items-center justify-center" size="sm" variant="outline">
-        <Download className="justify-self-center" />
-        <span>Pull</span>
-      </Button>
+      <GridButton icon={Download} size="sm" variant="outline">
+        Pull
+      </GridButton>
 
-      <Button className="grid grid-cols-[auto_1fr] items-center justify-center" size="sm" variant="outline">
-        <Upload className="justify-self-center" />
-        <span>Push</span>
-      </Button>
+      <GridButton icon={Upload} size="sm" variant="outline">
+        Push
+      </GridButton>
     </div>
   );
 }
@@ -577,38 +592,34 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
               )}
               {hasRemotes && (
                 <div className="flex justify-center items-center w-full flex-col gap-4">
-                  <Button
+                  <GridButton
                     className="w-full disabled:cursor-pointer h-8"
                     onClick={handleFetchRemote}
                     size="sm"
                     disabled={fetchPending}
                     variant="outline"
+                    icon={fetchPending ? Loader : Import}
+                    iconClassName={fetchPending ? "animate-spin" : "!h-4 !w-4 !stroke-1"}
                   >
-                    {fetchPending ? (
-                      <Loader className="mr-1 animate-spin" />
-                    ) : (
-                      <Import className="mr-1 !h-4 !w-4 !stroke-1" />
-                    )}
                     <TooltipToast cmdRef={fetchRef} sideOffset={10} />
                     Fetch Remote
-                  </Button>
+                  </GridButton>
                 </div>
               )}
               {info.fullInitialized && info.currentRef && <SyncPullPushButtons />}
 
               {((commitState === "bare-init" && !hasRemotes) || commitState === "init") && (
-                <Button
+                <GridButton
                   className="w-full disabled:cursor-pointer h-8"
                   onClick={handleRemoteInit}
                   size="sm"
                   variant="outline"
+                  icon={Import}
+                  iconClassName="!w-4 !h-4"
                 >
-                  <Import className="mr-1 !w-4 !h-4" />
-                  <span className="flex-1 min-w-0 truncate flex justify-center items-center">
-                    <TooltipToast cmdRef={initFromRemoteRef} sideOffset={10} />
-                    {commitState === "bare-init" ? "Add Remote" : "Init From Remote"}
-                  </span>
-                </Button>
+                  <TooltipToast cmdRef={initFromRemoteRef} sideOffset={10} />
+                  {commitState === "bare-init" ? "Add Remote" : "Init From Remote"}
+                </GridButton>
               )}
               {/* <Button onClick={() => openConfirmPane("foobar")}>Foo Bar</Button> */}
             </div>
