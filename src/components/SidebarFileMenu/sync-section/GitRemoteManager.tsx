@@ -13,7 +13,7 @@ import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRemote, GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";
-import { Download, Ellipsis, Pencil, Plus, RefreshCw, SatelliteDishIcon, Trash2, Upload } from "lucide-react";
+import { Delete, Download, Ellipsis, Pencil, Plus, RefreshCw, SatelliteDishIcon, Upload } from "lucide-react";
 import { useState } from "react";
 
 export function GitRemoteManager({
@@ -78,7 +78,7 @@ export function GitRemoteManager({
           </DropdownMenuItem>
           {Boolean(remotes.length) && (
             <DropdownMenuItem onClick={() => setSelectMode("delete")}>
-              <Trash2 /> Delete Remote
+              <Delete className="text-destructive" /> Delete Remote
             </DropdownMenuItem>
           )}
 

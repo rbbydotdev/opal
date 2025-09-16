@@ -11,6 +11,7 @@ import { GitRef, GitRepo, isBranchRef, isCommitRef, RepoInfoType } from "@/featu
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  Delete,
   Ellipsis,
   GitBranchIcon,
   GitMergeIcon,
@@ -18,7 +19,6 @@ import {
   LockKeyhole,
   Pencil,
   Plus,
-  Trash2,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -135,7 +135,7 @@ export function GitBranchManager({
           )}
           {refs.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
             <DropdownMenuItem onClick={() => setSelectMode("delete")}>
-              <Trash2 /> Delete Branch
+              <Delete className="text-destructive" /> Delete Branch
             </DropdownMenuItem>
           )}
           {currentGitRef && isBranchRef(currentGitRef) ? (
