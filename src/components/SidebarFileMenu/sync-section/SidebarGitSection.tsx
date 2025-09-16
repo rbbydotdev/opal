@@ -197,17 +197,17 @@ function CommitSection({
   }
 
   return (
-    <>
-      <Button
-        className="w-full disabled:cursor-pointer h-8 grid grid-cols-[auto_1fr] items-center justify-center"
-        onClick={handleButtonClick}
-        size="sm"
-        variant="outline"
-        disabled={commitState === "pending" || commitState === "commit-disabled" || commitState === "detatched"}
-      >
-        <GitActionButtonLabel commitState={commitState} /*exists={exists}*/ />
-      </Button>
-    </>
+    <GridButton
+      className="w-full disabled:cursor-pointer h-8"
+      onClick={handleButtonClick}
+      size="sm"
+      variant="outline"
+      disabled={commitState === "pending" || commitState === "commit-disabled" || commitState === "detatched"}
+      icon={ActionButtonIcons[commitState]}
+      iconClassName={commitState === "pending" ? "animate-spin" : ""}
+    >
+      {ActionButtonLabels[commitState]}
+    </GridButton>
   );
 }
 
@@ -233,33 +233,22 @@ const ActionButtonLabels = {
 };
 
 // Reusable grid-based button component for consistent icon + text layout
-const GridButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<typeof Button> & {
-    icon: React.ComponentType<{ className?: string }>;
-    iconClassName?: string;
-    children: React.ReactNode;
-  }
->(({ icon: Icon, iconClassName, children, className, ...props }, ref) => {
+const GridButton = ({
+  icon: Icon,
+  iconClassName,
+  children,
+  className,
+  ...props
+}: React.ComponentProps<typeof Button> & {
+  icon: React.ComponentType<{ className?: string }>;
+  iconClassName?: string;
+  children: React.ReactNode;
+}) => {
   return (
-    <Button ref={ref} className={cn("grid grid-cols-[auto_1fr] items-center justify-center", className)} {...props}>
+    <Button className={cn("grid grid-cols-[auto_1fr] items-center justify-center", className)} {...props}>
       <Icon className={cn("justify-self-center", iconClassName)} />
       <span>{children}</span>
     </Button>
-  );
-});
-GridButton.displayName = "GridButton";
-
-const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) => {
-  if (!commitState) return null;
-  const Icon = ActionButtonIcons[commitState];
-  const labelStr = ActionButtonLabels[commitState];
-  if (!Icon || !labelStr) return null;
-  return (
-    <>
-      <Icon className="_justify-self-center" />
-      <span className="truncate">{labelStr}</span>
-    </>
   );
 };
 

@@ -27,7 +27,7 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { IS_MAC } from "@/lib/isMac";
 import { cn } from "@/lib/utils";
-import { Check, Delete, Ellipsis, MoreHorizontal, Pencil, Plus, Sparkle, SquareDashed, Trash2 } from "lucide-react";
+import { Check, Delete, Ellipsis, MoreHorizontal, Pencil, Plus, Sparkle, SquareDashed } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 function ConnectionManager() {
@@ -208,7 +208,7 @@ function ConnectionManager() {
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => deleteRemoteAuth(connection.guid)}>
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <Delete className="w-4 h-4 mr-2 text-destructive" />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
