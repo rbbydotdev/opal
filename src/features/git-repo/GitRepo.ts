@@ -239,6 +239,12 @@ export class GitRepo {
   }
 
   private async normalizeRef({ ref }: { ref: string }) {
+    if (
+      ["HEAD", "ORIG_HEAD", "PREV_BRANCH", "FETCH_HEAD", "MERGE_HEAD", "CHERRY_PICK_HEAD", "REBASE_HEAD"].includes(ref)
+    ) {
+      return ref; // special refs that git understands
+    }
+
     if (ref.startsWith("refs/")) {
       return ref;
     }
