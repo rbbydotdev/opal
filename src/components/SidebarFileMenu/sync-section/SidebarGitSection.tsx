@@ -247,26 +247,22 @@ const GitActionButtonLabel = ({ commitState }: { commitState?: CommitState }) =>
 
 function SyncPullPushButtons() {
   return (
-    <>
-      <div>
-        <Button className="w-full flex" size="sm" variant="outline">
-          <RefreshCw className="mr-1" onClick={() => {}} />
-          Sync Now
-        </Button>
-      </div>
-      <div>
-        <Button className="w-full" size="sm" variant="outline">
-          <Download className="mr-1" />
-          Pull
-        </Button>
-      </div>
-      <div>
-        <Button className="w-full" size="sm" variant="outline">
-          <Upload className="mr-1" />
-          Push
-        </Button>
-      </div>
-    </>
+    <div className="grid gap-2 grid-cols-1">
+      <Button className="grid grid-cols-[auto_1fr] items-center justify-center" size="sm" variant="outline">
+        <RefreshCw className="justify-self-center" />
+        <span>Sync Now</span>
+      </Button>
+
+      <Button className="grid grid-cols-[auto_1fr] items-center justify-center" size="sm" variant="outline">
+        <Download className="justify-self-center" />
+        <span>Pull</span>
+      </Button>
+
+      <Button className="grid grid-cols-[auto_1fr] items-center justify-center" size="sm" variant="outline">
+        <Upload className="justify-self-center" />
+        <span>Push</span>
+      </Button>
+    </div>
   );
 }
 

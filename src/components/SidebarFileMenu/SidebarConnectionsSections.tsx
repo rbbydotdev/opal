@@ -10,6 +10,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -23,6 +25,7 @@ import {
 import { RemoteAuthJType, RemoteAuthRecord } from "@/Db/RemoteAuth";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { IS_MAC } from "@/lib/isMac";
 import { cn } from "@/lib/utils";
 import { Check, Delete, Ellipsis, MoreHorizontal, Pencil, Plus, Sparkle, SquareDashed, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -119,6 +122,10 @@ function ConnectionManager() {
               <Delete className="w-4 h-4 text-destructive" />
               <span>Delete Selected</span>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="py-2 text-2xs w-full text-muted-foreground font-thin">
+              {IS_MAC ? "⌘ cmd" : "^ ctrl"} + click connections / multi-select
+            </DropdownMenuLabel>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -161,7 +168,7 @@ function ConnectionManager() {
           )}
           {remoteAuths.map((connection) => (
             <SidebarMenuItem key={connection.guid}>
-              <div className="group flex items-center pr-1 my-1">
+              <div className="group flex items-center pr-1 py-0">
                 <SidebarMenuButton
                   className="flex-1 min-w-0 pl-4"
                   onClick={(e) => handleSelect(sectionRef, e, connection)}
