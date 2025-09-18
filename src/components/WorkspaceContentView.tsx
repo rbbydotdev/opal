@@ -40,7 +40,6 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
 
   const markdown = String(initialContents || "");
   const { data, content } = useMemo(() => matter(markdown), [markdown]);
-  console.log(content);
   return (
     <ScrollSyncProvider scrollEl={mdxEditorElement as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
       <div className="flex flex-col h-full relative">

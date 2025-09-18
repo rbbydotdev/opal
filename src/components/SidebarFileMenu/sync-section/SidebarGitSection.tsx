@@ -650,7 +650,7 @@ function GitManager({
             open(
               resetRepo,
               "Reset Repo",
-              "Are you sure you want to reset the repository? This action cannot be undone."
+              "Are you sure you want to reset the repository? This will clear ALL git files and history. This action cannot be undone."
             )
           }
         >
