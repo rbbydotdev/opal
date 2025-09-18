@@ -20,14 +20,14 @@ import { DiskDAO } from "@/Db/DiskDAO";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { FAVORITE_THEMES } from "@/features/theme/theme-lib";
+import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
-import { FAVORITE_THEMES } from "@/theme/theme-lib";
-import { ThemePreview } from "@/theme/ThemePreview";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   BombIcon,

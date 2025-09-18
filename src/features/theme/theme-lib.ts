@@ -211,11 +211,6 @@ export function setLightOrDarkClass(mode: "light" | "dark", root: HTMLElement = 
   }
 }
 
-// export function getMainThemes(): ThemeRegistryItem[] {
-//   const mainThemes = new Set("default");
-//   // return registry.items.filter((item) => mainThemes.has(item.name)).map
-// }
-
 export function applyTheme(options: ApplyThemeOptions): void {
   const { theme: themeName } = options;
 
@@ -296,20 +291,10 @@ export function applyTheme(options: ApplyThemeOptions): void {
   document.head.appendChild(style);
 }
 
-/**
- * Get all available theme names from registry
- * @param registry - Your imported registry.json
- * @returns Array of theme names
- */
 export function getThemeNames(registry: ThemeRegistry): string[] {
   return registry.items.map((item) => item.name);
 }
 
-/**
- * Remove all theme styles from root element
- * @param registry - Your imported registry.json
- * @param rootElement - Optional root element (defaults to document.documentElement)
- */
 export function removeTheme(registry: ThemeRegistry, rootElement: HTMLElement = document.documentElement): void {
   rootElement.classList.remove("dark", "light");
 

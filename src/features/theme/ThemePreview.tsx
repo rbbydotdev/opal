@@ -1,4 +1,4 @@
-import { getThemePreviewPalette } from "@/theme/theme-lib";
+import { getThemePreviewPalette } from "@/features/theme/theme-lib";
 
 export const ThemePreview = ({
   themeName,
