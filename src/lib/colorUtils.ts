@@ -1,12 +1,3 @@
-/**
- * Color derivation utilities for theme integration
- * Provides functions to derive colors from base theme colors
- */
-
-/**
- * Converts OKLCH string to usable CSS value
- * Example: "oklch(0.5 0.1 180)" -> "0.5 0.1 180"
- */
 export function extractOklchValues(oklchString: string): string {
   return oklchString.replace(/oklch\((.*?)\)/, "$1");
 }
@@ -70,6 +61,18 @@ export function createDerivedColorVars(rootElement: HTMLElement) {
   rootElement.style.setProperty("--border-subtle", oklchWithAlpha(border, 0.3));
   rootElement.style.setProperty("--foreground-muted", oklchWithAlpha(foreground, 0.7));
 }
+
+export const rgbToHex = (r: number, g: number, b: number): string => {
+  return (
+    "#" +
+    [r, g, b]
+      .map((x) => {
+        const hex = Math.round(Math.max(0, Math.min(255, x))).toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+      })
+      .join("")
+  );
+};
 
 export function hexToRgb(hex: string): [number, number, number] | null {
   const clean = hex.replace("#", "");
@@ -148,6 +151,12 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
 }
 
+function oklchStringToRgb(oklchStr: string): [number, number, number] | null {
+  const match = oklchStr.match(/oklch\(([^)]+)\)/);
+  if (!match) return null;
+  const [l, c, h] = match[1]!.split(" ").map((v) => parseFloat(v));
+  return oklchToRgb(l!, c!, h!);
+}
 // ⚠️ Simplified OKLCH → sRGB conversion (approximate)
 function oklchToRgb(l: number, c: number, h: number): [number, number, number] {
   // For simplicity, treat OKLCH like LCH in Lab space
@@ -197,69 +206,46 @@ export function invertColor(color: string): string {
   );
 }
 
-export type ColorFormat = "hex" | "rgb" | "hsl" | "oklch" | "lch" | "hwb";
+export const getContrastRatio = (color1: string, color2: string): number => {
+  let rgb1: [number, number, number] | null = null;
+  let rgb2: [number, number, number] | null = null;
 
-// import {
-// } from "culori";
-// Conversion functions
-// Function 	Conversion
-// convertA98ToXyz65(color) → color 	a98 → xyz65
-// convertCubehelixToRgb(color) → color 	cubehelix → rgb
-// convertDlchToLab65(color) → color 	dlch → lab65
-// convertHsiToRgb(color) → color 	hsi → rgb
-// convertHslToRgb(color) → color 	hsl → rgb
-// convertHsvToRgb(color) → color 	hsv → rgb
-// convertHwbToRgb(color) → color 	hwb → rgb
-// convertJabToJch(color) → color 	jab → jch
-// convertJabToRgb(color) → color 	jab → rgb
-// convertJabToXyz65(color) → color 	jab → xyz65
-// convertJchToJab(color) → color 	jch → jab
-// convertLab65ToDlch(color) → color 	lab65 → dlch
-// convertLab65ToRgb(color) → color 	lab65 → rgb
-// convertLab65ToXyz65(color) → color 	lab65 → xyz65
-// convertLabToLch(color) → color 	lab → lch
-// convertLabToRgb(color) → color 	lab → rgb
-// convertLabToXyz50(color) → color 	lab → xyz50
-// convertLchToLab(color) → color 	lch → lab
-// convertLchuvToLuv(color) → color 	lchuv → luv
-// convertLrgbToOklab(color) → color 	lrgb → oklab
-// convertLrgbToRgb(color) → color 	lrgb → rgb
-// convertLuvToLchuv(color) → color 	luv → lchuv
-// convertLuvToXyz50(color) → color 	luv → xyz50
-// convertOkhslToOklab(color) → color 	okhsl → oklab
-// convertOkhsvToOklab(color) → color 	okhsv → oklab
-// convertOklabToLrgb(color) → color 	oklab → lrgb
-// convertOklabToOkhsl(color) → color 	oklab → okhsl
-// convertOklabToOkhsv(color) → color 	oklab → okhsv
-// convertOklabToRgb(color) → color 	oklab → rgb
-// convertP3ToXyz65(color) → color 	p3 → xyz65
-// convertProphotoToXyz50(color) → color 	prophoto → xyz50
-// convertRec2020ToXyz65(color) → color 	rec2020 → xyz65
-// convertRgbToCubehelix(color) → color 	rgb → cubehelix
-// convertRgbToHsi(color) → color 	rgb → hsi
-// convertRgbToHsl(color) → color 	rgb → hsl
-// convertRgbToHsv(color) → color 	rgb → hsv
-// convertRgbToHwb(color) → color 	rgb → hwb
-// convertRgbToJab(color) → color 	rgb → jab
-// convertRgbToLab65(color) → color 	rgb → lab65
-// convertRgbToLab(color) → color 	rgb → lab
-// convertRgbToLrgb(color) → color 	rgb → lrgb
-// convertRgbToOklab(color) → color 	rgb → oklab
-// convertRgbToXyb(color) → color 	rgb → xyb
-// convertRgbToXyz50(color) → color 	rgb → xyz50
-// convertRgbToXyz65(color) → color 	rgb → xyz65
-// convertRgbToYiq(color) → color 	rgb → yiq
-// convertXybToRgb(color) → color 	xyb → rgb
-// convertXyz50ToLab(color) → color 	xyz50 → lab
-// convertXyz50ToLuv(color) → color 	xyz50 → luv
-// convertXyz50ToProphoto(color) → color 	xyz50 → prophoto
-// convertXyz50ToRgb(color) → color 	xyz50 → rgb
-// convertXyz50ToXyz65(color) → color 	xyz50 → xyz65
-// convertXyz65ToA98(color) → color 	xyz65 → a98
-// convertXyz65ToJab(color) → color 	xyz65 → jab
-// convertXyz65ToLab65(color) → color 	xyz65 → lab65
-// convertXyz65ToP3(color) → color 	xyz65 → p3
-// convertXyz65ToRec2020(color) → color 	xyz65 → rec2020
-// convertXyz65ToRgb(color) → color 	xyz65 → rgb
-// convertXyz65ToXyz50(color) → color 	xyz65 → xyz50
-// convertYiqToRgb(color) → color 	yiq → rgb
+  // Try hex first, then oklch
+  rgb1 = hexToRgb(color1) || oklchStringToRgb(color1);
+  rgb2 = hexToRgb(color2) || oklchStringToRgb(color2);
+
+  if (!rgb1 || !rgb2) return 1;
+
+  const lum1 = getLuminance(...rgb1);
+  const lum2 = getLuminance(...rgb2);
+
+  const lighter = Math.max(lum1, lum2);
+  const darker = Math.min(lum1, lum2);
+
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
+// Get computed CSS variable color
+export const getCSSVariableColor = (variable: string): string => {
+  if (typeof window === "undefined") return "#000000";
+  const computed = getComputedStyle(document.documentElement).getPropertyValue(
+    variable.replace("var(", "").replace(")", "")
+  );
+  return computed.trim() || "#000000";
+};
+
+// Contrast ratio calculation utilities
+// export const hexToRgb = (hex: string): [number, number, number] | null => {
+//   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+//   return result ? [parseInt(result[1]!, 16), parseInt(result[2]!, 16), parseInt(result[3]!, 16)] : null;
+// };
+
+export const getLuminance = (r: number, g: number, b: number): number => {
+  const [rs, gs, bs] = [r, g, b].map((c) => {
+    c = c / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs! + 0.7152 * gs! + 0.0722 * bs!;
+};
+
+export type ColorFormat = "hex" | "rgb" | "hsl" | "oklch" | "lch" | "hwb";

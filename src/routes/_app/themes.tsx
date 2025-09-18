@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
 import { useTheme } from "@/hooks/useTheme";
+import { getContrastRatio } from "@/lib/colorUtils";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle, FileText, Home, Search, Settings, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -20,51 +21,6 @@ import { useEffect, useState } from "react";
 export const Route = createFileRoute("/_app/themes")({
   component: ThemesPage,
 });
-
-// Contrast ratio calculation utilities
-const hexToRgb = (hex: string): [number, number, number] | null => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
-};
-
-const oklchToRgb = (oklchStr: string): [number, number, number] | null => {
-  // Simple approximation - in real implementation you'd use proper color conversion
-  const match = oklchStr.match(/oklch\(([^)]+)\)/);
-  if (!match) return null;
-  const [l, c, h] = match[1].split(" ").map(parseFloat);
-  // Rough approximation - convert to RGB
-  const r = Math.round(l * 255);
-  const g = Math.round(l * 255);
-  const b = Math.round(l * 255);
-  return [r, g, b];
-};
-
-const getLuminance = (r: number, g: number, b: number): number => {
-  const [rs, gs, bs] = [r, g, b].map((c) => {
-    c = c / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-};
-
-const getContrastRatio = (color1: string, color2: string): number => {
-  let rgb1: [number, number, number] | null = null;
-  let rgb2: [number, number, number] | null = null;
-
-  // Try hex first, then oklch
-  rgb1 = hexToRgb(color1) || oklchToRgb(color1);
-  rgb2 = hexToRgb(color2) || oklchToRgb(color2);
-
-  if (!rgb1 || !rgb2) return 1;
-
-  const lum1 = getLuminance(...rgb1);
-  const lum2 = getLuminance(...rgb2);
-
-  const lighter = Math.max(lum1, lum2);
-  const darker = Math.min(lum1, lum2);
-
-  return (lighter + 0.05) / (darker + 0.05);
-};
 
 interface ContrastBadgeProps {
   ratio: number;
@@ -491,7 +447,7 @@ function ThemeTestComponent() {
 }
 
 function ThemesPage() {
-  const { themeName, mode, setTheme, toggleMode, availableThemes } = useTheme();
+  const { themeName, mode, setTheme, availableThemes } = useTheme();
 
   // Apply the modern-minimal theme on mount for testing
   useEffect(() => {
@@ -506,9 +462,6 @@ function ThemesPage() {
           <div className="text-card-foreground">
             Current: <strong>{themeName}</strong> ({mode})
           </div>
-          <Button onClick={toggleMode} variant="outline">
-            Toggle {mode === "light" ? "Dark" : "Light"}
-          </Button>
           <select
             value={themeName}
             onChange={(e) => setTheme(e.target.value)}
