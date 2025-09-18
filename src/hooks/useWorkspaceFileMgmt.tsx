@@ -33,20 +33,29 @@ function defaultFileContent(path: AbsPath) {
   return "";
 }
 
-export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
+export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = true } = {}) {
   const { setFileTreeCtx, selectedRange, resetEditing, focused } = useFileTreeMenuCtx();
-  const tossError = useErrorToss();
+  const toss = useErrorToss();
   const navigate = useNavigate();
 
   const newFile = useCallback(
     async (path: AbsPath, content = "", options: { redirect?: boolean } = {}) => {
-      const result = await currentWorkspace.newFile(dirname(path), basename(path), content);
-      if (options.redirect) {
-        void navigate({ to: currentWorkspace.resolveFileUrl(result) });
+      try {
+        const result = await currentWorkspace.newFile(dirname(path), basename(path), content);
+        if (options.redirect) {
+          void navigate({ to: currentWorkspace.resolveFileUrl(result) });
+        }
+        return result;
+      } catch (e) {
+        console.error(e);
+        if (tossError) {
+          toss(e as Error);
+        } else {
+          throw e;
+        }
       }
-      return result;
     },
-    [currentWorkspace, navigate]
+    [currentWorkspace, navigate, toss, tossError]
   );
   const newDir = useCallback(
     async (path: AbsPath) => {
@@ -65,7 +74,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         if (e instanceof NotFoundError) {
           console.error(e);
         } else {
-          throw e;
+          if (tossError) {
+            toss(e as Error);
+          } else {
+            throw e;
+          }
         }
       }
       setFileTreeCtx({
@@ -77,7 +90,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         anchorIndex: -1,
       });
     },
-    [currentWorkspace, setFileTreeCtx]
+    [currentWorkspace, setFileTreeCtx, toss, tossError]
   );
 
   const trashFiles = useCallback(
@@ -94,7 +107,11 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         if (e instanceof NotFoundError) {
           console.error(e);
         } else {
-          throw e;
+          if (tossError) {
+            toss(e as Error);
+          } else {
+            throw e;
+          }
         }
       }
       setFileTreeCtx({
@@ -107,20 +124,36 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
         anchorIndex: -1,
       });
     },
-    [currentWorkspace, removeFiles, setFileTreeCtx]
+    [currentWorkspace, removeFiles, setFileTreeCtx, toss, tossError]
   );
 
   const removeFile = useCallback(
-    (path: AbsPath) => {
-      return removeFiles([path]);
+    async (path: AbsPath) => {
+      try {
+        return await removeFiles([path]);
+      } catch (e) {
+        if (tossError) {
+          toss(e as Error);
+        } else {
+          throw e;
+        }
+      }
     },
-    [removeFiles]
+    [removeFiles, toss, tossError]
   );
   const trashFile = useCallback(
     async (path: AbsPath) => {
-      return trashFiles([path]);
+      try {
+        return await trashFiles([path]);
+      } catch (e) {
+        if (tossError) {
+          toss(e as Error);
+        } else {
+          throw e;
+        }
+      }
     },
-    [trashFiles]
+    [toss, tossError, trashFiles]
   );
 
   const removeSelectedFiles = useCallback(async () => {
@@ -129,8 +162,16 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
     if (!range.length && focused) {
       range.push(focused);
     }
-    await removeFiles(range);
-  }, [focused, removeFiles, selectedRange]);
+    try {
+      await removeFiles(range);
+    } catch (e) {
+      if (tossError) {
+        toss(e as Error);
+      } else {
+        throw e;
+      }
+    }
+  }, [focused, removeFiles, selectedRange, toss, tossError]);
 
   const untrashFiles = useCallback(
     async (...filePaths: (AbsPath | TreeNode | AbsPath[] | TreeNode[])[]) => {
@@ -143,12 +184,20 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
 
         anchorIndex: -1,
       });
-      return currentWorkspace.untrashMultiple(flatUniqNodeArgs(filePaths));
+      try {
+        return await currentWorkspace.untrashMultiple(flatUniqNodeArgs(filePaths));
+      } catch (e) {
+        if (tossError) {
+          toss(e as Error);
+        } else {
+          throw e;
+        }
+      }
     },
-    [currentWorkspace, setFileTreeCtx]
+    [currentWorkspace, setFileTreeCtx, toss, tossError]
   );
 
-  const trashSelectedFiles = useCallback(() => {
+  const trashSelectedFiles = useCallback(async () => {
     const range = ([] as AbsPath[]).concat(selectedRange.map(absPath), focused ? [focused] : []);
     if (!range.length && focused) {
       range.push(focused);
@@ -163,16 +212,32 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       anchorIndex: -1,
     });
     const alreadyTrashedNowDelete = range.filter((path) => isAncestor({ parent: SpecialDirs.Trash, child: path }));
-    if (alreadyTrashedNowDelete.length) {
-      return removeFiles(alreadyTrashedNowDelete);
-    } else {
-      return currentWorkspace.trashMultiple(reduceLineage(range));
+    try {
+      if (alreadyTrashedNowDelete.length) {
+        return await removeFiles(alreadyTrashedNowDelete);
+      } else {
+        return await currentWorkspace.trashMultiple(reduceLineage(range));
+      }
+    } catch (e) {
+      if (tossError) {
+        toss(e as Error);
+      } else {
+        throw e;
+      }
     }
-  }, [currentWorkspace, focused, removeFiles, selectedRange, setFileTreeCtx]);
+  }, [currentWorkspace, focused, removeFiles, selectedRange, setFileTreeCtx, toss, tossError]);
 
   const removeFocusedFile = useCallback(async () => {
-    if (focused) await removeFiles([focused]);
-  }, [focused, removeFiles]);
+    try {
+      if (focused) await removeFiles([focused]);
+    } catch (e) {
+      if (tossError) {
+        toss(e as Error);
+      } else {
+        throw e;
+      }
+    }
+  }, [focused, removeFiles, toss, tossError]);
 
   const duplicateDirFile = useCallback(
     (type: TreeNode["type"], from: AbsPath | TreeNode) => {
@@ -229,21 +294,29 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
 
   const renameDirOrFileMultiple = useCallback(
     async (nodes: [oldNode: TreeNode, newFullPath: TreeNode | AbsPath][]) => {
-      const result = await currentWorkspace.renameMultiple(nodes);
-      if (result.length === 0) return [];
+      try {
+        const result = await currentWorkspace.renameMultiple(nodes);
+        if (result.length === 0) return [];
 
-      setFileTreeCtx({
-        editing: null,
-        editType: null,
-        focused: null,
-        virtual: null,
-        selectedRange: [],
+        setFileTreeCtx({
+          editing: null,
+          editType: null,
+          focused: null,
+          virtual: null,
+          selectedRange: [],
 
-        anchorIndex: -1,
-      });
-      return result;
+          anchorIndex: -1,
+        });
+        return result;
+      } catch (e) {
+        if (tossError) {
+          toss(e as Error);
+        } else {
+          throw e;
+        }
+      }
     },
-    [currentWorkspace, setFileTreeCtx]
+    [currentWorkspace, setFileTreeCtx, toss, tossError]
   );
 
   const renameDirOrFile = useCallback(
@@ -254,33 +327,52 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace) {
       // const finalPath = isRelPath(newPath.toString())
       //   ? joinPath(absPath(origNode.parent ?? RootNode), String(newPath))
       //   : newPath;
-      const result = await renameDirOrFileMultiple([[origNode, newPath]] as [TreeNode, TreeNode | AbsPath][]);
-      if (result.length <= 0) return null;
-      return result[0]!.newPath;
+      try {
+        const result = await renameDirOrFileMultiple([[origNode, newPath]] as [TreeNode, TreeNode | AbsPath][]);
+        if (!result || result.length <= 0) return null;
+        return result[0]!.newPath;
+      } catch (e) {
+        if (tossError) {
+          toss(e as Error);
+        } else {
+          throw e;
+        }
+      }
     },
-    [renameDirOrFileMultiple]
+    [renameDirOrFileMultiple, toss, tossError]
   );
 
   const commitChange = useCallback(
     async (origNode: TreeNode, fileName: RelPath, type: "rename" | "new" | "duplicate"): Promise<AbsPath | null> => {
-      const wantPath = joinPath(dirname(origNode.path), relPath(fileName));
-      if (type === "new") {
-        if (origNode.isTreeFile()) {
-          return newFile(wantPath, defaultFileContent(wantPath), {
-            redirect: true,
-          });
+      try {
+        const wantPath = joinPath(dirname(origNode.path), relPath(fileName));
+        if (type === "new") {
+          if (origNode.isTreeFile()) {
+            return (
+              (await newFile(wantPath, defaultFileContent(wantPath), {
+                redirect: true,
+              })) ?? null
+            );
+          } else {
+            return newDir(wantPath);
+          }
+        } else if (type === "duplicate") {
+          return currentWorkspace.copyFile(origNode.source!, wantPath);
+        } else if (type === "rename") {
+          return (await renameDirOrFile(origNode, wantPath)) ?? null;
         } else {
-          return newDir(wantPath);
+          throw new Error("invalid commit type");
         }
-      } else if (type === "duplicate") {
-        return currentWorkspace.copyFile(origNode.source!, wantPath);
-      } else if (type === "rename") {
-        return renameDirOrFile(origNode, wantPath);
-      } else {
-        throw new Error("invalid commit type");
+      } catch (e) {
+        if (tossError) {
+          toss(e as Error);
+          return null;
+        } else {
+          throw e;
+        }
       }
     },
-    [currentWorkspace, newDir, newFile, renameDirOrFile]
+    [currentWorkspace, newDir, newFile, renameDirOrFile, toss, tossError]
   );
   return {
     renameDirOrFileMultiple,
