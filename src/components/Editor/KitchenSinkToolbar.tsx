@@ -11,7 +11,6 @@ import {
   EditorInFocus,
   InsertAdmonition,
   InsertCodeBlock,
-  InsertFrontmatter,
   InsertImage,
   InsertSandpack,
   InsertTable,
@@ -95,8 +94,7 @@ export const KitchenSinkToolbar: React.FC = () => {
                   ]}
                 />
 
-                <Separator />
-                <InsertFrontmatter />
+                {/* < /> */}
               </>
             ),
           },

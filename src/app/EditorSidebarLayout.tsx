@@ -273,7 +273,7 @@ export const EditorSidebarLayout = ({
           <aside
             ref={rightPaneRef}
             style={{ width: `${rightPaneCurrentWidth}px` }}
-            className={`relative flex-shrink-0 overflow-y-auto ${rightPaneIsResizing ? "pointer-events-none" : ""}`}
+            className={`relative flex-shrink-0 _overflow-y-auto ${rightPaneIsResizing ? "pointer-events-none" : ""}`}
           >
             {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0
               ? rightPane || <div id={PREVIEW_PANE_ID} className="h-full w-full border-l border-border"></div>

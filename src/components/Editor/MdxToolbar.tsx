@@ -2,8 +2,6 @@ import {
   BlockTypeSelect,
   BoldItalicUnderlineToggles,
   CreateLink,
-  // DiffSourceToggleWrapper,
-  InsertFrontmatter,
   InsertImage,
   InsertTable,
   InsertThematicBreak,
@@ -42,8 +40,6 @@ export const MdxToolbar = ({ children }: { children?: ReactNode }) => {
       <StrikeThroughSupSubToggles options={["Strikethrough"]} />
       <Separator />
       <InsertTable />
-      <Separator />
-      <InsertFrontmatter />
     </>
   );
 };

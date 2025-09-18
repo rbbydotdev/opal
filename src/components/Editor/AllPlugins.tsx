@@ -16,7 +16,6 @@ import {
   codeBlockPlugin,
   codeMirrorPlugin,
   directivesPlugin,
-  frontmatterPlugin,
   headingsPlugin,
   linkDialogPlugin,
   linkPlugin,
@@ -130,7 +129,6 @@ export function useAllPlugins({
         workspaceImagesPlugin,
         tablePlugin(),
         thematicBreakPlugin(),
-        frontmatterPlugin(),
         codeBlockPlugin({
           defaultCodeBlockLanguage: "js",
           codeBlockEditorDescriptors: [{ priority: -10, match: (_) => true, Editor: CodeMirrorEditor }],

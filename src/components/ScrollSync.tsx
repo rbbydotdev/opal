@@ -123,15 +123,12 @@ export function ScrollSyncProvider({
   const scrollRef = useRef<HTMLElement | null>(null);
   const scrollPause = useRef(false);
 
-  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
-
   useEffect(() => {
     const sRef = scrollEl ?? scrollRef.current;
     const unsubs: UnsubFn[] = [];
     if (sRef) {
-      const handleScroll = () => {
-        if (scrollPause.current) return;
-        // Calculate relative scroll positions
+      const handleScroll = (e: Event) => {
+        if (scrollPause.current || e.target !== sRef) return;
         const maxScrollLeft = sRef.scrollWidth - sRef.clientWidth;
         const maxScrollTop = sRef.scrollHeight - sRef.clientHeight;
         const relX = maxScrollLeft > 0 ? sRef.scrollLeft / maxScrollLeft : 0;
