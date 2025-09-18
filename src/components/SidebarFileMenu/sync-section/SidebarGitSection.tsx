@@ -36,9 +36,8 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
-import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
+import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { NotFoundError } from "@/lib/errors";
@@ -399,8 +398,7 @@ function InPlaceConfirmSection({
 }
 
 export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
-  const { repo, playbook } = useWorkspaceContext().git;
-  const info = useRepoInfo(repo);
+  const { repo, playbook, info } = useWorkspaceGitRepo();
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
   const { cmdRef: remoteRef } = useTooltipToastCmd();

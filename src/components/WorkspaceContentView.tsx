@@ -10,7 +10,7 @@ import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCom
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
-import matter from "gray-matter";
+import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
@@ -23,7 +23,9 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
   } = useFileContents({
     path,
     currentWorkspace,
-    onContentChange: (c) => editorRef.current?.setMarkdown(c),
+    onContentChange: (c) => {
+      editorRef.current?.setMarkdown(graymatter(c).content);
+    },
   });
 
   if (error) throw error;

@@ -1,15 +1,16 @@
 import { Links } from "@/app/Links";
 import { useRenamePathAdjuster } from "@/app/useRenamePathAdjuster";
 import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
-import { ScrollSyncProvider, useScrollChannel, useScrollSync } from "@/components/ScrollSync";
+import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useWorkspaceContext, useWorkspaceRoute, WorkspaceProvider } from "@/context/WorkspaceContext";
+import { useWatchElement } from "@/hooks/useWatchElement";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isImage, isMarkdown } from "@/lib/paths2";
 import { useSearch } from "@tanstack/react-router";
 // import "github-markdown-css/github-markdown-light.css";
-import { RefObject, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export function PreviewComponent() {
   return (
@@ -47,9 +48,13 @@ function PreviewComponentInternal() {
   const { scrollEmitter } = useScrollChannel({ sessionId });
   if (!path) return null;
 
+  // const scrollEl = useMemo(() => document.querySelector("#markdown") as HTMLElement, []);
+  // console.log(scrollEl);
+  const scrollEl = useWatchElement<HTMLElement>("#markdown");
+
   if (isMarkdown(path)) {
     return (
-      <ScrollSyncProvider scrollEmitter={scrollEmitter}>
+      <ScrollSyncProvider scrollEmitter={scrollEmitter} scrollEl={scrollEl || undefined}>
         <Links hrefs={cssFiles} />
         <MarkdownRender path={path} />
       </ScrollSyncProvider>
@@ -88,12 +93,12 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
     () => renderMarkdownToHtml(stripFrontmatter(contents === null ? String(initialContents ?? "") : (contents ?? ""))),
     [contents, initialContents]
   );
-  const { scrollRef } = useScrollSync();
+  // const { scrollRef } = useScrollSync();
   // useSidebarPanes({ registerKeyboardListeners: window.self !== window.top });
   return (
     <div
-      ref={scrollRef as RefObject<HTMLDivElement>}
-      className="w-full p-4 m-0 h-[calc(100vh-48px)] overflow-y-scroll"
+      id="markdown"
+      className="w-full h-full absolute inset-0  overflow-y-auto"
       dangerouslySetInnerHTML={{ __html: html }}
     ></div>
   );

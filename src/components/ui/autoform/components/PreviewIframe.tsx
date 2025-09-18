@@ -7,8 +7,8 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   return (
-    <div className="relative w-full h-full flex-col text-foreground">
-      <div className="_absolute truncate w-full h-12 bg-sidebar z-10 flex justify-center text-sm py-2 font-bold gap-2">
+    <div className="h-full w-full relative flex flex-col">
+      <div className="truncate w-full h-12 bg-sidebar z-10 flex justify-center text-sm py-2 font-bold gap-2">
         <span className="font-light font-mono before:content-['['] after:content-[']']">PREVIEW</span>
         {" / "}
         <span className="truncate font-mono">{relPath(previewPath!)}</span>
@@ -25,7 +25,7 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
         ref={iframeRef}
         tabIndex={-1}
         src={previewURL}
-        className="border-0 _absolute inset-0 w-full h-full bg-foreground"
+        className="flex-grow bg-white"
         title="Preview"
         onLoad={() => {
           setShowSpinner(false);
