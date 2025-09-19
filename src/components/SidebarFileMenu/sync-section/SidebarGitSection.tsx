@@ -91,13 +91,18 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
           <dt className="font-bold">conflicting files:</dt>
           <dd>
             <details className="group">
-              <summary className="font-bold cursor-pointer list-none flex items-center gap-1 after:content-['▶_show'] group-open:after:content-['▼_hide']">
+              <summary
+                data-file-count={`(${conflictingFiles.length})`}
+                className="font-bold cursor-pointer list-none flex items-center gap-1 
+             after:content-['▶_show_'_attr(data-file-count)] 
+             group-open:after:content-['▼_hide']"
+              >
                 <span className="sr-only">hide/show</span>
               </summary>
               <ul>
                 {conflictingFiles.map((f) => (
                   <li key={f} className="truncate">
-                    {f}
+                    <span>{f}</span>
                   </li>
                 ))}
               </ul>
