@@ -64,7 +64,7 @@ function InfoCollapsible({ info }: { info: WorkspaceRepoType }) {
   );
 }
 function LatestInfo({ info }: { info: WorkspaceRepoType }) {
-  const { latestCommit, context, isMerging, currentBranch, hasChanges } = info;
+  const { latestCommit, conflictingFiles, isMerging, currentBranch, hasChanges } = info;
   const timeAgo = useTimeAgoUpdater({ date: new Date(latestCommit.date) });
   if (!latestCommit) {
     return null;
@@ -81,13 +81,27 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
       <dd className="truncate">{new Date(latestCommit.date).toLocaleString()}</dd>
       <dt className="font-bold">time ago:</dt>
       <dd className="truncate">{timeAgo}</dd>
-      {/* <dt className="font-bold">context:</dt>
-      <dd className="truncate">{context}</dd> */}
+
       {isMerging && (
         <>
           <dt className="font-bold">merging:</dt>
           <dd className="truncate">
             <b>true</b>
+          </dd>
+          <dt className="font-bold">conflicting files:</dt>
+          <dd>
+            <details className="group">
+              <summary className="font-bold cursor-pointer list-none flex items-center gap-1 after:content-['▶_show'] group-open:after:content-['▼_hide']">
+                <span className="sr-only">hide/show</span>
+              </summary>
+              <ul>
+                {conflictingFiles.map((f) => (
+                  <li key={f} className="truncate">
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </details>
           </dd>
         </>
       )}

@@ -14,9 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Disk, DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
+import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { useNavigate } from "@tanstack/react-router";
 import { LoaderIcon } from "lucide-react";
-import { nanoid } from "nanoid";
 import { useMemo, useState } from "react";
 
 export function NewWorkspaceDialog({
@@ -29,7 +29,8 @@ export function NewWorkspaceDialog({
   setIsOpen: (open: boolean) => void;
 }) {
   const [isPending, setPending] = useState(false);
-  const defaultValue = useMemo(() => "wrk-" + nanoid(), []);
+
+  const defaultValue = useMemo(() => RandomSlugWords() /*nanoid()*/, []);
   const navigate = useNavigate();
 
   const handleOpenChange = (open: boolean) => {

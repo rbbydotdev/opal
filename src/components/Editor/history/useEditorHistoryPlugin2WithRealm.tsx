@@ -1,7 +1,7 @@
-import { MdxEditorSelector } from "@/components/Editor/EditorConst";
-import { useEditHistoryPlugin2 } from "@/components/Editor/history/useEditHistory";
+import { MdxEditorSelector, setMarkdownOnly$ } from "@/components/Editor/EditorConst";
+import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { HistoryStorageInterface } from "@/Db/HistoryDAO";
-import { Cell, markdown$, Realm, setMarkdown$ } from "@mdxeditor/editor";
+import { Cell, markdown$, Realm } from "@mdxeditor/editor";
 import { useEffect, useRef } from "react";
 
 function MdxEditorInFocus() {
@@ -32,7 +32,7 @@ export function useEditorHistoryPlugin2WithRealm({
     isRestoreState,
     selectedEditMd,
     historyOutputInput,
-  } = useEditHistoryPlugin2({
+  } = useEditHistoryPlugin({
     workspaceId: workspaceId!,
     documentId,
     historyStorage,
@@ -49,7 +49,7 @@ export function useEditorHistoryPlugin2WithRealm({
   useEffect(() => {
     if (realm) {
       return historyOutputInput(
-        (md) => realm.pub(setMarkdown$, md),
+        (md) => realm.pub(setMarkdownOnly$, md),
         (setMarkdown) => realm.singletonSub(markdown$Ref.current, (md) => setMarkdown(md))
       );
     }

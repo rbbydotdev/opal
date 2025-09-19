@@ -147,22 +147,6 @@ export const CodeMirrorEditor = ({
     }
   }, [value]);
 
-  // const { updateDebounce } = useFileContents({ currentWorkspace });
-  // const historyDB = useSnapHistoryDB();
-  // const {
-  //   triggerSave,
-  //   isRestoreState,
-  //   edits,
-  //   selectedEdit,
-  //   selectedEditMd,
-  //   setEdit,
-  //   clearAll,
-  //   rebaseHistory,
-  //   resetAndRestore,
-  // } = useEditorHistoryPlugin2WithContentWatch({
-  // workspaceId: currentWorkspace.id,
-  // historyStorage: historyDB,
-  // });
   const { path } = useWorkspaceRoute();
 
   const { scrollEmitter, sessionId } = useWorkspacePathScrollChannel();
@@ -170,23 +154,12 @@ export const CodeMirrorEditor = ({
   return (
     <>
       <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
-        <CodeMirrorToolbar setVimMode={setVimMode} vimMode={vimMode} currentWorkspace={currentWorkspace} path={path}>
-          {/* {false && (
-            <EditHistoryMenu
-              finalizeRestore={(md) => updateDebounce(md)}
-              disabled={mimeType !== "text/markdown"}
-              edits={edits}
-              selectedEdit={selectedEdit}
-              setEdit={setEdit}
-              rebaseHistory={rebaseHistory}
-              resetAndRestore={resetAndRestore}
-              clearAll={clearAll}
-              triggerSave={triggerSave}
-              isRestoreState={isRestoreState}
-              selectedEditMd={selectedEditMd}
-            />
-          )} */}
-        </CodeMirrorToolbar>
+        <CodeMirrorToolbar
+          setVimMode={setVimMode}
+          vimMode={vimMode}
+          currentWorkspace={currentWorkspace}
+          path={path}
+        ></CodeMirrorToolbar>
         <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
       </ScrollSyncProvider>
     </>

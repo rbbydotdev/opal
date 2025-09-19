@@ -36,12 +36,14 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
 
   const mdxEditorElement = useWatchElement(MdxEditorSelector);
 
-  const documentId = useWorkspaceDocumentId(initialContents) ?? "unknown";
-
-  if (initialContents === null || !currentWorkspace) return null;
+  const documentId = useWorkspaceDocumentId(initialContents);
 
   const markdown = String(initialContents || "");
-  const { data, content } = useMemo(() => matter(markdown), [markdown]);
+  const { data, content } = useMemo(() => {
+    const md = matter(markdown);
+    return { data: { documentId, ...(md.data ?? {}) }, content: md.content };
+  }, [documentId, markdown]);
+  if (initialContents === null || !currentWorkspace) return null;
   return (
     <ScrollSyncProvider scrollEl={mdxEditorElement as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
       <div className="flex flex-col h-full relative">

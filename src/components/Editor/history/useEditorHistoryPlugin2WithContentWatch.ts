@@ -1,4 +1,4 @@
-import { useEditHistoryPlugin2 } from "@/components/Editor/history/useEditHistory";
+import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
 import { useWorkspaceDocumentId } from "@/components/Editor/history/useWorkspaceDocumentId";
 import { useFileContents } from "@/context/useFileContents";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -32,7 +32,7 @@ export function useEditorHistoryPlugin2WithContentWatch({
     isRestoreState,
     selectedEditMd,
     historyOutputInput,
-  } = useEditHistoryPlugin2({
+  } = useEditHistoryPlugin({
     workspaceId: workspaceId!,
     documentId,
     historyStorage,
