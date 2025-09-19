@@ -21,6 +21,7 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
 import { javascript } from "@codemirror/lang-javascript";
+// import { unifiedMergeView } from "@codemirror/merge";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
