@@ -22,7 +22,6 @@ export function PreviewComponent() {
 
 function PreviewComponentInternal() {
   const { path } = useWorkspaceRoute();
-  // const { isCssFile } = useCurrentFilepath();
   const { sessionId } = useSearch({
     strict: false,
   }) as { sessionId: string };
@@ -30,26 +29,11 @@ function PreviewComponentInternal() {
 
   useRenamePathAdjuster({ path, currentWorkspace });
 
-  // const router = useRouter();
-  // useEffect(() => {
-  //   //TODO this should just be a reusable hook somewhere
-  //   return currentWorkspace.renameListener((details) => {
-  //     const pathRename = details.find(({ oldPath }) => oldPath === path);
-  //     if (pathRename) {
-  //       router.history.replace(
-  //         window.location.pathname.replace(pathRename.oldPath, pathRename.newPath) + window.location.search
-  //       );
-  //     }
-  //   });
-  // }, [currentWorkspace, path, router]);
-
   const cssFiles = useLiveCssFiles({ path, currentWorkspace });
 
   const { scrollEmitter } = useScrollChannel({ sessionId });
   if (!path) return null;
 
-  // const scrollEl = useMemo(() => document.querySelector("#markdown") as HTMLElement, []);
-  // console.log(scrollEl);
   const scrollEl = useWatchElement<HTMLElement>("#markdown");
 
   if (isMarkdown(path)) {
@@ -93,12 +77,10 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
     () => renderMarkdownToHtml(stripFrontmatter(contents === null ? String(initialContents ?? "") : (contents ?? ""))),
     [contents, initialContents]
   );
-  // const { scrollRef } = useScrollSync();
-  // useSidebarPanes({ registerKeyboardListeners: window.self !== window.top });
   return (
     <div
       id="markdown"
-      className="w-full h-full absolute inset-0  overflow-y-auto"
+      className="w-full h-full absolute inset-0  overflow-y-auto px-4"
       dangerouslySetInnerHTML={{ __html: html }}
     ></div>
   );

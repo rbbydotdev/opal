@@ -5,7 +5,7 @@ import { useResource } from "@/hooks/useResource";
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
 import Emittery from "emittery";
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 export class HistoryDocRecord {
   id: string;
@@ -86,26 +86,6 @@ export function HistorySnapDBProvider({ documentId, workspaceId, children }: His
   return (
     <HistorySnapDBContext.Provider value={historyDB || NULL_HISTORY_DAO}>{children}</HistorySnapDBContext.Provider>
   );
-}
-export function HistorySnapDBProvider__old({ documentId, workspaceId, children }: HistorySnapDBProviderProps) {
-  const historyDB = useMemo(() => new HistoryDAO(), [documentId, workspaceId, children]);
-  useEffect(() => {
-    console.log("use effect ran");
-    return () => historyDB.tearDown();
-  }, [historyDB, documentId, workspaceId, children]);
-
-  const handleEditPreview = useIframeImagePooledImperitiveWorker({
-    workspaceId,
-  });
-  useEffect(() => {
-    if (documentId) {
-      return historyDB.onNewEdit(documentId, (edit) => {
-        handleEditPreview(edit);
-      });
-    }
-  }, [documentId, handleEditPreview, historyDB]);
-
-  return <HistorySnapDBContext.Provider value={historyDB}>{children}</HistorySnapDBContext.Provider>;
 }
 
 export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryStorageInterface }): boolean {
@@ -379,5 +359,5 @@ export interface HistoryStorageInterface {
   tearDown(): void;
   getSaveThreshold(documentId: string, newText: string): Promise<number>;
   ready?: Promise<boolean>;
-  init?(): void;
+  init?(): () => void;
 }

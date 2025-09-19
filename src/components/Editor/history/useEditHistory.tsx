@@ -12,7 +12,7 @@ const allMarkdown$ = Cell("", (realm) => {
   });
   realm.pub(allMarkdown$, realm.getValue(markdown$));
 });
-export function useEditHistoryPlugin2({
+export function useEditHistoryPlugin({
   workspaceId,
   documentId,
   historyStorage,
@@ -38,7 +38,8 @@ export function useEditHistoryPlugin2({
     [documentId, historyStorage, rootMarkdown, workspaceId]
   );
 
-  const [{ edits, selectedEdit, selectedEditMd }, setInfoState] = useState(() => history.getState());
+  const [infoState, setInfoState] = useState(() => history.getState());
+  const { edits, selectedEdit, selectedEditMd } = infoState;
   const unsubs = useRef<(() => void)[]>([]);
   const isRestoreState = selectedEdit !== null;
 

@@ -69,7 +69,7 @@ export function useFileContents({
 
   const writeFileContents = (updates: string) => {
     if (filePath && currentWorkspace) {
-      void currentWorkspace?.disk.writeFile(filePath, updates);
+      void currentWorkspace?.getDisk().writeFile(filePath, updates);
       //DO NOT EMIT THIS, IT MESSES UP THE EDITOR VIA TEXT-MD-TEXT TOMFOOLERY -> void currentWorkspace.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
       //   filePaths: [filePath],
       // });
@@ -93,7 +93,7 @@ export function useFileContents({
   useAsyncEffect(async () => {
     if (currentWorkspace && filePath) {
       try {
-        setInitialContents(await currentWorkspace.disk.readFile(filePath));
+        setInitialContents(await currentWorkspace.getDisk().readFile(filePath));
         setError(null);
       } catch (error) {
         setError(error as Error);
@@ -116,35 +116,23 @@ export function useFileContents({
   useEffect(() => {
     //Mount Local Listener
     if (filePath) {
-      return currentWorkspace.disk.outsideWriteListener(filePath, setInitialContents);
+      return currentWorkspace.getDisk().outsideWriteListener(filePath, setInitialContents);
     }
-  }, [currentWorkspace.disk, filePath]);
+  }, [currentWorkspace, filePath]);
 
   useEffect(() => {
     if (filePath) {
-      return currentWorkspace.disk.outsideWriteListener(filePath, (content) =>
-        contentEmitter.emit(ContentEvents.UPDATE, content)
-      );
+      return currentWorkspace
+        .getDisk()
+        .outsideWriteListener(filePath, (content) => contentEmitter.emit(ContentEvents.UPDATE, content));
     }
-  }, [contentEmitter, currentWorkspace.disk, filePath]);
-
-  // DEPRECATED
-  // useEffect(() => {
-  //   if (listenerCbRef.current && filePath) {
-  //     return contentEmitter.listen(ContentEvents.UPDATE, listenerCbRef.current);
-  //   }
-  // }, [contentEmitter, filePath]);
-
-  // function insideListener(cb: (content: string | null) => void) {
-  //   return contentEmitter.on(ContentEvents.UPDATE, cb);
-  // }
+  }, [contentEmitter, currentWorkspace, filePath]);
 
   // contents will not reflect the latest changes via writeFileContents, the state must be tracked somewhere else
   // this avoids glitchy behavior in the editor et all
   // the editor should use contents as initialContents
   // the editor will track the contents state itself, writes using onUpdate WILL write to file
   return {
-    // insideListener, //local to this hook
     contentEmitter,
     error,
     filePath,

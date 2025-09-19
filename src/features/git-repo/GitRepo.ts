@@ -112,6 +112,7 @@ export const RepoDefaultInfo = {
   exists: false,
   isMerging: false,
   unmergedFiles: [] as string[],
+  conflictingFiles: [] as string[],
   currentRef: null as null | GitRef,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
@@ -614,6 +615,7 @@ export class GitRepo {
         commitHistory: await this.getCommitHistory({ depth: 20 }),
         context: isWebWorker() ? "worker" : "main",
         exists: await this.fullInitialized(),
+        conflictingFiles: isMerging ? await this.getConflictedFiles() : [],
         isMerging,
         currentRef,
         unmergedFiles: isMerging ? await this.getUnmergedFiles() : [],
@@ -624,6 +626,20 @@ export class GitRepo {
       }
       return RepoDefaultInfo;
     }
+  };
+
+  getConflictedFiles = async () => {
+    if ((await this.fullInitialized()) === false) return [];
+    const mergeHead = await this.getMergeState();
+    if (!mergeHead) return [];
+    const matrix = await this.statusMatrix({
+      ref: mergeHead,
+    });
+    const conflicts: string[] = [];
+    for (const [filepath, _head, _workdir, stage] of matrix) {
+      if (stage === 3) conflicts.push(filepath);
+    }
+    return conflicts;
   };
 
   getUnmergedFiles = async (): Promise<string[]> => {

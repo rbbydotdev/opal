@@ -34,5 +34,7 @@ export class NullHistoryDAO implements HistoryStorageInterface {
   }
   ready = Promise.resolve(false);
   tearDown() {}
-  init() {}
+  init() {
+    return () => {};
+  }
 }

@@ -1,12 +1,12 @@
 import { useSnapHistoryDB } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
-import { MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { SourceEditorButton } from "@/components/Editor/SourceEditorButton";
 import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
-import { useEditorHistoryPlugin2WithContentWatch } from "@/components/Editor/history/useEditorHistoryPlugin2WithContentWatch";
+import { useEditorHistoryPlugin2WithRealm } from "@/components/Editor/history/useEditorHistoryPlugin2WithRealm";
+import { useWorkspaceDocumentId } from "@/components/Editor/history/useWorkspaceDocumentId";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { useFileContents } from "@/context/useFileContents";
@@ -26,12 +26,10 @@ import {
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
+  useRemoteMDXEditorRealm,
 } from "@mdxeditor/editor";
 import { useEffect, useMemo } from "react";
 
-function MdxEditorInFocus() {
-  return Boolean(document.activeElement?.closest(MdxEditorSelector));
-}
 export function useAllPlugins({
   currentWorkspace,
   realmId,
@@ -41,12 +39,11 @@ export function useAllPlugins({
   realmId: string;
   mimeType: string;
 }) {
-  // const { initialContents, debouncedUpdate } = useFileContents({ currentWorkspace });
-  const { updateDebounce } = useFileContents({ currentWorkspace });
+  const { contents } = useFileContents({ currentWorkspace });
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
   // //TODO heal documentId or prevent erasure
-  // const documentId = useWorkspaceDocumentId(String(initialContents || ""));
-  // const realm = useRemoteMDXEditorRealm(realmId);
+  const documentId = useWorkspaceDocumentId(String(contents || ""));
+  const realm = useRemoteMDXEditorRealm(realmId);
   const historyDB = useSnapHistoryDB();
 
   useEffect(() => {
@@ -67,29 +64,13 @@ export function useAllPlugins({
     clearAll,
     rebaseHistory,
     resetAndRestore,
-  } = useEditorHistoryPlugin2WithContentWatch({
+  } = useEditorHistoryPlugin2WithRealm({
     workspaceId: currentWorkspace.id,
+    documentId,
     historyStorage: historyDB,
-    shouldTrigger: MdxEditorInFocus,
+    rootMarkdown: String(contents ?? ""),
+    realm,
   });
-
-  // const {
-  //   triggerSave,
-  //   isRestoreState,
-  //   edits,
-  //   selectedEdit,
-  //   selectedEditMd,
-  //   setEdit,
-  //   clearAll,
-  //   rebaseHistory,
-  //   resetAndRestore,
-  // } = useEditorHistoryPlugin2WithRealm({
-  //   workspaceId: currentWorkspace.id,
-  //   documentId,
-  //   historyStorage: historyDB,
-  //   rootMarkdown: String(initialContents ?? ""),
-  //   realm,
-  // });
 
   return useMemo(
     () =>
@@ -98,21 +79,20 @@ export function useAllPlugins({
           toolbarContents: () => (
             <>
               <SourceEditorButton />
-              {false && (
-                <EditHistoryMenu
-                  finalizeRestore={(md) => updateDebounce(md)}
-                  disabled={mimeType !== "text/markdown"}
-                  edits={edits}
-                  selectedEdit={selectedEdit}
-                  setEdit={setEdit}
-                  rebaseHistory={rebaseHistory}
-                  resetAndRestore={resetAndRestore}
-                  clearAll={clearAll}
-                  triggerSave={triggerSave}
-                  isRestoreState={isRestoreState}
-                  selectedEditMd={selectedEditMd}
-                />
-              )}
+              <EditHistoryMenu
+                finalizeRestore={(md) => {
+                  console.log("md>>>", md);
+                }}
+                edits={edits}
+                selectedEdit={selectedEdit}
+                setEdit={setEdit}
+                rebaseHistory={rebaseHistory}
+                resetAndRestore={resetAndRestore}
+                clearAll={clearAll}
+                triggerSave={triggerSave}
+                isRestoreState={isRestoreState}
+                selectedEditMd={selectedEditMd}
+              />
               <LivePreviewButtons />
               <MdxSearchToolbar />
               <MdxToolbar />
@@ -141,10 +121,8 @@ export function useAllPlugins({
       ].filter(Boolean),
     [
       clearAll,
-      updateDebounce,
       edits,
       isRestoreState,
-      mimeType,
       realmId,
       rebaseHistory,
       resetAndRestore,
