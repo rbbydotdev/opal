@@ -1,4 +1,5 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
+import { ConflictBanner } from "@/components/ConflictBanner";
 import { FileError } from "@/components/FileError";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
@@ -6,11 +7,13 @@ import { TrashBanner } from "@/components/TrashBanner";
 import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
 import { WorkspaceImageView } from "@/components/WorkspaceImageView";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
+import { useFileContents } from "@/context/useFileContents";
 import useFavicon from "@/hooks/useFavicon";
+import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { NotFoundError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName/$")({
   component: WorkspaceFilePage,
@@ -22,6 +25,15 @@ function WorkspaceFilePage() {
   const { currentWorkspace } = useWorkspaceContext();
   const navigate = useNavigate();
   useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
+
+  // Get file contents to check for conflicts
+  const { contents } = useFileContents({ currentWorkspace });
+  
+  // Check if the current file has git conflicts
+  const hasConflicts = useMemo(() => {
+    if (!isMarkdown || !contents) return false;
+    return hasGitConflictMarkers(String(contents));
+  }, [isMarkdown, contents]);
 
   useEffect(() => {
     if (workspaceName) {
@@ -67,7 +79,10 @@ function WorkspaceFilePage() {
         e.stopPropagation();
         e.preventDefault();
         if (isSourceView) {
-          setViewMode("rich-text", "hash");
+          // Don't allow switching to rich text if conflicts exist
+          if (!hasConflicts) {
+            setViewMode("rich-text", "hash");
+          }
         } else {
           setViewMode("source", "hash");
         }
@@ -81,7 +96,7 @@ function WorkspaceFilePage() {
       window.removeEventListener("keydown", handleCmdE);
       window.removeEventListener("keydown", handleEscEsc);
     };
-  }, [isMarkdown, isSourceView]);
+  }, [isMarkdown, isSourceView, hasConflicts]);
 
   useEffect(() => {
     if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
@@ -99,10 +114,10 @@ function WorkspaceFilePage() {
     <>
       {/* <SpotlightSearch currentWorkspace={currentWorkspace} /> */}
       <div id="spotlight-slot"></div>
-      {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView })} />}
+      {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
       {isImage ? (
         <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
-      ) : !isMarkdown || isSourceView ? (
+      ) : !isMarkdown || isSourceView || hasConflicts ? (
         <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} key={filePath} />
       ) : (
         <WorkspaceMarkdownEditor path={filePath} currentWorkspace={currentWorkspace} />
