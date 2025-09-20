@@ -80,7 +80,7 @@ export function EditHistoryMenu({
   }
   return (
     <div
-      className={cn("relative flex items-center bg-primary-foreground pl-2 gap-2 font-mono text-sm", {
+      className={cn("relative flex items-center pl-2 gap-2 font-mono text-sm", {
         "opacity-50": disabled,
       })}
     >
@@ -91,7 +91,10 @@ export function EditHistoryMenu({
           </button>
         </div>
         <DropdownMenuTrigger asChild disabled={disabled}>
-          <button tabIndex={0} className="h-8 cursor-pointer flex rounded-md border border-primary items-center p-1">
+          <button
+            tabIndex={0}
+            className="h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
+          >
             <div className="pl-8 mr-2 flex items-center space-x-2 ">
               <span className="whitespace-nowrap">Edit history {timeAgoStr}</span>
             </div>
