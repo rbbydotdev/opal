@@ -88,7 +88,7 @@ function indexAllTextNodes(root: HTMLElement | null): TextNodeIndex {
 
   let currentNode: Node | null;
   while ((currentNode = treeWalker.nextNode())) {
-    const nodeContent = currentNode.textContent?.normalize("NFKD") ?? currentNode.textContent ?? "";
+    const nodeContent = currentNode.textContent /*?.normalize("NFKD") ?? currentNode.textContent*/ ?? "";
     for (let i = 0; i < nodeContent.length; i++) {
       nodeIndex.push(currentNode);
       offsetIndex.push(i);

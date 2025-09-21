@@ -63,7 +63,7 @@ export class SearchTextScannable<MetaExtType extends object, Scanner extends Sca
   }> {
     for await (const item of this.scanner.scan()) {
       const { text, ...rest } = item;
-      const haystack = text.normalize("NFKD");
+      const haystack = text; //.normalize("NFKD");
       if (!haystack) continue;
       const lineBreaks = this.computeLineBreaks(haystack);
       const results: SearchResultData[] = [];
