@@ -1,5 +1,4 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
-import { ConflictBanner } from "@/components/ConflictBanner";
 import { FileError } from "@/components/FileError";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
@@ -9,8 +8,8 @@ import { WorkspaceImageView } from "@/components/WorkspaceImageView";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useFileContents } from "@/context/useFileContents";
 import useFavicon from "@/hooks/useFavicon";
-import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { NotFoundError } from "@/lib/errors";
+import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { cn } from "@/lib/utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
@@ -28,7 +27,7 @@ function WorkspaceFilePage() {
 
   // Get file contents to check for conflicts
   const { contents } = useFileContents({ currentWorkspace });
-  
+
   // Check if the current file has git conflicts
   const hasConflicts = useMemo(() => {
     if (!isMarkdown || !contents) return false;

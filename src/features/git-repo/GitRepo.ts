@@ -700,9 +700,7 @@ export class GitRepo {
       ref: mergeHead,
     });
     const conflicts: string[] = [];
-    console.log("-------------");
     for (const [filepath, _head, _workdir, stage] of matrix) {
-      console.log("statusMatrix", { filepath, stage });
       if (stage > 0) conflicts.push(filepath);
     }
     return conflicts;
