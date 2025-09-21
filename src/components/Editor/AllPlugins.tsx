@@ -4,7 +4,7 @@ import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { SourceEditorButton } from "@/components/Editor/SourceEditorButton";
-import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
+import { EditHistoryMenu, useToggleEditHistory } from "@/components/Editor/history/EditHistoryMenu";
 import { useEditorHistoryPlugin2WithRealm } from "@/components/Editor/history/useEditorHistoryPlugin2WithRealm";
 import { useWorkspaceDocumentId } from "@/components/Editor/history/useWorkspaceDocumentId";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
@@ -110,7 +110,9 @@ function EditHistoryMenuWithRealm({
   writeFileContents: (newContents: string) => void;
   realm: Realm | undefined;
 }) {
+  const { isEditHistoryEnabled } = useToggleEditHistory();
   const historyDB = useSnapHistoryDB();
+  
   const {
     triggerSave,
     isRestoreState,
@@ -127,7 +129,12 @@ function EditHistoryMenuWithRealm({
     historyStorage: historyDB,
     rootMarkdown: String(contents ?? ""),
     realm,
+    enabled: isEditHistoryEnabled,
   });
+
+  if (!isEditHistoryEnabled) {
+    return <EditHistoryMenu disabled />;
+  }
 
   return (
     <EditHistoryMenu

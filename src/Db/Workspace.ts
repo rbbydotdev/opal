@@ -551,11 +551,35 @@ export class Workspace {
           this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath.replace(oldPath, newPath)))
         )
       );
-      await this.renameMdImages(
-        nodes
-          .filter(({ oldPath, newPath, fileType }) => oldPath !== newPath && fileType === "file" && isImage(oldPath))
-          .map(({ oldPath, newPath }) => [oldPath, newPath])
-      );
+
+      // Collect all image path changes for markdown replacement
+      const imagePathChanges: [string, string][] = [];
+
+      for (const { oldPath, newPath, fileType } of nodes) {
+        if (oldPath === newPath) continue;
+
+        if (fileType === "file" && isImage(oldPath)) {
+          // Direct image file rename
+          imagePathChanges.push([oldPath, newPath]);
+        } else if (fileType === "dir") {
+          // Directory rename - find all image children recursively
+          const oldDirNode = this.nodeFromPath(oldPath);
+          if (oldDirNode?.isTreeDir()) {
+            // Walk through all children to find images
+            oldDirNode.walk((child) => {
+              if (child.isTreeFile() && isImage(child.path)) {
+                // Calculate the new path for this image child
+                const newImagePath = absPath(child.path.replace(oldPath, newPath));
+                imagePathChanges.push([child.path, newImagePath]);
+              }
+            });
+          }
+        }
+      }
+
+      if (imagePathChanges.length > 0) {
+        await this.renameMdImages(imagePathChanges);
+      }
     });
   }
 

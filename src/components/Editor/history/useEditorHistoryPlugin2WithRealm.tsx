@@ -14,12 +14,14 @@ export function useEditorHistoryPlugin2WithRealm({
   historyStorage,
   rootMarkdown,
   realm,
+  enabled = true,
 }: {
   workspaceId: string;
   documentId: string;
   historyStorage: HistoryStorageInterface;
   rootMarkdown: string;
   realm?: Realm;
+  enabled?: boolean;
 }) {
   const {
     edits,
@@ -38,6 +40,7 @@ export function useEditorHistoryPlugin2WithRealm({
     historyStorage,
     rootMarkdown,
     shouldTrigger: MdxEditorInFocus, //to assure triggers only happen when there is a user interaction
+    enabled,
   });
 
   const markdown$Ref = useRef(
@@ -47,13 +50,14 @@ export function useEditorHistoryPlugin2WithRealm({
   );
 
   useEffect(() => {
-    if (realm) {
+    if (realm && enabled && historyOutputInput) {
       return historyOutputInput(
         (md) => realm.pub(setMarkdownOnly$, md),
         (setMarkdown) => realm.singletonSub(markdown$Ref.current, (md) => setMarkdown(md))
       );
     }
-  }, [historyOutputInput, realm]);
+  }, [historyOutputInput, realm, enabled]);
+  
   return {
     edits,
     selectedEdit,

@@ -230,24 +230,24 @@ const CodeMirrorToolbar = ({
   currentWorkspace,
   vimMode,
   setVimMode,
-  editorView,
-  enableConflictResolution = true,
+  // editorView,
+  // enableConflictResolution = true,
   conflictResolution = true,
   setConflictResolution,
   hasConflicts = false,
-  mimeType,
+  // mimeType,
 }: {
   children?: React.ReactNode;
   path: AbsPath | null;
   currentWorkspace: Workspace;
   vimMode: boolean;
   setVimMode: (value: boolean) => void;
-  editorView: EditorView | null;
-  enableConflictResolution?: boolean;
+  // editorView: EditorView | null;
+  // enableConflictResolution?: boolean;
   conflictResolution?: boolean;
   setConflictResolution?: (value: boolean) => void;
   hasConflicts?: boolean;
-  mimeType?: string;
+  // mimeType?: string;
 }) => {
   const { isMarkdown } = useCurrentFilepath();
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
