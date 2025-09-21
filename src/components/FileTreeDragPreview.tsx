@@ -54,12 +54,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
                 boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
               }}
             >
-              <Folder
-                fill="var(--primary-foreground)"
-                key={treeNode.path}
-                strokeWidth={1}
-                className="text-ring rounded w-full h-full"
-              />
+              <Folder fill="white" key={treeNode.path} strokeWidth={1} className="text-ring rounded w-full h-full" />
             </div>
           );
         }
@@ -95,7 +90,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
             <FileTextIcon
               key={treeNode.path}
               strokeWidth={1}
-              fill="var(--primary-foreground)"
+              fill="white"
               className="text-ring rounded bg-background w-full h-full"
             />
           </div>

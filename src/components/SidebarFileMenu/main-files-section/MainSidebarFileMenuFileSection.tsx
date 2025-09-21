@@ -1,10 +1,13 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
+import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { getDiskTypeLabel } from "@/Db/Disk";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
@@ -14,8 +17,8 @@ import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu"
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
-import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Info, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   const [dragEnter, setDragEnter] = useState(false);
@@ -64,6 +67,8 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
 
   useFileTreeClipboardEventListeners({ currentWorkspace, elementSelector: "[data-sidebar-file-menu]" });
 
+  const diskType = useMemo(() => getDiskTypeLabel(currentWorkspace.getDisk().type), [currentWorkspace]);
+
   return (
     <>
       <SidebarFileMenuFiles
@@ -81,6 +86,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
             addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
             addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
             setExpandAll={setExpandAll}
+            diskType={diskType}
           />
         </span>
         <TinyNotice />
@@ -88,66 +94,84 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
     </>
   );
 }
-
 export const SidebarFileMenuFilesActions = ({
   trashSelectedFiles,
   addFile,
   addDir,
   addCssFile,
   setExpandAll,
+  diskType,
 }: {
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void; // Optional for future use
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
-}) => (
-  <div className="whitespace-nowrap">
-    <Button
-      onClick={trashSelectedFiles}
-      className="p-1 m-0 !bg-transparent"
-      variant="ghost"
-      aria-label="Trash Files"
-      title="Trash Files"
-    >
-      <Trash2 />
-    </Button>
-    <Button
-      onClick={addFile}
-      className="p-1 m-0 !bg-transparent"
-      variant="ghost"
-      aria-label="New Markdown File"
-      title="New Markdown File"
-    >
-      <FileEditIcon />
-    </Button>
-    <Button
-      onClick={addCssFile}
-      className="p-1 m-0 !bg-transparent"
-      variant="ghost"
-      aria-label="New Css File"
-      title="New Css File"
-    >
-      <FileCode2Icon />
-    </Button>
-    <Button
-      onClick={addDir}
-      className="p-1 m-0 !bg-transparent"
-      variant="ghost"
-      aria-label="Add Folder"
-      title="New Folder"
-    >
-      <FolderPlus />
-    </Button>
-    <Button
-      aria-label="Expand All"
-      onDoubleClick={() => setExpandAll(true)}
-      onClick={() => setExpandAll(false)}
-      className="p-1 m-0 !bg-transparent"
-      variant="ghost"
-      title="Collapse All"
-    >
-      <CopyMinus />
-    </Button>
-  </div>
-);
+  diskType: string;
+}) => {
+  const [open, toggle] = useFlashTooltip();
+  return (
+    <div className="whitespace-nowrap gap-1 flex items-center justify-center p-1">
+      <Tooltip open={open}>
+        <TooltipTrigger>
+          <Button
+            onClick={toggle}
+            className="p-1 m-0 !bg-transparent"
+            variant="ghost"
+            aria-label={diskType}
+            title={diskType}
+          >
+            <Info />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{diskType}</TooltipContent>
+      </Tooltip>
+      <Button
+        onClick={trashSelectedFiles}
+        className="p-1 m-0 !bg-transparent"
+        variant="ghost"
+        aria-label="Trash Files"
+        title="Trash Files"
+      >
+        <Trash2 />
+      </Button>
+      <Button
+        onClick={addFile}
+        className="p-1 m-0 !bg-transparent"
+        variant="ghost"
+        aria-label="New Markdown File"
+        title="New Markdown File"
+      >
+        <FileEditIcon />
+      </Button>
+      <Button
+        onClick={addCssFile}
+        className="p-1 m-0 !bg-transparent"
+        variant="ghost"
+        aria-label="New Css File"
+        title="New Css File"
+      >
+        <FileCode2Icon />
+      </Button>
+      <Button
+        onClick={addDir}
+        className="p-1 m-0 !bg-transparent"
+        variant="ghost"
+        aria-label="Add Folder"
+        title="New Folder"
+      >
+        <FolderPlus />
+      </Button>
+      <Button
+        aria-label="Expand All"
+        onDoubleClick={() => setExpandAll(true)}
+        onClick={() => setExpandAll(false)}
+        className="p-1 m-0 !bg-transparent"
+        variant="ghost"
+        title="Collapse All"
+      >
+        <CopyMinus />
+      </Button>
+    </div>
+  );
+};

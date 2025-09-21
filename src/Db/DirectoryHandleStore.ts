@@ -55,11 +55,13 @@ export class DirectoryHandleStore {
   static async getStoredMetadata(diskId: string): Promise<DirectoryHandleRecord | undefined> {
     try {
       const metadata = await DirectoryHandleIDB.getMetadata(diskId);
-      return metadata ? {
-        diskId,
-        directoryName: metadata.directoryName,
-        lastAccessed: metadata.lastAccessed,
-      } : undefined;
+      return metadata
+        ? {
+            diskId,
+            directoryName: metadata.directoryName,
+            lastAccessed: metadata.lastAccessed,
+          }
+        : undefined;
     } catch (error) {
       console.warn("DirectoryHandleStore: Failed to get directory handle metadata:", error);
       return undefined;

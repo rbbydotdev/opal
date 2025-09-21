@@ -33,7 +33,6 @@ import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { DocxConvertType } from "@/workers/DocxWorker/docx.ww";
-import type { handleMdImageReplaceType } from "@/workers/ImageWorker/imageReplace.ww";
 import "@/workers/transferHandlers/workspace.th";
 import * as Comlink from "comlink";
 import Emittery from "emittery";
@@ -341,7 +340,7 @@ export class Workspace {
     return this.disk.renameMultiple(nodes);
   }
 
-  renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
+  ________________renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
     const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
       console.error("Error renaming dir", e);
       throw e;
@@ -360,6 +359,7 @@ export class Workspace {
     //   await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
     // }
 
+    // console.log("Renaming md images in dir", findStrReplaceStr);
     await this.renameMdImages(findStrReplaceStr);
 
     return newNode;
@@ -545,6 +545,7 @@ export class Workspace {
 
   private async initImageFileListeners() {
     return this.renameListener(async (nodes) => {
+      console.log(nodes);
       await Promise.all(
         nodes.map(({ oldPath, newPath, fileType }) =>
           this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath.replace(oldPath, newPath)))
@@ -656,19 +657,19 @@ export class Workspace {
   }
   // ConcurrentWorkers
 
-  async _____________renameMdImagesWorker(paths: [to: string, from: string][], origin = window.location.origin) {
-    try {
-      return await ConcurrentWorkers(
-        () => Comlink.wrap<handleMdImageReplaceType>(new Worker("/imageReplace.ww.js")),
-        (worker, item) => worker.handleMdImageReplace(this, origin, item, false),
-        [paths],
-        8,
-        (worker) => worker.tearDown()
-      );
-    } catch (e) {
-      console.error("Error renaming md images", e);
-    }
-  }
+  // async _____________renameMdImagesWorker(paths: [to: string, from: string][], origin = window.location.origin) {
+  //   try {
+  //     return await ConcurrentWorkers(
+  //       () => Comlink.wrap<handleMdImageReplaceType>(new Worker("/imageReplace.ww.js")),
+  //       (worker, item) => worker.handleMdImageReplace(this, origin, item, false),
+  //       [paths],
+  //       8,
+  //       (worker) => worker.tearDown()
+  //     );
+  //   } catch (e) {
+  //     console.error("Error renaming md images", e);
+  //   }
+  // }
 
   async renameMdImages(paths: [to: string, from: string][]) {
     if (paths.length === 0 || !paths.flat().length) return [];
@@ -735,7 +736,7 @@ export class Workspace {
     return this.remoteAuths ?? [];
   }
 
-  async __________RepoWorker() {
+  private async __________RepoWorker() {
     //TODO repo / repoworker should just be apart of workspace from the get go instead of being a separate thing
     //but it uses async instantiation so care is needed to make sure its torn down properly, think useAsyncEffct
     // const worker = new Worker(new URL("/src/workers/RepoWorker/repo.ww.ts", import.meta.url), { type: "module" });
