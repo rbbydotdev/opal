@@ -736,7 +736,7 @@ export class GitRepo {
   hasChanges = async (): Promise<boolean> => {
     if ((await this.fullInitialized()) === false) return false;
     try {
-      const matrix = await this.mutex.runExclusive(() => GIT.statusMatrix({ fs: this.fs, dir: this.dir }));
+      const matrix = await this.mutex.runExclusive(() => this.git.statusMatrix({ fs: this.fs, dir: this.dir }));
       return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
     } catch (error) {
       console.error("Error checking for changes:", error);

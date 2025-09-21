@@ -75,10 +75,12 @@ export class PatchedOPFS extends FsaNodeFs {
   //and unlink doesn't work as expected, like node:fs
   constructor(...args: ConstructorParameters<typeof FsaNodeFs>) {
     super(...args);
+    //@ts-ignore
     this.promises.unlink = async (path: string) => {
       return this.promises.rm.bind(this.promises)(path, { recursive: true, force: true }); // Monkey patch to add unlink method
     };
     const originalRename = this.promises.rename.bind(this.promises);
+    //@ts-ignore
     this.promises.rename = async (oldPath: string, newPath: string) => {
       const stat = await this.promises.stat(oldPath);
       if (!stat.isDirectory()) {

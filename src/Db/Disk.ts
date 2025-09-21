@@ -1,10 +1,12 @@
 import { CommonFileSystem, OPFSNamespacedFs } from "@/Db/CommonFileSystem";
 import { DexieFsDb } from "@/Db/DexieFsDb";
+import { DirectoryHandleStore } from "@/Db/DirectoryHandleStore";
 import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
 import { KVFileSystem, LocalStorageStore } from "@/Db/KVFs";
 import { MutexFs } from "@/Db/MutexFs";
 import { PatchedOPFS } from "@/Db/NamespacedFs";
+import { PatchedDirMountOPFS } from "@/Db/PatchedDirMountOPFS";
 import { UnwrapScannable } from "@/features/search/SearchScannable";
 import { BrowserAbility } from "@/lib/BrowserAbility";
 import { Channel } from "@/lib/channel";
@@ -35,11 +37,12 @@ export const DiskTypes = [
   "DexieFsDbDisk",
   "NullDisk",
   "OpFsDisk",
+  "OpFsDirMountDisk",
   "ZenWebstorageFSDbDisk",
   "LocalStorageFsDisk",
 ] as const;
 
-export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk"] as const;
+export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk", "OpFsDirMountDisk"] as const;
 export const DiskLabelMap: Record<DiskType, string> = {
   IndexedDbDisk: "IndexedDB (Recommended)",
   LocalStorageFsDisk: "Local Storage FS",
@@ -47,6 +50,7 @@ export const DiskLabelMap: Record<DiskType, string> = {
   DexieFsDbDisk: "DexieFS",
   NullDisk: "Null",
   OpFsDisk: "OPFS (origin private file system)",
+  OpFsDirMountDisk: "OPFS (mount to directory)",
   ZenWebstorageFSDbDisk: "ZenWebstorageFSDb",
 };
 export const DiskCanUseMap: Record<DiskType, () => boolean> = {
@@ -56,6 +60,7 @@ export const DiskCanUseMap: Record<DiskType, () => boolean> = {
   IndexedDbDisk: () => BrowserAbility.canUseIndexedDB(), //typeof indexedDB !== "undefined",
   DexieFsDbDisk: () => false, //typeof DexieFsDb !== "undefined",
   OpFsDisk: () => BrowserAbility.canUseOPFS(),
+  OpFsDirMountDisk: () => BrowserAbility.canUseOPFS() && "showDirectoryPicker" in window,
   ZenWebstorageFSDbDisk: () => false, // typeof ZenWebstorageFSDb !== "undefined",
 };
 
@@ -332,6 +337,7 @@ export abstract class Disk {
       [DexieFsDbDisk.type]: DexieFsDbDisk,
       [NullDisk.type]: NullDisk,
       [OpFsDisk.type]: OpFsDisk,
+      [OpFsDirMountDisk.type]: OpFsDirMountDisk,
       [LocalStorageFsDisk.type]: LocalStorageFsDisk,
     };
     if (!DiskMap[type]) throw new Error("invalid disk type " + type);
@@ -1030,5 +1036,106 @@ export class NullDisk extends Disk {
   }
   async init() {
     return () => {};
+  }
+}
+
+export class OpFsDirMountDisk extends Disk {
+  static type: DiskType = "OpFsDirMountDisk";
+  type = OpFsDirMountDisk.type;
+  ready: Promise<void>;
+  private directoryHandle: FileSystemDirectoryHandle | null = null;
+
+  constructor(
+    public readonly guid: string,
+    indexCache?: TreeDirRootJType
+  ) {
+    const mutex = new Mutex();
+    const { promise, resolve, reject } = Promise.withResolvers<void>();
+
+    // Initialize with a temporary memfs until directory is selected
+    const tempFs = memfs().fs;
+
+    super(
+      guid,
+      new MutexFs(tempFs.promises, mutex),
+      new FileTree(tempFs.promises, guid, mutex),
+      DiskDAO.New(OpFsDirMountDisk.type, guid, indexCache)
+    );
+
+    this.ready = promise;
+
+    // Try to restore directory handle from storage
+    this.initializeFromStorage().then(resolve).catch(reject);
+  }
+
+  private async initializeFromStorage(): Promise<void> {
+    const handle = await DirectoryHandleStore.getHandle(this.guid);
+    if (handle) {
+      await this.setDirectoryHandle(handle);
+    }
+  }
+
+  async setDirectoryHandle(handle: FileSystemDirectoryHandle): Promise<void> {
+    this.directoryHandle = handle;
+
+    // Store the handle
+    await DirectoryHandleStore.storeHandle(this.guid, handle);
+
+    // Create new filesystem using the directory handle with our patched implementation
+    const patchedDirMountOPFS = new PatchedDirMountOPFS(Promise.resolve(handle));
+    const mutex = new Mutex();
+    const mutexFs = new MutexFs(patchedDirMountOPFS, mutex);
+    const ft = new FileTree(patchedDirMountOPFS, this.guid, mutex);
+
+    // Replace the filesystem and file tree
+    (this as any).fs = mutexFs;
+    (this as any).fileTree = ft;
+  }
+
+  async selectDirectory(): Promise<FileSystemDirectoryHandle> {
+    if (!("showDirectoryPicker" in window)) {
+      throw new Error("Directory picker not supported in this browser");
+    }
+
+    const handle = await (window as any).showDirectoryPicker({
+      mode: "readwrite",
+      startIn: "documents",
+    });
+
+    await this.setDirectoryHandle(handle);
+    return handle;
+  }
+
+  hasDirectoryHandle(): boolean {
+    return this.directoryHandle !== null;
+  }
+
+  getDirectoryName(): string | null {
+    return this.directoryHandle?.name || null;
+  }
+
+  async needsDirectorySelection(): Promise<boolean> {
+    if (this.directoryHandle) {
+      return false;
+    }
+
+    // Check if we have metadata (meaning user previously selected a directory but it was lost)
+    const metadata = await DirectoryHandleStore.getStoredMetadata(this.guid);
+    return metadata !== undefined;
+  }
+
+  async getStoredMetadata() {
+    return DirectoryHandleStore.getStoredMetadata(this.guid);
+  }
+
+  async destroy() {
+    await DirectoryHandleStore.removeHandle(this.guid);
+    return super.destroy();
+  }
+
+  static async CreateWithDirectory(guid: string, indexCache?: TreeDirRootJType): Promise<OpFsDirMountDisk> {
+    const disk = new OpFsDirMountDisk(guid, indexCache);
+    await disk.selectDirectory();
+    return disk;
   }
 }
