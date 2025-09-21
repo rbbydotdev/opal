@@ -113,7 +113,7 @@ export const SidebarFileMenuFilesActions = ({
   return (
     <div className="whitespace-nowrap gap-1 flex items-center justify-center p-1">
       <Tooltip open={open}>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             onClick={toggle}
             className="p-1 m-0 !bg-transparent"

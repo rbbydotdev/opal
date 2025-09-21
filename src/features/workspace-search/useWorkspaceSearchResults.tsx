@@ -8,6 +8,7 @@ const SEARCH_DEBOUNCE_MS = 250;
 export type WorkspaceQueryParams = {
   workspaceName: string;
   searchTerm: string;
+  regexp?: boolean;
 };
 export type WorkspaceFetchParams = WorkspaceQueryParams & {
   signal: AbortSignal;
@@ -15,13 +16,16 @@ export type WorkspaceFetchParams = WorkspaceQueryParams & {
 async function* fetchQuerySearch({
   workspaceName,
   searchTerm,
+  regexp,
   signal,
 }: WorkspaceFetchParams): AsyncGenerator<WorkspaceSearchItem, void, unknown> {
   const url = new URL(joinPath(absPath("workspace-search"), workspaceName ?? ""), window.location.origin);
 
   url.searchParams.set("searchTerm", searchTerm);
   url.searchParams.set("workspaceName", workspaceName);
-  console.debug(`query search url = ${url.toString()}`);
+  const regexpValue = (regexp ?? true) ? "1" : "0";
+  url.searchParams.set("regexp", regexpValue);
+  console.debug(`query search url = ${url.toString()}, regexp param: ${regexp}, regexp value: ${regexpValue}`);
 
   let res = null;
   try {
@@ -94,7 +98,7 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   }, []);
 
   const query = useCallback(
-    async ({ workspaceName, searchTerm }: WorkspaceQueryParams) => {
+    async ({ workspaceName, searchTerm, regexp }: WorkspaceQueryParams) => {
       if (!workspaceName || !searchTerm) {
         reset();
         return;
@@ -113,6 +117,7 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
         const searchGenerator = fetchQuerySearch({
           workspaceName,
           searchTerm,
+          regexp,
           signal: controller.signal,
         });
 
@@ -143,16 +148,16 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   );
 
   const submit = useCallback(
-    ({ searchTerm, workspaceName }: WorkspaceQueryParams) => {
+    ({ searchTerm, workspaceName, regexp }: WorkspaceQueryParams) => {
       setCtx((prev) => ({ ...prev, isSearching: true }));
       if (debounceMs === 0) {
-        void query({ searchTerm, workspaceName });
+        void query({ searchTerm, workspaceName, regexp });
       } else {
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
         }
         debounceTimerRef.current = setTimeout(() => {
-          void query({ searchTerm, workspaceName });
+          void query({ searchTerm, workspaceName, regexp });
         }, debounceMs);
       }
     },

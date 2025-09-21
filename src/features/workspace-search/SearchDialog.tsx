@@ -1,6 +1,7 @@
 import { rangesToSearchParams } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { SelectWorkspaceComplete } from "@/components/SelectWorkspaceComplete";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -31,9 +32,10 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const { storedValue: optionsValue, setStoredValue: setOptionsValue } = useLocalStorage2(
     "SearchDialog/options/values",
     () =>
-      ({ workspace: ALL_WS_KEY, type: "markdown" }) as {
+      ({ workspace: ALL_WS_KEY, type: "markdown", regexp: true }) as {
         workspace: string;
         type: "markdown" | "rich";
+        regexp: boolean;
       }
   );
 
@@ -55,7 +57,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
 
   const handleInputChange = (searchTerm: string) => {
     setSearchTerm(searchTerm);
-    submit({ searchTerm, workspaceName: workspace });
+    submit({ searchTerm, workspaceName: workspace, regexp: optionsValue.regexp });
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,7 +122,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const handleWorkspaceChange = (workspaceId: string) => {
     setOptionsValue((prev) => ({ ...prev, workspace: workspaceId }));
     resetSearch();
-    submit({ searchTerm, workspaceName: workspaceId });
+    submit({ searchTerm, workspaceName: workspaceId, regexp: optionsValue.regexp });
   };
 
   return (
@@ -166,13 +168,28 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
                 workspaces={workspaces}
                 onChange={handleWorkspaceChange}
               />
+              <div className="flex items-center gap-2 ml-4">
+                <Checkbox
+                  id="regexp_option"
+                  checked={optionsValue.regexp}
+                  onCheckedChange={(checked) => {
+                    const newRegexpValue = checked === true;
+                    setOptionsValue((prev) => ({ ...prev, regexp: newRegexpValue }));
+                    resetSearch();
+                    submit({ searchTerm, workspaceName: workspace, regexp: newRegexpValue });
+                  }}
+                />
+                <Label className="flex items-center gap-1 font-mono text-2xs text-primary" htmlFor="regexp_option">
+                  <span>regex</span>
+                </Label>
+              </div>
               <RadioGroup
                 className="_flex ml-4 hidden items-center gap-2 TODO-SOMEDAY"
                 defaultValue={optionsValue.type}
                 onValueChange={(type: "markdown" | "rich") => {
                   setOptionsValue((prev) => ({ ...prev, type }));
                   resetSearch();
-                  submit({ searchTerm, workspaceName: currWorkspaceName });
+                  submit({ searchTerm, workspaceName: currWorkspaceName, regexp: optionsValue.regexp });
                 }}
               >
                 <RadioGroupItem id="markdown_option" value="markdown" className="scale-75" />
