@@ -3,6 +3,7 @@ import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
+import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
@@ -28,6 +29,9 @@ export class GitPlaybook {
 
   switchBranch = async (branchName: string) => {
     if ((await this.repo.getCurrentBranch()) === branchName) return false;
+    if (await this.repo.isMerging()) {
+      throw new Error("Cannot switch branches while a merge is in progress. Please complete the merge first.");
+    }
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.SWITCH_BRANCH,
@@ -45,6 +49,16 @@ export class GitPlaybook {
       ref: currentBranch,
       force: true,
     });
+  };
+
+  resetSoftParent = async () => {
+    const commit = await this.repo.readCommitFromRef({ ref: "HEAD~1" });
+    const parentOid = commit?.oid;
+    if (!parentOid) {
+      throw new NotFoundError("No parent commit found for HEAD~1");
+    }
+    const currentBranch = (await this.repo.getCurrentBranch({ fullname: true }))!;
+    await this.repo.writeRef({ ref: currentBranch, value: parentOid, force: true });
   };
 
   replaceGitBranch = async (symbolicRef: string, branchName: string) => {

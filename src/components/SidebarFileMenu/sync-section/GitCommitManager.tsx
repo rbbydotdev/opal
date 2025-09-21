@@ -1,4 +1,3 @@
-import { useConfirm } from "@/components/Confirm";
 import { OpalSvg } from "@/components/OpalSvg";
 import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
@@ -22,55 +21,22 @@ export function GitCommitManager({
   resetToOrigHead,
   refType,
   resetHard,
+  resetSoft,
   currentCommit,
-  hasChanges,
+  hasParent,
+  // hasChanges,
 }: {
   commits: RepoCommit[];
   setCurrentCommit: (commitOid: string) => void;
   resetToHead: () => void;
+  resetSoft: () => void;
   resetToOrigHead: () => void;
   resetHard: (commitOid: string) => void;
   refType: GitRefType;
   currentCommit?: string;
-  hasChanges: boolean;
+  // hasChanges: boolean;
+  hasParent?: boolean;
 }) {
-  const { open: confirmOpen } = useConfirm();
-  const resetToHeadHandler = () => {
-    if (!hasChanges) return resetToHead();
-    void confirmOpen(
-      resetToHead,
-      "Reset to HEAD",
-      "Are you sure you want to reset to HEAD? This will discard all changes made since the last commit."
-    );
-  };
-  const resetToOrigHeadHandler = () => {
-    if (!hasChanges) return resetToOrigHead();
-    void confirmOpen(
-      resetToOrigHead,
-      "Reset to Previous Branch",
-      "Are you sure you want to reset to the previous branch? This will discard all changes made since the last commit."
-    );
-  };
-
-  const handleResetHard = (commitOid: string) => {
-    setSelectCommit(false);
-    if (!hasChanges) return resetHard(commitOid);
-    void confirmOpen(
-      () => resetHard(commitOid),
-      "Reset to Hard",
-      <>
-        Are you sure you want to reset to
-        <i>
-          <b>{commitOid.slice(0, 12)}</b>
-        </i>
-        ?<br />
-        <i>
-          <b>⚠️ THIS WILL DISCARD ALL CHANGES MADE SINCE THE LAST COMMIT</b>
-        </i>
-      </>
-    );
-  };
-
   // const reset
 
   const [open, setOpen] = useState(false);
@@ -82,7 +48,11 @@ export function GitCommitManager({
         items={commits.map((commit) => ({ value: commit.oid, label: <CommitLabel commitData={commit} /> }))}
         placeholder="Select Commit"
         itemClassName={cn("focus:!bg-ring focus:!text-primary-foreground [&_*]:focus:text-primary-foreground")}
-        onSelect={(commit) => handleResetHard(commit)}
+        // onSelect={resetHardHandler}
+        onSelect={(value) => {
+          setSelectCommit(false);
+          resetHard(value);
+        }}
         onCancel={() => setSelectCommit(false)}
       />
     );
@@ -90,29 +60,31 @@ export function GitCommitManager({
 
   return (
     <>
-      <CommitSelect
-        commits={commits}
-        value={currentCommit || commits[0]?.oid || ""}
-        onSelect={(value: string) => {
-          setCurrentCommit(value);
-        }}
-      >
+      <CommitSelect commits={commits} value={currentCommit || commits[0]?.oid || ""} onSelect={setCurrentCommit}>
         <GitCommitMenuDropDown open={open} setOpen={setOpen}>
-          <DropdownMenuItem onSelect={resetToHeadHandler} /*disabled={refType !== "branch"}*/>
+          <DropdownMenuItem onSelect={resetToHead}>
             <RotateCcw />
             Reset to HEAD
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={resetToOrigHeadHandler}>
+          <DropdownMenuItem onSelect={resetToOrigHead}>
             <RotateCcw />
             Reset to Previous Branch
           </DropdownMenuItem>
-          {refType === "branch" && (
-            <DropdownMenuItem onSelect={() => setSelectCommit(true)}>
-              <ArrowBigLeftDashIcon className="text-ring" />
-              <span>
-                Reset <b>hard</b>
-              </span>
+          {hasParent && (
+            <DropdownMenuItem onSelect={resetSoft}>
+              <RotateCcw />
+              Reset Soft HEAD~1
             </DropdownMenuItem>
+          )}
+          {refType === "branch" && (
+            <>
+              <DropdownMenuItem onSelect={() => setSelectCommit(true)}>
+                <ArrowBigLeftDashIcon className="text-ring" />
+                <span>
+                  Reset <b>hard</b>
+                </span>
+              </DropdownMenuItem>
+            </>
           )}
         </GitCommitMenuDropDown>
       </CommitSelect>

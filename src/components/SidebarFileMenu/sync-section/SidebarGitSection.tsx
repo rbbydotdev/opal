@@ -583,6 +583,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                     currentCommit={info.latestCommit?.oid}
                     commitRef={commitManagerRef}
                     hasChanges={info.hasChanges}
+                    hasParent={info.hasChanges && info.parentOid !== null}
                   />
                   <Separator />
                 </>

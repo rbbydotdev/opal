@@ -170,7 +170,18 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [editorRef, readOnly, height, ext, value, onChange, mode, vimMode, conflictResolutionEnabled, shouldDisableLanguageExtension]);
+  }, [
+    editorRef,
+    readOnly,
+    height,
+    ext,
+    value,
+    onChange,
+    mode,
+    vimMode,
+    conflictResolutionEnabled,
+    shouldDisableLanguageExtension,
+  ]);
 
   useEffect(() => {
     if (viewRef.current && value !== viewRef.current.state.doc.toString()) {
@@ -243,7 +254,7 @@ const CodeMirrorToolbar = ({
   const router = useRouter();
 
   return (
-    <div className="flex items-center justify-start p-2 bg-muted h-12 gap-2">
+    <div className="pl-10 flex items-center justify-start p-2 bg-muted h-12 gap-2">
       {isMarkdown && !hasConflicts && <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />}
       {!isMarkdown && previewNode?.isMarkdownFile() && (
         <SourceButton onClick={() => router.navigate({ to: currentWorkspace.resolveFileUrl(previewNode.path) })} />

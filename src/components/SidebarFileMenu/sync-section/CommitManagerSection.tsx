@@ -1,7 +1,9 @@
+import { useConfirm } from "@/components/Confirm";
 import { GitCommitManager } from "@/components/SidebarFileMenu/sync-section/GitCommitManager";
 import { TooltipToast } from "@/components/ui/TooltipToast";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRefType, RepoCommit } from "@/features/git-repo/GitRepo";
+import { useErrorToss } from "@/lib/errorToss";
 
 export function CommitManagerSection({
   playbook,
@@ -10,6 +12,7 @@ export function CommitManagerSection({
   commitRef,
   refType,
   hasChanges,
+  hasParent,
 }: {
   playbook: GitPlaybook;
   commits: RepoCommit[];
@@ -17,8 +20,54 @@ export function CommitManagerSection({
   commitRef: React.RefObject<{ show: (text?: string) => void }>;
   refType: GitRefType;
   hasChanges: boolean;
+  hasParent?: boolean;
 }) {
   if (!commits || commits.length === 0) return null;
+
+  const toss = useErrorToss();
+
+  const { open: confirmOpen } = useConfirm();
+  const resetSoftHandler = () => {
+    void confirmOpen(
+      () => playbook.resetSoftParent().catch(toss),
+      "Reset Soft HEAD~1",
+      "Are you sure you want to reset soft to HEAD~1? This will keep your changes staged."
+    );
+  };
+  const resetToHeadHandler = () => {
+    if (!hasChanges) return;
+    void confirmOpen(
+      () => playbook.resetToHead().catch(toss),
+      "Reset to HEAD",
+      "Are you sure you want to reset to HEAD? This will discard all changes made since the last commit."
+    );
+  };
+  const resetToOrigHeadHandler = () => {
+    if (!hasChanges) return;
+    void confirmOpen(
+      () => playbook.resetToPrevBranch().catch(toss),
+      "Reset to Previous Branch",
+      "Are you sure you want to reset to the previous branch? This will discard all changes made since the last commit."
+    );
+  };
+
+  const resetHardHandler = (commitOid: string) => {
+    if (!hasChanges) return playbook.resetHard({ ref: commitOid });
+    void confirmOpen(
+      () => playbook.resetHard({ ref: commitOid }),
+      "Reset to Hard",
+      <>
+        Are you sure you want to reset to
+        <i>
+          <b>{commitOid.slice(0, 12)}</b>
+        </i>
+        ?<br />
+        <i>
+          <b>⚠️ THIS WILL DISCARD ALL CHANGES MADE SINCE THE LAST COMMIT</b>
+        </i>
+      </>
+    );
+  };
 
   return (
     <>
@@ -28,15 +77,60 @@ export function CommitManagerSection({
           <GitCommitManager
             refType={refType}
             commits={commits}
-            resetHard={(commitOid) => playbook.resetHard({ ref: commitOid })}
+            hasParent={hasParent}
+            resetSoft={resetSoftHandler}
+            resetHard={resetHardHandler}
             currentCommit={currentCommit}
-            resetToHead={playbook.resetToHead}
-            resetToOrigHead={playbook.resetToPrevBranch}
-            setCurrentCommit={(commitOid) => playbook.switchCommit(commitOid)}
-            hasChanges={hasChanges}
+            resetToHead={resetToHeadHandler}
+            resetToOrigHead={resetToOrigHeadHandler}
+            setCurrentCommit={(commitOid) => playbook.switchCommit(commitOid).catch(toss)}
           />
         </div>
       </div>
     </>
   );
 }
+
+// const { open: confirmOpen } = useConfirm();
+// const resetSoftHandler = () => {
+//   void confirmOpen(
+//     resetSoft,
+//     "Reset Soft HEAD~1",
+//     "Are you sure you want to reset soft to HEAD~1? This will keep your changes staged."
+//   );
+// };
+// const resetToHeadHandler = () => {
+//   if (!hasChanges) return resetToHead();
+//   void confirmOpen(
+//     resetToHead,
+//     "Reset to HEAD",
+//     "Are you sure you want to reset to HEAD? This will discard all changes made since the last commit."
+//   );
+// };
+// const resetToOrigHeadHandler = () => {
+//   if (!hasChanges) return resetToOrigHead();
+//   void confirmOpen(
+//     resetToOrigHead,
+//     "Reset to Previous Branch",
+//     "Are you sure you want to reset to the previous branch? This will discard all changes made since the last commit."
+//   );
+// };
+
+// const resetHardHandler = (commitOid: string) => {
+//   setSelectCommit(false);
+//   if (!hasChanges) return resetHard(commitOid);
+//   void confirmOpen(
+//     () => resetHard(commitOid),
+//     "Reset to Hard",
+//     <>
+//       Are you sure you want to reset to
+//       <i>
+//         <b>{commitOid.slice(0, 12)}</b>
+//       </i>
+//       ?<br />
+//       <i>
+//         <b>⚠️ THIS WILL DISCARD ALL CHANGES MADE SINCE THE LAST COMMIT</b>
+//       </i>
+//     </>
+//   );
+// };
