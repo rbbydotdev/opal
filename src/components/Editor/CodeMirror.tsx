@@ -181,6 +181,7 @@ export const CodeMirrorEditor = ({
     vimMode,
     conflictResolutionEnabled,
     shouldDisableLanguageExtension,
+    JSON.stringify(getHighlightRangesFromURL(window.location.href, "hash")),
   ]);
 
   useEffect(() => {
