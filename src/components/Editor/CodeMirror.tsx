@@ -200,6 +200,7 @@ export const CodeMirrorEditor = ({
     <>
       <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
         <CodeMirrorToolbar
+          key={path}
           setVimMode={setVimMode}
           vimMode={vimMode}
           currentWorkspace={currentWorkspace}
@@ -250,18 +251,18 @@ const CodeMirrorToolbar = ({
   hasConflicts?: boolean;
   // mimeType?: string;
 }) => {
-  const { isMarkdown } = useCurrentFilepath();
+  const { isMarkdown, hasEditOverride } = useCurrentFilepath();
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
   const router = useRouter();
 
   return (
     <div className="pl-10 flex items-center justify-start p-2 bg-muted h-12 gap-2">
-      {isMarkdown && !hasConflicts && <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />}
-      {!isMarkdown && previewNode?.isMarkdownFile() && (
+      {isMarkdown && !hasConflicts && !hasEditOverride && <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />}
+      {!isMarkdown && previewNode?.isMarkdownFile() && !hasEditOverride && (
         <SourceButton onClick={() => router.navigate({ to: currentWorkspace.resolveFileUrl(previewNode.path) })} />
       )}
 
-      <LivePreviewButtons />
+      {!hasEditOverride && <LivePreviewButtons />}
 
       {hasConflicts && isMarkdown && <ConflictBanner />}
 
