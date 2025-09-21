@@ -92,7 +92,7 @@ export function EditHistoryMenu({
       })}
     >
       <DropdownMenu open={isOpen} onOpenChange={setOpen}>
-        <div className="h-full absolute left-4 flex justify-center items-center">
+        <div className="h-full absolute left-4 flex justify-center items-center ">
           <button className="fill-primary-foreground text-4xl leading-4 group" onClick={triggerSave}>
             <HistoryStatus selectedEdit={selectedEdit} pendingSave={pendingSave} />
           </button>
@@ -109,7 +109,7 @@ export function EditHistoryMenu({
             <ChevronDown size={12} />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[37.5rem] bg-primary-foreground p-0">
+        <DropdownMenuContent align="start" className="w-[37.5rem] bg-background p-0">
           <div className="border-b border-border p-2">
             {Boolean(edits.length) ? (
               <Button
