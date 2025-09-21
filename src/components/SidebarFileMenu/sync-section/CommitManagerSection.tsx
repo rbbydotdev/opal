@@ -27,6 +27,7 @@ export function CommitManagerSection({
   const toss = useErrorToss();
 
   const { open: confirmOpen } = useConfirm();
+
   const resetSoftHandler = () => {
     void confirmOpen(
       () => playbook.resetSoftParent().catch(toss),
@@ -49,6 +50,19 @@ export function CommitManagerSection({
       "Reset to Previous Branch",
       "Are you sure you want to reset to the previous branch? This will discard all changes made since the last commit."
     );
+  };
+
+  const switchCommitHandler = (commitOid: string) => {
+    const switchCommit = () => playbook.switchCommit(commitOid).catch(toss);
+    if (hasChanges) {
+      void confirmOpen(
+        switchCommit,
+        "Switch Commit",
+        "Are you sure you want to switch commits? This will discard all changes made since the last commit."
+      );
+    } else {
+      void switchCommit();
+    }
   };
 
   const resetHardHandler = (commitOid: string) => {
@@ -83,7 +97,7 @@ export function CommitManagerSection({
             currentCommit={currentCommit}
             resetToHead={resetToHeadHandler}
             resetToOrigHead={resetToOrigHeadHandler}
-            setCurrentCommit={(commitOid) => playbook.switchCommit(commitOid).catch(toss)}
+            setCurrentCommit={switchCommitHandler}
           />
         </div>
       </div>

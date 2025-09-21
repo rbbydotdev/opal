@@ -176,7 +176,7 @@ export function IdenticonStr({ input, size = 5, scale = 20 }: IdenticonProps): s
     }
   }
 
-  const svgString = `<svg width="${size * scale}px" height="${
+  const svgString = `<svg width="${size * scale}px" class="w-full h-full" height="${
     size * scale
   }px" viewBox="0 0 ${size * scale} ${size * scale}" xmlns="http://www.w3.org/2000/svg" style="background-color: rgb(${colors.r},${colors.g},${colors.b});" stroke="none">${svgContent}</svg>`;
 

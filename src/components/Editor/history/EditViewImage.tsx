@@ -66,7 +66,7 @@ export const EditViewImage = ({
   const imageUrl = useIframeImagePooled({ edit, workspaceId, id: previewId({ workspaceId, editId: edit.id }) });
   return imageUrl !== null ? (
     <ImageFileHoverCard className="w-48 h-48">
-      <img src={imageUrl} className={cn("object-contain border border-border", className)} alt="" />
+      <img src={imageUrl} className={cn("object-contain border border-border bg-white", className)} alt="" />
     </ImageFileHoverCard>
   ) : (
     <div className={cn("border border-border", className)}></div>

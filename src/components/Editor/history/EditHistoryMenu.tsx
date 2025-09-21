@@ -12,10 +12,11 @@ import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref"
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { HistoryDocRecord, useSnapHistoryDB, useSnapHistoryPendingSave } from "@/Db/HistoryDAO";
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
-import { ChevronDown, History } from "lucide-react";
+import { ChevronDown, History, X } from "lucide-react";
 import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
@@ -28,6 +29,12 @@ export const allMarkdown$ = Cell("", (realm) => {
   });
   realm.pub(allMarkdown$, realm.getValue(markdown$));
 });
+
+export function useToggleEditHistory() {
+  const { storedValue, setStoredValue } = useLocalStorage2("app/EditHistory", true);
+  const toggle = () => setStoredValue(!storedValue);
+  return { isEditHistoryEnabled: storedValue, toggleEditHistory: toggle };
+}
 
 export function EditHistoryMenu({
   finalizeRestore,
@@ -94,6 +101,7 @@ export function EditHistoryMenu({
           <button
             tabIndex={0}
             className="mx-1 h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
+            title={"Edit History" + (edits.length ? ` (${edits.length} edits)` : "")}
           >
             <div className="pl-8 mr-2 flex items-center space-x-2 ">
               <span className="whitespace-nowrap">Edit history {timeAgoStr}</span>
@@ -102,8 +110,8 @@ export function EditHistoryMenu({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[37.5rem] bg-primary-foreground p-0">
-          {Boolean(edits.length) ? (
-            <div className="border-b border-border p-2">
+          <div className="border-b border-border p-2">
+            {Boolean(edits.length) ? (
               <Button
                 variant={"secondary"}
                 size="default"
@@ -115,8 +123,22 @@ export function EditHistoryMenu({
               >
                 clear
               </Button>
-            </div>
-          ) : null}
+            ) : null}
+            <Button
+              variant={"secondary"}
+              size="default"
+              onClick={() => {
+                void clearAll();
+                setOpen(false);
+              }}
+              className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
+            >
+              {/* <Check className="w-3 h-3" strokeWidth={4} /> */}
+              <X className="w-3 h-3" strokeWidth={4} />
+              disable
+            </Button>
+          </div>
+
           <ScrollAreaViewportRef
             viewportRef={(ref) => {
               scrollAreaRef.current = ref;
@@ -126,6 +148,7 @@ export function EditHistoryMenu({
               "h-18": !Boolean(edits.length),
             })}
           >
+            {/* <div></div> */}
             <div className="p-1 font-mono">
               {edits.length === 0 && (
                 <div className="flex h-full flex-col items-center justify-center gap-4 p-4">

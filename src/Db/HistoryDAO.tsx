@@ -52,10 +52,6 @@ export class HistoryDocRecord {
     return hdr;
   }
 }
-
-// export function useHistoryDAO() {
-//   return useMemo(() => new HistoryDAO(), []);
-// }
 // --- Context and Provider for HistorySnapDB ---
 
 type HistorySnapDBContextType = HistoryStorageInterface | null;

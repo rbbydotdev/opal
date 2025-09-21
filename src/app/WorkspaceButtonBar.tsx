@@ -20,13 +20,14 @@ import { DiskDAO } from "@/Db/DiskDAO";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { FAVORITE_THEMES } from "@/features/theme/theme-lib";
+import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
 import { useRequestSignals } from "@/lib/RequestSignals";
+import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
@@ -95,7 +96,7 @@ function BigButton({
               "flex-col w-full": !isSmall,
             })}
           >
-            {isActive && !isSmall && <div className="w-0.5 h-full bg-primary _ml-1 absolute left-0"></div>}
+            {isActive && !isSmall && <div className="w-0.5 h-full bg-primary absolute left-0"></div>}
             <div
               className={cn("flex items-center justify-center", {
                 "w-6 h-6": isSmall,
@@ -166,6 +167,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { mode, value, themeName, setPreference, setTheme } = useThemeSettings();
   const { setStoredValue: setAutoHide, storedValue: autoHide } = useAutoHide();
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
+  const { setZoom, isCurrentZoom, availableZooms } = useZoom();
   const router = useRouter();
   const { open } = useConfirm();
 
@@ -174,9 +176,9 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
       <ContextMenuTrigger>
         <Link
           to={"/"}
-          className={cn("absolute z-50 -top-8 h-14 left-0 cursor-pointer _bg-red-700 _opacity-25", {
-            "w-6": shrink,
-            "w-14": !shrink,
+          className={cn("absolute z-50 h-14  cursor-pointer ", {
+            "w-6 left-[0.125rem] -top-5": shrink,
+            "w-16 left-2 -top-7": !shrink,
           })}
         ></Link>
       </ContextMenuTrigger>
@@ -253,24 +255,13 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
             Zoom
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="max-h-48 overflow-y-auto">
-            {/* 0.75rem */}
-            {[0.65, 0.75, 0.85, 0.95, 1].map((zoom) => (
+            {availableZooms.map((zoom) => (
               <ContextMenuItem
                 className="grid grid-cols-[1rem_1fr] items-center gap-2"
                 key={zoom}
-                onClick={() => {
-                  document.body.style.fontSize = `${zoom}rem`;
-                  const styleEl = document.querySelector("#dynamic-zoom-style") ?? document.createElement("style");
-                  styleEl.id = "dynamic-zoom-style";
-                  styleEl.innerHTML = `html { font-size: ${zoom}rem; }`;
-                  document.head.appendChild(styleEl);
-                }}
+                onClick={() => setZoom(zoom)}
               >
-                {(document.querySelector("#dynamic-zoom-style")?.outerHTML ?? "").includes(`${zoom}rem`) ? (
-                  <Check size={12} />
-                ) : (
-                  <div className="w-4"></div>
-                )}
+                {isCurrentZoom(zoom) ? <Check size={12} /> : <div className="w-4"></div>}
                 <span className="pr-4">{Math.round(zoom * 100)}%</span>
               </ContextMenuItem>
             ))}
@@ -284,7 +275,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
             Themes
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="max-h-48 overflow-y-auto">
-            {FAVORITE_THEMES.map((theme) => (
+            {ALL_THEMES.map((theme) => (
               <ContextMenuItem
                 className="grid grid-cols-[1rem_1fr] items-center gap-2"
                 key={theme}
@@ -449,7 +440,9 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
               <WorkspaceMenu workspaceGuid={coalescedWorkspace.guid} workspaceName={coalescedWorkspace.name}>
                 <BigButton
                   variant={variant}
-                  icon={<WorkspaceIcon scale={shrink ? 5 : 7} input={coalescedWorkspace.guid} />}
+                  icon={
+                    <WorkspaceIcon className="w-full h-full" scale={shrink ? 5 : 7} input={coalescedWorkspace.guid} />
+                  }
                   title={coalescedWorkspace.name}
                   to={coalescedWorkspace.href}
                   truncate={true}
@@ -495,7 +488,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                   <WorkspaceMenu workspaceGuid={workspace.guid} key={workspace.guid} workspaceName={workspace.name}>
                     <BigButton
                       variant={variant}
-                      icon={<WorkspaceIcon scale={shrink ? 5 : 7} input={workspace.guid} />}
+                      icon={<WorkspaceIcon className="w-full h-full" scale={shrink ? 5 : 7} input={workspace.guid} />}
                       to={workspace.href}
                       truncate={true}
                       className="_whitespace-nowrap text-muted-foreground"

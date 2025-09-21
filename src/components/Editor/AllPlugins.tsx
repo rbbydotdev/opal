@@ -13,6 +13,7 @@ import { useFileContents } from "@/context/useFileContents";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
+  Realm,
   codeBlockPlugin,
   codeMirrorPlugin,
   directivesPlugin,
@@ -41,11 +42,9 @@ export function useAllPlugins({
 }) {
   const { contents, writeFileContents } = useFileContents({ currentWorkspace });
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
-  // //TODO heal documentId or prevent erasure
   const documentId = useWorkspaceDocumentId(String(contents || ""));
-  const realm = useRemoteMDXEditorRealm(realmId);
-  const historyDB = useSnapHistoryDB();
 
+  const realm = useRemoteMDXEditorRealm(realmId);
   useEffect(() => {
     if (mimeType === "text/markdown") return;
     document.body.classList.add("hide-rich-text");
@@ -54,24 +53,6 @@ export function useAllPlugins({
     };
   }, [mimeType]);
 
-  const {
-    triggerSave,
-    isRestoreState,
-    edits,
-    selectedEdit,
-    selectedEditMd,
-    setEdit,
-    clearAll,
-    rebaseHistory,
-    resetAndRestore,
-  } = useEditorHistoryPlugin2WithRealm({
-    workspaceId: currentWorkspace.id,
-    documentId,
-    historyStorage: historyDB,
-    rootMarkdown: String(contents ?? ""),
-    realm,
-  });
-
   return useMemo(
     () =>
       [
@@ -79,17 +60,12 @@ export function useAllPlugins({
           toolbarContents: () => (
             <>
               <SourceEditorButton />
-              <EditHistoryMenu
-                finalizeRestore={writeFileContents}
-                edits={edits}
-                selectedEdit={selectedEdit}
-                setEdit={setEdit}
-                rebaseHistory={rebaseHistory}
-                resetAndRestore={resetAndRestore}
-                clearAll={clearAll}
-                triggerSave={triggerSave}
-                isRestoreState={isRestoreState}
-                selectedEditMd={selectedEditMd}
+              <EditHistoryMenuWithRealm
+                currentWorkspace={currentWorkspace}
+                documentId={documentId}
+                contents={contents}
+                writeFileContents={writeFileContents}
+                realm={realm}
               />
               <LivePreviewButtons />
               <MdxSearchToolbar />
@@ -117,18 +93,54 @@ export function useAllPlugins({
         directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
         markdownShortcutPlugin(),
       ].filter(Boolean),
-    [
-      clearAll,
-      edits,
-      isRestoreState,
-      realmId,
-      rebaseHistory,
-      resetAndRestore,
-      selectedEdit,
-      selectedEditMd,
-      setEdit,
-      triggerSave,
-      workspaceImagesPlugin,
-    ]
+    [contents, currentWorkspace, documentId, realm, realmId, workspaceImagesPlugin, writeFileContents]
+  );
+}
+
+function EditHistoryMenuWithRealm({
+  currentWorkspace,
+  documentId,
+  contents,
+  writeFileContents,
+  realm,
+}: {
+  currentWorkspace: Workspace;
+  documentId: string;
+  contents: string | null;
+  writeFileContents: (newContents: string) => void;
+  realm: Realm | undefined;
+}) {
+  const historyDB = useSnapHistoryDB();
+  const {
+    triggerSave,
+    isRestoreState,
+    edits,
+    selectedEdit,
+    selectedEditMd,
+    setEdit,
+    clearAll,
+    rebaseHistory,
+    resetAndRestore,
+  } = useEditorHistoryPlugin2WithRealm({
+    workspaceId: currentWorkspace.id,
+    documentId,
+    historyStorage: historyDB,
+    rootMarkdown: String(contents ?? ""),
+    realm,
+  });
+
+  return (
+    <EditHistoryMenu
+      finalizeRestore={writeFileContents}
+      edits={edits}
+      selectedEdit={selectedEdit}
+      setEdit={setEdit}
+      rebaseHistory={rebaseHistory}
+      resetAndRestore={resetAndRestore}
+      clearAll={clearAll}
+      triggerSave={triggerSave}
+      isRestoreState={isRestoreState}
+      selectedEditMd={selectedEditMd}
+    />
   );
 }

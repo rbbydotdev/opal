@@ -1,6 +1,5 @@
 import { ALL_THEMES, applyTheme, getThemeModePrefers } from "@/features/theme/theme-lib";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
-// import themeRegistry from "@/theme/themes.json";
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
 
 type ResolvedTheme = "light" | "dark";
