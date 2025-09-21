@@ -11,12 +11,14 @@ const activeSearches = new Map<string, AbortController>();
 function createWorkspaceSearchStream({
   workspaces,
   searchTerm,
+  regexp,
   signal,
   searchController,
   searchKey,
 }: {
   workspaces: Workspace[];
   searchTerm: string;
+  regexp?: boolean;
   signal: AbortSignal;
   searchController: AbortController;
   searchKey: string;
@@ -28,11 +30,19 @@ function createWorkspaceSearchStream({
       try {
         const searchPromises = workspaces.map(async (workspace) => {
           const scannable = workspace.NewScannable();
-          const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm), signal);
+          console.log(`Searching in workspace with regex option: ${regexp}`);
+          const searchOptions = { regex: regexp !== undefined ? regexp : true };
+          console.log(`Search options:`, searchOptions);
+          try {
+            const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm, searchOptions), signal);
 
-          for await (const result of searchGenerator) {
-            const chunk = encoder.encode(JSON.stringify(result) + "\n");
-            controller.enqueue(chunk);
+            for await (const result of searchGenerator) {
+              const chunk = encoder.encode(JSON.stringify(result) + "\n");
+              controller.enqueue(chunk);
+            }
+          } catch (searchError) {
+            console.error(`Search error in workspace ${workspace.name}:`, searchError);
+            throw searchError;
           }
         });
 
@@ -54,7 +64,11 @@ function createWorkspaceSearchStream({
   });
 }
 
-export async function handleWorkspaceSearch({ workspaceName, searchTerm }: WorkspaceQueryParams): Promise<Response> {
+export async function handleWorkspaceSearch({
+  workspaceName,
+  searchTerm,
+  regexp = true,
+}: WorkspaceQueryParams): Promise<Response> {
   // 1. Cancel previous searches.
   const searchController = new AbortController();
   const searchKey = workspaceName; //all ? ALL_WS_KEY : workspaceName!;
@@ -93,6 +107,7 @@ export async function handleWorkspaceSearch({ workspaceName, searchTerm }: Works
     const stream = createWorkspaceSearchStream({
       workspaces: workspacesToSearch,
       searchTerm,
+      regexp,
       signal: combinedSignal,
       searchController,
       searchKey,

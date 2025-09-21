@@ -43,6 +43,8 @@ export const workspaceSearchHandler = withRequestSignal(async (context: RequestC
   const { url, params } = context;
   const workspaceName = params.workspaceName;
   const searchTerm = url.searchParams.get("searchTerm");
+  const regexpParam = url.searchParams.get("regexp");
+  const regexp = regexpParam === null ? true : regexpParam === "1";
 
   if (!workspaceName) {
     return new Response("Workspace name parameter is required.", { status: 400 });
@@ -52,7 +54,7 @@ export const workspaceSearchHandler = withRequestSignal(async (context: RequestC
   }
 
   console.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
-  return handleWorkspaceSearch({ workspaceName, searchTerm });
+  return handleWorkspaceSearch({ workspaceName, searchTerm, regexp });
 });
 
 export const downloadEncryptedHandler = (context: RequestContext) => {
