@@ -36,6 +36,7 @@ import {
   ChevronLeft,
   CirclePlus,
   Delete,
+  GlassesIcon,
   Moon,
   Palette,
   RefreshCcw,
@@ -245,6 +246,36 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         </ContextMenuItem>
 
         <ContextMenuSeparator />
+
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="pl-8 gap-2">
+            <GlassesIcon size={12} />
+            Zoom
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="max-h-48 overflow-y-auto">
+            {/* 0.75rem */}
+            {[0.65, 0.75, 0.85, 0.95, 1].map((zoom) => (
+              <ContextMenuItem
+                className="grid grid-cols-[1rem_1fr] items-center gap-2"
+                key={zoom}
+                onClick={() => {
+                  document.body.style.fontSize = `${zoom}rem`;
+                  const styleEl = document.querySelector("#dynamic-zoom-style") ?? document.createElement("style");
+                  styleEl.id = "dynamic-zoom-style";
+                  styleEl.innerHTML = `html { font-size: ${zoom}rem; }`;
+                  document.head.appendChild(styleEl);
+                }}
+              >
+                {(document.querySelector("#dynamic-zoom-style")?.outerHTML ?? "").includes(`${zoom}rem`) ? (
+                  <Check size={12} />
+                ) : (
+                  <div className="w-4"></div>
+                )}
+                <span className="pr-4">{Math.round(zoom * 100)}%</span>
+              </ContextMenuItem>
+            ))}
+          </ContextMenuSubContent>
+        </ContextMenuSub>
 
         {/* Themes Submenu */}
         <ContextMenuSub>
