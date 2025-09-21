@@ -13,6 +13,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
+import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 
@@ -22,6 +23,7 @@ interface MainAppLayoutProps {
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();
+  useZoom();
   return (
     <ThemeProvider>
       <div className="font-sans antialiased">
