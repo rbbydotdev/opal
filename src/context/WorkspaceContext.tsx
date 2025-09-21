@@ -46,10 +46,52 @@ export type Workspaces = WorkspaceDAO[];
 
 export const DEFAULT_MIME_TYPE = "application/octet-stream"; //i think this just means binary?
 
+function isRecognizedFileType(mimeType: string): boolean {
+  // Images, markdown, text files (including code files), HTML, CSS, and common web formats are recognized
+  return (
+    mimeType.startsWith("image/") ||
+    mimeType.startsWith("text/") ||
+    mimeType === "application/json" ||
+    mimeType === "application/javascript" ||
+    mimeType === "application/typescript" ||
+    mimeType === "application/xml" ||
+    mimeType === "text/html" ||
+    mimeType === "text/css"
+  );
+}
+
+function getEditOverride(): boolean {
+  const windowHref = window.location.href;
+  const url = new URL(windowHref);
+  const hashParams = new URLSearchParams(url.hash.slice(1));
+  const searchParams = url.searchParams;
+  
+  return hashParams.get("editOverride") === "true" || searchParams.get("editOverride") === "true";
+}
+
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
   const viewMode = useWatchViewMode("hash+search");
+  const [editOverride, setEditOverride] = useState(getEditOverride());
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      setEditOverride(getEditOverride());
+    };
+
+    window.addEventListener("hashchange", handleUrlChange);
+    window.addEventListener("popstate", handleUrlChange);
+    return () => {
+      window.removeEventListener("hashchange", handleUrlChange);
+      window.removeEventListener("popstate", handleUrlChange);
+    };
+  }, []);
+
+  // Also update editOverride when filePath changes (navigation between files)
+  useEffect(() => {
+    setEditOverride(getEditOverride());
+  }, [filePath]);
 
   if (filePath === null || currentWorkspace.isNull) {
     return {
@@ -72,11 +114,13 @@ export function useCurrentFilepath() {
     isSource: !mimeType.startsWith("text/markdown") && mimeType.startsWith("text/"),
     isCssFile: mimeType === "text/css",
     isBin: mimeType.startsWith("application/octet-stream"),
+    isRecognized: isRecognizedFileType(mimeType) || editOverride,
     inTrash: filePath.startsWith(SpecialDirs.Trash),
     isSourceView: viewMode === "source",
     isRichView: viewMode === "rich-text",
     isDiffView: viewMode === "diff",
     viewMode: viewMode,
+    hasEditOverride: editOverride,
   };
 }
 

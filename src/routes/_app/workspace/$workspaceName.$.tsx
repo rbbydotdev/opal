@@ -3,6 +3,7 @@ import { FileError } from "@/components/FileError";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { TrashBanner } from "@/components/TrashBanner";
+import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
 import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
 import { WorkspaceImageView } from "@/components/WorkspaceImageView";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceName/$")({
 
 function WorkspaceFilePage() {
   const { workspaceName } = Route.useParams();
-  const { filePath, isImage, inTrash, isSourceView, mimeType, isMarkdown } = useCurrentFilepath();
+  const { filePath, isImage, inTrash, isSourceView, mimeType, isMarkdown, isRecognized } = useCurrentFilepath();
   const { currentWorkspace } = useWorkspaceContext();
   const navigate = useNavigate();
   useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
@@ -114,7 +115,9 @@ function WorkspaceFilePage() {
       {/* <SpotlightSearch currentWorkspace={currentWorkspace} /> */}
       <div id="spotlight-slot"></div>
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
-      {isImage ? (
+      {!isRecognized ? (
+        <UnrecognizedFileCard key={filePath} fileName={filePath?.split('/').pop() || ''} mimeType={mimeType} />
+      ) : isImage ? (
         <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
       ) : !isMarkdown || isSourceView || hasConflicts ? (
         <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} key={filePath} />
