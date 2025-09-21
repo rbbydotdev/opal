@@ -58,8 +58,8 @@ export function EditorSidebar({
                   className="flex items-center w-full"
                 >
                   <div className="flex items-center gap-2 border-2 border-secondary-foreground rounded p-2 shadow-md w-full">
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
-                      <CurrentWorkspaceIcon size={4} scale={7} />
+                    <div className="flex aspect-square h-8 w-8 items-center justify-center rounded-sm text-sidebar-primary-foreground">
+                      <CurrentWorkspaceIcon className="w-full h-full" size={4} scale={7} />
                     </div>
                     <div className="flex flex-col gap-0.5 leading-none truncate w-full">
                       {workspaceTitleMode === "edit" ? (

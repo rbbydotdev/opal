@@ -72,7 +72,7 @@ export const EditableFile = ({
           to={currentWorkspace.resolveFileUrl(fullPath)}
           className={cn(
             className,
-            { "bg-sidebar-accent font-bold": isSelectedRange || isFocused },
+            { "ring-sidebar-accent ring-2 font-bold": isSelectedRange || isFocused },
             "group cursor-pointer"
           )}
           ref={linkRef}

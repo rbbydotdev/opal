@@ -24,31 +24,6 @@ export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
 export type NodeDataJType = { nodes: TreeFileJType[] };
 export type NodeDataType = { nodes: TreeNode[] };
 
-export async function handleFileTreeNodePaste_______DEPRECATED(
-  currentWorkspace: Workspace,
-  items: ClipboardItems,
-  targetNode: TreeNode
-) {
-  // for (const item of items) {
-  //   if (item.types.includes(INTERNAL_NODE_FILE_TYPE)) {
-  //     const clipboardText = String(await item.getType(INTERNAL_NODE_FILE_TYPE).then((blob) => blob.text()));
-  //     const payload = tryParseCopyNodesPayload(clipboardText);
-  //     if (!payload || payload.workspaceId !== currentWorkspace.id) continue;
-  //     const { fileNodes, action } = payload;
-  //     const copyNodes: [TreeNode, AbsPath][] = fileNodes
-  //       .map((path) => [
-  //         currentWorkspace.nodeFromPath(String(path))!,
-  //         joinPath(targetNode.closestDirPath(), basename(path)),
-  //       ])
-  //       .filter(([from, to]) => String(from) !== to) as [TreeNode, AbsPath][];
-  //     await currentWorkspace.copyMultipleFiles(copyNodes);
-  //     if (action === "cut") {
-  //       return currentWorkspace.removeMultiple(copyNodes.map(([from]) => from));
-  //     }
-  //   }
-  // }
-}
-
 export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });
   const { setFileTreeCtx } = useFileTreeMenuCtx();
