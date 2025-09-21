@@ -16,7 +16,7 @@ import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
-import { ChevronDown, History, X } from "lucide-react";
+import { Check, ChevronDown, History, X } from "lucide-react";
 import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
@@ -37,29 +37,29 @@ export function useToggleEditHistory() {
 }
 
 export function EditHistoryMenu({
-  finalizeRestore,
+  finalizeRestore = () => {},
   disabled,
-  edits,
-  selectedEdit,
-  setEdit,
-  rebaseHistory,
-  resetAndRestore,
-  clearAll,
-  triggerSave,
-  isRestoreState,
-  selectedEditMd,
+  edits = [],
+  selectedEdit = null,
+  setEdit = async () => {},
+  rebaseHistory = () => {},
+  resetAndRestore = async () => {},
+  clearAll = async () => {},
+  triggerSave = () => {},
+  isRestoreState = false,
+  selectedEditMd = null,
 }: {
-  finalizeRestore: (md: string) => void;
+  finalizeRestore?: (md: string) => void;
   disabled?: boolean;
-  edits: HistoryDocRecord[];
-  selectedEdit: HistoryDocRecord | null;
-  setEdit: (edit: HistoryDocRecord) => Promise<void>;
-  rebaseHistory: (md: string) => void;
-  resetAndRestore: () => Promise<void>;
-  clearAll: () => Promise<void>;
-  triggerSave: () => void;
-  isRestoreState: boolean;
-  selectedEditMd: string | null;
+  edits?: HistoryDocRecord[];
+  selectedEdit?: HistoryDocRecord | null;
+  setEdit?: (edit: HistoryDocRecord) => Promise<void>;
+  rebaseHistory?: (md: string) => void;
+  resetAndRestore?: () => Promise<void>;
+  clearAll?: () => Promise<void>;
+  triggerSave?: () => void;
+  isRestoreState?: boolean;
+  selectedEditMd?: string | null;
 }) {
   const { currentWorkspace } = useWorkspaceContext();
   const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
@@ -69,6 +69,7 @@ export function EditHistoryMenu({
   const pendingSave = useSnapHistoryPendingSave({ historyDB });
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
+  const { isEditHistoryEnabled, toggleEditHistory } = useToggleEditHistory();
 
   const finalizeAndRestore = () => {
     if (selectedEditMd) {
@@ -82,8 +83,46 @@ export function EditHistoryMenu({
 
   const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
 
+  // When disabled, show minimal UI with just the toggle
   if (disabled) {
-    return null;
+    return (
+      <div className="relative flex items-center pl-2 gap-2 font-mono text-sm opacity-50">
+        <DropdownMenu open={isOpen} onOpenChange={setOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              tabIndex={0}
+              className="mx-1 h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
+              title="Edit History (disabled)"
+            >
+              <div className=" mr-2 flex items-center space-x-2">
+                <span className="whitespace-nowrap flex justify-start items-center gap-2">
+                  <X className="w-4 h-4" />
+                  Edit history
+                </span>
+              </div>
+              <ChevronDown size={12} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[20rem] bg-background p-0">
+            <div className="border-b border-border p-2">
+              <Button
+                variant={"secondary"}
+                size="default"
+                onClick={() => {
+                  toggleEditHistory();
+                  setOpen(false);
+                }}
+                className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary flex items-center gap-1"
+              >
+                <Check className="w-3 h-3" strokeWidth={4} />
+                enable history
+              </Button>
+            </div>
+            <div className="p-4 text-center text-muted-foreground text-sm">History tracking is disabled</div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
   }
   return (
     <div
@@ -110,7 +149,7 @@ export function EditHistoryMenu({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[37.5rem] bg-background p-0">
-          <div className="border-b border-border p-2">
+          <div className="border-b border-border p-2 flex gap-2">
             {Boolean(edits.length) ? (
               <Button
                 variant={"secondary"}
@@ -128,14 +167,22 @@ export function EditHistoryMenu({
               variant={"secondary"}
               size="default"
               onClick={() => {
-                void clearAll();
+                toggleEditHistory();
                 setOpen(false);
               }}
-              className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
+              className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary flex items-center gap-1"
             >
-              {/* <Check className="w-3 h-3" strokeWidth={4} /> */}
-              <X className="w-3 h-3" strokeWidth={4} />
-              disable
+              {isEditHistoryEnabled ? (
+                <>
+                  <Check className="w-3 h-3" strokeWidth={4} />
+                  enabled
+                </>
+              ) : (
+                <>
+                  <X className="w-3 h-3" strokeWidth={4} />
+                  disabled
+                </>
+              )}
             </Button>
           </div>
 

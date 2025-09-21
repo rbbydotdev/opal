@@ -18,38 +18,46 @@ export function useEditHistoryPlugin({
   historyStorage,
   rootMarkdown,
   shouldTrigger,
+  enabled = true,
 }: {
   workspaceId: string;
   documentId: string;
   historyStorage: HistoryStorageInterface;
   rootMarkdown: string;
   shouldTrigger?: () => boolean;
+  enabled?: boolean;
 }) {
   const shouldTriggerFn = useRef(shouldTrigger);
   const history = useMemo(
     () =>
-      new HistoryPlugin2({
-        workspaceId,
-        documentId,
-        historyStorage,
-        rootMarkdown,
-        shouldTrigger: shouldTriggerFn.current,
-      }),
-    [documentId, historyStorage, rootMarkdown, workspaceId]
+      enabled
+        ? new HistoryPlugin2({
+            workspaceId,
+            documentId,
+            historyStorage,
+            rootMarkdown,
+            shouldTrigger: shouldTriggerFn.current,
+          })
+        : null,
+    [documentId, historyStorage, rootMarkdown, workspaceId, enabled]
   );
 
-  const [infoState, setInfoState] = useState(() => history.getState());
+  const [infoState, setInfoState] = useState(() => 
+    history ? history.getState() : { edits: [], selectedEdit: null, selectedEditMd: null }
+  );
   const { edits, selectedEdit, selectedEditMd } = infoState;
   const unsubs = useRef<(() => void)[]>([]);
   const isRestoreState = selectedEdit !== null;
 
   useEffect(() => {
+    if (!history) return;
     return history.onStateUpdate(() => {
       setInfoState({ ...history.getState() });
     });
   }, [history]);
 
   useEffect(() => {
+    if (!history) return;
     history.init();
     return () => {
       history.teardown();
@@ -59,13 +67,18 @@ export function useEditHistoryPlugin({
   }, [history]);
 
   const triggerSave = useCallback(() => {
-    void history.triggerSave();
+    if (history) {
+      void history.triggerSave();
+    }
   }, [history]);
 
   function historyOutputInput(
     onOutput: (md: string) => void,
     onInput: (setMarkdown: (md: string) => void) => void | (() => void)
   ) {
+    if (!history) {
+      return () => {};
+    }
     const us: unknown[] = [];
     us.push(history.handleMarkdown(onOutput));
     us.push(
@@ -84,13 +97,13 @@ export function useEditHistoryPlugin({
     selectedEdit,
     selectedEditMd,
     triggerSave: triggerSave,
-    clearSelectedEdit: history.clearSelectedEdit,
-    resetAndRestore: history.resetAndRestore,
-    rebaseHistory: history.rebaseHistory,
+    clearSelectedEdit: history?.clearSelectedEdit ?? (() => {}),
+    resetAndRestore: history?.resetAndRestore ?? (async () => {}),
+    rebaseHistory: history?.rebaseHistory ?? (() => {}),
     isRestoreState,
-    setEdit: history.setSelectedEdit,
-    reset: history.clearSelectedEdit,
-    clearAll: history.clearAll,
+    setEdit: history?.setSelectedEdit ?? (async () => {}),
+    reset: history?.clearSelectedEdit ?? (() => {}),
+    clearAll: history?.clearAll ?? (async () => {}),
     historyOutputInput,
   };
 }
