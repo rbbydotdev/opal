@@ -30,9 +30,9 @@ function createWorkspaceSearchStream({
       try {
         const searchPromises = workspaces.map(async (workspace) => {
           const scannable = workspace.NewScannable();
-          console.log(`Searching in workspace with regex option: ${regexp}`);
+          // console.log(`Searching in workspace with regex option: ${regexp}`);
           const searchOptions = { regex: regexp !== undefined ? regexp : true };
-          console.log(`Search options:`, searchOptions);
+          // console.log(`Search options:`, searchOptions);
           try {
             const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm, searchOptions), signal);
 

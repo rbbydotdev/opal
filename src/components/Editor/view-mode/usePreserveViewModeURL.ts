@@ -8,7 +8,14 @@ export function usePreserveViewModeURL() {
       const { workspaceName: toWorkspaceName } = Workspace.parseWorkspacePath(window.location.href);
       const { workspaceName: fromWorkspaceName } = Workspace.parseWorkspacePath(event?.fromLocation?.href || "");
       if (event?.fromLocation?.hash && !window.location.hash && toWorkspaceName === fromWorkspaceName) {
-        window.location.hash = event?.fromLocation?.hash;
+        // Only preserve viewMode parameter, not hlRanges
+        const fromHashParams = new URLSearchParams(event.fromLocation.hash.slice(1));
+        const viewModeParam = fromHashParams.get("viewMode");
+        if (viewModeParam) {
+          const newHashParams = new URLSearchParams();
+          newHashParams.set("viewMode", viewModeParam);
+          window.location.hash = newHashParams.toString();
+        }
       }
     });
   }, [router]);

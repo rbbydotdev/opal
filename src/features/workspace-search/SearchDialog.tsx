@@ -179,7 +179,10 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
                     submit({ searchTerm, workspaceName: workspace, regexp: newRegexpValue });
                   }}
                 />
-                <Label className="flex items-center gap-1 font-mono text-2xs text-primary" htmlFor="regexp_option">
+                <Label
+                  className="flex items-center uppercase gap-1 font-mono text-xs cursor-pointer text-primary"
+                  htmlFor="regexp_option"
+                >
                   <span>regex</span>
                 </Label>
               </div>
@@ -357,7 +360,7 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
     viewMode: "source",
   });
   return (
-    <a href={href + "#" + sp} onClick={onClick}>
+    <Link to={href} hash={sp} onClick={onClick}>
       <div className="group flex cursor-pointer items-start border-b-4 border-background bg-sidebar-foreground p-1 py-1 font-mono text-xs text-sidebar last-of-type:border-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
         <div className="relative mr-2 min-w-8 text-right font-bold">
           {match.linesSpanned > 0 && (
@@ -376,6 +379,6 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
           {match.endText}
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
