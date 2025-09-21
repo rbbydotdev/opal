@@ -72,7 +72,7 @@ export const EditableDir = ({
       onMouseUp={handleMouseUp}
       onFocus={handleFocus}
       className={cn(
-        { "bg-sidebar-accent font-bold": isSelectedRange || isFocused },
+        { "ring-sidebar-accent ring-2 font-bold": isSelectedRange || isFocused },
         className,
         "w-full flex cursor-pointer select-none group/dir"
       )}
