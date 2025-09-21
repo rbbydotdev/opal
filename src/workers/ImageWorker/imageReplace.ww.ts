@@ -12,7 +12,7 @@ const API = {
   ): Promise<AbsPath[]> {
     try {
       await workspace.init();
-      return !findReplace.length ? [] : await workspace.disk.findReplaceImgBatch(findReplace, origin);
+      return !findReplace.length ? [] : await workspace.getDisk().findReplaceImgBatch(findReplace, origin);
     } catch (e) {
       console.error("Error in handleMdImageReplace:", e);
       throw e;

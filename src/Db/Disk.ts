@@ -31,7 +31,7 @@ import { RequestSignalsInstance } from "../lib/RequestSignals";
 // Utility type to make certain properties optional
 export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType | null };
 
-export const DiskTypes = [
+export const DiskKinds = [
   "IndexedDbDisk",
   "MemDisk",
   "DexieFsDbDisk",
@@ -41,6 +41,22 @@ export const DiskTypes = [
   "ZenWebstorageFSDbDisk",
   "LocalStorageFsDisk",
 ] as const;
+
+export type DiskTypes = (typeof DiskKinds)[number];
+
+export const getDiskTypeLabel = (type: DiskTypes) => {
+  return DiskKindLabel[type] ?? "Unknown";
+};
+export const DiskKindLabel: Record<DiskType, string> = {
+  IndexedDbDisk: "IndexedDB",
+  MemDisk: "Memory",
+  DexieFsDbDisk: "Dexie FS",
+  NullDisk: "Null",
+  OpFsDisk: "OPFS",
+  OpFsDirMountDisk: "OPFS Dir Mount",
+  ZenWebstorageFSDbDisk: "Zen Webstorage FS Db",
+  LocalStorageFsDisk: "Local Storage FS",
+};
 
 export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk", "OpFsDirMountDisk"] as const;
 export const DiskLabelMap: Record<DiskType, string> = {
@@ -64,7 +80,7 @@ export const DiskCanUseMap: Record<DiskType, () => boolean> = {
   ZenWebstorageFSDbDisk: () => false, // typeof ZenWebstorageFSDb !== "undefined",
 };
 
-export type DiskType = (typeof DiskTypes)[number];
+export type DiskType = (typeof DiskKinds)[number];
 
 export class RenameFileType {
   oldPath: AbsPath;
@@ -1082,7 +1098,9 @@ export class OpFsDirMountDisk extends Disk {
     await DirectoryHandleStore.storeHandle(this.guid, handle);
 
     // Create new filesystem using the directory handle with our patched implementation
-    const patchedDirMountOPFS = new PatchedDirMountOPFS(Promise.resolve(handle));
+    const patchedDirMountOPFS = new PatchedDirMountOPFS(
+      Promise.resolve(handle) as unknown as Promise<IFileSystemDirectoryHandle>
+    );
     const mutex = new Mutex();
     const mutexFs = new MutexFs(patchedDirMountOPFS, mutex);
     const ft = new FileTree(patchedDirMountOPFS, this.guid, mutex);

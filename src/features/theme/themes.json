@@ -3066,6 +3066,7 @@
         }
       }
     },
+
     {
       "name": "clean-slate",
       "type": "registry:style",
@@ -4818,6 +4819,136 @@
           "shadow-lg": "0px 1px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.00)",
           "shadow-xl": "0px 1px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.00)",
           "shadow-2xl": "0px 1px 0px 0px hsl(0 0% 0% / 0.00)"
+        }
+      }
+    },
+    {
+      "name": "tokyo-night",
+      "type": "registry:style",
+      "title": "Tokyo Night",
+      "description": "A theme inspired by the Tokyo Night color palette.",
+      "css": {
+        "@layer base": {
+          "body": {
+            "letter-spacing": "var(--tracking-normal)"
+          }
+        }
+      },
+      "cssVars": {
+        "theme": {
+          "font-sans": "Inter, sans-serif",
+          "font-mono": "JetBrains Mono, monospace",
+          "font-serif": "Merriweather, serif",
+          "radius": "0.5rem",
+          "tracking-tighter": "calc(var(--tracking-normal) - 0.05em)",
+          "tracking-tight": "calc(var(--tracking-normal) - 0.025em)",
+          "tracking-wide": "calc(var(--tracking-normal) + 0.025em)",
+          "tracking-wider": "calc(var(--tracking-normal) + 0.05em)",
+          "tracking-widest": "calc(var(--tracking-normal) + 0.1em)"
+        },
+        "light": {
+          "background": "oklch(0.98 0.01 250)",
+          "foreground": "oklch(0.20 0.02 250)",
+          "card": "oklch(0.99 0 0)",
+          "card-foreground": "oklch(0.20 0.02 250)",
+          "popover": "oklch(0.99 0 0)",
+          "popover-foreground": "oklch(0.20 0.02 250)",
+
+          "primary": "oklch(0.55 0.19 275)",
+          "primary-foreground": "oklch(0.99 0 0)",
+          "secondary": "oklch(0.85 0.07 310)",
+          "secondary-foreground": "oklch(0.25 0.03 250)",
+
+          "muted": "oklch(0.92 0.01 260)",
+          "muted-foreground": "oklch(0.45 0.02 250)",
+          "accent": "oklch(0.80 0.15 330)",
+          "accent-foreground": "oklch(0.20 0.02 250)",
+
+          "destructive": "oklch(0.65 0.21 25)",
+          "destructive-foreground": "oklch(0.99 0 0)",
+
+          "border": "oklch(0.85 0.01 260)",
+          "input": "oklch(0.85 0.01 260)",
+          "ring": "oklch(0.55 0.19 275)",
+
+          "chart-1": "oklch(0.55 0.19 275)",
+          "chart-2": "oklch(0.80 0.15 330)",
+          "chart-3": "oklch(0.72 0.19 200)",
+          "chart-4": "oklch(0.65 0.25 95)",
+          "chart-5": "oklch(0.65 0.25 340)",
+
+          "radius": "0.5rem",
+          "sidebar": "oklch(0.95 0.01 250)",
+          "sidebar-foreground": "oklch(0.20 0.02 250)",
+          "sidebar-primary": "oklch(0.55 0.19 275)",
+          "sidebar-primary-foreground": "oklch(0.99 0 0)",
+          "sidebar-accent": "oklch(0.80 0.15 330)",
+          "sidebar-accent-foreground": "oklch(0.25 0.03 250)",
+          "sidebar-border": "oklch(0.85 0.01 260)",
+          "sidebar-ring": "oklch(0.55 0.19 275)",
+
+          "shadow-color": "hsl(0 0% 0%)",
+          "shadow-opacity": "0.1",
+          "shadow-blur": "8px",
+          "shadow-spread": "-1px",
+          "shadow-offset-x": "0px",
+          "shadow-offset-y": "4px",
+
+          "letter-spacing": "0em",
+          "spacing": "0.25rem",
+          "shadow": "0px 4px 8px -1px hsl(0 0% 0% / 0.10)"
+        },
+        "dark": {
+          "background": "oklch(0.22 0.03 260)",
+          "foreground": "oklch(0.90 0.02 260)",
+          "card": "oklch(0.28 0.03 260)",
+          "card-foreground": "oklch(0.90 0.02 260)",
+          "popover": "oklch(0.28 0.03 260)",
+          "popover-foreground": "oklch(0.90 0.02 260)",
+
+          "primary": "oklch(0.55 0.19 275)",
+          "primary-foreground": "oklch(0.15 0.02 260)",
+          "secondary": "oklch(0.68 0.16 310)",
+          "secondary-foreground": "oklch(0.20 0.02 250)",
+
+          "muted": "oklch(0.28 0.03 260)",
+          "muted-foreground": "oklch(0.65 0.02 260)",
+          "accent": "oklch(0.80 0.15 330)",
+          "accent-foreground": "oklch(0.20 0.02 250)",
+
+          "destructive": "oklch(0.65 0.21 25)",
+          "destructive-foreground": "oklch(0.15 0.02 260)",
+
+          "border": "oklch(0.35 0.02 260)",
+          "input": "oklch(0.35 0.02 260)",
+          "ring": "oklch(0.55 0.19 275)",
+
+          "chart-1": "oklch(0.55 0.19 275)",
+          "chart-2": "oklch(0.80 0.15 330)",
+          "chart-3": "oklch(0.72 0.19 200)",
+          "chart-4": "oklch(0.65 0.25 95)",
+          "chart-5": "oklch(0.65 0.25 340)",
+
+          "radius": "0.5rem",
+          "sidebar": "oklch(0.28 0.03 260)",
+          "sidebar-foreground": "oklch(0.90 0.02 260)",
+          "sidebar-primary-foreground": "oklch(0.15 0.02 260)",
+          "sidebar-primary": "oklch(0.80 0.15 330)",
+          "sidebar-accent": "oklch(0.55 0.19 275)",
+          "sidebar-accent-foreground": "oklch(0.20 0.02 250)",
+          "sidebar-border": "oklch(0.35 0.02 260)",
+          "sidebar-ring": "oklch(0.55 0.19 275)",
+
+          "shadow-color": "hsl(0 0% 0%)",
+          "shadow-opacity": "0.1",
+          "shadow-blur": "8px",
+          "shadow-spread": "-1px",
+          "shadow-offset-x": "0px",
+          "shadow-offset-y": "4px",
+
+          "letter-spacing": "0em",
+          "spacing": "0.25rem",
+          "shadow": "0px 4px 8px -1px hsl(0 0% 0% / 0.10)"
         }
       }
     }
