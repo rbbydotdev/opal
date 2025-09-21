@@ -1,4 +1,4 @@
-import { Extension, EditorState } from "@codemirror/state";
+import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, WidgetType } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { createContrastSafeCustomTheme } from "./codeMirrorCustomTheme";
@@ -10,31 +10,30 @@ export class ConflictContentWidget extends WidgetType {
 
   constructor(
     private region: ConflictRegion,
-    private contentType: 'current' | 'incoming',
-    private onContentChange: (regionId: string, contentType: 'current' | 'incoming', newContent: string) => void,
+    private contentType: "current" | "incoming",
+    private onContentChange: (regionId: string, contentType: "current" | "incoming", newContent: string) => void,
     private getLanguageExtension: (mimeType: string) => Extension | null
   ) {
     super();
   }
 
   toDOM() {
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     container.className = `conflict-embedded-editor conflict-${this.contentType}`;
-    
-    const content = this.contentType === 'current' 
-      ? this.region.currentContent 
-      : this.region.incomingContent;
-    
-    const label = this.contentType === 'current' 
-      ? this.region.startMarker.label || 'HEAD'
-      : this.region.endMarker.label || 'incoming';
+
+    const content = this.contentType === "current" ? this.region.currentContent : this.region.incomingContent;
+
+    const label =
+      this.contentType === "current"
+        ? this.region.startMarker.label || "HEAD"
+        : this.region.endMarker.label || "incoming";
 
     // Create header
-    const header = document.createElement('div');
-    header.className = 'conflict-editor-header';
+    const header = document.createElement("div");
+    header.className = "conflict-editor-header";
     header.style.cssText = `
       padding: 4px 8px;
-      background: ${this.contentType === 'current' ? 'var(--chart-2)' : 'var(--chart-3)'};
+      background: ${this.contentType === "current" ? "var(--chart-2)" : "var(--chart-3)"};
       color: white;
       font-size: 12px;
       font-weight: bold;
@@ -43,12 +42,12 @@ export class ConflictContentWidget extends WidgetType {
       align-items: center;
       gap: 8px;
     `;
-    header.textContent = `${this.contentType === 'current' ? 'Current' : 'Incoming'} (${label})`;
+    header.textContent = `${this.contentType === "current" ? "Current" : "Incoming"} (${label})`;
 
     // Create editor container
-    const editorContainer = document.createElement('div');
+    const editorContainer = document.createElement("div");
     editorContainer.style.cssText = `
-      border: 1px solid ${this.contentType === 'current' ? 'var(--chart-2)' : 'var(--chart-3)'};
+      border: 1px solid ${this.contentType === "current" ? "var(--chart-2)" : "var(--chart-3)"};
       border-top: none;
       border-radius: 0 0 4px 4px;
       overflow: hidden;
@@ -67,42 +66,42 @@ export class ConflictContentWidget extends WidgetType {
         }
       }),
       EditorView.theme({
-        "&": { 
+        "&": {
           fontSize: "14px",
           minHeight: "60px",
-          maxHeight: "200px"
+          maxHeight: "200px",
         },
-        ".cm-scroller": { 
+        ".cm-scroller": {
           padding: "8px",
-          overflowY: "auto"
+          overflowY: "auto",
         },
         ".cm-editor": {
-          outline: "none"
+          outline: "none",
         },
         ".cm-focused": {
-          outline: "none"
-        }
-      })
+          outline: "none",
+        },
+      }),
     ];
 
     // Add language extension if available
-    const langExt = this.getLanguageExtension('text/plain'); // You could detect language from file context
+    const langExt = this.getLanguageExtension("text/plain"); // You could detect language from file context
     if (langExt) {
       extensions.push(langExt);
     }
 
     const state = EditorState.create({
       doc: content.text,
-      extensions
+      extensions,
     });
 
     this.editorView = new EditorView({
       state,
-      parent: editorContainer
+      parent: editorContainer,
     });
 
     container.append(header, editorContainer);
-    
+
     // Style the main container
     container.style.cssText = `
       margin: 8px 0;
@@ -131,8 +130,8 @@ export class ConflictContentWidget extends WidgetType {
         changes: {
           from: 0,
           to: this.editorView.state.doc.length,
-          insert: newContent
-        }
+          insert: newContent,
+        },
       });
     }
   }
@@ -143,44 +142,44 @@ export class EnhancedConflictResolverWidget extends WidgetType {
   private currentEditor: ConflictContentWidget;
   private incomingEditor: ConflictContentWidget;
   private resolvedContent: { current: string; incoming: string } = {
-    current: '',
-    incoming: ''
+    current: "",
+    incoming: "",
   };
 
   constructor(
     private region: ConflictRegion,
-    private onResolve: (regionId: string, choice: 'current' | 'incoming' | 'both' | 'custom') => void,
-    private onContentChange: (regionId: string, contentType: 'current' | 'incoming', newContent: string) => void,
+    private onResolve: (regionId: string, choice: "current" | "incoming" | "both" | "custom") => void,
+    private onContentChange: (regionId: string, contentType: "current" | "incoming", newContent: string) => void,
     private getLanguageExtension: (mimeType: string) => Extension | null
   ) {
     super();
-    
+
     this.resolvedContent.current = region.currentContent.text;
     this.resolvedContent.incoming = region.incomingContent.text;
-    
+
     this.currentEditor = new ConflictContentWidget(
-      region, 
-      'current', 
+      region,
+      "current",
       this.handleContentChange.bind(this),
       getLanguageExtension
     );
-    
+
     this.incomingEditor = new ConflictContentWidget(
-      region, 
-      'incoming', 
+      region,
+      "incoming",
       this.handleContentChange.bind(this),
       getLanguageExtension
     );
   }
 
-  private handleContentChange = (regionId: string, contentType: 'current' | 'incoming', newContent: string) => {
+  private handleContentChange = (regionId: string, contentType: "current" | "incoming", newContent: string) => {
     this.resolvedContent[contentType] = newContent;
     this.onContentChange(regionId, contentType, newContent);
   };
 
   toDOM() {
-    const container = document.createElement('div');
-    container.className = 'enhanced-conflict-resolver';
+    const container = document.createElement("div");
+    container.className = "enhanced-conflict-resolver";
     container.style.cssText = `
       margin: 16px 0;
       padding: 16px;
@@ -191,8 +190,8 @@ export class EnhancedConflictResolverWidget extends WidgetType {
     `;
 
     // Title
-    const title = document.createElement('h3');
-    title.textContent = 'Git Merge Conflict';
+    const title = document.createElement("h3");
+    title.textContent = "Git Merge Conflict";
     title.style.cssText = `
       margin: 0 0 16px 0;
       color: var(--foreground);
@@ -202,13 +201,13 @@ export class EnhancedConflictResolverWidget extends WidgetType {
       align-items: center;
       gap: 8px;
     `;
-    
-    const icon = document.createElement('span');
-    icon.textContent = '⚠️';
+
+    const icon = document.createElement("span");
+    icon.textContent = "⚠️";
     title.prepend(icon);
 
     // Editors container
-    const editorsContainer = document.createElement('div');
+    const editorsContainer = document.createElement("div");
     editorsContainer.style.cssText = `
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -218,11 +217,11 @@ export class EnhancedConflictResolverWidget extends WidgetType {
 
     const currentContainer = this.currentEditor.toDOM();
     const incomingContainer = this.incomingEditor.toDOM();
-    
+
     editorsContainer.append(currentContainer, incomingContainer);
 
     // Action buttons
-    const actionsContainer = document.createElement('div');
+    const actionsContainer = document.createElement("div");
     actionsContainer.style.cssText = `
       display: flex;
       gap: 8px;
@@ -231,14 +230,14 @@ export class EnhancedConflictResolverWidget extends WidgetType {
     `;
 
     const buttons = [
-      { text: 'Accept Current', choice: 'current' as const, color: 'var(--chart-2)' },
-      { text: 'Accept Incoming', choice: 'incoming' as const, color: 'var(--chart-3)' },
-      { text: 'Accept Both', choice: 'both' as const, color: 'var(--primary)' },
-      { text: 'Accept Edited', choice: 'custom' as const, color: 'var(--chart-5)' }
+      { text: "Accept Current", choice: "current" as const, color: "var(--chart-2)" },
+      { text: "Accept Incoming", choice: "incoming" as const, color: "var(--chart-3)" },
+      { text: "Accept Both", choice: "both" as const, color: "var(--primary)" },
+      { text: "Accept Edited", choice: "custom" as const, color: "var(--chart-5)" },
     ];
 
     buttons.forEach(({ text, choice, color }) => {
-      const button = document.createElement('button');
+      const button = document.createElement("button");
       button.textContent = text;
       button.style.cssText = `
         padding: 8px 16px;
@@ -251,20 +250,20 @@ export class EnhancedConflictResolverWidget extends WidgetType {
         font-weight: bold;
         transition: opacity 0.2s;
       `;
-      
-      button.addEventListener('mouseover', () => {
-        button.style.opacity = '0.8';
+
+      button.addEventListener("mouseover", () => {
+        button.style.opacity = "0.8";
       });
-      
-      button.addEventListener('mouseout', () => {
-        button.style.opacity = '1';
+
+      button.addEventListener("mouseout", () => {
+        button.style.opacity = "1";
       });
-      
-      button.addEventListener('click', (e) => {
+
+      button.addEventListener("click", (e) => {
         e.preventDefault();
         this.onResolve(this.region.id, choice);
       });
-      
+
       actionsContainer.appendChild(button);
     });
 
@@ -290,15 +289,15 @@ export class EnhancedConflictResolverWidget extends WidgetType {
 class SimpleConflictResolverWidget extends WidgetType {
   constructor(
     private region: ConflictRegion,
-    private onResolve: (regionId: string, choice: 'current' | 'incoming' | 'both' | 'custom') => void
+    private onResolve: (regionId: string, choice: "current" | "incoming" | "both" | "custom") => void
   ) {
     super();
   }
 
   toDOM() {
-    const container = document.createElement('span');
-    container.className = 'conflict-resolver-widget';
-    container.style.cssText = `
+    const innerContainer = document.createElement("span");
+    innerContainer.className = "conflict-resolver-widget";
+    innerContainer.style.cssText = `
       display: inline-flex;
       gap: 4px;
       align-items: center;
@@ -312,13 +311,13 @@ class SimpleConflictResolverWidget extends WidgetType {
     `;
 
     const buttons = [
-      { text: 'Current', choice: 'current' as const, color: 'var(--chart-2)' },
-      { text: 'Incoming', choice: 'incoming' as const, color: 'var(--chart-3)' },
-      { text: 'Both', choice: 'both' as const, color: 'var(--primary)' }
+      { text: "Current", choice: "current" as const, color: "var(--chart-2)" },
+      { text: "Incoming", choice: "incoming" as const, color: "var(--chart-3)" },
+      { text: "Both", choice: "both" as const, color: "var(--primary)" },
     ];
 
     buttons.forEach(({ text, choice, color }) => {
-      const button = document.createElement('button');
+      const button = document.createElement("button");
       button.textContent = text;
       button.style.cssText = `
         padding: 2px 6px;
@@ -330,16 +329,16 @@ class SimpleConflictResolverWidget extends WidgetType {
         font-size: 10px;
         font-weight: bold;
       `;
-      
-      button.addEventListener('click', (e) => {
+
+      button.addEventListener("click", (e) => {
         e.preventDefault();
         this.onResolve(this.region.id, choice);
       });
-      
-      container.appendChild(button);
+
+      innerContainer.appendChild(button);
     });
 
-    return container;
+    return innerContainer;
   }
 
   eq(other: SimpleConflictResolverWidget) {
@@ -350,8 +349,8 @@ class SimpleConflictResolverWidget extends WidgetType {
 // Factory function to create conflict widgets
 export function createConflictWidget(
   region: ConflictRegion,
-  onResolve: (regionId: string, choice: 'current' | 'incoming' | 'both' | 'custom') => void,
-  onContentChange: (regionId: string, contentType: 'current' | 'incoming', newContent: string) => void,
+  onResolve: (regionId: string, choice: "current" | "incoming" | "both" | "custom") => void,
+  onContentChange: (regionId: string, contentType: "current" | "incoming", newContent: string) => void,
   getLanguageExtension: (mimeType: string) => Extension | null,
   useEmbeddedEditors: boolean = true
 ): WidgetType {

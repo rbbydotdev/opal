@@ -93,7 +93,7 @@ export function EditHistoryMenu({
         <DropdownMenuTrigger asChild disabled={disabled}>
           <button
             tabIndex={0}
-            className="h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
+            className="mx-1 h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
           >
             <div className="pl-8 mr-2 flex items-center space-x-2 ">
               <span className="whitespace-nowrap">Edit history {timeAgoStr}</span>

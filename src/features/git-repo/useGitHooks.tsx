@@ -11,4 +11,4 @@ export function useGitPlaybook(repo: GitRepo | Comlink.Remote<GitRepo>): GitPlay
     return new GitPlaybook(repo);
   }, [repo]);
 }
-export type WorkspaceRepoType = DeepNonNullable<RepoInfoType, "currentBranch" | "currentRef">;
+export type WorkspaceRepoType = DeepNonNullable<RepoInfoType, "parentOid" | "currentBranch" | "currentRef">;

@@ -2,6 +2,7 @@ import { Disk, DiskJType } from "@/Db/Disk";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
+import { debounce } from "@/lib/debounce";
 import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
@@ -54,6 +55,7 @@ export type RepoLatestCommit = {
   oid: string;
   date: number;
   message: string;
+  parentOid: string | null;
   author: {
     name: string;
     email: string;
@@ -69,6 +71,7 @@ export const RepoLatestCommitNull = {
   oid: "",
   date: 0,
   message: "",
+  parentOid: null,
   author: {
     name: "",
     email: "",
@@ -114,6 +117,7 @@ export const RepoDefaultInfo = {
   unmergedFiles: [] as string[],
   conflictingFiles: [] as string[],
   currentRef: null as null | GitRef,
+  parentOid: null as null | string,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
 //--------------------------
@@ -326,6 +330,15 @@ export class GitRepo {
     void this.remote.on(RepoEvents.GIT, () => {
       void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
     });
+    // this.gitEvents.on("*:end", (propName) => {
+    //   console.log("git event: " + propName);
+    // });
+    const onGitChange = debounce((_propName: string) => {
+      // console.debug("git repo event: " + _propName);
+      void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
+      void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
+      void this.sync();
+    }, 500);
     return this.gitEvents.on(
       [
         "commit:end",
@@ -338,13 +351,9 @@ export class GitRepo {
         "deleteBranch:end",
         "deleteRemote:end",
         "init:end",
+        "writeRef:end",
       ],
-      (propName) => {
-        console.debug("git repo event: " + propName);
-        void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
-        void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
-        void this.sync();
-      }
+      onGitChange
     );
   };
 
@@ -438,6 +447,60 @@ export class GitRepo {
       return false;
     }
   };
+
+  readCommit = async ({ oid }: { oid: string }) => {
+    return this.git.readCommit({ fs: this.fs, dir: this.dir, oid });
+  };
+  readCommitFromRef = async ({ ref, throwNotFound = false }: { ref: string; throwNotFound?: boolean }) => {
+    const { baseRef, operators } = this.parseRefOperators(ref);
+
+    // start from the base reference
+    const fullRef = await this.normalizeRef({ ref: baseRef });
+    let oid = await this.resolveRef({ ref: fullRef });
+
+    // apply operators in order (can chain them)
+    for (const op of operators) {
+      const { commit } = await this.readCommit({ oid });
+
+      if (op.type === "~") {
+        // walk first parent repeatedly
+        for (let i = 0; i < op.count; i++) {
+          if (!commit.parent[0]) {
+            if (throwNotFound) throw new NotFoundError(`Commit ${oid} has no parent to satisfy ${ref}`);
+            return null;
+          }
+          oid = commit.parent[0];
+          const parentCommit = await this.readCommit({ oid });
+          commit.parent = parentCommit.commit.parent;
+        }
+      } else if (op.type === "^") {
+        // direct parent lookup (1-based index)
+        const index = op.count - 1;
+        if (!commit.parent[index]) {
+          throw new Error(`Commit ${oid} does not have parent #${op.count} for ${ref}`);
+        }
+        oid = commit.parent[index];
+      }
+    }
+
+    return this.readCommit({ oid });
+  };
+  private parseRefOperators(ref: string) {
+    const baseRefMatch = ref.match(/^[^^~]+/);
+    if (!baseRefMatch) throw new Error(`Invalid ref: ${ref}`);
+    const baseRef = baseRefMatch[0];
+
+    const operators: { type: "~" | "^"; count: number }[] = [];
+    const regex = /([~^])(\d+)?/g;
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(ref)) !== null) {
+      const type = m[1] as "~" | "^";
+      const count = m[2] ? parseInt(m[2], 10) : 1;
+      operators.push({ type, count });
+    }
+
+    return { baseRef, operators };
+  }
 
   sync = async ({ emitRemote = true } = {}) => {
     const newInfo = { ...(await this.tryInfo()) };
@@ -619,6 +682,7 @@ export class GitRepo {
         isMerging,
         currentRef,
         unmergedFiles: isMerging ? await this.getUnmergedFiles() : [],
+        parentOid: latestCommit.oid,
       };
     } catch (e) {
       if (!(e instanceof GIT.Errors.NotFoundError)) {
@@ -636,8 +700,10 @@ export class GitRepo {
       ref: mergeHead,
     });
     const conflicts: string[] = [];
+    console.log("-------------");
     for (const [filepath, _head, _workdir, stage] of matrix) {
-      if (stage === 3) conflicts.push(filepath);
+      console.log("statusMatrix", { filepath, stage });
+      if (stage > 0) conflicts.push(filepath);
     }
     return conflicts;
   };
@@ -750,6 +816,7 @@ export class GitRepo {
       date: commit.commit.committer.timestamp * 1000, // timestamp is in seconds
       message: commit.commit.message,
       author: commit.commit.author,
+      parentOid: commit.commit.parent[0] || null,
     };
   };
 

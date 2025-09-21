@@ -39,7 +39,7 @@ export function useAllPlugins({
   realmId: string;
   mimeType: string;
 }) {
-  const { contents } = useFileContents({ currentWorkspace });
+  const { contents, writeFileContents } = useFileContents({ currentWorkspace });
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
   // //TODO heal documentId or prevent erasure
   const documentId = useWorkspaceDocumentId(String(contents || ""));
@@ -80,9 +80,7 @@ export function useAllPlugins({
             <>
               <SourceEditorButton />
               <EditHistoryMenu
-                finalizeRestore={(md) => {
-                  console.log("md>>>", md);
-                }}
+                finalizeRestore={writeFileContents}
                 edits={edits}
                 selectedEdit={selectedEdit}
                 setEdit={setEdit}
