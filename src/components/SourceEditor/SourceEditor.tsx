@@ -15,12 +15,16 @@ export const SourceEditor = ({
   mimeType?: string;
 }) => {
   const { contents: initialContents, updateDebounce, error } = useFileContents({ currentWorkspace });
-  const { storedValue: enableGitConflictResolution } = useLocalStorage2("SourceEditor/enableGitConflictResolution", true);
-  
+  const { storedValue: enableGitConflictResolution } = useLocalStorage2(
+    "SourceEditor/enableGitConflictResolution",
+    true
+  );
+
   if (error) {
     throw error;
   }
-  
+  console.log(initialContents);
+
   return (
     <div className="h-full">
       <div className="bg-sidebar"></div>

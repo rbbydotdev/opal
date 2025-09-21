@@ -88,64 +88,84 @@ function createEnhancedConflictDecorations(
     }
 
     try {
-      // Create an inline widget for the conflict resolution UI
-      const resolverWidget = Decoration.widget({
-        widget: createConflictWidget(
-          region,
-          (regionId, choice) => resolveEnhancedConflict(view, regionId, choice),
-          (regionId, contentType, newContent) => {
-            view.dispatch({
-              effects: [updateConflictContent.of({ regionId, contentType, newContent })],
-            });
-          },
-          getLanguageExtension,
-          false // Use simple resolver
-        ),
-        side: 1,
+      // Collect all decorations with their positions for sorting
+      const decorations = [];
+
+      // Add widget at the start
+      decorations.push({
+        from: region.startMarker.from,
+        to: region.startMarker.from,
+        decoration: Decoration.widget({
+          widget: createConflictWidget(
+            region,
+            (regionId, choice) => resolveEnhancedConflict(view, regionId, choice),
+            (regionId, contentType, newContent) => {
+              view.dispatch({
+                effects: [updateConflictContent.of({ regionId, contentType, newContent })],
+              });
+            },
+            getLanguageExtension,
+            false // Use simple resolver
+          ),
+          side: 1,
+        })
       });
 
-      builder.add(region.startMarker.from, region.startMarker.from, resolverWidget);
-
-      // Style the conflict markers and content
-      builder.add(
-        region.startMarker.from,
-        region.startMarker.to,
-        Decoration.mark({
+      // Add start marker decoration
+      decorations.push({
+        from: region.startMarker.from,
+        to: region.startMarker.to,
+        decoration: Decoration.mark({
           class: "conflict-marker conflict-start",
         })
-      );
+      });
 
-      builder.add(
-        region.separatorMarker.from,
-        region.separatorMarker.to,
-        Decoration.mark({
+      // Add current content decoration if there's content
+      if (region.currentContent.from < region.currentContent.to) {
+        decorations.push({
+          from: region.currentContent.from,
+          to: region.currentContent.to,
+          decoration: Decoration.mark({
+            class: "conflict-content conflict-current",
+          })
+        });
+      }
+
+      // Add separator marker decoration
+      decorations.push({
+        from: region.separatorMarker.from,
+        to: region.separatorMarker.to,
+        decoration: Decoration.mark({
           class: "conflict-marker conflict-separator",
         })
-      );
+      });
 
-      builder.add(
-        region.endMarker.from,
-        region.endMarker.to,
-        Decoration.mark({
+      // Add incoming content decoration if there's content
+      if (region.incomingContent.from < region.incomingContent.to) {
+        decorations.push({
+          from: region.incomingContent.from,
+          to: region.incomingContent.to,
+          decoration: Decoration.mark({
+            class: "conflict-content conflict-incoming",
+          })
+        });
+      }
+
+      // Add end marker decoration
+      decorations.push({
+        from: region.endMarker.from,
+        to: region.endMarker.to,
+        decoration: Decoration.mark({
           class: "conflict-marker conflict-end",
         })
-      );
+      });
 
-      builder.add(
-        region.currentContent.from,
-        region.currentContent.to,
-        Decoration.mark({
-          class: "conflict-content conflict-current",
-        })
-      );
-
-      builder.add(
-        region.incomingContent.from,
-        region.incomingContent.to,
-        Decoration.mark({
-          class: "conflict-content conflict-incoming",
-        })
-      );
+      // Sort decorations by position and add them in order
+      decorations
+        .sort((a, b) => a.from - b.from || a.to - b.to)
+        .forEach(({ from, to, decoration }) => {
+          builder.add(from, to, decoration);
+        });
     } catch (error) {
       console.warn("Failed to add conflict decorations:", error);
     }

@@ -1,10 +1,10 @@
 import { Extension, RangeSetBuilder, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView, ViewPlugin, WidgetType } from "@codemirror/view";
 
-// Git conflict marker patterns
-const CONFLICT_START_PATTERN = /^<{7}(?:\s+(.*))?$/gm;
-const CONFLICT_SEPARATOR_PATTERN = /^={7}$/gm;
-const CONFLICT_END_PATTERN = /^>{7}(?:\s+(.*))?$/gm;
+// // Git conflict marker patterns
+// const CONFLICT_START_PATTERN = /^<{7}(?:\s+(.*))?$/gm;
+// const CONFLICT_SEPARATOR_PATTERN = /^={7}$/gm;
+// const CONFLICT_END_PATTERN = /^>{7}(?:\s+(.*))?$/gm;
 
 export interface ConflictSection {
   type: "start" | "separator" | "end";
@@ -57,7 +57,7 @@ export function parseConflictMarkers(doc: string): ConflictRegion[] {
   let position = 0;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i]!;
     const lineStart = position;
     const lineEnd = position + line.length;
 
@@ -90,12 +90,12 @@ export function parseConflictMarkers(doc: string): ConflictRegion[] {
       const startLine = currentRegion.startMarker?.line;
       if (startLine !== undefined) {
         const currentContentStart = lines.slice(0, startLine + 1).join("\n").length + 1;
-        const currentContentEnd = lineStart - 1;
+        const currentContentEnd = Math.max(currentContentStart, lineStart - 1);
 
         currentRegion.currentContent = {
           from: currentContentStart,
           to: currentContentEnd,
-          text: doc.slice(currentContentStart, currentContentEnd),
+          text: currentContentStart <= currentContentEnd ? doc.slice(currentContentStart, currentContentEnd) : "",
         };
       }
     }
@@ -115,12 +115,12 @@ export function parseConflictMarkers(doc: string): ConflictRegion[] {
       const separatorLine = currentRegion.separatorMarker?.line;
       if (separatorLine !== undefined) {
         const incomingContentStart = lines.slice(0, separatorLine + 1).join("\n").length + 1;
-        const incomingContentEnd = lineStart - 1;
+        const incomingContentEnd = Math.max(incomingContentStart, lineStart - 1);
 
         currentRegion.incomingContent = {
           from: incomingContentStart,
           to: incomingContentEnd,
-          text: doc.slice(incomingContentStart, incomingContentEnd),
+          text: incomingContentStart <= incomingContentEnd ? doc.slice(incomingContentStart, incomingContentEnd) : "",
         };
       }
 
@@ -227,18 +227,22 @@ function createConflictDecorations(view: EditorView, regions: ConflictRegion[]):
 
     builder.add(region.endMarker.from, region.endMarker.to, Decoration.line({ class: "conflict-marker conflict-end" }));
 
-    // Decorate content sections
-    builder.add(
-      region.currentContent.from,
-      region.currentContent.to,
-      Decoration.mark({ class: "conflict-content conflict-current" })
-    );
+    // Decorate content sections (only if there's actual content)
+    if (region.currentContent.from < region.currentContent.to) {
+      builder.add(
+        region.currentContent.from,
+        region.currentContent.to,
+        Decoration.mark({ class: "conflict-content conflict-current" })
+      );
+    }
 
-    builder.add(
-      region.incomingContent.from,
-      region.incomingContent.to,
-      Decoration.mark({ class: "conflict-content conflict-incoming" })
-    );
+    if (region.incomingContent.from < region.incomingContent.to) {
+      builder.add(
+        region.incomingContent.from,
+        region.incomingContent.to,
+        Decoration.mark({ class: "conflict-content conflict-incoming" })
+      );
+    }
 
     // Add resolution widget after the conflict region
     const resolverWidget = Decoration.widget({
