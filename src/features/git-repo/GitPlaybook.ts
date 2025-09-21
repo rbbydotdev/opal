@@ -3,7 +3,7 @@ import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
-import { NotFoundError } from "@/lib/errors";
+import { ConflictError, NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
@@ -30,7 +30,7 @@ export class GitPlaybook {
   switchBranch = async (branchName: string) => {
     if ((await this.repo.getCurrentBranch()) === branchName) return false;
     if (await this.repo.isMerging()) {
-      throw new Error("Cannot switch branches while a merge is in progress. Please complete the merge first.");
+      throw new ConflictError("Cannot switch branches while a merge is in progress. Please complete the merge first.");
     }
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
