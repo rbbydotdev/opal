@@ -141,6 +141,19 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
       throw new Error("Cannot unlink root directory");
     }
     const normalizedPath = this.normalizePath(path);
+    
+    // Check if path is a directory first
+    try {
+      const stat = await this.stat(path);
+      if (stat.isDirectory()) {
+        // Use rmdir for directories
+        return this.promises.rmdir(normalizedPath, { recursive: true });
+      }
+    } catch (error) {
+      // If stat fails, proceed with unlink attempt
+    }
+    
+    // For files, use unlink or fallback to rm
     return this.promises.unlink
       ? this.promises.unlink(normalizedPath)
       : this.promises.rm(normalizedPath, { recursive: true, force: true });

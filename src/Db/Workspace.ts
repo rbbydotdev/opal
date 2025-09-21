@@ -545,7 +545,6 @@ export class Workspace {
 
   private async initImageFileListeners() {
     return this.renameListener(async (nodes) => {
-      console.log(nodes);
       await Promise.all(
         nodes.map(({ oldPath, newPath, fileType }) =>
           this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath.replace(oldPath, newPath)))
