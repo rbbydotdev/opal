@@ -5,6 +5,7 @@ import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -17,8 +18,9 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
+import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
-import { CopyMinus, FileCode2Icon, FileEditIcon, FolderPlus, Info, Trash2 } from "lucide-react";
+import { CopyMinus, Ellipsis, FileCode2Icon, FileEditIcon, FolderPlus, Info, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
@@ -95,7 +97,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
     </>
   );
 }
-export const SidebarFileMenuFilesActions = ({
+const FileMenuActionButtonRow = ({
   trashSelectedFiles,
   addFile,
   addDir,
@@ -105,16 +107,15 @@ export const SidebarFileMenuFilesActions = ({
 }: {
   trashSelectedFiles: () => void;
   addFile: () => void;
-  addCssFile?: () => void; // Optional for future use
+  addCssFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
 }) => {
   const [open, toggle] = useFlashTooltip();
-  const { storedValue: width } = useLeftWidth();
+
   return (
     <div className="whitespace-nowrap gap-1 flex items-center justify-center p-1">
-      <div>{width}</div>
       <Tooltip open={open}>
         <TooltipTrigger asChild>
           <Button
@@ -176,5 +177,112 @@ export const SidebarFileMenuFilesActions = ({
         <CopyMinus />
       </Button>
     </div>
+  );
+};
+
+const FileMenuCompactActions = ({
+  trashSelectedFiles,
+  addFile,
+  addDir,
+  addCssFile,
+  setExpandAll,
+  diskType,
+}: {
+  trashSelectedFiles: () => void;
+  addFile: () => void;
+  addCssFile?: () => void;
+  addDir: () => void;
+  setExpandAll: (expand: boolean) => void;
+  diskType: string;
+}) => {
+  return (
+    <div className="flex items-center justify-center p-1">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            className="p-1 m-0 !bg-transparent"
+            variant="ghost"
+            aria-label="File Menu Actions"
+            title="File Menu Actions"
+          >
+            <Ellipsis />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={addFile}>
+            <FileEditIcon className="w-4 h-4 mr-2" />
+            New Markdown File
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={addCssFile}>
+            <FileCode2Icon className="w-4 h-4 mr-2" />
+            New CSS File
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={addDir}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            New Folder
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={trashSelectedFiles}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            Trash Files
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setExpandAll(false)}>
+            <CopyMinus className="w-4 h-4 mr-2" />
+            Collapse All
+          </DropdownMenuItem>
+          <DropdownMenuItem onDoubleClick={() => setExpandAll(true)} onClick={() => setExpandAll(true)}>
+            <CopyMinus className="w-4 h-4 mr-2" />
+            Expand All
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Info className="w-4 h-4 mr-2" />
+            {diskType}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
+export const SidebarFileMenuFilesActions = ({
+  trashSelectedFiles,
+  addFile,
+  addDir,
+  addCssFile,
+  setExpandAll,
+  diskType,
+}: {
+  trashSelectedFiles: () => void;
+  addFile: () => void;
+  addCssFile?: () => void; // Optional for future use
+  addDir: () => void;
+  setExpandAll: (expand: boolean) => void;
+  diskType: string;
+}) => {
+  const { storedValue: width } = useLeftWidth();
+  const { zoomLevel } = useZoom();
+  const isTooSmall = Boolean(width * (1.05 / zoomLevel) < 310);
+
+  if (isTooSmall) {
+    return (
+      <FileMenuCompactActions
+        trashSelectedFiles={trashSelectedFiles}
+        addFile={addFile}
+        addDir={addDir}
+        addCssFile={addCssFile}
+        setExpandAll={setExpandAll}
+        diskType={diskType}
+      />
+    );
+  }
+
+  return (
+    <FileMenuActionButtonRow
+      trashSelectedFiles={trashSelectedFiles}
+      addFile={addFile}
+      addDir={addDir}
+      addCssFile={addCssFile}
+      setExpandAll={setExpandAll}
+      diskType={diskType}
+    />
   );
 };
