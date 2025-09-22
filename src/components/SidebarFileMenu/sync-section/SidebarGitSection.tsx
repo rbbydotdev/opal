@@ -11,12 +11,14 @@ import {
   RefreshCw,
   RotateCcw,
   Upload,
+  User,
   X,
 } from "lucide-react";
 import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { RefsManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
+import { GitAuthorDialog, useGitAuthorDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitAuthorDialog";
 import { GitRemoteDialog, useGitRemoteDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitRemoteDialog";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -37,6 +39,7 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
+import { useGitAuthorSettings } from "@/features/git-repo/useGitAuthorSettings";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
@@ -270,18 +273,28 @@ const GridButton = ({
   );
 };
 
-function SyncPullPushButtons() {
+function SyncPullPushButtons({
+  onSync,
+  onPull,
+  onPush,
+  disabled = false,
+}: {
+  onSync: () => void;
+  onPull: () => void;
+  onPush: () => void;
+  disabled?: boolean;
+}) {
   return (
     <div className="grid gap-2 grid-cols-1">
-      <GridButton icon={RefreshCw} size="sm" variant="outline">
+      <GridButton icon={RefreshCw} size="sm" variant="outline" onClick={onSync} disabled={disabled}>
         Sync Now
       </GridButton>
 
-      <GridButton icon={Download} size="sm" variant="outline">
+      <GridButton icon={Download} size="sm" variant="outline" onClick={onPull} disabled={disabled}>
         Pull
       </GridButton>
 
-      <GridButton icon={Upload} size="sm" variant="outline">
+      <GridButton icon={Upload} size="sm" variant="outline" onClick={onPush} disabled={disabled}>
         Push
       </GridButton>
     </div>
@@ -425,6 +438,9 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
   const { cmdRef: fetchRef } = useTooltipToastCmd();
   const { cmdRef: initFromRemoteRef } = useTooltipToastCmd();
+  
+  const { gitAuthor, setGitAuthor } = useGitAuthorSettings();
+  const gitAuthorDialogRef = useGitAuthorDialogCmd();
 
   const tossError = useErrorToss();
 
@@ -516,6 +532,92 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
     });
   };
 
+  const handleConfigureAuthor = () => {
+    void gitAuthorDialogRef.current.open(gitAuthor).then(({ author }) => {
+      if (author) {
+        setGitAuthor(author);
+        commitRef.current?.show("Git author updated");
+      }
+    });
+  };
+
+  const handleSyncRemote = async () => {
+    if (!coalescedRemote) return;
+    try {
+      setFetchPending(true);
+      // First pull, then push
+      await playbook.pull({ remote: coalescedRemote });
+      await playbook.push({ remote: coalescedRemote });
+      fetchRef.current?.show(
+        <span className="flex items-center gap-2 justify-center">
+          <Check size={10} />
+          Sync completed
+        </span>
+      );
+    } catch (err) {
+      fetchRef.current?.show(
+        <span className="flex items-center gap-2 justify-center w-full h-full">
+          <X size={10} />
+          Sync failed!
+        </span>,
+        "destructive"
+      );
+      console.error("Error syncing remote:", err);
+    } finally {
+      setFetchPending(false);
+    }
+  };
+
+  const handlePullRemote = async () => {
+    if (!coalescedRemote) return;
+    try {
+      setFetchPending(true);
+      await playbook.pull({ remote: coalescedRemote });
+      fetchRef.current?.show(
+        <span className="flex items-center gap-2 justify-center">
+          <Check size={10} />
+          Pull completed
+        </span>
+      );
+    } catch (err) {
+      fetchRef.current?.show(
+        <span className="flex items-center gap-2 justify-center w-full h-full">
+          <X size={10} />
+          Pull failed!
+        </span>,
+        "destructive"
+      );
+      console.error("Error pulling from remote:", err);
+    } finally {
+      setFetchPending(false);
+    }
+  };
+
+  const handlePushRemote = async () => {
+    if (!coalescedRemote) return;
+    try {
+      setFetchPending(true);
+      await playbook.push({ remote: coalescedRemote });
+      fetchRef.current?.show(
+        <span className="flex items-center gap-2 justify-center">
+          <Check size={10} />
+          Push completed
+        </span>
+      );
+    } catch (err) {
+      fetchRef.current?.show(
+        <span className="flex items-center gap-2 justify-center w-full h-full">
+          <X size={10} />
+          Push failed!
+        </span>,
+        "destructive"
+      );
+      console.error("Error pushing to remote:", err);
+    } finally {
+      setFetchPending(false);
+    }
+  };
+
   return (
     <SidebarGroup className="pl-0 py-0" {...props}>
       <Collapsible className="group/collapsible flex flex-col min-h-0" open={expanded} onOpenChange={setExpand}>
@@ -534,7 +636,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         </CollapsibleTrigger>
 
         <div className="group-data-[state=closed]/collapsible:hidden">
-          <GitManager info={info} resetRepo={repo.reset} initRepo={() => playbook.initialCommit()} />
+          <GitManager info={info} resetRepo={repo.reset} initRepo={() => playbook.initialCommit()} onConfigureAuthor={handleConfigureAuthor} />
         </div>
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
@@ -613,7 +715,14 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   </GridButton>
                 </div>
               )}
-              {info.fullInitialized && info.currentRef && <SyncPullPushButtons />}
+              {info.fullInitialized && info.currentRef && coalescedRemote && (
+                <SyncPullPushButtons
+                  onSync={() => handleSyncRemote()}
+                  onPull={() => handlePullRemote()}
+                  onPush={() => handlePushRemote()}
+                  disabled={fetchPending}
+                />
+              )}
 
               {((commitState === "bare-init" && !hasRemotes) || commitState === "init") && (
                 <GridButton
@@ -634,6 +743,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         </CollapsibleContent>
       </Collapsible>
       <GitRemoteDialog cmdRef={addRemoteCmdRef} />
+      <GitAuthorDialog cmdRef={gitAuthorDialogRef} />
     </SidebarGroup>
   );
 }
@@ -644,10 +754,12 @@ function GitManager({
   info,
   initRepo,
   resetRepo,
+  onConfigureAuthor,
 }: {
   info: RepoInfoType;
   initRepo: () => void;
   resetRepo: () => void;
+  onConfigureAuthor: () => void;
 }) {
   const { open } = useConfirm();
   return (
@@ -660,6 +772,10 @@ function GitManager({
       <DropdownMenuContent align="end">
         <DropdownMenuItem disabled={info.bareInitialized} onClick={initRepo}>
           <PlusIcon /> Initialize Repo
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={onConfigureAuthor}>
+          <User /> Configure Author
         </DropdownMenuItem>
 
         <DropdownMenuItem

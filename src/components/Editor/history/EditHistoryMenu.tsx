@@ -115,7 +115,7 @@ export function EditHistoryMenu({
                 className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary flex items-center gap-1"
               >
                 <Check className="w-3 h-3" strokeWidth={4} />
-                enable history
+                enable
               </Button>
             </div>
             <div className="p-4 text-center text-muted-foreground text-sm">History tracking is disabled</div>
@@ -172,15 +172,10 @@ export function EditHistoryMenu({
               }}
               className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary flex items-center gap-1"
             >
-              {isEditHistoryEnabled ? (
-                <>
-                  <Check className="w-3 h-3" strokeWidth={4} />
-                  enabled
-                </>
-              ) : (
+              {isEditHistoryEnabled && (
                 <>
                   <X className="w-3 h-3" strokeWidth={4} />
-                  disabled
+                  disable
                 </>
               )}
             </Button>

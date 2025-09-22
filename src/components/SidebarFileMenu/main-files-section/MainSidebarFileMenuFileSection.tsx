@@ -89,7 +89,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
             diskType={diskType}
           />
         </span>
-        <TinyNotice />
+        {!fileTreeDir.isEmpty() && <TinyNotice />}
       </SidebarFileMenuFiles>
     </>
   );

@@ -5,7 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import clsx from "clsx";
-import { CopyMinus, LucideGitBranch } from "lucide-react";
+import { CopyMinus, ListTree } from "lucide-react";
 
 export function SidebarTreeView({
   className,
@@ -30,7 +30,7 @@ export function SidebarTreeView({
                 <SidebarGripChevron />
                 <div className="w-full">
                   <div className="flex justify-center items-center">
-                    <LucideGitBranch size={14} className="mr-2" />
+                    <ListTree size={14} className="mr-2" />
                     Tree View
                   </div>
                 </div>
