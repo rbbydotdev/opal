@@ -17,8 +17,8 @@ import {
 import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
-import { RefsManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { GitAuthorDialog, useGitAuthorDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitAuthorDialog";
+import { RefsManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { GitRemoteDialog, useGitRemoteDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitRemoteDialog";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -38,8 +38,8 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
-import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useGitAuthorSettings } from "@/features/git-repo/useGitAuthorSettings";
+import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
@@ -52,18 +52,13 @@ import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
 function InfoCollapsible({ info }: { info: WorkspaceRepoType }) {
-  const [open, setOpen] = useState(false);
   return (
-    <Collapsible className="w-full" open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <Button className="w-full" size="sm" variant="outline">
-          {open ? "Hide Info" : "Show Info"}
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="w-full mt-2">
+    <details className="w-full">
+      <summary className="cursor-pointer text-2xs font-mono">Info</summary>
+      <div className="w-full mt-2">
         <LatestInfo info={info} />
-      </CollapsibleContent>
-    </Collapsible>
+      </div>
+    </details>
   );
 }
 function LatestInfo({ info }: { info: WorkspaceRepoType }) {
@@ -438,7 +433,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
   const { cmdRef: fetchRef } = useTooltipToastCmd();
   const { cmdRef: initFromRemoteRef } = useTooltipToastCmd();
-  
+
   const { gitAuthor, setGitAuthor } = useGitAuthorSettings();
   const gitAuthorDialogRef = useGitAuthorDialogCmd();
 
@@ -636,14 +631,19 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         </CollapsibleTrigger>
 
         <div className="group-data-[state=closed]/collapsible:hidden">
-          <GitManager info={info} resetRepo={repo.reset} initRepo={() => playbook.initialCommit()} onConfigureAuthor={handleConfigureAuthor} />
+          <GitManager
+            info={info}
+            resetRepo={repo.reset}
+            initRepo={() => playbook.initialCommit()}
+            onConfigureAuthor={handleConfigureAuthor}
+          />
         </div>
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="pb-3">
             <div className="px-4 pt-2 gap-2 flex flex-col">
               <InPlaceConfirmSection cmdRef={confirmPaneRef} />
-              {exists && <LatestInfo info={info} />}
+              {exists && <InfoCollapsible info={info} />}
               {/* {commitState === "init" && (
                 <Button
                   className="w-full disabled:cursor-pointer h-8 truncate"

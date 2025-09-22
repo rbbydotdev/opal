@@ -288,7 +288,7 @@ export function RefsManagerSection({
 
   const handleError = (e: unknown, action: string) => {
     console.error(e);
-    branchRef.current.show(`${action} failed - ` + unwrapError(e), "destructive", 10_000);
+    branchRef.current.show(`${action} failed - ` + unwrapError(e), "destructive", 5_000);
     setSelectKey((k) => k + 1);
   };
   const addGitBranch = (baseRef: GitRef, branch: GitBranchFormValue) => {

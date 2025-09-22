@@ -1,3 +1,4 @@
+import { useLeftWidth } from "@/app/EditorSidebarLayout";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
@@ -110,8 +111,10 @@ export const SidebarFileMenuFilesActions = ({
   diskType: string;
 }) => {
   const [open, toggle] = useFlashTooltip();
+  const { storedValue: width } = useLeftWidth();
   return (
     <div className="whitespace-nowrap gap-1 flex items-center justify-center p-1">
+      <div>{width}</div>
       <Tooltip open={open}>
         <TooltipTrigger asChild>
           <Button
