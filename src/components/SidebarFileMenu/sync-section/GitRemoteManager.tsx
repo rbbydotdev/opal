@@ -269,7 +269,7 @@ export function RemoteManagerSection({
   const handlePush = async () => {
     if (!selectRemote) return;
     try {
-      await repo.push(selectRemote);
+      await repo.push({ remote: selectRemote });
       remoteRef.current.show("push successful");
     } catch (e) {
       remoteRef.current.show("push failed");
@@ -277,8 +277,9 @@ export function RemoteManagerSection({
     }
   };
   const handlePull = async () => {
+    if (!selectRemote) return;
     try {
-      await repo.pull(selectRemote);
+      await repo.pull({ remote: selectRemote });
       remoteRef.current.show("pull successful");
     } catch (e) {
       remoteRef.current.show("pull failed");
@@ -286,8 +287,11 @@ export function RemoteManagerSection({
     }
   };
   const handleFetch = async () => {
+    if (!selectRemote) return;
     try {
-      await repo.fetch(selectRemote);
+      const remoteObj = await repo.getRemote(selectRemote);
+      if (!remoteObj) throw new Error("Remote not found");
+      await repo.fetch({ url: remoteObj.url, corsProxy: remoteObj.gitCorsProxy, onAuth: remoteObj.onAuth });
       remoteRef.current.show("fetch successful");
     } catch (e) {
       remoteRef.current.show("fetch failed");
@@ -295,8 +299,12 @@ export function RemoteManagerSection({
     }
   };
   const handleSync = async () => {
+    if (!selectRemote) return;
     try {
-      await repo.sync(selectRemote);
+      // Sync = fetch + pull + push
+      await handleFetch();
+      await handlePull();
+      await handlePush();
       remoteRef.current.show("sync successful");
     } catch (e) {
       remoteRef.current.show("sync failed");
@@ -309,10 +317,10 @@ export function RemoteManagerSection({
         <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
         <GitRemoteManager
           remotes={info.remotes}
-          pushRepo={() => void repo.push(selectRemote)}
-          pullRepo={() => void repo.pull(selectRemote)}
-          fetchRepo={() => void repo.fetch(selectRemote)}
-          syncRepo={() => void repo.sync(selectRemote)}
+          pushRepo={handlePush}
+          pullRepo={handlePull}
+          fetchRepo={handleFetch}
+          syncRepo={handleSync}
           selectRemote={selectRemote}
           setSelectRemote={setSelectRemote}
           replaceGitRemote={(previousRemote, nextRemote) => {
@@ -333,38 +341,3 @@ export function RemoteManagerSection({
   );
 }
 
-function useRepoActionHandlers({
-  playbook,
-  onSucces,
-  onError,
-}: {
-  playbook: GitPlaybook | Comlink.Remote<GitPlaybook>;
-  onSucces: (msg: string) => void;
-  onError: (msg: string) => void;
-}) {
-  return {
-    push: async (selectRemote: string | null) => {
-      if (!selectRemote) return;
-      try {
-        void playbook.push({ remote: selectRemote });
-      } catch (e) {
-        onError("push failed");
-        console.error(e);
-        return;
-      }
-      onSucces("push successful");
-    },
-    pull: () => {
-      if (!selectRemote) return;
-      void repo.pull(selectRemote);
-    },
-    fetch: () => {
-      if (!selectRemote) return;
-      void repo.fetch(selectRemote);
-    },
-    sync: () => {
-      if (!selectRemote) return;
-      void repo.sync(selectRemote);
-    },
-  };
-}

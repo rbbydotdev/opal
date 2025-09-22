@@ -1,3 +1,4 @@
+import { GitConfig } from "@/app/GitConfig";
 import { Disk, DiskJType } from "@/Db/Disk";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
@@ -194,6 +195,10 @@ export class GitRepo {
   private readonly gitEvents = this.gitWpm.events;
 
   author: GitRepoAuthor = OPAL_AUTHOR;
+
+  private getCurrentAuthor(): GitRepoAuthor {
+    return GitConfig.getInstance().getUserInfo();
+  }
 
   state: {
     fullInitialized: boolean;
@@ -434,6 +439,7 @@ export class GitRepo {
         fastForwardOnly: false,
         onAuth: remoteObj.onAuth,
         corsProxy: remoteObj.gitCorsProxy,
+        author: this.getCurrentAuthor(),
       });
     });
   }
@@ -935,7 +941,7 @@ export class GitRepo {
     const result = await this.git.commit({
       fs: this.fs,
       dir: this.dir,
-      author: author || this.author,
+      author: author || this.getCurrentAuthor(),
       ref,
       message,
       parent,
