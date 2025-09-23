@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { getDiskTypeLabel } from "@/Db/Disk";
@@ -21,11 +22,12 @@ import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { RootNode } from "@/lib/FileTree/TreeNode";
+import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { absPath } from "@/lib/paths2";
-// import { useLeftWidth } from "@/app/EditorSidebarLayout";
-// import { useZoom } from "@/lib/useZoom";
+import { useLeftWidth } from "@/app/EditorSidebarLayout";
+import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
-import { CopyMinus, Ellipsis, FileCode2Icon, FileEditIcon, FolderPlus, Info, Trash2 } from "lucide-react";
+import { ClipboardCopy, ClipboardPasteIcon, CopyMinus, Ellipsis, FileCode2Icon, FileEditIcon, FolderPlus, Info, Scissors, Trash2 } from "lucide-react";
 import { ComponentProps, useMemo, useState } from "react";
 
 const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
@@ -95,6 +97,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
             addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
             setExpandAll={setExpandAll}
             diskType={diskType}
+            currentWorkspace={currentWorkspace}
           />
         </span>
         {!fileTreeDir.isEmpty() && <TinyNotice />}
@@ -120,6 +123,9 @@ const FileMenuActionButtonRow = ({
   addCssFile,
   setExpandAll,
   diskType,
+  copyFiles,
+  cutFiles,
+  pasteFiles,
 }: {
   trashSelectedFiles: () => void;
   addFile: () => void;
@@ -127,11 +133,14 @@ const FileMenuActionButtonRow = ({
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
+  copyFiles: () => void;
+  cutFiles: () => void;
+  pasteFiles: () => void;
 }) => {
   const [open, toggle] = useFlashTooltip();
 
   return (
-    <div className="whitespace-nowrap gap-1 flex items-center justify-center p-1 ">
+    <div className="whitespace-nowrap gap-1 flex items-center justify-center p-1">
       <Tooltip open={open}>
         <TooltipTrigger asChild>
           <ActionButton onClick={toggle} aria-label={diskType} title={diskType}>
@@ -140,6 +149,15 @@ const FileMenuActionButtonRow = ({
         </TooltipTrigger>
         <TooltipContent>{diskType}</TooltipContent>
       </Tooltip>
+      <ActionButton onClick={copyFiles} aria-label="Copy Files" title="Copy Files">
+        <ClipboardCopy />
+      </ActionButton>
+      <ActionButton onClick={cutFiles} aria-label="Cut Files" title="Cut Files">
+        <Scissors />
+      </ActionButton>
+      <ActionButton onClick={pasteFiles} aria-label="Paste Files" title="Paste Files">
+        <ClipboardPasteIcon />
+      </ActionButton>
       <ActionButton onClick={trashSelectedFiles} aria-label="Trash Files" title="Trash Files">
         <Trash2 />
       </ActionButton>
@@ -171,6 +189,9 @@ const FileMenuCompactActions = ({
   addCssFile,
   setExpandAll,
   diskType,
+  copyFiles,
+  cutFiles,
+  pasteFiles,
 }: {
   trashSelectedFiles: () => void;
   addFile: () => void;
@@ -178,6 +199,9 @@ const FileMenuCompactActions = ({
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
+  copyFiles: () => void;
+  cutFiles: () => void;
+  pasteFiles: () => void;
 }) => {
   return (
     <div className="flex items-center justify-center p-1">
@@ -193,6 +217,18 @@ const FileMenuCompactActions = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={copyFiles}>
+            <ClipboardCopy className="w-4 h-4 mr-2" />
+            Copy Files
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={cutFiles}>
+            <Scissors className="w-4 h-4 mr-2" />
+            Cut Files
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={pasteFiles}>
+            <ClipboardPasteIcon className="w-4 h-4 mr-2" />
+            Paste Files
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={addFile}>
             <FileEditIcon className="w-4 h-4 mr-2" />
             New Markdown File
@@ -234,6 +270,7 @@ export const SidebarFileMenuFilesActions = ({
   addCssFile,
   setExpandAll,
   diskType,
+  currentWorkspace,
 }: {
   trashSelectedFiles: () => void;
   addFile: () => void;
@@ -241,33 +278,83 @@ export const SidebarFileMenuFilesActions = ({
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
+  currentWorkspace: Workspace;
 }) => {
-  // const { storedValue: width } = useLeftWidth();
-  // const { zoomLevel } = useZoom();
-  // const isTooSmall = Boolean(width * (1.05 / zoomLevel) < 310);
+  const { copy, cut, paste } = useFiletreeMenuContextMenuActions({ currentWorkspace });
+  const { selectedFocused, focused } = useFileTreeMenuCtx();
+  const { show: showToast, cmdRef: toastRef } = useTooltipToastCmd();
+  
+  const copyFiles = () => {
+    const selectedNodes = currentWorkspace.nodesFromPaths(selectedFocused);
+    if (selectedNodes.length > 0) {
+      copy(selectedNodes);
+      showToast(`Copied ${selectedNodes.length} item${selectedNodes.length === 1 ? '' : 's'}`, "success");
+    } else {
+      showToast("No files selected", "destructive");
+    }
+  };
+  
+  const cutFiles = () => {
+    const selectedNodes = currentWorkspace.nodesFromPaths(selectedFocused);
+    if (selectedNodes.length > 0) {
+      cut(selectedNodes);
+      showToast(`Cut ${selectedNodes.length} item${selectedNodes.length === 1 ? '' : 's'}`, "success");
+    } else {
+      showToast("No files selected", "destructive");
+    }
+  };
+  
+  const pasteFiles = async () => {
+    const targetNode = focused ? currentWorkspace.nodeFromPath(focused) : RootNode;
+    if (targetNode) {
+      try {
+        await paste(targetNode);
+        showToast("Files pasted", "success");
+      } catch (error) {
+        showToast("Paste failed", "destructive");
+      }
+    } else {
+      showToast("No target selected", "destructive");
+    }
+  };
 
-  // // if (isTooSmall) {
-  // if (false) {
-  //   return (
-  //     <FileMenuCompactActions
-  //       trashSelectedFiles={trashSelectedFiles}
-  //       addFile={addFile}
-  //       addDir={addDir}
-  //       addCssFile={addCssFile}
-  //       setExpandAll={setExpandAll}
-  //       diskType={diskType}
-  //     />
-  //   );
-  // }
+  const { storedValue: width } = useLeftWidth();
+  const { zoomLevel } = useZoom();
+  
+  // Use a slightly more generous threshold to avoid the loop issue
+  const isTooSmall = Boolean(width * (1.05 / zoomLevel) < 340);
+
+  if (isTooSmall) {
+    return (
+      <TooltipToast cmdRef={toastRef} durationMs={2000}>
+        <FileMenuCompactActions
+          trashSelectedFiles={trashSelectedFiles}
+          addFile={addFile}
+          addDir={addDir}
+          addCssFile={addCssFile}
+          setExpandAll={setExpandAll}
+          diskType={diskType}
+          copyFiles={copyFiles}
+          cutFiles={cutFiles}
+          pasteFiles={pasteFiles}
+        />
+      </TooltipToast>
+    );
+  }
 
   return (
-    <FileMenuActionButtonRow
-      trashSelectedFiles={trashSelectedFiles}
-      addFile={addFile}
-      addDir={addDir}
-      addCssFile={addCssFile}
-      setExpandAll={setExpandAll}
-      diskType={diskType}
-    />
+    <TooltipToast cmdRef={toastRef} durationMs={2000}>
+      <FileMenuActionButtonRow
+        trashSelectedFiles={trashSelectedFiles}
+        addFile={addFile}
+        addDir={addDir}
+        addCssFile={addCssFile}
+        setExpandAll={setExpandAll}
+        diskType={diskType}
+        copyFiles={copyFiles}
+        cutFiles={cutFiles}
+        pasteFiles={pasteFiles}
+      />
+    </TooltipToast>
   );
 };

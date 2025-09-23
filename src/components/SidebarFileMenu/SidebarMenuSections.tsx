@@ -14,7 +14,7 @@ import { FilterInSpecialDirs } from "@/Db/SpecialDirs";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { IS_MAC } from "@/lib/isMac";
 import { Slot } from "@radix-ui/react-slot";
-import { Ellipsis, List, ListXIcon } from "lucide-react";
+import { List, ListXIcon } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceContext } from "../../context/WorkspaceContext";
@@ -124,7 +124,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         <SidebarGroupLabel className="h-6">
           <DropdownMenuTrigger asChild>
             <SidebarGroupAction className="mr-2 -mt-2" title="Sidebar Menu">
-              <Ellipsis />
+              <List />
               <span className="sr-only">Sidebar Menu</span>
             </SidebarGroupAction>
           </DropdownMenuTrigger>
