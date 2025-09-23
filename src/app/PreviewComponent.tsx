@@ -47,20 +47,12 @@ function PreviewComponentInternal() {
   if (isImage(path)) {
     return <ImageRender />;
   }
-  return (
-    <div>
-      <p>Unsupported file type for preview: {path}</p>
-    </div>
-  );
+  return <p>Unsupported file type for preview: {path}</p>;
 }
 function ImageRender() {
   const { path } = useWorkspaceRoute();
   if (!path) return null;
-  return (
-    <div>
-      <img src={path} alt="Preview" />
-    </div>
-  );
+  return <img src={path} alt="Preview" />;
 }
 
 function MarkdownRender({ path }: { path: AbsPath | null }) {

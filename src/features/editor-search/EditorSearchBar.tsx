@@ -210,10 +210,8 @@ export function EditorSearchBar({
                 className="w-72 h-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
               />
             </div>
-            <div>
-              <div className="text-xs text-muted-foreground px-2 py-1 text-center w-20 flex items-start">
-                {matchTotal > 0 ? `${cursor}/${matchTotal}` : search ? "0/0" : ""}
-              </div>
+            <div className="text-xs text-muted-foreground px-2 py-1 text-center w-20 flex items-start">
+              {matchTotal > 0 ? `${cursor}/${matchTotal}` : search ? "0/0" : ""}
             </div>
           </div>
           <CollapsibleContent>
@@ -264,11 +262,9 @@ export function EditorSearchBar({
             <ChevronDown />
           </Button>
         </div>
-        <div>
-          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={handleClose} title="Close (Escape)">
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
+        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={handleClose} title="Close (Escape)">
+          <X className="h-3 w-3" />
+        </Button>
       </div>
     </div>
   );

@@ -131,74 +131,72 @@ export function ConnectionsModalContent({
         <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
         <DialogDescription>{mode === "edit" ? "Update your connection details." : "Connect to API"}</DialogDescription>
       </DialogHeader>
-      <div>
-        <Form {...form}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              return form.handleSubmit(handleSubmit)();
-            }}
-            className="space-y-4 py-4"
-          >
-            <FormField
-              control={form.control}
-              name="templateType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Connection Type</FormLabel>
-                  <Select
-                    defaultValue={field.value}
-                    onValueChange={(value: typeof field.value) => {
-                      form.reset(RemoteAuthTemplates.find((t) => typeSource(t) === value));
-                    }}
-                  >
-                    <SelectTrigger id="connection-type">
-                      <SelectValue placeholder="Select a connection type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {RemoteAuthTemplates.map((connection) => (
-                        <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
-                          <div className="flex items-center gap-2">
-                            {connection.icon}
-                            <div>
-                              <p className="text-sm font-medium">{connection.name}</p>
-                              <p className="text-xs text-muted-foreground">{connection.description}</p>
-                            </div>
+      <Form {...form}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            return form.handleSubmit(handleSubmit)();
+          }}
+          className="space-y-4 py-4"
+        >
+          <FormField
+            control={form.control}
+            name="templateType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Connection Type</FormLabel>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={(value: typeof field.value) => {
+                    form.reset(RemoteAuthTemplates.find((t) => typeSource(t) === value));
+                  }}
+                >
+                  <SelectTrigger id="connection-type">
+                    <SelectValue placeholder="Select a connection type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RemoteAuthTemplates.map((connection) => (
+                      <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
+                        <div className="flex items-center gap-2">
+                          {connection.icon}
+                          <div>
+                            <p className="text-sm font-medium">{connection.name}</p>
+                            <p className="text-xs text-muted-foreground">{connection.description}</p>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            {error && (
-              <div className="rounded-md bg-destructive p-4 text-destructive-foreground">
-                <p className="mb-2 font-bold">Connection Error</p>
-                <p className="mb-2">{error}</p>
-              </div>
-            )}
+          {error && (
+            <div className="rounded-md bg-destructive p-4 text-destructive-foreground">
+              <p className="mb-2 font-bold">Connection Error</p>
+              <p className="mb-2">{error}</p>
+            </div>
+          )}
 
-            {selectedTemplate?.type === "api" && (
-              <ApiKeyAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
-            )}
+          {selectedTemplate?.type === "api" && (
+            <ApiKeyAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+          )}
 
-            {selectedTemplate?.type === "oauth" && (
-              <OAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
-            )}
-            {selectedTemplate?.type === "oauth-device" && (
-              <DeviceAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
-            )}
+          {selectedTemplate?.type === "oauth" && (
+            <OAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+          )}
+          {selectedTemplate?.type === "oauth-device" && (
+            <DeviceAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+          )}
 
-            {selectedTemplate?.type === "basic-auth" && (
-              <BasicAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
-            )}
-          </form>
-        </Form>
-      </div>
+          {selectedTemplate?.type === "basic-auth" && (
+            <BasicAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+          )}
+        </form>
+      </Form>
     </div>
   );
 }
