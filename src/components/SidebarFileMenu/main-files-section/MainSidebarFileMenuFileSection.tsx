@@ -1,3 +1,5 @@
+import { useLeftWidth } from "@/app/EditorSidebarLayout";
+import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
@@ -22,12 +24,21 @@ import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { RootNode } from "@/lib/FileTree/TreeNode";
-import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { absPath } from "@/lib/paths2";
-import { useLeftWidth } from "@/app/EditorSidebarLayout";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
-import { ClipboardCopy, ClipboardPasteIcon, CopyMinus, Ellipsis, FileCode2Icon, FileEditIcon, FolderPlus, Info, Scissors, Trash2 } from "lucide-react";
+import {
+  ClipboardCopy,
+  ClipboardPasteIcon,
+  CopyMinus,
+  Ellipsis,
+  FileCode2Icon,
+  FileEditIcon,
+  FolderPlus,
+  Info,
+  Scissors,
+  Trash2,
+} from "lucide-react";
 import { ComponentProps, useMemo, useState } from "react";
 
 const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
@@ -208,7 +219,7 @@ const FileMenuCompactActions = ({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            className="p-1 m-0 !bg-transparent"
+            className="p-1 m-0 !bg-transparent h-auto"
             variant="ghost"
             aria-label="File Menu Actions"
             title="File Menu Actions"
@@ -283,27 +294,27 @@ export const SidebarFileMenuFilesActions = ({
   const { copy, cut, paste } = useFiletreeMenuContextMenuActions({ currentWorkspace });
   const { selectedFocused, focused } = useFileTreeMenuCtx();
   const { show: showToast, cmdRef: toastRef } = useTooltipToastCmd();
-  
+
   const copyFiles = () => {
     const selectedNodes = currentWorkspace.nodesFromPaths(selectedFocused);
     if (selectedNodes.length > 0) {
       copy(selectedNodes);
-      showToast(`Copied ${selectedNodes.length} item${selectedNodes.length === 1 ? '' : 's'}`, "success");
+      showToast(`Copied ${selectedNodes.length} item${selectedNodes.length === 1 ? "" : "s"}`, "success");
     } else {
       showToast("No files selected", "destructive");
     }
   };
-  
+
   const cutFiles = () => {
     const selectedNodes = currentWorkspace.nodesFromPaths(selectedFocused);
     if (selectedNodes.length > 0) {
       cut(selectedNodes);
-      showToast(`Cut ${selectedNodes.length} item${selectedNodes.length === 1 ? '' : 's'}`, "success");
+      showToast(`Cut ${selectedNodes.length} item${selectedNodes.length === 1 ? "" : "s"}`, "success");
     } else {
       showToast("No files selected", "destructive");
     }
   };
-  
+
   const pasteFiles = async () => {
     const targetNode = focused ? currentWorkspace.nodeFromPath(focused) : RootNode;
     if (targetNode) {
@@ -320,7 +331,7 @@ export const SidebarFileMenuFilesActions = ({
 
   const { storedValue: width } = useLeftWidth();
   const { zoomLevel } = useZoom();
-  
+
   // Use a slightly more generous threshold to avoid the loop issue
   const isTooSmall = Boolean(width * (1.05 / zoomLevel) < 340);
 

@@ -2,6 +2,7 @@ import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, newFileName, prefix, RelPath, relPath } from "@/lib/paths2";
@@ -28,6 +29,44 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const { flatTree } = useFileTree();
   const { commitChange, trashSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, anchorIndex, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
+
+  // Try to get tree expander context - it may not be available in all contexts
+  // let treeExpander: ReturnType<typeof useTreeExpanderContext> | null = null;
+  // try {
+  //   treeExpander = useTreeExpanderContext();
+  // } catch {
+  //   // TreeExpander context not available - use full flat tree
+  //   treeExpander = null;
+  // }
+
+  const treeExpander = useTreeExpanderContext();
+
+  // Create a visible-only version of the flat tree that respects expanded state
+  const visibleFlatTree = useMemo(() => {
+    if (!treeExpander) {
+      // If no tree expander context, return all items
+      return flatTree;
+    }
+
+    return flatTree.filter((path) => {
+      // Skip root directory - it's not a navigable item
+      if (path === "/") return false;
+
+      const node = currentWorkspace.nodeFromPath(path);
+      if (!node) return false;
+
+      // Check if all parent directories are expanded
+      let parentNode = node.parent;
+      while (parentNode && parentNode.path !== "/") {
+        if (!treeExpander.isExpanded(parentNode.path)) {
+          return false;
+        }
+        parentNode = parentNode.parent;
+      }
+
+      return true;
+    });
+  }, [flatTree, treeExpander, currentWorkspace]);
   const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
   const isSelected = fullPath === currentFile;
   const isEditing = fullPath === editing;
@@ -188,17 +227,20 @@ export function useEditable<T extends TreeFile | TreeDir>({
     } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !isEditing && focused) {
       e.preventDefault();
       e.stopPropagation();
-      const nextPath = flatTree[flatTree.indexOf(treeNode.path) - (e.key === "ArrowDown" ? -1 : 1)];
-      if (nextPath) {
+      const currentIndex = visibleFlatTree.indexOf(treeNode.path);
+      const nextIndex = currentIndex + (e.key === "ArrowDown" ? 1 : -1);
+      const nextPath = visibleFlatTree[nextIndex];
+
+      if (nextPath && currentIndex !== -1) {
         const nextAnchorIndex = anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex;
         setFileTreeCtx(({ selectedRange, anchorIndex, ...rest }) => {
-          const nextIndex = flatTree.indexOf(nextPath);
-          const start = Math.min(nextIndex, anchorIndex);
-          const end = Math.max(nextIndex, anchorIndex) + 1;
+          const actualNextIndex = flatTree.indexOf(nextPath);
+          const start = Math.min(actualNextIndex, anchorIndex);
+          const end = Math.max(actualNextIndex, anchorIndex) + 1;
           const range = e.shiftKey ? flatTree.slice(start, end) : selectedRange;
           return {
             ...rest,
-            anchorIndex: e.shiftKey ? nextAnchorIndex : nextIndex,
+            anchorIndex: e.shiftKey ? nextAnchorIndex : actualNextIndex,
             focused: nextPath,
             selectedRange: range,
           };
