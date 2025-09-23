@@ -273,23 +273,32 @@ function SyncPullPushButtons({
   onPull,
   onPush,
   disabled = false,
+  syncRef,
+  pullRef,
+  pushRef,
 }: {
   onSync: () => void;
   onPull: () => void;
   onPush: () => void;
   disabled?: boolean;
+  syncRef: React.RefObject<{ show: (text?: React.ReactNode, variant?: "destructive" | "info" | "success") => void }>;
+  pullRef: React.RefObject<{ show: (text?: React.ReactNode, variant?: "destructive" | "info" | "success") => void }>;
+  pushRef: React.RefObject<{ show: (text?: React.ReactNode, variant?: "destructive" | "info" | "success") => void }>;
 }) {
   return (
     <div className="grid gap-2 grid-cols-1">
       <GridButton icon={RefreshCw} size="sm" variant="outline" onClick={onSync} disabled={disabled}>
+        <TooltipToast cmdRef={syncRef} sideOffset={10} />
         Sync Now
       </GridButton>
 
       <GridButton icon={Download} size="sm" variant="outline" onClick={onPull} disabled={disabled}>
+        <TooltipToast cmdRef={pullRef} sideOffset={10} />
         Pull
       </GridButton>
 
       <GridButton icon={Upload} size="sm" variant="outline" onClick={onPush} disabled={disabled}>
+        <TooltipToast cmdRef={pushRef} sideOffset={10} />
         Push
       </GridButton>
     </div>
@@ -333,6 +342,9 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   const { cmdRef: branchRef } = useTooltipToastCmd();
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
   const { cmdRef: fetchRef } = useTooltipToastCmd();
+  const { cmdRef: syncRef } = useTooltipToastCmd();
+  const { cmdRef: pullRef } = useTooltipToastCmd();
+  const { cmdRef: pushRef } = useTooltipToastCmd();
   const { cmdRef: initFromRemoteRef } = useTooltipToastCmd();
 
   const { gitAuthor, setGitAuthor } = useGitAuthorSettings();
@@ -436,14 +448,14 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
       // First pull, then push
       await playbook.pull({ remote: coalescedRemote });
       await playbook.push({ remote: coalescedRemote });
-      fetchRef.current?.show(
+      syncRef.current?.show(
         <span className="flex items-center gap-2 justify-center">
           <Check size={10} />
           Sync completed
         </span>
       );
     } catch (err) {
-      fetchRef.current?.show(
+      syncRef.current?.show(
         <span className="flex items-center gap-2 justify-center w-full h-full">
           <X size={10} />
           Sync failed!
@@ -461,14 +473,14 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
     try {
       setFetchPending(true);
       await playbook.pull({ remote: coalescedRemote });
-      fetchRef.current?.show(
+      pullRef.current?.show(
         <span className="flex items-center gap-2 justify-center">
           <Check size={10} />
           Pull completed
         </span>
       );
     } catch (err) {
-      fetchRef.current?.show(
+      pullRef.current?.show(
         <span className="flex items-center gap-2 justify-center w-full h-full">
           <X size={10} />
           Pull failed!
@@ -486,14 +498,14 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
     try {
       setFetchPending(true);
       await playbook.push({ remote: coalescedRemote });
-      fetchRef.current?.show(
+      pushRef.current?.show(
         <span className="flex items-center gap-2 justify-center">
           <Check size={10} />
           Push completed
         </span>
       );
     } catch (err) {
-      fetchRef.current?.show(
+      pushRef.current?.show(
         <span className="flex items-center gap-2 justify-center w-full h-full">
           <X size={10} />
           Push failed!
@@ -615,6 +627,9 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   onPull={() => handlePullRemote()}
                   onPush={() => handlePushRemote()}
                   disabled={fetchPending}
+                  syncRef={syncRef}
+                  pullRef={pullRef}
+                  pushRef={pushRef}
                 />
               )}
 
