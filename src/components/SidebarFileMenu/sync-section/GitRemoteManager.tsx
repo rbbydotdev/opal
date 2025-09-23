@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipToast } from "@/components/ui/TooltipToast";
-import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRemote, GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";
@@ -340,4 +339,3 @@ export function RemoteManagerSection({
     </div>
   );
 }
-
