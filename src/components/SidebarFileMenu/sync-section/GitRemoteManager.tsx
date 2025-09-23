@@ -290,7 +290,12 @@ export function RemoteManagerSection({
     try {
       const remoteObj = await repo.getRemote(selectRemote);
       if (!remoteObj) throw new Error("Remote not found");
-      await repo.fetch({ url: remoteObj.url, corsProxy: remoteObj.gitCorsProxy, onAuth: remoteObj.onAuth });
+      await repo.fetch({
+        url: remoteObj.url,
+        remote: remoteObj.name,
+        corsProxy: remoteObj.gitCorsProxy,
+        onAuth: remoteObj.onAuth,
+      });
       remoteRef.current.show("fetch successful");
     } catch (e) {
       remoteRef.current.show("fetch failed");

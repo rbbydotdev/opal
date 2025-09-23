@@ -210,6 +210,7 @@ export class GitPlaybook {
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
     const onAuth = RemoteAuth?.toAgent()?.onAuth;
     const result = await this.repo.fetch({
+      remote: remoteObj.name,
       url: remoteObj.url,
       corsProxy,
       onAuth,
@@ -259,6 +260,7 @@ export class GitPlaybook {
     const RemoteAuth = remote.authId ? await RemoteAuthDAO.GetByGuid(remote.authId) : null;
     const onAuth = RemoteAuth?.toAgent()?.onAuth;
     return await this.repo.fetch({
+      remote: remote.name,
       url: remote.url,
       corsProxy: remote.gitCorsProxy,
       onAuth,

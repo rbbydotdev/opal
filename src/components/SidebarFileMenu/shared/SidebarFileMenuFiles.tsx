@@ -54,29 +54,29 @@ export const SidebarFileMenuFiles = ({
   return (
     <>
       <FileItemContextMenu disabled={!isEmpty} fileNode={fileTreeDir} currentWorkspace={currentWorkspace}>
-        <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 w-full", className)} {...rest}>
+        <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 ", className)} {...rest}>
           <Collapsible
             className="group/collapsible flex flex-col min-h-0"
             open={groupExpanded}
             onOpenChange={groupSetExpand}
           >
-            <SidebarGroupLabel className="hover:bg-sidebar-accent relative w-full pr-0 overflow-hidden">
+            <SidebarGroupLabel className="hover:bg-sidebar-accent relative pr-0 flex flex-wrap h-auto justify-between items-center">
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton>
+                <SidebarMenuButton className="w-auto flex-grow">
                   <SidebarGroupLabel className="pl-0">
                     <SidebarGripChevron />
-                    <div className="flex justify-center items-center">
+                    <div className="flex justify-center items-center ">
                       <Icon className="mr-2" size={12} />
                       {title}
                     </div>
                   </SidebarGroupLabel>
                 </SidebarMenuButton>
               </CollapsibleTrigger>
-              <div>{children}</div>
+              {children}
             </SidebarGroupLabel>
 
             <CollapsibleContent className="min-h-0 flex-shrink">
-              <SidebarContent className="overflow-y-auto h-full flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden _border-l-2 group">
+              <SidebarContent className="overflow-y-auto h-full flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden  group">
                 <>
                   {contentBanner}
                   {isEmpty ? (

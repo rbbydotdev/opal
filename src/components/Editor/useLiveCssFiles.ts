@@ -21,7 +21,7 @@ export function useLiveCssFiles({
   };
 
   useEffect(() => {
-    if (Boolean(path) && Boolean(currentWorkspace) && !currentWorkspace.isNull && isMarkdown(path!)) {
+    if (!!path && !!currentWorkspace && !currentWorkspace.isNull && isMarkdown(path!)) {
       const css = Object.values(
         currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
       ).map((node) => cached(node.path));

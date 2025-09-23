@@ -446,7 +446,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                   title={coalescedWorkspace.name}
                   to={coalescedWorkspace.href}
                   truncate={true}
-                  className="text-muted-foreground big-button-active _whitespace-nowrap truncate"
+                  className="text-muted-foreground big-button-active truncate"
                 />
               </WorkspaceMenu>
             )}
@@ -458,7 +458,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
               open={expand}
               onOpenChange={setExpand}
             >
-              <CollapsibleTrigger className="h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground _bg-muted flex items-center relative ">
+              <CollapsibleTrigger className="h-8 flex-shrink-0 group w-full stroke-muted-foreground text-muted-foreground flex items-center relative ">
                 <ChevronDown size={16} className="group-data-[state=closed]:hidden w-full" />
                 <div
                   className={cn(
