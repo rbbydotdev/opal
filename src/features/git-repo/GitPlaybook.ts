@@ -291,6 +291,7 @@ export class GitPlaybook {
     // }
     return this.repo.pull({
       ref,
+
       remote,
     });
   }

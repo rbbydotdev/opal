@@ -295,20 +295,20 @@ export const SidebarFileMenuFilesActions = ({
   const { selectedFocused, focused } = useFileTreeMenuCtx();
   const { show: showToast, cmdRef: toastRef } = useTooltipToastCmd();
 
-  const copyFiles = () => {
+  const copyFiles = async () => {
     const selectedNodes = currentWorkspace.nodesFromPaths(selectedFocused);
     if (selectedNodes.length > 0) {
-      copy(selectedNodes);
+      await copy(selectedNodes);
       showToast(`Copied ${selectedNodes.length} item${selectedNodes.length === 1 ? "" : "s"}`, "success");
     } else {
       showToast("No files selected", "destructive");
     }
   };
 
-  const cutFiles = () => {
+  const cutFiles = async () => {
     const selectedNodes = currentWorkspace.nodesFromPaths(selectedFocused);
     if (selectedNodes.length > 0) {
-      cut(selectedNodes);
+      await cut(selectedNodes);
       showToast(`Cut ${selectedNodes.length} item${selectedNodes.length === 1 ? "" : "s"}`, "success");
     } else {
       showToast("No files selected", "destructive");
