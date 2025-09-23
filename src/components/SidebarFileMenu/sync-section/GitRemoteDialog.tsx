@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Ban, GitBranch, Loader, Search } from "lucide-react";
+import { Ban, GitBranch, Loader, Plus, Search } from "lucide-react";
 
 import { AuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
@@ -251,7 +251,7 @@ function GitRemoteDialogInternal({
   onCancel: () => void;
   form: ReturnType<typeof useForm<GitRemoteFormValues>>;
 }) {
-  const [urlMode, setUrlMode] = useState<"manual" | "search">("manual");
+  const [urlMode, setUrlMode] = useState<"manual" | "search" | "create">("manual");
 
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
@@ -307,11 +307,13 @@ function GitRemoteDialogInternal({
                     <>
                       URL
                       <span className={cn({ hidden: authId && remoteAuth?.hasRemoteApi() }, "text-xs mono ml-2")}>
-                        (Select a remote authentication to search)
+                        (Select a remote authentication to search or create)
                       </span>
                     </>
-                  ) : (
+                  ) : urlMode === "search" ? (
                     "Repo Name"
+                  ) : (
+                    "New Repository Name"
                   )}
                 </FormLabel>
                 {urlMode === "search" && (
@@ -323,6 +325,16 @@ function GitRemoteDialogInternal({
                     onClose={() => setUrlMode("manual")}
                     onSelect={(repo) => {
                       form.setValue("url", repo.value);
+                      setUrlMode("manual");
+                    }}
+                  />
+                )}
+                {urlMode === "create" && (
+                  <RepoCreateContainer
+                    remoteAuth={remoteAuth}
+                    onClose={() => setUrlMode("manual")}
+                    onCreated={(repoUrl) => {
+                      form.setValue("url", repoUrl);
                       setUrlMode("manual");
                     }}
                   />
@@ -349,17 +361,30 @@ function GitRemoteDialogInternal({
                 )}
               </FormItem>
             </div>
-            <Button
-              variant={urlMode === "manual" ? "outline" : "default"}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={(e) => {
-                e.preventDefault();
-                setUrlMode(urlMode === "manual" ? "search" : "manual");
-              }}
-              className={cn({ hidden: !authId || !remoteAuth?.hasRemoteApi() })} // Hide button if no auth selected
-            >
-              <Search />
-            </Button>
+            <div className="flex gap-1">
+              <Button
+                variant={urlMode === "search" ? "default" : "outline"}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setUrlMode(urlMode === "search" ? "manual" : "search");
+                }}
+                className={cn({ hidden: !authId || !remoteAuth?.hasRemoteApi() })} // Hide button if no auth selected
+              >
+                <Search />
+              </Button>
+              <Button
+                variant={urlMode === "create" ? "default" : "outline"}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setUrlMode(urlMode === "create" ? "manual" : "create");
+                }}
+                className={cn({ hidden: !authId || !remoteAuth?.hasRemoteApi() })} // Hide button if no auth selected
+              >
+                <Plus />
+              </Button>
+            </div>
           </div>
 
           <FormField
@@ -563,6 +588,118 @@ function RepoDropDown({
           <div className="px-3 py-2 text-sm text-muted-foreground">No repositories found</div>
         </div>
       )}
+    </div>
+  );
+}
+
+function RepoCreateContainer({
+  remoteAuth,
+  onClose,
+  onCreated,
+}: {
+  remoteAuth: null | RemoteAuthDAO;
+  onClose: () => void;
+  onCreated: (repoUrl: string) => void;
+}) {
+  const [repoName, setRepoName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const agent = useMemo(() => remoteAuth?.toAgent() || null, [remoteAuth]);
+
+  // Get username from auth if available
+  const username = useMemo(() => {
+    if (!agent) return "";
+    if ("login" in (remoteAuth?.data || {})) {
+      return (remoteAuth?.data as any).login;
+    }
+    return agent.getUsername() === "x-access-token" ? "" : agent.getUsername();
+  }, [agent, remoteAuth]);
+
+  const handleCreateRepo = async () => {
+    if (!agent || !repoName.trim()) return;
+
+    setIsCreating(true);
+    setError(null);
+
+    try {
+      const githubAgent = agent as any;
+      if (!githubAgent.octokit) {
+        throw new Error("GitHub API not available");
+      }
+
+      const response = await githubAgent.octokit.request("POST /user/repos", {
+        name: repoName.trim(),
+        private: true,
+        auto_init: false,
+      });
+
+      onCreated(response.data.html_url);
+    } catch (err: any) {
+      setError(err.message || "Failed to create repository");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isCreating && repoName.trim()) {
+      e.preventDefault();
+      handleCreateRepo();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
+    }
+  };
+
+  const prefixedValue = username ? `${username}/` : "";
+  const displayValue = repoName.startsWith(prefixedValue) ? repoName : prefixedValue + repoName;
+
+  return (
+    <div className="w-full relative">
+      <div className="w-full p-0 relative">
+        <Input
+          autoFocus
+          value={displayValue}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value.startsWith(prefixedValue)) {
+              setRepoName(value.slice(prefixedValue.length));
+            } else {
+              setRepoName(value);
+            }
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={`${prefixedValue}my-new-repo`}
+          className="w-full"
+          disabled={isCreating}
+        />
+        
+        {error && (
+          <div className="absolute z-20 w-full top-10 bg-sidebar border border-destructive rounded-b-lg shadow-lg">
+            <div className="flex items-center px-3 py-2 text-sm text-destructive">
+              <Ban className="h-4 w-4 mr-2" />
+              {error}
+            </div>
+          </div>
+        )}
+        
+        {isCreating && (
+          <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
+            <div className="flex items-center px-3 py-2 text-sm text-muted-foreground">
+              <Loader className="animate-spin h-4 w-4 mr-2" />
+              Creating repository...
+            </div>
+          </div>
+        )}
+        
+        {!error && !isCreating && repoName.trim() && (
+          <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
+            <div className="px-3 py-2 text-sm text-muted-foreground">
+              Press Enter to create repository "{username ? `${username}/` : ""}{repoName.trim()}"
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

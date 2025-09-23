@@ -442,6 +442,7 @@ export class GitRepo {
     return this.mutex.runExclusive(async () => {
       return this.git.pull({
         fs: this.fs,
+
         http,
         dir: this.dir,
         ref: await this.normalizeRef({ ref: finalRef }),
