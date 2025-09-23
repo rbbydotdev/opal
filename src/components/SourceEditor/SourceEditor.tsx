@@ -23,8 +23,6 @@ export const SourceEditor = ({
   if (error) {
     throw error;
   }
-  console.log(initialContents);
-
   return (
     <div className="h-full">
       <div className="bg-sidebar"></div>
