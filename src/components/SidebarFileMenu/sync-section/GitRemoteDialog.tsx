@@ -31,6 +31,7 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { Env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useImperativeHandle, useMemo, useState } from "react";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 
 export const gitRemoteSchema = z.object({
   name: z
@@ -252,6 +253,7 @@ function GitRemoteDialogInternal({
   form: ReturnType<typeof useForm<GitRemoteFormValues>>;
 }) {
   const [urlMode, setUrlMode] = useState<"manual" | "search" | "create">("manual");
+  const { currentWorkspace } = useWorkspaceContext();
 
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
@@ -332,6 +334,7 @@ function GitRemoteDialogInternal({
                 {urlMode === "create" && (
                   <RepoCreateContainer
                     remoteAuth={remoteAuth}
+                    workspaceName={currentWorkspace.name}
                     onClose={() => setUrlMode("manual")}
                     onCreated={(repoUrl) => {
                       form.setValue("url", repoUrl);
@@ -594,14 +597,16 @@ function RepoDropDown({
 
 function RepoCreateContainer({
   remoteAuth,
+  workspaceName,
   onClose,
   onCreated,
 }: {
   remoteAuth: null | RemoteAuthDAO;
+  workspaceName: string;
   onClose: () => void;
   onCreated: (repoUrl: string) => void;
 }) {
-  const [repoName, setRepoName] = useState("");
+  const [repoName, setRepoName] = useState(workspaceName || "");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const agent = useMemo(() => remoteAuth?.toAgent() || null, [remoteAuth]);

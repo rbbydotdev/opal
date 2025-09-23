@@ -66,7 +66,6 @@ export function CommitManagerSection({
   };
 
   const resetHardHandler = (commitOid: string) => {
-    if (!hasChanges) return playbook.resetHard({ ref: commitOid });
     void confirmOpen(
       () => playbook.resetHard({ ref: commitOid }),
       "Reset to Hard",
