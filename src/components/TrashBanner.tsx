@@ -26,7 +26,7 @@ export const TrashBanner = ({ filePath, className }: { filePath: AbsPath; classN
         title="Put Back"
         onClick={untrashFile}
         aria-label="Put Back From Trash"
-        className="border backdrop-blur-lg !bg-transparent _border-primary _!bg-primary-foreground absolute left-0 peer/putback transition-transform hover:scale-125 hover:text-ring rounded-full ock w-12 h-12 text-sidebar-foreground/70 shadow-lg pointer-events-auto"
+        className="border backdrop-blur-lg !bg-transparent _!bg-primary-foreground absolute left-0 peer/putback transition-transform hover:scale-125 hover:text-ring rounded-full ock w-12 h-12 text-sidebar-foreground/70 shadow-lg pointer-events-auto"
       >
         <Undo strokeWidth={3} />
       </Button>
@@ -34,7 +34,7 @@ export const TrashBanner = ({ filePath, className }: { filePath: AbsPath; classN
         title="Permanently Delete"
         onClick={removeFile}
         aria-label="Permanently Delete"
-        className="_!bg-primary-foreground backdrop-blur-lg !bg-transparent border _border-primary absolute right-0 peer/delete transition-transform  hover:scale-125 hover:text-ring shadow-lg rounded-full block w-12 h-12 text-sidebar-foreground/70 pointer-events-auto "
+        className="_!bg-primary-foreground backdrop-blur-lg !bg-transparent border absolute right-0 peer/delete transition-transform  hover:scale-125 hover:text-ring shadow-lg rounded-full block w-12 h-12 text-sidebar-foreground/70 pointer-events-auto "
       >
         <Delete className="scale-125" strokeWidth={3} />
       </Button>

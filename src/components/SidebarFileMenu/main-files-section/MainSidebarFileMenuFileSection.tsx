@@ -1,4 +1,3 @@
-import { useLeftWidth } from "@/app/EditorSidebarLayout";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
@@ -23,10 +22,11 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
-import { useZoom } from "@/lib/useZoom";
+// import { useLeftWidth } from "@/app/EditorSidebarLayout";
+// import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
 import { CopyMinus, Ellipsis, FileCode2Icon, FileEditIcon, FolderPlus, Info, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ComponentProps, useMemo, useState } from "react";
 
 const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   const [dragEnter, setDragEnter] = useState(false);
@@ -102,6 +102,17 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
     </>
   );
 }
+const ActionButton = ({
+  children,
+  className,
+  ...rest
+}: { children: React.ReactNode } & ComponentProps<typeof Button>) => {
+  return (
+    <Button {...rest} className={cn("p-1 m-0 h-auto !bg-transparent", className)} variant="ghost">
+      {children}
+    </Button>
+  );
+};
 const FileMenuActionButtonRow = ({
   trashSelectedFiles,
   addFile,
@@ -120,67 +131,35 @@ const FileMenuActionButtonRow = ({
   const [open, toggle] = useFlashTooltip();
 
   return (
-    <div className="whitespace-nowrap gap-1 flex items-center justify-center p-1">
+    <div className="whitespace-nowrap gap-1 flex items-center justify-center p-1 ">
       <Tooltip open={open}>
         <TooltipTrigger asChild>
-          <Button
-            onClick={toggle}
-            className="p-1 m-0 !bg-transparent"
-            variant="ghost"
-            aria-label={diskType}
-            title={diskType}
-          >
+          <ActionButton onClick={toggle} aria-label={diskType} title={diskType}>
             <Info />
-          </Button>
+          </ActionButton>
         </TooltipTrigger>
         <TooltipContent>{diskType}</TooltipContent>
       </Tooltip>
-      <Button
-        onClick={trashSelectedFiles}
-        className="p-1 m-0 !bg-transparent"
-        variant="ghost"
-        aria-label="Trash Files"
-        title="Trash Files"
-      >
+      <ActionButton onClick={trashSelectedFiles} aria-label="Trash Files" title="Trash Files">
         <Trash2 />
-      </Button>
-      <Button
-        onClick={addFile}
-        className="p-1 m-0 !bg-transparent"
-        variant="ghost"
-        aria-label="New Markdown File"
-        title="New Markdown File"
-      >
+      </ActionButton>
+      <ActionButton onClick={addFile} aria-label="New Markdown File" title="New Markdown File">
         <FileEditIcon />
-      </Button>
-      <Button
-        onClick={addCssFile}
-        className="p-1 m-0 !bg-transparent"
-        variant="ghost"
-        aria-label="New Css File"
-        title="New Css File"
-      >
+      </ActionButton>
+      <ActionButton onClick={addCssFile} aria-label="New Css File" title="New Css File">
         <FileCode2Icon />
-      </Button>
-      <Button
-        onClick={addDir}
-        className="p-1 m-0 !bg-transparent"
-        variant="ghost"
-        aria-label="Add Folder"
-        title="New Folder"
-      >
+      </ActionButton>
+      <ActionButton onClick={addDir} aria-label="Add Folder" title="New Folder">
         <FolderPlus />
-      </Button>
-      <Button
+      </ActionButton>
+      <ActionButton
+        title="Collapse All"
         aria-label="Expand All"
         onDoubleClick={() => setExpandAll(true)}
         onClick={() => setExpandAll(false)}
-        className="p-1 m-0 !bg-transparent"
-        variant="ghost"
-        title="Collapse All"
       >
         <CopyMinus />
-      </Button>
+      </ActionButton>
     </div>
   );
 };
@@ -263,22 +242,23 @@ export const SidebarFileMenuFilesActions = ({
   setExpandAll: (expand: boolean) => void;
   diskType: string;
 }) => {
-  const { storedValue: width } = useLeftWidth();
-  const { zoomLevel } = useZoom();
-  const isTooSmall = Boolean(width * (1.05 / zoomLevel) < 310);
+  // const { storedValue: width } = useLeftWidth();
+  // const { zoomLevel } = useZoom();
+  // const isTooSmall = Boolean(width * (1.05 / zoomLevel) < 310);
 
-  if (isTooSmall) {
-    return (
-      <FileMenuCompactActions
-        trashSelectedFiles={trashSelectedFiles}
-        addFile={addFile}
-        addDir={addDir}
-        addCssFile={addCssFile}
-        setExpandAll={setExpandAll}
-        diskType={diskType}
-      />
-    );
-  }
+  // // if (isTooSmall) {
+  // if (false) {
+  //   return (
+  //     <FileMenuCompactActions
+  //       trashSelectedFiles={trashSelectedFiles}
+  //       addFile={addFile}
+  //       addDir={addDir}
+  //       addCssFile={addCssFile}
+  //       setExpandAll={setExpandAll}
+  //       diskType={diskType}
+  //     />
+  //   );
+  // }
 
   return (
     <FileMenuActionButtonRow

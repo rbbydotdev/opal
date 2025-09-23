@@ -549,7 +549,7 @@ function RepoDropDown({
               <button
                 {...getItemProps(index)}
                 onClick={() => handleItemClick(repo)}
-                className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _border-sidebar _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
+                className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
               >
                 <div className="min-w-0 truncate text-md font-mono _text-sidebar-foreground/70">{repo.element}</div>
               </button>

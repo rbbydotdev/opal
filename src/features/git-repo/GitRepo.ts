@@ -373,12 +373,23 @@ export class GitRepo {
     await this.fs.writeFile(joinPath(this.gitDir, "PREV_BRANCH"), branchName);
   };
 
-  fetch = async ({ url, corsProxy, onAuth }: { url: string; corsProxy?: string; onAuth?: AuthCallback }) => {
+  fetch = async ({
+    url,
+    corsProxy,
+    remote,
+    onAuth,
+  }: {
+    url: string;
+    remote: string;
+    corsProxy?: string;
+    onAuth?: AuthCallback;
+  }) => {
     return this.mutex.runExclusive(async () => {
       return this.git.fetch({
         fs: this.fs,
         http,
         corsProxy,
+        remote,
         url,
         dir: this.dir,
         onAuth: onAuth,
