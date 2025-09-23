@@ -36,7 +36,7 @@ export function CommitManagerSection({
     );
   };
   const resetToHeadHandler = () => {
-    if (!hasChanges) return;
+    if (!hasChanges) return playbook.resetToHead().catch(toss);
     void confirmOpen(
       () => playbook.resetToHead().catch(toss),
       "Reset to HEAD",
@@ -44,7 +44,7 @@ export function CommitManagerSection({
     );
   };
   const resetToOrigHeadHandler = () => {
-    if (!hasChanges) return;
+    if (!hasChanges) return playbook.resetToPrevBranch().catch(toss);
     void confirmOpen(
       () => playbook.resetToPrevBranch().catch(toss),
       "Reset to Previous Branch",

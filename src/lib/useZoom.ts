@@ -6,10 +6,7 @@ export type ZoomLevel = 0.65 | 0.75 | 0.85 | 0.95 | 1;
 export const ZOOM_LEVELS: ZoomLevel[] = [0.65, 0.75, 0.85, 0.95, 1];
 
 export function useZoom() {
-  const { storedValue: zoomLevel, setStoredValue: setZoomLevel } = useLocalStorage2<ZoomLevel>(
-    "app/zoom-level",
-    1
-  );
+  const { storedValue: zoomLevel, setStoredValue: setZoomLevel } = useLocalStorage2<ZoomLevel>("app/zoom-level", 1);
 
   const applyZoom = (zoom: ZoomLevel) => {
     document.body.style.fontSize = `${zoom}rem`;
@@ -22,12 +19,12 @@ export function useZoom() {
   const getCurrentZoom = (): ZoomLevel => {
     const styleEl = document.querySelector("#dynamic-zoom-style");
     if (!styleEl) return 1;
-    
+
     const match = styleEl.innerHTML.match(/font-size: ([\d.]+)rem/);
     if (!match) return 1;
-    
-    const currentZoom = parseFloat(match[1]);
-    return ZOOM_LEVELS.find(level => Math.abs(level - currentZoom) < 0.01) || 1;
+
+    const currentZoom = parseFloat(match[1]!);
+    return ZOOM_LEVELS.find((level) => Math.abs(level - currentZoom) < 0.01) || 1;
   };
 
   const setZoom = (zoom: ZoomLevel) => {
