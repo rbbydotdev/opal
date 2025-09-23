@@ -472,14 +472,12 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                   {otherWorkspacesCount}
                 </div>
                 <div className="top-2 absolute group-data-[state=open]:hidden flex w-full justify-center ">
-                  <div>
-                    <OpalSvg
-                      className={cn("rounded overflow-clip rotate-12", {
-                        "w-9": !shrink,
-                        "w-5": shrink,
-                      })}
-                    />
-                  </div>
+                  <OpalSvg
+                    className={cn("rounded overflow-clip rotate-12", {
+                      "w-9": !shrink,
+                      "w-5": shrink,
+                    })}
+                  />
                 </div>
               </CollapsibleTrigger>
 
