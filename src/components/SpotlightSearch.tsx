@@ -12,10 +12,11 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
+import type { FileWithWorkspace } from "@/hooks/useAllWorkspaceFiles";
 import { Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
-import { CommandIcon, FileTextIcon } from "lucide-react";
+import { CommandIcon, FileTextIcon, FolderIcon } from "lucide-react";
 import mime from "mime-types";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
@@ -97,24 +98,60 @@ const SpotlightSearchItemCmd = forwardRef<
 });
 SpotlightSearchItemCmd.displayName = "SpotlightSearchItemCmd";
 
-export function SpotlightSearch() {
+// Workspace-specific spotlight search that uses workspace context
+export function WorkspaceSpotlightSearch() {
   const { currentWorkspace } = useWorkspaceContext();
   const { flatTree } = useFileTree();
   const { cmdMap, commands } = useSpotlightCommandPalette({
     currentWorkspace,
   });
 
-  return createPortal(
-    <SpotlightSearchInternal
-      basePath={currentWorkspace.href}
+  return (
+    <SpotlightSearch
       files={flatTree}
       commands={commands}
       cmdMap={cmdMap}
-      commandPrefix={">"}
+      basePath={currentWorkspace.href}
+    />
+  );
+}
+
+// Generic spotlight search component
+export function SpotlightSearch({ 
+  files,
+  commands,
+  cmdMap,
+  basePath,
+  commandPrefix = ">",
+  placeholder = "Spotlight Search..."
+}: {
+  files: AbsPath[] | FileWithWorkspace[];
+  commands: string[];
+  cmdMap: CmdMap;
+  basePath?: AbsPath;
+  commandPrefix?: string;
+  placeholder?: string;
+}) {
+  return createPortal(
+    <SpotlightSearchInternal
+      basePath={basePath}
+      files={files}
+      commands={commands}
+      cmdMap={cmdMap}
+      commandPrefix={commandPrefix}
+      placeholder={placeholder}
     />,
     document.querySelector("#spotlight-slot") ?? document.body
   );
 }
+
+// Workspace header component
+const WorkspaceHeader = ({ workspaceName }: { workspaceName: string }) => (
+  <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+    <FolderIcon className="h-4 w-4" />
+    <span>{workspaceName}</span>
+  </div>
+);
 
 function SpotlightSearchInternal({
   basePath,
@@ -122,12 +159,14 @@ function SpotlightSearchInternal({
   commandPrefix = ">",
   commands,
   cmdMap,
+  placeholder = "Spotlight Search...",
 }: {
-  basePath: AbsPath;
-  files: AbsPath[];
+  basePath?: AbsPath;
+  files: AbsPath[] | FileWithWorkspace[];
   commandPrefix?: string;
   commands: string[];
   cmdMap: CmdMap;
+  placeholder?: string;
 }) {
   //MARK: State / hooks
   const [open, setOpen] = useState(false);
@@ -233,8 +272,20 @@ function SpotlightSearchInternal({
     return runNextStep();
   };
 
+  const isFileWithWorkspace = (file: any): file is FileWithWorkspace => {
+    return file && typeof file === 'object' && 'path' in file && 'workspaceName' in file;
+  };
+
   const visibleFiles = useMemo(() => {
-    return [...files.filter((file) => FilterOutSpecialDirs(file))];
+    if (files.length === 0) return [];
+    
+    // Handle FileWithWorkspace[] case
+    if (isFileWithWorkspace(files[0])) {
+      return (files as FileWithWorkspace[]).filter((file) => FilterOutSpecialDirs(file.path));
+    }
+    
+    // Handle AbsPath[] case
+    return (files as AbsPath[]).filter((file) => FilterOutSpecialDirs(file)).map(path => ({ path }));
   }, [files]);
 
   const commandList = useMemo(() => {
@@ -276,18 +327,51 @@ function SpotlightSearchInternal({
           }))
         );
       } else if (!deferredSearch.trim()) {
-        // MARK: Spotlight state
-        return setSortedList(
-          visibleFiles.map((file) => ({
-            element: <>{file}</>,
-            href: file,
-          }))
-        );
+        // MARK: Spotlight state - group by workspace if we have workspace info
+        const hasWorkspaceInfo = visibleFiles.length > 0 && visibleFiles[0] && 'workspaceName' in visibleFiles[0];
+        
+        if (hasWorkspaceInfo) {
+          // Group files by workspace
+          const grouped = (visibleFiles as FileWithWorkspace[]).reduce((acc, file) => {
+            if (!acc[file.workspaceName]) {
+              acc[file.workspaceName] = [];
+            }
+            acc[file.workspaceName]!.push(file);
+            return acc;
+          }, {} as Record<string, FileWithWorkspace[]>);
+
+          const result: any[] = [];
+          Object.entries(grouped).forEach(([workspaceName, workspaceFiles]) => {
+            result.push({ type: 'header', workspaceName });
+            result.push(...workspaceFiles.slice(0, 10).map(file => ({
+              element: <>{basename(file.path)}</>,
+              href: file.path,
+              workspaceName: file.workspaceName,
+              workspaceHref: file.workspaceHref,
+            })));
+          });
+          return setSortedList(result);
+        } else {
+          // Simple file list for workspace context
+          return setSortedList(
+            visibleFiles.map((file) => ({
+              element: <>{basename(file.path)}</>,
+              href: file.path,
+            }))
+          );
+        }
       } else {
-        return setSortedList(
-          fuzzysort
-            .go(deferredSearch, deferredSearch.startsWith(commandPrefix) ? commandList : visibleFiles, { limit: 50 })
-            .map((result) => ({
+        // Search with grouping
+        const hasWorkspaceInfo = visibleFiles.length > 0 && visibleFiles[0] && 'workspaceName' in visibleFiles[0];
+        const searchTargets = deferredSearch.startsWith(commandPrefix) 
+          ? commandList 
+          : visibleFiles.map(f => f.path);
+        
+        const searchResults = fuzzysort.go(deferredSearch, searchTargets, { limit: 50 });
+        
+        if (deferredSearch.startsWith(commandPrefix)) {
+          return setSortedList(
+            searchResults.map((result) => ({
               element: (
                 <>
                   {result.highlight((m, i) => (
@@ -299,7 +383,56 @@ function SpotlightSearchInternal({
               ),
               href: result.target,
             }))
-        );
+          );
+        } else if (hasWorkspaceInfo) {
+          // Group search results by workspace
+          const groupedResults = searchResults.reduce((acc, result) => {
+            const file = (visibleFiles as FileWithWorkspace[]).find(f => f.path === result.target);
+            if (!file) return acc;
+            
+            if (!acc[file.workspaceName]) {
+              acc[file.workspaceName] = [];
+            }
+            acc[file.workspaceName]!.push({
+              element: (
+                <>
+                  {result.highlight((m, i) => (
+                    <b className="text-highlight-foreground" key={i}>
+                      {m}
+                    </b>
+                  ))}
+                </>
+              ),
+              href: result.target,
+              workspaceName: file.workspaceName,
+              workspaceHref: file.workspaceHref,
+            });
+            return acc;
+          }, {} as Record<string, any[]>);
+
+          const result: any[] = [];
+          Object.entries(groupedResults).forEach(([workspaceName, workspaceFiles]) => {
+            result.push({ type: 'header', workspaceName });
+            result.push(...workspaceFiles);
+          });
+          return setSortedList(result);
+        } else {
+          // Simple search for workspace context
+          return setSortedList(
+            searchResults.map((result) => ({
+              element: (
+                <>
+                  {result.highlight((m, i) => (
+                    <b className="text-highlight-foreground" key={i}>
+                      {m}
+                    </b>
+                  ))}
+                </>
+              ),
+              href: result.target,
+            }))
+          );
+        }
       }
     });
   }, [commandList, commandPrefix, currentPrompt, deferredSearch, resetActiveIndex, state, visibleFiles]);
@@ -397,7 +530,7 @@ function SpotlightSearchInternal({
             id="spotlight-search"
             type="text"
             autoComplete="off"
-            placeholder={state === "prompt" || state === "select" ? promptPlaceholder : "Spotlight Search..."}
+            placeholder={state === "prompt" || state === "select" ? promptPlaceholder : placeholder}
             className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
           />
           {/* {isPending && <div className="absolute right-3 text-xs text-muted-foreground">Searching...</div>} */}
@@ -409,6 +542,11 @@ function SpotlightSearchInternal({
             className="mt-2 block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-background drop-shadow-lg"
           >
             {sortedList.map((item, index) => {
+              // Render workspace headers (non-interactive)
+              if (item.type === 'header') {
+                return <WorkspaceHeader key={`header-${item.workspaceName}`} workspaceName={item.workspaceName} />;
+              }
+
               if (state === "spotlight" && item.href.startsWith(commandPrefix)) {
                 return (
                   <SpotlightSearchItemCmd
@@ -421,6 +559,24 @@ function SpotlightSearchInternal({
                   />
                 );
               }
+
+              // Determine the correct href for navigation
+              const targetHref = (() => {
+                if (state === "select") {
+                  return item.href as AbsPath;
+                }
+                // For home spotlight with workspace files
+                if (item.workspaceHref) {
+                  return joinPath(item.workspaceHref, item.href);
+                }
+                // For workspace spotlight
+                if (basePath) {
+                  return joinPath(basePath, item.href);
+                }
+                // Fallback
+                return item.href;
+              })();
+
               return (
                 <SpotlightSearchItemLink
                   key={item.href}
@@ -437,9 +593,13 @@ function SpotlightSearchInternal({
                           setCurrentPrompt(null);
                           void runNextStep();
                         })()
-                      : handleClose();
+                      : (() => {
+                          e.preventDefault();
+                          window.location.href = targetHref;
+                          handleClose();
+                        })();
                   }}
-                  href={state === "select" ? (item.href as AbsPath) : joinPath(basePath, item.href)}
+                  href={targetHref}
                   title={item.element}
                 />
               );
@@ -598,7 +758,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
               console.warn("No directory name provided");
               return;
             }
-            const dir = currentWorkspace.nodeFromPath(currentPath)?.closestDirPath() ?? ("/" as AbsPath);
+            const dir = currentWorkspace.nodeFromPath(currentPath || ("/" as AbsPath))?.closestDirPath() ?? ("/" as AbsPath);
             const dirName = joinPath(dir, prefix(basename(name || "newdir")));
             const path = await newDir(absPath(strictPrefix(dirName)));
             console.log("New directory created at:", path);
@@ -614,7 +774,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
               return;
             }
             const fileName = absPath(strictPrefix(name) + ".md");
-            const dir = currentWorkspace.nodeFromPath(focused || currentPath)?.closestDirPath() ?? ("/" as AbsPath);
+            const dir = currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ?? ("/" as AbsPath);
             const path = await newFile(joinPath(dir, fileName));
             void navigate({
               to: currentWorkspace.resolveFileUrl(path),
