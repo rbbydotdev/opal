@@ -1,4 +1,7 @@
 import { OpalCard } from "@/components/OpalCard";
+import { SpotlightSearch } from "@/components/SpotlightSearch";
+import { useAllWorkspaceFiles } from "@/hooks/useAllWorkspaceFiles";
+import { useHomeSpotlightCommands } from "@/hooks/useHomeSpotlightCommands";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/")({
@@ -6,6 +9,9 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function Index() {
+  const { files } = useAllWorkspaceFiles();
+  const { cmdMap, commands } = useHomeSpotlightCommands();
+
   return (
     <div className="w-full h-screen max-h-screen flex flex-col">
       <div className="flex-1 overflow-hidden">
@@ -13,6 +19,12 @@ function Index() {
           <OpalCard />
         </div>
       </div>
+      <SpotlightSearch
+        files={files}
+        commands={commands}
+        cmdMap={cmdMap}
+        placeholder="Search files and commands..."
+      />
     </div>
   );
 }

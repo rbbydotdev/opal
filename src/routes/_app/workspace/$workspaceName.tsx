@@ -2,7 +2,7 @@ import { EditorSidebarLayout } from "@/app/EditorSidebarLayout";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
 import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
-import { SpotlightSearch } from "@/components/SpotlightSearch";
+import { WorkspaceSpotlightSearch } from "@/components/SpotlightSearch";
 import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
@@ -36,7 +36,7 @@ function WorkspaceLayout() {
       <Toaster />
       <FileTreeProvider currentWorkspace={currentWorkspace} filterIn={FileOnlyFilter}>
         <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace}>
-          <SpotlightSearch />
+          <WorkspaceSpotlightSearch />
         </FileTreeMenuCtxProvider>
       </FileTreeProvider>
       <div className="min-w-0 h-full flex w-full">
