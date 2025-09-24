@@ -1,6 +1,5 @@
 import { OpalCard } from "@/components/OpalCard";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
-import { useAllWorkspaceFiles } from "@/hooks/useAllWorkspaceFiles";
 import { useHomeSpotlightCommands } from "@/hooks/useHomeSpotlightCommands";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -22,7 +21,7 @@ function Index() {
         files={[]}
         commands={commands}
         cmdMap={cmdMap}
-        placeholder="Search files and commands..."
+        placeholder="Spotlight Search..."
         useFilenameSearch={true}
       />
     </div>
