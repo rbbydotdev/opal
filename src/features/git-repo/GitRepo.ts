@@ -718,8 +718,12 @@ export class GitRepo {
       ref: mergeHead,
     });
     const conflicts: string[] = [];
-    for (const [filepath, _head, _workdir, stage] of matrix) {
-      if (stage > 0) conflicts.push(filepath);
+    for (const [filepath, head, workdir, stage] of matrix) {
+      if (
+        stage === 3 || // staged content different from both head and workdir
+        (workdir !== stage && head !== stage)
+      )
+        conflicts.push(filepath);
     }
     return conflicts;
   };

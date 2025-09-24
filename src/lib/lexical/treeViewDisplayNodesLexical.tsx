@@ -80,7 +80,7 @@ function convertLexicalContentNode(
         viewNode.displayText = (
           <span title={displayText} className="text-xs flex justify-center items-center truncate w-full ">
             <img
-              src={Thumb.pathToURL(absPath(lexicalNode.getSrc()))}
+              src={Thumb.pathToURL({ path: absPath(lexicalNode.getSrc()) })}
               alt={lexicalNode.getSrc()}
               className="mr-2 h-4 w-4 flex-shrink-0 border  border-background object-cover"
             />
