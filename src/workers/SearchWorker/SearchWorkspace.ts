@@ -1,5 +1,5 @@
 import { type Workspace } from "@/Db/Workspace";
-import { SearchWorkerApi, SearchWorkerApiType } from "@/workers/SearchWorker/search.api";
+import { SearchWorkerApi, SearchWorkerApiType, SearchMode } from "@/workers/SearchWorker/search.api";
 import { Remote, wrap } from "comlink";
 import "../transferHandlers/asyncGenerator.th";
 
@@ -17,8 +17,15 @@ export class SearchWorkspaceWorker {
       console.warn("Could not create worker, falling back to direct API calls", error);
     }
   }
-  async *searchWorkspace(workspace: Workspace, searchTerm: string) {
-    for await (const scan of await this.api.searchWorkspace(workspace, searchTerm)) {
+  async *searchWorkspace(workspace: Workspace, searchTerm: string, mode: SearchMode = "content") {
+    for await (const scan of await this.api.searchWorkspace(workspace, searchTerm, mode)) {
+      if (scan.matches.length) {
+        yield scan;
+      }
+    }
+  }
+  async *searchWorkspaces(workspaces: Workspace[], searchTerm: string, mode: SearchMode = "content") {
+    for await (const scan of await this.api.searchWorkspaces(workspaces, searchTerm, mode)) {
       if (scan.matches.length) {
         yield scan;
       }

@@ -1,36 +1,28 @@
-import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
-import { absPath, AbsPath, joinPath } from "@/lib/paths2";
-// import { DiskSearchResultData } from "@/features/search/SearchResults";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AbsPath, absPath, joinPath } from "@/lib/paths2";
+import { FilenameSearchResult } from "@/lib/ServiceWorker/handleWorkspaceFilenameSearch";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
 
-export type WorkspaceQueryParams = {
+export type WorkspaceFilenameQueryParams = {
   workspaceName: string;
   searchTerm: string;
-  regexp?: boolean;
-  mode?: "content" | "filename";
 };
-export type WorkspaceFetchParams = WorkspaceQueryParams & {
+
+export type WorkspaceFilenameFetchParams = WorkspaceFilenameQueryParams & {
   signal: AbortSignal;
 };
-async function* fetchQuerySearch({
+
+async function* fetchFilenameSearch({
   workspaceName,
   searchTerm,
-  regexp,
-  mode,
   signal,
-}: WorkspaceFetchParams): AsyncGenerator<WorkspaceSearchItem, void, unknown> {
-  const url = new URL(joinPath(absPath("workspace-search"), workspaceName ?? ""), window.location.origin);
+}: WorkspaceFilenameFetchParams): AsyncGenerator<FilenameSearchResult, void, unknown> {
+  const url = new URL(joinPath(absPath("workspace-filename-search"), workspaceName ?? ""), window.location.origin);
 
   url.searchParams.set("searchTerm", searchTerm);
   url.searchParams.set("workspaceName", workspaceName);
-  const regexpValue = (regexp ?? true) ? "1" : "0";
-  url.searchParams.set("regexp", regexpValue);
-  if (mode) {
-    url.searchParams.set("mode", mode);
-  }
-  console.debug(`query search url = ${url.toString()}, regexp param: ${regexp}, regexp value: ${regexpValue}`);
+  console.debug(`filename search url = ${url.toString()}`);
 
   let res = null;
   try {
@@ -46,7 +38,7 @@ async function* fetchQuerySearch({
   if (res.status === 204) {
     return; // No content, successful but empty stream
   }
-  if (!res.ok) throw new Error(`Search failed: ${res.statusText}`);
+  if (!res.ok) throw new Error(`Filename search failed: ${res.statusText}`);
   if (!res.body) throw new Error("Response has no body to read.");
 
   const reader = res.body.getReader();
@@ -64,7 +56,7 @@ async function* fetchQuerySearch({
 
       for (const line of lines) {
         if (line.trim() === "") continue;
-        const result = JSON.parse(line) as WorkspaceSearchItem;
+        const result = JSON.parse(line) as FilenameSearchResult;
         yield result;
       }
     }
@@ -78,15 +70,13 @@ async function* fetchQuerySearch({
 }
 
 /**
- * A custom hook to perform a debounced, streaming search within a workspace.
+ * A custom hook to perform a debounced, streaming filename search within workspaces.
  * It handles loading states, errors, and aborting previous requests.
- *
- * @returns The search state including results, loading status, error, and a submit function.
  */
-export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
+export function useWorkspaceFilenameSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   const [hidden, setHidden] = useState<string[]>([]);
   const [ctx, setCtx] = useState<{
-    queryResults: WorkspaceSearchItem[];
+    queryResults: FilenameSearchResult[];
     error: string | null;
     isSearching: boolean;
   }>({ queryResults: [], error: null, isSearching: false });
@@ -103,7 +93,7 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   }, []);
 
   const query = useCallback(
-    async ({ workspaceName, searchTerm, regexp, mode }: WorkspaceQueryParams) => {
+    async ({ workspaceName, searchTerm }: WorkspaceFilenameQueryParams) => {
       if (!workspaceName || !searchTerm) {
         reset();
         return;
@@ -119,11 +109,9 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
       });
 
       try {
-        const searchGenerator = fetchQuerySearch({
+        const searchGenerator = fetchFilenameSearch({
           workspaceName,
           searchTerm,
-          regexp,
-          mode,
           signal: controller.signal,
         });
 
@@ -136,9 +124,9 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
           }));
         }
       } catch (err) {
-        console.error("Search error:", err);
+        console.error("Filename search error:", err);
         setCtx(() => ({
-          error: "Search failed. Please try again.",
+          error: "Filename search failed. Please try again.",
           isSearching: false,
           queryResults: [],
         }));
@@ -154,16 +142,16 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   );
 
   const submit = useCallback(
-    ({ searchTerm, workspaceName, regexp, mode }: WorkspaceQueryParams) => {
+    ({ searchTerm, workspaceName }: WorkspaceFilenameQueryParams) => {
       setCtx((prev) => ({ ...prev, isSearching: true }));
       if (debounceMs === 0) {
-        void query({ searchTerm, workspaceName, regexp, mode });
+        void query({ searchTerm, workspaceName });
       } else {
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
         }
         debounceTimerRef.current = setTimeout(() => {
-          void query({ searchTerm, workspaceName, regexp, mode });
+          void query({ searchTerm, workspaceName });
         }, debounceMs);
       }
     },
@@ -181,21 +169,12 @@ export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
 
   useEffect(() => tearDown(), [tearDown]);
 
-  const filteredResults = useMemo(() => {
-    return ctx.queryResults.filter(
-      ({ meta: { workspaceName, filePath } }) => !hidden.includes(resultKey(workspaceName, filePath))
-    );
-  }, [hidden, ctx.queryResults]);
+  const filteredResults = ctx.queryResults.filter(
+    ({ workspaceName, filePath }) => !hidden.includes(resultKey(workspaceName, filePath))
+  );
 
-  const workspaceResults = useMemo(
-    () =>
-      Object.entries(
-        Object.groupBy(
-          filteredResults,
-          (result: WorkspaceSearchItem) => result.meta.workspaceName
-        ) as unknown as Record<string, typeof filteredResults>
-      ),
-    [filteredResults]
+  const workspaceResults = Object.entries(
+    Object.groupBy(filteredResults, (result: FilenameSearchResult) => result.workspaceName) as Record<string, FilenameSearchResult[]>
   );
 
   const hasResults = filteredResults.length > 0;

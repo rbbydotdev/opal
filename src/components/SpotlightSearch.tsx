@@ -13,6 +13,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import type { FileWithWorkspace } from "@/hooks/useAllWorkspaceFiles";
+import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
+import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
 import { Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
@@ -123,7 +125,8 @@ export function SpotlightSearch({
   cmdMap,
   basePath,
   commandPrefix = ">",
-  placeholder = "Spotlight Search..."
+  placeholder = "Spotlight Search...",
+  useFilenameSearch = false,
 }: {
   files: AbsPath[] | FileWithWorkspace[];
   commands: string[];
@@ -131,6 +134,7 @@ export function SpotlightSearch({
   basePath?: AbsPath;
   commandPrefix?: string;
   placeholder?: string;
+  useFilenameSearch?: boolean;
 }) {
   return createPortal(
     <SpotlightSearchInternal
@@ -140,6 +144,7 @@ export function SpotlightSearch({
       cmdMap={cmdMap}
       commandPrefix={commandPrefix}
       placeholder={placeholder}
+      useFilenameSearch={useFilenameSearch}
     />,
     document.querySelector("#spotlight-slot") ?? document.body
   );
@@ -160,6 +165,7 @@ function SpotlightSearchInternal({
   commands,
   cmdMap,
   placeholder = "Spotlight Search...",
+  useFilenameSearch = false,
 }: {
   basePath?: AbsPath;
   files: AbsPath[] | FileWithWorkspace[];
@@ -167,6 +173,7 @@ function SpotlightSearchInternal({
   commands: string[];
   cmdMap: CmdMap;
   placeholder?: string;
+  useFilenameSearch?: boolean;
 }) {
   //MARK: State / hooks
   const [open, setOpen] = useState(false);
@@ -175,6 +182,9 @@ function SpotlightSearchInternal({
   const [_isPending, startTransition] = useTransition();
 
   const [state, setState] = useState<"spotlight" | "prompt" | "select">("spotlight");
+  
+  // Filename search hook for home spotlight - always call, conditionally use
+  const filenameSearchHook = useWorkspaceFilenameSearchResults(150);
   const [promptPlaceholder, setPromptPlaceholder] = useState("Enter value...");
   const [currentPrompt, setCurrentPrompt] = useState<CmdPrompt | CmdSelect | null>(null);
 
@@ -293,6 +303,26 @@ function SpotlightSearchInternal({
   }, [commandPrefix, commands]);
 
   const [sortedList, setSortedList] = useState<any[]>([]);
+  
+  // Track last search to avoid duplicate searches
+  const lastSearchRef = useRef<string>("");
+  
+  // Trigger filename search when using filename search mode
+  useEffect(() => {
+    if (useFilenameSearch && deferredSearch !== lastSearchRef.current) {
+      lastSearchRef.current = deferredSearch;
+      if (deferredSearch && !deferredSearch.startsWith(commandPrefix)) {
+        filenameSearchHook.submit({
+          workspaceName: ALL_WS_KEY,
+          searchTerm: deferredSearch,
+        });
+      } else if (!deferredSearch) {
+        // Clear search when empty
+        filenameSearchHook.resetSearch();
+      }
+    }
+  }, [useFilenameSearch, deferredSearch, commandPrefix, filenameSearchHook]);
+
   useEffect(() => {
     startTransition(() => {
       resetActiveIndex();
@@ -327,7 +357,23 @@ function SpotlightSearchInternal({
           }))
         );
       } else if (!deferredSearch.trim()) {
-        // MARK: Spotlight state - group by workspace if we have workspace info
+        // MARK: Spotlight state - show results from filename search or local files
+        if (useFilenameSearch && filenameSearchHook && filenameSearchHook.hasResults) {
+          // Show filename search results grouped by workspace
+          const result: any[] = [];
+          filenameSearchHook.workspaceResults.forEach(([workspaceName, results]) => {
+            result.push({ type: 'header', workspaceName });
+            result.push(...results.slice(0, 10).map(fileResult => ({
+              element: <>{fileResult.filename}</>,
+              href: fileResult.filePath,
+              workspaceName: fileResult.workspaceName,
+              workspaceHref: `/workspace/${fileResult.workspaceName}`,
+            })));
+          });
+          return setSortedList(result);
+        }
+        
+        // MARK: Original local files logic
         const hasWorkspaceInfo = visibleFiles.length > 0 && visibleFiles[0] && 'workspaceName' in visibleFiles[0];
         
         if (hasWorkspaceInfo) {
@@ -361,7 +407,25 @@ function SpotlightSearchInternal({
           );
         }
       } else {
-        // Search with grouping
+        // Search with grouping - check for filename search first
+        if (useFilenameSearch && filenameSearchHook && deferredSearch && !deferredSearch.startsWith(commandPrefix)) {
+          // Show filename search results
+          const result: any[] = [];
+          filenameSearchHook.workspaceResults.forEach(([workspaceName, results]) => {
+            if (results.length > 0) {
+              result.push({ type: 'header', workspaceName });
+              result.push(...results.map(fileResult => ({
+                element: <>{fileResult.filename}</>,
+                href: fileResult.filePath,
+                workspaceName: fileResult.workspaceName,
+                workspaceHref: `/workspace/${fileResult.workspaceName}`,
+              })));
+            }
+          });
+          return setSortedList(result);
+        }
+        
+        // Original search logic for workspace files
         const hasWorkspaceInfo = visibleFiles.length > 0 && visibleFiles[0] && 'workspaceName' in visibleFiles[0];
         const searchTargets = deferredSearch.startsWith(commandPrefix) 
           ? commandList 
@@ -435,7 +499,7 @@ function SpotlightSearchInternal({
         }
       }
     });
-  }, [commandList, commandPrefix, currentPrompt, deferredSearch, resetActiveIndex, state, visibleFiles]);
+  }, [commandList, commandPrefix, currentPrompt, deferredSearch, resetActiveIndex, state, visibleFiles, useFilenameSearch, filenameSearchHook.workspaceResults]);
 
   // Custom key handler that wraps the base handler for Cmd+P support and handles prompt/select states
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -735,9 +799,11 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         "New Style CSS": [
           NewCmdExec(async () => {
             const path = await newFile(absPath("styles.css"));
-            void navigate({
-              to: currentWorkspace.resolveFileUrl(path),
-            });
+            if (path) {
+              void navigate({
+                to: currentWorkspace.resolveFileUrl(path),
+              });
+            }
           }),
         ],
         "Trash File": [
@@ -776,9 +842,11 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             const fileName = absPath(strictPrefix(name) + ".md");
             const dir = currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ?? ("/" as AbsPath);
             const path = await newFile(joinPath(dir, fileName));
-            void navigate({
-              to: currentWorkspace.resolveFileUrl(path),
-            });
+            if (path) {
+              void navigate({
+                to: currentWorkspace.resolveFileUrl(path),
+              });
+            }
           }),
         ],
 

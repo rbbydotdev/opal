@@ -9,6 +9,7 @@ import { handleImageUpload } from "@/lib/ServiceWorker/handleImageUpload";
 import { handleMdImageReplace } from "@/lib/ServiceWorker/handleMdImageReplace";
 import { handleStyleSheetRequest } from "@/lib/ServiceWorker/handleStyleSheetRequest";
 import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
+import { handleWorkspaceFilenameSearch } from "@/lib/ServiceWorker/handleWorkspaceFilenameSearch";
 import { withRequestSignal } from "./utils"; // Assuming utils are in the same dir
 
 // --- Handler Context ---
@@ -55,6 +56,22 @@ export const workspaceSearchHandler = withRequestSignal(async (context: RequestC
 
   console.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
   return handleWorkspaceSearch({ workspaceName, searchTerm, regexp });
+});
+
+export const workspaceFilenameSearchHandler = withRequestSignal(async (context: RequestContext) => {
+  const { url, params } = context;
+  const workspaceName = params.workspaceName;
+  const searchTerm = url.searchParams.get("searchTerm");
+
+  if (!workspaceName) {
+    return new Response("Workspace name parameter is required.", { status: 400 });
+  }
+  if (searchTerm === null) {
+    return new Response("Search term is required.", { status: 400 });
+  }
+
+  console.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
+  return handleWorkspaceFilenameSearch({ workspaceName, searchTerm });
 });
 
 export const downloadEncryptedHandler = (context: RequestContext) => {
