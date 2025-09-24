@@ -31,13 +31,14 @@ const SpotlightSearchItemLink = forwardRef<
   {
     id: string;
     role: string;
+    workspaceName?: string;
     tabIndex: number;
     href: string | AbsPath;
     title: string | JSX.Element | React.ReactNode;
     isActive: boolean;
     onSelect: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => void;
   }
->(({ id, role, tabIndex, href, title, isActive, onSelect }, ref) => {
+>(({ id, role, tabIndex, workspaceName, href, title, onSelect }, ref) => {
   const { filePath } = Workspace.parseWorkspacePath(absPathname(href));
 
   return (
@@ -53,7 +54,7 @@ const SpotlightSearchItemLink = forwardRef<
       >
         {(mime.lookup(basename(href)) || "").startsWith("image/") ? (
           <img
-            src={Thumb.pathToURL(absPath(filePath!))}
+            src={Thumb.pathToURL({ path: absPath(filePath!), workspaceName })} //TODO:!
             alt=""
             className="mr-2 h-6 w-6 flex-shrink-0 border border-border bg-foreground"
           />
@@ -467,14 +468,13 @@ function SpotlightSearchInternal({
       }
     }
   }, [
-    deferredSearch,
     state,
     currentPrompt,
-    commandPrefix,
+    deferredSearch,
     useFilenameSearch,
-    filenameSearchHook?.hasResults,
-    filenameSearchHook?.workspaceResults,
+    filenameSearchHook,
     visibleFiles,
+    commandPrefix,
     commandList,
   ]);
 
@@ -633,8 +633,8 @@ function SpotlightSearchInternal({
             type="text"
             autoComplete="off"
             placeholder={
-              state === "prompt" || state === "select" 
-                ? promptPlaceholder 
+              state === "prompt" || state === "select"
+                ? promptPlaceholder
                 : false
                   ? "Search files across all workspaces..."
                   : placeholder
@@ -694,6 +694,7 @@ function SpotlightSearchInternal({
                 <SpotlightSearchItemLink
                   key={item.workspaceName ? `${item.workspaceName}-${item.href}` : item.href}
                   {...getItemProps(navigableIndex)}
+                  workspaceName={item.workspaceName}
                   isActive={navigableIndex === activeIndex}
                   onSelect={(e: any) => handleItemSelect(e, item.href, targetHref)}
                   href={targetHref}

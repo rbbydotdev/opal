@@ -24,14 +24,19 @@ export class Thumb {
     }
     return url.searchParams.has("thumb");
   }
-  static pathToURL(path: AbsPath, size = 100) {
+  static pathToURL({ path, workspaceName, size = 100 }: { path: AbsPath; workspaceName?: string; size?: number }) {
     if (path.endsWith(".svg")) {
       return absPath(encodePath(path));
     }
-    return absPath(encodePath(path) + "?thumb=" + size);
+    const params = new URLSearchParams();
+    params.set("thumb", size.toString());
+    if (workspaceName) {
+      params.set("workspaceName", workspaceName);
+    }
+    return absPath(encodePath(path) + "?" + params.toString());
   }
   static resolveURLFromNode(node: TreeNode) {
-    return absPath(Thumb.pathToURL(node.isDupNode() ? node.source : node.path));
+    return absPath(Thumb.pathToURL({ path: node.isDupNode() ? node.source : node.path }));
   }
   async save() {
     await this.thumbRepo.writeFileRecursive(this.path, this.content!);
