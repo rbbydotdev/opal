@@ -10,6 +10,7 @@ import {
   styleSheetHandler,
   uploadImageHandler,
   workspaceSearchHandler,
+  workspaceFilenameSearchHandler,
 } from "@/lib/ServiceWorker/handler";
 
 type HandlerFunction = (context: RequestContext) => Response | Promise<Response>;
@@ -54,6 +55,7 @@ const routes: Route[] = [
   createRoute("POST", "/upload-image/.*", uploadImageHandler),
   createRoute("POST", "/upload-docx/.*", convertDocxHandler),
   createRoute("GET", "/workspace-search/:workspaceName", workspaceSearchHandler),
+  createRoute("GET", "/workspace-filename-search/:workspaceName", workspaceFilenameSearchHandler),
   createRoute("POST", "/download-encrypted.zip", downloadEncryptedHandler),
   createRoute("GET", "/download.zip", downloadHandler),
   createRoute("GET", "/favicon.svg", faviconHandler),

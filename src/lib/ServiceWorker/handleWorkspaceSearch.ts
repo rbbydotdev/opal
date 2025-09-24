@@ -2,6 +2,7 @@ import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";
+import { basename } from "@/lib/paths2";
 import { wrapGeneratorWithSignal } from "@/lib/ServiceWorker/wrapGeneratorWithSignal";
 import { WorkspaceQueryParams } from "../../features/workspace-search/useWorkspaceSearchResults";
 import { SWWStore } from "./SWWStore";
@@ -12,6 +13,7 @@ function createWorkspaceSearchStream({
   workspaces,
   searchTerm,
   regexp,
+  mode,
   signal,
   searchController,
   searchKey,
@@ -19,6 +21,7 @@ function createWorkspaceSearchStream({
   workspaces: Workspace[];
   searchTerm: string;
   regexp?: boolean;
+  mode?: "content" | "filename";
   signal: AbortSignal;
   searchController: AbortController;
   searchKey: string;
@@ -29,16 +32,53 @@ function createWorkspaceSearchStream({
     async start(controller) {
       try {
         const searchPromises = workspaces.map(async (workspace) => {
-          const scannable = workspace.NewScannable();
-          // console.log(`Searching in workspace with regex option: ${regexp}`);
-          const searchOptions = { regex: regexp !== undefined ? regexp : true };
-          // console.log(`Search options:`, searchOptions);
           try {
-            const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm, searchOptions), signal);
+            if (mode === "filename") {
+              // Filename search
+              const files = workspace.getFlatTree({
+                filterIn: (node) => node.type === "file",
+                filterOut: () => false,
+              });
 
-            for await (const result of searchGenerator) {
-              const chunk = encoder.encode(JSON.stringify(result) + "\n");
-              controller.enqueue(chunk);
+              const matchedFiles = files.filter(filePath => {
+                const filename = basename(filePath);
+                return filename.toLowerCase().includes(searchTerm.toLowerCase());
+              });
+
+              if (matchedFiles.length > 0) {
+                // Create a result in the same format as content search
+                const result = {
+                  matches: matchedFiles.map(filePath => ({
+                    chsum: filePath, // Use file path as checksum for filename search
+                    lineNumber: 1,
+                    lineStart: 0,
+                    lineEnd: basename(filePath).length,
+                    start: 0,
+                    end: basename(filePath).length,
+                    lineText: basename(filePath),
+                    relStart: 0,
+                    relEnd: basename(filePath).length,
+                    linesSpanned: 0,
+                  })),
+                  meta: {
+                    workspaceId: workspace.id,
+                    workspaceName: workspace.name,
+                    sourceFile: matchedFiles[0], // Use first matched file as source
+                  }
+                };
+                const chunk = encoder.encode(JSON.stringify(result) + "\n");
+                controller.enqueue(chunk);
+              }
+            } else {
+              // Content search (existing logic)
+              const scannable = workspace.NewScannable();
+              const searchOptions = { regex: regexp !== undefined ? regexp : true };
+              const searchGenerator = wrapGeneratorWithSignal(scannable.search(searchTerm, searchOptions), signal);
+
+              for await (const result of searchGenerator) {
+                const chunk = encoder.encode(JSON.stringify(result) + "\n");
+                controller.enqueue(chunk);
+              }
             }
           } catch (searchError) {
             console.error(`Search error in workspace ${workspace.name}:`, searchError);
@@ -68,6 +108,7 @@ export async function handleWorkspaceSearch({
   workspaceName,
   searchTerm,
   regexp = true,
+  mode = "content",
 }: WorkspaceQueryParams): Promise<Response> {
   // 1. Cancel previous searches.
   const searchController = new AbortController();
@@ -108,6 +149,7 @@ export async function handleWorkspaceSearch({
       workspaces: workspacesToSearch,
       searchTerm,
       regexp,
+      mode,
       signal: combinedSignal,
       searchController,
       searchKey,

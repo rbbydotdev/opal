@@ -9,7 +9,6 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function Index() {
-  const { files } = useAllWorkspaceFiles();
   const { cmdMap, commands } = useHomeSpotlightCommands();
 
   return (
@@ -20,10 +19,11 @@ function Index() {
         </div>
       </div>
       <SpotlightSearch
-        files={files}
+        files={[]}
         commands={commands}
         cmdMap={cmdMap}
         placeholder="Search files and commands..."
+        useFilenameSearch={true}
       />
     </div>
   );
