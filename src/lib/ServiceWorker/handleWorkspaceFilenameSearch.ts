@@ -1,5 +1,6 @@
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { basename, AbsPath } from "@/lib/paths2";
@@ -45,8 +46,13 @@ function createWorkspaceFilenameSearchStream({
               filterOut: () => false,
             });
 
-            // Filter files by filename match
+            // Filter files by filename match and exclude special directories
             const matchedFiles = files.filter(filePath => {
+              // First filter out special directories
+              if (!FilterOutSpecialDirs(filePath)) {
+                return false;
+              }
+              // Then check filename match
               const filename = basename(filePath);
               return filename.toLowerCase().includes(searchTerm.toLowerCase());
             });

@@ -240,7 +240,6 @@ function SearchResults({
             className="border border-primary-foreground "
           />
           <Link
-            _reloadDocument
             onClick={onNavigate}
             to={joinPath(WorkspaceDAO.rootRoute, workspaceName).toString()}
             className="font-mono text-xs uppercase "
@@ -286,7 +285,6 @@ function SearchFile({
   return (
     <div className="mb-4 rounded-b-lg">
       <Link
-        _reloadDocument
         onClick={onNavigate}
         title={`${workspaceName}/${filePath}`}
         to={href.toString()}
@@ -362,7 +360,7 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
     viewMode: "source",
   });
   return (
-    <Link _reloadDocument to={href} hash={sp} onClick={onClick}>
+    <Link to={href} hash={sp} onClick={onClick}>
       <div className="group flex cursor-pointer items-start border-b-4 border-background bg-sidebar-foreground p-1 py-1 font-mono text-xs text-sidebar last-of-type:border-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
         <div className="relative mr-2 min-w-8 text-right font-bold">
           {match.linesSpanned > 0 && (
