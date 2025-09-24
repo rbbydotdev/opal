@@ -72,7 +72,7 @@ export function CommitManagerSection({
       <>
         Are you sure you want to reset to
         <i>
-          <b>{commitOid.slice(0, 12)}</b>
+          <b> {commitOid.slice(0, 12)}</b>
         </i>
         ?<br />
         <i>

@@ -5,6 +5,7 @@ import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
+import { useUrlParam } from "@/hooks/useUrlParam";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, isAncestor } from "@/lib/paths2";
@@ -60,38 +61,17 @@ function isRecognizedFileType(mimeType: string): boolean {
   );
 }
 
-function getEditOverride(): boolean {
-  const windowHref = window.location.href;
-  const url = new URL(windowHref);
-  const hashParams = new URLSearchParams(url.hash.slice(1));
-  const searchParams = url.searchParams;
-  
-  return hashParams.get("editOverride") === "true" || searchParams.get("editOverride") === "true";
-}
-
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
   const viewMode = useWatchViewMode("hash+search");
-  const [editOverride, setEditOverride] = useState(getEditOverride());
-
-  useEffect(() => {
-    const handleUrlChange = () => {
-      setEditOverride(getEditOverride());
-    };
-
-    window.addEventListener("hashchange", handleUrlChange);
-    window.addEventListener("popstate", handleUrlChange);
-    return () => {
-      window.removeEventListener("hashchange", handleUrlChange);
-      window.removeEventListener("popstate", handleUrlChange);
-    };
-  }, []);
-
-  // Also update editOverride when filePath changes (navigation between files)
-  useEffect(() => {
-    setEditOverride(getEditOverride());
-  }, [filePath]);
+  const [editOverride] = useUrlParam({
+    key: "editOverride",
+    paramType: "hash+search",
+    parser: (value) => value === "true",
+    serializer: (value) => String(value),
+    // watchEvents: ["hashchange", "popstate"],
+  });
 
   if (filePath === null || currentWorkspace.isNull) {
     return {
