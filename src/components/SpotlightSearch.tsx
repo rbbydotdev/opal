@@ -472,8 +472,8 @@ function SpotlightSearchInternal({
     currentPrompt,
     commandPrefix,
     useFilenameSearch,
-    filenameSearchHook.hasResults,
-    filenameSearchHook.workspaceResults,
+    filenameSearchHook?.hasResults,
+    filenameSearchHook?.workspaceResults,
     visibleFiles,
     commandList,
   ]);
@@ -632,7 +632,13 @@ function SpotlightSearchInternal({
             id="spotlight-search"
             type="text"
             autoComplete="off"
-            placeholder={state === "prompt" || state === "select" ? promptPlaceholder : placeholder}
+            placeholder={
+              state === "prompt" || state === "select" 
+                ? promptPlaceholder 
+                : false
+                  ? "Search files across all workspaces..."
+                  : placeholder
+            }
             className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
           />
           {/* {isPending && <div className="absolute right-3 text-xs text-muted-foreground">Searching...</div>} */}
@@ -842,6 +848,8 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             await trashFile(currentPath);
           }),
         ],
+
+        // Jump Search command removed from workspace view
 
         "New Dir": [
           NewCmdPrompt("dir_name", "Enter new directory name"),

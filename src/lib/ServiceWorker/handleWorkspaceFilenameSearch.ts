@@ -5,6 +5,7 @@ import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { basename, AbsPath } from "@/lib/paths2";
 import { SWWStore } from "./SWWStore";
+import fuzzysort from "fuzzysort";
 
 const activeFilenameSearches = new Map<string, AbortController>();
 
@@ -46,15 +47,17 @@ function createWorkspaceFilenameSearchStream({
               filterOut: () => false,
             });
 
-            // Filter files by filename match and exclude special directories
-            const matchedFiles = files.filter(filePath => {
-              // First filter out special directories
-              if (!FilterOutSpecialDirs(filePath)) {
-                return false;
-              }
-              // Then check filename match
-              const filename = basename(filePath);
-              return filename.toLowerCase().includes(searchTerm.toLowerCase());
+            // Filter out special directories first
+            const visibleFiles = files.filter(filePath => FilterOutSpecialDirs(filePath));
+            
+            // Use fuzzy search on filenames
+            const searchTargets = visibleFiles.map(filePath => basename(filePath));
+            const searchResults = fuzzysort.go(searchTerm, searchTargets, { limit: 50 });
+            
+            // Map fuzzy search results back to file paths
+            const matchedFiles = searchResults.map(result => {
+              const filename = result.target;
+              return visibleFiles.find(filePath => basename(filePath) === filename)!;
             });
 
             // Send each matched file as a separate result

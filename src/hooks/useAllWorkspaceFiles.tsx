@@ -2,6 +2,7 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { AbsPath } from "@/lib/paths2";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
+import { useCrossWorkspaceFilenameSearch } from "@/hooks/useCrossWorkspaceFilenameSearch";
 import { useCallback, useMemo } from "react";
 
 export interface FileWithWorkspace {
@@ -11,22 +12,19 @@ export interface FileWithWorkspace {
 }
 
 export function useAllWorkspaceFiles() {
-  const filenameSearch = useWorkspaceFilenameSearchResults(150); // Shorter debounce for filename search
+  // Use the new cross-workspace search hook
+  const crossWorkspaceSearch = useCrossWorkspaceFilenameSearch();
 
   const searchFilenames = useCallback(
     async (searchTerm: string): Promise<FileWithWorkspace[]> => {
       if (!searchTerm.trim()) return [];
 
-      // Use the ALL_WS_KEY to search across all workspaces
-      filenameSearch.submit({
-        workspaceName: ALL_WS_KEY,
-        searchTerm,
-      });
+      crossWorkspaceSearch.searchFilenames(searchTerm);
 
       // Convert the search results to FileWithWorkspace format
       const workspaceDAOs = await WorkspaceDAO.all();
       
-      return filenameSearch.workspaceResults.flatMap(([workspaceName, results]) => {
+      return crossWorkspaceSearch.workspaceResults.flatMap(([workspaceName, results]) => {
         const workspaceDAO = workspaceDAOs.find(dao => dao.name === workspaceName);
         const workspaceHref = workspaceDAO?.href || `/workspace/${workspaceName}`;
         
@@ -37,15 +35,15 @@ export function useAllWorkspaceFiles() {
         }));
       });
     },
-    [filenameSearch]
+    [crossWorkspaceSearch]
   );
 
   // Return search functionality and loading state
   return { 
     files: [], // We don't pre-load files anymore, only search on demand
-    loading: filenameSearch.isSearching,
+    loading: crossWorkspaceSearch.loading,
     searchFilenames,
-    hasResults: filenameSearch.hasResults,
-    error: filenameSearch.error,
+    hasResults: crossWorkspaceSearch.hasResults,
+    error: crossWorkspaceSearch.error,
   };
 }
