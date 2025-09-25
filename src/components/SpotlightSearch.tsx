@@ -401,6 +401,7 @@ function SpotlightSearchInternal({
 
       const searchResults = fuzzysort.go(deferredSearch, searchTargets, { limit: 50 });
 
+      // MARK: command palette
       if (deferredSearch.startsWith(commandPrefix)) {
         return searchResults.map((result) => ({
           element: (
@@ -415,6 +416,7 @@ function SpotlightSearchInternal({
           href: result.target,
         }));
       } else if (hasWorkspaceInfo) {
+        //MARK: workspace search
         // Group search results by workspace
         const groupedResults = searchResults.reduce(
           (acc, result) => {
@@ -477,7 +479,7 @@ function SpotlightSearchInternal({
     commandPrefix,
     commandList,
   ]);
-
+  //MARK: Navigation
   // Calculate navigable items (exclude headers) to map activeIndex correctly
   const navigableItems = useMemo(() => {
     return sortedList.filter((item) => item.type !== "header");
@@ -520,24 +522,29 @@ function SpotlightSearchInternal({
 
   // Trigger filename search when using filename search mode
   useEffect(() => {
-    if (useFilenameSearch && deferredSearch !== lastSearchRef.current) {
+    // Only trigger when in spotlight state and not typing commands
+    if (useFilenameSearch && state === "spotlight" && deferredSearch !== lastSearchRef.current && !deferredSearch.startsWith(commandPrefix)) {
+      console.log("Filename search:", deferredSearch);
+
       lastSearchRef.current = deferredSearch;
-      if (deferredSearch && !deferredSearch.startsWith(commandPrefix)) {
+      if (deferredSearch) {
         filenameSearchHook.submit({
           workspaceName: ALL_WS_KEY,
           searchTerm: deferredSearch,
         });
-      } else if (!deferredSearch) {
+      } else {
         // Clear search when empty
         filenameSearchHook.resetSearch();
       }
     }
-  }, [useFilenameSearch, deferredSearch, commandPrefix, filenameSearchHook]);
+  }, [useFilenameSearch, state, deferredSearch, commandPrefix, filenameSearchHook]);
 
   // Reset active index only when search terms change, not when sortedList reference changes
   useEffect(() => {
     resetActiveIndex();
   }, [deferredSearch, state, resetActiveIndex]);
+
+  //MARK: Handlers
 
   // Custom key handler that wraps the base handler for Cmd+P support and handles prompt/select states
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -641,7 +648,9 @@ function SpotlightSearchInternal({
             }
             className="w-full rounded-lg border-none bg-background p-2 text-md focus:outline-none"
           />
-          {/* {isPending && <div className="absolute right-3 text-xs text-muted-foreground">Searching...</div>} */}
+          {useFilenameSearch && filenameSearchHook.isSearching && deferredSearch && !deferredSearch.startsWith(commandPrefix) && (
+            <div className="absolute right-3 text-xs text-muted-foreground">Searching...</div>
+          )}
         </div>
         {(state === "spotlight" || state === "select") && Boolean(sortedList.length) && (
           <ul

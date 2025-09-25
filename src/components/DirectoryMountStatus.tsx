@@ -17,14 +17,14 @@ export function DirectoryMountStatus({ disk, onDirectorySelected }: DirectoryMou
     const checkStatus = async () => {
       const needs = await disk.needsDirectorySelection();
       setNeedsSelection(needs);
-      
+
       if (needs) {
         const metadata = await disk.getStoredMetadata();
         setLastKnownDirectory(metadata?.directoryName || null);
       }
     };
 
-    checkStatus();
+    void checkStatus();
   }, [disk]);
 
   const handleSelectDirectory = async () => {
@@ -54,8 +54,8 @@ export function DirectoryMountStatus({ disk, onDirectorySelected }: DirectoryMou
           <h3 className="text-sm font-medium text-yellow-800">Directory Access Lost</h3>
           <p className="text-sm text-yellow-700 mt-1">
             This workspace was previously connected to a directory
-            {lastKnownDirectory && ` "${lastKnownDirectory}"`}, but the connection was lost after the page 
-            was reloaded. Please re-select the directory to continue working with your files.
+            {lastKnownDirectory && ` "${lastKnownDirectory}"`}, but the connection was lost after the page was reloaded.
+            Please re-select the directory to continue working with your files.
           </p>
           <Button
             onClick={handleSelectDirectory}
