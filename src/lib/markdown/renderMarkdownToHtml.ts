@@ -1,6 +1,6 @@
 import rehypeRaw from "rehype-raw";
 import rehypeStringify from "rehype-stringify";
-import remarkDirective from "remark-directive";
+// import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -11,7 +11,7 @@ export function renderMarkdownToHtml(source: string): string {
   const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
-    .use(remarkDirective)
+    // .use(remarkDirective)
     // .use(remarkMdx)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)

@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -230,19 +231,7 @@ const FileMenuCompactActions = ({
             <Ellipsis />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={copyFiles}>
-            <ClipboardCopy className="w-4 h-4 mr-2" />
-            Copy Files
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={cutFiles}>
-            <Scissors className="w-4 h-4 mr-2" />
-            Cut Files
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={pasteFiles}>
-            <ClipboardPasteIcon className="w-4 h-4 mr-2" />
-            Paste Files
-          </DropdownMenuItem>
+        <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
           <DropdownMenuItem onClick={addFile}>
             <FileEditIcon className="w-4 h-4 mr-2" />
             New Markdown File
@@ -255,10 +244,28 @@ const FileMenuCompactActions = ({
             <FolderPlus className="w-4 h-4 mr-2" />
             New Folder
           </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={copyFiles}>
+            <ClipboardCopy className="w-4 h-4 mr-2" />
+            Copy Files
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={cutFiles}>
+            <Scissors className="w-4 h-4 mr-2" />
+            Cut Files
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={pasteFiles}>
+            <ClipboardPasteIcon className="w-4 h-4 mr-2" />
+            Paste Files
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={trashSelectedFiles}>
             <Trash2 className="w-4 h-4 mr-2" />
             Trash Files
           </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setExpandAll(false)}>
             <CopyMinus className="w-4 h-4 mr-2" />
             Collapse All

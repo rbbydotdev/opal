@@ -1041,6 +1041,8 @@ export class MemDisk extends Disk {
 export class NullDisk extends Disk {
   static type: DiskType = "NullDisk";
   type = NullDisk.type;
+  ready = new Promise<void>(() => {}); //never resolves since subsequent ops will fail
+
   constructor(
     public readonly guid = "__disk__NullDisk",
     _indexCache?: TreeDirRootJType
@@ -1049,6 +1051,7 @@ export class NullDisk extends Disk {
     const mt = new Mutex();
     const ft = new FileTree(fs.promises, guid, mt);
     super("__disk__NullDisk", fs.promises, ft, DiskDAO.New(NullDisk.type, guid));
+    // this.ready = new Promise<void>(() => {});
   }
   async init() {
     return () => {};
