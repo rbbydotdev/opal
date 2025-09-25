@@ -142,6 +142,7 @@ export const CodeMirrorEditor = ({
       //       }),
 
       EditorView.updateListener.of((update) => {
+        // console.log(update.state.doc.toString());
         if (update.docChanged) {
           const docStr = update.state.doc.toString();
           if (docStr !== valueRef.current) {
@@ -265,7 +266,6 @@ const CodeMirrorToolbar = ({
       {!isMarkdown && previewNode?.isMarkdownFile() && !hasEditOverride && (
         <SourceButton onClick={() => router.navigate({ to: currentWorkspace.resolveFileUrl(previewNode.path) })} />
       )}
-      {!hasEditOverride + ""}
       {!hasEditOverride && <LivePreviewButtons />}
       {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">

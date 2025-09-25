@@ -13,7 +13,7 @@ import { NotFoundError } from "@/lib/errors";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { cn } from "@/lib/utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName/$")({
   component: WorkspaceFilePage,
@@ -28,16 +28,31 @@ function WorkspaceFilePage() {
 
   // Get file contents to check for conflicts
 
-  const { contents: initialContents, updateDebounce, error } = useFileContents({ currentWorkspace });
+  const {
+    contents: initialContents,
+    updateDebounce,
+    error,
+  } = useFileContents({
+    currentWorkspace,
+  });
   if (error) {
     throw error;
   }
 
-  // Check if the current file has git conflicts
-  const hasConflicts = useMemo(() => {
-    if (!isMarkdown || !initialContents) return false;
-    return hasGitConflictMarkers(String(initialContents));
-  }, [isMarkdown, initialContents]);
+  // const hasConflicts = useMemo(() => {
+  //   if (!isMarkdown || !initialContents) return false;
+  //   return hasGitConflictMarkers(String(initialContents));
+  // }, [isMarkdown, initialContents]);
+
+  const [hasConflicts, setHasConflicts] = useState(false);
+  useEffect(() => {
+    setHasConflicts(hasGitConflictMarkers(String(initialContents)));
+  }, [initialContents]);
+  const handleSourceContentChange = (newContent: string) => {
+    const hasConflictsNow = hasGitConflictMarkers(newContent);
+    if (hasConflicts !== hasConflictsNow) setHasConflicts(hasConflictsNow);
+    updateDebounce(newContent);
+  };
 
   useEffect(() => {
     if (workspaceName) {
@@ -126,7 +141,7 @@ function WorkspaceFilePage() {
       ) : !isMarkdown || isSourceView || hasConflicts ? (
         <SourceEditor
           initialContents={initialContents}
-          updateDebounce={updateDebounce}
+          onChange={handleSourceContentChange}
           hasConflicts={hasConflicts}
           mimeType={mimeType}
           currentWorkspace={currentWorkspace}
