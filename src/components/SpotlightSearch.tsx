@@ -1029,10 +1029,10 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     if (gitRepoInfo.fullInitialized) {
       cmds.add("Git Initialize Repo");
     }
-    if (!gitRepoInfo.fullInitialized || !gitRepoInfo?.hasChanges || gitRepoInfo.unmergedFiles.length) {
+    if (!gitRepoInfo.fullInitialized || !gitRepoInfo?.hasChanges || gitRepoInfo.conflictingFiles.length) {
       // cmds.add("Git Commit");
     }
-    if (!gitRepoInfo.unmergedFiles.length || !gitRepoInfo.fullInitialized) {
+    if (!gitRepoInfo.conflictingFiles.length || !gitRepoInfo.fullInitialized) {
       cmds.add("Git Merge Commit");
     }
     return cmds;
@@ -1042,7 +1042,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     isMarkdown,
     gitRepoInfo.fullInitialized,
     gitRepoInfo?.hasChanges,
-    gitRepoInfo.unmergedFiles.length,
+    gitRepoInfo.conflictingFiles.length,
   ]);
 
   const filteredCmds = useMemo(() => {

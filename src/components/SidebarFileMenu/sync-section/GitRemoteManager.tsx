@@ -12,7 +12,17 @@ import { TooltipToast } from "@/components/ui/TooltipToast";
 import { GitRemote, GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";
-import { Delete, Download, Ellipsis, ExternalLink, Pencil, Plus, RefreshCw, SatelliteDishIcon, Upload } from "lucide-react";
+import {
+  Delete,
+  Download,
+  Ellipsis,
+  ExternalLink,
+  Pencil,
+  Plus,
+  RefreshCw,
+  SatelliteDishIcon,
+  Upload,
+} from "lucide-react";
 import { useState } from "react";
 
 export function GitRemoteManager({
@@ -97,7 +107,7 @@ export function GitRemoteManager({
                 onClick={() => {
                   const remote = remotes.find((r) => r.name === selectRemote);
                   if (remote?.url) {
-                    window.open(remote.url, '_blank', 'noopener,noreferrer');
+                    window.open(remote.url, "_blank", "noopener,noreferrer");
                   }
                 }}
               >

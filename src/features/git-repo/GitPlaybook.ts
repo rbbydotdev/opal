@@ -296,7 +296,7 @@ export class GitPlaybook {
     });
   }
 
-  async push({ remote, ref }: { remote: string; ref?: string }) {
+  async push({ remote, force, ref }: { remote: string; force?: boolean; ref?: string }) {
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.PREPUSH,
@@ -314,6 +314,7 @@ export class GitPlaybook {
     const onAuth = RemoteAuth ? IsoGitApiCallbackForRemoteAuth(RemoteAuth) : undefined;
     await this.repo.push({
       ref,
+      force,
       remote,
       corsProxy,
       onAuth,

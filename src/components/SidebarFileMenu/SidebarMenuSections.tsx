@@ -136,7 +136,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
             <SidebarFileMenuPublish className="flex-shrink flex" />
           </DndSlot>
           <DndSlot dndId={"git"}>
-            <SidebarGitSection className="flex-shrink flex flex-col" />
+            <SidebarGitSection currentWorkspace={currentWorkspace} className="flex-shrink flex flex-col" />
           </DndSlot>
           <DndSlot dndId={"connections"}>
             <SidebarConnectionsSection className="flex-shrink flex flex-col" />

@@ -4,6 +4,7 @@ import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { useRepoInfoContext } from "@/lib/FileTree/FileTreeRepoProvider";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, newFileName, prefix, RelPath, relPath } from "@/lib/paths2";
 import { useLocation } from "@tanstack/react-router";
@@ -26,18 +27,11 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const currentFile = useWorkspaceRoute().path;
 
+  // const info = useWatchWorkspaceGitRepoInfo();
+  // const conflicted = info.conflictedFiles.has(fullPath);
   const { flatTree } = useFileTree();
   const { commitChange, trashSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, anchorIndex, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
-
-  // Try to get tree expander context - it may not be available in all contexts
-  // let treeExpander: ReturnType<typeof useTreeExpanderContext> | null = null;
-  // try {
-  //   treeExpander = useTreeExpanderContext();
-  // } catch {
-  //   // TreeExpander context not available - use full flat tree
-  //   treeExpander = null;
-  // }
 
   const treeExpander = useTreeExpanderContext();
 
@@ -68,6 +62,8 @@ export function useEditable<T extends TreeFile | TreeDir>({
     });
   }, [flatTree, treeExpander, currentWorkspace]);
   const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
+  const info = useRepoInfoContext();
+  const isConflicted = useMemo(() => info.conflictingFiles.includes(fullPath), [fullPath, info.conflictingFiles]);
   const isSelected = fullPath === currentFile;
   const isEditing = fullPath === editing;
   const isFocused = fullPath === focused;
@@ -301,6 +297,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
     isSelected,
     isCurrentPath,
     isSelectedRange,
+    isConflicted,
     isFocused,
     isVirtual,
     handleKeyDown,

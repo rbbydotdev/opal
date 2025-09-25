@@ -33,6 +33,10 @@ export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
       password: this.getApiToken(),
     };
   };
+  async getRemoteUsername(): Promise<string> {
+    const user = await this.octokit.request("GET /user");
+    return user.data.login;
+  }
   async getRepos({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
     const allRepos: Repo[] = [];
     let page = 1;

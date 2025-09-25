@@ -22,6 +22,7 @@ import { Workspace } from "@/Db/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { RepoInfoProvider } from "@/lib/FileTree/FileTreeRepoProvider";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
@@ -92,27 +93,29 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
 
   return (
     <>
-      <SidebarFileMenuFiles
-        data-main-sidebar
-        FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
-        title={"Files"}
-        className={className}
-        contentBanner={!fileTreeDir.isEmpty() ? <Banner currentWorkspace={currentWorkspace} /> : null}
-        filter={SpecialDirs.All} // Exclude trash and git directories etc
-      >
-        <span className="block group-data-[state=closed]/collapsible:hidden">
-          <SidebarFileMenuFilesActions
-            trashSelectedFiles={trashSelectedFiles}
-            addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
-            addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
-            addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
-            setExpandAll={setExpandAll}
-            diskType={diskType}
-            currentWorkspace={currentWorkspace}
-          />
-        </span>
-        {!fileTreeDir.isEmpty() && <TinyNotice />}
-      </SidebarFileMenuFiles>
+      <RepoInfoProvider currentWorkspace={currentWorkspace}>
+        <SidebarFileMenuFiles
+          data-main-sidebar
+          FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
+          title={"Files"}
+          className={className}
+          contentBanner={!fileTreeDir.isEmpty() ? <Banner currentWorkspace={currentWorkspace} /> : null}
+          filter={SpecialDirs.All} // Exclude trash and git directories etc
+        >
+          <span className="block group-data-[state=closed]/collapsible:hidden">
+            <SidebarFileMenuFilesActions
+              trashSelectedFiles={trashSelectedFiles}
+              addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
+              addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
+              addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
+              setExpandAll={setExpandAll}
+              diskType={diskType}
+              currentWorkspace={currentWorkspace}
+            />
+          </span>
+          {!fileTreeDir.isEmpty() && <TinyNotice />}
+        </SidebarFileMenuFiles>
+      </RepoInfoProvider>
     </>
   );
 }
