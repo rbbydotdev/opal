@@ -10,14 +10,14 @@ export const SourceEditor = ({
   className,
   mimeType = "text/plain",
   initialContents,
-  updateDebounce,
+  onChange,
 }: {
   hasConflicts: boolean;
   currentWorkspace: Workspace;
   className?: string;
   mimeType?: string;
   initialContents?: string | Uint8Array | null;
-  updateDebounce: (newContent: string) => void;
+  onChange: (newContent: string) => void;
 }) => {
   const { storedValue: enableGitConflictResolution } = useLocalStorage2(
     "SourceEditor/enableGitConflictResolution",
@@ -33,7 +33,7 @@ export const SourceEditor = ({
         currentWorkspace={currentWorkspace}
         mimeType={mimeType as "text/css" | "text/plain" | "text/markdown"}
         value={String(initialContents ?? "")}
-        onChange={updateDebounce}
+        onChange={onChange}
         readOnly={false}
         className={cn("code-mirror-source-editor", "flex-grow", className)}
         enableConflictResolution={enableGitConflictResolution}
