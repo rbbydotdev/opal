@@ -18,8 +18,8 @@ export const EditableFile = ({
   depth,
   fullPath,
   treeNode,
-
   currentWorkspace,
+
   className,
   workspaceRoute,
   expand,
@@ -42,6 +42,7 @@ export const EditableFile = ({
     handleBlur,
     handleClick,
     isSelected,
+    isConflicted,
     handleMouseUp,
     handleFocus,
     isSelectedRange,
@@ -65,47 +66,50 @@ export const EditableFile = ({
   return (
     <div className="select-none">
       {!isEditing ? (
-        <ActiveLink
-          active={equals(fullPath, workspaceRoute.path)}
-          draggable
-          onDragStart={onDragStart}
-          to={currentWorkspace.resolveFileUrl(fullPath)}
-          className={cn(
-            className,
-            { "ring-sidebar-accent ring-2 font-bold": isSelectedRange || isFocused },
-            "group cursor-pointer"
-          )}
-          ref={linkRef}
-          tabIndex={0}
-          onFocus={handleFocus}
-          onMouseUp={handleMouseUp}
-          title={fullPath}
-          onMouseDown={handleMouseDown}
-          onKeyDown={(e) => handleKeyDown(e)}
-          onClick={handleClick}
-          onDoubleClick={() =>
-            setFileTreeCtx(({ anchorIndex }) => ({
-              anchorIndex,
-              editing: fullPath,
-              editType: "rename",
-              focused: fullPath,
-              virtual: null,
-              selectedRange: [],
-            }))
-          }
-        >
-          <div className="w-full">
-            <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
-              <SelectedMark selected={isSelected} />
-              <IconForTreeNode treeNode={treeNode} />
-              <div className="py-2.5 text-xs w-full truncate">{prefix(fileName)}</div>
+        <>
+          <SelectedMark selected={isSelected} conflicted={isConflicted} />
+          <ActiveLink
+            active={equals(fullPath, workspaceRoute.path)}
+            draggable
+            onDragStart={onDragStart}
+            to={currentWorkspace.resolveFileUrl(fullPath)}
+            className={cn(
+              className,
+              { "ring-sidebar-accent ring-2 font-bold": isSelectedRange || isFocused },
+              "group cursor-pointer"
+            )}
+            ref={linkRef}
+            tabIndex={0}
+            onFocus={handleFocus}
+            onMouseUp={handleMouseUp}
+            title={fullPath}
+            onMouseDown={handleMouseDown}
+            onKeyDown={(e) => handleKeyDown(e)}
+            onClick={handleClick}
+            onDoubleClick={() =>
+              setFileTreeCtx(({ anchorIndex }) => ({
+                anchorIndex,
+                editing: fullPath,
+                editType: "rename",
+                focused: fullPath,
+                virtual: null,
+                selectedRange: [],
+              }))
+            }
+          >
+            <div className="w-full">
+              <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
+                <SelectedMark selected={isSelected} conflicted={isConflicted} />
+                <IconForTreeNode treeNode={treeNode} />
+                <div className="py-2.5 text-xs w-full truncate">{prefix(fileName)}</div>
+              </div>
             </div>
-          </div>
-        </ActiveLink>
+          </ActiveLink>
+        </>
       ) : (
         <div className={twMerge(className, "w-full")}>
           <div className="w-full flex items-center truncate" style={{ paddingLeft: depth + "rem" }}>
-            <SelectedMark selected={isSelected} />
+            <SelectedMark selected={isSelected} conflicted={isConflicted} />
             {isImage(treeNode.path) ? (
               <img
                 src={Thumb.resolveURLFromNode(treeNode)}
@@ -131,16 +135,16 @@ export const EditableFile = ({
   );
 };
 
-export function SelectedMark({ selected = false }: { selected?: boolean }) {
+export function SelectedMark({ selected = false, conflicted = false }: { selected?: boolean; conflicted?: boolean }) {
   return (
     <div
       className={clsx(
-        { flex: selected },
-        { hidden: !selected },
+        { flex: selected || conflicted },
+        { hidden: !selected && !conflicted },
         "absolute w-2 h-2 flex justify-center items-center text-ring text-xs -ml-[1.075rem] mr-2"
       )}
     >
-      {"✦"}
+      {conflicted ? "◐" : selected ? "✦" : ""}
     </div>
   );
 }

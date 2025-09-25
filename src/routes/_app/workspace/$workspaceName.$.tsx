@@ -27,13 +27,17 @@ function WorkspaceFilePage() {
   useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
 
   // Get file contents to check for conflicts
-  const { contents } = useFileContents({ currentWorkspace });
+
+  const { contents: initialContents, updateDebounce, error } = useFileContents({ currentWorkspace });
+  if (error) {
+    throw error;
+  }
 
   // Check if the current file has git conflicts
   const hasConflicts = useMemo(() => {
-    if (!isMarkdown || !contents) return false;
-    return hasGitConflictMarkers(String(contents));
-  }, [isMarkdown, contents]);
+    if (!isMarkdown || !initialContents) return false;
+    return hasGitConflictMarkers(String(initialContents));
+  }, [isMarkdown, initialContents]);
 
   useEffect(() => {
     if (workspaceName) {
@@ -116,11 +120,18 @@ function WorkspaceFilePage() {
       <div id="spotlight-slot"></div>
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
       {!isRecognized ? (
-        <UnrecognizedFileCard key={filePath} fileName={filePath?.split('/').pop() || ''} mimeType={mimeType} />
+        <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
       ) : isImage ? (
         <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
       ) : !isMarkdown || isSourceView || hasConflicts ? (
-        <SourceEditor mimeType={mimeType} currentWorkspace={currentWorkspace} key={filePath} />
+        <SourceEditor
+          initialContents={initialContents}
+          updateDebounce={updateDebounce}
+          hasConflicts={hasConflicts}
+          mimeType={mimeType}
+          currentWorkspace={currentWorkspace}
+          key={filePath}
+        />
       ) : (
         <WorkspaceMarkdownEditor path={filePath} currentWorkspace={currentWorkspace} />
       )}

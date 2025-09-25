@@ -23,6 +23,7 @@ import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useDebounce } from "@/context/useDebounce";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { isFuzzyResult, useRepoSearch } from "@/Db/useGithubRepoSearch";
 import { GitRemote } from "@/features/git-repo/GitRepo";
@@ -31,7 +32,6 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { Env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useImperativeHandle, useMemo, useState } from "react";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 
 export const gitRemoteSchema = z.object({
   name: z
@@ -117,8 +117,9 @@ export function GitRemoteDialog({
 }) {
   const defaultValues = {
     name: defaultName,
-    url: "https://github.com/rbbydotdev/test123",
-    gitCorsProxy: Env.GitProtocolProxy, //"https://cors.isomorphic-git.org",
+    // url: "https://github.com/user/repo",
+    url: "",
+    gitCorsProxy: Env.GitProtocolProxy,
   };
 
   const form = useForm<GitRemoteFormValues>({
@@ -649,7 +650,7 @@ function RepoCreateContainer({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isCreating && repoName.trim()) {
       e.preventDefault();
-      handleCreateRepo();
+      return handleCreateRepo();
     } else if (e.key === "Escape") {
       e.preventDefault();
       onClose();
@@ -664,6 +665,7 @@ function RepoCreateContainer({
       <div className="w-full p-0 relative">
         <Input
           autoFocus
+          // onBlurCapture={}
           value={displayValue}
           onChange={(e) => {
             const value = e.target.value;
@@ -678,7 +680,7 @@ function RepoCreateContainer({
           className="w-full"
           disabled={isCreating}
         />
-        
+
         {error && (
           <div className="absolute z-20 w-full top-10 bg-sidebar border border-destructive rounded-b-lg shadow-lg">
             <div className="flex items-center px-3 py-2 text-sm text-destructive">
@@ -687,7 +689,7 @@ function RepoCreateContainer({
             </div>
           </div>
         )}
-        
+
         {isCreating && (
           <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
             <div className="flex items-center px-3 py-2 text-sm text-muted-foreground">
@@ -696,11 +698,12 @@ function RepoCreateContainer({
             </div>
           </div>
         )}
-        
+
         {!error && !isCreating && repoName.trim() && (
           <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
             <div className="px-3 py-2 text-sm text-muted-foreground">
-              Press Enter to create repository "{username ? `${username}/` : ""}{repoName.trim()}"
+              Press Enter to create repository "{username ? `${username}/` : ""}
+              {repoName.trim()}"
             </div>
           </div>
         )}

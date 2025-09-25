@@ -32,10 +32,10 @@ function WorkspaceIndexPage() {
           position: "relative",
         }}
         className="w-full h-full flex items-center justify-center"
-        onDrop={(e) =>
+        onDrop={(event) =>
           handleDropFilesEventForNode({
             currentWorkspace,
-            event: e,
+            event,
             targetNode: TreeNode.FromPath(absPath("/"), "dir"),
           })
         }

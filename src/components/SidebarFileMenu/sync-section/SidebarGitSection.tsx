@@ -2,6 +2,7 @@ import {
   Check,
   Download,
   Ellipsis,
+  FileText,
   GitBranchIcon,
   GitMerge,
   GitPullRequestDraftIcon,
@@ -38,30 +39,33 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
+import { Workspace } from "@/Db/Workspace";
 import { useGitAuthorSettings } from "@/features/git-repo/useGitAuthorSettings";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError, unwrapError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
+import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
 import { RepoInfoType } from "../../../features/git-repo/GitRepo";
 import { useConfirm } from "../../Confirm";
 import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";
 
-function InfoCollapsible({ info }: { info: WorkspaceRepoType }) {
+function InfoCollapsible({ info, currentWorkspace }: { info: WorkspaceRepoType; currentWorkspace: Workspace }) {
   return (
     <details className="w-full">
       <summary className="cursor-pointer text-2xs font-mono">Info</summary>
       <div className="w-full mt-2">
-        <LatestInfo info={info} />
+        <LatestInfo currentWorkspace={currentWorkspace} info={info} />
       </div>
     </details>
   );
 }
-function LatestInfo({ info }: { info: WorkspaceRepoType }) {
+function LatestInfo({ info, currentWorkspace }: { info: WorkspaceRepoType; currentWorkspace: Workspace }) {
   const { latestCommit, conflictingFiles, isMerging, currentBranch, hasChanges } = info;
   const timeAgo = useTimeAgoUpdater({ date: new Date(latestCommit.date) });
   if (!latestCommit) {
@@ -69,6 +73,10 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
   }
   return (
     <dl className="mb-4 grid [grid-template-columns:max-content_1fr] gap-x-2 font-mono text-2xs text-left">
+      <dt className="font-bold">current author</dt>
+      <dd className="truncate">
+        {info.currentAuthor.name} &lt;{info.currentAuthor.email}&gt;
+      </dd>
       <dt className="font-bold">branch:</dt>
       <dd className="truncate">{currentBranch || <i>none / detached</i>}</dd>
       <dt className="font-bold">commit:</dt>
@@ -86,6 +94,10 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
           <dd className="truncate">
             <b>true</b>
           </dd>
+        </>
+      )}
+      {!!conflictingFiles.length && (
+        <>
           <dt className="font-bold">conflicting files:</dt>
           <dd>
             <details className="group">
@@ -100,7 +112,9 @@ function LatestInfo({ info }: { info: WorkspaceRepoType }) {
               <ul>
                 {conflictingFiles.map((f) => (
                   <li key={f} className="truncate">
-                    <span>{f}</span>
+                    <span>
+                      <Link to={currentWorkspace.resolveFileUrl(f)}>{f}</Link>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -272,6 +286,7 @@ function SyncPullPushButtons({
   onSync,
   onPull,
   onPush,
+  onForcePush,
   disabled = false,
   syncRef,
   pullRef,
@@ -279,6 +294,7 @@ function SyncPullPushButtons({
 }: {
   onSync: () => void;
   onPull: () => void;
+  onForcePush: () => void;
   onPush: () => void;
   disabled?: boolean;
   syncRef: React.RefObject<{ show: (text?: React.ReactNode, variant?: "destructive" | "info" | "success") => void }>;
@@ -287,6 +303,20 @@ function SyncPullPushButtons({
 }) {
   return (
     <div className="grid gap-2 grid-cols-1">
+      <div className="w-full flex gap-2">
+        <GridButton
+          className="flex-grow"
+          icon={Upload}
+          size="sm"
+          variant="outline"
+          onClick={onPush}
+          disabled={disabled}
+        >
+          <TooltipToast cmdRef={pushRef} sideOffset={10} />
+          Push
+        </GridButton>
+        <PushMenu forcePush={onForcePush} disabled={disabled} />
+      </div>
       <GridButton icon={RefreshCw} size="sm" variant="outline" onClick={onSync} disabled={disabled}>
         <TooltipToast cmdRef={syncRef} sideOffset={10} />
         Sync Now
@@ -296,12 +326,23 @@ function SyncPullPushButtons({
         <TooltipToast cmdRef={pullRef} sideOffset={10} />
         Pull
       </GridButton>
-
-      <GridButton icon={Upload} size="sm" variant="outline" onClick={onPush} disabled={disabled}>
-        <TooltipToast cmdRef={pushRef} sideOffset={10} />
-        Push
-      </GridButton>
     </div>
+  );
+}
+function PushMenu({ forcePush, disabled }: { forcePush?: () => void; disabled?: boolean }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild disabled={disabled}>
+        <Button variant="outline" className="h-8" size="sm" title="Branch Menu">
+          <Ellipsis /> <span className="sr-only">Push Menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={forcePush} className="text-destructive">
+          <Upload /> Force Push
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -334,8 +375,11 @@ function useInPlaceConfirmCmd() {
   };
 }
 
-export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGroup>) {
-  const { repo, playbook, info } = useWorkspaceGitRepo();
+export function SidebarGitSection({
+  currentWorkspace,
+  ...props
+}: React.ComponentProps<typeof SidebarGroup> & { currentWorkspace: Workspace }) {
+  const { repo, playbook, info } = useWorkspaceGitRepo({ currentWorkspace });
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
   const { cmdRef: remoteRef } = useTooltipToastCmd();
@@ -408,7 +452,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
       fetchRef.current?.show(
         <span className="flex items-center gap-2 justify-center w-full h-full">
           <X size={10} />
-          Error Fetching! (check console)
+          Error Fetching, {unwrapError(err).split("\n")[0]}
         </span>,
         "destructive"
       );
@@ -458,7 +502,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
       syncRef.current?.show(
         <span className="flex items-center gap-2 justify-center w-full h-full">
           <X size={10} />
-          Sync failed!
+          Sync failed,{unwrapError(err).split("\n")[0]}
         </span>,
         "destructive"
       );
@@ -483,7 +527,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
       pullRef.current?.show(
         <span className="flex items-center gap-2 justify-center w-full h-full">
           <X size={10} />
-          Pull failed!
+          Pull failed, {unwrapError(err).split("\n")[0]}
         </span>,
         "destructive"
       );
@@ -493,11 +537,11 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
     }
   };
 
-  const handlePushRemote = async () => {
+  const handlePushRemote = async ({ force }: { force?: boolean } = {}) => {
     if (!coalescedRemote) return;
     try {
       setFetchPending(true);
-      await playbook.push({ remote: coalescedRemote });
+      await playbook.push({ remote: coalescedRemote, force });
       pushRef.current?.show(
         <span className="flex items-center gap-2 justify-center">
           <Check size={10} />
@@ -508,7 +552,7 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
       pushRef.current?.show(
         <span className="flex items-center gap-2 justify-center w-full h-full">
           <X size={10} />
-          Push failed!
+          Push failed {unwrapError(err).split("\n")[0]}
         </span>,
         "destructive"
       );
@@ -547,21 +591,10 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="pb-3">
             <div className="px-4 pt-2 gap-2 flex flex-col">
-              {/* <InPlaceConfirmSection cmdRef={confirmPaneRef} /> */}
-
-              {exists && <InfoCollapsible info={info} />}
-              {/* {commitState === "init" && (
-                <Button
-                  className="w-full disabled:cursor-pointer h-8 truncate"
-                  onClick={handleRemoteInit}
-                  size="sm"
-                  variant="outline"
-                >
-                  <SquareArrowOutUpRightIcon className="mr-1" />
-                  <span className="flex-1 min-w-0 truncate">Initialize Git Repo From Remote</span>
-                </Button>
-              )} */}
-
+              {exists && <InfoCollapsible currentWorkspace={currentWorkspace} info={info} />}
+              {!!info.conflictingFiles.length && (
+                <MergeConflictSection conflictingFiles={info.conflictingFiles} currentWorkspace={currentWorkspace} />
+              )}
               <CommitSection
                 commitState={commitState}
                 commit={(message) => playbook.addAllCommit({ message })}
@@ -605,6 +638,19 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                   selectRemote={coalescedRemote}
                 />
               )}
+              {info.fullInitialized && info.currentRef && coalescedRemote && (
+                <SyncPullPushButtons
+                  onSync={() => handleSyncRemote()}
+                  onPull={() => handlePullRemote()}
+                  onForcePush={() => handlePushRemote({ force: true })}
+                  onPush={() => handlePushRemote()}
+                  disabled={fetchPending}
+                  syncRef={syncRef}
+                  pullRef={pullRef}
+                  pushRef={pushRef}
+                />
+              )}
+
               {hasRemotes && (
                 <div className="flex justify-center items-center w-full flex-col gap-4">
                   <GridButton
@@ -620,17 +666,6 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
                     Fetch Remote
                   </GridButton>
                 </div>
-              )}
-              {info.fullInitialized && info.currentRef && coalescedRemote && (
-                <SyncPullPushButtons
-                  onSync={() => handleSyncRemote()}
-                  onPull={() => handlePullRemote()}
-                  onPush={() => handlePushRemote()}
-                  disabled={fetchPending}
-                  syncRef={syncRef}
-                  pullRef={pullRef}
-                  pushRef={pushRef}
-                />
               )}
 
               {((commitState === "bare-init" && !hasRemotes) || commitState === "init") && (
@@ -657,7 +692,44 @@ export function SidebarGitSection(props: React.ComponentProps<typeof SidebarGrou
   );
 }
 
-// export { useInPlaceConfirmCmd };
+function MergeConflictSection({
+  conflictingFiles,
+  currentWorkspace,
+}: {
+  conflictingFiles: AbsPath[];
+  currentWorkspace: Workspace;
+}) {
+  // if (!info.isMerging) return null;
+  // if (!info.conflictingFiles.length) return null;
+  return (
+    <div className="border rounded text-2xs max-h-24 flex flex-col border-ring">
+      <div className="w-full flex items-center px-2">
+        <div>
+          <GitMerge className="w-3 h-3 text-ring" />
+        </div>
+        <div className="h-6 flex-grow flex border-b justify-center items-center flex-shrink-0 font-mono p-1">
+          {"("}
+          {conflictingFiles.length}
+          {")"} merge conflicts:
+        </div>
+      </div>
+      <div className="relative flex-grow overflow-scroll py-2 w-full bg-background px-2 rounded-sm">
+        {conflictingFiles.map((file) => (
+          <div key={file} className="flex items-center gap-2 hover:bg-sidebar-accent hover:text-sidebar-foreground">
+            <FileText className="w-3 h-3" />
+            <Link
+              key={file}
+              className="truncate w-full block p-0.5"
+              to={currentWorkspace.resolveFileUrl(file) + '?viewMode="source"'}
+            >
+              {file}
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function GitManager({
   info,

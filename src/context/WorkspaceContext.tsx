@@ -70,7 +70,6 @@ export function useCurrentFilepath() {
     paramType: "hash+search",
     parser: (value) => value === "true",
     serializer: (value) => String(value),
-    // watchEvents: ["hashchange", "popstate"],
   });
 
   if (filePath === null || currentWorkspace.isNull) {

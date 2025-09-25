@@ -1,9 +1,8 @@
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
-
-export function useWorkspaceGitRepo() {
-  //chill facade for now
-  const { repo, playbook } = useWorkspaceContext().git;
+export function useWorkspaceGitRepo({ currentWorkspace }: { currentWorkspace: Workspace }) {
+  const repo = currentWorkspace.getRepo();
+  const playbook = currentWorkspace.getPlaybook();
   const info = useRepoInfo(repo);
   return { repo, playbook, info };
 }

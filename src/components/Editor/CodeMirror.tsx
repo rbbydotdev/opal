@@ -1,4 +1,3 @@
-import { ConflictBanner } from "@/components/ConflictBanner";
 import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
 import {
   CodeMirrorHighlightURLRange,
@@ -8,6 +7,7 @@ import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhanc
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
+import { GitConflictNotice } from "@/components/GitConflictNotice";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,6 @@ import { Workspace } from "@/Db/Workspace";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
-import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { AbsPath } from "@/lib/paths2";
 import { useResolvePathForPreview } from "@/lib/useResolvePathForPreview";
 import { cn } from "@/lib/utils";
@@ -24,7 +23,6 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
 import { javascript } from "@codemirror/lang-javascript";
-// import { unifiedMergeView } from "@codemirror/merge";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
@@ -53,6 +51,7 @@ const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdo
 };
 
 export const CodeMirrorEditor = ({
+  hasConflicts,
   mimeType,
   value,
   onChange,
@@ -61,8 +60,9 @@ export const CodeMirrorEditor = ({
   className,
   currentWorkspace,
   enableConflictResolution = true,
-  onConflictStatusChange,
+  // onConflictStatusChange,
 }: {
+  hasConflicts: boolean;
   mimeType: "text/css" | "text/plain" | "text/markdown" | string;
   value: string;
   onChange: (value: string) => void;
@@ -71,7 +71,7 @@ export const CodeMirrorEditor = ({
   className?: string;
   currentWorkspace: Workspace;
   enableConflictResolution?: boolean;
-  onConflictStatusChange?: (hasConflicts: boolean) => void;
+  // onConflictStatusChange?: (hasConflicts: boolean) => void;
 }) => {
   const { storedValue: vimMode, setStoredValue: setVimMode } = useLocalStorage2("CodeMirrorEditor/vimMode", false);
   const { storedValue: globalConflictResolution, setStoredValue: setGlobalConflictResolution } = useLocalStorage2(
@@ -88,18 +88,20 @@ export const CodeMirrorEditor = ({
   const conflictResolutionEnabled = enableConflictResolution ?? globalConflictResolution;
 
   // Check if we have conflicts (independent of whether conflict resolution is enabled)
-  const hasConflicts = useMemo(() => {
-    if (!value) return false;
-    return hasGitConflictMarkers(value);
-  }, [value]);
+  // const hasConflicts = useMemo(() => {
+  //   if (!value) return false;
+  //   return hasGitConflictMarkers(value);
+  // }, [value]);
+  // // console.log({ hasConflicts });
 
   // Only disable language extension if conflict resolution is enabled AND we have conflicts
   const shouldDisableLanguageExtension = conflictResolutionEnabled && hasConflicts;
 
-  // Notify parent component about conflict status changes
-  useEffect(() => {
-    onConflictStatusChange?.(hasConflicts);
-  }, [hasConflicts, onConflictStatusChange]);
+  // // Notify parent component about conflict status changes
+  // useEffect(() => {
+  //   onConflictStatusChange?.(hasConflicts);
+  // }, [hasConflicts, onConflictStatusChange]);
+
   useEffect(() => {
     if (!editorRef.current) return;
     if (viewRef.current) {
@@ -181,7 +183,7 @@ export const CodeMirrorEditor = ({
     vimMode,
     conflictResolutionEnabled,
     shouldDisableLanguageExtension,
-    JSON.stringify(getHighlightRangesFromURL(window.location.href, "hash")),
+    //TODO: JSON.stringify(getHighlightRangesFromURL(window.location.href, "hash")),
   ]);
 
   useEffect(() => {
@@ -205,12 +207,12 @@ export const CodeMirrorEditor = ({
           vimMode={vimMode}
           currentWorkspace={currentWorkspace}
           path={path}
-          editorView={viewRef.current}
-          enableConflictResolution={conflictResolutionEnabled}
+          // editorView={viewRef.current}
+          // enableConflictResolution={conflictResolutionEnabled}
           conflictResolution={globalConflictResolution}
           setConflictResolution={setGlobalConflictResolution}
           hasConflicts={hasConflicts}
-          mimeType={mimeType}
+          // mimeType={mimeType}
         ></CodeMirrorToolbar>
         <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
       </ScrollSyncProvider>
@@ -257,15 +259,15 @@ const CodeMirrorToolbar = ({
 
   return (
     <div className="pl-10 flex items-center justify-start p-2 bg-muted h-12 gap-2">
-      {isMarkdown && !hasConflicts && !hasEditOverride && <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />}
+      {isMarkdown && !hasConflicts && !hasEditOverride && (
+        <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />
+      )}
       {!isMarkdown && previewNode?.isMarkdownFile() && !hasEditOverride && (
         <SourceButton onClick={() => router.navigate({ to: currentWorkspace.resolveFileUrl(previewNode.path) })} />
       )}
-
+      {!hasEditOverride + ""}
       {!hasEditOverride && <LivePreviewButtons />}
-
-      {hasConflicts && isMarkdown && <ConflictBanner />}
-
+      {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">
         {/* Git conflict resolution toggle - only show when conflicts exist */}
         {setConflictResolution && hasConflicts && (

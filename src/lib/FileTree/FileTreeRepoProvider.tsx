@@ -1,14 +1,22 @@
-// import { GitRepo } from "@/features/git-repo/GitRepo";
-// import React, { useEffect } from "react";
-// const defaultRepoInfoContext = {};
+import { Workspace } from "@/Db/Workspace";
+import { RepoDefaultInfo } from "@/features/git-repo/GitRepo";
+import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
+import React from "react";
+const defaultRepoInfoContext = RepoDefaultInfo;
 
-// const RepoInfoContext = React.createContext<typeof defaultRepoInfoContext>(defaultRepoInfoContext);
+const RepoInfoContext = React.createContext<typeof defaultRepoInfoContext>(defaultRepoInfoContext);
 
-// const useRepoInfoContext = () => {
-//   return React.useContext(RepoInfoContext);
-// };
+export const useRepoInfoContext = () => {
+  return React.useContext(RepoInfoContext);
+};
 
-// const RepoProvider = ({ children, repo }: { children: React.ReactNode; repo: GitRepo }) => {
-//   useEffect(() => {}, []);
-//   return <RepoInfoContext.Provider value={{ repo }}>{children}</RepoInfoContext.Provider>;
-// };
+export const RepoInfoProvider = ({
+  children,
+  currentWorkspace,
+}: {
+  children: React.ReactNode;
+  currentWorkspace: Workspace;
+}) => {
+  const { info } = useWorkspaceGitRepo({ currentWorkspace });
+  return <RepoInfoContext.Provider value={info}>{children}</RepoInfoContext.Provider>;
+};

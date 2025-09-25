@@ -97,6 +97,7 @@ export type GitRefCommit = {
   type: "commit";
 };
 export const RepoDefaultInfo = {
+  currentAuthor: { name: "", email: "" } as GitRepoAuthor,
   currentBranch: null as null | string,
   bareInitialized: false,
   fullInitialized: false,
@@ -115,13 +116,12 @@ export const RepoDefaultInfo = {
   context: "" as "main" | "worker" | "",
   exists: false,
   isMerging: false,
-  unmergedFiles: [] as string[],
-  conflictingFiles: [] as string[],
+  unmergedFiles: [] as AbsPath[],
+  conflictingFiles: [] as AbsPath[],
   currentRef: null as null | GitRef,
   parentOid: null as null | string,
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
-//--------------------------
 
 export const SIGNAL_ONLY = undefined;
 export const RepoEvents = {
@@ -331,6 +331,12 @@ export class GitRepo {
         void this.syncLocal();
       }
     });
+    this.disk.dirtyListener(() => {
+      if (this.info?.conflictingFiles.length) {
+        void this.sync();
+      }
+      // void this.local.emit(RepoEvents.WORKTREE, SIGNAL_ONLY);
+    });
     //TODO: added this donno if breaks in main or worker?
     void this.remote.on(RepoEvents.GIT, () => {
       void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
@@ -410,12 +416,14 @@ export class GitRepo {
   async push({
     remote,
     ref,
+    force,
     remoteRef,
     corsProxy,
     onAuth,
   }: {
     remote: string;
     ref?: string;
+    force?: boolean;
     remoteRef?: string;
     corsProxy?: string;
     onAuth?: AuthCallback;
@@ -427,6 +435,7 @@ export class GitRepo {
       http,
       dir: this.dir,
       remote,
+      force,
       ref: await this.normalizeRef({ ref: finalRef }),
       remoteRef,
       corsProxy,
@@ -684,6 +693,7 @@ export class GitRepo {
           : null;
       const isMerging = await this.isMerging();
       return {
+        currentAuthor: this.getCurrentAuthor(),
         defaultBranch: await this.getDefaultBranch(),
         fullInitialized: this.state.fullInitialized,
         bareInitialized: this.state.bareInitialized,
@@ -710,6 +720,15 @@ export class GitRepo {
     }
   };
 
+  private containsConflictMarkers = async (filepath: string) => {
+    const content = (
+      (await this.fs.readFile(joinPath(this.dir, filepath), { encoding: "utf8" }).catch(() => null)) ?? ""
+    ).toString();
+    if (content) {
+      return content.includes("<<<<<<<") && content.includes("=======") && content.includes(">>>>>>>");
+    }
+    return false;
+  };
   getConflictedFiles = async () => {
     if ((await this.fullInitialized()) === false) return [];
     const mergeHead = await this.getMergeState();
@@ -725,10 +744,17 @@ export class GitRepo {
       )
         conflicts.push(filepath);
     }
-    return conflicts;
+
+    return (
+      await Promise.all(
+        conflicts.map((filePath) =>
+          this.containsConflictMarkers(filePath).then((hasMarkers) => (hasMarkers ? absPath(filePath) : null))
+        )
+      )
+    ).filter(Boolean);
   };
 
-  getUnmergedFiles = async (): Promise<string[]> => {
+  getUnmergedFiles = async (): Promise<AbsPath[]> => {
     if ((await this.fullInitialized()) === false) return [];
     const mergeHead = await this.getMergeState();
     if (mergeHead) {
