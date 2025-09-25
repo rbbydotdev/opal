@@ -79,6 +79,7 @@ const ALL_VARS = new Set([
   "spacing",
   "tracking-normal",
 ]);
+const DEFAULT_THEME_NAME = "cosmic-night";
 
 export interface ApplyThemeOptions {
   theme: string;
@@ -133,13 +134,13 @@ export function setLightOrDarkClass(mode: "light" | "dark", root: HTMLElement = 
 export function applyTheme(options: ApplyThemeOptions): void {
   const { theme: themeName } = options;
 
-  const defaultTheme = registry.items.find((item) => item.name === "default");
+  const defaultTheme = registry.items.find((item) => item.name === DEFAULT_THEME_NAME);
   let themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
     console.warn(`Theme "${themeName}" not found in registry`);
     themeItem = defaultTheme;
     if (!themeItem) {
-      console.warn(`Theme default not found in registry`);
+      console.warn(`Theme ${DEFAULT_THEME_NAME} not found in registry`);
       return;
     }
   }
