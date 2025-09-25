@@ -28,6 +28,33 @@ export function tryParseCopyNodesPayload(data: string): TreeNodeDataTransferJTyp
   return null;
 }
 
+function useClipboardHasFiles() {
+  const [hasFiles, setHasFiles] = React.useState(false);
+  React.useEffect(() => {
+    async function checkClipboard() {
+      try {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          if (item.types.includes(TreeNodeDataTransferType)) {
+            setHasFiles(true);
+            return;
+          }
+        }
+        setHasFiles(false);
+      } catch (err) {
+        console.error("Failed to read clipboard contents: ", err);
+        setHasFiles(false);
+      }
+    }
+    void checkClipboard();
+    const interval = setInterval(() => {
+      void checkClipboard();
+    }, 5000); // Check every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+  return hasFiles;
+}
+
 // prepareNodeDataTransfer
 export async function copyFileNodesToClipboard({
   fileNodes,
