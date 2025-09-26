@@ -9,6 +9,7 @@ import {
   depth as getDepth,
   incPath,
   isCss,
+  isEjs,
   isImage,
   isMarkdown,
   isText,
@@ -123,6 +124,10 @@ export class TreeNode {
   isMarkdownFile() {
     if (this.isTreeDir()) return false;
     return isMarkdown(this.path);
+  }
+  isEjsFile() {
+    if (this.isTreeDir()) return false;
+    return isEjs(this.path);
   }
   isTextFile() {
     if (this.isTreeDir()) return false;

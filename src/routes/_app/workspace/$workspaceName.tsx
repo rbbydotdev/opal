@@ -44,7 +44,7 @@ function WorkspaceLayout() {
           renderHiddenSidebar={true}
           sidebar={<EditorSidebar className="main-editor-sidebar" />}
           main={<Outlet />}
-          rightPaneEnabled={Boolean(previewURL) && Boolean(previewNode?.isMarkdownFile())}
+          rightPaneEnabled={!!previewURL && (!!previewNode?.isMarkdownFile() || !!previewNode?.isEjsFile())}
           rightPane={previewURL ? <PreviewIFrame previewPath={previewNode?.path} previewURL={previewURL} /> : null}
         />
       </div>

@@ -153,23 +153,21 @@ export function changePrefixRel(path: RelPath, newPrefix: string): RelPath {
   return relPath(pathModule.join(dir, `${newPrefix}${ext}`));
 }
 
-// --- MIME and Image ---
-export function getPathMimeType(path: AbsPath | RelPath): string {
-  return getMimeType(path);
-}
-
 export function isImage(path: AbsPath | RelPath | TreeNode | string): boolean {
-  return isImageType(getPathMimeType(relPath(String(path))));
+  return isImageType(getMimeType(relPath(String(path))));
 }
 
 export function isMarkdown(path: AbsPath | RelPath | TreeNode | string): boolean {
-  return isMarkdownType(getPathMimeType(relPath(String(path))));
+  return isMarkdownType(getMimeType(relPath(String(path))));
 }
 export function isText(path: AbsPath | RelPath | TreeNode | string): boolean {
-  return getPathMimeType(relPath(String(path))).startsWith("text/");
+  return getMimeType(relPath(String(path))).startsWith("text/");
+}
+export function isEjs(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return getMimeType(relPath(String(path))) === "text/x-ejs";
 }
 export function isCss(path: AbsPath | RelPath | TreeNode | string): boolean {
-  return getPathMimeType(relPath(String(path))) === "text/css";
+  return getMimeType(relPath(String(path))) === "text/css";
 }
 export function isSource(path: AbsPath | RelPath | TreeNode | string): boolean {
   return !isMarkdown(path) && !isImage(path) && !isCss(path);
