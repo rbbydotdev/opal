@@ -314,6 +314,13 @@ export class EtaRenderer {
     const message = err.message || String(err);
     const stack = err.stack || "";
     
+    // Log the error to console for debugging
+    console.error('Template Render Error:', {
+      message,
+      stack,
+      error: err
+    });
+    
     return `<div class="text-red-600 p-4 border border-red-300 rounded">
       <div><strong>Template Render Error:</strong> ${message}</div>
       ${stack ? `<pre class="mt-2 whitespace-pre-wrap text-sm">${stack}</pre>` : ""}
