@@ -61,9 +61,19 @@ export function getDefaultEjsTemplate(): string {
         <p><strong>File:</strong> getFileExtension, getFileName, getFileSize</p>
         <p><strong>Math:</strong> add, subtract, multiply, divide, round</p>
         <p><strong>Utility:</strong> json, escape, equals</p>
+        <p><strong>Markdown:</strong> importMarkdown, importMarkdownSync</p>
     </div>
     <p><em>Example: <code>&lt;%= it.helpers.capitalize('hello world') %&gt;</code> → "Hello world"</em></p>
     <p><em>You can use template includes like: <code>&lt;%~ include('./other-template') %&gt;</code></em></p>
+    
+    <h3>🚀 New: Markdown Import</h3>
+    <p>Import markdown files with frontmatter parsing:</p>
+    <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 0.9em;">
+        <p><code>&lt;% const md = await it.helpers.importMarkdown('path/to/file.md'); %&gt;</code></p>
+        <p><code>&lt;%= md.data.title %&gt;</code> ← frontmatter data</p>
+        <p><code>&lt;%= md.content %&gt;</code> ← markdown content</p>
+        <p><code>&lt;%= md.raw %&gt;</code> ← raw file content</p>
+    </div>
 </body>
 </html>`;
 }

@@ -41,6 +41,39 @@ export class TemplateManager {
   }
 
   /**
+   * Renders a template with markdown import support
+   */
+  async renderTemplateWithMarkdown(templatePath: AbsPath, customData: TemplateData = {}, markdownPaths: string[] = []): Promise<string> {
+    try {
+      // Read the main template
+      const templateContent = await this.workspace.readFile(templatePath);
+      const content = String(templateContent);
+
+      // Use renderWithMarkdown to support markdown imports
+      return await this.renderer.renderWithMarkdown(content, customData, markdownPaths);
+    } catch (error) {
+      console.error('Template rendering error:', error);
+      return this.renderer.formatError ? 
+        this.renderer.formatError(error) : 
+        `<div class="text-red-600">Template Error: ${error}</div>`;
+    }
+  }
+
+  /**
+   * Renders a template string with markdown import support
+   */
+  async renderStringWithMarkdown(templateContent: string, customData: TemplateData = {}, markdownPaths: string[] = []): Promise<string> {
+    try {
+      return await this.renderer.renderWithMarkdown(templateContent, customData, markdownPaths);
+    } catch (error) {
+      console.error('Template rendering error:', error);
+      return this.renderer.formatError ? 
+        this.renderer.formatError(error) : 
+        `<div class="text-red-600">Template Error: ${error}</div>`;
+    }
+  }
+
+  /**
    * Gets all template files in the workspace
    */
   getTemplateFiles(): AbsPath[] {
