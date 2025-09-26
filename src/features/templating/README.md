@@ -75,6 +75,63 @@ Templates automatically receive:
 - `it.images`: Array of workspace images with `{path, url, name}` (url is direct path, handled by service worker)
 - `it.fileTree`: Array of workspace files with `{path, name, type}`
 - `it.workspace`: Workspace info with `{name, id}`
+- `it.helpers`: Comprehensive helper functions (see below)
+
+## Helper Functions
+
+Access helper functions via `it.helpers` in your templates:
+
+### String Helpers
+```eta
+<%= it.helpers.capitalize('hello world') %>    <!-- "Hello world" -->
+<%= it.helpers.uppercase('hello') %>           <!-- "HELLO" -->
+<%= it.helpers.lowercase('HELLO') %>           <!-- "hello" -->
+<%= it.helpers.truncate('long text', 10) %>    <!-- "long text..." -->
+<%= it.helpers.slugify('Hello World!') %>      <!-- "hello-world" -->
+```
+
+### Array Helpers
+```eta
+<%= it.helpers.first(it.images) %>             <!-- First image -->
+<%= it.helpers.last(it.images) %>              <!-- Last image -->
+<%= it.helpers.length(it.images) %>            <!-- Array length -->
+<% it.helpers.take(it.images, 3).forEach(...) %> <!-- First 3 items -->
+<% it.helpers.skip(it.images, 2).forEach(...) %> <!-- Skip first 2 -->
+```
+
+### Date Helpers
+```eta
+<%= it.helpers.now() %>                        <!-- Current ISO date -->
+<%= it.helpers.formatDate(new Date(), 'MM/DD/YYYY') %> <!-- "12/25/2023" -->
+<%= it.helpers.formatDate(new Date(), 'DD/MM/YYYY HH:mm') %> <!-- "25/12/2023 14:30" -->
+```
+
+### File Helpers
+```eta
+<%= it.helpers.getFileName('/path/to/file.jpg') %>      <!-- "file.jpg" -->
+<%= it.helpers.getFileExtension('/path/to/file.jpg') %> <!-- "jpg" -->
+<%= it.helpers.getFileSize(1024) %>                    <!-- "1 KB" -->
+```
+
+### Image Helpers
+```eta
+<% it.helpers.filterImages(it.fileTree).forEach(...) %> <!-- Only image files -->
+<% it.helpers.getImagesByType(it.images, 'jpg').forEach(...) %> <!-- Only JPG images -->
+```
+
+### Math Helpers
+```eta
+<%= it.helpers.add(5, 3) %>                    <!-- 8 -->
+<%= it.helpers.round(3.14159, 2) %>            <!-- 3.14 -->
+<%= it.helpers.divide(10, 3) %>                <!-- 3.33... -->
+```
+
+### Utility Helpers
+```eta
+<%= it.helpers.json(it.workspace) %>           <!-- JSON representation -->
+<%= it.helpers.escape('<script>') %>           <!-- HTML escaped -->
+<%= it.helpers.equals(a, b) %>                 <!-- Boolean comparison -->
+```
 
 ## Classes
 
