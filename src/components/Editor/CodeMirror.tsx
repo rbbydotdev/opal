@@ -28,7 +28,13 @@ import { vim } from "@replit/codemirror-vim";
 import { useRouter } from "@tanstack/react-router";
 import { basicSetup } from "codemirror";
 import { ejs } from "codemirror-lang-ejs";
-import { Check, ChevronLeftIcon, FileText, X } from "lucide-react";
+import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
+import parserBabel from "prettier/plugins/babel";
+import parserEstree from "prettier/plugins/estree";
+import parserHtml from "prettier/plugins/html";
+import parserMarkdown from "prettier/plugins/markdown";
+import parserPostcss from "prettier/plugins/postcss";
+import * as prettier from "prettier/standalone";
 import { useEffect, useMemo, useRef } from "react";
 
 const noCommentKeymap = keymap.of([{ key: "Mod-/", run: () => true }]);
@@ -162,6 +168,8 @@ export const CodeMirrorEditor = ({
           conflictResolution={globalConflictResolution}
           setConflictResolution={setGlobalConflictResolution}
           hasConflicts={hasConflicts}
+          mimeType={mimeType}
+          editorView={viewRef.current}
         ></CodeMirrorToolbar>
         <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
       </ScrollSyncProvider>
@@ -186,6 +194,8 @@ const CodeMirrorToolbar = ({
   conflictResolution = true,
   setConflictResolution,
   hasConflicts = false,
+  mimeType,
+  editorView,
 }: {
   children?: React.ReactNode;
   path: AbsPath | null;
@@ -195,10 +205,58 @@ const CodeMirrorToolbar = ({
   conflictResolution?: boolean;
   setConflictResolution?: (value: boolean) => void;
   hasConflicts?: boolean;
+  mimeType?: string;
+  editorView?: EditorView | null;
 }) => {
   const { isMarkdown, hasEditOverride } = useCurrentFilepath();
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
   const router = useRouter();
+
+  const handlePrettify = async () => {
+    if (!editorView || !mimeType) return;
+
+    try {
+      const currentContent = editorView.state.doc.toString();
+      let prettifiedContent: string;
+
+      switch (mimeType) {
+        case "text/css":
+          prettifiedContent = await prettier.format(currentContent, {
+            parser: "css",
+            plugins: [parserBabel, parserPostcss],
+          });
+          break;
+        case "text/javascript":
+          prettifiedContent = await prettier.format(currentContent, {
+            parser: "babel",
+            plugins: [parserBabel, parserEstree],
+          });
+          break;
+        case "text/markdown":
+          prettifiedContent = await prettier.format(currentContent, {
+            parser: "markdown",
+            plugins: [parserMarkdown],
+          });
+          break;
+        case "text/x-ejs":
+          prettifiedContent = await prettier.format(currentContent, {
+            parser: "html",
+            plugins: [parserHtml],
+          });
+          break;
+        default:
+          return;
+      }
+
+      editorView.dispatch({
+        changes: { from: 0, to: editorView.state.doc.length, insert: prettifiedContent },
+      });
+    } catch (error) {
+      console.error("Prettify failed:", error);
+    }
+  };
+
+  const canPrettify = mimeType && ["text/css", "text/javascript", "text/markdown", "text/x-ejs"].includes(mimeType);
 
   return (
     <div className="pl-10 flex items-center justify-start p-2 bg-muted h-12 gap-2">
@@ -209,6 +267,14 @@ const CodeMirrorToolbar = ({
         <SourceButton onClick={() => router.navigate({ to: currentWorkspace.resolveFileUrl(previewNode.path) })} />
       )}
       {!hasEditOverride && <LivePreviewButtons />}
+      {canPrettify && !hasEditOverride && (
+        <Button variant="outline" size="sm" onClick={handlePrettify}>
+          <span className="text-xs flex justify-center items-center gap-1">
+            <Sparkles size={12} />
+            Prettify
+          </span>
+        </Button>
+      )}
       {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">
         {/* Git conflict resolution toggle - only show when conflicts exist */}
