@@ -23,6 +23,7 @@ export function getDefaultEjsTemplate(): string {
         <div style="border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
             <img src="<%= img.url %>" alt="<%= img.name %>" style="max-width: 200px; max-height: 200px; object-fit: contain;">
             <p style="margin: 5px 0 0 0; font-size: 0.8em;"><%= img.name %></p>
+            <p style="margin: 2px 0 0 0; font-size: 0.7em; color: #666;">Path: <%= img.path %></p>
         </div>
     <% }); %>
     </div>
