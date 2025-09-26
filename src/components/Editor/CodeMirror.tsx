@@ -21,21 +21,22 @@ import { cn } from "@/lib/utils";
 import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
-import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
-import { ejs } from "@/lib/codemirror/ejsLanguage";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
 import { useRouter } from "@tanstack/react-router";
 import { basicSetup } from "codemirror";
+import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, X } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
 const noCommentKeymap = keymap.of([{ key: "Mod-/", run: () => true }]);
 export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs";
 
-const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | string) => {
+const getLanguageExtension = (
+  language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | string
+) => {
   switch (language) {
     case "text/css":
       return css();
