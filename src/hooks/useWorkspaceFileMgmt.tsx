@@ -2,6 +2,7 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
+import { getDefaultEjsTemplate } from "@/lib/defaultEjsTemplate";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -29,6 +30,9 @@ function defaultFileContent(path: AbsPath) {
   }
   if (mime.lookup(path) === "text/markdown") {
     return setFrontmatter("# " + basename(path), { documentId: nanoid() });
+  }
+  if (path.toLowerCase().endsWith('.ejs')) {
+    return getDefaultEjsTemplate();
   }
   return "";
 }

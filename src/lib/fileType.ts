@@ -6,6 +6,7 @@ export const FileTypes = {
   BIN: "application/octet-stream",
   MARKDOWN: "text/markdown",
   CSS: "text/css",
+  EJS: "text/x-ejs",
 } as const;
 
 export const MimeTypeExt = {
@@ -16,6 +17,7 @@ export const MimeTypeExt = {
   "application/octet-stream": "bin",
   "text/markdown": "md",
   "text/css": "css",
+  "text/x-ejs": "ejs",
 } as const;
 
 export const MimeTypes = {
@@ -26,6 +28,7 @@ export const MimeTypes = {
   BIN: "application/octet-stream",
   MARKDOWN: "text/markdown",
   CSS: "text/css",
+  EJS: "text/x-ejs",
 } as const;
 
 export type FileType = (typeof FileTypes)[keyof typeof FileTypes];

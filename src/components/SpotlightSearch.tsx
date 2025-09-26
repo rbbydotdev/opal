@@ -25,6 +25,7 @@ import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState, useTransi
 import { createPortal } from "react-dom";
 import { useFileTree } from "../context/FileTreeProvider";
 import { useWorkspaceContext } from "../context/WorkspaceContext";
+import { getDefaultEjsTemplate } from "@/lib/defaultEjsTemplate";
 
 const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,
@@ -854,6 +855,26 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
         "New Style CSS": [
           NewCmdExec(async () => {
             const path = await newFile(absPath("styles.css"));
+            if (path) {
+              void navigate({
+                to: currentWorkspace.resolveFileUrl(path),
+              });
+            }
+          }),
+        ],
+        "New EJS Template": [
+          NewCmdPrompt("ejs_file_name", "Enter EJS template file name"),
+          NewCmdExec(async (context) => {
+            const name = context.ejs_file_name as string;
+            if (!name) {
+              console.warn("No file name provided for new EJS template");
+              return;
+            }
+            const fileName = absPath(strictPrefix(name) + ".ejs");
+            const dir =
+              currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
+              ("/" as AbsPath);
+            const path = await newFile(joinPath(dir, fileName), getDefaultEjsTemplate());
             if (path) {
               void navigate({
                 to: currentWorkspace.resolveFileUrl(path),

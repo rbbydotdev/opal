@@ -11,7 +11,7 @@ import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/T
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import mime from "mime-types";
+import { getMimeType } from "@/lib/mimeType";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { decodePath } from "../lib/paths2";
 
@@ -48,7 +48,7 @@ export type Workspaces = WorkspaceDAO[];
 export const DEFAULT_MIME_TYPE = "application/octet-stream"; //i think this just means binary?
 
 function isRecognizedFileType(mimeType: string): boolean {
-  // Images, markdown, text files (including code files), HTML, CSS, and common web formats are recognized
+  // Images, markdown, text files (including code files), HTML, CSS, EJS templates, and common web formats are recognized
   return (
     mimeType.startsWith("image/") ||
     mimeType.startsWith("text/") ||
@@ -57,7 +57,8 @@ function isRecognizedFileType(mimeType: string): boolean {
     mimeType === "application/typescript" ||
     mimeType === "application/xml" ||
     mimeType === "text/html" ||
-    mimeType === "text/css"
+    mimeType === "text/css" ||
+    mimeType === "text/x-ejs"
   );
 }
 
@@ -79,19 +80,21 @@ export function useCurrentFilepath() {
       isImage: false,
       isMarkdown: false,
       isCssFile: false,
+      isEjs: false,
       isSource: false,
       inTrash: false,
     };
   }
-  const mimeType = mime.lookup(filePath) || DEFAULT_MIME_TYPE;
+  const mimeType = getMimeType(filePath) || DEFAULT_MIME_TYPE;
 
   return {
     filePath,
     mimeType,
     isMarkdown: mimeType.startsWith("text/markdown"),
     isImage: mimeType.startsWith("image/"),
-    isSource: !mimeType.startsWith("text/markdown") && mimeType.startsWith("text/"),
+    isSource: (!mimeType.startsWith("text/markdown") && mimeType.startsWith("text/")) || mimeType === "text/x-ejs",
     isCssFile: mimeType === "text/css",
+    isEjs: mimeType === "text/x-ejs",
     isBin: mimeType.startsWith("application/octet-stream"),
     isRecognized: isRecognizedFileType(mimeType) || editOverride,
     inTrash: filePath.startsWith(SpecialDirs.Trash),
