@@ -117,7 +117,7 @@ export class EtaRenderer {
     const imagePaths = this.workspace.getImages();
     return imagePaths.map((path) => ({
       path,
-      url: this.workspace.resolveFileUrl(path),
+      url: path, // Use direct path since service worker handles routing
       name: path.split('/').pop() || '',
     }));
   }

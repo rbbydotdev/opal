@@ -72,7 +72,7 @@ Include it in your main template:
 Templates automatically receive:
 
 - `it.data`: Custom data passed to the template
-- `it.images`: Array of workspace images with `{path, url, name}` 
+- `it.images`: Array of workspace images with `{path, url, name}` (url is direct path, handled by service worker)
 - `it.fileTree`: Array of workspace files with `{path, name, type}`
 - `it.workspace`: Workspace info with `{name, id}`
 
