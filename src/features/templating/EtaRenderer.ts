@@ -14,7 +14,49 @@ export interface TemplateData {
     name: string;
     type: string;
   }>;
+  helpers?: TemplateHelpers;
   [key: string]: any;
+}
+
+export interface TemplateHelpers {
+  // String helpers
+  capitalize: (str: string) => string;
+  lowercase: (str: string) => string;
+  uppercase: (str: string) => string;
+  truncate: (str: string, length: number, suffix?: string) => string;
+  slugify: (str: string) => string;
+  
+  // Array helpers
+  first: <T>(arr: T[]) => T | undefined;
+  last: <T>(arr: T[]) => T | undefined;
+  take: <T>(arr: T[], count: number) => T[];
+  skip: <T>(arr: T[], count: number) => T[];
+  
+  // Date helpers
+  formatDate: (date: Date | string, format?: string) => string;
+  now: () => string;
+  
+  // File helpers
+  getFileExtension: (path: string) => string;
+  getFileName: (path: string) => string;
+  getFileSize: (bytes: number) => string;
+  
+  // Image helpers
+  filterImages: (files: any[]) => any[];
+  getImagesByType: (images: any[], type: string) => any[];
+  
+  // Utility helpers
+  json: (obj: any) => string;
+  escape: (str: string) => string;
+  length: (arr: any[] | string) => number;
+  equals: (a: any, b: any) => boolean;
+  
+  // Math helpers
+  add: (a: number, b: number) => number;
+  subtract: (a: number, b: number) => number;
+  multiply: (a: number, b: number) => number;
+  divide: (a: number, b: number) => number;
+  round: (num: number, decimals?: number) => number;
 }
 
 export class EtaRenderer {
@@ -102,11 +144,89 @@ export class EtaRenderer {
       ...data,
       images: data.images || this.getWorkspaceImages(),
       fileTree: data.fileTree || this.getWorkspaceFileTree(),
+      helpers: data.helpers || this.getTemplateHelpers(),
       // Add workspace-specific helpers
       workspace: {
         name: this.workspace.name,
         id: this.workspace.id,
       },
+    };
+  }
+
+  /**
+   * Gets template helper functions
+   */
+  private getTemplateHelpers(): TemplateHelpers {
+    return {
+      // String helpers
+      capitalize: (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase(),
+      lowercase: (str: string) => str.toLowerCase(),
+      uppercase: (str: string) => str.toUpperCase(),
+      truncate: (str: string, length: number, suffix = '...') => 
+        str.length > length ? str.substring(0, length) + suffix : str,
+      slugify: (str: string) => str.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, ''),
+
+      // Array helpers
+      first: <T>(arr: T[]) => arr[0],
+      last: <T>(arr: T[]) => arr[arr.length - 1],
+      take: <T>(arr: T[], count: number) => arr.slice(0, count),
+      skip: <T>(arr: T[], count: number) => arr.slice(count),
+
+      // Date helpers
+      formatDate: (date: Date | string, format = 'MM/DD/YYYY') => {
+        const d = new Date(date);
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        
+        return format
+          .replace('MM', month)
+          .replace('DD', day)
+          .replace('YYYY', year.toString())
+          .replace('HH', hours)
+          .replace('mm', minutes);
+      },
+      now: () => new Date().toISOString(),
+
+      // File helpers
+      getFileExtension: (path: string) => {
+        const lastDot = path.lastIndexOf('.');
+        return lastDot > 0 ? path.substring(lastDot + 1) : '';
+      },
+      getFileName: (path: string) => path.split('/').pop() || '',
+      getFileSize: (bytes: number) => {
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        if (bytes === 0) return '0 Bytes';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+      },
+
+      // Image helpers
+      filterImages: (files: any[]) => files.filter(file => isImage(file.path || file.name)),
+      getImagesByType: (images: any[], type: string) => 
+        images.filter(img => (img.path || img.name).toLowerCase().endsWith(`.${type.toLowerCase()}`)),
+
+      // Utility helpers
+      json: (obj: any) => JSON.stringify(obj, null, 2),
+      escape: (str: string) => str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;'),
+      length: (arr: any[] | string) => arr.length,
+      equals: (a: any, b: any) => a === b,
+
+      // Math helpers
+      add: (a: number, b: number) => a + b,
+      subtract: (a: number, b: number) => a - b,
+      multiply: (a: number, b: number) => a * b,
+      divide: (a: number, b: number) => b !== 0 ? a / b : 0,
+      round: (num: number, decimals = 0) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals),
     };
   }
 
