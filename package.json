@@ -107,6 +107,7 @@
     "cm6-theme-solarized-dark": "^0.2.0",
     "cmdk": "^1.1.1",
     "codemirror": "^6.0.2",
+    "codemirror-lang-ejs": "^0.1.5",
     "comlink": "^4.4.2",
     "comlink-async-generator": "^0.0.1",
     "culori": "^4.0.2",
