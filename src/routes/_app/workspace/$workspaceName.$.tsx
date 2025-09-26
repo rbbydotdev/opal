@@ -128,8 +128,6 @@ function WorkspaceFilePage() {
 
   return (
     <>
-      {/* <SpotlightSearch currentWorkspace={currentWorkspace} /> */}
-      <div id="spotlight-slot"></div>
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
       {!isRecognized ? (
         <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />

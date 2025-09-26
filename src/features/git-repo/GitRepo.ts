@@ -419,6 +419,9 @@ export class GitRepo {
   }) {
     const finalRef = ref || (await this.currentBranch()) || null;
     if (!finalRef) throw new Error("No current branch to push");
+    if (await this.isMerging()) {
+      throw new Error("Cannot push while merge is in progress");
+    }
     return this.git.push({
       fs: this.fs,
       http,
@@ -435,6 +438,9 @@ export class GitRepo {
   async pull({ remote, ref }: { remote: string; ref?: string }) {
     const finalRef = ref || (await this.currentBranch()) || null;
     if (!finalRef) throw new Error("No current branch to pull");
+    if (await this.isMerging()) {
+      throw new Error("Cannot push while merge is in progress");
+    }
     const remoteObj = await this.getRemote(remote);
     if (!remoteObj) throw new NotFoundError(`Remote ${remote} not found`);
     return this.mutex.runExclusive(async () => {
@@ -893,10 +899,11 @@ export class GitRepo {
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
-    // console.log(`Starting merge of ${from} into ${into}`);
+    if (await this.isMerging()) {
+      throw new Error("Cannot push while merge is in progress");
+    }
     const ours = await this.normalizeRef({ ref: into });
     const theirs = await this.normalizeRef({ ref: from });
-    // console.log(`Merging ${theirs} into ${ours}`);
     const result = await this.git
       .merge({
         fs: this.fs,
@@ -937,8 +944,7 @@ export class GitRepo {
   mustBeInitialized = async (defaultBranch = this.defaultMainBranch): Promise<boolean> => {
     if (this.state.fullInitialized) return true;
     if (!(await this.fullInitialized())) {
-      //if we are bare intialized we may have fetched refs we dont want to collide with
-      // const branches = await this.getBranches().catch(() => []);
+      console.log(defaultBranch);
       await this.git.init({
         fs: this.fs,
         dir: this.dir,
@@ -974,7 +980,12 @@ export class GitRepo {
       fs: this.fs,
       dir: this.dir,
       author: author || this.getCurrentAuthor(),
-      ref: ref ? await this.resolveRef({ ref }) : undefined,
+      ref: ref
+        ? await this.resolveRef({ ref }).catch(() => {
+            if (this.state.fullInitialized === false) return undefined;
+            throw new Error(`Ref ${ref} not found for commit`);
+          })
+        : undefined,
       message,
       parent,
     });

@@ -32,6 +32,7 @@ export function GitRemoteManager({
   deleteGitRemote,
   setSelectRemote,
   selectRemote,
+  isMerging,
   pushRepo,
   pullRepo,
   fetchRepo,
@@ -43,6 +44,7 @@ export function GitRemoteManager({
   deleteGitRemote: (remoteName: string) => void;
   setSelectRemote: (remote: string) => void;
   selectRemote: string | null;
+  isMerging: boolean;
   pushRepo: () => void;
   pullRepo: () => void;
   fetchRepo: () => void;
@@ -119,16 +121,16 @@ export function GitRemoteManager({
           {Boolean(selectRemote) && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={syncRepo}>
+              <DropdownMenuItem onClick={syncRepo} disabled={isMerging}>
                 <RefreshCw /> Sync Now
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={pushRepo}>
+              <DropdownMenuItem onClick={pushRepo} disabled={isMerging}>
                 <Upload /> Push
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={pullRepo}>
+              <DropdownMenuItem onClick={pullRepo} disabled={isMerging}>
                 <Download /> Pull
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={fetchRepo}>
+              <DropdownMenuItem onClick={fetchRepo} disabled={isMerging}>
                 <Download /> Fetch
               </DropdownMenuItem>
             </>
@@ -343,6 +345,7 @@ export function RemoteManagerSection({
       <>
         <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
         <GitRemoteManager
+          isMerging={info.isMerging}
           remotes={info.remotes}
           pushRepo={handlePush}
           pullRepo={handlePull}

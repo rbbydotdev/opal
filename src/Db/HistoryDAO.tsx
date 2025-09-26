@@ -227,9 +227,9 @@ export class HistoryDAO implements HistoryStorageInterface {
     abortForNewlines = false
   ): Promise<HistoryDocRecord | null> {
     /*
-    // --- HOW TO USE THE THRESHOLD ---
-    // You can now call the threshold method at the beginning of saveEdit.
-    // If the score is too low, you can abort the save.
+    --- HOW TO USE THE THRESHOLD ---
+    You can now call the threshold method at the beginning of saveEdit.
+    If the score is too low, you can abort the save.
 
     const score = await this._getSaveThreshold(id, newText);
     const SAVE_THRESHOLD = 0.3; // Example: Only save if score is > 0.3

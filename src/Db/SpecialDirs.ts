@@ -4,13 +4,12 @@ import { AbsPath, absPath } from "@/lib/paths2";
 export const SpecialDirs = {
   Trash: absPath("/.trash"),
   Storage: absPath("/.storage"),
-  Git: absPath("/git"),
+  Git: absPath("/.git"),
 
   allSpecialDirsExcept(...paths: (AbsPath | TreeNode)[]): AbsPath[] {
     return this.All.filter((dir) => !paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
   },
   get All() {
-    // return Object.values(this).flat();
     return [this.Trash, this.Storage, this.Git];
   },
 } as const;

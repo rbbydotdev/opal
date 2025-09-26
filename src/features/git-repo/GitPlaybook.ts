@@ -4,7 +4,6 @@ import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
 import { ConflictError, NotFoundError } from "@/lib/errors";
-import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
 import { Remote } from "comlink";
@@ -85,38 +84,40 @@ export class GitPlaybook {
     await this.repo.checkoutRef({ ref: commitOid, force: true });
     return true;
   };
-  // async initialCommit_() {
-  //   await this.repo.mustBeInitialized();
-  //   await this.repo.add(".");
-  //   await this.repo.commit({
-  //     message: "Initial commit",
-  //   });
-  // }
+
   async initialCommit() {
     await this.repo.mustBeInitialized();
     await this.repo.add(".");
-
-    //if were are in a bare repo some special things need to be done
-    //i think i need to create a slop branch for the working directory
-    const branches = await this.repo.getBranches().catch(() => []);
-    const main = gitAbbreviateRef(await this.repo.defaultMainBranch);
-    const newBranch = getUniqueSlug(main, branches);
-
-    // First commit to create the initial commit
-    const commitOid = await this.repo.commit({
+    await this.repo.commit({
       message: "Initial commit",
-      ref: newBranch,
     });
-
-    // Now create the branch pointing to this commit
-    await this.repo.addGitBranch({
-      branchName: newBranch,
-      symbolicRef: commitOid,
-      checkout: false,
-    });
-
-    await this.repo.checkoutRef({ ref: newBranch, force: true });
   }
+  // async _____initialCommit() {
+  //   await this.repo.mustBeInitialized();
+  //   await this.repo.add(".");
+  //   //if were are in a bare repo some special things need to be done
+  //   //i think i need to create a slop branch for the working directory
+  //   const branches = await this.repo.getBranches().catch(() => []);
+  //   const main = gitAbbreviateRef(await this.repo.defaultMainBranch);
+  //   const newBranch = getUniqueSlug(main, branches);
+
+  //   await this.repo.addGitBranch({ branchName: newBranch });
+
+  //   // First commit to create the initial commit
+  //   const commitOid = await this.repo.commit({
+  //     message: "Initial commit",
+  //     // ref: newBranch,
+  //   });
+
+  //   // Now create the branch pointing to this commit
+  //   await this.repo.addGitBranch({
+  //     branchName: newBranch,
+  //     symbolicRef: commitOid,
+  //     checkout: false,
+  //   });
+
+  //   await this.repo.checkoutRef({ ref: newBranch, force: true });
+  // }
 
   merge = this.repo.merge.bind(this);
 
@@ -283,10 +284,6 @@ export class GitPlaybook {
     // Then, merge the fetched branch with allowUnrelatedHistories
     const currentBranch = await this.repo.normalizeRef({ ref: finalRef });
     const remoteBranch = `${remoteObj.name}/${await this.repo.toShortBranchName(finalRef)}`;
-    console.log({
-      currentBranch,
-      remoteBranch,
-    });
 
     return this.merge({
       from: remoteBranch,
