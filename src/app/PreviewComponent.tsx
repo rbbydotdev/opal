@@ -7,7 +7,7 @@ import { useWorkspaceContext, useWorkspaceRoute, WorkspaceProvider } from "@/con
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { AbsPath, isImage, isMarkdown } from "@/lib/paths2";
+import { AbsPath, isEjs, isImage, isMarkdown } from "@/lib/paths2";
 import { useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
@@ -46,6 +46,14 @@ function PreviewComponentInternal() {
   if (isImage(path)) {
     return <ImageRender />;
   }
+  if (isEjs(path)) {
+    return (
+      <ScrollSyncProvider scrollEmitter={scrollEmitter} scrollEl={scrollEl || undefined}>
+        <Links hrefs={cssFiles} />
+        <EjsRender path={path} />
+      </ScrollSyncProvider>
+    );
+  }
   return <p>Unsupported file type for preview: {path}</p>;
 }
 function ImageRender() {
@@ -71,6 +79,27 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
   return (
     <div
       id="markdown"
+      className="w-full h-full absolute inset-0  overflow-y-auto px-4"
+      dangerouslySetInnerHTML={{ __html: html }}
+    ></div>
+  );
+}
+function EjsRender({ path }: { path: AbsPath | null }) {
+  const [contents, setContents] = useState<string | null>(null);
+  const { currentWorkspace } = useWorkspaceContext();
+  const { contents: initialContents } = useFileContents({
+    currentWorkspace,
+    path,
+    onContentChange: (contents) => {
+      setContents(stripFrontmatter(String(contents)));
+    },
+  });
+  const html = useMemo(
+    () => renderMarkdownToHtml(stripFrontmatter(contents === null ? String(initialContents ?? "") : (contents ?? ""))),
+    [contents, initialContents]
+  );
+  return (
+    <div
       className="w-full h-full absolute inset-0  overflow-y-auto px-4"
       dangerouslySetInnerHTML={{ __html: html }}
     ></div>
