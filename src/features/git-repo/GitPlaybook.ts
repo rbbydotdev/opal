@@ -268,31 +268,35 @@ export class GitPlaybook {
   }
 
   async pull({ remote, ref }: { remote: string; ref?: string }) {
+    const finalRef = ref || (await this.repo.currentBranch()) || null;
+    if (!finalRef) throw new Error("No current branch to pull");
+    const remoteObj = await this.repo.getRemote(remote);
+    if (!remoteObj) throw new NotFoundError(`Remote ${remote} not found`);
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.PREPUSH,
       });
     }
-    // const remoteObj = await this.repo.getRemote(remote);
-    // if (!remoteObj) {
-    //   throw new Error(`Remote ${remote} not found`);
-    // }
-    // if (remoteObj.authId && !remoteObj.RemoteAuth) {
-    //   throw new Error(`Remote ${remote} has authId but no RemoteAuth object found`);
-    // }
-    // const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
-    // const onAuth = RemoteAuth ? IsoGitApiCallbackForRemoteAuth(RemoteAuth) : undefined;
-    // if (!ref) {
-    //   const currentBranch = await this.repo.getCurrentBranch();
-    //   if (!currentBranch) {
-    //     throw new Error("No current branch to pull");
-    //   }
-    //   ref = currentBranch;
-    // }
-    return this.repo.pull({
-      ref,
 
-      remote,
+    // First, fetch from the remote
+    await this.repo.fetch({
+      url: remoteObj.url,
+      remote: remoteObj.name,
+      corsProxy: remoteObj.gitCorsProxy,
+      onAuth: remoteObj.onAuth,
+    });
+
+    // Then, merge the fetched branch with allowUnrelatedHistories
+    const currentBranch = await this.repo.normalizeRef({ ref: finalRef });
+    const remoteBranch = `${remoteObj.name}/${await this.repo.toShortBranchName(finalRef)}`;
+    console.log({
+      currentBranch,
+      remoteBranch,
+    });
+
+    return this.merge({
+      from: remoteBranch,
+      into: currentBranch,
     });
   }
 

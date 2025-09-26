@@ -1,8 +1,7 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { Thumb } from "@/Db/Thumb";
 import { DragPreviewNode } from "@/features/filetree-drag-and-drop/DragPreviewNode";
-import { isImage } from "@/lib/paths2";
-import { FileTextIcon, Folder } from "lucide-react";
+import { FileCode2Icon, FileTextIcon, Folder } from "lucide-react";
 import { forwardRef } from "react";
 
 export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
@@ -58,7 +57,8 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
             </div>
           );
         }
-        if (isImage(treeNode.path)) {
+        // if (isImage(treeNode.path)) {
+        if (treeNode.isImageFile()) {
           return (
             <div
               key={treeNode.path}
@@ -87,12 +87,21 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
             }}
           >
-            <FileTextIcon
-              key={treeNode.path}
-              strokeWidth={1}
-              fill="white"
-              className="text-ring rounded bg-background w-full h-full"
-            />
+            {treeNode.isCssFile() ? (
+              <FileCode2Icon
+                key={treeNode.path}
+                strokeWidth={1}
+                fill="white"
+                className="text-ring rounded bg-background w-full h-full"
+              />
+            ) : (
+              <FileTextIcon
+                key={treeNode.path}
+                strokeWidth={1}
+                fill="white"
+                className="text-ring rounded bg-background w-full h-full"
+              />
+            )}
           </div>
         );
       })}

@@ -51,6 +51,7 @@ export function useFileContents({
   debounceMs?: number;
   path?: AbsPath | null;
 }) {
+  const [hotContents, setHotContents] = useState<string | null>("");
   const onContentChangeRef = useRef(onContentChange);
   const { path: currentRoutePath } = useWorkspaceRoute();
   const [contents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
@@ -84,6 +85,7 @@ export function useFileContents({
     }
     debounceRef.current = setTimeout(() => {
       if (content !== null) {
+        setHotContents(content);
         writeFileContents(String(content));
       }
     }, debounceMs);
@@ -93,7 +95,9 @@ export function useFileContents({
   useAsyncEffect(async () => {
     if (currentWorkspace && filePath) {
       try {
-        setInitialContents(await currentWorkspace.getDisk().readFile(filePath));
+        const fileContents = await currentWorkspace.getDisk().readFile(filePath);
+        setHotContents(fileContents.toString());
+        setInitialContents(fileContents);
         setError(null);
       } catch (error) {
         setError(error as Error);
@@ -108,6 +112,7 @@ export function useFileContents({
     //hmmmmmmmmmmmmmmmmmmmmmmmm
     return contentEmitter.listen(ContentEvents.UPDATE, (c) => {
       if (c !== contents) {
+        setHotContents(c.toString());
         onContentChangeRef.current?.(String(c ?? ""));
       }
     });
@@ -116,15 +121,28 @@ export function useFileContents({
   useEffect(() => {
     //Mount Local Listener
     if (filePath) {
-      return currentWorkspace.getDisk().outsideWriteListener(filePath, setInitialContents);
+      return currentWorkspace.getDisk().insideWriteListener(filePath, (c) => {
+        setHotContents(c);
+      });
+    }
+  }, [currentWorkspace, filePath]);
+
+  useEffect(() => {
+    //Mount Local Listener
+    if (filePath) {
+      return currentWorkspace.getDisk().outsideWriteListener(filePath, (c) => {
+        setHotContents(c);
+        setInitialContents(c);
+      });
     }
   }, [currentWorkspace, filePath]);
 
   useEffect(() => {
     if (filePath) {
-      return currentWorkspace
-        .getDisk()
-        .outsideWriteListener(filePath, (content) => contentEmitter.emit(ContentEvents.UPDATE, content));
+      return currentWorkspace.getDisk().outsideWriteListener(filePath, (content) => {
+        contentEmitter.emit(ContentEvents.UPDATE, content);
+        setHotContents(content);
+      });
     }
   }, [contentEmitter, currentWorkspace, filePath]);
 
@@ -135,6 +153,8 @@ export function useFileContents({
   return {
     contentEmitter,
     error,
+    hotContents,
+
     filePath,
     contents: contents !== null ? String(contents) : null,
     mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
