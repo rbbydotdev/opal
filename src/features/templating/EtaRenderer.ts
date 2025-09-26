@@ -26,36 +26,36 @@ export interface TemplateHelpers {
   uppercase: (str: string) => string;
   truncate: (str: string, length: number, suffix?: string) => string;
   slugify: (str: string) => string;
-  
+
   // Array helpers
   first: <T>(arr: T[]) => T | undefined;
   last: <T>(arr: T[]) => T | undefined;
   take: <T>(arr: T[], count: number) => T[];
   skip: <T>(arr: T[], count: number) => T[];
-  
+
   // Date helpers
   formatDate: (date: Date | string, format?: string) => string;
   now: () => string;
-  
+
   // File helpers
   getFileExtension: (path: string) => string;
   getFileName: (path: string) => string;
   getFileSize: (bytes: number) => string;
-  
+
   // Image helpers
   filterImages: (files: any[]) => any[];
   getImagesByType: (images: any[], type: string) => any[];
-  
+
   // Utility helpers
   json: (obj: any) => string;
   escape: (str: string) => string;
   length: (arr: any[] | string) => number;
   equals: (a: any, b: any) => boolean;
-  
+
   // Markdown helpers
   importMarkdown: (path: string) => Promise<{ content: string; data: Record<string, any>; raw: string }>;
   importMarkdownSync: (path: string) => { content: string; data: Record<string, any>; raw: string };
-  
+
   // Math helpers
   add: (a: number, b: number) => number;
   subtract: (a: number, b: number) => number;
@@ -73,7 +73,7 @@ export class EtaRenderer {
 
   constructor(workspace: Workspace) {
     this.workspace = workspace;
-    
+
     // Synchronous ETA instance
     this.eta = new Eta({
       cache: false, // Disable cache for live editing
@@ -110,9 +110,17 @@ export class EtaRenderer {
    */
   async renderStringAsync(templateContent: string, data: TemplateData = {}): Promise<string> {
     try {
+      // console.log('renderStringAsync called with template preview:', templateContent.substring(0, 200));
       const enrichedData = this.enrichTemplateData(data);
-      return await this.etaAsync.renderStringAsync(templateContent, enrichedData) || "";
+      // console.log('About to call etaAsync.renderStringAsync with data keys:', Object.keys(enrichedData));
+      // Use ETA's built-in renderStringAsync which handles async compilation
+      const result = (await this.etaAsync.renderStringAsync(templateContent, enrichedData)) || "";
+      // console.log('renderStringAsync succeeded');
+      return result;
     } catch (error) {
+      // console.error('renderStringAsync failed with detailed error:', error);
+      // console.error('Error message:', (error as Error).message);
+      // console.error('Error stack:', (error as Error).stack);
       return this.formatError(error);
     }
   }
@@ -124,9 +132,9 @@ export class EtaRenderer {
     try {
       const templateContent = await this.workspace.readFile(templatePath);
       const content = String(templateContent);
-      
+
       // Check if template contains await and use appropriate renderer
-      if (content.includes('await')) {
+      if (content.includes("await")) {
         return await this.renderStringAsync(content, data);
       } else {
         return this.renderString(content, data);
@@ -148,7 +156,7 @@ export class EtaRenderer {
         console.warn(`Could not preload template: ${path}`, error);
       }
     });
-    
+
     await Promise.all(loadPromises);
   }
 
@@ -158,19 +166,21 @@ export class EtaRenderer {
   async renderWithIncludes(templateContent: string, data: TemplateData = {}): Promise<string> {
     // Find all include statements in the template
     const includeMatches = templateContent.match(/<%~\s*include\(['"`]([^'"`]+)['"`]\s*(?:,\s*\{[^}]*\})?\s*\)\s*%>/g);
-    
+
     if (includeMatches) {
-      const includePaths = includeMatches.map(match => {
-        const pathMatch = match.match(/include\(['"`]([^'"`]+)['"`]/);
-        return pathMatch?.[1] ? this.resolveTemplatePath(pathMatch[1]) : null;
-      }).filter((path): path is string => path !== null);
+      const includePaths = includeMatches
+        .map((match) => {
+          const pathMatch = match.match(/include\(['"`]([^'"`]+)['"`]/);
+          return pathMatch?.[1] ? this.resolveTemplatePath(pathMatch[1]) : null;
+        })
+        .filter((path): path is string => path !== null);
 
       // Preload all included templates
       await this.preloadTemplates(includePaths as AbsPath[]);
     }
 
     // Check if template contains await and use appropriate renderer
-    if (templateContent.includes('await')) {
+    if (templateContent.includes("await")) {
       return await this.renderStringAsync(templateContent, data);
     } else {
       return this.renderString(templateContent, data);
@@ -203,11 +213,13 @@ export class EtaRenderer {
       capitalize: (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase(),
       lowercase: (str: string) => str.toLowerCase(),
       uppercase: (str: string) => str.toUpperCase(),
-      truncate: (str: string, length: number, suffix = '...') => 
+      truncate: (str: string, length: number, suffix = "...") =>
         str.length > length ? str.substring(0, length) + suffix : str,
-      slugify: (str: string) => str.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, ''),
+      slugify: (str: string) =>
+        str
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, ""),
 
       // Array helpers
       first: <T>(arr: T[]) => arr[0],
@@ -216,49 +228,50 @@ export class EtaRenderer {
       skip: <T>(arr: T[], count: number) => arr.slice(count),
 
       // Date helpers
-      formatDate: (date: Date | string, format = 'MM/DD/YYYY') => {
+      formatDate: (date: Date | string, format = "MM/DD/YYYY") => {
         const d = new Date(date);
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
         const year = d.getFullYear();
-        const hours = String(d.getHours()).padStart(2, '0');
-        const minutes = String(d.getMinutes()).padStart(2, '0');
-        
+        const hours = String(d.getHours()).padStart(2, "0");
+        const minutes = String(d.getMinutes()).padStart(2, "0");
+
         return format
-          .replace('MM', month)
-          .replace('DD', day)
-          .replace('YYYY', year.toString())
-          .replace('HH', hours)
-          .replace('mm', minutes);
+          .replace("MM", month)
+          .replace("DD", day)
+          .replace("YYYY", year.toString())
+          .replace("HH", hours)
+          .replace("mm", minutes);
       },
       now: () => new Date().toISOString(),
 
       // File helpers
       getFileExtension: (path: string) => {
-        const lastDot = path.lastIndexOf('.');
-        return lastDot > 0 ? path.substring(lastDot + 1) : '';
+        const lastDot = path.lastIndexOf(".");
+        return lastDot > 0 ? path.substring(lastDot + 1) : "";
       },
-      getFileName: (path: string) => path.split('/').pop() || '',
+      getFileName: (path: string) => path.split("/").pop() || "",
       getFileSize: (bytes: number) => {
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        if (bytes === 0) return '0 Bytes';
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        if (bytes === 0) return "0 Bytes";
         const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+        return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
       },
 
       // Image helpers
-      filterImages: (files: any[]) => files.filter(file => isImage(file.path || file.name)),
-      getImagesByType: (images: any[], type: string) => 
-        images.filter(img => (img.path || img.name).toLowerCase().endsWith(`.${type.toLowerCase()}`)),
+      filterImages: (files: any[]) => files.filter((file) => isImage(file.path || file.name)),
+      getImagesByType: (images: any[], type: string) =>
+        images.filter((img) => (img.path || img.name).toLowerCase().endsWith(`.${type.toLowerCase()}`)),
 
       // Utility helpers
       json: (obj: any) => JSON.stringify(obj, null, 2),
-      escape: (str: string) => str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#x27;'),
+      escape: (str: string) =>
+        str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#x27;"),
       length: (arr: any[] | string) => arr.length,
       equals: (a: any, b: any) => a === b,
 
@@ -266,7 +279,7 @@ export class EtaRenderer {
       add: (a: number, b: number) => a + b,
       subtract: (a: number, b: number) => a - b,
       multiply: (a: number, b: number) => a * b,
-      divide: (a: number, b: number) => b !== 0 ? a / b : 0,
+      divide: (a: number, b: number) => (b !== 0 ? a / b : 0),
       round: (num: number, decimals = 0) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals),
 
       // Markdown helpers
@@ -288,7 +301,7 @@ export class EtaRenderer {
     return imagePaths.map((path) => ({
       path,
       url: path, // Use direct path since service worker handles routing
-      name: path.split('/').pop() || '',
+      name: path.split("/").pop() || "",
     }));
   }
 
@@ -313,7 +326,7 @@ export class EtaRenderer {
       if (this.templateCache.has(path)) {
         return this.templateCache.get(path)!;
       }
-      
+
       // If not in cache, throw error since sync reading is not available
       throw new Error(`Template not preloaded: ${path}. Use renderWithIncludes() for templates with includes.`);
     } catch (error) {
@@ -326,19 +339,19 @@ export class EtaRenderer {
    */
   private resolveTemplatePath(template: string): string {
     // Handle relative paths
-    if (template.startsWith('./') || template.startsWith('../')) {
+    if (template.startsWith("./") || template.startsWith("../")) {
       // For now, resolve relative to root
-      const resolvedPath = template.replace(/^\.\//, '/');
+      const resolvedPath = template.replace(/^\.\//, "/");
       return resolvedPath as AbsPath;
     }
-    
+
     // Handle absolute paths
-    if (template.startsWith('/')) {
+    if (template.startsWith("/")) {
       return template as AbsPath;
     }
-    
+
     // Default to adding .eta extension if no extension provided
-    const hasExtension = template.includes('.');
+    const hasExtension = template.includes(".");
     return (hasExtension ? template : `${template}.eta`) as AbsPath;
   }
 
@@ -349,14 +362,14 @@ export class EtaRenderer {
     const err = error as Error;
     const message = err.message || String(err);
     const stack = err.stack || "";
-    
+
     // Log the error to console for debugging
-    console.error('Template Render Error:', {
+    console.error("Template Render Error:", {
       message,
       stack,
-      error: err
+      error: err,
     });
-    
+
     return `<div class="text-red-600 p-4 border border-red-300 rounded">
       <div><strong>Template Render Error:</strong> ${message}</div>
       ${stack ? `<pre class="mt-2 whitespace-pre-wrap text-sm">${stack}</pre>` : ""}
@@ -370,7 +383,7 @@ export class EtaRenderer {
     try {
       // Resolve the path relative to workspace
       const resolvedPath = this.resolveMarkdownPath(path);
-      
+
       // Check cache first
       if (this.markdownCache.has(resolvedPath)) {
         return this.markdownCache.get(resolvedPath)!;
@@ -379,19 +392,19 @@ export class EtaRenderer {
       // Read the markdown file from workspace
       const markdownContent = await this.workspace.readFile(resolvedPath);
       const rawContent = String(markdownContent);
-      
+
       // Parse with gray-matter
       const parsed = graymatter(rawContent);
-      
+
       const result = {
         content: parsed.content, // markdown content without frontmatter
-        data: parsed.data,       // frontmatter data
-        raw: rawContent          // original file content
+        data: parsed.data, // frontmatter data
+        raw: rawContent, // original file content
       };
-      
+
       // Cache the result
       this.markdownCache.set(resolvedPath, result);
-      
+
       return result;
     } catch (error) {
       throw new Error(`Could not import markdown file: ${path}. ${error}`);
@@ -404,12 +417,12 @@ export class EtaRenderer {
   private importMarkdownFileSync(path: string): { content: string; data: Record<string, any>; raw: string } {
     try {
       const resolvedPath = this.resolveMarkdownPath(path);
-      
+
       // Check if markdown is in cache
       if (this.markdownCache.has(resolvedPath)) {
         return this.markdownCache.get(resolvedPath)!;
       }
-      
+
       // If not in cache, throw error since sync reading is not available
       throw new Error(`Markdown not preloaded: ${path}. Use renderWithMarkdown() for templates with markdown imports.`);
     } catch (error) {
@@ -422,19 +435,19 @@ export class EtaRenderer {
    */
   private resolveMarkdownPath(path: string): AbsPath {
     // Handle relative paths
-    if (path.startsWith('./') || path.startsWith('../')) {
+    if (path.startsWith("./") || path.startsWith("../")) {
       // For now, resolve relative to root
-      const resolvedPath = path.replace(/^\.\//, '/');
+      const resolvedPath = path.replace(/^\.\//, "/");
       return resolvedPath as AbsPath;
     }
-    
+
     // Handle absolute paths
-    if (path.startsWith('/')) {
+    if (path.startsWith("/")) {
       return path as AbsPath;
     }
-    
+
     // Default to adding .md extension if no extension provided
-    const hasExtension = path.includes('.');
+    const hasExtension = path.includes(".");
     return (hasExtension ? `/${path}` : `/${path}.md`) as AbsPath;
   }
 
@@ -449,34 +462,45 @@ export class EtaRenderer {
         console.warn(`Could not preload markdown: ${path}`, error);
       }
     });
-    
+
     await Promise.all(loadPromises);
   }
 
   /**
    * Renders with preloaded markdown files, enabling markdown imports
    */
-  async renderWithMarkdown(templateContent: string, data: TemplateData = {}, markdownPaths: string[] = []): Promise<string> {
+  async renderWithMarkdown(
+    templateContent: string,
+    data: TemplateData = {},
+    markdownPaths: string[] = []
+  ): Promise<string> {
     // Auto-detect markdown import statements in the template
     const markdownMatches = templateContent.match(/<%.*?helpers\.importMarkdown\(['"`]([^'"`]+)['"`]\)/g);
-    
+
     if (markdownMatches) {
-      const detectedPaths = markdownMatches.map(match => {
-        const pathMatch = match.match(/importMarkdown\(['"`]([^'"`]+)['"`]\)/);
-        return pathMatch ? pathMatch[1] : null;
-      }).filter((path): path is string => path !== null && path !== undefined);
+      const detectedPaths = markdownMatches
+        .map((match) => {
+          const pathMatch = match.match(/importMarkdown\(['"`]([^'"`]+)['"`]\)/);
+          return pathMatch ? pathMatch[1] : null;
+        })
+        .filter((path): path is string => path !== null && path !== undefined);
 
       // Merge with explicitly provided paths
       const allPaths = [...new Set([...markdownPaths, ...detectedPaths])];
-      
+
       // Preload all markdown files
       await this.preloadMarkdownFiles(allPaths);
     }
 
     // Check if template contains await and use appropriate renderer
-    if (templateContent.includes('await')) {
+    const hasAwait = templateContent.includes("await");
+    // console.log("renderWithMarkdown - hasAwait:", hasAwait, "template preview:", templateContent.substring(0, 200));
+
+    if (hasAwait) {
+      // console.log("Using async renderer for template with await");
       return await this.renderStringAsync(templateContent, data);
     } else {
+      // console.log("Using sync renderer for template without await");
       return this.renderString(templateContent, data);
     }
   }
