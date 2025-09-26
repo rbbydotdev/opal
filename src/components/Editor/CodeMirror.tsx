@@ -15,7 +15,6 @@ import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContex
 import { Workspace } from "@/Db/Workspace";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
-import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { AbsPath } from "@/lib/paths2";
 import { useResolvePathForPreview } from "@/lib/useResolvePathForPreview";
 import { cn } from "@/lib/utils";
@@ -31,9 +30,7 @@ import { basicSetup } from "codemirror";
 import { Check, ChevronLeftIcon, FileText, X } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
-const noCommentKeymap = keymap.of([
-  { key: "Mod-/", run: () => true }, // return true = handled, but do nothing
-]);
+const noCommentKeymap = keymap.of([{ key: "Mod-/", run: () => true }]);
 export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript";
 
 const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | string) => {
@@ -56,7 +53,6 @@ export const CodeMirrorEditor = ({
   value,
   onChange,
   readOnly = false,
-  height = "200px",
   className,
   currentWorkspace,
   enableConflictResolution = true,
@@ -67,40 +63,24 @@ export const CodeMirrorEditor = ({
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
-  height?: string;
   className?: string;
   currentWorkspace: Workspace;
   enableConflictResolution?: boolean;
-  // onConflictStatusChange?: (hasConflicts: boolean) => void;
 }) => {
   const { storedValue: vimMode, setStoredValue: setVimMode } = useLocalStorage2("CodeMirrorEditor/vimMode", false);
   const { storedValue: globalConflictResolution, setStoredValue: setGlobalConflictResolution } = useLocalStorage2(
     "SourceEditor/enableGitConflictResolution",
     true
   );
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   const valueRef = useRef(value);
+  valueRef.current = value;
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const ext = useMemo(() => getLanguageExtension(mimeType), [mimeType]);
-  const { mode } = useThemeSettings();
-
-  // Use prop or global setting
   const conflictResolutionEnabled = enableConflictResolution ?? globalConflictResolution;
-
-  // Check if we have conflicts (independent of whether conflict resolution is enabled)
-  // const hasConflicts = useMemo(() => {
-  //   if (!value) return false;
-  //   return hasGitConflictMarkers(value);
-  // }, [value]);
-  // // console.log({ hasConflicts });
-
-  // Only disable language extension if conflict resolution is enabled AND we have conflicts
   const shouldDisableLanguageExtension = conflictResolutionEnabled && hasConflicts;
-
-  // // Notify parent component about conflict status changes
-  // useEffect(() => {
-  //   onConflictStatusChange?.(hasConflicts);
-  // }, [hasConflicts, onConflictStatusChange]);
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -118,36 +98,14 @@ export const CodeMirrorEditor = ({
       CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),
       noCommentKeymap,
       keymap.of([indentWithTab]),
-      // Only use language extension if no conflicts detected when conflict resolution is enabled
       shouldDisableLanguageExtension ? null : ext,
-
-      // Git conflict resolution plugin
       conflictResolutionEnabled ? gitConflictEnhancedPlugin(getLanguageExtension) : null,
-
-      // how to determine user change vs programmatic change
-      // EditorView.updateListener.of((update) => {
-      //         if (update.docChanged) {
-      //           // Check if this was a user event
-      //           const userEvent = update.transactions.some((tr) =>
-      //             tr.annotation(Transaction.userEvent)
-      //           );
-
-      //           if (userEvent) {
-      //             console.log("User change:", userEvent);
-      //             // userEvent will be strings like "input", "delete", "paste", "dragdrop"
-      //           } else {
-      //             console.log("Programmatic change");
-      //           }
-      //         }
-      //       }),
-
       EditorView.updateListener.of((update) => {
-        // console.log(update.state.doc.toString());
         if (update.docChanged) {
           const docStr = update.state.doc.toString();
           if (docStr !== valueRef.current) {
             valueRef.current = docStr;
-            onChange(docStr);
+            onChangeRef.current(docStr);
           }
         }
       }),
@@ -173,19 +131,7 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [
-    editorRef,
-    readOnly,
-    height,
-    ext,
-    value,
-    onChange,
-    mode,
-    vimMode,
-    conflictResolutionEnabled,
-    shouldDisableLanguageExtension,
-    //TODO: JSON.stringify(getHighlightRangesFromURL(window.location.href, "hash")),
-  ]);
+  }, [conflictResolutionEnabled, ext, readOnly, shouldDisableLanguageExtension, vimMode]);
 
   useEffect(() => {
     if (viewRef.current && value !== viewRef.current.state.doc.toString()) {
@@ -208,12 +154,9 @@ export const CodeMirrorEditor = ({
           vimMode={vimMode}
           currentWorkspace={currentWorkspace}
           path={path}
-          // editorView={viewRef.current}
-          // enableConflictResolution={conflictResolutionEnabled}
           conflictResolution={globalConflictResolution}
           setConflictResolution={setGlobalConflictResolution}
           hasConflicts={hasConflicts}
-          // mimeType={mimeType}
         ></CodeMirrorToolbar>
         <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
       </ScrollSyncProvider>
@@ -235,24 +178,18 @@ const CodeMirrorToolbar = ({
   currentWorkspace,
   vimMode,
   setVimMode,
-  // editorView,
-  // enableConflictResolution = true,
   conflictResolution = true,
   setConflictResolution,
   hasConflicts = false,
-  // mimeType,
 }: {
   children?: React.ReactNode;
   path: AbsPath | null;
   currentWorkspace: Workspace;
   vimMode: boolean;
   setVimMode: (value: boolean) => void;
-  // editorView: EditorView | null;
-  // enableConflictResolution?: boolean;
   conflictResolution?: boolean;
   setConflictResolution?: (value: boolean) => void;
   hasConflicts?: boolean;
-  // mimeType?: string;
 }) => {
   const { isMarkdown, hasEditOverride } = useCurrentFilepath();
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });

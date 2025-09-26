@@ -1,7 +1,6 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { FileError } from "@/components/FileError";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
-// import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
 import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
@@ -32,6 +31,7 @@ function WorkspaceFilePage() {
     contents: initialContents,
     updateDebounce,
     error,
+    hotContents,
   } = useFileContents({
     currentWorkspace,
   });
@@ -39,15 +39,12 @@ function WorkspaceFilePage() {
     throw error;
   }
 
-  // const hasConflicts = useMemo(() => {
-  //   if (!isMarkdown || !initialContents) return false;
-  //   return hasGitConflictMarkers(String(initialContents));
-  // }, [isMarkdown, initialContents]);
-
   const [hasConflicts, setHasConflicts] = useState(false);
+
   useEffect(() => {
     setHasConflicts(hasGitConflictMarkers(String(initialContents)));
   }, [initialContents]);
+
   const handleSourceContentChange = (newContent: string) => {
     const hasConflictsNow = hasGitConflictMarkers(newContent);
     if (hasConflicts !== hasConflictsNow) setHasConflicts(hasConflictsNow);
@@ -140,7 +137,8 @@ function WorkspaceFilePage() {
         <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
       ) : !isMarkdown || isSourceView || hasConflicts ? (
         <SourceEditor
-          initialContents={initialContents}
+          // initialContents={initialContents}
+          initialContents={hotContents}
           onChange={handleSourceContentChange}
           hasConflicts={hasConflicts}
           mimeType={mimeType}
@@ -148,7 +146,7 @@ function WorkspaceFilePage() {
           key={filePath}
         />
       ) : (
-        <WorkspaceMarkdownEditor path={filePath} currentWorkspace={currentWorkspace} />
+        <WorkspaceMarkdownEditor contents={hotContents} path={filePath} currentWorkspace={currentWorkspace} />
       )}
     </>
   );

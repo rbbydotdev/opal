@@ -14,7 +14,15 @@ import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";
 import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
 
-export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
+export function WorkspaceMarkdownEditor({
+  currentWorkspace,
+  contents,
+  path,
+}: {
+  currentWorkspace: Workspace;
+  contents: string | null;
+  path: AbsPath;
+}) {
   const editorRef = useRef<MDXEditorMethods>(null);
   const {
     contents: initialContents,
@@ -38,7 +46,7 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
 
   const documentId = useWorkspaceDocumentId(initialContents);
 
-  const markdown = String(initialContents || "");
+  const markdown = String(contents || "");
   const { data, content } = useMemo(() => {
     const md = matter(markdown);
     return { data: { documentId, ...(md.data ?? {}) }, content: md.content };
@@ -56,6 +64,7 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
                 editorRef={editorRef}
                 onChange={(md) => updateDebounce(matter.stringify(md, data))}
                 markdown={content}
+                // markdown={contents ?? ""}
                 className={"bg-background flex-grow  flex-col h-full"}
                 contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
               />

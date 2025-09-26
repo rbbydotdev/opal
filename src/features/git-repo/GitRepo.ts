@@ -222,7 +222,7 @@ export class GitRepo {
   }
 
   // Helper functions for ref name normalization
-  private toShortBranchName(ref: string): string {
+  toShortBranchName(ref: string): string {
     if (ref.startsWith("refs/heads/")) {
       return ref.slice("refs/heads/".length);
     }
@@ -248,7 +248,7 @@ export class GitRepo {
     return `refs/remotes/${remote}/${this.toShortBranchName(branch)}`;
   }
 
-  private async normalizeRef({ ref }: { ref: string }) {
+  async normalizeRef({ ref }: { ref: string }) {
     if (
       ["HEAD", "ORIG_HEAD", "PREV_BRANCH", "FETCH_HEAD", "MERGE_HEAD", "CHERRY_PICK_HEAD", "REBASE_HEAD"].includes(ref)
     ) {
