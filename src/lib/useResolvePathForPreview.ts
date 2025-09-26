@@ -13,6 +13,7 @@ export function useResolvePathForPreview({
     if (!path) return null;
     const currentNode = currentWorkspace.nodeFromPath(path);
     if (currentNode?.isMarkdownFile()) return currentNode;
+    if (currentNode?.isEjsFile()) return currentNode;
     if (currentNode?.isImageFile()) return null;
     return (
       currentNode?.siblings().find((node) => node.isMarkdownFile() && prefix(node.path) === prefix(path)) ||

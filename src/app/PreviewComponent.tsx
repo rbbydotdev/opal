@@ -9,7 +9,6 @@ import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isImage, isMarkdown } from "@/lib/paths2";
 import { useSearch } from "@tanstack/react-router";
-// import "github-markdown-css/github-markdown-light.css";
 import { useMemo, useState } from "react";
 
 export function PreviewComponent() {
