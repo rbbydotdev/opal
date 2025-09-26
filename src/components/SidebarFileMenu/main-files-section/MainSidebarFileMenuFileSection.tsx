@@ -36,6 +36,7 @@ import {
   Ellipsis,
   FileCode2Icon,
   FileEditIcon,
+  FileTextIcon,
   FolderPlus,
   Info,
   Scissors,
@@ -108,6 +109,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
               trashSelectedFiles={trashSelectedFiles}
               addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
               addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
+              addEjsFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs"), true)}
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
               diskType={diskType}
@@ -136,6 +138,7 @@ const FileMenuActionButtonRow = ({
   addFile,
   addDir,
   addCssFile,
+  addEjsFile,
   setExpandAll,
   diskType,
   copyFiles,
@@ -145,6 +148,7 @@ const FileMenuActionButtonRow = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void;
+  addEjsFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
@@ -202,6 +206,7 @@ const FileMenuCompactActions = ({
   addFile,
   addDir,
   addCssFile,
+  addEjsFile,
   setExpandAll,
   diskType,
   copyFiles,
@@ -211,6 +216,7 @@ const FileMenuCompactActions = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void;
+  addEjsFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
@@ -239,6 +245,10 @@ const FileMenuCompactActions = ({
           <DropdownMenuItem onClick={addCssFile}>
             <FileCode2Icon className="w-4 h-4 mr-2" />
             New CSS File
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={addEjsFile}>
+            <FileTextIcon className="w-4 h-4 mr-2" />
+            New EJS Template
           </DropdownMenuItem>
           <DropdownMenuItem onClick={addDir}>
             <FolderPlus className="w-4 h-4 mr-2" />
@@ -289,6 +299,7 @@ export const SidebarFileMenuFilesActions = ({
   addFile,
   addDir,
   addCssFile,
+  addEjsFile,
   setExpandAll,
   diskType,
   currentWorkspace,
@@ -296,6 +307,7 @@ export const SidebarFileMenuFilesActions = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void; // Optional for future use
+  addEjsFile?: () => void; // Optional for future use
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
@@ -353,6 +365,7 @@ export const SidebarFileMenuFilesActions = ({
           addFile={addFile}
           addDir={addDir}
           addCssFile={addCssFile}
+          addEjsFile={addEjsFile}
           setExpandAll={setExpandAll}
           diskType={diskType}
           copyFiles={copyFiles}
@@ -370,6 +383,7 @@ export const SidebarFileMenuFilesActions = ({
         addFile={addFile}
         addDir={addDir}
         addCssFile={addCssFile}
+        addEjsFile={addEjsFile}
         setExpandAll={setExpandAll}
         diskType={diskType}
         copyFiles={copyFiles}

@@ -21,7 +21,9 @@ import { cn } from "@/lib/utils";
 import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
+import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
+import { ejs } from "@/lib/codemirror/ejsLanguage";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
@@ -31,9 +33,9 @@ import { Check, ChevronLeftIcon, FileText, X } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
 const noCommentKeymap = keymap.of([{ key: "Mod-/", run: () => true }]);
-export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript";
+export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs";
 
-const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | string) => {
+const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | string) => {
   switch (language) {
     case "text/css":
       return css();
@@ -41,6 +43,8 @@ const getLanguageExtension = (language: "text/css" | "text/plain" | "text/markdo
       return enhancedMarkdownExtension(true);
     case "text/javascript":
       return javascript();
+    case "text/x-ejs":
+      return ejs();
     case "text/plain":
     default:
       return null;
@@ -59,7 +63,7 @@ export const CodeMirrorEditor = ({
   // onConflictStatusChange,
 }: {
   hasConflicts: boolean;
-  mimeType: "text/css" | "text/plain" | "text/markdown" | string;
+  mimeType: "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | string;
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
