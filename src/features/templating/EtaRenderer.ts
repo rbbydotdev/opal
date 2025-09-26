@@ -66,20 +66,31 @@ export interface TemplateHelpers {
 
 export class EtaRenderer {
   private eta: Eta;
+  private etaAsync: Eta;
   private workspace: Workspace;
   private templateCache: Map<string, string> = new Map();
   private markdownCache: Map<string, { content: string; data: Record<string, any>; raw: string }> = new Map();
 
   constructor(workspace: Workspace) {
     this.workspace = workspace;
+    
+    // Synchronous ETA instance
     this.eta = new Eta({
       cache: false, // Disable cache for live editing
       autoEscape: false, // Allow HTML output
     });
 
-    // Set up custom file reader to read from workspace filesystem
+    // Asynchronous ETA instance (same config, but use renderStringAsync method)
+    this.etaAsync = new Eta({
+      cache: false, // Disable cache for live editing
+      autoEscape: false, // Allow HTML output
+    });
+
+    // Set up custom file reader to read from workspace filesystem for both instances
     this.eta.readFile = this.readTemplateFromWorkspace.bind(this);
     this.eta.resolvePath = this.resolveTemplatePath.bind(this);
+    this.etaAsync.readFile = this.readTemplateFromWorkspace.bind(this);
+    this.etaAsync.resolvePath = this.resolveTemplatePath.bind(this);
   }
 
   /**
@@ -95,12 +106,31 @@ export class EtaRenderer {
   }
 
   /**
+   * Renders a template string asynchronously (for templates with await)
+   */
+  async renderStringAsync(templateContent: string, data: TemplateData = {}): Promise<string> {
+    try {
+      const enrichedData = this.enrichTemplateData(data);
+      return await this.etaAsync.renderStringAsync(templateContent, enrichedData) || "";
+    } catch (error) {
+      return this.formatError(error);
+    }
+  }
+
+  /**
    * Renders a template file from the workspace
    */
   async renderTemplate(templatePath: AbsPath, data: TemplateData = {}): Promise<string> {
     try {
       const templateContent = await this.workspace.readFile(templatePath);
-      return this.renderString(String(templateContent), data);
+      const content = String(templateContent);
+      
+      // Check if template contains await and use appropriate renderer
+      if (content.includes('await')) {
+        return await this.renderStringAsync(content, data);
+      } else {
+        return this.renderString(content, data);
+      }
     } catch (error) {
       return this.formatError(error);
     }
@@ -139,7 +169,12 @@ export class EtaRenderer {
       await this.preloadTemplates(includePaths as AbsPath[]);
     }
 
-    return this.renderString(templateContent, data);
+    // Check if template contains await and use appropriate renderer
+    if (templateContent.includes('await')) {
+      return await this.renderStringAsync(templateContent, data);
+    } else {
+      return this.renderString(templateContent, data);
+    }
   }
 
   /**
@@ -235,8 +270,9 @@ export class EtaRenderer {
       round: (num: number, decimals = 0) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals),
 
       // Markdown helpers
-      importMarkdown: async (path: string) => {
-        return await this.importMarkdownFile(path);
+      importMarkdown: (path: string) => {
+        // For async templates, this will work directly
+        return this.importMarkdownFile(path);
       },
       importMarkdownSync: (path: string) => {
         return this.importMarkdownFileSync(path);
@@ -437,7 +473,12 @@ export class EtaRenderer {
       await this.preloadMarkdownFiles(allPaths);
     }
 
-    return this.renderString(templateContent, data);
+    // Check if template contains await and use appropriate renderer
+    if (templateContent.includes('await')) {
+      return await this.renderStringAsync(templateContent, data);
+    } else {
+      return this.renderString(templateContent, data);
+    }
   }
 
   /**

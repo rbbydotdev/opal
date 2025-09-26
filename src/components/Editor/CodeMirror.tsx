@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
+import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
@@ -38,14 +39,16 @@ import * as prettier from "prettier/standalone";
 import { useEffect, useMemo, useRef } from "react";
 
 const noCommentKeymap = keymap.of([{ key: "Mod-/", run: () => true }]);
-export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs";
+export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | "text/html";
 
 const getLanguageExtension = (
-  language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | string
+  language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | "text/html" | string
 ) => {
   switch (language) {
     case "text/css":
       return css();
+    case "text/html":
+      return html();
     case "text/markdown":
       return enhancedMarkdownExtension(true);
     case "text/javascript":
@@ -70,7 +73,7 @@ export const CodeMirrorEditor = ({
   // onConflictStatusChange,
 }: {
   hasConflicts: boolean;
-  mimeType: "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | string;
+  mimeType: "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html" | string;
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
@@ -244,6 +247,12 @@ const CodeMirrorToolbar = ({
             plugins: [parserHtml],
           });
           break;
+        case "text/html":
+          prettifiedContent = await prettier.format(currentContent, {
+            parser: "html",
+            plugins: [parserHtml],
+          });
+          break;
         default:
           return;
       }
@@ -256,7 +265,7 @@ const CodeMirrorToolbar = ({
     }
   };
 
-  const canPrettify = mimeType && ["text/css", "text/javascript", "text/markdown", "text/x-ejs"].includes(mimeType);
+  const canPrettify = mimeType && ["text/css", "text/javascript", "text/markdown", "text/x-ejs", "text/html"].includes(mimeType);
 
   return (
     <div className="pl-10 flex items-center justify-start p-2 bg-muted h-12 gap-2">

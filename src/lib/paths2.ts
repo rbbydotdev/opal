@@ -166,6 +166,9 @@ export function isText(path: AbsPath | RelPath | TreeNode | string): boolean {
 export function isEjs(path: AbsPath | RelPath | TreeNode | string): boolean {
   return getMimeType(relPath(String(path))) === "text/x-ejs";
 }
+export function isHtml(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return getMimeType(relPath(String(path))) === "text/html";
+}
 export function isCss(path: AbsPath | RelPath | TreeNode | string): boolean {
   return getMimeType(relPath(String(path))) === "text/css";
 }

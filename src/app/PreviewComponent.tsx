@@ -8,7 +8,7 @@ import { TemplateManager } from "@/features/templating";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { AbsPath, isEjs, isImage, isMarkdown } from "@/lib/paths2";
+import { AbsPath, isEjs, isHtml, isImage, isMarkdown } from "@/lib/paths2";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
@@ -52,6 +52,14 @@ function PreviewComponentInternal() {
       <ScrollSyncProvider scrollEmitter={scrollEmitter} scrollEl={scrollEl || undefined}>
         <Links hrefs={cssFiles} />
         <EjsRender path={path} />
+      </ScrollSyncProvider>
+    );
+  }
+  if (isHtml(path)) {
+    return (
+      <ScrollSyncProvider scrollEmitter={scrollEmitter} scrollEl={scrollEl || undefined}>
+        <Links hrefs={cssFiles} />
+        <HtmlRender path={path} />
       </ScrollSyncProvider>
     );
   }
@@ -114,8 +122,8 @@ function EjsRender({ path }: { path: AbsPath | null }) {
 
     const renderTemplate = async () => {
       try {
-        // Use renderString for direct template content rendering with all workspace data
-        const rendered = templateManager.renderString(finalContents, {
+        // Use renderStringWithMarkdown for all templates (handles async automatically)
+        const rendered = await templateManager.renderStringWithMarkdown(finalContents, {
           data: {
             title: "Preview",
             name: "User",
@@ -139,8 +147,32 @@ function EjsRender({ path }: { path: AbsPath | null }) {
 
   return (
     <div
+      id="ejs-render"
       className="w-full h-full absolute inset-0  overflow-y-auto px-4"
       dangerouslySetInnerHTML={{ __html: html }}
+    ></div>
+  );
+}
+
+function HtmlRender({ path }: { path: AbsPath | null }) {
+  const [contents, setContents] = useState<string | null>(null);
+  const { currentWorkspace } = useWorkspaceContext();
+  const { contents: initialContents } = useFileContents({
+    currentWorkspace,
+    path,
+    onContentChange: (contents) => {
+      console.log(">>>>>>>HTML contents changed");
+      setContents(String(contents));
+    },
+  });
+
+  const finalContents = contents === null ? String(initialContents ?? "") : (contents ?? "");
+
+  return (
+    <div
+      id="html-render"
+      className="w-full h-full absolute inset-0  overflow-y-auto px-4"
+      dangerouslySetInnerHTML={{ __html: finalContents }}
     ></div>
   );
 }

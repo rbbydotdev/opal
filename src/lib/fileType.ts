@@ -7,6 +7,7 @@ export const FileTypes = {
   MARKDOWN: "text/markdown",
   CSS: "text/css",
   EJS: "text/x-ejs",
+  HTML: "text/html",
 } as const;
 
 export const MimeTypeExt = {
@@ -18,6 +19,7 @@ export const MimeTypeExt = {
   "text/markdown": "md",
   "text/css": "css",
   "text/x-ejs": "ejs",
+  "text/html": "html",
 } as const;
 
 export const MimeTypes = {
@@ -29,6 +31,7 @@ export const MimeTypes = {
   MARKDOWN: "text/markdown",
   CSS: "text/css",
   EJS: "text/x-ejs",
+  HTML: "text/html",
 } as const;
 
 export type FileType = (typeof FileTypes)[keyof typeof FileTypes];
@@ -39,6 +42,9 @@ export const isImageType = (type: FileType | string): boolean => {
 };
 export const isMarkdownType = (type: FileType | string): boolean => {
   return type === FileTypes.MARKDOWN;
+};
+export const isHtmlType = (type: FileType | string): boolean => {
+  return type === FileTypes.HTML;
 };
 export const isBinaryType = (type: FileType | string): boolean => {
   return type === FileTypes.BIN;

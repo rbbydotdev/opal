@@ -9,5 +9,10 @@ export const getMimeType = (path: string): MimeType => {
     return FileTypes.EJS;
   }
   
+  // Handle .html files
+  if (filePath.endsWith('.html') || filePath.endsWith('.htm')) {
+    return FileTypes.HTML;
+  }
+  
   return (mime.lookup(filePath) || "") as MimeType;
 };

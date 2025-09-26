@@ -10,6 +10,7 @@ import {
   incPath,
   isCss,
   isEjs,
+  isHtml,
   isImage,
   isMarkdown,
   isText,
@@ -128,6 +129,10 @@ export class TreeNode {
   isEjsFile() {
     if (this.isTreeDir()) return false;
     return isEjs(this.path);
+  }
+  isHtmlFile() {
+    if (this.isTreeDir()) return false;
+    return isHtml(this.path);
   }
   isTextFile() {
     if (this.isTreeDir()) return false;
