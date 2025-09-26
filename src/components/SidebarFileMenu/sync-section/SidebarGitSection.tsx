@@ -643,7 +643,7 @@ export function SidebarGitSection({
                   onPull={() => handlePullRemote()}
                   onForcePush={() => handlePushRemote({ force: true })}
                   onPush={() => handlePushRemote()}
-                  disabled={fetchPending}
+                  disabled={fetchPending || isMerging}
                   syncRef={syncRef}
                   pullRef={pullRef}
                   pushRef={pushRef}

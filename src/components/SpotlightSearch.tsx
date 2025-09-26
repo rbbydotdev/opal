@@ -141,7 +141,7 @@ export function SpotlightSearch({
       placeholder={placeholder}
       useFilenameSearch={useFilenameSearch}
     />,
-    document.querySelector("#spotlight-slot") ?? document.body
+    document.body
   );
 }
 
