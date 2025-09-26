@@ -1,6 +1,7 @@
 import { Workspace } from "@/Db/Workspace";
 import { AbsPath, isImage } from "@/lib/paths2";
 import { Eta } from "eta";
+import graymatter from "gray-matter";
 
 export interface TemplateData {
   data?: Record<string, any>;
@@ -51,6 +52,10 @@ export interface TemplateHelpers {
   length: (arr: any[] | string) => number;
   equals: (a: any, b: any) => boolean;
   
+  // Markdown helpers
+  importMarkdown: (path: string) => Promise<{ content: string; data: Record<string, any>; raw: string }>;
+  importMarkdownSync: (path: string) => { content: string; data: Record<string, any>; raw: string };
+  
   // Math helpers
   add: (a: number, b: number) => number;
   subtract: (a: number, b: number) => number;
@@ -63,6 +68,7 @@ export class EtaRenderer {
   private eta: Eta;
   private workspace: Workspace;
   private templateCache: Map<string, string> = new Map();
+  private markdownCache: Map<string, { content: string; data: Record<string, any>; raw: string }> = new Map();
 
   constructor(workspace: Workspace) {
     this.workspace = workspace;
@@ -126,7 +132,7 @@ export class EtaRenderer {
     if (includeMatches) {
       const includePaths = includeMatches.map(match => {
         const pathMatch = match.match(/include\(['"`]([^'"`]+)['"`]/);
-        return pathMatch ? this.resolveTemplatePath(pathMatch[1]) : null;
+        return pathMatch?.[1] ? this.resolveTemplatePath(pathMatch[1]) : null;
       }).filter((path): path is string => path !== null);
 
       // Preload all included templates
@@ -227,6 +233,14 @@ export class EtaRenderer {
       multiply: (a: number, b: number) => a * b,
       divide: (a: number, b: number) => b !== 0 ? a / b : 0,
       round: (num: number, decimals = 0) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals),
+
+      // Markdown helpers
+      importMarkdown: async (path: string) => {
+        return await this.importMarkdownFile(path);
+      },
+      importMarkdownSync: (path: string) => {
+        return this.importMarkdownFileSync(path);
+      },
     };
   }
 
@@ -307,9 +321,124 @@ export class EtaRenderer {
   }
 
   /**
+   * Imports a markdown file and parses its frontmatter and content
+   */
+  private async importMarkdownFile(path: string): Promise<{ content: string; data: Record<string, any>; raw: string }> {
+    try {
+      // Resolve the path relative to workspace
+      const resolvedPath = this.resolveMarkdownPath(path);
+      
+      // Check cache first
+      if (this.markdownCache.has(resolvedPath)) {
+        return this.markdownCache.get(resolvedPath)!;
+      }
+
+      // Read the markdown file from workspace
+      const markdownContent = await this.workspace.readFile(resolvedPath);
+      const rawContent = String(markdownContent);
+      
+      // Parse with gray-matter
+      const parsed = graymatter(rawContent);
+      
+      const result = {
+        content: parsed.content, // markdown content without frontmatter
+        data: parsed.data,       // frontmatter data
+        raw: rawContent          // original file content
+      };
+      
+      // Cache the result
+      this.markdownCache.set(resolvedPath, result);
+      
+      return result;
+    } catch (error) {
+      throw new Error(`Could not import markdown file: ${path}. ${error}`);
+    }
+  }
+
+  /**
+   * Synchronous version for templates that have preloaded markdown files
+   */
+  private importMarkdownFileSync(path: string): { content: string; data: Record<string, any>; raw: string } {
+    try {
+      const resolvedPath = this.resolveMarkdownPath(path);
+      
+      // Check if markdown is in cache
+      if (this.markdownCache.has(resolvedPath)) {
+        return this.markdownCache.get(resolvedPath)!;
+      }
+      
+      // If not in cache, throw error since sync reading is not available
+      throw new Error(`Markdown not preloaded: ${path}. Use renderWithMarkdown() for templates with markdown imports.`);
+    } catch (error) {
+      throw new Error(`Could not import markdown file: ${path}. ${error}`);
+    }
+  }
+
+  /**
+   * Resolves markdown file paths within the workspace
+   */
+  private resolveMarkdownPath(path: string): AbsPath {
+    // Handle relative paths
+    if (path.startsWith('./') || path.startsWith('../')) {
+      // For now, resolve relative to root
+      const resolvedPath = path.replace(/^\.\//, '/');
+      return resolvedPath as AbsPath;
+    }
+    
+    // Handle absolute paths
+    if (path.startsWith('/')) {
+      return path as AbsPath;
+    }
+    
+    // Default to adding .md extension if no extension provided
+    const hasExtension = path.includes('.');
+    return (hasExtension ? `/${path}` : `/${path}.md`) as AbsPath;
+  }
+
+  /**
+   * Pre-loads markdown files for synchronous access during rendering
+   */
+  async preloadMarkdownFiles(markdownPaths: string[]): Promise<void> {
+    const loadPromises = markdownPaths.map(async (path) => {
+      try {
+        await this.importMarkdownFile(path);
+      } catch (error) {
+        console.warn(`Could not preload markdown: ${path}`, error);
+      }
+    });
+    
+    await Promise.all(loadPromises);
+  }
+
+  /**
+   * Renders with preloaded markdown files, enabling markdown imports
+   */
+  async renderWithMarkdown(templateContent: string, data: TemplateData = {}, markdownPaths: string[] = []): Promise<string> {
+    // Auto-detect markdown import statements in the template
+    const markdownMatches = templateContent.match(/<%.*?helpers\.importMarkdown\(['"`]([^'"`]+)['"`]\)/g);
+    
+    if (markdownMatches) {
+      const detectedPaths = markdownMatches.map(match => {
+        const pathMatch = match.match(/importMarkdown\(['"`]([^'"`]+)['"`]\)/);
+        return pathMatch ? pathMatch[1] : null;
+      }).filter((path): path is string => path !== null && path !== undefined);
+
+      // Merge with explicitly provided paths
+      const allPaths = [...new Set([...markdownPaths, ...detectedPaths])];
+      
+      // Preload all markdown files
+      await this.preloadMarkdownFiles(allPaths);
+    }
+
+    return this.renderString(templateContent, data);
+  }
+
+  /**
    * Updates the workspace reference (useful for workspace changes)
    */
   updateWorkspace(workspace: Workspace): void {
     this.workspace = workspace;
+    // Clear caches when workspace changes
+    this.markdownCache.clear();
   }
 }

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= it.data?.title || 'Markdown Import Example' %></title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        .frontmatter { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .markdown-content { background: #fafafa; padding: 20px; border-radius: 5px; white-space: pre-wrap; }
+        .example { margin: 20px 0; padding: 15px; border-left: 4px solid #007acc; background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>ETA Template with Markdown Import</h1>
+    
+    <% 
+    // Import the kitchen-sink markdown file
+    const kitchenSink = await it.helpers.importMarkdown('src/app/kitchen-sink.md');
+    %>
+    
+    <div class="example">
+        <h2>Imported Markdown: kitchen-sink.md</h2>
+        
+        <h3>Frontmatter Data:</h3>
+        <div class="frontmatter">
+            <strong>Title:</strong> <%= kitchenSink.data.title %><br>
+            <strong>All frontmatter:</strong> <%= it.helpers.json(kitchenSink.data) %>
+        </div>
+        
+        <h3>Markdown Content (without frontmatter):</h3>
+        <div class="markdown-content"><%= kitchenSink.content %></div>
+        
+        <h3>Raw File Content:</h3>
+        <details>
+            <summary>Click to view raw content</summary>
+            <pre><%= it.helpers.escape(kitchenSink.raw) %></pre>
+        </details>
+    </div>
+
+    <div class="example">
+        <h2>Working with Frontmatter Data</h2>
+        <p>You can use the frontmatter data in your template logic:</p>
+        
+        <% if (kitchenSink.data.title) { %>
+            <p>✅ The markdown file has a title: "<%= kitchenSink.data.title %>"</p>
+        <% } else { %>
+            <p>❌ No title found in frontmatter</p>
+        <% } %>
+        
+        <p>Content length: <%= it.helpers.length(kitchenSink.content) %> characters</p>
+        <p>First 100 characters: <%= it.helpers.truncate(kitchenSink.content, 100) %></p>
+    </div>
+
+    <div class="example">
+        <h2>Available Helper Functions for Markdown</h2>
+        <ul>
+            <li><code>await it.helpers.importMarkdown('path/to/file.md')</code> - Import markdown with frontmatter parsing</li>
+            <li><code>markdown.content</code> - Get content without frontmatter</li>
+            <li><code>markdown.data</code> - Get frontmatter as object</li>
+            <li><code>markdown.raw</code> - Get original file content</li>
+        </ul>
+    </div>
+
+    <hr>
+    <p><em>Generated with ETA template engine at <%= it.helpers.formatDate(it.helpers.now(), 'MM/DD/YYYY HH:mm') %></em></p>
+</body>
+</html>
