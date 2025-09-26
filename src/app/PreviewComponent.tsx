@@ -8,8 +8,9 @@ import { useWatchElement } from "@/hooks/useWatchElement";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isEjs, isImage, isMarkdown } from "@/lib/paths2";
+import { TemplateManager } from "@/features/templating";
 import { useSearch } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export function PreviewComponent() {
   return (
@@ -69,7 +70,7 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
     currentWorkspace,
     path,
     onContentChange: (contents) => {
-      setContents(stripFrontmatter(String(contents)));
+      setContents(String(contents));
     },
   });
   const html = useMemo(
@@ -86,18 +87,56 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
 }
 function EjsRender({ path }: { path: AbsPath | null }) {
   const [contents, setContents] = useState<string | null>(null);
+  const [html, setHtml] = useState<string>("");
   const { currentWorkspace } = useWorkspaceContext();
   const { contents: initialContents } = useFileContents({
     currentWorkspace,
     path,
     onContentChange: (contents) => {
-      setContents(stripFrontmatter(String(contents)));
+      console.log(">>>>>>>EJS contents changed");
+      setContents(String(contents));
     },
   });
-  const html = useMemo(
-    () => renderMarkdownToHtml(stripFrontmatter(contents === null ? String(initialContents ?? "") : (contents ?? ""))),
-    [contents, initialContents]
-  );
+
+  // Create template manager when workspace is available
+  const templateManager = useMemo(() => {
+    return currentWorkspace ? new TemplateManager(currentWorkspace) : null;
+  }, [currentWorkspace]);
+
+  const finalContents = contents === null ? String(initialContents ?? "") : (contents ?? "");
+
+  // Use effect to handle async rendering
+  useEffect(() => {
+    if (!templateManager || !finalContents) {
+      setHtml("");
+      return;
+    }
+
+    const renderTemplate = async () => {
+      try {
+        // Use renderString for direct template content rendering with all workspace data
+        const rendered = templateManager.renderString(finalContents, {
+          data: {
+            title: "Preview",
+            name: "User",
+          },
+        });
+        setHtml(rendered);
+      } catch (error) {
+        console.error("Template render error:", error);
+        const err = error as Error;
+        const message = err.message || String(err);
+        const stack = err.stack || "";
+        setHtml(`<div class="text-red-600 p-4 border border-red-300 rounded">
+          <div><strong>Template Render Error:</strong> ${message}</div>
+          ${stack ? `<pre class="mt-2 whitespace-pre-wrap text-sm">${stack}</pre>` : ""}
+        </div>`);
+      }
+    };
+
+    renderTemplate();
+  }, [templateManager, finalContents]);
+
   return (
     <div
       className="w-full h-full absolute inset-0  overflow-y-auto px-4"
