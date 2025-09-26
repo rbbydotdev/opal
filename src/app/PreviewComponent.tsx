@@ -4,11 +4,11 @@ import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { ScrollSyncProvider, useScrollChannel } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useWorkspaceContext, useWorkspaceRoute, WorkspaceProvider } from "@/context/WorkspaceContext";
+import { TemplateManager } from "@/features/templating";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isEjs, isImage, isMarkdown } from "@/lib/paths2";
-import { TemplateManager } from "@/features/templating";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
@@ -134,7 +134,7 @@ function EjsRender({ path }: { path: AbsPath | null }) {
       }
     };
 
-    renderTemplate();
+    void renderTemplate();
   }, [templateManager, finalContents]);
 
   return (
