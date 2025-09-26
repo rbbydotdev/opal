@@ -463,7 +463,6 @@ export function SidebarGitSection({
   };
 
   const handleRemoteInit = () => {
-    // void repo.mustBeInitialized();
     void addRemoteCmdRef.current.open("add").then(async ({ next }) => {
       try {
         if (!next) return;

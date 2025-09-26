@@ -237,17 +237,6 @@ export class GitRepo {
     return ref;
   }
 
-  private toFullBranchRef(ref: string): string {
-    if (ref.startsWith("refs/")) {
-      return ref; // Already a full ref
-    }
-    return `refs/heads/${ref}`;
-  }
-
-  private toFullRemoteRef(remote: string, branch: string): string {
-    return `refs/remotes/${remote}/${this.toShortBranchName(branch)}`;
-  }
-
   async normalizeRef({ ref }: { ref: string }) {
     if (
       ["HEAD", "ORIG_HEAD", "PREV_BRANCH", "FETCH_HEAD", "MERGE_HEAD", "CHERRY_PICK_HEAD", "REBASE_HEAD"].includes(ref)
@@ -904,28 +893,28 @@ export class GitRepo {
   }
 
   merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
+    // console.log(`Starting merge of ${from} into ${into}`);
+    const ours = await this.normalizeRef({ ref: into });
+    const theirs = await this.normalizeRef({ ref: from });
+    // console.log(`Merging ${theirs} into ${ours}`);
     const result = await this.git
       .merge({
         fs: this.fs,
         dir: this.dir,
         author: this.author,
-        ours: await this.normalizeRef({ ref: into }),
         fastForward: true,
-        theirs: await this.normalizeRef({ ref: from }),
+        theirs,
+        ours,
         abortOnConflict: false,
         allowUnrelatedHistories: true,
       })
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
-          // console.log("Merge conflict detected:", { from, into }, e.data);
+          // console.log("Merge conflict detected:", e);
           await this.setMergeState(await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
+          console.log((await this.fs.readFile("/.git/HEAD")).toString());
 
           await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
-          // console.log(
-          //   await Promise.all(
-          //     e.data.filepaths.map((fp) => this.fs.readFile(joinPath(absPath("/"), fp)).then((c) => c.toString()))
-          //   )
-          // );
 
           return structuredClone(e.data);
         } else {
@@ -934,6 +923,7 @@ export class GitRepo {
       });
 
     if (!isMergeConflict(result)) {
+      console.log("Merge successful, checking out", into);
       await this.git.checkout({
         fs: this.fs,
         dir: this.dir,
@@ -984,7 +974,7 @@ export class GitRepo {
       fs: this.fs,
       dir: this.dir,
       author: author || this.getCurrentAuthor(),
-      ref,
+      ref: ref ? await this.resolveRef({ ref }) : undefined,
       message,
       parent,
     });
@@ -1229,15 +1219,13 @@ export class GitRepo {
     force?: boolean;
     symbolic?: boolean;
   }): Promise<void> => {
-    // Normalize ref to full format for writeRef
-    const shortRef = this.toShortBranchName(ref);
-    const branches: string[] = await this.getBranches().catch(() => []);
-    const fullRef = branches.includes(shortRef) ? this.toFullBranchRef(shortRef) : ref;
+    // Use normalizeRef instead of manual normalization to avoid double refs/heads/
+    const normalizedRef = await this.normalizeRef({ ref });
 
     return this.git.writeRef({
       fs: this.fs,
       dir: this.dir,
-      ref: fullRef,
+      ref: normalizedRef,
       value,
       force,
       symbolic,

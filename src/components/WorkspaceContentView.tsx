@@ -24,18 +24,14 @@ export function WorkspaceMarkdownEditor({
   path: AbsPath;
 }) {
   const editorRef = useRef<MDXEditorMethods>(null);
-  const {
-    contents: initialContents,
-    updateDebounce,
-    error,
-  } = useFileContents({
+  const { updateDebounce, error } = useFileContents({
     path,
     currentWorkspace,
     onContentChange: (c) => {
+      //for external changes
       editorRef.current?.setMarkdown(graymatter(c).content);
     },
   });
-
   if (error) throw error;
 
   const { mimeType } = useCurrentFilepath();
@@ -44,14 +40,14 @@ export function WorkspaceMarkdownEditor({
 
   const mdxEditorElement = useWatchElement(MdxEditorSelector);
 
-  const documentId = useWorkspaceDocumentId(initialContents);
+  const documentId = useWorkspaceDocumentId(contents);
 
   const markdown = String(contents || "");
   const { data, content } = useMemo(() => {
     const md = matter(markdown);
     return { data: { documentId, ...(md.data ?? {}) }, content: md.content };
   }, [documentId, markdown]);
-  if (initialContents === null || !currentWorkspace) return null;
+  if (contents === null || !currentWorkspace) return null;
   return (
     <ScrollSyncProvider scrollEl={mdxEditorElement as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
       <div className="flex flex-col h-full relative">

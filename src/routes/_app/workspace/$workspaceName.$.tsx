@@ -137,8 +137,7 @@ function WorkspaceFilePage() {
         <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
       ) : !isMarkdown || isSourceView || hasConflicts ? (
         <SourceEditor
-          // initialContents={initialContents}
-          initialContents={hotContents}
+          contents={hotContents}
           onChange={handleSourceContentChange}
           hasConflicts={hasConflicts}
           mimeType={mimeType}

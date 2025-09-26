@@ -118,10 +118,6 @@ export class GitPlaybook {
     await this.repo.checkoutRef({ ref: newBranch, force: true });
   }
 
-  // merge = async ({ from, into }: { from: string; into: string }): Promise<MergeResult | MergeConflict> => {
-  //   return this.repo.merge({ from, into });
-  // };
-
   merge = this.repo.merge.bind(this);
 
   mergeCommit = async (): Promise<string | null> => {
@@ -172,7 +168,8 @@ export class GitPlaybook {
   newBranchFromCurrentOrphan = async () => {
     const prevBranch = (await this.repo.getPrevBranch()) ?? "unknown";
     const currentRef = await this.repo.currentRef();
-    const newBranchName = `${prevBranch.replace("refs/heads/", "")}-${currentRef.slice(0, 6)}`;
+
+    const newBranchName = `${gitAbbreviateRef(prevBranch)}-${currentRef.slice(0, 6)}`;
     await this.repo.addGitBranch({ branchName: newBranchName, symbolicRef: currentRef, checkout: true });
     await this.addAllCommit({
       message: SYSTEM_COMMITS.SWITCH_BRANCH,
@@ -198,11 +195,6 @@ export class GitPlaybook {
   };
 
   async fetchRemote(remote: string) {
-    //if no master or main branch, create one
-    // if (!(await this.repo.getBranch("main")) && !(await this.repo.getBranch("master"))) {
-    //   await this.repo.addGitBranch({ branchName: "main", checkout: true });
-    //   await this.initialCommit();
-    // }
     const remoteObj = await this.repo.getRemote(remote);
     if (!remoteObj) {
       throw new Error(`Remote ${remote} not found`);
@@ -232,7 +224,7 @@ export class GitPlaybook {
     if (!(await this.repo.isCleanFs())) {
       const defaultBranchRef = await this.repo
         .resolveRef({ ref: defaultBranch })
-        .catch(() => this.repo.addGitBranch({ branchName: defaultBranch, checkout: true }));
+        .catch(() => this.repo.addGitBranch({ branchName: gitAbbreviateRef(defaultBranch), checkout: true }));
       //branch does not exist we need to create initial commit
       //save current files in initial commit on default branch
       await this.repo.add(".");
@@ -240,6 +232,8 @@ export class GitPlaybook {
         message: "Initial commit",
         ref: defaultBranchRef,
       });
+      console.log("Created initial commit on branch", defaultBranch);
+      console.log(await this.repo.currentBranch());
 
       await this.repo.merge({
         from: `refs/remotes/${remote.name}/${gitAbbreviateRef(defaultBranch)}`,
@@ -248,7 +242,7 @@ export class GitPlaybook {
     } else {
       //otherwise just checkout remote
       await this.repo.checkoutRef({
-        ref: gitAbbreviateRef(defaultBranch),
+        ref: defaultBranch,
         remote: remote.name,
         force: true,
       });
