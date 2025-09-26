@@ -91,16 +91,31 @@ export function useFileContents({
     }, debounceMs);
   };
 
+  // Clear debounce when filePath changes
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+  }, [filePath]);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useAsyncEffect(async () => {
+  useAsyncEffect(async (signal) => {
     if (currentWorkspace && filePath) {
       try {
         const fileContents = await currentWorkspace.getDisk().readFile(filePath);
+        
+        // Check if operation was cancelled
+        if (signal.aborted) return;
+        
         setHotContents(fileContents.toString());
         setInitialContents(fileContents);
         setError(null);
       } catch (error) {
-        setError(error as Error);
+        // Only set error if operation wasn't cancelled
+        if (!signal.aborted) {
+          setError(error as Error);
+        }
       }
     }
   }, [currentWorkspace, filePath, navigate]);
@@ -137,14 +152,6 @@ export function useFileContents({
     }
   }, [currentWorkspace, filePath]);
 
-  useEffect(() => {
-    if (filePath) {
-      return currentWorkspace.getDisk().outsideWriteListener(filePath, (content) => {
-        contentEmitter.emit(ContentEvents.UPDATE, content);
-        setHotContents(content);
-      });
-    }
-  }, [contentEmitter, currentWorkspace, filePath]);
 
   // contents will not reflect the latest changes via writeFileContents, the state must be tracked somewhere else
   // this avoids glitchy behavior in the editor et all

@@ -1,3 +1,4 @@
+import { Workspace } from "@/Db/Workspace";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { FileError } from "@/components/FileError";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
@@ -10,6 +11,7 @@ import { useFileContents } from "@/context/useFileContents";
 import useFavicon from "@/hooks/useFavicon";
 import { NotFoundError } from "@/lib/errors";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
+import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -20,21 +22,44 @@ export const Route = createFileRoute("/_app/workspace/$workspaceName/$")({
 
 function WorkspaceFilePage() {
   const { workspaceName } = Route.useParams();
-  const { filePath, isImage, inTrash, isSourceView, mimeType, isMarkdown, isRecognized } = useCurrentFilepath();
+  const { filePath, isImage } = useCurrentFilepath();
   const { currentWorkspace } = useWorkspaceContext();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (workspaceName) {
+      document.title = workspaceName;
+    }
+  }, [workspaceName]);
   useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
 
-  // Get file contents to check for conflicts
+  useEffect(() => {
+    if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
+      void currentWorkspace.tryFirstFileUrl().then((path) => navigate({ to: path }));
+    }
+  }, [currentWorkspace, filePath, navigate]);
+  //-----------------------------------------
+  //-----------------------------------------
+  //-----------------------------------------
+  //-----------------------------------------
 
-  const {
-    contents: initialContents,
-    updateDebounce,
-    error,
-    hotContents,
-  } = useFileContents({
+  if (!filePath) return null;
+  if (!currentWorkspace.isNull && currentWorkspace.nodeFromPath(filePath) === null) {
+    return <FileError error={new NotFoundError("File not found: " + filePath)} />;
+  }
+  if (isImage) {
+    return <ImageViewer filePath={filePath} currentWorkspace={currentWorkspace} />;
+  }
+  return <TextEditor filePath={filePath} currentWorkspace={currentWorkspace} />;
+}
+
+function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspace; filePath: AbsPath }) {
+  // Get file contents to check for conflicts (only for non-image files)
+
+  const { inTrash, isSourceView, mimeType, isMarkdown, isRecognized } = useCurrentFilepath();
+  const { contents, updateDebounce, error, hotContents } = useFileContents({
     currentWorkspace,
   });
+
   if (error) {
     throw error;
   }
@@ -42,20 +67,14 @@ function WorkspaceFilePage() {
   const [hasConflicts, setHasConflicts] = useState(false);
 
   useEffect(() => {
-    setHasConflicts(hasGitConflictMarkers(String(initialContents)));
-  }, [initialContents]);
+    setHasConflicts(hasGitConflictMarkers(String(contents)));
+  }, [contents]);
 
   const handleSourceContentChange = (newContent: string) => {
     const hasConflictsNow = hasGitConflictMarkers(newContent);
     if (hasConflicts !== hasConflictsNow) setHasConflicts(hasConflictsNow);
     updateDebounce(newContent);
   };
-
-  useEffect(() => {
-    if (workspaceName) {
-      document.title = workspaceName;
-    }
-  }, [workspaceName]);
 
   useEffect(() => {
     const handleCmdE = (e: KeyboardEvent) => {
@@ -114,25 +133,13 @@ function WorkspaceFilePage() {
     };
   }, [isMarkdown, isSourceView, hasConflicts]);
 
-  useEffect(() => {
-    if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
-      void currentWorkspace.tryFirstFileUrl().then((path) => navigate({ to: path }));
-    }
-  }, [currentWorkspace, filePath, navigate]);
-
   if (!filePath) return null;
-
-  if (!currentWorkspace.isNull && currentWorkspace.nodeFromPath(filePath) === null) {
-    return <FileError error={new NotFoundError("File not found: " + filePath)} />;
-  }
 
   return (
     <>
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
       {!isRecognized ? (
         <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
-      ) : isImage ? (
-        <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />
       ) : !isMarkdown || isSourceView || hasConflicts ? (
         <SourceEditor
           contents={hotContents}
@@ -147,4 +154,8 @@ function WorkspaceFilePage() {
       )}
     </>
   );
+}
+
+function ImageViewer({ filePath, currentWorkspace }: { filePath: string; currentWorkspace: Workspace }) {
+  return <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />;
 }

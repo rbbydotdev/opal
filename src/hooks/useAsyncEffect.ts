@@ -1,23 +1,31 @@
 import { useEffect, useRef } from "react";
 
-export function useAsyncEffect(effect: () => Promise<void | (() => void)>, deps: React.DependencyList): void {
+export function useAsyncEffect(effect: (signal: AbortSignal) => Promise<void | (() => void)>, deps: React.DependencyList): void {
   const unsubRef = useRef<(() => void) | void>(() => {});
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
+    
     void (async () => {
-      const unsub = await effect();
-      if (typeof unsub === "function") {
-        if (isMounted) {
-          unsubRef.current = unsub;
-        } else {
-          unsub();
+      try {
+        const unsub = await effect(controller.signal);
+        if (typeof unsub === "function") {
+          if (!controller.signal.aborted) {
+            unsubRef.current = unsub;
+          } else {
+            unsub();
+          }
+        }
+      } catch (error) {
+        // Ignore AbortError
+        if (error instanceof Error && error.name !== 'AbortError') {
+          throw error;
         }
       }
     })();
 
     return () => {
-      isMounted = false;
+      controller.abort();
       if (typeof unsubRef.current === "function") {
         unsubRef.current();
         unsubRef.current = undefined;
