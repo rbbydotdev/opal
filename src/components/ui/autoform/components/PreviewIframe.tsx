@@ -49,21 +49,43 @@ export function PreviewIFrame({ previewURL, previewPath }: { previewURL: string;
 
           try {
             const iframeWin = iframeRef.current?.contentWindow;
-            if (iframeWin) {
+            const iframeDoc = iframeRef.current?.contentDocument;
+            
+            if (iframeWin && iframeDoc) {
+              // Inject selection styles into iframe
+              const style = iframeDoc.createElement("style");
+              style.textContent = `
+                ::selection {
+                  background-color: #3b82f6 !important;
+                  color: white !important;
+                }
+                ::-moz-selection {
+                  background-color: #3b82f6 !important;
+                  color: white !important;
+                }
+              `;
+              iframeDoc.head.appendChild(style);
+              
               iframeWin.addEventListener("keydown", (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                // Re-dispatch the event on the parent window
-                const evt = new KeyboardEvent("keydown", {
-                  key: e.key,
-                  code: e.code,
-                  ctrlKey: e.ctrlKey,
-                  shiftKey: e.shiftKey,
-                  altKey: e.altKey,
-                  metaKey: e.metaKey,
-                  bubbles: true,
-                });
-                window.dispatchEvent(evt);
+                // Only prevent default for specific keyboard shortcuts, not text selection
+                const isTextSelectionKey = e.key === "a" && (e.ctrlKey || e.metaKey); // Ctrl/Cmd+A
+                const isCopyPasteKey = (e.key === "c" || e.key === "v" || e.key === "x") && (e.ctrlKey || e.metaKey); // Ctrl/Cmd+C/V/X
+                
+                if (!isTextSelectionKey && !isCopyPasteKey) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Re-dispatch the event on the parent window
+                  const evt = new KeyboardEvent("keydown", {
+                    key: e.key,
+                    code: e.code,
+                    ctrlKey: e.ctrlKey,
+                    shiftKey: e.shiftKey,
+                    altKey: e.altKey,
+                    metaKey: e.metaKey,
+                    bubbles: true,
+                  });
+                  window.dispatchEvent(evt);
+                }
               });
             }
           } catch (_err) {

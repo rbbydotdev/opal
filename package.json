@@ -117,7 +117,7 @@
     "diff-match-patch": "^1.0.5",
     "embla-carousel-react": "^8.6.0",
     "emittery": "^1.0.3",
-    "eta": "^3.5.0",
+    "eta": "^4.0.1",
     "fflate": "^0.8.2",
     "fuzzysort": "^3.1.0",
     "github-markdown-css": "^5.8.1",
