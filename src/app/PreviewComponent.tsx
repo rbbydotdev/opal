@@ -123,6 +123,7 @@ function EjsRender({ path }: { path: AbsPath | null }) {
       try {
         // Use renderStringWithMarkdown for all templates (handles async automatically)
         const rendered = await templateManager.renderStringWithMarkdown(finalContents, {
+          date: new Date(),
           data: {
             title: "Preview",
             name: "User",

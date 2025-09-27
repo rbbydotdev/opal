@@ -1,7 +1,12 @@
 /**
  * Returns the default ETA template content for new .ejs/.eta files
  */
+
 export function getDefaultEjsTemplate(): string {
+  return `<h1>current date: <%= it.date %></h1>`;
+}
+
+export function getDefaultEjsTemplateAdvanced(): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -14,24 +14,26 @@ import {
   dirname,
   duplicatePath,
   isAncestor,
+  isCss,
+  isEjs,
+  isMarkdown,
   joinPath,
   reduceLineage,
   RelPath,
   relPath,
 } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
-import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { useCallback } from "react";
 
 function defaultFileContent(path: AbsPath) {
-  if (mime.lookup(path) === "text/css") {
+  if (isCss(path)) {
     return `/* ${basename(path)} */\n`;
   }
-  if (mime.lookup(path) === "text/markdown") {
+  if (isMarkdown(path)) {
     return setFrontmatter("# " + basename(path), { documentId: nanoid() });
   }
-  if (path.toLowerCase().endsWith('.ejs')) {
+  if (isEjs(path)) {
     return getDefaultEjsTemplate();
   }
   return "";
@@ -271,7 +273,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
   );
   const addDirFile = useCallback(
     (type: TreeNode["type"], parent: TreeDir | AbsPath, fileName?: string) => {
-      /** --------- TODO: move me somewhere more appropriate start ------ */
       let parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
       if (!parentNode) {
         console.warn("Parent node not found for adding new file or directory");
@@ -279,7 +280,6 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
       if ((parentNode && parentNode?.isVirtual) || !parentNode) {
         parentNode = parentNode?.parent ?? currentWorkspace.getFileTreeRoot();
       }
-      /** --------- end ------ */
       const name = fileName || (type === "dir" ? "newdir" : "newfile.md");
       const newNode = currentWorkspace.addVirtualFile({ type, basename: relPath(name) }, parentNode);
       setFileTreeCtx({
