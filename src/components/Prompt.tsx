@@ -18,7 +18,7 @@ import React, {
 } from "react";
 
 type PromptContextType = {
-  open: <T>(form: ReactElement, title: string, description: string) => Promise<T | null>;
+  open: <T>(form: ReactElement<any>, title: string, description: string) => Promise<T | null>;
 };
 
 const PromptContext = createContext<PromptContextType | undefined>(undefined);
@@ -42,12 +42,12 @@ export function usePrompt() {
 
 export function usePromptCmd() {
   const cmdRef = useRef<{
-    open: <T>(form: ReactElement, title: string, description: string) => Promise<T | null>;
+    open: <T>(form: ReactElement<any>, title: string, description: string) => Promise<T | null>;
   }>({
     open: async () => null,
   });
   return {
-    open: <T,>(form: ReactElement, title: string, description: string): Promise<T | null> =>
+    open: <T,>(form: ReactElement<any>, title: string, description: string): Promise<T | null> =>
       cmdRef.current.open(form, title, description),
     cmdRef,
   };
@@ -57,14 +57,14 @@ export function Prompt({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{
-    open: <T>(form: ReactElement, title: string, description: string) => Promise<T | null>;
+    open: <T>(form: ReactElement<any>, title: string, description: string) => Promise<T | null>;
   }>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const deferredPromiseRef = useRef<PromiseWithResolvers<any> | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState<string>("");
-  const [FormElement, setFormElement] = useState<ReactElement | null>(null);
+  const [FormElement, setFormElement] = useState<ReactElement<any> | null>(null);
 
   const handleCancel = () => {
     deferredPromiseRef.current?.resolve(null);
@@ -95,7 +95,7 @@ export function Prompt({
   }, []);
 
   useImperativeHandle(cmdRef, () => ({
-    open: <T,>(form: ReactElement, title: string, description: string): Promise<T | null> => {
+    open: <T,>(form: ReactElement<any>, title: string, description: string): Promise<T | null> => {
       deferredPromiseRef.current = Promise.withResolvers<T | null>();
       setTitle(title);
       setDescription(description);

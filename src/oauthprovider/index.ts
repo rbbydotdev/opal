@@ -39,6 +39,12 @@ class OAuthProvider {
     if (_type === "GoogleDriveProvider") {
       return new GoogleDocsProvider(accessToken, tokenType, scope, obtainedAt);
     }
+    if (_type === "NetlifyProvider") {
+      return new NetlifyProvider(accessToken, tokenType, scope, obtainedAt);
+    }
+    if (_type === "CloudflareProvider") {
+      return new CloudflareProvider(accessToken, tokenType, scope, obtainedAt);
+    }
     throw new Error("Unknown Provider type: " + _type);
     // return new OAuthProvider(accessToken, tokenType, scope, obtainedAt);
   }
@@ -70,6 +76,24 @@ class GoogleDocsProvider extends OAuthProvider {
     this.refreshToken = refreshToken;
     this.idToken = idToken;
   }
+}
+
+// Extend the base class for Netlify
+class NetlifyProvider extends OAuthProvider {
+  constructor(accessToken: string, tokenType: string, scope: string, obtainedAt: number) {
+    super(accessToken, tokenType, scope, obtainedAt);
+  }
+
+  // Add any Netlify-specific methods here
+}
+
+// Extend the base class for Cloudflare
+class CloudflareProvider extends OAuthProvider {
+  constructor(accessToken: string, tokenType: string, scope: string, obtainedAt: number) {
+    super(accessToken, tokenType, scope, obtainedAt);
+  }
+
+  // Add any Cloudflare-specific methods here
 }
 
 // interface GitHubProvider {

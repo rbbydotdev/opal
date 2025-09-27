@@ -1,6 +1,6 @@
 import React from "react";
 import { type ThemeRegistry, getThemeNames, getThemePreviewPalette } from "../src/features/theme/theme-lib";
-import themeRegistry from "../src/theme/themes.json";
+import themeRegistry from "../src/features/theme/themes.json";
 
 const ThemePreviewCard: React.FC<{ themeName: string }> = ({ themeName }) => {
   const palette = getThemePreviewPalette(themeName);

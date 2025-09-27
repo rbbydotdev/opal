@@ -14,6 +14,7 @@ import { Route as AllSettingsRouteImport } from './routes/all-settings'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as PreviewSplatRouteImport } from './routes/preview/$'
+import { Route as AuthNetlifyRouteImport } from './routes/auth.netlify'
 import { Route as AuthGithubRouteImport } from './routes/auth.github'
 import { Route as AllSettingsSplatRouteImport } from './routes/all-settings/$'
 import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
@@ -50,6 +51,11 @@ const PreviewSplatRoute = PreviewSplatRouteImport.update({
   id: '/$',
   path: '/$',
   getParentRoute: () => PreviewRoute,
+} as any)
+const AuthNetlifyRoute = AuthNetlifyRouteImport.update({
+  id: '/auth/netlify',
+  path: '/auth/netlify',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthGithubRoute = AuthGithubRouteImport.update({
   id: '/auth/github',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
   '/auth/github': typeof AuthGithubRoute
+  '/auth/netlify': typeof AuthNetlifyRoute
   '/preview/$': typeof PreviewSplatRoute
   '/': typeof AppIndexRoute
   '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
   '/auth/github': typeof AuthGithubRoute
+  '/auth/netlify': typeof AuthNetlifyRoute
   '/preview/$': typeof PreviewSplatRoute
   '/': typeof AppIndexRoute
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/_app/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
   '/auth/github': typeof AuthGithubRoute
+  '/auth/netlify': typeof AuthNetlifyRoute
   '/preview/$': typeof PreviewSplatRoute
   '/_app/': typeof AppIndexRoute
   '/_app/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/all-settings/$'
     | '/auth/github'
+    | '/auth/netlify'
     | '/preview/$'
     | '/'
     | '/workspace/$workspaceName'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/all-settings/$'
     | '/auth/github'
+    | '/auth/netlify'
     | '/preview/$'
     | '/'
     | '/workspace/$workspaceName/$'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/_app/workspace'
     | '/all-settings/$'
     | '/auth/github'
+    | '/auth/netlify'
     | '/preview/$'
     | '/_app/'
     | '/_app/workspace/$workspaceName'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   AllSettingsRoute: typeof AllSettingsRouteWithChildren
   PreviewRoute: typeof PreviewRouteWithChildren
   AuthGithubRoute: typeof AuthGithubRoute
+  AuthNetlifyRoute: typeof AuthNetlifyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/preview/$'
       preLoaderRoute: typeof PreviewSplatRouteImport
       parentRoute: typeof PreviewRoute
+    }
+    '/auth/netlify': {
+      id: '/auth/netlify'
+      path: '/auth/netlify'
+      fullPath: '/auth/netlify'
+      preLoaderRoute: typeof AuthNetlifyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/github': {
       id: '/auth/github'
@@ -440,6 +460,7 @@ const rootRouteChildren: RootRouteChildren = {
   AllSettingsRoute: AllSettingsRouteWithChildren,
   PreviewRoute: PreviewRouteWithChildren,
   AuthGithubRoute: AuthGithubRoute,
+  AuthNetlifyRoute: AuthNetlifyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,9 +1,11 @@
 import { RemoteAuthSource, RemoteAuthType } from "@/Db/RemoteAuth";
-import { Github, LucideProps, Zap } from "lucide-react";
+import { Github, LucideProps, Zap, Globe, Cloud } from "lucide-react";
 import React from "react";
 
 export const RemoteAuthSourceIcon = {
   github: <Github className="h-4 w-4" />,
+  netlify: <Globe className="h-4 w-4" />,
+  cloudflare: <Cloud className="h-4 w-4" />,
   private: <Zap className="h-4 w-4" />,
 } satisfies Record<RemoteAuthSource, React.ReactNode>;
 

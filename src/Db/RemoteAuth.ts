@@ -6,7 +6,7 @@ import { z } from "zod";
 
 // 1. Add the new type to the union
 export type RemoteAuthType = "api" | "oauth" | "oauth-device" | "basic-auth";
-export type RemoteAuthSource = "github" | "private"; /*| "gitlab" | "bitbucket" | "custom";*/
+export type RemoteAuthSource = "github" | "netlify" | "cloudflare" | "private"; /*| "gitlab" | "bitbucket" | "custom";*/
 
 // 2. Define all record schemas
 export const RemoteAuthAPIRecordInternalSchema = z.object({
@@ -240,4 +240,22 @@ export type GithubDeviceOAuthRemoteAuthDAO = RemoteAuthDAO & {
 };
 export function isGithubDeviceOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is GithubDeviceOAuthRemoteAuthDAO {
   return record.type === "oauth-device" && record.source === "github";
+}
+
+export type NetlifyOAuthRemoteAuthDAO = RemoteAuthDAO & {
+  source: "netlify";
+  type: "oauth";
+  data: RemoteAuthOAuthRecordInternal;
+};
+export function isNetlifyOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is NetlifyOAuthRemoteAuthDAO {
+  return record.type === "oauth" && record.source === "netlify";
+}
+
+export type CloudflareAPIRemoteAuthDAO = RemoteAuthDAO & {
+  source: "cloudflare";
+  type: "api";
+  data: RemoteAuthAPIRecordInternal;
+};
+export function isCloudflareAPIRemoteAuthDAO(record: RemoteAuthDAO): record is CloudflareAPIRemoteAuthDAO {
+  return record.type === "api" && record.source === "cloudflare";
 }
