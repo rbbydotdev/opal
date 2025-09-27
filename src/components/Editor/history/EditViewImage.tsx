@@ -3,6 +3,7 @@ import {
   NewComlinkSnapshotPoolWorker,
   useSnapApiPool,
 } from "@/components/Editor/history/SnapApiPoolProvider";
+import { useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { HistoryDocRecord } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
@@ -14,8 +15,10 @@ function previewId({ workspaceId, editId }: { workspaceId: string; editId: strin
 
 export function useIframeImagePooledImperitiveWorker({ workspaceId }: { workspaceId: string }) {
   const { work } = useSnapApiPool();
+  const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
 
   return function previewForEdit(edit: HistoryDocRecord) {
+    if (!isHistoryImageGenerationEnabled) return;
     const worker: ApiPoolWorker = NewComlinkSnapshotPoolWorker({ editId: edit.edit_id, workspaceId });
     void work(worker);
   };
@@ -23,9 +26,15 @@ export function useIframeImagePooledImperitiveWorker({ workspaceId }: { workspac
 
 function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecord; workspaceId: string; id: string }) {
   const { work, flush } = useSnapApiPool();
+  const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
+    if (!isHistoryImageGenerationEnabled) {
+      setImageUrl(null);
+      return;
+    }
+    
     if (edit.preview === null) {
       let worker: ApiPoolWorker | null = NewComlinkSnapshotPoolWorker(
         { editId: edit.edit_id, workspaceId, id },
@@ -41,7 +50,7 @@ function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecor
     } else {
       setImageUrl(URL.createObjectURL(edit.preview));
     }
-  }, [edit, id, flush, work, workspaceId]);
+  }, [edit, id, flush, work, workspaceId, isHistoryImageGenerationEnabled]);
   useEffect(() => {
     return () => {
       try {

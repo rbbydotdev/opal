@@ -36,6 +36,12 @@ export function useToggleEditHistory() {
   return { isEditHistoryEnabled: storedValue, toggleEditHistory: toggle };
 }
 
+export function useToggleHistoryImageGeneration() {
+  const { storedValue, setStoredValue } = useLocalStorage2("app/EditHistoryImageGeneration", false);
+  const toggle = () => setStoredValue(!storedValue);
+  return { isHistoryImageGenerationEnabled: storedValue, toggleHistoryImageGeneration: toggle };
+}
+
 export function EditHistoryMenu({
   finalizeRestore = () => {},
   disabled,
@@ -70,6 +76,7 @@ export function EditHistoryMenu({
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
   const { isEditHistoryEnabled, toggleEditHistory } = useToggleEditHistory();
+  const { isHistoryImageGenerationEnabled, toggleHistoryImageGeneration } = useToggleHistoryImageGeneration();
 
   const finalizeAndRestore = () => {
     if (selectedEditMd) {
@@ -179,6 +186,27 @@ export function EditHistoryMenu({
                 </>
               )}
             </Button>
+            <Button
+              variant={"secondary"}
+              size="default"
+              onClick={() => {
+                toggleHistoryImageGeneration();
+                setOpen(false);
+              }}
+              className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary flex items-center gap-1"
+            >
+              {isHistoryImageGenerationEnabled ? (
+                <>
+                  <X className="w-3 h-3" strokeWidth={4} />
+                  disable images
+                </>
+              ) : (
+                <>
+                  <Check className="w-3 h-3" strokeWidth={4} />
+                  enable images
+                </>
+              )}
+            </Button>
           </div>
 
           <ScrollAreaViewportRef
@@ -204,15 +232,20 @@ export function EditHistoryMenu({
                   <DropdownMenuItem
                     ref={selectedEdit?.edit_id === EDIT.edit_id ? updateSelectedItemRef : null}
                     onSelect={() => setEdit(EDIT)}
-                    className={cn("h-auto cursor-pointer p-1 py-2 focus:bg-sidebar-accent", {
+                    className={cn("h-auto cursor-pointer focus:bg-sidebar-accent", {
                       "bg-sidebar-accent": selectedEdit && selectedEdit.edit_id === EDIT.edit_id,
+                      "p-1 py-2": isHistoryImageGenerationEnabled,
+                      "p-1 py-1": !isHistoryImageGenerationEnabled,
                     })}
                   >
-                    <div className="flex w-full items-center justify-start text-left text-sm">
-                      {workspaceId && filePath ? (
+                    <div className={cn("flex w-full items-center justify-start text-left", {
+                      "text-sm": isHistoryImageGenerationEnabled,
+                      "text-xs": !isHistoryImageGenerationEnabled,
+                    })}>
+                      {workspaceId && filePath && isHistoryImageGenerationEnabled ? (
                         <EditViewImage className="w-12 h-12" workspaceId={workspaceId} edit={EDIT} />
                       ) : null}
-                      <div className="ml-4">
+                      <div className={isHistoryImageGenerationEnabled ? "ml-4" : "ml-0"}>
                         {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
                           <span className="mr-2 text-primary">{"•"}</span>
                         ) : (

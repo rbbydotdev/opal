@@ -1,6 +1,7 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
+import { useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
@@ -47,11 +48,12 @@ export function WorkspaceMarkdownEditor({
     const md = matter(markdown);
     return { data: { documentId, ...(md.data ?? {}) }, content: md.content };
   }, [documentId, markdown]);
+  const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
   if (contents === null || !currentWorkspace) return null;
   return (
     <ScrollSyncProvider scrollEl={mdxEditorElement as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
       <div className="flex flex-col h-full relative">
-        <SnapApiPoolProvider max={1}>
+        <SnapApiPoolProvider max={isHistoryImageGenerationEnabled ? 1 : 0}>
           <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
             <DropCommanderProvider>
               <EditorWithPlugins
