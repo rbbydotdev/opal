@@ -1,8 +1,5 @@
 import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
-import {
-  CodeMirrorHighlightURLRange,
-  getHighlightRangesFromURL,
-} from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { CodeMirrorHighlightURLRange, parseParamsToRanges } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
@@ -26,7 +23,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
-import { useRouter } from "@tanstack/react-router";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import { basicSetup } from "codemirror";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
@@ -39,7 +36,13 @@ import * as prettier from "prettier/standalone";
 import { useEffect, useMemo, useRef } from "react";
 
 const noCommentKeymap = keymap.of([{ key: "Mod-/", run: () => true }]);
-export type StrictSourceMimesType = "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | "text/html";
+export type StrictSourceMimesType =
+  | "text/css"
+  | "text/plain"
+  | "text/markdown"
+  | "text/javascript"
+  | "text/x-ejs"
+  | "text/html";
 
 const getLanguageExtension = (
   language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | "text/html" | string
@@ -96,6 +99,7 @@ export const CodeMirrorEditor = ({
   const conflictResolutionEnabled = enableConflictResolution ?? globalConflictResolution;
   const shouldDisableLanguageExtension = conflictResolutionEnabled && hasConflicts;
 
+  const location = useLocation();
   useEffect(() => {
     if (!editorRef.current) return;
     if (viewRef.current) {
@@ -109,7 +113,7 @@ export const CodeMirrorEditor = ({
       customCodeMirrorTheme,
       autocompletion(),
       EditorView.lineWrapping,
-      CodeMirrorHighlightURLRange(getHighlightRangesFromURL(window.location.href, "hash")),
+      CodeMirrorHighlightURLRange(parseParamsToRanges(new URLSearchParams(location.hash)).ranges),
       noCommentKeymap,
       keymap.of([indentWithTab]),
       shouldDisableLanguageExtension ? null : ext,
@@ -145,7 +149,7 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [conflictResolutionEnabled, ext, readOnly, shouldDisableLanguageExtension, vimMode]);
+  }, [conflictResolutionEnabled, ext, readOnly, location, shouldDisableLanguageExtension, vimMode]);
 
   useEffect(() => {
     if (viewRef.current && value !== viewRef.current.state.doc.toString()) {
@@ -265,7 +269,8 @@ const CodeMirrorToolbar = ({
     }
   };
 
-  const canPrettify = mimeType && ["text/css", "text/javascript", "text/markdown", "text/x-ejs", "text/html"].includes(mimeType);
+  const canPrettify =
+    mimeType && ["text/css", "text/javascript", "text/markdown", "text/x-ejs", "text/html"].includes(mimeType);
 
   return (
     <div className="pl-10 flex items-center justify-start p-2 bg-muted h-12 gap-2">

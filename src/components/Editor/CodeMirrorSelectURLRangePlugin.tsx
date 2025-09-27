@@ -1,12 +1,23 @@
-import { EditorSelection, Extension } from "@codemirror/state";
+import { EditorSelection, Extension, StateEffect, StateField } from "@codemirror/state";
 import { EditorView, ViewPlugin } from "@codemirror/view";
 import { checkSum } from "../../lib/checkSum";
+
+// Effect to mark ranges as applied
+const setAppliedRangesEffect = StateEffect.define<string>();
+
+// State field to track applied highlight ranges
+const appliedRangesField = StateField.define<string | null>({
+  create: () => null,
+  update: (value, tr) => {
+    const effect = tr.effects.find((e) => e.is(setAppliedRangesEffect));
+    return effect ? effect.value : value;
+  },
+});
 
 const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, chsum?: number][] | null) =>
   ViewPlugin.fromClass(
     class {
       private view: EditorView;
-      private didSetSelection = false;
 
       constructor(view: EditorView) {
         this.view = view;
@@ -34,20 +45,26 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, c
           })
           .filter(Boolean);
         if (selections.length) {
+          const rangesKey = JSON.stringify(ranges);
           this.view.dispatch({
             selection: EditorSelection.create(selections),
             scrollIntoView: true,
+            effects: [setAppliedRangesEffect.of(rangesKey)],
           });
         }
       };
 
       update() {
-        if (!this.didSetSelection && hlRanges) {
-          this.didSetSelection = true;
-          requestAnimationFrame(() => {
-            this.handleSelectRanges(hlRanges);
-            // Wait for selection to be applied, then scroll
-          });
+        if (hlRanges) {
+          const currentRangesKey = JSON.stringify(hlRanges);
+          const appliedRanges = this.view.state.field(appliedRangesField);
+
+          // Only apply ranges if they haven't been applied yet
+          if (appliedRanges !== currentRangesKey) {
+            requestAnimationFrame(() => {
+              this.handleSelectRanges(hlRanges);
+            });
+          }
         }
       }
 
@@ -58,7 +75,7 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, c
 export function CodeMirrorHighlightURLRange(
   hlRanges = getHighlightRangesFromURL(window.location.href, "search")
 ): Extension {
-  return codeMirrorSelectURLRangePlugin(hlRanges);
+  return [appliedRangesField, codeMirrorSelectURLRangePlugin(hlRanges)];
 }
 
 const RANGE_KEY = "hlRanges";
@@ -76,23 +93,41 @@ export function rangesToSearchParams(
   return params.toString();
 }
 
+export function parseParamsToRanges(params: URLSearchParams): {
+  ranges: [start: number, end: number, chsum?: number][] | null;
+  meta: Record<string, unknown>;
+} {
+  let ranges: Array<[startStr: string, endStr: string, chsum?: number]> | null = null;
+  const meta: Record<string, unknown> = {};
+  try {
+    const rangeParam = params.get(RANGE_KEY);
+    if (rangeParam) {
+      const parsed = JSON.parse(rangeParam);
+      if (Array.isArray(parsed)) {
+        ranges = parsed as Array<[startStr: string, endStr: string, chsum?: number]>;
+      }
+    }
+    for (const [key, value] of params.entries()) {
+      if (key === RANGE_KEY) continue;
+      try {
+        meta[key] = JSON.parse(value);
+      } catch {
+        meta[key] = value;
+      }
+    }
+  } catch (_e) {
+    console.warn(`Invalid range format in params ${params.toString()}`);
+  }
+  return {
+    ranges: ranges ? ranges.map(([s, e, c]) => [parseInt(s), parseInt(e), c]) : null,
+    meta,
+  };
+}
 export function getHighlightRangesFromURL(
   windowHref: string,
   type: "hash" | "search" = "hash"
 ): [start: number, end: number, chsum?: number][] | null {
-  const params =
-    type === "hash" ? new URLSearchParams(new URL(windowHref).hash.slice(1)) : new URL(windowHref).searchParams;
-  let ranges: Array<[startStr: string, endStr: string, chsum?: number]> | null = null;
-  try {
-    const rangeParam = params.get(RANGE_KEY);
-    if (!rangeParam) return null;
-    const parsed = JSON.parse(rangeParam);
-    if (Array.isArray(parsed)) {
-      ranges = parsed as Array<[startStr: string, endStr: string, chsum?: number]>;
-      return ranges.map(([s, e, c]) => [parseInt(s), parseInt(e), c]);
-    }
-  } catch (_e) {
-    console.warn(`Invalid range format in URL ${windowHref}`);
-  }
-  return null;
+  const url = new URL(windowHref);
+  const params = type === "hash" ? new URLSearchParams(url.hash.slice(1)) : url.searchParams;
+  return parseParamsToRanges(params).ranges;
 }
