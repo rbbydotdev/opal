@@ -30,6 +30,7 @@ import {
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
+import { DefaultTemplate } from "@/Db/WorkspaceTemplates";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { DocxConvertType } from "@/workers/DocxWorker/docx.ww";
@@ -198,14 +199,23 @@ export class Workspace {
     return { workspaceName: result.workspaceName, filePath: result.filePath };
   }
 
-  static async CreateNew(name: string, files: Record<string, string | Promise<string>> = {}, diskType?: DiskType) {
+  static async CreateNew(
+    name: string,
+    files: Record<string, string | Promise<string> | (() => string | Promise<string>)> = {},
+    diskType?: DiskType
+  ) {
     const workspace = (await WorkspaceDAO.CreateNewWithDiskType({ name, diskType })).toModel();
-    await workspace.newFiles(Object.entries(files).map(([path, content]) => [absPath(path), content]));
+    await workspace.newFiles(
+      Object.entries(files).map(([path, content]) => [
+        absPath(path),
+        typeof content === "function" ? content() : content,
+      ])
+    );
     return workspace;
   }
 
   static async CreateNewWithSeedFiles(name: string, diskType?: DiskType) {
-    return Workspace.CreateNew(name, Workspace.seedFiles, diskType);
+    return Workspace.CreateNew(name, DefaultTemplate.seedFiles, diskType);
   }
 
   replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {
