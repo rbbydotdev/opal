@@ -4,7 +4,7 @@ import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
 import { SourceEditorButton } from "@/components/Editor/SourceEditorButton";
-import { EditHistoryMenu, useToggleEditHistory } from "@/components/Editor/history/EditHistoryMenu";
+import { EditHistoryMenu } from "@/components/Editor/history/EditHistoryMenu";
 import { useEditorHistoryPlugin2WithRealm } from "@/components/Editor/history/useEditorHistoryPlugin2WithRealm";
 import { useWorkspaceDocumentId } from "@/components/Editor/history/useWorkspaceDocumentId";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
@@ -30,6 +30,7 @@ import {
   useRemoteMDXEditorRealm,
 } from "@mdxeditor/editor";
 import { useEffect, useMemo } from "react";
+import { useToggleEditHistory } from "./history/useToggleEditHistory";
 
 export function useAllPlugins({
   currentWorkspace,
@@ -112,7 +113,7 @@ function EditHistoryMenuWithRealm({
 }) {
   const { isEditHistoryEnabled } = useToggleEditHistory();
   const historyDB = useSnapHistoryDB();
-  
+
   const {
     triggerSave,
     isRestoreState,

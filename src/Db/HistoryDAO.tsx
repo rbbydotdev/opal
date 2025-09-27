@@ -1,5 +1,5 @@
 import { useIframeImagePooledImperitiveWorker } from "@/components/Editor/history/EditViewImage";
-import { useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
+import { useToggleHistoryImageGeneration } from "@/components/Editor/history/useToggleHistoryImageGeneration";
 import { ClientDb } from "@/Db/instance";
 import { NullHistoryDAO } from "@/Db/NullHistoryDAO";
 import { useResource } from "@/hooks/useResource";

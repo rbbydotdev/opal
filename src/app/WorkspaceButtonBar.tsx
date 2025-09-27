@@ -1,6 +1,7 @@
 import { useLeftCollapsed, useSidebarWidth } from "@/app/EditorSidebarLayout";
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
-import { useToggleEditHistory, useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
+import { useToggleEditHistory } from "@/components/Editor/history/useToggleEditHistory";
+import { useToggleHistoryImageGeneration } from "@/components/Editor/history/useToggleHistoryImageGeneration";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
