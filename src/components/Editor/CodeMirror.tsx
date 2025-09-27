@@ -1,8 +1,5 @@
 import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
-import {
-  createURLRangeExtension,
-  getHighlightRangesFromURL,
-} from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { createURLRangeExtension, getHighlightRangesFromURL } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
@@ -26,7 +23,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import { Compartment, EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
-import { useRouter, useLocation } from "@tanstack/react-router";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import { basicSetup } from "codemirror";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
@@ -159,7 +156,9 @@ export const CodeMirrorEditor = ({
         conflictCompartment.reconfigure(
           enableConflictResolution && hasConflicts ? gitConflictEnhancedPlugin(getLanguageExtension) : []
         ),
-        urlRangeCompartment.reconfigure(createURLRangeExtension(getHighlightRangesFromURL(window.location.href, "hash"))),
+        urlRangeCompartment.reconfigure(
+          createURLRangeExtension(getHighlightRangesFromURL(window.location.href, "hash"))
+        ),
       ],
     });
 
@@ -167,7 +166,19 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [value]); // Only depend on initial value
+  }, [
+    conflictCompartment,
+    editableCompartment,
+    enableConflictResolution,
+    hasConflicts,
+    languageCompartment,
+    mimeType,
+    readOnly,
+    urlRangeCompartment,
+    value,
+    vimCompartment,
+    vimMode,
+  ]); // Only depend on initial value
 
   // Reconfigure language when mimeType/conflicts change
   useEffect(() => {
