@@ -1,6 +1,6 @@
 import { Workspace } from "@/Db/Workspace";
 import { AbsPath, isImage } from "@/lib/paths2";
-import { Eta } from "eta";
+import { Eta } from "eta/core";
 import graymatter from "gray-matter";
 
 export interface TemplateData {
@@ -78,12 +78,14 @@ export class EtaRenderer {
     this.eta = new Eta({
       cache: false, // Disable cache for live editing
       autoEscape: false, // Allow HTML output
+      // debug: true,
     });
 
     // Asynchronous ETA instance (same config, but use renderStringAsync method)
     this.etaAsync = new Eta({
       cache: false, // Disable cache for live editing
       autoEscape: false, // Allow HTML output
+      // debug: true,
     });
 
     // Set up custom file reader to read from workspace filesystem for both instances
@@ -110,17 +112,10 @@ export class EtaRenderer {
    */
   async renderStringAsync(templateContent: string, data: TemplateData = {}): Promise<string> {
     try {
-      // console.log('renderStringAsync called with template preview:', templateContent.substring(0, 200));
       const enrichedData = this.enrichTemplateData(data);
-      // console.log('About to call etaAsync.renderStringAsync with data keys:', Object.keys(enrichedData));
-      // Use ETA's built-in renderStringAsync which handles async compilation
       const result = (await this.etaAsync.renderStringAsync(templateContent, enrichedData)) || "";
-      // console.log('renderStringAsync succeeded');
       return result;
     } catch (error) {
-      // console.error('renderStringAsync failed with detailed error:', error);
-      // console.error('Error message:', (error as Error).message);
-      // console.error('Error stack:', (error as Error).stack);
       return this.formatError(error);
     }
   }

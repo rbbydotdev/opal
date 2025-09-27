@@ -34,7 +34,7 @@ function PreviewComponentInternal() {
   const { scrollEmitter } = useScrollChannel({ sessionId });
   if (!path) return null;
 
-  const scrollEl = useWatchElement<HTMLElement>("#markdown");
+  const scrollEl = useWatchElement<HTMLElement>("#render");
 
   if (isMarkdown(path)) {
     return (
@@ -87,7 +87,7 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
   );
   return (
     <div
-      id="markdown"
+      id="render"
       className="w-full h-full absolute inset-0  overflow-y-auto px-4"
       dangerouslySetInnerHTML={{ __html: html }}
     ></div>
@@ -146,7 +146,7 @@ function EjsRender({ path }: { path: AbsPath | null }) {
 
   return (
     <div
-      id="ejs-render"
+      id="render"
       className="w-full h-full absolute inset-0  overflow-y-auto px-4"
       dangerouslySetInnerHTML={{ __html: html }}
     ></div>
@@ -168,7 +168,7 @@ function HtmlRender({ path }: { path: AbsPath | null }) {
 
   return (
     <div
-      id="html-render"
+      id="render"
       className="w-full h-full absolute inset-0  overflow-y-auto px-4"
       dangerouslySetInnerHTML={{ __html: finalContents }}
     ></div>
