@@ -1,4 +1,3 @@
-import { rangesToSearchParams } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { SelectWorkspaceComplete } from "@/components/SelectWorkspaceComplete";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -124,6 +123,15 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     resetSearch();
     submit({ searchTerm, workspaceName: workspaceId, regexp: optionsValue.regexp });
   };
+
+  useEffect(() => {
+    //if url has highlight ranges then remove them pre-emptively
+    if (isOpen && window.location.hash.includes("hlRanges=")) {
+      const url = new URL(window.location.href);
+      url.hash = "";
+      window.history.replaceState({}, document.title, url.toString());
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>

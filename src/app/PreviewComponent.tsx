@@ -101,7 +101,6 @@ function EjsRender({ path }: { path: AbsPath | null }) {
     currentWorkspace,
     path,
     onContentChange: (contents) => {
-      console.log(">>>>>>>EJS contents changed");
       setContents(String(contents));
     },
   });
@@ -161,7 +160,6 @@ function HtmlRender({ path }: { path: AbsPath | null }) {
     currentWorkspace,
     path,
     onContentChange: (contents) => {
-      console.log(">>>>>>>HTML contents changed");
       setContents(String(contents));
     },
   });
