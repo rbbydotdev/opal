@@ -331,6 +331,12 @@ const CodeMirrorToolbar = ({
           });
           break;
         case "text/x-ejs":
+        // prettifiedContent = await prettier.format(currentContent, {
+        //   parser: "html",
+        //   plugins: [parserEjs, parserHtml],
+        //   filepath: "file.ejs",
+        // });
+        // break;
         case "text/html":
           prettifiedContent = await prettier.format(currentContent, {
             parser: "html",

@@ -34,6 +34,9 @@ export class GitConfig {
 
   getConfig(): GitConfigData {
     try {
+      if (localStorage === undefined) {
+        return DEFAULT_GIT_CONFIG;
+      }
       const stored = localStorage.getItem(GIT_CONFIG_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<GitConfigData>;
