@@ -289,3 +289,9 @@ body table tr {
 body table tr:nth-child(2n) {
   background-color: var(--bgColor-muted);
 }
+
+img {
+  width: 420px;
+  border-radius: 12px;
+  margin: auto;
+}
