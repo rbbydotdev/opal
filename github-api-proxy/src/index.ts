@@ -1,6 +1,6 @@
 // DONT FORGET TO SET GITHUB_CLIENT_SECRET in your Cloudflare Workers environment variables!
 
-const ALLOWED_ORIGINS = ['https://opal-editor.com', 'http://localhost:3000'];
+const ALLOWED_ORIGINS = ['https://opaledx.com', 'http://localhost:3000'];
 const ALLOWED_HOSTS = ['github.com', 'api.github.com', '*.github.com'];
 
 function filterHeaders(headers: Headers): Headers {
