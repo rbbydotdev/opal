@@ -180,6 +180,9 @@ const FileMenuActionButtonRow = ({
       <ActionButton onClick={trashSelectedFiles} aria-label="Trash Files" title="Trash Files">
         <Trash2 />
       </ActionButton>
+      <ActionButton onClick={addEjsFile} aria-label="New EJS File" title="New EJS File">
+        <FileTextIcon />
+      </ActionButton>
       <ActionButton onClick={addFile} aria-label="New Markdown File" title="New Markdown File">
         <FileEditIcon />
       </ActionButton>
@@ -343,7 +346,7 @@ export const SidebarFileMenuFilesActions = ({
       try {
         await paste(targetNode);
         showToast("Files pasted", "success");
-      } catch (error) {
+      } catch (_err) {
         showToast("Paste failed", "destructive");
       }
     } else {
