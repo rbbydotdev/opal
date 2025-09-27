@@ -173,7 +173,13 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
   {
     id: "blank",
     name: "Blank",
-    description: "Empty workspace with just basic CSS styles",
+    description: "Completely empty workspace with no files",
+    seedFiles: {},
+  },
+  {
+    id: "basic",
+    name: "Basic",
+    description: "Empty workspace with basic CSS styles",
     seedFiles: WorkspaceSeedFiles,
   },
   {

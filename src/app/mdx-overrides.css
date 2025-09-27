@@ -103,7 +103,7 @@
 .mdxeditor {
   /* for scroll into view to work properly*/
   .cm-editor {
-    height: 100vh;
+    /* height: 100vh; */
   }
   .cm-scroller {
     height: 100%;

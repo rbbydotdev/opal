@@ -151,16 +151,14 @@ export function NewWorkspaceDialog({
               <Label htmlFor="template-1">Template</Label>
               <Select name="template" value={selectedTemplate} onValueChange={setSelectedTemplate}>
                 <SelectTrigger className="h-12">
-                  <SelectValue className="_h-12" placeholder="Choose a template"></SelectValue>
+                  <SelectValue placeholder="Choose a template"></SelectValue>
                 </SelectTrigger>
                 <SelectContent id="template-1">
                   {WORKSPACE_TEMPLATES.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
-                      <div className="flex flex-col items-start w-full min-w-0">
+                      <div className="flex flex-col items-start w-full min-w-0 text-start">
                         <span className="font-medium truncate w-full">{template.name}</span>
-                        <span className="text-sm text-muted-foreground text-wrap break-words w-full">
-                          {template.description}
-                        </span>
+                        <span className="text-sm text-muted-foreground w-full">{template.description}</span>
                       </div>
                     </SelectItem>
                   ))}

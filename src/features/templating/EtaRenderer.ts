@@ -56,12 +56,12 @@ export interface TemplateHelpers {
   importMarkdown: (path: string) => Promise<{ content: string; data: Record<string, any>; raw: string }>;
   importMarkdownSync: (path: string) => { content: string; data: Record<string, any>; raw: string };
 
-  // Math helpers
-  add: (a: number, b: number) => number;
-  subtract: (a: number, b: number) => number;
-  multiply: (a: number, b: number) => number;
-  divide: (a: number, b: number) => number;
-  round: (num: number, decimals?: number) => number;
+  // // Math helpers
+  // add: (a: number, b: number) => number;
+  // subtract: (a: number, b: number) => number;
+  // multiply: (a: number, b: number) => number;
+  // divide: (a: number, b: number) => number;
+  // round: (num: number, decimals?: number) => number;
 }
 
 export class EtaRenderer {
@@ -270,12 +270,12 @@ export class EtaRenderer {
       length: (arr: any[] | string) => arr.length,
       equals: (a: any, b: any) => a === b,
 
-      // Math helpers
-      add: (a: number, b: number) => a + b,
-      subtract: (a: number, b: number) => a - b,
-      multiply: (a: number, b: number) => a * b,
-      divide: (a: number, b: number) => (b !== 0 ? a / b : 0),
-      round: (num: number, decimals = 0) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals),
+      // // Math helpers
+      // add: (a: number, b: number) => a + b,
+      // subtract: (a: number, b: number) => a - b,
+      // multiply: (a: number, b: number) => a * b,
+      // divide: (a: number, b: number) => (b !== 0 ? a / b : 0),
+      // round: (num: number, decimals = 0) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals),
 
       // Markdown helpers
       importMarkdown: (path: string) => {

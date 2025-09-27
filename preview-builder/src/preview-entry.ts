@@ -5,45 +5,84 @@ import { snapdom } from "@zumer/snapdom";
 import * as Comlink from "comlink";
 import "github-markdown-css/github-markdown-light.css";
 
+// Fast image loading with reduced timeout
+async function loadImagesOptimized(images: HTMLImageElement[]) {
+  const promises = images.map(img => 
+    Promise.race([
+      new Promise<boolean>(resolve => {
+        if (img.complete) return resolve(true);
+        const onDone = () => resolve(true);
+        img.addEventListener("load", onDone, { once: true });
+        img.addEventListener("error", onDone, { once: true });
+      }),
+      new Promise<boolean>(resolve => setTimeout(() => resolve(true), 500)) // Reduced from 2000ms
+    ])
+  );
+  await Promise.allSettled(promises); // Don't wait for failures
+}
+
+// Chunked canvas processing to avoid blocking
+async function processCanvasChunked(sourceCanvas: HTMLCanvasElement, scale: number): Promise<HTMLCanvasElement> {
+  return new Promise((resolve) => {
+    const scaledCanvas = document.createElement("canvas");
+    scaledCanvas.width = sourceCanvas.width * scale;
+    scaledCanvas.height = sourceCanvas.height * scale;
+    const ctx = scaledCanvas.getContext("2d");
+    
+    if (!ctx) {
+      resolve(scaledCanvas);
+      return;
+    }
+
+    // Use requestAnimationFrame to avoid blocking
+    requestAnimationFrame(() => {
+      ctx.drawImage(sourceCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+      resolve(scaledCanvas);
+    });
+  });
+}
+
 async function snapshot(target: HTMLElement) {
+  const perfStart = performance.now();
+  console.debug("[iframe] Starting snapshot process");
+
+  // Optimized image loading
   const images = Array.from(target.querySelectorAll("img"));
   if (images.length > 0) {
-    await Promise.all(
-      images.map(
-        (img) =>
-          new Promise((resolve) => {
-            if (img.complete) return resolve(true);
-            const onDone = () => resolve(true);
-            img.addEventListener("load", onDone, { once: true });
-            img.addEventListener(
-              "error",
-              (e) => {
-                console.error("Image failed to load:", img.src);
-                onDone();
-              },
-              { once: true }
-            );
-            setTimeout(onDone, 2000);
-          })
-      )
-    );
+    const imageStart = performance.now();
+    await loadImagesOptimized(images);
+    console.debug(`[iframe] Images loaded in ${performance.now() - imageStart}ms`);
   }
 
-  const capture = await snapdom.capture(target, {});
-  const canvas = await capture.toCanvas();
+  // Snapdom capture with fast mode
+  const captureStart = performance.now();
+  const capture = await snapdom.capture(target, { 
+    fast: true,  // Enable fast mode
+    scale: 1     // Avoid internal scaling
+  });
+  console.debug(`[iframe] Snapdom capture took ${performance.now() - captureStart}ms`);
 
+  // Canvas processing
+  const canvasStart = performance.now();
+  const sourceCanvas = await capture.toCanvas();
+  console.debug(`[iframe] Canvas creation took ${performance.now() - canvasStart}ms`);
+
+  // Chunked scaling
+  const scaleStart = performance.now();
   const scale = parseFloat((1 / 1).toFixed(4));
-  const scaledCanvas = document.createElement("canvas");
-  scaledCanvas.width = canvas.width * scale;
-  scaledCanvas.height = canvas.height * scale;
-  const ctx = scaledCanvas.getContext("2d");
-  if (ctx) {
-    ctx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-  }
+  const scaledCanvas = await processCanvasChunked(sourceCanvas, scale);
+  console.debug(`[iframe] Canvas scaling took ${performance.now() - scaleStart}ms`);
 
+  // Blob creation
+  const blobStart = performance.now();
   const blob: Blob = await new Promise((resolve) => {
     scaledCanvas.toBlob((b) => resolve(b as Blob), "image/webp", 0.8);
   });
+  console.debug(`[iframe] Blob creation took ${performance.now() - blobStart}ms`);
+  
+  const totalTime = performance.now() - perfStart;
+  console.debug(`[iframe] Total snapshot time: ${totalTime}ms, blob size: ${blob.size} bytes`);
+  
   return blob;
 }
 
