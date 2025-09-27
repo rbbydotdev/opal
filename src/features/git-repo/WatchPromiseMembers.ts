@@ -1,13 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Emittery from "emittery";
 
-type PromiseReturningFunctionKeys<T> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => Promise<any> ? K : never;
-}[keyof T];
+type PromiseReturningFunctionKeys<T> = Extract<
+  {
+    [K in keyof T]: T[K] extends (...args: any[]) => Promise<any> ? K : never;
+  }[keyof T],
+  string
+>;
 
-type EventKeys<K> = `${K & string}:start` | `${K & string}:end` | "*" | "*:start" | "*:end" | (K & string);
+type EventKeys<K extends string> = `${K}:start` | `${K}:end` | "*" | "*:start" | "*:end";
+
 type WatcherEvents<T> = {
-  [K in PromiseReturningFunctionKeys<T> as EventKeys<K>]: keyof T & string;
+  [K in PromiseReturningFunctionKeys<T> as EventKeys<K>]: K;
 };
 
 export class WatchPromiseMembers<T extends Record<string, unknown>> {
