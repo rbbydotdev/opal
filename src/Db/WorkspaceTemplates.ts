@@ -1,7 +1,6 @@
+import globalSeedCss from "@/seedfiles/global-seed.css?raw";
 import graymatter from "gray-matter";
 import { nanoid } from "nanoid";
-import { WorkspaceSeedFiles } from "./WorkspaceSeedFiles";
-
 export type WorkspaceTemplate = {
   id: string;
   name: string;
@@ -108,69 +107,6 @@ console.log("Code blocks work great!");
 Start writing your own content and make this blog yours!
 `;
 
-const blogCss = `/* Blog-specific styles */
-.blog-header {
-  border-bottom: 2px solid var(--borderColor-default);
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-}
-
-.blog-post {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.blog-post h1 {
-  color: var(--fgColor-accent);
-  margin-bottom: 0.5rem;
-}
-
-.blog-meta {
-  color: var(--fgColor-muted);
-  font-style: italic;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-}
-
-.blog-content {
-  line-height: 1.6;
-}
-
-.blog-nav {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--borderColor-muted);
-}
-
-.blog-nav a {
-  color: var(--fgColor-accent);
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--borderColor-default);
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.blog-nav a:hover {
-  background-color: var(--bgColor-muted);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .blog-post {
-    padding: 1rem;
-  }
-  
-  .blog-nav {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
-`;
-
 const newMd = function (doc: string) {
   return graymatter.stringify(doc, { documentId: nanoid(), createdAt: new Date().toISOString() });
 };
@@ -185,19 +121,20 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     id: "basic",
     name: "Basic",
     description: "Empty workspace with basic CSS styles",
-    seedFiles: WorkspaceSeedFiles,
+    seedFiles: {
+      "/global.css": globalSeedCss,
+    },
   },
   {
     id: "blog",
     name: "Blog",
     description: "A simple blog setup with posts, styles, and sample content",
     seedFiles: {
-      ...WorkspaceSeedFiles,
       "/welcome.md": newMd(blogWelcomeMarkdown),
       "/index.md": newMd(blogIndexMarkdown),
       "/posts/first-post.md": newMd(blogFirstPostMarkdown),
       "/posts/getting-started.md": newMd(blogGettingStartedMarkdown),
-      "/styles/blog.css": blogCss,
+      "/global.css": globalSeedCss,
     },
   },
 ];

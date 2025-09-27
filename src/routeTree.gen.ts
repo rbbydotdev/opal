@@ -18,7 +18,6 @@ import { Route as AuthGithubRouteImport } from './routes/auth.github'
 import { Route as AllSettingsSplatRouteImport } from './routes/all-settings/$'
 import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppThemesRouteImport } from './routes/_app/themes'
-import { Route as AppTemplatesRouteImport } from './routes/_app/templates'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSandboxRouteImport } from './routes/_app/sandbox'
 import { Route as AppNewWorkspaceRouteImport } from './routes/_app/newWorkspace'
@@ -70,11 +69,6 @@ const AppWorkspaceRoute = AppWorkspaceRouteImport.update({
 const AppThemesRoute = AppThemesRouteImport.update({
   id: '/themes',
   path: '/themes',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppTemplatesRoute = AppTemplatesRouteImport.update({
-  id: '/templates',
-  path: '/templates',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -129,7 +123,6 @@ export interface FileRoutesByFullPath {
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/sandbox': typeof AppSandboxRoute
   '/settings': typeof AppSettingsRoute
-  '/templates': typeof AppTemplatesRoute
   '/themes': typeof AppThemesRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
@@ -148,7 +141,6 @@ export interface FileRoutesByTo {
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/sandbox': typeof AppSandboxRoute
   '/settings': typeof AppSettingsRoute
-  '/templates': typeof AppTemplatesRoute
   '/themes': typeof AppThemesRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
@@ -168,7 +160,6 @@ export interface FileRoutesById {
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
   '/_app/sandbox': typeof AppSandboxRoute
   '/_app/settings': typeof AppSettingsRoute
-  '/_app/templates': typeof AppTemplatesRoute
   '/_app/themes': typeof AppThemesRoute
   '/_app/workspace': typeof AppWorkspaceRouteWithChildren
   '/all-settings/$': typeof AllSettingsSplatRoute
@@ -189,7 +180,6 @@ export interface FileRouteTypes {
     | '/newWorkspace'
     | '/sandbox'
     | '/settings'
-    | '/templates'
     | '/themes'
     | '/workspace'
     | '/all-settings/$'
@@ -208,7 +198,6 @@ export interface FileRouteTypes {
     | '/newWorkspace'
     | '/sandbox'
     | '/settings'
-    | '/templates'
     | '/themes'
     | '/workspace'
     | '/all-settings/$'
@@ -227,7 +216,6 @@ export interface FileRouteTypes {
     | '/_app/newWorkspace'
     | '/_app/sandbox'
     | '/_app/settings'
-    | '/_app/templates'
     | '/_app/themes'
     | '/_app/workspace'
     | '/all-settings/$'
@@ -310,13 +298,6 @@ declare module '@tanstack/react-router' {
       path: '/themes'
       fullPath: '/themes'
       preLoaderRoute: typeof AppThemesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/templates': {
-      id: '/_app/templates'
-      path: '/templates'
-      fullPath: '/templates'
-      preLoaderRoute: typeof AppTemplatesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -414,7 +395,6 @@ interface AppRouteChildren {
   AppNewWorkspaceRoute: typeof AppNewWorkspaceRoute
   AppSandboxRoute: typeof AppSandboxRoute
   AppSettingsRoute: typeof AppSettingsRoute
-  AppTemplatesRoute: typeof AppTemplatesRoute
   AppThemesRoute: typeof AppThemesRoute
   AppWorkspaceRoute: typeof AppWorkspaceRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
@@ -425,7 +405,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppNewWorkspaceRoute: AppNewWorkspaceRoute,
   AppSandboxRoute: AppSandboxRoute,
   AppSettingsRoute: AppSettingsRoute,
-  AppTemplatesRoute: AppTemplatesRoute,
   AppThemesRoute: AppThemesRoute,
   AppWorkspaceRoute: AppWorkspaceRouteWithChildren,
   AppIndexRoute: AppIndexRoute,

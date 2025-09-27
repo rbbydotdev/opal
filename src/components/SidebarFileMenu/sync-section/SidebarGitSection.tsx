@@ -589,7 +589,11 @@ export function SidebarGitSection({
 
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="pb-3">
-            <div className="px-4 pt-2 gap-2 flex flex-col">
+            <div className="px-4 pt-2 gap-2 flex flex-col relative">
+              <div className="absolute inset-0">
+                <Loader className="w-8 h-8 text-sidebar-foreground animate-spin absolute m-auto inset-0" />
+                <div className="absolute inset-0 bg-sidebar-background z-10 rounded opacity-80"></div>
+              </div>
               {exists && <InfoCollapsible currentWorkspace={currentWorkspace} info={info} />}
               {!!info.conflictingFiles.length && (
                 <MergeConflictSection conflictingFiles={info.conflictingFiles} currentWorkspace={currentWorkspace} />
