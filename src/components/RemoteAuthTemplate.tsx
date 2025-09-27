@@ -6,7 +6,7 @@ import {
   RemoteAuthType,
 } from "@/Db/RemoteAuth";
 import { Env } from "@/lib/env";
-import { Github, KeyIcon } from "lucide-react";
+import { Github, KeyIcon, Globe, Cloud } from "lucide-react";
 
 export type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = {
   name: string;
@@ -66,6 +66,22 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     data: {
       corsProxy: Env.GithubCorsProxy,
     },
+  }),
+  template({
+    name: "Netlify OAuth",
+    description: "Connect using Netlify OAuth",
+    source: "netlify",
+    type: "oauth",
+    icon: <Globe className="h-5 w-5" />,
+    data: {},
+  }),
+  template({
+    name: "Cloudflare API",
+    description: "Connect using a Cloudflare API token",
+    source: "cloudflare",
+    type: "api",
+    icon: <Cloud className="h-5 w-5" />,
+    data: {},
   }),
 ];
 
