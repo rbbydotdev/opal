@@ -3,11 +3,11 @@ import {
   NewComlinkSnapshotPoolWorker,
   useSnapApiPool,
 } from "@/components/Editor/history/SnapApiPoolProvider";
-import { useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { HistoryDocRecord } from "@/Db/HistoryDAO";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
 
 function previewId({ workspaceId, editId }: { workspaceId: string; editId: string }) {
   return `${workspaceId}/${editId}`;
@@ -34,7 +34,7 @@ function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecor
       setImageUrl(null);
       return;
     }
-    
+
     if (edit.preview === null) {
       let worker: ApiPoolWorker | null = NewComlinkSnapshotPoolWorker(
         { editId: edit.edit_id, workspaceId, id },

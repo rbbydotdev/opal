@@ -1,6 +1,7 @@
 // EditHistoryMenu.tsx;
 import { EditViewImage } from "@/components/Editor/history/EditViewImage";
 import { useSelectedItemScroll } from "@/components/Editor/history/useSelectedItemScroll";
+import { useToggleEditHistory } from "@/components/Editor/history/useToggleEditHistory";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,13 +13,13 @@ import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref"
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { HistoryDocRecord, useSnapHistoryDB, useSnapHistoryPendingSave } from "@/Db/HistoryDAO";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
 import { Check, ChevronDown, History, X } from "lucide-react";
 import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
+import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
 
 export const allMarkdown$ = Cell("", (realm) => {
   realm.sub(markdown$, (md) => {
@@ -29,18 +30,6 @@ export const allMarkdown$ = Cell("", (realm) => {
   });
   realm.pub(allMarkdown$, realm.getValue(markdown$));
 });
-
-export function useToggleEditHistory() {
-  const { storedValue, setStoredValue } = useLocalStorage2("app/EditHistory", true);
-  const toggle = () => setStoredValue(!storedValue);
-  return { isEditHistoryEnabled: storedValue, toggleEditHistory: toggle };
-}
-
-export function useToggleHistoryImageGeneration() {
-  const { storedValue, setStoredValue } = useLocalStorage2("app/EditHistoryImageGeneration", false);
-  const toggle = () => setStoredValue(!storedValue);
-  return { isHistoryImageGenerationEnabled: storedValue, toggleHistoryImageGeneration: toggle };
-}
 
 export function EditHistoryMenu({
   finalizeRestore = () => {},
@@ -238,10 +227,12 @@ export function EditHistoryMenu({
                       "p-1 py-1": !isHistoryImageGenerationEnabled,
                     })}
                   >
-                    <div className={cn("flex w-full items-center justify-start text-left", {
-                      "text-sm": isHistoryImageGenerationEnabled,
-                      "text-xs": !isHistoryImageGenerationEnabled,
-                    })}>
+                    <div
+                      className={cn("flex w-full items-center justify-start text-left", {
+                        "text-sm": isHistoryImageGenerationEnabled,
+                        "text-xs": !isHistoryImageGenerationEnabled,
+                      })}
+                    >
                       {workspaceId && filePath && isHistoryImageGenerationEnabled ? (
                         <EditViewImage className="w-12 h-12" workspaceId={workspaceId} edit={EDIT} />
                       ) : null}

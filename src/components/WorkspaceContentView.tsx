@@ -1,12 +1,12 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
-import { useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
+import { useToggleHistoryImageGeneration } from "./Editor/history/useToggleHistoryImageGeneration";
 // import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
