@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Disk, DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType, OpFsDirMountDisk } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/Db/WorkspaceTemplates";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { useNavigate } from "@tanstack/react-router";
 import { FolderIcon, LoaderIcon, XIcon } from "lucide-react";
@@ -33,6 +34,7 @@ export function NewWorkspaceDialog({
   const [selectedFileSystem, setSelectedFileSystem] = useState<DiskType>(Disk.defaultDiskType);
   const [selectedDirectory, setSelectedDirectory] = useState<FileSystemDirectoryHandle | null>(null);
   const [directoryError, setDirectoryError] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(getDefaultTemplate().id);
 
   const defaultValue = useMemo(() => RandomSlugWords() /*nanoid()*/, []);
   const navigate = useNavigate();
@@ -45,6 +47,7 @@ export function NewWorkspaceDialog({
       setSelectedFileSystem(Disk.defaultDiskType);
       setSelectedDirectory(null);
       setDirectoryError(null);
+      setSelectedTemplate(getDefaultTemplate().id);
     }
   };
 
@@ -54,12 +57,12 @@ export function NewWorkspaceDialog({
       if (!("showDirectoryPicker" in window)) {
         throw new Error("Directory picker not supported in this browser");
       }
-      
+
       const handle = await (window as any).showDirectoryPicker({
         mode: "readwrite",
-        startIn: "documents"
+        startIn: "documents",
       });
-      
+
       setSelectedDirectory(handle);
     } catch (error: any) {
       if (error.name === "AbortError") {
@@ -88,28 +91,32 @@ export function NewWorkspaceDialog({
     const formData = new FormData(e.currentTarget);
     const workspaceName = formData.get("workspaceName") as string;
     const fileSystem = formData.get("fileSystem") as DiskType;
-    
+    const templateId = formData.get("template") as string;
+
     // Validate directory selection for OpFsDirMountDisk
     if (fileSystem === "OpFsDirMountDisk" && !selectedDirectory) {
       setDirectoryError("Please select a directory");
       return;
     }
-    
+
+    // Get the selected template
+    const template = getTemplateById(templateId) || getDefaultTemplate();
+
     setPending(true);
     try {
       let workspace: Workspace;
-      
+
       if (fileSystem === "OpFsDirMountDisk" && selectedDirectory) {
         // Create workspace with directory-mounted OPFS
         const workspaceDAO = await WorkspaceDAO.CreateNewWithDiskType({ name: workspaceName, diskType: fileSystem });
         const disk = workspaceDAO.disk.toModel() as OpFsDirMountDisk;
         await disk.setDirectoryHandle(selectedDirectory);
         workspace = workspaceDAO.toModel();
-        await workspace.newFiles(Object.entries(Workspace.seedFiles).map(([path, content]) => [path as any, content]));
+        await workspace.newFiles(Object.entries(template.seedFiles).map(([path, content]) => [path as any, content]));
       } else {
-        workspace = await Workspace.CreateNewWithSeedFiles(workspaceName, fileSystem);
+        workspace = await Workspace.CreateNew(workspaceName, template.seedFiles, fileSystem);
       }
-      
+
       setPending(false);
       setIsOpen(false);
       void navigate({ to: String(workspace.home()) });
@@ -139,6 +146,24 @@ export function NewWorkspaceDialog({
                 defaultValue={defaultValue}
                 autoComplete="off"
               />
+            </div>
+            <div className="grid gap-3">
+              <Label htmlFor="template-1">Template</Label>
+              <Select name="template" value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                <SelectTrigger className="h-12">
+                  <SelectValue className="_h-12" placeholder="Choose a template"></SelectValue>
+                </SelectTrigger>
+                <SelectContent id="template-1">
+                  {WORKSPACE_TEMPLATES.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{template.name}</span>
+                        <span className="text-sm text-muted-foreground">{template.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-3">
               <Label htmlFor="fileSystem-1">File System</Label>
@@ -181,9 +206,7 @@ export function NewWorkspaceDialog({
                     </Button>
                   )}
                 </div>
-                {directoryError && (
-                  <p className="text-sm text-red-500">{directoryError}</p>
-                )}
+                {directoryError && <p className="text-sm text-red-500">{directoryError}</p>}
               </div>
             )}
           </div>
