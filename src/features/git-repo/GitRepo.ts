@@ -7,6 +7,7 @@ import { debounce } from "@/lib/debounce";
 import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
+
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
@@ -208,6 +209,11 @@ export class GitRepo {
     bareInitialized: false,
   };
 
+  globalPending = false;
+  isPending = () => {
+    return this.globalPending;
+  };
+
   onTearDown = (fn: () => void) => {
     this.unsubs.push(fn);
     return this;
@@ -310,6 +316,29 @@ export class GitRepo {
 
   getInfo = () => {
     return this.info;
+  };
+
+  onPending = (cb: (pending: boolean) => void) => {
+    return this.gitEvents.on(
+      [
+        "commit:start",
+        "checkout:start",
+        "pull:start",
+        "fetch:start",
+        "merge:start",
+        "addRemote:start",
+        "branch:start",
+        "deleteBranch:start",
+        "deleteRemote:start",
+        "init:start",
+        "writeRef:start",
+      ],
+      async (propName) => {
+        cb((this.globalPending = true));
+        await this.gitEvents.once(`${propName}:end`);
+        cb((this.globalPending = false));
+      }
+    );
   };
   initListeners = () => {
     this.remote.init();
@@ -1024,13 +1053,6 @@ export class GitRepo {
     if (await this.isMerging()) await this.resetMergeState();
     const fullRef = await this.normalizeRef({ ref });
     await this.mutex.runExclusive(async () => {
-      await this.git.checkout({
-        fs: this.fs,
-        dir: this.dir,
-        ref: fullRef,
-        remote,
-        force,
-      });
       if (fullRef.startsWith("refs/heads/") || fullRef.startsWith("refs/tags/")) {
         await this.rememberCurrentBranch();
       }

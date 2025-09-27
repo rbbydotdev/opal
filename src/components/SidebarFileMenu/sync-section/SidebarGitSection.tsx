@@ -15,7 +15,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useSyncExternalStore } from "react";
 
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { GitAuthorDialog, useGitAuthorDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitAuthorDialog";
@@ -423,6 +423,10 @@ export function SidebarGitSection({
     if (currentGitRef?.type === "commit") return "detatched";
     return "commit";
   })();
+  // onPending
+
+  // repo.onPending
+  const globalPending = useSyncExternalStore(repo.onPending, repo.isPending);
 
   // Remote management functions
   const addRemoteCmdRef = useGitRemoteDialogCmd();
@@ -590,7 +594,11 @@ export function SidebarGitSection({
         <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
           <SidebarMenu className="pb-3">
             <div className="px-4 pt-2 gap-2 flex flex-col relative">
-              <div className="absolute inset-0">
+              <div
+                className={cn("absolute inset-0", {
+                  hidden: !globalPending,
+                })}
+              >
                 <Loader className="w-8 h-8 text-sidebar-foreground animate-spin absolute m-auto inset-0" />
                 <div className="absolute inset-0 bg-sidebar-background z-10 rounded opacity-80"></div>
               </div>

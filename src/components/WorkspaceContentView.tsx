@@ -1,13 +1,13 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
-import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
+import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
 import { Workspace } from "@/Db/Workspace";
-import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
+// import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
@@ -55,18 +55,18 @@ export function WorkspaceMarkdownEditor({
       <div className="flex flex-col h-full relative">
         <SnapApiPoolProvider max={isHistoryImageGenerationEnabled ? 1 : 0}>
           <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
-            <DropCommanderProvider>
-              <EditorWithPlugins
-                mimeType={mimeType}
-                currentWorkspace={currentWorkspace}
-                editorRef={editorRef}
-                onChange={(md) => updateDebounce(matter.stringify(md, data))}
-                markdown={content}
-                // markdown={contents ?? ""}
-                className={"bg-background flex-grow  flex-col h-full"}
-                contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
-              />
-            </DropCommanderProvider>
+            {/* <DropCommanderProvider> */}
+            <EditorWithPlugins
+              mimeType={mimeType}
+              currentWorkspace={currentWorkspace}
+              editorRef={editorRef}
+              onChange={(md) => updateDebounce(matter.stringify(md, data))}
+              markdown={content}
+              // markdown={contents ?? ""}
+              className={"bg-background flex-grow  flex-col h-full"}
+              contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
+            />
+            {/* </DropCommanderProvider> */}
           </HistorySnapDBProvider>
         </SnapApiPoolProvider>
       </div>
