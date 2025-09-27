@@ -1,4 +1,4 @@
-import { EditorSelection, Extension, StateEffect, StateField } from "@codemirror/state";
+import { EditorSelection, Extension, StateEffect, StateField, Compartment } from "@codemirror/state";
 import { EditorView, ViewPlugin } from "@codemirror/view";
 import { checkSum } from "../../lib/checkSum";
 
@@ -55,7 +55,7 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, c
       };
 
       update() {
-        if (hlRanges) {
+        if (hlRanges && this.view.state.doc.length > 0) {
           const currentRangesKey = JSON.stringify(hlRanges);
           const appliedRanges = this.view.state.field(appliedRangesField);
 
@@ -72,10 +72,14 @@ const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, c
     }
   );
 
+export function createURLRangeExtension(hlRanges: [start: number, end: number, chsum?: number][] | null): Extension {
+  return [appliedRangesField, codeMirrorSelectURLRangePlugin(hlRanges)];
+}
+
 export function CodeMirrorHighlightURLRange(
   hlRanges = getHighlightRangesFromURL(window.location.href, "search")
 ): Extension {
-  return [appliedRangesField, codeMirrorSelectURLRangePlugin(hlRanges)];
+  return createURLRangeExtension(hlRanges);
 }
 
 const RANGE_KEY = "hlRanges";

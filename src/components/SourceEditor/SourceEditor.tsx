@@ -26,8 +26,6 @@ export const SourceEditor = ({
 
   return (
     <div className="h-full">
-      {/* <div className="bg-sidebar"></div> */}
-
       <CodeMirrorEditor
         hasConflicts={hasConflicts}
         currentWorkspace={currentWorkspace}

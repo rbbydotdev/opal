@@ -1,5 +1,8 @@
 import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
-import { CodeMirrorHighlightURLRange, parseParamsToRanges } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import {
+  createURLRangeExtension,
+  getHighlightRangesFromURL,
+} from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
@@ -20,10 +23,10 @@ import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
-import { EditorState, Extension } from "@codemirror/state";
+import { Compartment, EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { useRouter, useLocation } from "@tanstack/react-router";
 import { basicSetup } from "codemirror";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
@@ -36,6 +39,7 @@ import * as prettier from "prettier/standalone";
 import { useEffect, useMemo, useRef } from "react";
 
 const noCommentKeymap = keymap.of([{ key: "Mod-/", run: () => true }]);
+
 export type StrictSourceMimesType =
   | "text/css"
   | "text/plain"
@@ -73,7 +77,6 @@ export const CodeMirrorEditor = ({
   className,
   currentWorkspace,
   enableConflictResolution = true,
-  // onConflictStatusChange,
 }: {
   hasConflicts: boolean;
   mimeType: "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html" | string;
@@ -89,54 +92,55 @@ export const CodeMirrorEditor = ({
     "SourceEditor/enableGitConflictResolution",
     true
   );
+  const location = useLocation();
+
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const valueRef = useRef(value);
-  valueRef.current = value;
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const ext = useMemo(() => getLanguageExtension(mimeType), [mimeType]);
-  const conflictResolutionEnabled = enableConflictResolution ?? globalConflictResolution;
-  const shouldDisableLanguageExtension = conflictResolutionEnabled && hasConflicts;
 
-  const location = useLocation();
+  // Compartments for dynamic configuration
+  const languageCompartment = useMemo(() => new Compartment(), []);
+  const vimCompartment = useMemo(() => new Compartment(), []);
+  const editableCompartment = useMemo(() => new Compartment(), []);
+  const conflictCompartment = useMemo(() => new Compartment(), []);
+  const urlRangeCompartment = useMemo(() => new Compartment(), []);
+
+  // initial setup
   useEffect(() => {
     if (!editorRef.current) return;
-    if (viewRef.current) {
-      viewRef.current.destroy();
-      viewRef.current = null;
-    }
 
     const extensions: Extension[] = [
-      vimMode ? vim() : null,
       basicSetup,
       customCodeMirrorTheme,
       autocompletion(),
       EditorView.lineWrapping,
-      CodeMirrorHighlightURLRange(parseParamsToRanges(new URLSearchParams(location.hash)).ranges),
+      urlRangeCompartment.of([]),
       noCommentKeymap,
       keymap.of([indentWithTab]),
-      shouldDisableLanguageExtension ? null : ext,
-      conflictResolutionEnabled ? gitConflictEnhancedPlugin(getLanguageExtension) : null,
+
+      // compartments (start with initial config)
+      languageCompartment.of([]),
+      vimCompartment.of([]),
+      editableCompartment.of(EditorView.editable.of(false)),
+      conflictCompartment.of([]),
+
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const docStr = update.state.doc.toString();
-          if (docStr !== valueRef.current) {
-            valueRef.current = docStr;
-            onChangeRef.current(docStr);
-          }
+          onChangeRef.current(docStr);
         }
       }),
-      EditorView.editable.of(!readOnly),
+
       EditorView.theme({
         "&": { height: "calc(100% - 4rem)" },
         ".cm-scroller": { height: "100%" },
         ".cm-content": { padding: 0 },
       }),
-    ].filter(Boolean) as Extension[];
+    ];
 
     const state = EditorState.create({
-      doc: valueRef.current,
+      doc: value,
       extensions,
     });
 
@@ -145,42 +149,111 @@ export const CodeMirrorEditor = ({
       parent: editorRef.current,
     });
 
+    // Initialize compartments with actual values
+    const view = viewRef.current;
+    view.dispatch({
+      effects: [
+        languageCompartment.reconfigure(getLanguageExtension(mimeType) ?? []),
+        vimCompartment.reconfigure(vimMode ? vim() : []),
+        editableCompartment.reconfigure(EditorView.editable.of(!readOnly)),
+        conflictCompartment.reconfigure(
+          enableConflictResolution && hasConflicts ? gitConflictEnhancedPlugin(getLanguageExtension) : []
+        ),
+        urlRangeCompartment.reconfigure(createURLRangeExtension(getHighlightRangesFromURL(window.location.href, "hash"))),
+      ],
+    });
+
     return () => {
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [conflictResolutionEnabled, ext, readOnly, location, shouldDisableLanguageExtension, vimMode]);
+  }, [value]); // Only depend on initial value
 
+  // Reconfigure language when mimeType/conflicts change
+  useEffect(() => {
+    if (viewRef.current) {
+      const ext =
+        hasConflicts && globalConflictResolution
+          ? [] // disable highlighting if conflicts enabled
+          : (getLanguageExtension(mimeType) ?? []);
+      viewRef.current.dispatch({
+        effects: languageCompartment.reconfigure(ext),
+      });
+    }
+  }, [mimeType, hasConflicts, globalConflictResolution, languageCompartment]);
+
+  // Reconfigure vim mode
+  useEffect(() => {
+    if (viewRef.current) {
+      viewRef.current.dispatch({
+        effects: vimCompartment.reconfigure(vimMode ? vim() : []),
+      });
+    }
+  }, [vimCompartment, vimMode]);
+
+  // Reconfigure editable state
+  useEffect(() => {
+    if (viewRef.current) {
+      viewRef.current.dispatch({
+        effects: editableCompartment.reconfigure(EditorView.editable.of(!readOnly)),
+      });
+    }
+  }, [editableCompartment, readOnly]);
+
+  // Reconfigure conflict plugin
+  useEffect(() => {
+    if (viewRef.current) {
+      viewRef.current.dispatch({
+        effects: conflictCompartment.reconfigure(
+          enableConflictResolution ? gitConflictEnhancedPlugin(getLanguageExtension) : []
+        ),
+      });
+    }
+  }, [conflictCompartment, enableConflictResolution]);
+
+  // Reconfigure URL ranges when hash changes
+  useEffect(() => {
+    if (viewRef.current) {
+      const ranges = getHighlightRangesFromURL(window.location.href, "hash");
+      viewRef.current.dispatch({
+        effects: urlRangeCompartment.reconfigure(createURLRangeExtension(ranges)),
+      });
+    }
+  }, [urlRangeCompartment, location.hash]);
+
+  // external prop value pushes into editor
   useEffect(() => {
     if (viewRef.current && value !== viewRef.current.state.doc.toString()) {
       viewRef.current.dispatch({
-        changes: { from: 0, to: viewRef.current.state.doc.length, insert: value },
+        changes: {
+          from: 0,
+          to: viewRef.current.state.doc.length,
+          insert: value,
+        },
       });
     }
   }, [value]);
 
   const { path } = useWorkspaceRoute();
-
   const { scrollEmitter, sessionId } = useWorkspacePathScrollChannel();
   const cmScroller = useWatchElement(".cm-scroller");
+
   return (
-    <>
-      <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
-        <CodeMirrorToolbar
-          key={path}
-          setVimMode={setVimMode}
-          vimMode={vimMode}
-          currentWorkspace={currentWorkspace}
-          path={path}
-          conflictResolution={globalConflictResolution}
-          setConflictResolution={setGlobalConflictResolution}
-          hasConflicts={hasConflicts}
-          mimeType={mimeType}
-          editorView={viewRef.current}
-        ></CodeMirrorToolbar>
-        <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
-      </ScrollSyncProvider>
-    </>
+    <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
+      <CodeMirrorToolbar
+        key={path}
+        setVimMode={setVimMode}
+        vimMode={vimMode}
+        currentWorkspace={currentWorkspace}
+        path={path}
+        conflictResolution={globalConflictResolution}
+        setConflictResolution={setGlobalConflictResolution}
+        hasConflicts={hasConflicts}
+        mimeType={mimeType}
+        editorView={viewRef.current}
+      />
+      <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
+    </ScrollSyncProvider>
   );
 };
 
@@ -192,6 +265,7 @@ const SourceButton = ({ onClick }: { onClick: () => void }) => (
     </span>
   </Button>
 );
+
 const CodeMirrorToolbar = ({
   children,
   path,
@@ -221,10 +295,9 @@ const CodeMirrorToolbar = ({
 
   const handlePrettify = async () => {
     if (!editorView || !mimeType) return;
-
     try {
       const currentContent = editorView.state.doc.toString();
-      let prettifiedContent: string;
+      let prettifiedContent = currentContent;
 
       switch (mimeType) {
         case "text/css":
@@ -246,11 +319,6 @@ const CodeMirrorToolbar = ({
           });
           break;
         case "text/x-ejs":
-          prettifiedContent = await prettier.format(currentContent, {
-            parser: "html",
-            plugins: [parserHtml],
-          });
-          break;
         case "text/html":
           prettifiedContent = await prettier.format(currentContent, {
             parser: "html",
@@ -262,7 +330,11 @@ const CodeMirrorToolbar = ({
       }
 
       editorView.dispatch({
-        changes: { from: 0, to: editorView.state.doc.length, insert: prettifiedContent },
+        changes: {
+          from: 0,
+          to: editorView.state.doc.length,
+          insert: prettifiedContent,
+        },
       });
     } catch (error) {
       console.error("Prettify failed:", error);
@@ -278,7 +350,13 @@ const CodeMirrorToolbar = ({
         <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />
       )}
       {!isMarkdown && previewNode?.isMarkdownFile() && !hasEditOverride && (
-        <SourceButton onClick={() => router.navigate({ to: currentWorkspace.resolveFileUrl(previewNode.path) })} />
+        <SourceButton
+          onClick={() =>
+            router.navigate({
+              to: currentWorkspace.resolveFileUrl(previewNode.path),
+            })
+          }
+        />
       )}
       {!hasEditOverride && <LivePreviewButtons />}
       {canPrettify && !hasEditOverride && (
@@ -291,7 +369,6 @@ const CodeMirrorToolbar = ({
       )}
       {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">
-        {/* Git conflict resolution toggle - only show when conflicts exist */}
         {setConflictResolution && hasConflicts && (
           <Button
             variant={conflictResolution ? "default" : "outline"}
@@ -306,7 +383,6 @@ const CodeMirrorToolbar = ({
           </Button>
         )}
 
-        {/* Vim mode toggle */}
         <Label htmlFor="vimMode" className="flex items-center gap-1 select-none">
           <span className="text-sm">Vim Mode</span>
           <input
