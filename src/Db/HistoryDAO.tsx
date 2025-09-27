@@ -1,4 +1,5 @@
 import { useIframeImagePooledImperitiveWorker } from "@/components/Editor/history/EditViewImage";
+import { useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
 import { ClientDb } from "@/Db/instance";
 import { NullHistoryDAO } from "@/Db/NullHistoryDAO";
 import { useResource } from "@/hooks/useResource";
@@ -67,17 +68,18 @@ interface HistorySnapDBProviderProps {
 
 export function HistorySnapDBProvider({ documentId, workspaceId, children }: HistorySnapDBProviderProps) {
   const historyDB = useResource<HistoryStorageInterface>(() => new HistoryDAO(), [], NULL_HISTORY_DAO);
+  const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
 
   const handleEditPreview = useIframeImagePooledImperitiveWorker({
     workspaceId,
   });
   useEffect(() => {
-    if (documentId && historyDB) {
+    if (documentId && historyDB && isHistoryImageGenerationEnabled) {
       return historyDB.onNewEdit(documentId, (edit) => {
         handleEditPreview(edit);
       });
     }
-  }, [documentId, handleEditPreview, historyDB]);
+  }, [documentId, handleEditPreview, historyDB, isHistoryImageGenerationEnabled]);
 
   return (
     <HistorySnapDBContext.Provider value={historyDB || NULL_HISTORY_DAO}>{children}</HistorySnapDBContext.Provider>
