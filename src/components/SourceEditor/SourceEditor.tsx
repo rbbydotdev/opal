@@ -23,7 +23,7 @@ export const SourceEditor = ({
     "SourceEditor/enableGitConflictResolution",
     true
   );
-
+  if (!contents) return null;
   return (
     <div className="h-full">
       <CodeMirrorEditor
