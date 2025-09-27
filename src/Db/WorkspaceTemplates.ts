@@ -1,4 +1,5 @@
 import graymatter from "gray-matter";
+import { nanoid } from "nanoid";
 import { WorkspaceSeedFiles } from "./WorkspaceSeedFiles";
 
 export type WorkspaceTemplate = {
@@ -171,7 +172,7 @@ const blogCss = `/* Blog-specific styles */
 `;
 
 const newMd = function (doc: string) {
-  return graymatter.stringify(doc, { documentId: nanoId(), createdAt: new Date().toISOString() });
+  return graymatter.stringify(doc, { documentId: nanoid(), createdAt: new Date().toISOString() });
 };
 export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
   {
@@ -192,10 +193,10 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     description: "A simple blog setup with posts, styles, and sample content",
     seedFiles: {
       ...WorkspaceSeedFiles,
-      "/welcome.md": () => newMd(blogWelcomeMarkdown),
-      "/index.md": () => newMd(blogIndexMarkdown),
-      "/posts/first-post.md": () => newMd(blogFirstPostMarkdown),
-      "/posts/getting-started.md": () => newMd(blogGettingStartedMarkdown),
+      "/welcome.md": newMd(blogWelcomeMarkdown),
+      "/index.md": newMd(blogIndexMarkdown),
+      "/posts/first-post.md": newMd(blogFirstPostMarkdown),
+      "/posts/getting-started.md": newMd(blogGettingStartedMarkdown),
       "/styles/blog.css": blogCss,
     },
   },
@@ -209,7 +210,4 @@ export function getTemplateById(id: string): WorkspaceTemplate | undefined {
 
 export function getDefaultTemplate(): WorkspaceTemplate {
   return WORKSPACE_TEMPLATES[0]!; // blank template
-}
-function nanoId() {
-  throw new Error("Function not implemented.");
 }
