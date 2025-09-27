@@ -7,6 +7,7 @@
 import { invertColor } from "@/lib/colorUtils";
 
 // Import registry.json and type it as ThemeRegistry
+import { DEFAULT_THEME_STATE } from "@/features/theme/theme-constants";
 import registryJson from "./themes.json";
 
 export const registry: ThemeRegistry = registryJson as unknown as ThemeRegistry;
@@ -79,7 +80,6 @@ const ALL_VARS = new Set([
   "spacing",
   "tracking-normal",
 ]);
-const DEFAULT_THEME_NAME = "cosmic-night";
 
 export interface ApplyThemeOptions {
   theme: string;
@@ -134,13 +134,13 @@ export function setLightOrDarkClass(mode: "light" | "dark", root: HTMLElement = 
 export function applyTheme(options: ApplyThemeOptions): void {
   const { theme: themeName } = options;
 
-  const defaultTheme = registry.items.find((item) => item.name === DEFAULT_THEME_NAME);
+  const defaultTheme = registry.items.find((item) => item.name === DEFAULT_THEME_STATE.themeName);
   let themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
     console.warn(`Theme "${themeName}" not found in registry`);
     themeItem = defaultTheme;
     if (!themeItem) {
-      console.warn(`Theme ${DEFAULT_THEME_NAME} not found in registry`);
+      console.warn(`Theme ${DEFAULT_THEME_STATE.themeName} not found in registry`);
       return;
     }
   }
@@ -384,42 +384,3 @@ export type ThemeSharedVars = {
 };
 
 export const ALL_THEMES = registry.items.map((item) => item.name);
-
-// export const FAVORITE_THEMES = [
-//   "modern-minimal",
-//   "t3-chat",
-//   "twitter",
-//   "mocha-mousse",
-//   "bubblegum",
-//   "doom-64",
-//   "catppuccin",
-//   "graphite",
-//   "perpetuity",
-//   "kodama-grove",
-//   "cosmic-night",
-//   "tangerine",
-//   "quantum-rose",
-//   "nature",
-//   "bold-tech",
-//   "elegant-luxury",
-//   "amber-minimal",
-//   "supabase",
-//   "neo-brutalism",
-//   "solar-dusk",
-//   "claymorphism",
-//   "cyberpunk",
-//   "pastel-dreams",
-//   "clean-slate",
-//   "caffeine",
-//   "ocean-breeze",
-//   "retro-arcade",
-//   "midnight-bloom",
-//   "candyland",
-//   "northern-lights",
-//   "vintage-paper",
-//   "sunset-horizon",
-//   "starry-night",
-//   "claude",
-//   "vercel",
-//   "mono",
-// ];

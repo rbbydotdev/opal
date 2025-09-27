@@ -59,7 +59,7 @@ import { useConfirm } from "../components/Confirm";
 type ButtonVariant = "lg" | "sm";
 
 function useShrink() {
-  return useLocalStorage2("BigButtonBar/shrink", true);
+  return useLocalStorage2("BigButtonBar/shrink", false);
 }
 function useAutoHide() {
   return useLocalStorage2("BigButtonBar/autohide", false);

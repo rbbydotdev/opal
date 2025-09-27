@@ -1,19 +1,7 @@
+import { DEFAULT_THEME_STATE, ResolvedTheme, ThemePreference, ThemeState } from "@/features/theme/theme-constants";
 import { ALL_THEMES, applyTheme, getThemeModePrefers } from "@/features/theme/theme-lib";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
-
-type ResolvedTheme = "light" | "dark";
-type ThemePreference = ResolvedTheme | "system";
-
-interface ThemeState {
-  themeName: string;
-  mode: ResolvedTheme;
-}
-
-const DEFAULT_THEME_STATE: ThemeState = {
-  themeName: "claude",
-  mode: "light",
-};
 
 interface ThemeContextValue {
   // Theme mode (light/dark) settings
