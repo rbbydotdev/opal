@@ -30,7 +30,7 @@ export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { curren
   const { addDirFile, duplicateDirFile, trashFiles, untrashFiles, removeFiles } =
     useWorkspaceFileMgmt(currentWorkspace);
 
-  const addFile = (fileNode: TreeNode) => addDirFile("file", fileNode.closestDir()!);
+  const addFile = (fileNode: TreeNode, filename?: string) => addDirFile("file", fileNode.closestDir()!, filename);
   const addDir = (fileNode: TreeNode) => addDirFile("dir", fileNode.closestDir()!);
   const trash = (...nodes: (AbsPath | TreeNode | AbsPath[] | TreeNode[])[]) => trashFiles(flatUniqNodeArgs(nodes));
 
