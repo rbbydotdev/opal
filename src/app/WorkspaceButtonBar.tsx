@@ -1,11 +1,13 @@
 import { useLeftCollapsed, useSidebarWidth } from "@/app/EditorSidebarLayout";
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
+import { useToggleEditHistory, useToggleHistoryImageGeneration } from "@/components/Editor/history/EditHistoryMenu";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuLabel,
   ContextMenuSeparator,
   ContextMenuSub,
   ContextMenuSubContent,
@@ -26,6 +28,7 @@ import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog"
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
+import { IS_MAC } from "@/lib/isMac";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
@@ -168,8 +171,15 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { setStoredValue: setAutoHide, storedValue: autoHide } = useAutoHide();
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
   const { setZoom, isCurrentZoom, availableZooms } = useZoom();
+
+  const { isHistoryImageGenerationEnabled, toggleHistoryImageGeneration } = useToggleHistoryImageGeneration();
+  const { isEditHistoryEnabled, toggleEditHistory } = useToggleEditHistory();
   const router = useRouter();
   const { open } = useConfirm();
+  const keepMenuOpen = (fn: () => void) => (e: React.MouseEvent) => {
+    if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault();
+    fn();
+  };
 
   return (
     <ContextMenu>
@@ -186,7 +196,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         {/* Light */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-          onClick={() => setPreference("light")}
+          onClick={keepMenuOpen(() => setPreference("light"))}
         >
           {value === "light" ? <Check size={12} /> : <div className="w-4" />}
           <Sun size={12} />
@@ -196,7 +206,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         {/* Dark */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-          onClick={() => setPreference("dark")}
+          onClick={keepMenuOpen(() => setPreference("dark"))}
         >
           {value === "dark" ? <Check size={12} /> : <div className="w-4" />}
           <Moon size={12} />
@@ -206,7 +216,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         {/* System */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-          onClick={() => setPreference("system")}
+          onClick={keepMenuOpen(() => setPreference("system"))}
         >
           {value === "system" ? <Check size={12} /> : <div className="w-4" />}
           <Settings size={12} />
@@ -218,7 +228,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         {/* Spinner */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-          onClick={() => setSpin((prev) => !prev)}
+          onClick={keepMenuOpen(() => setSpin((prev) => !prev))}
         >
           {spin ? <Check size={12} /> : <div className="w-4" />}
           <RefreshCcw size={12} />
@@ -230,7 +240,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         {/* Auto-hide Dock */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-          onClick={() => setAutoHide((v) => !v)}
+          onClick={keepMenuOpen(() => setAutoHide((v) => !v))}
         >
           {autoHide ? <Check size={12} /> : <div className="w-4" />}
           <Sidebar size={12} />
@@ -240,7 +250,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         {/* Show Sidebar */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-          onClick={() => setCollapsed((v) => !v)}
+          onClick={keepMenuOpen(() => setCollapsed((v) => !v))}
         >
           {!collapsed ? <Check size={12} /> : <div className="w-4" />}
           <Sidebar size={12} />
@@ -259,7 +269,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
               <ContextMenuItem
                 className="grid grid-cols-[1rem_1fr] items-center gap-2"
                 key={zoom}
-                onClick={() => setZoom(zoom)}
+                onClick={keepMenuOpen(() => setZoom(zoom))}
               >
                 {isCurrentZoom(zoom) ? <Check size={12} /> : <div className="w-4"></div>}
                 <span className="pr-4">{Math.round(zoom * 100)}%</span>
@@ -279,7 +289,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
               <ContextMenuItem
                 className="grid grid-cols-[1rem_1fr] items-center gap-2"
                 key={theme}
-                onClick={() => setTheme(theme)}
+                onClick={keepMenuOpen(() => setTheme(theme))}
               >
                 {themeName === theme ? <Check size={12} /> : <div className="w-4"></div>}
                 <ThemePreview themeName={theme} mode={mode} />
@@ -290,10 +300,32 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
 
         <ContextMenuSeparator />
 
+        <ContextMenuItem
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
+          onClick={keepMenuOpen(toggleEditHistory)}
+        >
+          {isEditHistoryEnabled ? <Check size={12} /> : <div className="w-4" />}
+          <Palette size={12} />
+          <span className="pr-4">Edit History</span>
+        </ContextMenuItem>
+
+        {isEditHistoryEnabled && (
+          <ContextMenuItem
+            className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
+            onClick={keepMenuOpen(toggleHistoryImageGeneration)}
+          >
+            {isHistoryImageGenerationEnabled ? <Check size={12} /> : <div className="w-4" />}
+            <Palette size={12} />
+            <span className="pr-4">History Images</span>
+          </ContextMenuItem>
+        )}
+
+        <ContextMenuSeparator />
+
         {/* Delete All Workspaces */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2 text-destructive"
-          onClick={() =>
+          onClick={keepMenuOpen(() =>
             open(
               async () =>
                 Promise.all([
@@ -304,11 +336,16 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
               "Delete all workspaces",
               "This will delete all workspaces and cannot be undone. Are you sure you want to continue?"
             )
-          }
+          )}
         >
           <X size={12} className="text-destructive" />
           <span className="col-span-2 pr-4 text-3xs uppercase">Delete all workspaces</span>
         </ContextMenuItem>
+
+        <ContextMenuSeparator />
+        <ContextMenuLabel className="py-2 text-2xs w-full text-muted-foreground font-thin justify-center flex gap-2">
+          {IS_MAC ? "⌘ cmd" : "ctrl"} + click / multi-select
+        </ContextMenuLabel>
       </ContextMenuContent>
     </ContextMenu>
   );

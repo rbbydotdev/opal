@@ -82,10 +82,6 @@ export const MainFileTreeContextMenu = ({
           <FileTextIcon className="mr-3 h-4 w-4" />
           New EJS Template
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => addFile(fileNode))}>
-          <FilePlusIcon className="mr-3 h-4 w-4" />
-          New File
-        </ContextMenuItem>
         <ContextMenuItem inset onClick={deferredFn(() => addDir(fileNode))}>
           <FolderPlusIcon className="mr-3 h-4 w-4" />
           New Folder

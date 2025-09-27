@@ -6,7 +6,6 @@ import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
-import { WorkspaceSeedFiles } from "@/Db/WorkspaceSeedFiles";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
 import { debounce } from "@/lib/debounce";
@@ -59,7 +58,6 @@ export class Workspace {
   imageCache: ImageCache;
   memid = nanoid();
   isNull = false;
-  static seedFiles = WorkspaceSeedFiles;
 
   static newCache(id: string) {
     return new ImageCache({ guid: id, name: "img" });

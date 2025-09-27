@@ -330,11 +330,7 @@ export class GitRepo {
     void this.remote.on(RepoEvents.GIT, () => {
       void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
     });
-    // this.gitEvents.on("*:end", (propName) => {
-    //   console.log("git event: " + propName);
-    // });
     const onGitChange = debounce((_propName: string) => {
-      // console.debug("git repo event: " + _propName);
       void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
       void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
       void this.sync();
@@ -392,15 +388,6 @@ export class GitRepo {
       });
     });
   };
-
-  // async pull({ ref }: { ref: string }) {
-  //   return this.git.pull({
-  //     fs: this.fs,
-  //     http,
-  //     dir: this.dir,
-  //     ref,
-  //   });
-  // }
 
   async push({
     remote,
