@@ -582,6 +582,10 @@ export class Workspace {
     });
   }
 
+  // isReady(){
+  //   return this.disk.isReady() && this.repo.isReady();
+  // }
+
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     const unsubs: (() => void)[] = [];
 

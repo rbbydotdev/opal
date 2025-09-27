@@ -37,10 +37,6 @@ function WorkspaceFilePage() {
       void currentWorkspace.tryFirstFileUrl().then((path) => navigate({ to: path }));
     }
   }, [currentWorkspace, filePath, navigate]);
-  //-----------------------------------------
-  //-----------------------------------------
-  //-----------------------------------------
-  //-----------------------------------------
 
   if (!filePath) return null;
   if (!currentWorkspace.isNull && currentWorkspace.nodeFromPath(filePath) === null) {
@@ -142,7 +138,7 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
         <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
       ) : !isMarkdown || isSourceView || hasConflicts ? (
         <SourceEditor
-          contents={hotContents}
+          initialContents={contents}
           onChange={handleSourceContentChange}
           hasConflicts={hasConflicts}
           mimeType={mimeType}

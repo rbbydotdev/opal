@@ -1,5 +1,5 @@
 import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
-import { createURLRangeExtension, getHighlightRangesFromURL } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { createURLRangeExtension, parseParamsToRanges } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
@@ -157,7 +157,7 @@ export const CodeMirrorEditor = ({
           enableConflictResolution && hasConflicts ? gitConflictEnhancedPlugin(getLanguageExtension) : []
         ),
         urlRangeCompartment.reconfigure(
-          createURLRangeExtension(getHighlightRangesFromURL(window.location.href, "hash"))
+          createURLRangeExtension(parseParamsToRanges(new URLSearchParams(location.hash)).ranges)
         ),
       ],
     });
@@ -172,6 +172,7 @@ export const CodeMirrorEditor = ({
     enableConflictResolution,
     hasConflicts,
     languageCompartment,
+    location.hash,
     mimeType,
     readOnly,
     urlRangeCompartment,
@@ -225,7 +226,7 @@ export const CodeMirrorEditor = ({
   // Reconfigure URL ranges when hash changes
   useEffect(() => {
     if (viewRef.current) {
-      const ranges = getHighlightRangesFromURL(window.location.href, "hash");
+      const ranges = parseParamsToRanges(new URLSearchParams(location.hash)).ranges;
       viewRef.current.dispatch({
         effects: urlRangeCompartment.reconfigure(createURLRangeExtension(ranges)),
       });
