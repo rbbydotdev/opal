@@ -129,13 +129,13 @@ export function NewWorkspaceDialog({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {/* 1. Give the form a unique ID */}
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[26.5625rem]">
+      <DialogContent className="sm:max-w-[28rem] max-w-[95vw]">
         <DialogHeader>
           <DialogTitle>New Workspace</DialogTitle>
           <DialogDescription>Create A New Workspace</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="gap-4 flex flex-col">
-          <div className="grid gap-4">
+          <div className="grid gap-4 min-w-0">
             <div className="grid gap-3">
               <Label htmlFor="name-1">Name</Label>
               <Input
@@ -156,9 +156,11 @@ export function NewWorkspaceDialog({
                 <SelectContent id="template-1">
                   {WORKSPACE_TEMPLATES.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">{template.name}</span>
-                        <span className="text-sm text-muted-foreground">{template.description}</span>
+                      <div className="flex flex-col items-start w-full min-w-0">
+                        <span className="font-medium truncate w-full">{template.name}</span>
+                        <span className="text-sm text-muted-foreground text-wrap break-words w-full">
+                          {template.description}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
