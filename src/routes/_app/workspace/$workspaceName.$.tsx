@@ -138,7 +138,6 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
         <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
       ) : !isMarkdown || isSourceView || hasConflicts ? (
         <SourceEditor
-          initialContents={contents}
           onChange={handleSourceContentChange}
           hasConflicts={hasConflicts}
           mimeType={mimeType}
