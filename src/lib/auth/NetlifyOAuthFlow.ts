@@ -1,4 +1,4 @@
-import { Env } from "@/lib/env";
+import { ENV } from "@/lib/env";
 import { mapToTypedError } from "@/lib/errors";
 
 /**
@@ -13,7 +13,7 @@ export type NetlifyOAuthFlowPayload = {
  * Build Netlify authorize URL
  */
 export function getNetlifyOAuthUrl({
-  clientId = Env.PublicNetlifyClientID,
+  clientId = ENV.PUBLIC_NETLIFY_CLIENT_ID,
   redirectUri,
   state,
 }: {
@@ -31,11 +31,7 @@ export function getNetlifyOAuthUrl({
   return `https://app.netlify.com/authorize?${params.toString()}`;
 }
 
-export async function validateNetlifyToken({
-  accessToken,
-}: {
-  accessToken: string;
-}): Promise<NetlifyOAuthFlowPayload> {
+export async function validateNetlifyToken({ accessToken }: { accessToken: string }): Promise<NetlifyOAuthFlowPayload> {
   try {
     // Validate the token by making a simple API call to Netlify
     const response = await fetch("https://api.netlify.com/api/v1/user", {
@@ -49,7 +45,7 @@ export async function validateNetlifyToken({
     }
 
     const userData = await response.json();
-    
+
     if (!userData || !userData.id) {
       throw new Error("Invalid token: Could not retrieve user data");
     }

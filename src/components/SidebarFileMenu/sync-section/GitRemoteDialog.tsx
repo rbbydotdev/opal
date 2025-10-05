@@ -29,7 +29,7 @@ import { isFuzzyResult, useRepoSearch } from "@/Db/useGithubRepoSearch";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { Env } from "@/lib/env";
+import { ENV } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useImperativeHandle, useMemo, useState } from "react";
 
@@ -120,7 +120,7 @@ export function GitRemoteDialog({
     // url: "https://github.com/user/repo",
     // url: "",
     url: "https://github.com/rbbydotdev/test123",
-    gitCorsProxy: Env.GitProtocolProxy,
+    gitCorsProxy: ENV.GIT_PROTOCOL_PROXY,
   };
 
   const form = useForm<GitRemoteFormValues>({

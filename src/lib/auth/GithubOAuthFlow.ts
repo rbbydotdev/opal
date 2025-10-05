@@ -1,4 +1,4 @@
-import { Env } from "@/lib/env"; // still using your env
+import { ENV } from "@/lib/env"; // still using your env
 import { mapToTypedError } from "@/lib/errors";
 import { Octokit } from "@octokit/core";
 
@@ -44,7 +44,7 @@ export type GithubOAuthFlowPayload = {
  * Build GitHub authorize URL
  */
 export function getGithubOAuthUrl({
-  clientId = Env.PublicGithubClientID,
+  clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
   redirectUri,
   scopes = ["read:user", "repo"], // slim default scope recommendations
   state,
@@ -73,7 +73,7 @@ export async function exchangeCodeForToken({
   codeVerifier,
   redirectUri,
   corsProxy, // must provide if frontend-only
-  clientId = Env.PublicGithubClientID,
+  clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
 }: {
   code: string;
   codeVerifier: string;
