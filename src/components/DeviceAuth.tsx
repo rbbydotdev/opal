@@ -6,7 +6,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { RemoteAuthGithubDeviceOAuthRecordInternal, RemoteAuthJType, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
-import { Env } from "@/lib/env";
+import { ENV } from "@/lib/env";
 import { unwrapError } from "@/lib/errors";
 import { CheckCircle2Icon, ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";
@@ -30,7 +30,7 @@ export function DeviceAuth({
   const [verificationUri, setVerificationUri] = useState<string | null>(null);
   const [pin, setPin] = useState<string>("");
   const remoteAuthRef = useRef<RemoteAuthGithubDeviceOAuthRecordInternal | null>(null);
-  const [corsProxy, setCorsProxy] = useState<string>(Env.GithubCorsProxy || "");
+  const [corsProxy, setCorsProxy] = useState<string>(ENV.GITHUB_CORS_PROXY || "");
   const [error, setError] = useState<string | null>(null);
   const [apiName, setApiName] = useState<string>(
     form ? form.getValues()?.name || editConnection?.name || "my-gh-auth" : "my-gh-auth"

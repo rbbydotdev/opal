@@ -5,8 +5,8 @@ import {
   RemoteAuthSource,
   RemoteAuthType,
 } from "@/Db/RemoteAuth";
-import { Env } from "@/lib/env";
-import { Github, KeyIcon, Globe, Cloud } from "lucide-react";
+import { ENV } from "@/lib/env";
+import { Cloud, Github, Globe, KeyIcon } from "lucide-react";
 
 export type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = {
   name: string;
@@ -34,7 +34,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "basic-auth",
     icon: <KeyIcon className="h-5 w-5" />,
     data: {
-      corsProxy: Env.PrivateCorsProxy,
+      corsProxy: ENV.PRIVATE_CORS_PROXY,
     },
   }),
   template({
@@ -44,7 +44,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "api",
     icon: <Github className="h-5 w-5" />,
     data: {
-      corsProxy: Env.GithubCorsProxy,
+      corsProxy: ENV.GITHUB_CORS_PROXY,
     },
   }),
   template({
@@ -54,7 +54,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "oauth-device",
     icon: <Github className="h-5 w-5" />,
     data: {
-      corsProxy: Env.GithubCorsProxy,
+      corsProxy: ENV.GITHUB_CORS_PROXY,
     },
   }),
   template({
@@ -64,7 +64,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "oauth",
     icon: <Github className="h-5 w-5" />,
     data: {
-      corsProxy: Env.GithubCorsProxy,
+      corsProxy: ENV.GITHUB_CORS_PROXY,
     },
   }),
   template({

@@ -5,7 +5,7 @@ import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
 import EventEmitter from "events";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const ContentEvents = {
   UPDATE: "update",
@@ -52,12 +52,16 @@ export function useFileContents({
   path?: AbsPath | null;
 }) {
   const [hotContents, setHotContents] = useState<string | null>("");
+
   const onContentChangeRef = useRef(onContentChange);
   const { path: currentRoutePath } = useWorkspaceRoute();
   const [contents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
   const [error, setError] = useState<null | Error>(null);
   const navigate = useNavigate();
   const contentEmitter = useContentEmitter();
+
+  const flushingContentsRef = useRef(contents);
+  flushingContentsRef.current = contents;
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => clearTimeout(debounceRef.current!), []);
@@ -68,18 +72,22 @@ export function useFileContents({
     return null;
   }, [currentRoutePath, path]);
 
-  const writeFileContents = (updates: string) => {
-    if (filePath && currentWorkspace) {
-      void currentWorkspace?.getDisk().writeFile(filePath, updates);
-      //DO NOT EMIT THIS, IT MESSES UP THE EDITOR VIA TEXT-MD-TEXT TOMFOOLERY -> void currentWorkspace.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
-      //   filePaths: [filePath],
-      // });
-      //USE INSIDE_WRITE INSTEAD SOMEWHERE ELSE
-      //THIS HOOK IS INTEDED FOR OUT OF BAND UPDATES
-    }
-  };
+  const writeFileContents = useCallback(
+    (updates: string) => {
+      if (filePath && currentWorkspace) {
+        void currentWorkspace?.getDisk().writeFile(filePath, updates);
+        //DO NOT EMIT THIS, IT MESSES UP THE EDITOR VIA TEXT-MD-TEXT TOMFOOLERY -> void currentWorkspace.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
+        //   filePaths: [filePath],
+        // });
+        //USE INSIDE_WRITE INSTEAD SOMEWHERE ELSE
+        //THIS HOOK IS INTEDED FOR OUT OF BAND UPDATES
+      }
+    },
+    [currentWorkspace, filePath]
+  );
 
   const updateDebounce = (content: string | null) => {
+    flushingContentsRef.current = content;
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
@@ -93,32 +101,40 @@ export function useFileContents({
 
   // Clear debounce when filePath changes
   useEffect(() => {
+    //flush any pending changes
+    if (flushingContentsRef.current !== null) {
+      console.log("FLUSHING CHANGES");
+      writeFileContents(String(flushingContentsRef.current));
+    }
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
-  }, [filePath]);
+  }, [filePath, writeFileContents]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useAsyncEffect(async (signal) => {
-    if (currentWorkspace && filePath) {
-      try {
-        const fileContents = await currentWorkspace.getDisk().readFile(filePath);
-        
-        // Check if operation was cancelled
-        if (signal.aborted) return;
-        
-        setHotContents(fileContents.toString());
-        setInitialContents(fileContents);
-        setError(null);
-      } catch (error) {
-        // Only set error if operation wasn't cancelled
-        if (!signal.aborted) {
-          setError(error as Error);
+  useAsyncEffect(
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    async (signal) => {
+      if (currentWorkspace && filePath) {
+        try {
+          const fileContents = await currentWorkspace.getDisk().readFile(filePath);
+
+          // Check if operation was cancelled
+          if (signal.aborted) return;
+
+          setHotContents(fileContents.toString());
+          setInitialContents(fileContents);
+          setError(null);
+        } catch (error) {
+          // Only set error if operation wasn't cancelled
+          if (!signal.aborted) {
+            setError(error as Error);
+          }
         }
       }
-    }
-  }, [currentWorkspace, filePath, navigate]);
+    },
+    [currentWorkspace, filePath, navigate]
+  );
 
   useEffect(() => {
     return onContentChangeRef.current?.(String(contents ?? ""));
@@ -151,7 +167,6 @@ export function useFileContents({
       });
     }
   }, [currentWorkspace, filePath]);
-
 
   // contents will not reflect the latest changes via writeFileContents, the state must be tracked somewhere else
   // this avoids glitchy behavior in the editor et all

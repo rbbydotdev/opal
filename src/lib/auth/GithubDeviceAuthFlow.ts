@@ -1,4 +1,4 @@
-import { Env } from "@/lib/env";
+import { ENV } from "@/lib/env";
 import { mapToTypedError } from "@/lib/errors";
 import { createOAuthDeviceAuth } from "@octokit/auth-oauth-device";
 import { Octokit } from "@octokit/core";
@@ -26,7 +26,7 @@ export type GithubDeviceAuthFlowPayload = {
 };
 export async function GithubDeviceAuthFlow({
   corsProxy,
-  clientId = Env.PublicGithubClientID,
+  clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
   scopes = ["public_repo", "private_repo", "repo", "workflow"],
   onVerification,
   onAuthentication,

@@ -35,8 +35,6 @@ import parserPostcss from "prettier/plugins/postcss";
 import * as prettier from "prettier/standalone";
 import { useEffect, useMemo, useRef } from "react";
 
-const noCommentKeymap = keymap.of([{ key: "Mod-/", run: () => true }]);
-
 export type StrictSourceMimesType =
   | "text/css"
   | "text/plain"
@@ -113,7 +111,7 @@ export const CodeMirrorEditor = ({
       autocompletion(),
       EditorView.lineWrapping,
       urlRangeCompartment.of([]),
-      noCommentKeymap,
+      keymap.of([{ key: "Mod-/", run: () => true }]),
       keymap.of([indentWithTab]),
 
       // compartments (start with initial config)
