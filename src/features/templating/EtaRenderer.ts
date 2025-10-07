@@ -1,7 +1,8 @@
 import { Workspace } from "@/Db/Workspace";
-import { AbsPath, isImage } from "@/lib/paths2";
+import { AbsPath } from "@/lib/paths2";
 import { Eta } from "eta/core";
 import graymatter from "gray-matter";
+import { BaseRenderer, SharedHelpers } from "./BaseRenderer";
 
 export interface TemplateData {
   data?: Record<string, any>;
@@ -64,15 +65,13 @@ export interface TemplateHelpers {
   // round: (num: number, decimals?: number) => number;
 }
 
-export class EtaRenderer {
+export class EtaRenderer extends BaseRenderer {
   private eta: Eta;
   private etaAsync: Eta;
-  private workspace: Workspace;
   private templateCache: Map<string, string> = new Map();
-  private markdownCache: Map<string, { content: string; data: Record<string, any>; raw: string }> = new Map();
 
   constructor(workspace: Workspace) {
-    this.workspace = workspace;
+    super(workspace);
 
     // Synchronous ETA instance
     this.eta = new Eta({
@@ -93,6 +92,10 @@ export class EtaRenderer {
     this.eta.resolvePath = this.resolveTemplatePath.bind(this);
     this.etaAsync.readFile = this.readTemplateFromWorkspace.bind(this);
     this.etaAsync.resolvePath = this.resolveTemplatePath.bind(this);
+  }
+
+  protected getRendererName(): string {
+    return "ETA";
   }
 
   /**
@@ -128,12 +131,8 @@ export class EtaRenderer {
       const templateContent = await this.workspace.readFile(templatePath);
       const content = String(templateContent);
 
-      // Check if template contains await and use appropriate renderer
-      if (content.includes("await")) {
-        return await this.renderStringAsync(content, data);
-      } else {
-        return this.renderString(content, data);
-      }
+      // Use renderWithIncludes to support template includes
+      return await this.renderWithIncludes(content, data);
     } catch (error) {
       return this.formatError(error);
     }
@@ -204,80 +203,10 @@ export class EtaRenderer {
    */
   private getTemplateHelpers(): TemplateHelpers {
     return {
-      // String helpers
-      capitalize: (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase(),
-      lowercase: (str: string) => str.toLowerCase(),
-      uppercase: (str: string) => str.toUpperCase(),
-      truncate: (str: string, length: number, suffix = "...") =>
-        str.length > length ? str.substring(0, length) + suffix : str,
-      slugify: (str: string) =>
-        str
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, ""),
+      // Use shared helpers directly
+      ...SharedHelpers,
 
-      // Array helpers
-      first: <T>(arr: T[]) => arr[0],
-      last: <T>(arr: T[]) => arr[arr.length - 1],
-      take: <T>(arr: T[], count: number) => arr.slice(0, count),
-      skip: <T>(arr: T[], count: number) => arr.slice(count),
-
-      // Date helpers
-      formatDate: (date: Date | string, format = "MM/DD/YYYY") => {
-        const d = new Date(date);
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        const year = d.getFullYear();
-        const hours = String(d.getHours()).padStart(2, "0");
-        const minutes = String(d.getMinutes()).padStart(2, "0");
-
-        return format
-          .replace("MM", month)
-          .replace("DD", day)
-          .replace("YYYY", year.toString())
-          .replace("HH", hours)
-          .replace("mm", minutes);
-      },
-      now: () => new Date().toISOString(),
-
-      // File helpers
-      getFileExtension: (path: string) => {
-        const lastDot = path.lastIndexOf(".");
-        return lastDot > 0 ? path.substring(lastDot + 1) : "";
-      },
-      getFileName: (path: string) => path.split("/").pop() || "",
-      getFileSize: (bytes: number) => {
-        const sizes = ["Bytes", "KB", "MB", "GB"];
-        if (bytes === 0) return "0 Bytes";
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
-      },
-
-      // Image helpers
-      filterImages: (files: any[]) => files.filter((file) => isImage(file.path || file.name)),
-      getImagesByType: (images: any[], type: string) =>
-        images.filter((img) => (img.path || img.name).toLowerCase().endsWith(`.${type.toLowerCase()}`)),
-
-      // Utility helpers
-      json: (obj: any) => JSON.stringify(obj, null, 2),
-      escape: (str: string) =>
-        str
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#x27;"),
-      length: (arr: any[] | string) => arr.length,
-      equals: (a: any, b: any) => a === b,
-
-      // // Math helpers
-      // add: (a: number, b: number) => a + b,
-      // subtract: (a: number, b: number) => a - b,
-      // multiply: (a: number, b: number) => a * b,
-      // divide: (a: number, b: number) => (b !== 0 ? a / b : 0),
-      // round: (num: number, decimals = 0) => Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals),
-
-      // Markdown helpers
+      // Markdown helpers (ETA-specific)
       importMarkdown: (path: string) => {
         // For async templates, this will work directly
         return this.importMarkdownFile(path);
@@ -288,29 +217,6 @@ export class EtaRenderer {
     };
   }
 
-  /**
-   * Gets all images from the workspace
-   */
-  private getWorkspaceImages() {
-    const imagePaths = this.workspace.getImages();
-    return imagePaths.map((path) => ({
-      path,
-      url: path, // Use direct path since service worker handles routing
-      name: path.split("/").pop() || "",
-    }));
-  }
-
-  /**
-   * Gets the workspace file tree
-   */
-  private getWorkspaceFileTree() {
-    const allNodes = this.workspace.getFileTree().all();
-    return allNodes.map((node) => ({
-      path: node.path,
-      name: node.basename,
-      type: node.type,
-    }));
-  }
 
   /**
    * Custom file reader for Eta to read templates from workspace
@@ -350,26 +256,6 @@ export class EtaRenderer {
     return (hasExtension ? template : `${template}.eta`) as AbsPath;
   }
 
-  /**
-   * Formats errors for display in the template
-   */
-  formatError(error: unknown): string {
-    const err = error as Error;
-    const message = err.message || String(err);
-    const stack = err.stack || "";
-
-    // Log the error to console for debugging
-    console.error("Template Render Error:", {
-      message,
-      stack,
-      error: err,
-    });
-
-    return `<div class="text-red-600 p-4 border border-red-300 rounded">
-      <div><strong>Template Render Error:</strong> ${message}</div>
-      ${stack ? `<pre class="mt-2 whitespace-pre-wrap text-sm">${stack}</pre>` : ""}
-    </div>`;
-  }
 
   /**
    * Imports a markdown file and parses its frontmatter and content
@@ -504,8 +390,8 @@ export class EtaRenderer {
    * Updates the workspace reference (useful for workspace changes)
    */
   updateWorkspace(workspace: Workspace): void {
-    this.workspace = workspace;
-    // Clear caches when workspace changes
-    this.markdownCache.clear();
+    super.updateWorkspace(workspace);
+    // Clear template cache when workspace changes
+    this.templateCache.clear();
   }
 }

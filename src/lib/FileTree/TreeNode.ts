@@ -20,6 +20,7 @@ import {
   strictPrefix,
 } from "@/lib/paths2";
 import { extname } from "path";
+import { isTemplateFile } from "../paths2";
 
 export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
@@ -125,6 +126,10 @@ export class TreeNode {
   isMarkdownFile() {
     if (this.isTreeDir()) return false;
     return isMarkdown(this.path);
+  }
+  isTemplateFile() {
+    if (this.isTreeDir()) return false;
+    return isTemplateFile(this.path);
   }
   isEjsFile() {
     if (this.isTreeDir()) return false;

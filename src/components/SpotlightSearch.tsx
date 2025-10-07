@@ -8,6 +8,7 @@ import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
+import { TemplateDefaultContents } from "@/features/templating/TemplateManager";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
@@ -25,7 +26,6 @@ import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState, useTransi
 import { createPortal } from "react-dom";
 import { useFileTree } from "../context/FileTreeProvider";
 import { useWorkspaceContext } from "../context/WorkspaceContext";
-import { getDefaultEjsTemplate } from "@/lib/defaultEjsTemplate";
 
 const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,
@@ -852,6 +852,27 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             await renameDirOrFile(currentFile, wantPath);
           }),
         ],
+        "New Mustache Template": [
+          NewCmdPrompt("mustache_file_name", "Enter Mustache template file name"),
+          NewCmdExec(async (context) => {
+            const name = context.mustache_file_name as string;
+            if (!name) {
+              console.warn("No file name provided for new Mustache template");
+              return;
+            }
+            const fileName = absPath(strictPrefix(name) + ".mustache");
+            const dir =
+              currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
+              ("/" as AbsPath);
+            const path = await newFile(joinPath(dir, fileName), TemplateDefaultContents.mustache);
+            console.log((await currentWorkspace.readFile(path!)) + "");
+            if (path) {
+              void navigate({
+                to: currentWorkspace.resolveFileUrl(path),
+              });
+            }
+          }),
+        ],
         "New Style CSS": [
           NewCmdExec(async () => {
             const path = await newFile(absPath("styles.css"));
@@ -874,7 +895,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             const dir =
               currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
               ("/" as AbsPath);
-            const path = await newFile(joinPath(dir, fileName), getDefaultEjsTemplate());
+            const path = await newFile(joinPath(dir, fileName), TemplateDefaultContents.ejs);
             if (path) {
               void navigate({
                 to: currentWorkspace.resolveFileUrl(path),
@@ -910,7 +931,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
           }),
         ],
 
-        "New File (Markdown)": [
+        "New Markdown File": [
           NewCmdPrompt("markdown_file_name", "Enter markdown file name"),
           NewCmdExec(async (context) => {
             const name = context.markdown_file_name as string;
@@ -922,7 +943,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             const dir =
               currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
               ("/" as AbsPath);
-            const path = await newFile(joinPath(dir, fileName));
+            const path = await newFile(joinPath(dir, fileName), `# ${fileName}`);
             if (path) {
               void navigate({
                 to: currentWorkspace.resolveFileUrl(path),

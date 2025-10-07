@@ -109,6 +109,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
               trashSelectedFiles={trashSelectedFiles}
               addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
               addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
+              addMustacheFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "template.mustache"), true)}
               addEjsFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs"), true)}
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
@@ -138,6 +139,7 @@ const FileMenuActionButtonRow = ({
   addFile,
   addDir,
   addCssFile,
+  addMustacheFile,
   addEjsFile,
   setExpandAll,
   diskType,
@@ -148,6 +150,7 @@ const FileMenuActionButtonRow = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void;
+  addMustacheFile?: () => void;
   addEjsFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
@@ -180,7 +183,7 @@ const FileMenuActionButtonRow = ({
       <ActionButton onClick={trashSelectedFiles} aria-label="Trash Files" title="Trash Files">
         <Trash2 />
       </ActionButton>
-      <ActionButton onClick={addEjsFile} aria-label="New EJS File" title="New EJS File">
+      <ActionButton onClick={addMustacheFile} aria-label="New Mustache Template" title="New Mustache Template">
         <FileTextIcon />
       </ActionButton>
       <ActionButton onClick={addFile} aria-label="New Markdown File" title="New Markdown File">
@@ -188,6 +191,9 @@ const FileMenuActionButtonRow = ({
       </ActionButton>
       <ActionButton onClick={addCssFile} aria-label="New Css File" title="New Css File">
         <FileCode2Icon />
+      </ActionButton>
+      <ActionButton onClick={addEjsFile} aria-label="New EJS Template" title="New EJS Template">
+        <FileTextIcon />
       </ActionButton>
       <ActionButton onClick={addDir} aria-label="Add Folder" title="New Folder">
         <FolderPlus />
@@ -209,6 +215,7 @@ const FileMenuCompactActions = ({
   addFile,
   addDir,
   addCssFile,
+  addMustacheFile,
   addEjsFile,
   setExpandAll,
   diskType,
@@ -219,6 +226,7 @@ const FileMenuCompactActions = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void;
+  addMustacheFile?: () => void;
   addEjsFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
@@ -241,6 +249,10 @@ const FileMenuCompactActions = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
+          <DropdownMenuItem onClick={addMustacheFile}>
+            <FileTextIcon className="w-4 h-4 mr-2" />
+            New Mustache Template
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={addFile}>
             <FileEditIcon className="w-4 h-4 mr-2" />
             New Markdown File
@@ -302,6 +314,7 @@ export const SidebarFileMenuFilesActions = ({
   addFile,
   addDir,
   addCssFile,
+  addMustacheFile,
   addEjsFile,
   setExpandAll,
   diskType,
@@ -310,6 +323,7 @@ export const SidebarFileMenuFilesActions = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void; // Optional for future use
+  addMustacheFile?: () => void; // Optional for future use
   addEjsFile?: () => void; // Optional for future use
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
@@ -368,6 +382,7 @@ export const SidebarFileMenuFilesActions = ({
           addFile={addFile}
           addDir={addDir}
           addCssFile={addCssFile}
+          addMustacheFile={addMustacheFile}
           addEjsFile={addEjsFile}
           setExpandAll={setExpandAll}
           diskType={diskType}
@@ -386,6 +401,7 @@ export const SidebarFileMenuFilesActions = ({
         addFile={addFile}
         addDir={addDir}
         addCssFile={addCssFile}
+        addMustacheFile={addMustacheFile}
         addEjsFile={addEjsFile}
         setExpandAll={setExpandAll}
         diskType={diskType}

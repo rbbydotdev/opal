@@ -8,7 +8,7 @@ import { TemplateManager } from "@/features/templating";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { AbsPath, isEjs, isHtml, isImage, isMarkdown } from "@/lib/paths2";
+import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache } from "@/lib/paths2";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
@@ -47,11 +47,11 @@ function PreviewComponentInternal() {
   if (isImage(path)) {
     return <ImageRender />;
   }
-  if (isEjs(path)) {
+  if (isMustache(path) || isEjs(path)) {
     return (
       <ScrollSyncProvider scrollEmitter={scrollEmitter} scrollEl={scrollEl || undefined}>
         <Links hrefs={cssFiles} />
-        <EjsRender path={path} />
+        <TemplateRender path={path} />
       </ScrollSyncProvider>
     );
   }
@@ -93,7 +93,7 @@ function MarkdownRender({ path }: { path: AbsPath | null }) {
     ></div>
   );
 }
-function EjsRender({ path }: { path: AbsPath | null }) {
+function TemplateRender({ path }: { path: AbsPath | null }) {
   const [contents, setContents] = useState<string | null>(null);
   const [html, setHtml] = useState<string>("");
   const { currentWorkspace } = useWorkspaceContext();
@@ -105,14 +105,13 @@ function EjsRender({ path }: { path: AbsPath | null }) {
     },
   });
 
-  // Create template manager when workspace is available
   const templateManager = useMemo(() => {
     return currentWorkspace ? new TemplateManager(currentWorkspace) : null;
   }, [currentWorkspace]);
 
   const finalContents = contents === null ? String(initialContents ?? "") : (contents ?? "");
+  const templateType = path ? (isMustache(path) ? "mustache" : (isEjs(path) ? "ejs" : "html")) : "html";
 
-  // Use effect to handle async rendering
   useEffect(() => {
     if (!templateManager || !finalContents) {
       setHtml("");
@@ -121,14 +120,18 @@ function EjsRender({ path }: { path: AbsPath | null }) {
 
     const renderTemplate = async () => {
       try {
-        // Use renderStringWithMarkdown for all templates (handles async automatically)
-        const rendered = await templateManager.renderStringWithMarkdown(finalContents, {
-          date: new Date(),
-          data: {
-            title: "Preview",
-            name: "User",
+        const rendered = await templateManager.renderStringWithMarkdown(
+          finalContents, 
+          {
+            date: new Date(),
+            data: {
+              title: "Preview",
+              name: "User",
+            },
           },
-        });
+          [],
+          templateType
+        );
         setHtml(rendered);
       } catch (error) {
         console.error("Template render error:", error);
@@ -143,7 +146,7 @@ function EjsRender({ path }: { path: AbsPath | null }) {
     };
 
     void renderTemplate();
-  }, [templateManager, finalContents]);
+  }, [templateManager, finalContents, templateType]);
 
   return (
     <div

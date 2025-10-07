@@ -25,7 +25,7 @@ export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
   const { displayTree } = useEditorDisplayTreeCtx();
   const { getLexicalNode, getDOMNode } = useGetNodeFromEditor(MainEditorRealmId);
-  const { isMarkdown } = useCurrentFilepath();
+  const { isMarkdown: isMarkdown } = useCurrentFilepath();
 
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
