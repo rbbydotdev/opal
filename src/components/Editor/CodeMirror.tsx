@@ -12,6 +12,8 @@ import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContex
 import { Workspace } from "@/Db/Workspace";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
+import { mustache } from "@/lib/codemirror/mustacheLanguage";
+import { MimeType } from "@/lib/fileType";
 import { AbsPath } from "@/lib/paths2";
 import { useResolvePathForPreview } from "@/lib/useResolvePathForPreview";
 import { cn } from "@/lib/utils";
@@ -41,10 +43,19 @@ export type StrictSourceMimesType =
   | "text/markdown"
   | "text/javascript"
   | "text/x-ejs"
+  | "text/x-mustache"
   | "text/html";
 
 const getLanguageExtension = (
-  language: "text/css" | "text/plain" | "text/markdown" | "text/javascript" | "text/x-ejs" | "text/html" | string
+  language:
+    | "text/css"
+    | "text/plain"
+    | "text/markdown"
+    | "text/javascript"
+    | "text/x-ejs"
+    | "text/x-mustache"
+    | "text/html"
+    | string
 ) => {
   switch (language) {
     case "text/css":
@@ -57,6 +68,8 @@ const getLanguageExtension = (
       return javascript();
     case "text/x-ejs":
       return ejs();
+    case "text/x-mustache":
+      return mustache();
     case "text/plain":
     default:
       return null;
@@ -74,7 +87,7 @@ export const CodeMirrorEditor = ({
   enableConflictResolution = true,
 }: {
   hasConflicts: boolean;
-  mimeType: "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html" | string;
+  mimeType: Extract<MimeType, "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html">;
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
@@ -111,7 +124,6 @@ export const CodeMirrorEditor = ({
       autocompletion(),
       EditorView.lineWrapping,
       urlRangeCompartment.of([]),
-      keymap.of([{ key: "Mod-/", run: () => true }]),
       keymap.of([indentWithTab]),
 
       // compartments (start with initial config)
@@ -296,7 +308,7 @@ const CodeMirrorToolbar = ({
   conflictResolution?: boolean;
   setConflictResolution?: (value: boolean) => void;
   hasConflicts?: boolean;
-  mimeType?: string;
+  mimeType?: MimeType;
   editorView?: EditorView | null;
 }) => {
   const { isMarkdown, hasEditOverride } = useCurrentFilepath();
@@ -316,7 +328,7 @@ const CodeMirrorToolbar = ({
             plugins: [parserBabel, parserPostcss],
           });
           break;
-        case "text/javascript":
+        case "text/x-mustache":
           prettifiedContent = await prettier.format(currentContent, {
             parser: "babel",
             plugins: [parserBabel, parserEstree],
@@ -358,7 +370,12 @@ const CodeMirrorToolbar = ({
   };
 
   const canPrettify =
-    mimeType && ["text/css", "text/javascript", "text/markdown", "text/x-ejs", "text/html"].includes(mimeType);
+    mimeType &&
+    (
+      ["text/css", "text/javascript", "text/markdown", "text/x-mustache", "text/x-ejs", "text/html"] satisfies Array<
+        typeof mimeType | "text/javascript"
+      >
+    ).includes(mimeType);
 
   return (
     <div className="pl-10 flex items-center justify-start p-2 bg-muted h-12 gap-2">

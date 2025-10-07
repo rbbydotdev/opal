@@ -2,7 +2,7 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
-import { getDefaultEjsTemplate } from "@/lib/defaultEjsTemplate";
+import { TemplateDefaultContents } from "@/features/templating/TemplateManager";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -17,6 +17,7 @@ import {
   isCss,
   isEjs,
   isMarkdown,
+  isMustache,
   joinPath,
   reduceLineage,
   RelPath,
@@ -26,7 +27,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { nanoid } from "nanoid";
 import { useCallback } from "react";
 
-function defaultFileContent(path: AbsPath) {
+export function defaultFileContentFromType(type: string) {
+  // TODO: Implement type-based default content
+  return "";
+}
+export function defaultFileContentFromPath(path: AbsPath) {
   if (isCss(path)) {
     return `/* ${basename(path)} */\n`;
   }
@@ -34,7 +39,10 @@ function defaultFileContent(path: AbsPath) {
     return setFrontmatter("# " + basename(path), { documentId: nanoid() });
   }
   if (isEjs(path)) {
-    return getDefaultEjsTemplate();
+    return TemplateDefaultContents.ejs;
+  }
+  if (isMustache(path)) {
+    return TemplateDefaultContents.mustache;
   }
   return "";
 }
@@ -353,7 +361,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
         if (type === "new") {
           if (origNode.isTreeFile()) {
             return (
-              (await newFile(wantPath, defaultFileContent(wantPath), {
+              (await newFile(wantPath, defaultFileContentFromPath(wantPath), {
                 redirect: true,
               })) ?? null
             );

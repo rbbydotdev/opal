@@ -1,75 +1,145 @@
 import { Workspace } from "@/Db/Workspace";
-import { AbsPath } from "@/lib/paths2";
+import { defaultFileContentFromPath } from "@/hooks/useWorkspaceFileMgmt";
+import { AbsPath, isEjs, isMustache } from "@/lib/paths2";
+import { BaseRenderer } from "./BaseRenderer";
 import { EtaRenderer, TemplateData } from "./EtaRenderer";
+import { HtmlRenderer, HtmlTemplateData } from "./HtmlRenderer";
+import { MustacheRenderer, MustacheTemplateData } from "./MustacheRenderer";
 
-/**
- * Manages template rendering for a workspace with support for live editing
- */
+type TemplateType = "ejs" | "mustache" | "html";
+
+export const TemplateDefaultContents = {
+  ejs: `<h1>current date: <%= it.date %></h1>`,
+  eta: `<h1>current date: <%= it.date %></h1>`, // .eta files use same syntax as EJS
+  mustache: `<h1>Current date: {{helpers.now}}</h1>`,
+  html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>    
+    <h1>Hello, World!</h1>
+</body>
+</html>`,
+};
 export class TemplateManager {
-  private renderer: EtaRenderer;
+  static canHandleFile(path: AbsPath): boolean {
+    return isEjs(path) || isMustache(path) || path.endsWith(".html");
+  }
+
+  private renderers: Record<TemplateType, BaseRenderer>;
   private workspace: Workspace;
 
   constructor(workspace: Workspace) {
     this.workspace = workspace;
-    this.renderer = new EtaRenderer(workspace);
+    this.renderers = {
+      ejs: new EtaRenderer(workspace), // EJS and .eta files both use ETA renderer internally
+      mustache: new MustacheRenderer(workspace),
+      html: new HtmlRenderer(workspace), // HTML stub renderer (no templating)
+    };
+  }
+
+  /**
+   * Gets the template type from file path
+   */
+  private getTemplateType(templatePath: AbsPath): TemplateType {
+    if (templatePath.endsWith(".mustache")) return "mustache";
+    if (templatePath.endsWith(".ejs") || templatePath.endsWith(".eta")) return "ejs";
+    if (templatePath.endsWith(".html")) return "html";
+
+    // Default fallback
+    return "html";
+  }
+
+  /**
+   * Gets the appropriate renderer for a template path
+   */
+  private getRenderer(templatePath: AbsPath): BaseRenderer {
+    const templateType = this.getTemplateType(templatePath);
+    return this.renderers[templateType];
   }
 
   /**
    * Renders a template file with live data from workspace
    */
-  async renderTemplate(templatePath: AbsPath, customData: TemplateData = {}): Promise<string> {
+  async renderTemplate(
+    templatePath: AbsPath,
+    customData: TemplateData | MustacheTemplateData | HtmlTemplateData = {}
+  ): Promise<string> {
     try {
-      // Read the main template
-      const templateContent = await this.workspace.readFile(templatePath);
-      const content = String(templateContent);
-
-      // Use renderWithIncludes to support template includes
-      return await this.renderer.renderWithIncludes(content, customData);
+      const renderer = this.getRenderer(templatePath);
+      return await renderer.renderTemplate(templatePath, customData);
     } catch (error) {
-      console.error('Template rendering error:', error);
-      return this.renderer.formatError ? 
-        this.renderer.formatError(error) : 
-        `<div class="text-red-600">Template Error: ${error}</div>`;
+      console.error("Template rendering error:", error);
+      const renderer = this.getRenderer(templatePath);
+      return renderer.formatError(error);
     }
   }
 
   /**
    * Renders a template string directly
    */
-  renderString(templateContent: string, customData: TemplateData = {}): string {
-    return this.renderer.renderString(templateContent, customData);
+  renderString(
+    templateContent: string,
+    customData: TemplateData | MustacheTemplateData | HtmlTemplateData = {},
+    templateType: TemplateType = "html"
+  ): string {
+    const renderer = this.renderers[templateType];
+    return renderer.renderString(templateContent, customData);
   }
 
   /**
-   * Renders a template with markdown import support
+   * Renders a template with markdown import support (EJS only)
    */
-  async renderTemplateWithMarkdown(templatePath: AbsPath, customData: TemplateData = {}, markdownPaths: string[] = []): Promise<string> {
+  async renderTemplateWithMarkdown(
+    templatePath: AbsPath,
+    customData: TemplateData = {},
+    markdownPaths: string[] = []
+  ): Promise<string> {
     try {
-      // Read the main template
-      const templateContent = await this.workspace.readFile(templatePath);
-      const content = String(templateContent);
+      const renderer = this.getRenderer(templatePath);
+      const templateType = this.getTemplateType(templatePath);
 
-      // Use renderWithMarkdown to support markdown imports
-      return await this.renderer.renderWithMarkdown(content, customData, markdownPaths);
+      if (templateType === "mustache" || templateType === "html") {
+        // Mustache and HTML don't support markdown imports, fallback to regular rendering
+        return await renderer.renderTemplate(templatePath, customData);
+      } else {
+        // For EJS templates, use renderWithMarkdown to support markdown imports
+        const templateContent = await this.workspace.readFile(templatePath);
+        const content = String(templateContent);
+        return await (renderer as EtaRenderer).renderWithMarkdown(content, customData, markdownPaths);
+      }
     } catch (error) {
-      console.error('Template rendering error:', error);
-      return this.renderer.formatError ? 
-        this.renderer.formatError(error) : 
-        `<div class="text-red-600">Template Error: ${error}</div>`;
+      console.error("Template rendering error:", error);
+      const renderer = this.getRenderer(templatePath);
+      return renderer.formatError(error);
     }
   }
 
   /**
-   * Renders a template string with markdown import support
+   * Renders a template string with markdown import support (EJS only)
    */
-  async renderStringWithMarkdown(templateContent: string, customData: TemplateData = {}, markdownPaths: string[] = []): Promise<string> {
+  async renderStringWithMarkdown(
+    templateContent: string,
+    customData: TemplateData = {},
+    markdownPaths: string[] = [],
+    templateType: TemplateType = "html"
+  ): Promise<string> {
     try {
-      return await this.renderer.renderWithMarkdown(templateContent, customData, markdownPaths);
+      const renderer = this.renderers[templateType];
+
+      if (templateType === "mustache" || templateType === "html") {
+        // Mustache and HTML don't support markdown imports, fallback to regular rendering
+        return renderer.renderString(templateContent, customData);
+      } else {
+        return await (renderer as EtaRenderer).renderWithMarkdown(templateContent, customData, markdownPaths);
+      }
     } catch (error) {
-      console.error('Template rendering error:', error);
-      return this.renderer.formatError ? 
-        this.renderer.formatError(error) : 
-        `<div class="text-red-600">Template Error: ${error}</div>`;
+      console.error("Template rendering error:", error);
+      const renderer = this.renderers[templateType];
+      return renderer.formatError(error);
     }
   }
 
@@ -79,59 +149,27 @@ export class TemplateManager {
   getTemplateFiles(): AbsPath[] {
     const allNodes = this.workspace.getFileTree().all();
     return allNodes
-      .filter(node => node.type === 'file' && (
-        node.path.endsWith('.eta') || 
-        node.path.endsWith('.ejs') ||
-        node.path.endsWith('.html')
-      ))
-      .map(node => node.path);
+      .filter(
+        (node) =>
+          node.type === "file" &&
+          (node.path.endsWith(".eta") ||
+            node.path.endsWith(".ejs") ||
+            node.path.endsWith(".mustache") ||
+            node.path.endsWith(".html"))
+      )
+      .map((node) => node.path);
   }
 
   /**
    * Creates a new template file with default content
    */
   async createTemplate(templatePath: AbsPath, content?: string): Promise<AbsPath> {
-    const defaultContent = content || this.getDefaultTemplateContent();
+    const defaultContent = content || defaultFileContentFromPath(templatePath);
     return await this.workspace.newFile(
-      templatePath.split('/').slice(0, -1).join('/') as AbsPath,
-      templatePath.split('/').pop() as any,
+      templatePath.split("/").slice(0, -1).join("/") as AbsPath,
+      templatePath.split("/").pop() as any,
       defaultContent
     );
-  }
-
-  /**
-   * Gets default template content
-   */
-  private getDefaultTemplateContent(): string {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= it.data?.title || 'Document' %></title>
-</head>
-<body>
-    <h1>Hello <%= it.data?.name || 'World' %>!</h1>
-    
-    <% if (it.images && it.images.length > 0) { %>
-    <h2>Images:</h2>
-    <div class="image-gallery">
-    <% it.images.forEach(function(img) { %>
-        <img src="<%= img.url %>" alt="<%= img.name %>" style="max-width: 200px; margin: 10px;">
-    <% }); %>
-    </div>
-    <% } %>
-    
-    <% if (it.fileTree && it.fileTree.length > 0) { %>
-    <h2>Files in workspace:</h2>
-    <ul>
-    <% it.fileTree.forEach(function(file) { %>
-        <li><%= file.name %> (<%= file.type %>)</li>
-    <% }); %>
-    </ul>
-    <% } %>
-</body>
-</html>`;
   }
 
   /**
@@ -139,6 +177,6 @@ export class TemplateManager {
    */
   updateWorkspace(workspace: Workspace): void {
     this.workspace = workspace;
-    this.renderer.updateWorkspace(workspace);
+    Object.values(this.renderers).forEach((renderer) => renderer.updateWorkspace(workspace));
   }
 }

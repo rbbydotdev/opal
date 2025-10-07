@@ -166,14 +166,23 @@ export function isText(path: AbsPath | RelPath | TreeNode | string): boolean {
 export function isEjs(path: AbsPath | RelPath | TreeNode | string): boolean {
   return getMimeType(relPath(String(path))) === "text/x-ejs";
 }
+export function isTemplateFile(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return isEjs(path) || isMustache(path);
+}
+export function isMustache(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return getMimeType(relPath(String(path))) === "text/x-mustache";
+}
 export function isHtml(path: AbsPath | RelPath | TreeNode | string): boolean {
   return getMimeType(relPath(String(path))) === "text/html";
 }
 export function isCss(path: AbsPath | RelPath | TreeNode | string): boolean {
   return getMimeType(relPath(String(path))) === "text/css";
 }
-export function isSource(path: AbsPath | RelPath | TreeNode | string): boolean {
-  return !isMarkdown(path) && !isImage(path) && !isCss(path);
+export function isBin(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return getMimeType(relPath(String(path))) === "application/octet-stream";
+}
+export function isSourceOnly(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return isText(path) && !isMarkdown(path);
 }
 
 // --- Ancestor/Lineage Utilities ---

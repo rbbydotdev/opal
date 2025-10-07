@@ -5,7 +5,7 @@ export type WorkspaceTemplate = {
   id: string;
   name: string;
   description: string;
-  seedFiles: Record<string, string | Promise<string> | (() => string | Promise<string>)>;
+  seedFiles: Record<string, string | Promise<string>>;
 };
 
 const blogWelcomeMarkdown = `# Welcome to your Blog

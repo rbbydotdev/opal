@@ -22,12 +22,10 @@ export const SourceEditor = ({
     "SourceEditor/enableGitConflictResolution",
     true
   );
-
   const { contents } = useFileContents({
     currentWorkspace,
   });
-
-  if (!contents) return null;
+  if (contents === null) return null;
   return (
     <div className="h-full">
       <CodeMirrorEditor

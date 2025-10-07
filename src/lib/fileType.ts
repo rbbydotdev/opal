@@ -1,4 +1,4 @@
-export const FileTypes = {
+export const MimeTypes = {
   PNG: "image/png",
   JPEG: "image/jpeg",
   GIF: "image/gif",
@@ -7,6 +7,7 @@ export const FileTypes = {
   MARKDOWN: "text/markdown",
   CSS: "text/css",
   EJS: "text/x-ejs",
+  MUSTACHE: "text/x-mustache",
   HTML: "text/html",
 } as const;
 
@@ -19,49 +20,40 @@ export const MimeTypeExt = {
   "text/markdown": "md",
   "text/css": "css",
   "text/x-ejs": "ejs",
+  "text/x-mustache": "mustache",
   "text/html": "html",
 } as const;
 
-export const MimeTypes = {
-  PNG: "image/png",
-  JPEG: "image/jpeg",
-  GIF: "image/gif",
-  WEBP: "image/webp",
-  BIN: "application/octet-stream",
-  MARKDOWN: "text/markdown",
-  CSS: "text/css",
-  EJS: "text/x-ejs",
-  HTML: "text/html",
-} as const;
-
-export type FileType = (typeof FileTypes)[keyof typeof FileTypes];
 export type MimeType = (typeof MimeTypes)[keyof typeof MimeTypes];
 
-export const isImageType = (type: FileType | string): boolean => {
+export const isImageType = (type: MimeType | string): boolean => {
   return type.startsWith("image/");
 };
-export const isMarkdownType = (type: FileType | string): boolean => {
-  return type === FileTypes.MARKDOWN;
+export const isMarkdownType = (type: MimeType | string): boolean => {
+  return type === MimeTypes.MARKDOWN;
 };
-export const isHtmlType = (type: FileType | string): boolean => {
-  return type === FileTypes.HTML;
+export const isHtmlType = (type: MimeType | string): boolean => {
+  return type === MimeTypes.HTML;
 };
-export const isBinaryType = (type: FileType | string): boolean => {
-  return type === FileTypes.BIN;
+export const isMustacheType = (type: MimeType | string): boolean => {
+  return type === MimeTypes.MUSTACHE;
+};
+export const isBinaryType = (type: MimeType | string): boolean => {
+  return type === MimeTypes.BIN;
 };
 export function contentsToMimeType(contents: Uint8Array<ArrayBufferLike>): MimeType {
   return getFileType(contents);
 }
 
-export function getMimeTypeExt(fileType: FileType) {
+export function getMimeTypeExt(fileType: MimeType) {
   return MimeTypeExt[fileType];
 }
 
-export function getFileType(data: string | Uint8Array<ArrayBufferLike>): FileType {
-  if (typeof data === "string") return FileTypes.MARKDOWN;
+export function getFileType(data: string | Uint8Array<ArrayBufferLike>): MimeType {
+  if (typeof data === "string") return MimeTypes.MARKDOWN;
   // Check for JPEG (FF D8 FF)
   if (data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) {
-    return FileTypes.JPEG;
+    return MimeTypes.JPEG;
   }
 
   // Check for PNG (89 50 4E 47 0D 0A 1A 0A)
@@ -75,7 +67,7 @@ export function getFileType(data: string | Uint8Array<ArrayBufferLike>): FileTyp
     data[6] === 0x1a &&
     data[7] === 0x0a
   ) {
-    return FileTypes.PNG;
+    return MimeTypes.PNG;
   }
 
   // Check for GIF (47 49 46 38)
@@ -87,7 +79,7 @@ export function getFileType(data: string | Uint8Array<ArrayBufferLike>): FileTyp
     (data[4] === 0x39 || data[4] === 0x37) &&
     data[5] === 0x61
   ) {
-    return FileTypes.GIF;
+    return MimeTypes.GIF;
   }
 
   if (
@@ -100,9 +92,9 @@ export function getFileType(data: string | Uint8Array<ArrayBufferLike>): FileTyp
     data[10] === 0x56 &&
     data[11] === 0x45
   ) {
-    return FileTypes.WEBP;
+    return MimeTypes.WEBP;
   }
-  return isBinary(data) ? FileTypes.BIN : FileTypes.MARKDOWN;
+  return isBinary(data) ? MimeTypes.BIN : MimeTypes.MARKDOWN;
 }
 export function isBinary(buffer: Uint8Array<ArrayBufferLike>, maxLength = 128): boolean {
   for (let i = 0; i <= Math.min(maxLength, buffer.length); i++) {

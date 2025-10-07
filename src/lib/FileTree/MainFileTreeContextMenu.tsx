@@ -48,6 +48,7 @@ export const MainFileTreeContextMenu = ({
 
   const addCssFile = () => addFile(fileNode, "styles.css");
   const addEjsFile = () => addFile(fileNode, "template.ejs");
+  const addMustacheFile = () => addFile(fileNode, "template.mustache");
   const addMarkdownFile = () => addFile(fileNode, "newfile.md");
 
   const fnRef = useRef<null | (() => void)>(null);
@@ -70,6 +71,10 @@ export const MainFileTreeContextMenu = ({
           }
         }}
       >
+        <ContextMenuItem inset onClick={deferredFn(() => addMustacheFile())}>
+          <FileTextIcon className="mr-3 h-4 w-4" />
+          New Mustache Template
+        </ContextMenuItem>
         <ContextMenuItem inset onClick={deferredFn(() => addMarkdownFile())} className="w-full flex justify-start">
           <FileEditIcon className="mr-3 h-4 w-4" />
           New Markdown File

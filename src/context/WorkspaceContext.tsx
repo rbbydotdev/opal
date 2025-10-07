@@ -8,10 +8,10 @@ import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useUrlParam } from "@/hooks/useUrlParam";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, isAncestor } from "@/lib/paths2";
+import { getMimeType } from "@/lib/mimeType";
+import { AbsPath, isAncestor, isBin, isCss, isEjs, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { getMimeType } from "@/lib/mimeType";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { decodePath } from "../lib/paths2";
 
@@ -90,14 +90,16 @@ export function useCurrentFilepath() {
   return {
     filePath,
     mimeType,
-    isMarkdown: mimeType.startsWith("text/markdown"),
-    isImage: mimeType.startsWith("image/"),
-    isSource: (!mimeType.startsWith("text/markdown") && mimeType.startsWith("text/")) || mimeType === "text/x-ejs",
-    isCssFile: mimeType === "text/css",
-    isEjs: mimeType === "text/x-ejs",
-    isBin: mimeType.startsWith("application/octet-stream"),
-    isRecognized: isRecognizedFileType(mimeType) || editOverride,
+
+    isMarkdown: isMarkdown(filePath),
+    isImage: isImage(filePath),
+    isSource: isSourceOnly(filePath),
+    isCssFile: isCss(filePath),
+    isEjs: isEjs(filePath),
+    isBin: isBin(filePath),
+
     inTrash: filePath.startsWith(SpecialDirs.Trash),
+    isRecognized: isRecognizedFileType(mimeType) || editOverride,
     isSourceView: viewMode === "source",
     isRichView: viewMode === "rich-text",
     isDiffView: viewMode === "diff",
