@@ -9,6 +9,7 @@ export const MimeTypes = {
   EJS: "text/x-ejs",
   MUSTACHE: "text/x-mustache",
   HTML: "text/html",
+  PLAIN: "text/plain",
 } as const;
 
 export const MimeTypeExt = {
@@ -19,37 +20,38 @@ export const MimeTypeExt = {
   "application/octet-stream": "bin",
   "text/markdown": "md",
   "text/css": "css",
+  "text/plain": "txt",
   "text/x-ejs": "ejs",
   "text/x-mustache": "mustache",
   "text/html": "html",
 } as const;
 
-export type MimeType = (typeof MimeTypes)[keyof typeof MimeTypes];
+export type OpalMimeType = (typeof MimeTypes)[keyof typeof MimeTypes];
 
-export const isImageType = (type: MimeType | string): boolean => {
+export const isImageType = (type: OpalMimeType | string): boolean => {
   return type.startsWith("image/");
 };
-export const isMarkdownType = (type: MimeType | string): boolean => {
+export const isMarkdownType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.MARKDOWN;
 };
-export const isHtmlType = (type: MimeType | string): boolean => {
+export const isHtmlType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.HTML;
 };
-export const isMustacheType = (type: MimeType | string): boolean => {
+export const isMustacheType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.MUSTACHE;
 };
-export const isBinaryType = (type: MimeType | string): boolean => {
+export const isBinaryType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.BIN;
 };
-export function contentsToMimeType(contents: Uint8Array<ArrayBufferLike>): MimeType {
+export function contentsToMimeType(contents: Uint8Array<ArrayBufferLike>): OpalMimeType {
   return getFileType(contents);
 }
 
-export function getMimeTypeExt(fileType: MimeType) {
+export function getMimeTypeExt(fileType: OpalMimeType) {
   return MimeTypeExt[fileType];
 }
 
-export function getFileType(data: string | Uint8Array<ArrayBufferLike>): MimeType {
+export function getFileType(data: string | Uint8Array<ArrayBufferLike>): OpalMimeType {
   if (typeof data === "string") return MimeTypes.MARKDOWN;
   // Check for JPEG (FF D8 FF)
   if (data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) {

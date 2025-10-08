@@ -1,5 +1,5 @@
 import { Workspace } from "@/Db/Workspace";
-import { AbsPath, prefix } from "@/lib/paths2";
+import { AbsPath, prefix, isMustache } from "@/lib/paths2";
 import { useMemo } from "react";
 
 export function useResolvePathForPreview({
@@ -12,6 +12,8 @@ export function useResolvePathForPreview({
   const previewNode = useMemo(() => {
     if (!path) return null;
     const currentNode = currentWorkspace.nodeFromPath(path);
+    // Prioritize mustache files first
+    if (currentNode && isMustache(currentNode.path)) return currentNode;
     if (currentNode?.isMarkdownFile()) return currentNode;
     if (currentNode?.isEjsFile()) return currentNode;
     if (currentNode?.isHtmlFile()) return currentNode;
