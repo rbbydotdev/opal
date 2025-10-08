@@ -139,7 +139,7 @@ export const CodeMirrorEditor = ({
       }),
 
       EditorView.theme({
-        // "&": { height: "calc(100% - 4rem)" },
+        "&": { height: "100%" },
         ".cm-scroller": { height: "100%" },
         ".cm-content": { padding: 0 },
       }),

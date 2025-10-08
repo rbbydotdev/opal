@@ -1,5 +1,5 @@
 import { Workspace } from "@/Db/Workspace";
-import { defaultFileContentFromPath } from "@/hooks/useWorkspaceFileMgmt";
+import { DefaultFile } from "@/lib/DefaultFile";
 import { AbsPath, isEjs, isMustache } from "@/lib/paths2";
 import { BaseRenderer } from "./BaseRenderer";
 import { EtaRenderer, TemplateData } from "./EtaRenderer";
@@ -8,22 +8,6 @@ import { MustacheRenderer, MustacheTemplateData } from "./MustacheRenderer";
 
 type TemplateType = "ejs" | "mustache" | "html";
 
-export const TemplateDefaultContents = {
-  ejs: `<h1>current date: <%= it.date %></h1>`,
-  eta: `<h1>current date: <%= it.date %></h1>`, // .eta files use same syntax as EJS
-  mustache: `<h1>Current date: {{helpers.now}}</h1>`,
-  html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>    
-    <h1>Hello, World!</h1>
-</body>
-</html>`,
-};
 export class TemplateManager {
   static canHandleFile(path: AbsPath): boolean {
     return isEjs(path) || isMustache(path) || path.endsWith(".html");
@@ -164,7 +148,7 @@ export class TemplateManager {
    * Creates a new template file with default content
    */
   async createTemplate(templatePath: AbsPath, content?: string): Promise<AbsPath> {
-    const defaultContent = content || defaultFileContentFromPath(templatePath);
+    const defaultContent = content || DefaultFile.fromPath(templatePath);
     return await this.workspace.newFile(
       templatePath.split("/").slice(0, -1).join("/") as AbsPath,
       templatePath.split("/").pop() as any,

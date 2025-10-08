@@ -83,6 +83,8 @@ export function OAuth({
 
   const handleCancel = () => {
     oauthServiceRef.current?.cancelOAuthFlow();
+    setAuthError(null);
+    setOAuthState("idle");
     onCancel();
   };
 
