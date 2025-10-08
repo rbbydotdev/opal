@@ -2,11 +2,10 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
-import { TemplateDefaultContents } from "@/features/templating/TemplateManager";
+import { DefaultFile } from "@/lib/DefaultFile";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
-import { setFrontmatter } from "@/lib/markdown/frontMatter";
 import {
   AbsPath,
   absPath,
@@ -24,7 +23,6 @@ import {
   relPath,
 } from "@/lib/paths2";
 import { useNavigate } from "@tanstack/react-router";
-import { nanoid } from "nanoid";
 import { useCallback } from "react";
 
 export function defaultFileContentFromType(type: string) {
@@ -32,19 +30,7 @@ export function defaultFileContentFromType(type: string) {
   return "";
 }
 export function defaultFileContentFromPath(path: AbsPath) {
-  if (isCss(path)) {
-    return `/* ${basename(path)} */\n`;
-  }
-  if (isMarkdown(path)) {
-    return setFrontmatter("# " + basename(path), { documentId: nanoid() });
-  }
-  if (isEjs(path)) {
-    return TemplateDefaultContents.ejs;
-  }
-  if (isMustache(path)) {
-    return TemplateDefaultContents.mustache;
-  }
-  return "";
+  return DefaultFile.fromPath(path);
 }
 
 export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = true } = {}) {

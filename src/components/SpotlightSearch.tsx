@@ -8,7 +8,6 @@ import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
-import { TemplateDefaultContents } from "@/features/templating/TemplateManager";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
@@ -16,6 +15,7 @@ import type { FileWithWorkspace } from "@/hooks/useAllWorkspaceFiles";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
@@ -864,7 +864,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             const dir =
               currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
               ("/" as AbsPath);
-            const path = await newFile(joinPath(dir, fileName), TemplateDefaultContents.mustache);
+            const path = await newFile(joinPath(dir, fileName), DefaultFile.Mustache());
             console.log((await currentWorkspace.readFile(path!)) + "");
             if (path) {
               void navigate({
@@ -895,7 +895,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             const dir =
               currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
               ("/" as AbsPath);
-            const path = await newFile(joinPath(dir, fileName), TemplateDefaultContents.ejs);
+            const path = await newFile(joinPath(dir, fileName), DefaultFile.EJS());
             if (path) {
               void navigate({
                 to: currentWorkspace.resolveFileUrl(path),
@@ -943,7 +943,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             const dir =
               currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
               ("/" as AbsPath);
-            const path = await newFile(joinPath(dir, fileName), `# ${fileName}`);
+            const path = await newFile(joinPath(dir, fileName), DefaultFile.MarkdownFromPath(fileName));
             if (path) {
               void navigate({
                 to: currentWorkspace.resolveFileUrl(path),

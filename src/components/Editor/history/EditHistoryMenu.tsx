@@ -16,7 +16,7 @@ import { HistoryDocRecord, useSnapHistoryDB, useSnapHistoryPendingSave } from "@
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
-import { Check, ChevronDown, History, X } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Circle, History, X } from "lucide-react";
 import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
 import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
@@ -238,9 +238,9 @@ export function EditHistoryMenu({
                       ) : null}
                       <div className={isHistoryImageGenerationEnabled ? "ml-4" : "ml-0"}>
                         {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
-                          <span className="mr-2 text-primary">{"•"}</span>
+                          <Circle className="inline-block mr-2 text-primary" size={16} strokeWidth={2} />
                         ) : (
-                          <span className="-ml-1 mr-2 text-2xl font-bold text-ring">{"✓"}</span>
+                          <CheckCircle2 className="inline-block mr-2 text-ring" size={16} strokeWidth={2} />
                         )}
 
                         {new Date(EDIT.timestamp).toLocaleString()}
