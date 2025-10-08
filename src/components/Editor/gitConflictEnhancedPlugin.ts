@@ -108,7 +108,7 @@ function createEnhancedConflictDecorations(
             false // Use simple resolver
           ),
           side: 1,
-        })
+        }),
       });
 
       // Add start marker decoration
@@ -117,7 +117,7 @@ function createEnhancedConflictDecorations(
         to: region.startMarker.to,
         decoration: Decoration.mark({
           class: "conflict-marker conflict-start",
-        })
+        }),
       });
 
       // Add current content decoration if there's content
@@ -127,7 +127,7 @@ function createEnhancedConflictDecorations(
           to: region.currentContent.to,
           decoration: Decoration.mark({
             class: "conflict-content conflict-current",
-          })
+          }),
         });
       }
 
@@ -137,7 +137,7 @@ function createEnhancedConflictDecorations(
         to: region.separatorMarker.to,
         decoration: Decoration.mark({
           class: "conflict-marker conflict-separator",
-        })
+        }),
       });
 
       // Add incoming content decoration if there's content
@@ -147,7 +147,7 @@ function createEnhancedConflictDecorations(
           to: region.incomingContent.to,
           decoration: Decoration.mark({
             class: "conflict-content conflict-incoming",
-          })
+          }),
         });
       }
 
@@ -157,7 +157,7 @@ function createEnhancedConflictDecorations(
         to: region.endMarker.to,
         decoration: Decoration.mark({
           class: "conflict-marker conflict-end",
-        })
+        }),
       });
 
       // Sort decorations by position and add them in order

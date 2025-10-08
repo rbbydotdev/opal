@@ -25,7 +25,7 @@ export function WorkspaceImageView({ currentWorkspace }: { currentWorkspace: Wor
             })
           }
         >
-          <ImageViewer alt={filePath} origSrc={filePath} />
+          <ImageViewer alt={filePath ?? ""} origSrc={filePath ?? ""} />
         </ConditionalDropzone>
       </>
     );

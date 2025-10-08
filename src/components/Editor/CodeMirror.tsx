@@ -13,7 +13,7 @@ import { Workspace } from "@/Db/Workspace";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { mustache } from "@/lib/codemirror/mustacheLanguage";
-import { MimeType } from "@/lib/fileType";
+import { OpalMimeType } from "@/lib/fileType";
 import { AbsPath } from "@/lib/paths2";
 import { useResolvePathForPreview } from "@/lib/useResolvePathForPreview";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,6 @@ import { basicSetup } from "codemirror";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
 import parserBabel from "prettier/plugins/babel";
-import parserEstree from "prettier/plugins/estree";
 import parserHtml from "prettier/plugins/html";
 import parserMarkdown from "prettier/plugins/markdown";
 import parserPostcss from "prettier/plugins/postcss";
@@ -87,7 +86,7 @@ export const CodeMirrorEditor = ({
   enableConflictResolution = true,
 }: {
   hasConflicts: boolean;
-  mimeType: Extract<MimeType, "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html">;
+  mimeType: Extract<OpalMimeType, "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html">;
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
@@ -140,7 +139,7 @@ export const CodeMirrorEditor = ({
       }),
 
       EditorView.theme({
-        "&": { height: "calc(100% - 4rem)" },
+        // "&": { height: "calc(100% - 4rem)" },
         ".cm-scroller": { height: "100%" },
         ".cm-content": { padding: 0 },
       }),
@@ -274,7 +273,7 @@ export const CodeMirrorEditor = ({
         mimeType={mimeType}
         editorView={viewRef.current}
       />
-      <div className={cn("code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
+      <div className={cn("foobar code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
     </ScrollSyncProvider>
   );
 };
@@ -308,7 +307,7 @@ const CodeMirrorToolbar = ({
   conflictResolution?: boolean;
   setConflictResolution?: (value: boolean) => void;
   hasConflicts?: boolean;
-  mimeType?: MimeType;
+  mimeType?: OpalMimeType;
   editorView?: EditorView | null;
 }) => {
   const { isMarkdown, hasEditOverride } = useCurrentFilepath();
@@ -328,12 +327,6 @@ const CodeMirrorToolbar = ({
             plugins: [parserBabel, parserPostcss],
           });
           break;
-        case "text/x-mustache":
-          prettifiedContent = await prettier.format(currentContent, {
-            parser: "babel",
-            plugins: [parserBabel, parserEstree],
-          });
-          break;
         case "text/markdown":
           prettifiedContent = await prettier.format(currentContent, {
             parser: "markdown",
@@ -341,12 +334,7 @@ const CodeMirrorToolbar = ({
           });
           break;
         case "text/x-ejs":
-        // prettifiedContent = await prettier.format(currentContent, {
-        //   parser: "html",
-        //   plugins: [parserEjs, parserHtml],
-        //   filepath: "file.ejs",
-        // });
-        // break;
+        case "text/x-mustache":
         case "text/html":
           prettifiedContent = await prettier.format(currentContent, {
             parser: "html",

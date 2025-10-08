@@ -1,7 +1,7 @@
-import { MimeType, MimeTypes } from "@/lib/fileType";
+import { MimeTypes, OpalMimeType } from "@/lib/fileType";
 import mime from "mime-types";
 
-export const getMimeType = (path: string): MimeType => {
+export const getMimeType = (path: string): OpalMimeType => {
   const filePath = String(path).toLowerCase();
 
   // Handle .ejs files specially since mime-types doesn't recognize them
@@ -19,5 +19,5 @@ export const getMimeType = (path: string): MimeType => {
     return MimeTypes.HTML;
   }
 
-  return (mime.lookup(filePath) || "") as MimeType;
+  return (mime.lookup(filePath) || "") as OpalMimeType;
 };
