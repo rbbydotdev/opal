@@ -62,7 +62,7 @@ export const MainFileTreeContextMenu = ({
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent
-        className="w-52"
+        className="w-60"
         onCloseAutoFocus={(event) => {
           if (fnRef.current) {
             event.preventDefault();

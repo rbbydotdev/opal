@@ -1,5 +1,6 @@
 import { newMd } from "@/Db/newMd";
 import { AbsPath, basename, prefix } from "@/lib/paths2";
+import globalSeedCss from "@/seedfiles/global-seed.css?raw";
 
 export const DefaultFile = {
   MarkdownFromPath: (path: AbsPath) => {
@@ -13,6 +14,10 @@ export const DefaultFile = {
   CSS: (filename?: string) => {
     const name = filename ? basename(filename as AbsPath) : "styles.css";
     return `/* ${name} */\n`;
+  },
+
+  GlobalCSS: () => {
+    return globalSeedCss;
   },
 
   HTML: () => {
@@ -150,7 +155,6 @@ Start writing your own content and make this blog yours!
 `);
   },
 
-  // Auto-detect from file path
   fromPath: (path: AbsPath, title?: string): string => {
     const pathStr = path.toString();
 
