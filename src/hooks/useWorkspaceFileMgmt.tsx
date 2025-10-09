@@ -5,7 +5,7 @@ import { Workspace } from "@/Db/Workspace";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
-import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
+import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import {
   AbsPath,
   absPath,
@@ -13,10 +13,6 @@ import {
   dirname,
   duplicatePath,
   isAncestor,
-  isCss,
-  isEjs,
-  isMarkdown,
-  isMustache,
   joinPath,
   reduceLineage,
   RelPath,
@@ -25,10 +21,10 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 
-export function defaultFileContentFromType(type: string) {
-  // TODO: Implement type-based default content
-  return "";
-}
+// export function defaultFileContentFromType(type: string) {
+//   // TODO: Implement type-based default content
+//   return "";
+// }
 export function defaultFileContentFromPath(path: AbsPath) {
   return DefaultFile.fromPath(path);
 }
@@ -265,30 +261,35 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
     },
     [currentWorkspace, setFileTreeCtx]
   );
-  const addDirFile = useCallback(
-    (type: TreeNode["type"], parent: TreeDir | AbsPath, fileName?: string) => {
-      let parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
-      if (!parentNode) {
-        console.warn("Parent node not found for adding new file or directory");
-      }
-      if ((parentNode && parentNode?.isVirtual) || !parentNode) {
-        parentNode = parentNode?.parent ?? currentWorkspace.getFileTreeRoot();
-      }
-      const name = fileName || (type === "dir" ? "newdir" : "newfile.md");
-      const newNode = currentWorkspace.addVirtualFile({ type, basename: relPath(name) }, parentNode);
-      setFileTreeCtx({
-        editing: newNode.path,
-        editType: "new",
-        focused: newNode.path,
-        virtual: newNode.path,
-        selectedRange: [],
 
-        anchorIndex: -1,
-      });
-      return newNode;
-    },
-    [currentWorkspace, setFileTreeCtx]
-  );
+  function addDirFile(type: "file", parent: TreeDir | AbsPath, fileName?: string, content?: string): TreeFile;
+  function addDirFile(type: "dir", parent: TreeDir | AbsPath, dirName?: string): TreeDir;
+  function addDirFile(type: TreeNode["type"], parent: TreeDir | AbsPath, name?: string, content?: string): TreeNode {
+    let parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
+
+    if (!parentNode) {
+      console.warn("Parent node not found for adding new file or directory");
+    }
+
+    if ((parentNode && parentNode.isVirtual) || !parentNode) {
+      parentNode = parentNode?.parent ?? currentWorkspace.getFileTreeRoot();
+    }
+
+    const fileName = name || (type === "dir" ? "newdir" : "newfile.md");
+
+    const newNode = currentWorkspace.addVirtualFile({ type, basename: relPath(fileName) }, parentNode, content);
+
+    setFileTreeCtx({
+      editing: newNode.path,
+      editType: "new",
+      focused: newNode.path,
+      virtual: newNode.path,
+      selectedRange: [],
+      anchorIndex: -1,
+    });
+
+    return newNode;
+  }
 
   const renameDirOrFileMultiple = useCallback(
     async (nodes: [oldNode: TreeNode, newFullPath: TreeNode | AbsPath][]) => {
@@ -314,6 +315,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
         }
       }
     },
+
     [currentWorkspace, setFileTreeCtx, toss, tossError]
   );
 
@@ -347,9 +349,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
         if (type === "new") {
           if (origNode.isTreeFile()) {
             return (
-              (await newFile(wantPath, defaultFileContentFromPath(wantPath), {
-                redirect: true,
-              })) ?? null
+              (await newFile(
+                wantPath,
+                origNode.isTreeNodeWithContent() ? origNode.virtualContent : defaultFileContentFromPath(wantPath),
+                {
+                  redirect: true,
+                }
+              )) ?? null
             );
           } else {
             return newDir(wantPath);

@@ -40,6 +40,7 @@ export type TreeNodeType = TreeFile | TreeDir;
 export class TreeNode {
   isVirtual?: boolean;
   source?: AbsPath; // For virtual nodes, this is the source path of the original file
+  virtualContent?: string; // For virtual nodes, this is the content of the file
   type: "dir" | "file";
   parent: TreeDir | null;
   depth: number;
@@ -185,6 +186,7 @@ export class TreeNode {
     this.children = newNode.children;
     this.isVirtual = newNode.isVirtual;
     this.source = newNode.source;
+    this.virtualContent = newNode.virtualContent;
   }
 
   async asyncWalk(
@@ -239,6 +241,7 @@ export class TreeNode {
     parent,
     depth,
     source,
+    virtualContent,
   }: {
     type: "dir" | "file";
     dirname: AbsPath | string;
@@ -247,6 +250,7 @@ export class TreeNode {
     path: AbsPath | string;
     depth?: number;
     source?: AbsPath;
+    virtualContent?: string;
   }) {
     this.type = type;
     this._dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
@@ -255,8 +259,7 @@ export class TreeNode {
     this.depth = typeof depth !== "undefined" ? depth : getDepth(this._path);
     this.parent = parent;
     this.source = source;
-    // if (isTreeFile(this)) return this;
-    // if (isTreeDir(this)) return this;
+    this.virtualContent = virtualContent;
   }
 
   remove() {
@@ -300,6 +303,7 @@ export class TreeNode {
         path: this.path,
         depth: this.depth,
         source: this.source,
+        virtualContent: this.virtualContent,
         children: Object.fromEntries(
           Object.entries(this.children ?? {}).map(([key, child]) => [key, child.deepCopy()])
         ),
@@ -312,6 +316,7 @@ export class TreeNode {
       path: this.path,
       depth: this.depth,
       source: this.source,
+      virtualContent: this.virtualContent,
     });
   }
 
@@ -362,6 +367,9 @@ export class TreeNode {
   isTreeFile(): this is TreeFile {
     return this.type === "file";
   }
+  isTreeNodeWithContent(): this is TreeNodeWithContent {
+    return this.isTreeFile() && typeof this.virtualContent === "string";
+  }
   toJSON(): {
     type: "dir" | "file";
     dirname: string;
@@ -378,6 +386,8 @@ export class TreeNode {
     };
   }
 }
+
+export type TreeNodeWithContent = TreeFile & { virtualContent: string };
 
 export class TreeDir extends TreeNode {
   type = "dir" as const;
@@ -433,6 +443,7 @@ export class TreeDir extends TreeNode {
     children = {},
     parent,
     source,
+    virtualContent,
   }: {
     dirname: AbsPath;
     basename: RelPath;
@@ -440,9 +451,10 @@ export class TreeDir extends TreeNode {
     path: AbsPath;
     depth: number;
     source?: AbsPath;
+    virtualContent?: string;
     children: TreeDir["children"];
   }) {
-    super({ type: "dir", dirname, parent, basename, path, depth, source });
+    super({ type: "dir", dirname, parent, basename, path, depth, source, virtualContent });
     this.children = children;
   }
 
@@ -461,7 +473,6 @@ export class TreeDir extends TreeNode {
   }
 
   prune(filterOut: ((n: TreeNode) => boolean) | AbsPath[]): TreeDir {
-    // const maxDepth = Array.isArray(filterOut) ? Math.max(...filterOut.map((path) => getDepth(path))) : Infinity;
     const filterFn = Array.isArray(filterOut) ? (node: TreeNode) => filterOut.includes(node.path) : filterOut;
     const newChildren: Record<string, TreeFile | TreeDir> = {};
 
@@ -482,6 +493,7 @@ export class TreeDir extends TreeNode {
       depth: this.depth,
       parent: this.parent,
       source: this.source,
+      virtualContent: this.virtualContent,
       children: newChildren,
     });
   }
@@ -586,15 +598,18 @@ export class TreeFile extends TreeNode {
     depth,
     parent,
     source,
+    virtualContent,
   }: {
     dirname: AbsPath;
     basename: RelPath;
     path: AbsPath;
+
     depth: number;
     parent: TreeDir | null;
     source?: AbsPath;
+    virtualContent?: string;
   }) {
-    super({ type: "file", parent, dirname, basename, path, depth, source });
+    super({ type: "file", parent, dirname, basename, path, depth, source, virtualContent });
   }
   static FromJSON(json: TreeFileJType, parent: TreeDir | null = null): TreeFile {
     return new TreeFile({
@@ -613,6 +628,10 @@ function tagSource<T extends TreeNode>(this: T, sourceNode: TreeNode) {
   this.source = sourceNode.path;
   return this;
 }
+// function tagContent<T extends TreeNode>(this: T, content?: string) {
+//   if (content != undefined) this.virtualContent = content;
+//   return this;
+// }
 
 export class VirtualTreeNode extends TreeNode {
   isVirtual = true;
@@ -621,10 +640,19 @@ export class VirtualTreeNode extends TreeNode {
 export class VirtualFileTreeNode extends TreeFile {
   isVirtual = true;
   tagSource = tagSource<VirtualTreeNode>;
+  // tagContent = tagContent<VirtualTreeNode>;
 }
+
 export class VirtualDirTreeNode extends TreeDir {
   isVirtual = true;
   tagSource = tagSource<VirtualTreeNode>;
+}
+export class VirtualFileTreeNodeWithContent extends VirtualFileTreeNode {
+  virtualContent!: string;
+  constructor(props: ConstructorParameters<typeof VirtualFileTreeNode>[0] & { virtualContent: string }) {
+    super(props);
+    this.virtualContent = props.virtualContent;
+  }
 }
 
 export function isVirtualNode(node: TreeNode): node is VirtualTreeNode {

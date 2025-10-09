@@ -39,6 +39,7 @@ export const SidebarFileMenuFiles = ({
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const { currentWorkspace } = useWorkspaceContext();
   const { fileTreeDir } = useFileTree();
+  //TODO - SidebarFileMenuFiles fileTreeDir
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
 
   const treeNode = scope ? (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT) : fileTreeDir;
