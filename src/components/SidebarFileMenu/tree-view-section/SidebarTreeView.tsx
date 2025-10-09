@@ -53,12 +53,12 @@ export function SidebarTreeView({
 export const SidebarTreeViewActions = ({ setExpandAll }: { setExpandAll: (expand: boolean) => void }) => (
   <div className="whitespace-nowrap">
     <Button
-      aria-label="Expand All"
+      aria-label="Collapse All, Double click to Expand All"
+      title="Collapse All / Double click to Expand All"
       onDoubleClick={() => setExpandAll(true)}
       onClick={() => setExpandAll(false)}
       className="p-1 m-0 h-fit"
       variant="ghost"
-      title="Collapse All"
     >
       <CopyMinus />
     </Button>

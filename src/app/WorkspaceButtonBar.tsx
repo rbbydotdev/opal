@@ -26,6 +26,7 @@ import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
@@ -42,6 +43,7 @@ import {
   CirclePlus,
   Delete,
   GlassesIcon,
+  KeyboardIcon,
   Moon,
   Palette,
   RefreshCcw,
@@ -452,6 +454,15 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                 to="#"
               />
             </WorkspaceSearchDialog>
+
+            <KeyboardShortcutsModal>
+              <BigButton
+                variant={variant}
+                icon={<KeyboardIcon strokeWidth="1" stroke="current" className="w-full h-full" />}
+                title="shortcuts"
+                to="#"
+              />
+            </KeyboardShortcutsModal>
 
             <BigButton
               variant={variant}
