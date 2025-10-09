@@ -1,6 +1,6 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { FileError } from "@/components/FileError";
-import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
+import { isSourceMimeType, SourceEditor } from "@/components/SourceEditor/SourceEditor";
 import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
 import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
@@ -138,7 +138,7 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
       {!isRecognized ? (
         <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
-      ) : !isMarkdown || isSourceView || hasConflicts ? (
+      ) : (!isMarkdown || isSourceView || hasConflicts) && isSourceMimeType(mimeType) ? (
         <SourceEditor
           onChange={handleSourceContentChange}
           hasConflicts={hasConflicts}

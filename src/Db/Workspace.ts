@@ -232,8 +232,12 @@ export class Workspace {
     return this.disk.newFiles(files);
   }
 
-  addVirtualFile({ type, basename }: Pick<TreeNode, "type" | "basename">, selectedNode: TreeNode | null) {
-    return this.disk.addVirtualFile({ type, basename }, selectedNode);
+  addVirtualFile(
+    { type, basename }: Pick<TreeNode, "type" | "basename">,
+    selectedNode: TreeNode | null,
+    content?: string
+  ) {
+    return this.disk.addVirtualFile({ type, basename }, selectedNode, content);
   }
 
   addVirtualFileFromSource(

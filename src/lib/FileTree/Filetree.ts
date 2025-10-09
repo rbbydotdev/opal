@@ -236,9 +236,9 @@ export class FileTree {
     this.map.delete(oldNode.path);
     this.map.set(newNode.path, newNode);
   }
-  insertClosestVirtualNode(node: Pick<TreeNode, "basename" | "type">, selectedNode: TreeNode) {
+  insertClosestVirtualNode(node: Pick<TreeNode, "basename" | "type">, selectedNode: TreeNode, virtualContent?: string) {
     const parent = selectedNode.closestDir() ?? this.root;
-    const newNode = newVirtualTreeNode({ basename: node.basename, type: node.type, parent });
+    const newNode = newVirtualTreeNode({ basename: node.basename, type: node.type, parent, virtualContent });
     while (this.nodeWithPathExists(newNode.path)) newNode.inc();
     return this.insertNode(parent, newNode);
   }
@@ -253,7 +253,12 @@ function spliceNode<T extends VirtualTreeNode | TreeNode>(targetNode: TreeDir, n
   return newNode;
 }
 
-function newVirtualTreeNode(props: { type: "file" | "dir"; basename: RelPath; parent: TreeDir }) {
+function newVirtualTreeNode(props: {
+  type: "file" | "dir";
+  basename: RelPath;
+  parent: TreeDir;
+  virtualContent?: string;
+}) {
   const path = joinPath(props.parent.path, props.basename);
   const depth = props.parent.depth + 1;
   if (props.type === "dir") {
@@ -269,6 +274,7 @@ function newVirtualTreeNode(props: { type: "file" | "dir"; basename: RelPath; pa
     return new VirtualFileTreeNode({
       dirname: absPath(dirname(path)),
       basename: relPath(basename(path)),
+      virtualContent: props.virtualContent,
       path,
       parent: props.parent,
       depth,

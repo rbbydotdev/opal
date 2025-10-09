@@ -9,6 +9,10 @@ import { RootNode } from "@/lib/FileTree/TreeNode";
 import { OpalMimeType } from "@/lib/fileType";
 import { cn } from "@/lib/utils";
 
+export type SourceMimeType = Extract<OpalMimeType, "text/css" | "text/plain" | "text/markdown">;
+export const isSourceMimeType = (mimeType: string): mimeType is SourceMimeType =>
+  mimeType === "text/css" || mimeType === "text/plain" || mimeType === "text/markdown";
+
 export const SourceEditor = ({
   hasConflicts,
   currentWorkspace,
@@ -19,7 +23,7 @@ export const SourceEditor = ({
   hasConflicts: boolean;
   currentWorkspace: Workspace;
   className?: string;
-  mimeType?: Extract<OpalMimeType, "text/css" | "text/plain" | "text/markdown">;
+  mimeType?: SourceMimeType;
   onChange: (newContent: string) => void;
 }) => {
   const { storedValue: enableGitConflictResolution } = useLocalStorage2(

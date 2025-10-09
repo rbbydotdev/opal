@@ -668,11 +668,29 @@ export abstract class Disk {
       .insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent)
       .tagSource(props.sourceNode);
   }
+  // addVirtualFileWithContent(
+  //   props: Pick<TreeNode, "type" | "basename"> & { content?: string },
+  //   parentNode: TreeNode | null
+  // ) {
+  //   const parent = parentNode || this.fileTree.root;
+  //   const node = this.fileTree.insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent);
+  //   if (node instanceof VirtualFileTreeNode && props.content != undefined) node.tagContent(props.content);
+  //   void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+  //   return node;
+  // }
 
-  addVirtualFile(props: Pick<TreeNode, "type" | "basename">, selectedNode: TreeNode | null): TreeNode {
+  addVirtualFile(
+    props: Pick<TreeNode, "type" | "basename">,
+    selectedNode: TreeNode | null,
+    virtualContent?: string
+  ): TreeNode {
     const parent = selectedNode || this.fileTree.root;
 
-    const node = this.fileTree.insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent);
+    const node = this.fileTree.insertClosestVirtualNode(
+      { type: props.type, basename: props.basename },
+      parent,
+      virtualContent
+    );
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return node;
   }
@@ -686,7 +704,6 @@ export abstract class Disk {
   async newFiles<T extends string | Uint8Array | Blob>(files: [AbsPath, T | Promise<T>][]): Promise<AbsPath[]> {
     await this.ready;
     const result: AbsPath[] = [];
-    // eslint-disable-next-line prefer-const
     for (let [fullPath, content] of files) {
       while (await this.pathExists(fullPath)) {
         fullPath = incPath(fullPath);
