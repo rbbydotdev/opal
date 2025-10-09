@@ -85,6 +85,7 @@ export function useFileContents({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingContentRef = useRef<string | null>(null);
   const previousFilePathRef = useRef<AbsPath | null>(null);
+  pendingContentRef.current = hotContents;
 
   // Determine current file path from props or route
   const filePath = useMemo(() => {
@@ -127,7 +128,6 @@ export function useFileContents({
     }
     debounceRef.current = setTimeout(() => {
       if (pendingContentRef.current !== null) {
-        // console.log("DEBOUNCED UPDATE");
         writeFileContents(String(pendingContentRef.current));
         pendingContentRef.current = null;
         debounceRef.current = null;
@@ -142,7 +142,6 @@ export function useFileContents({
   useEffect(() => {
     // If filePath changed and we have pending changes, flush them to the previous file
     if (previousFilePathRef.current !== filePath && debounceRef.current && pendingContentRef.current !== null) {
-      // console.log("FLUSHING CHANGES TO PREVIOUS FILE");
       if (currentWorkspace && previousFilePathRef.current) {
         void currentWorkspace.getDisk().writeFile(previousFilePathRef.current, String(pendingContentRef.current));
       }
@@ -172,7 +171,7 @@ export function useFileContents({
         debounceRef.current = null;
       }
     };
-  }, []);
+  }, [currentWorkspace]);
 
   /**
    * FILE LOADING EFFECT: Reads file content from disk when filePath changes
@@ -221,7 +220,7 @@ export function useFileContents({
    */
   useEffect(() => {
     return contentEmitter.listen(ContentEvents.UPDATE, (c) => {
-      if (c !== contents) {
+      if (c !== pendingContentRef.current) {
         setHotContents(c.toString());
         onContentChangeRef.current?.(String(c ?? ""));
       }

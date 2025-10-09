@@ -46,7 +46,7 @@ import {
   Scissors,
   Trash2,
 } from "lucide-react";
-import { ComponentProps, useMemo, useState } from "react";
+import { ComponentProps, useMemo, useRef, useState } from "react";
 
 const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   const [dragEnter, setDragEnter] = useState(false);
@@ -113,7 +113,9 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
               trashSelectedFiles={trashSelectedFiles}
               addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
               addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
-              addGlobalCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "global.css", DefaultFile.GlobalCSS()), true)}
+              addGlobalCssFile={() =>
+                expandForNode(addDirFile("file", focused || absPath("/"), "global.css", DefaultFile.GlobalCSS()), true)
+              }
               addMustacheFile={() =>
                 expandForNode(addDirFile("file", focused || absPath("/"), "template.mustache"), true)
               }
@@ -235,10 +237,10 @@ const FileMenuCompactActions = ({
 }: {
   trashSelectedFiles: () => void;
   addFile: () => void;
-  addCssFile?: () => void;
-  addGlobalCssFile?: () => void;
-  addMustacheFile?: () => void;
-  addEjsFile?: () => void;
+  addCssFile: () => void;
+  addGlobalCssFile: () => void;
+  addMustacheFile: () => void;
+  addEjsFile: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
@@ -246,6 +248,10 @@ const FileMenuCompactActions = ({
   cutFiles: () => void;
   pasteFiles: () => void;
 }) => {
+  const deferredFn = useRef<null | (() => void)>(null);
+  const deferFn = (fn: () => void) => {
+    return () => (deferredFn.current = fn);
+  };
   return (
     <div className="flex items-center justify-center p-1">
       <DropdownMenu>
@@ -259,7 +265,16 @@ const FileMenuCompactActions = ({
             <Ellipsis />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
+        <DropdownMenuContent
+          align="end"
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            if (deferredFn.current) {
+              deferredFn.current();
+              deferredFn.current = null;
+            }
+          }}
+        >
           <DropdownMenuItem className="whitespace-nowrap" onClick={addMustacheFile}>
             <FileTextIcon className="w-4 h-4 mr-2" />
             New Mustache Template
@@ -276,22 +291,22 @@ const FileMenuCompactActions = ({
             <FileTextIcon className="w-4 h-4 mr-2" />
             New EJS Template
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={addDir}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            New Folder
+          </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <FileCode2Icon className="w-4 h-4 mr-2" />
-              Template Files
+              Stock Files
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={addGlobalCssFile}>
+              <DropdownMenuItem onClick={deferFn(addGlobalCssFile)}>
                 <FileCode2Icon className="w-4 h-4 mr-2" />
                 global.css
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-          <DropdownMenuItem onClick={addDir}>
-            <FolderPlus className="w-4 h-4 mr-2" />
-            New Folder
-          </DropdownMenuItem>
 
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={copyFiles}>
@@ -346,10 +361,10 @@ export const SidebarFileMenuFilesActions = ({
 }: {
   trashSelectedFiles: () => void;
   addFile: () => void;
-  addCssFile?: () => void; // Optional for future use
-  addGlobalCssFile?: () => void; // Optional for future use
-  addMustacheFile?: () => void; // Optional for future use
-  addEjsFile?: () => void; // Optional for future use
+  addCssFile: () => void;
+  addGlobalCssFile: () => void;
+  addMustacheFile: () => void;
+  addEjsFile: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
