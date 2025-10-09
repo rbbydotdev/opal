@@ -30,9 +30,9 @@ export abstract class OAuthProvider {
   }
 
   abstract getAuthorizationUrl(config: OAuthProviderConfig): Promise<string> | string;
-  
+
   abstract setupChannelListeners(
-    channel: OAuthChannel,
+    channel: OAuthCbChannel,
     config: OAuthProviderConfig,
     onSuccess: (data: RemoteAuthOAuthRecordInternal) => void,
     onError: (error: string) => void
@@ -55,12 +55,4 @@ export type OAuthCbEventPayload = {
   [OAuthCbEvents.ACCESS_TOKEN]: { accessToken: string; state: string };
 };
 
-export class OAuthCbChannel extends Channel<OAuthCbEventPayload> implements OAuthChannel {
-  async emit(event: string, data: any): Promise<void> {
-    await super.emit(event as keyof OAuthCbEventPayload, data);
-  }
-
-  async once(event: string): Promise<any> {
-    return super.once(event as keyof OAuthCbEventPayload);
-  }
-}
+export class OAuthCbChannel extends Channel<OAuthCbEventPayload> {}

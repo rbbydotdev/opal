@@ -40,7 +40,7 @@ function createWorkspaceSearchStream({
                 filterOut: () => false,
               });
 
-              const matchedFiles = files.filter(filePath => {
+              const matchedFiles = files.filter((filePath) => {
                 const filename = basename(filePath);
                 return filename.toLowerCase().includes(searchTerm.toLowerCase());
               });
@@ -48,8 +48,9 @@ function createWorkspaceSearchStream({
               if (matchedFiles.length > 0) {
                 // Create a result in the same format as content search
                 const result = {
-                  matches: matchedFiles.map(filePath => ({
-                    chsum: filePath, // Use file path as checksum for filename search
+                  matches: matchedFiles.map((filePath) => ({
+                    // chsum: filePath, // Use file path as checksum for filename search
+                    chsum: 0,
                     lineNumber: 1,
                     lineStart: 0,
                     lineEnd: basename(filePath).length,
@@ -63,8 +64,8 @@ function createWorkspaceSearchStream({
                   meta: {
                     workspaceId: workspace.id,
                     workspaceName: workspace.name,
-                    sourceFile: matchedFiles[0], // Use first matched file as source
-                  }
+                    filePath: matchedFiles[0]!, // Use first matched file as source
+                  },
                 };
                 const chunk = encoder.encode(JSON.stringify(result) + "\n");
                 controller.enqueue(chunk);

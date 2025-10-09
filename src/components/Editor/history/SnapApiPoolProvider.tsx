@@ -1,6 +1,7 @@
 import { CreatePoolContext, PoolWorker, Resource } from "@/components/PoolWorker";
 
 import * as Comlink from "comlink";
+import { PreviewWorkerApiType } from "../../../../preview-builder/src/preview-entry";
 
 export async function createApiResource({
   editId,
@@ -8,7 +9,7 @@ export async function createApiResource({
 }: {
   editId: number;
   workspaceId: string;
-}): Promise<Resource<Comlink.Remote<PreviewWorkerApi>>> {
+}): Promise<Resource<Comlink.Remote<PreviewWorkerApiType>>> {
   let iframe: HTMLIFrameElement | null = document.createElement("iframe");
   const searchParams = new URLSearchParams({
     editId: String(editId),
@@ -22,7 +23,7 @@ export async function createApiResource({
   document.body.appendChild(iframe);
   await new Promise((rs) => (iframe!.onload = () => rs(true)));
   console.debug("iframe up");
-  let api: Comlink.Remote<PreviewWorkerApi> | null = Comlink.wrap<PreviewWorkerApi>(
+  let api: Comlink.Remote<PreviewWorkerApiType> | null = Comlink.wrap<PreviewWorkerApiType>(
     Comlink.windowEndpoint(iframe.contentWindow!)
   );
   //TODO: profile this to see if its even needed
@@ -50,7 +51,7 @@ export function NewComlinkSnapshotPoolWorker(
   );
 }
 
-export class ApiPoolWorker extends PoolWorker<Resource<PreviewWorkerApi>> {}
+export class ApiPoolWorker extends PoolWorker<Resource<PreviewWorkerApiType>> {}
 const { PoolProvider, usePool, Context } = CreatePoolContext<ApiPoolWorker>();
 export const SnapApiPoolProvider = PoolProvider;
 export const useSnapApiPool = usePool;

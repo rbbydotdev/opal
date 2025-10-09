@@ -19,7 +19,12 @@ export class CloudflareClient {
         },
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success: boolean;
+        errors: { code: number; message: string }[];
+        messages: string[];
+        result: T;
+      };
 
       if (!response.ok || !data.success) {
         const errors = data.errors?.map((e: any) => e.message).join(", ") || "Unknown error";

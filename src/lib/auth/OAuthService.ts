@@ -1,8 +1,8 @@
 import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuth";
 import { nanoid } from "nanoid";
-import { OAuthProvider, OAuthCbChannel } from "./providers/OAuthProvider";
 import { GitHubOAuthProvider } from "./providers/GitHubOAuthProvider";
 import { NetlifyOAuthProvider } from "./providers/NetlifyOAuthProvider";
+import { OAuthCbChannel, OAuthProvider } from "./providers/OAuthProvider";
 
 export interface OAuthServiceConfig {
   source: RemoteAuthSource;
@@ -128,7 +128,6 @@ export class OAuthService {
           this.handleError("Authorization was cancelled");
         }
       }, 1000);
-
     } catch (error) {
       this.handleError(error instanceof Error ? error.message : "Failed to initiate OAuth flow");
     }

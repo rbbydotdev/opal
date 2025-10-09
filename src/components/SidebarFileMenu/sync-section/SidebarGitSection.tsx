@@ -110,10 +110,10 @@ function LatestInfo({ info, currentWorkspace }: { info: WorkspaceRepoType; curre
                 <span className="sr-only">hide/show</span>
               </summary>
               <ul>
-                {conflictingFiles.map((f) => (
-                  <li key={f} className="truncate">
+                {conflictingFiles.map((file) => (
+                  <li key={file} className="truncate">
                     <span>
-                      <Link to={currentWorkspace.resolveFileUrl(f)}>{f}</Link>
+                      <Link to={currentWorkspace.resolveFileUrl(file)}>{file}</Link>
                     </span>
                   </li>
                 ))}

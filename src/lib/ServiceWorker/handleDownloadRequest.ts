@@ -1,6 +1,7 @@
 import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, joinPath, strictPathname } from "@/lib/paths2";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
 import { signalRequest } from "@/lib/ServiceWorker/utils";
@@ -25,9 +26,9 @@ export async function handleDownloadRequest(workspaceName: string): Promise<Resp
 
     const workspace = await SWWStore.tryWorkspace(workspaceName);
 
-    await workspace.disk.fileTree.index();
+    await workspace.getDisk().fileTree.index();
 
-    const fileNodes = [...workspace.disk.fileTree.iterator(FilterOutSpecialDirs)];
+    const fileNodes = [...workspace.getDisk().fileTree.iterator(FilterOutSpecialDirs)] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
       console.warn("No files found in the workspace to download.");
@@ -44,7 +45,8 @@ export async function handleDownloadRequest(workspaceName: string): Promise<Resp
             const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
             zip.add(fileStream);
             //'stream' file by file
-            void workspace.disk
+            void workspace
+              .getDisk()
               .readFile(node.path)
               .then((data) => {
                 fileStream.push(coerceUint8Array(data), true);

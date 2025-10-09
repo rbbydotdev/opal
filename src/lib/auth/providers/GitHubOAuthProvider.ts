@@ -1,6 +1,11 @@
 import { RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuth";
-import { exchangeCodeForToken, generateCodeChallenge, generateCodeVerifier, getGithubOAuthUrl } from "@/lib/auth/GithubOAuthFlow";
-import { OAuthProvider, OAuthProviderConfig, OAuthChannel, OAuthCbEvents } from "./OAuthProvider";
+import {
+  exchangeCodeForToken,
+  generateCodeChallenge,
+  generateCodeVerifier,
+  getGithubOAuthUrl,
+} from "@/lib/auth/GithubOAuthFlow";
+import { OAuthCbChannel, OAuthCbEvents, OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
 export class GitHubOAuthProvider extends OAuthProvider {
   private codeVerifier: string | null = null;
@@ -22,7 +27,7 @@ export class GitHubOAuthProvider extends OAuthProvider {
   }
 
   setupChannelListeners(
-    channel: OAuthChannel,
+    channel: OAuthCbChannel,
     config: OAuthProviderConfig,
     onSuccess: (data: RemoteAuthOAuthRecordInternal) => void,
     onError: (error: string) => void

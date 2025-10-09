@@ -13,7 +13,11 @@ export const SearchWorkerApi = {
       yield* workspace.NewScannable().search(searchTerm);
     }
   },
-  async *searchWorkspaces(workspaces: AsyncGenerator<Workspace> | Workspace[], searchTerm: string, mode: SearchMode = "content") {
+  async *searchWorkspaces(
+    workspaces: AsyncGenerator<Workspace> | Workspace[],
+    searchTerm: string,
+    mode: SearchMode = "content"
+  ) {
     for await (const workspace of workspaces) {
       if (mode === "filename") {
         yield* SearchWorkerApi.searchFilenames(workspace, searchTerm);
@@ -30,7 +34,7 @@ export const SearchWorkerApi = {
     });
 
     // Search file names
-    const matchedFiles = files.filter(filePath => {
+    const matchedFiles = files.filter((filePath) => {
       const filename = basename(filePath);
       return filename.toLowerCase().includes(searchTerm.toLowerCase());
     });
@@ -38,8 +42,9 @@ export const SearchWorkerApi = {
     // Yield results in the same format as content search
     if (matchedFiles.length > 0) {
       yield {
-        matches: matchedFiles.map(filePath => ({
-          chsum: filePath, // Use file path as checksum for filename search
+        matches: matchedFiles.map((filePath) => ({
+          // chsum: filePath, // Use file path as checksum for filename search
+          chsum: 0,
           lineNumber: 1,
           lineStart: 0,
           lineEnd: basename(filePath).length,
@@ -53,8 +58,8 @@ export const SearchWorkerApi = {
         meta: {
           workspaceId: workspace.id,
           workspaceName: workspace.name,
-          sourceFile: matchedFiles[0], // Use first matched file as source
-        }
+          filePath: matchedFiles[0]!, // Use first matched file as source
+        },
       };
     }
   },

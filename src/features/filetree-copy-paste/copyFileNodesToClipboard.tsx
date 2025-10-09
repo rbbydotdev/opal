@@ -62,7 +62,7 @@ export function useCopyKeydownImages(currentWorkspace: Workspace) {
         //TODO: probably reconcile this hyper object handling with prepareNodeDataTransfer
         const fileNodes = Array.from(new Set([...selectedRange, fullPath, focused ? focused : null]))
           .filter(Boolean)
-          .map((entry) => currentWorkspace.disk.fileTree.nodeFromPath(absPath(entry)))
+          .map((entry) => currentWorkspace.getDisk().fileTree.nodeFromPath(absPath(entry)))
           .filter(Boolean);
         void copyFileNodesToClipboard({ fileNodes, action: "copy", workspaceId: currentWorkspace.id });
 

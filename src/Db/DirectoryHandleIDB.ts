@@ -3,6 +3,8 @@
  * Dexie cannot serialize these objects, so we use the native IndexedDB API
  */
 
+import { InternalServerError, NotFoundError } from "../lib/errors";
+
 const DB_NAME = "DirectoryHandlesDB";
 const DB_VERSION = 1;
 const STORE_NAME = "directoryHandles";
@@ -104,13 +106,16 @@ export class DirectoryHandleIDB {
           return record.handle;
         } catch (permissionError) {
           await this.removeHandle(diskId);
-          return null;
+          throw new NotFoundError(`Directory handle for diskId '${diskId}' has invalid permissions and was removed`);
         }
       } else {
-        return null;
+        throw new NotFoundError(`Directory handle not found for diskId '${diskId}'`);
       }
     } catch (error) {
-      return null;
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new InternalServerError(`Failed to retrieve directory handle for diskId '${diskId}': ${error}`);
     }
   }
 
@@ -134,7 +139,7 @@ export class DirectoryHandleIDB {
     }
   }
 
-  static async getMetadata(diskId: string): Promise<{ directoryName: string; lastAccessed: Date } | null> {
+  static async getMetadata(diskId: string): Promise<{ directoryName: string; lastAccessed: Date }> {
     try {
       const db = await this.getDB();
       const transaction = db.transaction([STORE_NAME], "readonly");
@@ -156,15 +161,25 @@ export class DirectoryHandleIDB {
           lastAccessed: record.lastAccessed,
         };
       }
-      return null;
+      throw new NotFoundError(`Metadata not found for diskId '${diskId}'`);
     } catch (error) {
-      return null;
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new InternalServerError(`Failed to retrieve metadata for diskId '${diskId}': ${error}`);
     }
   }
 
   static async hasHandle(diskId: string): Promise<boolean> {
-    const handle = await this.getHandle(diskId);
-    return handle !== null;
+    try {
+      const handle = await this.getHandle(diskId);
+      return handle !== null;
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return false;
+      }
+      throw error;
+    }
   }
 
   static async listAll(): Promise<Array<{ diskId: string; directoryName: string; lastAccessed: Date }>> {
@@ -189,7 +204,7 @@ export class DirectoryHandleIDB {
         lastAccessed: record.lastAccessed,
       }));
     } catch (error) {
-      return [];
+      throw new InternalServerError(`Failed to list all directory handles: ${error}`);
     }
   }
 }

@@ -44,7 +44,7 @@ export async function validateNetlifyToken({ accessToken }: { accessToken: strin
       throw new Error(`Failed to validate token: ${response.statusText}`);
     }
 
-    const userData = await response.json();
+    const userData = (await response.json()) as { id: string };
 
     if (!userData || !userData.id) {
       throw new Error("Invalid token: Could not retrieve user data");

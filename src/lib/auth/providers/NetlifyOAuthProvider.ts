@@ -1,6 +1,6 @@
 import { RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuth";
 import { getNetlifyOAuthUrl } from "@/lib/auth/NetlifyOAuthFlow";
-import { OAuthProvider, OAuthProviderConfig, OAuthChannel, OAuthCbEvents } from "./OAuthProvider";
+import { OAuthCbChannel, OAuthCbEvents, OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
 export class NetlifyOAuthProvider extends OAuthProvider {
   constructor() {
@@ -15,7 +15,7 @@ export class NetlifyOAuthProvider extends OAuthProvider {
   }
 
   setupChannelListeners(
-    channel: OAuthChannel,
+    channel: OAuthCbChannel,
     config: OAuthProviderConfig,
     onSuccess: (data: RemoteAuthOAuthRecordInternal) => void,
     onError: (error: string) => void

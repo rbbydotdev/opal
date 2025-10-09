@@ -6,7 +6,16 @@ export interface AsyncKeyValueStore {
   delete(key: string): Promise<void>;
   keys(prefix?: string): Promise<string[]>;
 }
-type FileEntry = { type: "file"; data: string } | { type: "dir" } | { type: "symlink"; target: string };
+type FileEntry =
+  | { type: "file"; data: string | Uint8Array | Buffer }
+  | { type: "dir" }
+  | { type: "symlink"; target: string };
+
+type FileFileEntry = { type: "file"; data: string | Uint8Array | Buffer };
+
+function isFileEntry(entry: FileEntry): entry is FileFileEntry {
+  return entry.type === "file";
+}
 
 export class KVFileSystem implements CommonFileSystem {
   constructor(private store: AsyncKeyValueStore) {}
