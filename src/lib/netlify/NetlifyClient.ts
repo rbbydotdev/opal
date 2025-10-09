@@ -23,7 +23,7 @@ export class NetlifyClient {
         throw new Error(`Netlify API error: ${response.status} ${response.statusText}`);
       }
 
-      return response.json();
+      return response.json() as Promise<T>;
     } catch (e) {
       throw mapToTypedError(e);
     }
@@ -67,7 +67,7 @@ export class NetlifyClient {
 
   async deployFiles(siteId: string, files: Map<string, string | Blob>): Promise<NetlifyDeploy> {
     const formData = new FormData();
-    
+
     files.forEach((content, path) => {
       if (typeof content === "string") {
         formData.append(path, new Blob([content], { type: "text/plain" }), path);
@@ -88,7 +88,7 @@ export class NetlifyClient {
       throw new Error(`Deploy failed: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<NetlifyDeploy>;
   }
 }
 

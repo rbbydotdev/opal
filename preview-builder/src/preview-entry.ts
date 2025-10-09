@@ -7,15 +7,15 @@ import "github-markdown-css/github-markdown-light.css";
 
 // Fast image loading with reduced timeout
 async function loadImagesOptimized(images: HTMLImageElement[]) {
-  const promises = images.map(img => 
+  const promises = images.map((img) =>
     Promise.race([
-      new Promise<boolean>(resolve => {
+      new Promise<boolean>((resolve) => {
         if (img.complete) return resolve(true);
         const onDone = () => resolve(true);
         img.addEventListener("load", onDone, { once: true });
         img.addEventListener("error", onDone, { once: true });
       }),
-      new Promise<boolean>(resolve => setTimeout(() => resolve(true), 500)) // Reduced from 2000ms
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 500)), // Reduced from 2000ms
     ])
   );
   await Promise.allSettled(promises); // Don't wait for failures
@@ -28,7 +28,7 @@ async function processCanvasChunked(sourceCanvas: HTMLCanvasElement, scale: numb
     scaledCanvas.width = sourceCanvas.width * scale;
     scaledCanvas.height = sourceCanvas.height * scale;
     const ctx = scaledCanvas.getContext("2d");
-    
+
     if (!ctx) {
       resolve(scaledCanvas);
       return;
@@ -56,9 +56,9 @@ async function snapshot(target: HTMLElement) {
 
   // Snapdom capture with fast mode
   const captureStart = performance.now();
-  const capture = await snapdom.capture(target, { 
-    fast: true,  // Enable fast mode
-    scale: 1     // Avoid internal scaling
+  const capture = await snapdom.capture(target, {
+    fast: true, // Enable fast mode
+    scale: 1, // Avoid internal scaling
   });
   console.debug(`[iframe] Snapdom capture took ${performance.now() - captureStart}ms`);
 
@@ -79,12 +79,14 @@ async function snapshot(target: HTMLElement) {
     scaledCanvas.toBlob((b) => resolve(b as Blob), "image/webp", 0.8);
   });
   console.debug(`[iframe] Blob creation took ${performance.now() - blobStart}ms`);
-  
+
   const totalTime = performance.now() - perfStart;
   console.debug(`[iframe] Total snapshot time: ${totalTime}ms, blob size: ${blob.size} bytes`);
-  
+
   return blob;
 }
+
+export type PreviewWorkerApiType = typeof PreviewWorkerApi;
 
 const PreviewWorkerApi = {
   async renderFromMarkdownAndSnapshot(markdownContent: string) {
@@ -125,6 +127,6 @@ const PreviewWorkerApi = {
 
     return result;
   },
-} satisfies PreviewWorkerApi;
+};
 
 Comlink.expose(PreviewWorkerApi, Comlink.windowEndpoint(self.parent));

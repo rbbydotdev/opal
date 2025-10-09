@@ -1,49 +1,46 @@
-import { Workspace } from "@/Db/Workspace";
-import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
 // import { DiskSearchResultData } from "@/features/search/SearchResults";
-import { SearchWorkspaceWorker } from "@/workers/SearchWorker/SearchWorkspace";
 import { Semaphore } from "async-mutex";
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export function useSearchWorkspace(workspace: Workspace) {
-  const searchWorker = useMemo(() => {
-    return new SearchWorkspaceWorker();
-  }, []);
+// export function useSearchWorkspace(workspace: Workspace) {
+//   const searchWorker = useMemo(() => {
+//     return new SearchWorkspaceWorker();
+//   }, []);
 
-  const search = useCallback(
-    async function* scan(term: string) {
-      for await (const file of searchWorker.searchWorkspace(workspace, term)) {
-        yield file;
-      }
-    },
-    [searchWorker, workspace]
-  );
-  useEffect(() => {
-    return () => {
-      searchWorker.teardown();
-    };
-  }, [searchWorker]);
+//   const search = useCallback(
+//     async function* scan(term: string) {
+//       for await (const file of searchWorker.searchWorkspace(workspace, term)) {
+//         yield file;
+//       }
+//     },
+//     [searchWorker, workspace]
+//   );
+//   useEffect(() => {
+//     return () => {
+//       searchWorker.teardown();
+//     };
+//   }, [searchWorker]);
 
-  const [appendedResults, setAppendResults] = useState<WorkspaceSearchItem[]>([]);
-  const submit = useCallback(
-    async (searchTerm: string) => {
-      setAppendResults([]);
-      for await (const res of search(searchTerm)) {
-        setAppendResults((prev) => [...prev, res]);
-      }
-    },
-    [search]
-  );
-  const reset = useCallback(() => {
-    setAppendResults([]);
-  }, []);
-  return {
-    submit,
-    results: appendedResults,
-    reset,
-    search,
-  };
-}
+//   const [appendedResults, setAppendResults] = useState<WorkspaceSearchItem[]>([]);
+//   const submit = useCallback(
+//     async (searchTerm: string) => {
+//       setAppendResults([]);
+//       for await (const res of search(searchTerm)) {
+//         setAppendResults((prev) => [...prev, res]);
+//       }
+//     },
+//     [search]
+//   );
+//   const reset = useCallback(() => {
+//     setAppendResults([]);
+//   }, []);
+//   return {
+//     submit,
+//     results: appendedResults,
+//     reset,
+//     search,
+//   };
+// }
 
 // The context now provides functions to interact with the worker pool.
 export const SearchWorkerContext = createContext<{

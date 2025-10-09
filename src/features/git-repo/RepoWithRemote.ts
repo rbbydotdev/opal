@@ -10,9 +10,13 @@ export class RepoWithRemote extends GitRepo {
   state: {
     initialized: boolean;
     remoteOK: boolean;
+    fullInitialized: boolean;
+    bareInitialized: boolean;
   } = {
     initialized: false,
     remoteOK: false,
+    fullInitialized: false,
+    bareInitialized: false,
   };
 
   constructor(
