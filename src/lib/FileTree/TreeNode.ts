@@ -370,6 +370,9 @@ export class TreeNode {
   isTreeNodeWithContent(): this is TreeNodeWithContent {
     return this.isTreeFile() && typeof this.virtualContent === "string";
   }
+  isTreeNodeWithSource(): this is TreeNodeWithSource {
+    return typeof this.source === "string";
+  }
   toJSON(): {
     type: "dir" | "file";
     dirname: string;
@@ -388,6 +391,7 @@ export class TreeNode {
 }
 
 export type TreeNodeWithContent = TreeFile & { virtualContent: string };
+export type TreeNodeWithSource = TreeNode & { source: AbsPath };
 
 export class TreeDir extends TreeNode {
   type = "dir" as const;

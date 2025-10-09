@@ -242,10 +242,12 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
         throw new Error("Parent node not found");
       }
 
-      const newNode = currentWorkspace.addVirtualFileFromSource(
-        { type, basename: basename(duplicatePath(fromNode.path)), sourceNode: fromNode },
-        fromNode.parent ?? fromNode
-      );
+      const newNode = currentWorkspace.addVirtualFile({
+        type,
+        basename: basename(duplicatePath(fromNode.path)),
+        selectedNode: fromNode.parent ?? fromNode,
+        source: fromNode
+      });
 
       setFileTreeCtx({
         editing: newNode.path,
@@ -277,7 +279,12 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
 
     const fileName = name || (type === "dir" ? "newdir" : "newfile.md");
 
-    const newNode = currentWorkspace.addVirtualFile({ type, basename: relPath(fileName) }, parentNode, content);
+    const newNode = currentWorkspace.addVirtualFile({
+      type,
+      basename: relPath(fileName),
+      selectedNode: parentNode,
+      virtualContent: content
+    });
 
     setFileTreeCtx({
       editing: newNode.path,

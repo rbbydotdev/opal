@@ -232,20 +232,16 @@ export class Workspace {
     return this.disk.newFiles(files);
   }
 
-  addVirtualFile(
-    { type, basename }: Pick<TreeNode, "type" | "basename">,
-    selectedNode: TreeNode | null,
-    content?: string
-  ) {
-    return this.disk.addVirtualFile({ type, basename }, selectedNode, content);
+  addVirtualFile(options: {
+    type: TreeNode["type"];
+    basename: TreeNode["basename"];
+    selectedNode?: TreeNode | null;
+    virtualContent?: string;
+    source?: TreeNode;
+  }) {
+    return this.disk.addVirtualFile(options);
   }
 
-  addVirtualFileFromSource(
-    { type, basename, sourceNode }: Pick<TreeNode, "type" | "basename"> & { sourceNode: TreeNode },
-    parentNode: TreeNode | null
-  ) {
-    return this.disk.addVirtualFileFromSource({ type, basename, sourceNode }, parentNode);
-  }
   removeVirtualfile(path: AbsPath) {
     return this.disk.removeVirtualFile(path);
   }
