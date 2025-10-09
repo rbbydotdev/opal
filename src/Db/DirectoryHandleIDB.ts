@@ -41,7 +41,7 @@ export class DirectoryHandleIDB {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, { keyPath: "diskId" });
           store.createIndex("directoryName", "directoryName", { unique: false });
@@ -67,7 +67,7 @@ export class DirectoryHandleIDB {
       };
 
       const request = store.put(record);
-      
+
       await new Promise<void>((resolve, reject) => {
         request.onsuccess = () => {
           resolve();
@@ -183,7 +183,7 @@ export class DirectoryHandleIDB {
         };
       });
 
-      return records.map(record => ({
+      return records.map((record) => ({
         diskId: record.diskId,
         directoryName: record.directoryName,
         lastAccessed: record.lastAccessed,

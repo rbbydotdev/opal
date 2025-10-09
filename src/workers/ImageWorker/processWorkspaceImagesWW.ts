@@ -54,6 +54,6 @@ export async function processWorkspaceImagesWW(
   const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
   await Promise.all(workers);
   console.log(results);
-  await workspace.disk.indexAndEmitNewFiles(results);
+  await workspace.getDisk().indexAndEmitNewFiles(results);
   return results;
 }
