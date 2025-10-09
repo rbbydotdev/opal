@@ -11,6 +11,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -23,6 +26,7 @@ import { Workspace } from "@/Db/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { DefaultFile } from "@/lib/DefaultFile";
 import { RepoInfoProvider } from "@/lib/FileTree/FileTreeRepoProvider";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { RootNode } from "@/lib/FileTree/TreeNode";
@@ -109,7 +113,10 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
               trashSelectedFiles={trashSelectedFiles}
               addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
               addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
-              addMustacheFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "template.mustache"), true)}
+              addGlobalCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "global.css", DefaultFile.GlobalCSS()), true)}
+              addMustacheFile={() =>
+                expandForNode(addDirFile("file", focused || absPath("/"), "template.mustache"), true)
+              }
               addEjsFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs"), true)}
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
@@ -141,6 +148,7 @@ const FileMenuActionButtonRow = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addGlobalCssFile,
   setExpandAll,
   diskType,
   copyFiles,
@@ -150,6 +158,7 @@ const FileMenuActionButtonRow = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void;
+  addGlobalCssFile?: () => void;
   addMustacheFile?: () => void;
   addEjsFile?: () => void;
   addDir: () => void;
@@ -199,8 +208,8 @@ const FileMenuActionButtonRow = ({
         <FolderPlus />
       </ActionButton>
       <ActionButton
-        title="Collapse All"
-        aria-label="Expand All"
+        title="Collapse All / Double click to Expand All"
+        aria-label="Collapse All / Double click to Expand All"
         onDoubleClick={() => setExpandAll(true)}
         onClick={() => setExpandAll(false)}
       >
@@ -217,6 +226,7 @@ const FileMenuCompactActions = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addGlobalCssFile,
   setExpandAll,
   diskType,
   copyFiles,
@@ -226,6 +236,7 @@ const FileMenuCompactActions = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void;
+  addGlobalCssFile?: () => void;
   addMustacheFile?: () => void;
   addEjsFile?: () => void;
   addDir: () => void;
@@ -249,7 +260,7 @@ const FileMenuCompactActions = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
-          <DropdownMenuItem onClick={addMustacheFile}>
+          <DropdownMenuItem className="whitespace-nowrap" onClick={addMustacheFile}>
             <FileTextIcon className="w-4 h-4 mr-2" />
             New Mustache Template
           </DropdownMenuItem>
@@ -265,6 +276,18 @@ const FileMenuCompactActions = ({
             <FileTextIcon className="w-4 h-4 mr-2" />
             New EJS Template
           </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <FileCode2Icon className="w-4 h-4 mr-2" />
+              Template Files
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={addGlobalCssFile}>
+                <FileCode2Icon className="w-4 h-4 mr-2" />
+                global.css
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           <DropdownMenuItem onClick={addDir}>
             <FolderPlus className="w-4 h-4 mr-2" />
             New Folder
@@ -316,6 +339,7 @@ export const SidebarFileMenuFilesActions = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addGlobalCssFile,
   setExpandAll,
   diskType,
   currentWorkspace,
@@ -323,6 +347,7 @@ export const SidebarFileMenuFilesActions = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void; // Optional for future use
+  addGlobalCssFile?: () => void; // Optional for future use
   addMustacheFile?: () => void; // Optional for future use
   addEjsFile?: () => void; // Optional for future use
   addDir: () => void;
@@ -384,6 +409,7 @@ export const SidebarFileMenuFilesActions = ({
           addCssFile={addCssFile}
           addMustacheFile={addMustacheFile}
           addEjsFile={addEjsFile}
+          addGlobalCssFile={addGlobalCssFile}
           setExpandAll={setExpandAll}
           diskType={diskType}
           copyFiles={copyFiles}
@@ -403,6 +429,7 @@ export const SidebarFileMenuFilesActions = ({
         addCssFile={addCssFile}
         addMustacheFile={addMustacheFile}
         addEjsFile={addEjsFile}
+        addGlobalCssFile={addGlobalCssFile}
         setExpandAll={setExpandAll}
         diskType={diskType}
         copyFiles={copyFiles}
