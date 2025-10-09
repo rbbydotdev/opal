@@ -668,16 +668,6 @@ export abstract class Disk {
       .insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent)
       .tagSource(props.sourceNode);
   }
-  // addVirtualFileWithContent(
-  //   props: Pick<TreeNode, "type" | "basename"> & { content?: string },
-  //   parentNode: TreeNode | null
-  // ) {
-  //   const parent = parentNode || this.fileTree.root;
-  //   const node = this.fileTree.insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent);
-  //   if (node instanceof VirtualFileTreeNode && props.content != undefined) node.tagContent(props.content);
-  //   void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
-  //   return node;
-  // }
 
   addVirtualFile(
     props: Pick<TreeNode, "type" | "basename">,
