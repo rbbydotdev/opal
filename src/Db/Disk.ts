@@ -658,29 +658,26 @@ export abstract class Disk {
     //TODO donno why indexing
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
   }
-  addVirtualFileFromSource(
-    props: Pick<TreeNode, "type" | "basename"> & { sourceNode: TreeNode },
-    parentNode: TreeNode | null
-  ) {
-    const parent = parentNode || this.fileTree.root;
-    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
-    return this.fileTree
-      .insertClosestVirtualNode({ type: props.type, basename: props.basename }, parent)
-      .tagSource(props.sourceNode);
-  }
 
-  addVirtualFile(
-    props: Pick<TreeNode, "type" | "basename">,
-    selectedNode: TreeNode | null,
-    virtualContent?: string
-  ): TreeNode {
-    const parent = selectedNode || this.fileTree.root;
+  addVirtualFile(options: {
+    type: TreeNode["type"];
+    basename: TreeNode["basename"];
+    selectedNode?: TreeNode | null;
+    virtualContent?: string;
+    source?: TreeNode;
+  }): TreeNode {
+    const parent = options.selectedNode || this.fileTree.root;
 
     const node = this.fileTree.insertClosestVirtualNode(
-      { type: props.type, basename: props.basename },
+      { type: options.type, basename: options.basename },
       parent,
-      virtualContent
+      options.virtualContent
     );
+    
+    if (options.source) {
+      node.tagSource(options.source);
+    }
+    
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return node;
   }
