@@ -9,9 +9,17 @@ import { RootNode } from "@/lib/FileTree/TreeNode";
 import { OpalMimeType } from "@/lib/fileType";
 import { cn } from "@/lib/utils";
 
-export type SourceMimeType = Extract<OpalMimeType, "text/css" | "text/plain" | "text/markdown">;
+export type SourceMimeType = Extract<
+  OpalMimeType,
+  "text/css" | "text/plain" | "text/markdown" | "text/html" | "text/x-mustache" | "text/x-ejs"
+>;
 export const isSourceMimeType = (mimeType: string): mimeType is SourceMimeType =>
-  mimeType === "text/css" || mimeType === "text/plain" || mimeType === "text/markdown";
+  mimeType === "text/css" ||
+  mimeType === "text/plain" ||
+  mimeType === "text/markdown" ||
+  mimeType === "text/html" ||
+  mimeType === "text/x-mustache" ||
+  mimeType === "text/x-ejs";
 
 export const SourceEditor = ({
   hasConflicts,

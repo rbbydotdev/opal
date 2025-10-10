@@ -4,6 +4,7 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
+import { StockFilesMenu } from "@/components/SidebarFileMenu/shared/StockFilesMenu";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +43,7 @@ import {
   FileEditIcon,
   FileTextIcon,
   FolderPlus,
+  Globe,
   Info,
   Scissors,
   Trash2,
@@ -116,10 +118,13 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
               addGlobalCssFile={() =>
                 expandForNode(addDirFile("file", focused || absPath("/"), "global.css", DefaultFile.GlobalCSS()), true)
               }
-              addMustacheFile={() =>
-                expandForNode(addDirFile("file", focused || absPath("/"), "template.mustache"), true)
+              addHtmlFile={() =>
+                expandForNode(addDirFile("file", focused || absPath("/"), "index.html", DefaultFile.HTML()), true)
               }
-              addEjsFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs"), true)}
+              addMustacheFile={() =>
+                expandForNode(addDirFile("file", focused || absPath("/"), "template.mustache", DefaultFile.Mustache()), true)
+              }
+              addEjsFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs", DefaultFile.EJS()), true)}
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
               diskType={diskType}
@@ -161,6 +166,7 @@ const FileMenuActionButtonRow = ({
   addFile: () => void;
   addCssFile?: () => void;
   addGlobalCssFile?: () => void;
+  addHtmlFile?: () => void;
   addMustacheFile?: () => void;
   addEjsFile?: () => void;
   addDir: () => void;
@@ -209,6 +215,7 @@ const FileMenuActionButtonRow = ({
       <ActionButton onClick={addDir} aria-label="Add Folder" title="New Folder">
         <FolderPlus />
       </ActionButton>
+      <StockFilesMenu variant="icon" />
       <ActionButton
         title="Collapse All / Double click to Expand All"
         aria-label="Collapse All / Double click to Expand All"
@@ -229,6 +236,7 @@ const FileMenuCompactActions = ({
   addMustacheFile,
   addEjsFile,
   addGlobalCssFile,
+  addHtmlFile,
   setExpandAll,
   diskType,
   copyFiles,
@@ -239,6 +247,7 @@ const FileMenuCompactActions = ({
   addFile: () => void;
   addCssFile: () => void;
   addGlobalCssFile: () => void;
+  addHtmlFile: () => void;
   addMustacheFile: () => void;
   addEjsFile: () => void;
   addDir: () => void;
@@ -305,6 +314,18 @@ const FileMenuCompactActions = ({
                 <FileCode2Icon className="w-4 h-4 mr-2" />
                 global.css
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={deferFn(addHtmlFile)}>
+                <Globe className="w-4 h-4 mr-2" />
+                index.html
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={deferFn(addMustacheFile)}>
+                <FileTextIcon className="w-4 h-4 mr-2" />
+                template.mustache
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={deferFn(addEjsFile)}>
+                <FileTextIcon className="w-4 h-4 mr-2" />
+                template.ejs
+              </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
 
@@ -355,6 +376,7 @@ export const SidebarFileMenuFilesActions = ({
   addMustacheFile,
   addEjsFile,
   addGlobalCssFile,
+  addHtmlFile,
   setExpandAll,
   diskType,
   currentWorkspace,
@@ -363,6 +385,7 @@ export const SidebarFileMenuFilesActions = ({
   addFile: () => void;
   addCssFile: () => void;
   addGlobalCssFile: () => void;
+  addHtmlFile: () => void;
   addMustacheFile: () => void;
   addEjsFile: () => void;
   addDir: () => void;
@@ -425,6 +448,7 @@ export const SidebarFileMenuFilesActions = ({
           addMustacheFile={addMustacheFile}
           addEjsFile={addEjsFile}
           addGlobalCssFile={addGlobalCssFile}
+          addHtmlFile={addHtmlFile}
           setExpandAll={setExpandAll}
           diskType={diskType}
           copyFiles={copyFiles}
