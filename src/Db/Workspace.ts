@@ -1,4 +1,13 @@
-import { CreateDetails, DeleteDetails, Disk, DiskEvents, DiskType, IndexTrigger, RenameDetails } from "@/Db/Disk";
+import {
+  CreateDetails,
+  DeleteDetails,
+  Disk,
+  DiskEvents,
+  DiskType,
+  IndexTrigger,
+  OpFsDirMountDisk,
+  RenameDetails,
+} from "@/Db/Disk";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { ImageCache } from "@/Db/ImageCache";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
@@ -200,19 +209,33 @@ export class Workspace {
   static async CreateNew(
     name: string,
     files: Record<string, string | Promise<string> | (() => string | Promise<string>)> = {},
-    diskType?: DiskType
+    diskType: DiskType,
+    diskOptions?: {
+      selectedDirectory: FileSystemDirectoryHandle | null;
+    }
   ) {
-    const workspace = (await WorkspaceDAO.CreateNewWithDiskType({ name, diskType })).toModel();
+    let workspace: Workspace;
+    const workspaceDAO = await WorkspaceDAO.CreateNewWithDiskType({ name, diskType });
+    //TODO: make this more elegant, too much special case inside of Workspace class
+    if (diskType === "OpFsDirMountDisk") {
+      if (!diskOptions?.selectedDirectory) {
+        throw new BadRequestError("selectedDirectory is required for OpFsDirMountDisk");
+      }
+      const disk = workspaceDAO.disk.toModel() as OpFsDirMountDisk;
+      await disk.setDirectoryHandle(diskOptions.selectedDirectory);
+    }
+    workspace = workspaceDAO.toModel();
     await workspace.newFiles(
       Object.entries(files).map(([path, content]) => [
         absPath(path),
         typeof content === "function" ? content() : content,
       ])
     );
+
     return workspace;
   }
 
-  static async CreateNewWithSeedFiles(name: string, diskType?: DiskType) {
+  static async CreateNewWithSeedFiles(name: string, diskType: DiskType) {
     return Workspace.CreateNew(name, DefaultTemplate.seedFiles, diskType);
   }
 
