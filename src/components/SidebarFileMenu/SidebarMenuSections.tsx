@@ -133,7 +133,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
       <div className="overflow-y-auto no-scrollbar pr-4">
         <SidebarDndList storageKey={"sidebarMenu"} show={storedValue}>
           <DndSlot dndId={"publish"}>
-            <SidebarFileMenuPublish className="flex-shrink flex" />
+            <SidebarFileMenuPublish className="flex-shrink flex" currentWorkspace={currentWorkspace} />
           </DndSlot>
           <DndSlot dndId={"git"}>
             <SidebarGitSection currentWorkspace={currentWorkspace} className="flex-shrink flex flex-col" />

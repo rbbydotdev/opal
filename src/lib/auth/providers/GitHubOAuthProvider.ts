@@ -22,7 +22,7 @@ export class GitHubOAuthProvider extends OAuthProvider {
       redirectUri: config.redirectUri,
       state: config.state,
       codeChallenge,
-      scopes: ["public_repo", "private_repo", "repo", "workflow"],
+      scopes: ["repo", "workflow"],
     });
   }
 

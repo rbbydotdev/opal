@@ -8,6 +8,7 @@ import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Thumb } from "@/Db/Thumb";
 import { Workspace } from "@/Db/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
+import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
@@ -799,18 +800,13 @@ export function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
   return cmd.type === "select";
 }
 
-//
-// ---- Theme Preview Component ----
-//
-//
-// ---- Hook ----
-//
 export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir, renameDirOrFile, trashFile } = useWorkspaceFileMgmt(currentWorkspace);
-  const [repo, playbook] = useMemo(
-    () => [currentWorkspace.getRepo(), currentWorkspace.getPlaybook()] as const,
-    [currentWorkspace]
-  );
+  // const { repo, playbook } = useMemo(
+  //   () => ({ repo: currentWorkspace.getRepo(), playbook: currentWorkspace.getPlaybook() }),
+  //   [currentWorkspace]
+  // );
+  const { repo, playbook } = useWorkspaceGitRepo({ currentWorkspace });
   const previewURL = useWorkspacePathPreviewURL();
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath } = useWorkspaceRoute();

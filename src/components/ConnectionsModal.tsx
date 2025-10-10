@@ -53,7 +53,10 @@ export function ConnectionsModal({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[26.5625rem] sm:min-h-[37rem] max-h-[80vh]" onSelect={onSelect}>
+      <DialogContent
+        className="_sm:max-w-[26.5625rem] _sm:min-h-[37rem] max-h-[80vh] overflow-y-auto"
+        onSelect={onSelect}
+      >
         <ConnectionsModalContent
           mode={mode}
           editConnection={editConnection}
