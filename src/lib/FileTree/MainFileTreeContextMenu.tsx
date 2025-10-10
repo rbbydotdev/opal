@@ -1,14 +1,19 @@
 import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { getDiskTypeLabel } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
+import { DefaultFile } from "@/lib/DefaultFile";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import {
@@ -20,7 +25,9 @@ import {
   FilePlusIcon,
   FileTextIcon,
   FolderPlusIcon,
+  Globe,
   Info,
+  Package,
   Scissors,
   SquarePen,
   Trash2,
@@ -40,6 +47,7 @@ export const MainFileTreeContextMenu = ({
   const { addFile, addDir, trash, copy, cut, paste, duplicate, rename } = useFiletreeMenuContextMenuActions({
     currentWorkspace,
   });
+  const { addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
 
   const { selectedFocused } = useFileTreeMenuCtx();
   const { setExpandAll } = useTreeExpanderContext();
@@ -50,6 +58,12 @@ export const MainFileTreeContextMenu = ({
   const addEjsFile = () => addFile(fileNode, "template.ejs");
   const addMustacheFile = () => addFile(fileNode, "template.mustache");
   const addMarkdownFile = () => addFile(fileNode, "newfile.md");
+  
+  // Stock file functions
+  const addGlobalCssFile = () => addDirFile("file", fileNode.closestDir()!, "global.css", DefaultFile.GlobalCSS());
+  const addHtmlFile = () => addDirFile("file", fileNode.closestDir()!, "index.html", DefaultFile.HTML());
+  const addStockMustacheFile = () => addDirFile("file", fileNode.closestDir()!, "template.mustache", DefaultFile.Mustache());
+  const addStockEjsFile = () => addDirFile("file", fileNode.closestDir()!, "template.ejs", DefaultFile.EJS());
 
   const fnRef = useRef<null | (() => void)>(null);
   const deferredFn = (fn: () => void) => {
@@ -91,6 +105,31 @@ export const MainFileTreeContextMenu = ({
           <FolderPlusIcon className="mr-3 h-4 w-4" />
           New Folder
         </ContextMenuItem>
+        
+        <ContextMenuSub>
+          <ContextMenuSubTrigger inset>
+            <Package className="mr-3 h-4 w-4" />
+            Stock Files
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent>
+            <ContextMenuItem onClick={deferredFn(() => addGlobalCssFile())}>
+              <FileCode2Icon className="mr-3 h-4 w-4" />
+              global.css
+            </ContextMenuItem>
+            <ContextMenuItem onClick={deferredFn(() => addHtmlFile())}>
+              <Globe className="mr-3 h-4 w-4" />
+              index.html
+            </ContextMenuItem>
+            <ContextMenuItem onClick={deferredFn(() => addStockMustacheFile())}>
+              <FileTextIcon className="mr-3 h-4 w-4" />
+              template.mustache
+            </ContextMenuItem>
+            <ContextMenuItem onClick={deferredFn(() => addStockEjsFile())}>
+              <FileTextIcon className="mr-3 h-4 w-4" />
+              template.ejs
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
 
         <ContextMenuSeparator />
         {!isRoot && (

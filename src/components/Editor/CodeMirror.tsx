@@ -86,7 +86,10 @@ export const CodeMirrorEditor = ({
   enableConflictResolution = true,
 }: {
   hasConflicts: boolean;
-  mimeType: Extract<OpalMimeType, "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html">;
+  mimeType: Extract<
+    OpalMimeType,
+    "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html" | "text/x-mustache"
+  >;
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
