@@ -81,8 +81,6 @@ export async function exchangeCodeForToken({
   corsProxy?: string;
   clientId?: string;
 }): Promise<GithubOAuthFlowPayload> {
-  // console.log("=== Starting OAuth token exchange ===");
-
   try {
     const baseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/github.com` : "https://github.com";
     const tokenUrl = `${baseUrl}/login/oauth/access_token`;

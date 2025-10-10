@@ -14,7 +14,6 @@ import { OnVerificationCallback } from "../../../node_modules/@octokit/auth-oaut
 
 // corsProxy,
 // clientId: NotEnv.PublicGithubClientID,
-// scopes: ["public_repo", "private_repo", "repo", "workflow"],
 const stripTrailingSlash = (path: string): string => {
   return path.endsWith("/") ? path.slice(0, -1) : path;
 };
@@ -27,7 +26,7 @@ export type GithubDeviceAuthFlowPayload = {
 export async function GithubDeviceAuthFlow({
   corsProxy,
   clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
-  scopes = ["public_repo", "private_repo", "repo", "workflow"],
+  scopes = ["repo", "workflow"],
   onVerification,
   onAuthentication,
 }: {
