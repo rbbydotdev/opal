@@ -105,7 +105,20 @@ const handleRequest = async (request: Request, env: Env): Promise<Response> => {
 		}
 
 		const body = await request.text();
-		const params = new URLSearchParams(body);
+		const contentType = request.headers.get('content-type') || '';
+		
+		let params: URLSearchParams;
+		if (contentType.includes('application/json')) {
+			// Handle JSON request from @octokit/auth-oauth-device
+			const jsonData = JSON.parse(body);
+			params = new URLSearchParams();
+			for (const [key, value] of Object.entries(jsonData)) {
+				params.set(key, String(value));
+			}
+		} else {
+			// Handle URL-encoded request
+			params = new URLSearchParams(body);
+		}
 
 		// Add the client secret to the request
 		params.set('client_secret', env.GITHUB_CLIENT_SECRET);

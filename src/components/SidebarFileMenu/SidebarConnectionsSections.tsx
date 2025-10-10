@@ -174,7 +174,7 @@ function ConnectionManager() {
                   onClick={(e) => handleSelect(sectionRef, e, connection)}
                 >
                   <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
-                    <div className="w-4 h-4 flex justify-center items-center  mr-0.5">
+                    <div className="w-4 h-4 flex justify-center items-center mr-0.5 shrink-0">
                       {isSelected(connection.guid) && <Check className="w-3 h-3 rounded-full _border" />}
                     </div>
                     <RemoteAuthSourceIconComponent

@@ -54,6 +54,12 @@ export function DeviceAuth({
             login: auth.login,
             obtainedAt: Date.now(),
           };
+
+          // Populate the form with the authentication data (same as OAuth component)
+          if (form) {
+            form.setValue("data", remoteAuthRef.current);
+          }
+
           setState("auth-success");
         },
       });
@@ -165,7 +171,7 @@ export function DeviceAuth({
           Cancel
         </Button>
         {(state === "auth-success" || state === "pending-rad-save") && (
-          <Button type="submit" variant="default">
+          <Button type="submit" variant="default" disabled={state === "pending-rad-save"}>
             {state === "pending-rad-save" && <Loader size={12} className="animate-spin animation-iteration-infinite" />}
             OK
           </Button>
