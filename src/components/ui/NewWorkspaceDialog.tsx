@@ -12,9 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Disk, DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType, OpFsDirMountDisk } from "@/Db/Disk";
+import { Disk, DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/Db/WorkspaceTemplates";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { useNavigate } from "@tanstack/react-router";
@@ -104,18 +103,9 @@ export function NewWorkspaceDialog({
 
     setPending(true);
     try {
-      let workspace: Workspace;
-
-      if (fileSystem === "OpFsDirMountDisk" && selectedDirectory) {
-        // Create workspace with directory-mounted OPFS
-        const workspaceDAO = await WorkspaceDAO.CreateNewWithDiskType({ name: workspaceName, diskType: fileSystem });
-        const disk = workspaceDAO.disk.toModel() as OpFsDirMountDisk;
-        await disk.setDirectoryHandle(selectedDirectory);
-        workspace = workspaceDAO.toModel();
-        await workspace.newFiles(Object.entries(template.seedFiles).map(([path, content]) => [path as any, content]));
-      } else {
-        workspace = await Workspace.CreateNew(workspaceName, template.seedFiles, fileSystem);
-      }
+      const workspace = await Workspace.CreateNew(workspaceName, template.seedFiles, fileSystem, {
+        selectedDirectory,
+      });
 
       setPending(false);
       setIsOpen(false);
