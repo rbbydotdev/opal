@@ -168,6 +168,13 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
       throw new Error("Cannot write to root directory as file");
     }
     const normalizedPath = this.normalizePath(path);
+    
+    // Ensure parent directory exists for OPFS compatibility
+    const parentDir = normalizedPath.substring(0, normalizedPath.lastIndexOf('/'));
+    if (parentDir && parentDir !== normalizedPath) {
+      await this.mkdir(parentDir, { recursive: true, mode: 0o777 });
+    }
+    
     return this.promises.writeFile(normalizedPath, data, options);
   }
 
