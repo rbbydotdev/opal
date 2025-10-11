@@ -1,6 +1,5 @@
 import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -13,8 +12,9 @@ import {
 } from "@/components/ui/context-menu";
 import { getDiskTypeLabel } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
-import { DefaultFile } from "@/lib/DefaultFile";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { DefaultFile } from "@/lib/DefaultFile";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import {
   ClipboardCopy,
@@ -58,11 +58,12 @@ export const MainFileTreeContextMenu = ({
   const addEjsFile = () => addFile(fileNode, "template.ejs");
   const addMustacheFile = () => addFile(fileNode, "template.mustache");
   const addMarkdownFile = () => addFile(fileNode, "newfile.md");
-  
+
   // Stock file functions
   const addGlobalCssFile = () => addDirFile("file", fileNode.closestDir()!, "global.css", DefaultFile.GlobalCSS());
   const addHtmlFile = () => addDirFile("file", fileNode.closestDir()!, "index.html", DefaultFile.HTML());
-  const addStockMustacheFile = () => addDirFile("file", fileNode.closestDir()!, "template.mustache", DefaultFile.Mustache());
+  const addStockMustacheFile = () =>
+    addDirFile("file", fileNode.closestDir()!, "template.mustache", DefaultFile.Mustache());
   const addStockEjsFile = () => addDirFile("file", fileNode.closestDir()!, "template.ejs", DefaultFile.EJS());
 
   const fnRef = useRef<null | (() => void)>(null);
@@ -80,6 +81,7 @@ export const MainFileTreeContextMenu = ({
         onCloseAutoFocus={(event) => {
           if (fnRef.current) {
             event.preventDefault();
+
             fnRef.current();
             fnRef.current = null;
           }
@@ -105,7 +107,7 @@ export const MainFileTreeContextMenu = ({
           <FolderPlusIcon className="mr-3 h-4 w-4" />
           New Folder
         </ContextMenuItem>
-        
+
         <ContextMenuSub>
           <ContextMenuSubTrigger inset>
             <Package className="mr-3 h-4 w-4" />

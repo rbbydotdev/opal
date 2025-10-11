@@ -12,7 +12,7 @@ import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander
 import { isContainer, isLeaf, LexicalTreeViewNode } from "@/lib/lexical/treeViewDisplayNodesLexical";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
-import { PlusIcon } from "lucide-react";
+import { Dot, PlusIcon } from "lucide-react";
 import mdast from "mdast";
 import { twMerge } from "tailwind-merge";
 import unist from "unist";
@@ -111,7 +111,12 @@ export function SidebarTreeViewMenuContent({
       {(parent.children ?? []).map((displayNode) => (
         <SidebarMenuItem key={displayNode.id}>
           {isContainer(displayNode) ? (
-            <Collapsible open={isExpanded(displayNode.id)} onOpenChange={(o) => expandSingle(displayNode.id, o)}>
+            <Collapsible
+              open={isExpanded(displayNode.id)}
+              onOpenChange={(o) => {
+                !!displayNode.children?.length ? expandSingle(displayNode.id, o) : null;
+              }}
+            >
               <CollapsibleTrigger asChild>
                 <div>
                   <SidebarMenuButton asChild className="h-6">
@@ -200,17 +205,17 @@ export const TreeViewMenuParent = ({
     <span
       tabIndex={0}
       onClick={onClick}
-      className={twMerge(
-        // isSelectedRange || isFocused ? "bg-sidebar-accent font-bold" : "",
-        className,
-        "w-full flex cursor-pointer select-none group/dir my-0"
-      )}
+      className={twMerge(className, "w-full flex cursor-pointer select-none group/dir my-0")}
       style={{ paddingLeft: depth + "rem" }}
     >
       <div className="flex w-full items-center truncate">
         <div className="flex justify-center items-center">
           <Bullet {...node} />
-          <PlusIcon className="text-xs mr-1" size={8} />
+          {!!node.children?.length ? (
+            <PlusIcon className="text-xs mr-1" size={12} />
+          ) : (
+            <Dot className="text-xs mr-1" size={12} />
+          )}
         </div>
         <div className="text-xs truncate w-full flex items-center">
           <div className="truncate text-2xs font-bold font-mono">{children}</div>

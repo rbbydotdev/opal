@@ -282,8 +282,8 @@ const FileMenuCompactActions = ({
         <DropdownMenuContent
           align="end"
           onCloseAutoFocus={(e) => {
-            e.preventDefault();
             if (deferredFn.current) {
+              e.preventDefault();
               deferredFn.current();
               deferredFn.current = null;
             }
@@ -293,19 +293,19 @@ const FileMenuCompactActions = ({
             <FileTextIcon className="w-4 h-4 mr-2" />
             New Mustache Template
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={addFile}>
+          <DropdownMenuItem onClick={deferFn(addFile)}>
             <FileEditIcon className="w-4 h-4 mr-2" />
             New Markdown File
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={addCssFile}>
+          <DropdownMenuItem onClick={deferFn(addCssFile)}>
             <FileCode2Icon className="w-4 h-4 mr-2" />
             New CSS File
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={addEjsFile}>
+          <DropdownMenuItem onClick={deferFn(addEjsFile)}>
             <FileTextIcon className="w-4 h-4 mr-2" />
             New EJS Template
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={addDir}>
+          <DropdownMenuItem onClick={deferFn(addDir)}>
             <FolderPlus className="w-4 h-4 mr-2" />
             New Folder
           </DropdownMenuItem>
