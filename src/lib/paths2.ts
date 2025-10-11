@@ -333,12 +333,16 @@ export const stringifyEntry = (
   return String(entry);
 };
 
-export async function mkdirRecursive(this: CommonFileSystem, filePath: AbsPath) {
-  const segments = encodePath(filePath).split("/").slice(1);
+export async function mkdirRecursive(this: CommonFileSystem, filePath: AbsPath | RelPath | string) {
+  const encoded = encodePath(filePath);
+  const segments = encoded.split("/").filter(s => s !== "");
+  
   for (let i = 1; i <= segments.length; i++) {
-    const dirPath = "/" + segments.slice(0, i).join("/");
+    const dirPath = isAbsPath(filePath) 
+      ? absPath("/" + segments.slice(0, i).join("/"))
+      : relPath(segments.slice(0, i).join("/"));
     try {
-      await this.mkdir(dirPath, { recursive: true, mode: 0o777 });
+      await this.mkdir(String(dirPath), { recursive: true, mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error creating directory ${dirPath}:`, err);
