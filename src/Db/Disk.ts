@@ -246,8 +246,8 @@ export abstract class Disk {
     this.remote = new DiskEventsRemote(this.guid);
   }
 
-  static FromJSON(json: DiskJType): Disk {
-    return Disk.From({ guid: json.guid, type: json.type, indexCache: json.indexCache });
+  static FromJSON(json: DiskJType, fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs): Disk {
+    return Disk.From({ guid: json.guid, type: json.type, indexCache: json.indexCache }, fsTransform);
   }
 
   NamespaceReset() {
@@ -386,7 +386,10 @@ export abstract class Disk {
 
   static guid = () => "__disk__" + nanoid();
 
-  static From({ guid, type, indexCache }: DiskJType): Disk {
+  static From(
+    { guid, type, indexCache }: DiskJType,
+    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
+  ): Disk {
     const DiskMap = {
       [IndexedDbDisk.type]: IndexedDbDisk,
       [MemDisk.type]: MemDisk,
@@ -400,7 +403,7 @@ export abstract class Disk {
     const DiskConstructor = DiskMap[type] satisfies {
       new (guid: string): Disk; //TODO interface somewhere?
     };
-    return new DiskConstructor(guid, indexCache ?? new TreeDirRoot());
+    return new DiskConstructor(guid, indexCache ?? new TreeDirRoot(), fsTransform);
   }
 
   private async *iteratorMutex(filter?: (node: TreeNode) => boolean): AsyncIterableIterator<TreeNode> {
@@ -991,7 +994,11 @@ export abstract class Disk {
     this.unsubs.forEach((us) => us());
   }
 
-  toNamespace(namespace: string): Disk {
+  toNamespace(namespace: AbsPath | string): Disk {
+    //may need to pass around a mutex womp womp
+    return Disk.FromJSON(this, (fs: CommonFileSystem) => new NamespacedFs(fs, namespace));
+  }
+  toNamespace2(namespace: string): Disk {
     const namespacePath = absPath(namespace);
 
     // Create a shallow clone of this disk instance to preserve all special properties
@@ -1023,7 +1030,8 @@ export class OpFsDisk extends Disk {
   private internalFs: OPFSNamespacedFs;
   constructor(
     public readonly guid: string,
-    indexCache?: TreeDirRootJType
+    indexCache?: TreeDirRootJType,
+    fsTransform: (fs: OPFSNamespacedFs) => OPFSNamespacedFs = (fs) => fs
   ) {
     const mutex = new Mutex();
     const { promise, resolve } = Promise.withResolvers<void>();
@@ -1034,11 +1042,12 @@ export class OpFsDisk extends Disk {
       }) as Promise<IFileSystemDirectoryHandle>
     );
 
-    const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
-    void mutex.runExclusive(() => fs.init());
+    const origFs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
+    const fs = fsTransform(origFs);
+    void mutex.runExclusive(() => origFs.init());
     super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), DiskDAO.New(OpFsDisk.type, guid, indexCache));
 
-    this.internalFs = fs;
+    this.internalFs = fs; // as OPFSNamespacedFs;
     this.ready = promise;
   }
 
@@ -1052,9 +1061,10 @@ export class DexieFsDbDisk extends Disk {
   type = DexieFsDbDisk.type;
   constructor(
     public readonly guid: string,
-    indexCache?: TreeDirRootJType
+    indexCache?: TreeDirRootJType,
+    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
   ) {
-    const fs = new DexieFsDb(guid);
+    const fs = fsTransform(new DexieFsDb(guid));
     const mt = new Mutex();
     const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
     super(guid, fs, ft, DiskDAO.New(DexieFsDbDisk.type, guid, indexCache));
@@ -1064,11 +1074,13 @@ export class DexieFsDbDisk extends Disk {
 export class LocalStorageFsDisk extends Disk {
   static type: DiskType = "LocalStorageFsDisk";
   type = LocalStorageFsDisk.type;
+
   constructor(
     public readonly guid: string,
-    indexCache?: TreeDirRootJType
+    indexCache?: TreeDirRootJType,
+    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
   ) {
-    const fs = new KVFileSystem(new LocalStorageStore(guid));
+    const fs = fsTransform(new KVFileSystem(new LocalStorageStore(guid)));
     const mt = new Mutex();
     const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
     super(guid, fs, ft, DiskDAO.New(LocalStorageFsDisk.type, guid, indexCache));
@@ -1080,17 +1092,19 @@ export class IndexedDbDisk extends Disk {
   type = IndexedDbDisk.type;
   constructor(
     public readonly guid: string,
-    indexCache?: TreeDirRootJType
+    indexCache?: TreeDirRootJType,
+    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
   ) {
     const mutex = new Mutex();
-    const fs = new LightningFs();
-    const mutexFs = new MutexFs(fs.promises, mutex);
+    const lightningFs = new LightningFs();
+    const fs = fsTransform(lightningFs.promises);
+    const mutexFs = new MutexFs(fs, mutex);
     const ft = indexCache
-      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex)
-      : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mutex);
+      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs), guid, mutex)
+      : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs), guid, mutex);
 
     super(guid, mutexFs, ft, DiskDAO.New(IndexedDbDisk.type, guid, indexCache));
-    this.ready = fs.init(guid) as unknown as Promise<void>;
+    this.ready = lightningFs.init(guid) as unknown as Promise<void>;
   }
 }
 
@@ -1099,15 +1113,16 @@ export class MemDisk extends Disk {
   type = MemDisk.type;
   constructor(
     public readonly guid: string,
-    indexCache?: TreeDirRootJType
+    indexCache?: TreeDirRootJType,
+    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
   ) {
     const mt = new Mutex();
-    const fs = memfs().fs;
+    const fs = fsTransform(memfs().fs.promises);
     const ft = indexCache
-      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mt)
-      : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs.promises), guid, mt);
+      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs), guid, mt)
+      : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs), guid, mt);
 
-    super(guid, fs.promises, ft, DiskDAO.New(MemDisk.type, guid, indexCache));
+    super(guid, fs, ft, DiskDAO.New(MemDisk.type, guid, indexCache));
   }
 }
 
@@ -1118,12 +1133,13 @@ export class NullDisk extends Disk {
 
   constructor(
     public readonly guid = "__disk__NullDisk",
-    _indexCache?: TreeDirRootJType
+    _indexCache?: TreeDirRootJType,
+    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
   ) {
-    const fs = memfs().fs;
+    const fs = fsTransform(memfs().fs.promises);
     const mt = new Mutex();
-    const ft = new FileTree(fs.promises, guid, mt);
-    super("__disk__NullDisk", fs.promises, ft, DiskDAO.New(NullDisk.type, guid));
+    const ft = new FileTree(fs, guid, mt);
+    super("__disk__NullDisk", fs, ft, DiskDAO.New(NullDisk.type, guid));
   }
   async init() {
     return () => {};
@@ -1138,25 +1154,29 @@ export class OpFsDirMountDisk extends Disk {
 
   constructor(
     public readonly guid: string,
-    indexCache?: TreeDirRootJType
+    indexCache?: TreeDirRootJType,
+    private fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
   ) {
     const mutex = new Mutex();
     const { promise, resolve, reject } = Promise.withResolvers<void>();
 
-    // Initialize with a temporary memfs until directory is selected
-    const tempFs = memfs().fs;
-
+    void mutex.acquire();
     super(
       guid,
-      new MutexFs(tempFs.promises, mutex),
-      new FileTree(tempFs.promises, guid, mutex),
+      new MutexFs({} as CommonFileSystem, mutex),
+      new FileTree({} as CommonFileSystem, guid, mutex),
       DiskDAO.New(OpFsDirMountDisk.type, guid, indexCache)
     );
 
     this.ready = promise;
 
     // Try to restore directory handle from storage
-    this.initializeFromStorage().then(resolve).catch(reject);
+    this.initializeFromStorage()
+      .then(() => {
+        mutex.release();
+        resolve();
+      })
+      .catch(reject);
   }
 
   private async initializeFromStorage(): Promise<void> {
@@ -1173,8 +1193,8 @@ export class OpFsDirMountDisk extends Disk {
     await DirectoryHandleStore.storeHandle(this.guid, handle);
 
     // Create new filesystem using the directory handle with our patched implementation
-    const patchedDirMountOPFS = new PatchedDirMountOPFS(
-      Promise.resolve(handle) as unknown as Promise<IFileSystemDirectoryHandle>
+    const patchedDirMountOPFS = this.fsTransform(
+      new PatchedDirMountOPFS(Promise.resolve(handle) as unknown as Promise<IFileSystemDirectoryHandle>)
     );
     const mutex = new Mutex();
     const mutexFs = new MutexFs(patchedDirMountOPFS, mutex);

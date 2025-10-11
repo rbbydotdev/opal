@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const ENV = {
   PUBLIC_GITHUB_CLIENT_ID: import.meta.env.VITE_PUBLIC_GITHUB_CLIENT_ID || "Ov23lipqkfiZDSS9HrCI",
   PUBLIC_NETLIFY_CLIENT_ID: import.meta.env.VITE_PUBLIC_NETLIFY_CLIENT_ID || "YOUR_NETLIFY_CLIENT_ID",

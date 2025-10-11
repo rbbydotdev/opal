@@ -109,6 +109,21 @@ function KeyboardShortcutBadge({ keys }: { keys: string[] }) {
 }
 
 export function KeyboardShortcutsModal({ children }: { children: React.ReactNode }) {
+  // Group shortcuts by section
+  const groupedShortcuts = keyboardShortcuts.reduce(
+    (acc, shortcut) => {
+      if (!acc[shortcut.section]) {
+        acc[shortcut.section] = [];
+      }
+      acc[shortcut.section]!.push(shortcut);
+      return acc;
+    },
+    {} as Record<string, KeyboardShortcut[]>
+  );
+
+  // Define section order for consistent display
+  const sectionOrder = ["General", "Editor", "Navigation", "Search", "File Explorer"];
+
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -119,27 +134,37 @@ export function KeyboardShortcutsModal({ children }: { children: React.ReactNode
             Keyboard Shortcuts
           </DialogTitle>
         </DialogHeader>
-        <div className="mt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">Action</TableHead>
-                <TableHead className="w-[200px]">Shortcut</TableHead>
-                <TableHead>Description</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {keyboardShortcuts.map((shortcut, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium font-mono text-sm">{shortcut.action}</TableCell>
-                  <TableCell>
-                    <KeyboardShortcutBadge keys={shortcut.keys} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{shortcut.description}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="mt-4 space-y-6">
+          {sectionOrder.map((section) => {
+            const shortcuts = groupedShortcuts[section];
+            if (!shortcuts || shortcuts.length === 0) return null;
+
+            return (
+              <div key={section}>
+                <h3 className="text-lg font-semibold mb-3 text-foreground">{section}</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[200px]">Action</TableHead>
+                      <TableHead className="w-[200px]">Shortcut</TableHead>
+                      <TableHead>Description</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {shortcuts.map((shortcut, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium font-mono text-sm">{shortcut.action}</TableCell>
+                        <TableCell>
+                          <KeyboardShortcutBadge keys={shortcut.keys} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{shortcut.description}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            );
+          })}
         </div>
       </DialogContent>
     </Dialog>
