@@ -1,9 +1,11 @@
 export type AbsPath = Brand<string, "AbsolutePath">;
 export type RelPath = Brand<string, "RelativePath">;
 
+import { errorCode } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isImageType } from "@/lib/fileType";
 import pathModule from "path";
+import { CommonFileSystem } from "../Db/CommonFileSystem";
 import { isMarkdownType } from "./fileType";
 import { getMimeType } from "./mimeType";
 
@@ -233,18 +235,6 @@ export function replaceAncestor(
   return oldPath;
 }
 
-// --- Reduce Lineage ---
-export function reduceLineage____old<T extends (string | { toString(): string })[]>(range: T): T {
-  const sortedRange = [...range].sort((a, b) => a.toString().split("/").length - b.toString().split("/").length) as T;
-  for (let i = 0; i < sortedRange.length; i++) {
-    const a = sortedRange[i];
-    for (let j = i + 1; j < sortedRange.length; j++) {
-      const b = sortedRange[j];
-      if (isAncestor({ child: b!.toString(), parent: a!.toString() })) sortedRange.splice(j--, 1);
-    }
-  }
-  return sortedRange;
-}
 export function reduceLineage<T extends string | { toString(): string }>(range: Array<T>) {
   type nodeType = Record<string, unknown> & Record<symbol, T>;
   const $end = Symbol();
@@ -272,8 +262,6 @@ export function reduceLineage<T extends string | { toString(): string }>(range: 
 
 export function strictPathname(str: string): string {
   // Replace any character that is not a-z, A-Z, 0-9, _, -, /, or . with "_"
-  // const pre = prefix(str);
-  // const ext = extname(str);
   let sanitized = str
     .trim()
     .toString()
@@ -341,3 +329,24 @@ export const stringifyEntry = (
   }
   return String(entry);
 };
+
+export async function mkdirRecursive(this: CommonFileSystem, filePath: AbsPath) {
+  //make recursive dir if or if not exists
+  const segments = encodePath(filePath).split("/").slice(1);
+  for (let i = 1; i <= segments.length; i++) {
+    const dirPath = "/" + segments.slice(0, i).join("/");
+    console.debug(`mkdirRecursive: Attempting to create directory: ${dirPath}`);
+    try {
+      await this.mkdir(dirPath, { recursive: true, mode: 0o777 });
+      console.debug(`mkdirRecursive: Successfully created directory: ${dirPath}`);
+    } catch (err) {
+      console.error(`Error creating directory ${dirPath}:`, err);
+      if (errorCode(err).code !== "EEXIST") {
+        console.error(`Error creating directory ${dirPath}:`, err);
+      } else {
+        console.debug(`mkdirRecursive: Directory already exists: ${dirPath}`);
+      }
+    }
+  }
+  return filePath;
+}

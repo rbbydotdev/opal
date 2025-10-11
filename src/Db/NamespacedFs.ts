@@ -54,7 +54,10 @@ export class NamespacedFs implements CommonFileSystem {
   }
 
   async rmdir(path: AbsPath, options?: { recursive?: boolean }) {
-    return this.fs.rmdir(path, options);
+    return this.fs.rmdir(joinPath(this.namespace, path), options).catch((e) => {
+      console.error("rm failed, recently add namespaced prefix, if its not working this is why");
+      throw e;
+    });
   }
   async lstat(path: AbsPath) {
     //not bothering with symlinks...

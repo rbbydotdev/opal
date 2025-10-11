@@ -169,8 +169,7 @@ export class Workspace {
   }
 
   async readOrMakeThumb(path: AbsPath | string, size = 100) {
-    const thumb = this.NewThumb(absPath(path), size);
-    return thumb.readOrMake();
+    return this.NewThumb(absPath(path), size).readOrMake();
   }
 
   static parseWorkspacePath(pathOrUrl: string) {
