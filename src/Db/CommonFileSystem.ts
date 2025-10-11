@@ -1,5 +1,7 @@
 import { NamespacedFs } from "@/Db/NamespacedFs";
+import { isErrorWithCode } from "@/lib/errors";
 import { AbsPath, encodePath, joinPath } from "@/lib/paths2";
+import { relPath } from "../lib/paths2";
 
 export interface CommonFileSystem {
   readdir(path: string): Promise<
@@ -38,6 +40,11 @@ type OPFSFileSystem = CommonFileSystem & {
 
 export class OPFSNamespacedFs extends NamespacedFs {
   fs: OPFSFileSystem;
+  init() {
+    return this.fs.mkdir(relPath(this.namespace)).catch((e) => {
+      if (!isErrorWithCode(e, "EEXIST")) throw e;
+    });
+  }
   constructor(fs: OPFSFileSystem, namespace: AbsPath | string) {
     super(fs, namespace);
     this.fs = fs;

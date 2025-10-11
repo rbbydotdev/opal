@@ -5,6 +5,7 @@ export const SpecialDirs = {
   Trash: absPath("/.trash"),
   Storage: absPath("/.storage"),
   Git: absPath("/.git"),
+  Thumb: absPath("/.thumb"),
 
   allSpecialDirsExcept(...paths: (AbsPath | TreeNode)[]): AbsPath[] {
     return this.All.filter((dir) => !paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));

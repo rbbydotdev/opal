@@ -15,7 +15,18 @@ import { FileTree } from "@/lib/FileTree/Filetree";
 import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
-import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, RelPath, relPath } from "@/lib/paths2";
+import {
+  AbsPath,
+  absPath,
+  basename,
+  dirname,
+  encodePath,
+  incPath,
+  joinPath,
+  mkdirRecursive,
+  RelPath,
+  relPath,
+} from "@/lib/paths2";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
@@ -394,25 +405,8 @@ export abstract class Disk {
     }
     return filePaths;
   }
-  //TODO: should probabably parse document then search find image nodes
-  //Also this function is a little beefy, service object?
-  //TODO use search ?
 
-  async mkdirRecursive(filePath: AbsPath) {
-    // await this.ready;
-    //make recursive dir if or if not exists
-    const segments = encodePath(filePath).split("/").slice(1);
-    for (let i = 1; i <= segments.length; i++) {
-      try {
-        await this.fs.mkdir("/" + segments.slice(0, i).join("/"), { recursive: true, mode: 0o777 });
-      } catch (err) {
-        if (errorCode(err).code !== "EEXIST") {
-          console.error(`Error creating directory ${dirname(filePath)}:`, err);
-        }
-      }
-    }
-    return filePath;
-  }
+  mkdirRecursive = mkdirRecursive.bind(this.fs);
 
   async *scan(): AsyncGenerator<{
     filePath: AbsPath;
@@ -673,11 +667,11 @@ export abstract class Disk {
       parent,
       options.virtualContent
     );
-    
+
     if (options.source) {
       node.tagSource(options.source);
     }
-    
+
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return node;
   }
@@ -890,7 +884,7 @@ export abstract class Disk {
   }
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array | Blob) {
     await this.ready;
-    await this.mkdirRecursive(absPath(dirname(filePath)));
+    await this.mkdirRecursive(dirname(filePath));
     try {
       let data: string | Uint8Array;
       if (content instanceof Blob) {
@@ -965,7 +959,7 @@ export class OpFsDisk extends Disk {
     );
 
     const fs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
-
+    void mutex.runExclusive(() => fs.init());
     super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), DiskDAO.New(OpFsDisk.type, guid, indexCache));
 
     this.internalFs = fs;

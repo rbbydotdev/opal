@@ -12,7 +12,7 @@ import { HistoryDAO } from "@/Db/HistoryDAO";
 import { ImageCache } from "@/Db/ImageCache";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { SpecialDirs } from "@/Db/SpecialDirs";
-import { Thumb } from "@/Db/Thumb";
+import { NamespacedThumb } from "@/Db/Thumb";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { WorkspaceScannable } from "@/Db/WorkspaceScannable";
 import { GitRepo } from "@/features/git-repo/GitRepo";
@@ -165,7 +165,8 @@ export class Workspace {
   }
 
   NewThumb(path: AbsPath, size = 100) {
-    return new Thumb(this.imageCache.getCache(), this.thumbs, this.disk, path, null, size);
+    return new NamespacedThumb(this.imageCache.getCache(), this.disk, path, absPath("thumbs"), null, size);
+    // return new Thumb(this.imageCache.getCache(), this.thumbs, this.disk, path, null, size);
   }
 
   async readOrMakeThumb(path: AbsPath | string, size = 100) {

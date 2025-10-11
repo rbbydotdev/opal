@@ -203,36 +203,39 @@ export function isAncestor({
 }
 
 /**
- * Replace the leading ancestor (root) portion of oldPath with newPath.
+ * Replace the leading ancestor portion of a given path with a new base path.
+ *
+ * This function effectively "re-roots" a path if the given path starts with a
+ * specific ancestor (base) path.
  *
  * Behavior:
- * - If oldPath === root, returns newPath.
- * - If oldPath has root as its leading path segments (i.e. root is an ancestor),
- *   returns newPath plus the remaining trailing segments from oldPath.
- * - Otherwise returns oldPath unchanged.
+ * - If `targetPath` is exactly equal to `ancestorPath`, returns `replacementRoot`.
+ * - If `targetPath` starts with `ancestorPath` as its leading segments,
+ *   returns `replacementRoot` joined with the remaining trailing segments from `targetPath`.
+ * - Otherwise, returns `targetPath` unchanged.
  *
- * Example:
- * replaceAncestor('/a', '/a/b/c', '/x') => '/x/b/c'
- * replaceAncestor('/a/b', '/a/b', '/z') => '/z'
- * replaceAncestor('/a/b', '/a/c/d', '/z') => '/a/c/d' (unchanged)
+ * Examples:
+ * replaceAncestor('/a', '/a/b/c', '/x') === '/x/b/c'
+ * replaceAncestor('/a/b', '/a/b', '/z') === '/z'
+ * replaceAncestor('/a/b', '/a/c/d', '/z') === '/a/c/d'  (unchanged)
  *
  * Notes:
- * - Null checks are present but root/oldPath are typed as non-null (legacy safeguard).
- * - Returned path is normalized via absPath + joinPath.
+ * - Although null checks exist for backward compatibility, inputs are expected to be non-null strings.
+ * - The returned path is normalized via absPath() and joinPath().
  */
 export function replaceAncestor(
-  root: AbsPath | string,
-  oldPath: AbsPath | string,
-  newPath: AbsPath | string
+  ancestorPath: AbsPath | string, // The base or ancestor path to look for
+  targetPath: AbsPath | string, // The path potentially containing the ancestor
+  replacementRoot: AbsPath | string // The new base to replace the ancestor with
 ): AbsPath | string {
-  if (oldPath === root) return newPath;
-  if (oldPath === null || root === null) return oldPath;
-  const rootSegments = root.split("/");
-  const pathSegments = oldPath.split("/");
+  if (targetPath === ancestorPath) return replacementRoot;
+  if (targetPath === null || ancestorPath === null) return targetPath;
+  const rootSegments = ancestorPath.split("/");
+  const pathSegments = targetPath.split("/");
   if (pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i])) {
-    return joinPath(absPath(newPath), ...pathSegments.slice(rootSegments.length));
+    return joinPath(absPath(replacementRoot), ...pathSegments.slice(rootSegments.length));
   }
-  return oldPath;
+  return targetPath;
 }
 
 export function reduceLineage<T extends string | { toString(): string }>(range: Array<T>) {
@@ -331,20 +334,14 @@ export const stringifyEntry = (
 };
 
 export async function mkdirRecursive(this: CommonFileSystem, filePath: AbsPath) {
-  //make recursive dir if or if not exists
   const segments = encodePath(filePath).split("/").slice(1);
   for (let i = 1; i <= segments.length; i++) {
     const dirPath = "/" + segments.slice(0, i).join("/");
-    console.debug(`mkdirRecursive: Attempting to create directory: ${dirPath}`);
     try {
       await this.mkdir(dirPath, { recursive: true, mode: 0o777 });
-      console.debug(`mkdirRecursive: Successfully created directory: ${dirPath}`);
     } catch (err) {
-      console.error(`Error creating directory ${dirPath}:`, err);
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error creating directory ${dirPath}:`, err);
-      } else {
-        console.debug(`mkdirRecursive: Directory already exists: ${dirPath}`);
       }
     }
   }
