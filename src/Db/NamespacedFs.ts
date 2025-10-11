@@ -1,4 +1,5 @@
-import { AbsPath, absPath, decodePath, joinPath } from "@/lib/paths2";
+import { isErrorWithCode } from "@/lib/errors";
+import { AbsPath, absPath, decodePath, joinPath, relPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
 import { CommonFileSystem } from "./CommonFileSystem";
@@ -14,6 +15,12 @@ export class NamespacedFs implements CommonFileSystem {
     } else {
       this.namespace = namespace;
     }
+  }
+
+  init() {
+    return this.fs.mkdir(relPath(this.namespace)).catch((e) => {
+      if (!isErrorWithCode(e, "EEXIST")) throw e;
+    });
   }
 
   async readdir(path: string): Promise<

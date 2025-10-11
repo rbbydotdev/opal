@@ -4,29 +4,15 @@ import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, encodePath, joinPath } from "@/lib/paths2";
 
-export class NamespacedThumb {}
-
 export class Thumb {
-  private path: AbsPath;
-  private thumbRepo: Disk;
-
-  get originalPath() {
-    return this.path.replace("/thumb/", "/") as AbsPath;
-  }
-
   constructor(
     protected cache: Promise<Cache>,
-    _thumbRepo: Disk,
+    protected thumbRepo: Disk,
     protected imgRepo: Disk,
-    _path: AbsPath,
+    protected path: AbsPath,
     protected content: Uint8Array | null = null,
     protected readonly size = 100
-  ) {
-    this.thumbRepo = imgRepo;
-    console.log(`using img repo disk ${imgRepo.guid} ${imgRepo.type}`);
-    console.log(`using thumb repo disk ${this.thumbRepo.guid} ${this.thumbRepo.type}`);
-    this.path = joinPath(absPath("/thumb"), _path);
-  }
+  ) {}
 
   static isThumbURL(url: string | URL) {
     if (typeof url === "string") {
@@ -56,6 +42,10 @@ export class Thumb {
     await this.thumbRepo.writeFileRecursive(this.path, this.content!);
     return this;
   }
+
+  getSourcePath() {
+    return this.path;
+  }
   async readOrMake() {
     if (await this.exists()) {
       return this.read();
@@ -64,7 +54,7 @@ export class Thumb {
   }
 
   async make() {
-    const content = await this.imgRepo.readFile(this.path.replace("/thumb/", "/") as AbsPath);
+    const content = await this.imgRepo.readFile(this.getSourcePath());
     if (!content) throw new NotFoundError("Image not found for thumb" + this.path);
     this.content = await createThumbnail(content as Uint8Array, this.size, this.size);
     await this.save();
@@ -98,5 +88,24 @@ export class Thumb {
   async remove() {
     await this.cache.then((c) => c.delete(this.url()));
     await this.thumbRepo.removeFile(this.path);
+  }
+}
+
+export class NamespacedThumb extends Thumb {
+  constructor(
+    protected cache: Promise<Cache>,
+    protected imgRepo: Disk,
+    protected path: AbsPath,
+    protected namespace: string,
+    protected content: Uint8Array | null = null,
+    protected readonly size = 100
+  ) {
+    super(cache, imgRepo, imgRepo, path, content, size);
+    this.path = joinPath(absPath(namespace), path);
+  }
+
+  getSourcePath() {
+    // return absPath(this.path.slice(absPath(this.namespace).length));
+    return this.path.replace(new RegExp("^" + encodePath(this.namespace)), "") as AbsPath;
   }
 }
