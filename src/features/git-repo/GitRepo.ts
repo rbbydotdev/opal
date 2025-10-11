@@ -8,6 +8,9 @@ import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 
+import { CommonFileSystem } from "@/Db/CommonFileSystem";
+import { HideFs } from "@/Db/HideFs";
+import { SpecialDirs } from "@/Db/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
@@ -183,6 +186,7 @@ export class GitRepo {
   defaultMainBranch: string = "main";
   readonly guid: string;
   mutex = new Mutex();
+  private hideFs: CommonFileSystem | null = null;
 
   local = new RepoEventsLocal();
   remote: RepoEventsRemote;
@@ -220,7 +224,11 @@ export class GitRepo {
   };
 
   get fs() {
-    return this.disk.fs;
+    if (this.hideFs) return this.hideFs;
+    return (this.hideFs = new HideFs(this.disk.fs, [
+      ...SpecialDirs.allSpecialDirsExcept(this.gitDir),
+      // absPath("/hidden"),
+    ]));
   }
 
   get gitDir() {
@@ -977,6 +985,7 @@ export class GitRepo {
 
   reset = async () => {
     await this.disk.removeFile(this.gitDir);
+    this.hideFs = null;
     this.state = { bareInitialized: false, fullInitialized: false };
     await this.sync();
   };

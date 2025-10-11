@@ -163,7 +163,7 @@ export const CodeMirrorEditor = ({
     view.dispatch({
       effects: [
         languageCompartment.reconfigure(getLanguageExtension(mimeType) ?? []),
-        vimCompartment.reconfigure(vimMode ? vim() : []),
+        // vimCompartment.reconfigure(vimMode ? vim() : []),
         editableCompartment.reconfigure(EditorView.editable.of(!readOnly)),
         conflictCompartment.reconfigure(
           enableConflictResolution && hasConflicts ? gitConflictEnhancedPlugin(getLanguageExtension) : []
@@ -190,7 +190,6 @@ export const CodeMirrorEditor = ({
     urlRangeCompartment,
     value,
     vimCompartment,
-    vimMode,
   ]); // Only depend on initial value
 
   // Reconfigure language when mimeType/conflicts change

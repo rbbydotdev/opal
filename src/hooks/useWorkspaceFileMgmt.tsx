@@ -246,7 +246,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
         type,
         basename: basename(duplicatePath(fromNode.path)),
         selectedNode: fromNode.parent ?? fromNode,
-        source: fromNode
+        source: fromNode,
       });
 
       setFileTreeCtx({
@@ -283,7 +283,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
       type,
       basename: relPath(fileName),
       selectedNode: parentNode,
-      virtualContent: content
+      virtualContent: content,
     });
 
     setFileTreeCtx({
