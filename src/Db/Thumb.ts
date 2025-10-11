@@ -2,17 +2,31 @@ import { Disk } from "@/Db/Disk";
 import { createThumbnail } from "@/lib/createThumbnail";
 import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath, encodePath } from "@/lib/paths2";
+import { absPath, AbsPath, encodePath, joinPath } from "@/lib/paths2";
+
+export class NamespacedThumb {}
 
 export class Thumb {
+  private path: AbsPath;
+  private thumbRepo: Disk;
+
+  get originalPath() {
+    return this.path.replace("/thumb/", "/") as AbsPath;
+  }
+
   constructor(
     protected cache: Promise<Cache>,
-    protected thumbRepo: Disk,
+    _thumbRepo: Disk,
     protected imgRepo: Disk,
-    protected path: AbsPath,
+    _path: AbsPath,
     protected content: Uint8Array | null = null,
     protected readonly size = 100
-  ) {}
+  ) {
+    this.thumbRepo = imgRepo;
+    console.log(`using img repo disk ${imgRepo.guid} ${imgRepo.type}`);
+    console.log(`using thumb repo disk ${this.thumbRepo.guid} ${this.thumbRepo.type}`);
+    this.path = joinPath(absPath("/thumb"), _path);
+  }
 
   static isThumbURL(url: string | URL) {
     if (typeof url === "string") {
@@ -50,7 +64,7 @@ export class Thumb {
   }
 
   async make() {
-    const content = await this.imgRepo.readFile(this.path);
+    const content = await this.imgRepo.readFile(this.path.replace("/thumb/", "/") as AbsPath);
     if (!content) throw new NotFoundError("Image not found for thumb" + this.path);
     this.content = await createThumbnail(content as Uint8Array, this.size, this.size);
     await this.save();
