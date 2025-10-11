@@ -165,8 +165,7 @@ export class Workspace {
   }
 
   NewThumb(path: AbsPath, size = 100) {
-    return new NamespacedThumb(this.imageCache.getCache(), this.disk, path, absPath("thumbs"), null, size);
-    // return new Thumb(this.imageCache.getCache(), this.thumbs, this.disk, path, null, size);
+    return new NamespacedThumb(this.imageCache.getCache(), this.disk, path, SpecialDirs.Thumb, null, size);
   }
 
   async readOrMakeThumb(path: AbsPath | string, size = 100) {

@@ -1,4 +1,3 @@
-import { useLeftWidth } from "@/app/EditorSidebarLayout";
 import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
@@ -25,6 +24,7 @@ import { getDiskTypeLabel } from "@/Db/Disk";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
@@ -122,9 +122,14 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
                 expandForNode(addDirFile("file", focused || absPath("/"), "index.html", DefaultFile.HTML()), true)
               }
               addMustacheFile={() =>
-                expandForNode(addDirFile("file", focused || absPath("/"), "template.mustache", DefaultFile.Mustache()), true)
+                expandForNode(
+                  addDirFile("file", focused || absPath("/"), "template.mustache", DefaultFile.Mustache()),
+                  true
+                )
               }
-              addEjsFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs", DefaultFile.EJS()), true)}
+              addEjsFile={() =>
+                expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs", DefaultFile.EJS()), true)
+              }
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
               diskType={diskType}

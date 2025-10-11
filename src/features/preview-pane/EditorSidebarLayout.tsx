@@ -101,13 +101,13 @@ export const EditorSidebarLayout = ({
   sidebar,
   main,
   rightPane,
-  renderHiddenSidebar,
+  // renderHiddenSidebar,
   rightPaneEnabled = true,
 }: {
   sidebar: React.ReactNode;
   main: React.ReactNode;
   rightPane?: React.ReactNode;
-  renderHiddenSidebar?: boolean;
+  // renderHiddenSidebar?: boolean;
   rightPaneEnabled?: boolean;
 }) => {
   // --- Pane States (persisted) ---
@@ -241,7 +241,8 @@ export const EditorSidebarLayout = ({
         style={{ width: `${currentDisplayWidth}px` }}
         className="relative flex-shrink-0 overflow-y-auto"
       >
-        {currentDisplayWidth > 0 || COLLAPSED_STATE_WIDTH > 0 || renderHiddenSidebar === true ? sidebar : null}
+        {/* {currentDisplayWidth > 0 || COLLAPSED_STATE_WIDTH > 0 || renderHiddenSidebar === true ? sidebar : null} */}
+        {sidebar}
       </aside>
 
       <div

@@ -20,7 +20,7 @@ import {
   strictPrefix,
 } from "@/lib/paths2";
 import { extname } from "path";
-import { isTemplateFile } from "../paths2";
+import { isMustache, isPreviewable, isTemplateFile } from "../paths2";
 
 export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
@@ -124,6 +124,10 @@ export class TreeNode {
   closestDirPath(): AbsPath {
     return this.isTreeDir() ? this.path : dirname(this.path);
   }
+  isMustache(): boolean {
+    if (this.isTreeDir()) return false;
+    return isMustache(this.path);
+  }
   isMarkdownFile() {
     if (this.isTreeDir()) return false;
     return isMarkdown(this.path);
@@ -151,6 +155,10 @@ export class TreeNode {
   isImageFile() {
     if (this.isTreeDir()) return false;
     return isImage(this.path);
+  }
+  isPreviewable() {
+    if (this.isTreeDir()) return false;
+    return isPreviewable(this.path);
   }
   toString() {
     return this.path;

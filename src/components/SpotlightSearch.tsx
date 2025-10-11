@@ -1,6 +1,5 @@
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
@@ -27,6 +26,7 @@ import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState, useTransi
 import { createPortal } from "react-dom";
 import { useFileTree } from "../context/FileTreeProvider";
 import { useWorkspaceContext } from "../context/WorkspaceContext";
+import { useWorkspacePathPreviewURL } from "../features/preview-pane/useWorkspacePathPreviewURL";
 
 const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,

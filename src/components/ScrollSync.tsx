@@ -1,7 +1,7 @@
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { useWorkspacePathPreviewURL } from "@/features/preview-pane/useWorkspacePathPreviewURL";
 import { useResource } from "@/hooks/useResource";
 import { Channel } from "@/lib/channel";
-import { absPath, joinPath } from "@/lib/paths2";
 import { useSearch } from "@tanstack/react-router";
 import { nanoid } from "nanoid";
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef } from "react";
@@ -76,21 +76,6 @@ export function useScrollChannelFromSearchParams() {
 export function workspacePathSessionId({ workspaceId, filePath }: { workspaceId: string; filePath: string }): string {
   return `${workspaceId}${filePath}`;
 }
-export function useWorkspacePathPreviewURL(filePathOverride?: string) {
-  const { id: workspaceId, path } = useWorkspaceRoute();
-  const filePath = filePathOverride || path;
-  if (!workspaceId || !filePath) {
-    return null;
-  }
-
-  const previewURL = joinPath(
-    absPath("preview"),
-    workspaceId!,
-    filePath! + `?${sessionIdParam({ sessionId: workspacePathSessionId({ workspaceId, filePath }) })}`
-  ) as string;
-  return previewURL;
-}
-
 export function useWorkspacePathScrollChannel() {
   const { id: workspaceId, path: filePath } = useWorkspaceRoute();
   if (!workspaceId || !filePath) {

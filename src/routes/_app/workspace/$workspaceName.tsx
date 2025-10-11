@@ -1,13 +1,12 @@
-import { EditorSidebarLayout } from "@/app/EditorSidebarLayout";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
-import { useWorkspacePathPreviewURL } from "@/components/ScrollSync";
 import { WorkspaceSpotlightSearch } from "@/components/SpotlightSearch";
 import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { EditorSidebarLayout } from "@/features/preview-pane/EditorSidebarLayout";
+import { usePreviewPaneProps } from "@/features/preview-pane/usePreviewPaneProps";
 import useFavicon from "@/hooks/useFavicon";
-import { useResolvePathForPreview } from "@/lib/useResolvePathForPreview";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
@@ -22,9 +21,7 @@ function WorkspaceLayout() {
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
 
-  const previewNode = useResolvePathForPreview({ path, currentWorkspace });
-
-  const previewURL = useWorkspacePathPreviewURL(previewNode?.path);
+  const { previewURL, previewNode, canShow } = usePreviewPaneProps({ path, currentWorkspace });
 
   useEffect(() => {
     if (workspaceName) {
@@ -41,13 +38,10 @@ function WorkspaceLayout() {
       </FileTreeProvider>
       <div className="min-w-0 h-full flex w-full">
         <EditorSidebarLayout
-          renderHiddenSidebar={true}
+          // renderHiddenSidebar={true}
           sidebar={<EditorSidebar className="main-editor-sidebar" />}
           main={<Outlet />}
-          rightPaneEnabled={
-            !!previewURL &&
-            (!!previewNode?.isMarkdownFile() || !!previewNode?.isTemplateFile() || !!previewNode?.isHtmlFile())
-          }
+          rightPaneEnabled={canShow}
           rightPane={previewURL ? <PreviewIFrame previewPath={previewNode?.path} previewURL={previewURL} /> : null}
         />
       </div>
