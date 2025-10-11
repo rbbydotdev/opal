@@ -105,7 +105,7 @@ export class NamespacedThumb extends Thumb {
   }
 
   getSourcePath() {
-    // return absPath(this.path.slice(absPath(this.namespace).length));
-    return this.path.replace(new RegExp("^" + encodePath(this.namespace)), "") as AbsPath;
+    // return this.path.replace(new RegExp("^" + encodePath(this.namespace)), "") as AbsPath;
+    return absPath(this.path.slice(absPath(this.namespace).length));
   }
 }
