@@ -27,9 +27,19 @@ export class HideFs implements CommonFileSystem {
   private fs: CommonFileSystem;
   private hideRules: HideRule[];
 
-  constructor(fs: CommonFileSystem, hideRules: HideRule[] = []) {
+  constructor(fs: CommonFileSystem, hideRules: Array<HideRule | AbsPath | RelPath> = []) {
     this.fs = fs;
-    this.hideRules = hideRules;
+    this.hideRules = hideRules.map((rule) => {
+      if (typeof rule === "string") {
+        // Determine if it's an absolute path or relative path
+        if (isAbsPath(rule)) {
+          return { type: "dir", path: rule } as HideRule;
+        } else {
+          return { type: "dir", path: rule } as HideRule;
+        }
+      }
+      return rule;
+    });
   }
 
   private shouldHide(path: string, isDirectory: boolean = false): boolean {
@@ -66,6 +76,7 @@ export class HideFs implements CommonFileSystem {
         }
       }
     }
+
     return false;
   }
 

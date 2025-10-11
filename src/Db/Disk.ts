@@ -14,6 +14,7 @@ import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
+import { replaceFileUrlsInMarkdown } from "@/lib/markdown/replaceFileUrlsInMarkdown";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
 import {
   AbsPath,
@@ -228,12 +229,16 @@ export abstract class Disk {
   local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
+  private origFs: CommonFileSystem | null = null;
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
+  get fs() {
+    return this._fs;
+  }
 
   constructor(
     public readonly guid: string,
-    readonly fs: CommonFileSystem,
+    private _fs: CommonFileSystem,
     //TODO move things into protected to isolate property digging
     readonly fileTree: FileTree,
     private connector: DiskDAO
@@ -243,6 +248,30 @@ export abstract class Disk {
 
   static FromJSON(json: DiskJType): Disk {
     return Disk.From({ guid: json.guid, type: json.type, indexCache: json.indexCache });
+  }
+
+  NamespaceReset() {
+    if (this.origFs) {
+      Object.defineProperty(this, "fs", {
+        get: () => {
+          return this.origFs;
+        },
+        configurable: true, // important if you want to redefine later
+      });
+      this.origFs = null;
+    }
+  }
+  Namespace(namespace: AbsPath | string) {
+    if (!this.origFs) {
+      this.origFs = this.fs;
+    }
+    const newFs = new NamespacedFs(this.origFs, namespace);
+    Object.defineProperty(this, "fs", {
+      get: () => {
+        return newFs;
+      },
+      configurable: true, // important if you want to redefine later
+    });
   }
 
   initialIndexFromCache(cache: TreeNodeDirJType) {
@@ -388,6 +417,29 @@ export abstract class Disk {
     const filePaths = [];
     for await (const node of await this.iteratorMutex((node) => node.isMarkdownFile())) {
       const [newContent, changed] = await replaceImageUrlsInMarkdown(
+        String(await this.readFile(node.path)),
+        findReplace,
+        origin
+      );
+
+      if (changed) {
+        await this.writeFile(node.path, newContent);
+        filePaths.push(node.path);
+      }
+    }
+    if (filePaths.length) {
+      void this.local.emit(DiskEvents.OUTSIDE_WRITE, {
+        filePaths,
+      });
+    }
+    return filePaths;
+  }
+
+  async findReplaceFileBatch(findReplace: [string, string][], origin: string = ""): Promise<AbsPath[]> {
+    if (findReplace.length === 0) return [];
+    const filePaths = [];
+    for await (const node of await this.iteratorMutex((node) => node.isMarkdownFile())) {
+      const [newContent, changed] = await replaceFileUrlsInMarkdown(
         String(await this.readFile(node.path)),
         findReplace,
         origin
@@ -1008,7 +1060,6 @@ export class DexieFsDbDisk extends Disk {
     super(guid, fs, ft, DiskDAO.New(DexieFsDbDisk.type, guid, indexCache));
   }
 }
-// const fs = new KVFileSystem(new LocalStorageStore("myvolume1"));
 
 export class LocalStorageFsDisk extends Disk {
   static type: DiskType = "LocalStorageFsDisk";
@@ -1073,7 +1124,6 @@ export class NullDisk extends Disk {
     const mt = new Mutex();
     const ft = new FileTree(fs.promises, guid, mt);
     super("__disk__NullDisk", fs.promises, ft, DiskDAO.New(NullDisk.type, guid));
-    // this.ready = new Promise<void>(() => {});
   }
   async init() {
     return () => {};
@@ -1181,4 +1231,17 @@ export class OpFsDirMountDisk extends Disk {
     await disk.selectDirectory();
     return disk;
   }
+}
+
+export function NamespaceDisk(disk: Disk) {
+  if (!(disk instanceof Disk)) {
+    throw new Error("Invalid disk instance for namespacing");
+  }
+  Object.defineProperty(disk, "fs", {
+    get() {
+      return disk.fs;
+    },
+    configurable: true, // important if you want to redefine later
+  });
+  return disk;
 }

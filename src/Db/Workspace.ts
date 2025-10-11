@@ -731,7 +731,8 @@ export class Workspace {
   async renameMdImages(paths: [to: string, from: string][]) {
     if (paths.length === 0 || !paths.flat().length) return [];
     let res: AbsPath[] = [];
-    const response = await fetch("/replace-md-images", {
+    // const response = await fetch("/replace-md-images", {
+    const response = await fetch("/replace-files", {
       method: "POST",
       body: JSON.stringify(paths),
     });
@@ -739,7 +740,7 @@ export class Workspace {
       try {
         res = (await response.clone().json()) as AbsPath[];
       } catch (e) {
-        console.error(`Error parsing JSON from /replace-md-images\n\n${await response.clone().text()}`, e);
+        console.error(`Error parsing JSON from /replace-files\n\n${await response.clone().text()}`, e);
         res = [];
       }
     } else {

@@ -1,17 +1,19 @@
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath } from "@/lib/paths2";
 
-export const SpecialDirs = {
+const paths = {
   Trash: absPath("/.trash"),
   Storage: absPath("/.storage"),
   Git: absPath("/.git"),
   Thumb: absPath("/.thumb"),
-
+};
+export const SpecialDirs = {
+  ...paths,
   allSpecialDirsExcept(...paths: (AbsPath | TreeNode)[]): AbsPath[] {
     return this.All.filter((dir) => !paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
   },
   get All() {
-    return [this.Trash, this.Storage, this.Git];
+    return Object.values(paths);
   },
 } as const;
 

@@ -7,6 +7,7 @@ import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
 import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
 import { handleImageUpload } from "@/lib/ServiceWorker/handleImageUpload";
 import { handleMdImageReplace } from "@/lib/ServiceWorker/handleMdImageReplace";
+import { handleFileReplace } from "@/lib/ServiceWorker/handleFileReplace";
 import { handleStyleSheetRequest } from "@/lib/ServiceWorker/handleStyleSheetRequest";
 import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
 import { handleWorkspaceFilenameSearch } from "@/lib/ServiceWorker/handleWorkspaceFilenameSearch";
@@ -125,4 +126,19 @@ export const replaceMdImageHandler = withRequestSignal(async (context: RequestCo
   console.log(`Replacing images in MD with: ${findReplace.length} pairs`);
 
   return handleMdImageReplace(url, workspaceName, findReplace);
+});
+
+export const replaceFileHandler = withRequestSignal(async (context: RequestContext) => {
+  const { url, workspaceName } = context;
+  console.log(`Handling file replacement for: ${workspaceName}`);
+  //parse json body
+  const body = await context.event.request.json();
+  if (!Array.isArray(body)) {
+    return new Response("Invalid request body. Expected an array of [find, replace] pairs.", { status: 400 });
+  }
+
+  const findReplace: [string, string][] = body as [string, string][];
+  console.log(`Replacing files with: ${findReplace.length} pairs`);
+
+  return handleFileReplace(url, workspaceName, findReplace);
 });

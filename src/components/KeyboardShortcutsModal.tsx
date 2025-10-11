@@ -7,66 +7,86 @@ import React from "react";
 interface KeyboardShortcut {
   action: string;
   keys: string[];
+  section: "General" | "Editor" | "Navigation" | "Search" | "File Explorer";
   description?: string;
 }
 
+//TODO: make this configurable by user
 const keyboardShortcuts: KeyboardShortcut[] = [
   {
+    section: "General",
     action: "Spotlight Search",
     keys: [IS_MAC ? "⌘" : "Ctrl", "P"],
     description: "Filename and command Palette",
   },
   {
+    section: "General",
     action: "Workspace Search",
     keys: [IS_MAC ? "⌘" : "Ctrl", "Shift", "F"],
     description: "Search file contents across workspaces",
   },
   {
+    section: "Editor",
     action: "Editor Search",
     keys: [IS_MAC ? "⌘" : "Ctrl", "F"],
     description: "Search within current file",
   },
   {
+    section: "Editor",
+    action: "Editor View Mode",
+    keys: [IS_MAC ? "⌘" : ";", ";"],
+    description: "Switch between wysiwyg and view modes",
+  },
+  {
+    section: "File Explorer",
     action: "Navigate Down",
     keys: ["↓"],
     description: "Move selection down in lists",
   },
   {
+    section: "File Explorer",
     action: "Navigate Up",
     keys: ["↑"],
     description: "Move selection up in lists",
   },
   {
+    section: "File Explorer",
     action: "Navigate Items",
     keys: ["Tab"],
     description: "Navigate between interactive elements",
   },
   {
+    section: "File Explorer",
     action: "Navigate Items (Reverse)",
     keys: ["Shift", "Tab"],
     description: "Navigate backwards between elements",
   },
   {
+    section: "General",
     action: "Close Modal/Search",
     keys: ["Escape"],
     description: "Close open dialogs and search bars",
   },
   {
+    section: "Search",
     action: "Next Search Result",
     keys: ["Enter"],
     description: "Navigate to next search result",
   },
   {
+    section: "Search",
     action: "Previous Search Result",
     keys: ["Shift", "Enter"],
     description: "Navigate to previous search result",
   },
   {
+    section: "Search",
     action: "Replace",
     keys: ["Enter"],
     description: "Replace current match (in replace mode)",
   },
   {
+    section: "Search",
     action: "Replace All",
     keys: [IS_MAC ? "⌘" : "Ctrl", "Enter"],
     description: "Replace all matches (in replace mode)",

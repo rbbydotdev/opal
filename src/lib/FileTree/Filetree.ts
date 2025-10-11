@@ -58,6 +58,12 @@ export class FileTree {
     this.cacheId = `${this.guid}/cache`;
   }
 
+  clone(mutex: Mutex) {
+    const newTree = new FileTree(this.fs, this.guid, mutex);
+    newTree.root = this.root;
+    return newTree;
+  }
+
   walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
   asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
   asyncWalkIterator = (...args: Parameters<TreeDirRoot["asyncWalkIterator"]>) => this.root.asyncWalkIterator(...args);
