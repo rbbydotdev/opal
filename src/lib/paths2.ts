@@ -186,6 +186,9 @@ export function isBin(path: AbsPath | RelPath | TreeNode | string): boolean {
 export function isSourceOnly(path: AbsPath | RelPath | TreeNode | string): boolean {
   return isText(path) && !isMarkdown(path);
 }
+export function isPreviewable(path: AbsPath | RelPath | TreeNode | string): boolean {
+  return isMarkdown(path) || isTemplateFile(path) || isHtml(path);
+}
 
 // --- Ancestor/Lineage Utilities ---
 export function isAncestor({
@@ -333,12 +336,12 @@ export const stringifyEntry = (
   return String(entry);
 };
 
-export async function mkdirRecursive(this: CommonFileSystem, filePath: AbsPath | RelPath | string) {
+export async function mkdirRecursive(this: CommonFileSystem, filePath: AbsPath | RelPath) {
   const encoded = encodePath(filePath);
-  const segments = encoded.split("/").filter(s => s !== "");
-  
+  const segments = encoded.split("/").filter((s) => s !== "");
+
   for (let i = 1; i <= segments.length; i++) {
-    const dirPath = isAbsPath(filePath) 
+    const dirPath = isAbsPath(filePath)
       ? absPath("/" + segments.slice(0, i).join("/"))
       : relPath(segments.slice(0, i).join("/"));
     try {

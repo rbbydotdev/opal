@@ -1,7 +1,7 @@
-import { useLeftCollapsed, useSidebarWidth } from "@/app/EditorSidebarLayout";
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { useToggleEditHistory } from "@/components/Editor/history/useToggleEditHistory";
 import { useToggleHistoryImageGeneration } from "@/components/Editor/history/useToggleHistoryImageGeneration";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -23,10 +23,10 @@ import { DiskDAO } from "@/Db/DiskDAO";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { useLeftCollapsed, useSidebarWidth } from "@/features/preview-pane/EditorSidebarLayout";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
-import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";

@@ -5,7 +5,7 @@ import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
 import { KVFileSystem, LocalStorageStore } from "@/Db/KVFs";
 import { MutexFs } from "@/Db/MutexFs";
-import { PatchedOPFS } from "@/Db/NamespacedFs";
+import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
 import { PatchedDirMountOPFS } from "@/Db/PatchedDirMountOPFS";
 import { UnwrapScannable } from "@/features/search/SearchScannable";
 import { BrowserAbility } from "@/lib/BrowserAbility";
@@ -938,8 +938,32 @@ export abstract class Disk {
     await this.local.clearListeners();
     this.unsubs.forEach((us) => us());
   }
-}
 
+  toNamespace(namespace: string): Disk {
+    const namespacePath = absPath(namespace);
+
+    // Create a shallow clone of this disk instance to preserve all special properties
+    const clonedDisk = Object.create(Object.getPrototypeOf(this));
+    Object.assign(clonedDisk, this);
+
+    // Replace the filesystem with a namespaced version
+    const namespacedFs = new NamespacedFs(this.fs, namespacePath);
+    const mutex = new Mutex();
+    const fileTree = new FileTree(namespacedFs, this.guid, mutex);
+
+    // Replace only the fs and fileTree, keeping everything else
+    clonedDisk.fs = namespacedFs;
+    clonedDisk.fileTree = fileTree;
+    clonedDisk.ready = this.initNamespace(namespacePath);
+
+    return clonedDisk;
+  }
+
+  private async initNamespace(namespace: AbsPath): Promise<void> {
+    await this.ready;
+    await this.mkdirRecursive(namespace);
+  }
+}
 export class OpFsDisk extends Disk {
   static type: DiskType = "OpFsDisk";
   type = OpFsDisk.type;
