@@ -1,12 +1,14 @@
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
+import { SidebarBuildsList } from "@/components/SidebarFileMenu/publish-section/SidebarBuildsList";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Workspace } from "@/Db/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
+import { useBuildModal } from "@/components/BuildModal";
 import { Code2, FileTextIcon, Github, UploadCloud, UploadCloudIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export function SidebarFileMenuPublish({
   currentWorkspace,
@@ -16,7 +18,28 @@ export function SidebarFileMenuPublish({
 }) {
   const [expanded, setExpand] = useSingleItemExpander("publish");
   const { info } = useWorkspaceGitRepo({ currentWorkspace });
+  const { open: openBuildModal } = useBuildModal();
+  const [selectedBuildIds, setSelectedBuildIds] = useState<string[]>([]);
   const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
+
+  const handlePublishToHTML = async () => {
+    try {
+      const sourceDisk = currentWorkspace.getDisk();
+      const result = await openBuildModal({
+        sourceDisk,
+        outputDisk: sourceDisk, // Use same disk for now
+        onComplete: (buildDao) => {
+          console.log('Build completed successfully:', buildDao?.guid);
+          // The builds list will automatically refresh via its useEffect dependency on diskId
+        },
+        onCancel: () => {
+          console.log('Build cancelled');
+        }
+      });
+    } catch (error) {
+      console.error('Build modal error:', error);
+    }
+  };
   return (
     <SidebarGroup {...props}>
       <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
@@ -42,7 +65,12 @@ export function SidebarFileMenuPublish({
                 <UploadCloud className="mr-1" />
                 <span className="flex-grow"> Publish to Web</span>
               </Button>
-              <Button className="w-full flex text-xs" size="sm" variant="outline">
+              <Button 
+                className="w-full flex text-xs" 
+                size="sm" 
+                variant="outline"
+                onClick={handlePublishToHTML}
+              >
                 <Code2 className="mr-1" />
                 <span className="flex-grow">Publish to HTML</span>
               </Button>
@@ -57,6 +85,16 @@ export function SidebarFileMenuPublish({
                 </Button>
               )}
             </SidebarGroup>
+
+            {/* Builds List */}
+            <SidebarBuildsList
+              diskId={currentWorkspace.getDisk().guid}
+              selectedBuildIds={selectedBuildIds}
+              onSelectionChange={setSelectedBuildIds}
+              onDelete={(buildId) => {
+                setSelectedBuildIds(prev => prev.filter(id => id !== buildId));
+              }}
+            />
           </div>
         </CollapsibleContent>
       </Collapsible>
