@@ -10,14 +10,15 @@ import { useGetNodeFromEditor } from "@/components/useGetNodeFromEditor";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { isContainer, isLeaf, LexicalTreeViewNode } from "@/lib/lexical/treeViewDisplayNodesLexical";
+import { $createListItemNode, $createListNode, $isListItemNode, $isListNode } from "@lexical/list";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
-import { $createParagraphNode, $createListNode, $createListItemNode, $isTextNode, $isListItemNode } from "lexical";
 import { Slot } from "@radix-ui/react-slot";
 import { Dot, PlusIcon } from "lucide-react";
 import mdast from "mdast";
+import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import unist from "unist";
-import { useState } from "react";
+const { $createParagraphNode } = lexical;
 
 export function isParent(node: unknown): node is unist.Parent {
   return Boolean(typeof (node as mdast.Parent).children !== "undefined");
@@ -113,234 +114,315 @@ export function SidebarTreeViewMenuContent({
 }) {
   const { isExpanded, expandSingle } = useTreeExpanderContext();
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const [dropPosition, setDropPosition] = useState<'before' | 'after'>('before');
-  const [dropLevels, setDropLevels] = useState<{nodeId: string, depth: number, isSelected: boolean}[]>([]);
-  
+  const [dropPosition, setDropPosition] = useState<"before" | "after" | "inside">("before");
+
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
 
-  const getDropIndicatorClasses = (nodeId: string): string => {
-    if (dropLevels.length === 0) return "";
-    
-    // Find if this node is part of the current drop hierarchy
-    const levelForThisNode = dropLevels.find(level => level.nodeId === nodeId);
-    if (!levelForThisNode) return "";
-    
-    const isSelected = levelForThisNode.isSelected;
-    const levelIndex = dropLevels.findIndex(level => level.nodeId === nodeId);
-    const hierarchyDepth = dropLevels.length - levelIndex; // 1 = deepest, higher = more parent
-    
-    let borderClass = "";
-    
-    if (dropPosition === 'before') {
-      if (isSelected) {
-        borderClass = "border-t-4 border-ring shadow-lg";
-      } else {
-        switch (hierarchyDepth) {
-          case 1:
-            borderClass = "border-t-[1px] border-accent/40";
-            break;
-          case 2: 
-            borderClass = "border-t-2 border-accent/30";
-            break;
-          case 3:
-            borderClass = "border-t-[3px] border-accent/20";
-            break;
-          default:
-            borderClass = "border-t-[4px] border-accent/15";
-        }
-      }
-    } else {
-      if (isSelected) {
-        borderClass = "border-b-4 border-ring shadow-lg";
-      } else {
-        switch (hierarchyDepth) {
-          case 1:
-            borderClass = "border-b-[1px] border-accent/40";
-            break;
-          case 2:
-            borderClass = "border-b-2 border-accent/30";
-            break;
-          case 3:
-            borderClass = "border-b-[3px] border-accent/20";
-            break;
-          default:
-            borderClass = "border-b-[4px] border-accent/15";
-        }
-      }
+  const validateListStructure = (node: lexical.LexicalNode): boolean => {
+    if ($isListItemNode(node)) {
+      const parent = node.getParent();
+      return parent !== null && $isListNode(parent);
     }
-    
-    return twMerge("relative transition-all duration-150", borderClass);
+    return true;
   };
 
-  const buildParentChain = (nodeId: string, currentDepth: number): {nodeId: string, depth: number}[] => {
-    const chain: {nodeId: string, depth: number}[] = [];
-    
-    const findNodeAndParents = (node: LexicalTreeViewNode, targetId: string, currentPath: {nodeId: string, depth: number}[]): {nodeId: string, depth: number}[] | null => {
-      const currentEntry = {nodeId: node.id, depth: currentPath.length};
-      const newPath = [...currentPath, currentEntry];
-      
-      if (node.id === targetId) {
-        return newPath;
+  const getListTypeSecure = (listItemNode: lexical.LexicalNode): string | null => {
+    if ($isListItemNode(listItemNode)) {
+      const parent = listItemNode.getParent();
+      if (parent && $isListNode(parent)) {
+        return parent.getListType();
       }
-      
-      if (node.children) {
-        for (const child of node.children) {
-          const found = findNodeAndParents(child, targetId, newPath);
-          if (found) return found;
+    }
+    return null;
+  };
+
+  const findMergeableParent = (node: lexical.LexicalNode): lexical.LexicalNode | null => {
+    // For list items, find the parent list
+    if ($isListItemNode(node)) {
+      const parent = node.getParent();
+      if (parent && $isListNode(parent)) {
+        return parent;
+      }
+    }
+    // For other nodes, return the node itself
+    return node;
+  };
+
+  const mergeListIntoList = (sourceList: lexical.LexicalNode, targetList: lexical.LexicalNode): boolean => {
+    if (!$isListNode(sourceList) || !$isListNode(targetList)) {
+      return false;
+    }
+
+    console.log("🔀 Merging lists:", {
+      sourceType: sourceList.getListType(),
+      targetType: targetList.getListType()
+    });
+
+    // Move all children from source to target
+    const sourceChildren = sourceList.getChildren();
+    sourceList.remove();
+    
+    sourceChildren.forEach(child => {
+      if ($isListItemNode(child)) {
+        targetList.append(child);
+      }
+    });
+    
+    return true;
+  };
+
+  const handleListAwareDrop = (
+    draggedNode: lexical.LexicalNode,
+    targetNode: lexical.LexicalNode,
+    position: "before" | "after" | "inside"
+  ): boolean => {
+    const isDraggedList = $isListNode(draggedNode);
+    const isDraggedListItem = $isListItemNode(draggedNode);
+    const isTargetList = $isListNode(targetNode);
+    const isTargetListItem = $isListItemNode(targetNode);
+
+    console.log("📋 List analysis:", {
+      isDraggedList,
+      isDraggedListItem,
+      isTargetList,
+      isTargetListItem,
+      position,
+    });
+
+    // HIERARCHICAL MERGING LOGIC
+    
+    // Case 1: List → List = Merge lists
+    if (isDraggedList && isTargetList) {
+      return mergeListIntoList(draggedNode, targetNode);
+    }
+
+    // Case 2: List → List Item = Find parent list and merge
+    if (isDraggedList && isTargetListItem) {
+      const targetParentList = findMergeableParent(targetNode);
+      if (targetParentList && $isListNode(targetParentList)) {
+        return mergeListIntoList(draggedNode, targetParentList);
+      }
+      return false;
+    }
+
+    // Case 3: List Item → List = Move item to list
+    if (isDraggedListItem && isTargetList) {
+      draggedNode.remove();
+      if (position === "inside") {
+        targetNode.append(draggedNode);
+      } else {
+        // For before/after on list, append to maintain structure
+        targetNode.append(draggedNode);
+      }
+      return true;
+    }
+
+    // Case 4: List Item → List Item = Move to parent list with position
+    if (isDraggedListItem && isTargetListItem) {
+      const targetParentList = findMergeableParent(targetNode);
+      if (targetParentList && $isListNode(targetParentList)) {
+        draggedNode.remove();
+        if (position === "before") {
+          targetNode.insertBefore(draggedNode);
+        } else if (position === "after") {
+          targetNode.insertAfter(draggedNode);
+        } else {
+          // inside: create nested list under target item
+          const nestedListType = getListTypeSecure(draggedNode) || "bullet";
+          const nestedList = $createListNode(nestedListType);
+          nestedList.append(draggedNode);
+          targetNode.append(nestedList);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    // Case 5: List → Non-List = Place list adjacent
+    if (isDraggedList && !isTargetList && !isTargetListItem) {
+      draggedNode.remove();
+      if (position === "before") {
+        targetNode.insertBefore(draggedNode);
+      } else if (position === "after") {
+        targetNode.insertAfter(draggedNode);
+      } else {
+        // inside non-list node
+        if (lexical.$isElementNode(targetNode)) {
+          targetNode.append(draggedNode);
+        } else {
+          targetNode.insertAfter(draggedNode);
         }
       }
+      return true;
+    }
+
+    // Case 6: List Item → Non-List = Create new list
+    if (isDraggedListItem && !isTargetList && !isTargetListItem) {
+      const listType = getListTypeSecure(draggedNode) || "bullet";
+      const newList = $createListNode(listType);
+      draggedNode.remove();
+      newList.append(draggedNode);
       
-      return null;
-    };
-    
-    const result = findNodeAndParents(parent, nodeId, []);
-    return result || [{nodeId, depth: currentDepth}];
+      if (position === "before") {
+        targetNode.insertBefore(newList);
+      } else if (position === "after") {
+        targetNode.insertAfter(newList);
+      } else {
+        if (lexical.$isElementNode(targetNode)) {
+          targetNode.append(newList);
+        } else {
+          targetNode.insertAfter(newList);
+        }
+      }
+      return true;
+    }
+
+    // Case 7: Non-List → List context = Wrap in list item
+    if (!isDraggedList && !isDraggedListItem && (isTargetList || isTargetListItem)) {
+      const newListItem = $createListItemNode();
+      const wrappedNode = wrapNodeIfNeeded(draggedNode, targetNode);
+      
+      draggedNode.remove();
+      newListItem.append(wrappedNode);
+
+      if (isTargetList) {
+        targetNode.append(newListItem);
+      } else if (isTargetListItem) {
+        const targetParentList = findMergeableParent(targetNode);
+        if (targetParentList && $isListNode(targetParentList)) {
+          if (position === "before") {
+            targetNode.insertBefore(newListItem);
+          } else if (position === "after") {
+            targetNode.insertAfter(newListItem);
+          } else {
+            targetNode.append(newListItem);
+          }
+          return true;
+        }
+        return false;
+      }
+      return true;
+    }
+
+    // Case 8: Non-List → Non-List = Original logic
+    if (!isDraggedList && !isDraggedListItem && !isTargetList && !isTargetListItem) {
+      draggedNode.remove();
+      const nodeToInsert = wrapNodeIfNeeded(draggedNode, targetNode);
+
+      if (position === "inside") {
+        if (lexical.$isElementNode(targetNode)) {
+          targetNode.append(nodeToInsert);
+        } else {
+          targetNode.insertAfter(nodeToInsert);
+        }
+      } else if (position === "before") {
+        targetNode.insertBefore(nodeToInsert);
+      } else {
+        targetNode.insertAfter(nodeToInsert);
+      }
+      return true;
+    }
+
+    console.warn("🚫 Unsupported list operation");
+    return false;
   };
 
   const wrapNodeIfNeeded = (draggedNode: lexical.LexicalNode, targetNode: lexical.LexicalNode): lexical.LexicalNode => {
     const draggedType = draggedNode.getType();
-    const targetType = targetNode.getType();
-    
-    // Check if the dragged node needs special container handling
-    const needsParagraphWrapper = draggedType === 'image' || 
-                                  draggedType === 'text' || 
-                                  $isTextNode(draggedNode);
-    
-    const needsListWrapper = draggedType === 'listitem' && 
-                             targetType !== 'list' && 
-                             targetType !== 'listitem';
-    
-    const droppedIntoList = targetType === 'list' || targetType === 'listitem';
-    const needsListItemWrapper = !$isListItemNode(draggedNode) && droppedIntoList;
-    
-    // Apply container wrapping based on context
-    if (needsListWrapper) {
-      // List item dropped outside list - create list container
-      const listNode = $createListNode('bullet');
-      listNode.append(draggedNode);
-      return listNode;
-    }
-    
-    if (needsListItemWrapper) {
-      // Non-list item dropped into list - wrap in list item
-      const listItemNode = $createListItemNode();
-      if (needsParagraphWrapper) {
-        // Wrap in paragraph first, then list item
-        const paragraphNode = $createParagraphNode();
-        paragraphNode.append(draggedNode);
-        listItemNode.append(paragraphNode);
-      } else {
-        listItemNode.append(draggedNode);
-      }
-      return listItemNode;
-    }
-    
-    if (needsParagraphWrapper && !droppedIntoList) {
-      // Image, text, or inline content needs paragraph wrapping
+
+    // Only enable image wrapping for now
+    const needsParagraphWrapper = draggedType === "image";
+
+    if (needsParagraphWrapper) {
       const paragraphNode = $createParagraphNode();
       paragraphNode.append(draggedNode);
       return paragraphNode;
     }
-    
-    // No special handling needed
+
     return draggedNode;
   };
 
-  const handleDrop = async (e: React.DragEvent, targetNode: LexicalTreeViewNode, position: 'before' | 'after') => {
+  const handleDrop = async (
+    e: React.DragEvent,
+    targetNode: LexicalTreeViewNode,
+    position: "before" | "after" | "inside"
+  ) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    const draggedNodeId = e.dataTransfer.getData("text/plain");
-    if (!draggedNodeId || !editor) {
-      return;
-    }
 
-    // Find the selected drop level
-    const selectedLevel = dropLevels.find(level => level.isSelected);
-    const actualTargetId = selectedLevel?.nodeId || targetNode.id;
-    
-    // Find the actual target node in the tree
-    const findNodeById = (node: LexicalTreeViewNode, id: string): LexicalTreeViewNode | null => {
-      if (node.id === id) return node;
-      if (node.children) {
-        for (const child of node.children) {
-          const found = findNodeById(child, id);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    
-    const actualTargetNode = findNodeById(parent, actualTargetId) || targetNode;
-    
-    if (draggedNodeId === actualTargetNode.lexicalNodeId) {
+    const draggedNodeId = e.dataTransfer.getData("text/plain");
+    if (!draggedNodeId || draggedNodeId === targetNode.lexicalNodeId || !editor) {
       return;
     }
 
     try {
       editor.update(() => {
         const draggedLexicalNode = lexical.$getNodeByKey(draggedNodeId);
-        const targetLexicalNode = lexical.$getNodeByKey(actualTargetNode.lexicalNodeId);
-        
+        const targetLexicalNode = lexical.$getNodeByKey(targetNode.lexicalNodeId);
+
         if (draggedLexicalNode && targetLexicalNode) {
-          draggedLexicalNode.remove();
-          
-          // Apply special container handling based on node type
-          const nodeToInsert = wrapNodeIfNeeded(draggedLexicalNode, targetLexicalNode);
-          
-          if (position === 'before') {
-            targetLexicalNode.insertBefore(nodeToInsert);
-          } else {
-            targetLexicalNode.insertAfter(nodeToInsert);
+          console.log("🔄 Drag operation:", {
+            draggedType: draggedLexicalNode.getType(),
+            targetType: targetLexicalNode.getType(),
+            position,
+          });
+
+          const success = handleListAwareDrop(draggedLexicalNode, targetLexicalNode, position);
+          if (!success) {
+            console.warn("🚫 Drop operation cancelled due to list structure constraints");
           }
+          clearDragState();
         }
       });
     } catch (error) {
-      console.error('Error moving node:', error);
+      console.error("Error moving node:", error, {
+        draggedNodeId,
+        targetNodeId: targetNode.lexicalNodeId,
+        position,
+      });
+      clearDragState();
     }
-    
-    setDragOverId(null);
-    setDropLevels([]);
   };
 
   const handleDragOver = (e: React.DragEvent, nodeId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
-    const x = e.clientX - rect.left;
-    const position = y < rect.height / 2 ? 'before' : 'after';
-    
-    // Build parent chain for multi-level drop targeting
-    const parentChain = buildParentChain(nodeId, depth);
-    
-    // Calculate which level to select based on horizontal mouse position
-    // Closer to left edge = higher level (parent), closer to right = deeper level (self)
-    const relativeX = x / rect.width; // 0 = left edge, 1 = right edge
-    const chainLength = parentChain.length;
-    const selectedIndex = Math.floor(relativeX * chainLength);
-    const clampedIndex = Math.max(0, Math.min(selectedIndex, chainLength - 1));
-    
-    // Create drop levels with selection
-    const levels = parentChain.map((level, index) => ({
-      ...level,
-      isSelected: index === clampedIndex
-    }));
-    
+
+    // Calculate coverage percentage
+    const yCoverage = y / rect.height;
+
+    // Only use Y coverage to determine if user wants to embed inside
+    // High Y coverage means they're covering most of the element vertically
+    const shouldEmbedInside = yCoverage > 0.9;
+
+    let position: "before" | "after" | "inside";
+
+    if (shouldEmbedInside) {
+      position = "inside";
+    } else {
+      position = y < rect.height / 2 ? "before" : "after";
+    }
+
     setDragOverId(nodeId);
     setDropPosition(position);
-    setDropLevels(levels);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear if leaving the entire drop zone
+    // Clear drag state more aggressively to prevent lingering
     const relatedTarget = e.relatedTarget as HTMLElement;
-    if (!e.currentTarget.contains(relatedTarget)) {
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
       setDragOverId(null);
-      setDropLevels([]);
+      setDropPosition("before");
     }
+  };
+
+  const clearDragState = () => {
+    setDragOverId(null);
+    setDropPosition("before");
   };
 
   return (
@@ -351,7 +433,12 @@ export function SidebarTreeViewMenuContent({
             onDragOver={(e) => handleDragOver(e, displayNode.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, displayNode, dropPosition)}
-            className={getDropIndicatorClasses(displayNode.id)}
+            className={twMerge(
+              "relative",
+              dragOverId === displayNode.id && dropPosition === "before" && "border-t-2 border-ring",
+              dragOverId === displayNode.id && dropPosition === "after" && "border-b-2 border-ring",
+              dragOverId === displayNode.id && dropPosition === "inside" && "border-2 border-ring bg-ring/10"
+            )}
           >
             {isContainer(displayNode) ? (
               <Collapsible
@@ -362,11 +449,7 @@ export function SidebarTreeViewMenuContent({
               >
                 <CollapsibleTrigger asChild>
                   <div>
-                    <SidebarMenuButton
-                      asChild
-                      className="h-6"
-                      onClick={() => {}}
-                    >
+                    <SidebarMenuButton asChild className="h-6" onClick={() => {}}>
                       <TreeViewMenuParent depth={depth} node={displayNode}>
                         <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
                           <span className="hover:underline flex" title={displayNode.type}>
@@ -394,10 +477,7 @@ export function SidebarTreeViewMenuContent({
                 </CollapsibleContent>
               </Collapsible>
             ) : isLeaf(displayNode) ? (
-              <SidebarMenuButton
-                asChild
-                onClick={() => {}}
-              >
+              <SidebarMenuButton asChild onClick={() => {}}>
                 <TreeViewTreeMenuChild depth={depth} node={displayNode} className="h-6">
                   <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
                     <div className="py-1 hover:underline font-mono text-2xs w-full truncate">
@@ -495,7 +575,7 @@ export const TreeViewTreeMenuChild = ({
   children?: React.ReactNode;
 }) => {
   if (!node.displayText) return null;
-  
+
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("text/plain", node.lexicalNodeId);
     e.dataTransfer.effectAllowed = "move";
@@ -503,9 +583,9 @@ export const TreeViewTreeMenuChild = ({
 
   return (
     <div className="select-none">
-      <div 
-        className={twMerge(className, "group cursor-pointer my-0")} 
-        tabIndex={0} 
+      <div
+        className={twMerge(className, "group cursor-pointer my-0")}
+        tabIndex={0}
         title={node.type}
         draggable
         onDragStart={handleDragStart}
