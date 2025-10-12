@@ -53,6 +53,7 @@ import { ComponentProps, useMemo, useRef, useState } from "react";
 const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   const [dragEnter, setDragEnter] = useState(false);
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { setFileTreeCtx } = useFileTreeMenuCtx();
   const handleClick = () => {
@@ -66,19 +67,28 @@ const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
     });
   };
   const { handleDrop } = useFileTreeDragDrop({ currentWorkspace, onMoveMultiple: renameDirOrFileMultiple });
+
+  // DRY: Combine drag/click event handlers that set dragEnter with timeout
+  const setDragEnterWithTimeout = (value: boolean) => {
+    clearTimeout(timeoutRef.current!);
+    if (value) {
+      setDragEnter(true);
+    } else {
+      timeoutRef.current = setTimeout(() => setDragEnter(false), 1000);
+    }
+  };
+
   return (
     <MainFileTreeContextMenu fileNode={RootNode} currentWorkspace={currentWorkspace}>
       <div
         className={cn(
           "mb-[5px] visible cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
           { "border h-8 bg-sidebar scale-110 mt-1": dragEnter }
-          // { "mb-[5px] visible": hasDepth },
-          // { "invisible h-2": !hasDepth }
         )}
         onDrop={(e) => handleDrop(e, RootNode)}
-        onDragEnter={() => setDragEnter(true)}
-        onDragLeave={() => setDragEnter(false)}
-        onMouseLeave={() => setDragEnter(false)}
+        onDragEnter={() => setDragEnterWithTimeout(true)}
+        onDragLeave={() => setDragEnterWithTimeout(false)}
+        onMouseLeave={() => setDragEnterWithTimeout(false)}
         onClick={handleClick}
         title={"File Tree Root"}
       >

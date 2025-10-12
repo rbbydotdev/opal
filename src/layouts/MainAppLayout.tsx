@@ -7,6 +7,7 @@ import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserv
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/ErrorPlaque";
 import { GitStatusProvider } from "@/components/GitStatusModal";
+import { BuildModalProvider } from "@/components/BuildModal";
 import { PromptProvider } from "@/components/Prompt";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -41,7 +42,8 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
               <ErrorPopper>
                 <WorkspaceProvider>
                   <GitStatusProvider>
-                    <SidebarProvider>
+                    <BuildModalProvider>
+                      <SidebarProvider>
                       <PromptProvider>
                         <ConfirmProvider>
                           <RemoteMDXEditorRealmProvider>
@@ -62,7 +64,8 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                           </RemoteMDXEditorRealmProvider>
                         </ConfirmProvider>
                       </PromptProvider>
-                    </SidebarProvider>
+                      </SidebarProvider>
+                    </BuildModalProvider>
                   </GitStatusProvider>
                 </WorkspaceProvider>
               </ErrorPopper>

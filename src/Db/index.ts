@@ -1,6 +1,7 @@
 import { HistoryDocRecord } from "@/Db/HistoryDAO";
 import { RemoteAuthRecord } from "@/Db/RemoteAuth";
 import { SettingsRecord } from "@/Db/SettingsRecord";
+import { BuildRecord } from "@/Db/BuildRecord";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 import { DiskRecord } from "./DiskRecord";
@@ -11,6 +12,7 @@ export class ClientIndexedDb extends Dexie {
   remoteAuths!: EntityTable<RemoteAuthRecord, "guid">;
   settings!: EntityTable<SettingsRecord, "name">;
   disks!: EntityTable<DiskRecord, "guid">;
+  builds!: EntityTable<BuildRecord, "guid">;
 
   historyDocs!: EntityTable<HistoryDocRecord, "edit_id">; // Auto-increment edit_id
 
@@ -22,6 +24,7 @@ export class ClientIndexedDb extends Dexie {
       remoteAuths: "guid,type,ta",
       workspaces: "guid,name",
       disks: "guid",
+      builds: "guid,diskId,timestamp",
       thumbnails: "[workspaceId+path],guid,path,workspaceId",
       historyDocs: "++edit_id,id,parent,workspaceId",
     });
