@@ -275,7 +275,7 @@ export const CodeMirrorEditor = ({
         mimeType={mimeType}
         editorView={viewRef.current}
       />
-      <div className={cn("foobar code-mirror-source-editor bg-background h-full", className)} ref={editorRef} />
+      <div className={cn("code-mirror-source-editor bg-background min-h-0", className)} ref={editorRef} />
     </ScrollSyncProvider>
   );
 };
