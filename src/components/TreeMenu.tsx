@@ -154,21 +154,16 @@ export function SidebarTreeViewMenuContent({
       return false;
     }
 
-    console.log("🔀 Merging lists:", {
-      sourceType: sourceList.getListType(),
-      targetType: targetList.getListType()
-    });
-
     // Move all children from source to target
     const sourceChildren = sourceList.getChildren();
     sourceList.remove();
-    
-    sourceChildren.forEach(child => {
+
+    sourceChildren.forEach((child) => {
       if ($isListItemNode(child)) {
         targetList.append(child);
       }
     });
-    
+
     return true;
   };
 
@@ -182,16 +177,8 @@ export function SidebarTreeViewMenuContent({
     const isTargetList = $isListNode(targetNode);
     const isTargetListItem = $isListItemNode(targetNode);
 
-    console.log("📋 List analysis:", {
-      isDraggedList,
-      isDraggedListItem,
-      isTargetList,
-      isTargetListItem,
-      position,
-    });
-
     // HIERARCHICAL MERGING LOGIC
-    
+
     // Case 1: List → List = Merge lists
     if (isDraggedList && isTargetList) {
       return mergeListIntoList(draggedNode, targetNode);
@@ -263,7 +250,7 @@ export function SidebarTreeViewMenuContent({
       const newList = $createListNode(listType);
       draggedNode.remove();
       newList.append(draggedNode);
-      
+
       if (position === "before") {
         targetNode.insertBefore(newList);
       } else if (position === "after") {
@@ -282,7 +269,7 @@ export function SidebarTreeViewMenuContent({
     if (!isDraggedList && !isDraggedListItem && (isTargetList || isTargetListItem)) {
       const newListItem = $createListItemNode();
       const wrappedNode = wrapNodeIfNeeded(draggedNode, targetNode);
-      
+
       draggedNode.remove();
       newListItem.append(wrappedNode);
 
@@ -324,7 +311,7 @@ export function SidebarTreeViewMenuContent({
       return true;
     }
 
-    console.warn("🚫 Unsupported list operation");
+    console.warn("Unsupported list operation");
     return false;
   };
 
@@ -362,15 +349,9 @@ export function SidebarTreeViewMenuContent({
         const targetLexicalNode = lexical.$getNodeByKey(targetNode.lexicalNodeId);
 
         if (draggedLexicalNode && targetLexicalNode) {
-          console.log("🔄 Drag operation:", {
-            draggedType: draggedLexicalNode.getType(),
-            targetType: targetLexicalNode.getType(),
-            position,
-          });
-
           const success = handleListAwareDrop(draggedLexicalNode, targetLexicalNode, position);
           if (!success) {
-            console.warn("🚫 Drop operation cancelled due to list structure constraints");
+            console.warn("Drop operation cancelled due to list structure constraints");
           }
           clearDragState();
         }
