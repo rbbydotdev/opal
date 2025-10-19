@@ -5,8 +5,8 @@ import { Workspace } from "@/Db/Workspace";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { AbsPath, isAncestor } from "@/lib/paths2";
+import { slugifier } from "@/lib/slugifier";
 import { nanoid } from "nanoid";
-import slugify from "slugify";
 import { getUniqueSlug } from "../lib/getUniqueSlug";
 import { DiskDAO } from "./DiskDAO";
 
@@ -147,11 +147,8 @@ export class WorkspaceDAO {
   }
 
   static Slugify(name: string) {
-    return slugify(name, { strict: true });
+    return slugifier(name);
   }
-  // private getRemoteAuth() {
-  //   return RemoteOAuthDAO.FromJSON(this.remoteAuth);
-  // }
 
   getDisk() {
     return DiskDAO.FromJSON(this.disk);

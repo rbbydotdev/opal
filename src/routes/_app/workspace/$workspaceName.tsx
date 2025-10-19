@@ -4,6 +4,7 @@ import { WorkspaceSpotlightSearch } from "@/components/SpotlightSearch";
 import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { FilterInSpecialDirs } from "@/Db/SpecialDirs";
 import { EditorSidebarLayout } from "@/features/preview-pane/EditorSidebarLayout";
 import { usePreviewPaneProps } from "@/features/preview-pane/usePreviewPaneProps";
 import useFavicon from "@/hooks/useFavicon";
@@ -31,7 +32,7 @@ function WorkspaceLayout() {
   return (
     <>
       <Toaster />
-      <FileTreeProvider currentWorkspace={currentWorkspace} filterIn={FileOnlyFilter}>
+      <FileTreeProvider currentWorkspace={currentWorkspace} filterIn={FileOnlyFilter} filterOut={FilterInSpecialDirs}>
         <FileTreeMenuCtxProvider currentWorkspace={currentWorkspace}>
           <WorkspaceSpotlightSearch />
         </FileTreeMenuCtxProvider>
