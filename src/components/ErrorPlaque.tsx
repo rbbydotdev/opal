@@ -21,7 +21,7 @@ export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {
 
       {/* Background pattern */}
       <div
-        className="absolute rotate-12 scale-150 inset-0 overflow-hidden opacity-45 text-xs animate-drift"
+        className="absolute rotate-12 scale-150 inset-0 overflow-hidden opacity-45 text-xs"
         style={{
           backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='20'><text x='0' y='20' font-size='12' fill='white' font-family='monospace'>error</text></svg>")`,
         }}

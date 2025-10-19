@@ -341,7 +341,7 @@ export abstract class Disk {
     await this.ready;
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot()); //load first from cache
-    this.hydrateIndexFromDisk().catch((error) => {
+    this.hydrateIndexFromDisk().catch((error: Error) => {
       if (onError) {
         onError(error);
       } else {

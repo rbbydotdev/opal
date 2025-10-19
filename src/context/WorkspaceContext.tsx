@@ -3,6 +3,7 @@ import { NullWorkspace } from "@/Db/NullWorkspace";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { WorkspaceCorruptionModal, useWorkspaceCorruption } from "@/features/workspace-corruption";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useUrlParam } from "@/hooks/useUrlParam";
@@ -194,25 +195,43 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const location = useLocation();
   const navigate = useNavigate();
   const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);
+  
+  // Use workspace corruption handling feature
+  const { errorState, handleWorkspaceError, clearError, shouldPreventInitialization } = useWorkspaceCorruption();
 
   useEffect(() => {
     if (workspaceName === "new" || !workspaceName) {
       setCurrentWorkspace(NULL_WORKSPACE);
+      clearError(); // Clear any previous errors
       return;
     }
+
+    // Prevent duplicate error handling for the same workspace
+    if (shouldPreventInitialization(workspaceName)) {
+      return;
+    }
+
     const workspace = WorkspaceDAO.FetchModelFromNameAndInit(workspaceName)
       .then((ws) => {
         setCurrentWorkspace(ws);
+        clearError(); // Clear errors on successful load
         console.debug("Initialize Workspace:" + ws.name);
         return ws;
       })
-      .catch(() => {
-        window.location.href = "/";
+      .catch(async (error: Error) => {
+        console.error("Failed to initialize workspace:", error);
+        
+        // Handle the error using the feature module
+        await handleWorkspaceError(workspaceName, error);
+
+        // Set workspace to null and tear down on fatal error
+        setCurrentWorkspace(NULL_WORKSPACE);
       });
+    
     return () => {
       void workspace.then((ws) => ws?.tearDown());
     };
-  }, [navigate, workspaceName]);
+  }, [navigate, workspaceName, shouldPreventInitialization, handleWorkspaceError, clearError]);
 
   useEffect(() => {
     if (!currentWorkspace) return;
@@ -277,6 +296,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       }}
     >
       {children}
+      
+      {/* Workspace Corruption Modal */}
+      <WorkspaceCorruptionModal 
+        errorState={errorState} 
+        onClearError={clearError} 
+      />
     </WorkspaceContext.Provider>
   );
 };

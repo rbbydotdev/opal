@@ -1,4 +1,4 @@
-import { isParent } from "@/components/TreeMenu";
+import { isParent } from "@/components/isParent";
 import { getTextContent } from "@/lib/mdast/mdastUtils";
 import mdast, { Content, Heading, Root } from "mdast";
 
@@ -8,7 +8,10 @@ class HierNode {
   label: string;
   id: string;
   content: string;
-  constructor(public ref: mdast.Parent, public depth: number) {
+  constructor(
+    public ref: mdast.Parent,
+    public depth: number
+  ) {
     this.id = ref.position?.start?.line + "-" + ref.position?.start?.column;
     this.label = ref.type;
     this.content = getTextContent(ref);

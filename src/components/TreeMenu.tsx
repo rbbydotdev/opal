@@ -1,6 +1,7 @@
 import { MainEditorRealmId } from "@/components/Editor/EditorConst";
 import { highlightMdxElement } from "@/components/Editor/highlightMdxElement";
 import { scrollToEditorElement } from "@/components/Editor/scrollToEditorElement";
+import { isParent } from "@/components/isParent";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -14,15 +15,9 @@ import { $createListItemNode, $createListNode, $isListItemNode, $isListNode } fr
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
 import { Dot, PlusIcon } from "lucide-react";
-import mdast from "mdast";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
-import unist from "unist";
 const { $createParagraphNode } = lexical;
-
-export function isParent(node: unknown): node is unist.Parent {
-  return Boolean(typeof (node as mdast.Parent).children !== "undefined");
-}
 
 export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();

@@ -1,4 +1,3 @@
-import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import {
   ContextMenu,
@@ -10,6 +9,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { getDiskTypeLabel } from "@/Db/Disk";
 import { Workspace } from "@/Db/Workspace";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
