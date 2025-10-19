@@ -338,27 +338,31 @@ export function SidebarTreeViewMenuContent({
     e.preventDefault();
     e.stopPropagation();
 
-    const draggedNodeId = e.dataTransfer.getData("text/plain");
-    if (!draggedNodeId || draggedNodeId === targetNode.lexicalNodeId || !editor) {
+    // const draggedNodeId = e.dataTransfer.getData("text/plain");
+    const draggedNodeIds: string[] = e.dataTransfer.getData("text/plain").split(",").filter(Boolean);
+    if (!draggedNodeIds.length || draggedNodeIds[0] === targetNode.lexicalNodeId || !editor) {
       return;
     }
 
     try {
       editor.update(() => {
-        const draggedLexicalNode = lexical.$getNodeByKey(draggedNodeId);
-        const targetLexicalNode = lexical.$getNodeByKey(targetNode.lexicalNodeId);
+        for (const draggedNodeId of draggedNodeIds) {
+          console.log(draggedNodeIds);
+          const draggedLexicalNode = lexical.$getNodeByKey(draggedNodeId);
+          const targetLexicalNode = lexical.$getNodeByKey(targetNode.lexicalNodeId);
 
-        if (draggedLexicalNode && targetLexicalNode) {
-          const success = handleListAwareDrop(draggedLexicalNode, targetLexicalNode, position);
-          if (!success) {
-            console.warn("Drop operation cancelled due to list structure constraints");
+          if (draggedLexicalNode && targetLexicalNode) {
+            const success = handleListAwareDrop(draggedLexicalNode, targetLexicalNode, position);
+            if (!success) {
+              console.warn("Drop operation cancelled due to list structure constraints");
+            }
           }
-          clearDragState();
         }
+        clearDragState();
       });
     } catch (error) {
-      console.error("Error moving node:", error, {
-        draggedNodeId,
+      console.error("Error moving nodes:", error, {
+        draggedNodeId: draggedNodeIds.join(","),
         targetNodeId: targetNode.lexicalNodeId,
         position,
       });
@@ -500,6 +504,13 @@ function Bullet({ type, depth }: LexicalTreeViewNode) {
   return null;
 }
 
+const inorderWalk = (node: LexicalTreeViewNode, callback: (node: LexicalTreeViewNode) => void) => {
+  callback(node);
+  if (isParent(node) && node.children) {
+    node.children.forEach((child) => inorderWalk(child, callback));
+  }
+};
+
 export const TreeViewMenuParent = ({
   depth,
   className,
@@ -514,7 +525,12 @@ export const TreeViewMenuParent = ({
   onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
 }) => {
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData("text/plain", node.lexicalNodeId);
+    const nodes: string[] = [];
+    inorderWalk(node, (n) => {
+      nodes.push(n.lexicalNodeId);
+    });
+    // e.dataTransfer.setData("text/plain", node.lexicalNodeId);
+    e.dataTransfer.setData("text/plain", nodes.join(","));
     e.dataTransfer.effectAllowed = "move";
   };
 

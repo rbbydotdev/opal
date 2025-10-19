@@ -1,6 +1,7 @@
 // Helper methods for the Builder class - split into separate file for clarity
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, RelPath, basename, dirname, extname, joinPath, relPath } from "@/lib/paths2";
 import matter from "gray-matter";
 import { marked } from "marked";
@@ -27,8 +28,14 @@ export class BuilderMethods {
   }
 
   isTemplateFile(node: TreeNode): boolean {
-    const ext = extname(node.path);
-    return ext === ".mustache" || ext === ".ejs";
+    return this.getTemplateType(node.path) !== null;
+  }
+
+  getTemplateType(filePath: string): "mustache" | "ejs" | null {
+    const mime = getMimeType(filePath);
+    if (mime === "text/x-mustache") return "mustache";
+    if (mime === "text/x-ejs") return "ejs";
+    return null;
   }
 
   isMarkdownFile(node: TreeNode): boolean {
@@ -151,26 +158,37 @@ export class BuilderMethods {
     this.log("Blog index generated");
   }
 
+  async processLayout(post: PageData): Promise<{ layout: string; type: "mustache" | "ejs" }> {
+    if (post.frontMatter.layout && !this.getTemplateType(post.frontMatter.layout)) {
+      throw new Error(`Unknown template type for layout: ${post.frontMatter.layout}`);
+    }
+    return post.frontMatter.layout
+      ? {
+          layout: await this.loadTemplate(relPath(`_layouts/${post.frontMatter.layout}`)),
+          type: this.getTemplateType(post.frontMatter.layout)!,
+        }
+      : { layout: DefaultPageLayout, type: "mustache" };
+  }
   async generateBlogPosts(posts: PageData[]): Promise<void> {
     const postsOutputPath = joinPath(this.options.outputPath, relPath("posts"));
     await this.ensureDirectoryExists(postsOutputPath);
 
     for (const post of posts) {
-      if (!post.frontMatter.layout) {
-        throw new Error(`Missing layout in front matter for ${post.path}`);
-      }
+      const { layout, type } = await this.processLayout(post);
 
-      const layout = await this.loadTemplate(relPath(`_layouts/${post.frontMatter.layout}.mustache`));
       const additionalStyles = await this.getAdditionalStyles(post.frontMatter.styles || []);
       const globalCss = await this.getGlobalCss();
 
-      const html = mustache.render(layout, {
-        content: post.htmlContent,
-        title: post.frontMatter.title,
-        globalCss,
-        additionalStyles,
-        ...post.frontMatter,
-      });
+      if (type !== "mustache") {
+        const html = mustache.render(layout, {
+          content: post.htmlContent,
+          title: post.frontMatter.title,
+          globalCss,
+          additionalStyles,
+          ...post.frontMatter,
+        });
+      } else {
+      }
 
       const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
       await this.options.outputDisk.writeFile(outputPath, html);
@@ -253,5 +271,24 @@ export class BuilderMethods {
       return bDate.getTime() - aDate.getTime();
     });
   }
-
 }
+
+const DefaultPageLayout = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <style>
+    {{#globalCss}}
+    {{{globalCss}}}
+    {{/globalCss}}
+    {{#additionalStyles}}
+    {{{additionalStyles}}}
+    {{/additionalStyles}}
+  </style>
+</head>
+<body>
+  {{{content}}}
+</body>
+</html>`;
