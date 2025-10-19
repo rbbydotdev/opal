@@ -10,7 +10,7 @@ import { PatchedDirMountOPFS } from "@/Db/PatchedDirMountOPFS";
 import { UnwrapScannable } from "@/features/search/SearchScannable";
 import { BrowserAbility } from "@/lib/BrowserAbility";
 import { Channel } from "@/lib/channel";
-import { errF, errorCode, isErrorWithCode, NotFoundError } from "@/lib/errors";
+import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
@@ -283,7 +283,7 @@ export abstract class Disk {
       });
       void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     } catch (e) {
-      throw errF`Error initializing index ${e}`;
+      throw new ServiceUnavailableError(errF`Error initializing index ${e}`);
     }
     return;
   }
@@ -337,11 +337,17 @@ export abstract class Disk {
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot());
   }
-  async init({ skipListeners }: { skipListeners?: boolean } = {}) {
+  async init({ skipListeners, onError }: { skipListeners?: boolean; onError?: (error: Error) => void } = {}) {
     await this.ready;
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot()); //load first from cache
-    void this.hydrateIndexFromDisk(); //load first from cache
+    this.hydrateIndexFromDisk().catch((error) => {
+      if (onError) {
+        onError(error);
+      } else {
+        console.warn("Failed to hydrate index from disk, continuing with cached index:", error);
+      }
+    });
     if (isServiceWorker() || isWebWorker() || skipListeners) {
       console.debug("skipping remote listeners in service worker");
       return () => {};
@@ -1157,11 +1163,13 @@ export class OpFsDirMountDisk extends Disk {
     const mutex = new Mutex();
     const { promise, resolve, reject } = Promise.withResolvers<void>();
 
+    // Initialize with a temporary memfs until directory is selected
+    const tempFs = memfs().fs;
     void mutex.acquire();
     super(
       guid,
-      new MutexFs({} as CommonFileSystem, mutex),
-      new FileTree({} as CommonFileSystem, guid, mutex),
+      new MutexFs(tempFs.promises, mutex),
+      new FileTree(tempFs.promises, guid, mutex),
       DiskDAO.New(OpFsDirMountDisk.type, guid, indexCache)
     );
 

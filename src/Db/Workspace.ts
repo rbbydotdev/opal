@@ -636,7 +636,7 @@ export class Workspace {
     return this;
   }
   async initNoListen() {
-    return this.init({ skipListeners: true });
+    return await this.init({ skipListeners: true });
   }
 
   async tearDown() {
