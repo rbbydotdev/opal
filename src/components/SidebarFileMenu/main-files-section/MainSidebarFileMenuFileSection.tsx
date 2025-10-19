@@ -68,7 +68,6 @@ const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
   };
   const { handleDrop } = useFileTreeDragDrop({ currentWorkspace, onMoveMultiple: renameDirOrFileMultiple });
 
-  // DRY: Combine drag/click event handlers that set dragEnter with timeout
   const setDragEnterWithTimeout = (value: boolean) => {
     clearTimeout(timeoutRef.current!);
     if (value) {

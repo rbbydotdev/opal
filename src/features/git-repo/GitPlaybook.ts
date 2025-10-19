@@ -51,7 +51,7 @@ export class GitPlaybook {
   };
 
   resetSoftParent = async () => {
-    const commit = await this.repo.readCommitFromRef({ ref: "HEAD~1" });
+    const commit = await this.repo.readCommitFromRef({ ref: "HEAD~1" }).catch(() => null);
     const parentOid = commit?.oid;
     if (!parentOid) {
       throw new NotFoundError("No parent commit found for HEAD~1");

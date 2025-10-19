@@ -232,13 +232,10 @@ export abstract class Disk {
   private origFs: CommonFileSystem | null = null;
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
-  get fs() {
-    return this._fs;
-  }
 
   constructor(
     public readonly guid: string,
-    private _fs: CommonFileSystem,
+    protected fs: CommonFileSystem,
     //TODO move things into protected to isolate property digging
     readonly fileTree: FileTree,
     private connector: DiskDAO
@@ -866,7 +863,7 @@ export abstract class Disk {
     for (const node of sourceNodes) {
       node.path = await this.nextPath(node.path);
       for (const n of node.iterator()) {
-        if (n.isTreeDir()) result.push(await this.mkdirRecursive(n.path));
+        if (n.isTreeDir()) result.push((await this.mkdirRecursive(n.path)) as AbsPath);
         else {
           await this.writeFile(n.path, await fromDisk.readFile(n.source));
           result.push(n.path);
@@ -1251,17 +1248,4 @@ export class OpFsDirMountDisk extends Disk {
     await disk.selectDirectory();
     return disk;
   }
-}
-
-export function NamespaceDisk(disk: Disk) {
-  if (!(disk instanceof Disk)) {
-    throw new Error("Invalid disk instance for namespacing");
-  }
-  Object.defineProperty(disk, "fs", {
-    get() {
-      return disk.fs;
-    },
-    configurable: true, // important if you want to redefine later
-  });
-  return disk;
 }

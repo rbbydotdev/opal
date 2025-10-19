@@ -127,14 +127,14 @@ export function KeyboardShortcutsModal({ children }: { children: React.ReactNode
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyboardIcon className="h-5 w-5" />
             Keyboard Shortcuts
           </DialogTitle>
         </DialogHeader>
-        <div className="mt-4 space-y-6">
+        <div className="mt-4 space-y-6  overflow-y-auto min-h-0">
           {sectionOrder.map((section) => {
             const shortcuts = groupedShortcuts[section];
             if (!shortcuts || shortcuts.length === 0) return null;
