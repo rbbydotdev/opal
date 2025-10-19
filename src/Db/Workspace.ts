@@ -619,7 +619,16 @@ export class Workspace {
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     const unsubs: (() => void)[] = [];
 
-    unsubs.push(await this.disk.init({ skipListeners }));
+    // Store disk initialization errors to re-throw them
+    let diskInitError: Error | null = null;
+
+    unsubs.push(await this.disk.init({ 
+      skipListeners,
+      onError: (error) => {
+        diskInitError = error;
+      }
+    }));
+    
     unsubs.push(await this.initRepo({ skipListeners }));
     if (!skipListeners) {
       unsubs.push(this.remote.init());
@@ -633,6 +642,12 @@ export class Workspace {
     } else {
       this.unsubs.push(...unsubs);
     }
+
+    // If there was a disk initialization error, throw it after setup is complete
+    if (diskInitError) {
+      throw diskInitError;
+    }
+
     return this;
   }
   async initNoListen() {

@@ -106,8 +106,8 @@ export default {
       },
       keyframes: {
         drift: {
-          "0%": { backgroundPosition: "0 0" },
-          "100%": { backgroundPosition: "200px 200px" },
+          "0%": { transform: "translate(0, 0)" },
+          "100%": { transform: "translate(200px, 200px)" },
         },
         "accordion-down": {
           from: { height: "0" },
@@ -126,7 +126,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s linear infinite",
-        drift: "drift 30s linear infinite",
+        drift: "drift 1s linear infinite",
       },
     },
   },

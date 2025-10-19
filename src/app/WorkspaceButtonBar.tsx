@@ -73,8 +73,10 @@ function BigButton({
   active,
   truncate,
   variant = "lg",
+  badge = null,
   ...restProps
 }: {
+  badge?: React.ReactNode;
   icon: React.ReactNode;
   title?: React.ReactNode | null;
   truncate?: boolean;
@@ -109,6 +111,7 @@ function BigButton({
                 "w-8 h-8": !isSmall,
               })}
             >
+              {badge}
               {icon}
             </div>
             {!isSmall &&
@@ -392,12 +395,13 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
             "mt-8": shrink,
           })}
         >
-          <div className="w-full _px-2 flex flex-col gap-4">
+          <div className="w-full flex flex-col gap-4">
             {process.env.NODE_ENV === "development" ? (
               <>
                 <BigButton
                   variant={variant}
                   icon={<BombIcon strokeWidth="1" stroke="current" className="w-full h-full" />}
+                  badge={<ErrorBadge />}
                   title={"Destroy All"}
                   to="#"
                   onClick={() =>
@@ -530,15 +534,16 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                 </div>
               </CollapsibleTrigger>
 
-              <CollapsibleContent className="w-full h-full _bg-green-500 overflow-y-scroll no-scrollbar flex justify-start gap-2 flex-col items-center pb-8">
+              <CollapsibleContent className="w-full h-full overflow-y-scroll no-scrollbar flex justify-start gap-2 flex-col items-center pb-8">
                 {workspaces.map((workspace) => (
                   <WorkspaceMenu workspaceGuid={workspace.guid} key={workspace.guid} workspaceName={workspace.name}>
                     <BigButton
                       variant={variant}
+                      badge={<ErrorBadge />}
                       icon={<WorkspaceIcon className="w-full h-full" scale={shrink ? 5 : 7} input={workspace.guid} />}
                       to={workspace.href}
                       truncate={true}
-                      className="_whitespace-nowrap text-muted-foreground"
+                      className="text-muted-foreground"
                       title={workspace.name}
                     />
                   </WorkspaceMenu>
@@ -553,6 +558,14 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
     </div>
   );
 }
+
+const ErrorBadge = () => {
+  return (
+    <div className="absolute top-0 right-3 w-5 h-5 p-1 flex items-center justify-center bg-destructive text-destructive-foreground rounded-full border-2">
+      <span className="text-2xs font-mono text-bold bold">!</span>
+    </div>
+  );
+};
 
 function DragCollapseBar() {
   const { setStoredValue, storedValue: shrink } = useShrink();

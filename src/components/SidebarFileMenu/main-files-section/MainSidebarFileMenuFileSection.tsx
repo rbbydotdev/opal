@@ -1,4 +1,3 @@
-import { useFiletreeMenuContextMenuActions } from "@/components/FiletreeMenu";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
+import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { getDiskTypeLabel } from "@/Db/Disk";

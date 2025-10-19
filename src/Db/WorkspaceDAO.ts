@@ -20,12 +20,20 @@ export const wrkId = (id: string) => {
   throw new Error("unknown id expected, /^__workspace__.+/");
 };
 
+//CODES
+type WSStatusCodeOK = 0;
+type WSStatusCodeCorrupted = 1;
+
+//state code, 0 is ok, other values are error states
+export type WorkspaceStatusCode = WSStatusCodeOK | WSStatusCodeCorrupted;
+
 export class WorkspaceDAO {
   static guid = () => "__workspace__" + nanoid();
 
   guid: string;
   name: string;
   disk: DiskDAO;
+  code: WorkspaceStatusCode = 0;
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
 
@@ -33,6 +41,7 @@ export class WorkspaceDAO {
     return {
       name: this.name,
       guid: this.guid,
+      code: this.code,
       remoteAuth: this.remoteAuths,
       disk: this.disk,
       thumbs: this.thumbs,
@@ -81,6 +90,7 @@ export class WorkspaceDAO {
       disk: this.disk,
       remoteAuths: this.remoteAuths,
       thumbs: this.thumbs,
+      code: this.code,
     });
   };
   static async CreateNewWithDiskType({
@@ -122,6 +132,7 @@ export class WorkspaceDAO {
       guid: WorkspaceDAO.guid(),
       disk,
       thumbs,
+
       remoteAuths,
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
@@ -243,15 +254,18 @@ export class WorkspaceDAO {
     disk,
     thumbs,
     remoteAuths = [],
+    code = 0,
   }: {
     guid: string;
     name: string;
     disk: DiskDAO | DiskJType;
     thumbs: DiskDAO | DiskJType;
     remoteAuths: RemoteAuthJType[];
+    code?: WorkspaceStatusCode;
   }) {
     this.guid = guid;
     this.name = name;
+    this.code = code;
     this.disk = DiskDAO.FromJSON(disk);
     this.thumbs = DiskDAO.FromJSON(thumbs);
     this.remoteAuths = remoteAuths.map((ra) => RemoteAuthDAO.FromJSON(ra));
