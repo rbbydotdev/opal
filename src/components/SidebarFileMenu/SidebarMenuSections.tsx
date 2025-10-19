@@ -130,7 +130,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           </DropdownMenuTrigger>
         </SidebarGroupLabel>
       </DropdownMenu>
-      <div className="overflow-y-auto no-scrollbar pr-4">
+      <div className="overflow-y-auto no-scrollbar pr-4 flex flex-col h-full justify-start">
         <SidebarDndList storageKey={"sidebarMenu"} show={storedValue}>
           <DndSlot dndId={"publish"}>
             <SidebarFileMenuPublish className="flex-shrink flex" currentWorkspace={currentWorkspace} />

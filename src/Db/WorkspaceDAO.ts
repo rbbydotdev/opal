@@ -227,7 +227,7 @@ export class WorkspaceDAO {
 
   static async FetchModelFromNameAndInit(name: string) {
     const workspaceDAO = await WorkspaceDAO.FetchFromName(name);
-    return workspaceDAO.toModel().init();
+    return await workspaceDAO.toModel().init();
   }
   static async FetchModelFromName(name: string) {
     return (await WorkspaceDAO.FetchFromName(name)).toModel();
