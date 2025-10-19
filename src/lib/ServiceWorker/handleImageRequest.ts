@@ -33,7 +33,9 @@ export async function handleImageRequest(event: FetchEvent, url: URL, workspaceN
     console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     const contents = isThumbnail
-      ? await workspace.readOrMakeThumb(decodedPathname)
+      ? decodedPathname.startsWith("/.thumb/")
+        ? await workspace.readFile(absPath(decodedPathname)) // Don't create thumbnails of thumbnails
+        : await workspace.readOrMakeThumb(decodedPathname)
       : await workspace.readFile(absPath(decodedPathname));
 
     const response = new Response(coerceUint8Array(contents) as BodyInit, {

@@ -73,11 +73,13 @@ export class BuilderMethods {
     const content = String(await this.options.sourceDisk.readFile(node.path));
     const { data: frontMatter, content: markdownContent } = matter(content);
 
-    if (!frontMatter.layout) {
-      throw new Error(`Missing layout in front matter for ${node.path}`);
-    }
+    // if (!frontMatter.layout) {
+    //   throw new Error(`Missing layout in front matter for ${node.path}`);
+    // }
 
-    const layout = await this.loadTemplate(relPath(`_layouts/${frontMatter.layout}.mustache`));
+    const layout = !frontMatter.layout
+      ? DefaultPageLayout
+      : await this.loadTemplate(relPath(`_layouts/${frontMatter.layout}.mustache`));
     const htmlContent = await marked(markdownContent);
     const additionalStyles = await this.getAdditionalStyles(frontMatter.styles || []);
     const globalCss = await this.getGlobalCss();
@@ -179,16 +181,13 @@ export class BuilderMethods {
       const additionalStyles = await this.getAdditionalStyles(post.frontMatter.styles || []);
       const globalCss = await this.getGlobalCss();
 
-      if (type !== "mustache") {
-        const html = mustache.render(layout, {
-          content: post.htmlContent,
-          title: post.frontMatter.title,
-          globalCss,
-          additionalStyles,
-          ...post.frontMatter,
-        });
-      } else {
-      }
+      const html = mustache.render(layout, {
+        content: post.htmlContent,
+        title: post.frontMatter.title,
+        globalCss,
+        additionalStyles,
+        ...post.frontMatter,
+      });
 
       const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
       await this.options.outputDisk.writeFile(outputPath, html);

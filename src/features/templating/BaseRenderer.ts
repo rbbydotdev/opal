@@ -161,39 +161,57 @@ export const SharedHelpers = HelperCore;
  */
 export const createMustacheLambda = {
   // String helpers that need render context
-  stringHelper: (helperFn: (str: string, ...args: any[]) => string, ...args: any[]) => 
-    () => (text: string, render: (template: string) => string) => {
+  stringHelper:
+    (helperFn: (str: string, ...args: any[]) => string, ...args: any[]) =>
+    () =>
+    (text: string, render: (template: string) => string) => {
       const rendered = render(text);
       return helperFn(rendered, ...args);
     },
 
   // String helpers with parameters
-  stringHelperWithParams: (helperFn: (str: string, ...args: any[]) => string) => 
-    (...args: any[]) => (text: string, render: (template: string) => string) => {
+  stringHelperWithParams:
+    (helperFn: (str: string, ...args: any[]) => string) =>
+    (...args: any[]) =>
+    (text: string, render: (template: string) => string) => {
       const rendered = render(text);
       return helperFn(rendered, ...args);
     },
 
   // Array helpers
-  arrayHelper: (helperFn: (arr: any[], ...args: any[]) => any, ...args: any[]) => 
-    () => (arr: any[]) => helperFn(arr, ...args),
+  arrayHelper:
+    (helperFn: (arr: any[], ...args: any[]) => any, ...args: any[]) =>
+    () =>
+    (arr: any[]) =>
+      helperFn(arr, ...args),
 
-  // Array helpers with parameters  
-  arrayHelperWithParams: (helperFn: (arr: any[], ...args: any[]) => any) => 
-    (...args: any[]) => (arr: any[]) => helperFn(arr, ...args),
+  // Array helpers with parameters
+  arrayHelperWithParams:
+    (helperFn: (arr: any[], ...args: any[]) => any) =>
+    (...args: any[]) =>
+    (arr: any[]) =>
+      helperFn(arr, ...args),
 
   // Date helpers
-  dateHelper: (helperFn: (date: Date | string, ...args: any[]) => string) => 
-    (...args: any[]) => (date: Date | string, render: (template: string) => string) => {
+  dateHelper:
+    (helperFn: (date: Date | string, ...args: any[]) => string) =>
+    (...args: any[]) =>
+    (date: Date | string, render: (template: string) => string) => {
       const dateValue = date instanceof Date ? date : new Date(render(String(date)));
       return helperFn(dateValue, ...args);
     },
 
   // Simple function wrappers (no render context needed)
-  simpleHelper: (helperFn: (...args: any[]) => any, ...args: any[]) => 
-    () => (...callArgs: any[]) => helperFn(...args, ...callArgs),
+  simpleHelper:
+    (helperFn: (...args: any[]) => any, ...args: any[]) =>
+    () =>
+    (...callArgs: any[]) =>
+      helperFn(...args, ...callArgs),
 
   // Parameterized simple helpers
-  simpleHelperWithParams: (helperFn: (...args: any[]) => any) => 
-    (...args: any[]) => (...callArgs: any[]) => helperFn(...args, ...callArgs),
+  simpleHelperWithParams:
+    (helperFn: (...args: any[]) => any) =>
+    (...args: any[]) =>
+    (...callArgs: any[]) =>
+      helperFn(...args, ...callArgs),
 };

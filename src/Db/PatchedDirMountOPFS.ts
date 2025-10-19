@@ -141,7 +141,7 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
       throw new Error("Cannot unlink root directory");
     }
     const normalizedPath = this.normalizePath(path);
-    
+
     // Check if path is a directory first
     try {
       const stat = await this.stat(path);
@@ -152,7 +152,7 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
     } catch (error) {
       // If stat fails, proceed with unlink attempt
     }
-    
+
     // For files, use unlink or fallback to rm
     return this.promises.unlink
       ? this.promises.unlink(normalizedPath)
