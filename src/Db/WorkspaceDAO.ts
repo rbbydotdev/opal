@@ -9,7 +9,7 @@ import { slugifier } from "@/lib/slugifier";
 import { nanoid } from "nanoid";
 import { getUniqueSlug } from "../lib/getUniqueSlug";
 import { DiskDAO } from "./DiskDAO";
-import { WorkspaceStatusCode } from "./WorkspaceStatusCode";
+import { WorkspaceStatusCode, WS_OK } from "./WorkspaceStatusCode";
 
 export type WorkspaceGuid = Brand<string, "WorkspaceGuid">;
 
@@ -27,7 +27,7 @@ export class WorkspaceDAO {
   guid: string;
   name: string;
   disk: DiskDAO;
-  code: WorkspaceStatusCode = "STATUS_OK";
+  code: WorkspaceStatusCode = WS_OK;
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
 
@@ -77,6 +77,16 @@ export class WorkspaceDAO {
     return result !== null;
   }
 
+  isOk = () => {
+    return this.code === WS_OK;
+  };
+  async recoverStatus() {
+    if (this.code !== WS_OK) {
+      console.log(`Recovering workspace status for ${this.name} from code ${this.code} to OK`);
+      this.code = WS_OK;
+      await this.save();
+    }
+  }
   async setStatusCode(code: WorkspaceStatusCode) {
     this.code = code;
     await this.save();

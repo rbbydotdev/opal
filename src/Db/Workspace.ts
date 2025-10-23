@@ -38,7 +38,7 @@ import {
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
-import { WS_STATUS_CORRUPTED_DISK_NON_RECOVERABLE } from "@/Db/WorkspaceStatusCode";
+import { WS_ERR_NONRECOVERABLE } from "@/Db/WorkspaceStatusCode";
 import { DefaultTemplate } from "@/Db/WorkspaceTemplates";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
@@ -410,6 +410,10 @@ export class Workspace {
     return this.disk.copyMultipleSourceNodes(sourceNodes, fromDisk);
   }
 
+  recoverStatus = () => {
+    return this.connector.recoverStatus();
+  };
+
   copyMultipleFiles(copyNodes: [from: TreeNode, toRoot: AbsPath | TreeNode][]) {
     return this.disk.copyMultiple(copyNodes);
   }
@@ -649,10 +653,13 @@ export class Workspace {
       // If there was a disk initialization error, throw it after setup is complete
       // if (diskInitError) throw diskInitError;
 
+      void this.recoverStatus().catch(() => {
+        console.warn("Error recovering workspace status code, ignoring");
+      }); //just in case
       return this;
     } catch (e) {
       // this.setEror
-      await this.connector.setStatusCode(WS_STATUS_CORRUPTED_DISK_NON_RECOVERABLE);
+      await this.connector.setStatusCode(WS_ERR_NONRECOVERABLE);
       throw e;
     }
   }

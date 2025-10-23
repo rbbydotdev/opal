@@ -104,7 +104,7 @@ export class DirectoryHandleIDB {
         try {
           await record.handle.requestPermission({ mode: "readwrite" });
           return record.handle;
-        } catch (permissionError) {
+        } catch (_permissionError) {
           await this.removeHandle(diskId);
           throw new NotFoundError(`Directory handle for diskId '${diskId}' has invalid permissions and was removed`);
         }

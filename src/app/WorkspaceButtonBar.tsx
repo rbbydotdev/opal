@@ -538,7 +538,7 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                   <WorkspaceMenu workspaceGuid={workspace.guid} key={workspace.guid} workspaceName={workspace.name}>
                     <BigButton
                       variant={variant}
-                      badge={<ErrorBadge />}
+                      badge={workspace.isOk() ? null : <ErrorBadge />}
                       icon={<WorkspaceIcon className="w-full h-full" scale={shrink ? 5 : 7} input={workspace.guid} />}
                       to={workspace.href}
                       truncate={true}
