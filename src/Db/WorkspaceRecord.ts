@@ -1,12 +1,12 @@
 import { DiskJType } from "@/Db/Disk";
 import { RemoteAuthRecord } from "@/Db/RemoteAuth";
-// import { RemoteAuthJType } from "@/Db/RemoteAuth";
+import { WorkspaceStatusCode } from "@/Db/WorkspaceStatusCode";
 
 export class WorkspaceRecord {
   guid!: string;
   name!: string;
   disk!: DiskJType;
   thumbs!: DiskJType;
-  code!: number;
+  code!: WorkspaceStatusCode;
   remoteAuths!: RemoteAuthRecord[];
 }

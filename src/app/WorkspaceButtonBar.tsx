@@ -401,7 +401,6 @@ function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; aut
                 <BigButton
                   variant={variant}
                   icon={<BombIcon strokeWidth="1" stroke="current" className="w-full h-full" />}
-                  badge={<ErrorBadge />}
                   title={"Destroy All"}
                   to="#"
                   onClick={() =>

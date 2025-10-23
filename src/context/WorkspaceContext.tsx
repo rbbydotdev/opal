@@ -3,9 +3,10 @@ import { NullWorkspace } from "@/Db/NullWorkspace";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { WorkspaceCorruptionModal, useWorkspaceCorruption } from "@/features/workspace-corruption";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
+import { useWorkspaceCorruption } from "@/features/workspace-corruption/useWorkspaceCorruption";
+import { WorkspaceCorruptionModal } from "@/features/workspace-corruption/WorkspaceCorruptionModal";
 import { useUrlParam } from "@/hooks/useUrlParam";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -195,7 +196,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const location = useLocation();
   const navigate = useNavigate();
   const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);
-  
+
   // Use workspace corruption handling feature
   const { errorState, handleWorkspaceError, clearError, shouldPreventInitialization } = useWorkspaceCorruption();
 
@@ -220,14 +221,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       })
       .catch(async (error: Error) => {
         console.error("Failed to initialize workspace:", error);
-        
         // Handle the error using the feature module
         await handleWorkspaceError(workspaceName, error);
-
         // Set workspace to null and tear down on fatal error
         setCurrentWorkspace(NULL_WORKSPACE);
       });
-    
+
     return () => {
       void workspace.then((ws) => ws?.tearDown());
     };
@@ -296,12 +295,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       }}
     >
       {children}
-      
+
       {/* Workspace Corruption Modal */}
-      <WorkspaceCorruptionModal 
-        errorState={errorState} 
-        onClearError={clearError} 
-      />
+      <WorkspaceCorruptionModal errorState={errorState} />
     </WorkspaceContext.Provider>
   );
 };

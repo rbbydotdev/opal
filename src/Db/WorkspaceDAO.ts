@@ -9,6 +9,7 @@ import { slugifier } from "@/lib/slugifier";
 import { nanoid } from "nanoid";
 import { getUniqueSlug } from "../lib/getUniqueSlug";
 import { DiskDAO } from "./DiskDAO";
+import { WorkspaceStatusCode } from "./WorkspaceStatusCode";
 
 export type WorkspaceGuid = Brand<string, "WorkspaceGuid">;
 
@@ -20,20 +21,13 @@ export const wrkId = (id: string) => {
   throw new Error("unknown id expected, /^__workspace__.+/");
 };
 
-//CODES
-type WSStatusCodeOK = 0;
-type WSStatusCodeCorrupted = 1;
-
-//state code, 0 is ok, other values are error states
-export type WorkspaceStatusCode = WSStatusCodeOK | WSStatusCodeCorrupted;
-
 export class WorkspaceDAO {
   static guid = () => "__workspace__" + nanoid();
 
   guid: string;
   name: string;
   disk: DiskDAO;
-  code: WorkspaceStatusCode = 0;
+  code: WorkspaceStatusCode = "STATUS_OK";
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
 
@@ -81,6 +75,11 @@ export class WorkspaceDAO {
       throwNotFound: false,
     });
     return result !== null;
+  }
+
+  async setStatusCode(code: WorkspaceStatusCode) {
+    this.code = code;
+    await this.save();
   }
 
   save = async () => {
@@ -254,7 +253,7 @@ export class WorkspaceDAO {
     disk,
     thumbs,
     remoteAuths = [],
-    code = 0,
+    code = "STATUS_OK",
   }: {
     guid: string;
     name: string;

@@ -591,7 +591,7 @@ export function SidebarGitSection({
           />
         </div>
 
-        <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
+        <CollapsibleContent>
           <SidebarMenu className="pb-3">
             <div className="px-4 pt-2 gap-2 flex flex-col relative">
               <div

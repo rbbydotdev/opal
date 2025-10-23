@@ -1,8 +1,7 @@
 import { useConfirm } from "@/components/Confirm";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { WorkspaceIcon } from "@/components/WorkspaceIcon";
+import { WorkspaceBadge } from "@/components/WorkspaceBadge";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { cn } from "@/lib/utils";
 import { useRouter } from "@tanstack/react-router";
 import { Delete, Pencil } from "lucide-react";
 
@@ -45,7 +44,7 @@ export function WorkspaceMenu({
               <span className="text-lg flex flex-col gap-2">
                 <span>⚠️ Are you sure you want to delete this workspace ?</span>
                 <span>
-                  <CurrentWorkspaceBadge name={workspaceName} workspaceId={workspaceGuid} />
+                  <WorkspaceBadge name={workspaceName} workspaceId={workspaceGuid} />
                 </span>
                 <b>This action cannot be undone.</b>
               </span>
@@ -61,25 +60,3 @@ export function WorkspaceMenu({
     </ContextMenu>
   );
 }
-
-const CurrentWorkspaceBadge = ({
-  name,
-  workspaceId,
-  className,
-}: {
-  name: string;
-  workspaceId: string;
-  className?: string;
-}) => {
-  return (
-    <span
-      className={cn(
-        "rounded p-1 px-2 inline-flex items-center gap-2 border-2 border-secondary-foreground shadow-md text-foreground",
-        className
-      )}
-    >
-      <WorkspaceIcon variant="round" input={workspaceId} />
-      {name}
-    </span>
-  );
-};
