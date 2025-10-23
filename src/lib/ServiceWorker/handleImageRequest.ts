@@ -32,11 +32,9 @@ export async function handleImageRequest(event: FetchEvent, url: URL, workspaceN
     if (!workspace) throw new Error("Workspace not found " + workspaceName);
     console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
-    const contents = isThumbnail
-      ? decodedPathname.startsWith("/.thumb/")
-        ? await workspace.readFile(absPath(decodedPathname)) // Don't create thumbnails of thumbnails
-        : await workspace.readOrMakeThumb(decodedPathname)
-      : await workspace.readFile(absPath(decodedPathname));
+    const contents = await (isThumbnail && !decodedPathname.startsWith("/.thumb/")
+      ? workspace.readOrMakeThumb(absPath(decodedPathname))
+      : workspace.readFile(absPath(decodedPathname)));
 
     const response = new Response(coerceUint8Array(contents) as BodyInit, {
       headers: {
