@@ -41,7 +41,7 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
       const normalized = relPath(path);
 
       return normalized;
-    } catch (error) {
+    } catch (_error) {
       return "";
     }
   }
@@ -59,7 +59,7 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
     if (this.isRootPath(path)) {
       const rootHandle = await this.root;
       const entries = [];
-      for await (const [name, handle] of rootHandle.entries()) {
+      for await (const [name, _handle] of rootHandle.entries()) {
         entries.push(name);
       }
       return entries;
@@ -149,7 +149,7 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
         // Use rmdir for directories
         return this.promises.rmdir(normalizedPath, { recursive: true });
       }
-    } catch (error) {
+    } catch (_error) {
       // If stat fails, proceed with unlink attempt
     }
 

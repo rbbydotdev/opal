@@ -463,7 +463,9 @@ export abstract class Disk {
     return filePaths;
   }
 
-  mkdirRecursive = mkdirRecursive.bind(this.fs);
+  get mkdirRecursive() {
+    return mkdirRecursive.bind(this.fs);
+  }
 
   async *scan(): AsyncGenerator<{
     filePath: AbsPath;
@@ -941,6 +943,7 @@ export abstract class Disk {
   }
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array | Blob) {
     await this.ready;
+    console.log(`writeFileRecursive: Creating directory for ${dirname(filePath)}`);
     await this.mkdirRecursive(dirname(filePath));
     try {
       let data: string | Uint8Array;
@@ -949,6 +952,7 @@ export abstract class Disk {
       } else {
         data = content;
       }
+      console.log(`writeFileRecursive: Writing file ${filePath}`);
       return this.fs.writeFile(encodePath(filePath), data, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
@@ -994,35 +998,6 @@ export abstract class Disk {
     await this.remote.tearDown();
     await this.local.clearListeners();
     this.unsubs.forEach((us) => us());
-  }
-
-  // toNamespace(namespace: AbsPath | string): Disk {
-  //   //may need to pass around a mutex womp womp
-  //   return Disk.FromJSON(this, (fs: CommonFileSystem) => new NamespacedFs(fs, namespace));
-  // }
-  // toNamespace2(namespace: string): Disk {
-  //   const namespacePath = absPath(namespace);
-
-  //   // Create a shallow clone of this disk instance to preserve all special properties
-  //   const clonedDisk = Object.create(Object.getPrototypeOf(this));
-  //   Object.assign(clonedDisk, this);
-
-  //   // Replace the filesystem with a namespaced version
-  //   const namespacedFs = new NamespacedFs(this.fs, namespacePath);
-  //   const mutex = new Mutex();
-  //   const fileTree = new FileTree(namespacedFs, this.guid, mutex);
-
-  //   // Replace only the fs and fileTree, keeping everything else
-  //   clonedDisk.fs = namespacedFs;
-  //   clonedDisk.fileTree = fileTree;
-  //   clonedDisk.ready = this.initNamespace(namespacePath);
-
-  //   return clonedDisk;
-  // }
-
-  private async initNamespace(namespace: AbsPath): Promise<void> {
-    await this.ready;
-    await this.mkdirRecursive(namespace);
   }
 }
 export class OpFsDisk extends Disk {
