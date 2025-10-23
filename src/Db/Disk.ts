@@ -276,6 +276,7 @@ export abstract class Disk {
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
     return;
   }
+
   async hydrateIndexFromDisk() {
     try {
       await this.fileTreeIndex({
@@ -995,29 +996,29 @@ export abstract class Disk {
     this.unsubs.forEach((us) => us());
   }
 
-  toNamespace(namespace: AbsPath | string): Disk {
-    //may need to pass around a mutex womp womp
-    return Disk.FromJSON(this, (fs: CommonFileSystem) => new NamespacedFs(fs, namespace));
-  }
-  toNamespace2(namespace: string): Disk {
-    const namespacePath = absPath(namespace);
+  // toNamespace(namespace: AbsPath | string): Disk {
+  //   //may need to pass around a mutex womp womp
+  //   return Disk.FromJSON(this, (fs: CommonFileSystem) => new NamespacedFs(fs, namespace));
+  // }
+  // toNamespace2(namespace: string): Disk {
+  //   const namespacePath = absPath(namespace);
 
-    // Create a shallow clone of this disk instance to preserve all special properties
-    const clonedDisk = Object.create(Object.getPrototypeOf(this));
-    Object.assign(clonedDisk, this);
+  //   // Create a shallow clone of this disk instance to preserve all special properties
+  //   const clonedDisk = Object.create(Object.getPrototypeOf(this));
+  //   Object.assign(clonedDisk, this);
 
-    // Replace the filesystem with a namespaced version
-    const namespacedFs = new NamespacedFs(this.fs, namespacePath);
-    const mutex = new Mutex();
-    const fileTree = new FileTree(namespacedFs, this.guid, mutex);
+  //   // Replace the filesystem with a namespaced version
+  //   const namespacedFs = new NamespacedFs(this.fs, namespacePath);
+  //   const mutex = new Mutex();
+  //   const fileTree = new FileTree(namespacedFs, this.guid, mutex);
 
-    // Replace only the fs and fileTree, keeping everything else
-    clonedDisk.fs = namespacedFs;
-    clonedDisk.fileTree = fileTree;
-    clonedDisk.ready = this.initNamespace(namespacePath);
+  //   // Replace only the fs and fileTree, keeping everything else
+  //   clonedDisk.fs = namespacedFs;
+  //   clonedDisk.fileTree = fileTree;
+  //   clonedDisk.ready = this.initNamespace(namespacePath);
 
-    return clonedDisk;
-  }
+  //   return clonedDisk;
+  // }
 
   private async initNamespace(namespace: AbsPath): Promise<void> {
     await this.ready;

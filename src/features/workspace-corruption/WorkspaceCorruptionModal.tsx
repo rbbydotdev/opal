@@ -21,9 +21,10 @@ export function WorkspaceCorruptionModal({ errorState }: WorkspaceCorruptionModa
     if (!errorState) return;
     try {
       const workspace = await WorkspaceDAO.FetchFromName(errorState.workspaceName);
-      const disk = workspace.getDisk();
+      const disk = workspace.getDisk().toModel();
       if (disk instanceof OpFsDirMountDisk) {
         await disk.selectDirectory();
+        await workspace.recoverStatus();
         // Reload to reinitialize the workspace
         window.location.reload();
       }
