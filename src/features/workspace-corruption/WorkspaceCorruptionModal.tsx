@@ -8,20 +8,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { OpFsDirMountDisk } from "@/Db/Disk";
+import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { AlertTriangle, FolderX, HardDrive } from "lucide-react";
 import { WorkspaceCorruptionState } from "./types";
 
 interface WorkspaceCorruptionModalProps {
   errorState: WorkspaceCorruptionState | null;
-  onClearError: () => void;
 }
 
-export function WorkspaceCorruptionModal({ errorState, onClearError }: WorkspaceCorruptionModalProps) {
+export function WorkspaceCorruptionModal({ errorState }: WorkspaceCorruptionModalProps) {
   const handleRecoverOpfsHandle = async () => {
-    if (!errorState?.workspace) return;
-
+    if (!errorState) return;
     try {
-      const disk = errorState.workspace.getDisk();
+      const workspace = await WorkspaceDAO.FetchFromName(errorState.workspaceName);
+      const disk = workspace.getDisk();
       if (disk instanceof OpFsDirMountDisk) {
         await disk.selectDirectory();
         // Reload to reinitialize the workspace
@@ -38,7 +38,7 @@ export function WorkspaceCorruptionModal({ errorState, onClearError }: Workspace
 
   return (
     <AlertDialog open={true} onOpenChange={() => {}}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="max-w-md min-w-fit">
         <AlertDialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">

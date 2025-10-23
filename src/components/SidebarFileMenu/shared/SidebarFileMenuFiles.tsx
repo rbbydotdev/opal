@@ -76,8 +76,8 @@ export const SidebarFileMenuFiles = ({
               {children}
             </SidebarGroupLabel>
 
-            <CollapsibleContent className="min-h-0 flex-shrink">
-              <SidebarContent className="overflow-y-auto h-full flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden  group">
+            <CollapsibleContent>
+              <SidebarContent className="flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden  group">
                 <>
                   {contentBanner}
                   {isEmpty ? (

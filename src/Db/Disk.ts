@@ -337,17 +337,15 @@ export abstract class Disk {
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot());
   }
-  async init({ skipListeners, onError }: { skipListeners?: boolean; onError?: (error: Error) => void } = {}) {
+  // async init({ skipListeners, onError }: { skipListeners?: boolean; onError?: (error: Error) => void } = {}) {
+  async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     await this.ready;
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot()); //load first from cache
-    this.hydrateIndexFromDisk().catch((error: Error) => {
-      if (onError) {
-        onError(error);
-      } else {
-        console.warn("Failed to hydrate index from disk, continuing with cached index:", error);
-      }
-    });
+    await this.hydrateIndexFromDisk(); /*.catch((error: Error) => {
+      if (onError) onError(error);
+      else console.warn("Failed to hydrate index from disk, continuing with cached index:", error);
+    });*/
     if (isServiceWorker() || isWebWorker() || skipListeners) {
       console.debug("skipping remote listeners in service worker");
       return () => {};

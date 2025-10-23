@@ -40,8 +40,8 @@ export function SidebarTreeView({
           <div className="peer-hover:bg-sidebar-accent  h-full flex items-center rounded-none">{children}</div>
         </SidebarGroupLabel>
 
-        <CollapsibleContent className="min-h-0 flex-shrink">
-          <SidebarContent className="overflow-y-auto h-full scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
+        <CollapsibleContent>
+          <SidebarContent className="scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
             <SidebarTreeViewMenu />
           </SidebarContent>
         </CollapsibleContent>

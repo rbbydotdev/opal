@@ -159,7 +159,7 @@ function ConnectionManager() {
         <div />
       </ConnectionsModal>
 
-      <CollapsibleContent className="flex flex-col flex-shrink overflow-y-auto">
+      <CollapsibleContent>
         <SidebarMenu>
           {remoteAuths.length === 0 && (
             <div className="px-4 py-2">

@@ -1,6 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
-
-export type WorkspaceErrorType = 'corruption' | 'generic' | 'opfs_revoked';
+export type WorkspaceErrorType = "corruption" | "generic" | "opfs_revoked";
 
 export interface WorkspaceCorruptionState {
   hasError: boolean;
@@ -8,7 +6,7 @@ export interface WorkspaceCorruptionState {
   errorMessage: string;
   workspaceName: string;
   canRecover?: boolean;
-  workspace?: Workspace;
+  workspaceId?: string;
 }
 
 export interface WorkspaceCorruptionActions {

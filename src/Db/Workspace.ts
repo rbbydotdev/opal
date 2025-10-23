@@ -38,6 +38,7 @@ import {
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
+import { WS_STATUS_CORRUPTED_DISK_NON_RECOVERABLE } from "@/Db/WorkspaceStatusCode";
 import { DefaultTemplate } from "@/Db/WorkspaceTemplates";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
@@ -148,6 +149,7 @@ export class Workspace {
       remoteAuths: (this.remoteAuths ?? []).map((ra) => ra.toJSON()),
       disk: this.disk.toJSON(),
       thumbs: this.thumbs.toJSON(),
+      code: this.connector.code,
     };
   }
   static FromJSON(json: WorkspaceJType) {
@@ -617,38 +619,42 @@ export class Workspace {
   // }
 
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
-    const unsubs: (() => void)[] = [];
+    try {
+      const unsubs: (() => void)[] = [];
+      // Store disk initialization errors to re-throw them
+      // let diskInitError: Error | null = null;
+      unsubs.push(
+        await this.disk.init({
+          skipListeners,
+          // onError: (error) => {
+          //   diskInitError = error;
+          // },
+        })
+      );
 
-    // Store disk initialization errors to re-throw them
-    let diskInitError: Error | null = null;
-
-    unsubs.push(await this.disk.init({ 
-      skipListeners,
-      onError: (error) => {
-        diskInitError = error;
+      unsubs.push(await this.initRepo({ skipListeners }));
+      if (!skipListeners) {
+        unsubs.push(this.remote.init());
+        unsubs.push(await this.initImageFileListeners());
+        this.remote.on(WorkspaceEvents.RENAME, (payload) => this.local.emit(WorkspaceEvents.RENAME, payload));
+        this.remote.on(WorkspaceEvents.DELETE, (payload) => this.local.emit(WorkspaceEvents.DELETE, payload));
       }
-    }));
-    
-    unsubs.push(await this.initRepo({ skipListeners }));
-    if (!skipListeners) {
-      unsubs.push(this.remote.init());
-      unsubs.push(await this.initImageFileListeners());
-      this.remote.on(WorkspaceEvents.RENAME, (payload) => this.local.emit(WorkspaceEvents.RENAME, payload));
-      this.remote.on(WorkspaceEvents.DELETE, (payload) => this.local.emit(WorkspaceEvents.DELETE, payload));
-    }
-    if (this.tornDown) {
-      //weird but totally race condition, if the workspace was torn down before the init completes
-      unsubs.forEach((unsub) => unsub());
-    } else {
-      this.unsubs.push(...unsubs);
-    }
+      if (this.tornDown) {
+        //weird but totally race condition, if the workspace was torn down before the init completes
+        unsubs.forEach((unsub) => unsub());
+      } else {
+        this.unsubs.push(...unsubs);
+      }
 
-    // If there was a disk initialization error, throw it after setup is complete
-    if (diskInitError) {
-      throw diskInitError;
-    }
+      // If there was a disk initialization error, throw it after setup is complete
+      // if (diskInitError) throw diskInitError;
 
-    return this;
+      return this;
+    } catch (e) {
+      // this.setEror
+      await this.connector.setStatusCode(WS_STATUS_CORRUPTED_DISK_NON_RECOVERABLE);
+      throw e;
+    }
   }
   async initNoListen() {
     return await this.init({ skipListeners: true });
