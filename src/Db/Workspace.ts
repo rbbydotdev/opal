@@ -307,12 +307,11 @@ export class Workspace {
           await c.put(encodePath(newPath), res);
         }
       });
-      await this.NewThumb(oldNode.path)
-        .move(oldNode.path, newPath)
-        .catch(async (_e) => {
-          console.warn(`error moving thumb from ${oldNode.path} to ${newPath}`);
-          // console.error(e);
-        });
+      const oldThumb = this.NewThumb(oldNode.path);
+      const newThumb = this.NewThumb(newPath);
+      await oldThumb.move(oldThumb.path, newThumb.path).catch(async (_e) => {
+        console.warn(`error moving thumb from ${oldThumb.path} to ${newThumb.path}`);
+      });
     }
   }
   async renameSingle(from: TreeNode, to: TreeNode | AbsPath) {
@@ -410,8 +409,12 @@ export class Workspace {
     return this.disk.copyMultipleSourceNodes(sourceNodes, fromDisk);
   }
 
-  recoverStatus = () => {
+  recoverStatus() {
     return this.connector.recoverStatus();
+  }
+
+  isOk = () => {
+    return this.connector.isOk();
   };
 
   /**
@@ -419,24 +422,24 @@ export class Workspace {
    * @returns Promise that resolves when directory access is recovered
    */
   async recoverDirectoryAccess(): Promise<void> {
-    console.log("🔄 Starting recoverDirectoryAccess for workspace:", this.name);
+    // console.log("🔄 Starting recoverDirectoryAccess for workspace:", this.name);
     const disk = this.getDisk();
     const thumbDisk = this.getThumbsDisk();
-    console.log("🔄 Main disk type:", disk.type, "guid:", disk.guid);
-    console.log("🔄 Thumb disk type:", thumbDisk.type, "guid:", thumbDisk.guid);
-    
+    // console.log("🔄 Main disk type:", disk.type, "guid:", disk.guid);
+    // console.log("🔄 Thumb disk type:", thumbDisk.type, "guid:", thumbDisk.guid);
+
     if (disk instanceof OpFsDirMountDisk) {
-      console.log("🔄 Calling selectDirectory on main disk...");
+      // console.log("🔄 Calling selectDirectory on main disk...");
       const handle = await disk.selectDirectory(); // This already calls setDirectoryHandle internally
-      
+
       if (thumbDisk instanceof OpFsDirMountDisk) {
-        console.log("🔄 Setting directory handle on thumb disk...");
+        // console.log("🔄 Setting directory handle on thumb disk...");
         await thumbDisk.setDirectoryHandle(handle, false); // Force storage update
       }
-      
-      console.log("🔄 Calling recoverStatus...");
-      await this.recoverStatus();
-      console.log("✅ Directory access recovery completed");
+
+      // console.log("🔄 Calling recoverStatus...");
+      // await this.recoverStatus();
+      // console.log("✅ Directory access recovery completed");
     } else {
       throw new Error("Directory access recovery is only supported for OPFS workspaces");
     }
@@ -611,7 +614,7 @@ export class Workspace {
     return this.renameListener(async (nodes) => {
       await Promise.all(
         nodes.map(({ oldPath, newPath, fileType }) =>
-          this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath.replace(oldPath, newPath)))
+          this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath))
         )
       );
 
@@ -678,15 +681,13 @@ export class Workspace {
         this.unsubs.push(...unsubs);
       }
 
-      // If there was a disk initialization error, throw it after setup is complete
-      // if (diskInitError) throw diskInitError;
-
-      void this.recoverStatus().catch(() => {
-        console.warn("Error recovering workspace status code, ignoring");
-      }); //just in case
+      if (!this.connector.isOk()) {
+        await this.recoverStatus();
+      }
       return this;
     } catch (e) {
       // this.setEror
+      console.error("Error initializing workspace", e);
       await this.connector.setStatusCode(WS_ERR_NONRECOVERABLE);
       throw e;
     }

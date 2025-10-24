@@ -27,7 +27,7 @@ export class WorkspaceDAO {
   guid: string;
   name: string;
   disk: DiskDAO;
-  code: WorkspaceStatusCode = WS_OK;
+  code: WorkspaceStatusCode;
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
 
@@ -56,6 +56,7 @@ export class WorkspaceDAO {
       disk: json.disk,
       thumbs: json.thumbs,
       remoteAuths: json.remoteAuths,
+      code: json.code,
     });
   }
 
@@ -83,8 +84,7 @@ export class WorkspaceDAO {
   async recoverStatus() {
     if (this.code !== WS_OK) {
       console.log(`Recovering workspace status for ${this.name} from code ${this.code} to OK`);
-      this.code = WS_OK;
-      await this.save();
+      await this.setStatusCode(WS_OK);
     }
   }
   async setStatusCode(code: WorkspaceStatusCode) {
@@ -141,8 +141,8 @@ export class WorkspaceDAO {
       guid: WorkspaceDAO.guid(),
       disk,
       thumbs,
-
       remoteAuths,
+      code: WS_OK,
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
       return await Promise.all([
@@ -263,14 +263,14 @@ export class WorkspaceDAO {
     disk,
     thumbs,
     remoteAuths = [],
-    code = "STATUS_OK",
+    code,
   }: {
     guid: string;
     name: string;
     disk: DiskDAO | DiskJType;
     thumbs: DiskDAO | DiskJType;
     remoteAuths: RemoteAuthJType[];
-    code?: WorkspaceStatusCode;
+    code: WorkspaceStatusCode;
   }) {
     this.guid = guid;
     this.name = name;
