@@ -233,6 +233,10 @@ export abstract class Disk {
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
 
+  get dirName(): string | null {
+    return null;
+  }
+
   constructor(
     public readonly guid: string,
     protected fs: CommonFileSystem,
@@ -896,9 +900,9 @@ export abstract class Disk {
     await this.ready;
     const result: AbsPath[] = [];
     // console.log(copyPaths);
-    for (const [from, to] of copyPaths) {
-      console.log(from.path, "->", to instanceof TreeNode ? to.path : to);
-    }
+    // for (const [from, to] of copyPaths) {
+    //   console.log(from.path, "->", to instanceof TreeNode ? to.path : to);
+    // }
 
     // return [];
     for (const [from, to] of copyPaths) {
@@ -943,7 +947,7 @@ export abstract class Disk {
   }
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array | Blob) {
     await this.ready;
-    console.log(`writeFileRecursive: Creating directory for ${dirname(filePath)}`);
+    // console.log(`writeFileRecursive: Creating directory for ${dirname(filePath)}`);
     await this.mkdirRecursive(dirname(filePath));
     try {
       let data: string | Uint8Array;
@@ -952,7 +956,7 @@ export abstract class Disk {
       } else {
         data = content;
       }
-      console.log(`writeFileRecursive: Writing file ${filePath}`);
+      // console.log(`writeFileRecursive: Writing file ${filePath}`);
       return this.fs.writeFile(encodePath(filePath), data, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
@@ -1127,7 +1131,12 @@ export class OpFsDirMountDisk extends Disk {
   static type: DiskType = "OpFsDirMountDisk";
   type = OpFsDirMountDisk.type;
   ready: Promise<void>;
+
   private directoryHandle: FileSystemDirectoryHandle | null = null;
+
+  get dirName() {
+    return this.directoryHandle?.name ?? null;
+  }
 
   constructor(
     public readonly guid: string,
@@ -1159,19 +1168,46 @@ export class OpFsDirMountDisk extends Disk {
   }
 
   private async initializeFromStorage(): Promise<void> {
+    // console.log("🔄 Initializing from storage for disk:", this.guid);
     const handle = await DirectoryHandleStore.getHandle(this.guid);
     if (handle) {
-      await this.setDirectoryHandle(handle);
+      // console.log("✅ Found stored handle:", handle.name);
+      await this.setDirectoryHandle(handle, true); // Skip storage when restoring
+      // console.log("✅ Initialization from storage complete");
+    } else {
+      // console.log("ℹ️ No stored handle found for disk:", this.guid);
     }
   }
 
-  async setDirectoryHandle(handle: FileSystemDirectoryHandle): Promise<void> {
+  async setDirectoryHandle(handle: FileSystemDirectoryHandle, skipStorage = false): Promise<void> {
+    const previousHandle = this.directoryHandle;
+    // console.log("🔧 Setting directory handle for disk:", this.guid);
+    // console.log("🔧 Previous handle:", previousHandle?.name || "none");
+    // console.log("🔧 New handle:", handle.name);
+    // console.log("🔧 Skip storage:", skipStorage);
+
     this.directoryHandle = handle;
 
-    // Store the handle
-    await DirectoryHandleStore.storeHandle(this.guid, handle);
+    // Only store if this is a new selection or the directory name changed
+    const shouldStore = !skipStorage && (!previousHandle || previousHandle.name !== handle.name);
+    // console.log("🔍 Storage decision:", {
+    //   skipStorage,
+    //   hasPreviousHandle: !!previousHandle,
+    //   previousName: previousHandle?.name,
+    //   newName: handle.name,
+    //   shouldStore,
+    // });
+
+    if (shouldStore) {
+      // console.log("💾 Storing handle to IndexedDB...");
+      await DirectoryHandleStore.storeHandle(this.guid, handle);
+      // console.log("💾 Handle stored successfully");
+    } else {
+      // console.log("⏭️ Skipping storage - no change needed");
+    }
 
     // Create new filesystem using the directory handle with our patched implementation
+    // console.log("🔧 Creating new filesystem...");
     const patchedDirMountOPFS = this.fsTransform(
       new PatchedDirMountOPFS(Promise.resolve(handle) as unknown as Promise<IFileSystemDirectoryHandle>)
     );
@@ -1182,6 +1218,7 @@ export class OpFsDirMountDisk extends Disk {
     // Replace the filesystem and file tree
     (this as any).fs = mutexFs;
     (this as any).fileTree = ft;
+    // console.log("✅ Filesystem and file tree replaced");
   }
 
   async selectDirectory(): Promise<FileSystemDirectoryHandle> {
@@ -1189,12 +1226,15 @@ export class OpFsDirMountDisk extends Disk {
       throw new Error("Directory picker not supported in this browser");
     }
 
+    // console.log("📁 Opening directory picker...");
     const handle = await (window as any).showDirectoryPicker({
       mode: "readwrite",
       startIn: "documents",
     });
 
+    // console.log("📁 User selected directory:", handle.name, "for disk:", this.guid);
     await this.setDirectoryHandle(handle);
+    // console.log("✅ Directory handle set successfully");
     return handle;
   }
 

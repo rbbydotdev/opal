@@ -414,6 +414,34 @@ export class Workspace {
     return this.connector.recoverStatus();
   };
 
+  /**
+   * Recovers directory access for OPFS workspaces by prompting user to select the directory
+   * @returns Promise that resolves when directory access is recovered
+   */
+  async recoverDirectoryAccess(): Promise<void> {
+    console.log("🔄 Starting recoverDirectoryAccess for workspace:", this.name);
+    const disk = this.getDisk();
+    const thumbDisk = this.getThumbsDisk();
+    console.log("🔄 Main disk type:", disk.type, "guid:", disk.guid);
+    console.log("🔄 Thumb disk type:", thumbDisk.type, "guid:", thumbDisk.guid);
+    
+    if (disk instanceof OpFsDirMountDisk) {
+      console.log("🔄 Calling selectDirectory on main disk...");
+      const handle = await disk.selectDirectory(); // This already calls setDirectoryHandle internally
+      
+      if (thumbDisk instanceof OpFsDirMountDisk) {
+        console.log("🔄 Setting directory handle on thumb disk...");
+        await thumbDisk.setDirectoryHandle(handle, false); // Force storage update
+      }
+      
+      console.log("🔄 Calling recoverStatus...");
+      await this.recoverStatus();
+      console.log("✅ Directory access recovery completed");
+    } else {
+      throw new Error("Directory access recovery is only supported for OPFS workspaces");
+    }
+  }
+
   copyMultipleFiles(copyNodes: [from: TreeNode, toRoot: AbsPath | TreeNode][]) {
     return this.disk.copyMultiple(copyNodes);
   }

@@ -8,6 +8,8 @@ import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceCorruption } from "@/features/workspace-corruption/useWorkspaceCorruption";
 import { WorkspaceCorruptionModal } from "@/features/workspace-corruption/WorkspaceCorruptionModal";
 import { useUrlParam } from "@/hooks/useUrlParam";
+import { NotFoundError } from "@/lib/errors";
+import { useErrorToss } from "@/lib/errorToss";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
@@ -196,6 +198,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const location = useLocation();
   const navigate = useNavigate();
   const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);
+  const tossError = useErrorToss();
 
   // Use workspace corruption handling feature
   const { errorState, handleWorkspaceError, clearError, shouldPreventInitialization } = useWorkspaceCorruption();
@@ -220,6 +223,11 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         return ws;
       })
       .catch(async (error: Error) => {
+        if (error instanceof NotFoundError) {
+          tossError(new NotFoundError(`The workspace "${workspaceName}" does not exist.`));
+          // void navigate({ to: "/" });
+          return;
+        }
         console.error("Failed to initialize workspace:", error);
         // Handle the error using the feature module
         await handleWorkspaceError(workspaceName, error);
@@ -230,7 +238,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     return () => {
       void workspace.then((ws) => ws?.tearDown());
     };
-  }, [navigate, workspaceName, shouldPreventInitialization, handleWorkspaceError, clearError]);
+  }, [navigate, workspaceName, shouldPreventInitialization, handleWorkspaceError, clearError, tossError]);
 
   useEffect(() => {
     if (!currentWorkspace) return;

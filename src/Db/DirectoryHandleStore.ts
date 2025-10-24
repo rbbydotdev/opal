@@ -38,6 +38,10 @@ export class DirectoryHandleStore {
       }
     } catch (error) {
       console.warn("DirectoryHandleStore: Failed to get handle from IndexedDB:", error);
+      // Only re-throw if this is NOT a "not found" error
+      if (error instanceof Error && !error.message.includes('not found')) {
+        throw error;
+      }
     }
 
     return null;

@@ -1,5 +1,6 @@
 import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
+import { BuildModalProvider } from "@/components/BuildModal";
 import { ConfirmProvider } from "@/components/Confirm";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
@@ -7,12 +8,12 @@ import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserv
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/ErrorPlaque";
 import { GitStatusProvider } from "@/components/GitStatusModal";
-import { BuildModalProvider } from "@/components/BuildModal";
 import { PromptProvider } from "@/components/Prompt";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
+import { WorkspaceErrorBoundaryFallback } from "@/layouts/WorkspaceErrorBoundaryFallback";
 import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
@@ -40,34 +41,36 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
           <ServiceWorker>
             <AsyncWindowErrorBoundary>
               <ErrorPopper>
-                <WorkspaceProvider>
-                  <GitStatusProvider>
-                    <BuildModalProvider>
-                      <SidebarProvider>
-                      <PromptProvider>
-                        <ConfirmProvider>
-                          <RemoteMDXEditorRealmProvider>
-                            <div className="w-full flex">
-                              <ErrorBoundary fallback={ErrorPlaque}>
-                                <div
-                                  className={cn(
-                                    "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
-                                  )}
-                                >
-                                  <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                    <WorkspaceButtonBar />
+                <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
+                  <WorkspaceProvider>
+                    <GitStatusProvider>
+                      <BuildModalProvider>
+                        <SidebarProvider>
+                          <PromptProvider>
+                            <ConfirmProvider>
+                              <RemoteMDXEditorRealmProvider>
+                                <div className="w-full flex">
+                                  <ErrorBoundary fallback={ErrorPlaque}>
+                                    <div
+                                      className={cn(
+                                        "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
+                                      )}
+                                    >
+                                      <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                        <WorkspaceButtonBar />
+                                      </ErrorBoundary>
+                                    </div>
+                                    <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
                                   </ErrorBoundary>
                                 </div>
-                                <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                              </ErrorBoundary>
-                            </div>
-                          </RemoteMDXEditorRealmProvider>
-                        </ConfirmProvider>
-                      </PromptProvider>
-                      </SidebarProvider>
-                    </BuildModalProvider>
-                  </GitStatusProvider>
-                </WorkspaceProvider>
+                              </RemoteMDXEditorRealmProvider>
+                            </ConfirmProvider>
+                          </PromptProvider>
+                        </SidebarProvider>
+                      </BuildModalProvider>
+                    </GitStatusProvider>
+                  </WorkspaceProvider>
+                </ErrorBoundary>
               </ErrorPopper>
             </AsyncWindowErrorBoundary>
           </ServiceWorker>
