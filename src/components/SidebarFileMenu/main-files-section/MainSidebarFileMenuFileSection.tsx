@@ -142,6 +142,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
               diskType={diskType}
+              dirName={currentWorkspace.getDisk().dirName}
               currentWorkspace={currentWorkspace}
             />
           </span>
@@ -162,6 +163,14 @@ const ActionButton = ({
     </Button>
   );
 };
+
+const DirNameLabel = ({ dirName }: { dirName: string | null }) => {
+  return (
+    <span className="whitespace-nowrap inline-block max-w-[12ch] overflow-hidden text-ellipsis align-middle font-bold">
+      {dirName ? `: ${dirName}` : ""}
+    </span>
+  );
+};
 const FileMenuActionButtonRow = ({
   trashSelectedFiles,
   addFile,
@@ -169,9 +178,10 @@ const FileMenuActionButtonRow = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
-  addGlobalCssFile,
+  // addGlobalCssFile,
   setExpandAll,
   diskType,
+  dirName,
   copyFiles,
   cutFiles,
   pasteFiles,
@@ -179,13 +189,14 @@ const FileMenuActionButtonRow = ({
   trashSelectedFiles: () => void;
   addFile: () => void;
   addCssFile?: () => void;
-  addGlobalCssFile?: () => void;
+  // addGlobalCssFile?: () => void;
   addHtmlFile?: () => void;
   addMustacheFile?: () => void;
   addEjsFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
+  dirName: string | null;
   copyFiles: () => void;
   cutFiles: () => void;
   pasteFiles: () => void;
@@ -200,7 +211,10 @@ const FileMenuActionButtonRow = ({
             <Info />
           </ActionButton>
         </TooltipTrigger>
-        <TooltipContent>{diskType}</TooltipContent>
+        <TooltipContent>
+          {diskType}
+          <DirNameLabel dirName={dirName} />
+        </TooltipContent>
       </Tooltip>
       <ActionButton onClick={copyFiles} aria-label="Copy Files" title="Copy Files">
         <ClipboardCopy />
@@ -253,6 +267,7 @@ const FileMenuCompactActions = ({
   addHtmlFile,
   setExpandAll,
   diskType,
+  dirName,
   copyFiles,
   cutFiles,
   pasteFiles,
@@ -267,6 +282,7 @@ const FileMenuCompactActions = ({
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
+  dirName: string | null;
   copyFiles: () => void;
   cutFiles: () => void;
   pasteFiles: () => void;
@@ -375,6 +391,7 @@ const FileMenuCompactActions = ({
           <DropdownMenuItem>
             <Info className="w-4 h-4 mr-2" />
             {diskType}
+            <DirNameLabel dirName={dirName} />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -393,6 +410,7 @@ export const SidebarFileMenuFilesActions = ({
   addHtmlFile,
   setExpandAll,
   diskType,
+  dirName,
   currentWorkspace,
 }: {
   trashSelectedFiles: () => void;
@@ -403,6 +421,7 @@ export const SidebarFileMenuFilesActions = ({
   addMustacheFile: () => void;
   addEjsFile: () => void;
   addDir: () => void;
+  dirName: string | null;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
   currentWorkspace: Workspace;
@@ -460,6 +479,7 @@ export const SidebarFileMenuFilesActions = ({
           addDir={addDir}
           addCssFile={addCssFile}
           addMustacheFile={addMustacheFile}
+          dirName={dirName}
           addEjsFile={addEjsFile}
           addGlobalCssFile={addGlobalCssFile}
           addHtmlFile={addHtmlFile}
@@ -481,8 +501,9 @@ export const SidebarFileMenuFilesActions = ({
         addDir={addDir}
         addCssFile={addCssFile}
         addMustacheFile={addMustacheFile}
+        dirName={dirName}
         addEjsFile={addEjsFile}
-        addGlobalCssFile={addGlobalCssFile}
+        // addGlobalCssFile={addGlobalCssFile}
         setExpandAll={setExpandAll}
         diskType={diskType}
         copyFiles={copyFiles}

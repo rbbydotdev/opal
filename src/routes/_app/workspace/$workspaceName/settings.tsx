@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/sonner";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "@/components/ui/sonner";
 import * as z from "zod";
 
 const workspaceFormSchema = z.object({
@@ -60,10 +60,43 @@ function WorkspaceSettingsPage() {
   }
 
   return (
-    <div className="flex w-full items-center justify-center">
-      <div className="p-4 max-w-lg w-full">
+    <div className="flex w-full items-start justify-center bg-background h-full">
+      <div className="p-4 max-w-xl w-full gap-8 flex flex-col">
         <h1 className="text-2xl font-bold mb-4">Workspace Settings</h1>
-        <div className="border-2 rounded-lg p-4 flex flex-col">
+        <section className="border-2 rounded-lg p-4 flex flex-col bg-card">
+          <h2 className="text-lg font-bold mb-4">Info</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed">
+              <tbody>
+                <tr className="border-b last:border-b-0">
+                  <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Workspace ID</td>
+                  <td className="py-3 px-2 text-sm break-words">{currentWorkspace.id}</td>
+                </tr>
+                <tr className="border-b last:border-b-0">
+                  <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Name</td>
+                  <td className="py-3 px-2 text-sm">{currentWorkspace.name}</td>
+                </tr>
+                <tr className="border-b last:border-b-0">
+                  <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Main Disk ID</td>
+                  <td className="py-3 px-2 text-sm break-words">{currentWorkspace.getDisk().guid}</td>
+                </tr>
+                <tr>
+                  <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Disk Type</td>
+                  <td className="py-3 px-2 text-sm">{currentWorkspace.getDisk().type}</td>
+                </tr>
+                <tr className="border-b last:border-b-0">
+                  <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Thumb Disk ID</td>
+                  <td className="py-3 px-2 text-sm break-words">{currentWorkspace.getThumbsDisk().guid}</td>
+                </tr>
+                <tr>
+                  <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Disk Type</td>
+                  <td className="py-3 px-2 text-sm">{currentWorkspace.getThumbsDisk().type}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className="border-2 rounded-lg p-4 #flex flex-col bg-card hidden">
           <h2 className="text-lg font-bold mb-4">General</h2>
 
           <Form {...form}>
@@ -92,7 +125,7 @@ function WorkspaceSettingsPage() {
               Delete Workspace
             </Button>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
