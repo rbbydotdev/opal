@@ -1,5 +1,5 @@
 import { errF, isError, NotFoundError } from "@/lib/errors";
-import { AbsPath } from "@/lib/paths2";
+import { AbsPath, encodePath } from "@/lib/paths2";
 import { SWWStore } from "./SWWStore";
 
 export async function handleImageUpload(
@@ -19,6 +19,20 @@ export async function handleImageUpload(
 
     if (!workspace) throw new Error("Workspace not found " + workspaceName);
     console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
+    
+    // Clear image and thumbnail cache before uploading
+    try {
+      // Clear image cache
+      const imageCache = await workspace.imageCache.getCache();
+      await imageCache.delete(encodePath(filePath));
+      
+      // Clear thumbnail cache (both standard size and possible variations)
+      const thumbUrl = encodePath(filePath) + "?thumb=100";
+      await imageCache.delete(thumbUrl);
+    } catch (e) {
+      // Silently ignore cache cleanup errors
+    }
+    
     const resultPath = await workspace.NewImage(await request.arrayBuffer(), filePath);
 
     return new Response(resultPath, {

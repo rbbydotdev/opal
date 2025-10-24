@@ -27,3 +27,22 @@
     height: 0;
   }
 }
+
+/* .CollapsibleContent[data-state="open"] {
+  animation: slideDown 100ms ease-out;
+}
+.CollapsibleContent[data-state="closed"] {
+  animation: slideUp 100ms ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-1rem);
+  }
+}
+
+@keyframes slideUp {
+  to {
+    transform: translateY(-1rem);
+  }
+} */
