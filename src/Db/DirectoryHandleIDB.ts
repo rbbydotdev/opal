@@ -3,6 +3,7 @@
  * Dexie cannot serialize these objects, so we use the native IndexedDB API
  */
 
+import { promisifyHandler } from "@/lib/promisifyHandler";
 import { InternalServerError, NotFoundError } from "../lib/errors";
 
 const DB_NAME = "DirectoryHandlesDB";
@@ -60,24 +61,15 @@ export class DirectoryHandleIDB {
       const db = await this.getDB();
       const transaction = db.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
-
       const record: DirectoryHandleRecord = {
         diskId,
         handle,
         directoryName: handle.name,
         lastAccessed: new Date(),
       };
-
-      const request = store.put(record);
-
-      await new Promise<void>((resolve, reject) => {
-        request.onsuccess = () => {
-          resolve();
-        };
-        request.onerror = () => {
-          reject(request.error);
-        };
-      });
+      console.log("Storing directory handle record:", record);
+      await promisifyHandler(store.put(record));
+      console.log("Directory handle stored successfully for diskId:", diskId);
     } catch (error) {
       throw error;
     }
