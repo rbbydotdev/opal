@@ -342,7 +342,6 @@ export function SidebarTreeViewMenuContent({
     try {
       editor.update(() => {
         for (const draggedNodeId of draggedNodeIds) {
-          console.log(draggedNodeIds);
           const draggedLexicalNode = lexical.$getNodeByKey(draggedNodeId);
           const targetLexicalNode = lexical.$getNodeByKey(targetNode.lexicalNodeId);
 
