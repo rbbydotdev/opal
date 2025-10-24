@@ -5,8 +5,6 @@ import React from "react";
 const Collapsible = CollapsiblePrimitive.Root;
 
 const CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger;
-// add CollapsibleContent to the classname of the content
-// const CollapsibleContent = CollapsiblePrimitive.CollapsibleContent;
 const CollapsibleContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.CollapsibleContent>

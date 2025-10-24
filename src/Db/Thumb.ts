@@ -9,7 +9,7 @@ export class Thumb {
     protected cache: Promise<Cache>,
     protected thumbRepo: Disk,
     protected imgRepo: Disk,
-    protected path: AbsPath,
+    public path: AbsPath,
     protected content: Uint8Array | null = null,
     protected readonly size = 100
   ) {}
@@ -95,7 +95,7 @@ export class NamespacedThumb extends Thumb {
   constructor(
     protected cache: Promise<Cache>,
     protected imgRepo: Disk,
-    protected path: AbsPath,
+    public path: AbsPath,
     protected namespace: string,
     protected content: Uint8Array | null = null,
     protected readonly size = 100
