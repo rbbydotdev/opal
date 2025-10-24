@@ -22,24 +22,17 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
   }
 
   private isRootPath(path: string): boolean {
-    // Check various root path patterns
-    if (!path || path === "/" || path === "/." || path === "//.") {
-      return true;
-    }
-    const normalizedPath = this.normalizePath(path);
-    return normalizedPath === "";
+    return !path || path === "/" || path === "/." || path === "//.";
   }
 
   private normalizePath(path: string): string {
-    // Handle undefined, null, empty, or root paths
-    if (!path || path === "/" || path === "/." || path === "//.") {
+    if (this.isRootPath(path)) {
       return "";
     }
 
     // Use relPath utility to normalize the path
     try {
       const normalized = relPath(path);
-
       return normalized;
     } catch (_error) {
       return "";
