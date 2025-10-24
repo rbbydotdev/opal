@@ -1,4 +1,4 @@
-import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
@@ -37,9 +37,9 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
         <CollapsibleContent>
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a href="/download.zip">
+              <a href="/download.zip" className="flex">
                 <Download className="mr-1 !w-4 !h-4 stroke-1" />
-                Download Zip
+                <span className="w-full flex justify-center">Download Zip</span>
               </a>
             </Button>
             <EncryptedZipDialog
@@ -53,7 +53,7 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
                 variant="outline"
                 asChild
               >
-                <div>
+                <div className="flex">
                   <Lock className="inline !w-4 !h-4 stroke-1" />
                   <div className="absolute -top-0 right-0 group-hover:block hidden">
                     <Tooltip>
@@ -65,7 +65,7 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  Download Encrypted Zip
+                  <span className="w-full">Download Encrypted Zip</span>
                 </div>
               </Button>
             </EncryptedZipDialog>

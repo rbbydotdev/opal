@@ -1,20 +1,8 @@
 import { createContext, ReactNode, useContext } from "react";
 
 export interface WorkspaceFileTreeContextValue {
-  // TODO: add fields like: fileTree, refresh(), selectFile(), etc.
-  // fileTree?: YourFileTreeType;
   fileTree: {};
 }
-
-// const { currentWorkspace, fileTreeDir } = useWorkspaceContext();
-// const flatTree = useMemo(
-//   () => Array.from(fileTreeDir.iterator(FileOnlyFilter)).map((node) => node.toString()),
-//   [fileTreeDir]
-// );
-// const { cmdMap, commands } = useSpotlightCommandPalette({
-//   currentWorkspace,
-// });
-
 const WorkspaceFileTreeContext = createContext<WorkspaceFileTreeContextValue | undefined>(undefined);
 
 export function useWorkspaceFileTree(): WorkspaceFileTreeContextValue {

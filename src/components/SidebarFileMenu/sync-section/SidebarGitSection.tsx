@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import React, { useRef, useState, useSyncExternalStore } from "react";
 
-import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { GitAuthorDialog, useGitAuthorDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitAuthorDialog";
 import { RefsManagerSection } from "@/components/SidebarFileMenu/sync-section/GitBranchManager";
 import { GitRemoteDialog, useGitRemoteDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitRemoteDialog";

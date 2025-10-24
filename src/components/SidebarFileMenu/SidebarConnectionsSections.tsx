@@ -2,8 +2,8 @@
 import { useConfirm } from "@/components/Confirm";
 import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
-import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {

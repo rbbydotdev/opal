@@ -1,4 +1,4 @@
-import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { SidebarTreeViewMenu } from "@/components/TreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
