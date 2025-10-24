@@ -1,16 +1,16 @@
-import { SidebarGripChevron } from "@/components/SidebarFileMenu/publish-section/SidebarGripChevron";
-import { SidebarBuildsList } from "@/components/SidebarFileMenu/publish-section/SidebarBuildsList";
+import { useBuildModal } from "@/components/BuildModal";
+import { SidebarBuildsList, SidebarBuildsListRef } from "@/components/SidebarFileMenu/build-section/SidebarBuildsList";
+import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Workspace } from "@/Db/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { useBuildModal } from "@/components/BuildModal";
-import { Code2, FileTextIcon, Github, UploadCloud, UploadCloudIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Code2, Github, Hammer } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 
-export function SidebarFileMenuPublish({
+export function SidebarFileMenuBuild({
   currentWorkspace,
   ...props
 }: React.ComponentProps<typeof SidebarGroup> & {
@@ -20,24 +20,26 @@ export function SidebarFileMenuPublish({
   const { info } = useWorkspaceGitRepo({ currentWorkspace });
   const { open: openBuildModal } = useBuildModal();
   const [selectedBuildIds, setSelectedBuildIds] = useState<string[]>([]);
+  const buildsListRef = useRef<SidebarBuildsListRef>(null);
   const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
 
   const handlePublishToHTML = async () => {
     try {
       const sourceDisk = currentWorkspace.getDisk();
-      const result = await openBuildModal({
+      const _result = await openBuildModal({
         sourceDisk,
         outputDisk: sourceDisk, // Use same disk for now
-        onComplete: (buildDao) => {
-          console.log('Build completed successfully:', buildDao?.guid);
-          // The builds list will automatically refresh via its useEffect dependency on diskId
+        onComplete: async (buildDao) => {
+          console.log("Build completed successfully:", buildDao?.guid);
+          // Refresh the builds list to show the new build
+          await buildsListRef.current?.refresh();
         },
         onCancel: () => {
-          console.log('Build cancelled');
-        }
+          console.log("Build cancelled");
+        },
       });
     } catch (error) {
-      console.error('Build modal error:', error);
+      console.error("Build modal error:", error);
     }
   };
   return (
@@ -49,8 +51,8 @@ export function SidebarFileMenuPublish({
               <SidebarGripChevron />
               <div className="w-full">
                 <div className="flex justify-center items-center">
-                  <UploadCloudIcon size={12} className="mr-2" />
-                  Publish
+                  <Hammer size={12} className="mr-2" />
+                  Build
                 </div>
               </div>
             </SidebarGroupLabel>
@@ -61,38 +63,26 @@ export function SidebarFileMenuPublish({
           <div className="px-4 pt-2 py-4 flex flex-col gap-4">
             <SidebarGroup className="gap-2 flex flex-col">
               <SidebarGroupLabel>Workspace Actions</SidebarGroupLabel>
-              <Button className="w-full text-xs" size="sm" variant="outline">
-                <UploadCloud className="mr-1" />
-                <span className="flex-grow"> Publish to Web</span>
-              </Button>
-              <Button 
-                className="w-full flex text-xs" 
-                size="sm" 
-                variant="outline"
-                onClick={handlePublishToHTML}
-              >
+              <Button className="w-full flex text-xs" size="sm" variant="outline" onClick={handlePublishToHTML}>
                 <Code2 className="mr-1" />
-                <span className="flex-grow">Publish to HTML</span>
-              </Button>
-              <Button className="w-full text-xs" size="sm" variant="outline">
-                <FileTextIcon className="mr-1" />
-                <span className="flex-grow">Publish to PDF</span>
+                <span className="flex-grow">Build to HTML</span>
               </Button>
               {githubConnected && (
                 <Button className="w-full text-xs" size="sm" variant="outline">
                   <Github className="mr-1" />
-                  <span className="flex-grow">Publish to Github Pages</span>
+                  <span className="flex-grow">Push to Github Pages</span>
                 </Button>
               )}
             </SidebarGroup>
 
             {/* Builds List */}
             <SidebarBuildsList
+              ref={buildsListRef}
               diskId={currentWorkspace.getDisk().guid}
               selectedBuildIds={selectedBuildIds}
               onSelectionChange={setSelectedBuildIds}
               onDelete={(buildId) => {
-                setSelectedBuildIds(prev => prev.filter(id => id !== buildId));
+                setSelectedBuildIds((prev) => prev.filter((id) => id !== buildId));
               }}
             />
           </div>

@@ -7,13 +7,14 @@ import { BuildDAO } from "@/Db/BuildDAO";
 import { Disk } from "@/Db/Disk";
 import { HideFs } from "@/Db/HideFs";
 import { SpecialDirs } from "@/Db/SpecialDirs";
-import { absPath, relPath } from "@/lib/paths2";
-import { Loader, X } from "lucide-react";
-import React, { createContext, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { absPath } from "@/lib/paths2";
+import { usePreventNavigation } from "@/lib/usePreventNavigation";
+import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
+import React, { createContext, useCallback, useContext, useImperativeHandle, useRef, useState } from "react";
 
 type BuildModalContextType = {
-  open: (options?: { 
-    onCancel?: () => void; 
+  open: (options?: {
+    onCancel?: () => void;
     onComplete?: (buildDao?: BuildDAO) => void;
     outputDisk?: Disk;
     sourceDisk?: Disk;
@@ -42,8 +43,8 @@ export function useBuildModal() {
 
 function useBuildModalCmd() {
   const cmdRef = useRef<{
-    open: (options?: { 
-      onCancel?: () => void; 
+    open: (options?: {
+      onCancel?: () => void;
       onComplete?: (buildDao?: BuildDAO) => void;
       outputDisk?: Disk;
       sourceDisk?: Disk;
@@ -55,8 +56,8 @@ function useBuildModalCmd() {
   });
 
   return {
-    open: (options?: { 
-      onCancel?: () => void; 
+    open: (options?: {
+      onCancel?: () => void;
       onComplete?: (buildDao?: BuildDAO) => void;
       outputDisk?: Disk;
       sourceDisk?: Disk;
@@ -76,8 +77,8 @@ export function BuildModal({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{
-    open: (options?: { 
-      onCancel?: () => void; 
+    open: (options?: {
+      onCancel?: () => void;
       onComplete?: (buildDao?: BuildDAO) => void;
       outputDisk?: Disk;
       sourceDisk?: Disk;
@@ -87,6 +88,8 @@ export function BuildModal({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
+  const [buildCompleted, setBuildCompleted] = useState(false);
+  const [buildError, setBuildError] = useState<string | null>(null);
   const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
   const [logs, setLogs] = useState<BuildLog[]>([]);
   const [buildAbortController, setBuildAbortController] = useState<AbortController | null>(null);
@@ -98,34 +101,10 @@ export function BuildModal({
   const originalFsRef = useRef<any>(null);
   const sourceDiskRef = useRef<Disk | null>(null);
 
-  // Prevent window close/navigation during build
-  useEffect(() => {
-    if (!isBuilding) return;
+  // Reusable hook to prevent navigation/close while activated.
 
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "Build in progress. Are you sure you want to leave?";
-      return "Build in progress. Are you sure you want to leave?";
-    };
-
-    const handlePopState = (e: PopStateEvent) => {
-      if (isBuilding) {
-        e.preventDefault();
-        window.history.pushState(null, "", window.location.href);
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("popstate", handlePopState);
-
-    // Push state to prevent back navigation
-    window.history.pushState(null, "", window.location.href);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [isBuilding]);
+  // Use the hook with a customizable message
+  usePreventNavigation(isBuilding, "Build in progress. Are you sure you want to leave?");
 
   const addLog = (message: string, type: "info" | "error" = "info") => {
     setLogs((prev) => [...prev, { timestamp: new Date(), message, type }]);
@@ -148,6 +127,8 @@ export function BuildModal({
     if (isBuilding) return;
 
     setIsBuilding(true);
+    setBuildCompleted(false);
+    setBuildError(null);
     clearLogs();
 
     const abortController = new AbortController();
@@ -155,7 +136,7 @@ export function BuildModal({
 
     try {
       addLog(`Starting ${strategy} build...`);
-      addLog("Filtering out special directories (SpecialDirs, node_modules, .next, etc.)");
+      addLog("Filtering out special directories ");
 
       // Get disk instances from options
       const options = optionsRef.current;
@@ -175,36 +156,21 @@ export function BuildModal({
       const hiddenPaths = [
         // Include all special directories (/.trash, /.storage, /.git, /.thumb)
         ...SpecialDirs.All,
-        // Add common build/dev directories not covered by SpecialDirs
-        relPath("node_modules"),
-        relPath(".vscode"),
-        relPath(".next"),
-        relPath("build"),
-        relPath("dist"),
-        relPath("coverage"),
-        relPath(".cache"),
-        relPath(".env"),
-        relPath(".vercel"),
-        relPath("playwright-report"),
-        relPath(".tanstack"),
-        relPath(".github"),
-        relPath(".DS_Store"),
-        relPath("*.log"),
       ];
 
       // Wrap the source disk's filesystem with HideFs to filter out special directories
       const hideFs = new HideFs(baseDisk.fs, hiddenPaths);
-      
+
       // Store original fs for restoration
       originalFsRef.current = baseDisk.fs;
       sourceDiskRef.current = baseDisk;
-      
+
       // Temporarily replace the fs with the filtered version
-      Object.defineProperty(baseDisk, 'fs', {
+      Object.defineProperty(baseDisk, "fs", {
         get: () => hideFs,
-        configurable: true
+        configurable: true,
       });
-      
+
       const sourceDisk = baseDisk;
 
       const builder = new Builder({
@@ -227,82 +193,92 @@ export function BuildModal({
 
       if (!abortController.signal.aborted) {
         addLog("Build completed successfully!");
-        
+
         // Create and save build record
         const buildLabel = `${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Build - ${new Date().toLocaleString()}`;
         const buildDao = await BuildDAO.CreateNew(buildLabel, baseDisk.guid);
         await buildDao.save();
-        
+
         addLog(`Build saved with ID: ${buildDao.guid}`);
-        
+
         // Restore original filesystem
         if (originalFsRef.current && sourceDiskRef.current) {
-          Object.defineProperty(sourceDiskRef.current, 'fs', {
+          Object.defineProperty(sourceDiskRef.current, "fs", {
             get: () => originalFsRef.current,
-            configurable: true
+            configurable: true,
           });
         }
-        
+
         setIsBuilding(false);
+        setBuildCompleted(true);
         setBuildAbortController(null);
 
         onCompleteRef.current?.(buildDao);
         resolveRef.current?.("completed");
-        setIsOpen(false);
+        // setIsOpen(false);
       }
     } catch (error) {
       if (!abortController.signal.aborted) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         addLog(`Build failed: ${errorMessage}`, "error");
-        
+        setBuildError(errorMessage);
+
         // Restore original filesystem on error
         if (originalFsRef.current && sourceDiskRef.current) {
-          Object.defineProperty(sourceDiskRef.current, 'fs', {
+          Object.defineProperty(sourceDiskRef.current, "fs", {
             get: () => originalFsRef.current,
-            configurable: true
+            configurable: true,
           });
         }
-        
+
         setIsBuilding(false);
         setBuildAbortController(null);
       }
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (isBuilding && buildAbortController) {
       buildAbortController.abort();
       setBuildAbortController(null);
       addLog("Build cancelled by user", "error");
-      
+
       // Restore original filesystem if it was modified
       if (originalFsRef.current && sourceDiskRef.current) {
-        Object.defineProperty(sourceDiskRef.current, 'fs', {
+        Object.defineProperty(sourceDiskRef.current, "fs", {
           get: () => originalFsRef.current,
-          configurable: true
+          configurable: true,
         });
       }
     }
 
     setIsBuilding(false);
+    setBuildCompleted(false);
+    setBuildError(null);
     onCancelRef.current?.();
     resolveRef.current?.("cancelled");
     setIsOpen(false);
-  };
+  }, [buildAbortController, isBuilding]);
 
-  const handleClose = () => {
+  const handleOkay = useCallback(() => {
+    setIsOpen(false);
+    setBuildCompleted(false);
+    resolveRef.current?.("completed");
+  }, []);
+
+  const handleClose = useCallback(() => {
     if (isBuilding) {
       // Don't allow closing during build
       return;
     }
     handleCancel();
-  };
+  }, [handleCancel, isBuilding]);
 
   useImperativeHandle(
     cmdRef,
     () => ({
-      open: async (options?: { 
-        onCancel?: () => void; 
+      open: async (options?: {
+        onCancel?: () => void;
         onComplete?: (buildDao?: BuildDAO) => void;
         outputDisk?: Disk;
         sourceDisk?: Disk;
@@ -314,13 +290,16 @@ export function BuildModal({
           optionsRef.current = options ? { outputDisk: options.outputDisk, sourceDisk: options.sourceDisk } : null;
 
           setIsOpen(true);
+          setBuildCompleted(false);
+          setBuildError(null);
+          setIsBuilding(false);
           clearLogs();
           setStrategy("freeform");
         });
       },
       close: handleClose,
     }),
-    [isBuilding]
+    [handleClose]
   );
 
   return (
@@ -376,16 +355,18 @@ export function BuildModal({
 
           {/* Build Controls */}
           <div className="flex gap-2">
-            <Button onClick={handleBuild} disabled={isBuilding} className="flex items-center gap-2">
-              {isBuilding ? (
-                <>
-                  <Loader size={16} className="animate-spin" />
-                  Building...
-                </>
-              ) : (
-                "Start Build"
-              )}
-            </Button>
+            {!buildCompleted && (
+              <Button onClick={handleBuild} disabled={isBuilding} className="flex items-center gap-2">
+                {isBuilding ? (
+                  <>
+                    <Loader size={16} className="animate-spin" />
+                    Building...
+                  </>
+                ) : (
+                  "Start Build"
+                )}
+              </Button>
+            )}
 
             {isBuilding && (
               <Button variant="outline" onClick={handleCancel} className="flex items-center gap-2">
@@ -395,6 +376,35 @@ export function BuildModal({
             )}
           </div>
 
+          {/* Build Success Indicator */}
+          {buildCompleted && (
+            <div className="border-2 border-success bg-card p-4 rounded-lg">
+              <div className="flex items-center gap-2 font-mono text-success justify-between">
+                <div className="flex items-center gap-4">
+                  <CheckCircle size={20} className="text-success" />
+                  <span className="font-semibold">BUILD COMPLETED SUCCESSFULLY</span>
+                </div>
+                <Button onClick={handleOkay} className="flex items-center gap-2">
+                  Okay
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Build Error Indicator */}
+          {buildError && (
+            <div className="border-2 border-destructive bg-card p-4 rounded-lg">
+              <div className="flex items-center gap-2 font-mono text-destructive justify-between">
+                <div className="flex items-center gap-4">
+                  <AlertTriangle size={20} className="text-destructive" />
+                  <span className="font-semibold">BUILD FAILED</span>
+                </div>
+                <Button onClick={handleOkay} variant="destructive" className="flex items-center gap-2">
+                  Okay
+                </Button>
+              </div>
+            </div>
+          )}
           {/* Log Output */}
           <div className="flex-1 flex flex-col min-h-0">
             <label className="text-sm font-medium mb-2">Build Output</label>

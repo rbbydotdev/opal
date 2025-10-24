@@ -56,10 +56,10 @@ export function SelectableList({
     if (!onSelectionChange) return;
 
     let newSelection: string[];
-    
+
     if (multiSelect) {
       if (selectedIds.includes(id)) {
-        newSelection = selectedIds.filter(selectedId => selectedId !== id);
+        newSelection = selectedIds.filter((selectedId) => selectedId !== id);
       } else {
         newSelection = [...selectedIds, id];
       }
@@ -77,13 +77,13 @@ export function SelectableList({
 
   return (
     <SidebarGroup className={className}>
-      <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpanded}>
+      <Collapsible className="group/collapsible-selectable" open={expanded} onOpenChange={setExpanded}>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton>
             <SidebarGroupLabel>
-              <ChevronRight 
-                size={12} 
-                className="transition-transform group-data-[state=open]/collapsible:rotate-90" 
+              <ChevronRight
+                size={12}
+                className="transition-transform group-data-[state=open]/collapsible-selectable:rotate-90"
               />
               <div className="w-full">
                 <div className="flex justify-center items-center">
@@ -96,23 +96,16 @@ export function SelectableList({
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-4 pt-2 py-4 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             {onAdd && (
-              <Button 
-                className="w-full text-xs" 
-                size="sm" 
-                variant="outline"
-                onClick={onAdd}
-              >
+              <Button className="w-full text-xs" size="sm" variant="outline" onClick={onAdd}>
                 {addButtonIcon && <span className="mr-1">{addButtonIcon}</span>}
                 <span className="flex-grow">{addButtonLabel}</span>
               </Button>
             )}
 
             {items.length === 0 ? (
-              <div className="text-xs text-muted-foreground text-center py-4">
-                {emptyMessage}
-              </div>
+              <div className="text-xs text-muted-foreground text-center py-4">{emptyMessage}</div>
             ) : (
               <ScrollArea className="w-full" style={{ maxHeight }}>
                 <div className="space-y-1">
@@ -125,10 +118,7 @@ export function SelectableList({
                         key={item.id}
                         className={`
                           relative flex items-center gap-2 p-2 rounded cursor-pointer transition-colors
-                          ${isSelected 
-                            ? 'bg-accent text-accent-foreground' 
-                            : 'hover:bg-muted/50'
-                          }
+                          ${isSelected ? "bg-accent text-accent-foreground" : "hover:bg-muted/50"}
                         `}
                         onClick={() => handleItemClick(item.id)}
                         onMouseEnter={() => setHoveredId(item.id)}
@@ -140,29 +130,19 @@ export function SelectableList({
                         </div>
 
                         {/* Item icon */}
-                        {item.icon && (
-                          <div className="flex-shrink-0">
-                            {item.icon}
-                          </div>
-                        )}
+                        {item.icon && <div className="flex-shrink-0">{item.icon}</div>}
 
                         {/* Item content */}
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">
-                            {item.label}
-                          </div>
+                          <div className="text-sm font-medium truncate">{item.label}</div>
                           {item.subtitle && (
-                            <div className="text-xs text-muted-foreground truncate">
-                              {item.subtitle}
-                            </div>
+                            <div className="text-xs text-muted-foreground truncate">{item.subtitle}</div>
                           )}
                         </div>
 
                         {/* Metadata */}
                         {item.metadata && (
-                          <div className="flex-shrink-0 text-xs text-muted-foreground">
-                            {item.metadata}
-                          </div>
+                          <div className="flex-shrink-0 text-xs text-muted-foreground">{item.metadata}</div>
                         )}
 
                         {/* Delete button */}
@@ -184,9 +164,7 @@ export function SelectableList({
             )}
 
             {selectedIds.length > 0 && (
-              <div className="text-xs text-muted-foreground pt-2 border-t">
-                {selectedIds.length} selected
-              </div>
+              <div className="text-xs text-muted-foreground pt-2 border-t">{selectedIds.length} selected</div>
             )}
           </div>
         </CollapsibleContent>

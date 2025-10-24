@@ -19,21 +19,12 @@ export function WorkspaceCorruptionModal({ errorState }: WorkspaceCorruptionModa
   const handleRecoverOpfsHandle = async () => {
     if (!errorState) return;
     try {
-      // console.log("🔄 Starting workspace recovery for:", errorState.workspaceName);
       const workspaceDAO = await WorkspaceDAO.FetchFromName(errorState.workspaceName);
       const workspace = workspaceDAO.toModel();
-      // console.log("✅ Workspace loaded, calling recoverDirectoryAccess...");
-
-      // Use the existing recoverDirectoryAccess method which handles the complete flow
       await workspace.recoverDirectoryAccess();
-      // console.log("✅ Directory access recovered successfully");
-
-      // Reload to reinitialize the workspace
-      // console.log("🔄 Reloading page to reinitialize workspace...");
       window.location.reload();
     } catch (error) {
-      console.error("❌ Failed to recover directory access:", error);
-      // Fall back to going home if recovery fails
+      console.error(error);
       window.location.href = "/";
     }
   };

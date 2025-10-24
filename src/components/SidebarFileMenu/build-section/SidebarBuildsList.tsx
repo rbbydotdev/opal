@@ -2,7 +2,7 @@ import { SelectableList, SelectableListItem } from "@/components/ui/SelectableLi
 import { BuildDAO } from "@/Db/BuildDAO";
 import { useErrorToss } from "@/lib/errorToss";
 import { Archive, Calendar } from "lucide-react";
-import { useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 
 export interface SidebarBuildsListProps {
   diskId?: string;
@@ -12,41 +12,47 @@ export interface SidebarBuildsListProps {
   className?: string;
 }
 
-export function SidebarBuildsList({
+export interface SidebarBuildsListRef {
+  refresh: () => Promise<void>;
+}
+
+export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsListProps>(function SidebarBuildsList({
   diskId,
   selectedBuildIds = [],
   onSelectionChange,
   onDelete,
   className,
-}: SidebarBuildsListProps) {
+}, ref) {
   const [builds, setBuilds] = useState<BuildDAO[]>([]);
   const [loading, setLoading] = useState(true);
   const errorToss = useErrorToss();
 
-  const loadBuilds = async () => {
+  const loadBuilds = useCallback(async () => {
     try {
       setLoading(true);
-      const buildList = diskId 
-        ? await BuildDAO.allForDisk(diskId)
-        : await BuildDAO.all();
+      const buildList = diskId ? await BuildDAO.allForDisk(diskId) : await BuildDAO.all();
       setBuilds(buildList);
     } catch (error) {
       errorToss(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setLoading(false);
     }
-  };
+  }, [diskId, errorToss]);
 
   useEffect(() => {
-    loadBuilds();
-  }, [diskId]);
+    void loadBuilds();
+  }, [diskId, loadBuilds]);
+
+  useImperativeHandle(ref, () => ({
+    refresh: loadBuilds
+  }), [loadBuilds]);
 
   const handleDelete = async (buildId: string) => {
     try {
-      const build = builds.find(b => b.guid === buildId);
+      const build = builds.find((b) => b.guid === buildId);
       if (build) {
         await build.delete();
-        setBuilds(prev => prev.filter(b => b.guid !== buildId));
+        setBuilds((prev) => prev.filter((b) => b.guid !== buildId));
         onDelete?.(buildId);
       }
     } catch (error) {
@@ -112,4 +118,4 @@ export function SidebarBuildsList({
       className={className}
     />
   );
-}
+});

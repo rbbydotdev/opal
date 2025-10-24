@@ -13,7 +13,7 @@ body {
     --editor-toolbar-height: 3.5rem;
 
     /* Missing variables that map to existing theme colors */
-    --success: var(--primary);
+    --success: var(--ring);
     --success-foreground: var(--primary-foreground);
     --highlight: var(--muted);
     --highlight-foreground: var(--muted-foreground);

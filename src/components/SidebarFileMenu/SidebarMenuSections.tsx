@@ -1,8 +1,8 @@
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
+import { SidebarFileMenuBuild } from "@/components/SidebarFileMenu/build-section/SidebarFileMenuBuild";
 import { SidebarFileMenuExport } from "@/components/SidebarFileMenu/export-section/SidebarFileMenuExport";
 import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/main-files-section/MainSidebarFileMenuFileSection";
-import { SidebarFileMenuPublish } from "@/components/SidebarFileMenu/publish-section/SidebarFileMenuPublish";
 import { SidebarConnectionsSection } from "@/components/SidebarFileMenu/SidebarConnectionsSections";
 import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/SidebarGitSection";
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
@@ -133,7 +133,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
       <div className="overflow-y-auto no-scrollbar pr-4">
         <SidebarDndList storageKey={"sidebarMenu"} show={storedValue}>
           <DndSlot dndId={"publish"}>
-            <SidebarFileMenuPublish className="flex-shrink flex" currentWorkspace={currentWorkspace} />
+            <SidebarFileMenuBuild className="flex-shrink flex" currentWorkspace={currentWorkspace} />
           </DndSlot>
           <DndSlot dndId={"git"}>
             <SidebarGitSection currentWorkspace={currentWorkspace} className="flex-shrink flex flex-col" />
