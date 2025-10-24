@@ -7,7 +7,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { OpFsDirMountDisk } from "@/Db/Disk";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { AlertTriangle, FolderX, HardDrive } from "lucide-react";
 import { WorkspaceCorruptionState } from "./types";
@@ -20,16 +19,20 @@ export function WorkspaceCorruptionModal({ errorState }: WorkspaceCorruptionModa
   const handleRecoverOpfsHandle = async () => {
     if (!errorState) return;
     try {
-      const workspace = await WorkspaceDAO.FetchFromName(errorState.workspaceName);
-      const disk = workspace.getDisk().toModel();
-      if (disk instanceof OpFsDirMountDisk) {
-        await disk.selectDirectory();
-        await workspace.recoverStatus();
-        // Reload to reinitialize the workspace
-        window.location.reload();
-      }
+      // console.log("🔄 Starting workspace recovery for:", errorState.workspaceName);
+      const workspaceDAO = await WorkspaceDAO.FetchFromName(errorState.workspaceName);
+      const workspace = workspaceDAO.toModel();
+      // console.log("✅ Workspace loaded, calling recoverDirectoryAccess...");
+
+      // Use the existing recoverDirectoryAccess method which handles the complete flow
+      await workspace.recoverDirectoryAccess();
+      // console.log("✅ Directory access recovered successfully");
+
+      // Reload to reinitialize the workspace
+      // console.log("🔄 Reloading page to reinitialize workspace...");
+      window.location.reload();
     } catch (error) {
-      console.error("Failed to recover OPFS handle:", error);
+      console.error("❌ Failed to recover directory access:", error);
       // Fall back to going home if recovery fails
       window.location.href = "/";
     }
@@ -59,7 +62,7 @@ export function WorkspaceCorruptionModal({ errorState }: WorkspaceCorruptionModa
                   : "Workspace Loading Failed"}
             </AlertDialogTitle>
           </div>
-          <AlertDialogDescription className="mt-3 text-muted-foreground">
+          <AlertDialogDescription className="mt-3 text-muted-foreground max-w-md">
             {errorState.errorMessage}
           </AlertDialogDescription>
         </AlertDialogHeader>

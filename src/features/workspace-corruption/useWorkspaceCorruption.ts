@@ -3,7 +3,7 @@ import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { ServiceUnavailableError } from "@/lib/errors";
 import { useState } from "react";
-import { WorkspaceCorruptionState } from "./types";
+import { WorkspaceCorruptionState, WorkspaceErrorType } from "./types";
 
 export function useWorkspaceCorruption() {
   const [errorState, setErrorState] = useState<WorkspaceCorruptionState | null>(null);
@@ -43,38 +43,37 @@ export async function analyzeWorkspaceError(workspaceName: string, error: Error)
     console.debug("Could not fetch workspace for recovery check:", e);
   }
 
-  if (error instanceof ServiceUnavailableError) {
-    const isOpfsRevoked = workspaceForRecovery ? await checkOpfsHandleRevocation(workspaceForRecovery, error) : false;
-    const diskType = workspaceForRecovery?.getDisk().type ?? null;
+  const isServiceUnavailable = error instanceof ServiceUnavailableError;
+  const isOpfsRevoked =
+    isServiceUnavailable && workspaceForRecovery ? await checkOpfsHandleRevocation(workspaceForRecovery, error) : false;
+  const diskType = workspaceForRecovery?.getDisk().type ?? null;
 
-    if (isOpfsRevoked) {
-      return {
-        hasError: true,
-        errorType: "opfs_revoked",
-        errorMessage: `Workspace "${workspaceName}" lost access to its directory. This happens when the browser revokes file system access or if the folder was moved. You can select the directory again or create a new workspace for the current location.`,
-        workspaceName,
-        workspaceId,
-        canRecover: true,
-      };
-    } else {
-      return {
-        hasError: true,
-        errorType: "corruption",
-        errorMessage: `Workspace "${workspaceName}" appears to be corrupted or has missing files. This is likely due to external file system changes. You can create a new workspace to start again, or select the directory again if using OPFS.`,
-        canRecover: diskType === "OpFsDirMountDisk",
-        workspaceId,
-        workspaceName,
-      };
-    }
-  } else {
-    return {
-      hasError: true,
-      errorType: "generic",
-      errorMessage: `Failed to load workspace "${workspaceName}". There was an unrecoverable error during initialization. You can create a new workspace to start fresh.`,
-      workspaceId,
-      workspaceName,
-    };
+  const opfsMessage = `Workspace "${workspaceName}" lost access to its directory. This happens when the browser revokes file system access or if the folder was moved. You can select the directory again or create a new workspace for the current location.`;
+  const corruptionMessage = `Workspace "${workspaceName}" appears to be corrupted or has missing files. This is likely due to external file system changes. You can create a new workspace to start again, or select the directory again if using OPFS.`;
+  const genericMessage = `Failed to load workspace "${workspaceName}". There was an unrecoverable error during initialization. You can create a new workspace to start fresh.`;
+
+  let errorType: WorkspaceErrorType = "generic";
+  if (isServiceUnavailable) {
+    if (isOpfsRevoked) errorType = "opfs_revoked";
+    else errorType = "corruption";
   }
+  let errorMessage: string = genericMessage;
+  if (isServiceUnavailable) {
+    errorMessage = isOpfsRevoked ? opfsMessage : corruptionMessage;
+  }
+  let canRecover: boolean = false;
+  if (isServiceUnavailable) {
+    canRecover = isOpfsRevoked ? true : diskType === "OpFsDirMountDisk";
+  }
+
+  return {
+    hasError: true,
+    errorType,
+    errorMessage,
+    workspaceName,
+    workspaceId,
+    canRecover,
+  };
 }
 
 export async function checkOpfsHandleRevocation(workspace: Workspace, _error: Error): Promise<boolean> {

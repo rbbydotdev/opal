@@ -92,7 +92,7 @@ export class DirectoryHandleIDB {
       });
 
       if (record) {
-        // Verify the handle is still valid
+        // Verify the handle is still valid - keep it simple for now
         try {
           await record.handle.requestPermission({ mode: "readwrite" });
           return record.handle;

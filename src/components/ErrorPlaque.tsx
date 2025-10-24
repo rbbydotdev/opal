@@ -9,16 +9,6 @@ export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {
       onClick={reset}
       className="relative overflow-hidden cursor-pointer w-full h-full bg-destructive opacity-100 border border-destructive text-destructive rounded flex items-center justify-center"
     >
-      {/* Centered button */}
-      {/* <button
-        className="hover:scale-110 z-10 text-white bg-destructive h-16 w-16 border-white border rounded p-4 active:scale-90 transition-all"
-        onClick={() => {
-          reset?.();
-        }}
-      >
-        <RotateCcw />
-      </button> */}
-
       {/* Background pattern */}
       <div
         className="absolute rotate-12 scale-150 inset-0 overflow-hidden opacity-45 text-xs"
@@ -62,8 +52,11 @@ export function ErrorPlaque({
                   </div>
                 </div>
               </CardDescription>
-              <Button variant="outline" className="mt-4 self-center" onClick={reset}>
+              <Button variant="outline" className="mt-2" onClick={reset}>
                 Close
+              </Button>
+              <Button variant="secondary" className="mt-2" onClick={() => (window.location.href = "/")}>
+                Home
               </Button>
             </CardContent>
           </Card>
