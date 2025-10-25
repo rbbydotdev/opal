@@ -2,7 +2,7 @@ import { isErrorWithCode } from "@/lib/errors";
 import { AbsPath, absPath, decodePath, joinPath, relPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
-import { CommonFileSystem } from "./CommonFileSystem";
+import { CommonFileSystem } from "./FileSystemTypes";
 
 export class NamespacedFs implements CommonFileSystem {
   namespace: AbsPath;

@@ -1,4 +1,4 @@
-import { CommonFileSystem } from "@/Db/CommonFileSystem";
+import { CommonFileSystem } from "@/Db/FileSystemTypes";
 
 // A helper interface for defining mount points.
 export interface MountPoint {

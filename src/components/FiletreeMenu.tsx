@@ -8,15 +8,14 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
-import { TreeDir, TreeDirRoot, TreeFileJType, TreeNode } from "@/lib/FileTree/TreeNode";
+import { TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
+import { INTERNAL_NODE_FILE_TYPE, NodeDataJType, NodeDataType } from "@/types/FiletreeTypes";
 import cn from "clsx";
 import React from "react";
 
-export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
-
-export type NodeDataJType = { nodes: TreeFileJType[] };
-export type NodeDataType = { nodes: TreeNode[] };
+// Re-export types for convenience
+export { INTERNAL_NODE_FILE_TYPE, type NodeDataJType, type NodeDataType };
 
 export function FileTreeMenu({
   fileTreeDir,

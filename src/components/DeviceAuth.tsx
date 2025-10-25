@@ -4,7 +4,7 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RemoteAuthGithubDeviceOAuthRecordInternal, RemoteAuthJType, RemoteAuthSource } from "@/Db/RemoteAuth";
+import { RemoteAuthGithubDeviceOAuthRecordInternal, RemoteAuthJType, RemoteAuthSource } from "@/Db/RemoteAuthTypes";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { ENV } from "@/lib/env";
 import { unwrapError } from "@/lib/errors";

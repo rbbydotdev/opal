@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
+import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
 import { OAuth } from "@/components/OAuth";
@@ -20,14 +21,17 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
-import { RemoteAuthDAO, RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/Db/RemoteAuth";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
+import { RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/Db/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import z from "zod";
 // import { CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "cmdk";
 
-export type ConnectionsModalMode = "add" | "edit" | "view";
+// Re-export type for convenience
+export type { ConnectionsModalMode };
+
 export function ConnectionsModal({
   children,
   mode = "add",

@@ -1,4 +1,4 @@
-import { RemoteAuthSource, RemoteAuthType } from "@/Db/RemoteAuth";
+import { RemoteAuthSource, RemoteAuthType } from "@/Db/RemoteAuthTypes";
 import { Github, LucideProps, Zap, Globe, Cloud } from "lucide-react";
 import React from "react";
 

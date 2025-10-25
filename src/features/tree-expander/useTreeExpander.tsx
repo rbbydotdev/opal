@@ -1,4 +1,5 @@
 import { TreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
+import { ExpandMap, TreeExpanderValue } from "@/features/tree-expander/TreeExpanderTypes";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, isAncestor } from "@/lib/paths2";
@@ -9,7 +10,6 @@ function expandForFile(dirTree: string[], file: AbsPath | string | null, exp: Ex
   dirTree.filter((dir) => isAncestor({ child: file, parent: dir })).forEach((d) => (exp[d] = true));
   return exp;
 }
-type ExpandMap = { [path: string]: boolean };
 
 export function useTreeExpanderContext() {
   const context = useContext(TreeExpanderContext);

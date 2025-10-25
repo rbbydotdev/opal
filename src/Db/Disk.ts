@@ -1,4 +1,4 @@
-import { CommonFileSystem } from "@/Db/CommonFileSystem";
+import { CommonFileSystem } from "@/Db/FileSystemTypes";
 import { DiskDAO } from "@/Db/DiskDAO";
 import {
   DiskEvents,
@@ -10,8 +10,7 @@ import {
   RenameFileType,
   SIGNAL_ONLY,
 } from "@/Db/DiskEvents";
-import { DiskMap } from "@/Db/DiskMap";
-import { DiskJType, DiskType } from "@/Db/DiskType";
+import { DiskType } from "@/Db/DiskType";
 import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
@@ -26,17 +25,15 @@ import {
   encodePath,
   incPath,
   joinPath,
-  mkdirRecursive,
   relPath,
 } from "@/lib/paths2";
+import { mkdirRecursive } from "@/Db/FileSystemTypes";
 import { Mutex } from "async-mutex";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage, stringifyEntry } from "../lib/paths2";
 
 export abstract class Disk {
-  static defaultDiskType: DiskType = "IndexedDbDisk";
-
   remote: DiskEventsRemote;
   local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
   ready: Promise<void> = Promise.resolve();
@@ -57,10 +54,6 @@ export abstract class Disk {
     private connector: DiskDAO
   ) {
     this.remote = new DiskEventsRemote(this.guid);
-  }
-
-  static FromJSON(json: DiskJType, fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs): Disk {
-    return Disk.From({ guid: json.guid, type: json.type, indexCache: json.indexCache }, fsTransform);
   }
 
   initialIndexFromCache(cache: TreeNodeDirJType) {
@@ -179,17 +172,6 @@ export abstract class Disk {
   }
 
   static guid = () => "__disk__" + nanoid();
-
-  static From(
-    { guid, type, indexCache }: DiskJType,
-    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
-  ): Disk {
-    if (!DiskMap[type]) throw new Error("invalid disk type " + type);
-    const DiskConstructor = DiskMap[type] satisfies {
-      new (guid: string): Disk; //TODO interface somewhere?
-    };
-    return new DiskConstructor(guid, indexCache ?? new TreeDirRoot(), fsTransform);
-  }
 
   private async *iteratorMutex(filter?: (node: TreeNode) => boolean): AsyncIterableIterator<TreeNode> {
     await this.ready;

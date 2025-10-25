@@ -1,7 +1,7 @@
 import { CreatePoolContext, PoolWorker, Resource } from "@/components/PoolWorker";
+import { PreviewWorkerApiType } from "@/types/PreviewWorkerTypes";
 
 import * as Comlink from "comlink";
-import { PreviewWorkerApiType } from "../../../../preview-builder/src/preview-entry";
 
 export async function createApiResource({
   editId,

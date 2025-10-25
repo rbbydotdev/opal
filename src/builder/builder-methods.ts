@@ -7,7 +7,7 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
-import { BuildOptions, PageData } from "./builder";
+import { BuildOptions, PageData } from "./builder-types";
 
 export class BuilderMethods {
   constructor(

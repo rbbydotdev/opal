@@ -1,39 +1,12 @@
-import { Disk } from "@/Db/Disk";
 import { FileTree } from "@/lib/FileTree/Filetree";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, RelPath, joinPath, relPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import mustache from "mustache";
 import { BuilderMethods } from "./builder-methods";
+import { BuildOptions, BuildStrategy, FrontMatter, PageData } from "./builder-types";
 
-export type BuildStrategy = "freeform" | "book" | "blog";
-
-export interface BuildOptions {
-  strategy: BuildStrategy;
-  sourceDisk: Disk;
-  outputDisk: Disk;
-  sourcePath: AbsPath;
-  outputPath: AbsPath;
-  onLog?: (message: string) => void;
-  onError?: (error: string) => void;
-}
-
-export interface FrontMatter {
-  layout?: string;
-  title?: string;
-  summary?: string;
-  styles?: string[];
-  scripts?: string[];
-  [key: string]: any;
-}
-
-export interface PageData {
-  path: RelPath;
-  content: string;
-  frontMatter: FrontMatter;
-  htmlContent: string;
-  node: TreeNode;
-}
+// Re-export types for convenience
+export type { BuildStrategy, BuildOptions, FrontMatter, PageData };
 
 export class Builder {
   private options: BuildOptions;

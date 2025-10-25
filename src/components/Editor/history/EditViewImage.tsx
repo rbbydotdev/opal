@@ -4,7 +4,7 @@ import {
   useSnapApiPool,
 } from "@/components/Editor/history/SnapApiPoolProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
-import { HistoryDocRecord } from "@/Db/HistoryDAO";
+import { HistoryDocRecord } from "@/Db/HistoryTypes";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";

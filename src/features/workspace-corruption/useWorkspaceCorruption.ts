@@ -33,12 +33,12 @@ export function useWorkspaceCorruption() {
  */
 export async function analyzeWorkspaceError(workspaceName: string, error: Error): Promise<WorkspaceCorruptionState> {
   // Try to get workspace DAO to check disk type for OPFS handle revocation
-  let workspaceForRecovery: Workspace | undefined;
-  let workspaceId: string | undefined;
+  let workspaceForRecovery: Workspace | null = null;
+  let workspaceId: string | null = "NULL";
   try {
     const workspaceDAO = await WorkspaceDAO.FetchFromName(workspaceName).catch(() => null);
-    workspaceId = workspaceDAO?.guid;
-    workspaceForRecovery = workspaceDAO?.toModel();
+    workspaceId = workspaceDAO?.guid ?? workspaceId;
+    workspaceForRecovery = workspaceDAO ? Workspace.FromDAO(workspaceDAO) : null;
   } catch (e) {
     console.debug("Could not fetch workspace for recovery check:", e);
   }

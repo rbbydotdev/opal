@@ -1,6 +1,6 @@
 import { MdxEditorSelector, setMarkdownOnly$ } from "@/components/Editor/EditorConst";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
-import { HistoryStorageInterface } from "@/Db/HistoryDAO";
+import { HistoryStorageInterface } from "@/Db/HistoryTypes";
 import { Cell, markdown$, Realm } from "@mdxeditor/editor";
 import { useEffect, useRef } from "react";
 

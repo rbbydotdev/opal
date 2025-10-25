@@ -1,12 +1,8 @@
-import {
+import type {
   BasicAuthRemoteAuthDAO,
   GithubAPIRemoteAuthDAO,
   GithubDeviceOAuthRemoteAuthDAO,
   GithubOAuthRemoteAuthDAO,
-  isGithubAPIRemoteAuthDAO,
-  isGithubDeviceOAuthRemoteAuthDAO,
-  isGithubOAuthRemoteAuthDAO,
-  RemoteAuthDAO,
 } from "@/Db/RemoteAuth";
 import { Octokit } from "@octokit/core";
 
@@ -51,13 +47,13 @@ export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
       });
 
       allRepos.push(
-        ...response.data.map((r) => ({
-          updated_at: new Date(r.updated_at ?? Date.now()),
-          id: r.id,
-          name: r.name,
-          full_name: r.full_name,
-          description: r.description,
-          html_url: r.html_url,
+        ...response.data.map(({ updated_at, id, name, full_name, description, html_url }) => ({
+          updated_at: new Date(updated_at ?? Date.now()),
+          id,
+          name,
+          full_name,
+          description,
+          html_url,
         }))
       );
 
@@ -143,37 +139,6 @@ export class RemoteAuthGithubDeviceOAuthAgent extends IRemoteAuthGithubAgent {
   constructor(private remoteAuth: GithubDeviceOAuthRemoteAuthDAO) {
     super();
   }
-}
-
-export function IsoGitApiCallbackForRemoteAuth(remoteAuth: RemoteAuthDAO) {
-  const agent = RemoteAuthAgentForRemoteAuth(remoteAuth);
-  return () => ({
-    username: agent.getUsername(),
-    password: agent.getApiToken(),
-  });
-}
-
-export type GithubRemoteAuthDAO = GithubAPIRemoteAuthDAO | GithubOAuthRemoteAuthDAO | GithubDeviceOAuthRemoteAuthDAO;
-
-export function isGithubRemoteAuth(remoteAuth: RemoteAuthDAO): remoteAuth is GithubRemoteAuthDAO {
-  return (
-    isGithubAPIRemoteAuthDAO(remoteAuth) ||
-    isGithubOAuthRemoteAuthDAO(remoteAuth) ||
-    isGithubDeviceOAuthRemoteAuthDAO(remoteAuth)
-  );
-}
-
-export function RemoteAuthAgentForRemoteAuth(remoteAuth: RemoteAuthDAO) {
-  if (isGithubAPIRemoteAuthDAO(remoteAuth)) {
-    return new RemoteAuthGithubAPIAgent(remoteAuth);
-  }
-  if (isGithubOAuthRemoteAuthDAO(remoteAuth)) {
-    return new RemoteAuthGithubOAuthAgent(remoteAuth);
-  }
-  if (isGithubDeviceOAuthRemoteAuthDAO(remoteAuth)) {
-    return new RemoteAuthGithubDeviceOAuthAgent(remoteAuth);
-  }
-  throw new Error(`No RemoteAuthGitAgent for remoteAuth type: ${remoteAuth.type} source: ${remoteAuth.source}`);
 }
 
 export interface Repo {

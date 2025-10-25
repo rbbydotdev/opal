@@ -1,7 +1,8 @@
-import { ConnectionsModalMode } from "@/components/ConnectionsModal";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
-import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
+import { RemoteAuthJType } from "@/Db/RemoteAuthTypes";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
+import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { useState } from "react";
 
 export const useRemoteAuthSubmit = (

@@ -2,15 +2,13 @@ export type AbsPath = Brand<string, "AbsolutePath">;
 export type RelPath = Brand<string, "RelativePath">;
 
 import { errorCode } from "@/lib/errors";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isImageType } from "@/lib/fileType";
 import pathModule from "path";
-import { CommonFileSystem } from "../Db/CommonFileSystem";
 import { isMarkdownType } from "./fileType";
 import { getMimeType } from "./mimeType";
 
 // --- Constructors ---
-export function absPath(path: string | TreeNode): AbsPath {
+export function absPath(path: string | { toString(): string }): AbsPath {
   let pathStr = String(path);
   if (isAbsPath(pathStr)) return pathModule.normalize(pathStr) as AbsPath;
   if (!pathStr.startsWith("/")) pathStr = "/" + pathStr;
@@ -18,7 +16,7 @@ export function absPath(path: string | TreeNode): AbsPath {
   return pathModule.normalize(pathStr) as AbsPath;
 }
 
-export function relPath(path: string | TreeNode): RelPath {
+export function relPath(path: string | { toString(): string }): RelPath {
   let pathStr = String(path);
   if (pathStr.startsWith("/")) pathStr = pathModule.normalize(pathStr).slice(1);
   if (pathStr !== "" && pathStr.endsWith("/")) pathStr = pathStr.slice(0, -1);
@@ -33,21 +31,21 @@ export function isRelPath(path: AbsPath | RelPath | string): path is RelPath {
 }
 
 // --- Path Utilities ---
-export function extname(path: AbsPath | RelPath | TreeNode | string): string {
+export function extname(path: AbsPath | RelPath | string | { toString(): string }): string {
   return pathModule.extname(String(path));
 }
 
-export function prefix(path: AbsPath | RelPath | TreeNode | string): string {
+export function prefix(path: AbsPath | RelPath | string | { toString(): string }): string {
   const ext = extname(path);
   const base = basename(path);
   return ext.length ? base.slice(0, base.length - ext.length) : base;
 }
 
-export function basename(path: AbsPath | RelPath | TreeNode | string): RelPath {
+export function basename(path: AbsPath | RelPath | string | { toString(): string }): RelPath {
   return relPath(pathModule.basename(String(path)));
 }
 
-export function dirname(path: AbsPath | RelPath | TreeNode | string): AbsPath {
+export function dirname(path: AbsPath | RelPath | string | { toString(): string }): AbsPath {
   return absPath(pathModule.dirname(String(path)));
 }
 
@@ -61,14 +59,14 @@ function isEncoded(str: string): boolean {
   return /%[0-9A-Fa-f]{2}/.test(str);
 }
 
-export function encodePath<T extends string | TreeNode | AbsPath>(path: T): T {
+export function encodePath<T extends string | { toString(): string } | AbsPath>(path: T): T {
   return String(path)
     .split("/")
     .map((part) => (isEncoded(part) ? part : encodeURIComponent(part)))
     .join("/") as T;
 }
 
-export function decodePath<T extends string | TreeNode | AbsPath>(path: T): T {
+export function decodePath<T extends string | { toString(): string } | AbsPath>(path: T): T {
   return String(path)
     .split("/")
     .map((part) => (isEncoded(part) ? decodeURIComponent(part) : part))
@@ -155,38 +153,38 @@ export function changePrefixRel(path: RelPath, newPrefix: string): RelPath {
   return relPath(pathModule.join(dir, `${newPrefix}${ext}`));
 }
 
-export function isImage(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isImage(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return isImageType(getMimeType(relPath(String(path))));
 }
 
-export function isMarkdown(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isMarkdown(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return isMarkdownType(getMimeType(relPath(String(path))));
 }
-export function isText(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isText(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))).startsWith("text/");
 }
-export function isEjs(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isEjs(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/x-ejs";
 }
-export function isTemplateFile(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isTemplateFile(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return isEjs(path) || isMustache(path);
 }
-export function isMustache(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isMustache(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/x-mustache";
 }
-export function isHtml(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isHtml(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/html";
 }
-export function isCss(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isCss(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/css";
 }
-export function isBin(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isBin(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "application/octet-stream";
 }
-export function isSourceOnly(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isSourceOnly(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return isText(path) && !isMarkdown(path);
 }
-export function isPreviewable(path: AbsPath | RelPath | TreeNode | string): boolean {
+export function isPreviewable(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return isMarkdown(path) || isTemplateFile(path) || isHtml(path);
 }
 
@@ -336,21 +334,3 @@ export const stringifyEntry = (
   return String(entry);
 };
 
-export async function mkdirRecursive(this: CommonFileSystem, filePath: AbsPath | RelPath) {
-  const encoded = encodePath(filePath);
-  const segments = encoded.split("/").filter((s) => s !== "");
-
-  for (let i = 1; i <= segments.length; i++) {
-    const dirPath = isAbsPath(filePath)
-      ? absPath("/" + segments.slice(0, i).join("/"))
-      : relPath(segments.slice(0, i).join("/"));
-    try {
-      await this.mkdir(String(dirPath), { recursive: true, mode: 0o777 });
-    } catch (err) {
-      if (errorCode(err).code !== "EEXIST") {
-        console.error(`Error creating directory ${dirPath}:`, err);
-      }
-    }
-  }
-  return filePath;
-}

@@ -1,4 +1,4 @@
-import { CommonFileSystem } from "@/Db/CommonFileSystem";
+import { CommonFileSystem } from "@/Db/FileSystemTypes";
 
 export interface AsyncKeyValueStore {
   get(key: string): Promise<string | null>;

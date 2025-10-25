@@ -1,4 +1,3 @@
-import { Disk } from "@/Db/Disk";
 import { Channel } from "@/lib/channel";
 import { AbsPath, RelPath, absPath, relPath } from "@/lib/paths2";
 import Emittery from "emittery";
@@ -73,7 +72,13 @@ export type IndexTrigger =
       details: DeleteDetails;
     };
 
-export type ListenerCallback<T extends "create" | "rename" | "delete"> = Parameters<Disk[`${T}Listener`]>[0];
+export type ListenerCallback<T extends "create" | "rename" | "delete"> = T extends "create"
+  ? (props: CreateDetails) => void
+  : T extends "rename"
+  ? (props: RenameDetails[]) => void
+  : T extends "delete"
+  ? (props: DeleteDetails) => void
+  : never;
 
 export type DiskRemoteEventPayload = {
   // [DiskEvents.RENAME]: RemoteRenameFileType[];

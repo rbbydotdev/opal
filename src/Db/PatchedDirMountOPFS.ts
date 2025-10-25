@@ -1,7 +1,7 @@
 import { relPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
-import { CommonFileSystem } from "./CommonFileSystem";
+import { CommonFileSystem } from "./FileSystemTypes";
 
 /**
  * Patched OPFS filesystem specifically for directory-mounted disks.

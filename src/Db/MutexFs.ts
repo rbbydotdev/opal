@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AbsPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
-import { CommonFileSystem } from "./CommonFileSystem";
+import { CommonFileSystem } from "./FileSystemTypes";
 
 // MutexFs: No 'any' used
 export class MutexFs implements CommonFileSystem {

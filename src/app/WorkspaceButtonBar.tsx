@@ -306,7 +306,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
             open(
               async () =>
                 Promise.all([
-                  ...(await WorkspaceDAO.all().then((wss) => wss.map((ws) => ws.toModel().destroy()))),
+                  ...(await WorkspaceDAO.all().then((wss) => wss.map((ws) => Workspace.FromDAO(ws).destroy()))),
                 ]).then(() => {
                   void router.navigate({ to: "/newWorkspace" });
                 }),
@@ -385,8 +385,7 @@ export function WorkspaceButtonBar() {
                       WorkspaceDAO.all().then((workspaces) =>
                         Promise.all(
                           workspaces.map((ws) =>
-                            ws
-                              .toModel()
+                            Workspace.FromDAO(ws)
                               .tearDown()
                               .then((ws) => ws.destroy())
                           )

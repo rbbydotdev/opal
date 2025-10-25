@@ -22,7 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { RemoteAuthJType, RemoteAuthRecord } from "@/Db/RemoteAuth";
+import { RemoteAuthJType, RemoteAuthRecord } from "@/Db/RemoteAuthTypes";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { IS_MAC } from "@/lib/isMac";

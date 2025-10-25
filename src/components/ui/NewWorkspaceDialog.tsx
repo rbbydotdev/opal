@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Disk } from "@/Db/Disk";
+import { DefaultDiskType } from "@/Db/DiskDefaults";
 import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/DiskType";
 import { Workspace } from "@/Db/Workspace";
 import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/Db/WorkspaceTemplates";
@@ -31,7 +31,7 @@ export function NewWorkspaceDialog({
   setIsOpen: (open: boolean) => void;
 }) {
   const [isPending, setPending] = useState(false);
-  const [selectedFileSystem, setSelectedFileSystem] = useState<DiskType>(Disk.defaultDiskType);
+  const [selectedFileSystem, setSelectedFileSystem] = useState<DiskType>(DefaultDiskType);
   const [selectedDirectory, setSelectedDirectory] = useState<FileSystemDirectoryHandle | null>(null);
   const [directoryError, setDirectoryError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string>(getDefaultTemplate().id);
@@ -44,7 +44,7 @@ export function NewWorkspaceDialog({
     if (!open) {
       void navigate({ to: "/" });
       // Reset state when closing
-      setSelectedFileSystem(Disk.defaultDiskType);
+      setSelectedFileSystem(DefaultDiskType);
       setSelectedDirectory(null);
       setDirectoryError(null);
       setSelectedTemplate(getDefaultTemplate().id);
@@ -158,7 +158,7 @@ export function NewWorkspaceDialog({
             </div>
             <div className="grid gap-3">
               <Label htmlFor="fileSystem-1">File System</Label>
-              <Select name="fileSystem" defaultValue={Disk.defaultDiskType} onValueChange={handleFileSystemChange}>
+              <Select name="fileSystem" defaultValue={DefaultDiskType} onValueChange={handleFileSystemChange}>
                 <SelectTrigger>
                   <SelectValue placeholder={"Disk Filesystem Type"}></SelectValue>
                 </SelectTrigger>

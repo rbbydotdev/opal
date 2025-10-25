@@ -1,4 +1,3 @@
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath, relPath } from "@/lib/paths2";
 
 const paths = {
@@ -10,7 +9,7 @@ const paths = {
 };
 export const SpecialDirs = {
   ...paths,
-  allSpecialDirsExcept(...paths: (AbsPath | TreeNode)[]): AbsPath[] {
+  allSpecialDirsExcept(...paths: (AbsPath | { toString(): string })[]): AbsPath[] {
     return this.All.filter((dir) => !paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
   },
   get All() {
@@ -18,10 +17,10 @@ export const SpecialDirs = {
   },
 } as const;
 
-export function FilterOutSpecialDirs(path: AbsPath | TreeNode): boolean {
+export function FilterOutSpecialDirs(path: AbsPath | { toString(): string }): boolean {
   return !SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
-export function FilterInSpecialDirs(path: AbsPath | TreeNode): boolean {
+export function FilterInSpecialDirs(path: AbsPath | { toString(): string }): boolean {
   return SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
 

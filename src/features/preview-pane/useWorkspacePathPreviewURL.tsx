@@ -1,6 +1,6 @@
-import { sessionIdParam, workspacePathSessionId } from "@/components/ScrollSync";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { absPath, joinPath } from "@/lib/paths2";
+import { sessionIdParam, workspacePathSessionId } from "@/lib/scrollSyncUtils";
 
 export function useWorkspacePathPreviewURL(filePathOverride?: string) {
   const { id: workspaceId, path } = useWorkspaceRoute();

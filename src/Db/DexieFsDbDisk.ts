@@ -1,4 +1,4 @@
-import { CommonFileSystem } from "@/Db/CommonFileSystem";
+import { CommonFileSystem } from "@/Db/FileSystemTypes";
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { Disk } from "@/Db/Disk";
 import { DiskDAO } from "@/Db/DiskDAO";

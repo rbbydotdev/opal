@@ -1,4 +1,4 @@
-import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
+import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryTypes";
 import { debounce } from "@/lib/debounce";
 import { Mutex } from "async-mutex";
 import EventEmitter from "events";

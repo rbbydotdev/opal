@@ -7,6 +7,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { AlertTriangle, FolderX, HardDrive } from "lucide-react";
 import { WorkspaceCorruptionState } from "./types";
@@ -20,7 +21,7 @@ export function WorkspaceCorruptionModal({ errorState }: WorkspaceCorruptionModa
     if (!errorState) return;
     try {
       const workspaceDAO = await WorkspaceDAO.FetchFromName(errorState.workspaceName);
-      const workspace = workspaceDAO.toModel();
+      const workspace = Workspace.FromDAO(workspaceDAO);
       await workspace.recoverDirectoryAccess();
       window.location.reload();
     } catch (error) {

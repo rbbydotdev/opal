@@ -1,4 +1,4 @@
-import { Disk } from "@/Db/Disk";
+import { DefaultDiskType } from "@/Db/DiskDefaults";
 import { DiskRecord } from "@/Db/DiskRecord";
 import { ClientDb } from "@/Db/instance";
 import { TreeDirRoot, TreeDirRootJType } from "@/lib/FileTree/TreeNode";
@@ -29,7 +29,7 @@ export class DiskDAO {
     };
   }
 
-  static CreateNew(type: DiskType = Disk.defaultDiskType) {
+  static CreateNew(type: DiskType = DefaultDiskType) {
     return new DiskDAO({ type: type, guid: DiskDAO.guid() });
   }
 
@@ -69,9 +69,6 @@ export class DiskDAO {
     });
   }
 
-  toModel() {
-    return Disk.FromJSON(this);
-  }
   delete() {
     return ClientDb.disks.delete(this.guid);
   }
