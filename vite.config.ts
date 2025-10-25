@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import svgr from "vite-plugin-svgr";
 
 // Service Worker Configuration (Development Watch)
 export default defineConfig(() => {
@@ -29,6 +30,7 @@ export default defineConfig(() => {
         // Whether to polyfill `node:` protocol imports.
         protocolImports: false,
       }),
+      svgr(),
     ],
     resolve: {
       alias: {

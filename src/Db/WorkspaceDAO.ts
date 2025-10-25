@@ -1,4 +1,3 @@
-import { DiskJType, DiskType } from "@/Db/Disk";
 import { ClientDb } from "@/Db/instance";
 import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
@@ -9,6 +8,7 @@ import { slugifier } from "@/lib/slugifier";
 import { nanoid } from "nanoid";
 import { getUniqueSlug } from "../lib/getUniqueSlug";
 import { DiskDAO } from "./DiskDAO";
+import { DiskJType, DiskType } from "./DiskType";
 import { WorkspaceStatusCode, WS_OK } from "./WorkspaceStatusCode";
 
 export type WorkspaceGuid = Brand<string, "WorkspaceGuid">;

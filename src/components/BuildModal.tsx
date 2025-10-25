@@ -1,24 +1,26 @@
-import { Builder, BuildStrategy } from "@/builder/builder";
+import { BuildStrategy } from "@/builder/builder";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO } from "@/Db/BuildDAO";
 import { Disk } from "@/Db/Disk";
-import { HideFs } from "@/Db/HideFs";
-import { SpecialDirs } from "@/Db/SpecialDirs";
-import { absPath } from "@/lib/paths2";
-import { usePreventNavigation } from "@/lib/usePreventNavigation";
+import { useBuildExecution } from "@/hooks/useBuildExecution";
+import { useBuildLogs } from "@/hooks/useBuildLogs";
+import { useBuildModalState } from "@/hooks/useBuildModalState";
+import { BuildService } from "@/services/BuildService";
 import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
-import React, { createContext, useCallback, useContext, useImperativeHandle, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useImperativeHandle, useMemo, useRef } from "react";
+
+type BuildModalOptionsType = {
+  onCancel?: () => void;
+  onComplete?: (buildDao?: BuildDAO) => void;
+  outputDisk: Disk;
+  sourceDisk: Disk;
+};
 
 type BuildModalContextType = {
-  open: (options?: {
-    onCancel?: () => void;
-    onComplete?: (buildDao?: BuildDAO) => void;
-    outputDisk?: Disk;
-    sourceDisk?: Disk;
-  }) => Promise<"cancelled" | "completed">;
+  open: (options: BuildModalOptionsType) => Promise<"cancelled" | "completed">;
   close: () => void;
 };
 
@@ -43,12 +45,7 @@ export function useBuildModal() {
 
 function useBuildModalCmd() {
   const cmdRef = useRef<{
-    open: (options?: {
-      onCancel?: () => void;
-      onComplete?: (buildDao?: BuildDAO) => void;
-      outputDisk?: Disk;
-      sourceDisk?: Disk;
-    }) => Promise<"cancelled" | "completed">;
+    open: (options: BuildModalOptionsType) => Promise<"cancelled" | "completed">;
     close: () => void;
   }>({
     open: async () => "completed" as const,
@@ -56,261 +53,99 @@ function useBuildModalCmd() {
   });
 
   return {
-    open: (options?: {
-      onCancel?: () => void;
-      onComplete?: (buildDao?: BuildDAO) => void;
-      outputDisk?: Disk;
-      sourceDisk?: Disk;
-    }) => cmdRef.current.open(options),
+    open: (options: BuildModalOptionsType) => cmdRef.current.open(options),
     close: () => cmdRef.current.close(),
     cmdRef,
   };
-}
-
-interface BuildLog {
-  timestamp: Date;
-  message: string;
-  type: "info" | "error";
 }
 
 export function BuildModal({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{
-    open: (options?: {
-      onCancel?: () => void;
-      onComplete?: (buildDao?: BuildDAO) => void;
-      outputDisk?: Disk;
-      sourceDisk?: Disk;
-    }) => Promise<"cancelled" | "completed">;
+    open: (options: BuildModalOptionsType) => Promise<"cancelled" | "completed">;
     close: () => void;
   }>;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isBuilding, setIsBuilding] = useState(false);
-  const [buildCompleted, setBuildCompleted] = useState(false);
-  const [buildError, setBuildError] = useState<string | null>(null);
-  const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
-  const [logs, setLogs] = useState<BuildLog[]>([]);
-  const [buildAbortController, setBuildAbortController] = useState<AbortController | null>(null);
-
-  const resolveRef = useRef<((value: "cancelled" | "completed") => void) | null>(null);
-  const onCancelRef = useRef<(() => void) | null>(null);
-  const onCompleteRef = useRef<((buildDao?: BuildDAO) => void) | null>(null);
-  const optionsRef = useRef<{ outputDisk?: Disk; sourceDisk?: Disk } | null>(null);
-  const originalFsRef = useRef<any>(null);
-  const sourceDiskRef = useRef<Disk | null>(null);
-
-  // Reusable hook to prevent navigation/close while activated.
-
-  // Use the hook with a customizable message
-  usePreventNavigation(isBuilding, "Build in progress. Are you sure you want to leave?");
-
-  const addLog = (message: string, type: "info" | "error" = "info") => {
-    setLogs((prev) => [...prev, { timestamp: new Date(), message, type }]);
-  };
-
-  const clearLogs = () => {
-    setLogs([]);
-  };
-
-  const formatTimestamp = (timestamp: Date) => {
-    return timestamp.toLocaleTimeString("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
+  const {
+    isOpen,
+    strategy,
+    buildCompleted,
+    buildError,
+    optionsRef,
+    setStrategy,
+    setBuildError,
+    openModal,
+    closeModal,
+    completeModal,
+    handleOkay,
+  } = useBuildModalState();
+  const buildExecution = useBuildExecution();
+  const buildLogs = useBuildLogs();
+  const buildServiceRef = useRef(useMemo(() => new BuildService(), []));
 
   const handleBuild = async () => {
-    if (isBuilding) return;
+    const options = optionsRef.current;
+    if (!options) throw new Error("Options not provided");
 
-    setIsBuilding(true);
-    setBuildCompleted(false);
-    setBuildError(null);
-    clearLogs();
+    if (buildExecution.isBuilding) return;
 
-    const abortController = new AbortController();
-    setBuildAbortController(abortController);
+    buildLogs.clearLogs();
+    const abortController = buildExecution.startBuild();
 
-    try {
-      addLog(`Starting ${strategy} build...`);
-      addLog("Filtering out special directories ");
+    const result = await buildServiceRef.current.executeBuild({
+      strategy: strategy,
+      sourceDisk: options.sourceDisk,
+      outputDisk: options.outputDisk,
+      onLog: buildLogs.addLog,
+      onError: (message) => buildLogs.addLog(message, "error"),
+      abortSignal: abortController.signal,
+    });
 
-      // Get disk instances from options
-      const options = optionsRef.current;
-      if (!options?.sourceDisk) {
-        throw new Error("Source disk not provided");
-      }
+    buildExecution.finishBuild();
 
-      // For now, use the same disk as both source and output if outputDisk not specified
-      const baseDisk = options.sourceDisk;
-      const outputDisk = options.outputDisk || options.sourceDisk;
-
-      if (!baseDisk || !outputDisk) {
-        throw new Error("Source or output disk not available");
-      }
-
-      // Create a filtered version of the source disk that hides special directories
-      const hiddenPaths = [
-        // Include all special directories (/.trash, /.storage, /.git, /.thumb)
-        ...SpecialDirs.All,
-      ];
-
-      // Wrap the source disk's filesystem with HideFs to filter out special directories
-      const hideFs = new HideFs(baseDisk.fs, hiddenPaths);
-
-      // Store original fs for restoration
-      originalFsRef.current = baseDisk.fs;
-      sourceDiskRef.current = baseDisk;
-
-      // Temporarily replace the fs with the filtered version
-      Object.defineProperty(baseDisk, "fs", {
-        get: () => hideFs,
-        configurable: true,
-      });
-
-      const sourceDisk = baseDisk;
-
-      const builder = new Builder({
-        strategy,
-        sourceDisk,
-        outputDisk,
-        sourcePath: absPath("/"), // Replace with actual source path
-        outputPath: absPath("/build"), // Replace with actual output path
-        onLog: (message) => addLog(message),
-        onError: (message) => addLog(message, "error"),
-      });
-
-      // Check for abort before starting
-      if (abortController.signal.aborted) {
-        addLog("Build cancelled", "error");
-        return;
-      }
-
-      await builder.build();
-
-      if (!abortController.signal.aborted) {
-        addLog("Build completed successfully!");
-
-        // Create and save build record
-        const buildLabel = `${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Build - ${new Date().toLocaleString()}`;
-        const buildDao = await BuildDAO.CreateNew(buildLabel, baseDisk.guid);
-        await buildDao.save();
-
-        addLog(`Build saved with ID: ${buildDao.guid}`);
-
-        // Restore original filesystem
-        if (originalFsRef.current && sourceDiskRef.current) {
-          Object.defineProperty(sourceDiskRef.current, "fs", {
-            get: () => originalFsRef.current,
-            configurable: true,
-          });
-        }
-
-        setIsBuilding(false);
-        setBuildCompleted(true);
-        setBuildAbortController(null);
-
-        onCompleteRef.current?.(buildDao);
-        resolveRef.current?.("completed");
-        // setIsOpen(false);
-      }
-    } catch (error) {
-      if (!abortController.signal.aborted) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        addLog(`Build failed: ${errorMessage}`, "error");
-        setBuildError(errorMessage);
-
-        // Restore original filesystem on error
-        if (originalFsRef.current && sourceDiskRef.current) {
-          Object.defineProperty(sourceDiskRef.current, "fs", {
-            get: () => originalFsRef.current,
-            configurable: true,
-          });
-        }
-
-        setIsBuilding(false);
-        setBuildAbortController(null);
-      }
+    if (result.success) {
+      completeModal(result.buildDao);
+    } else if (result.error) {
+      setBuildError(result.error);
     }
   };
 
   const handleCancel = useCallback(() => {
-    if (isBuilding && buildAbortController) {
-      buildAbortController.abort();
-      setBuildAbortController(null);
-      addLog("Build cancelled by user", "error");
-
-      // Restore original filesystem if it was modified
-      if (originalFsRef.current && sourceDiskRef.current) {
-        Object.defineProperty(sourceDiskRef.current, "fs", {
-          get: () => originalFsRef.current,
-          configurable: true,
-        });
-      }
+    if (buildExecution.isBuilding) {
+      buildExecution.cancelBuild();
+      buildServiceRef.current.cancelBuild();
+      buildLogs.addLog("Build cancelled by user", "error");
     }
 
-    setIsBuilding(false);
-    setBuildCompleted(false);
-    setBuildError(null);
-    onCancelRef.current?.();
-    resolveRef.current?.("cancelled");
-    setIsOpen(false);
-  }, [buildAbortController, isBuilding]);
-
-  const handleOkay = useCallback(() => {
-    setIsOpen(false);
-    setBuildCompleted(false);
-    resolveRef.current?.("completed");
-  }, []);
+    closeModal();
+  }, [buildExecution, buildLogs, closeModal]);
 
   const handleClose = useCallback(() => {
-    if (isBuilding) {
-      // Don't allow closing during build
+    if (buildExecution.isBuilding) {
       return;
     }
     handleCancel();
-  }, [handleCancel, isBuilding]);
+  }, [handleCancel, buildExecution.isBuilding]);
 
   useImperativeHandle(
     cmdRef,
     () => ({
-      open: async (options?: {
-        onCancel?: () => void;
-        onComplete?: (buildDao?: BuildDAO) => void;
-        outputDisk?: Disk;
-        sourceDisk?: Disk;
-      }) => {
-        return new Promise<"cancelled" | "completed">((resolve) => {
-          resolveRef.current = resolve;
-          onCancelRef.current = options?.onCancel || null;
-          onCompleteRef.current = options?.onComplete || null;
-          optionsRef.current = options ? { outputDisk: options.outputDisk, sourceDisk: options.sourceDisk } : null;
-
-          setIsOpen(true);
-          setBuildCompleted(false);
-          setBuildError(null);
-          setIsBuilding(false);
-          clearLogs();
-          setStrategy("freeform");
-        });
-      },
+      open: openModal,
       close: handleClose,
     }),
-    [handleClose]
+    [openModal, handleClose]
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={isBuilding ? undefined : handleClose}>
+    <Dialog open={isOpen} onOpenChange={buildExecution.isBuilding ? undefined : handleClose}>
       <DialogContent
         className="max-w-2xl h-[80vh] flex flex-col"
-        onPointerDownOutside={isBuilding ? (e) => e.preventDefault() : undefined}
+        onPointerDownOutside={buildExecution.isBuilding ? (e) => e.preventDefault() : undefined}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isBuilding && <Loader size={16} className="animate-spin" />}
+            {buildExecution.isBuilding && <Loader size={16} className="animate-spin" />}
             Build Workspace
           </DialogTitle>
           <DialogDescription>Select a build strategy and publish your workspace to static HTML.</DialogDescription>
@@ -322,7 +157,11 @@ export function BuildModal({
             <label htmlFor="strategy-select" className="text-sm font-medium">
               Build Strategy
             </label>
-            <Select value={strategy} onValueChange={(value: BuildStrategy) => setStrategy(value)} disabled={isBuilding}>
+            <Select
+              value={strategy}
+              onValueChange={(value: BuildStrategy) => setStrategy(value)}
+              disabled={buildExecution.isBuilding}
+            >
               <SelectTrigger id="strategy-select" className="min-h-14">
                 <SelectValue placeholder="Select build strategy" />
               </SelectTrigger>
@@ -356,8 +195,8 @@ export function BuildModal({
           {/* Build Controls */}
           <div className="flex gap-2">
             {!buildCompleted && (
-              <Button onClick={handleBuild} disabled={isBuilding} className="flex items-center gap-2">
-                {isBuilding ? (
+              <Button onClick={handleBuild} disabled={buildExecution.isBuilding} className="flex items-center gap-2">
+                {buildExecution.isBuilding ? (
                   <>
                     <Loader size={16} className="animate-spin" />
                     Building...
@@ -368,7 +207,7 @@ export function BuildModal({
               </Button>
             )}
 
-            {isBuilding && (
+            {buildExecution.isBuilding && (
               <Button variant="outline" onClick={handleCancel} className="flex items-center gap-2">
                 <X size={16} />
                 Cancel
@@ -410,15 +249,17 @@ export function BuildModal({
             <label className="text-sm font-medium mb-2">Build Output</label>
             <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30">
               <div className="font-mono text-sm space-y-1">
-                {logs.length === 0 ? (
+                {buildLogs.logs.length === 0 ? (
                   <div className="text-muted-foreground italic">Build output will appear here...</div>
                 ) : (
-                  logs.map((log, index) => (
+                  buildLogs.logs.map((log, index) => (
                     <div
                       key={index}
                       className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
                     >
-                      <span className="text-muted-foreground shrink-0">[{formatTimestamp(log.timestamp)}]</span>
+                      <span className="text-muted-foreground shrink-0">
+                        [{buildLogs.formatTimestamp(log.timestamp)}]
+                      </span>
                       <span className="break-all">{log.message}</span>
                     </div>
                   ))

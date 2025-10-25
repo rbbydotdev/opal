@@ -12,7 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Disk, DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/Disk";
+import { Disk } from "@/Db/Disk";
+import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/DiskType";
 import { Workspace } from "@/Db/Workspace";
 import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/Db/WorkspaceTemplates";
 import { RandomSlugWords } from "@/lib/randomSlugWords";

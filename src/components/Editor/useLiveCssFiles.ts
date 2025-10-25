@@ -1,6 +1,6 @@
-import { isFilePathsPayload } from "@/Db/Disk";
+import { isFilePathsPayload } from "@/Db/DiskEvents";
 import { Workspace } from "@/Db/Workspace";
-import { absPath, isMarkdown, isTemplateFile, isHtml } from "@/lib/paths2";
+import { absPath, isHtml, isMarkdown, isTemplateFile } from "@/lib/paths2";
 import { useEffect, useRef, useState } from "react";
 
 const noCached = (filePath: string): string => {
@@ -21,7 +21,12 @@ export function useLiveCssFiles({
   };
 
   useEffect(() => {
-    if (!!path && !!currentWorkspace && !currentWorkspace.isNull && (isMarkdown(path!) || isTemplateFile(path!) || isHtml(path!))) {
+    if (
+      !!path &&
+      !!currentWorkspace &&
+      !currentWorkspace.isNull &&
+      (isMarkdown(path!) || isTemplateFile(path!) || isHtml(path!))
+    ) {
       const css = Object.values(
         currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
       ).map((node) => cached(node.path));

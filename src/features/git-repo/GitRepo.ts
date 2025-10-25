@@ -1,5 +1,6 @@
 import { GitConfig } from "@/app/GitConfig";
-import { Disk, DiskJType } from "@/Db/Disk";
+import { Disk } from "@/Db/Disk";
+import { DiskJType } from "@/Db/DiskType";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";

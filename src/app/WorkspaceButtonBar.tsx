@@ -23,7 +23,7 @@ import { DiskDAO } from "@/Db/DiskDAO";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { useLeftCollapsed, useSidebarWidth } from "@/features/preview-pane/EditorSidebarLayout";
+import { useLeftCollapsed } from "@/features/preview-pane/EditorSidebarLayout";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
@@ -54,7 +54,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { twMerge } from "tailwind-merge";
 import { useConfirm } from "../components/Confirm";
 
@@ -136,40 +136,11 @@ function BigButton({
   );
 }
 
-export function WorkspaceButtonBar({}: {}) {
-  const { storedValue: shrink, setStoredValue: setShrink } = useShrink();
-  const { storedValue: autoHide } = useAutoHide();
-
-  const setShrinkRef = useRef(setShrink);
-  const { width: sidebarWidth, collapsed } = useSidebarWidth();
-  setShrinkRef.current = setShrink;
-  useEffect(() => {
-    if (!autoHide) return;
-    //create dock hidden behavior for left side of screen
-    const thresholdExpand = 50;
-    const thresholdShrink = sidebarWidth + 50;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const onMouseMove = (e: MouseEvent) => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        if (e.clientX < thresholdExpand && shrink) {
-          //expand
-          setShrinkRef.current?.(false);
-        }
-        if (e.clientX > thresholdShrink && !shrink) {
-          //shrink
-          setShrinkRef.current?.(true);
-        }
-      }, 250);
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-    };
-  }, [autoHide, collapsed, setShrink, shrink, sidebarWidth]);
-
-  return <WorkspaceButtonBarInternal shrink={shrink} autoHide={autoHide} />;
-}
+// export function WorkspaceButtonBar() {
+//   const { storedValue: shrink, setStoredValue: setShrink } = useShrink();
+//   const { storedValue: autoHide } = useAutoHide();
+//   return <WorkspaceButtonBarInternal shrink={shrink} autoHide={autoHide} />;
+// }
 
 function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { storedValue: spin, setStoredValue: setSpin } = useLocalStorage2("WorkspaceButtonBar/spin", true);
@@ -357,7 +328,9 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   );
 }
 
-function WorkspaceButtonBarInternal({ shrink, autoHide }: { shrink: boolean; autoHide: boolean }) {
+export function WorkspaceButtonBar() {
+  const { storedValue: shrink } = useShrink();
+  const { storedValue: autoHide } = useAutoHide();
   const { pending } = useRequestSignals();
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);

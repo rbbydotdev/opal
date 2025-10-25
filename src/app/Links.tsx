@@ -30,6 +30,7 @@ export const Links: React.FC<LinksProps> = ({
 
   useEffect(() => {
     const newBaseHrefs = new Set(debouncedHrefs.map(getBaseHref));
+    const unsub: (() => void)[] = [];
 
     // --- Step 1: Add or Swap links based on the debounced hrefs array ---
     debouncedHrefs.forEach((newHref) => {
@@ -56,6 +57,10 @@ export const Links: React.FC<LinksProps> = ({
 
         newLink.addEventListener("load", handleLoadOrError);
         newLink.addEventListener("error", handleLoadOrError);
+        unsub.push(() => {
+          newLink.removeEventListener("load", handleLoadOrError);
+          newLink.removeEventListener("error", handleLoadOrError);
+        });
         domElement?.appendChild(newLink);
       }
     });
@@ -69,6 +74,9 @@ export const Links: React.FC<LinksProps> = ({
         link.remove();
       }
     });
+    return () => {
+      unsub.forEach((fn) => fn());
+    };
   }, [debouncedHrefs, domElement]); // The key change: this effect now depends on the debounced value.
 
   return null;

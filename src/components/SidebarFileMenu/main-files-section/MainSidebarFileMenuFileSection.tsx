@@ -20,7 +20,7 @@ import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { getDiskTypeLabel } from "@/Db/Disk";
+import { getDiskTypeLabel } from "@/Db/DiskType";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
