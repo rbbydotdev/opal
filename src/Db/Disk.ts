@@ -1,6 +1,4 @@
-import { CommonFileSystem, OPFSNamespacedFs } from "@/Db/CommonFileSystem";
-import { DexieFsDb } from "@/Db/DexieFsDb";
-import { DirectoryHandleStore } from "@/Db/DirectoryHandleStore";
+import { CommonFileSystem } from "@/Db/CommonFileSystem";
 import { DiskDAO } from "@/Db/DiskDAO";
 import {
   DiskEvents,
@@ -14,11 +12,6 @@ import {
 } from "@/Db/DiskEvents";
 import { DiskMap } from "@/Db/DiskMap";
 import { DiskJType, DiskType } from "@/Db/DiskType";
-import { ClientDb } from "@/Db/instance";
-import { KVFileSystem, LocalStorageStore } from "@/Db/KVFs";
-import { MutexFs } from "@/Db/MutexFs";
-import { PatchedOPFS } from "@/Db/NamespacedFs";
-import { PatchedDirMountOPFS } from "@/Db/PatchedDirMountOPFS";
 import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
@@ -37,12 +30,9 @@ import {
   relPath,
 } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
-import { memfs } from "memfs";
-import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
-import { TreeDir, TreeDirRootJType, TreeNode } from "../lib/FileTree/TreeNode";
+import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage, stringifyEntry } from "../lib/paths2";
-import { RequestSignalsInstance } from "../lib/RequestSignals";
 
 export abstract class Disk {
   static defaultDiskType: DiskType = "IndexedDbDisk";
@@ -774,219 +764,5 @@ export abstract class Disk {
     await this.remote.tearDown();
     await this.local.clearListeners();
     this.unsubs.forEach((us) => us());
-  }
-}
-export class OpFsDisk extends Disk {
-  static type: DiskType = "OpFsDisk";
-  type = OpFsDisk.type;
-  ready: Promise<void>;
-  private internalFs: OPFSNamespacedFs;
-  constructor(
-    public readonly guid: string,
-    indexCache?: TreeDirRootJType,
-    fsTransform: (fs: OPFSNamespacedFs) => OPFSNamespacedFs = (fs) => fs
-  ) {
-    const mutex = new Mutex();
-    const { promise, resolve } = Promise.withResolvers<void>();
-    const patchedOPFS = new PatchedOPFS(
-      navigator.storage.getDirectory().then(async (dir) => {
-        resolve();
-        return dir;
-      }) as Promise<IFileSystemDirectoryHandle>
-    );
-
-    const origFs = new OPFSNamespacedFs(patchedOPFS.promises, absPath("/" + guid));
-    const fs = fsTransform(origFs);
-    void mutex.runExclusive(() => origFs.init());
-    super(guid, new MutexFs(fs, mutex), new FileTree(fs, guid, mutex), DiskDAO.New(OpFsDisk.type, guid, indexCache));
-
-    this.internalFs = fs; // as OPFSNamespacedFs;
-    this.ready = promise;
-  }
-
-  async destroy() {
-    await Promise.all([this.internalFs.tearDown(), ClientDb.disks.delete(this.guid)]);
-  }
-}
-
-export class DexieFsDbDisk extends Disk {
-  static type: DiskType = "DexieFsDbDisk";
-  type = DexieFsDbDisk.type;
-  constructor(
-    public readonly guid: string,
-    indexCache?: TreeDirRootJType,
-    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
-  ) {
-    const fs = fsTransform(new DexieFsDb(guid));
-    const mt = new Mutex();
-    const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
-    super(guid, fs, ft, DiskDAO.New(DexieFsDbDisk.type, guid, indexCache));
-  }
-}
-
-export class LocalStorageFsDisk extends Disk {
-  static type: DiskType = "LocalStorageFsDisk";
-  type = LocalStorageFsDisk.type;
-
-  constructor(
-    public readonly guid: string,
-    indexCache?: TreeDirRootJType,
-    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
-  ) {
-    const fs = fsTransform(new KVFileSystem(new LocalStorageStore(guid)));
-    const mt = new Mutex();
-    const ft = indexCache ? FileTree.FromJSON(indexCache, fs, guid, mt) : new FileTree(fs, guid, mt);
-    super(guid, fs, ft, DiskDAO.New(LocalStorageFsDisk.type, guid, indexCache));
-  }
-}
-
-export class MemDisk extends Disk {
-  static type: DiskType = "MemDisk";
-  type = MemDisk.type;
-  constructor(
-    public readonly guid: string,
-    indexCache?: TreeDirRootJType,
-    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
-  ) {
-    const mt = new Mutex();
-    const fs = fsTransform(memfs().fs.promises);
-    const ft = indexCache
-      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs), guid, mt)
-      : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs), guid, mt);
-
-    super(guid, fs, ft, DiskDAO.New(MemDisk.type, guid, indexCache));
-  }
-}
-
-export class NullDisk extends Disk {
-  static type: DiskType = "NullDisk";
-  type = NullDisk.type;
-  ready = new Promise<void>(() => {}); //never resolves since subsequent ops will fail
-
-  constructor(
-    public readonly guid = "__disk__NullDisk",
-    _indexCache?: TreeDirRootJType,
-    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
-  ) {
-    const fs = fsTransform(memfs().fs.promises);
-    const mt = new Mutex();
-    const ft = new FileTree(fs, guid, mt);
-    super("__disk__NullDisk", fs, ft, DiskDAO.New(NullDisk.type, guid));
-  }
-  async init() {
-    return () => {};
-  }
-}
-
-export class OpFsDirMountDisk extends Disk {
-  static type: DiskType = "OpFsDirMountDisk";
-  type = OpFsDirMountDisk.type;
-  ready: Promise<void>;
-
-  private directoryHandle: FileSystemDirectoryHandle | null = null;
-
-  get dirName() {
-    return this.directoryHandle?.name ?? null;
-  }
-
-  constructor(
-    public readonly guid: string,
-    indexCache?: TreeDirRootJType,
-    private fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
-  ) {
-    const mutex = new Mutex();
-    const { promise, resolve, reject } = Promise.withResolvers<void>();
-
-    // Initialize with a temporary memfs until directory is selected
-    const tempFs = memfs().fs;
-    void mutex.acquire();
-    super(
-      guid,
-      new MutexFs(tempFs.promises, mutex),
-      new FileTree(tempFs.promises, guid, mutex),
-      DiskDAO.New(OpFsDirMountDisk.type, guid, indexCache)
-    );
-
-    this.ready = promise;
-
-    // Try to restore directory handle from storage
-    this.initializeFromStorage()
-      .then(() => {
-        mutex.release();
-        resolve();
-      })
-      .catch(reject);
-  }
-
-  private async initializeFromStorage(): Promise<void> {
-    // console.log("🔄 Initializing from storage for disk:", this.guid);
-    const handle = await DirectoryHandleStore.getHandle(this.guid);
-    if (handle) {
-      // console.log("✅ Found stored handle:", handle.name);
-      await this.setDirectoryHandle(handle, true); // Skip storage when restoring
-      // console.log("✅ Initialization from storage complete");
-    } else {
-      // console.log("ℹ️ No stored handle found for disk:", this.guid);
-    }
-  }
-
-  async setDirectoryHandle(handle: FileSystemDirectoryHandle, skipStorage = false): Promise<void> {
-    const previousHandle = this.directoryHandle;
-    this.directoryHandle = handle;
-    const shouldStore = !skipStorage && (!previousHandle || previousHandle.name !== handle.name);
-    if (shouldStore) await DirectoryHandleStore.storeHandle(this.guid, handle);
-    const patchedDirMountOPFS = this.fsTransform(
-      new PatchedDirMountOPFS(Promise.resolve(handle) as unknown as Promise<IFileSystemDirectoryHandle>)
-    );
-    const mutex = new Mutex();
-    const mutexFs = new MutexFs(patchedDirMountOPFS, mutex);
-    const ft = new FileTree(patchedDirMountOPFS, this.guid, mutex);
-    (this as any).fs = mutexFs;
-    (this as any).fileTree = ft;
-  }
-
-  async selectDirectory(): Promise<FileSystemDirectoryHandle> {
-    if (!("showDirectoryPicker" in window)) {
-      throw new Error("Directory picker not supported in this browser");
-    }
-    const handle = await (window as any).showDirectoryPicker({
-      mode: "readwrite",
-      startIn: "documents",
-    });
-    await this.setDirectoryHandle(handle);
-    return handle;
-  }
-
-  hasDirectoryHandle(): boolean {
-    return this.directoryHandle !== null;
-  }
-
-  getDirectoryName(): string | null {
-    return this.directoryHandle?.name || null;
-  }
-
-  async needsDirectorySelection(): Promise<boolean> {
-    if (this.directoryHandle) {
-      return false;
-    }
-
-    // Check if we have metadata (meaning user previously selected a directory but it was lost)
-    const metadata = await DirectoryHandleStore.getStoredMetadata(this.guid);
-    return metadata !== undefined;
-  }
-
-  async getStoredMetadata() {
-    return DirectoryHandleStore.getStoredMetadata(this.guid);
-  }
-
-  async destroy() {
-    await DirectoryHandleStore.removeHandle(this.guid);
-    return super.destroy();
-  }
-
-  static async CreateWithDirectory(guid: string, indexCache?: TreeDirRootJType): Promise<OpFsDirMountDisk> {
-    const disk = new OpFsDirMountDisk(guid, indexCache);
-    await disk.selectDirectory();
-    return disk;
   }
 }

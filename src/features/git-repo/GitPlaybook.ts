@@ -1,4 +1,4 @@
-import { Disk, NullDisk } from "@/Db/Disk";
+import { Disk } from "@/Db/Disk";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
 import { IsoGitApiCallbackForRemoteAuth } from "@/Db/RemoteAuthAgent";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
@@ -6,6 +6,7 @@ import { GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
+import { NullDisk } from "@/Db/NullDisk";
 import { Remote } from "comlink";
 import * as git from "isomorphic-git";
 

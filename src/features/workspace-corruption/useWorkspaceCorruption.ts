@@ -1,4 +1,4 @@
-import { OpFsDirMountDisk } from "@/Db/Disk";
+import { OpFsDirMountDisk } from "@/Db/OPFsDirMountDisk";
 import { Workspace } from "@/Db/Workspace";
 import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
 import { ServiceUnavailableError } from "@/lib/errors";
