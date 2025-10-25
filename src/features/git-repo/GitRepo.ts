@@ -9,7 +9,8 @@ import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 
-import { CommonFileSystem } from "@/Db/CommonFileSystem";
+import { DiskFromJSON } from "@/Db/DiskFactory";
+import { CommonFileSystem } from "@/Db/FileSystemTypes";
 import { HideFs } from "@/Db/HideFs";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
@@ -632,7 +633,7 @@ export class GitRepo {
   }) {
     this.mutex = mutex || this.mutex;
     this.guid = guid;
-    this.disk = disk instanceof Disk ? disk : Disk.FromJSON(disk);
+    this.disk = disk instanceof Disk ? disk : DiskFromJSON(disk);
     this.dir = dir || this.dir;
     this.defaultMainBranch = defaultBranch || this.defaultMainBranch;
     this.author = author || this.author;
@@ -651,7 +652,7 @@ export class GitRepo {
   static FromJSON = (json: { guid: string; disk: Disk; dir: AbsPath; defaultBranch: string }): GitRepo => {
     return new GitRepo({
       guid: json.guid,
-      disk: Disk.FromJSON(json.disk),
+      disk: DiskFromJSON(json.disk),
       dir: json.dir,
       defaultBranch: json.defaultBranch,
     });
@@ -840,7 +841,7 @@ export class GitRepo {
       if (!RemoteAuth) {
         throw new NotFoundError("Remote auth not found");
       }
-      return { ...remote, RemoteAuth, onAuth: RemoteAuth?.toAgent()?.onAuth };
+      return { ...remote, RemoteAuth, onAuth: RemoteAuth.toAgent().onAuth };
     }
     return { ...remote, RemoteAuth: null };
   };

@@ -1,6 +1,6 @@
 import { ClientDb } from "@/Db/instance";
-import { RemoteAuthDAO, RemoteAuthJType } from "@/Db/RemoteAuth";
-import { Workspace } from "@/Db/Workspace";
+import { RemoteAuthDAO } from "@/Db/RemoteAuth";
+import { RemoteAuthJType } from "@/Db/RemoteAuthTypes";
 import { WorkspaceRecord } from "@/Db/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";
 import { AbsPath, isAncestor } from "@/lib/paths2";
@@ -8,6 +8,7 @@ import { slugifier } from "@/lib/slugifier";
 import { nanoid } from "nanoid";
 import { getUniqueSlug } from "../lib/getUniqueSlug";
 import { DiskDAO } from "./DiskDAO";
+import { DiskFromJSON } from "./DiskFactory";
 import { DiskJType, DiskType } from "./DiskType";
 import { WorkspaceStatusCode, WS_OK } from "./WorkspaceStatusCode";
 
@@ -213,21 +214,8 @@ export class WorkspaceDAO {
     return WorkspaceDAO.FromJSON(ws);
   }
 
-  static async ToModelFromGuid(guid: string) {
-    const workspaceDAO = await WorkspaceDAO.FetchFromGuid(guid);
-    return workspaceDAO.toModel();
-  }
-  toModel() {
-    return new Workspace(
-      {
-        ...this,
-        disk: this.disk.toModel(),
-        thumbs: this.thumbs.toModel(),
-        remoteAuths: this.remoteAuths,
-      },
-      this
-    );
-  }
+  // Moved ToModelFromGuid to Workspace.FromGuid() to avoid circular dependency
+  // Moved toModel() to Workspace.FromDAO() to avoid circular dependency
   rename(name: string) {
     return ClientDb.transaction("rw", ClientDb.workspaces, async () => {
       const all = await WorkspaceDAO.all();
@@ -245,13 +233,7 @@ export class WorkspaceDAO {
     return ClientDb.workspaces.delete(this.guid);
   }
 
-  static async FetchModelFromNameAndInit(name: string) {
-    const workspaceDAO = await WorkspaceDAO.FetchFromName(name);
-    return await workspaceDAO.toModel().init();
-  }
-  static async FetchModelFromName(name: string) {
-    return (await WorkspaceDAO.FetchFromName(name)).toModel();
-  }
+  // Moved FetchModelFromNameAndInit and FetchModelFromName to Workspace class to avoid circular dependency
 
   static async FetchFromRouteAndInit(route: string) {
     return await WorkspaceDAO.fetchFromRoute(route);

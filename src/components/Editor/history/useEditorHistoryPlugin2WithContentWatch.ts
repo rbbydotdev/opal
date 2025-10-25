@@ -2,7 +2,7 @@ import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory
 import { useWorkspaceDocumentId } from "@/components/Editor/history/useWorkspaceDocumentId";
 import { useFileContents } from "@/context/useFileContents";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { HistoryStorageInterface } from "@/Db/HistoryDAO";
+import { HistoryStorageInterface } from "@/Db/HistoryTypes";
 import { useEffect, useRef } from "react";
 export function useEditorHistoryPlugin2WithContentWatch({
   workspaceId,

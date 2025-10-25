@@ -215,7 +215,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       return;
     }
 
-    const workspace = WorkspaceDAO.FetchModelFromNameAndInit(workspaceName)
+    const workspace = Workspace.FromNameAndInit(workspaceName)
       .then((ws) => {
         setCurrentWorkspace(ws);
         clearError(); // Clear errors on successful load

@@ -2,6 +2,7 @@ import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useWorkspacePathPreviewURL } from "@/features/preview-pane/useWorkspacePathPreviewURL";
 import { useResource } from "@/hooks/useResource";
 import { Channel } from "@/lib/channel";
+import { sessionIdParam, workspacePathSessionId } from "@/lib/scrollSyncUtils";
 import { useSearch } from "@tanstack/react-router";
 import { nanoid } from "nanoid";
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef } from "react";
@@ -54,12 +55,6 @@ export class ScrollBroadcastChannel extends Channel<ScrollEventPayload> implemen
   }
 }
 
-export function sessionIdParam({ sessionId }: { sessionId: string }) {
-  const searchParams = new URLSearchParams();
-  searchParams.set("sessionId", sessionId);
-  return searchParams.toString();
-}
-
 export function useScrollChannelFromSearchParams() {
   const search = useSearch({ from: "__root__" }) as { sessionId?: string | null };
   const sessionId = search?.sessionId || null;
@@ -73,9 +68,6 @@ export function useScrollChannelFromSearchParams() {
   });
 }
 
-export function workspacePathSessionId({ workspaceId, filePath }: { workspaceId: string; filePath: string }): string {
-  return `${workspaceId}${filePath}`;
-}
 export function useWorkspacePathScrollChannel() {
   const { id: workspaceId, path: filePath } = useWorkspaceRoute();
   if (!workspaceId || !filePath) {

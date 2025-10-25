@@ -1,0 +1,1 @@
+export type ConnectionsModalMode = "add" | "edit" | "view";

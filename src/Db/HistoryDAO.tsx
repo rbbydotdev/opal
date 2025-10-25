@@ -1,58 +1,15 @@
 import { useIframeImagePooledImperitiveWorker } from "@/components/Editor/history/EditViewImage";
 import { useToggleHistoryImageGeneration } from "@/components/Editor/history/useToggleHistoryImageGeneration";
+import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryTypes";
 import { ClientDb } from "@/Db/instance";
 import { NullHistoryDAO } from "@/Db/NullHistoryDAO";
 import { useResource } from "@/hooks/useResource";
+
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
 import Emittery from "emittery";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
-export class HistoryDocRecord {
-  id: string;
-  change: string;
-  timestamp: number;
-  parent: number | null;
-  edit_id!: number;
-  preview: Blob | null;
-  workspaceId: string;
-
-  constructor(
-    workspaceId: string,
-    id: string,
-    change: string,
-    timestamp: number,
-    parent: number | null,
-    preview: Blob | null = null
-  ) {
-    this.workspaceId = workspaceId;
-    this.id = id;
-    this.change = change;
-    this.timestamp = timestamp;
-    this.parent = parent;
-    this.preview = preview;
-  }
-  static FromJSON(json: {
-    workspaceId: string;
-    id: string;
-    edit_id: number;
-    change: string;
-    timestamp: number;
-    parent: number | null;
-    preview?: Blob | null;
-  }) {
-    const hdr = new HistoryDocRecord(
-      json.workspaceId,
-      json.id,
-      json.change,
-      json.timestamp,
-      json.parent,
-      json.preview ?? null
-    );
-    hdr.edit_id = json.edit_id;
-    return hdr;
-  }
-}
 // --- Context and Provider for HistorySnapDB ---
 
 type HistorySnapDBContextType = HistoryStorageInterface | null;
@@ -262,7 +219,7 @@ export class HistoryDAO implements HistoryStorageInterface {
 
     const newDoc = new HistoryDocRecord(workspaceId, id, patch, Date.now(), latestEdit ? latestEdit.edit_id! : null);
     const resultId = await ClientDb.historyDocs.add(newDoc);
-    void this.emitter.emit("new_edit", HistoryDocRecord.FromJSON({ ...newDoc, edit_id: resultId! }));
+    void this.emitter.emit("new_edit", HistoryDocRecord.FromJSON({ ...newDoc, edit_id: Number(resultId!) }));
     return newDoc;
   }
 
@@ -340,22 +297,4 @@ export class HistoryDAO implements HistoryStorageInterface {
     const result = await ClientDb.historyDocs.where("id").equals(id).reverse().sortBy("timestamp");
     return result[0] ?? null;
   }
-}
-
-export interface HistoryStorageInterface {
-  clear(docId: string): void;
-  saveEdit(workspaceId: string, id: string, newText: string): Promise<HistoryDocRecord | null>;
-  reconstructDocument(edit_id: number): Promise<string | null>;
-  clearAllEdits(id: string): void;
-  reconstructDocumentFromEdit(edit: HistoryDocRecord): Promise<string | null>;
-  getEditByEditId(edit_id: number): Promise<HistoryDocRecord | null>;
-  getEdits(id: string): Promise<HistoryDocRecord[]>;
-  getLatestEdit(id: string): Promise<HistoryDocRecord | null>;
-  updatePreviewForEditId(edit_id: number, preview: Blob): Promise<void>;
-  onUpdate: (documentId: string, cb: (edits: HistoryDocRecord[]) => void) => () => void;
-  onNewEdit: (documentId: string, cb: (edit: HistoryDocRecord) => void) => () => void;
-  tearDown(): void;
-  getSaveThreshold(documentId: string, newText: string): Promise<number>;
-  ready?: Promise<boolean>;
-  init?(): () => void;
 }

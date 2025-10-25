@@ -1,7 +1,7 @@
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import Dexie from "dexie";
 import path from "path";
-import { CommonFileSystem } from "./CommonFileSystem";
+import { CommonFileSystem } from "./FileSystemTypes";
 
 interface FileSystemEntry {
   path: string;

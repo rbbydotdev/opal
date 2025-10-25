@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuth";
+import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuthTypes";
 import { Channel } from "@/lib/channel";
 
 export interface OAuthFlowResult {

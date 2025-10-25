@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuth";
+import { RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuthTypes";
 import {
   exchangeCodeForToken,
   generateCodeChallenge,

@@ -1,4 +1,4 @@
-import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryDAO";
+import { HistoryDocRecord, HistoryStorageInterface } from "@/Db/HistoryTypes";
 
 export class NullHistoryDAO implements HistoryStorageInterface {
   onNewEdit(documentId: string, cb: (edit: HistoryDocRecord) => void) {

@@ -4,7 +4,7 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuth";
+import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuthTypes";
 import { OAuthService, OAuthState } from "@/lib/auth/OAuthService";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Loader } from "lucide-react";

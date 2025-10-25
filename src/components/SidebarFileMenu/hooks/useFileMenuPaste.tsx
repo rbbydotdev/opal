@@ -27,7 +27,7 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
       currentWorkspace.id === sourceWorkspaceId
         ? currentWorkspace
         : await WorkspaceDAO.FetchByNameOrId(sourceWorkspaceId ?? currentWorkspace.id).then((ws) =>
-            ws.toModel().init()
+            Workspace.FromDAO(ws).init()
           );
 
     if (action && fileNodes) {

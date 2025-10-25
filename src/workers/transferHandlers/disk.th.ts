@@ -1,4 +1,5 @@
 import { Disk } from "@/Db/Disk";
+import { DiskFromJSON } from "@/Db/DiskFactory";
 import { DiskJType } from "@/Db/DiskType";
 import { transferHandlers } from "comlink";
 
@@ -11,6 +12,6 @@ transferHandlers.set("Disk", {
     ];
   },
   deserialize: (serialized: { value: DiskJType }) => {
-    return Disk.FromJSON(serialized.value);
+    return DiskFromJSON(serialized.value);
   },
 });

@@ -31,13 +31,13 @@ import { DiskType } from "./DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
+import { DiskFromJSON } from "@/Db/DiskFactory";
 import { OpFsDirMountDisk } from "@/Db/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/Db/WorkspaceStatusCode";
 import { DefaultTemplate } from "@/Db/WorkspaceTemplates";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
-import { DocxConvertType } from "@/workers/DocxWorker/docx.ww";
-import "@/workers/transferHandlers/workspace.th";
+import { DocxConvertType } from "@/types/DocxWorkerTypes";
 import * as Comlink from "comlink";
 import Emittery from "emittery";
 import mime from "mime-types";
@@ -129,7 +129,7 @@ export class Workspace {
 
   static async DeleteAll() {
     const workspaces = await WorkspaceDAO.all();
-    return Promise.all(workspaces.map((workspace) => workspace.toModel().destroy()));
+    return Promise.all(workspaces.map((workspace) => Workspace.FromDAO(workspace).destroy()));
   }
 
   get href() {
@@ -152,12 +152,39 @@ export class Workspace {
       {
         name: json.name,
         guid: json.guid,
-        disk: Disk.FromJSON(json.disk),
-        thumbs: Disk.FromJSON(json.thumbs),
+        disk: DiskFromJSON(json.disk),
+        thumbs: DiskFromJSON(json.thumbs),
         remoteAuths: json.remoteAuths.map((ra) => RemoteAuthDAO.FromJSON(ra)),
       },
       connector
     );
+  }
+
+  static FromDAO(dao: WorkspaceDAO) {
+    return new Workspace(
+      {
+        ...dao,
+        disk: DiskFromJSON(dao.disk),
+        thumbs: DiskFromJSON(dao.thumbs),
+        remoteAuths: dao.remoteAuths,
+      },
+      dao
+    );
+  }
+
+  static async FromGuid(guid: string) {
+    const workspaceDAO = await WorkspaceDAO.FetchFromGuid(guid);
+    return Workspace.FromDAO(workspaceDAO);
+  }
+
+  static async FromNameAndInit(name: string) {
+    const workspaceDAO = await WorkspaceDAO.FetchFromName(name);
+    return await Workspace.FromDAO(workspaceDAO).init();
+  }
+
+  static async FromName(name: string) {
+    const workspaceDAO = await WorkspaceDAO.FetchFromName(name);
+    return Workspace.FromDAO(workspaceDAO);
   }
 
   NewThumb(path: AbsPath, size = 100) {
@@ -216,10 +243,10 @@ export class Workspace {
       if (!diskOptions?.selectedDirectory) {
         throw new BadRequestError("selectedDirectory is required for OpFsDirMountDisk");
       }
-      const disk = workspaceDAO.disk.toModel() as OpFsDirMountDisk;
+      const disk = DiskFromJSON(workspaceDAO.disk) as OpFsDirMountDisk;
       await disk.setDirectoryHandle(diskOptions.selectedDirectory);
     }
-    workspace = workspaceDAO.toModel();
+    workspace = Workspace.FromDAO(workspaceDAO);
     await workspace.newFiles(
       Object.entries(files).map(([path, content]) => [
         absPath(path),

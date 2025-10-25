@@ -1,5 +1,5 @@
 import { HistoryPlugin2 } from "@/components/Editor/history/historyPlugin2";
-import { HistoryStorageInterface } from "@/Db/HistoryDAO";
+import { HistoryStorageInterface } from "@/Db/HistoryTypes";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

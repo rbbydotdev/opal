@@ -1,9 +1,9 @@
-import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { treeNodeDataTransfer } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
+import { INTERNAL_NODE_FILE_TYPE } from "@/types/FiletreeTypes";
 
 export const prepareNodeDataTransfer = <T extends MetaDataTransfer | DataTransfer>({
   dataTransfer,

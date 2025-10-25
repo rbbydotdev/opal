@@ -1,4 +1,4 @@
-import { RemoteAuthRecord } from "@/Db/RemoteAuth";
+import { RemoteAuthRecord } from "@/Db/RemoteAuthTypes";
 import { WorkspaceStatusCode } from "@/Db/WorkspaceStatusCode";
 import { DiskJType } from "./DiskType";
 
