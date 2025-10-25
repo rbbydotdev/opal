@@ -1,4 +1,4 @@
-import { Disk, OpFsDirMountDisk } from "@/Db/Disk";
+import { Disk } from "@/Db/Disk";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { ImageCache } from "@/Db/ImageCache";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
@@ -31,6 +31,7 @@ import { DiskType } from "./DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";
+import { OpFsDirMountDisk } from "@/Db/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/Db/WorkspaceStatusCode";
 import { DefaultTemplate } from "@/Db/WorkspaceTemplates";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
