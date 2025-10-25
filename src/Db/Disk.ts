@@ -2,14 +2,23 @@ import { CommonFileSystem, OPFSNamespacedFs } from "@/Db/CommonFileSystem";
 import { DexieFsDb } from "@/Db/DexieFsDb";
 import { DirectoryHandleStore } from "@/Db/DirectoryHandleStore";
 import { DiskDAO } from "@/Db/DiskDAO";
+import {
+  DiskEvents,
+  DiskEventsLocal,
+  DiskEventsRemote,
+  FilePathsType,
+  IndexTrigger,
+  RemoteRenameFileType,
+  RenameFileType,
+  SIGNAL_ONLY,
+} from "@/Db/DiskEvents";
+import { DiskMap } from "@/Db/DiskMap";
+import { DiskJType, DiskType } from "@/Db/DiskType";
 import { ClientDb } from "@/Db/instance";
 import { KVFileSystem, LocalStorageStore } from "@/Db/KVFs";
 import { MutexFs } from "@/Db/MutexFs";
-import { NamespacedFs, PatchedOPFS } from "@/Db/NamespacedFs";
+import { PatchedOPFS } from "@/Db/NamespacedFs";
 import { PatchedDirMountOPFS } from "@/Db/PatchedDirMountOPFS";
-import { UnwrapScannable } from "@/features/search/SearchScannable";
-import { BrowserAbility } from "@/lib/BrowserAbility";
-import { Channel } from "@/lib/channel";
 import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
@@ -25,12 +34,9 @@ import {
   incPath,
   joinPath,
   mkdirRecursive,
-  RelPath,
   relPath,
 } from "@/lib/paths2";
-import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
-import Emittery from "emittery";
 import { memfs } from "memfs";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 import { nanoid } from "nanoid";
@@ -38,190 +44,6 @@ import { TreeDir, TreeDirRootJType, TreeNode } from "../lib/FileTree/TreeNode";
 import { reduceLineage, stringifyEntry } from "../lib/paths2";
 import { RequestSignalsInstance } from "../lib/RequestSignals";
 
-// TODO: Lazy load modules based on disk
-
-// Utility type to make certain properties optional
-export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType | null };
-
-export const DiskKinds = [
-  "IndexedDbDisk",
-  "MemDisk",
-  "DexieFsDbDisk",
-  "NullDisk",
-  "OpFsDisk",
-  "OpFsDirMountDisk",
-  "ZenWebstorageFSDbDisk",
-  "LocalStorageFsDisk",
-] as const;
-
-export type DiskTypes = (typeof DiskKinds)[number];
-
-export const getDiskTypeLabel = (type: DiskTypes) => {
-  return DiskKindLabel[type] ?? "Unknown";
-};
-export const DiskKindLabel: Record<DiskType, string> = {
-  IndexedDbDisk: "IndexedDB",
-  MemDisk: "Memory",
-  DexieFsDbDisk: "Dexie FS",
-  NullDisk: "Null",
-  OpFsDisk: "OPFS",
-  OpFsDirMountDisk: "OPFS Dir Mount",
-  ZenWebstorageFSDbDisk: "Zen Webstorage FS Db",
-  LocalStorageFsDisk: "Local Storage FS",
-};
-
-export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk", "OpFsDirMountDisk"] as const;
-export const DiskLabelMap: Record<DiskType, string> = {
-  IndexedDbDisk: "IndexedDB (Recommended)",
-  LocalStorageFsDisk: "Local Storage FS",
-  MemDisk: "Memory",
-  DexieFsDbDisk: "DexieFS",
-  NullDisk: "Null",
-  OpFsDisk: "OPFS (origin private file system)",
-  OpFsDirMountDisk: "OPFS (mount to directory)",
-  ZenWebstorageFSDbDisk: "ZenWebstorageFSDb",
-};
-export const DiskCanUseMap: Record<DiskType, () => boolean> = {
-  MemDisk: () => true,
-  NullDisk: () => true,
-  LocalStorageFsDisk: () => BrowserAbility.canUseLocalStorage(),
-  IndexedDbDisk: () => BrowserAbility.canUseIndexedDB(), //typeof indexedDB !== "undefined",
-  DexieFsDbDisk: () => false, //typeof DexieFsDb !== "undefined",
-  OpFsDisk: () => BrowserAbility.canUseOPFS(),
-  OpFsDirMountDisk: () => BrowserAbility.canUseOPFS() && "showDirectoryPicker" in window,
-  ZenWebstorageFSDbDisk: () => false, // typeof ZenWebstorageFSDb !== "undefined",
-};
-
-export type DiskType = (typeof DiskKinds)[number];
-
-export class RenameFileType {
-  oldPath: AbsPath;
-  oldName: RelPath;
-  newPath: AbsPath;
-  newName: RelPath;
-  fileType: "file" | "dir";
-
-  constructor({
-    oldPath,
-    oldName,
-    newPath,
-    newName,
-    fileType,
-  }: {
-    oldPath: string | AbsPath;
-    oldName: string | RelPath;
-    newPath: string | AbsPath;
-    newName: string | RelPath;
-    fileType: "file" | "dir";
-  }) {
-    this.oldPath = typeof oldPath === "string" ? absPath(oldPath) : oldPath;
-    this.oldName = typeof oldName === "string" ? relPath(oldName) : oldName;
-    this.newPath = typeof newPath === "string" ? absPath(newPath) : newPath;
-    this.newName = typeof newName === "string" ? relPath(newName) : newName;
-    this.fileType = fileType;
-  }
-  toJSON() {
-    return {
-      oldPath: this.oldPath,
-      oldName: this.oldName,
-      newPath: this.newPath,
-      newName: this.newName,
-      fileType: this.fileType,
-    };
-  }
-  static New(properties: RemoteRenameFileType): RenameFileType {
-    return new RenameFileType(properties);
-  }
-}
-
-export type RemoteRenameFileType = {
-  oldPath: AbsPath;
-  oldName: RelPath;
-  newPath: AbsPath;
-  newName: RelPath;
-  fileType: "file" | "dir";
-};
-
-export type FilePathsType = {
-  filePaths: AbsPath[];
-};
-
-export type CreateDetails = FilePathsType;
-export type DeleteDetails = FilePathsType;
-export type RenameDetails = RemoteRenameFileType;
-
-export type IndexTrigger =
-  | {
-      type: "create";
-      details: CreateDetails;
-    }
-  | {
-      type: "rename";
-      details: RenameDetails[];
-    }
-  | {
-      type: "delete";
-      details: DeleteDetails;
-    };
-
-export type ListenerCallback<T extends "create" | "rename" | "delete"> = Parameters<Disk[`${T}Listener`]>[0];
-
-export type DiskRemoteEventPayload = {
-  // [DiskEvents.RENAME]: RemoteRenameFileType[];
-  [DiskEvents.INDEX]: IndexTrigger | undefined;
-  //for remotes or 'processes'(img node src replace on file move etc)
-  //that write 'outside' not intended for local writes done via the editor
-  //may be used to indicate to the editor to update
-  [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
-  //intended for hot writes, when the editor is writing to disk
-  //therefore inside writes should never do anything which impacts the editor
-  [DiskEvents.INSIDE_WRITE]: FilePathsType;
-};
-
-export function isFilePathsPayload(
-  payload: DiskRemoteEventPayload[keyof DiskRemoteEventPayload]
-): payload is FilePathsType {
-  return typeof payload === "object" && payload !== null && "filePaths" in payload;
-}
-
-export class DiskEventsRemote extends Channel<DiskRemoteEventPayload> {}
-
-export const SIGNAL_ONLY = undefined;
-export const DiskEvents = {
-  INSIDE_WRITE: "inside-write" as const, //for writes done by the editor or local process
-  //outside write will return contents for the watched file
-  OUTSIDE_WRITE: "outside-write" as const,
-  //outside update will return filepath only, not contents, "*" is possible
-  // OUTSIDE_UPDATE: "outside-update" as const,
-  INDEX: "index" as const,
-  RENAME: "rename" as const,
-  CREATE: "create" as const,
-  DELETE: "delete" as const,
-};
-
-type DiskLocalEventPayload = {
-  // [DiskEvents.RENAME]: RenameFileType[];
-  [DiskEvents.INDEX]: IndexTrigger | undefined;
-  // [DiskEvents.OUTSIDE_UPDATE]: FilePathsType;
-  [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
-  [DiskEvents.INSIDE_WRITE]: FilePathsType;
-};
-export class DiskEventsLocal extends Emittery<DiskLocalEventPayload> {}
-
-// export type DiskScanTextSearchResultType = { path: AbsPath; text: string };
-
-export type DiskScanResult = UnwrapScannable<Disk>;
-
-/*
-
-TODO add mount dirs to disk
-
-Give disk a mount map 
-
-mounts = Record<AbsPath, Disk>
-
-
-*/
 export abstract class Disk {
   static defaultDiskType: DiskType = "IndexedDbDisk";
 
@@ -229,7 +51,7 @@ export abstract class Disk {
   local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
-  private origFs: CommonFileSystem | null = null;
+  // private origFs: CommonFileSystem | null = null;
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
 
@@ -249,30 +71,6 @@ export abstract class Disk {
 
   static FromJSON(json: DiskJType, fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs): Disk {
     return Disk.From({ guid: json.guid, type: json.type, indexCache: json.indexCache }, fsTransform);
-  }
-
-  NamespaceReset() {
-    if (this.origFs) {
-      Object.defineProperty(this, "fs", {
-        get: () => {
-          return this.origFs;
-        },
-        configurable: true, // important if you want to redefine later
-      });
-      this.origFs = null;
-    }
-  }
-  Namespace(namespace: AbsPath | string) {
-    if (!this.origFs) {
-      this.origFs = this.fs;
-    }
-    const newFs = new NamespacedFs(this.origFs, namespace);
-    Object.defineProperty(this, "fs", {
-      get: () => {
-        return newFs;
-      },
-      configurable: true, // important if you want to redefine later
-    });
   }
 
   initialIndexFromCache(cache: TreeNodeDirJType) {
@@ -396,15 +194,6 @@ export abstract class Disk {
     { guid, type, indexCache }: DiskJType,
     fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
   ): Disk {
-    const DiskMap = {
-      [IndexedDbDisk.type]: IndexedDbDisk,
-      [MemDisk.type]: MemDisk,
-      [DexieFsDbDisk.type]: DexieFsDbDisk,
-      [NullDisk.type]: NullDisk,
-      [OpFsDisk.type]: OpFsDisk,
-      [OpFsDirMountDisk.type]: OpFsDirMountDisk,
-      [LocalStorageFsDisk.type]: LocalStorageFsDisk,
-    };
     if (!DiskMap[type]) throw new Error("invalid disk type " + type);
     const DiskConstructor = DiskMap[type] satisfies {
       new (guid: string): Disk; //TODO interface somewhere?
@@ -511,17 +300,8 @@ export abstract class Disk {
 
   writeIndexListener(callback: () => void) {
     return this.local.on([DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], callback);
-    // const unsubs: (() => void)[] = [];
-    // return () => unsubs.forEach((unsub) => unsub());
   }
 
-  // outsideUpdateListener(watchFilePath: AbsPath | "*", fn: (filePaths: AbsPath[]) => void): () => void {
-  //   return this.local.on(DiskEvents.OUTSIDE_UPDATE, async ({ filePaths }) => {
-  //     if (filePaths.includes(watchFilePath) || watchFilePath === "*") {
-  //       fn(filePaths);
-  //     }
-  //   });
-  // }
   outsideWriteListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
     return this.local.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
       if (filePaths.includes(watchFilePath)) {
@@ -539,14 +319,6 @@ export abstract class Disk {
   dirtyListener(cb: (trigger: FilePathsType | IndexTrigger | undefined) => void) {
     return this.local.on([DiskEvents.INSIDE_WRITE, DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], cb);
   }
-
-  // remoteUpdateListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-  //   return this.remote.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
-  //     if (filePaths.includes(watchFilePath)) {
-  //       fn(String(await this.readFile(absPath(watchFilePath))));
-  //     }
-  //   });
-  // }
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
     if (nodes.length === 0) return [];
@@ -1068,27 +840,6 @@ export class LocalStorageFsDisk extends Disk {
   }
 }
 
-export class IndexedDbDisk extends Disk {
-  static type: DiskType = "IndexedDbDisk";
-  type = IndexedDbDisk.type;
-  constructor(
-    public readonly guid: string,
-    indexCache?: TreeDirRootJType,
-    fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
-  ) {
-    const mutex = new Mutex();
-    const lightningFs = new LightningFs();
-    const fs = fsTransform(lightningFs.promises);
-    const mutexFs = new MutexFs(fs, mutex);
-    const ft = indexCache
-      ? FileTree.FromJSON(indexCache, RequestSignalsInstance.watchPromiseMembers(fs), guid, mutex)
-      : new FileTree(RequestSignalsInstance.watchPromiseMembers(fs), guid, mutex);
-
-    super(guid, mutexFs, ft, DiskDAO.New(IndexedDbDisk.type, guid, indexCache));
-    this.ready = lightningFs.init(guid) as unknown as Promise<void>;
-  }
-}
-
 export class MemDisk extends Disk {
   static type: DiskType = "MemDisk";
   type = MemDisk.type;
@@ -1181,60 +932,28 @@ export class OpFsDirMountDisk extends Disk {
 
   async setDirectoryHandle(handle: FileSystemDirectoryHandle, skipStorage = false): Promise<void> {
     const previousHandle = this.directoryHandle;
-    // console.log("🔧 Setting directory handle for disk:", this.guid);
-    // console.log("🔧 Previous handle:", previousHandle?.name || "none");
-    // console.log("🔧 New handle:", handle.name);
-    // console.log("🔧 Skip storage:", skipStorage);
-
     this.directoryHandle = handle;
-
-    // Only store if this is a new selection or the directory name changed
     const shouldStore = !skipStorage && (!previousHandle || previousHandle.name !== handle.name);
-    // console.log("🔍 Storage decision:", {
-    //   skipStorage,
-    //   hasPreviousHandle: !!previousHandle,
-    //   previousName: previousHandle?.name,
-    //   newName: handle.name,
-    //   shouldStore,
-    // });
-
-    if (shouldStore) {
-      // console.log("💾 Storing handle to IndexedDB...");
-      await DirectoryHandleStore.storeHandle(this.guid, handle);
-      // console.log("💾 Handle stored successfully");
-    } else {
-      // console.log("⏭️ Skipping storage - no change needed");
-    }
-
-    // Create new filesystem using the directory handle with our patched implementation
-    // console.log("🔧 Creating new filesystem...");
+    if (shouldStore) await DirectoryHandleStore.storeHandle(this.guid, handle);
     const patchedDirMountOPFS = this.fsTransform(
       new PatchedDirMountOPFS(Promise.resolve(handle) as unknown as Promise<IFileSystemDirectoryHandle>)
     );
     const mutex = new Mutex();
     const mutexFs = new MutexFs(patchedDirMountOPFS, mutex);
     const ft = new FileTree(patchedDirMountOPFS, this.guid, mutex);
-
-    // Replace the filesystem and file tree
     (this as any).fs = mutexFs;
     (this as any).fileTree = ft;
-    // console.log("✅ Filesystem and file tree replaced");
   }
 
   async selectDirectory(): Promise<FileSystemDirectoryHandle> {
     if (!("showDirectoryPicker" in window)) {
       throw new Error("Directory picker not supported in this browser");
     }
-
-    // console.log("📁 Opening directory picker...");
     const handle = await (window as any).showDirectoryPicker({
       mode: "readwrite",
       startIn: "documents",
     });
-
-    // console.log("📁 User selected directory:", handle.name, "for disk:", this.guid);
     await this.setDirectoryHandle(handle);
-    // console.log("✅ Directory handle set successfully");
     return handle;
   }
 

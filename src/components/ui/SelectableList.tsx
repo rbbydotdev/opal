@@ -105,7 +105,9 @@ export function SelectableList({
             )}
 
             {items.length === 0 ? (
-              <div className="text-xs text-muted-foreground text-center py-4">{emptyMessage}</div>
+              <div className="text-2xs italic text-muted-foreground text-center p-1 border-dashed border">
+                {emptyMessage}
+              </div>
             ) : (
               <ScrollArea className="w-full" style={{ maxHeight }}>
                 <div className="space-y-1">

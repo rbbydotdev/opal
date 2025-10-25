@@ -1,4 +1,5 @@
-import { Disk, DiskJType } from "@/Db/Disk";
+import { Disk } from "@/Db/Disk";
+import { DiskJType } from "@/Db/DiskType";
 import { transferHandlers } from "comlink";
 
 transferHandlers.set("Disk", {

@@ -1,13 +1,4 @@
-import {
-  CreateDetails,
-  DeleteDetails,
-  Disk,
-  DiskEvents,
-  DiskType,
-  IndexTrigger,
-  OpFsDirMountDisk,
-  RenameDetails,
-} from "@/Db/Disk";
+import { Disk, OpFsDirMountDisk } from "@/Db/Disk";
 import { HistoryDAO } from "@/Db/HistoryDAO";
 import { ImageCache } from "@/Db/ImageCache";
 import { RemoteAuthDAO } from "@/Db/RemoteAuth";
@@ -35,6 +26,8 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
+import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "./DiskEvents";
+import { DiskType } from "./DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/Db/ConcurrentWorkers";

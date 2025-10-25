@@ -26,9 +26,10 @@ export function SidebarFileMenuBuild({
   const handlePublishToHTML = async () => {
     try {
       const sourceDisk = currentWorkspace.getDisk();
+      // throw new Error("SET BUILD DISK!!!!!!!!!!!!!!!!!!!!!");
       const _result = await openBuildModal({
         sourceDisk,
-        outputDisk: sourceDisk, // Use same disk for now
+        outputDisk: sourceDisk, // Use same disk for now // TODO: BUILD DISK >>>>>>>>>>>>>>>>>>>>>>>>>>
         onComplete: async (buildDao) => {
           console.log("Build completed successfully:", buildDao?.guid);
           // Refresh the builds list to show the new build

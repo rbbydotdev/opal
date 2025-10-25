@@ -1,5 +1,5 @@
-import { DiskType } from "@/Db/Disk";
 import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
+import { DiskType } from "./DiskType";
 
 export class DiskRecord {
   guid!: string;
