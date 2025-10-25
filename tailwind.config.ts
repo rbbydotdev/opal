@@ -1,7 +1,7 @@
 import tailwindProse from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
+import tailwindAnimate from "tailwindcss-animate";
 import plugin from "tailwindcss/plugin";
-
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,mdx}"],
@@ -186,6 +186,6 @@ export default {
     }),
 
     tailwindProse,
-    require("tailwindcss-animate"),
+    tailwindAnimate,
   ],
 } satisfies Config;

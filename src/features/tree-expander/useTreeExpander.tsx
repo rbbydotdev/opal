@@ -1,14 +1,24 @@
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { TreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
-import { ExpandMap, TreeExpanderValue } from "@/features/tree-expander/TreeExpanderTypes";
+import { ExpandMap } from "@/features/tree-expander/TreeExpanderTypes";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, isAncestor } from "@/lib/paths2";
-import { useContext, useEffect, useState } from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 
 function expandForFile(dirTree: string[], file: AbsPath | string | null, exp: ExpandMap) {
   if (!file) return exp;
   dirTree.filter((dir) => isAncestor({ child: file, parent: dir })).forEach((d) => (exp[d] = true));
   return exp;
+}
+
+export function TreeExpanderProvider({ children, id }: { children: ReactNode; id: string }) {
+  const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
+  const expanderId = currentWorkspace.id + "/" + id;
+
+  // Import the hook dynamically to avoid circular dependency
+  const value = useTreeExpander({ nodePaths: flatTree, activePath: workspaceRoute.path, expanderId });
+  return <TreeExpanderContext.Provider value={value}>{children}</TreeExpanderContext.Provider>;
 }
 
 export function useTreeExpanderContext() {
