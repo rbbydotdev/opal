@@ -11,6 +11,7 @@ import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-secti
 import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FilterInSpecialDirs } from "@/Db/SpecialDirs";
+import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { IS_MAC } from "@/lib/isMac";
 import { Slot } from "@radix-ui/react-slot";
@@ -19,7 +20,6 @@ import React from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceContext } from "../../context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "../../features/filetree-drag-and-drop/useFileTreeDragDrop";
-import { TreeExpanderProvider } from "../../features/tree-expander/TreeExpanderContext";
 import useLocalStorage2 from "../../hooks/useLocalStorage2";
 import { capitalizeFirst } from "../../lib/capitalizeFirst";
 import { FileTreeMenuCtxProvider } from "../FileTreeMenuCtxProvider";

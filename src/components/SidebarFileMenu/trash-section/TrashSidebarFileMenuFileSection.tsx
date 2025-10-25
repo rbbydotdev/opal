@@ -4,7 +4,7 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/Db/SpecialDirs";
-import { TreeExpanderProvider } from "@/features/tree-expander/TreeExpanderContext";
+import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { Delete, Trash2 } from "lucide-react";
 import { useSyncExternalStore } from "react";
