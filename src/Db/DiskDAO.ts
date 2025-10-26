@@ -72,4 +72,7 @@ export class DiskDAO {
   delete() {
     return ClientDb.disks.delete(this.guid);
   }
+  static delete(guid: string) {
+    return ClientDb.disks.delete(guid);
+  }
 }

@@ -31,7 +31,7 @@ const defaultWorkspaceContext = {
     repo: new NullRepo() as GitRepo,
     playbook: new NullGitPlaybook() as GitPlaybook,
   },
-  workspaceRoute: { id: null, path: null } as WorkspaceRouteType,
+  workspaceRoute: { name: null, path: null } as WorkspaceRouteType,
 };
 
 export type DeepNonNullable<T extends object, K extends keyof T = never> = {
@@ -45,7 +45,7 @@ export type WorkspaceContextType = typeof defaultWorkspaceContext;
 
 export const WorkspaceContext = React.createContext<WorkspaceContextType>(defaultWorkspaceContext);
 
-export type WorkspaceRouteType = { id: string | null; path: AbsPath | null };
+export type WorkspaceRouteType = { name: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 
@@ -118,18 +118,18 @@ export function useWorkspaceRoute() {
     useMemo(() => {
       if (!location.pathname)
         return {
-          id: null,
+          name: null,
           path: null,
         };
       const { workspaceName, filePath } = Workspace.parseWorkspacePath(location.pathname);
       if (workspaceName && workspaceName !== "new") {
         return {
-          id: workspaceName ?? null,
+          name: workspaceName ?? null,
           path: filePath ?? null,
         };
       }
     }, [location.pathname]) ?? {
-      id: null,
+      name: null,
       path: null,
     }
   );

@@ -227,10 +227,7 @@ export class GitRepo {
 
   get fs() {
     if (this.hideFs) return this.hideFs;
-    return (this.hideFs = new HideFs(this.disk.fs, [
-      ...SpecialDirs.allSpecialDirsExcept(this.gitDir),
-      // absPath("/hidden"),
-    ]));
+    return (this.hideFs = new HideFs(this.disk.fs, [...SpecialDirs.allSpecialDirsExcept(this.gitDir)]));
   }
 
   get gitDir() {

@@ -1,4 +1,5 @@
 import { BuildRecord } from "@/Db/BuildRecord";
+import { DiskDAO } from "@/Db/DiskDAO";
 import { ClientDb } from "@/Db/instance";
 import { nanoid } from "nanoid";
 
@@ -9,7 +10,7 @@ export class BuildDAO {
   label: string;
   timestamp: Date;
   diskId: string;
-  
+
   static guid = () => "__build__" + nanoid();
 
   constructor(build: BuildRecord) {
@@ -79,7 +80,10 @@ export class BuildDAO {
     });
   }
 
-  delete() {
-    return ClientDb.builds.delete(this.guid);
+  async delete() {
+    return Promise.all([DiskDAO.delete(this.diskId), BuildDAO.delete(this.guid)]);
+  }
+  static delete(guid: string) {
+    return ClientDb.builds.delete(guid);
   }
 }

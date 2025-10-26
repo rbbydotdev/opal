@@ -12,6 +12,10 @@ export function useBuildLogs() {
   const addLog = useCallback((message: string, type: "info" | "error" = "info") => {
     setLogs((prev) => [...prev, { timestamp: new Date(), message, type }]);
   }, []);
+  const log = addLog; // alias
+  const errorLog = useCallback((message: string) => {
+    setLogs((prev) => [...prev, { timestamp: new Date(), message, type: "error" }]);
+  }, []);
 
   const clearLogs = useCallback(() => {
     setLogs([]);
@@ -28,6 +32,8 @@ export function useBuildLogs() {
 
   return {
     logs,
+    log,
+    errorLog,
     addLog,
     clearLogs,
     formatTimestamp,

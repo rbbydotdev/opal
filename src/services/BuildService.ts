@@ -1,17 +1,22 @@
-import { Builder, BuildStrategy } from "@/builder/builder";
+import { BuildStrategy, PageData } from "@/builder/builder-types";
 import { BuildDAO } from "@/Db/BuildDAO";
 import { Disk } from "@/Db/Disk";
-import { HideFs } from "@/Db/HideFs";
-import { SpecialDirs } from "@/Db/SpecialDirs";
-import { absPath } from "@/lib/paths2";
+import { NullDisk } from "@/Db/NullDisk";
+import { Workspace } from "@/Db/Workspace";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
+import { getMimeType } from "@zip.js/zip.js";
+import matter from "gray-matter";
+import { marked } from "marked";
+import mustache from "mustache";
+import slugify from "slugify";
 
 export interface BuildServiceOptions {
   strategy: BuildStrategy;
-  sourceDisk: Disk;
-  outputDisk: Disk;
+  workspaceId: string;
+  abortSignal?: AbortSignal;
   onLog?: (message: string) => void;
   onError?: (message: string) => void;
-  abortSignal?: AbortSignal;
 }
 
 export interface BuildResult {
@@ -21,76 +26,75 @@ export interface BuildResult {
 }
 
 export class BuildService {
-  private originalFs: any = null;
-  private sourceDisk: Disk | null = null;
+  onLog: (message: string) => void;
+  onError: (message: string) => void;
+  sourceDisk: Disk = new NullDisk();
+  outputDisk: Disk = new NullDisk();
+  outputPath: AbsPath;
+  sourcePath: AbsPath;
+  workspaceName: string;
+  strategy: BuildStrategy;
 
-  async executeBuild(options: BuildServiceOptions): Promise<BuildResult> {
-    const {
-      strategy,
-      sourceDisk,
-      outputDisk, // = options.sourceDisk,
-      onLog = () => {},
-      onError = () => {},
-      abortSignal,
-    } = options;
+  get fileTree() {
+    return this.sourceDisk.fileTree;
+  }
 
+  constructor({
+    onLog,
+    onError,
+    outputPath = absPath("/"),
+    sourcePath = absPath("/"),
+    workspaceName,
+    strategy,
+  }: {
+    onLog: (message: string) => void;
+    onError: (message: string) => void;
+    workspaceName: string;
+    outputPath?: AbsPath;
+    sourcePath?: AbsPath;
+    strategy: BuildStrategy;
+  }) {
+    this.onLog = onLog;
+    this.onError = onError;
+    this.outputPath = outputPath;
+    this.sourcePath = sourcePath;
+    this.workspaceName = workspaceName;
+    this.strategy = strategy;
+  }
+  tearDown() {
+    // Clean up resources if needed
+  }
+  async executeBuild({ strategy, abortSignal }: BuildServiceOptions): Promise<BuildResult> {
     try {
-      onLog(`Starting ${strategy} build...`);
-      onLog("Filtering out special directories");
-
-      await this.setupFilteredFileSystem(sourceDisk);
+      this.onLog(`Starting ${strategy} build...`);
+      this.onLog("Filtering out special directories");
 
       if (abortSignal?.aborted) {
-        onError("Build cancelled");
+        this.onError("Build cancelled");
         return { success: false, error: "Build cancelled" };
       }
 
-      const builder = new Builder({
-        strategy,
-        sourceDisk,
-        outputDisk,
-        sourcePath: absPath("/"),
-        outputPath: absPath("/"),
-        onLog: (message) => onLog(message),
-        onError: (message) => onError(message),
-      });
-
-      await builder.build();
+      await this.build();
 
       if (abortSignal?.aborted) {
-        onError("Build cancelled");
+        this.onError("Build cancelled");
         return { success: false, error: "Build cancelled" };
       }
 
-      onLog("Build completed successfully!");
+      this.onLog("Build completed successfully!");
 
-      const buildDao = await this.createBuildRecord(strategy, sourceDisk);
-      onLog(`Build saved with ID: ${buildDao.guid}`);
+      const buildDao = await this.createBuildRecord(strategy, this.sourceDisk);
+      this.onLog(`Build saved with ID: ${buildDao.guid}`);
 
       return { success: true, buildDao };
     } catch (error) {
       if (!abortSignal?.aborted) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        onError?.(`Build failed: ${errorMessage}`);
+        this.onError(`Build failed: ${errorMessage}`);
         return { success: false, error: errorMessage };
       }
       return { success: false, error: "Build cancelled" };
-    } finally {
-      this.restoreOriginalFileSystem();
     }
-  }
-
-  private async setupFilteredFileSystem(sourceDisk: Disk): Promise<void> {
-    const hiddenPaths = [...SpecialDirs.All];
-    const hideFs = new HideFs((sourceDisk as any).fs, hiddenPaths);
-
-    this.originalFs = (sourceDisk as any).fs;
-    this.sourceDisk = sourceDisk;
-
-    Object.defineProperty(sourceDisk, "fs", {
-      get: () => hideFs,
-      configurable: true,
-    });
   }
 
   private async createBuildRecord(strategy: BuildStrategy, sourceDisk: Disk): Promise<BuildDAO> {
@@ -100,18 +104,394 @@ export class BuildService {
     return buildDao;
   }
 
-  private restoreOriginalFileSystem(): void {
-    if (this.originalFs && this.sourceDisk) {
-      Object.defineProperty(this.sourceDisk, "fs", {
-        get: () => this.originalFs,
-        configurable: true,
-      });
-      this.originalFs = null;
-      this.sourceDisk = null;
+  async build(): Promise<void> {
+    let currentWorkspace: Workspace | null = null;
+    try {
+      this.onLog("Starting build process...");
+      this.onLog("Loading workspace...");
+      currentWorkspace = await Workspace.FromNameAndInit(this.workspaceName);
+      if (!currentWorkspace) {
+        throw new Error("Workspace not found");
+      }
+      const sourceDisk = currentWorkspace.getDisk();
+      this.onLog(`Using source disk: ${sourceDisk.guid}`);
+      this.onLog("Building file tree...");
+
+      // Index the source directory
+      this.onLog("Indexing source files...");
+      // await this.sourceTree.index();
+      await this.sourceDisk.triggerIndex();
+      this.sourceDisk.fileTree;
+
+      await this.ensureOutputDirectory();
+
+      switch (this.strategy) {
+        case "freeform":
+          await this.buildFreeform();
+          break;
+        case "book":
+          await this.buildBook();
+          break;
+        case "blog":
+          await this.buildBlog();
+          break;
+        default:
+          throw new Error(`Unknown build strategy: ${this.strategy}`);
+      }
+
+      this.onLog("Build completed successfully!");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      this.onError(`Build failed: ${errorMessage}`);
+      throw err;
+    } finally {
+      if (currentWorkspace) {
+        await currentWorkspace.tearDown();
+      }
     }
   }
 
-  cancelBuild(): void {
-    this.restoreOriginalFileSystem();
+  private async ensureOutputDirectory(): Promise<void> {
+    this.onLog("Creating output directory...");
+    await this.outputDisk.mkdirRecursive(this.outputPath);
+  }
+
+  private async buildFreeform(): Promise<void> {
+    this.onLog("Building with freeform strategy...");
+
+    await this.copyAssets();
+    await this.processTemplatesAndMarkdown();
+  }
+
+  private async buildBook(): Promise<void> {
+    this.onLog("Building with book strategy...");
+
+    await this.copyAssets();
+
+    const pages = await this.loadPagesFromDirectory(relPath("_pages"));
+
+    if (pages.length === 0) {
+      throw new Error("No pages found in _pages directory for book strategy");
+    }
+
+    const tableOfContents = this.generateTableOfContents(pages);
+    const combinedContent = pages.map((page) => page.htmlContent).join('\n<div class="page-break"></div>\n');
+
+    const bookLayout = await this.loadTemplate(relPath("book.mustache"));
+    const globalCss = await this.getGlobalCss();
+    const bookHtml = mustache.render(bookLayout, {
+      tableOfContents,
+      content: combinedContent,
+      globalCss,
+    });
+
+    const indexPath = joinPath(this.outputPath, relPath("index.html"));
+    await this.outputDisk.writeFile(indexPath, bookHtml);
+    this.onLog("Book page generated");
+  }
+
+  private async buildBlog(): Promise<void> {
+    this.onLog("Building with blog strategy...");
+
+    await this.copyAssets();
+
+    const posts = await this.loadPostsFromDirectory(relPath("posts"));
+
+    await this.generateBlogIndex(posts);
+    await this.generateBlogPosts(posts);
+  }
+
+  private async copyAssets(): Promise<void> {
+    this.onLog("Copying assets...");
+
+    // Copy all files except templates, markdown, and files in _ directories
+    for (const node of this.fileTree.files()) {
+      if (this.shouldCopyAsset(node)) {
+        await this.copyFileToOutput(node);
+      }
+    }
+  }
+
+  private async processTemplatesAndMarkdown(): Promise<void> {
+    this.onLog("Processing templates and markdown...");
+
+    for (const node of this.fileTree.files()) {
+      if (this.shouldIgnoreFile(node)) continue;
+
+      if (this.isTemplateFile(node)) {
+        await this.processTemplate(node);
+      } else if (this.isMarkdownFile(node)) {
+        await this.processMarkdown(node);
+      }
+    }
+  }
+
+  shouldCopyAsset(node: TreeNode): boolean {
+    const path = relPath(node.path);
+    return !path.startsWith("_") && !this.isTemplateFile(node) && !this.isMarkdownFile(node);
+  }
+
+  shouldIgnoreFile(node: TreeNode): boolean {
+    const path = relPath(node.path);
+    return path.startsWith("_");
+  }
+
+  isTemplateFile(node: TreeNode): boolean {
+    return this.getTemplateType(node.path) !== null;
+  }
+
+  getTemplateType(filePath: string): "mustache" | "ejs" | null {
+    const mime = getMimeType(filePath);
+    if (mime === "text/x-mustache") return "mustache";
+    if (mime === "text/x-ejs") return "ejs";
+    return null;
+  }
+
+  isMarkdownFile(node: TreeNode): boolean {
+    return extname(node.path) === ".md";
+  }
+
+  async copyFileToOutput(node: TreeNode): Promise<void> {
+    const relativePath = relPath(node.path);
+    const outputPath = joinPath(this.outputPath, relativePath);
+
+    // Ensure output directory exists
+    await this.ensureDirectoryExists(dirname(outputPath));
+
+    const content = await this.sourceDisk.readFile(node.path);
+    await this.outputDisk.writeFile(outputPath, content);
+
+    this.onLog(`Copied asset: ${relativePath}`);
+  }
+
+  async processTemplate(node: TreeNode): Promise<void> {
+    const content = String(await this.sourceDisk.readFile(node.path));
+    const relativePath = relPath(node.path);
+    const outputPath = this.getOutputPathForTemplate(relativePath);
+
+    await this.ensureDirectoryExists(dirname(outputPath));
+
+    const globalCss = await this.getGlobalCss();
+    const html = mustache.render(content, { globalCss });
+
+    await this.outputDisk.writeFile(outputPath, html);
+    this.onLog(`Template processed: ${relativePath}`);
+  }
+
+  async processMarkdown(node: TreeNode): Promise<void> {
+    const content = String(await this.sourceDisk.readFile(node.path));
+    const { data: frontMatter, content: markdownContent } = matter(content);
+    const layout = !frontMatter.layout
+      ? DefaultPageLayout
+      : await this.loadTemplate(relPath(`_layouts/${frontMatter.layout}.mustache`));
+    const htmlContent = await marked(markdownContent);
+    const additionalStyles = await this.getAdditionalStyles(frontMatter.styles || []);
+    const globalCss = await this.getGlobalCss();
+
+    const html = mustache.render(layout, {
+      content: htmlContent,
+      title: frontMatter.title,
+      globalCss,
+      additionalStyles,
+      ...frontMatter,
+    });
+
+    const relativePath = relPath(node.path);
+    const outputPath = this.getOutputPathForMarkdown(relativePath);
+    await this.ensureDirectoryExists(dirname(outputPath));
+    await this.outputDisk.writeFile(outputPath, html);
+
+    this.onLog(`Markdown processed: ${relativePath}`);
+  }
+
+  async loadPagesFromDirectory(dirPath: RelPath): Promise<PageData[]> {
+    const pages: PageData[] = [];
+    const fullDirPath = joinPath(this.sourcePath, dirPath);
+
+    // Use FileTree to find all markdown files in the directory
+    for (const node of this.sourceDisk.fileTree.files()) {
+      if (node.path.startsWith(fullDirPath) && this.isMarkdownFile(node)) {
+        const content = String(await this.sourceDisk.readFile(node.path));
+        const { data: frontMatter, content: markdownContent } = matter(content);
+        const htmlContent = await marked(markdownContent);
+
+        pages.push({
+          path: relPath(node.path.replace(fullDirPath + "/", "")),
+          content: markdownContent,
+          frontMatter,
+          htmlContent,
+          node,
+        });
+      }
+    }
+
+    return this.sortPagesByPrefix(pages);
+  }
+
+  async loadPostsFromDirectory(dirPath: RelPath): Promise<PageData[]> {
+    const posts = await this.loadPagesFromDirectory(dirPath);
+    return this.sortPostsByDate(posts);
+  }
+
+  generateTableOfContents(pages: PageData[]): string {
+    const tocItems = pages.map((page) => {
+      const title = page.frontMatter.title || basename(page.path).replace(".md", "");
+      const slug = slugify(title, { lower: true, strict: true });
+      return `<li><a href="#${slug}">${title}</a></li>`;
+    });
+
+    return `<ul class="table-of-contents">${tocItems.join("\n")}</ul>`;
+  }
+
+  async generateBlogIndex(posts: PageData[]): Promise<void> {
+    const indexLayout = await this.loadTemplate(relPath("blog-index.mustache"));
+
+    const postSummaries = posts.map((post) => ({
+      title: post.frontMatter.title,
+      summary: post.frontMatter.summary,
+      date: post.frontMatter.date,
+      url: `/posts/${basename(post.path).replace(".md", ".html")}`,
+    }));
+
+    const globalCss = await this.getGlobalCss();
+    const html = mustache.render(indexLayout, {
+      posts: postSummaries,
+      globalCss,
+    });
+
+    const indexPath = joinPath(this.outputPath, relPath("index.html"));
+    await this.outputDisk.writeFile(indexPath, html);
+    this.onLog("Blog index generated");
+  }
+
+  async processLayout(post: PageData): Promise<{ layout: string; type: "mustache" | "ejs" }> {
+    if (post.frontMatter.layout && !this.getTemplateType(post.frontMatter.layout)) {
+      throw new Error(`Unknown template type for layout: ${post.frontMatter.layout}`);
+    }
+    return post.frontMatter.layout
+      ? {
+          layout: await this.loadTemplate(relPath(`_layouts/${post.frontMatter.layout}`)),
+          type: this.getTemplateType(post.frontMatter.layout)!,
+        }
+      : { layout: DefaultPageLayout, type: "mustache" };
+  }
+  async generateBlogPosts(posts: PageData[]): Promise<void> {
+    const postsOutputPath = joinPath(this.outputPath, relPath("posts"));
+    await this.ensureDirectoryExists(postsOutputPath);
+
+    for (const post of posts) {
+      const { layout } = await this.processLayout(post);
+
+      const additionalStyles = await this.getAdditionalStyles(post.frontMatter.styles || []);
+      const globalCss = await this.getGlobalCss();
+
+      const html = mustache.render(layout, {
+        content: post.htmlContent,
+        title: post.frontMatter.title,
+        globalCss,
+        additionalStyles,
+        ...post.frontMatter,
+      });
+
+      const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
+      await this.outputDisk.writeFile(outputPath, html);
+
+      this.onLog(`Blog post generated: ${post.path}`);
+    }
+  }
+
+  async loadTemplate(templatePath: RelPath): Promise<string> {
+    const fullPath = joinPath(this.sourcePath, templatePath);
+    try {
+      return String(await this.sourceDisk.readFile(fullPath));
+    } catch (_err) {
+      throw new Error(`Template not found: ${templatePath}`);
+    }
+  }
+
+  async getGlobalCss(): Promise<string> {
+    try {
+      const globalCssPath = joinPath(this.sourcePath, relPath("global.css"));
+      return String(await this.sourceDisk.readFile(globalCssPath));
+    } catch {
+      return "";
+    }
+  }
+
+  async getAdditionalStyles(styleFiles: string[]): Promise<string> {
+    const styles: string[] = [];
+
+    for (const styleFile of styleFiles) {
+      try {
+        const stylePath = joinPath(this.sourcePath, relPath(styleFile));
+        const content = String(await this.sourceDisk.readFile(stylePath));
+        styles.push(content);
+      } catch (_err) {
+        this.onError(`Style file not found: ${styleFile}`);
+      }
+    }
+
+    return styles.join("\n");
+  }
+
+  private getOutputPathForTemplate(relativePath: RelPath): AbsPath {
+    const outputRelativePath = relativePath.replace(".mustache", ".html").replace(".ejs", ".html");
+    return joinPath(this.outputPath, relPath(outputRelativePath));
+  }
+
+  private getOutputPathForMarkdown(relativePath: RelPath): AbsPath {
+    const outputRelativePath = relativePath.replace(".md", ".html");
+    return joinPath(this.outputPath, relPath(outputRelativePath));
+  }
+
+  private async ensureDirectoryExists(dirPath: AbsPath): Promise<void> {
+    await this.outputDisk.mkdirRecursive(dirPath);
+  }
+
+  private sortPagesByPrefix(pages: PageData[]): PageData[] {
+    return pages.sort((a, b) => {
+      const aName = basename(a.path);
+      const bName = basename(b.path);
+
+      const aMatch = aName.match(/^(\d+)_/);
+      const bMatch = bName.match(/^(\d+)_/);
+
+      if (aMatch && bMatch && aMatch[1] && bMatch[1]) {
+        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+      }
+
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+
+      return aName.localeCompare(bName);
+    });
+  }
+
+  private sortPostsByDate(posts: PageData[]): PageData[] {
+    return posts.sort((a, b) => {
+      const aDate = new Date(a.frontMatter.date || 0);
+      const bDate = new Date(b.frontMatter.date || 0);
+      return bDate.getTime() - aDate.getTime();
+    });
   }
 }
+
+const DefaultPageLayout = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <style>
+    {{#globalCss}}
+    {{{globalCss}}}
+    {{/globalCss}}
+    {{#additionalStyles}}
+    {{{additionalStyles}}}
+    {{/additionalStyles}}
+  </style>
+</head>
+<body>
+  {{{content}}}
+</body>
+</html>`;

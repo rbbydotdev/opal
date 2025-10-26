@@ -1,13 +1,12 @@
-import { BuildStrategy } from "@/builder/builder";
+import { BuildStrategy } from "@/builder/builder-types";
 import { BuildDAO } from "@/Db/BuildDAO";
-import { Disk } from "@/Db/Disk";
+import { Workspace } from "@/Db/Workspace";
 import { useCallback, useRef, useState } from "react";
 
 export interface BuildModalOptions {
   onCancel?: () => void;
   onComplete?: (buildDao?: BuildDAO) => void;
-  outputDisk: Disk;
-  sourceDisk: Disk;
+  currentWorkspace: Workspace;
 }
 
 export function useBuildModalState() {

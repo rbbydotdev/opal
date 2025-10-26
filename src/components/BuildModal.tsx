@@ -1,22 +1,22 @@
-import { BuildStrategy } from "@/builder/builder";
+import { BuildStrategy } from "@/builder/builder-types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/Db/BuildDAO";
-import { Disk } from "@/Db/Disk";
+import { Workspace } from "@/Db/Workspace";
 import { useBuildExecution } from "@/hooks/useBuildExecution";
 import { useBuildLogs } from "@/hooks/useBuildLogs";
 import { useBuildModalState } from "@/hooks/useBuildModalState";
 import { BuildService } from "@/services/BuildService";
 import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
-import React, { createContext, useCallback, useContext, useImperativeHandle, useMemo, useRef } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useImperativeHandle, useRef } from "react";
 
 type BuildModalOptionsType = {
   onCancel?: () => void;
   onComplete?: (buildDao?: BuildDAO) => void;
-  outputDisk: Disk;
-  sourceDisk: Disk;
+  currentWorkspace: Workspace;
 };
 
 type BuildModalContextType = {
@@ -81,24 +81,34 @@ export function BuildModal({
     handleOkay,
   } = useBuildModalState();
   const buildExecution = useBuildExecution();
-  const buildLogs = useBuildLogs();
-  const buildServiceRef = useRef(useMemo(() => new BuildService(), []));
+  const { log, logs, errorLog, clearLogs, formatTimestamp } = useBuildLogs();
+  const { name } = useWorkspaceRoute();
+  const buildServiceRef = useRef({} as BuildService);
+  useEffect(() => {
+    buildServiceRef.current = new BuildService({
+      onLog: log,
+      onError: errorLog,
+      workspaceName: name!,
+      strategy,
+    });
+    return () => {
+      buildServiceRef?.current?.tearDown();
+    };
+  }, [errorLog, log, strategy, name]);
 
   const handleBuild = async () => {
-    const options = optionsRef.current;
-    if (!options) throw new Error("Options not provided");
+    if (!optionsRef.current) throw new Error("Options not provided");
 
     if (buildExecution.isBuilding) return;
 
-    buildLogs.clearLogs();
+    clearLogs();
     const abortController = buildExecution.startBuild();
 
     const result = await buildServiceRef.current.executeBuild({
       strategy: strategy,
-      sourceDisk: options.sourceDisk,
-      outputDisk: options.outputDisk,
-      onLog: buildLogs.addLog,
-      onError: (message) => buildLogs.addLog(message, "error"),
+      workspaceId: name!,
+      onLog: log,
+      onError: errorLog,
       abortSignal: abortController.signal,
     });
 
@@ -114,12 +124,11 @@ export function BuildModal({
   const handleCancel = useCallback(() => {
     if (buildExecution.isBuilding) {
       buildExecution.cancelBuild();
-      buildServiceRef.current.cancelBuild();
-      buildLogs.addLog("Build cancelled by user", "error");
+      log("Build cancelled by user", "error");
     }
 
     closeModal();
-  }, [buildExecution, buildLogs, closeModal]);
+  }, [buildExecution, closeModal, log]);
 
   const handleClose = useCallback(() => {
     if (buildExecution.isBuilding) {
@@ -249,17 +258,15 @@ export function BuildModal({
             <label className="text-sm font-medium mb-2">Build Output</label>
             <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30">
               <div className="font-mono text-sm space-y-1">
-                {buildLogs.logs.length === 0 ? (
+                {logs.length === 0 ? (
                   <div className="text-muted-foreground italic">Build output will appear here...</div>
                 ) : (
-                  buildLogs.logs.map((log, index) => (
+                  logs.map((log, index) => (
                     <div
                       key={index}
                       className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
                     >
-                      <span className="text-muted-foreground shrink-0">
-                        [{buildLogs.formatTimestamp(log.timestamp)}]
-                      </span>
+                      <span className="text-muted-foreground shrink-0">[{formatTimestamp(log.timestamp)}]</span>
                       <span className="break-all">{log.message}</span>
                     </div>
                   ))
