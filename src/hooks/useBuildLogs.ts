@@ -21,21 +21,11 @@ export function useBuildLogs() {
     setLogs([]);
   }, []);
 
-  const formatTimestamp = useCallback((timestamp: Date) => {
-    return timestamp.toLocaleTimeString("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  }, []);
-
   return {
     logs,
     log,
     errorLog,
     addLog,
     clearLogs,
-    formatTimestamp,
   };
 }

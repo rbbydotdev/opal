@@ -6,6 +6,14 @@ type ErrorWithCode = Error & {
   code: string;
 };
 
+export function coerceError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  } else {
+    return new Error(String(error));
+  }
+}
+
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (
     typeof error === "object" &&

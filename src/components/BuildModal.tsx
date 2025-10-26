@@ -12,6 +12,7 @@ import { useBuildModalState } from "@/hooks/useBuildModalState";
 import { BuildService } from "@/services/BuildService";
 import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
 import React, { createContext, useCallback, useContext, useEffect, useImperativeHandle, useRef } from "react";
+import { timeAgo } from "short-time-ago";
 
 type BuildModalOptionsType = {
   onCancel?: () => void;
@@ -81,7 +82,7 @@ export function BuildModal({
     handleOkay,
   } = useBuildModalState();
   const buildExecution = useBuildExecution();
-  const { log, logs, errorLog, clearLogs, formatTimestamp } = useBuildLogs();
+  const { log, logs, errorLog, clearLogs } = useBuildLogs();
   const { name } = useWorkspaceRoute();
   const buildServiceRef = useRef({} as BuildService);
   useEffect(() => {
@@ -124,11 +125,11 @@ export function BuildModal({
   const handleCancel = useCallback(() => {
     if (buildExecution.isBuilding) {
       buildExecution.cancelBuild();
-      log("Build cancelled by user", "error");
+      errorLog("Build cancelled by user");
     }
 
     closeModal();
-  }, [buildExecution, closeModal, log]);
+  }, [buildExecution, closeModal, errorLog]);
 
   const handleClose = useCallback(() => {
     if (buildExecution.isBuilding) {
@@ -266,7 +267,7 @@ export function BuildModal({
                       key={index}
                       className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
                     >
-                      <span className="text-muted-foreground shrink-0">[{formatTimestamp(log.timestamp)}]</span>
+                      <span className="text-muted-foreground shrink-0">[{timeAgo(log.timestamp)}]</span>
                       <span className="break-all">{log.message}</span>
                     </div>
                   ))
