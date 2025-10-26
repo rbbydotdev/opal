@@ -1,7 +1,7 @@
+import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import type React from "react";
 import { useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
-import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
 import { OAuth } from "@/components/OAuth";
@@ -41,7 +41,7 @@ export function ConnectionsModal({
   onOpenChange,
   onSelect,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   mode?: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
   onSuccess?: () => void;
