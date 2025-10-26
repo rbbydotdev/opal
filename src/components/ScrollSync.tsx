@@ -2,7 +2,7 @@ import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useWorkspacePathPreviewURL } from "@/features/preview-pane/useWorkspacePathPreviewURL";
 import { useResource } from "@/hooks/useResource";
 import { Channel } from "@/lib/channel";
-import { sessionIdParam, workspacePathSessionId } from "@/lib/scrollSyncUtils";
+import { workspacePathSessionId } from "@/lib/scrollSyncUtils";
 import { useSearch } from "@tanstack/react-router";
 import { nanoid } from "nanoid";
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useRef } from "react";
@@ -69,7 +69,7 @@ export function useScrollChannelFromSearchParams() {
 }
 
 export function useWorkspacePathScrollChannel() {
-  const { id: workspaceId, path: filePath } = useWorkspaceRoute();
+  const { name: workspaceId, path: filePath } = useWorkspaceRoute();
   if (!workspaceId || !filePath) {
     throw new Error(
       "useWorkspacePathScrollChannel must be used within a WorkspaceRoute context with valid id and path"

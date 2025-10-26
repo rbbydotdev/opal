@@ -3,7 +3,7 @@ import { absPath, joinPath } from "@/lib/paths2";
 import { sessionIdParam, workspacePathSessionId } from "@/lib/scrollSyncUtils";
 
 export function useWorkspacePathPreviewURL(filePathOverride?: string) {
-  const { id: workspaceId, path } = useWorkspaceRoute();
+  const { name: workspaceId, path } = useWorkspaceRoute();
   const filePath = filePathOverride || path;
   if (!workspaceId || !filePath) {
     return null;

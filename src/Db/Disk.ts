@@ -1,4 +1,3 @@
-import { CommonFileSystem } from "@/Db/FileSystemTypes";
 import { DiskDAO } from "@/Db/DiskDAO";
 import {
   DiskEvents,
@@ -11,23 +10,14 @@ import {
   SIGNAL_ONLY,
 } from "@/Db/DiskEvents";
 import { DiskType } from "@/Db/DiskType";
+import { CommonFileSystem, mkdirRecursive } from "@/Db/FileSystemTypes";
 import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceFileUrlsInMarkdown } from "@/lib/markdown/replaceFileUrlsInMarkdown";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
-import {
-  AbsPath,
-  absPath,
-  basename,
-  dirname,
-  encodePath,
-  incPath,
-  joinPath,
-  relPath,
-} from "@/lib/paths2";
-import { mkdirRecursive } from "@/Db/FileSystemTypes";
+import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, relPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import { nanoid } from "nanoid";
 import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
@@ -44,6 +34,10 @@ export abstract class Disk {
 
   get dirName(): string | null {
     return null;
+  }
+
+  getFs() {
+    return this.fs;
   }
 
   constructor(
@@ -85,6 +79,7 @@ export abstract class Disk {
   triggerIndex = async () => {
     await this.fileTreeIndex();
     void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+    return this.fileTree;
   };
 
   private fileTreeIndex = async ({
