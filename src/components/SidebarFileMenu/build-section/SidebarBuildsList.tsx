@@ -1,8 +1,10 @@
 import { SelectableList, SelectableListItem } from "@/components/ui/SelectableList";
 import { BuildDAO } from "@/Db/BuildDAO";
+import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { Archive, Calendar } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { timeAgo } from "short-time-ago";
 
 export interface SidebarBuildsListProps {
   diskId?: string;
@@ -16,26 +18,19 @@ export interface SidebarBuildsListRef {
   refresh: () => Promise<void>;
 }
 
-export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsListProps>(function SidebarBuildsList({
-  diskId,
-  selectedBuildIds = [],
-  onSelectionChange,
-  onDelete,
-  className,
-}, ref) {
+export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsListProps>(function SidebarBuildsList(
+  { diskId, selectedBuildIds = [], onSelectionChange, onDelete, className },
+  ref
+) {
   const [builds, setBuilds] = useState<BuildDAO[]>([]);
-  const [loading, setLoading] = useState(true);
   const errorToss = useErrorToss();
 
   const loadBuilds = useCallback(async () => {
     try {
-      setLoading(true);
       const buildList = diskId ? await BuildDAO.allForDisk(diskId) : await BuildDAO.all();
       setBuilds(buildList);
     } catch (error) {
-      errorToss(error instanceof Error ? error : new Error(String(error)));
-    } finally {
-      setLoading(false);
+      errorToss(coerceError(error));
     }
   }, [diskId, errorToss]);
 
@@ -43,9 +38,13 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
     void loadBuilds();
   }, [diskId, loadBuilds]);
 
-  useImperativeHandle(ref, () => ({
-    refresh: loadBuilds
-  }), [loadBuilds]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      refresh: loadBuilds,
+    }),
+    [loadBuilds]
+  );
 
   const handleDelete = async (buildId: string) => {
     try {
@@ -56,23 +55,7 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
         onDelete?.(buildId);
       }
     } catch (error) {
-      errorToss(error instanceof Error ? error : new Error(String(error)));
-    }
-  };
-
-  const formatTimestamp = (timestamp: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) {
-      return `${days}d ago`;
-    } else if (hours > 0) {
-      return `${hours}h ago`;
-    } else {
-      const minutes = Math.floor(diff / (1000 * 60));
-      return `${Math.max(1, minutes)}m ago`;
+      errorToss(coerceError(error));
     }
   };
 
@@ -84,23 +67,10 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
     metadata: (
       <div className="flex items-center gap-1">
         <Calendar size={10} />
-        <span>{formatTimestamp(build.timestamp)}</span>
+        <span>{timeAgo(build.timestamp)}</span>
       </div>
     ),
   }));
-
-  if (loading) {
-    return (
-      <SelectableList
-        title="Recent Builds"
-        titleIcon={<Archive size={12} />}
-        items={[]}
-        emptyMessage="Loading builds..."
-        expanderId="builds"
-        className={className}
-      />
-    );
-  }
 
   return (
     <SelectableList

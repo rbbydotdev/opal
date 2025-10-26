@@ -65,6 +65,7 @@ export class BuildService {
     // Clean up resources if needed
   }
   async executeBuild({ strategy, abortSignal }: BuildServiceOptions): Promise<BuildResult> {
+    let currentWorkspace: Workspace | null = null;
     try {
       this.onLog(`Starting ${strategy} build...`);
       this.onLog("Filtering out special directories");
@@ -74,7 +75,42 @@ export class BuildService {
         return { success: false, error: "Build cancelled" };
       }
 
-      await this.build();
+      this.onLog("Starting build process...");
+      this.onLog("Loading workspace...");
+      currentWorkspace = await Workspace.FromNameAndInit(this.workspaceName);
+      if (!currentWorkspace) {
+        throw new Error("Workspace not found");
+      }
+      const sourceDisk = currentWorkspace.getDisk();
+      this.sourceDisk = sourceDisk;
+      this.onLog(`Using source disk: ${sourceDisk.guid}`);
+      this.onLog("Building file tree...");
+
+      // Index the source directory
+      this.onLog("Indexing source files...");
+      await this.sourceDisk.triggerIndex();
+      this.sourceDisk.fileTree;
+
+      await this.ensureOutputDirectory();
+
+      if (abortSignal?.aborted) {
+        this.onError("Build cancelled");
+        return { success: false, error: "Build cancelled" };
+      }
+
+      switch (this.strategy) {
+        case "freeform":
+          await this.buildFreeform();
+          break;
+        case "book":
+          await this.buildBook();
+          break;
+        case "blog":
+          await this.buildBlog();
+          break;
+        default:
+          throw new Error(`Unknown build strategy: ${this.strategy}`);
+      }
 
       if (abortSignal?.aborted) {
         this.onError("Build cancelled");
@@ -94,6 +130,10 @@ export class BuildService {
         return { success: false, error: errorMessage };
       }
       return { success: false, error: "Build cancelled" };
+    } finally {
+      if (currentWorkspace) {
+        await currentWorkspace.tearDown();
+      }
     }
   }
 
@@ -104,52 +144,6 @@ export class BuildService {
     return buildDao;
   }
 
-  async build(): Promise<void> {
-    let currentWorkspace: Workspace | null = null;
-    try {
-      this.onLog("Starting build process...");
-      this.onLog("Loading workspace...");
-      currentWorkspace = await Workspace.FromNameAndInit(this.workspaceName);
-      if (!currentWorkspace) {
-        throw new Error("Workspace not found");
-      }
-      const sourceDisk = currentWorkspace.getDisk();
-      this.onLog(`Using source disk: ${sourceDisk.guid}`);
-      this.onLog("Building file tree...");
-
-      // Index the source directory
-      this.onLog("Indexing source files...");
-      // await this.sourceTree.index();
-      await this.sourceDisk.triggerIndex();
-      this.sourceDisk.fileTree;
-
-      await this.ensureOutputDirectory();
-
-      switch (this.strategy) {
-        case "freeform":
-          await this.buildFreeform();
-          break;
-        case "book":
-          await this.buildBook();
-          break;
-        case "blog":
-          await this.buildBlog();
-          break;
-        default:
-          throw new Error(`Unknown build strategy: ${this.strategy}`);
-      }
-
-      this.onLog("Build completed successfully!");
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this.onError(`Build failed: ${errorMessage}`);
-      throw err;
-    } finally {
-      if (currentWorkspace) {
-        await currentWorkspace.tearDown();
-      }
-    }
-  }
 
   private async ensureOutputDirectory(): Promise<void> {
     this.onLog("Creating output directory...");

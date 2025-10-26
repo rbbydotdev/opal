@@ -1,8 +1,8 @@
-import { CommonFileSystem } from "@/Db/FileSystemTypes";
 import { DirectoryHandleStore } from "@/Db/DirectoryHandleStore";
 import { Disk } from "@/Db/Disk";
 import { DiskDAO } from "@/Db/DiskDAO";
 import { DiskType } from "@/Db/DiskType";
+import { CommonFileSystem } from "@/Db/FileSystemTypes";
 import { MutexFs } from "@/Db/MutexFs";
 import { PatchedDirMountOPFS } from "@/Db/PatchedDirMountOPFS";
 import { FileTree } from "@/lib/FileTree/Filetree";
@@ -51,14 +51,9 @@ export class OpFsDirMountDisk extends Disk {
   }
 
   private async initializeFromStorage(): Promise<void> {
-    // console.log("🔄 Initializing from storage for disk:", this.guid);
     const handle = await DirectoryHandleStore.getHandle(this.guid);
     if (handle) {
-      // console.log("✅ Found stored handle:", handle.name);
       await this.setDirectoryHandle(handle, true); // Skip storage when restoring
-      // console.log("✅ Initialization from storage complete");
-    } else {
-      // console.log("ℹ️ No stored handle found for disk:", this.guid);
     }
   }
 
@@ -73,15 +68,15 @@ export class OpFsDirMountDisk extends Disk {
     const mutex = new Mutex();
     const mutexFs = new MutexFs(patchedDirMountOPFS, mutex);
     const ft = new FileTree(patchedDirMountOPFS, this.guid, mutex);
-    (this as any).fs = mutexFs;
-    (this as any).fileTree = ft;
+    this.fs = mutexFs;
+    this.fileTree = ft;
   }
 
   async selectDirectory(): Promise<FileSystemDirectoryHandle> {
-    if (!("showDirectoryPicker" in window)) {
+    if (typeof window.showDirectoryPicker === "undefined") {
       throw new Error("Directory picker not supported in this browser");
     }
-    const handle = await (window as any).showDirectoryPicker({
+    const handle = await window.showDirectoryPicker({
       mode: "readwrite",
       startIn: "documents",
     });

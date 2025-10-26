@@ -31,7 +31,7 @@ import { Check, Delete, Ellipsis, MoreHorizontal, Pencil, Plus, Sparkle, SquareD
 import { useEffect, useRef, useState } from "react";
 
 function ConnectionManager() {
-  const { remoteAuths, deleteRemoteAuth } = useRemoteAuths();
+  const { remoteAuths: remoteAuths, deleteRemoteAuth } = useRemoteAuths();
   const [editingConnection, setEditingConnection] = useState<RemoteAuthJType | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const toggleSelected = (id: string) =>
@@ -81,7 +81,6 @@ function ConnectionManager() {
 
   return (
     <>
-      {/* <div ref={sectionRef} tabIndex={0}> */}
       <div>
         <ConnectionsModal>
           <SidebarGroupAction className={cn("top-1.5 p-0", { "right-8": remoteAuths.length })} title="Add Connection">
@@ -129,23 +128,6 @@ function ConnectionManager() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      {/* <div ref={sectionRef} tabIndex={0}>
-        {!!selected.length && (
-          <>
-            <SidebarGroupAction className="top-1.5 p-0 right-16" onClick={() => setSelected([])} title="Deselect All">
-              <SquareDashed /> <span className="sr-only">Deselect All</span>
-            </SidebarGroupAction>
-            <SidebarGroupAction className="top-1.5 p-0 right-8" onClick={handleDeleteAll} title="Delete Selected">
-              <Minus /> <span className="sr-only">Delete Selected</span>
-            </SidebarGroupAction>
-          </>
-        )}
-        <ConnectionsModal>
-          <SidebarGroupAction className="top-1.5 p-0">
-            <Plus /> <span className="sr-only">Add Connection</span>
-          </SidebarGroupAction>
-        </ConnectionsModal>
-      </div> */}
 
       <ConnectionsModal
         mode="edit"

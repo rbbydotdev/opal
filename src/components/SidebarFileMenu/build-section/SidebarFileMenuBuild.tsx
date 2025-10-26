@@ -32,9 +32,6 @@ export function SidebarFileMenuBuild({
           // Refresh the builds list to show the new build
           await buildsListRef.current?.refresh();
         },
-        onCancel: () => {
-          console.log("Build cancelled");
-        },
       });
     } catch (error) {
       console.error("Build modal error:", error);

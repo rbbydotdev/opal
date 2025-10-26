@@ -13,21 +13,32 @@ import { DiskType } from "@/Db/DiskType";
 import { CommonFileSystem, mkdirRecursive } from "@/Db/FileSystemTypes";
 import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
-import { SourceTreeNode, TreeDirRoot, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
+import { SourceTreeNode, TreeDir, TreeDirRoot, TreeNode, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceFileUrlsInMarkdown } from "@/lib/markdown/replaceFileUrlsInMarkdown";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
-import { AbsPath, absPath, basename, dirname, encodePath, incPath, joinPath, relPath } from "@/lib/paths2";
+import {
+  AbsPath,
+  absPath,
+  basename,
+  dirname,
+  encodePath,
+  incPath,
+  joinPath,
+  reduceLineage,
+  relPath,
+  stringifyEntry,
+} from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import { nanoid } from "nanoid";
-import { TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
-import { reduceLineage, stringifyEntry } from "../lib/paths2";
 
 export abstract class Disk {
   remote: DiskEventsRemote;
   local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
+  _fs: CommonFileSystem;
+  _fileTree: FileTree;
   // private origFs: CommonFileSystem | null = null;
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
@@ -36,17 +47,28 @@ export abstract class Disk {
     return null;
   }
 
-  getFs() {
-    return this.fs;
+  get fs() {
+    return this._fs;
+  }
+  set fs(value: CommonFileSystem) {
+    this._fs = value;
+  }
+
+  get fileTree() {
+    return this._fileTree;
+  }
+  set fileTree(value: FileTree) {
+    this._fileTree = value;
   }
 
   constructor(
     public readonly guid: string,
-    protected fs: CommonFileSystem,
-    //TODO move things into protected to isolate property digging
-    readonly fileTree: FileTree,
+    fs: CommonFileSystem,
+    fileTree: FileTree,
     private connector: DiskDAO
   ) {
+    this._fs = fs;
+    this._fileTree = fileTree;
     this.remote = new DiskEventsRemote(this.guid);
   }
 
@@ -518,21 +540,21 @@ export abstract class Disk {
   }
 
   private async copyDirQuiet(oldFullPath: AbsPath | TreeNode, newFullPath: AbsPath | TreeNode, overWrite?: boolean) {
-    const _oldFullPath = absPath(oldFullPath);
-    let _newFullPath = absPath(newFullPath);
+    const oldPath = absPath(oldFullPath);
+    let newPath = absPath(newFullPath);
     await this.ready;
-    if (await this.pathExists(_newFullPath)) {
+    if (await this.pathExists(newPath)) {
       if (!overWrite) {
-        _newFullPath = await this.nextPath(_newFullPath);
+        newPath = await this.nextPath(newPath);
       } else {
-        await this.quietRemove(_newFullPath);
+        await this.quietRemove(newPath);
       }
     }
-    await this.mkdirRecursive(absPath(dirname(_newFullPath)));
-    const entries = await this.fs.readdir(encodePath(_oldFullPath));
+    await this.mkdirRecursive(absPath(dirname(newPath)));
+    const entries = await this.fs.readdir(encodePath(oldPath));
     for (const entry of entries) {
-      const oldEntryPath = joinPath(_oldFullPath, stringifyEntry(entry));
-      const newEntryPath = joinPath(_newFullPath, stringifyEntry(entry));
+      const oldEntryPath = joinPath(oldPath, stringifyEntry(entry));
+      const newEntryPath = joinPath(newPath, stringifyEntry(entry));
       if (typeof entry === "string" || entry instanceof String) {
         if ((await this.fs.stat(encodePath(oldEntryPath))).isDirectory()) {
           await this.copyDirQuiet(oldEntryPath, newEntryPath, overWrite);
@@ -546,13 +568,13 @@ export abstract class Disk {
     await this.fileTreeIndex();
     void this.local.emit(DiskEvents.INDEX, {
       type: "create",
-      details: { filePaths: [_newFullPath] },
+      details: { filePaths: [newPath] },
     });
     void this.remote.emit(DiskEvents.INDEX, {
       type: "create",
-      details: { filePaths: [_newFullPath] },
+      details: { filePaths: [newPath] },
     });
-    return _newFullPath;
+    return newPath;
   }
 
   async copyDir(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
@@ -570,27 +592,27 @@ export abstract class Disk {
     return newFullPath;
   }
   private async copyFileQuiet(oldFullPath: AbsPath | TreeNode, newFullPath: AbsPath | TreeNode, overWrite?: boolean) {
-    const _oldFullPath = absPath(oldFullPath);
-    let _newFullPath = absPath(newFullPath);
+    const oldPath = absPath(oldFullPath);
+    let newPath = absPath(newFullPath);
     await this.ready;
-    const oldContent = await this.readFile(_oldFullPath); //yeeesh wish i could pipe this!
+    const oldContent = await this.readFile(oldPath); //yeeesh wish i could pipe this!
     //alternatively if have access to pipes, mv old file to tmp first then copy then
     //remove tmp
-    if (await this.pathExists(_newFullPath)) {
+    if (await this.pathExists(newPath)) {
       if (!overWrite) {
-        _newFullPath = await this.nextPath(_newFullPath);
+        newPath = await this.nextPath(newPath);
       } else {
-        await this.quietRemove(_newFullPath);
+        await this.quietRemove(newPath);
       }
     }
 
-    await this.mkdirRecursive(dirname(_newFullPath));
-    await this.fs.writeFile(encodePath(_newFullPath), oldContent, {
+    await this.mkdirRecursive(dirname(newPath));
+    await this.fs.writeFile(encodePath(newPath), oldContent, {
       encoding: "utf8",
       mode: 0o777,
     });
 
-    return _newFullPath;
+    return newPath;
   }
   async copyFile(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
     const fullPath = await this.copyFileQuiet(oldFullPath, newFullPath, overWrite);
