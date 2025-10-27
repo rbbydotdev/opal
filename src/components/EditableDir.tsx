@@ -1,6 +1,6 @@
-import { Workspace } from "@/Db/Workspace";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { WorkspaceRouteType } from "@/context/WorkspaceContext";
+import { Workspace } from "@/data/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, RelPath, relPath } from "@/lib/paths2";

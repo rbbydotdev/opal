@@ -1,8 +1,8 @@
 import { useWatchViewMode } from "@/components/Editor/view-mode/useWatchViewMode";
-import { NullWorkspace } from "@/Db/NullWorkspace";
-import { SpecialDirs } from "@/Db/SpecialDirs";
-import { Workspace } from "@/Db/Workspace";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { NullWorkspace } from "@/data/NullWorkspace";
+import { SpecialDirs } from "@/data/SpecialDirs";
+import { Workspace } from "@/data/Workspace";
+import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceCorruption } from "@/features/workspace-corruption/useWorkspaceCorruption";

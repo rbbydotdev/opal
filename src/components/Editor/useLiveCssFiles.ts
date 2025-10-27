@@ -1,5 +1,5 @@
-import { isFilePathsPayload } from "@/Db/DiskEvents";
-import { Workspace } from "@/Db/Workspace";
+import { isFilePathsPayload } from "@/data/disk/DiskEvents";
+import { Workspace } from "@/data/Workspace";
 import { absPath, isHtml, isMarkdown, isTemplateFile } from "@/lib/paths2";
 import { useEffect, useRef, useState } from "react";
 

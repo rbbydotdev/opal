@@ -1,9 +1,7 @@
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { AbsPath } from "@/lib/paths2";
-import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
-import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
+import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 import { useCrossWorkspaceFilenameSearch } from "@/hooks/useCrossWorkspaceFilenameSearch";
-import { useCallback, useMemo } from "react";
+import { AbsPath } from "@/lib/paths2";
+import { useCallback } from "react";
 
 export interface FileWithWorkspace {
   path: AbsPath;
@@ -23,12 +21,12 @@ export function useAllWorkspaceFiles() {
 
       // Convert the search results to FileWithWorkspace format
       const workspaceDAOs = await WorkspaceDAO.all();
-      
+
       return crossWorkspaceSearch.workspaceResults.flatMap(([workspaceName, results]) => {
-        const workspaceDAO = workspaceDAOs.find(dao => dao.name === workspaceName);
+        const workspaceDAO = workspaceDAOs.find((dao) => dao.name === workspaceName);
         const workspaceHref = workspaceDAO?.href || `/workspace/${workspaceName}`;
-        
-        return results.map(result => ({
+
+        return results.map((result) => ({
           path: result.filePath,
           workspaceName: result.workspaceName,
           workspaceHref,
@@ -39,7 +37,7 @@ export function useAllWorkspaceFiles() {
   );
 
   // Return search functionality and loading state
-  return { 
+  return {
     files: [], // We don't pre-load files anymore, only search on demand
     loading: crossWorkspaceSearch.loading,
     searchFilenames,

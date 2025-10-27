@@ -1,5 +1,5 @@
-import { RemoteAuthSource, RemoteAuthType } from "@/Db/RemoteAuthTypes";
-import { Github, LucideProps, Zap, Globe, Cloud } from "lucide-react";
+import { RemoteAuthSource, RemoteAuthType } from "@/data/RemoteAuthTypes";
+import { Cloud, Github, Globe, LucideProps, Zap } from "lucide-react";
 import React from "react";
 
 export const RemoteAuthSourceIcon = {

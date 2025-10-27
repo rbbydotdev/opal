@@ -1,6 +1,6 @@
-import { Disk } from "@/Db/Disk";
-import { DiskFromJSON } from "@/Db/DiskFactory";
-import { DiskJType } from "@/Db/DiskType";
+import { Disk } from "@/data/disk/Disk";
+import { DiskFromJSON } from "@/data/disk/DiskFactory";
+import { DiskJType } from "@/data/DiskType";
 import { transferHandlers } from "comlink";
 
 transferHandlers.set("Disk", {

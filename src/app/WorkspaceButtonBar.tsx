@@ -19,10 +19,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceMenu } from "@/components/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { DiskDAO } from "@/Db/DiskDAO";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { Workspace } from "@/Db/Workspace";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { DiskDAO } from "@/data/disk/DiskDAO";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { Workspace } from "@/data/Workspace";
+import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 import { useLeftCollapsed } from "@/features/preview-pane/EditorSidebarLayout";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";

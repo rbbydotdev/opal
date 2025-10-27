@@ -1,7 +1,7 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import {
   TreeNodeDataTransferJType,
   TreeNodeDataTransferType,

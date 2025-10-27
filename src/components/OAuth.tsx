@@ -4,7 +4,7 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuthTypes";
+import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { OAuthService, OAuthState } from "@/lib/auth/OAuthService";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Loader } from "lucide-react";
@@ -145,12 +145,7 @@ export function OAuth({
       )}
 
       <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleCancel}
-          className="w-full"
-        >
+        <Button type="button" variant="outline" onClick={handleCancel} className="w-full">
           Cancel
         </Button>
         {authSuccess ? (

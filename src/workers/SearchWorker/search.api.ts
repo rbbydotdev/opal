@@ -1,4 +1,4 @@
-import { type Workspace } from "@/Db/Workspace";
+import { type Workspace } from "@/data/Workspace";
 import { basename } from "@/lib/paths2";
 
 import "@/workers/transferHandlers/asyncGenerator.th";

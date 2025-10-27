@@ -1,3 +1,4 @@
+import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
@@ -21,9 +22,9 @@ import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { getDiskTypeLabel } from "@/Db/DiskType";
-import { SpecialDirs } from "@/Db/SpecialDirs";
-import { Workspace } from "@/Db/Workspace";
+import { getDiskTypeLabel } from "@/data/DiskType";
+import { SpecialDirs } from "@/data/SpecialDirs";
+import { Workspace } from "@/data/Workspace";
 import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
@@ -49,7 +50,13 @@ import {
 } from "lucide-react";
 import { ComponentProps, useMemo, useRef } from "react";
 
-export function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
+export function MainSidebarFileMenuFileSection({
+  className,
+  ItemContextMenu,
+}: {
+  className?: string;
+  ItemContextMenu: FileItemContextMenuComponentType;
+}) {
   const { currentWorkspace } = useWorkspaceContext();
   const { focused } = useFileTreeMenuCtx();
   const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
@@ -68,6 +75,7 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
           data-main-sidebar
           // FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
           title={"Files"}
+          ItemContextMenu={ItemContextMenu}
           className={className}
           contentBanner={!fileTreeDir.isEmpty() ? <RootFileMenuBanner currentWorkspace={currentWorkspace} /> : null}
           filter={SpecialDirs.All} // Exclude trash and git directories etc

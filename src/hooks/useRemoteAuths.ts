@@ -1,5 +1,5 @@
-import { ClientDb } from "@/Db/instance";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
+import { ClientDb } from "@/data/instance";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { useLiveQuery } from "dexie-react-hooks";
 
 export function useRemoteAuths() {

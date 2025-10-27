@@ -1,4 +1,4 @@
-import { Workspace, WorkspaceJType } from "@/Db/Workspace";
+import { Workspace, WorkspaceJType } from "@/data/Workspace";
 import { ImageWorkerApi } from "@/workers/ImageWorker/Image.api";
 import * as Comlink from "comlink";
 import { transferHandlers } from "comlink";

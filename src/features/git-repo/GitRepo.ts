@@ -1,7 +1,7 @@
 import { GitConfig } from "@/app/GitConfig";
-import { Disk } from "@/Db/Disk";
-import { DiskJType } from "@/Db/DiskType";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
+import { Disk } from "@/data/disk/Disk";
+import { DiskJType } from "@/data/DiskType";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { debounce } from "@/lib/debounce";
@@ -9,10 +9,10 @@ import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 
-import { DiskFromJSON } from "@/Db/DiskFactory";
-import { CommonFileSystem } from "@/Db/FileSystemTypes";
-import { HideFs } from "@/Db/HideFs";
-import { SpecialDirs } from "@/Db/SpecialDirs";
+import { DiskFromJSON } from "@/data/disk/DiskFactory";
+import { CommonFileSystem } from "@/data/FileSystemTypes";
+import { HideFs } from "@/data/fs/HideFs";
+import { SpecialDirs } from "@/data/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
@@ -227,7 +227,7 @@ export class GitRepo {
 
   get fs() {
     if (this.hideFs) return this.hideFs;
-    return (this.hideFs = new HideFs(this.disk.fs, [...SpecialDirs.allSpecialDirsExcept(this.gitDir)]));
+    return (this.hideFs = new HideFs(this.disk.fs, [...SpecialDirs.allInSpecialDirsExcept(this.gitDir)]));
   }
 
   get gitDir() {

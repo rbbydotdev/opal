@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 export function usePreserveViewModeURL() {

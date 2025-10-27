@@ -1,5 +1,5 @@
-// import { DiskType } from "@/Db/Disk";
-// import { Workspace } from "@/Db/Workspace";
+// import { DiskType } from "@/data/disk/Disk";
+// import { Workspace } from "@/data/Workspace";
 
 // export class WorkspaceCreator {
 //   constructor(private workspace: Workspace) {}

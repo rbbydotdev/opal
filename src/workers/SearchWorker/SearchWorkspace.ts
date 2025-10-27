@@ -1,5 +1,5 @@
-import { type Workspace } from "@/Db/Workspace";
-import { SearchWorkerApi, SearchWorkerApiType, SearchMode } from "@/workers/SearchWorker/search.api";
+import { type Workspace } from "@/data/Workspace";
+import { SearchMode, SearchWorkerApi, SearchWorkerApiType } from "@/workers/SearchWorker/search.api";
 import { Remote, wrap } from "comlink";
 import "../transferHandlers/asyncGenerator.th";
 

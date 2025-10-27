@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { BuildDAO } from "@/Db/BuildDAO";
-import { Workspace } from "@/Db/Workspace";
+import { BuildDAO } from "@/data/BuildDAO";
+import { Workspace } from "@/data/Workspace";
 import { useBuildExecution } from "@/hooks/useBuildExecution";
 import { useBuildLogs } from "@/hooks/useBuildLogs";
 import { useBuildModalState } from "@/hooks/useBuildModalState";

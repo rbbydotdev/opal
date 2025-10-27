@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/Db/RemoteAuthTypes";
+import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { nanoid } from "nanoid";
 import { GitHubOAuthProvider } from "./providers/GitHubOAuthProvider";
 import { NetlifyOAuthProvider } from "./providers/NetlifyOAuthProvider";

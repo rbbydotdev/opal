@@ -1,6 +1,6 @@
 import * as Comlink from "comlink";
 
-import { Disk } from "@/Db/Disk";
+import { Disk } from "@/data/disk/Disk";
 import "@/workers/transferHandlers/disk.th";
 import "@/workers/transferHandlers/function.th";
 import "@/workers/transferHandlers/treeNode.th";

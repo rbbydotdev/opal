@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { prefix } from "@/lib/paths2";
 import { useMemo } from "react";
 

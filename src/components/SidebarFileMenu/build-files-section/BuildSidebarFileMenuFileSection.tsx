@@ -1,28 +1,31 @@
 import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
-import { FileTreeProvider, NoopContextMenu, useFileTree } from "@/context/FileTreeProvider";
+import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { FilterInSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { Hammer } from "lucide-react";
-// import { useSyncExternalStore } from "react";
+import { FileItemContextMenuComponentType } from "../../FileItemContextMenuComponentType";
 
-export function BuildSidebarFileMenuFileSection({ className }: { className?: string }) {
+export function BuildSidebarFileMenuFileSection({
+  ItemContextMenu,
+  className,
+}: {
+  className?: string;
+  ItemContextMenu: FileItemContextMenuComponentType;
+}) {
   const { currentWorkspace } = useWorkspaceContext();
   const { fileTreeDir } = useFileTree();
-  // const fileTreeDir2 = currentWorkspace.nodeFromPath(SpecialDirs.Build) ?? NULL_TREE_ROOT;
   return (
-    <FileTreeProvider
-      // filterOut={FilterInSpecialDirs}
-      currentWorkspace={currentWorkspace}
-      ItemContextMenu={NoopContextMenu}
-    >
+    <FileTreeProvider filterOut={FilterInSpecialDirs} currentWorkspace={currentWorkspace}>
       <TreeExpanderProvider id="BuildFiles">
         <SidebarFileMenuFiles
           Icon={Hammer}
           title={"Build Files"}
           className={className}
-          // scope={SpecialDirs.Build}
+          scope={SpecialDirs.Build}
+          ItemContextMenu={ItemContextMenu}
           contentBanner={!fileTreeDir.isEmpty() ? <RootFileMenuBanner currentWorkspace={currentWorkspace} /> : null}
         >
           {!fileTreeDir.isEmpty() ? <TinyNotice /> : null}

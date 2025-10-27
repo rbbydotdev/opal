@@ -24,8 +24,8 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useDebounce } from "@/context/useDebounce";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { isFuzzyResult, useRepoSearch } from "@/Db/useGithubRepoSearch";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { isFuzzyResult, useRepoSearch } from "@/data/useGithubRepoSearch";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";

@@ -10,8 +10,8 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
-import { getDiskTypeLabel } from "@/Db/DiskType";
-import { Workspace } from "@/Db/Workspace";
+import { getDiskTypeLabel } from "@/data/DiskType";
+import { Workspace } from "@/data/Workspace";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";

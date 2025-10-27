@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal } from "@/Db/RemoteAuthTypes";
+import { RemoteAuthOAuthRecordInternal } from "@/data/RemoteAuthTypes";
 import { Channel } from "@/lib/channel";
 import { unwrapError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";

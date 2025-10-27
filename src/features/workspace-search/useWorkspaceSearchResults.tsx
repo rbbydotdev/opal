@@ -1,4 +1,4 @@
-import { WorkspaceSearchItem } from "@/Db/WorkspaceScannable";
+import { WorkspaceSearchItem } from "@/data/WorkspaceScannable";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 // import { DiskSearchResultData } from "@/features/search/SearchResults";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

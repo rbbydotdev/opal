@@ -1,4 +1,4 @@
-import { Disk } from "@/Db/Disk";
+import { Disk } from "@/data/disk/Disk";
 import { GitRepo, IRemote } from "@/features/git-repo/GitRepo";
 import { Remote } from "@/features/git-repo/Remote";
 import { AbsPath } from "@/lib/paths2";
