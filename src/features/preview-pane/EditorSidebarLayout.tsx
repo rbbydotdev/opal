@@ -1,4 +1,6 @@
+import { Button } from "@/components/ui/button";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { PanelLeft } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 // --- Configuration Constants ---
@@ -256,7 +258,16 @@ export const EditorSidebarLayout = ({
         title="Resize sidebar"
       ></div>
 
-      <main className="relative min-w-0 flex-col flex flex-grow overflow-hidden">{main}</main>
+      <main className="relative min-w-0 flex-col flex flex-grow overflow-hidden">
+        {panes.left.isCollapsed && (
+          <div className="absolute top-0 left-0 pl-2 bg-card p-1 z-50 flex aspect-square h-12 w-8 items-center justify-center rounded-r-lg">
+            <Button onClick={() => panes.left.setIsCollapsed(false)} title="Show sidebar (Cmd+B)" variant="outline">
+              <PanelLeft className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+        {main}
+      </main>
 
       {rightPaneEnabled && (
         <>

@@ -10,6 +10,8 @@ import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { useFileContents } from "@/context/useFileContents";
 import { useSnapHistoryDB } from "@/data/HistoryDAO";
 import { Workspace } from "@/data/Workspace";
+import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
+import { cn } from "@/lib/utils";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
@@ -58,21 +60,29 @@ export function useAllPlugins({
     () =>
       [
         toolbarPlugin({
-          toolbarContents: () => (
-            <>
-              <SourceEditorButton />
-              <EditHistoryMenuWithRealm
-                currentWorkspace={currentWorkspace}
-                documentId={documentId}
-                contents={contents}
-                writeFileContents={writeFileContents}
-                realm={realm}
-              />
-              <LivePreviewButtons />
-              <MdxSearchToolbar />
-              <MdxToolbar />
-            </>
-          ),
+          toolbarContents: () => {
+            const { left } = useSidebarPanes();
+            return (
+              <div
+                className={cn("flex w-full", {
+                  "ml-0": !left.isCollapsed,
+                  "ml-16": left.isCollapsed,
+                })}
+              >
+                <SourceEditorButton />
+                <EditHistoryMenuWithRealm
+                  currentWorkspace={currentWorkspace}
+                  documentId={documentId}
+                  contents={contents}
+                  writeFileContents={writeFileContents}
+                  realm={realm}
+                />
+                <LivePreviewButtons />
+                <MdxSearchToolbar />
+                <MdxToolbar />
+              </div>
+            );
+          },
         }),
         remoteRealmPlugin({ editorId: realmId }),
         listsPlugin(),

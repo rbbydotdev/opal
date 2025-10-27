@@ -5,16 +5,16 @@ const paths = {
   Storage: absPath("/.storage"),
   Git: absPath("/.git"),
   Thumb: absPath("/.thumb"),
-  Build: absPath("/.build"),
+  Build: absPath("/build"),
 };
 export const SpecialDirs = {
   ...paths,
   allInSpecialDirsExcept(...paths: (AbsPath | { toString(): string })[]): AbsPath[] {
     return this.All.filter((dir) => !paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
   },
-  // allOutSpecialDirsExcept(...paths: (AbsPath | { toString(): string })[]): AbsPath[] {
-  //   return this.All.filter((dir) => paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
-  // },
+  allOutSpecialDirsExcept(...paths: (AbsPath | { toString(): string })[]): AbsPath[] {
+    return this.All.filter((dir) => paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
+  },
   get All() {
     return Object.values(paths);
   },
@@ -25,6 +25,9 @@ export function FilterOutSpecialDirs(path: AbsPath | { toString(): string }): bo
 }
 export function FilterInSpecialDirs(path: AbsPath | { toString(): string }): boolean {
   return SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
+}
+export function FilterDirs(path: AbsPath | { toString(): string }, dirs: AbsPath[]): boolean {
+  return dirs.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
 
 // const BuildIgnoreDirs = [

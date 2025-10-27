@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/data/Workspace";
+import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
@@ -323,6 +324,8 @@ const CodeMirrorToolbar = ({
   editorView?: EditorView | null;
 }) => {
   const { isMarkdown, hasEditOverride } = useCurrentFilepath();
+
+  const { left } = useSidebarPanes();
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
   const router = useRouter();
 
@@ -378,7 +381,12 @@ const CodeMirrorToolbar = ({
     ).includes(mimeType);
 
   return (
-    <div className="pl-10 flex items-center justify-start p-2 bg-muted h-12 gap-2">
+    <div
+      className={cn("flex items-center justify-start p-2 bg-card h-12 gap-2", {
+        "pl-10": !left.isCollapsed,
+        "pl-16": left.isCollapsed,
+      })}
+    >
       {isMarkdown && !hasConflicts && !hasEditOverride && (
         <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />
       )}
