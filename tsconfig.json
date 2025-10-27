@@ -9,6 +9,7 @@
     "noUncheckedIndexedAccess": true,
     "types": [],
     "typeRoots": [],
+    "baseUrl": ".",
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
