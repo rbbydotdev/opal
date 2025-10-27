@@ -217,9 +217,9 @@ export class TreeNode {
     }
   }
 
-  iterator(filter?: (n: TreeNode) => boolean): IterableIterator<this> {
+  iterator(filterIn?: (n: TreeNode) => boolean): IterableIterator<this> {
     function* gen(node: TreeNode): IterableIterator<unknown> {
-      if (!filter || filter(node)) yield node;
+      if (!filterIn || filterIn(node)) yield node;
       // if (node.isTreeFile()) return node;
       for (const childNode of Object.values((node as TreeDir).children ?? {})) {
         yield* gen.bind(node)(childNode);

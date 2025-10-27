@@ -1,8 +1,8 @@
-import { SelectableList, SelectableListItem } from "@/components/ui/SelectableList";
+import { SelectableList } from "@/components/ui/SelectableList";
 import { BuildDAO } from "@/Db/BuildDAO";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
-import { Archive, Calendar } from "lucide-react";
+import { Archive, Eye, Delete } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
@@ -19,7 +19,7 @@ export interface SidebarBuildsListRef {
 }
 
 export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsListProps>(function SidebarBuildsList(
-  { diskId, selectedBuildIds = [], onSelectionChange, onDelete, className },
+  { diskId, onDelete },
   ref
 ) {
   const [builds, setBuilds] = useState<BuildDAO[]>([]);
@@ -59,33 +59,56 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
     }
   };
 
-  const items: SelectableListItem[] = builds.map((build) => ({
-    id: build.guid,
-    label: build.label,
-    subtitle: `Disk: ${build.diskId.slice(-8)}`, // Show last 8 chars of disk ID
-    icon: <Archive size={14} className="text-muted-foreground" />,
-    metadata: (
-      <div className="flex items-center gap-1">
-        <Calendar size={10} />
-        <span>{timeAgo(build.timestamp)}</span>
-      </div>
-    ),
-  }));
+  const handleView = (buildId: string) => {
+    // This could open a build details modal in the future
+    console.log("View build:", buildId);
+  };
+
 
   return (
-    <SelectableList
-      title="Recent Builds"
-      titleIcon={<Archive size={12} />}
-      items={items}
-      selectedIds={selectedBuildIds}
-      onSelectionChange={onSelectionChange}
-      onDelete={handleDelete}
-      multiSelect={true}
-      emptyMessage="No builds found"
-      showDeleteButton={true}
-      maxHeight="250px"
+    <SelectableList.Root
+      onClick={handleView}
       expanderId="builds"
-      className={className}
-    />
+      emptyLabel="no builds found"
+      showGrip={false}
+    >
+      <SelectableList.Header>
+        <Archive size={12} className="mr-2" />
+        Recent Builds
+      </SelectableList.Header>
+
+      <SelectableList.Actions />
+
+      <SelectableList.Content>
+        {builds.map((build) => (
+          <SelectableList.Item key={build.guid} id={build.guid}>
+            <SelectableList.ItemIcon>
+              <Archive size={12} className="flex-shrink-0 text-muted-foreground" />
+            </SelectableList.ItemIcon>
+            <div className="flex flex-col min-w-0 ml-1">
+              <div className="font-mono text-xs truncate">{build.label}</div>
+              <div className="text-2xs text-muted-foreground truncate">
+                Disk: {build.diskId.slice(-8)} • {timeAgo(build.timestamp)}
+              </div>
+            </div>
+            <SelectableList.ItemMenu>
+              <SelectableList.ItemAction
+                onClick={() => handleView(build.guid)}
+                icon={<Eye className="w-4 h-4" />}
+              >
+                View
+              </SelectableList.ItemAction>
+              <SelectableList.ItemAction
+                onClick={() => handleDelete(build.guid)}
+                icon={<Delete className="w-4 h-4" />}
+                destructive
+              >
+                Delete
+              </SelectableList.ItemAction>
+            </SelectableList.ItemMenu>
+          </SelectableList.Item>
+        ))}
+      </SelectableList.Content>
+    </SelectableList.Root>
   );
 });

@@ -6,7 +6,7 @@ export const SidebarGripChevron = () => (
     <ChevronRight
       size={14}
       className={
-        "transition-transform duration-100 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 -ml-1"
+        "transition-transform duration-100 group-data-[state=open]/selectablelist:rotate-90 group-data-[state=open]/collapsible:rotate-90 group-data-[state=closed]/collapsible:rotate-0 group-data-[state=closed]/selectablelist:rotate-0 -ml-1"
       }
     />
   </div>
