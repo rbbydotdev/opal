@@ -421,7 +421,7 @@ export const SidebarFileMenuFilesActions = ({
   const { zoomLevel } = useZoom();
 
   // Use a slightly more generous threshold to avoid the loop issue
-  const isTooSmall = Boolean(width * (0.9 / zoomLevel) < 340);
+  const isTooSmall = Boolean(width * (0.9 / zoomLevel) < 410);
 
   if (isTooSmall) {
     return (
