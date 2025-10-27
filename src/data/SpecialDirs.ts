@@ -21,6 +21,7 @@ export const SpecialDirs = {
 } as const;
 
 export function FilterOutSpecialDirs(path: AbsPath | { toString(): string }): boolean {
+  console.log("Filtering out special dirs:", path);
   return !SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
 export function FilterInSpecialDirs(path: AbsPath | { toString(): string }): boolean {

@@ -1,8 +1,9 @@
 import { BuildStrategy, PageData } from "@/builder/builder-types";
 import { BuildDAO } from "@/data/BuildDAO";
+import { BuildLogLine } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { NullDisk } from "@/data/NullDisk";
-import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
+import { FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
@@ -35,15 +36,43 @@ export class BuildService {
   sourcePath: AbsPath;
   workspaceName: string;
   strategy: BuildStrategy;
+  logs: BuildLogLine[] = [];
 
   get fileTree() {
     return this.sourceDisk.fileTree;
   }
 
+  private log(message: string, type: "info" | "error" | "warning" = "info") {
+    const logLine: BuildLogLine = {
+      timestamp: new Date(),
+      message,
+      type,
+    };
+    this.logs.push(logLine);
+
+    if (type === "error") {
+      this.onError(message);
+    } else {
+      this.onLog(message);
+    }
+  }
+
+  private logInfo(message: string) {
+    this.log(message, "info");
+  }
+
+  private logError(message: string) {
+    this.log(message, "error");
+  }
+
+  private logWarning(message: string) {
+    this.log(message, "warning");
+  }
+
   constructor({
     onLog,
     onError,
-    outputPath = absPath("/"),
+    outputPath = SpecialDirs.Build,
     sourcePath = absPath("/"),
     workspaceName,
     strategy,
@@ -53,6 +82,7 @@ export class BuildService {
     workspaceName: string;
     outputPath?: AbsPath;
     sourcePath?: AbsPath;
+
     strategy: BuildStrategy;
   }) {
     this.onLog = onLog;
@@ -68,35 +98,35 @@ export class BuildService {
   async executeBuild({ strategy, abortSignal }: BuildServiceOptions): Promise<BuildResult> {
     let currentWorkspace: Workspace | null = null;
     try {
-      this.onLog(`Starting ${strategy} build...`);
-      this.onLog("Filtering out special directories");
+      this.logInfo(`Starting ${strategy} build...`);
+      this.logInfo("Filtering out special directories");
 
       if (abortSignal?.aborted) {
-        this.onError("Build cancelled");
+        this.logError("Build cancelled");
         return { success: false, error: "Build cancelled" };
       }
 
-      this.onLog("Starting build process...");
-      this.onLog("Loading workspace...");
+      this.logInfo("Starting build process...");
+      this.logInfo("Loading workspace...");
       currentWorkspace = await Workspace.FromNameAndInit(this.workspaceName);
       if (!currentWorkspace) {
         throw new Error("Workspace not found");
       }
       const sourceDisk = currentWorkspace.getDisk();
       this.sourceDisk = sourceDisk;
-      this.outputDisk = new Disk(currentWorkspace.db, currentWorkspace.outputDiskGuid);
-      this.onLog(`Using source disk: ${sourceDisk.guid}`);
-      this.onLog("Building file tree...");
+      this.outputDisk = sourceDisk;
+      this.logInfo(`Using source disk: ${sourceDisk.guid}`);
+      this.logInfo("Building file tree...");
 
       // Index the source directory
-      this.onLog("Indexing source files...");
+      this.logInfo("Indexing source files...");
       await this.sourceDisk.triggerIndex();
       this.sourceDisk.fileTree;
 
       await this.ensureOutputDirectory();
 
       if (abortSignal?.aborted) {
-        this.onError("Build cancelled");
+        this.logError("Build cancelled");
         return { success: false, error: "Build cancelled" };
       }
 
@@ -115,20 +145,20 @@ export class BuildService {
       }
 
       if (abortSignal?.aborted) {
-        this.onError("Build cancelled");
+        this.logError("Build cancelled");
         return { success: false, error: "Build cancelled" };
       }
 
-      this.onLog("Build completed successfully!");
+      this.logInfo("Build completed successfully!");
 
       const buildDao = await this.createBuildRecord(strategy, this.sourceDisk);
-      this.onLog(`Build saved with ID: ${buildDao.guid}`);
+      this.logInfo(`Build saved with ID: ${buildDao.guid}`);
 
       return { success: true, buildDao };
     } catch (error) {
       if (!abortSignal?.aborted) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        this.onError(`Build failed: ${errorMessage}`);
+        this.logError(`Build failed: ${errorMessage}`);
         return { success: false, error: errorMessage };
       }
       return { success: false, error: "Build cancelled" };
@@ -142,24 +172,25 @@ export class BuildService {
   private async createBuildRecord(strategy: BuildStrategy, sourceDisk: Disk): Promise<BuildDAO> {
     const buildLabel = `${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Build - ${new Date().toLocaleString()}`;
     const buildDao = await BuildDAO.CreateNew(buildLabel, sourceDisk.guid);
+    buildDao.logs = this.logs;
     await buildDao.save();
     return buildDao;
   }
 
   private async ensureOutputDirectory(): Promise<void> {
-    this.onLog("Creating output directory...");
+    this.logInfo("Creating output directory...");
     await this.outputDisk.mkdirRecursive(this.outputPath);
   }
 
   private async buildFreeform(): Promise<void> {
-    this.onLog("Building with freeform strategy...");
+    this.logInfo("Building with freeform strategy...");
 
     await this.copyAssets();
     await this.processTemplatesAndMarkdown();
   }
 
   private async buildBook(): Promise<void> {
-    this.onLog("Building with book strategy...");
+    this.logInfo("Building with book strategy...");
 
     await this.copyAssets();
 
@@ -182,11 +213,11 @@ export class BuildService {
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
     await this.outputDisk.writeFile(indexPath, bookHtml);
-    this.onLog("Book page generated");
+    this.logInfo("Book page generated");
   }
 
   private async buildBlog(): Promise<void> {
-    this.onLog("Building with blog strategy...");
+    this.logInfo("Building with blog strategy...");
 
     await this.copyAssets();
 
@@ -197,10 +228,10 @@ export class BuildService {
   }
 
   private async copyAssets(): Promise<void> {
-    this.onLog("Copying assets...");
+    this.logInfo("Copying assets...");
 
     // Copy all files except templates, markdown, and files in _ directories
-    for (const node of this.fileTree.files()) {
+    for (const node of this.sourceDisk.fileTree.iterator((node) => node.isTreeFile() && FilterOutSpecialDirs(node.path))) {
       if (this.shouldCopyAsset(node)) {
         await this.copyFileToOutput(node);
       }
@@ -208,9 +239,9 @@ export class BuildService {
   }
 
   private async processTemplatesAndMarkdown(): Promise<void> {
-    this.onLog("Processing templates and markdown...");
+    this.logInfo("Processing templates and markdown...");
 
-    for (const node of this.fileTree.files()) {
+    for (const node of this.sourceDisk.fileTree.iterator((node) => node.isTreeFile() && FilterOutSpecialDirs(node.path))) {
       if (this.shouldIgnoreFile(node)) continue;
 
       if (this.isTemplateFile(node)) {
@@ -256,7 +287,7 @@ export class BuildService {
     const content = await this.sourceDisk.readFile(node.path);
     await this.outputDisk.writeFile(outputPath, content);
 
-    this.onLog(`Copied asset: ${relativePath}`);
+    this.logInfo(`Copied asset: ${relativePath}`);
   }
 
   async processTemplate(node: TreeNode): Promise<void> {
@@ -270,7 +301,7 @@ export class BuildService {
     const html = mustache.render(content, { globalCss });
 
     await this.outputDisk.writeFile(outputPath, html);
-    this.onLog(`Template processed: ${relativePath}`);
+    this.logInfo(`Template processed: ${relativePath}`);
   }
 
   async processMarkdown(node: TreeNode): Promise<void> {
@@ -296,7 +327,7 @@ export class BuildService {
     await this.ensureDirectoryExists(dirname(outputPath));
     await this.outputDisk.writeFile(outputPath, html);
 
-    this.onLog(`Markdown processed: ${relativePath}`);
+    this.logInfo(`Markdown processed: ${relativePath}`);
   }
 
   async loadPagesFromDirectory(dirPath: RelPath): Promise<PageData[]> {
@@ -304,7 +335,7 @@ export class BuildService {
     const fullDirPath = joinPath(this.sourcePath, dirPath);
 
     // Use FileTree to find all markdown files in the directory
-    for (const node of this.sourceDisk.fileTree.iterator(FilterOutSpecialDirs)) {
+    for (const node of this.sourceDisk.fileTree.iterator((node) => node.isTreeFile() && FilterOutSpecialDirs(node.path))) {
       if (node.path.startsWith(fullDirPath) && this.isMarkdownFile(node)) {
         const content = String(await this.sourceDisk.readFile(node.path));
         const { data: frontMatter, content: markdownContent } = matter(content);
@@ -356,7 +387,7 @@ export class BuildService {
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
     await this.outputDisk.writeFile(indexPath, html);
-    this.onLog("Blog index generated");
+    this.logInfo("Blog index generated");
   }
 
   async processLayout(post: PageData): Promise<{ layout: string; type: "mustache" | "ejs" }> {
@@ -391,7 +422,7 @@ export class BuildService {
       const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
       await this.outputDisk.writeFile(outputPath, html);
 
-      this.onLog(`Blog post generated: ${post.path}`);
+      this.logInfo(`Blog post generated: ${post.path}`);
     }
   }
 
@@ -422,7 +453,7 @@ export class BuildService {
         const content = String(await this.sourceDisk.readFile(stylePath));
         styles.push(content);
       } catch (_err) {
-        this.onError(`Style file not found: ${styleFile}`);
+        this.logError(`Style file not found: ${styleFile}`);
       }
     }
 

@@ -260,8 +260,13 @@ export const EditorSidebarLayout = ({
 
       <main className="relative min-w-0 flex-col flex flex-grow overflow-hidden">
         {panes.left.isCollapsed && (
-          <div className="absolute top-0 left-0 pl-2 bg-card p-1 z-50 flex aspect-square h-12 w-8 items-center justify-center rounded-r-lg">
-            <Button onClick={() => panes.left.setIsCollapsed(false)} title="Show sidebar (Cmd+B)" variant="outline">
+          <div className="absolute top-0 left-0 pl-2 bg-card p-1 z-50 flex aspect-square h-12 w-12 items-center justify-center rounded-r-lg">
+            <Button
+              onClick={() => panes.left.setIsCollapsed(false)}
+              title="Show sidebar (Cmd+B)"
+              variant="outline"
+              className="w-full"
+            >
               <PanelLeft className="h-4 w-4" />
             </Button>
           </div>

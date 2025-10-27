@@ -4,7 +4,7 @@
 }
 .CollapsibleContent[data-state="open"] {
   animation: slideDown 100ms ease-out;
-  overflow: visible;
+  overflow-y: scroll;
 }
 .CollapsibleContent[data-state="closed"] {
   animation: slideUp 100ms ease-out;
