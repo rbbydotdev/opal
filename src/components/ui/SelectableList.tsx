@@ -30,8 +30,10 @@ export type SelectableItem = {
   ItemComponent: React.ComponentType<{ id: string; isSelected: boolean }>;
 };
 
-type SelectableListContextValue = {
+type SelectableListContextValue<T = any> = {
   items: SelectableItem[];
+  data?: T[];
+  getItemId?: (item: T) => string;
   selected: string[];
   isSelected: (id: string) => boolean;
   toggleSelected: (id: string) => void;
@@ -42,7 +44,7 @@ type SelectableListContextValue = {
   emptyLabel?: string;
   showGrip?: boolean;
   allItemIds: string[];
-  setAllItemIds: (ids: string[]) => void;
+  setChildItemIds: (ids: string[]) => void;
 };
 
 const SelectableListContext = createContext<SelectableListContextValue | null>(null);
@@ -55,9 +57,11 @@ const useSelectableListContext = () => {
   return context;
 };
 
-type SelectableListRootProps = {
+type SelectableListRootProps<T = any> = {
   children: React.ReactNode;
   items?: SelectableItem[];
+  data?: T[];
+  getItemId?: (item: T) => string;
   onClick?: (id: string) => void;
   onDelete?: (id: string) => void;
   emptyLabel?: string;
@@ -65,17 +69,27 @@ type SelectableListRootProps = {
   showGrip?: boolean;
 };
 
-function SelectableListRoot({
+function SelectableListRoot<T = any>({
   children,
   items = [],
+  data,
+  getItemId,
   onClick,
   onDelete,
   emptyLabel = "no items",
   expanderId,
   showGrip = true,
-}: SelectableListRootProps) {
+}: SelectableListRootProps<T>) {
   const [selected, setSelected] = useState<string[]>([]);
-  const [allItemIds, setAllItemIds] = useState<string[]>([]);
+  const [childItemIds, setChildItemIds] = useState<string[]>([]);
+  
+  // Derive allItemIds from: 1) data prop, 2) items prop, 3) children IDs
+  const allItemIds = data && getItemId 
+    ? data.map(getItemId)
+    : items.length > 0 
+    ? items.map(item => item.id) 
+    : childItemIds;
+  
   const toggleSelected = (id: string) =>
     isSelected(id) ? setSelected((prev) => prev.filter((i) => i !== id)) : setSelected((prev) => [...prev, id]);
   const isSelected = (id: string) => selected.includes(id);
@@ -101,8 +115,10 @@ function SelectableListRoot({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [sectionRef, selected.length]);
 
-  const contextValue: SelectableListContextValue = {
+  const contextValue: SelectableListContextValue<T> = {
     items,
+    data,
+    getItemId,
     selected,
     isSelected,
     toggleSelected,
@@ -113,7 +129,7 @@ function SelectableListRoot({
     emptyLabel,
     showGrip,
     allItemIds,
-    setAllItemIds,
+    setChildItemIds,
   };
 
   const [expanded, setExpand] = useSingleItemExpander(expanderId);
@@ -230,25 +246,28 @@ function SelectableListHeader({ children }: { children: React.ReactNode }) {
 }
 
 function SelectableListContent({ children }: { children?: React.ReactNode }) {
-  const { emptyLabel, setAllItemIds } = useSelectableListContext();
+  const { emptyLabel, items, data, setChildItemIds } = useSelectableListContext();
 
   const childrenCount = React.Children.count(children);
+  const hasData = (data && data.length > 0) || items.length > 0;
 
-  // Extract item IDs from children and update context
+  // Extract child item IDs only when no data or items are provided
   React.useEffect(() => {
-    const itemIds: string[] = [];
-    React.Children.forEach(children, (child) => {
-      if (React.isValidElement(child) && child.type === SelectableListItem) {
-        itemIds.push(child.props.id);
-      }
-    });
-    setAllItemIds(itemIds);
-  }, [children, setAllItemIds]);
+    if (!hasData) {
+      const itemIds: string[] = [];
+      React.Children.forEach(children, (child) => {
+        if (React.isValidElement(child) && child.type === SelectableListItem) {
+          itemIds.push((child.props as any).id);
+        }
+      });
+      setChildItemIds(itemIds);
+    }
+  }, [children, setChildItemIds, hasData]);
 
   return (
     <CollapsibleContent>
       <SidebarMenu>
-        {childrenCount === 0 && (
+        {childrenCount === 0 && !hasData && (
           <div className="px-4 py-2">
             <EmptySidebarLabel label={emptyLabel} />
           </div>
@@ -257,6 +276,21 @@ function SelectableListContent({ children }: { children?: React.ReactNode }) {
       </SidebarMenu>
     </CollapsibleContent>
   );
+}
+
+type SelectableListMapProps<T> = {
+  doTheMap: (item: T) => React.ReactNode;
+};
+
+function SelectableListMap<T>({ doTheMap }: SelectableListMapProps<T>) {
+  const { data, getItemId } = useSelectableListContext();
+
+  if (!data || !getItemId) {
+    console.warn('SelectableList.Map requires data and getItemId to be provided in SelectableList.Root');
+    return null;
+  }
+
+  return <>{data.map(doTheMap)}</>;
 }
 
 type SelectableListTriggerProps = {
@@ -385,11 +419,12 @@ function SelectableListItemAction({ children, onClick, icon, destructive }: Sele
 
 // <SelectableList
 export const SelectableList = {
-  Root: SelectableListRoot, // <SelectableList.Root>
+  Root: SelectableListRoot as <T = any>(props: SelectableListRootProps<T>) => React.ReactElement,
   Header: SelectableListHeader, // <SelectableList.Header>
   Actions: SelectableListActions, // <SelectableList.Actions>
   ActionButton: SelectableListActionButton, // <SelectableList.ActionButton>
   Content: SelectableListContent, // <SelectableList.Content>
+  Map: SelectableListMap as <T = any>(props: SelectableListMapProps<T>) => React.ReactElement | null,
   Trigger: SelectableListTrigger, // <SelectableList.Trigger>
   Item: SelectableListItem, // <SelectableList.Item>
   ItemIcon: SelectableListItemIcon, // <SelectableList.ItemIcon>
@@ -403,11 +438,11 @@ export const SelectableList = {
 /*
 import { Github, Sparkle, Plus, Archive, Calendar } from "lucide-react";
 
-// Example 1: Using Icon/label/subLabel (backward compatible)
+// Example 1: Using the new Map component (recommended pattern)
 function ConnectionsExample() {
   const connections = [
-    { id: "1", Icon: Github, label: "Connection 1", subLabel: "github.com/user1" },
-    { id: "2", Icon: Github, label: "Connection 2", subLabel: "github.com/user2" },
+    { guid: "1", name: "Connection 1", type: "github", source: "github.com/user1" },
+    { guid: "2", name: "Connection 2", type: "github", source: "github.com/user2" },
   ];
 
   const handleEdit = (id: string) => {
@@ -424,25 +459,45 @@ function ConnectionsExample() {
 
   return (
     <SelectableList.Root 
-      items={connections} 
-      onEdit={handleEdit} 
+      data={connections}
+      getItemId={(connection) => connection.guid}
+      onClick={handleEdit} 
       onDelete={handleDelete}
       expanderId="connections"
       emptyLabel="no connections"
-      showGrip={true} // Default: true for draggable sections
+      showGrip={true}
     >
       <SelectableList.Header>
         <Sparkle size={12} className="mr-2" />
         Connections
       </SelectableList.Header>
       
-      <SelectableList.Actions />
+      <SelectableList.Actions>
+        <SelectableList.ActionButton onClick={handleAddConnection}>
+          <Plus size={12} />
+        </SelectableList.ActionButton>
+      </SelectableList.Actions>
       
       <SelectableList.Content>
-        <SelectableList.Trigger onTrigger={handleAddConnection}>
-          <Plus size={12} className="mr-1" />
-          Add Connection
-        </SelectableList.Trigger>
+        <SelectableList.Map 
+          doTheMap={(connection) => (
+            <SelectableList.Item key={connection.guid} id={connection.guid}>
+              <SelectableList.ItemIcon>
+                <Github size={12} />
+              </SelectableList.ItemIcon>
+              <SelectableList.ItemLabel>{connection.name}</SelectableList.ItemLabel>
+              <SelectableList.ItemSubLabel>{connection.source}</SelectableList.ItemSubLabel>
+              <SelectableList.ItemMenu>
+                <SelectableList.ItemAction onClick={() => handleEdit(connection.guid)}>
+                  Edit
+                </SelectableList.ItemAction>
+                <SelectableList.ItemAction onClick={() => handleDelete(connection.guid)}>
+                  Delete
+                </SelectableList.ItemAction>
+              </SelectableList.ItemMenu>
+            </SelectableList.Item>
+          )}
+        />
       </SelectableList.Content>
     </SelectableList.Root>
   );

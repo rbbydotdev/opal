@@ -11,7 +11,7 @@ import { useGetNodeFromEditor } from "@/components/useGetNodeFromEditor";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { isContainer, isLeaf, LexicalTreeViewNode } from "@/lib/lexical/treeViewDisplayNodesLexical";
-import { $createListItemNode, $createListNode, $isListItemNode, $isListNode } from "@lexical/list";
+import { $createListItemNode, $createListNode, $isListItemNode, $isListNode, ListType } from "@lexical/list";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
 import { Dot, PlusIcon } from "lucide-react";
@@ -212,7 +212,7 @@ export function SidebarTreeViewMenuContent({
         } else {
           // inside: create nested list under target item
           const nestedListType = getListTypeSecure(draggedNode) || "bullet";
-          const nestedList = $createListNode(nestedListType);
+          const nestedList = $createListNode(nestedListType as ListType);
           nestedList.append(draggedNode);
           targetNode.append(nestedList);
         }
@@ -242,7 +242,7 @@ export function SidebarTreeViewMenuContent({
     // Case 6: List Item → Non-List = Create new list
     if (isDraggedListItem && !isTargetList && !isTargetListItem) {
       const listType = getListTypeSecure(draggedNode) || "bullet";
-      const newList = $createListNode(listType);
+      const newList = $createListNode(listType as ListType);
       draggedNode.remove();
       newList.append(draggedNode);
 
