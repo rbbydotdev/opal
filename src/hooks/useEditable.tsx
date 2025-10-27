@@ -186,7 +186,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
           (["new", "duplicate"].includes(editType) || prefix(fileName) !== prefix(basename(fullPath)))
         ) {
           e.stopPropagation();
-          const wantPath = newFileName(fullPath, fileName); //basename(changePrefix(fullPath, strictPathname(prefix(fileName))));
+          const wantPath = newFileName(fullPath, fileName);
           const gotPath = await commitChange(treeNode, wantPath, editType);
           const newFocused = gotPath ?? fullPath;
           if (gotPath !== null) {

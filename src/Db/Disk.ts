@@ -315,7 +315,7 @@ export abstract class Disk {
     for (const [oldNode, newNode] of nodes) {
       /*no mutex everything runs sequentially*/
       const result = await this.quietlyRenameDirOrFile(
-        oldNode.path,
+        oldNode,
         newNode instanceof TreeNode ? newNode.path : newNode,
         oldNode.type
       );
@@ -348,20 +348,24 @@ export abstract class Disk {
     return this.broadcastRename([await this.quietlyRenameDirOrFile(...properties)]);
   }
   protected async quietlyRenameDirOrFile(
-    oldFullPath: AbsPath,
+    oldFullPath: AbsPath | TreeNode,
     newFullPath: AbsPath,
     fileType?: "file" | "dir"
   ): Promise<RenameFileType> {
     await this.ready;
     if (!fileType) {
-      const stat = await this.fs.stat(encodePath(oldFullPath));
-      fileType = stat.isDirectory() ? "dir" : "file";
+      if (oldFullPath instanceof TreeNode) {
+        fileType = oldFullPath.isTreeDir() ? "dir" : "file";
+      } else {
+        const stat = await this.fs.stat(encodePath(oldFullPath));
+        fileType = stat.isDirectory() ? "dir" : "file";
+      }
     }
     const NOCHANGE: RenameFileType = new RenameFileType({
       fileType: fileType,
-      newPath: oldFullPath,
+      newPath: String(oldFullPath),
       newName: relPath(basename(oldFullPath)),
-      oldPath: oldFullPath,
+      oldPath: String(oldFullPath),
       oldName: relPath(basename(oldFullPath)),
     });
 
@@ -371,7 +375,7 @@ export abstract class Disk {
     const uniquePath = await this.nextPath(cleanFullPath); // ensure the path is unique
     try {
       await this.mkdirRecursive(absPath(dirname(uniquePath)));
-      await this.fs.rename(encodePath(oldFullPath), encodePath(uniquePath));
+      await this.fs.rename(encodePath(String(oldFullPath)), encodePath(uniquePath));
     } catch (e) {
       throw e;
     }
@@ -381,7 +385,7 @@ export abstract class Disk {
       newPath: uniquePath,
       newName: relPath(basename(uniquePath)),
       oldName: relPath(basename(oldFullPath)),
-      oldPath: oldFullPath,
+      oldPath: String(oldFullPath),
     });
 
     return CHANGE;

@@ -328,12 +328,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
 
   const renameDirOrFile = useCallback(
     async (origNode: TreeNode, newPath: TreeNode | AbsPath | RelPath) => {
-      if (origNode.path === newPath) {
-        return null; // No change needed
-      }
-      // const finalPath = isRelPath(newPath.toString())
-      //   ? joinPath(absPath(origNode.parent ?? RootNode), String(newPath))
-      //   : newPath;
+      if (origNode.path === newPath) return null; // No change needed
       try {
         const result = await renameDirOrFileMultiple([[origNode, newPath]] as [TreeNode, TreeNode | AbsPath][]);
         if (!result || result.length <= 0) return null;

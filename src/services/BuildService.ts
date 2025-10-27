@@ -2,6 +2,7 @@ import { BuildStrategy, PageData } from "@/builder/builder-types";
 import { BuildDAO } from "@/Db/BuildDAO";
 import { Disk } from "@/Db/Disk";
 import { NullDisk } from "@/Db/NullDisk";
+import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
@@ -143,7 +144,6 @@ export class BuildService {
     await buildDao.save();
     return buildDao;
   }
-
 
   private async ensureOutputDirectory(): Promise<void> {
     this.onLog("Creating output directory...");
@@ -303,7 +303,7 @@ export class BuildService {
     const fullDirPath = joinPath(this.sourcePath, dirPath);
 
     // Use FileTree to find all markdown files in the directory
-    for (const node of this.sourceDisk.fileTree.files()) {
+    for (const node of this.sourceDisk.fileTree.iterator(FilterOutSpecialDirs)) {
       if (node.path.startsWith(fullDirPath) && this.isMarkdownFile(node)) {
         const content = String(await this.sourceDisk.readFile(node.path));
         const { data: frontMatter, content: markdownContent } = matter(content);

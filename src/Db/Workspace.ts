@@ -392,30 +392,6 @@ export class Workspace {
     return this.disk.renameMultiple(nodes);
   }
 
-  ________________renameDir = async (oldNode: TreeNode, newFullPath: AbsPath) => {
-    const { newPath } = await this.disk.renameDir(oldNode.path, newFullPath).catch((e) => {
-      console.error("Error renaming dir", e);
-      throw e;
-    });
-    const newNode = oldNode.copy().rename(newPath);
-
-    const findStrReplaceStr: [string, string][] = [];
-
-    await newNode.asyncWalk(async (child) => {
-      findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
-      await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
-    });
-
-    // for await (const child of newNode.asyncWalkIterator()) {
-    //   findStrReplaceStr.push([child.path, absPath(child.path.replace(oldNode.path, newNode.path))]);
-    //   await this.adjustThumbAndCachePath(child, absPath(child.path.replace(oldNode.path, newNode.path)));
-    // }
-
-    // console.log("Renaming md images in dir", findStrReplaceStr);
-    await this.renameMdImages(findStrReplaceStr);
-
-    return newNode;
-  };
   readFile = (filePath: AbsPath) => {
     return this.disk.readFile(filePath);
   };

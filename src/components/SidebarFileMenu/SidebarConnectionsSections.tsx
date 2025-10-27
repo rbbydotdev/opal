@@ -1,35 +1,16 @@
 import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
-import { SelectableList, SelectableItem } from "@/components/ui/SelectableList2";
+import { SelectableList } from "@/components/ui/SelectableList";
 import { SidebarGroup } from "@/components/ui/sidebar";
-import { RemoteAuthJType, RemoteAuthRecord } from "@/Db/RemoteAuthTypes";
+import { RemoteAuthJType } from "@/Db/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
-import { Plus, Sparkle } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Delete, Pencil, Plus, Sparkle } from "lucide-react";
+import { useState } from "react";
 
 function ConnectionManager() {
   const { remoteAuths, deleteRemoteAuth } = useRemoteAuths();
   const [editingConnection, setEditingConnection] = useState<RemoteAuthJType | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
-
-  // Convert RemoteAuthRecord to SelectableItem format
-  const connectionItems: SelectableItem[] = useMemo(
-    () =>
-      remoteAuths.map((connection) => ({
-        id: connection.guid,
-        label: connection.name,
-        subLabel: `${connection.type} ${connection.source}`.toLowerCase(),
-        Icon: () => (
-          <RemoteAuthSourceIconComponent
-            type={connection.type}
-            source={connection.source}
-            size={12}
-            className="flex-shrink-0"
-          />
-        ),
-      })),
-    [remoteAuths]
-  );
 
   const handleEdit = (id: string) => {
     const connection = remoteAuths.find((conn) => conn.guid === id);
@@ -39,7 +20,7 @@ function ConnectionManager() {
   };
 
   const handleDelete = (id: string) => {
-    deleteRemoteAuth(id);
+    return deleteRemoteAuth(id);
   };
 
   const handleAddConnection = () => {
@@ -48,37 +29,56 @@ function ConnectionManager() {
 
   return (
     <>
-      <SelectableList.Root
-        items={connectionItems}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        expanderId="connections"
-        emptyLabel="no connections"
-      >
+      <SelectableList.Root onClick={handleEdit} expanderId="connections" emptyLabel="no connections">
         <SelectableList.Header>
           <Sparkle size={12} className="mr-2" />
           Connections
         </SelectableList.Header>
-        
+
         <SelectableList.Actions>
-          <SelectableList.ActionButton 
-            onClick={handleAddConnection}
-            title="Add Connection"
-          >
+          <SelectableList.ActionButton onClick={handleAddConnection} title="Add Connection" className="right-7">
             <Plus className="w-4 h-4" />
             <span className="sr-only">Add Connection</span>
           </SelectableList.ActionButton>
         </SelectableList.Actions>
-        
-        <SelectableList.Content />
+
+        <SelectableList.Content>
+          {remoteAuths.map((connection) => (
+            <SelectableList.Item key={connection.guid} id={connection.guid}>
+              <SelectableList.ItemIcon>
+                <RemoteAuthSourceIconComponent
+                  type={connection.type}
+                  source={connection.source}
+                  size={12}
+                  className="flex-shrink-0"
+                />
+              </SelectableList.ItemIcon>
+              <SelectableList.ItemLabel>{connection.name}</SelectableList.ItemLabel>
+              <SelectableList.ItemSubLabel>
+                {`${connection.type} ${connection.source}`.toLowerCase()}
+              </SelectableList.ItemSubLabel>
+              <SelectableList.ItemMenu>
+                <SelectableList.ItemAction
+                  onClick={() => handleEdit(connection.guid)}
+                  icon={<Pencil className="w-4 h-4" />}
+                >
+                  Edit
+                </SelectableList.ItemAction>
+                <SelectableList.ItemAction
+                  onClick={() => handleDelete(connection.guid)}
+                  icon={<Delete className="w-4 h-4" />}
+                  destructive
+                >
+                  Delete
+                </SelectableList.ItemAction>
+              </SelectableList.ItemMenu>
+            </SelectableList.Item>
+          ))}
+        </SelectableList.Content>
       </SelectableList.Root>
 
       {/* Add Connection Modal */}
-      <ConnectionsModal
-        open={addModalOpen}
-        onOpenChange={setAddModalOpen}
-        onSuccess={() => setAddModalOpen(false)}
-      />
+      <ConnectionsModal open={addModalOpen} onOpenChange={setAddModalOpen} onSuccess={() => setAddModalOpen(false)} />
 
       {/* Edit Connection Modal */}
       <ConnectionsModal
