@@ -580,10 +580,10 @@ export class Workspace {
     return this.disk.fileTree.all().map((node) => node.path);
   }
 
-  nodeFromPath(path?: AbsPath | string | null) {
+  nodeFromPath = (path?: AbsPath | string | null) => {
     if (path === null || path === undefined) return null;
     return this.disk.fileTree.nodeFromPath(path);
-  }
+  };
   nodesFromPaths(paths: (AbsPath | string | null)[]) {
     return paths.map((path) => this.nodeFromPath(path)).filter(Boolean);
   }

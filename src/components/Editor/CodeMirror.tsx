@@ -26,7 +26,7 @@ import { Compartment, EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
 import { useLocation, useRouter } from "@tanstack/react-router";
-import { basicSetup } from "codemirror";
+import { createCustomBasicSetup } from "@/components/Editor/customBasicSetup";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
 import parserBabel from "prettier/plugins/babel";
@@ -115,14 +115,13 @@ export const CodeMirrorEditor = ({
   const editableCompartment = useMemo(() => new Compartment(), []);
   const conflictCompartment = useMemo(() => new Compartment(), []);
   const urlRangeCompartment = useMemo(() => new Compartment(), []);
+  const basicSetupCompartment = useMemo(() => new Compartment(), []);
 
   // initial setup
   useEffect(() => {
     if (!editorRef.current) return;
 
     const extensions: Extension[] = [
-      basicSetup,
-      customCodeMirrorTheme,
       autocompletion(),
       EditorView.lineWrapping,
       urlRangeCompartment.of([]),
@@ -146,6 +145,8 @@ export const CodeMirrorEditor = ({
         ".cm-scroller": { height: "100%" },
         ".cm-content": { padding: 0 },
       }),
+      basicSetupCompartment.of([]),
+      customCodeMirrorTheme,
     ];
 
     const state = EditorState.create({
@@ -179,6 +180,7 @@ export const CodeMirrorEditor = ({
       viewRef.current = null;
     };
   }, [
+    basicSetupCompartment,
     conflictCompartment,
     editableCompartment,
     enableConflictResolution,
@@ -204,6 +206,14 @@ export const CodeMirrorEditor = ({
       });
     }
   }, [mimeType, hasConflicts, globalConflictResolution, languageCompartment]);
+  useEffect(() => {
+    //basicsetup compartment - use custom setup that respects vim mode
+    if (viewRef.current) {
+      viewRef.current.dispatch({
+        effects: basicSetupCompartment.reconfigure(createCustomBasicSetup(vimMode)),
+      });
+    }
+  }, [basicSetupCompartment, vimMode]);
 
   // Reconfigure vim mode
   useEffect(() => {

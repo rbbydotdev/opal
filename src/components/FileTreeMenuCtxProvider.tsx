@@ -44,14 +44,14 @@ type EditType = "rename" | "new" | "duplicate";
 
 export const FileTreeMenuCtxProvider = ({
   children,
-  currentWorkspace,
+  nodeFromPath,
   scope,
   // filterRange is needed since selecting ranges will include hidden files in the range
   // so they need filtered out
   // filterRange, TODO - i don't think we need this anymore
 }: {
   children: React.ReactNode;
-  currentWorkspace: Workspace;
+  nodeFromPath: (path?: AbsPath | string | null) => TreeNode | null;
   scope?: AbsPath;
 }) => {
   const location = useLocation();
@@ -62,11 +62,8 @@ export const FileTreeMenuCtxProvider = ({
   const [draggingNodes, setDraggingNodes] = useState<TreeNode[]>([]);
 
   const scopedTreeNode = useMemo(
-    () =>
-      typeof scope === "undefined"
-        ? currentWorkspace.nodeFromPath(absPath("/"))!
-        : currentWorkspace.nodeFromPath(scope)!,
-    [currentWorkspace, scope]
+    () => (typeof scope === "undefined" ? nodeFromPath(absPath("/"))! : nodeFromPath(scope)!),
+    [nodeFromPath, scope]
   );
 
   const [fileTreeCtx, setFileTreeCtx] = useState<{
@@ -89,20 +86,20 @@ export const FileTreeMenuCtxProvider = ({
   const { editing, anchorIndex, focused, virtual, selectedRange, editType } = useMemo(() => {
     return {
       anchorIndex: fileTreeCtx.anchorIndex,
-      editing: currentWorkspace.nodeFromPath(fileTreeCtx.editing)?.path ?? null,
-      focused: currentWorkspace.nodeFromPath(fileTreeCtx.focused)?.path ?? null,
+      editing: nodeFromPath(fileTreeCtx.editing)?.path ?? null,
+      focused: nodeFromPath(fileTreeCtx.focused)?.path ?? null,
       virtual: fileTreeCtx.virtual,
-      selectedRange: fileTreeCtx.selectedRange.filter((path) => currentWorkspace.nodeFromPath(path) !== null),
+      selectedRange: fileTreeCtx.selectedRange.filter((path) => nodeFromPath(path) !== null),
       editType: fileTreeCtx.editType,
     };
   }, [
-    currentWorkspace,
-    fileTreeCtx.editType,
+    fileTreeCtx.anchorIndex,
     fileTreeCtx.editing,
     fileTreeCtx.focused,
-    fileTreeCtx.selectedRange,
     fileTreeCtx.virtual,
-    fileTreeCtx.anchorIndex,
+    fileTreeCtx.selectedRange,
+    fileTreeCtx.editType,
+    nodeFromPath,
   ]);
 
   const resetEditing = () => {

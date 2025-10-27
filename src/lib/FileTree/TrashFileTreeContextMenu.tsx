@@ -22,7 +22,6 @@ export const TrashFileTreeContextMenu = ({
     return () => (fnRef.current = fn);
   };
 
-  // const { selectedNodes } = useFiletreeMenuContextMenuActions({
   const { selectedRange } = useFileTreeMenuCtx();
   const { untrash, remove } = useFiletreeMenuContextMenuActions({
     currentWorkspace,
