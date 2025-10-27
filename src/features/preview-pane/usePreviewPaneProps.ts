@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import { useWorkspacePathPreviewURL } from "@/features/preview-pane/useWorkspacePathPreviewURL";
 import { AbsPath } from "@/lib/paths2";

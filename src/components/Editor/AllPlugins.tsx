@@ -1,5 +1,3 @@
-import { useSnapHistoryDB } from "@/Db/HistoryDAO";
-import { Workspace } from "@/Db/Workspace";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/components/Editor/MdxSeachToolbar";
 import { MdxToolbar } from "@/components/Editor/MdxToolbar";
@@ -10,6 +8,8 @@ import { useWorkspaceDocumentId } from "@/components/Editor/history/useWorkspace
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { useFileContents } from "@/context/useFileContents";
+import { useSnapHistoryDB } from "@/data/HistoryDAO";
+import { Workspace } from "@/data/Workspace";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,

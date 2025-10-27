@@ -1,8 +1,8 @@
 import { SelectableList } from "@/components/ui/SelectableList";
-import { BuildDAO } from "@/Db/BuildDAO";
+import { BuildDAO } from "@/data/BuildDAO";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
-import { Archive, Eye, Delete } from "lucide-react";
+import { Archive, Delete, Eye } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
@@ -64,14 +64,8 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
     console.log("View build:", buildId);
   };
 
-
   return (
-    <SelectableList.Root
-      onClick={handleView}
-      expanderId="builds"
-      emptyLabel="no builds found"
-      showGrip={false}
-    >
+    <SelectableList.Root onClick={handleView} expanderId="builds" emptyLabel="no builds found" showGrip={false}>
       <SelectableList.Header>
         <Archive size={12} className="mr-2" />
         Recent Builds
@@ -92,10 +86,7 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
               </div>
             </div>
             <SelectableList.ItemMenu>
-              <SelectableList.ItemAction
-                onClick={() => handleView(build.guid)}
-                icon={<Eye className="w-4 h-4" />}
-              >
+              <SelectableList.ItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
                 View
               </SelectableList.ItemAction>
               <SelectableList.ItemAction

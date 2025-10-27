@@ -1,4 +1,4 @@
-import { type Workspace } from "@/Db/Workspace";
+import { type Workspace } from "@/data/Workspace";
 import { AbsPath, joinPath } from "@/lib/paths2";
 import { type ImageWorkerApiType } from "@/workers/ImageWorker/Image.api";
 import { ImageWorkerMessageArgs, ImageWorkerMessageReturn } from "@/workers/ImageWorker/image3.ww";

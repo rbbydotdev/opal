@@ -1,8 +1,8 @@
 import { useConfirm } from "@/components/Confirm";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { WorkspaceBadge } from "@/components/WorkspaceBadge";
-import { Workspace } from "@/Db/Workspace";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { Workspace } from "@/data/Workspace";
+import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 import { useRouter } from "@tanstack/react-router";
 import { Delete, Pencil } from "lucide-react";
 
@@ -35,7 +35,9 @@ export function WorkspaceMenu({
           onClick={() => {
             void open(
               async () => {
-                const currentWorkspace = await WorkspaceDAO.FetchByGuid(workspaceGuid).then((ws) => Workspace.FromDAO(ws));
+                const currentWorkspace = await WorkspaceDAO.FetchByGuid(workspaceGuid).then((ws) =>
+                  Workspace.FromDAO(ws)
+                );
                 await currentWorkspace.destroy();
                 if (window.location.pathname.startsWith(currentWorkspace.href)) {
                   void router.navigate({ to: "/" });

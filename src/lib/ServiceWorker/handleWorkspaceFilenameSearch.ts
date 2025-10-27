@@ -1,11 +1,11 @@
-import { Workspace } from "@/Db/Workspace";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
-import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
+import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
+import { Workspace } from "@/data/Workspace";
+import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";
-import { basename, AbsPath } from "@/lib/paths2";
-import { SWWStore } from "./SWWStore";
+import { AbsPath, basename } from "@/lib/paths2";
 import fuzzysort from "fuzzysort";
+import { SWWStore } from "./SWWStore";
 
 const activeFilenameSearches = new Map<string, AbortController>();
 
@@ -48,29 +48,29 @@ function createWorkspaceFilenameSearchStream({
             });
 
             // Filter out special directories first
-            const visibleFiles = files.filter(filePath => FilterOutSpecialDirs(filePath));
-            
+            const visibleFiles = files.filter((filePath) => FilterOutSpecialDirs(filePath));
+
             // Use fuzzy search on filenames
-            const searchTargets = visibleFiles.map(filePath => basename(filePath));
+            const searchTargets = visibleFiles.map((filePath) => basename(filePath));
             const searchResults = fuzzysort.go(searchTerm, searchTargets, { limit: 50 });
-            
+
             // Map fuzzy search results back to file paths
-            const matchedFiles = searchResults.map(result => {
+            const matchedFiles = searchResults.map((result) => {
               const filename = result.target;
-              return visibleFiles.find(filePath => basename(filePath) === filename)!;
+              return visibleFiles.find((filePath) => basename(filePath) === filename)!;
             });
 
             // Send each matched file as a separate result
             for (const filePath of matchedFiles) {
               if (signal.aborted) break;
-              
+
               const result: FilenameSearchResult = {
                 filePath,
                 filename: basename(filePath),
                 workspaceName: workspace.name,
                 workspaceId: workspace.id,
               };
-              
+
               const chunk = encoder.encode(JSON.stringify(result) + "\n");
               controller.enqueue(chunk);
             }

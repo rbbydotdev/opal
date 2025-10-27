@@ -7,7 +7,7 @@ import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
 import { WorkspaceImageView } from "@/components/WorkspaceImageView";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import useFavicon from "@/hooks/useFavicon";
 import { NotFoundError } from "@/lib/errors";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";

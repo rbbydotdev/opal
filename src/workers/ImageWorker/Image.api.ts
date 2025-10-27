@@ -1,4 +1,4 @@
-import { type Workspace } from "@/Db/Workspace";
+import { type Workspace } from "@/data/Workspace";
 import { AbsPath } from "@/lib/paths2";
 
 export const ImageWorkerApi = {

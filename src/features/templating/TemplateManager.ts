@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { AbsPath, isEjs, isMustache } from "@/lib/paths2";
 import { BaseRenderer } from "./BaseRenderer";

@@ -1,6 +1,6 @@
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { RemoteAuthJType } from "@/Db/RemoteAuthTypes";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { useState } from "react";

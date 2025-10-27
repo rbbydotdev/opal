@@ -4,7 +4,7 @@ import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/S
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { Code2, Github, Hammer } from "lucide-react";

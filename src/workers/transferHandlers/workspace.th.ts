@@ -1,4 +1,4 @@
-import { Workspace, WorkspaceJType } from "@/Db/Workspace";
+import { Workspace, WorkspaceJType } from "@/data/Workspace";
 import { transferHandlers } from "comlink";
 transferHandlers.set("Workspace", {
   canHandle: (obj): obj is Workspace => obj instanceof Workspace,

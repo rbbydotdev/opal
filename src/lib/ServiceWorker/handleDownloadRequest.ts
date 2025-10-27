@@ -1,4 +1,4 @@
-import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
+import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";

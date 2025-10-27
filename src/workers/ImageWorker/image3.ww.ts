@@ -4,7 +4,7 @@
 //   return workspace.NewImage(buffer, filePath);
 // },
 
-import { Workspace, WorkspaceJType } from "@/Db/Workspace";
+import { Workspace, WorkspaceJType } from "@/data/Workspace";
 import { unwrapError } from "@/lib/errors";
 import { AbsPath } from "@/lib/paths2";
 import { ImageWorkerApi } from "@/workers/ImageWorker/Image.api";

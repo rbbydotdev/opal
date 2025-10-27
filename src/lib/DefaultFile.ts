@@ -1,4 +1,4 @@
-import { newMd } from "@/Db/newMd";
+import { newMd } from "@/data/newMd";
 import { AbsPath, basename, prefix } from "@/lib/paths2";
 import globalSeedCss from "@/seedfiles/global-seed.css?raw";
 

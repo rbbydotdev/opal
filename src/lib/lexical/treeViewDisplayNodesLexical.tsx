@@ -1,4 +1,4 @@
-import { Thumb } from "@/Db/Thumb";
+import { Thumb } from "@/data/Thumb";
 import { absPath, basename } from "@/lib/paths2";
 import { $isHeadingNode, HeadingNode } from "@lexical/rich-text";
 

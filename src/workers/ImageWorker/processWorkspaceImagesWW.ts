@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { AbsPath, joinPath } from "@/lib/paths2";
 import { wrap } from "comlink";
 

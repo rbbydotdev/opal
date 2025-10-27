@@ -1,5 +1,5 @@
-import { Workspace } from "@/Db/Workspace";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { Workspace } from "@/data/Workspace";
+import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 
 //shared singleton for Service Worker to manage/cache workspaces
 export const SWWStore = new (class SwWorkspace {

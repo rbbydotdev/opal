@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { AbsPath } from "@/lib/paths2";
 import { Eta } from "eta/core";
 import graymatter from "gray-matter";
@@ -217,7 +217,6 @@ export class EtaRenderer extends BaseRenderer {
     };
   }
 
-
   /**
    * Custom file reader for Eta to read templates from workspace
    */
@@ -255,7 +254,6 @@ export class EtaRenderer extends BaseRenderer {
     const hasExtension = template.includes(".");
     return (hasExtension ? template : `${template}.eta`) as AbsPath;
   }
-
 
   /**
    * Imports a markdown file and parses its frontmatter and content

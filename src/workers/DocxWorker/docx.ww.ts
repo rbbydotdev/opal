@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { convertImage } from "@/lib/createImage";
 import { renderHtmlToMarkdown } from "@/lib/markdown/renderHtmlToMarkdown";
 import { AbsPath, basename, dirname, extname, joinPath, prefix, relPath, strictPathname } from "@/lib/paths2";

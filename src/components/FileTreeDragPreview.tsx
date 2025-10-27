@@ -1,5 +1,5 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { Thumb } from "@/Db/Thumb";
+import { Thumb } from "@/data/Thumb";
 import { DragPreviewNode } from "@/features/filetree-drag-and-drop/DragPreviewNode";
 import { FileCode2Icon, FileTextIcon, Folder } from "lucide-react";
 import { forwardRef } from "react";

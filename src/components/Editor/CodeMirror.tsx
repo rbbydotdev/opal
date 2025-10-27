@@ -1,5 +1,6 @@
 import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
 import { createURLRangeExtension, parseParamsToRanges } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { createCustomBasicSetup } from "@/components/Editor/customBasicSetup";
 import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
@@ -9,7 +10,7 @@ import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
@@ -26,7 +27,6 @@ import { Compartment, EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
 import { useLocation, useRouter } from "@tanstack/react-router";
-import { createCustomBasicSetup } from "@/components/Editor/customBasicSetup";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
 import parserBabel from "prettier/plugins/babel";

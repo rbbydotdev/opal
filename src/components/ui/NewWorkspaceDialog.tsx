@@ -12,10 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DefaultDiskType } from "@/Db/DiskDefaults";
-import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/Db/DiskType";
-import { Workspace } from "@/Db/Workspace";
-import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/Db/WorkspaceTemplates";
+import { DefaultDiskType } from "@/data/disk/DiskDefaults";
+import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/data/DiskType";
+import { Workspace } from "@/data/Workspace";
+import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/data/WorkspaceTemplates";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { useNavigate } from "@tanstack/react-router";
 import { FolderIcon, LoaderIcon, XIcon } from "lucide-react";

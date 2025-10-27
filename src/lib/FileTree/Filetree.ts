@@ -1,4 +1,4 @@
-import { CommonFileSystem } from "@/Db/FileSystemTypes";
+import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { exhaustAsyncGenerator } from "@/lib/exhaustAsyncGenerator";
 import {

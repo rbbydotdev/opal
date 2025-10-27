@@ -1,10 +1,10 @@
+import type { CmdMap } from "@/components/SpotlightSearch";
 import { toast } from "@/components/ui/sonner";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/WorkspaceDAO";
+import { ThemePreview } from "@/features/theme/ThemePreview";
 import { useTheme } from "@/hooks/useTheme";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { ThemePreview } from "@/features/theme/ThemePreview";
-import type { CmdMap } from "@/components/SpotlightSearch";
 
 const NewCmdExec = (exec: (context: Record<string, unknown>, abort: () => void) => void | Promise<void>) => ({
   exec,

@@ -1,5 +1,5 @@
-import { Thumb } from "@/Db/Thumb";
-import { Workspace } from "@/Db/Workspace";
+import { Thumb } from "@/data/Thumb";
+import { Workspace } from "@/data/Workspace";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";

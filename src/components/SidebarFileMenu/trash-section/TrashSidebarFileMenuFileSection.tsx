@@ -3,7 +3,7 @@ import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotic
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { SpecialDirs } from "@/Db/SpecialDirs";
+import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TrashFileTreeContextMenu } from "@/lib/FileTree/TrashFileTreeContextMenu";
@@ -19,13 +19,14 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
   );
 
   return (
-    <FileTreeProvider currentWorkspace={currentWorkspace} ItemContextMenu={TrashFileTreeContextMenu}>
+    <FileTreeProvider currentWorkspace={currentWorkspace}>
       <TreeExpanderProvider id="TrashFiles">
         <ContextMenu>
           <ContextMenuTrigger disabled={!currentWorkspace.hasTrash()} asChild>
             <SidebarFileMenuFiles
               Icon={Trash2}
               title={"Trash"}
+              ItemContextMenu={TrashFileTreeContextMenu}
               className={className}
               scope={SpecialDirs.Trash}
               contentBanner={hasTrash ? <div className="h-2"></div> : null}

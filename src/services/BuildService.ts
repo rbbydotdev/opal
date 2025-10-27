@@ -1,9 +1,9 @@
 import { BuildStrategy, PageData } from "@/builder/builder-types";
-import { BuildDAO } from "@/Db/BuildDAO";
-import { Disk } from "@/Db/Disk";
-import { NullDisk } from "@/Db/NullDisk";
-import { FilterOutSpecialDirs } from "@/Db/SpecialDirs";
-import { Workspace } from "@/Db/Workspace";
+import { BuildDAO } from "@/data/BuildDAO";
+import { Disk } from "@/data/disk/Disk";
+import { NullDisk } from "@/data/NullDisk";
+import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
+import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { getMimeType } from "@zip.js/zip.js";
@@ -84,6 +84,7 @@ export class BuildService {
       }
       const sourceDisk = currentWorkspace.getDisk();
       this.sourceDisk = sourceDisk;
+      this.outputDisk = new Disk(currentWorkspace.db, currentWorkspace.outputDiskGuid);
       this.onLog(`Using source disk: ${sourceDisk.guid}`);
       this.onLog("Building file tree...");
 

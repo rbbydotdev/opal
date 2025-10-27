@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { AbsPath, isImage } from "@/lib/paths2";
 
 export abstract class BaseRenderer {

@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";
 import { useLocation } from "@tanstack/react-router";

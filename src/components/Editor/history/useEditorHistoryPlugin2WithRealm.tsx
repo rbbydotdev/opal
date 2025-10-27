@@ -1,6 +1,6 @@
 import { MdxEditorSelector, setMarkdownOnly$ } from "@/components/Editor/EditorConst";
 import { useEditHistoryPlugin } from "@/components/Editor/history/useEditHistory";
-import { HistoryStorageInterface } from "@/Db/HistoryTypes";
+import { HistoryStorageInterface } from "@/data/HistoryTypes";
 import { Cell, markdown$, Realm } from "@mdxeditor/editor";
 import { useEffect, useRef } from "react";
 
@@ -57,7 +57,7 @@ export function useEditorHistoryPlugin2WithRealm({
       );
     }
   }, [historyOutputInput, realm, enabled]);
-  
+
   return {
     edits,
     selectedEdit,

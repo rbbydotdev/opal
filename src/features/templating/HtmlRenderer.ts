@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { AbsPath } from "@/lib/paths2";
 import { BaseRenderer } from "./BaseRenderer";
 
@@ -30,7 +30,7 @@ export class HtmlRenderer extends BaseRenderer {
     try {
       const templateContent = await this.workspace.readFile(templatePath);
       const content = String(templateContent);
-      
+
       // HTML renderer is a stub - just return the content unchanged
       return content;
     } catch (error) {

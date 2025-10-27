@@ -10,9 +10,9 @@ import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/tr
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
 import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
-import { FileTreeProvider } from "@/context/FileTreeProvider";
-import { FilterInSpecialDirs } from "@/Db/SpecialDirs";
-import { Workspace } from "@/Db/Workspace";
+import { FileTreeProvider, NoopContextMenu } from "@/context/FileTreeProvider";
+import { FilterInSpecialDirs } from "@/data/SpecialDirs";
+import { Workspace } from "@/data/Workspace";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
@@ -177,12 +177,8 @@ function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]
         <div className="flex-shrink flex">
           <FileTreeMenuCtxProvider nodeFromPath={nodeFromPath}>
             <TreeExpanderProvider id="BuildFiles">
-              <FileTreeProvider
-                currentWorkspace={currentWorkspace}
-                // filterOut={FilterInSpecialDirs}
-                ItemContextMenu={MainFileTreeContextMenu}
-              >
-                <BuildSidebarFileMenuFileSection />
+              <FileTreeProvider currentWorkspace={currentWorkspace}>
+                <BuildSidebarFileMenuFileSection ItemContextMenu={NoopContextMenu} />
               </FileTreeProvider>
             </TreeExpanderProvider>
           </FileTreeMenuCtxProvider>
@@ -209,12 +205,8 @@ function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]
         <div className="flex-shrink flex">
           <FileTreeMenuCtxProvider nodeFromPath={nodeFromPath}>
             <TreeExpanderProvider id="MainFiles">
-              <FileTreeProvider
-                currentWorkspace={currentWorkspace}
-                filterOut={FilterInSpecialDirs}
-                ItemContextMenu={MainFileTreeContextMenu}
-              >
-                <MainSidebarFileMenuFileSection />
+              <FileTreeProvider currentWorkspace={currentWorkspace} filterOut={FilterInSpecialDirs}>
+                <MainSidebarFileMenuFileSection ItemContextMenu={MainFileTreeContextMenu} />
               </FileTreeProvider>
             </TreeExpanderProvider>
           </FileTreeMenuCtxProvider>

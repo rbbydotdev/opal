@@ -2,9 +2,9 @@ import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
 import { WorkspaceSpotlightSearch } from "@/components/SpotlightSearch";
 import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe";
-import { FileTreeProvider, NoopContextMenu } from "@/context/FileTreeProvider";
+import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { FilterInSpecialDirs } from "@/Db/SpecialDirs";
+import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { EditorSidebarLayout } from "@/features/preview-pane/EditorSidebarLayout";
 import { usePreviewPaneProps } from "@/features/preview-pane/usePreviewPaneProps";
 import useFavicon from "@/hooks/useFavicon";
@@ -32,12 +32,7 @@ function WorkspaceLayout() {
   return (
     <>
       <Toaster />
-      <FileTreeProvider
-        currentWorkspace={currentWorkspace}
-        filterIn={FileOnlyFilter}
-        filterOut={FilterInSpecialDirs}
-        ItemContextMenu={NoopContextMenu}
-      >
+      <FileTreeProvider currentWorkspace={currentWorkspace} filterIn={FileOnlyFilter} filterOut={FilterInSpecialDirs}>
         <FileTreeMenuCtxProvider nodeFromPath={currentWorkspace.nodeFromPath}>
           <WorkspaceSpotlightSearch />
         </FileTreeMenuCtxProvider>

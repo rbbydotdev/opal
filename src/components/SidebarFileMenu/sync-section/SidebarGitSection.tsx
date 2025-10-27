@@ -39,7 +39,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { useGitAuthorSettings } from "@/features/git-repo/useGitAuthorSettings";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";

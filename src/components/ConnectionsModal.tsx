@@ -21,8 +21,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
-import { RemoteAuthDAO } from "@/Db/RemoteAuth";
-import { RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/Db/RemoteAuthTypes";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";

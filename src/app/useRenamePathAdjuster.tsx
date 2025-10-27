@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { AbsPath } from "@/lib/paths2";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";

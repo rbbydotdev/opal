@@ -2,7 +2,7 @@ import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { SelectableList } from "@/components/ui/SelectableList";
 import { SidebarGroup } from "@/components/ui/sidebar";
-import { RemoteAuthJType } from "@/Db/RemoteAuthTypes";
+import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { Delete, Pencil, Plus, Sparkle } from "lucide-react";
 import { useState } from "react";

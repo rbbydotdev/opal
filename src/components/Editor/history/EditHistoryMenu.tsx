@@ -12,8 +12,8 @@ import {
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { HistoryDocRecord } from "@/Db/HistoryTypes";
-import { useSnapHistoryDB, useSnapHistoryPendingSave } from "@/Db/HistoryDAO";
+import { useSnapHistoryDB, useSnapHistoryPendingSave } from "@/data/HistoryDAO";
+import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";

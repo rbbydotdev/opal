@@ -1,10 +1,10 @@
 import { EditableDir } from "@/components/EditableDir";
 import { EditableFile } from "@/components/EditableFile";
+import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { FileTreeDragPreview } from "@/components/FileTreeDragPreview";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
@@ -25,7 +25,7 @@ export function FileTreeMenu({
   expandForNode,
   expanded,
   filter,
-  // FileItemContextMenu,
+  ItemContextMenu,
 }: {
   fileTreeDir: TreeDir | TreeDirRoot;
   depth?: number;
@@ -34,13 +34,12 @@ export function FileTreeMenu({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
-  // FileItemContextMenu: FileItemContextMenuComponentType;
+  ItemContextMenu: FileItemContextMenuComponentType;
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
   const sidebarMenuRef = React.useRef<HTMLUListElement>(null);
   const { highlightDragover, draggingNodes } = useFileTreeMenuCtx();
-  const { ItemContextMenu } = useFileTree();
 
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
@@ -106,6 +105,7 @@ export function FileTreeMenu({
                         expandForNode={expandForNode}
                         fileTreeDir={fileNode as TreeDir}
                         renameDirOrFileMultiple={renameDirOrFileMultiple}
+                        ItemContextMenu={ItemContextMenu}
                         depth={depth + 1}
                         expanded={expanded}
                         filter={filter}

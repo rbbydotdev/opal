@@ -4,8 +4,8 @@ import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProv
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
-import { HistorySnapDBProvider } from "@/Db/HistoryDAO";
-import { Workspace } from "@/Db/Workspace";
+import { HistorySnapDBProvider } from "@/data/HistoryDAO";
+import { Workspace } from "@/data/Workspace";
 import { useToggleHistoryImageGeneration } from "./Editor/history/useToggleHistoryImageGeneration";
 // import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";

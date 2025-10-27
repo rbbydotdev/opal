@@ -1,6 +1,7 @@
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
+import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
@@ -23,6 +24,7 @@ export const SidebarFileMenuFiles = ({
   Icon = Files,
   scope,
   contentBanner = null,
+  ItemContextMenu,
   ...rest
 }: {
   className?: string;
@@ -32,12 +34,12 @@ export const SidebarFileMenuFiles = ({
   scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
+  ItemContextMenu: FileItemContextMenuComponentType;
 } & ComponentProps<typeof SidebarGroup>) => {
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const { currentWorkspace } = useWorkspaceContext();
   const { fileTreeDir } = useFileTree();
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
-  const { ItemContextMenu } = useFileTree();
 
   const treeNode = scope ? (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT) : fileTreeDir;
   if (!treeNode.isTreeDir()) {
@@ -91,6 +93,7 @@ export const SidebarFileMenuFiles = ({
                         expand={expandSingle}
                         filter={filter}
                         renameDirOrFileMultiple={renameDirOrFileMultiple}
+                        ItemContextMenu={ItemContextMenu}
                         expandForNode={expandForNode}
                         expanded={expanded}
                         depth={0}

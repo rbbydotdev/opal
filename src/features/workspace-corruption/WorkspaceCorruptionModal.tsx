@@ -7,8 +7,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Workspace } from "@/Db/Workspace";
-import { WorkspaceDAO } from "@/Db/WorkspaceDAO";
+import { Workspace } from "@/data/Workspace";
+import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 import { AlertTriangle, FolderX, HardDrive } from "lucide-react";
 import { WorkspaceCorruptionState } from "./types";
 

@@ -1,4 +1,4 @@
-import { HistoryDAO } from "@/Db/HistoryDAO";
+import { HistoryDAO } from "@/data/HistoryDAO";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { snapdom } from "@zumer/snapdom";

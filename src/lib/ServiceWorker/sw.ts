@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { routeRequest } from "@/lib/ServiceWorker/router";

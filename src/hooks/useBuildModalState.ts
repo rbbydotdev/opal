@@ -1,6 +1,6 @@
 import { BuildStrategy } from "@/builder/builder-types";
-import { BuildDAO } from "@/Db/BuildDAO";
-import { Workspace } from "@/Db/Workspace";
+import { BuildDAO } from "@/data/BuildDAO";
+import { Workspace } from "@/data/Workspace";
 import { useCallback, useRef, useState } from "react";
 
 export interface BuildModalOptions {

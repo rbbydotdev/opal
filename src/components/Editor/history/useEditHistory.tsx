@@ -1,5 +1,5 @@
 import { HistoryPlugin2 } from "@/components/Editor/history/historyPlugin2";
-import { HistoryStorageInterface } from "@/Db/HistoryTypes";
+import { HistoryStorageInterface } from "@/data/HistoryTypes";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -42,7 +42,7 @@ export function useEditHistoryPlugin({
     [documentId, historyStorage, rootMarkdown, workspaceId, enabled]
   );
 
-  const [infoState, setInfoState] = useState(() => 
+  const [infoState, setInfoState] = useState(() =>
     history ? history.getState() : { edits: [], selectedEdit: null, selectedEditMd: null }
   );
   const { edits, selectedEdit, selectedEditMd } = infoState;

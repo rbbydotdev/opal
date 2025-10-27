@@ -1,4 +1,4 @@
-import { Workspace } from "@/Db/Workspace";
+import { Workspace } from "@/data/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 export function useWorkspaceGitRepo({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const repo = currentWorkspace.getRepo();

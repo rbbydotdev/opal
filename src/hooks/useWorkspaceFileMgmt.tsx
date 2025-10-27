@@ -1,7 +1,7 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
-import { SpecialDirs } from "@/Db/SpecialDirs";
-import { Workspace } from "@/Db/Workspace";
+import { SpecialDirs } from "@/data/SpecialDirs";
+import { Workspace } from "@/data/Workspace";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";

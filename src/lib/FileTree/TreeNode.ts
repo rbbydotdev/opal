@@ -1,4 +1,4 @@
-import { SpecialDirs } from "@/Db/SpecialDirs";
+import { SpecialDirs } from "@/data/SpecialDirs";
 import { getMimeType } from "@/lib/mimeType";
 import {
   AbsPath,

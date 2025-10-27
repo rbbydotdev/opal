@@ -4,7 +4,7 @@ import {
   RemoteAuthRecord,
   RemoteAuthSource,
   RemoteAuthType,
-} from "@/Db/RemoteAuthTypes";
+} from "@/data/RemoteAuthTypes";
 import { ENV } from "@/lib/env";
 import { Github, KeyIcon } from "lucide-react";
 
