@@ -1,4 +1,3 @@
-import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -24,7 +23,6 @@ export const SidebarFileMenuFiles = ({
   Icon = Files,
   scope,
   contentBanner = null,
-  FileItemContextMenu,
   ...rest
 }: {
   className?: string;
@@ -34,13 +32,12 @@ export const SidebarFileMenuFiles = ({
   scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
-  FileItemContextMenu: FileItemContextMenuComponentType;
 } & ComponentProps<typeof SidebarGroup>) => {
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const { currentWorkspace } = useWorkspaceContext();
   const { fileTreeDir } = useFileTree();
-  //TODO - SidebarFileMenuFiles fileTreeDir
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
+  const { ItemContextMenu } = useFileTree();
 
   const treeNode = scope ? (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT) : fileTreeDir;
   if (!treeNode.isTreeDir()) {
@@ -54,7 +51,7 @@ export const SidebarFileMenuFiles = ({
 
   return (
     <>
-      <FileItemContextMenu disabled={!isEmpty} fileNode={fileTreeDir} currentWorkspace={currentWorkspace}>
+      <ItemContextMenu disabled={!isEmpty} fileNode={fileTreeDir} currentWorkspace={currentWorkspace}>
         <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 ", className)} {...rest}>
           <Collapsible
             className="group/collapsible flex flex-col min-h-0"
@@ -95,7 +92,6 @@ export const SidebarFileMenuFiles = ({
                         filter={filter}
                         renameDirOrFileMultiple={renameDirOrFileMultiple}
                         expandForNode={expandForNode}
-                        FileItemContextMenu={FileItemContextMenu}
                         expanded={expanded}
                         depth={0}
                       />
@@ -106,7 +102,7 @@ export const SidebarFileMenuFiles = ({
             </CollapsibleContent>
           </Collapsible>
         </SidebarGroup>
-      </FileItemContextMenu>
+      </ItemContextMenu>
     </>
   );
 };

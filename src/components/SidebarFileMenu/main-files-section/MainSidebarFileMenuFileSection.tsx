@@ -1,5 +1,6 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
+import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
 import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { StockFilesMenu } from "@/components/SidebarFileMenu/shared/StockFilesMenu";
@@ -23,13 +24,11 @@ import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { getDiskTypeLabel } from "@/Db/DiskType";
 import { SpecialDirs } from "@/Db/SpecialDirs";
 import { Workspace } from "@/Db/Workspace";
-import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { RepoInfoProvider } from "@/lib/FileTree/FileTreeRepoProvider";
-import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { useZoom } from "@/lib/useZoom";
@@ -48,54 +47,8 @@ import {
   Scissors,
   Trash2,
 } from "lucide-react";
-import { ComponentProps, useMemo, useRef, useState } from "react";
+import { ComponentProps, useMemo, useRef } from "react";
 
-const Banner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
-  const [dragEnter, setDragEnter] = useState(false);
-  const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const { setFileTreeCtx } = useFileTreeMenuCtx();
-  const handleClick = () => {
-    setFileTreeCtx({
-      anchorIndex: -1,
-      editing: null,
-      editType: null,
-      focused: absPath("/"),
-      virtual: null,
-      selectedRange: [],
-    });
-  };
-  const { handleDrop } = useFileTreeDragDrop({ currentWorkspace, onMoveMultiple: renameDirOrFileMultiple });
-
-  const setDragEnterWithTimeout = (value: boolean) => {
-    clearTimeout(timeoutRef.current!);
-    if (value) {
-      setDragEnter(true);
-    } else {
-      timeoutRef.current = setTimeout(() => setDragEnter(false), 1000);
-    }
-  };
-
-  return (
-    <MainFileTreeContextMenu fileNode={RootNode} currentWorkspace={currentWorkspace}>
-      <div
-        className={cn(
-          "mb-[5px] visible cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
-          { "border h-8 bg-sidebar scale-110 mt-1": dragEnter }
-        )}
-        onDrop={(e) => handleDrop(e, RootNode)}
-        onDragEnter={() => setDragEnterWithTimeout(true)}
-        onDragLeave={() => setDragEnterWithTimeout(false)}
-        onMouseLeave={() => setDragEnterWithTimeout(false)}
-        onClick={handleClick}
-        title={"File Tree Root"}
-      >
-        <span className={cn("group-hover/banner:block hidden", { block: dragEnter })}>root</span>
-      </div>
-    </MainFileTreeContextMenu>
-  );
-};
 export function MainSidebarFileMenuFileSection({ className }: { className?: string }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { focused } = useFileTreeMenuCtx();
@@ -113,10 +66,10 @@ export function MainSidebarFileMenuFileSection({ className }: { className?: stri
       <RepoInfoProvider currentWorkspace={currentWorkspace}>
         <SidebarFileMenuFiles
           data-main-sidebar
-          FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
+          // FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
           title={"Files"}
           className={className}
-          contentBanner={!fileTreeDir.isEmpty() ? <Banner currentWorkspace={currentWorkspace} /> : null}
+          contentBanner={!fileTreeDir.isEmpty() ? <RootFileMenuBanner currentWorkspace={currentWorkspace} /> : null}
           filter={SpecialDirs.All} // Exclude trash and git directories etc
         >
           <span className="block group-data-[state=closed]/collapsible:hidden">
