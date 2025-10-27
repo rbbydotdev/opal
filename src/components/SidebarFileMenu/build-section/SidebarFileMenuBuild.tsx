@@ -16,7 +16,7 @@ export function SidebarFileMenuBuild({
 }: React.ComponentProps<typeof SidebarGroup> & {
   currentWorkspace: Workspace;
 }) {
-  const [expanded, setExpand] = useSingleItemExpander("publish");
+  const [expanded, setExpand] = useSingleItemExpander("build");
   const { info } = useWorkspaceGitRepo({ currentWorkspace });
   const { open: openBuildModal } = useBuildModal();
   const [selectedBuildIds, setSelectedBuildIds] = useState<string[]>([]);

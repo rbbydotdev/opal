@@ -45,9 +45,9 @@ function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndI
     </ErrorBoundary>
   );
 }
-const dndSections = ["publish", "git", "export", "trash", "files", "treeview", "upload", "connections", "build_files"];
+const dndSections = ["build", "git", "export", "trash", "files", "treeview", "upload", "connections", "build_files"];
 type DndSectionType =
-  | "publish"
+  | "build"
   | "git"
   | "export"
   | "trash"
@@ -151,7 +151,7 @@ function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]
   const nodeFromPath = currentWorkspace.nodeFromPath.bind(currentWorkspace);
   return (
     <SidebarDndList storageKey={"sidebarMenu"} show={show}>
-      <DndSlot dndId={"publish"}>
+      <DndSlot dndId={"build"}>
         <SidebarFileMenuBuild className="flex-shrink flex" currentWorkspace={currentWorkspace} />
       </DndSlot>
       <DndSlot dndId={"git"}>

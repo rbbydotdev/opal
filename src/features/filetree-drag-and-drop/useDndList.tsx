@@ -14,7 +14,7 @@ export const useDndList = <const T extends readonly string[]>(
   onActiveIdsChange?: (ids: T[number][]) => void
 ) => {
   // `DndId` becomes a union of all possible string literals from the tuple `T`.
-  // e.g., "publish" | "sync" | "export" | "trash" | "files"
+  // e.g., "build" | "sync" | "export" | "trash" | "files"
   type DndId = T[number];
 
   // A helper to resolve the IDs, whether it's a value or a function.

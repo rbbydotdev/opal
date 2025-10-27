@@ -1,11 +1,11 @@
-import { AbsPath, absPath, relPath } from "@/lib/paths2";
+import { AbsPath, absPath } from "@/lib/paths2";
 
 const paths = {
   Trash: absPath("/.trash"),
   Storage: absPath("/.storage"),
   Git: absPath("/.git"),
   Thumb: absPath("/.thumb"),
-  Build: absPath("/.build"),
+  Build: absPath("/build"),
 };
 export const SpecialDirs = {
   ...paths,
@@ -24,19 +24,19 @@ export function FilterInSpecialDirs(path: AbsPath | { toString(): string }): boo
   return SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
 
-const BuildIgnoreDirs = [
-  relPath("node_modules"),
-  relPath(".vscode"),
-  relPath(".next"),
-  relPath("build"),
-  relPath("dist"),
-  relPath("coverage"),
-  relPath(".cache"),
-  relPath(".env"),
-  relPath(".vercel"),
-  relPath("playwright-report"),
-  relPath(".tanstack"),
-  relPath(".github"),
-  relPath(".DS_Store"),
-  relPath("*.log"),
-];
+// const BuildIgnoreDirs = [
+//   relPath("node_modules"),
+//   relPath(".vscode"),
+//   relPath(".next"),
+//   relPath("build"),
+//   relPath("dist"),
+//   relPath("coverage"),
+//   relPath(".cache"),
+//   relPath(".env"),
+//   relPath(".vercel"),
+//   relPath("playwright-report"),
+//   relPath(".tanstack"),
+//   relPath(".github"),
+//   relPath(".DS_Store"),
+//   relPath("*.log"),
+// ];
