@@ -65,7 +65,15 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
   };
 
   return (
-    <SelectableList.Root onClick={handleView} expanderId="builds" emptyLabel="no builds found" showGrip={false}>
+    <SelectableList.Root 
+      data={builds}
+      getItemId={(build) => build.guid}
+      onClick={handleView} 
+      onDelete={handleDelete}
+      expanderId="builds" 
+      emptyLabel="no builds found" 
+      showGrip={false}
+    >
       <SelectableList.Header>
         <Archive size={12} className="mr-2" />
         Recent Builds
@@ -74,31 +82,33 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
       <SelectableList.Actions />
 
       <SelectableList.Content>
-        {builds.map((build) => (
-          <SelectableList.Item key={build.guid} id={build.guid}>
-            <SelectableList.ItemIcon>
-              <Archive size={12} className="flex-shrink-0 text-muted-foreground" />
-            </SelectableList.ItemIcon>
-            <div className="flex flex-col min-w-0 ml-1">
-              <div className="font-mono text-xs truncate">{build.label}</div>
-              <div className="text-2xs text-muted-foreground truncate">
-                Disk: {build.diskId.slice(-8)} • {timeAgo(build.timestamp)}
+        <SelectableList.Map 
+          doTheMap={(build) => (
+            <SelectableList.Item key={build.guid} id={build.guid}>
+              <SelectableList.ItemIcon>
+                <Archive size={12} className="flex-shrink-0 text-muted-foreground" />
+              </SelectableList.ItemIcon>
+              <div className="flex flex-col min-w-0 ml-1">
+                <div className="font-mono text-xs truncate">{build.label}</div>
+                <div className="text-2xs text-muted-foreground truncate">
+                  Disk: {build.diskId.slice(-8)} • {timeAgo(build.timestamp)}
+                </div>
               </div>
-            </div>
-            <SelectableList.ItemMenu>
-              <SelectableList.ItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
-                View
-              </SelectableList.ItemAction>
-              <SelectableList.ItemAction
-                onClick={() => handleDelete(build.guid)}
-                icon={<Delete className="w-4 h-4" />}
-                destructive
-              >
-                Delete
-              </SelectableList.ItemAction>
-            </SelectableList.ItemMenu>
-          </SelectableList.Item>
-        ))}
+              <SelectableList.ItemMenu>
+                <SelectableList.ItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
+                  View
+                </SelectableList.ItemAction>
+                <SelectableList.ItemAction
+                  onClick={() => handleDelete(build.guid)}
+                  icon={<Delete className="w-4 h-4" />}
+                  destructive
+                >
+                  Delete
+                </SelectableList.ItemAction>
+              </SelectableList.ItemMenu>
+            </SelectableList.Item>
+          )}
+        />
       </SelectableList.Content>
     </SelectableList.Root>
   );
