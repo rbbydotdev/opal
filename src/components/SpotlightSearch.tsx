@@ -83,7 +83,7 @@ const SpotlightSearchItemCmd = forwardRef<
     isActive: boolean;
     onSelect: () => void;
   }
->(({ id, role, tabIndex, cmd: _cmd, title, isActive, onSelect }, ref) => {
+>(({ id, role, tabIndex, cmd: _cmd, title, isActive: _isActive, onSelect }, ref) => {
   return (
     <li role="presentation" className="flex w-full flex-col rounded p-1">
       <button

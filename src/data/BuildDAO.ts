@@ -1,4 +1,4 @@
-import { BuildRecord } from "@/data/BuildRecord";
+import { BuildRecord, BuildLogLine } from "@/data/BuildRecord";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { ClientDb } from "@/data/instance";
 import { nanoid } from "nanoid";
@@ -10,6 +10,7 @@ export class BuildDAO {
   label: string;
   timestamp: Date;
   diskId: string;
+  logs: BuildLogLine[] = [];
 
   static guid = () => "__build__" + nanoid();
 
@@ -30,6 +31,7 @@ export class BuildDAO {
       label: this.label,
       timestamp: this.timestamp,
       diskId: this.diskId,
+      logs: this.logs,
     };
   }
 
@@ -39,6 +41,7 @@ export class BuildDAO {
       label,
       timestamp: new Date(),
       diskId,
+      logs: [],
     });
   }
 
@@ -77,6 +80,7 @@ export class BuildDAO {
       label: this.label,
       timestamp: this.timestamp,
       diskId: this.diskId,
+      logs: this.logs,
     });
   }
 

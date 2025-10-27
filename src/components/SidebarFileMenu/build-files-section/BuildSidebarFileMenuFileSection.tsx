@@ -19,7 +19,9 @@ export function BuildSidebarFileMenuFileSection({
   const { fileTreeDir } = useFileTree();
   return (
     <FileTreeProvider
-      // filterOut={SpecialDirs.allInSpecialDirsExcept(SpecialDirs.Build)}
+      filterOut={(treeNode) =>
+        !(treeNode.toString().startsWith(SpecialDirs.Build) || treeNode.toString() === SpecialDirs.Build)
+      }
       currentWorkspace={currentWorkspace}
     >
       <TreeExpanderProvider id="BuildFiles">
