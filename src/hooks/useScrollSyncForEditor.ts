@@ -30,7 +30,14 @@ export function useScrollSyncForEditor(currentWorkspace: Workspace | null, path:
   
   // Create adapter for ScrollSyncProvider compatibility (adds tearDown method and origin tracking)
   const scrollEmitter = useMemo(() => {
-    if (!newScrollEmitter) return undefined;
+    if (!newScrollEmitter) {
+      // Return a no-op emitter when there's no session
+      return {
+        onScroll: () => () => {}, // Returns a no-op unsubscribe function
+        emitScroll: () => {},
+        tearDown: () => {}
+      };
+    }
     
     return {
       onScroll: (callback: (relX: number, relY: number) => void) => {

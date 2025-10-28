@@ -2,17 +2,57 @@ import { Button } from "@/components/ui/button";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout.jsx";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview.js";
-import { Link } from "@tanstack/react-router";
-import { SquareArrowUpRightIcon, X, Zap } from "lucide-react";
-import { useWorkspacePathPreviewURL } from "../../features/preview-pane/useWorkspacePathPreviewURL.jsx";
+import { ExternalLink, X, Zap } from "lucide-react";
+import { useWindowContextProvider } from "@/app/WindowContextProvider";
+import { usePreviewLogic } from "@/app/PreviewCore";
+import { getScrollEmitter, releaseScrollEmitter } from "@/app/PreviewComponent2";
+import { useEffect } from "react";
 
 export function LivePreviewButtons() {
   const { right } = useSidebarPanes();
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
+  const actualPath = previewNode?.path || path;
 
-  const previewURL = useWorkspacePathPreviewURL(previewNode?.path);
+  // Window context for popup preview
+  const { contextProvider, isWindowOpen, openWindow, closeWindow } = useWindowContextProvider();
+
+  // Create session ID for window (separate from iframe)
+  const sessionId = currentWorkspace && actualPath 
+    ? `${currentWorkspace.name}:${actualPath}:window`
+    : undefined;
+
+  const scrollEmitter = sessionId ? getScrollEmitter(sessionId) : undefined;
+
+  // Use shared preview logic for window (only when window is open)
+  usePreviewLogic(
+    isWindowOpen ? contextProvider : { 
+      isReady: () => false, 
+      getContext: () => null, 
+      cleanup: () => {} 
+    } as any, 
+    actualPath, 
+    currentWorkspace, 
+    scrollEmitter
+  );
+
+  // Cleanup scroll emitter on unmount
+  useEffect(() => {
+    return () => {
+      if (sessionId) {
+        releaseScrollEmitter(sessionId);
+      }
+    };
+  }, [sessionId]);
+
+  const handleOpenWindow = () => {
+    const success = openWindow();
+    if (!success) {
+      alert('Popup blocked! Please allow popups for this site.');
+    }
+  };
+
   if (!previewNode) return null;
   return (
     <div className={"flex  items-center justify-center flex-nowrap "}>
@@ -36,14 +76,15 @@ export function LivePreviewButtons() {
           )}
         </div>
       </Button>
-      <Button size="sm" className={"active:scale-95 text-secondary rounded-l-none border-l-border"} asChild>
-        <Link to={previewURL!} target="_blank" rel="noopener noreferrer">
-          <span>
-            <SquareArrowUpRightIcon size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
-          </span>
-        </Link>
+      <Button 
+        size="sm" 
+        className={"active:scale-95 text-secondary rounded-l-none border-l-border"} 
+        onClick={handleOpenWindow}
+      >
+        <span>
+          <ExternalLink size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
+        </span>
       </Button>
     </div>
   );
 }
-//  to={previewURL!} target="_blank"
