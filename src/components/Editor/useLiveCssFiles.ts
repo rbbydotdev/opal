@@ -11,7 +11,7 @@ export function useLiveCssFiles({
   currentWorkspace,
 }: {
   path: string | null;
-  currentWorkspace: Workspace;
+  currentWorkspace: Workspace | null;
   domElement?: HTMLElement | null;
 }) {
   const [cssFiles, setCssFiles] = useState<string[]>([]);
