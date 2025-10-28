@@ -12,6 +12,7 @@ import { handleStyleSheetRequest } from "@/lib/ServiceWorker/handleStyleSheetReq
 import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
 import { handleWorkspaceFilenameSearch } from "@/lib/ServiceWorker/handleWorkspaceFilenameSearch";
 import { withRequestSignal } from "./utils"; // Assuming utils are in the same dir
+import { PWACache } from "./pwaCache";
 
 // --- Handler Context ---
 export interface RequestContext {
@@ -109,8 +110,36 @@ export const imageHandler = withRequestSignal((context: RequestContext) => {
   return fetch(event.request);
 });
 
-export const defaultFetchHandler = withRequestSignal((event: FetchEvent) => {
-  return fetch(event.request);
+export const defaultFetchHandler = withRequestSignal(async (event: FetchEvent) => {
+  const { request } = event;
+  const url = new URL(request.url);
+  
+  // Try to get from cache first for PWA assets
+  if (PWACache.shouldCacheRequest(url)) {
+    const cachedResponse = await PWACache.getCachedResponse(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+  }
+  
+  // Fetch from network
+  try {
+    const response = await fetch(request);
+    
+    // Cache successful responses for PWA assets
+    if (PWACache.shouldCacheRequest(url) && response.ok) {
+      await PWACache.cacheResponse(request, response);
+    }
+    
+    return response;
+  } catch (error) {
+    // If network fails, try cache as fallback
+    const cachedResponse = await PWACache.getCachedResponse(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    throw error;
+  }
 });
 
 export const replaceMdImageHandler = withRequestSignal(async (context: RequestContext) => {
