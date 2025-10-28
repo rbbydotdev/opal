@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { PreviewContext, PreviewContextProvider, initializePreviewDocument } from "./PreviewCore";
+import { setActiveWorkspaceContext, injectWorkspaceContextIntoWindow } from "@/lib/workspaceContext";
 
 export class WindowContextProvider implements PreviewContextProvider {
   private windowRef: Window | null = null;
   private ready: boolean = false;
   private context: PreviewContext | null = null;
   private onWindowClose?: () => void;
+  private workspaceName?: string;
+  private sessionId?: string;
 
-  constructor(onWindowClose?: () => void) {
+  constructor(onWindowClose?: () => void, workspaceName?: string, sessionId?: string) {
     this.onWindowClose = onWindowClose;
+    this.workspaceName = workspaceName;
+    this.sessionId = sessionId;
   }
 
   openWindow(): boolean {
@@ -24,6 +29,15 @@ export class WindowContextProvider implements PreviewContextProvider {
 
     this.windowRef = newWindow;
     initializePreviewDocument(newWindow.document, "Preview Window");
+
+    // Set workspace context for service worker communication
+    if (this.workspaceName) {
+      // Set main window context (for cookie)
+      setActiveWorkspaceContext(this.workspaceName, this.sessionId);
+      
+      // Inject context into popup window
+      injectWorkspaceContextIntoWindow(newWindow, this.workspaceName, this.sessionId);
+    }
 
     // Handle window close
     const handleBeforeUnload = () => {
@@ -80,7 +94,7 @@ export class WindowContextProvider implements PreviewContextProvider {
   }
 }
 
-export function useWindowContextProvider(): {
+export function useWindowContextProvider(workspaceName?: string, sessionId?: string): {
   contextProvider: WindowContextProvider;
   isWindowOpen: boolean;
   openWindow: () => boolean;
@@ -93,7 +107,7 @@ export function useWindowContextProvider(): {
   if (!contextProviderRef.current) {
     contextProviderRef.current = new WindowContextProvider(() => {
       setIsWindowOpen(false);
-    });
+    }, workspaceName, sessionId);
   }
 
   const contextProvider = contextProviderRef.current;
