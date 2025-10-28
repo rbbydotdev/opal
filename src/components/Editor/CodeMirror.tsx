@@ -7,6 +7,7 @@ import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlight
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { GitConflictNotice } from "@/components/GitConflictNotice";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
+import { useScrollSyncForEditor } from "@/hooks/useScrollSyncForEditor";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
@@ -269,7 +270,8 @@ export const CodeMirrorEditor = ({
   }, [value]);
 
   const { path } = useWorkspaceRoute();
-  const { scrollEmitter, sessionId } = useWorkspacePathScrollChannel();
+  const { scrollEmitter, sessionId } = useScrollSyncForEditor(currentWorkspace, path);
+  
   const cmScroller = useWatchElement(".cm-scroller");
 
   return (

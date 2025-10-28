@@ -2,6 +2,7 @@ import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
 import { WorkspaceSpotlightSearch } from "@/components/SpotlightSearch";
 import { PreviewIFrame } from "@/components/ui/autoform/components/PreviewIframe";
+import { PreviewIFrame2 } from "@/components/ui/PreviewIframe2";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
@@ -43,7 +44,7 @@ function WorkspaceLayout() {
           sidebar={<EditorSidebar className="main-editor-sidebar" />}
           main={<Outlet />}
           rightPaneEnabled={canShow}
-          rightPane={previewURL ? <PreviewIFrame previewPath={previewNode?.path} previewURL={previewURL} /> : null}
+          rightPane={previewURL ? <PreviewIFrame2 previewPath={previewNode?.path} /> : null}
         />
       </div>
     </>
