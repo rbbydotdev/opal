@@ -15,13 +15,16 @@ export function LivePreviewButtons() {
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
   const actualPath = previewNode?.path || path;
 
-  // Window context for popup preview
-  const { contextProvider, isWindowOpen, openWindow, closeWindow } = useWindowContextProvider();
-
   // Create session ID for window (separate from iframe)
   const sessionId = currentWorkspace && actualPath 
     ? `${currentWorkspace.name}:${actualPath}:window`
     : undefined;
+
+  // Window context for popup preview
+  const { contextProvider, isWindowOpen, openWindow, closeWindow } = useWindowContextProvider(
+    currentWorkspace?.name, 
+    sessionId
+  );
 
   const scrollEmitter = sessionId ? getScrollEmitter(sessionId) : undefined;
 
