@@ -7,6 +7,48 @@ import { useNavigate } from "@tanstack/react-router";
 import EventEmitter from "events";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+/**
+ * Simplified hook for watching file content changes (read-only)
+ * Ideal for preview contexts where you only need to display content
+ * Does not require router context - accepts path as prop
+ */
+export function useLiveFileContent(currentWorkspace: Workspace, path: AbsPath | null) {
+  const [content, setContent] = useState<string>('');
+
+  useEffect(() => {
+    if (!path || !currentWorkspace) return;
+
+    // Initial load
+    const loadContent = async () => {
+      try {
+        const fileContent = await currentWorkspace.readFile(path);
+        setContent(String(fileContent || ''));
+      } catch (error) {
+        console.error('Error loading file:', error);
+        setContent('');
+      }
+    };
+
+    void loadContent();
+
+    // Watch for file changes
+    const unsubscribeInside = currentWorkspace.getDisk().insideWriteListener(path, (content) => {
+      setContent(String(content));
+    });
+
+    const unsubscribeOutside = currentWorkspace.getDisk().outsideWriteListener(path, (content) => {
+      setContent(String(content));
+    });
+
+    return () => {
+      unsubscribeInside?.();
+      unsubscribeOutside?.();
+    };
+  }, [currentWorkspace, path]);
+
+  return content;
+}
+
 const ContentEvents = {
   UPDATE: "update",
 } as const;

@@ -2,6 +2,7 @@ import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
+import { useScrollSyncForEditor } from "@/hooks/useScrollSyncForEditor";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/HistoryDAO";
@@ -36,8 +37,7 @@ export function WorkspaceMarkdownEditor({
   if (error) throw error;
 
   const { mimeType } = useCurrentFilepath();
-
-  const { scrollEmitter, sessionId } = useWorkspacePathScrollChannel();
+  const { scrollEmitter, sessionId } = useScrollSyncForEditor(currentWorkspace, path);
 
   const mdxEditorElement = useWatchElement(MdxEditorSelector);
 
