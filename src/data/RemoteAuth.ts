@@ -48,6 +48,9 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
     if (isGithubDeviceOAuthRemoteAuthDAO(this)) {
       return new RemoteAuthGithubDeviceOAuthAgent(this);
     }
+    if (isBasicAuthRemoteAuthDAO(this)) {
+      return new RemoteAuthBasicAuthAgent(this);
+    }
     throw new Error(`No RemoteAuthGitAgent for this type: ${this.type} source: ${this.source}`);
   }
   hasRemoteApi() {

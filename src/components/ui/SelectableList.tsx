@@ -82,14 +82,11 @@ function SelectableListRoot<T = any>({
 }: SelectableListRootProps<T>) {
   const [selected, setSelected] = useState<string[]>([]);
   const [childItemIds, setChildItemIds] = useState<string[]>([]);
-  
+
   // Derive allItemIds from: 1) data prop, 2) items prop, 3) children IDs
-  const allItemIds = data && getItemId 
-    ? data.map(getItemId)
-    : items.length > 0 
-    ? items.map(item => item.id) 
-    : childItemIds;
-  
+  const allItemIds =
+    data && getItemId ? data.map(getItemId) : items.length > 0 ? items.map((item) => item.id) : childItemIds;
+
   const toggleSelected = (id: string) =>
     isSelected(id) ? setSelected((prev) => prev.filter((i) => i !== id)) : setSelected((prev) => [...prev, id]);
   const isSelected = (id: string) => selected.includes(id);
@@ -279,18 +276,18 @@ function SelectableListContent({ children }: { children?: React.ReactNode }) {
 }
 
 type SelectableListMapProps<T> = {
-  doTheMap: (item: T) => React.ReactNode;
+  map: (item: T) => React.ReactNode;
 };
 
-function SelectableListMap<T>({ doTheMap }: SelectableListMapProps<T>) {
+function SelectableListMap<T>({ map }: SelectableListMapProps<T>) {
   const { data, getItemId } = useSelectableListContext();
 
   if (!data || !getItemId) {
-    console.warn('SelectableList.Map requires data and getItemId to be provided in SelectableList.Root');
+    console.warn("SelectableList.Map requires data and getItemId to be provided in SelectableList.Root");
     return null;
   }
 
-  return <>{data.map(doTheMap)}</>;
+  return <>{data.map(map)}</>;
 }
 
 type SelectableListTriggerProps = {
