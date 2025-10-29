@@ -47,13 +47,7 @@ export function WorkspaceFilePage() {
 function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspace; filePath: AbsPath }) {
   // Get file contents to check for conflicts (only for non-image files)
 
-  const {
-    inTrash: inTrash,
-    isSourceView: isSourceView,
-    mimeType,
-    isMarkdown: isMarkdown,
-    isRecognized: isRecognized,
-  } = useCurrentFilepath();
+  const { inTrash, isSourceView, mimeType, isMarkdown, isRecognized } = useCurrentFilepath();
   const { contents, updateDebounce, error, hotContents } = useFileContents({
     currentWorkspace,
   });
