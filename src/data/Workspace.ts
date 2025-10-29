@@ -600,33 +600,33 @@ export class Workspace {
         )
       );
 
-      // Collect all image path changes for markdown replacement
-      const imagePathChanges: [string, string][] = [];
+      // Collect all file path changes for markdown replacement
+      const filePathChanges: [string, string][] = [];
 
       for (const { oldPath, newPath, fileType } of nodes) {
         if (oldPath === newPath) continue;
 
-        if (fileType === "file" && isImage(oldPath)) {
-          // Direct image file rename
-          imagePathChanges.push([oldPath, newPath]);
+        if (fileType === "file") {
+          // Direct file rename - include all files that might be referenced
+          filePathChanges.push([oldPath, newPath]);
         } else if (fileType === "dir") {
-          // Directory rename - find all image children recursively
+          // Directory rename - find all file children recursively
           const oldDirNode = this.nodeFromPath(oldPath);
           if (oldDirNode?.isTreeDir()) {
-            // Walk through all children to find images
+            // Walk through all children to find all files (not just images)
             oldDirNode.walk((child) => {
-              if (child.isTreeFile() && isImage(child.path)) {
-                // Calculate the new path for this image child
-                const newImagePath = absPath(child.path.replace(oldPath, newPath));
-                imagePathChanges.push([child.path, newImagePath]);
+              if (child.isTreeFile()) {
+                // Calculate the new path for this file child
+                const newFilePath = absPath(child.path.replace(oldPath, newPath));
+                filePathChanges.push([child.path, newFilePath]);
               }
             });
           }
         }
       }
 
-      if (imagePathChanges.length > 0) {
-        await this.renameMdImages(imagePathChanges);
+      if (filePathChanges.length > 0) {
+        await this.renameMdImages(filePathChanges);
       }
     });
   }
