@@ -34,8 +34,8 @@ const keyboardShortcuts: KeyboardShortcut[] = [
   {
     section: "Editor",
     action: "Editor View Mode",
-    keys: [IS_MAC ? "⌘" : ";", ";"],
-    description: "Switch between wysiwyg and view modes",
+    keys: [IS_MAC ? "⌘" : "Ctrl", ";"],
+    description: "Switch between wysiwyg and source modes",
   },
   {
     section: "File Explorer",
