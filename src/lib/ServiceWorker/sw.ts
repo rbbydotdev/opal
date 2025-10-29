@@ -3,6 +3,7 @@ import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { routeRequest } from "@/lib/ServiceWorker/router";
 import { WHITELIST } from "@/lib/ServiceWorker/utils";
+import { PWACache } from "@/lib/ServiceWorker/pwaCache";
 
 // Service worker workspace context parsing (inline for SW compatibility)
 function getWorkspaceContextFromRequest(request: Request): { workspaceName: string; sessionId?: string; timestamp: number } | null {
@@ -29,11 +30,21 @@ declare const self: ServiceWorkerGlobalScope;
 // --- Service Worker Lifecycle ---
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      PWACache.handleActivate()
+    ])
+  );
 });
 
 self.addEventListener("install", (event: ExtendableEvent) => {
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    Promise.all([
+      self.skipWaiting(),
+      PWACache.handleInstall()
+    ])
+  );
 });
 
 // --- Helper Functions ---
