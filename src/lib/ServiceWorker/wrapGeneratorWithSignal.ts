@@ -20,9 +20,7 @@ export async function* wrapGeneratorWithSignal<T>(
 
     const result = await Promise.race([nextPromise, abortPromise]);
 
-    if (result.done) {
-      return; // The generator finished.
-    }
+    if (result.done) return;
     yield result.value;
   }
 }
