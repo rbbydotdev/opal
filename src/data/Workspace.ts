@@ -611,14 +611,14 @@ export class Workspace {
           filePathChanges.push([oldPath, newPath]);
         } else if (fileType === "dir") {
           // Directory rename - find all file children recursively
-          const oldDirNode = this.nodeFromPath(oldPath);
-          if (oldDirNode?.isTreeDir()) {
+          const newDirNode = this.nodeFromPath(newPath);
+          if (newDirNode?.isTreeDir()) {
             // Walk through all children to find all files (not just images)
-            oldDirNode.walk((child) => {
+            newDirNode.walk((child) => {
               if (child.isTreeFile()) {
-                // Calculate the new path for this file child
-                const newFilePath = absPath(child.path.replace(oldPath, newPath));
-                filePathChanges.push([child.path, newFilePath]);
+                // Calculate what the old path would have been
+                const oldFilePath = absPath(child.path.replace(newPath, oldPath));
+                filePathChanges.push([oldFilePath, child.path]);
               }
             });
           }
