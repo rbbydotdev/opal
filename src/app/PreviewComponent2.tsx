@@ -65,7 +65,7 @@ export function releaseScrollEmitter(sessionId: string): void {
 // Export scroll sync types and functions for editor integration
 export { createScrollSyncEmitter };
 
-export function PreviewComponent2() {
+export function PreviewComponent2({ onContentLoaded }: { onContentLoaded?: () => void } = {}) {
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
 
@@ -85,7 +85,7 @@ export function PreviewComponent2() {
   const { iframeRef, contextProvider } = useIframeContextProvider();
 
   // Use shared preview logic
-  usePreviewLogic(contextProvider, actualPath, currentWorkspace, scrollEmitter);
+  usePreviewLogic(contextProvider, actualPath, currentWorkspace, scrollEmitter, onContentLoaded);
 
   return (
     <div className="w-full h-full relative">

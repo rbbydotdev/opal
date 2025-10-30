@@ -16,8 +16,8 @@ function getWorkspaceContextFromRequest(request: Request): SpecialReqContextType
   if (cookieMatch && cookieMatch[1]) {
     try {
       const obj = JSON.parse(decodeURIComponent(cookieMatch[1])) as SpecialReqContextType;
-      if (!obj.workspaceName || !obj.timestamp) {
-        throw new Error("Invalid workspace context cookie format");
+      if (!obj.workspaceName) {
+        return null;
       }
       return obj;
     } catch (e) {

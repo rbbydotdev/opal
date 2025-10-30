@@ -19,6 +19,7 @@
   overflow-y: scroll;
 }
 .mdxeditor-toolbar {
+  border-radius: 0;
   flex-shrink: 0;
   &::-webkit-scrollbar {
     display: none;
@@ -199,6 +200,10 @@
   /* Ensure proper contrast in content editable */
   .mdxeditor-root-contenteditable {
     color: var(--foreground) !important;
+    > div {
+      /* weird */
+      overflow-x: scroll;
+    }
   }
 
   /* Fix caret color */
