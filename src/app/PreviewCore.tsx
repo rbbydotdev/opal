@@ -126,7 +126,8 @@ export function usePreviewRenderer(
   contextProvider: PreviewContextProvider,
   path: AbsPath | null,
   currentWorkspace: Workspace | null,
-  scrollEmitter?: ScrollSyncEmitter
+  scrollEmitter?: ScrollSyncEmitter,
+  onContentLoaded?: () => void
 ) {
   const reactRootRef = useRef<Root | null>(null);
 
@@ -156,6 +157,7 @@ export function usePreviewRenderer(
         currentWorkspace={currentWorkspace}
         scrollEmitter={scrollEmitter}
         context={context}
+        onContentLoaded={onContentLoaded}
       />
     );
 
@@ -187,24 +189,35 @@ interface PreviewContentProps {
   currentWorkspace: Workspace;
   scrollEmitter?: ScrollSyncEmitter;
   context: PreviewContext;
+  onContentLoaded?: () => void;
 }
 
-export function PreviewContent({ path, currentWorkspace, scrollEmitter, context }: PreviewContentProps) {
+export function PreviewContent({ path, currentWorkspace, scrollEmitter, context, onContentLoaded }: PreviewContentProps) {
   if (isMarkdown(path)) {
-    return <MarkdownRenderer path={path} currentWorkspace={currentWorkspace} scrollEmitter={scrollEmitter} context={context} />;
+    return <MarkdownRenderer path={path} currentWorkspace={currentWorkspace} scrollEmitter={scrollEmitter} context={context} onContentLoaded={onContentLoaded} />;
   }
 
   if (isImage(path)) {
-    return <img src={path} alt="Preview" style={{ maxWidth: "100%", height: "auto" }} />;
+    return <img 
+      src={path} 
+      alt="Preview" 
+      style={{ maxWidth: "100%", height: "auto" }} 
+      onLoad={() => onContentLoaded?.()} 
+    />;
   }
 
   if (isMustache(path) || isEjs(path)) {
-    return <TemplateRenderer path={path} currentWorkspace={currentWorkspace} />;
+    return <TemplateRenderer path={path} currentWorkspace={currentWorkspace} onContentLoaded={onContentLoaded} />;
   }
 
   if (isHtml(path)) {
-    return <HtmlRenderer path={path} currentWorkspace={currentWorkspace} />;
+    return <HtmlRenderer path={path} currentWorkspace={currentWorkspace} onContentLoaded={onContentLoaded} />;
   }
+
+  // Call onContentLoaded for unsupported files too
+  useEffect(() => {
+    onContentLoaded?.();
+  }, [onContentLoaded]);
 
   return <div>Unsupported file type for preview: {path}</div>;
 }
@@ -214,12 +227,14 @@ function MarkdownRenderer({
   path, 
   currentWorkspace, 
   scrollEmitter, 
-  context 
+  context,
+  onContentLoaded
 }: { 
   path: AbsPath; 
   currentWorkspace: Workspace; 
   scrollEmitter?: ScrollSyncEmitter; 
-  context: PreviewContext; 
+  context: PreviewContext;
+  onContentLoaded?: () => void;
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
@@ -231,11 +246,14 @@ function MarkdownRenderer({
       const markdownContent = stripFrontmatter(content || "");
       const renderedHtml = renderMarkdownToHtml(markdownContent);
       setHtml(renderedHtml);
+      // Call onContentLoaded after a brief delay to ensure DOM is updated
+      setTimeout(() => onContentLoaded?.(), 50);
     } catch (error) {
       console.error("Error rendering markdown:", error);
       setHtml('<div style="color: red; padding: 16px;">Error rendering markdown</div>');
+      setTimeout(() => onContentLoaded?.(), 50);
     }
-  }, [content]);
+  }, [content, onContentLoaded]);
 
   return (
     <div 
@@ -245,7 +263,7 @@ function MarkdownRenderer({
   );
 }
 
-function TemplateRenderer({ path, currentWorkspace }: { path: AbsPath; currentWorkspace: Workspace }) {
+function TemplateRenderer({ path, currentWorkspace, onContentLoaded }: { path: AbsPath; currentWorkspace: Workspace; onContentLoaded?: () => void }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
 
@@ -268,6 +286,7 @@ function TemplateRenderer({ path, currentWorkspace }: { path: AbsPath; currentWo
           templateType
         );
         setHtml(rendered);
+        setTimeout(() => onContentLoaded?.(), 50);
       } catch (error) {
         console.error("Template render error:", error);
         const err = error as Error;
@@ -277,17 +296,23 @@ function TemplateRenderer({ path, currentWorkspace }: { path: AbsPath; currentWo
           <div><strong>Template Render Error:</strong> ${message}</div>
           ${stack ? `<pre style="margin-top: 8px; white-space: pre-wrap; font-size: 14px;">${stack}</pre>` : ""}
         </div>`);
+        setTimeout(() => onContentLoaded?.(), 50);
       }
     };
 
     void renderTemplate();
-  }, [content, path, currentWorkspace]);
+  }, [content, path, currentWorkspace, onContentLoaded]);
 
   return <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-function HtmlRenderer({ path, currentWorkspace }: { path: AbsPath; currentWorkspace: Workspace }) {
+function HtmlRenderer({ path, currentWorkspace, onContentLoaded }: { path: AbsPath; currentWorkspace: Workspace; onContentLoaded?: () => void }) {
   const content = useLiveFileContent(currentWorkspace, path);
+
+  useEffect(() => {
+    // Call onContentLoaded when content changes
+    setTimeout(() => onContentLoaded?.(), 50);
+  }, [content, onContentLoaded]);
 
   return (
     <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: content }} />
@@ -299,7 +324,8 @@ export function usePreviewLogic(
   contextProvider: PreviewContextProvider,
   path: AbsPath | null,
   currentWorkspace: Workspace | null,
-  scrollEmitter?: ScrollSyncEmitter
+  scrollEmitter?: ScrollSyncEmitter,
+  onContentLoaded?: () => void
 ) {
   // Get CSS files in parent context
   const cssFiles = useLiveCssFiles({ 
@@ -308,7 +334,7 @@ export function usePreviewLogic(
   });
   
   // Setup React rendering
-  const reactRootRef = usePreviewRenderer(contextProvider, path, currentWorkspace, scrollEmitter);
+  const reactRootRef = usePreviewRenderer(contextProvider, path, currentWorkspace, scrollEmitter, onContentLoaded);
   
   // Inject CSS when ready
   useEffect(() => {

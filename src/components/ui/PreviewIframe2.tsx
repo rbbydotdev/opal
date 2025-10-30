@@ -65,8 +65,7 @@ export function PreviewIFrame2({ previewPath }: { previewPath?: string | null })
   const handleRefresh = () => {
     setShowSpinner(true);
     setRefreshKey(prev => prev + 1);
-    // Give a small delay to show the spinner
-    setTimeout(() => setShowSpinner(false), 300);
+    // Spinner will be hidden when content finishes loading
   };
 
   const handleOpenWindow = () => {
@@ -109,7 +108,7 @@ export function PreviewIFrame2({ previewPath }: { previewPath?: string | null })
       )}
 
       <div key={refreshKey} className="flex-grow relative">
-        <PreviewComponent2 />
+        <PreviewComponent2 onContentLoaded={() => setShowSpinner(false)} />
       </div>
     </div>
   );
