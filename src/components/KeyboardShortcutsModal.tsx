@@ -1,8 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { IS_MAC } from "@/lib/isMac";
+import fuzzysort from "fuzzysort";
 import { KeyboardIcon } from "lucide-react";
-import React from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardShortcutsSearch } from "./KeyboardShortcutsSearch";
 
 interface KeyboardShortcut {
   action: string;
@@ -109,8 +111,31 @@ function KeyboardShortcutBadge({ keys }: { keys: string[] }) {
 }
 
 export function KeyboardShortcutsModal({ children }: { children: React.ReactNode }) {
-  // Group shortcuts by section
-  const groupedShortcuts = keyboardShortcuts.reduce(
+  const [searchValue, setSearchValue] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter shortcuts based on search value
+  const filteredShortcuts = useMemo(() => {
+    if (!searchValue.trim()) {
+      return keyboardShortcuts;
+    }
+
+    const searchTargets = keyboardShortcuts.map((shortcut, index) => ({
+      target: `${shortcut.action} ${shortcut.description || ""} ${shortcut.keys.join(" ")}`,
+      shortcut,
+      originalIndex: index,
+    }));
+
+    const results = fuzzysort.go(searchValue, searchTargets, {
+      key: "target",
+    });
+
+    return results.map((result) => result.obj.shortcut);
+  }, [searchValue]);
+
+  // Group filtered shortcuts by section
+  const groupedShortcuts = filteredShortcuts.reduce(
     (acc, shortcut) => {
       if (!acc[shortcut.section]) {
         acc[shortcut.section] = [];
@@ -124,16 +149,29 @@ export function KeyboardShortcutsModal({ children }: { children: React.ReactNode
   // Define section order for consistent display
   const sectionOrder = ["General", "Editor", "Navigation", "Search", "File Explorer"];
 
+  // Reset search when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchValue("");
+    }
+  }, [isOpen]);
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col fixed left-[50%] top-[10vh] translate-x-[-50%] translate-y-0">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyboardIcon className="h-5 w-5" />
             Keyboard Shortcuts
           </DialogTitle>
         </DialogHeader>
+        <KeyboardShortcutsSearch
+          ref={searchInputRef}
+          value={searchValue}
+          onChange={setSearchValue}
+          placeholder="Search shortcuts..."
+        />
         <div className="mt-4 space-y-6  overflow-y-auto min-h-0">
           {sectionOrder.map((section) => {
             const shortcuts = groupedShortcuts[section];
