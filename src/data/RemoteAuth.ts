@@ -1,5 +1,6 @@
 import { ClientDb } from "@/data/instance";
 import {
+  RemoteAuthBasicAuthAgent,
   RemoteAuthGithubAPIAgent,
   RemoteAuthGithubDeviceOAuthAgent,
   RemoteAuthGithubOAuthAgent,
