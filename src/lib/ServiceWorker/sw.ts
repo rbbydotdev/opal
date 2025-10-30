@@ -1,25 +1,30 @@
 import { Workspace } from "@/data/Workspace";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
+import { PWACache } from "@/lib/ServiceWorker/pwaCache";
 import { routeRequest } from "@/lib/ServiceWorker/router";
 import { WHITELIST } from "@/lib/ServiceWorker/utils";
-import { PWACache } from "@/lib/ServiceWorker/pwaCache";
 
 // Service worker workspace context parsing (inline for SW compatibility)
-function getWorkspaceContextFromRequest(request: Request): { workspaceName: string; sessionId?: string; timestamp: number } | null {
+type SpecialReqContextType = { workspaceName: string; sessionId?: string; timestamp: number };
+function getWorkspaceContextFromRequest(request: Request): SpecialReqContextType | null {
   // Parse cookie from request headers
-  const cookieHeader = request.headers.get('cookie');
+  const cookieHeader = request.headers.get("cookie");
   if (!cookieHeader) return null;
-  
+
   const cookieMatch = cookieHeader.match(/activeWorkspace=([^;]+)/);
-  if (cookieMatch) {
+  if (cookieMatch && cookieMatch[1]) {
     try {
-      return JSON.parse(decodeURIComponent(cookieMatch[1]));
+      const obj = JSON.parse(decodeURIComponent(cookieMatch[1])) as SpecialReqContextType;
+      if (!obj.workspaceName || !obj.timestamp) {
+        throw new Error("Invalid workspace context cookie format");
+      }
+      return obj;
     } catch (e) {
-      console.warn('Service worker: Failed to parse workspace context:', e);
+      console.warn("Service worker: Failed to parse workspace context:", e);
     }
   }
-  
+
   return null;
 }
 
@@ -30,36 +35,26 @@ declare const self: ServiceWorkerGlobalScope;
 // --- Service Worker Lifecycle ---
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    Promise.all([
-      self.clients.claim(),
-      PWACache.handleActivate()
-    ])
-  );
+  event.waitUntil(Promise.all([self.clients.claim(), PWACache.handleActivate()]));
 });
 
 self.addEventListener("install", (event: ExtendableEvent) => {
-  event.waitUntil(
-    Promise.all([
-      self.skipWaiting(),
-      PWACache.handleInstall()
-    ])
-  );
+  event.waitUntil(Promise.all([self.skipWaiting(), PWACache.handleInstall()]));
 });
 
 // --- Helper Functions ---
 
 function isPopupWindowRequest(request: Request): boolean {
-  const referer = request.headers.get('referer');
+  const referer = request.headers.get("referer");
   // Popup windows typically have no referrer or "about:blank"
-  return !referer || referer === 'about:blank' || referer.startsWith('about:');
+  return !referer || referer === "about:blank" || referer.startsWith("about:");
 }
 
 function getWorkspaceFromRequest(request: Request, url: URL): string | null {
   // First, try cookie-based detection (for popup windows)
   const cookieContext = getWorkspaceContextFromRequest(request);
   if (cookieContext?.workspaceName) {
-    console.log('SW: Using cookie workspace context:', cookieContext.workspaceName);
+    console.log("SW: Using cookie workspace context:", cookieContext.workspaceName);
     return cookieContext.workspaceName;
   }
 
@@ -67,7 +62,7 @@ function getWorkspaceFromRequest(request: Request, url: URL): string | null {
   if (request.referrer) {
     const legacyWorkspace = Workspace.parseWorkspacePathLegacy(request.referrer).workspaceName;
     if (legacyWorkspace) {
-      console.log('SW: Using referrer workspace context:', legacyWorkspace);
+      console.log("SW: Using referrer workspace context:", legacyWorkspace);
       return legacyWorkspace;
     }
   }
@@ -75,7 +70,7 @@ function getWorkspaceFromRequest(request: Request, url: URL): string | null {
   // Final fallback to URL search params
   const urlWorkspace = url.searchParams.get("workspaceName");
   if (urlWorkspace) {
-    console.log('SW: Using URL param workspace context:', urlWorkspace);
+    console.log("SW: Using URL param workspace context:", urlWorkspace);
     return urlWorkspace;
   }
 
@@ -89,7 +84,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const url = new URL(request.url);
 
   const whiteListMatch = WHITELIST.some((pattern) => pattern.test(url.pathname));
-  
+
   // Handle navigation and script requests directly
   if (request.mode === "navigate" || event.request.destination === "script") {
     return event.respondWith(defaultFetchHandler(event));
@@ -97,7 +92,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
   // Special handling for potential popup window requests
   if (isPopupWindowRequest(request)) {
-    console.log('SW: Detected popup window request:', request.url);
+    console.log("SW: Detected popup window request:", request.url);
     // Don't whitelist popup requests - try to get workspace context
   } else if (whiteListMatch) {
     // Apply whitelist only to non-popup requests
@@ -114,10 +109,10 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
     // Only handle requests with a valid workspace and same origin
     if (workspaceName && url.origin === self.location.origin) {
-      console.log('SW: Routing request to workspace:', workspaceName, request.url);
+      console.log("SW: Routing request to workspace:", workspaceName, request.url);
       event.respondWith(routeRequest(event, workspaceName));
     } else {
-      console.log('SW: No workspace context, using default handler:', request.url);
+      console.log("SW: No workspace context, using default handler:", request.url);
       event.respondWith(defaultFetchHandler(event));
     }
   } catch (e) {
