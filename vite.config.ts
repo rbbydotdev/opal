@@ -48,6 +48,7 @@ export default defineConfig(() => {
       headers: {
         // Allow service workers to control the entire site scope in preview mode too
         "Service-Worker-Allowed": "/",
+        // "Origin-Agent-Cluster": "?1",
       },
     },
     // The `optimizeDeps` and `build.rollupOptions.plugins` sections

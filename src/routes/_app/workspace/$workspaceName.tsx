@@ -43,7 +43,9 @@ function WorkspaceLayout() {
           main={<Outlet />}
           rightPaneEnabled={canShow}
           rightPane={
-            previewURL ? <PreviewIFrame3 previewPath={previewNode?.path} currentWorkspace={currentWorkspace} /> : null
+            previewURL && previewNode?.path ? (
+              <PreviewIFrame3 previewPath={previewNode.path} currentWorkspace={currentWorkspace} />
+            ) : null
           }
         />
       </div>

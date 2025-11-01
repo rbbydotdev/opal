@@ -43,7 +43,13 @@ export function PreviewIFrame3({
       )}
 
       <div className="flex-grow relative">
-        <PreviewComponent3 />
+        {!previewPath ? (
+          <div className="w-full h-full flex m-auto inset-0 absolute justify-center items-center bg-background text-muted-foreground">
+            No preview available
+          </div>
+        ) : (
+          <PreviewComponent3 currentWorkspace={currentWorkspace} path={previewPath} />
+        )}
       </div>
     </div>
   );
