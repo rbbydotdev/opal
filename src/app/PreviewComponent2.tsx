@@ -1,8 +1,8 @@
+import { usePreviewLogic } from "@/app/PreviewCore";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import { getScrollEmitter, scrollEmitterSession } from "@/hooks/useScrollSyncForEditor";
 import { useIframeContextProvider } from "./IframeContextProvider";
-import { usePreviewLogic } from "./PreviewCore";
 
 export function PreviewComponent2({ onContentLoaded }: { onContentLoaded?: () => void } = {}) {
   const { path } = useWorkspaceRoute();

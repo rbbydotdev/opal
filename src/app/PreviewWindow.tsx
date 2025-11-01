@@ -1,8 +1,8 @@
+import { usePreviewLogic } from "@/app/PreviewCore";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import { getScrollEmitter, releaseScrollEmitter, scrollEmitterSession } from "@/hooks/useScrollSyncForEditor";
 import { useEffect } from "react";
-import { usePreviewLogic } from "./PreviewCore";
 import { useWindowContextProvider } from "./WindowContextProvider";
 
 export function PreviewWindow() {

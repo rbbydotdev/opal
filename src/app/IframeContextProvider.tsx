@@ -1,10 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { PreviewContext, PreviewContextProvider, initializePreviewDocument } from "./PreviewCore";
 
 export class IframeContextProvider implements PreviewContextProvider {
   private iframeRef: React.RefObject<HTMLIFrameElement | null>;
   private ready: boolean = false;
-  private context: PreviewContext | null = null;
+  private _context: PreviewContext | null = null;
+
+  public get context() {
+    return (
+      this._context ?? {
+        document: null,
+        window: null,
+        rootElement: null,
+      }
+    );
+  }
 
   constructor(iframeRef: React.RefObject<HTMLIFrameElement | null>) {
     this.iframeRef = iframeRef;
@@ -23,10 +33,10 @@ export class IframeContextProvider implements PreviewContextProvider {
 
       if (!rootElement) return null;
 
-      this.context = {
+      this._context = {
         document: doc,
         window: win,
-        rootElement
+        rootElement,
       };
     }
 
@@ -40,13 +50,13 @@ export class IframeContextProvider implements PreviewContextProvider {
   setReady(ready: boolean): void {
     this.ready = ready;
     if (!ready) {
-      this.context = null;
+      this._context = null;
     }
   }
 
   cleanup(): void {
     this.ready = false;
-    this.context = null;
+    this._context = null;
   }
 }
 
@@ -55,14 +65,12 @@ export function useIframeContextProvider(): {
   contextProvider: IframeContextProvider;
 } {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const contextProviderRef = useRef<IframeContextProvider | null>(null);
+  const contextProvider = useMemo(() => new IframeContextProvider(iframeRef), [iframeRef]);
+  useEffect(() => {
+    return () => contextProvider.cleanup();
+  }, [contextProvider]);
 
-  // Create context provider once
-  if (!contextProviderRef.current) {
-    contextProviderRef.current = new IframeContextProvider(iframeRef);
-  }
-
-  const contextProvider = contextProviderRef.current;
+  new IframeContextProvider(iframeRef);
 
   // Initialize iframe
   useEffect(() => {

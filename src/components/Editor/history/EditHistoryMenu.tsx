@@ -83,7 +83,7 @@ export function EditHistoryMenu({
   // When disabled, show minimal UI with just the toggle
   if (disabled) {
     return (
-      <div className="relative flex items-center pl-2 gap-2 font-mono text-sm opacity-50">
+      <div className="relative flex items-center pl-2 gap-2 font-mono text-sm opacity-50 mx-2">
         <DropdownMenu open={isOpen} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <button
@@ -123,7 +123,7 @@ export function EditHistoryMenu({
   }
   return (
     <div
-      className={cn("relative flex items-center pl-2 gap-2 font-mono text-sm", {
+      className={cn("relative flex items-center pl-2 gap-2 font-mono text-sm mx-2", {
         "opacity-50": disabled,
       })}
     >

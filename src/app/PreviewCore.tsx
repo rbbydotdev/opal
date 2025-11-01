@@ -13,9 +13,9 @@ import { createRoot, Root } from "react-dom/client";
 
 // Common interface for both iframe and window contexts
 export interface PreviewContext {
-  document: Document;
-  window: Window;
-  rootElement: HTMLElement;
+  document: Document | null;
+  window: Window | null;
+  rootElement: HTMLElement | null;
 }
 
 // Interface for context providers (iframe vs window)
@@ -27,6 +27,7 @@ export interface PreviewContextProvider {
 
 // Shared document initialization
 export function initializePreviewDocument(doc: Document, title: string = "Preview"): void {
+  console.log("Initializing preview document with title:", title);
   doc.open();
   doc.write(`
     <!DOCTYPE html>
@@ -37,7 +38,7 @@ export function initializePreviewDocument(doc: Document, title: string = "Previe
         <title>${title}</title>
       </head>
       <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
-        <div id="preview-root"></div>
+        <div id="preview-root">loading...</div>
       </body>
     </html>
   `);
@@ -46,19 +47,19 @@ export function initializePreviewDocument(doc: Document, title: string = "Previe
 
 // Shared CSS injection logic
 export function injectCssFiles(context: PreviewContext, cssFiles: string[]): void {
-  const head = context.document.head;
-
   // Remove existing preview CSS
-  const existingLinks = head.querySelectorAll('link[data-preview-css="true"]');
-  existingLinks.forEach((link) => link.remove());
+  const existingLinks = context.document?.head?.querySelectorAll('link[data-preview-css="true"]');
+  existingLinks?.forEach((link) => link.remove());
 
   // Add new CSS files
   cssFiles.forEach((cssFile) => {
-    const link = context.document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = cssFile;
-    link.setAttribute("data-preview-css", "true");
-    head.appendChild(link);
+    const link = context?.document?.createElement("link");
+    if (link) {
+      link.rel = "stylesheet";
+      link.href = cssFile;
+      link.setAttribute("data-preview-css", "true");
+      context.document?.head.appendChild(link);
+    }
   });
 }
 
@@ -78,12 +79,13 @@ export function usePreviewScrollSync({
   useEffect(() => {
     if (!scrollEmitter || !context) return;
 
-    const { document: doc, window: win } = context;
-    const scrollElement = doc.documentElement;
+    // const { document: doc, window: win } = context;
 
     // Listen for scroll events from other components
     const unsubscribe = scrollEmitter.onScroll(async (relX: number, relY: number, sourceOriginId?: string) => {
+      const scrollElement = context.document?.documentElement;
       if (sourceOriginId === originId.current || isScrollingRef.current) return;
+      if (!scrollElement) return;
 
       const maxScrollLeft = scrollElement.scrollWidth - scrollElement.clientWidth;
       const maxScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
@@ -94,13 +96,13 @@ export function usePreviewScrollSync({
 
       const scrollPromise = new Promise<void>((resolve) => {
         const handleScrollComplete = () => {
-          doc.removeEventListener("scroll", handleScrollComplete);
+          context.document?.removeEventListener("scroll", handleScrollComplete);
           resolve();
         };
-        doc.addEventListener("scroll", handleScrollComplete, { passive: true, once: true });
+        context.document?.addEventListener("scroll", handleScrollComplete, { passive: true, once: true });
       });
 
-      win.scrollTo(scrollLeft, scrollTop);
+      context.window?.scrollTo?.(scrollLeft, scrollTop);
       await scrollPromise;
 
       isScrollingRef.current = false;
@@ -108,7 +110,11 @@ export function usePreviewScrollSync({
 
     // Send our scroll events to other components
     const handleScroll = () => {
+      const scrollElement = context.document?.documentElement;
+      const win = context.window;
       if (isScrollingRef.current) return;
+      if (!scrollElement) return;
+      if (!win) return;
 
       const maxScrollLeft = scrollElement.scrollWidth - scrollElement.clientWidth;
       const maxScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
@@ -118,11 +124,11 @@ export function usePreviewScrollSync({
       scrollEmitter.emitScroll(relX, relY, originId.current);
     };
 
-    doc.addEventListener("scroll", handleScroll, { passive: true });
+    context.document?.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       unsubscribe();
-      doc.removeEventListener("scroll", handleScroll);
+      context.document?.removeEventListener("scroll", handleScroll);
     };
   }, [scrollEmitter, context, originPrefix]);
 }
@@ -138,16 +144,15 @@ export function usePreviewRenderer({
   contextProvider: PreviewContextProvider;
   path: AbsPath | null;
   currentWorkspace: Workspace | null;
-  scrollEmitter: ScrollSyncEmitter | null;
+  scrollEmitter?: ScrollSyncEmitter | null;
   onContentLoaded?: () => void;
 }) {
   const reactRootRef = useRef<Root | null>(null);
 
   useEffect(() => {
     if (!contextProvider.isReady() || !path || !currentWorkspace) return;
-
     const context = contextProvider.getContext();
-    if (!context) return;
+    if (!context || !context.rootElement) return;
 
     // Clean up previous root
     if (reactRootRef.current) {
@@ -205,7 +210,7 @@ export function PreviewContent({
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
-  scrollEmitter: ScrollSyncEmitter | null;
+  scrollEmitter?: ScrollSyncEmitter | null;
   context: PreviewContext;
   onContentLoaded?: () => void;
 }) {
@@ -253,18 +258,20 @@ function MarkdownRenderer({
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
-  scrollEmitter: ScrollSyncEmitter | null;
+  scrollEmitter?: ScrollSyncEmitter | null;
   context: PreviewContext;
   onContentLoaded?: () => void;
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
 
-  usePreviewScrollSync({
-    scrollEmitter,
-    context,
-    originPrefix: "markdown",
-  });
+  if (scrollEmitter) {
+    usePreviewScrollSync({
+      scrollEmitter,
+      context,
+      originPrefix: "markdown",
+    });
+  }
 
   useEffect(() => {
     try {
