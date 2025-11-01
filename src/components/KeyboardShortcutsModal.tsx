@@ -51,6 +51,12 @@ const keyboardShortcuts: KeyboardShortcut[] = [
     description: "Switch between wysiwyg and source modes",
   },
   {
+    section: "Editor",
+    action: "Focus Editor",
+    keys: [IS_MAC ? "⌘" : "Ctrl", "E"],
+    description: "Focus and put cursor in the editor",
+  },
+  {
     section: "File Explorer",
     action: "Navigate Down",
     keys: ["↓"],
@@ -111,10 +117,10 @@ function KeyboardShortcutBadge({ keys }: { keys: string[] }) {
     <div className="flex items-center gap-1">
       {keys.map((key, index) => (
         <React.Fragment key={index}>
-          <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+          <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-sm font-medium text-muted-foreground opacity-100">
             {key}
           </kbd>
-          {index < keys.length - 1 && <span className="text-muted-foreground text-xs">+</span>}
+          {index < keys.length - 1 && <span className="text-muted-foreground text-sm">+</span>}
         </React.Fragment>
       ))}
     </div>

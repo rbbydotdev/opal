@@ -16,13 +16,13 @@ export interface PreviewContextProvider {
   teardown(): void;
 }
 
-type ReadyContext = {
+export type IframeReadyContext = {
   document: Document;
   window: Window;
   rootElement: HTMLElement;
   ready: true;
 };
-type NotReadyContext = {
+export type IframeNotReadyContext = {
   document: null;
   window: null;
   rootElement: null;
@@ -36,7 +36,7 @@ const IframeEvents = {
 type IframeEventMap = {
   [IframeEvents.READY]: PreviewContext | null;
 };
-const EMPTY_CONTEXT: NotReadyContext = {
+const EMPTY_CONTEXT: IframeNotReadyContext = {
   document: null,
   window: null,
   rootElement: null,
@@ -44,7 +44,7 @@ const EMPTY_CONTEXT: NotReadyContext = {
 };
 class IframeContextProvider implements PreviewContextProvider {
   constructor(private iframeRef: React.RefObject<HTMLIFrameElement | null>) {}
-  private _context: ReadyContext | NotReadyContext = EMPTY_CONTEXT;
+  private _context: IframeReadyContext | IframeNotReadyContext = EMPTY_CONTEXT;
   private unsubs: (() => void)[] = [];
   private events = CreateTypedEmitter<IframeEventMap>();
 
@@ -65,7 +65,7 @@ class IframeContextProvider implements PreviewContextProvider {
     return this.iframeRef.current?.contentDocument?.getElementById("preview-root") || null;
   }
 
-  get context(): NotReadyContext | ReadyContext {
+  get context(): IframeNotReadyContext | IframeReadyContext {
     if (!this.doc || !this.win || !this.rootEl) {
       return EMPTY_CONTEXT;
     }
@@ -75,7 +75,7 @@ class IframeContextProvider implements PreviewContextProvider {
       window: this.win,
       rootElement: this.rootEl,
       ready: true,
-    } as ReadyContext;
+    } as IframeReadyContext;
 
     return this._context;
   }

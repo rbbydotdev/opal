@@ -1,4 +1,4 @@
-import { PreviewContext } from "@/app/IframeContextProvider2";
+import { IframeReadyContext, PreviewContext } from "@/app/IframeContextProvider2";
 import { useLiveFileContent } from "@/context/useFileContents";
 import { Workspace } from "@/data/Workspace";
 import { TemplateManager } from "@/features/templating";
@@ -10,10 +10,9 @@ import { useEffect, useState } from "react";
 const getBaseHref = (href: string): string => href.split("?")[0]!;
 
 // Shared CSS injection logic with smooth transitions
-export function injectCssFiles(context: PreviewContext, cssFiles: string[]): void {
-  const head = context.document?.head;
-  if (!head) return;
-  
+export function injectCssFiles(context: IframeReadyContext, cssFiles: string[]): void {
+  const head = context.document.head;
+
   const newBaseHrefs = new Set(cssFiles.map(getBaseHref));
 
   // Step 1: Add or swap links with smooth transitions
@@ -21,10 +20,10 @@ export function injectCssFiles(context: PreviewContext, cssFiles: string[]): voi
     const baseHref = getBaseHref(newHref);
     // Find ALL links for this base href (there might be multiple cache-busted versions)
     const existingLinks = head.querySelectorAll<HTMLLinkElement>(`link[data-preview-css="${baseHref}"]`);
-    
+
     // Check if we already have this exact href
-    const exactMatch = Array.from(existingLinks).find(link => link.href === newHref);
-    
+    const exactMatch = Array.from(existingLinks).find((link) => link.href === newHref);
+
     if (exactMatch) {
       // We already have this exact CSS file, no need to do anything
       return;
@@ -46,7 +45,7 @@ export function injectCssFiles(context: PreviewContext, cssFiles: string[]): voi
 
       const handleLoadOrError = () => {
         // Remove ALL old versions of this CSS file
-        existingLinks.forEach(oldLink => {
+        existingLinks.forEach((oldLink) => {
           oldLink.remove();
         });
         newLink.removeEventListener("load", handleLoadOrError);
@@ -60,7 +59,7 @@ export function injectCssFiles(context: PreviewContext, cssFiles: string[]): voi
   });
 
   // Step 2: Clean up links for CSS files that are no longer needed
-  const existingLinks = head.querySelectorAll<HTMLLinkElement>('link[data-preview-css]');
+  const existingLinks = head.querySelectorAll<HTMLLinkElement>("link[data-preview-css]");
   existingLinks.forEach((link) => {
     const managedHref = link.getAttribute("data-preview-css");
     if (managedHref && !newBaseHrefs.has(managedHref)) {
