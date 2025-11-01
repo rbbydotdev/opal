@@ -6,8 +6,7 @@ import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { GitConflictNotice } from "@/components/GitConflictNotice";
-import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
-import { useScrollSyncForEditor } from "@/hooks/useScrollSyncForEditor";
+import { ScrollSyncProvider } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
@@ -15,6 +14,7 @@ import { Workspace } from "@/data/Workspace";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useScrollSyncForEditor } from "@/hooks/useScrollSyncForEditor";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { mustache } from "@/lib/codemirror/mustacheLanguage";
 import { OpalMimeType } from "@/lib/fileType";
@@ -271,7 +271,7 @@ export const CodeMirrorEditor = ({
 
   const { path } = useWorkspaceRoute();
   const { scrollEmitter, sessionId } = useScrollSyncForEditor(currentWorkspace, path);
-  
+
   const cmScroller = useWatchElement(".cm-scroller");
 
   return (
@@ -328,7 +328,7 @@ const CodeMirrorToolbar = ({
   const { isMarkdown, hasEditOverride } = useCurrentFilepath();
 
   const { left } = useSidebarPanes();
-  const previewNode = useResolvePathForPreview({ path, currentWorkspace });
+  const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const router = useRouter();
 
   const handlePrettify = async () => {

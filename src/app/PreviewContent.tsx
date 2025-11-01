@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 export function injectCssFiles(context: PreviewContext, cssFiles: string[]): void {
   // Remove existing preview CSS
   const existingLinks = context.document?.head?.querySelectorAll('link[data-preview-css="true"]');
-  existingLinks?.forEach((link) => link.remove());
 
   // Add new CSS files
   cssFiles.forEach((cssFile) => {
@@ -23,6 +22,7 @@ export function injectCssFiles(context: PreviewContext, cssFiles: string[]): voi
       context.document?.head.appendChild(link);
     }
   });
+  existingLinks?.forEach((link) => link.remove());
 }
 
 export function PreviewContent({

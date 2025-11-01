@@ -22,7 +22,7 @@ function WorkspaceLayout() {
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
 
-  const { previewURL, previewNode, canShow } = usePreviewPaneProps({ path, currentWorkspace });
+  const { previewURL, previewNode, canShow, setPreviewNode } = usePreviewPaneProps({ path, currentWorkspace });
 
   useEffect(() => {
     if (workspaceName) {
@@ -44,7 +44,11 @@ function WorkspaceLayout() {
           rightPaneEnabled={canShow}
           rightPane={
             previewURL && previewNode?.path ? (
-              <PreviewIFrame previewPath={previewNode.path} currentWorkspace={currentWorkspace} />
+              <PreviewIFrame
+                previewPath={previewNode.path}
+                currentWorkspace={currentWorkspace}
+                setPreviewNode={setPreviewNode}
+              />
             ) : null
           }
         />

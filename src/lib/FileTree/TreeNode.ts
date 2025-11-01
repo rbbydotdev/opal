@@ -117,7 +117,7 @@ export class TreeNode {
   closestDir(): TreeDir | null {
     return this.isTreeDir() ? this : (this.parent?.closestDir() ?? null);
   }
-  siblings(filterIn: (() => boolean) | AbsPath[] = () => true): TreeNode[] {
+  siblings(filterIn: ((node: TreeNode) => boolean) | AbsPath[] = () => true): TreeNode[] {
     const filterFn = Array.isArray(filterIn) ? (node: TreeNode) => filterIn.includes(node.path) : filterIn;
     return this.parent ? Object.values(this.parent.children).filter((child) => child !== this && filterFn(child)) : [];
   }
