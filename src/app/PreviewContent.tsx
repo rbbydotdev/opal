@@ -7,22 +7,66 @@ import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache } from "@/lib/paths2";
 import { useEffect, useState } from "react";
 
-// Shared CSS injection logic
-export function injectCssFiles(context: PreviewContext, cssFiles: string[]): void {
-  // Remove existing preview CSS
-  const existingLinks = context.document?.head?.querySelectorAll('link[data-preview-css="true"]');
+const getBaseHref = (href: string): string => href.split("?")[0]!;
 
-  // Add new CSS files
-  cssFiles.forEach((cssFile) => {
-    const link = context?.document?.createElement("link");
-    if (link) {
-      link.rel = "stylesheet";
-      link.href = cssFile;
-      link.setAttribute("data-preview-css", "true");
-      context.document?.head.appendChild(link);
+// Shared CSS injection logic with smooth transitions
+export function injectCssFiles(context: PreviewContext, cssFiles: string[]): void {
+  const head = context.document?.head;
+  if (!head) return;
+  
+  const newBaseHrefs = new Set(cssFiles.map(getBaseHref));
+
+  // Step 1: Add or swap links with smooth transitions
+  cssFiles.forEach((newHref) => {
+    const baseHref = getBaseHref(newHref);
+    // Find ALL links for this base href (there might be multiple cache-busted versions)
+    const existingLinks = head.querySelectorAll<HTMLLinkElement>(`link[data-preview-css="${baseHref}"]`);
+    
+    // Check if we already have this exact href
+    const exactMatch = Array.from(existingLinks).find(link => link.href === newHref);
+    
+    if (exactMatch) {
+      // We already have this exact CSS file, no need to do anything
+      return;
+    }
+
+    if (existingLinks.length === 0) {
+      // New CSS file - just add it
+      const newLink = context.document.createElement("link");
+      newLink.rel = "stylesheet";
+      newLink.href = newHref;
+      newLink.setAttribute("data-preview-css", baseHref);
+      head.appendChild(newLink);
+    } else {
+      // CSS file changed - smooth transition and remove ALL old versions
+      const newLink = context.document.createElement("link");
+      newLink.rel = "stylesheet";
+      newLink.href = newHref;
+      newLink.setAttribute("data-preview-css", baseHref);
+
+      const handleLoadOrError = () => {
+        // Remove ALL old versions of this CSS file
+        existingLinks.forEach(oldLink => {
+          oldLink.remove();
+        });
+        newLink.removeEventListener("load", handleLoadOrError);
+        newLink.removeEventListener("error", handleLoadOrError);
+      };
+
+      newLink.addEventListener("load", handleLoadOrError);
+      newLink.addEventListener("error", handleLoadOrError);
+      head.appendChild(newLink);
     }
   });
-  existingLinks?.forEach((link) => link.remove());
+
+  // Step 2: Clean up links for CSS files that are no longer needed
+  const existingLinks = head.querySelectorAll<HTMLLinkElement>('link[data-preview-css]');
+  existingLinks.forEach((link) => {
+    const managedHref = link.getAttribute("data-preview-css");
+    if (managedHref && !newBaseHrefs.has(managedHref)) {
+      link.remove();
+    }
+  });
 }
 
 export function PreviewContent({
