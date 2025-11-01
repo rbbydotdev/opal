@@ -1,4 +1,4 @@
-import { IframeReadyContext, PreviewContext } from "@/app/IframeContextProvider2";
+import { IframeReadyContext, PreviewContext } from "@/app/IframeContextProvider";
 import { useLiveFileContent } from "@/context/useFileContents";
 import { Workspace } from "@/data/Workspace";
 import { TemplateManager } from "@/features/templating";

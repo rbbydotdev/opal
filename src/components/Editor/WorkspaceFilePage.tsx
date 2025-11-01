@@ -150,3 +150,101 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
 function ImageViewer({ filePath, currentWorkspace }: { filePath: string; currentWorkspace: Workspace }) {
   return <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />;
 }
+
+function ExternalPreviewWindow() {
+  useEffect(() => {
+    window.open("", "_blank", "noopener,noreferrer");
+  }, []);
+}
+
+export class WindowContextProvider implements PreviewContextProvider {
+  private windowRef: Window | null = null;
+  private ready: boolean = false;
+  private context: PreviewContext | null = null;
+  private onWindowClose?: () => void;
+  private workspaceName?: string;
+  private sessionId?: string;
+
+  constructor(onWindowClose?: () => void, workspaceName?: string, sessionId?: string) {
+    this.onWindowClose = onWindowClose;
+    this.workspaceName = workspaceName;
+    this.sessionId = sessionId;
+  }
+
+  openWindow(): boolean {
+    if (this.windowRef && !this.windowRef.closed) {
+      this.windowRef.focus();
+      return true;
+    }
+
+    const newWindow = window.open("", "_blank", "width=800,height=600,scrollbars=yes,resizable=yes");
+    if (!newWindow) {
+      return false; // Popup blocked
+    }
+
+    this.windowRef = newWindow;
+    initializePreviewDocument(newWindow.document, "Preview Window");
+
+    // Set workspace context for service worker communication
+    if (this.workspaceName) {
+      // Set main window context (for cookie)
+      setActiveWorkspaceContext(this.workspaceName, this.sessionId);
+
+      // Inject context into popup window
+      injectWorkspaceContextIntoWindow(newWindow, this.workspaceName, this.sessionId);
+    }
+
+    // Handle window close
+    const handleBeforeUnload = () => {
+      this.cleanup();
+      this.onWindowClose?.();
+    };
+
+    newWindow.addEventListener("beforeunload", handleBeforeUnload);
+    this.ready = true;
+
+    return true;
+  }
+
+  closeWindow(): void {
+    if (this.windowRef && !this.windowRef.closed) {
+      this.windowRef.close();
+    }
+  }
+
+  getContext(): PreviewContext | null {
+    if (!this.ready || !this.windowRef || this.windowRef.closed) {
+      return null;
+    }
+
+    if (!this.context) {
+      const doc = this.windowRef.document;
+      const win = this.windowRef;
+      const rootElement = doc.getElementById("preview-root");
+
+      if (!rootElement) return null;
+
+      this.context = {
+        document: doc,
+        window: win,
+        rootElement,
+      };
+    }
+
+    return this.context;
+  }
+
+  isReady(): boolean {
+    return this.ready && this.windowRef !== null && !this.windowRef.closed;
+  }
+
+  isWindowOpen(): boolean {
+    return this.windowRef !== null && !this.windowRef.closed;
+  }
+
+  cleanup(): void {
+    this.ready = false;
+    this.context = null;
+    this.windowRef = null;
+  }
+}
