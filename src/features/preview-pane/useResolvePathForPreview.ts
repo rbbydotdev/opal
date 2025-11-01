@@ -1,7 +1,7 @@
 import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, prefix } from "@/lib/paths2";
-import { useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function useResolvePathForPreview({
   path,
@@ -9,8 +9,8 @@ export function useResolvePathForPreview({
 }: {
   path: AbsPath | null;
   currentWorkspace: Workspace;
-}): TreeNode | null {
-  const previewNode = useMemo(() => {
+}) {
+  const getPreviewNode = useCallback(() => {
     if (!path) return null;
     const currentNode = currentWorkspace.nodeFromPath(path);
     // Prioritize mustache files first
@@ -21,9 +21,16 @@ export function useResolvePathForPreview({
     if (currentNode?.isImageFile()) return null;
     return (
       currentNode?.siblings().find((node) => node.isMarkdownFile() && prefix(node.path) === prefix(path)) ||
-      currentNode?.siblings().find((node) => node.isMarkdownFile())
-      // currentNode
+      currentNode?.siblings().find((node) => node.isMarkdownFile()) ||
+      null
     );
   }, [currentWorkspace, path]);
-  return previewNode ?? null;
+  const [previewNode, setPreviewNode] = useState<TreeNode | null>(getPreviewNode);
+
+  useEffect(() => {
+    const resolvedNode = getPreviewNode();
+    setPreviewNode(resolvedNode!);
+  }, [currentWorkspace, getPreviewNode, path]);
+
+  return { setPreviewNode, previewNode };
 }

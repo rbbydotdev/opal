@@ -4,9 +4,10 @@ import { useWorkspacePathPreviewURL } from "@/features/preview-pane/useWorkspace
 import { AbsPath } from "@/lib/paths2";
 
 export function usePreviewPaneProps({ path, currentWorkspace }: { path: AbsPath | null; currentWorkspace: Workspace }) {
-  const previewNode = useResolvePathForPreview({ path, currentWorkspace });
+  const { setPreviewNode, previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const previewURL = useWorkspacePathPreviewURL(previewNode?.path);
   return {
+    setPreviewNode,
     previewNode,
     previewURL,
     canShow: !!previewNode?.isPreviewable(),

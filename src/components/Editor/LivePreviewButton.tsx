@@ -10,7 +10,7 @@ export function LivePreviewButtons() {
   const { right } = useSidebarPanes();
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
-  const previewNode = useResolvePathForPreview({ path, currentWorkspace });
+  const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   // const actualPath = previewNode?.path || path;
 
   // Create session ID for window (separate from iframe)
