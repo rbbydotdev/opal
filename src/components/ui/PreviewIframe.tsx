@@ -30,9 +30,13 @@ export function PreviewIFrame({
         <div className="flex items-center gap-2 truncate flex-1 justify-center">
           <span className="font-light font-mono before:content-['['] after:content-[']'] mr-3">PREVIEW3</span>
           {" / "}
-          <Select key={previewPath} onValueChange={(value) => setPreviewNode(currentWorkspace.nodeFromPath(value))}>
+          <Select
+            key={previewPath}
+            onValueChange={(value) => setPreviewNode(currentWorkspace.nodeFromPath(value))}
+            defaultValue={node.path}
+          >
             <SelectTrigger className="w-auto min-w-[100px] font-mono !border-0 !outline-0 truncate">
-              <SelectValue defaultValue={node.path} placeholder={relPath(node.path)} />
+              <SelectValue placeholder={relPath(node.path)} />
             </SelectTrigger>
             <SelectContent>
               {siblings.map((sibling) => (
