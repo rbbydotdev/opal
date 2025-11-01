@@ -1,7 +1,7 @@
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
 import { WorkspaceSpotlightSearch } from "@/components/SpotlightSearch";
-import { PreviewIFrame3 } from "@/components/ui/PreviewIframe3";
+import { PreviewIFrame } from "@/components/ui/PreviewIframe";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
@@ -44,7 +44,7 @@ function WorkspaceLayout() {
           rightPaneEnabled={canShow}
           rightPane={
             previewURL && previewNode?.path ? (
-              <PreviewIFrame3 previewPath={previewNode.path} currentWorkspace={currentWorkspace} />
+              <PreviewIFrame previewPath={previewNode.path} currentWorkspace={currentWorkspace} />
             ) : null
           }
         />

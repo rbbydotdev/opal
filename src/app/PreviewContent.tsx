@@ -29,42 +29,26 @@ export function PreviewContent({
   path,
   currentWorkspace,
   context,
-  onContentLoaded,
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
   context: PreviewContext;
-  onContentLoaded?: () => void;
 }) {
   if (isMarkdown(path)) {
-    return (
-      <MarkdownRenderer
-        path={path}
-        currentWorkspace={currentWorkspace}
-        context={context}
-        onContentLoaded={onContentLoaded}
-      />
-    );
+    return <MarkdownRenderer path={path} currentWorkspace={currentWorkspace} context={context} />;
   }
 
   if (isImage(path)) {
-    return (
-      <img src={path} alt="Preview" style={{ maxWidth: "100%", height: "auto" }} onLoad={() => onContentLoaded?.()} />
-    );
+    return <img src={path} alt="Preview" style={{ maxWidth: "100%", height: "auto" }} />;
   }
 
   if (isMustache(path) || isEjs(path)) {
-    return <TemplateRenderer path={path} currentWorkspace={currentWorkspace} onContentLoaded={onContentLoaded} />;
+    return <TemplateRenderer path={path} currentWorkspace={currentWorkspace} />;
   }
 
   if (isHtml(path)) {
-    return <HtmlRenderer path={path} currentWorkspace={currentWorkspace} onContentLoaded={onContentLoaded} />;
+    return <HtmlRenderer path={path} currentWorkspace={currentWorkspace} />;
   }
-
-  // Call onContentLoaded for unsupported files too
-  useEffect(() => {
-    onContentLoaded?.();
-  }, [onContentLoaded]);
 
   return <div>Unsupported file type for preview: {path}</div>;
 }
@@ -73,12 +57,10 @@ export function PreviewContent({
 function MarkdownRenderer({
   path,
   currentWorkspace,
-  onContentLoaded,
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
   context: PreviewContext;
-  onContentLoaded?: () => void;
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
@@ -88,27 +70,16 @@ function MarkdownRenderer({
       const markdownContent = stripFrontmatter(content || "");
       const renderedHtml = renderMarkdownToHtml(markdownContent);
       setHtml(renderedHtml);
-      // Call onContentLoaded after a brief delay to ensure DOM is updated
-      // setTimeout(() => onContentLoaded?.(), 50);
     } catch (error) {
       console.error("Error rendering markdown:", error);
       setHtml('<div style="color: red; padding: 16px;">Error rendering markdown</div>');
-      setTimeout(() => onContentLoaded?.(), 50);
     }
-  }, [content, onContentLoaded]);
+  }, [content]);
 
   return <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-function TemplateRenderer({
-  path,
-  currentWorkspace,
-  onContentLoaded,
-}: {
-  path: AbsPath;
-  currentWorkspace: Workspace;
-  onContentLoaded?: () => void;
-}) {
+function TemplateRenderer({ path, currentWorkspace }: { path: AbsPath; currentWorkspace: Workspace }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
 
@@ -131,7 +102,6 @@ function TemplateRenderer({
           templateType
         );
         setHtml(rendered);
-        setTimeout(() => onContentLoaded?.(), 50);
       } catch (error) {
         console.error("Template render error:", error);
         const err = error as Error;
@@ -141,31 +111,17 @@ function TemplateRenderer({
           <div><strong>Template Render Error:</strong> ${message}</div>
           ${stack ? `<pre style="margin-top: 8px; white-space: pre-wrap; font-size: 14px;">${stack}</pre>` : ""}
         </div>`);
-        setTimeout(() => onContentLoaded?.(), 50);
       }
     };
 
     void renderTemplate();
-  }, [content, path, currentWorkspace, onContentLoaded]);
+  }, [content, path, currentWorkspace]);
 
   return <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-function HtmlRenderer({
-  path,
-  currentWorkspace,
-  onContentLoaded,
-}: {
-  path: AbsPath;
-  currentWorkspace: Workspace;
-  onContentLoaded?: () => void;
-}) {
+function HtmlRenderer({ path, currentWorkspace }: { path: AbsPath; currentWorkspace: Workspace }) {
   const content = useLiveFileContent(currentWorkspace, path);
-
-  useEffect(() => {
-    // Call onContentLoaded when content changes
-    setTimeout(() => onContentLoaded?.(), 50);
-  }, [content, onContentLoaded]);
 
   return (
     <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: content }} />
