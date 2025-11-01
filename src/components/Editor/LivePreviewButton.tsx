@@ -1,11 +1,11 @@
+import { usePreviewLogic } from "@/app/PreviewCore";
+import { useWindowContextProvider } from "@/app/WindowContextProvider";
 import { Button } from "@/components/ui/button";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout.jsx";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview.js";
+import { getScrollEmitter, releaseScrollEmitter, scrollEmitterSession } from "@/hooks/useScrollSyncForEditor";
 import { ExternalLink, X, Zap } from "lucide-react";
-import { useWindowContextProvider } from "@/app/WindowContextProvider";
-import { usePreviewLogic } from "@/app/PreviewCore";
-import { getScrollEmitter, releaseScrollEmitter } from "@/app/PreviewComponent2";
 import { useEffect } from "react";
 
 export function LivePreviewButtons() {
@@ -16,29 +16,19 @@ export function LivePreviewButtons() {
   const actualPath = previewNode?.path || path;
 
   // Create session ID for window (separate from iframe)
-  const sessionId = currentWorkspace && actualPath 
-    ? `${currentWorkspace.name}:${actualPath}:window`
-    : undefined;
-
+  const sessionId = scrollEmitterSession({ workspaceId: currentWorkspace.id, path }, "window");
   // Window context for popup preview
-  const { contextProvider, isWindowOpen, openWindow, closeWindow } = useWindowContextProvider(
-    currentWorkspace?.name, 
-    sessionId
-  );
+  const { contextProvider, isWindowOpen, openWindow } = useWindowContextProvider(currentWorkspace?.name, sessionId);
 
-  const scrollEmitter = sessionId ? getScrollEmitter(sessionId) : undefined;
+  const scrollEmitter = getScrollEmitter(sessionId);
 
   // Use shared preview logic for window (only when window is open)
-  usePreviewLogic(
-    isWindowOpen ? contextProvider : { 
-      isReady: () => false, 
-      getContext: () => null, 
-      cleanup: () => {} 
-    } as any, 
-    actualPath, 
-    currentWorkspace, 
-    scrollEmitter
-  );
+  usePreviewLogic({
+    contextProvider,
+    path: actualPath,
+    currentWorkspace,
+    scrollEmitter,
+  });
 
   // Cleanup scroll emitter on unmount
   useEffect(() => {
@@ -52,7 +42,7 @@ export function LivePreviewButtons() {
   const handleOpenWindow = () => {
     const success = openWindow();
     if (!success) {
-      alert('Popup blocked! Please allow popups for this site.');
+      alert("Popup blocked! Please allow popups for this site.");
     }
   };
 
@@ -79,9 +69,9 @@ export function LivePreviewButtons() {
           )}
         </div>
       </Button>
-      <Button 
-        size="sm" 
-        className={"active:scale-95 text-secondary rounded-l-none border-l-border"} 
+      <Button
+        size="sm"
+        className={"active:scale-95 text-secondary rounded-l-none border-l-border"}
         onClick={handleOpenWindow}
       >
         <span>

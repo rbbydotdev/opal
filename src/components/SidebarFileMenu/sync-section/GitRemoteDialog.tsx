@@ -321,7 +321,7 @@ function GitRemoteDialogInternal({
                   )}
                 </FormLabel>
                 {urlMode === "search" && (
-                  <RepoSearchContainer
+                  <GitRepoSearchContainer
                     remoteAuth={remoteAuth}
                     defaultValue={TryPathname(form.getValues("url"))
                       .replace(/^\//, "")
@@ -425,7 +425,7 @@ type GithubSearchReposResult = {
   value: string;
   element: React.ReactNode;
 };
-function RepoSearchContainer({
+function GitRepoSearchContainer({
   remoteAuth,
   defaultValue,
   onClose,

@@ -6,14 +6,13 @@ import { KeyboardIcon } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardShortcutsSearch } from "./KeyboardShortcutsSearch";
 
+const KeyboardSections = ["General", "Layout", "Editor", "Navigation", "Search", "File Explorer"] as const;
 interface KeyboardShortcut {
   action: string;
   keys: string[];
-  section: "General" | "Editor" | "Navigation" | "Search" | "File Explorer";
+  section: (typeof KeyboardSections)[number];
   description?: string;
 }
-
-//TODO: make this configurable by user
 const keyboardShortcuts: KeyboardShortcut[] = [
   {
     section: "General",
@@ -26,6 +25,18 @@ const keyboardShortcuts: KeyboardShortcut[] = [
     action: "Workspace Search",
     keys: [IS_MAC ? "⌘" : "Ctrl", "Shift", "F"],
     description: "Search file contents across workspaces",
+  },
+  {
+    section: "Layout",
+    action: "Toggle Sidebar",
+    keys: [IS_MAC ? "⌘" : "Ctrl", "B"],
+    description: "Show or hide the file explorer sidebar",
+  },
+  {
+    section: "Layout",
+    action: "Toggle Preview Pane",
+    keys: [IS_MAC ? "⌘" : "Ctrl", "/"],
+    description: "Show or hide the preview pane",
   },
   {
     section: "Editor",
@@ -122,7 +133,7 @@ export function KeyboardShortcutsModal({ children }: { children: React.ReactNode
     }
 
     const searchTargets = keyboardShortcuts.map((shortcut, index) => ({
-      target: `${shortcut.action} ${shortcut.description || ""} ${shortcut.keys.join(" ")}`,
+      target: `${shortcut.section} ${shortcut.action} ${shortcut.description || ""} ${shortcut.keys.join(" ")}`,
       shortcut,
       originalIndex: index,
     }));
@@ -147,7 +158,7 @@ export function KeyboardShortcutsModal({ children }: { children: React.ReactNode
   );
 
   // Define section order for consistent display
-  const sectionOrder = ["General", "Editor", "Navigation", "Search", "File Explorer"];
+  const sectionOrder = KeyboardSections;
 
   // Reset search when modal closes
   useEffect(() => {

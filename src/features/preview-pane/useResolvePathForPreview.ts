@@ -1,4 +1,5 @@
 import { Workspace } from "@/data/Workspace";
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, prefix } from "@/lib/paths2";
 import { useMemo } from "react";
 
@@ -8,7 +9,7 @@ export function useResolvePathForPreview({
 }: {
   path: AbsPath | null;
   currentWorkspace: Workspace;
-}) {
+}): TreeNode | null {
   const previewNode = useMemo(() => {
     if (!path) return null;
     const currentNode = currentWorkspace.nodeFromPath(path);
@@ -24,5 +25,5 @@ export function useResolvePathForPreview({
       // currentNode
     );
   }, [currentWorkspace, path]);
-  return previewNode;
+  return previewNode ?? null;
 }

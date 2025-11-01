@@ -1,13 +1,15 @@
+import { useWindowContextProvider } from "@/app/WindowContextProvider";
 import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { useLiveFileContent } from "@/context/useFileContents";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Workspace } from "@/data/Workspace";
 import { TemplateManager } from "@/features/templating";
+import { getScrollEmitter, releaseScrollEmitter, ScrollSyncEmitter } from "@/hooks/useScrollSyncForEditor";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache } from "@/lib/paths2";
 import { useEffect, useRef, useState } from "react";
 import { createRoot, Root } from "react-dom/client";
-import { ScrollSyncEmitter } from "./PreviewComponent2";
 
 // Common interface for both iframe and window contexts
 export interface PreviewContext {
@@ -45,7 +47,7 @@ export function initializePreviewDocument(doc: Document, title: string = "Previe
 // Shared CSS injection logic
 export function injectCssFiles(context: PreviewContext, cssFiles: string[]): void {
   const head = context.document.head;
-  
+
   // Remove existing preview CSS
   const existingLinks = head.querySelectorAll('link[data-preview-css="true"]');
   existingLinks.forEach((link) => link.remove());
@@ -61,11 +63,15 @@ export function injectCssFiles(context: PreviewContext, cssFiles: string[]): voi
 }
 
 // Shared scroll sync setup
-export function usePreviewScrollSync(
-  scrollEmitter: ScrollSyncEmitter | undefined,
-  context: PreviewContext | null,
-  originPrefix: string
-) {
+export function usePreviewScrollSync({
+  scrollEmitter,
+  context,
+  originPrefix,
+}: {
+  scrollEmitter: ScrollSyncEmitter | null;
+  context: PreviewContext | null;
+  originPrefix: string;
+}) {
   const isScrollingRef = useRef(false);
   const originId = useRef(`${originPrefix}-${Math.random().toString(36).substr(2, 9)}`);
 
@@ -76,59 +82,65 @@ export function usePreviewScrollSync(
     const scrollElement = doc.documentElement;
 
     // Listen for scroll events from other components
-    const unsubscribe = scrollEmitter.onScroll(async (relX, relY, sourceOriginId) => {
+    const unsubscribe = scrollEmitter.onScroll(async (relX: number, relY: number, sourceOriginId?: string) => {
       if (sourceOriginId === originId.current || isScrollingRef.current) return;
-      
+
       const maxScrollLeft = scrollElement.scrollWidth - scrollElement.clientWidth;
       const maxScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
       const scrollLeft = relX * maxScrollLeft;
       const scrollTop = relY * maxScrollTop;
-      
+
       isScrollingRef.current = true;
-      
+
       const scrollPromise = new Promise<void>((resolve) => {
         const handleScrollComplete = () => {
-          doc.removeEventListener('scroll', handleScrollComplete);
+          doc.removeEventListener("scroll", handleScrollComplete);
           resolve();
         };
-        doc.addEventListener('scroll', handleScrollComplete, { passive: true, once: true });
+        doc.addEventListener("scroll", handleScrollComplete, { passive: true, once: true });
       });
-      
+
       win.scrollTo(scrollLeft, scrollTop);
       await scrollPromise;
-      
+
       isScrollingRef.current = false;
     });
 
     // Send our scroll events to other components
     const handleScroll = () => {
       if (isScrollingRef.current) return;
-      
+
       const maxScrollLeft = scrollElement.scrollWidth - scrollElement.clientWidth;
       const maxScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
       const relX = maxScrollLeft > 0 ? win.scrollX / maxScrollLeft : 0;
       const relY = maxScrollTop > 0 ? win.scrollY / maxScrollTop : 0;
-      
+
       scrollEmitter.emitScroll(relX, relY, originId.current);
     };
 
-    doc.addEventListener('scroll', handleScroll, { passive: true });
+    doc.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       unsubscribe();
-      doc.removeEventListener('scroll', handleScroll);
+      doc.removeEventListener("scroll", handleScroll);
     };
   }, [scrollEmitter, context, originPrefix]);
 }
 
 // Shared React mounting logic
-export function usePreviewRenderer(
-  contextProvider: PreviewContextProvider,
-  path: AbsPath | null,
-  currentWorkspace: Workspace | null,
-  scrollEmitter?: ScrollSyncEmitter,
-  onContentLoaded?: () => void
-) {
+export function usePreviewRenderer({
+  contextProvider,
+  path,
+  currentWorkspace,
+  scrollEmitter,
+  onContentLoaded,
+}: {
+  contextProvider: PreviewContextProvider;
+  path: AbsPath | null;
+  currentWorkspace: Workspace | null;
+  scrollEmitter: ScrollSyncEmitter | null;
+  onContentLoaded?: () => void;
+}) {
   const reactRootRef = useRef<Root | null>(null);
 
   useEffect(() => {
@@ -142,7 +154,7 @@ export function usePreviewRenderer(
       try {
         reactRootRef.current.unmount();
       } catch (error) {
-        console.warn('Error unmounting previous React root:', error);
+        console.warn("Error unmounting previous React root:", error);
       }
     }
 
@@ -152,8 +164,8 @@ export function usePreviewRenderer(
 
     // Render content
     root.render(
-      <PreviewContent 
-        path={path} 
+      <PreviewContent
+        path={path}
         currentWorkspace={currentWorkspace}
         scrollEmitter={scrollEmitter}
         context={context}
@@ -164,7 +176,7 @@ export function usePreviewRenderer(
     return () => {
       // Cleanup handled by context provider
     };
-  }, [contextProvider, path, currentWorkspace, scrollEmitter]);
+  }, [contextProvider, path, currentWorkspace, scrollEmitter, onContentLoaded]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -173,7 +185,7 @@ export function usePreviewRenderer(
         try {
           reactRootRef.current.unmount();
         } catch (error) {
-          console.warn('Error unmounting React root on cleanup:', error);
+          console.warn("Error unmounting React root on cleanup:", error);
         }
         reactRootRef.current = null;
       }
@@ -184,26 +196,35 @@ export function usePreviewRenderer(
 }
 
 // Shared content rendering component
-interface PreviewContentProps {
+export function PreviewContent({
+  path,
+  currentWorkspace,
+  scrollEmitter,
+  context,
+  onContentLoaded,
+}: {
   path: AbsPath;
   currentWorkspace: Workspace;
-  scrollEmitter?: ScrollSyncEmitter;
+  scrollEmitter: ScrollSyncEmitter | null;
   context: PreviewContext;
   onContentLoaded?: () => void;
-}
-
-export function PreviewContent({ path, currentWorkspace, scrollEmitter, context, onContentLoaded }: PreviewContentProps) {
+}) {
   if (isMarkdown(path)) {
-    return <MarkdownRenderer path={path} currentWorkspace={currentWorkspace} scrollEmitter={scrollEmitter} context={context} onContentLoaded={onContentLoaded} />;
+    return (
+      <MarkdownRenderer
+        path={path}
+        currentWorkspace={currentWorkspace}
+        scrollEmitter={scrollEmitter}
+        context={context}
+        onContentLoaded={onContentLoaded}
+      />
+    );
   }
 
   if (isImage(path)) {
-    return <img 
-      src={path} 
-      alt="Preview" 
-      style={{ maxWidth: "100%", height: "auto" }} 
-      onLoad={() => onContentLoaded?.()} 
-    />;
+    return (
+      <img src={path} alt="Preview" style={{ maxWidth: "100%", height: "auto" }} onLoad={() => onContentLoaded?.()} />
+    );
   }
 
   if (isMustache(path) || isEjs(path)) {
@@ -223,23 +244,27 @@ export function PreviewContent({ path, currentWorkspace, scrollEmitter, context,
 }
 
 // Shared renderer components
-function MarkdownRenderer({ 
-  path, 
-  currentWorkspace, 
-  scrollEmitter, 
+function MarkdownRenderer({
+  path,
+  currentWorkspace,
+  scrollEmitter,
   context,
-  onContentLoaded
-}: { 
-  path: AbsPath; 
-  currentWorkspace: Workspace; 
-  scrollEmitter?: ScrollSyncEmitter; 
+  onContentLoaded,
+}: {
+  path: AbsPath;
+  currentWorkspace: Workspace;
+  scrollEmitter: ScrollSyncEmitter | null;
   context: PreviewContext;
   onContentLoaded?: () => void;
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
-  
-  usePreviewScrollSync(scrollEmitter, context, "markdown");
+
+  usePreviewScrollSync({
+    scrollEmitter,
+    context,
+    originPrefix: "markdown",
+  });
 
   useEffect(() => {
     try {
@@ -255,15 +280,18 @@ function MarkdownRenderer({
     }
   }, [content, onContentLoaded]);
 
-  return (
-    <div 
-      style={{ width: "100%", height: "100%", overflow: "auto" }} 
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  return <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-function TemplateRenderer({ path, currentWorkspace, onContentLoaded }: { path: AbsPath; currentWorkspace: Workspace; onContentLoaded?: () => void }) {
+function TemplateRenderer({
+  path,
+  currentWorkspace,
+  onContentLoaded,
+}: {
+  path: AbsPath;
+  currentWorkspace: Workspace;
+  onContentLoaded?: () => void;
+}) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
 
@@ -306,7 +334,15 @@ function TemplateRenderer({ path, currentWorkspace, onContentLoaded }: { path: A
   return <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-function HtmlRenderer({ path, currentWorkspace, onContentLoaded }: { path: AbsPath; currentWorkspace: Workspace; onContentLoaded?: () => void }) {
+function HtmlRenderer({
+  path,
+  currentWorkspace,
+  onContentLoaded,
+}: {
+  path: AbsPath;
+  currentWorkspace: Workspace;
+  onContentLoaded?: () => void;
+}) {
   const content = useLiveFileContent(currentWorkspace, path);
 
   useEffect(() => {
@@ -320,26 +356,38 @@ function HtmlRenderer({ path, currentWorkspace, onContentLoaded }: { path: AbsPa
 }
 
 // Shared preview logic hook that combines everything
-export function usePreviewLogic(
-  contextProvider: PreviewContextProvider,
-  path: AbsPath | null,
-  currentWorkspace: Workspace | null,
-  scrollEmitter?: ScrollSyncEmitter,
-  onContentLoaded?: () => void
-) {
+export function usePreviewLogic({
+  contextProvider,
+  path,
+  currentWorkspace,
+  scrollEmitter,
+  onContentLoaded,
+}: {
+  contextProvider: PreviewContextProvider;
+  path: AbsPath | null;
+  currentWorkspace: Workspace | null;
+  scrollEmitter: ScrollSyncEmitter | null;
+  onContentLoaded?: () => void;
+}) {
   // Get CSS files in parent context
-  const cssFiles = useLiveCssFiles({ 
-    path, 
-    currentWorkspace
+  const cssFiles = useLiveCssFiles({
+    path,
+    currentWorkspace,
   });
-  
+
   // Setup React rendering
-  const reactRootRef = usePreviewRenderer(contextProvider, path, currentWorkspace, scrollEmitter, onContentLoaded);
-  
+  const reactRootRef = usePreviewRenderer({
+    contextProvider,
+    path,
+    currentWorkspace,
+    scrollEmitter,
+    onContentLoaded,
+  });
+
   // Inject CSS when ready
   useEffect(() => {
     if (!contextProvider.isReady()) return;
-    
+
     const context = contextProvider.getContext();
     if (context) {
       injectCssFiles(context, cssFiles);
@@ -347,4 +395,53 @@ export function usePreviewLogic(
   }, [contextProvider, cssFiles]);
 
   return { reactRootRef };
+}
+
+export function useWindowPreview({
+  currentWorkspace,
+  sessionId,
+  actualPath,
+}: {
+  currentWorkspace: ReturnType<typeof useWorkspaceContext>["currentWorkspace"];
+  sessionId: string | null;
+  actualPath: AbsPath | null;
+}) {
+  // Window context for popup preview
+
+  const scrollEmitter = getScrollEmitter(sessionId);
+  const { contextProvider, isWindowOpen, openWindow, closeWindow } = useWindowContextProvider(
+    currentWorkspace?.name,
+    sessionId
+  );
+  // Use shared preview logic for window (only when window is open)
+  useEffect(() => {
+    if (isWindowOpen) {
+      // Force re-render of preview logic when window opens
+      // The usePreviewLogic hook will check contextProvider.isReady()
+    }
+  }, [isWindowOpen]);
+
+  useEffect(() => {
+    return () => releaseScrollEmitter(sessionId!);
+  }, [sessionId]);
+
+  usePreviewLogic({
+    contextProvider,
+    path: actualPath,
+    currentWorkspace,
+    scrollEmitter,
+  });
+
+  const handleOpenWindow = () => {
+    const success = openWindow();
+    if (!success) {
+      alert("Popup blocked! Please allow popups for this site.");
+    }
+  };
+  return {
+    handleOpenWindow,
+    isWindowOpen,
+    openWindow,
+    closeWindow,
+  };
 }

@@ -1,16 +1,24 @@
+import { openWorkspaceWindow } from "@/lib/workspaceContext";
 import { useEffect, useRef, useState } from "react";
 import { PreviewContext, PreviewContextProvider, initializePreviewDocument } from "./PreviewCore";
-import { setActiveWorkspaceContext, injectWorkspaceContextIntoWindow } from "@/lib/workspaceContext";
 
 export class WindowContextProvider implements PreviewContextProvider {
   private windowRef: Window | null = null;
   private ready: boolean = false;
   private context: PreviewContext | null = null;
   private onWindowClose?: () => void;
-  private workspaceName?: string;
-  private sessionId?: string;
+  private workspaceName: string | null;
+  private sessionId: string | null;
 
-  constructor(onWindowClose?: () => void, workspaceName?: string, sessionId?: string) {
+  constructor({
+    onWindowClose,
+    workspaceName,
+    sessionId,
+  }: {
+    onWindowClose: () => void;
+    workspaceName: string | null;
+    sessionId: string | null;
+  }) {
     this.onWindowClose = onWindowClose;
     this.workspaceName = workspaceName;
     this.sessionId = sessionId;
@@ -22,22 +30,24 @@ export class WindowContextProvider implements PreviewContextProvider {
       return true;
     }
 
-    const newWindow = window.open("", "_blank", "width=800,height=600,scrollbars=yes,resizable=yes");
+    // Open window with workspace context in URL parameters
+    if (!this.workspaceName || !this.sessionId) {
+      return false; // Cannot open window without workspace context
+    }
+
+    const newWindow = openWorkspaceWindow(
+      "", // Empty URL to use current path
+      this.workspaceName,
+      this.sessionId,
+      "width=800,height=600,scrollbars=yes,resizable=yes"
+    );
+
     if (!newWindow) {
       return false; // Popup blocked
     }
 
     this.windowRef = newWindow;
     initializePreviewDocument(newWindow.document, "Preview Window");
-
-    // Set workspace context for service worker communication
-    if (this.workspaceName) {
-      // Set main window context (for cookie)
-      setActiveWorkspaceContext(this.workspaceName, this.sessionId);
-      
-      // Inject context into popup window
-      injectWorkspaceContextIntoWindow(newWindow, this.workspaceName, this.sessionId);
-    }
 
     // Handle window close
     const handleBeforeUnload = () => {
@@ -94,7 +104,10 @@ export class WindowContextProvider implements PreviewContextProvider {
   }
 }
 
-export function useWindowContextProvider(workspaceName?: string, sessionId?: string): {
+export function useWindowContextProvider(
+  workspaceName: string | null = null,
+  sessionId: string | null = null
+): {
   contextProvider: WindowContextProvider;
   isWindowOpen: boolean;
   openWindow: () => boolean;
@@ -105,9 +118,13 @@ export function useWindowContextProvider(workspaceName?: string, sessionId?: str
 
   // Create context provider once
   if (!contextProviderRef.current) {
-    contextProviderRef.current = new WindowContextProvider(() => {
-      setIsWindowOpen(false);
-    }, workspaceName, sessionId);
+    contextProviderRef.current = new WindowContextProvider({
+      onWindowClose: () => {
+        setIsWindowOpen(false);
+      },
+      workspaceName,
+      sessionId,
+    });
   }
 
   const contextProvider = contextProviderRef.current;

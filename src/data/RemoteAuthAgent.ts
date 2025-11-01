@@ -11,8 +11,9 @@ export interface IRemoteAuthAgent {
   getApiToken(): string;
   onAuth(): { username: string; password: string };
 }
+export interface IRemoteGitApiAgent extends IRemoteAuthAgent, IGitProviderAgent {}
 
-export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
+export abstract class IRemoteAuthGithubAgent implements IRemoteGitApiAgent {
   private _octokit!: Octokit;
   get octokit() {
     return (
@@ -88,7 +89,7 @@ export abstract class IRemoteAuthGithubAgent implements IRemoteAuthAgent {
   abstract getApiToken(): string;
 }
 
-export class RemoteAuthBasicAuthAgent implements IRemoteAuthAgent {
+export class RemoteAuthBasicAuthAgent implements IRemoteGitApiAgent {
   getUsername(): string {
     return this.remoteAuth.data.username;
   }
@@ -102,8 +103,19 @@ export class RemoteAuthBasicAuthAgent implements IRemoteAuthAgent {
       password: this.getApiToken(),
     };
   }
+  async getRepos(): Promise<Repo[]> {
+    console.warn("RemoteAuthBasicAuthAgent.getRepos() is not implemented");
+    return [];
+  }
+  hasUpdates(
+    etag: string | null,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ updated: boolean; newEtag: string | null }> {
+    console.warn("RemoteAuthBasicAuthAgent.hasUpdates() is not implemented");
+    return Promise.resolve({ updated: false, newEtag: etag });
+  }
 }
-
+// IGitProviderAgent
 export class RemoteAuthGithubOAuthAgent extends IRemoteAuthGithubAgent {
   getUsername(): string {
     return "x-access-token";
