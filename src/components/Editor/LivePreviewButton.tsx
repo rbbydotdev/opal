@@ -1,11 +1,9 @@
-import { usePreviewLogic } from "@/app/PreviewCore";
-import { useWindowContextProvider } from "@/app/WindowContextProvider";
 import { Button } from "@/components/ui/button";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout.jsx";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview.js";
-import { getScrollEmitter, releaseScrollEmitter, scrollEmitterSession } from "@/hooks/useScrollSyncForEditor";
-import { ExternalLink, X, Zap } from "lucide-react";
+import { releaseScrollEmitter, scrollEmitterSession } from "@/hooks/useScrollSyncForEditor";
+import { X, Zap } from "lucide-react";
 import { useEffect } from "react";
 
 export function LivePreviewButtons() {
@@ -13,22 +11,22 @@ export function LivePreviewButtons() {
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
-  const actualPath = previewNode?.path || path;
+  // const actualPath = previewNode?.path || path;
 
   // Create session ID for window (separate from iframe)
   const sessionId = scrollEmitterSession({ workspaceId: currentWorkspace.id, path }, "window");
   // Window context for popup preview
-  const { contextProvider, isWindowOpen, openWindow } = useWindowContextProvider(currentWorkspace?.name, sessionId);
+  // const { contextProvider, isWindowOpen, openWindow } = useWindowContextProvider(currentWorkspace?.name, sessionId);
 
-  const scrollEmitter = getScrollEmitter(sessionId);
+  // const scrollEmitter = getScrollEmitter(sessionId);
 
   // Use shared preview logic for window (only when window is open)
-  usePreviewLogic({
-    contextProvider,
-    path: actualPath,
-    currentWorkspace,
-    scrollEmitter,
-  });
+  // usePreviewLogic({
+  //   contextProvider,
+  //   path: actualPath,
+  //   currentWorkspace,
+  //   scrollEmitter,
+  // });
 
   // Cleanup scroll emitter on unmount
   useEffect(() => {
@@ -39,12 +37,12 @@ export function LivePreviewButtons() {
     };
   }, [sessionId]);
 
-  const handleOpenWindow = () => {
-    const success = openWindow();
-    if (!success) {
-      alert("Popup blocked! Please allow popups for this site.");
-    }
-  };
+  // const handleOpenWindow = () => {
+  //   const success = openWindow();
+  //   if (!success) {
+  //     alert("Popup blocked! Please allow popups for this site.");
+  //   }
+  // };
 
   if (!previewNode) return null;
   return (
@@ -69,7 +67,7 @@ export function LivePreviewButtons() {
           )}
         </div>
       </Button>
-      <Button
+      {/* <Button
         size="sm"
         className={"active:scale-95 text-secondary rounded-l-none border-l-border"}
         onClick={handleOpenWindow}
@@ -77,7 +75,7 @@ export function LivePreviewButtons() {
         <span>
           <ExternalLink size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
         </span>
-      </Button>
+      </Button> */}
     </div>
   );
 }

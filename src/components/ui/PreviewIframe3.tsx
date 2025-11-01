@@ -1,4 +1,4 @@
-import { PreviewComponent3 } from "@/app/PreviewComponent3";
+import { PreviewComponent } from "@/app/PreviewComponent";
 import { Workspace } from "@/data/Workspace";
 import { AbsPath, relPath } from "@/lib/paths2";
 import { ExternalLink, Loader, RefreshCw } from "lucide-react";
@@ -48,7 +48,7 @@ export function PreviewIFrame3({
             No preview available
           </div>
         ) : (
-          <PreviewComponent3 currentWorkspace={currentWorkspace} path={previewPath} />
+          <PreviewComponent currentWorkspace={currentWorkspace} path={previewPath} />
         )}
       </div>
     </div>

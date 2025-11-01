@@ -3,8 +3,8 @@ import { Workspace } from "@/data/Workspace";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
+import { CreateTypedEmitter } from "@/lib/TypeEmitter";
 import { useNavigate } from "@tanstack/react-router";
-import EventEmitter from "events";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
  * Does not require router context - accepts path as prop
  */
 export function useLiveFileContent(currentWorkspace: Workspace, path: AbsPath | null) {
-  const [content, setContent] = useState<string>('');
+  const [content, setContent] = useState<string>("");
 
   useEffect(() => {
     if (!path || !currentWorkspace) return;
@@ -22,10 +22,10 @@ export function useLiveFileContent(currentWorkspace: Workspace, path: AbsPath | 
     const loadContent = async () => {
       try {
         const fileContent = await currentWorkspace.readFile(path);
-        setContent(String(fileContent || ''));
+        setContent(String(fileContent || ""));
       } catch (error) {
-        console.error('Error loading file:', error);
-        setContent('');
+        console.error("Error loading file:", error);
+        setContent("");
       }
     };
 
@@ -54,23 +54,8 @@ const ContentEvents = {
 } as const;
 
 type ContentEventMap = {
-  [ContentEvents.UPDATE]: [md: string];
+  [ContentEvents.UPDATE]: string;
 };
-class ContentEventEmitter extends EventEmitter {
-  on<K extends keyof ContentEventMap>(event: K, callback: (...args: ContentEventMap[K]) => void): this {
-    return super.on(event, callback);
-  }
-  listen<K extends keyof ContentEventMap>(event: K, callback: (...args: ContentEventMap[K]) => void): () => void {
-    super.on(event, callback);
-    return () => {
-      this.off(event, callback);
-    };
-  }
-
-  emit<K extends keyof ContentEventMap>(event: K, ...args: ContentEventMap[K]): boolean {
-    return super.emit(event, ...args);
-  }
-}
 
 /**
  * Creates a singleton content emitter for programmatic content updates
@@ -78,7 +63,7 @@ class ContentEventEmitter extends EventEmitter {
  * Cleanup: Removes all listeners on unmount to prevent memory leaks
  */
 export function useContentEmitter() {
-  const emitter = useMemo(() => new ContentEventEmitter(), []);
+  const emitter = useMemo(() => CreateTypedEmitter<ContentEventMap>(), []);
   useEffect(() => {
     return () => {
       emitter.removeAllListeners();
