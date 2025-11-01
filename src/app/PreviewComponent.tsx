@@ -7,15 +7,7 @@ import { useEffect, useRef } from "react";
 // import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
 
-export function PreviewComponent({
-  path,
-  currentWorkspace,
-  onContentLoaded,
-}: {
-  path: AbsPath;
-  currentWorkspace: Workspace;
-  onContentLoaded?: () => void;
-}) {
+export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; currentWorkspace: Workspace }) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const context = useIframeContextProvider({
     iframeRef,
@@ -36,12 +28,7 @@ export function PreviewComponent({
       {!context?.document?.body
         ? null
         : createPortal(
-            <PreviewContent
-              path={path}
-              currentWorkspace={currentWorkspace}
-              context={context}
-              onContentLoaded={onContentLoaded}
-            />,
+            <PreviewContent path={path} currentWorkspace={currentWorkspace} context={context} />,
             context.document.body
           )}
       <div className="w-full h-full relative">

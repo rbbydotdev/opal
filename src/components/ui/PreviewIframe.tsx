@@ -3,7 +3,7 @@ import { Workspace } from "@/data/Workspace";
 import { AbsPath, relPath } from "@/lib/paths2";
 import { ExternalLink, Loader, RefreshCw } from "lucide-react";
 
-export function PreviewIFrame3({
+export function PreviewIFrame({
   previewPath,
   currentWorkspace,
 }: {
