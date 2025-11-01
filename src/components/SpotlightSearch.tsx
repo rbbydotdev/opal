@@ -17,6 +17,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
+import { openWorkspaceWindow } from "@/lib/workspaceContext";
 import { Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
@@ -809,7 +810,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const { repo, playbook } = useWorkspaceGitRepo({ currentWorkspace });
   const previewURL = useWorkspacePathPreviewURL();
   const { focused } = useFileTreeMenuCtx();
-  const { path: currentPath } = useWorkspaceRoute();
+  const { path: currentPath, name: workspaceName } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
   const navigate = useNavigate();
   const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useTheme();
@@ -821,7 +822,13 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
 
         "Open External Preview": [
           NewCmdExec(() => {
-            window.open(previewURL!, "_blank", "noopener,noreferrer");
+            if (workspaceName && previewURL) {
+              // Extract session ID from preview URL if available
+              const url = new URL(previewURL, window.location.origin);
+              const sessionId = url.searchParams.get('sessionId');
+              
+              openWorkspaceWindow(previewURL, workspaceName, sessionId || undefined);
+            }
           }),
         ],
         //

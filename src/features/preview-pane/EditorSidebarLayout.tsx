@@ -71,8 +71,8 @@ export const useSidebarPanes = ({
         e.stopPropagation();
         controlsRef.current.left.setIsCollapsed((prev: boolean) => !prev);
       }
-      // Cmd+Shift+B toggle right pane
-      else if (/*$c.rightPaneEnabled &&*/ (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "b") {
+      // Cmd+\ roggle right pane
+      else if ((e.metaKey || e.ctrlKey) && e.key === "\\" && !e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
         controlsRef.current.right.setIsCollapsed((prev: boolean) => !prev);

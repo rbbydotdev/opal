@@ -1,78 +1,45 @@
-import { relPath } from "@/lib/paths2";
-import { ExternalLink, Loader, RefreshCw } from "lucide-react";
-import { useRef, useState } from "react";
-import { PreviewComponent2 } from "@/app/PreviewComponent2";
-import { useWindowContextProvider } from "@/app/WindowContextProvider";
-import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { PreviewComponent3 } from "@/app/PreviewComponent3";
+import { useWindowPreview } from "@/app/PreviewCore";
+import { useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { Workspace } from "@/data/Workspace";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
-import { usePreviewLogic, PreviewContextProvider } from "@/app/PreviewCore";
-import { getScrollEmitter, releaseScrollEmitter } from "@/app/PreviewComponent2";
-import { useEffect } from "react";
+import { scrollEmitterSession } from "@/hooks/useScrollSyncForEditor";
+import { AbsPath, relPath } from "@/lib/paths2";
+import { ExternalLink, Loader, RefreshCw } from "lucide-react";
+import { useState } from "react";
 
-export function PreviewIFrame2({ previewPath }: { previewPath?: string | null }) {
+export function PreviewIFrame2({
+  previewPath,
+  currentWorkspace,
+}: {
+  previewPath?: AbsPath | null;
+  currentWorkspace: Workspace;
+}) {
   const [showSpinner, setShowSpinner] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Window preview functionality
   const { path } = useWorkspaceRoute();
-  const { currentWorkspace } = useWorkspaceContext();
+
   const previewNode = useResolvePathForPreview({ path, currentWorkspace });
-  const actualPath = previewNode?.path || path;
 
-  // Create session ID for window (separate from iframe)
-  const sessionId = currentWorkspace && actualPath 
-    ? `${currentWorkspace.name}:${actualPath}:window`
-    : undefined;
+  const windowSessionId = scrollEmitterSession({ workspaceId: currentWorkspace.id, path }, "window");
+  // const containerRef = useRef<HTMLDivElement>(null);
+  const { handleOpenWindow } = useWindowPreview({
+    currentWorkspace,
+    sessionId: windowSessionId,
+    actualPath: previewNode?.path || path,
+  });
 
-  // Window context for popup preview
-  const { contextProvider, isWindowOpen, openWindow, closeWindow } = useWindowContextProvider(
-    currentWorkspace?.name, 
-    sessionId
-  );
-
-  const scrollEmitter = sessionId ? getScrollEmitter(sessionId) : undefined;
-
-  // Use shared preview logic for window (only when window is open)
-  useEffect(() => {
-    if (isWindowOpen) {
-      // Force re-render of preview logic when window opens
-      // The usePreviewLogic hook will check contextProvider.isReady()
-    }
-  }, [isWindowOpen]);
-
-  // Only run preview logic when window is actually open
-  usePreviewLogic(
-    isWindowOpen ? contextProvider : { 
-      isReady: () => false, 
-      getContext: () => null, 
-      cleanup: () => {} 
-    } as PreviewContextProvider, 
-    actualPath, 
-    currentWorkspace, 
-    scrollEmitter
-  );
+  // // Create session ID for window (separate from iframe)
+  // const sessionId = currentWorkspace && actualPath ? `${currentWorkspace.name}:${actualPath}:window` : undefined;
 
   // Cleanup scroll emitter on unmount
-  useEffect(() => {
-    return () => {
-      if (sessionId) {
-        releaseScrollEmitter(sessionId);
-      }
-    };
-  }, [sessionId]);
 
   const handleRefresh = () => {
     setShowSpinner(true);
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
     // Spinner will be hidden when content finishes loading
-  };
-
-  const handleOpenWindow = () => {
-    const success = openWindow();
-    if (!success) {
-      alert('Popup blocked! Please allow popups for this site.');
-    }
   };
 
   return (
@@ -98,7 +65,7 @@ export function PreviewIFrame2({ previewPath }: { previewPath?: string | null })
           <ExternalLink size={16} />
         </button>
       </div>
-      
+
       {showSpinner && (
         <div className="w-full h-full flex m-auto inset-0 absolute justify-center items-center bg-background">
           <div className="animate-spin animation-iteration-infinite">
@@ -108,8 +75,11 @@ export function PreviewIFrame2({ previewPath }: { previewPath?: string | null })
       )}
 
       <div key={refreshKey} className="flex-grow relative">
-        <PreviewComponent2 onContentLoaded={() => setShowSpinner(false)} />
+        {/* <PreviewComponent2 onContentLoaded={() => setShowSpinner(false)} /> */}
+        <PreviewComponent3 />
       </div>
     </div>
   );
 }
+
+// funcion

@@ -1,15 +1,18 @@
 // Service worker utilities for workspace context detection
 // This code would be used in your service worker
 
-import { getWorkspaceContextFromRequest } from './workspaceContext';
+import { getWorkspaceContextFromRequest, getWorkspaceContextFromReferrer } from './workspaceContext';
 
 // Example service worker fetch handler
 export function handleWorkspaceRequest(event: FetchEvent) {
   const request = event.request;
   const url = new URL(request.url);
   
-  // Get workspace context from cookie
-  const workspaceContext = getWorkspaceContextFromRequest(request);
+  // Get workspace context from URL parameters first, then fallback to referrer
+  let workspaceContext = getWorkspaceContextFromRequest(request);
+  if (!workspaceContext) {
+    workspaceContext = getWorkspaceContextFromReferrer(request);
+  }
   
   if (workspaceContext) {
     console.log('Service Worker: Detected workspace:', workspaceContext.workspaceName);
@@ -54,17 +57,21 @@ function handleWorkspaceAsset(request: Request, workspaceName: string): Promise<
   }));
 }
 
-// Alternative: Direct window detection
+// Alternative: Direct window detection with query parameters
 export function handlePopupWindowRequest(event: FetchEvent) {
   const request = event.request;
   const referer = request.headers.get('referer');
   
-  // Check if request comes from about:blank (popup window)
+  // Check if request comes from about:blank (popup window) or has workspace params
   if (!referer || referer === 'about:blank') {
     console.log('Service Worker: Request from popup window detected');
     
-    // Get workspace context from cookie
-    const workspaceContext = getWorkspaceContextFromRequest(request);
+    // Get workspace context from URL parameters first, then referrer fallback
+    let workspaceContext = getWorkspaceContextFromRequest(request);
+    if (!workspaceContext) {
+      workspaceContext = getWorkspaceContextFromReferrer(request);
+    }
+    
     if (workspaceContext) {
       console.log('Service Worker: Using workspace context:', workspaceContext.workspaceName);
       return handleWorkspaceAsset(request, workspaceContext.workspaceName);
