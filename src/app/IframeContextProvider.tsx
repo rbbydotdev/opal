@@ -42,7 +42,8 @@ const EMPTY_CONTEXT: IframeNotReadyContext = {
   rootElement: null,
   ready: false,
 };
-class IframeContextProvider implements PreviewContextProvider {
+
+export class IframeContextProvider implements PreviewContextProvider {
   constructor(private iframeRef: React.RefObject<HTMLIFrameElement | null>) {}
   private _context: IframeReadyContext | IframeNotReadyContext = EMPTY_CONTEXT;
   private unsubs: (() => void)[] = [];

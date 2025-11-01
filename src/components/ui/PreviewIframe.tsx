@@ -14,7 +14,6 @@ export function PreviewIFrame({
   currentWorkspace: Workspace;
   setPreviewNode: (node: TreeNode | null) => void;
 }) {
-  // const path = relPath(previewPath!);
   const node = currentWorkspace.nodeFromPath(previewPath)!;
   const siblings = [...(node.siblings((node) => node.isPreviewable()) || []), node];
   return (
@@ -77,5 +76,3 @@ export function PreviewIFrame({
     </div>
   );
 }
-
-// funcion
