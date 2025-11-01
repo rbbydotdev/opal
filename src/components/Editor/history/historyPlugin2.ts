@@ -1,7 +1,7 @@
 import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
 import { debounce } from "@/lib/debounce";
+import { CreateTypedEmitter } from "@/lib/TypeEmitter";
 import { Mutex } from "async-mutex";
-import EventEmitter from "events";
 
 const HistoryEvents = {
   INSIDE_MARKDOWN: "inside-markdown",
@@ -12,36 +12,12 @@ const HistoryEvents = {
 } as const;
 
 type HistoryEventMap = {
-  [HistoryEvents.INSIDE_MARKDOWN]: [md: string];
-  [HistoryEvents.OUTSIDE_MARKDOWN]: [md: string];
-  [HistoryEvents.SELECTED_EDIT_MD]: [md: string | null];
-  [HistoryEvents.SELECTED_EDIT]: [edit: HistoryDocRecord | null];
-  [HistoryEvents.EDITS]: [edits: HistoryDocRecord[]];
+  [HistoryEvents.INSIDE_MARKDOWN]: string;
+  [HistoryEvents.OUTSIDE_MARKDOWN]: string;
+  [HistoryEvents.SELECTED_EDIT_MD]: string | null;
+  [HistoryEvents.SELECTED_EDIT]: HistoryDocRecord | null;
+  [HistoryEvents.EDITS]: HistoryDocRecord[];
 };
-class HistoryEventEmitter extends EventEmitter {
-  on<K extends keyof HistoryEventMap>(event: K, callback: (...args: HistoryEventMap[K]) => void): this {
-    return super.on(event, callback);
-  }
-  listen<K extends keyof HistoryEventMap>(event: K, callback: (...args: HistoryEventMap[K]) => void): () => void {
-    super.on(event, callback);
-    return () => {
-      this.off(event, callback);
-    };
-  }
-  awaitEvent<K extends keyof HistoryEventMap>(event: K): Promise<HistoryEventMap[K]> {
-    return new Promise((resolve) => {
-      const handler = (...args: HistoryEventMap[K]) => {
-        this.off(event, handler);
-        resolve(args);
-      };
-      this.on(event, handler);
-    });
-  }
-
-  emit<K extends keyof HistoryEventMap>(event: K, ...args: HistoryEventMap[K]): boolean {
-    return super.emit(event, ...args);
-  }
-}
 
 function timeout$(ms: number, warnMsg?: string): [Promise<void>, () => void] {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -59,7 +35,7 @@ function timeout$(ms: number, warnMsg?: string): [Promise<void>, () => void] {
 }
 
 export class HistoryPlugin2 {
-  private events = new HistoryEventEmitter();
+  private events = CreateTypedEmitter<HistoryEventMap>();
   readonly workspaceId: string;
   readonly documentId: string;
   readonly historyStorage: HistoryStorageInterface;

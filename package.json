@@ -26,22 +26,22 @@
   },
   "overrides": {
     "dexie": "^4.0.10",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "@mdxeditor/editor": {
-      "react-dom": "19.1.0",
-      "react": "19.1.0"
+      "react-dom": "19.2.0",
+      "react": "19.2.0"
     },
     "@codesandbox/sandpack-react": {
-      "react-dom": "19.1.0",
-      "react": "19.1.0"
+      "react-dom": "19.2.0",
+      "react": "19.2.0"
     }
   },
   "resolutions": {
     "@radix-ui/react-focus-scope": "1.1.7",
-    "react-dom": "19.1.0",
+    "react-dom": "19.2.0",
     "dexie": "^4.0.10",
-    "react": "19.1.0"
+    "react": "19.2.0"
   },
   "dependencies": {
     "@autoform/react": "^3.1.0",
@@ -140,9 +140,9 @@
     "patch-package": "^8.0.0",
     "path-to-regexp": "^8.2.0",
     "prettier": "^3.6.2",
-    "react": "19.1.0",
+    "react": "19.2.0",
     "react-day-picker": "^9.8.0",
-    "react-dom": "19.1.0",
+    "react-dom": "19.2.0",
     "react-hook-form": "^7.62.0",
     "react-resizable-panels": "^2.1.9",
     "recharts": "^2.15.4",
