@@ -92,13 +92,7 @@ abstract class BaseContextProvider implements PreviewContextProvider {
       </head>
       <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
         <div id="preview-root"></div>
-        <script>
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-              .then(registration => console.log('SW registered:', registration))
-              .catch(error => console.log('SW registration failed:', error));
-          }
-        </script>
+   
       </body>
     </html>
   `);
@@ -210,7 +204,7 @@ export class WindowContextProvider extends BaseContextProvider {
 
   open(): void {
     if (!this.windowRef.current || this.windowRef.current.closed) {
-      this.windowRef.current = window.open("about:blank", "_blank");
+      this.windowRef.current = window.open("/?previewMode=true", "_blank");
       if (!this.windowRef.current) {
         throw new Error("Failed to open external window");
       }
