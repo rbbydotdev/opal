@@ -3,15 +3,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, relPath } from "@/lib/paths2";
-import { ExternalLink, Loader, RefreshCw } from "lucide-react";
+import { Loader, RefreshCw } from "lucide-react";
 
 export function PreviewIFrame({
   previewPath,
   currentWorkspace,
+  refresh,
   setPreviewNode,
 }: {
   previewPath?: AbsPath | null;
   currentWorkspace: Workspace;
+  refresh: () => void;
   setPreviewNode: (node: TreeNode | null) => void;
 }) {
   const node = currentWorkspace.nodeFromPath(previewPath)!;
@@ -20,7 +22,7 @@ export function PreviewIFrame({
     <div className="h-full w-full relative flex flex-col">
       <div className="w-full h-12 bg-sidebar z-10 flex items-center text-sm py-2 font-bold px-4">
         <button
-          onClick={() => {}}
+          onClick={refresh}
           className="flex items-center justify-center w-8 h-8 rounded hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
           title="Refresh preview"
         >
@@ -47,13 +49,13 @@ export function PreviewIFrame({
           </Select>
           {/* <span className="truncate font-mono">{path}</span> */}
         </div>
-        <button
+        {/* <button
           onClick={() => {}}
           className="flex items-center justify-center w-8 h-8 rounded hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
           title="Open preview in new window"
         >
           <ExternalLink size={16} />
-        </button>
+        </button> */}
       </div>
 
       {false && (

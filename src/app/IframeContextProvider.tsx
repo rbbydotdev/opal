@@ -106,9 +106,9 @@ abstract class BaseContextProvider implements PreviewContextProvider {
     if (!this.doc) {
       throw new Error("Document not available");
     }
-    
-    const isFirefox = navigator.userAgent.includes('Firefox');
-    
+
+    const isFirefox = navigator.userAgent.includes("Firefox");
+
     if (isFirefox) {
       this.doc.open();
       this.doc.write(PREVIEW_HTML);
@@ -116,7 +116,7 @@ abstract class BaseContextProvider implements PreviewContextProvider {
     } else {
       this.doc.documentElement.innerHTML = PREVIEW_HTML_INNER;
     }
-    
+
     this.events.emit(ExtCtxEvents.READY, this.context);
   };
 
@@ -190,7 +190,7 @@ export class IframeContextProvider extends BaseContextProvider {
     this.unsubs.push(() => {
       iframe.removeEventListener("load", this.initializePreview);
     });
-    iframe.src = "/";
+    iframe.src = "/preview_blank.html";
   }
 }
 
@@ -224,7 +224,7 @@ export class WindowContextProvider extends BaseContextProvider {
 
   open(): void {
     if (!this.windowRef.current || this.windowRef.current.closed) {
-      this.windowRef.current = window.open("/?previewMode=true", "_blank");
+      this.windowRef.current = window.open("/preview_blank.html?previewMode=true", "_blank");
       if (!this.windowRef.current) {
         throw new Error("Failed to open external window");
       }
