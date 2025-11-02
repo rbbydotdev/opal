@@ -124,7 +124,6 @@ export function useIframeContextProvider({ iframeRef }: { iframeRef: React.RefOb
   const contextProvider = useMemo(() => new IframeContextProvider(iframeRef), [iframeRef]);
   const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
   useEffect(() => {
-    contextProvider.init();
     return () => contextProvider.teardown();
   }, [contextProvider]);
 
