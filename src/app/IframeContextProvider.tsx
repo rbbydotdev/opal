@@ -44,6 +44,31 @@ const EMPTY_CONTEXT: ExtCtxNotReadyContext = {
   ready: false,
 };
 
+const PREVIEW_HTML = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Preview</title>
+  </head>
+  <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
+    <div id="preview-root"></div>
+  </body>
+</html>
+`;
+
+const PREVIEW_HTML_INNER = `
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Preview</title>
+  </head>
+  <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
+    <div id="preview-root"></div>
+  </body>
+`;
+
 abstract class BaseContextProvider implements PreviewContextProvider {
   protected _context: ExtCtxReadyContext | ExtCtxNotReadyContext = EMPTY_CONTEXT;
   protected unsubs: (() => void)[] = [];
@@ -81,22 +106,17 @@ abstract class BaseContextProvider implements PreviewContextProvider {
     if (!this.doc) {
       throw new Error("Document not available");
     }
-    this.doc.open();
-    this.doc.write(/*html*/ `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Preview</title>
-      </head>
-      <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
-        <div id="preview-root"></div>
-   
-      </body>
-    </html>
-  `);
-    this.doc.close();
+    
+    const isFirefox = navigator.userAgent.includes('Firefox');
+    
+    if (isFirefox) {
+      this.doc.open();
+      this.doc.write(PREVIEW_HTML);
+      this.doc.close();
+    } else {
+      this.doc.documentElement.innerHTML = PREVIEW_HTML_INNER;
+    }
+    
     this.events.emit(ExtCtxEvents.READY, this.context);
   };
 
@@ -170,7 +190,7 @@ export class IframeContextProvider extends BaseContextProvider {
     this.unsubs.push(() => {
       iframe.removeEventListener("load", this.initializePreview);
     });
-    iframe.src = "about:blank";
+    iframe.src = "/";
   }
 }
 

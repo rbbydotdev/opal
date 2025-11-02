@@ -2,6 +2,7 @@ import { useIframeContextProvider, useWindowContextProvider } from "@/app/Iframe
 import { injectCssFiles, PreviewContent } from "@/app/PreviewContent";
 import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { Workspace } from "@/data/Workspace";
+import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import { AbsPath } from "@/lib/paths2";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 // import { createRoot } from "react-dom/client";
@@ -48,9 +49,11 @@ export const WindowPreviewComponent = forwardRef<
   { path: AbsPath; currentWorkspace: Workspace; Open?: React.ReactNode; Closed?: React.ReactNode }
 >(function WindowPreviewComponent({ path, currentWorkspace, Open, Closed }, ref) {
   const { open, close, isOpen, ...context } = useWindowContextProvider();
+  const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
+  const resolvedPath = previewNode?.path || path;
 
   const cssFiles = useLiveCssFiles({
-    path,
+    path: resolvedPath,
     currentWorkspace,
   });
 
@@ -73,7 +76,7 @@ export const WindowPreviewComponent = forwardRef<
       {!context?.document?.body
         ? null
         : createPortal(
-            <PreviewContent path={path} currentWorkspace={currentWorkspace} context={context} />,
+            <PreviewContent path={resolvedPath} currentWorkspace={currentWorkspace} context={context} />,
             context.document.body
           )}
 
