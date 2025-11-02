@@ -1,4 +1,4 @@
-import { IframeReadyContext, PreviewContext } from "@/app/IframeContextProvider";
+import { ExtCtxReadyContext, PreviewContext } from "@/app/IframeContextProvider";
 import { useLiveFileContent } from "@/context/useFileContents";
 import { Workspace } from "@/data/Workspace";
 import { TemplateManager } from "@/features/templating";
@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 const getBaseHref = (href: string): string => href.split("?")[0]!;
 
 // Shared CSS injection logic with smooth transitions
-export function injectCssFiles(context: IframeReadyContext, cssFiles: string[]): void {
+export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[]): void {
   const head = context.document.head;
 
   const newBaseHrefs = new Set(cssFiles.map(getBaseHref));

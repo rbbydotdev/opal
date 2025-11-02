@@ -1,9 +1,9 @@
-import { useIframeContextProvider } from "@/app/IframeContextProvider";
+import { useIframeContextProvider, useWindowContextProvider } from "@/app/IframeContextProvider";
 import { injectCssFiles, PreviewContent } from "@/app/PreviewContent";
 import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { Workspace } from "@/data/Workspace";
 import { AbsPath } from "@/lib/paths2";
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 // import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
 
@@ -37,3 +37,47 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
     </>
   );
 }
+
+export interface WindowPreviewHandler {
+  open(): void;
+  close(): void;
+}
+
+export const WindowPreviewComponent = forwardRef<
+  WindowPreviewHandler,
+  { path: AbsPath; currentWorkspace: Workspace; Open?: React.ReactNode; Closed?: React.ReactNode }
+>(function WindowPreviewComponent({ path, currentWorkspace, Open, Closed }, ref) {
+  const { open, close, isOpen, ...context } = useWindowContextProvider();
+
+  const cssFiles = useLiveCssFiles({
+    path,
+    currentWorkspace,
+  });
+
+  useEffect(() => {
+    if (!context.ready) return;
+    injectCssFiles(context, cssFiles);
+  }, [context, cssFiles]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      open,
+      close,
+    }),
+    [close, open]
+  );
+
+  return (
+    <>
+      {!context?.document?.body
+        ? null
+        : createPortal(
+            <PreviewContent path={path} currentWorkspace={currentWorkspace} context={context} />,
+            context.document.body
+          )}
+
+      {isOpen ? (Open ?? null) : (Closed ?? null)}
+    </>
+  );
+});
