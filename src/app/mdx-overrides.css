@@ -7,16 +7,10 @@
   max-width: 100%;
   height: 100%;
   min-width: 400px;
-  /* height: calc(100vh - var(--editor-toolbar-height)); */
 }
-/* _contentEditable_sects_380 max-w-full content-editable prose bg-background */
-/* _rootContentEditableWrapper_sects_1114 mdxeditor-root-contenteditable */
 .mdxeditor-root-contenteditable {
-  height: 100%;
+  min-height: 0;
   flex-grow: 1;
-}
-.mdxeditor {
-  overflow-y: scroll;
 }
 .mdxeditor-toolbar {
   border-radius: 0;
@@ -68,6 +62,7 @@
 .mdxeditor-rich-text-editor,
 .mdxeditor-root-contenteditable > div {
   height: 100%;
+  /* overflow: hidden; */
 }
 .mdxeditor-rich-text-editor .content-editable {
   background-color: transparent !important;
@@ -76,10 +71,6 @@
 .mdxeditor [data-lexical-decorator="true"] {
   /* this fixes scroll to calculations */
   display: inline-block;
-}
-
-.mdxeditor-source-editor {
-  /* caret-color: black !important; */
 }
 
 .mdxeditor-source-editor .cm-focused .cm-matchingBracket {

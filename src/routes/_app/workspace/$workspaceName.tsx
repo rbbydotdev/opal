@@ -9,7 +9,7 @@ import { EditorSidebarLayout } from "@/features/preview-pane/EditorSidebarLayout
 import { usePreviewPaneProps } from "@/features/preview-pane/usePreviewPaneProps";
 import useFavicon from "@/hooks/useFavicon";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName")({
@@ -29,6 +29,8 @@ function WorkspaceLayout() {
       document.title = workspaceName;
     }
   }, [workspaceName]);
+  const [key, setKey] = useState(0);
+  const previewKey = previewNode?.path + "-" + key;
   return (
     <>
       <Toaster />
@@ -45,6 +47,8 @@ function WorkspaceLayout() {
           rightPane={
             previewURL && previewNode?.path ? (
               <PreviewIFrame
+                key={previewKey}
+                refresh={() => setKey((k) => k + 1)}
                 previewPath={previewNode.path}
                 currentWorkspace={currentWorkspace}
                 setPreviewNode={setPreviewNode}

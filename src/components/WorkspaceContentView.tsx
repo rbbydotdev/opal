@@ -64,8 +64,7 @@ export function WorkspaceMarkdownEditor({
               editorRef={editorRef}
               onChange={(md) => updateDebounce(matter.stringify(md, data))}
               markdown={content}
-              // markdown={contents ?? ""}
-              className={"bg-background flex-grow  flex-col h-full"}
+              className={"bg-background flex-grow flex-col h-full "}
               contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
             />
             {/* </DropCommanderProvider> */}
