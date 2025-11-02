@@ -1,7 +1,7 @@
 import { Workspace } from "@/data/Workspace";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
-import { routeRequest } from "@/lib/ServiceWorker/router";
+import { hasRouteMatch, routeRequest } from "@/lib/ServiceWorker/router";
 import { WHITELIST } from "@/lib/ServiceWorker/utils";
 
 // EnableRemoteLogger();
@@ -27,6 +27,9 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const whiteListMatch = WHITELIST.some((pattern) => pattern.test(url.pathname));
   // If there's no referrer, it's likely a direct navigation or non-app request.
   // Let the browser handle it directly.
+  if ((request.mode === "navigate" || !request.referrer) && hasRouteMatch(event, "NAV")) {
+    return event.respondWith(routeRequest(event));
+  }
   if (!request.referrer || whiteListMatch || request.mode === "navigate" || event.request.destination === "script") {
     return event.respondWith(defaultFetchHandler(event));
   }
