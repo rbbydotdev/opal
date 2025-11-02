@@ -13,33 +13,52 @@ import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 
-export interface BuildServiceOptions {
+export interface BuildRunnerOptions {
   strategy: BuildStrategy;
-  workspaceId: string;
+  workspaceName: string;
+  buildLabel?: string;
   abortSignal?: AbortSignal;
+  onLog?: (message: string) => void;
+  onError?: (message: string) => void;
+}
+
+export interface CreateBuildRunnerOptions {
+  strategy: BuildStrategy;
+  workspace: Workspace;
+  buildId?: string;
+  buildLabel?: string;
   onLog?: (message: string) => void;
   onError?: (message: string) => void;
 }
 
 export interface BuildResult {
   success: boolean;
-  buildDao?: BuildDAO;
   error?: string;
 }
 
-export class BuildService {
+export class BuildRunner {
+  buildDao: BuildDAO;
+
   onLog: (message: string) => void;
   onError: (message: string) => void;
   sourceDisk: Disk = new NullDisk();
   outputDisk: Disk = new NullDisk();
   outputPath: AbsPath;
   sourcePath: AbsPath;
-  workspaceName: string;
+  workspace: Workspace;
   strategy: BuildStrategy;
   logs: BuildLogLine[] = [];
 
+  static create(options: CreateBuildRunnerOptions): BuildRunner {
+    return new BuildRunner(options);
+  }
+
   get fileTree() {
     return this.sourceDisk.fileTree;
+  }
+
+  get buildId() {
+    return this.buildDao.guid;
   }
 
   private log(message: string, type: "info" | "error" | "warning" = "info") {
@@ -69,37 +88,51 @@ export class BuildService {
     this.log(message, "warning");
   }
 
-  constructor({
-    onLog,
-    onError,
-    outputPath = SpecialDirs.Build,
+  private constructor({
+    onLog = () => {},
+    onError = () => {},
     sourcePath = absPath("/"),
-    workspaceName,
+    workspace,
     strategy,
+    buildId,
+    buildLabel,
   }: {
-    onLog: (message: string) => void;
-    onError: (message: string) => void;
-    workspaceName: string;
-    outputPath?: AbsPath;
+    onLog?: (message: string) => void;
+    onError?: (message: string) => void;
     sourcePath?: AbsPath;
-
+    workspace: Workspace;
     strategy: BuildStrategy;
+    buildId?: string;
+    buildLabel?: string;
   }) {
     this.onLog = onLog;
     this.onError = onError;
-    this.outputPath = outputPath;
     this.sourcePath = sourcePath;
-    this.workspaceName = workspaceName;
+    this.workspace = workspace;
     this.strategy = strategy;
+
+    // Setup disks from workspace
+    this.sourceDisk = workspace.getDisk();
+    this.outputDisk = this.sourceDisk;
+
+    // Use provided label or generate automatically
+    const label = buildLabel || `${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Build - ${new Date().toLocaleString()}`;
+    const guid = buildId || BuildDAO.guid();
+    this.buildDao = BuildDAO.CreateNew(label, this.sourceDisk.guid, guid);
+    
+    // Set output path based on build ID
+    this.outputPath = joinPath(SpecialDirs.Build, relPath(this.buildDao.guid));
   }
-  tearDown() {
-    // Clean up resources if needed
+  async tearDown() {
+    // Note: Workspace cleanup is handled externally by the caller
+    // BuildRunner doesn't own the workspace lifecycle
   }
-  async executeBuild({ strategy, abortSignal }: BuildServiceOptions): Promise<BuildResult> {
-    let currentWorkspace: Workspace | null = null;
+  async execute(abortSignal?: AbortSignal): Promise<BuildResult> {
     try {
-      this.logInfo(`Starting ${strategy} build...`);
-      this.logInfo("Filtering out special directories");
+      this.logInfo(`Starting ${this.strategy} build, id ${this.buildDao.guid}...`);
+      this.logInfo(`Workspace: ${this.workspace ? 'initialized' : 'missing'}`);
+      this.logInfo(`Source disk: ${this.sourceDisk.guid}`);
+      this.logInfo(`Output path: ${this.outputPath}`);
 
       if (abortSignal?.aborted) {
         this.logError("Build cancelled");
@@ -107,21 +140,14 @@ export class BuildService {
       }
 
       this.logInfo("Starting build process...");
-      this.logInfo("Loading workspace...");
-      currentWorkspace = await Workspace.FromNameAndInit(this.workspaceName);
-      if (!currentWorkspace) {
-        throw new Error("Workspace not found");
-      }
-      const sourceDisk = currentWorkspace.getDisk();
-      this.sourceDisk = sourceDisk;
-      this.outputDisk = sourceDisk;
-      this.logInfo(`Using source disk: ${sourceDisk.guid}`);
       this.logInfo("Building file tree...");
 
       // Index the source directory
       this.logInfo("Indexing source files...");
       await this.sourceDisk.triggerIndex();
-      this.sourceDisk.fileTree;
+      
+      const fileTree = this.sourceDisk.fileTree;
+      this.logInfo(`File tree loaded with ${fileTree ? 'files found' : 'no files'}`);
 
       await this.ensureOutputDirectory();
 
@@ -130,6 +156,7 @@ export class BuildService {
         return { success: false, error: "Build cancelled" };
       }
 
+      this.logInfo(`Executing ${this.strategy} build strategy...`);
       switch (this.strategy) {
         case "freeform":
           await this.buildFreeform();
@@ -143,6 +170,7 @@ export class BuildService {
         default:
           throw new Error(`Unknown build strategy: ${this.strategy}`);
       }
+      this.logInfo(`${this.strategy} build strategy completed`);
 
       if (abortSignal?.aborted) {
         this.logError("Build cancelled");
@@ -151,10 +179,15 @@ export class BuildService {
 
       this.logInfo("Build completed successfully!");
 
-      const buildDao = await this.createBuildRecord(strategy, this.sourceDisk);
-      this.logInfo(`Build saved with ID: ${buildDao.guid}`);
+      await this.saveBuildRecord();
+      this.logInfo(`Build saved with ID: ${this.buildDao.guid}`);
 
-      return { success: true, buildDao };
+      // Trigger index update so build files section refreshes
+      this.logInfo("Refreshing file tree index...");
+      await this.outputDisk.triggerIndex();
+      this.logInfo("File tree index updated");
+
+      return { success: true };
     } catch (error) {
       if (!abortSignal?.aborted) {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -163,18 +196,13 @@ export class BuildService {
       }
       return { success: false, error: "Build cancelled" };
     } finally {
-      if (currentWorkspace) {
-        await currentWorkspace.tearDown();
-      }
+      // No workspace cleanup needed - workspace is managed externally
     }
   }
 
-  private async createBuildRecord(strategy: BuildStrategy, sourceDisk: Disk): Promise<BuildDAO> {
-    const buildLabel = `${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Build - ${new Date().toLocaleString()}`;
-    const buildDao = await BuildDAO.CreateNew(buildLabel, sourceDisk.guid);
-    buildDao.logs = this.logs;
-    await buildDao.save();
-    return buildDao;
+  private async saveBuildRecord(): Promise<void> {
+    this.buildDao.logs = this.logs;
+    await this.buildDao.save();
   }
 
   private async ensureOutputDirectory(): Promise<void> {
@@ -231,7 +259,9 @@ export class BuildService {
     this.logInfo("Copying assets...");
 
     // Copy all files except templates, markdown, and files in _ directories
-    for (const node of this.sourceDisk.fileTree.iterator((node) => node.isTreeFile() && FilterOutSpecialDirs(node.path))) {
+    for (const node of this.sourceDisk.fileTree.iterator(
+      (node) => node.isTreeFile() && FilterOutSpecialDirs(node.path)
+    )) {
       if (this.shouldCopyAsset(node)) {
         await this.copyFileToOutput(node);
       }
@@ -241,7 +271,9 @@ export class BuildService {
   private async processTemplatesAndMarkdown(): Promise<void> {
     this.logInfo("Processing templates and markdown...");
 
-    for (const node of this.sourceDisk.fileTree.iterator((node) => node.isTreeFile() && FilterOutSpecialDirs(node.path))) {
+    for (const node of this.sourceDisk.fileTree.iterator(
+      (node) => node.isTreeFile() && FilterOutSpecialDirs(node.path)
+    )) {
       if (this.shouldIgnoreFile(node)) continue;
 
       if (this.isTemplateFile(node)) {
@@ -335,7 +367,9 @@ export class BuildService {
     const fullDirPath = joinPath(this.sourcePath, dirPath);
 
     // Use FileTree to find all markdown files in the directory
-    for (const node of this.sourceDisk.fileTree.iterator((node) => node.isTreeFile() && FilterOutSpecialDirs(node.path))) {
+    for (const node of this.sourceDisk.fileTree.iterator(
+      (node) => node.isTreeFile() && FilterOutSpecialDirs(node.path)
+    )) {
       if (node.path.startsWith(fullDirPath) && this.isMarkdownFile(node)) {
         const content = String(await this.sourceDisk.readFile(node.path));
         const { data: frontMatter, content: markdownContent } = matter(content);
