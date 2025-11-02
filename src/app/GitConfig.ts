@@ -34,7 +34,7 @@ export class GitConfig {
 
   getConfig(): GitConfigData {
     try {
-      if (localStorage === undefined) {
+      if (!localStorage) {
         return DEFAULT_GIT_CONFIG;
       }
       const stored = localStorage.getItem(GIT_CONFIG_KEY);

@@ -5,7 +5,7 @@ const paths = {
   Storage: absPath("/.storage"),
   Git: absPath("/.git"),
   Thumb: absPath("/.thumb"),
-  Build: absPath("/build"),
+  Build: absPath("/.build"),
 };
 export const SpecialDirs = {
   ...paths,

@@ -3,13 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/BuildDAO";
 import { Workspace } from "@/data/Workspace";
 import { useBuildExecution } from "@/hooks/useBuildExecution";
 import { useBuildLogs } from "@/hooks/useBuildLogs";
 import { useBuildModalState } from "@/hooks/useBuildModalState";
-import { BuildService } from "@/services/BuildService";
+import { BuildRunner } from "@/services/BuildRunner";
 import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
 import React, { createContext, useCallback, useContext, useEffect, useImperativeHandle, useRef } from "react";
 import { timeAgo } from "short-time-ago";
@@ -83,19 +82,30 @@ export function BuildModal({
   } = useBuildModalState();
   const buildExecution = useBuildExecution();
   const { log, logs, errorLog, clearLogs } = useBuildLogs();
-  const { name } = useWorkspaceRoute();
-  const buildServiceRef = useRef({} as BuildService);
+  const buildRunnerRef = useRef<BuildRunner | null>(null);
+
   useEffect(() => {
-    buildServiceRef.current = new BuildService({
-      onLog: log,
-      onError: errorLog,
-      workspaceName: name!,
-      strategy,
-    });
+    if (isOpen && optionsRef.current?.currentWorkspace) {
+      buildRunnerRef.current = BuildRunner.create({
+        onLog: log,
+        onError: errorLog,
+        workspace: optionsRef.current.currentWorkspace,
+        strategy,
+      });
+    }
+
+    if (!isOpen) {
+      setBuildError(null);
+      clearLogs();
+    }
+
     return () => {
-      buildServiceRef?.current?.tearDown();
+      if (buildRunnerRef.current) {
+        void buildRunnerRef.current?.tearDown();
+        buildRunnerRef.current = null;
+      }
     };
-  }, [errorLog, log, strategy, name]);
+  }, [isOpen, strategy, log, errorLog, optionsRef, setBuildError, clearLogs]);
 
   const handleBuild = async () => {
     if (!optionsRef.current) throw new Error("Options not provided");
@@ -105,20 +115,26 @@ export function BuildModal({
     clearLogs();
     const abortController = buildExecution.startBuild();
 
-    const result = await buildServiceRef.current.executeBuild({
-      strategy: strategy,
-      workspaceId: name!,
-      onLog: log,
-      onError: errorLog,
-      abortSignal: abortController.signal,
-    });
+    if (!buildRunnerRef.current) {
+      setBuildError("Build runner not initialized");
+      return;
+    }
 
-    buildExecution.finishBuild();
+    try {
+      const result = await buildRunnerRef.current.execute(abortController.signal);
 
-    if (result.success) {
-      completeModal(result.buildDao);
-    } else if (result.error) {
-      setBuildError(result.error);
+      buildExecution.finishBuild();
+
+      if (result.success) {
+        completeModal(buildRunnerRef.current.buildDao);
+      } else if (result.error) {
+        setBuildError(result.error);
+      } else {
+        setBuildError("Build failed with no error message");
+      }
+    } catch (error) {
+      setBuildError(error instanceof Error ? error.message : String(error));
+      buildExecution.finishBuild();
     }
   };
 
