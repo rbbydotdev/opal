@@ -5,26 +5,26 @@ import {
   downloadHandler,
   faviconHandler,
   imageHandler,
-  replaceMdImageHandler,
   replaceFileHandler,
+  replaceMdImageHandler,
   RequestContext,
   styleSheetHandler,
   uploadImageHandler,
-  workspaceSearchHandler,
   workspaceFilenameSearchHandler,
+  workspaceSearchHandler,
 } from "@/lib/ServiceWorker/handler";
 
 type HandlerFunction = (context: RequestContext) => Response | Promise<Response>;
 
 interface Route {
-  method: "GET" | "POST" | "ANY";
+  method: "GET" | "POST" | "NAV" | "ANY";
   pattern: RegExp;
   handler: HandlerFunction;
   paramNames: string[];
 }
 
 // Helper to create routes from simple path strings
-function createRoute(method: "GET" | "POST" | "ANY", path: string, handler: HandlerFunction): Route {
+function createRoute(method: "GET" | "POST" | "NAV" | "ANY", path: string, handler: HandlerFunction): Route {
   const paramNames: string[] = [];
 
   // Replace :paramName with a capturing group while storing param names
@@ -50,8 +50,13 @@ function createRoute(method: "GET" | "POST" | "ANY", path: string, handler: Hand
   return { method, pattern, handler, paramNames };
 }
 
-// --- Route Definitions ---
+function previewBuildHandler(context: RequestContext): Response | Promise<Response> {
+  console.log("Preview Build Handler Invoked");
+  return new Response("Preview Build Handler - Not Implemented", { status: 200 });
+}
+
 const routes: Route[] = [
+  createRoute("NAV", "/preview-build/:workspaceName/:buildId/.*", previewBuildHandler),
   createRoute("POST", "/replace-md-images", replaceMdImageHandler),
   createRoute("POST", "/replace-files", replaceFileHandler),
   createRoute("POST", "/upload-image/.*", uploadImageHandler),
@@ -67,7 +72,24 @@ const routes: Route[] = [
   createRoute("GET", "/.*.{jpg|webp|jpeg|png|svg}", imageHandler),
 ];
 
-export async function routeRequest(event: FetchEvent, workspaceParam: string) {
+export function hasRouteMatch(event: FetchEvent, method: Route["method"] | null = null): boolean {
+  const { request } = event;
+  const url = new URL(request.url);
+  const requestMethod = method || request.method;
+  for (const route of routes) {
+    if (route.method !== "ANY" && route.method !== requestMethod) {
+      continue;
+    }
+
+    const match = url.pathname.match(route.pattern);
+    if (match) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export async function routeRequest(event: FetchEvent, workspaceParam: string | null = null): Promise<Response> {
   const { request } = event;
   const url = new URL(request.url);
 
@@ -94,8 +116,9 @@ export async function routeRequest(event: FetchEvent, workspaceParam: string) {
           }
         })
       );
-
-      const context: RequestContext = { event, url, workspaceName: workspaceParam, params, searchParams };
+      //if workspaceParam is null try to get it from params
+      if (!workspaceParam && params.workspaceName) workspaceParam = params.workspaceName;
+      const context: RequestContext = { event, url, workspaceName: workspaceParam || "unknown", params, searchParams };
       return route.handler(context);
     }
   }
