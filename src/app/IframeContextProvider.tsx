@@ -11,62 +11,56 @@ export interface PreviewContext {
 // Interface for context providers (iframe vs window)
 export interface PreviewContextProvider {
   context: PreviewContext | null;
-  init(): void;
-  onReady: (callback: (ctx: PreviewContext | null) => void) => void;
+  onReady: (callback: (ctx: PreviewContext | null) => void) => () => void;
+  getContext: () => PreviewContext | null;
   teardown(): void;
 }
 
-export type IframeReadyContext = {
+export type ExtCtxReadyContext = {
   document: Document;
   window: Window;
   rootElement: HTMLElement;
   ready: true;
 };
-export type IframeNotReadyContext = {
+export type ExtCtxNotReadyContext = {
   document: null;
   window: null;
   rootElement: null;
   ready: false;
 };
 
-const IframeEvents = {
+const ExtCtxEvents = {
   READY: "ready",
 } as const;
 
-type IframeEventMap = {
-  [IframeEvents.READY]: PreviewContext | null;
+type ExtCtxEventMap = {
+  [ExtCtxEvents.READY]: PreviewContext | null;
 };
-const EMPTY_CONTEXT: IframeNotReadyContext = {
+
+const EMPTY_CONTEXT: ExtCtxNotReadyContext = {
   document: null,
   window: null,
   rootElement: null,
   ready: false,
 };
 
-export class IframeContextProvider implements PreviewContextProvider {
-  constructor(private iframeRef: React.RefObject<HTMLIFrameElement | null>) {}
-  private _context: IframeReadyContext | IframeNotReadyContext = EMPTY_CONTEXT;
-  private unsubs: (() => void)[] = [];
-  private events = CreateTypedEmitter<IframeEventMap>();
+abstract class BaseContextProvider implements PreviewContextProvider {
+  protected _context: ExtCtxReadyContext | ExtCtxNotReadyContext = EMPTY_CONTEXT;
+  protected unsubs: (() => void)[] = [];
+  protected events = CreateTypedEmitter<ExtCtxEventMap>();
 
   onReady = (callback: (ctx: PreviewContext | null) => void) => {
-    return this.events.listen(IframeEvents.READY, callback);
+    return this.events.listen(ExtCtxEvents.READY, callback);
   };
   getContext = () => {
     return this._context;
   };
 
-  private get doc() {
-    return this.iframeRef.current?.contentDocument || null;
-  }
-  private get win() {
-    return this.iframeRef.current?.contentWindow || null;
-  }
-  private get rootEl() {
-    return this.iframeRef.current?.contentDocument?.getElementById("preview-root") || null;
-  }
+  abstract get doc(): Document | null;
+  abstract get win(): Window | null;
+  abstract get rootEl(): HTMLElement | null;
 
-  get context(): IframeNotReadyContext | IframeReadyContext {
+  get context(): ExtCtxNotReadyContext | ExtCtxReadyContext {
     if (!this.doc || !this.win || !this.rootEl) {
       return EMPTY_CONTEXT;
     }
@@ -76,25 +70,16 @@ export class IframeContextProvider implements PreviewContextProvider {
       window: this.win,
       rootElement: this.rootEl,
       ready: true,
-    } as IframeReadyContext;
+    } as ExtCtxReadyContext;
 
     return this._context;
   }
-  init() {
-    const iframe = this.iframeRef.current;
-    if (!iframe) return;
 
-    iframe.addEventListener("load", this.initializePreview);
-    this.unsubs.push(() => {
-      iframe.removeEventListener("load", this.initializePreview);
-    });
-    iframe.src = "about:blank";
-  }
+  // abstract init(): void;
 
-  private initializePreview = () => {
-    console.log("Initializing preview document");
+  protected initializePreview = () => {
     if (!this.doc) {
-      throw new Error("Iframe document not available");
+      throw new Error("Document not available");
     }
     this.doc.open();
     this.doc.write(/*html*/ `
@@ -107,12 +92,20 @@ export class IframeContextProvider implements PreviewContextProvider {
       </head>
       <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
         <div id="preview-root"></div>
+        <script>
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+              .then(registration => console.log('SW registered:', registration))
+              .catch(error => console.log('SW registration failed:', error));
+          }
+        </script>
       </body>
     </html>
   `);
     this.doc.close();
-    this.events.emit(IframeEvents.READY, this.context);
+    this.events.emit(ExtCtxEvents.READY, this.context);
   };
+
   teardown(): void {
     this.events.removeAllListeners();
     this._context = EMPTY_CONTEXT;
@@ -120,12 +113,144 @@ export class IframeContextProvider implements PreviewContextProvider {
   }
 }
 
-export function useIframeContextProvider({ iframeRef }: { iframeRef: React.RefObject<HTMLIFrameElement | null> }) {
+export function useIframeContextProvider({ iframeRef }: { iframeRef: { current: HTMLIFrameElement | null } }) {
   const contextProvider = useMemo(() => new IframeContextProvider(iframeRef), [iframeRef]);
   const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
   useEffect(() => {
+    contextProvider.init();
     return () => contextProvider.teardown();
   }, [contextProvider]);
 
   return context;
+}
+
+export function useWindowContextProvider() {
+  const contextProvider = useMemo(() => new WindowContextProvider(), []);
+  const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
+  const isOpen = useSyncExternalStore(contextProvider.onOpenChange, contextProvider.getOpenState);
+  useEffect(() => {
+    return () => contextProvider.teardown();
+  }, [contextProvider]);
+
+  return {
+    ...context,
+    isOpen,
+    open: () => contextProvider.open(),
+    close: () => {
+      contextProvider.close();
+    },
+  };
+}
+
+export function useContextProvider<T extends PreviewContextProvider>(providerFactoryFn: () => T) {
+  const provider = useMemo(() => providerFactoryFn(), [providerFactoryFn]);
+  const context = useSyncExternalStore(provider.onReady, provider.getContext);
+  useEffect(() => {
+    return () => provider.teardown();
+  }, [provider]);
+
+  return context;
+}
+
+export class IframeContextProvider extends BaseContextProvider {
+  constructor(private iframeRef: { current: HTMLIFrameElement | null }) {
+    super();
+  }
+
+  get doc(): Document | null {
+    return this.iframeRef.current?.contentDocument || null;
+  }
+
+  get win(): Window | null {
+    return this.iframeRef.current?.contentWindow || null;
+  }
+
+  get rootEl(): HTMLElement | null {
+    return this.iframeRef.current?.contentDocument?.getElementById("preview-root") || null;
+  }
+  init() {
+    const iframe = this.iframeRef.current;
+    if (!iframe) return;
+
+    iframe.addEventListener("load", this.initializePreview);
+    this.unsubs.push(() => {
+      iframe.removeEventListener("load", this.initializePreview);
+    });
+    iframe.src = "about:blank";
+  }
+}
+
+export class WindowContextProvider extends BaseContextProvider {
+  private windowRef: { current: Window | null } = { current: null };
+  private openEventEmitter = CreateTypedEmitter<{ openChange: boolean }>();
+  private pollInterval: number | null = null;
+
+  constructor() {
+    super();
+  }
+
+  onOpenChange = (callback: (isOpen: boolean) => void) => {
+    return this.openEventEmitter.listen("openChange", callback);
+  };
+  getOpenState = () => {
+    return this.windowRef.current !== null && !this.windowRef.current.closed;
+  };
+
+  get doc(): Document | null {
+    return this.windowRef.current?.document || null;
+  }
+
+  get win(): Window | null {
+    return this.windowRef.current;
+  }
+
+  get rootEl(): HTMLElement | null {
+    return this.windowRef.current?.document?.getElementById("preview-root") || null;
+  }
+
+  open(): void {
+    if (!this.windowRef.current || this.windowRef.current.closed) {
+      this.windowRef.current = window.open("about:blank", "_blank");
+      if (!this.windowRef.current) {
+        throw new Error("Failed to open external window");
+      }
+    }
+    this.windowRef.current.addEventListener("load", this.initializePreview);
+    this.openEventEmitter.emit("openChange", true);
+
+    const clearPoll = () => {
+      if (this.pollInterval) {
+        clearInterval(this.pollInterval);
+        this.pollInterval = null;
+      }
+    };
+    // Poll to detect when window closes
+    this.pollInterval = window.setInterval(() => {
+      if (this.windowRef.current?.closed) {
+        this.openEventEmitter.emit("openChange", false);
+        clearPoll();
+      }
+    }, 1000);
+
+    this.unsubs.push(() => {
+      this.windowRef.current?.removeEventListener("load", this.initializePreview);
+      clearPoll();
+    });
+
+    if (this.windowRef.current.document.readyState === "complete") {
+      this.initializePreview();
+    }
+  }
+  close() {
+    if (this.windowRef.current && this.windowRef.current !== window) {
+      this.windowRef.current.close();
+      // Don't set to null immediately - let polling detect the close
+      // this.windowRef.current = null;
+    }
+  }
+
+  teardown(): void {
+    super.teardown();
+    this.close();
+  }
 }

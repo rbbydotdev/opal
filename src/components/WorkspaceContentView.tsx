@@ -1,12 +1,12 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
-import { ScrollSyncProvider, useWorkspacePathScrollChannel } from "@/components/ScrollSync";
-import { useScrollSyncForEditor } from "@/hooks/useScrollSyncForEditor";
+import { ScrollSyncProvider } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/HistoryDAO";
 import { Workspace } from "@/data/Workspace";
+import { useScrollSyncForEditor } from "@/hooks/useScrollSyncForEditor";
 import { useToggleHistoryImageGeneration } from "./Editor/history/useToggleHistoryImageGeneration";
 // import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
@@ -19,11 +19,13 @@ import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId"
 export function WorkspaceMarkdownEditor({
   currentWorkspace,
   contents,
+  // extPreviewCtrl,
   path,
 }: {
   currentWorkspace: Workspace;
   contents: string | null;
   path: AbsPath;
+  // extPreviewCtrl: React.RefObject<WindowPreviewHandler | null>;
 }) {
   const editorRef = useRef<MDXEditorMethods>(null);
   const { updateDebounce, error } = useFileContents({
