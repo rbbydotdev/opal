@@ -3,7 +3,7 @@ import { injectCssFiles, PreviewContent } from "@/app/PreviewContent";
 import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { Workspace } from "@/data/Workspace";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
-import { AbsPath } from "@/lib/paths2";
+import { AbsPath, relPath } from "@/lib/paths2";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 // import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
@@ -33,7 +33,11 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
             context.document.body
           )}
       <div className="w-full h-full relative">
-        <iframe ref={iframeRef} className="w-full h-full border-0 bg-white" title="Preview" />
+        <iframe
+          ref={iframeRef}
+          className="w-full h-full border-0 bg-white"
+          title={`${currentWorkspace.name} ${relPath(path)}`}
+        />
       </div>
     </>
   );

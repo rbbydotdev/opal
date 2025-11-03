@@ -120,8 +120,8 @@ export class BuildRunner {
     const guid = buildId || BuildDAO.guid();
     this.buildDao = BuildDAO.CreateNew(label, this.sourceDisk.guid, guid);
     
-    // Set output path based on build ID
-    this.outputPath = joinPath(SpecialDirs.Build, relPath(this.buildDao.guid));
+    // Set output path from build DAO
+    this.outputPath = this.buildDao.getBuildPath();
   }
   async tearDown() {
     // Note: Workspace cleanup is handled externally by the caller

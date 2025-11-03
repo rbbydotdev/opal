@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
+import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import { IS_MAC } from "@/lib/isMac";
 import clsx from "clsx";
 import { ChevronDown, ChevronRight, ChevronUp, Replace, ReplaceAll, X } from "lucide-react";
@@ -157,6 +158,11 @@ export function EditorSearchBar({
     window.addEventListener("focus", handleOtherFocus);
     return () => window.removeEventListener("focus", handleOtherFocus);
   }, [closeOnBlur, handleClose, isOpen]);
+
+  const {
+    right: { width: rightSideBarWidth, isCollapsed: isRightSidebarCollapsed },
+  } = useSidebarPanes();
+
   if (!isOpen) return null;
 
   return (
@@ -178,9 +184,12 @@ export function EditorSearchBar({
       }}
       className={twMerge(
         clsx({ "animate-in": open }),
-        "bg-transparent backdrop-blur-md border rounded-lg shadow-lg flex absolute top-12 translate-y-4 right-4 z-50",
+        "bg-transparent backdrop-blur-md border rounded-lg shadow-lg flex absolute top-12 translate-y-4 right-4 z-50 border-4 border-red-500",
         className
       )}
+      style={{
+        right: !isRightSidebarCollapsed ? rightSideBarWidth + 16 : "inerit",
+      }}
     >
       <div className={"p-2 flex flex-col items-center gap-1"}>
         <Collapsible className="group/collapsible" defaultOpen={true}>

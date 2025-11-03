@@ -81,7 +81,7 @@ export function useWorkspacePathScrollChannel() {
 }
 // --- useScrollChannel hook ---
 export function useScrollChannel({ sessionId }: { sessionId?: string | null } = {}) {
-  const sId = useMemo(() => sessionId ?? `scroll-sync-${nanoid()}`, [sessionId]);
+  const sId = useMemo(() => sessionId ?? nanoid(), [sessionId]);
   const scrollEmitter = useResource(() => new ScrollBroadcastChannel(sId), [sId]);
   return { scrollEmitter, sessionId: sId };
 }

@@ -4,7 +4,7 @@ import { Workspace } from "@/data/Workspace";
 import { TemplateManager } from "@/features/templating";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache } from "@/lib/paths2";
+import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, prefix, relPath } from "@/lib/paths2";
 import { useEffect, useState } from "react";
 
 const getBaseHref = (href: string): string => href.split("?")[0]!;
@@ -137,8 +137,8 @@ function TemplateRenderer({ path, currentWorkspace }: { path: AbsPath; currentWo
           {
             date: new Date(),
             data: {
-              title: "Preview",
-              name: "User",
+              title: `${currentWorkspace.name} ${relPath(path)}`,
+              name: `${prefix(path)}`,
             },
           },
           [],

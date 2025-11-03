@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, relPath } from "@/lib/paths2";
-import { Loader, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 export function PreviewIFrame({
   previewPath,
@@ -29,7 +29,7 @@ export function PreviewIFrame({
           <RefreshCw size={16} />
         </button>
         <div className="flex items-center gap-2 truncate flex-1 justify-center">
-          <span className="font-light font-mono before:content-['['] after:content-[']'] mr-3">PREVIEW3</span>
+          <span className="font-light font-mono before:content-['['] after:content-[']'] mr-3">PREVIEW</span>
           {" / "}
           <Select
             key={previewPath}
@@ -47,25 +47,8 @@ export function PreviewIFrame({
               ))}
             </SelectContent>
           </Select>
-          {/* <span className="truncate font-mono">{path}</span> */}
         </div>
-        {/* <button
-          onClick={() => {}}
-          className="flex items-center justify-center w-8 h-8 rounded hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-          title="Open preview in new window"
-        >
-          <ExternalLink size={16} />
-        </button> */}
       </div>
-
-      {false && (
-        <div className="w-full h-full flex m-auto inset-0 absolute justify-center items-center bg-background">
-          <div className="animate-spin animation-iteration-infinite">
-            <Loader size={24} />
-          </div>
-        </div>
-      )}
-
       <div className="flex-grow relative">
         {!previewPath ? (
           <div className="w-full h-full flex m-auto inset-0 absolute justify-center items-center bg-background text-muted-foreground">
