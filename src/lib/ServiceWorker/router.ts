@@ -89,12 +89,17 @@ export function hasRouteMatch(event: FetchEvent, method: Route["method"] | null 
   return false;
 }
 
-export async function routeRequest(event: FetchEvent, workspaceParam: string | null = null): Promise<Response> {
+export async function routeRequest(
+  event: FetchEvent,
+  workspaceParam: string | null = null,
+  methodOverride: Route["method"] | null = null
+): Promise<Response> {
   const { request } = event;
   const url = new URL(request.url);
+  const requestMethod = methodOverride || request.method;
 
   for (const route of routes) {
-    if (route.method !== "ANY" && route.method !== request.method) {
+    if (route.method !== "ANY" && route.method !== requestMethod) {
       continue;
     }
 
