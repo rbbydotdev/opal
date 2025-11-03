@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { IS_MAC } from "@/lib/isMac";
 import clsx from "clsx";
 import { ChevronDown, ChevronRight, ChevronUp, Replace, ReplaceAll, X } from "lucide-react";
@@ -39,7 +40,7 @@ export function EditorSearchBar({
 }: FloatingSearchBarProps) {
   const editorSearchBarRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState<string | null>(null);
-  const [isReplaceExpanded, setIsReplaceExpanded] = useState<boolean>(false);
+  // const [isReplaceExpanded, setIsReplaceExpanded] = useState<boolean>(false);
   const pauseBlurClose = useRef(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleClose = () => {
@@ -163,6 +164,16 @@ export function EditorSearchBar({
     right: { width: rightSideBarWidth, isCollapsed: isRightSidebarCollapsed },
   } = useSidebarPanes();
 
+  const { setStoredValue: setSearchBarSetting, storedValue: searchBarSetting } = useLocalStorage2("EditorSearchBar", {
+    expanded: true,
+    position: "top-right" as "top-right" | "top-left",
+  });
+
+  const isReplaceExpanded = searchBarSetting.expanded;
+  const setIsReplaceExpanded = (expanded: boolean) => {
+    setSearchBarSetting({ ...searchBarSetting, expanded });
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -184,7 +195,7 @@ export function EditorSearchBar({
       }}
       className={twMerge(
         clsx({ "animate-in": open }),
-        "bg-transparent backdrop-blur-md border rounded-lg shadow-lg flex absolute top-12 translate-y-4 right-4 z-50 border-4 border-red-500",
+        "bg-transparent backdrop-blur-md border rounded-lg shadow-lg flex absolute top-12 translate-y-4 right-4 z-50",
         className
       )}
       style={{
@@ -192,7 +203,7 @@ export function EditorSearchBar({
       }}
     >
       <div className={"p-2 flex flex-col items-center gap-1"}>
-        <Collapsible className="group/collapsible" defaultOpen={true}>
+        <Collapsible className="group/collapsible" open={isReplaceExpanded}>
           <div className="flex items-center gap-1 w-full">
             <CollapsibleTrigger asChild>
               <Button
@@ -250,30 +261,43 @@ export function EditorSearchBar({
           </CollapsibleContent>
         </Collapsible>
       </div>
-      <div className="flex w-full p-2 justify-start">
-        <div className="w-full gap-1 flex justify-start">
-          <Button
-            variant="ghost"
-            className="h-6 w-6 p-0"
-            onClick={prev}
-            disabled={matchTotal === 0}
-            title="Previous match (Shift+Enter)"
-          >
-            <ChevronUp />
-          </Button>
-          <Button
-            variant="ghost"
-            className="h-6 w-6 p-0"
-            onClick={next}
-            disabled={matchTotal === 0}
-            title="Next match (Enter)"
-          >
-            <ChevronDown />
+      <div className="flex flex-col justify-between">
+        <div className="flex w-full p-2 justify-start">
+          <div className="w-full gap-1 flex justify-start">
+            <Button
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              onClick={prev}
+              disabled={matchTotal === 0}
+              title="Previous match (Shift+Enter)"
+            >
+              <ChevronUp />
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              onClick={next}
+              disabled={matchTotal === 0}
+              title="Next match (Enter)"
+            >
+              <ChevronDown />
+            </Button>
+          </div>
+          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={handleClose} title="Close (Escape)">
+            <X className="h-3 w-3" />
           </Button>
         </div>
-        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={handleClose} title="Close (Escape)">
-          <X className="h-3 w-3" />
-        </Button>
+        {/* <div className="flex justify-end">
+          <button
+            onMouseDown={() => {}}
+            onDragStart={() => {
+              console.log("drag start");
+            }}
+            className="rounded border h-8 w-8 p-2 mb-2 mr-2 flex justify-center items-center cursor-grab"
+          >
+            <Grip className="w-4 h-4" />
+          </button>
+        </div> */}
       </div>
     </div>
   );
