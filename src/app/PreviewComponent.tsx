@@ -38,9 +38,6 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
           elementRef={{ current: context.document?.documentElement || context.document?.body || null }}
           listenRef={{
             current: context.window,
-            // current: iframeRef.current?.contentDocument?.documentElement ||
-            // iframeRef.current?.contentDocument?.body ||
-            // null,
           }}
         >
           <iframe
