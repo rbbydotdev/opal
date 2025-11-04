@@ -156,9 +156,3 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
 function ImageViewer({ filePath, currentWorkspace }: { filePath: string; currentWorkspace: Workspace }) {
   return <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />;
 }
-
-// function ExternalPreviewWindow() {
-//   useEffect(() => {
-//     window.open("", "_blank", "noopener,noreferrer");
-//   }, []);
-// }

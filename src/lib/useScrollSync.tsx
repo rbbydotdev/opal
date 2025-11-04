@@ -66,6 +66,12 @@ export function useScrollSync({
       const maxX = el.scrollWidth - el.clientWidth;
       const maxY = el.scrollHeight - el.clientHeight;
       el.scrollTo(x * maxX, y * maxY);
+      await new Promise((rs) =>
+        el.addEventListener("scroll", rs, {
+          passive: true,
+          once: true,
+        })
+      );
       scrollPause.current = false;
     };
 
