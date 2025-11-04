@@ -78,19 +78,19 @@ class TestSuite {
 // Test suite
 const suite = new TestSuite();
 
-suite.test("should connect and retrieve emitters by class", () => {
+suite.test("should connect and retrieve emitters by symbol", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
   const systemEmitter = new SystemEmitter();
 
-  // Connect emitters
-  omnibus.connect(UserEmitter, userEmitter);
-  omnibus.connect(SystemEmitter, systemEmitter);
+  // Connect emitters using symbols
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
 
-  // Retrieve emitters
-  const retrievedUser = omnibus.get(UserEmitter);
-  const retrievedSystem = omnibus.get(SystemEmitter);
-  const nonExistent = omnibus.get(FileEmitter);
+  // Retrieve emitters using symbols
+  const retrievedUser = omnibus.get(UserEmitter.IDENT);
+  const retrievedSystem = omnibus.get(SystemEmitter.IDENT);
+  const nonExistent = omnibus.get(FileEmitter.IDENT);
 
   suite.assert(retrievedUser === userEmitter, "Should retrieve the exact UserEmitter instance");
   suite.assert(retrievedSystem === systemEmitter, "Should retrieve the exact SystemEmitter instance");
@@ -101,8 +101,8 @@ suite.test("should forward events from connected emitters to omnibus", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
   
-  // Connect the emitter
-  omnibus.connect(UserEmitter, userEmitter);
+  // Connect the emitter using symbol
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
 
   const receivedEvents: Array<{ eventName: string; payload: any }> = [];
 
@@ -132,10 +132,10 @@ suite.test("should handle multiple different emitter types", () => {
   const systemEmitter = new SystemEmitter();
   const fileEmitter = new FileEmitter();
 
-  // Connect all emitters
-  omnibus.connect(UserEmitter, userEmitter);
-  omnibus.connect(SystemEmitter, systemEmitter);
-  omnibus.connect(FileEmitter, fileEmitter);
+  // Connect all emitters using symbols
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
+  omnibus.connect(FileEmitter.IDENT, fileEmitter);
 
   const allEvents: Array<{ type: string; data: any }> = [];
 
@@ -164,8 +164,8 @@ suite.test("should support wildcard listening on omnibus", () => {
   const userEmitter = new UserEmitter();
   const systemEmitter = new SystemEmitter();
 
-  omnibus.connect(UserEmitter, userEmitter);
-  omnibus.connect(SystemEmitter, systemEmitter);
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
 
   const wildcardEvents: Array<{ eventName: string; payload: any }> = [];
 
@@ -194,7 +194,7 @@ suite.test("should disconnect emitters properly", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
   
-  omnibus.connect(UserEmitter, userEmitter);
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
   
   let eventCount = 0;
   omnibus.on("login", () => eventCount++);
@@ -204,10 +204,10 @@ suite.test("should disconnect emitters properly", () => {
   suite.assertEqual(eventCount, 1, "Should receive event before disconnect");
 
   // Disconnect
-  omnibus.disconnect(UserEmitter);
+  omnibus.disconnect(UserEmitter.IDENT);
   
   // Verify it's disconnected
-  const retrieved = omnibus.get(UserEmitter);
+  const retrieved = omnibus.get(UserEmitter.IDENT);
   suite.assert(retrieved === undefined, "Should not retrieve disconnected emitter");
 
   // Emit after disconnect
@@ -224,8 +224,8 @@ suite.test("should list connected emitters", () => {
   suite.assertEqual(omnibus.getConnectedEmitters().length, 0, "Should start with no connected emitters");
 
   // Connect emitters
-  omnibus.connect(UserEmitter, userEmitter);
-  omnibus.connect(SystemEmitter, systemEmitter);
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
 
   const connected = omnibus.getConnectedEmitters();
   suite.assertEqual(connected.length, 2, "Should have 2 connected emitters");
@@ -233,7 +233,7 @@ suite.test("should list connected emitters", () => {
   suite.assert(connected.includes(systemEmitter), "Should include system emitter");
 
   // Disconnect one
-  omnibus.disconnect(UserEmitter);
+  omnibus.disconnect(UserEmitter.IDENT);
   const remaining = omnibus.getConnectedEmitters();
   suite.assertEqual(remaining.length, 1, "Should have 1 emitter after disconnect");
   suite.assert(remaining.includes(systemEmitter), "Should still include system emitter");
@@ -246,9 +246,9 @@ suite.test("should listen to specific emitter types with onType", () => {
   const systemEmitter = new SystemEmitter();
   const fileEmitter = new FileEmitter();
 
-  omnibus.connect(UserEmitter, userEmitter);
-  omnibus.connect(SystemEmitter, systemEmitter);
-  omnibus.connect(FileEmitter, fileEmitter);
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
+  omnibus.connect(FileEmitter.IDENT, fileEmitter);
 
   const userLoginEvents: any[] = [];
   const systemStartupEvents: any[] = [];
@@ -296,8 +296,8 @@ suite.test("should isolate events by emitter type even with same event names", (
   const emitterA = new EmitterA();
   const emitterB = new EmitterB();
 
-  omnibus.connect(EmitterA, emitterA);
-  omnibus.connect(EmitterB, emitterB);
+  omnibus.connect(EmitterA.IDENT, emitterA);
+  omnibus.connect(EmitterB.IDENT, emitterB);
 
   const eventsFromA: any[] = [];
   const eventsFromB: any[] = [];
@@ -323,7 +323,7 @@ suite.test("should clean up onType listeners", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
 
-  omnibus.connect(UserEmitter, userEmitter);
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
 
   let eventCount = 0;
   const cleanup = omnibus.onType(UserEmitter.IDENT, "login", () => eventCount++);
@@ -341,10 +341,10 @@ suite.test("should provide type safety for connected emitters", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
   
-  omnibus.connect(UserEmitter, userEmitter);
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
   
   // This should be typed correctly
-  const retrievedEmitter = omnibus.get(UserEmitter);
+  const retrievedEmitter = omnibus.get(UserEmitter.IDENT);
   
   // TypeScript should know this is UserEmitter | undefined
   if (retrievedEmitter) {
