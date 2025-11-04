@@ -1,16 +1,15 @@
 import { useAllPlugins } from "@/components/Editor/AllPlugins";
-import { MainEditorRealmId, MdxEditorSelector } from "@/components/Editor/EditorConst";
+import { MainEditorRealmId, MdxEditorScrollSelector } from "@/components/Editor/EditorConst";
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
-import { ScrollSyncProvider } from "@/components/ScrollSync";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/HistoryDAO";
 import { Workspace } from "@/data/Workspace";
-import { useScrollSyncForEditor } from "@/hooks/useScrollSyncForEditor";
 import { useToggleHistoryImageGeneration } from "./Editor/history/useToggleHistoryImageGeneration";
 // import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
+import { ScrollSync } from "@/lib/useScrollSync";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";
@@ -39,10 +38,8 @@ export function WorkspaceMarkdownEditor({
   if (error) throw error;
 
   const { mimeType } = useCurrentFilepath();
-  const { scrollEmitter, sessionId } = useScrollSyncForEditor(currentWorkspace, path);
 
-  const mdxEditorElement = useWatchElement(MdxEditorSelector);
-
+  const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
   const documentId = useWorkspaceDocumentId(contents);
 
   const markdown = String(contents || "");
@@ -53,11 +50,10 @@ export function WorkspaceMarkdownEditor({
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
   if (contents === null || !currentWorkspace) return null;
   return (
-    <ScrollSyncProvider scrollEl={mdxEditorElement as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
-      <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full relative">
+      <ScrollSync elementRef={{ current: mdxEditorElement as HTMLElement }}>
         <SnapApiPoolProvider max={isHistoryImageGenerationEnabled ? 1 : 0}>
           <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
-            {/* <DropCommanderProvider> */}
             <EditorWithPlugins
               mimeType={mimeType}
               currentWorkspace={currentWorkspace}
@@ -67,11 +63,10 @@ export function WorkspaceMarkdownEditor({
               className={"bg-background flex-grow flex-col h-full "}
               contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
             />
-            {/* </DropCommanderProvider> */}
           </HistorySnapDBProvider>
         </SnapApiPoolProvider>
-      </div>
-    </ScrollSyncProvider>
+      </ScrollSync>
+    </div>
   );
 }
 
