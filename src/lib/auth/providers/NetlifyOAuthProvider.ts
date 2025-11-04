@@ -21,7 +21,7 @@ export class NetlifyOAuthProvider extends OAuthProvider {
     onError: (error: string) => void
   ): void {
     // Handle access token from callback window (implicit flow)
-    void channel.once(OAuthCbEvents.ACCESS_TOKEN).then(async ({ accessToken, state }) => {
+    void channel.once(OAuthCbEvents.ACCESS_TOKEN, async ({ accessToken, state }) => {
       try {
         const authData = await this.validateAndProcessAuth({ accessToken, state }, config);
         onSuccess(authData);

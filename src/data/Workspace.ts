@@ -39,7 +39,7 @@ import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { DocxConvertType } from "@/types/DocxWorkerTypes";
 import * as Comlink from "comlink";
-import Emittery from "emittery";
+import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
 import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
@@ -52,7 +52,7 @@ const WorkspaceEvents = {
 type RenameTrigger = { id: string; oldName: string; newName: string };
 type DeleteTrigger = { id: string };
 export class WorkspaceEventsRemote extends Channel<WorkspaceRemoteEventPayload> {}
-export class WorkspaceEventsLocal extends Emittery<WorkspaceRemoteEventPayload> {}
+export class WorkspaceEventsLocal extends CreateSuperTypedEmitterClass<WorkspaceRemoteEventPayload>() {}
 export type WorkspaceRemoteEventPayload = {
   [WorkspaceEvents.RENAME]: RenameTrigger;
   [WorkspaceEvents.DELETE]: DeleteTrigger;

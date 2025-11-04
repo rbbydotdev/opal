@@ -91,8 +91,8 @@ export class OAuthService {
       this.channel.init();
 
       // Set up channel listeners
-      void this.channel.once("success").then(this.handleSuccess);
-      void this.channel.once("error").then(this.handleError);
+      this.channel.once("success", this.handleSuccess);
+      this.channel.once("error", this.handleError);
 
       // Setup provider-specific listeners
       this.provider.setupChannelListeners(

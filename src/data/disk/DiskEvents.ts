@@ -1,6 +1,6 @@
 import { Channel } from "@/lib/channel";
 import { AbsPath, RelPath, absPath, relPath } from "@/lib/paths2";
-import Emittery from "emittery";
+import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
 
 export type RemoteRenameFileType = {
   oldPath: AbsPath;
@@ -120,4 +120,4 @@ type DiskLocalEventPayload = {
   [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
   [DiskEvents.INSIDE_WRITE]: FilePathsType;
 };
-export class DiskEventsLocal extends Emittery<DiskLocalEventPayload> {}
+export class DiskEventsLocal extends CreateSuperTypedEmitterClass<DiskLocalEventPayload>() {}

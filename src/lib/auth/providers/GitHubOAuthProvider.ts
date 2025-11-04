@@ -33,7 +33,7 @@ export class GitHubOAuthProvider extends OAuthProvider {
     onError: (error: string) => void
   ): void {
     // Handle authorization code from callback window
-    void channel.once(OAuthCbEvents.AUTHORIZATION_CODE).then(async ({ code, state }) => {
+    channel.once(OAuthCbEvents.AUTHORIZATION_CODE, async ({ code, state }) => {
       try {
         const authData = await this.validateAndProcessAuth({ code, state }, config);
         onSuccess(authData);

@@ -7,7 +7,7 @@ import { useResource } from "@/hooks/useResource";
 
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
-import Emittery from "emittery";
+import { SuperEmitter } from "@/lib/TypeEmitter";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 // --- Context and Provider for HistorySnapDB ---
@@ -83,7 +83,7 @@ export class HistoryDAO implements HistoryStorageInterface {
 
   unsubs = new Array<() => void>();
 
-  emitter = new Emittery<{
+  emitter = new SuperEmitter<{
     edits: HistoryDocRecord[];
     new_edit: HistoryDocRecord;
   }>();

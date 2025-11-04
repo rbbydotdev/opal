@@ -1,11 +1,14 @@
-import Emittery, { type Options } from "emittery";
 import { nanoid } from "nanoid";
+import { SuperEmitter } from "@/lib/TypeEmitter";
 
 const ChannelSet = new Map<string, Channel>();
 
 const DEBUG_CHANNELS = false;
 
-export class Channel<EventData = Record<string, unknown>> extends Emittery<EventData> {
+export class Channel<EventData extends Record<string, any> = Record<string, unknown>> {
+  private emitter: SuperEmitter<EventData>;
+  private listenerAddedSymbol = Symbol("listenerAdded");
+  private listenerRemovedSymbol = Symbol("listenerRemoved");
   private channel: BroadcastChannel | null = null;
   private contextId: string = nanoid();
 
@@ -14,10 +17,9 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
   }
 
   constructor(
-    public readonly channelName: string,
-    options?: Options<EventData>
+    public readonly channelName: string
   ) {
-    super(options);
+    this.emitter = new SuperEmitter<EventData>();
   }
   init() {
     console.debug("channel setup");
@@ -40,10 +42,10 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
 
     this.channel.onmessage = (event) => {
       const { eventData, eventName, senderId } = event.data;
-      if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
+      if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
       if (DEBUG_CHANNELS) console.debug("bcast incoming:", eventName);
-      void super.emit(eventName, eventData);
+      this.emitter.emit(eventName, eventData);
     };
     return () => {
       this.channel?.close();
@@ -51,24 +53,60 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
     };
   }
 
-  async emit<Name extends keyof EventData>(
+  emit<Name extends keyof EventData>(
     eventName: Name,
     eventData?: EventData[Name],
     { contextId }: { contextId?: string } = { contextId: this.contextId }
-  ): Promise<void> {
-    if (eventName === Emittery.listenerAdded || eventName === Emittery.listenerRemoved) return;
+  ): void {
+    if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
     if (DEBUG_CHANNELS) console.debug("broadcast outgoing:", eventName);
     try {
-      //TODO:
       if (this.channel) {
-        return this.channel.postMessage(JSON.parse(message));
+        this.channel.postMessage(JSON.parse(message));
       } else {
         console.warn("Channel is not initialized or has been closed.");
       }
     } catch (e) {
       console.error("Error during postMessage:", e);
     }
+  }
+
+  // Delegate Emittery-like methods to the internal emitter
+  on<Name extends keyof EventData>(
+    eventName: Name | (keyof EventData)[],
+    listener: (eventData: EventData[Name]) => void
+  ): () => void {
+    return this.emitter.on(eventName, listener);
+  }
+
+  once<Name extends keyof EventData>(
+    eventName: Name,
+    listener: (eventData: EventData[Name]) => void
+  ): () => void {
+    return this.emitter.once(eventName, listener);
+  }
+
+  off<Name extends keyof EventData>(
+    eventName: Name,
+    listener: (eventData: EventData[Name]) => void
+  ): void {
+    this.emitter.off(eventName, listener);
+  }
+
+  removeListener<Name extends keyof EventData>(
+    eventName: Name,
+    listener: (eventData: EventData[Name]) => void
+  ): void {
+    this.emitter.removeListener(eventName, listener);
+  }
+
+  clearListeners(): void {
+    this.emitter.clearListeners();
+  }
+
+  awaitEvent<Name extends keyof EventData>(eventName: Name): Promise<EventData[Name]> {
+    return this.emitter.awaitEvent(eventName);
   }
 
   tearDown = () => {
@@ -82,6 +120,6 @@ export class Channel<EventData = Record<string, unknown>> extends Emittery<Event
       this.channel.close();
       this.channel = null;
     }
-    this.clearListeners();
+    this.emitter.clearListeners();
   };
 }
