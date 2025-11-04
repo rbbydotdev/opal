@@ -75,10 +75,10 @@ export type IndexTrigger =
 export type ListenerCallback<T extends "create" | "rename" | "delete"> = T extends "create"
   ? (props: CreateDetails) => void
   : T extends "rename"
-  ? (props: RenameDetails[]) => void
-  : T extends "delete"
-  ? (props: DeleteDetails) => void
-  : never;
+    ? (props: RenameDetails[]) => void
+    : T extends "delete"
+      ? (props: DeleteDetails) => void
+      : never;
 
 export type DiskRemoteEventPayload = {
   // [DiskEvents.RENAME]: RemoteRenameFileType[];
@@ -114,10 +114,20 @@ export const DiskEvents = {
   DELETE: "delete" as const,
 };
 type DiskLocalEventPayload = {
-  // [DiskEvents.RENAME]: RenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
-  // [DiskEvents.OUTSIDE_UPDATE]: FilePathsType;
   [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
   [DiskEvents.INSIDE_WRITE]: FilePathsType;
 };
-export class DiskEventsLocal extends CreateSuperTypedEmitterClass<DiskLocalEventPayload>() {}
+export class DiskEventsLocal extends CreateSuperTypedEmitterClass<
+  DiskLocalEventPayload,
+  {
+    diskId: string;
+  }
+>() {
+  constructor(private diskId: string) {
+    super();
+  }
+  emit(event: keyof DiskLocalEventPayload, payload: DiskLocalEventPayload[typeof event] = {} as any) {
+    return super.emit(event, { ...payload, diskId: this["diskId"] });
+  }
+}

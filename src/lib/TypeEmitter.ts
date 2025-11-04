@@ -29,14 +29,18 @@ export function CreateTypedEmitterClass<Events extends Record<string, any>>() {
   };
 }
 
-export function CreateSuperTypedEmitterClass<Events extends Record<string, any>>() {
+export function CreateSuperTypedEmitterClass<Events extends Record<string, any>, Meta = {}>() {
+  type ExtendedEvents = Events & {
+    "*": Events[keyof Events] & Meta & { eventName: keyof Events };
+  };
+
   return class {
     private emitter = new EventEmitter();
     constructor() {
       this.emitter.setMaxListeners(100);
     }
 
-    on<K extends keyof Events>(event: K | (keyof Events)[], listener: (payload: Events[K]) => void): () => void {
+    on<K extends keyof ExtendedEvents>(event: K | (keyof Events)[], listener: (payload: ExtendedEvents[K]) => void): () => void {
       if (Array.isArray(event)) {
         const unsubscribers = event.map((e) => {
           this.emitter.on(e as string | symbol, listener);
@@ -49,20 +53,21 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>>
       }
     }
 
-    once<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): () => void {
+    once<K extends keyof ExtendedEvents>(event: K, listener: (payload: ExtendedEvents[K]) => void): () => void {
       this.emitter.once(event as string | symbol, listener);
       return () => this.emitter.off(event as string | symbol, listener);
     }
 
-    emit<K extends keyof Events>(event: K, payload: Events[K]): void {
+    emit<K extends keyof Events>(event: K, payload: Events[K] & Meta): void {
       this.emitter.emit(event as string | symbol, payload);
+      this.emitter.emit("*", { ...payload, eventName: event });
     }
 
-    off<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): void {
+    off<K extends keyof ExtendedEvents>(event: K, listener: (payload: ExtendedEvents[K]) => void): void {
       this.emitter.off(event as string | symbol, listener);
     }
 
-    removeListener<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): void {
+    removeListener<K extends keyof ExtendedEvents>(event: K, listener: (payload: ExtendedEvents[K]) => void): void {
       this.emitter.removeListener(event as string | symbol, listener);
     }
 
@@ -70,9 +75,9 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>>
       this.emitter.removeAllListeners();
     }
 
-    awaitEvent<K extends keyof Events>(event: K): Promise<Events[K]> {
+    awaitEvent<K extends keyof ExtendedEvents>(event: K): Promise<ExtendedEvents[K]> {
       return new Promise((resolve) => {
-        const handler = (payload: Events[K]) => {
+        const handler = (payload: ExtendedEvents[K]) => {
           this.emitter.off(event as string | symbol, handler);
           resolve(payload);
         };
@@ -136,3 +141,84 @@ export class SuperEmitter<Events extends Record<string, any> = Record<string, an
     });
   }
 }
+
+export class OmniBusEmitter extends CreateSuperTypedEmitterClass<Record<string, any>>() {
+  private connectedEmitters = new WeakMap<Function, any>();
+  private classToEmitterMap = new Map<Function, any>();
+  private listenerCleanupMap = new Map<Function, () => void>();
+  private symbolToClassMap = new Map<symbol, Function>();
+
+  connect<T extends { on: (event: "*", listener: any) => any; constructor: { IDENT: symbol } }>(
+    emitterClass: new (...args: any[]) => T,
+    emitter: T
+  ): void {
+    const emitterIdent = (emitterClass as any).IDENT;
+    if (!emitterIdent || typeof emitterIdent !== 'symbol') {
+      throw new Error(`Emitter class must have a static IDENT symbol property`);
+    }
+
+    // Store in both maps for different access patterns
+    this.connectedEmitters.set(emitterClass, emitter);
+    this.classToEmitterMap.set(emitterClass, emitter);
+    this.symbolToClassMap.set(emitterIdent, emitterClass);
+
+    // Listen to the wildcard event and forward all events to this omnibus
+    const cleanup = emitter.on("*", (payload: any) => {
+      const { eventName, ...eventPayload } = payload;
+      
+      // Add source emitter metadata to the payload
+      const enhancedPayload = {
+        ...eventPayload,
+        __sourceEmitter: emitterIdent
+      };
+      
+      this.emit(eventName as any, enhancedPayload);
+    });
+
+    // Store cleanup function for later disconnection
+    this.listenerCleanupMap.set(emitterClass, cleanup);
+  }
+
+  onType<Events extends Record<string, any>, K extends keyof Events>(
+    emitterIdent: symbol,
+    event: K,
+    listener: (payload: Events[K]) => void
+  ): () => void {
+    return this.on("*" as any, (payload: any) => {
+      if (payload.eventName === event && payload.__sourceEmitter === emitterIdent) {
+        const { eventName, __sourceEmitter, ...cleanPayload } = payload;
+        listener(cleanPayload as Events[K]);
+      }
+    });
+  }
+
+  get<T>(emitterClass: new (...args: any[]) => T): T | undefined {
+    return this.classToEmitterMap.get(emitterClass);
+  }
+
+  disconnect<T>(emitterClass: new (...args: any[]) => T): void {
+    const emitter = this.classToEmitterMap.get(emitterClass);
+    const cleanup = this.listenerCleanupMap.get(emitterClass);
+    
+    if (emitter && cleanup) {
+      // Remove the event listener
+      cleanup();
+      
+      // Remove from all maps
+      const emitterIdent = (emitterClass as any).IDENT;
+      if (emitterIdent) {
+        this.symbolToClassMap.delete(emitterIdent);
+      }
+      this.connectedEmitters.delete(emitterClass);
+      this.classToEmitterMap.delete(emitterClass);
+      this.listenerCleanupMap.delete(emitterClass);
+    }
+  }
+
+  getConnectedEmitters(): any[] {
+    return Array.from(this.classToEmitterMap.values());
+  }
+}
+
+// Re-export the singleton for convenience
+export { OmniBus } from "./OmniBus";

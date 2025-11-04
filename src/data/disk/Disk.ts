@@ -34,7 +34,7 @@ import { nanoid } from "nanoid";
 
 export abstract class Disk {
   remote: DiskEventsRemote;
-  local = new DiskEventsLocal(); //oops this should be put it init but i think it will break everything
+  local: DiskEventsLocal;
   ready: Promise<void> = Promise.resolve();
   mutex = new Mutex();
   _fs: CommonFileSystem;
@@ -70,6 +70,7 @@ export abstract class Disk {
     this._fs = fs;
     this._fileTree = fileTree;
     this.remote = new DiskEventsRemote(this.guid);
+    this.local = new DiskEventsLocal(this.guid);
   }
 
   initialIndexFromCache(cache: TreeNodeDirJType) {
