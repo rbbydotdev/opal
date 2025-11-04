@@ -51,7 +51,11 @@ export function WorkspaceMarkdownEditor({
   if (contents === null || !currentWorkspace) return null;
   return (
     <div className="flex flex-col h-full relative">
-      <ScrollSync elementRef={{ current: mdxEditorElement as HTMLElement }}>
+      <ScrollSync
+        elementRef={{ current: mdxEditorElement as HTMLElement }}
+        path={path}
+        workspaceName={currentWorkspace.name}
+      >
         <SnapApiPoolProvider max={isHistoryImageGenerationEnabled ? 1 : 0}>
           <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
             <EditorWithPlugins

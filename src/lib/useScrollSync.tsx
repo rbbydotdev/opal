@@ -21,13 +21,19 @@ function clamp(value: number, min = 0, max = 1) {
 export function useScrollSync({
   elementRef,
   listenRef,
+  path: currentPath,
+  workspaceName: currentWorkspace,
 }: {
   elementRef: RefObject<HTMLElement | null>;
   listenRef?: RefObject<HTMLElement | null>;
+  path?: string;
+  workspaceName?: string;
 }) {
   listenRef = listenRef || elementRef;
   const context = useContext(ScrollSyncCtx);
-  const { name, path } = useWorkspaceRoute();
+  const workspaceRoute = useWorkspaceRoute();
+  const path = currentPath || workspaceRoute.path;
+  const name = currentWorkspace || workspaceRoute.name;
   const originId = useMemo(() => nanoid(), []);
   const scrollId = name! + path!;
   const scrollPause = useRef(false);
@@ -65,14 +71,16 @@ export function useScrollSync({
       scrollPause.current = true;
       const maxX = el.scrollWidth - el.clientWidth;
       const maxY = el.scrollHeight - el.clientHeight;
-      el.scrollTo(x * maxX, y * maxY);
-      await new Promise((rs) =>
-        el.addEventListener("scroll", rs, {
-          passive: true,
+      listenEl.addEventListener(
+        "scroll",
+        () => {
+          scrollPause.current = false;
+        },
+        {
           once: true,
-        })
+        }
       );
-      scrollPause.current = false;
+      el.scrollTo(x * maxX, y * maxY);
     };
 
     listenEl.addEventListener("scroll", handleScroll, { passive: true });
@@ -96,11 +104,15 @@ export function ScrollSync({
   children,
   elementRef,
   listenRef,
+  path,
+  workspaceName,
 }: {
   children: React.ReactNode;
   elementRef: RefObject<HTMLElement | null>;
+  workspaceName?: string;
+  path?: string;
   listenRef?: RefObject<HTMLElement | null>;
 }) {
-  useScrollSync({ elementRef, listenRef });
+  useScrollSync({ elementRef, listenRef, path, workspaceName });
   return <>{children}</>;
 }
