@@ -274,7 +274,11 @@ export const CodeMirrorEditor = ({
 
   return (
     <>
-      <ScrollSync elementRef={{ current: cmScroller as HTMLElement }}>
+      <ScrollSync
+        elementRef={{ current: cmScroller as HTMLElement }}
+        path={path!}
+        workspaceName={currentWorkspace.name}
+      >
         <CodeMirrorToolbar
           key={path}
           setVimMode={setVimMode}

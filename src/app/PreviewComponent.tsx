@@ -35,9 +35,11 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
           )}
       <div className="w-full h-full relative">
         <ScrollSync
+          path={path}
+          workspaceName={currentWorkspace.name}
           elementRef={{ current: context.document?.documentElement || context.document?.body || null }}
           listenRef={{
-            current: context.window,
+            current: context.window as any,
           }}
         >
           <iframe
