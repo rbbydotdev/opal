@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Emittery from "emittery";
+import { SuperEmitter } from "@/lib/TypeEmitter";
 
 type PromiseReturningFunctionKeys<T> = Extract<
   {
@@ -15,12 +15,12 @@ type WatcherEvents<T> = {
 };
 
 export class WatchPromiseMembers<T extends Record<string, unknown>> {
-  public readonly events: Emittery<WatcherEvents<T>>;
+  public readonly events: SuperEmitter<WatcherEvents<T>>;
 
   public readonly watched: T;
 
   constructor(instance: T) {
-    this.events = new Emittery<WatcherEvents<T>>();
+    this.events = new SuperEmitter<WatcherEvents<T>>();
 
     // Step 3: Create the Proxy, which is the core of the logic.
     this.watched = new Proxy(instance, {

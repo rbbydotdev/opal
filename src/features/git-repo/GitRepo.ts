@@ -15,8 +15,8 @@ import { HideFs } from "@/data/fs/HideFs";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
+import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
 import { Mutex } from "async-mutex";
-import Emittery from "emittery";
 import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 import { gitAbbreviateRef } from "./gitAbbreviateRef";
@@ -141,7 +141,7 @@ type RepoLocalEventPayload = {
   [RepoEvents.GIT]: undefined;
   [RepoEvents.INFO]: RepoInfoType;
 };
-export class RepoEventsLocal extends Emittery<RepoLocalEventPayload> {}
+export class RepoEventsLocal extends CreateSuperTypedEmitterClass<RepoLocalEventPayload>() {}
 
 export type RepoRemoteEventPayload = {
   [RepoEvents.WORKTREE]: undefined;
@@ -342,7 +342,7 @@ export class GitRepo {
       ],
       async (propName) => {
         cb((this.globalPending = true));
-        await this.gitEvents.once(`${propName}:end`);
+        await new Promise((rs) => this.gitEvents.once(`${propName}:end`, rs));
         cb((this.globalPending = false));
       }
     );
