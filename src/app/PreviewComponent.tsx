@@ -4,6 +4,7 @@ import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
 import { Workspace } from "@/data/Workspace";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import { AbsPath, relPath } from "@/lib/paths2";
+import { ScrollSync } from "@/lib/useScrollSync";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 // import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
@@ -33,11 +34,21 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
             context.document.body
           )}
       <div className="w-full h-full relative">
-        <iframe
-          ref={iframeRef}
-          className="w-full h-full border-0 bg-white"
-          title={`${currentWorkspace.name} ${relPath(path)}`}
-        />
+        <ScrollSync
+          elementRef={{ current: context.document?.documentElement || context.document?.body || null }}
+          listenRef={{
+            current: context.window,
+            // current: iframeRef.current?.contentDocument?.documentElement ||
+            // iframeRef.current?.contentDocument?.body ||
+            // null,
+          }}
+        >
+          <iframe
+            ref={iframeRef}
+            className="w-full h-full border-0 bg-white"
+            title={`${currentWorkspace.name} ${relPath(path)}`}
+          />
+        </ScrollSync>
       </div>
     </>
   );

@@ -32,14 +32,17 @@ export function CreateTypedEmitterClass<Events extends Record<string, any>>() {
 export function CreateSuperTypedEmitterClass<Events extends Record<string, any>>() {
   return class {
     private emitter = new EventEmitter();
+    constructor() {
+      this.emitter.setMaxListeners(100);
+    }
 
     on<K extends keyof Events>(event: K | (keyof Events)[], listener: (payload: Events[K]) => void): () => void {
       if (Array.isArray(event)) {
-        const unsubscribers = event.map(e => {
+        const unsubscribers = event.map((e) => {
           this.emitter.on(e as string | symbol, listener);
           return () => this.emitter.off(e as string | symbol, listener);
         });
-        return () => unsubscribers.forEach(unsub => unsub());
+        return () => unsubscribers.forEach((unsub) => unsub());
       } else {
         this.emitter.on(event as string | symbol, listener);
         return () => this.emitter.off(event as string | symbol, listener);
@@ -85,14 +88,17 @@ export function CreateTypedEmitter<Events extends Record<string, any>>(): TypedE
 
 export class SuperEmitter<Events extends Record<string, any> = Record<string, any>> {
   private emitter = new EventEmitter();
+  constructor() {
+    this.emitter.setMaxListeners(100);
+  }
 
   on<K extends keyof Events>(event: K | (keyof Events)[], listener: (payload: Events[K]) => void): () => void {
     if (Array.isArray(event)) {
-      const unsubscribers = event.map(e => {
+      const unsubscribers = event.map((e) => {
         this.emitter.on(e as string | symbol, listener);
         return () => this.emitter.off(e as string | symbol, listener);
       });
-      return () => unsubscribers.forEach(unsub => unsub());
+      return () => unsubscribers.forEach((unsub) => unsub());
     } else {
       this.emitter.on(event as string | symbol, listener);
       return () => this.emitter.off(event as string | symbol, listener);

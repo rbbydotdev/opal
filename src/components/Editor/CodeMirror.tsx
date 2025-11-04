@@ -6,7 +6,6 @@ import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { GitConflictNotice } from "@/components/GitConflictNotice";
-import { ScrollSyncProvider } from "@/components/ScrollSync";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
@@ -14,11 +13,11 @@ import { Workspace } from "@/data/Workspace";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
-import { useScrollSyncForEditor } from "@/hooks/useScrollSyncForEditor";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { mustache } from "@/lib/codemirror/mustacheLanguage";
 import { OpalMimeType } from "@/lib/fileType";
 import { AbsPath } from "@/lib/paths2";
+import { ScrollSync } from "@/lib/useScrollSync";
 import { cn } from "@/lib/utils";
 import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
@@ -270,26 +269,27 @@ export const CodeMirrorEditor = ({
   }, [value]);
 
   const { path } = useWorkspaceRoute();
-  const { scrollEmitter, sessionId } = useScrollSyncForEditor(currentWorkspace, path);
 
   const cmScroller = useWatchElement(".cm-scroller");
 
   return (
-    <ScrollSyncProvider scrollEl={cmScroller as HTMLElement} scrollEmitter={scrollEmitter} sessionId={sessionId}>
-      <CodeMirrorToolbar
-        key={path}
-        setVimMode={setVimMode}
-        vimMode={vimMode}
-        currentWorkspace={currentWorkspace}
-        path={path}
-        conflictResolution={globalConflictResolution}
-        setConflictResolution={setGlobalConflictResolution}
-        hasConflicts={hasConflicts}
-        mimeType={mimeType}
-        editorView={viewRef.current}
-      />
-      <div className={cn("code-mirror-source-editor bg-background min-h-0", className)} ref={editorRef} />
-    </ScrollSyncProvider>
+    <>
+      <ScrollSync elementRef={{ current: cmScroller as HTMLElement }}>
+        <CodeMirrorToolbar
+          key={path}
+          setVimMode={setVimMode}
+          vimMode={vimMode}
+          currentWorkspace={currentWorkspace}
+          path={path}
+          conflictResolution={globalConflictResolution}
+          setConflictResolution={setGlobalConflictResolution}
+          hasConflicts={hasConflicts}
+          mimeType={mimeType}
+          editorView={viewRef.current}
+        />
+        <div className={cn("code-mirror-source-editor bg-background min-h-0", className)} ref={editorRef} />
+      </ScrollSync>
+    </>
   );
 };
 

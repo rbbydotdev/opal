@@ -8,6 +8,7 @@ import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { EditorSidebarLayout } from "@/features/preview-pane/EditorSidebarLayout";
 import { usePreviewPaneProps } from "@/features/preview-pane/usePreviewPaneProps";
 import useFavicon from "@/hooks/useFavicon";
+import { ScrollSyncProvider } from "@/lib/useScrollSync";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
@@ -40,22 +41,24 @@ function WorkspaceLayout() {
         </FileTreeMenuCtxProvider>
       </FileTreeProvider>
       <div className="min-w-0 h-full flex w-full">
-        <EditorSidebarLayout
-          sidebar={<EditorSidebar className="main-editor-sidebar" />}
-          main={<Outlet />}
-          rightPaneEnabled={canShow}
-          rightPane={
-            previewURL && previewNode?.path ? (
-              <PreviewIFrame
-                key={previewKey}
-                refresh={() => setKey((k) => k + 1)}
-                previewPath={previewNode.path}
-                currentWorkspace={currentWorkspace}
-                setPreviewNode={setPreviewNode}
-              />
-            ) : null
-          }
-        />
+        <ScrollSyncProvider>
+          <EditorSidebarLayout
+            sidebar={<EditorSidebar className="main-editor-sidebar" />}
+            main={<Outlet />}
+            rightPaneEnabled={canShow}
+            rightPane={
+              previewURL && previewNode?.path ? (
+                <PreviewIFrame
+                  key={previewKey}
+                  refresh={() => setKey((k) => k + 1)}
+                  previewPath={previewNode.path}
+                  currentWorkspace={currentWorkspace}
+                  setPreviewNode={setPreviewNode}
+                />
+              ) : null
+            }
+          />
+        </ScrollSyncProvider>
       </div>
     </>
   );

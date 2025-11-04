@@ -172,7 +172,7 @@ export class IframeContextProvider extends BaseContextProvider {
   }
 
   get doc(): Document | null {
-    return this.iframeRef.current?.contentDocument || null;
+    return this.iframeRef.current?.contentDocument || this.iframeRef.current?.contentWindow?.document || null;
   }
 
   get win(): Window | null {
