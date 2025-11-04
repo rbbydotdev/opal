@@ -143,24 +143,19 @@ export class SuperEmitter<Events extends Record<string, any> = Record<string, an
 }
 
 export class OmniBusEmitter extends CreateSuperTypedEmitterClass<Record<string, any>>() {
-  private connectedEmitters = new WeakMap<Function, any>();
-  private classToEmitterMap = new Map<Function, any>();
-  private listenerCleanupMap = new Map<Function, () => void>();
-  private symbolToClassMap = new Map<symbol, Function>();
+  private symbolToEmitterMap = new Map<symbol, any>();
+  private listenerCleanupMap = new Map<symbol, () => void>();
 
-  connect<T extends { on: (event: "*", listener: any) => any; constructor: { IDENT: symbol } }>(
-    emitterClass: new (...args: any[]) => T,
+  connect<T extends { on: (event: "*", listener: any) => any }>(
+    emitterIdent: symbol,
     emitter: T
   ): void {
-    const emitterIdent = (emitterClass as any).IDENT;
-    if (!emitterIdent || typeof emitterIdent !== 'symbol') {
-      throw new Error(`Emitter class must have a static IDENT symbol property`);
+    if (typeof emitterIdent !== 'symbol') {
+      throw new Error(`emitterIdent must be a symbol`);
     }
 
-    // Store in both maps for different access patterns
-    this.connectedEmitters.set(emitterClass, emitter);
-    this.classToEmitterMap.set(emitterClass, emitter);
-    this.symbolToClassMap.set(emitterIdent, emitterClass);
+    // Store emitter by symbol
+    this.symbolToEmitterMap.set(emitterIdent, emitter);
 
     // Listen to the wildcard event and forward all events to this omnibus
     const cleanup = emitter.on("*", (payload: any) => {
@@ -176,7 +171,7 @@ export class OmniBusEmitter extends CreateSuperTypedEmitterClass<Record<string, 
     });
 
     // Store cleanup function for later disconnection
-    this.listenerCleanupMap.set(emitterClass, cleanup);
+    this.listenerCleanupMap.set(emitterIdent, cleanup);
   }
 
   onType<Events extends Record<string, any>, K extends keyof Events>(
@@ -192,31 +187,30 @@ export class OmniBusEmitter extends CreateSuperTypedEmitterClass<Record<string, 
     });
   }
 
-  get<T>(emitterClass: new (...args: any[]) => T): T | undefined {
-    return this.classToEmitterMap.get(emitterClass);
+  get<T>(emitterIdent: symbol): T | undefined {
+    return this.symbolToEmitterMap.get(emitterIdent);
   }
 
-  disconnect<T>(emitterClass: new (...args: any[]) => T): void {
-    const emitter = this.classToEmitterMap.get(emitterClass);
-    const cleanup = this.listenerCleanupMap.get(emitterClass);
+  disconnect(emitterIdent: symbol): void {
+    const emitter = this.symbolToEmitterMap.get(emitterIdent);
+    const cleanup = this.listenerCleanupMap.get(emitterIdent);
     
     if (emitter && cleanup) {
       // Remove the event listener
       cleanup();
       
       // Remove from all maps
-      const emitterIdent = (emitterClass as any).IDENT;
-      if (emitterIdent) {
-        this.symbolToClassMap.delete(emitterIdent);
-      }
-      this.connectedEmitters.delete(emitterClass);
-      this.classToEmitterMap.delete(emitterClass);
-      this.listenerCleanupMap.delete(emitterClass);
+      this.symbolToEmitterMap.delete(emitterIdent);
+      this.listenerCleanupMap.delete(emitterIdent);
     }
   }
 
   getConnectedEmitters(): any[] {
-    return Array.from(this.classToEmitterMap.values());
+    return Array.from(this.symbolToEmitterMap.values());
+  }
+
+  getConnectedIdentifiers(): symbol[] {
+    return Array.from(this.symbolToEmitterMap.keys());
   }
 }
 
