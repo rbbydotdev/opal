@@ -26,7 +26,7 @@ export async function handleImageRequest(event: FetchEvent, url: URL, workspaceN
         return cachedResponse;
       }
     }
-    console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace`);
+    console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace name ${workspaceName}`);
     const workspace = await SWWStore.tryWorkspace(workspaceName);
 
     if (!workspace) throw new Error("Workspace not found " + workspaceName);

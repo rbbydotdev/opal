@@ -224,7 +224,7 @@ export class WindowContextProvider extends BaseContextProvider {
 
   open(): void {
     if (!this.windowRef.current || this.windowRef.current.closed) {
-      this.windowRef.current = window.open("/preview_blank.html?previewMode=true", "_blank");
+      this.windowRef.current = window.open(`/preview_blank.html?previewMode=true`, "_blank");
       if (!this.windowRef.current) {
         throw new Error("Failed to open external window");
       }

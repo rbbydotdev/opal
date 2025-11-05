@@ -1,3 +1,4 @@
+// import { useWindowContextProvider } from "@/app/IframeContextProvider";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { toast } from "@/components/ui/sonner";
@@ -19,7 +20,6 @@ import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
-import { openWorkspaceWindow } from "@/lib/workspaceContext";
 import { Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import fuzzysort from "fuzzysort";
@@ -812,6 +812,8 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const { path: currentPath, name: workspaceName } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
   const navigate = useNavigate();
+
+  // const { open: openPreview } = useWindowContextProvider();
   const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useTheme();
 
   const cmdMap = useMemo(
@@ -819,17 +821,14 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       ({
         // MARK: Editor Commands
 
-        "Open External Preview": [
-          NewCmdExec(() => {
-            if (workspaceName && previewURL) {
-              // Extract session ID from preview URL if available
-              const url = new URL(previewURL, window.location.origin);
-              const sessionId = url.searchParams.get("sessionId");
+        // "Open External Preview": [
+        //   NewCmdExec(() => {
+        //     if (workspaceName) {
+        //       openPreview();
+        //     }
+        //   }),
+        // ],
 
-              openWorkspaceWindow(previewURL, workspaceName, sessionId || undefined);
-            }
-          }),
-        ],
         //
         // MARK: File Commands
         //
@@ -1065,7 +1064,6 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       newDir,
       newFile,
       playbook,
-      previewURL,
       renameDirOrFile,
       repo,
       setMode,
@@ -1085,7 +1083,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     if (!currentFile?.isTreeFile()) {
       cmds.add("Rename Current File");
       cmds.add("Trash File");
-      cmds.add("Open External Preview");
+      // cmds.add("Open External Preview");
     }
     if (!isMarkdown) {
       cmds.add("Rich Text View");

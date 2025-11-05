@@ -1,3 +1,4 @@
+import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SelectableList } from "@/components/ui/SelectableList";
 import { BuildDAO } from "@/data/BuildDAO";
 import { coerceError } from "@/lib/errors";
@@ -82,31 +83,34 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
       <SelectableList.Actions />
 
       <SelectableList.Content>
-        {builds.map((build) => (
-          <SelectableList.Item key={build.guid} id={build.guid}>
-            <SelectableList.ItemIcon>
-              <Archive size={12} className="flex-shrink-0 text-muted-foreground" />
-            </SelectableList.ItemIcon>
-            <div className="flex flex-col min-w-0 ml-1">
-              <div className="font-mono text-xs truncate">{build.label}</div>
-              <div className="text-2xs text-muted-foreground truncate">
-                Disk: {build.diskId.slice(-8)} • {timeAgo(build.timestamp)}
+        <div className="flex flex-col gap-2 mt-4">
+          {builds.length === 0 && <EmptySidebarLabel label="no builds" />}
+          {builds.map((build) => (
+            <SelectableList.Item key={build.guid} id={build.guid}>
+              <SelectableList.ItemIcon>
+                <Archive size={12} className="flex-shrink-0 text-muted-foreground" />
+              </SelectableList.ItemIcon>
+              <div className="flex flex-col min-w-0 ml-1">
+                <div className="font-mono text-xs truncate">{build.label}</div>
+                <div className="text-2xs text-muted-foreground truncate">
+                  Disk: {build.diskId.slice(-8)} • {timeAgo(build.timestamp)}
+                </div>
               </div>
-            </div>
-            <SelectableList.ItemMenu>
-              <SelectableList.ItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
-                View
-              </SelectableList.ItemAction>
-              <SelectableList.ItemAction
-                onClick={() => handleDelete(build.guid)}
-                icon={<Delete className="w-4 h-4" />}
-                destructive
-              >
-                Delete
-              </SelectableList.ItemAction>
-            </SelectableList.ItemMenu>
-          </SelectableList.Item>
-        ))}
+              <SelectableList.ItemMenu>
+                <SelectableList.ItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
+                  View
+                </SelectableList.ItemAction>
+                <SelectableList.ItemAction
+                  onClick={() => handleDelete(build.guid)}
+                  icon={<Delete className="w-4 h-4" />}
+                  destructive
+                >
+                  Delete
+                </SelectableList.ItemAction>
+              </SelectableList.ItemMenu>
+            </SelectableList.Item>
+          ))}
+        </div>
       </SelectableList.Content>
     </SelectableList.Root>
   );

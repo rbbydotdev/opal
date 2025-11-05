@@ -3,7 +3,7 @@ import { DiskDAO } from "@/data/disk/DiskDAO";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { ClientDb } from "@/data/instance";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { AbsPath, encodePath, joinPath, relPath } from "@/lib/paths2";
+import { AbsPath, joinPath, relPath } from "@/lib/paths2";
 import { nanoid } from "nanoid";
 
 export type BuildJType = BuildRecord;
@@ -13,6 +13,7 @@ export class BuildDAO {
   label: string;
   timestamp: Date;
   diskId: string;
+  workspaceId: string;
   buildPath: AbsPath;
   logs: BuildLogLine[] = [];
 
@@ -23,6 +24,7 @@ export class BuildDAO {
     this.label = build.label;
     this.timestamp = build.timestamp;
     this.diskId = build.diskId;
+    this.workspaceId = build.workspaceId;
     this.buildPath = build.buildPath;
   }
 
@@ -36,18 +38,30 @@ export class BuildDAO {
       label: this.label,
       timestamp: this.timestamp,
       diskId: this.diskId,
+      workspaceId: this.workspaceId,
       buildPath: this.buildPath,
       logs: this.logs,
     };
   }
 
-  static CreateNew(label: string, diskId: string, guid: string = BuildDAO.guid()) {
+  static CreateNew({
+    label,
+    diskId,
+    workspaceId,
+    guid = BuildDAO.guid(),
+  }: {
+    label: string;
+    diskId: string;
+    workspaceId: string;
+    guid: string;
+  }) {
     const buildPath = joinPath(SpecialDirs.Build, relPath(guid));
     return new BuildDAO({
       guid,
       label,
       timestamp: new Date(),
       diskId,
+      workspaceId,
       buildPath,
       logs: [],
     });
@@ -57,9 +71,11 @@ export class BuildDAO {
     return ClientDb.builds.where("guid").equals(guid).first();
   }
 
-  static async all() {
-    const builds = await ClientDb.builds.orderBy("timestamp").reverse().toArray();
-    return builds.map((build) => BuildDAO.FromJSON(build));
+  static async all(workspaceId?: string) {
+    const buildQuery = !workspaceId
+      ? ClientDb.builds.orderBy("timestamp")
+      : ClientDb.builds.where("workspaceId").equals(workspaceId);
+    return (await buildQuery.reverse().sortBy("timestamp")).map((build) => BuildDAO.FromJSON(build));
   }
 
   static async allForDisk(diskId: string) {
@@ -88,6 +104,7 @@ export class BuildDAO {
       guid: this.guid,
       label: this.label,
       timestamp: this.timestamp,
+      workspaceId: this.workspaceId,
       diskId: this.diskId,
       buildPath: this.buildPath,
       logs: this.logs,
@@ -105,19 +122,11 @@ export class BuildDAO {
   }
 
   async delete() {
-    console.log(`BuildDAO.delete() called for build ${this.guid}`);
-    console.log(`Build path: ${this.buildPath}`);
-    console.log(`Disk ID: ${this.diskId}`);
-
     const disk = await this.getDisk();
-    console.log(`Retrieved disk:`, disk ? "Found" : "Not found");
 
     if (disk) {
       try {
-        console.log(`Attempting to remove directory: ${encodePath(this.buildPath)}`);
-        // await disk.remove(encodePath(this.buildPath), { recursive: true });
-        await disk.removeFile(this.buildPath);
-        console.log(`Successfully removed build directory: ${this.buildPath}`);
+        await disk.removeMultipleFiles([this.buildPath]);
       } catch (error) {
         console.error(`Failed to remove build files at ${this.buildPath}:`, error);
       }
@@ -125,7 +134,6 @@ export class BuildDAO {
       console.warn(`No disk found for diskId: ${this.diskId}`);
     }
 
-    console.log(`Deleting database records for build ${this.guid} and disk ${this.diskId}`);
     return Promise.all([DiskDAO.delete(this.diskId), BuildDAO.delete(this.guid)]);
   }
   static delete(guid: string) {

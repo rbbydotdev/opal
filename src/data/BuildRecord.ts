@@ -5,6 +5,7 @@ export interface BuildRecord {
   label: string;
   timestamp: Date;
   diskId: string;
+  workspaceId: string;
   buildPath: AbsPath;
   logs: BuildLogLine[];
 }

@@ -3,7 +3,7 @@ import { BuildDAO } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { NullDisk } from "@/data/NullDisk";
-import { FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
+import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
@@ -116,10 +116,11 @@ export class BuildRunner {
     this.outputDisk = this.sourceDisk;
 
     // Use provided label or generate automatically
-    const label = buildLabel || `${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Build - ${new Date().toLocaleString()}`;
+    const label =
+      buildLabel || `${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Build - ${new Date().toLocaleString()}`;
     const guid = buildId || BuildDAO.guid();
-    this.buildDao = BuildDAO.CreateNew(label, this.sourceDisk.guid, guid);
-    
+    this.buildDao = BuildDAO.CreateNew({ label, diskId: this.sourceDisk.guid, guid, workspaceId: this.workspace.guid });
+
     // Set output path from build DAO
     this.outputPath = this.buildDao.getBuildPath();
   }
@@ -130,7 +131,7 @@ export class BuildRunner {
   async execute(abortSignal?: AbortSignal): Promise<BuildResult> {
     try {
       this.logInfo(`Starting ${this.strategy} build, id ${this.buildDao.guid}...`);
-      this.logInfo(`Workspace: ${this.workspace ? 'initialized' : 'missing'}`);
+      this.logInfo(`Workspace: ${this.workspace ? "initialized" : "missing"}`);
       this.logInfo(`Source disk: ${this.sourceDisk.guid}`);
       this.logInfo(`Output path: ${this.outputPath}`);
 
@@ -145,9 +146,9 @@ export class BuildRunner {
       // Index the source directory
       this.logInfo("Indexing source files...");
       await this.sourceDisk.triggerIndex();
-      
+
       const fileTree = this.sourceDisk.fileTree;
-      this.logInfo(`File tree loaded with ${fileTree ? 'files found' : 'no files'}`);
+      this.logInfo(`File tree loaded with ${fileTree ? "files found" : "no files"}`);
 
       await this.ensureOutputDirectory();
 

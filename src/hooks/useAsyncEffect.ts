@@ -1,11 +1,14 @@
 import { useEffect, useRef } from "react";
 
-export function useAsyncEffect(effect: (signal: AbortSignal) => Promise<void | (() => void)>, deps: React.DependencyList): void {
+export function useAsyncEffect(
+  effect: (signal: AbortSignal) => Promise<void | (() => void)>,
+  deps: React.DependencyList
+): void {
   const unsubRef = useRef<(() => void) | void>(() => {});
 
   useEffect(() => {
     const controller = new AbortController();
-    
+
     void (async () => {
       try {
         const unsub = await effect(controller.signal);
@@ -18,7 +21,7 @@ export function useAsyncEffect(effect: (signal: AbortSignal) => Promise<void | (
         }
       } catch (error) {
         // Ignore AbortError
-        if (error instanceof Error && error.name !== 'AbortError') {
+        if (error instanceof Error && error.name !== "AbortError") {
           throw error;
         }
       }
