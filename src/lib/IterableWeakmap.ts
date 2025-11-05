@@ -1,44 +1,80 @@
-export interface IIterableWeakMap<T extends object, P> {
-  get: (key: T) => P | undefined;
-  set: (key: T, value: P) => IIterableWeakMap<T, P>;
-  delete: (key: T) => boolean;
-  has: (key: T) => boolean;
-  keys: () => T[];
-  values: () => P[];
-  [Symbol.toStringTag]: string;
+export interface IIterableWeakMap<T extends object, V> {
+  get(key: T): V | undefined;
+  set(key: T, value: V): IIterableWeakMap<T, V>;
+  delete(key: T): boolean;
+  has(key: T): boolean;
+  keys(): IterableIterator<T>;
+  values(): IterableIterator<V>;
+  entries(): IterableIterator<[T, V]>;
+  [Symbol.iterator](): IterableIterator<[T, V]>;
+  readonly [Symbol.toStringTag]: string;
 }
-export default function IterableWeakMap<T extends object, P>(): IIterableWeakMap<T, P> {
-  const weakMap = new WeakMap(),
-    arrKeys: T[] = [],
-    arrValues: P[] = [],
-    objectToIndex = new WeakMap<T, number>(),
-    _ = {
-      get [Symbol.toStringTag]() {
-        return "IterableWeakMap";
-      },
-      get: (key: T): P | undefined => weakMap.get(key) as P | undefined,
-      set: (key: T, value: P): IIterableWeakMap<T, P> => {
-        weakMap.set(key, value);
-        objectToIndex.set(key, arrKeys.length);
-        arrKeys.push(key);
-        arrValues.push(value);
 
-        return _;
-      },
-      delete: (key: T): boolean => {
-        if (!weakMap.get(key) || !objectToIndex.has(key)) {
-          return false;
+export class IterableWeakMap<T extends object, V> implements IIterableWeakMap<T, V> {
+  // Internal storages
+  #weakMap = new WeakMap<T, V>();
+  #refs = new Set<WeakRef<T>>();
+  #registry = new FinalizationRegistry<WeakRef<T>>((ref) => {
+    // Cleanup any dead refs when the key is garbage-collected
+    this.#refs.delete(ref);
+  });
+
+  get [Symbol.toStringTag]() {
+    return "IterableWeakMap";
+  }
+
+  get(key: T): V | undefined {
+    return this.#weakMap.get(key);
+  }
+
+  set(key: T, value: V): this {
+    this.#weakMap.set(key, value);
+    const ref = new WeakRef(key);
+    this.#refs.add(ref);
+    this.#registry.register(key, ref);
+    return this;
+  }
+
+  delete(key: T): boolean {
+    const deleted = this.#weakMap.delete(key);
+    if (deleted) {
+      for (const ref of this.#refs) {
+        if (ref.deref() === key) {
+          this.#refs.delete(ref);
+          this.#registry.unregister(ref);
+          break;
         }
-        weakMap.delete(key);
-        arrKeys.splice(objectToIndex.get(key)!, 1);
-        arrValues.splice(objectToIndex.get(key)!, 1);
-        objectToIndex.delete(key);
+      }
+    }
+    return deleted;
+  }
 
-        return true;
-      },
-      has: (key: T): boolean => weakMap.has(key),
-      keys: (): T[] => arrKeys,
-      values: (): P[] => arrValues,
-    };
-  return Object.freeze(_);
+  has(key: T): boolean {
+    return this.#weakMap.has(key);
+  }
+
+  *keys(): IterableIterator<T> {
+    for (const ref of this.#refs) {
+      const key = ref.deref();
+      if (key) yield key;
+    }
+  }
+
+  *values(): IterableIterator<V> {
+    for (const key of this.keys()) {
+      const value = this.#weakMap.get(key);
+      if (value !== undefined) yield value;
+    }
+  }
+
+  *entries(): IterableIterator<[T, V]> {
+    for (const key of this.keys()) {
+      const value = this.#weakMap.get(key);
+      if (value !== undefined) yield [key, value] as [T, V];
+    }
+  }
+
+  *[Symbol.iterator](): IterableIterator<[T, V]> {
+    yield* this.entries();
+  }
 }

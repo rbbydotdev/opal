@@ -17,6 +17,7 @@ import { SourceTreeNode, TreeDir, TreeDirRoot, TreeNode, TreeNodeDirJType } from
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceFileUrlsInMarkdown } from "@/lib/markdown/replaceFileUrlsInMarkdown";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
+import { OmniBus } from "@/lib/OmniBus";
 import {
   AbsPath,
   absPath,
@@ -33,6 +34,7 @@ import { Mutex } from "async-mutex";
 import { nanoid } from "nanoid";
 
 export abstract class Disk {
+  static readonly IDENT = Symbol("Disk");
   remote: DiskEventsRemote;
   local: DiskEventsLocal;
   ready: Promise<void> = Promise.resolve();
@@ -71,6 +73,12 @@ export abstract class Disk {
     this._fileTree = fileTree;
     this.remote = new DiskEventsRemote(this.guid);
     this.local = new DiskEventsLocal(this.guid);
+    this.unsubs.push(OmniBus.connect(Disk.IDENT, this.local));
+    // OmniBus.onType<DiskLocalEventPayload, "index">(Disk.IDENT, "index", (payload) => {
+    //   if (payload?.type === "create") {
+    //     console.log("index payload", payload);
+    //   }
+    // });
   }
 
   initialIndexFromCache(cache: TreeNodeDirJType) {
@@ -141,17 +149,15 @@ export abstract class Disk {
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot());
   }
-  // async init({ skipListeners, onError }: { skipListeners?: boolean; onError?: (error: Error) => void } = {}) {
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     await this.ready;
     const { indexCache } = await this.connector.hydrate();
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot()); //load first from cache
-    await this.hydrateIndexFromDisk(); /*.catch((error: Error) => {
-      if (onError) onError(error);
-      else console.warn("Failed to hydrate index from disk, continuing with cached index:", error);
-    });*/
+    await this.hydrateIndexFromDisk();
     if (isServiceWorker() || isWebWorker() || skipListeners) {
-      console.debug("skipping remote listeners in service worker");
+      console.debug(
+        `skipping remote listeners (reason ${isServiceWorker() ? "service worker" : isWebWorker() ? "web worker" : "skipListeners"})`
+      );
       return () => {};
     } else {
       return this.setupRemoteListeners();
@@ -180,7 +186,6 @@ export abstract class Disk {
     const listeners = [
       this.remote.init(),
       this.remote.on(DiskEvents.OUTSIDE_WRITE, handleOutsideWrite),
-      // >>>>>>>> this.remote.on(DiskEvents.RENAME, handleRename),
       this.remote.on(DiskEvents.INDEX, async (data) => {
         if (data?.type === "rename") return handleRename(data.details);
       }),

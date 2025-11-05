@@ -1,4 +1,16 @@
 import { EventEmitter } from "events";
+import { IterableWeakSet } from "./IterableWeakSet";
+
+// Helper function to create symbol-like objects for emitter identification
+export function EmitterSymbol(description?: string): object {
+  return Object.freeze({
+    description: description || "",
+    [Symbol.toStringTag]: "EmitterSymbol",
+    toString() {
+      return `EmitterSymbol(${String(this.description)})`;
+    },
+  });
+}
 
 export type TypedEmitter<Events extends Record<string, any>> = {
   on<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): EventEmitter;
@@ -40,7 +52,10 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
       this.emitter.setMaxListeners(100);
     }
 
-    on<K extends keyof ExtendedEvents>(event: K | (keyof Events)[], listener: (payload: ExtendedEvents[K]) => void): () => void {
+    on<K extends keyof ExtendedEvents>(
+      event: K | (keyof Events)[],
+      listener: (payload: ExtendedEvents[K]) => void
+    ): () => void {
       if (Array.isArray(event)) {
         const unsubscribers = event.map((e) => {
           this.emitter.on(e as string | symbol, listener);
@@ -143,76 +158,146 @@ export class SuperEmitter<Events extends Record<string, any> = Record<string, an
 }
 
 export class OmniBusEmitter extends CreateSuperTypedEmitterClass<Record<string, any>>() {
-  private symbolToEmitterMap = new Map<symbol, any>();
-  private listenerCleanupMap = new Map<symbol, () => void>();
+  private instanceToEmitterMap = new WeakMap<object, any>();
+  private instanceToCleanupMap = new WeakMap<object, () => void>();
+  private instanceToClassMap = new WeakMap<object, symbol>();
+  private classToInstancesMap = new Map<symbol, IterableWeakSet<object>>();
 
   connect<T extends { on: (event: "*", listener: any) => any }>(
-    emitterIdent: symbol,
-    emitter: T
-  ): void {
-    if (typeof emitterIdent !== 'symbol') {
-      throw new Error(`emitterIdent must be a symbol`);
+    classIdent: symbol,
+    emitter: T,
+    instanceIdent?: object
+  ): () => void {
+    if (typeof classIdent !== "symbol") {
+      throw new Error(`classIdent must be a symbol`);
     }
 
-    // Store emitter by symbol
-    this.symbolToEmitterMap.set(emitterIdent, emitter);
+    // Use provided instanceIdent, emitter's IIDENT, or generate one
+    const finalInstanceIdent =
+      instanceIdent || (emitter as any).IIDENT || EmitterSymbol(`${classIdent.description || "Unknown"}Instance`);
+
+    // Store emitter by instance identifier using WeakMap
+    this.instanceToEmitterMap.set(finalInstanceIdent, emitter);
+    this.instanceToClassMap.set(finalInstanceIdent, classIdent);
+
+    // Track instances by class using IterableWeakSet
+    if (!this.classToInstancesMap.has(classIdent)) {
+      this.classToInstancesMap.set(classIdent, new IterableWeakSet());
+    }
+    this.classToInstancesMap.get(classIdent)!.add(finalInstanceIdent);
 
     // Listen to the wildcard event and forward all events to this omnibus
     const cleanup = emitter.on("*", (payload: any) => {
       const { eventName, ...eventPayload } = payload;
-      
+
       // Add source emitter metadata to the payload
       const enhancedPayload = {
         ...eventPayload,
-        __sourceEmitter: emitterIdent
+        __sourceClass: classIdent,
+        __sourceInstance: finalInstanceIdent,
+        eventName,
       };
-      
+
       this.emit(eventName as any, enhancedPayload);
     });
 
-    // Store cleanup function for later disconnection
-    this.listenerCleanupMap.set(emitterIdent, cleanup);
+    // Store cleanup function using WeakMap
+    this.instanceToCleanupMap.set(finalInstanceIdent, cleanup);
+
+    // Return disconnect function
+    return () => this.disconnect(finalInstanceIdent);
   }
 
   onType<Events extends Record<string, any>, K extends keyof Events>(
-    emitterIdent: symbol,
+    classIdent: symbol,
     event: K,
     listener: (payload: Events[K]) => void
   ): () => void {
     return this.on("*" as any, (payload: any) => {
-      if (payload.eventName === event && payload.__sourceEmitter === emitterIdent) {
-        const { eventName, __sourceEmitter, ...cleanPayload } = payload;
+      if (payload.eventName === event && payload.__sourceClass === classIdent) {
+        const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
         listener(cleanPayload as Events[K]);
       }
     });
   }
 
-  get<T>(emitterIdent: symbol): T | undefined {
-    return this.symbolToEmitterMap.get(emitterIdent);
+  onInstance<Events extends Record<string, any>, K extends keyof Events>(
+    instanceIdent: object,
+    event: K,
+    listener: (payload: Events[K]) => void
+  ): () => void {
+    return this.on("*" as any, (payload: any) => {
+      if (payload.eventName === event && payload.__sourceInstance === instanceIdent) {
+        const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
+        listener(cleanPayload as Events[K]);
+      }
+    });
   }
 
-  disconnect(emitterIdent: symbol): void {
-    const emitter = this.symbolToEmitterMap.get(emitterIdent);
-    const cleanup = this.listenerCleanupMap.get(emitterIdent);
-    
+  get<T>(instanceIdent: object): T | undefined {
+    return this.instanceToEmitterMap.get(instanceIdent);
+  }
+
+  getByClass<T>(classIdent: symbol): T[] {
+    const instances = this.classToInstancesMap.get(classIdent);
+    if (!instances) return [];
+
+    return Array.from(instances)
+      .map((instance) => this.instanceToEmitterMap.get(instance))
+      .filter((emitter) => emitter !== undefined) as T[];
+  }
+
+  disconnect(instanceIdent: object): void {
+    const emitter = this.instanceToEmitterMap.get(instanceIdent);
+    const cleanup = this.instanceToCleanupMap.get(instanceIdent);
+    const classIdent = this.instanceToClassMap.get(instanceIdent);
+
     if (emitter && cleanup) {
       // Remove the event listener
       cleanup();
-      
-      // Remove from all maps
-      this.symbolToEmitterMap.delete(emitterIdent);
-      this.listenerCleanupMap.delete(emitterIdent);
+
+      // Remove from class tracking
+      if (classIdent) {
+        const instances = this.classToInstancesMap.get(classIdent);
+        if (instances) {
+          instances.delete(instanceIdent);
+          // IterableWeakSet will automatically clean up, but we can remove empty entries
+          // Note: IterableWeakSet doesn't have a size property, so we'll keep the entry
+        }
+      }
+
+      // WeakMaps will automatically clean themselves up
+      // but we can explicitly delete for immediate cleanup
+      this.instanceToEmitterMap.delete(instanceIdent);
+      this.instanceToCleanupMap.delete(instanceIdent);
+      this.instanceToClassMap.delete(instanceIdent);
+    }
+  }
+
+  disconnectClass(classIdent: symbol): void {
+    const instances = this.classToInstancesMap.get(classIdent);
+    if (instances) {
+      // Disconnect all instances of this class
+      // Convert to array first since disconnect() modifies the set
+      const instanceArray = Array.from(instances);
+      instanceArray.forEach((instance) => this.disconnect(instance));
     }
   }
 
   getConnectedEmitters(): any[] {
-    return Array.from(this.symbolToEmitterMap.values());
+    const emitters: any[] = [];
+    for (const instances of this.classToInstancesMap.values()) {
+      for (const instance of instances) {
+        const emitter = this.instanceToEmitterMap.get(instance);
+        if (emitter) emitters.push(emitter);
+      }
+    }
+    return emitters;
   }
 
-  getConnectedIdentifiers(): symbol[] {
-    return Array.from(this.symbolToEmitterMap.keys());
+  getConnectedClasses(): symbol[] {
+    return Array.from(this.classToInstancesMap.keys());
   }
 }
 
 // Re-export the singleton for convenience
-export { OmniBus } from "./OmniBus";
