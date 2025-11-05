@@ -13,6 +13,9 @@ import {
   isHtml,
   isImage,
   isMarkdown,
+  isMustache,
+  isPreviewable,
+  isTemplateFile,
   isText,
   joinPath,
   prefix,
@@ -20,7 +23,6 @@ import {
   strictPrefix,
 } from "@/lib/paths2";
 import { extname } from "path";
-import { isMustache, isPreviewable, isTemplateFile } from "../paths2";
 
 export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";

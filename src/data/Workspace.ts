@@ -1,4 +1,5 @@
 import { Disk } from "@/data/disk/Disk";
+import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "@/data/disk/DiskEvents";
 import { HistoryDAO } from "@/data/HistoryDAO";
 import { ImageCache } from "@/data/ImageCache";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
@@ -26,7 +27,6 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
-import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "@/data/disk/DiskEvents";
 import { DiskType } from "./DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
@@ -37,13 +37,13 @@ import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
 import { DefaultTemplate } from "@/data/WorkspaceTemplates";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
+import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
+import { reduceLineage } from "@/lib/paths2";
+import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
 import { DocxConvertType } from "@/types/DocxWorkerTypes";
 import * as Comlink from "comlink";
-import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
-import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "../lib/FileTree/TreeNode";
-import { reduceLineage } from "../lib/paths2";
 
 const WorkspaceEvents = {
   RENAME: "rename",

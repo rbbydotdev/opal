@@ -6,12 +6,12 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { RemoteAuthGithubDeviceOAuthRecordInternal, RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
+import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { ENV } from "@/lib/env";
 import { unwrapError } from "@/lib/errors";
 import { CheckCircle2Icon, ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { capitalizeFirst } from "../lib/capitalizeFirst";
 
 export function DeviceAuth({
   form,

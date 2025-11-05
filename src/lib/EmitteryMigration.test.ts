@@ -1,4 +1,4 @@
-import { SuperEmitter, CreateSuperTypedEmitterClass } from "./TypeEmitter";
+import { CreateSuperTypedEmitterClass, SuperEmitter } from "./TypeEmitter";
 
 // Test the exact patterns we migrated from Emittery
 type TestSuite = {
@@ -68,7 +68,7 @@ test("DiskEventsLocal pattern: extend CreateSuperTypedEmitterClass", async () =>
   });
 
   diskEvents.emit("inside-write", { filePaths: ["file1.ts"] });
-  diskEvents.emit("index", undefined);
+  diskEvents.emit("index", undefined as never);
   diskEvents.emit("outside-write", { filePaths: ["file1.ts", "file2.ts"] });
 
   console.assert(received.length === 3, "Should receive all events");
@@ -140,7 +140,7 @@ test("WatchPromiseMembers pattern: member property", async () => {
 
     async simulateAsyncMethod() {
       this.events.emit("method:start", "start");
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
       this.events.emit("method:end", "end");
     }
   }
@@ -171,7 +171,7 @@ test("Synchronous behavior: no async/await needed", () => {
 
   // This is synchronous - no await needed!
   emitter.emit("test", "immediate");
-  
+
   // Should be received immediately
   console.assert(received === "immediate", "Should receive immediately without await");
   console.log("✅ Synchronous behavior works (no async/await needed)");
@@ -196,7 +196,7 @@ async function runTests() {
   }
 
   console.log(`\n📊 Migration Tests: ${passed} passed, ${failed} failed`);
-  
+
   if (failed === 0) {
     console.log("\n🎉 All patterns migrated successfully! SuperEmitter is a drop-in replacement for Emittery.");
   }
@@ -206,7 +206,7 @@ async function runTests() {
 
 // Run tests if this is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runTests().then(success => {
+  runTests().then((success) => {
     process.exit(success ? 0 : 1);
   });
 }

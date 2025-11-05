@@ -364,10 +364,10 @@ export class GitRepo {
     });
     //TODO: added this donno if breaks in main or worker?
     void this.remote.on(RepoEvents.GIT, () => {
-      void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
+      void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY as never);
     });
     const onGitChange = debounce((_propName: string) => {
-      void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY);
+      void this.local.emit(RepoEvents.GIT, SIGNAL_ONLY as never);
       void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
       void this.sync();
     }, 500);

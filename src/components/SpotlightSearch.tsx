@@ -2,12 +2,14 @@ import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMod
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
-import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
+import { useFileTree } from "@/context/FileTreeProvider";
+import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { Thumb } from "@/data/Thumb";
 import { Workspace } from "@/data/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
+import { useWorkspacePathPreviewURL } from "@/features/preview-pane/useWorkspacePathPreviewURL";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
@@ -25,9 +27,6 @@ import { CommandIcon, FileTextIcon } from "lucide-react";
 import mime from "mime-types";
 import React, { forwardRef, JSX, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { useFileTree } from "../context/FileTreeProvider";
-import { useWorkspaceContext } from "../context/WorkspaceContext";
-import { useWorkspacePathPreviewURL } from "../features/preview-pane/useWorkspacePathPreviewURL";
 
 const SpotlightSearchItemLink = forwardRef<
   HTMLAnchorElement,
@@ -825,8 +824,8 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
             if (workspaceName && previewURL) {
               // Extract session ID from preview URL if available
               const url = new URL(previewURL, window.location.origin);
-              const sessionId = url.searchParams.get('sessionId');
-              
+              const sessionId = url.searchParams.get("sessionId");
+
               openWorkspaceWindow(previewURL, workspaceName, sessionId || undefined);
             }
           }),

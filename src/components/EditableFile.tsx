@@ -5,14 +5,13 @@ import { Thumb } from "@/data/Thumb";
 import { Workspace } from "@/data/Workspace";
 import { useEditable } from "@/hooks/useEditable";
 import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, equals, isImage, prefix, relPath } from "@/lib/paths2";
+import { AbsPath, equals, isImage, prefix, relPath, RelPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import { FileCode2, FileText } from "lucide-react";
 import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
-import { RelPath } from "../lib/paths2";
 
 export const EditableFile = ({
   depth,
