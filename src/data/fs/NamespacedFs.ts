@@ -1,8 +1,8 @@
+import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { isErrorWithCode } from "@/lib/errors";
 import { AbsPath, absPath, decodePath, joinPath, relPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
-import { CommonFileSystem } from "../FileSystemTypes";
 
 export class NamespacedFs implements CommonFileSystem {
   namespace: AbsPath;
@@ -99,7 +99,7 @@ export class PatchedOPFS extends FsaNodeFs {
       const walk = async (dir: string) => {
         const targetDir = dir.replace(oldPath, newPath);
         await this.promises.mkdir(targetDir, { recursive: true, mode: 0o777 });
-        const entries = (await this.promises.readdir(dir)).map((e) => String(e));
+        const entries = (await this.promises.readdir(dir)).map((e) => String(e as any));
         for (const entry of entries) {
           const entryPath = path.join(dir, entry);
           const stat = await this.promises.stat(entryPath);

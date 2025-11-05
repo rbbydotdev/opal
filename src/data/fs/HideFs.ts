@@ -1,3 +1,4 @@
+import { CommonFileSystem } from "@/data/FileSystemTypes";
 import {
   AbsPath,
   RelPath,
@@ -10,7 +11,6 @@ import {
   relPath,
   stringifyEntry,
 } from "@/lib/paths2";
-import { CommonFileSystem } from "../FileSystemTypes";
 
 export type HideRule = { type: "file"; path: string } | { type: "dir"; path: RelPath | AbsPath };
 

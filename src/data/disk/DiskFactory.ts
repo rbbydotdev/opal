@@ -1,14 +1,13 @@
-import { Disk } from "@/data/disk/Disk";
-import { DefaultDiskType } from "@/data/disk/DiskDefaults";
-import { DiskJType } from "@/data/DiskType";
-import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { DexieFsDbDisk } from "@/data/disk/DexieFsDbDisk";
-import { LocalStorageFsDisk } from "@/data/fs/LocalStorageFsDisk";
-import { IndexedDbDisk } from "@/data/IndexedDbDisk";
+import { Disk } from "@/data/disk/Disk";
 import { MemDisk } from "@/data/disk/MemDisk";
-import { NullDisk } from "@/data/NullDisk";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { OpFsDisk } from "@/data/disk/OpFsDisk";
+import { DiskJType } from "@/data/DiskType";
+import { CommonFileSystem } from "@/data/FileSystemTypes";
+import { LocalStorageFsDisk } from "@/data/fs/LocalStorageFsDisk";
+import { IndexedDbDisk } from "@/data/IndexedDbDisk";
+import { NullDisk } from "@/data/NullDisk";
 import { TreeDirRoot } from "@/lib/FileTree/TreeNode";
 
 const DiskMap = {
@@ -21,7 +20,7 @@ const DiskMap = {
   [LocalStorageFsDisk.type]: LocalStorageFsDisk,
 };
 
-export { DefaultDiskType };
+// export { DefaultDiskType };
 export function DiskFromJSON(
   json: DiskJType,
   fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs

@@ -1,5 +1,5 @@
+import "@/app/styles.css";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import "../app/styles.css";
 
 function RootComponent() {
   return (

@@ -1,3 +1,4 @@
+import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
@@ -6,7 +7,6 @@ import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { Hammer } from "lucide-react";
-import { FileItemContextMenuComponentType } from "../../FileItemContextMenuComponentType";
 
 export function BuildSidebarFileMenuFileSection({
   ItemContextMenu,

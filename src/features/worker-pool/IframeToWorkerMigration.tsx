@@ -1,3 +1,4 @@
+//@ts-nocheck
 /**
  * Migration Guide: Iframe Screenshot Pool → Web Worker Pool
  *

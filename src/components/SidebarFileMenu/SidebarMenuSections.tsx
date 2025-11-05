@@ -1,5 +1,6 @@
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
+import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
 import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { SidebarFileMenuBuild } from "@/components/SidebarFileMenu/build-section/SidebarFileMenuBuild";
 import { SidebarFileMenuExport } from "@/components/SidebarFileMenu/export-section/SidebarFileMenuExport";
@@ -9,6 +10,17 @@ import { SidebarGitSection } from "@/components/SidebarFileMenu/sync-section/Sid
 import { TrashSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/SidebarFileMenu/tree-view-section/SidebarMenuTreeSection";
 import { SidebarFileMenuUpload } from "@/components/SidebarFileMenu/upload-section/SidebarFileMenuUpload";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
 import { FileTreeProvider, NoopContextMenu } from "@/context/FileTreeProvider";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
@@ -25,18 +37,6 @@ import { List, ListXIcon } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceContext } from "../../context/WorkspaceContext";
-import { FileTreeMenuCtxProvider } from "../FileTreeMenuCtxProvider";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Separator } from "../ui/separator";
-import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "../ui/sidebar";
-import { SidebarDndList } from "../ui/SidebarDndList";
 
 function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
   return (

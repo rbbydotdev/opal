@@ -1,9 +1,9 @@
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskRecord } from "@/data/disk/DiskRecord";
+import { DiskJType, DiskType } from "@/data/DiskType";
 import { ClientDb } from "@/data/instance";
 import { TreeDirRoot, TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 import { nanoid } from "nanoid";
-import { DiskJType, DiskType } from "@/data/DiskType";
 
 export class DiskDAO {
   guid: string;

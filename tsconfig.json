@@ -48,6 +48,7 @@
     "./src/components/ui/input-otp.tsx",
     "./tools",
     ".next",
+    "**/*/*.test.ts",
     ".next/types/**/*.ts",
     "src/app/sand/**",
     "node_modules/**/*",

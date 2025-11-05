@@ -1,4 +1,5 @@
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
+import { useConfirm } from "@/components/Confirm";
 import { useToggleEditHistory } from "@/components/Editor/history/useToggleEditHistory";
 import { useToggleHistoryImageGeneration } from "@/components/Editor/history/useToggleHistoryImageGeneration";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
@@ -56,7 +57,6 @@ import {
 } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
-import { useConfirm } from "../components/Confirm";
 
 type ButtonVariant = "lg" | "sm";
 

@@ -1,7 +1,6 @@
 import { NamespacedFs } from "@/data/fs/NamespacedFs";
 import { isErrorWithCode } from "@/lib/errors";
-import { AbsPath, encodePath, joinPath } from "@/lib/paths2";
-import { relPath } from "../lib/paths2";
+import { AbsPath, encodePath, joinPath, relPath } from "@/lib/paths2";
 import { CommonFileSystem } from "./FileSystemTypes";
 
 type OPFSFileSystem = CommonFileSystem & {
