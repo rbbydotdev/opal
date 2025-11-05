@@ -1,5 +1,5 @@
 import { CreateTypedEmitter } from "@/lib/TypeEmitter";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
 
 export interface PreviewContext {
   document: Document | null;
@@ -128,7 +128,7 @@ abstract class BaseContextProvider implements PreviewContextProvider {
 }
 
 export function useIframeContextProvider({ iframeRef }: { iframeRef: { current: HTMLIFrameElement | null } }) {
-  const contextProvider = useMemo(() => new IframeContextProvider(iframeRef), [iframeRef]);
+  const contextProvider = useMemo(() => new IframeManager(iframeRef), [iframeRef]);
   const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
   useEffect(() => {
     contextProvider.init();
@@ -139,25 +139,15 @@ export function useIframeContextProvider({ iframeRef }: { iframeRef: { current: 
 }
 
 export function useWindowContextProvider() {
-  const contextProvider = useMemo(() => new WindowContextProvider(), []);
-  const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
-  const isOpen = useSyncExternalStore(contextProvider.onOpenChange, contextProvider.getOpenState);
-  useEffect(() => {
-    return () => contextProvider.teardown();
-  }, [contextProvider]);
-
-  return {
-    ...context,
-    isOpen,
-    open: () => contextProvider.open(),
-    close: () => {
-      contextProvider.close();
-    },
-  };
+  const context = useContext(WindowContext);
+  if (!context) {
+    throw new Error("useWindowContextProvider must be used within a WindowContextProviderComponent");
+  }
+  return context;
 }
 
-export function useContextProvider<T extends PreviewContextProvider>(providerFactoryFn: () => T) {
-  const provider = useMemo(() => providerFactoryFn(), [providerFactoryFn]);
+export function useContextProvider<T extends PreviewContextProvider>(managerFactoryFn: () => T) {
+  const provider = useMemo(() => managerFactoryFn(), [managerFactoryFn]);
   const context = useSyncExternalStore(provider.onReady, provider.getContext);
   useEffect(() => {
     return () => provider.teardown();
@@ -166,7 +156,7 @@ export function useContextProvider<T extends PreviewContextProvider>(providerFac
   return context;
 }
 
-export class IframeContextProvider extends BaseContextProvider {
+export class IframeManager extends BaseContextProvider {
   constructor(private iframeRef: { current: HTMLIFrameElement | null }) {
     super();
   }
@@ -194,7 +184,7 @@ export class IframeContextProvider extends BaseContextProvider {
   }
 }
 
-export class WindowContextProvider extends BaseContextProvider {
+export class WindowManager extends BaseContextProvider {
   private windowRef: { current: Window | null } = { current: null };
   private openEventEmitter = CreateTypedEmitter<{ openChange: boolean }>();
   private pollInterval: number | null = null;
@@ -267,4 +257,36 @@ export class WindowContextProvider extends BaseContextProvider {
     super.teardown();
     this.close();
   }
+}
+
+// React Context for shared WindowManager
+type WindowContextValue = (ExtCtxReadyContext | ExtCtxNotReadyContext) & {
+  isOpen: boolean;
+  open: () => void;
+  close: () => void;
+}
+
+const WindowContext = createContext<WindowContextValue | null>(null);
+
+export function WindowContextProviderComponent({ children }: { children: React.ReactNode }) {
+  const contextProvider = useMemo(() => new WindowManager(), []);
+  const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
+  const isOpen = useSyncExternalStore(contextProvider.onOpenChange, contextProvider.getOpenState);
+  
+  useEffect(() => {
+    return () => contextProvider.teardown();
+  }, [contextProvider]);
+
+  const value: WindowContextValue = useMemo(() => ({
+    ...context,
+    isOpen,
+    open: () => contextProvider.open(),
+    close: () => contextProvider.close(),
+  }), [context, isOpen, contextProvider]);
+
+  return (
+    <WindowContext.Provider value={value}>
+      {children}
+    </WindowContext.Provider>
+  );
 }

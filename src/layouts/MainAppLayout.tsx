@@ -1,3 +1,4 @@
+import { WindowContextProviderComponent } from "@/app/IframeContextProvider";
 import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
 import { BuildModalProvider } from "@/components/BuildModal";
@@ -43,12 +44,13 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
               <ErrorPopper>
                 <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
                   <WorkspaceProvider>
-                    <GitStatusProvider>
-                      <BuildModalProvider>
-                        <SidebarProvider>
-                          <PromptProvider>
-                            <ConfirmProvider>
-                              <RemoteMDXEditorRealmProvider>
+                    <WindowContextProviderComponent>
+                      <GitStatusProvider>
+                        <BuildModalProvider>
+                          <SidebarProvider>
+                            <PromptProvider>
+                              <ConfirmProvider>
+                                <RemoteMDXEditorRealmProvider>
                                 <div className="w-full flex">
                                   <ErrorBoundary fallback={ErrorPlaque}>
                                     <div
@@ -63,12 +65,13 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                                     <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
                                   </ErrorBoundary>
                                 </div>
-                              </RemoteMDXEditorRealmProvider>
-                            </ConfirmProvider>
-                          </PromptProvider>
-                        </SidebarProvider>
-                      </BuildModalProvider>
-                    </GitStatusProvider>
+                                </RemoteMDXEditorRealmProvider>
+                              </ConfirmProvider>
+                            </PromptProvider>
+                          </SidebarProvider>
+                        </BuildModalProvider>
+                      </GitStatusProvider>
+                    </WindowContextProviderComponent>
                   </WorkspaceProvider>
                 </ErrorBoundary>
               </ErrorPopper>

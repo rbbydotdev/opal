@@ -1,4 +1,4 @@
-// import { useWindowContextProvider } from "@/app/IframeContextProvider";
+import { useWindowContextProvider } from "@/app/IframeContextProvider";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { toast } from "@/components/ui/sonner";
@@ -10,7 +10,6 @@ import { Thumb } from "@/data/Thumb";
 import { Workspace } from "@/data/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
-import { useWorkspacePathPreviewURL } from "@/features/preview-pane/useWorkspacePathPreviewURL";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
@@ -807,13 +806,12 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   //   [currentWorkspace]
   // );
   const { repo, playbook } = useWorkspaceGitRepo({ currentWorkspace });
-  const previewURL = useWorkspacePathPreviewURL();
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath, name: workspaceName } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
   const navigate = useNavigate();
 
-  // const { open: openPreview } = useWindowContextProvider();
+  const { open: openPreview } = useWindowContextProvider();
   const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useTheme();
 
   const cmdMap = useMemo(
@@ -821,13 +819,13 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       ({
         // MARK: Editor Commands
 
-        // "Open External Preview": [
-        //   NewCmdExec(() => {
-        //     if (workspaceName) {
-        //       openPreview();
-        //     }
-        //   }),
-        // ],
+        "Open External Preview": [
+          NewCmdExec(() => {
+            if (workspaceName) {
+              openPreview();
+            }
+          }),
+        ],
 
         //
         // MARK: File Commands
@@ -1063,12 +1061,14 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       navigate,
       newDir,
       newFile,
+      openPreview,
       playbook,
       renameDirOrFile,
       repo,
       setMode,
       setTheme,
       trashFile,
+      workspaceName,
     ]
   );
 
