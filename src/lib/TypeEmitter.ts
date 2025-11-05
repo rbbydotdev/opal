@@ -210,28 +210,52 @@ export class OmniBusEmitter extends CreateSuperTypedEmitterClass<Record<string, 
 
   onType<Events extends Record<string, any>, K extends keyof Events>(
     classIdent: symbol,
-    event: K,
+    event: K | K[],
     listener: (payload: Events[K]) => void
   ): () => void {
-    return this.on("*" as any, (payload: any) => {
-      if (payload.eventName === event && payload.__sourceClass === classIdent) {
-        const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
-        listener(cleanPayload as Events[K]);
-      }
-    });
+    if (Array.isArray(event)) {
+      const unsubscribers = event.map((e) => {
+        return this.on("*" as any, (payload: any) => {
+          if (payload.eventName === e && payload.__sourceClass === classIdent) {
+            const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
+            listener(cleanPayload as Events[K]);
+          }
+        });
+      });
+      return () => unsubscribers.forEach((unsub) => unsub());
+    } else {
+      return this.on("*" as any, (payload: any) => {
+        if (payload.eventName === event && payload.__sourceClass === classIdent) {
+          const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
+          listener(cleanPayload as Events[K]);
+        }
+      });
+    }
   }
 
   onInstance<Events extends Record<string, any>, K extends keyof Events>(
     instanceIdent: object,
-    event: K,
+    event: K | K[],
     listener: (payload: Events[K]) => void
   ): () => void {
-    return this.on("*" as any, (payload: any) => {
-      if (payload.eventName === event && payload.__sourceInstance === instanceIdent) {
-        const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
-        listener(cleanPayload as Events[K]);
-      }
-    });
+    if (Array.isArray(event)) {
+      const unsubscribers = event.map((e) => {
+        return this.on("*" as any, (payload: any) => {
+          if (payload.eventName === e && payload.__sourceInstance === instanceIdent) {
+            const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
+            listener(cleanPayload as Events[K]);
+          }
+        });
+      });
+      return () => unsubscribers.forEach((unsub) => unsub());
+    } else {
+      return this.on("*" as any, (payload: any) => {
+        if (payload.eventName === event && payload.__sourceInstance === instanceIdent) {
+          const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
+          listener(cleanPayload as Events[K]);
+        }
+      });
+    }
   }
 
   get<T>(instanceIdent: object): T | undefined {
