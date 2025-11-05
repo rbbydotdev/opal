@@ -123,16 +123,20 @@ export class DiskEventsLocal extends CreateSuperTypedEmitterClass<
   DiskLocalEventPayload,
   {
     diskId: string;
+    instanceId: string;
   }
 >() {
-  constructor(private diskId: string) {
+  constructor(
+    private diskId: string,
+    private instanceId: string
+  ) {
     super();
   }
   emit(event: keyof DiskLocalEventPayload, payload: DiskLocalEventPayload[typeof event] = {} as any) {
-    return super.emit(event, { ...payload, diskId: this["diskId"] });
+    return super.emit(event, { ...payload, diskId: this["diskId"], instanceId: this["instanceId"] });
   }
 }
 
 export type DiskEventsLocalFullPayload = {
-  [K in keyof DiskLocalEventPayload]: DiskLocalEventPayload[K] & { diskId: string };
+  [K in keyof DiskLocalEventPayload]: DiskLocalEventPayload[K] & { diskId: string; instanceId: string };
 };

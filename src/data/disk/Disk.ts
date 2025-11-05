@@ -36,6 +36,7 @@ import { nanoid } from "nanoid";
 
 export abstract class Disk {
   static readonly IDENT = Symbol("Disk");
+  instanceId = nanoid();
   remote: DiskEventsRemote;
   local: DiskEventsLocal;
   ready: Promise<void> = Promise.resolve();
@@ -73,13 +74,8 @@ export abstract class Disk {
     this._fs = fs;
     this._fileTree = fileTree;
     this.remote = new DiskEventsRemote(this.guid);
-    this.local = new DiskEventsLocal(this.guid);
+    this.local = new DiskEventsLocal(this.guid, this.instanceId);
     this.unsubs.push(OmniBus.connect(Disk.IDENT, this.local));
-    // OmniBus.onType<DiskLocalEventPayload, "index">(Disk.IDENT, "index", (payload) => {
-    //   if (payload?.type === "create") {
-    //     console.log("index payload", payload);
-    //   }
-    // });
   }
 
   initialIndexFromCache(cache: TreeNodeDirJType) {
@@ -140,10 +136,13 @@ export abstract class Disk {
 
   latestIndexListener(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
     if (this.fileTree.initialIndex) callback(this.fileTree.root);
-    return OmniBus.onType<DiskEventsLocalFullPayload, "index">(Disk.IDENT, "index", (trigger) => {
+    return OmniBus.onType<DiskEventsLocalFullPayload, "index">(Disk.IDENT, "index", async (trigger) => {
       if (trigger.diskId === this.guid) {
+        // Same disk, different instance = cross-instance event
+        if (trigger.instanceId && trigger.instanceId !== this.instanceId) {
+          await this.fileTreeIndex(); // Re-index this instance
+        }
         callback(this.fileTree.root, trigger);
-        console.debug("local disk index event");
       }
     });
   }
@@ -444,12 +443,9 @@ export abstract class Disk {
   }
 
   async newDir(fullPath: AbsPath) {
-    // await this.ready;
-
     while (await this.pathExists(fullPath)) {
       fullPath = incPath(fullPath);
     }
-    console.debug("Creating new dir at", fullPath);
     await this.mkdirRecursive(fullPath);
     await this.fileTreeIndex();
 

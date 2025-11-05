@@ -1,10 +1,10 @@
 import { BuildRecord } from "@/data/BuildRecord";
+import { DiskRecord } from "@/data/disk/DiskRecord";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { SettingsRecord } from "@/data/SettingsRecord";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
-import { DiskRecord } from "@/data/disk/DiskRecord";
 import { WorkspaceRecord } from "./WorkspaceRecord";
 
 export class ClientIndexedDb extends Dexie {
@@ -24,7 +24,7 @@ export class ClientIndexedDb extends Dexie {
       remoteAuths: "guid,type,ta",
       workspaces: "guid,name",
       disks: "guid",
-      builds: "guid,diskId,timestamp",
+      builds: "guid,diskId,timestamp,workspaceId",
       thumbnails: "[workspaceId+path],guid,path,workspaceId",
       historyDocs: "++edit_id,id,parent,workspaceId",
     });

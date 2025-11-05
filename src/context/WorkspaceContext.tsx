@@ -166,6 +166,7 @@ export function useWatchWorkspaceFileTree({
           if (filterOut && filterOut(treeNode)) return true; // filterOut
           return false;
         });
+        // console.log("useWatchWorkspaceFileTree update", { newTree });
         setFileTreeDir(newTree);
         setFlatTree(currentWorkspace.getFlatTree({ filterIn, filterOut }));
         setFileTree(currentWorkspace.getFileTree());
