@@ -1,5 +1,5 @@
-import { nanoid } from "nanoid";
 import { SuperEmitter } from "@/lib/TypeEmitter";
+import { nanoid } from "nanoid";
 
 const ChannelSet = new Map<string, Channel>();
 
@@ -7,8 +7,8 @@ const DEBUG_CHANNELS = false;
 
 export class Channel<EventData extends Record<string, any> = Record<string, unknown>> {
   private emitter: SuperEmitter<EventData>;
-  private listenerAddedSymbol = Symbol("listenerAdded");
-  private listenerRemovedSymbol = Symbol("listenerRemoved");
+  // private listenerAddedSymbol = Symbol("listenerAdded");
+  // private listenerRemovedSymbol = Symbol("listenerRemoved");
   private channel: BroadcastChannel | null = null;
   private contextId: string = nanoid();
 
@@ -16,9 +16,7 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
     return ChannelSet.get(channelName);
   }
 
-  constructor(
-    public readonly channelName: string
-  ) {
+  constructor(public readonly channelName: string) {
     this.emitter = new SuperEmitter<EventData>();
   }
   init() {
@@ -42,7 +40,7 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
 
     this.channel.onmessage = (event) => {
       const { eventData, eventName, senderId } = event.data;
-      if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
+      // if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
       if (DEBUG_CHANNELS) console.debug("bcast incoming:", eventName);
       this.emitter.emit(eventName, eventData);
@@ -58,7 +56,7 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
     eventData?: EventData[Name],
     { contextId }: { contextId?: string } = { contextId: this.contextId }
   ): void {
-    if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
+    // if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
     if (DEBUG_CHANNELS) console.debug("broadcast outgoing:", eventName);
     try {
@@ -80,24 +78,15 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
     return this.emitter.on(eventName, listener);
   }
 
-  once<Name extends keyof EventData>(
-    eventName: Name,
-    listener: (eventData: EventData[Name]) => void
-  ): () => void {
+  once<Name extends keyof EventData>(eventName: Name, listener: (eventData: EventData[Name]) => void): () => void {
     return this.emitter.once(eventName, listener);
   }
 
-  off<Name extends keyof EventData>(
-    eventName: Name,
-    listener: (eventData: EventData[Name]) => void
-  ): void {
+  off<Name extends keyof EventData>(eventName: Name, listener: (eventData: EventData[Name]) => void): void {
     this.emitter.off(eventName, listener);
   }
 
-  removeListener<Name extends keyof EventData>(
-    eventName: Name,
-    listener: (eventData: EventData[Name]) => void
-  ): void {
+  removeListener<Name extends keyof EventData>(eventName: Name, listener: (eventData: EventData[Name]) => void): void {
     this.emitter.removeListener(eventName, listener);
   }
 
