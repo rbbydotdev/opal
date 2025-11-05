@@ -113,7 +113,7 @@ export const DiskEvents = {
   CREATE: "create" as const,
   DELETE: "delete" as const,
 };
-type DiskLocalEventPayload = {
+export type DiskLocalEventPayload = {
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
   [DiskEvents.INSIDE_WRITE]: FilePathsType;
