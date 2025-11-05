@@ -336,6 +336,117 @@ suite.test("should clean up onType listeners", () => {
   suite.assertEqual(eventCount, 1, "Should not receive event after cleanup");
 });
 
+suite.test("should support array of events in onType method", () => {
+  const omnibus = new OmniBusEmitter();
+  const userEmitter = new UserEmitter();
+  const fileEmitter = new FileEmitter();
+
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(FileEmitter.IDENT, fileEmitter);
+
+  const userEvents: any[] = [];
+  const fileEvents: any[] = [];
+
+  // Listen to multiple events from UserEmitter
+  omnibus.onType(UserEmitter.IDENT, ["login", "logout"], (payload) => userEvents.push(payload));
+  
+  // Listen to multiple events from FileEmitter
+  omnibus.onType(FileEmitter.IDENT, ["created", "deleted", "modified"], (payload) => fileEvents.push(payload));
+
+  // Emit various events
+  userEmitter.emit("login", { userId: "alice" });
+  userEmitter.emit("logout", { userId: "alice" });
+  fileEmitter.emit("created", { path: "/test.txt" });
+  fileEmitter.emit("modified", { path: "/test.txt", size: 1024 });
+  fileEmitter.emit("deleted", { path: "/test.txt" });
+
+  suite.assertEqual(userEvents.length, 2, "Should receive both user events");
+  suite.assertEqual(fileEvents.length, 3, "Should receive all three file events");
+  
+  suite.assertEqual(userEvents[0].userId, "alice", "Login event payload correct");
+  suite.assertEqual(userEvents[1].userId, "alice", "Logout event payload correct");
+  suite.assertEqual(fileEvents[0].path, "/test.txt", "Created event payload correct");
+  suite.assertEqual(fileEvents[1].size, 1024, "Modified event payload correct");
+  suite.assertEqual(fileEvents[2].path, "/test.txt", "Deleted event payload correct");
+});
+
+suite.test("should clean up array listeners in onType method", () => {
+  const omnibus = new OmniBusEmitter();
+  const userEmitter = new UserEmitter();
+
+  omnibus.connect(UserEmitter.IDENT, userEmitter);
+
+  let eventCount = 0;
+  const cleanup = omnibus.onType(UserEmitter.IDENT, ["login", "logout"], () => eventCount++);
+
+  userEmitter.emit("login", { userId: "test" });
+  userEmitter.emit("logout", { userId: "test" });
+  suite.assertEqual(eventCount, 2, "Should receive both events before cleanup");
+
+  cleanup();
+  userEmitter.emit("login", { userId: "test2" });
+  userEmitter.emit("logout", { userId: "test2" });
+  suite.assertEqual(eventCount, 2, "Should not receive events after cleanup");
+});
+
+suite.test("should support array of events in onInstance method", () => {
+  const omnibus = new OmniBusEmitter();
+  const userEmitter1 = new UserEmitter();
+  const userEmitter2 = new UserEmitter();
+  const fileEmitter = new FileEmitter();
+
+  const instance1 = Symbol("user-instance-1");
+  const instance2 = Symbol("user-instance-2");
+  const fileInstance = Symbol("file-instance");
+
+  omnibus.connect(UserEmitter.IDENT, userEmitter1, instance1);
+  omnibus.connect(UserEmitter.IDENT, userEmitter2, instance2);
+  omnibus.connect(FileEmitter.IDENT, fileEmitter, fileInstance);
+
+  const instance1Events: any[] = [];
+  const fileInstanceEvents: any[] = [];
+
+  // Listen to multiple events from specific instances
+  omnibus.onInstance(instance1, ["login", "logout"], (payload) => instance1Events.push(payload));
+  omnibus.onInstance(fileInstance, ["created", "deleted"], (payload) => fileInstanceEvents.push(payload));
+
+  // Emit events from different instances
+  userEmitter1.emit("login", { userId: "alice" });
+  userEmitter1.emit("logout", { userId: "alice" });
+  userEmitter2.emit("login", { userId: "bob" }); // Different instance, shouldn't be captured
+  fileEmitter.emit("created", { path: "/test.txt" });
+  fileEmitter.emit("modified", { path: "/test.txt", size: 1024 }); // Not in array, shouldn't be captured
+  fileEmitter.emit("deleted", { path: "/test.txt" });
+
+  suite.assertEqual(instance1Events.length, 2, "Should receive both events from instance1");
+  suite.assertEqual(fileInstanceEvents.length, 2, "Should receive both file events from fileInstance");
+  
+  suite.assertEqual(instance1Events[0].userId, "alice", "Instance1 login event correct");
+  suite.assertEqual(instance1Events[1].userId, "alice", "Instance1 logout event correct");
+  suite.assertEqual(fileInstanceEvents[0].path, "/test.txt", "File created event correct");
+  suite.assertEqual(fileInstanceEvents[1].path, "/test.txt", "File deleted event correct");
+});
+
+suite.test("should clean up array listeners in onInstance method", () => {
+  const omnibus = new OmniBusEmitter();
+  const userEmitter = new UserEmitter();
+  const instance = Symbol("user-instance");
+
+  omnibus.connect(UserEmitter.IDENT, userEmitter, instance);
+
+  let eventCount = 0;
+  const cleanup = omnibus.onInstance(instance, ["login", "logout"], () => eventCount++);
+
+  userEmitter.emit("login", { userId: "test" });
+  userEmitter.emit("logout", { userId: "test" });
+  suite.assertEqual(eventCount, 2, "Should receive both events before cleanup");
+
+  cleanup();
+  userEmitter.emit("login", { userId: "test2" });
+  userEmitter.emit("logout", { userId: "test2" });
+  suite.assertEqual(eventCount, 2, "Should not receive events after cleanup");
+});
+
 // Test type safety at compile time
 suite.test("should provide type safety for connected emitters", () => {
   const omnibus = new OmniBusEmitter();

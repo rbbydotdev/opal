@@ -116,7 +116,7 @@ export class BuildDAO {
       try {
         console.log(`Attempting to remove directory: ${encodePath(this.buildPath)}`);
         // await disk.remove(encodePath(this.buildPath), { recursive: true });
-        await disk.removeFile(encodePath(this.buildPath));
+        await disk.removeFile(this.buildPath);
         console.log(`Successfully removed build directory: ${this.buildPath}`);
       } catch (error) {
         console.error(`Failed to remove build files at ${this.buildPath}:`, error);

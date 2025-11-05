@@ -140,9 +140,11 @@ export abstract class Disk {
 
   latestIndexListener(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
     if (this.fileTree.initialIndex) callback(this.fileTree.root);
-    return this.local.on(DiskEvents.INDEX, (trigger) => {
-      callback(this.fileTree.root, trigger);
-      console.debug("local disk index event");
+    return OmniBus.onType<DiskEventsLocalFullPayload, "index">(Disk.IDENT, "index", (trigger) => {
+      if (trigger.diskId === this.guid) {
+        callback(this.fileTree.root, trigger);
+        console.debug("local disk index event");
+      }
     });
   }
 
@@ -295,25 +297,41 @@ export abstract class Disk {
   }
 
   writeIndexListener(callback: () => void) {
-    return this.local.on([DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], callback);
+    return OmniBus.onType<DiskEventsLocalFullPayload, "outside-write" | "index">(
+      Disk.IDENT,
+      ["outside-write", "index"],
+      (trigger) => {
+        if (trigger.diskId === this.guid) {
+          callback();
+        }
+      }
+    );
   }
 
   outsideWriteListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-    return this.local.on(DiskEvents.OUTSIDE_WRITE, async ({ filePaths }) => {
-      if (filePaths.includes(watchFilePath)) {
+    return OmniBus.onType<DiskEventsLocalFullPayload, "outside-write">(Disk.IDENT, "outside-write", async (trigger) => {
+      if (trigger.diskId === this.guid && trigger.filePaths.includes(watchFilePath)) {
         fn(String(await this.readFile(absPath(watchFilePath))));
       }
     });
   }
   insideWriteListener(watchFilePath: AbsPath, fn: (contents: string) => void) {
-    return this.local.on(DiskEvents.INSIDE_WRITE, async ({ filePaths }) => {
-      if (filePaths.includes(watchFilePath)) {
+    return OmniBus.onType<DiskEventsLocalFullPayload, "inside-write">(Disk.IDENT, "inside-write", async (trigger) => {
+      if (trigger.diskId === this.guid && trigger.filePaths.includes(watchFilePath)) {
         fn(String(await this.readFile(absPath(watchFilePath))));
       }
     });
   }
   dirtyListener(cb: (trigger: FilePathsType | IndexTrigger | undefined) => void) {
-    return this.local.on([DiskEvents.INSIDE_WRITE, DiskEvents.OUTSIDE_WRITE, DiskEvents.INDEX], cb);
+    return OmniBus.onType<DiskEventsLocalFullPayload, "inside-write" | "outside-write" | "index">(
+      Disk.IDENT,
+      ["inside-write", "outside-write", "index"],
+      (trigger) => {
+        if (trigger.diskId === this.guid) {
+          cb(trigger);
+        }
+      }
+    );
   }
 
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
