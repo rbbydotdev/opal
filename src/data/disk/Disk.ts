@@ -2,6 +2,7 @@ import { DiskDAO } from "@/data/disk/DiskDAO";
 import {
   DiskEvents,
   DiskEventsLocal,
+  DiskEventsLocalFullPayload,
   DiskEventsRemote,
   FilePathsType,
   IndexTrigger,
@@ -272,22 +273,22 @@ export abstract class Disk {
   }
 
   renameListener(fn: (props: Extract<IndexTrigger, { type: "rename" }>["details"]) => void) {
-    return this.local.on(DiskEvents.INDEX, (trigger) => {
-      if (trigger && trigger.type === "rename") {
+    return OmniBus.onType<DiskEventsLocalFullPayload, "index">(Disk.IDENT, "index", (trigger) => {
+      if (trigger?.type === "rename" && trigger.diskId === this.guid) {
         fn(trigger.details);
       }
     });
   }
   deleteListener(fn: (props: Extract<IndexTrigger, { type: "delete" }>["details"]) => void) {
-    return this.local.on(DiskEvents.INDEX, (trigger) => {
-      if (trigger && trigger.type === "delete") {
+    return OmniBus.onType<DiskEventsLocalFullPayload, "index">(Disk.IDENT, "index", (trigger) => {
+      if (trigger?.type === "delete" && trigger.diskId === this.guid) {
         fn(trigger.details);
       }
     });
   }
   createListener(fn: (props: Extract<IndexTrigger, { type: "create" }>["details"]) => void) {
-    return this.local.on(DiskEvents.INDEX, (trigger) => {
-      if (trigger && trigger.type === "create") {
+    return OmniBus.onType<DiskEventsLocalFullPayload, "index">(Disk.IDENT, "index", (trigger) => {
+      if (trigger?.type === "create" && trigger.diskId === this.guid) {
         fn(trigger.details);
       }
     });

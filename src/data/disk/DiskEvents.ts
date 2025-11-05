@@ -118,6 +118,7 @@ export type DiskLocalEventPayload = {
   [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
   [DiskEvents.INSIDE_WRITE]: FilePathsType;
 };
+
 export class DiskEventsLocal extends CreateSuperTypedEmitterClass<
   DiskLocalEventPayload,
   {
@@ -131,3 +132,7 @@ export class DiskEventsLocal extends CreateSuperTypedEmitterClass<
     return super.emit(event, { ...payload, diskId: this["diskId"] });
   }
 }
+
+export type DiskEventsLocalFullPayload = {
+  [K in keyof DiskLocalEventPayload]: DiskLocalEventPayload[K] & { diskId: string };
+};
