@@ -1,7 +1,7 @@
+import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/BuildDAO";
@@ -10,8 +10,6 @@ import { Workspace } from "@/data/Workspace";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { RootNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
-import { useLiveQuery } from "dexie-react-hooks";
-import { useState } from "react";
 
 function RootAndDirSelector({
   isEmpty,
@@ -30,44 +28,26 @@ function RootAndDirSelector({
 }) {
   return (
     <>
-      <div className="pt-1 px-4 w-full *:text-xs">
-        <Select
-          key={builds.length}
-          defaultValue={build?.guid}
-          onValueChange={(guid) => setBuild(guid)}
-          disabled={builds.length === 0}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Build" />
-          </SelectTrigger>
-          <SelectContent defaultValue={build?.guid}>
-            {builds.map((b) => (
-              <SelectItem key={b.guid} value={b.guid}>
-                {b.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <BuildSelector builds={builds} setBuildId={setBuild} build={build} />
       {!isEmpty ? <RootFileMenuBanner rootNode={scope || RootNode} currentWorkspace={currentWorkspace} /> : null}
     </>
   );
 }
 
-function useBuildManager({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const [build, setBuildId] = useState<string | null>(null);
-  const builds = useLiveQuery(async () => BuildDAO.allForWorkspace(currentWorkspace.guid), [currentWorkspace.guid], []);
-  return { builds, build: builds.find((b) => b.guid === build) || builds[0] || null, setBuildId };
-}
-export function BuildSidebarFileMenuFileSectionInternal({ className }: { className?: string }) {
+export function BuildSidebarFileMenuFileSectionInternal({
+  className,
+  build,
+}: {
+  className?: string;
+  build: BuildDAO | null;
+}) {
   const { currentWorkspace } = useWorkspaceContext();
   const { fileTree } = useFileTree();
-  const { builds, build, setBuildId } = useBuildManager({ currentWorkspace });
   const isEmpty = !build?.buildPath
     ? true
     : Object.keys(fileTree.nodeFromPath(build?.buildPath)?.children ?? {}).length === 0;
-  // console.log(fileTree.root.scope(build?.buildPath || SpecialDirs.Build));
   const scope = build?.buildPath || SpecialDirs.Build;
+
   return (
     <TreeExpanderProvider id="BuildFiles">
       <SidebarFileMenuFiles
@@ -76,14 +56,9 @@ export function BuildSidebarFileMenuFileSectionInternal({ className }: { classNa
         scope={scope}
         canDrag={false}
         contentBanner={
-          <RootAndDirSelector
-            builds={builds}
-            setBuildId={setBuildId}
-            build={build}
-            isEmpty={isEmpty}
-            scope={scope}
-            currentWorkspace={currentWorkspace}
-          />
+          build?.buildPath && !isEmpty ? (
+            <RootFileMenuBanner currentWorkspace={currentWorkspace} rootNode={build?.buildPath} />
+          ) : null
         }
       >
         {!isEmpty ? <TinyNotice /> : null}
@@ -92,14 +67,14 @@ export function BuildSidebarFileMenuFileSectionInternal({ className }: { classNa
   );
 }
 
-export function BuildSidebarFileMenuFileSection({ className }: { className?: string }) {
+export function BuildSidebarFileMenuFileSection({ className, build }: { className?: string; build: BuildDAO | null }) {
   return (
     <FileTreeProvider
       filterIn={(treeNode) =>
         treeNode.toString().startsWith(SpecialDirs.Build) || treeNode.toString() === SpecialDirs.Build
       }
     >
-      <BuildSidebarFileMenuFileSectionInternal className={className} />
+      <BuildSidebarFileMenuFileSectionInternal className={className} build={build} />
     </FileTreeProvider>
   );
 }

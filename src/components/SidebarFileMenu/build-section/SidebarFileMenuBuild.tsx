@@ -1,17 +1,18 @@
 import { useBuildModal } from "@/components/BuildModal";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
+import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
-import { SidebarBuildsList } from "@/components/SidebarFileMenu/build-section/SidebarBuildsList";
+import { useBuildManager } from "@/components/SidebarFileMenu/build-files-section/useBuildManager";
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
+import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton, SidebarSeparator } from "@/components/ui/sidebar";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { Workspace } from "@/data/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
-import { Code2, Github, Hammer } from "lucide-react";
+import { Code2, Ellipsis, Github, Hammer } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export function SidebarFileMenuBuild({
@@ -23,8 +24,11 @@ export function SidebarFileMenuBuild({
   const [expanded, setExpand] = useSingleItemExpander("build");
   const { info } = useWorkspaceGitRepo({ currentWorkspace });
   const { openNew } = useBuildModal();
+
   const [selectedBuildIds, setSelectedBuildIds] = useState<string[]>([]);
   const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
+
+  const { builds, build, setBuildId } = useBuildManager({ currentWorkspace });
 
   const handlePublishToHTML = async () => {
     try {
@@ -53,17 +57,6 @@ export function SidebarFileMenuBuild({
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-4 pt-2 py-4 flex flex-col gap-4 pl-6">
-            <div className="flex-shrink flex">
-              <FileTreeMenuCtxProvider>
-                <TreeExpanderProvider id="BuildFiles">
-                  <FileTreeProvider>
-                    <BuildSidebarFileMenuFileSection />
-                  </FileTreeProvider>
-                </TreeExpanderProvider>
-              </FileTreeMenuCtxProvider>
-            </div>
-          </div>
           <div className="px-4 pt-2 py-4 flex flex-col gap-4">
             <SidebarGroup className="gap-2 flex flex-col">
               <SidebarGroupLabel>Workspace Actions</SidebarGroupLabel>
@@ -78,15 +71,34 @@ export function SidebarFileMenuBuild({
                 </Button>
               )}
             </SidebarGroup>
+            <SidebarSeparator />
+            <div className="min-w-0 flex items-center w-full">
+              <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
+                <Button className="h-12 w-6 shrink-0 flex-grow" variant="outline">
+                  <Ellipsis />
+                </Button>
+              </BuildSelector>
+            </div>
             {/* Builds List */}
-            <SidebarBuildsList
+            {/* <SidebarBuildsList
               workspaceId={currentWorkspace.id}
               selectedBuildIds={selectedBuildIds}
               onSelectionChange={setSelectedBuildIds}
               onDelete={(buildId) => {
                 setSelectedBuildIds((prev) => prev.filter((id) => id !== buildId));
               }}
-            />
+            /> */}
+          </div>
+          <div className="px-4 pt-2 py-4 flex flex-col gap-4 pl-3">
+            <div className="flex-shrink flex">
+              <FileTreeMenuCtxProvider>
+                <TreeExpanderProvider id="BuildFiles">
+                  <FileTreeProvider>
+                    <BuildSidebarFileMenuFileSection build={build} />
+                  </FileTreeProvider>
+                </TreeExpanderProvider>
+              </FileTreeMenuCtxProvider>
+            </div>
           </div>
         </CollapsibleContent>
       </Collapsible>

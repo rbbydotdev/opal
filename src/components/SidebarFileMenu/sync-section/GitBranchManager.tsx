@@ -220,7 +220,7 @@ function BranchSelect({
   const keyRef = React.useRef(0);
   return (
     <div className="w-full flex items-center justify-between space-x-2">
-      <div className="w-full ">
+      <div className="w-full">
         <Select
           value={value ?? undefined}
           key={String(value) + keyRef.current}

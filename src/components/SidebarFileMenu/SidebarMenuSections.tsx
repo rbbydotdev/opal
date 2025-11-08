@@ -45,17 +45,18 @@ function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndI
     </ErrorBoundary>
   );
 }
-const dndSections = ["build", "git", "export", "trash", "files", "treeview", "upload", "connections", "build_files"];
-type DndSectionType =
-  | "build"
-  | "git"
-  | "export"
-  | "trash"
-  | "files"
-  | "treeview"
-  | "upload"
-  | "connections"
-  | "build_files";
+const dndSections = [
+  "build",
+  "git",
+  "export",
+  "trash",
+  "files",
+  "treeview",
+  "upload",
+  "connections" /*, "build_files"*/,
+];
+type DndSectionType = "build" | "git" | "export" | "trash" | "files" | "treeview" | "upload" | "connections";
+// | "build_files";
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
