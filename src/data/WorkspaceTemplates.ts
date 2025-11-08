@@ -7,7 +7,6 @@ export type WorkspaceTemplate = {
   seedFiles: Record<string, string | Promise<string>>;
 };
 
-
 export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
   {
     id: "blank",

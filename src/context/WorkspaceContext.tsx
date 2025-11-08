@@ -1,4 +1,13 @@
 import { useWatchViewMode } from "@/components/Editor/view-mode/useWatchViewMode";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { NullWorkspace } from "@/data/NullWorkspace";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { Workspace } from "@/data/Workspace";
@@ -16,6 +25,7 @@ import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, decodePath, isAncestor, isBin, isCss, isEjs, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
+import { TriangleAlert } from "lucide-react";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
 export const NULL_WORKSPACE = new NullWorkspace();
@@ -203,6 +213,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   // Use workspace corruption handling feature
   const { errorState, handleWorkspaceError, clearError, shouldPreventInitialization } = useWorkspaceCorruption();
 
+  const [workspaceNotFound, setWorkspaceNotFound] = useState(false);
   useEffect(() => {
     if (workspaceName === "new" || !workspaceName) {
       setCurrentWorkspace(NULL_WORKSPACE);
@@ -224,8 +235,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       })
       .catch(async (error: Error) => {
         if (error instanceof NotFoundError) {
-          tossError(new NotFoundError(`The workspace "${workspaceName}" does not exist.`));
-          // void navigate({ to: "/" });
+          setWorkspaceNotFound(true);
           return;
         }
         console.error("Failed to initialize workspace:", error);
@@ -305,7 +315,56 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       {children}
 
       {/* Workspace Corruption Modal */}
+      {workspaceNotFound && <WorkspaceNotFound />}
       <WorkspaceCorruptionModal errorState={errorState} />
     </WorkspaceContext.Provider>
   );
 };
+
+function WorkspaceNotFound() {
+  const [open, setOpen] = useState(true);
+  const { name } = useWorkspaceRoute();
+  const navigate = useNavigate();
+  if (!open) return null;
+  return (
+    <AlertDialog open={true} onOpenChange={() => {}}>
+      <AlertDialogContent className="max-w-md min-w-fit">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-destructive flex justify-start items-center gap-2">
+            <TriangleAlert /> Error Workspace Not Found
+          </AlertDialogTitle>
+          <AlertDialogDescription className="mt-3 text-muted-foreground max-w-md flex items-center gap-2">
+            Workspace
+            <span className="border p-2 font-mono">{name}</span>
+            not found!
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="mt-6 flex-col sm:flex-row gap-2">
+          <AlertDialogAction
+            onClick={() => {
+              setOpen(false);
+              void navigate({
+                to: "/",
+              });
+            }}
+            className="order-2 border border-input hover:bg-accent hover:text-accent-foreground"
+          >
+            Go Home
+          </AlertDialogAction>
+
+          <AlertDialogAction
+            onClick={() => {
+              setOpen(false);
+              void navigate({
+                to: "/newWorkspace",
+              });
+            }}
+            className="bg-destructive hover:bg-destructive/90 order-1"
+          >
+            Create New Workspace
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

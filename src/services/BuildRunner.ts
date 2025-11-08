@@ -4,7 +4,6 @@ import { BuildLogLine } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { NullDisk } from "@/data/NullDisk";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
-import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { getMimeType } from "@zip.js/zip.js";
@@ -12,6 +11,7 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
+import { NullBuild } from "../data/BuildDAO";
 
 export interface BuildRunnerOptions {
   strategy: BuildStrategy;
@@ -22,35 +22,68 @@ export interface BuildRunnerOptions {
   onError?: (message: string) => void;
 }
 
-export interface CreateBuildRunnerOptions {
-  strategy: BuildStrategy;
-  workspace: Workspace;
-  buildId?: string;
-  buildLabel?: string;
-  onLog?: (message: string) => void;
-  onError?: (message: string) => void;
-}
-
 export interface BuildResult {
   success: boolean;
   error?: string;
 }
+function logLine(message: string, type: "info" | "error" | "warning" = "info") {
+  return {
+    timestamp: new Date(),
+    message,
+    type,
+  } as BuildLogLine;
+}
 
 export class BuildRunner {
-  buildDao: BuildDAO;
-
-  onLog: (message: string) => void;
-  onError: (message: string) => void;
-  sourceDisk: Disk = new NullDisk();
-  outputDisk: Disk = new NullDisk();
+  build: BuildDAO;
+  sourceDisk: Disk; // = new NullDisk();
+  outputDisk: Disk; // = new NullDisk();
   outputPath: AbsPath;
   sourcePath: AbsPath;
-  workspace: Workspace;
   strategy: BuildStrategy;
   logs: BuildLogLine[] = [];
+  // isBuilding: boolean = false;
+  completed: boolean = false;
+  get isBuilding() {
+    return this.build.status === "pending";
+  }
+  get isCompleted() {
+    return this.build.status === "success" || this.build.status === "failed" || this.build.status === "cancelled";
+  }
+  get isSuccessful() {
+    return this.build.status === "success";
+  }
+  get isCancelled() {
+    return this.build.status === "cancelled";
+  }
+  get isFailed() {
+    return this.build.status === "failed";
+  }
+  get isIdle() {
+    return this.build.status === "idle";
+  }
+  private abortController: AbortController = new AbortController();
+  protected readonly log = (message: string, type?: "info" | "error") => {
+    const l = logLine(message, type);
+    this.logs.push(l);
+    return l;
+  };
 
-  static create(options: CreateBuildRunnerOptions): BuildRunner {
-    return new BuildRunner(options);
+  static create({
+    build,
+    strategy,
+    sourceDisk = new NullDisk(),
+  }: {
+    strategy: BuildStrategy;
+    buildLabel?: string;
+    build: BuildDAO;
+    sourceDisk: Disk;
+  }): BuildRunner {
+    return new BuildRunner({
+      build,
+      strategy,
+      sourceDisk,
+    });
   }
 
   get fileTree() {
@@ -58,106 +91,78 @@ export class BuildRunner {
   }
 
   get buildId() {
-    return this.buildDao.guid;
+    return this.build.guid;
   }
 
-  private log(message: string, type: "info" | "error" | "warning" = "info") {
-    const logLine: BuildLogLine = {
-      timestamp: new Date(),
-      message,
-      type,
-    };
-    this.logs.push(logLine);
-
-    if (type === "error") {
-      this.onError(message);
-    } else {
-      this.onLog(message);
-    }
-  }
-
-  private logInfo(message: string) {
-    this.log(message, "info");
-  }
-
-  private logError(message: string) {
-    this.log(message, "error");
-  }
-
-  private logWarning(message: string) {
-    this.log(message, "warning");
-  }
-
-  private constructor({
-    onLog = () => {},
-    onError = () => {},
+  constructor({
+    sourceDisk,
     sourcePath = absPath("/"),
-    workspace,
     strategy,
-    buildId,
-    buildLabel,
+    build,
   }: {
-    onLog?: (message: string) => void;
-    onError?: (message: string) => void;
     sourcePath?: AbsPath;
-    workspace: Workspace;
+    sourceDisk: Disk;
+    build: BuildDAO;
     strategy: BuildStrategy;
-    buildId?: string;
-    buildLabel?: string;
   }) {
-    this.onLog = onLog;
-    this.onError = onError;
+    this.sourceDisk = sourceDisk;
     this.sourcePath = sourcePath;
-    this.workspace = workspace;
     this.strategy = strategy;
+    this.build = build;
 
-    // Setup disks from workspace
-    this.sourceDisk = workspace.getDisk();
     this.outputDisk = this.sourceDisk;
-
-    // Use provided label or generate automatically
-    const label =
-      buildLabel || `${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Build - ${new Date().toLocaleString()}`;
-    const guid = buildId || BuildDAO.guid();
-    this.buildDao = BuildDAO.CreateNew({ label, diskId: this.sourceDisk.guid, guid, workspaceId: this.workspace.guid });
-
-    // Set output path from build DAO
-    this.outputPath = this.buildDao.getBuildPath();
+    this.outputPath = this.build.getBuildPath();
   }
-  async tearDown() {
-    // Note: Workspace cleanup is handled externally by the caller
-    // BuildRunner doesn't own the workspace lifecycle
+  async tearDown() {}
+  cancel({ log = () => {} }: { log?: (l: BuildLogLine) => void } = {}) {
+    this.abortController.abort();
+    log(this.log("Build cancelled by user", "error"));
   }
-  async execute(abortSignal?: AbortSignal): Promise<BuildResult> {
+  async execute({
+    abortSignal = this.abortController.signal,
+    log = () => {},
+  }: {
+    log?: (l: BuildLogLine) => void;
+    abortSignal?: AbortSignal;
+  } = {}): Promise<BuildDAO> {
+    const errorLog = (message: string) => log(this.log(message, "error"));
+    const infoLog = (message: string) => log(this.log(message, "info"));
     try {
-      this.logInfo(`Starting ${this.strategy} build, id ${this.buildDao.guid}...`);
-      this.logInfo(`Workspace: ${this.workspace ? "initialized" : "missing"}`);
-      this.logInfo(`Source disk: ${this.sourceDisk.guid}`);
-      this.logInfo(`Output path: ${this.outputPath}`);
+      this.build.status = "pending";
+      await this.build.save();
+      infoLog(`Starting ${this.strategy} build, id ${this.build.guid}...`);
+      infoLog(`Source disk: ${this.sourceDisk.guid}`);
+      infoLog(`Output path: ${this.outputPath}`);
 
       if (abortSignal?.aborted) {
-        this.logError("Build cancelled");
-        return { success: false, error: "Build cancelled" };
+        errorLog("Build cancelled");
+        return this.build.update({
+          logs: this.logs,
+          status: "cancelled",
+        });
       }
 
-      this.logInfo("Starting build process...");
-      this.logInfo("Building file tree...");
+      infoLog("Starting build process...");
+      infoLog("Building file tree...");
 
       // Index the source directory
-      this.logInfo("Indexing source files...");
+      infoLog("Indexing source files...");
       await this.sourceDisk.triggerIndex();
 
       const fileTree = this.sourceDisk.fileTree;
-      this.logInfo(`File tree loaded with ${fileTree ? "files found" : "no files"}`);
+      infoLog(`File tree loaded with ${fileTree ? "files found" : "no files"}`);
 
       await this.ensureOutputDirectory();
 
       if (abortSignal?.aborted) {
-        this.logError("Build cancelled");
-        return { success: false, error: "Build cancelled" };
+        errorLog("Build cancelled");
+        return this.build.update({
+          logs: this.logs,
+          status: "cancelled",
+        });
       }
 
-      this.logInfo(`Executing ${this.strategy} build strategy...`);
+      infoLog(`Executing ${this.strategy} build strategy...`);
       switch (this.strategy) {
         case "freeform":
           await this.buildFreeform();
@@ -171,55 +176,56 @@ export class BuildRunner {
         default:
           throw new Error(`Unknown build strategy: ${this.strategy}`);
       }
-      this.logInfo(`${this.strategy} build strategy completed`);
+      infoLog(`${this.strategy} build strategy completed`);
 
       if (abortSignal?.aborted) {
-        this.logError("Build cancelled");
-        return { success: false, error: "Build cancelled" };
+        return this.build.update({
+          logs: this.logs,
+          status: "cancelled",
+        });
       }
 
-      this.logInfo("Build completed successfully!");
+      infoLog("Build completed successfully!");
 
-      await this.saveBuildRecord();
-      this.logInfo(`Build saved with ID: ${this.buildDao.guid}`);
-
-      // Trigger index update so build files section refreshes
-      this.logInfo("Refreshing file tree index...");
-      await this.outputDisk.triggerIndex();
-      this.logInfo("File tree index updated");
-
-      return { success: true };
+      infoLog(`Build saved with ID: ${this.build.guid}`);
+      return this.build.update({
+        logs: this.logs,
+        status: "success",
+      });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      errorLog(`Build failed: ${errorMessage}`);
       if (!abortSignal?.aborted) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        this.logError(`Build failed: ${errorMessage}`);
-        return { success: false, error: errorMessage };
+        return this.build.update({
+          logs: this.logs,
+          status: "failed",
+        });
+      } else {
+        return this.build.update({
+          logs: this.logs,
+          status: "cancelled",
+        });
       }
-      return { success: false, error: "Build cancelled" };
     } finally {
-      // No workspace cleanup needed - workspace is managed externally
+      Object.freeze(this.build);
+      Object.freeze(this);
     }
   }
 
-  private async saveBuildRecord(): Promise<void> {
-    this.buildDao.logs = this.logs;
-    await this.buildDao.save();
-  }
-
   private async ensureOutputDirectory(): Promise<void> {
-    this.logInfo("Creating output directory...");
+    this.log("Creating output directory...", "info");
     await this.outputDisk.mkdirRecursive(this.outputPath);
   }
 
   private async buildFreeform(): Promise<void> {
-    this.logInfo("Building with freeform strategy...");
+    this.log("Building with freeform strategy...", "info");
 
     await this.copyAssets();
     await this.processTemplatesAndMarkdown();
   }
 
   private async buildBook(): Promise<void> {
-    this.logInfo("Building with book strategy...");
+    this.log("Building with book strategy...", "info");
 
     await this.copyAssets();
 
@@ -242,11 +248,11 @@ export class BuildRunner {
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
     await this.outputDisk.writeFile(indexPath, bookHtml);
-    this.logInfo("Book page generated");
+    this.log("Book page generated");
   }
 
   private async buildBlog(): Promise<void> {
-    this.logInfo("Building with blog strategy...");
+    this.log("Building with blog strategy...");
 
     await this.copyAssets();
 
@@ -257,7 +263,7 @@ export class BuildRunner {
   }
 
   private async copyAssets(): Promise<void> {
-    this.logInfo("Copying assets...");
+    this.log("Copying assets...");
 
     // Copy all files except templates, markdown, and files in _ directories
     for (const node of this.sourceDisk.fileTree.iterator(
@@ -270,7 +276,7 @@ export class BuildRunner {
   }
 
   private async processTemplatesAndMarkdown(): Promise<void> {
-    this.logInfo("Processing templates and markdown...");
+    this.log("Processing templates and markdown...");
 
     for (const node of this.sourceDisk.fileTree.iterator(
       (node) => node.isTreeFile() && FilterOutSpecialDirs(node.path)
@@ -320,7 +326,7 @@ export class BuildRunner {
     const content = await this.sourceDisk.readFile(node.path);
     await this.outputDisk.writeFile(outputPath, content);
 
-    this.logInfo(`Copied asset: ${relativePath}`);
+    this.log(`Copied asset: ${relativePath}`);
   }
 
   async processTemplate(node: TreeNode): Promise<void> {
@@ -334,7 +340,7 @@ export class BuildRunner {
     const html = mustache.render(content, { globalCss });
 
     await this.outputDisk.writeFile(outputPath, html);
-    this.logInfo(`Template processed: ${relativePath}`);
+    this.log(`Template processed: ${relativePath}`);
   }
 
   async processMarkdown(node: TreeNode): Promise<void> {
@@ -360,7 +366,7 @@ export class BuildRunner {
     await this.ensureDirectoryExists(dirname(outputPath));
     await this.outputDisk.writeFile(outputPath, html);
 
-    this.logInfo(`Markdown processed: ${relativePath}`);
+    this.log(`Markdown processed: ${relativePath}`);
   }
 
   async loadPagesFromDirectory(dirPath: RelPath): Promise<PageData[]> {
@@ -422,7 +428,7 @@ export class BuildRunner {
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
     await this.outputDisk.writeFile(indexPath, html);
-    this.logInfo("Blog index generated");
+    this.log("Blog index generated");
   }
 
   async processLayout(post: PageData): Promise<{ layout: string; type: "mustache" | "ejs" }> {
@@ -457,7 +463,7 @@ export class BuildRunner {
       const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
       await this.outputDisk.writeFile(outputPath, html);
 
-      this.logInfo(`Blog post generated: ${post.path}`);
+      this.log(`Blog post generated: ${post.path}`);
     }
   }
 
@@ -488,7 +494,7 @@ export class BuildRunner {
         const content = String(await this.sourceDisk.readFile(stylePath));
         styles.push(content);
       } catch (_err) {
-        this.logError(`Style file not found: ${styleFile}`);
+        this.log(`Style file not found: ${styleFile}`, "error");
       }
     }
 
@@ -536,6 +542,21 @@ export class BuildRunner {
     });
   }
 }
+
+export class NullBuildRunner extends BuildRunner {
+  constructor() {
+    super({
+      build: NullBuild,
+      strategy: "freeform",
+      sourceDisk: new NullDisk(),
+    });
+  }
+
+  async execute(): Promise<BuildDAO> {
+    return this.build;
+  }
+}
+export const NULL_BUILD_RUNNER = new NullBuildRunner();
 
 const DefaultPageLayout = `<!DOCTYPE html>
 <html lang="en">

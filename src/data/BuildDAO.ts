@@ -1,43 +1,48 @@
 import { BuildLogLine, BuildRecord } from "@/data/BuildRecord";
-import { DiskDAO } from "@/data/disk/DiskDAO";
+import { Disk } from "@/data/disk/Disk";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
+import { DiskJType } from "@/data/DiskType";
 import { ClientDb } from "@/data/instance";
+import { NullDisk } from "@/data/NullDisk";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { AbsPath, joinPath, relPath } from "@/lib/paths2";
+import { absPath, AbsPath, joinPath, relPath } from "@/lib/paths2";
 import { nanoid } from "nanoid";
 
-export type BuildJType = BuildRecord;
+export type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
 
-export class BuildDAO {
+export class BuildDAO implements BuildRecord {
   guid: string;
+  disk: Disk | DiskJType;
   label: string;
   timestamp: Date;
-  diskId: string;
+  status: "idle" | "pending" | "success" | "failed" | "cancelled";
   workspaceId: string;
   buildPath: AbsPath;
-  logs: BuildLogLine[] = [];
+  logs: BuildLogLine[];
 
   static guid = () => "build_id_" + nanoid();
 
-  constructor(build: BuildRecord) {
+  constructor(build: Omit<BuildRecord, "status">) {
     this.guid = build.guid;
     this.label = build.label;
     this.timestamp = build.timestamp;
-    this.diskId = build.diskId;
+    this.disk = build.disk;
     this.workspaceId = build.workspaceId;
     this.buildPath = build.buildPath;
+    this.status = "idle";
+    this.logs = build.logs;
   }
 
   static FromJSON(json: BuildJType) {
     return new BuildDAO(json);
   }
 
-  toJSON(): BuildJType {
+  toJSON() {
     return {
       guid: this.guid,
       label: this.label,
       timestamp: this.timestamp,
-      diskId: this.diskId,
+      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
       workspaceId: this.workspaceId,
       buildPath: this.buildPath,
       logs: this.logs,
@@ -46,36 +51,40 @@ export class BuildDAO {
 
   static CreateNew({
     label,
-    diskId,
+    disk,
     workspaceId,
     guid = BuildDAO.guid(),
   }: {
     label: string;
-    diskId: string;
+    disk: Disk | DiskJType;
     workspaceId: string;
-    guid: string;
+    guid?: string;
   }) {
     const buildPath = joinPath(SpecialDirs.Build, relPath(guid));
     return new BuildDAO({
       guid,
       label,
       timestamp: new Date(),
-      diskId,
+      disk: disk instanceof Disk ? disk : DiskFromJSON(disk),
       workspaceId,
       buildPath,
       logs: [],
     });
   }
 
-  static FetchFromGuid(guid: string) {
-    return ClientDb.builds.where("guid").equals(guid).first();
+  static async FetchFromGuid(guid: string) {
+    const result = await ClientDb.builds.where("guid").equals(guid).first();
+    if (!result) return result;
+    return BuildDAO.FromJSON(result);
   }
 
-  static async all(workspaceId?: string) {
-    const buildQuery = !workspaceId
-      ? ClientDb.builds.orderBy("timestamp")
-      : ClientDb.builds.where("workspaceId").equals(workspaceId);
-    return (await buildQuery.reverse().sortBy("timestamp")).map((build) => BuildDAO.FromJSON(build));
+  static async all() {
+    return (await ClientDb.builds.toArray()).map((build) => BuildDAO.FromJSON(build));
+  }
+
+  static async allForWorkspace(workspaceId: string) {
+    const builds = await ClientDb.builds.where("workspaceId").equals(workspaceId).reverse().sortBy("timestamp");
+    return builds.map((build) => BuildDAO.FromJSON(build));
   }
 
   static async allForDisk(diskId: string) {
@@ -91,12 +100,12 @@ export class BuildDAO {
     return this;
   }
 
-  update(properties: Partial<BuildRecord>) {
-    this.label = properties.label ?? this.label;
-    this.timestamp = properties.timestamp ?? this.timestamp;
-    this.diskId = properties.diskId ?? this.diskId;
-    this.buildPath = properties.buildPath ?? this.buildPath;
-    return ClientDb.builds.update(this.guid, properties);
+  async update({ ...properties }: Partial<Omit<BuildRecord, "guid">>) {
+    for (const [key, value] of Object.entries(properties)) {
+      (this as any)[key] = value;
+    }
+    await ClientDb.builds.update(this.guid, properties);
+    return this;
   }
 
   save() {
@@ -105,9 +114,10 @@ export class BuildDAO {
       label: this.label,
       timestamp: this.timestamp,
       workspaceId: this.workspaceId,
-      diskId: this.diskId,
+      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
       buildPath: this.buildPath,
       logs: this.logs,
+      status: this.status,
     });
   }
 
@@ -115,28 +125,38 @@ export class BuildDAO {
     return this.buildPath;
   }
 
-  async getDisk() {
-    const diskDao = await DiskDAO.FetchFromGuid(this.diskId);
-    if (!diskDao) return null;
-    return DiskFromJSON(diskDao);
+  get Disk() {
+    return (this.disk = this.disk instanceof Disk ? this.disk : DiskFromJSON(this.disk));
   }
 
   async delete() {
-    const disk = await this.getDisk();
-
-    if (disk) {
-      try {
-        await disk.removeMultipleFiles([this.buildPath]);
-      } catch (error) {
-        console.error(`Failed to remove build files at ${this.buildPath}:`, error);
-      }
-    } else {
-      console.warn(`No disk found for diskId: ${this.diskId}`);
+    try {
+      const disk = this.Disk;
+      await disk.removeMultipleFiles([this.buildPath]);
+    } catch (error) {
+      console.error(`Failed to remove build files at ${this.buildPath}:`, error);
     }
-
-    return Promise.all([DiskDAO.delete(this.diskId), BuildDAO.delete(this.guid)]);
+    //todo delete disk, when i move over to build disks
+    // return Promise.all([BuildDAO.delete(this.guid)]);
+    return BuildDAO.delete(this.guid);
   }
   static delete(guid: string) {
     return ClientDb.builds.delete(guid);
   }
 }
+
+export class NullBuildDAO extends BuildDAO {
+  constructor() {
+    super({
+      guid: "",
+      label: "",
+      timestamp: new Date(0),
+      disk: new NullDisk(),
+      workspaceId: "",
+      buildPath: absPath("/"),
+      logs: [],
+    });
+  }
+}
+
+export const NullBuild = new NullBuildDAO();

@@ -30,6 +30,7 @@ export function ErrorPlaque({
   error?: Error | null;
   reset?: () => void;
 }) {
+  const navigateTo = error instanceof ApplicationError ? error.getNavigateTo() : null;
   return (
     <div className="flex h-screen w-[calc(100vw-5rem)]">
       <div className="w-full">
@@ -55,8 +56,8 @@ export function ErrorPlaque({
               <Button variant="outline" className="mt-2" onClick={reset}>
                 Close
               </Button>
-              <Button variant="secondary" className="mt-2" onClick={() => (window.location.href = "/")}>
-                Home
+              <Button variant="secondary" className="mt-2" onClick={() => (window.location.href = navigateTo || "/")}>
+                {navigateTo && navigateTo !== "/" ? `Go To ${navigateTo}` : "Home"}
               </Button>
             </CardContent>
           </Card>

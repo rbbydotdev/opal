@@ -11,9 +11,6 @@ import { Lock } from "lucide-react";
 
 import { Download, Info } from "lucide-react";
 import React from "react";
-// import { useWorkspaceContext } from "../../context/WorkspaceHooks";
-// import { useSingleItemExpander } from "../../features/tree-expander/useSingleItemExpander";
-// import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/ui/sidebar";
 export function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleItemExpander("export");
   const { currentWorkspace } = useWorkspaceContext();

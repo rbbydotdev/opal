@@ -3,36 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/BuildDAO";
+import { BuildLogLine } from "@/data/BuildRecord";
 import { Workspace } from "@/data/Workspace";
-import { useBuildExecution } from "@/hooks/useBuildExecution";
-import { useBuildLogs } from "@/hooks/useBuildLogs";
-import { useBuildModalState } from "@/hooks/useBuildModalState";
-import { BuildRunner } from "@/services/BuildRunner";
+import { BuildLog } from "@/hooks/useBuildLogs";
+import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
-import React, { createContext, useCallback, useContext, useEffect, useImperativeHandle, useRef } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
-type BuildModalOptionsType = {
-  onCancel?: () => void;
-  onComplete?: (buildDao?: BuildDAO) => void;
-  currentWorkspace: Workspace;
-};
-
 type BuildModalContextType = {
-  open: (options: BuildModalOptionsType) => Promise<"cancelled" | "completed">;
+  openNew: (options: { currentWorkspace: Workspace }) => Promise<void>;
   close: () => void;
 };
 
 const BuildModalContext = createContext<BuildModalContextType | undefined>(undefined);
 
 export function BuildModalProvider({ children }: { children: React.ReactNode }) {
-  const { open, close, cmdRef } = useBuildModalCmd();
-
+  const { currentWorkspace } = useWorkspaceContext();
+  const { openNew, close, cmdRef } = useBuildModalCmd();
   return (
-    <BuildModalContext.Provider value={{ open, close }}>
+    <BuildModalContext.Provider value={{ openNew, close }}>
       {children}
-      <BuildModal cmdRef={cmdRef} />
+      <BuildModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
     </BuildModalContext.Provider>
   );
 }
@@ -45,133 +39,126 @@ export function useBuildModal() {
 
 function useBuildModalCmd() {
   const cmdRef = useRef<{
-    open: (options: BuildModalOptionsType) => Promise<"cancelled" | "completed">;
+    openNew: (options: { currentWorkspace: Workspace }) => Promise<void>;
     close: () => void;
   }>({
-    open: async () => "completed" as const,
+    openNew: async () => {},
     close: () => {},
   });
 
   return {
-    open: (options: BuildModalOptionsType) => cmdRef.current.open(options),
-    close: () => cmdRef.current.close(),
+    ...cmdRef.current,
     cmdRef,
   };
 }
 
 export function BuildModal({
   cmdRef,
+  currentWorkspace,
 }: {
+  currentWorkspace: Workspace;
   cmdRef: React.ForwardedRef<{
-    open: (options: BuildModalOptionsType) => Promise<"cancelled" | "completed">;
+    openNew: (options: { currentWorkspace: Workspace }) => void;
     close: () => void;
   }>;
 }) {
-  const {
-    isOpen,
-    strategy,
-    buildCompleted,
-    buildError,
-    optionsRef,
-    setStrategy,
-    setBuildError,
-    openModal,
-    closeModal,
-    completeModal,
-    handleOkay,
-  } = useBuildModalState();
-  const buildExecution = useBuildExecution();
-  const { log, logs, errorLog, clearLogs } = useBuildLogs();
-  const buildRunnerRef = useRef<BuildRunner | null>(null);
+  const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
+
+  const [isOpen, setIsOpen] = useState(false);
+  const optionsRef = useRef<{
+    currentWorkspace: Workspace;
+    onCancel?: () => void;
+    onComplete?: (buildDao?: BuildDAO) => void;
+  } | null>(null);
+  // const [buildCompleted, setBuildCompleted] = useState(false);
+  const [buildError, setBuildError] = useState<string | null>(null);
+  const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
+  const [logs, setLogs] = useState<BuildLog[]>([]);
+
+  const buildCompleted = buildRunner ? buildRunner.isSuccessful : false;
+  const handleOkay = () => setIsOpen(false);
+  const log = useCallback((bl: BuildLogLine) => {
+    setLogs((prev) => [...prev, bl]);
+  }, []);
+  const openNew = useCallback(async () => {
+    const build = BuildDAO.CreateNew({
+      label: `Build ${new Date().toLocaleString()}`,
+      workspaceId: currentWorkspace.guid,
+      disk: currentWorkspace.getDisk(),
+    });
+    setBuildRunner(
+      BuildRunner.create({
+        build,
+        sourceDisk: currentWorkspace.getDisk(),
+        strategy,
+      })
+    );
+    setIsOpen(true);
+  }, [currentWorkspace, strategy]);
+  const openEdit = async ({ buildId }: { buildId: string }) => {
+    const build = await BuildDAO.FetchFromGuid(buildId);
+    setBuildRunner(
+      BuildRunner.create({
+        build: build!,
+        sourceDisk: currentWorkspace.getDisk(),
+        strategy,
+      })
+    );
+  };
 
   useEffect(() => {
-    if (isOpen && optionsRef.current?.currentWorkspace) {
-      buildRunnerRef.current = BuildRunner.create({
-        onLog: log,
-        onError: errorLog,
-        workspace: optionsRef.current.currentWorkspace,
-        strategy,
-      });
-    }
-
-    if (!isOpen) {
-      setBuildError(null);
-      clearLogs();
-    }
-
     return () => {
-      if (buildRunnerRef.current) {
-        void buildRunnerRef.current?.tearDown();
-        buildRunnerRef.current = null;
+      if (!isOpen) {
+        setBuildError(null);
+        setLogs([]);
       }
     };
-  }, [isOpen, strategy, log, errorLog, optionsRef, setBuildError, clearLogs]);
+  }, [isOpen, strategy, log, optionsRef, setBuildError, currentWorkspace]);
 
   const handleBuild = async () => {
-    if (!optionsRef.current) throw new Error("Options not provided");
-
-    if (buildExecution.isBuilding) return;
-
-    clearLogs();
-    const abortController = buildExecution.startBuild();
-
-    if (!buildRunnerRef.current) {
-      setBuildError("Build runner not initialized");
-      return;
-    }
-
-    try {
-      const result = await buildRunnerRef.current.execute(abortController.signal);
-
-      buildExecution.finishBuild();
-
-      if (result.success) {
-        completeModal(buildRunnerRef.current.buildDao);
-      } else if (result.error) {
-        setBuildError(result.error);
-      } else {
-        setBuildError("Build failed with no error message");
-      }
-    } catch (error) {
-      setBuildError(error instanceof Error ? error.message : String(error));
-      buildExecution.finishBuild();
+    if (!buildRunner) return;
+    await buildRunner.execute({
+      log,
+    });
+    if (buildRunner.isSuccessful) {
+      setBuildError(null);
+      console.log("Build completed successfully");
+    } else if (buildRunner.isFailed) {
+      setBuildError("Build failed. Please check the logs for more details.");
+    } else if (buildRunner.isCancelled) {
+      setBuildError("Build was cancelled.");
     }
   };
 
   const handleCancel = useCallback(() => {
-    if (buildExecution.isBuilding) {
-      buildExecution.cancelBuild();
-      errorLog("Build cancelled by user");
-    }
-
-    closeModal();
-  }, [buildExecution, closeModal, errorLog]);
+    buildRunner!.cancel({ log });
+    setIsOpen(false);
+  }, [buildRunner, log]);
 
   const handleClose = useCallback(() => {
-    if (buildExecution.isBuilding) {
-      return;
-    }
-    handleCancel();
-  }, [handleCancel, buildExecution.isBuilding]);
+    if (buildRunner.isBuilding) return;
+    setIsOpen(false);
+  }, [buildRunner]);
 
   useImperativeHandle(
     cmdRef,
     () => ({
-      open: openModal,
+      openNew,
       close: handleClose,
     }),
-    [openModal, handleClose]
+    [handleClose, openNew]
   );
+  // const isIdle = buildRunnerRef.current?.build.status === "idle";
 
   return (
-    <Dialog open={isOpen} onOpenChange={buildExecution.isBuilding ? undefined : handleClose}>
+    <Dialog open={isOpen} onOpenChange={buildRunner.isBuilding ? undefined : handleClose}>
       <DialogContent
         className="max-w-2xl h-[80vh] flex flex-col"
-        onPointerDownOutside={buildExecution.isBuilding ? (e) => e.preventDefault() : undefined}
+        onPointerDownOutside={buildRunner.isBuilding ? (e) => e.preventDefault() : undefined}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {buildExecution.isBuilding && <Loader size={16} className="animate-spin" />}
+            {buildRunner.isBuilding && <Loader size={16} className="animate-spin" />}
             Build Workspace
           </DialogTitle>
           <DialogDescription>Select a build strategy and publish your workspace to static HTML.</DialogDescription>
@@ -186,7 +173,7 @@ export function BuildModal({
             <Select
               value={strategy}
               onValueChange={(value: BuildStrategy) => setStrategy(value)}
-              disabled={buildExecution.isBuilding}
+              disabled={buildRunner.isBuilding || buildRunner.isCompleted}
             >
               <SelectTrigger id="strategy-select" className="min-h-14">
                 <SelectValue placeholder="Select build strategy" />
@@ -221,8 +208,12 @@ export function BuildModal({
           {/* Build Controls */}
           <div className="flex gap-2">
             {!buildCompleted && (
-              <Button onClick={handleBuild} disabled={buildExecution.isBuilding} className="flex items-center gap-2">
-                {buildExecution.isBuilding ? (
+              <Button
+                onClick={handleBuild}
+                disabled={buildRunner.isBuilding || buildRunner.isCompleted}
+                className="flex items-center gap-2"
+              >
+                {buildRunner.isBuilding ? (
                   <>
                     <Loader size={16} className="animate-spin" />
                     Building...
@@ -233,7 +224,7 @@ export function BuildModal({
               </Button>
             )}
 
-            {buildExecution.isBuilding && (
+            {buildRunner.isBuilding && (
               <Button variant="outline" onClick={handleCancel} className="flex items-center gap-2">
                 <X size={16} />
                 Cancel

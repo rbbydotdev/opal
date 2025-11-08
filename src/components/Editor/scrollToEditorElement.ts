@@ -1,14 +1,13 @@
-import { MdxEditorSelector } from "@/components/Editor/EditorConst";
+import { MdxEditorScrollSelector } from "@/components/Editor/EditorConst";
 
 export const scrollToEditorElement = (
-  // element: HTMLElement | null,
   element: { getClientRects: () => DOMRectList },
   options?: {
     offset?: number;
     ignoreIfInView?: boolean;
     behavior?: ScrollBehavior;
   },
-  scrollContentElement = document.querySelector(MdxEditorSelector) as HTMLElement
+  scrollContentElement = document.querySelector(MdxEditorScrollSelector) as HTMLElement
 ) => {
   if (!element) return;
   const ignoreIfInView = options?.ignoreIfInView ?? false;

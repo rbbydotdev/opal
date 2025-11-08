@@ -1,4 +1,5 @@
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
+import { useWorkspacButtonBarSpin } from "@/app/useWorkspacButtonBarSpin";
 import { useConfirm } from "@/components/Confirm";
 import { useToggleEditHistory } from "@/components/Editor/history/useToggleEditHistory";
 import { useToggleHistoryImageGeneration } from "@/components/Editor/history/useToggleHistoryImageGeneration";
@@ -20,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceMenu } from "@/components/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { BuildDAO } from "@/data/BuildDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { Workspace } from "@/data/Workspace";
@@ -136,14 +138,8 @@ function BigButton({
   );
 }
 
-// export function WorkspaceButtonBar() {
-//   const { storedValue: shrink, setStoredValue: setShrink } = useShrink();
-//   const { storedValue: autoHide } = useAutoHide();
-//   return <WorkspaceButtonBarInternal shrink={shrink} autoHide={autoHide} />;
-// }
-
 function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
-  const { storedValue: spin, setStoredValue: setSpin } = useLocalStorage2("WorkspaceButtonBar/spin", true);
+  const { storedValue: spin, setStoredValue: setSpin } = useWorkspacButtonBarSpin();
   const { mode, value, themeName, setPreference, setTheme } = useThemeSettings();
   const { setStoredValue: setAutoHide, storedValue: autoHide } = useAutoHide();
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
@@ -327,14 +323,13 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
     </ContextMenu>
   );
 }
-
 export function WorkspaceButtonBar() {
   const { storedValue: shrink } = useShrink();
   const { storedValue: autoHide } = useAutoHide();
   const { pending } = useRequestSignals();
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
-  const { storedValue: spin } = useLocalStorage2("WorkspaceButtonBar/spin", true);
+  const { storedValue: spin } = useWorkspacButtonBarSpin();
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const navigate = useNavigate();
@@ -378,7 +373,11 @@ export function WorkspaceButtonBar() {
                   to="#"
                   onClick={() =>
                     Promise.all([
+                      (() => {
+                        console.log("Unregistering service workers...");
+                      })(),
                       clearAllCaches(),
+                      BuildDAO.all().then((builds) => Promise.all(builds.map((build) => build.delete()))),
                       DiskDAO.all().then((disks) => Promise.all(disks.map((disk) => disk.delete()))),
                       RemoteAuthDAO.all().then((auths) => Promise.all(auths.map((auth) => auth.delete()))),
                       currentWorkspace.tearDown(),

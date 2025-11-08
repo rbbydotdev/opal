@@ -3,58 +3,29 @@ import { SelectableList } from "@/components/ui/SelectableList";
 import { BuildDAO } from "@/data/BuildDAO";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
+import { useLiveQuery } from "dexie-react-hooks";
 import { Archive, Delete, Eye } from "lucide-react";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
-export interface SidebarBuildsListProps {
-  diskId?: string;
+export function SidebarBuildsList({
+  workspaceId,
+  selectedBuildIds,
+  onSelectionChange,
+  onDelete,
+  className,
+}: {
+  workspaceId: string;
   selectedBuildIds?: string[];
   onSelectionChange?: (selectedIds: string[]) => void;
   onDelete?: (buildId: string) => void;
   className?: string;
-}
-
-export interface SidebarBuildsListRef {
-  refresh: () => Promise<void>;
-}
-
-export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsListProps>(function SidebarBuildsList(
-  { diskId, onDelete },
-  ref
-) {
-  const [builds, setBuilds] = useState<BuildDAO[]>([]);
+}) {
   const errorToss = useErrorToss();
-
-  const loadBuilds = useCallback(async () => {
-    try {
-      const buildList = diskId ? await BuildDAO.allForDisk(diskId) : await BuildDAO.all();
-      setBuilds(buildList);
-    } catch (error) {
-      errorToss(coerceError(error));
-    }
-  }, [diskId, errorToss]);
-
-  useEffect(() => {
-    void loadBuilds();
-  }, [diskId, loadBuilds]);
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      refresh: loadBuilds,
-    }),
-    [loadBuilds]
-  );
-
+  const builds = useLiveQuery(async () => BuildDAO.allForWorkspace(workspaceId), [workspaceId]) || [];
   const handleDelete = async (buildId: string) => {
     try {
       const build = builds.find((b) => b.guid === buildId);
-      if (build) {
-        await build.delete();
-        setBuilds((prev) => prev.filter((b) => b.guid !== buildId));
-        onDelete?.(buildId);
-      }
+      if (build) await build.delete();
     } catch (error) {
       errorToss(coerceError(error));
     }
@@ -93,7 +64,7 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
               <div className="flex flex-col min-w-0 ml-1">
                 <div className="font-mono text-xs truncate">{build.label}</div>
                 <div className="text-2xs text-muted-foreground truncate">
-                  Disk: {build.diskId.slice(-8)} • {timeAgo(build.timestamp)}
+                  Disk: {build.disk.guid.slice(-8)} • {timeAgo(build.timestamp)}
                 </div>
               </div>
               <SelectableList.ItemMenu>
@@ -114,4 +85,4 @@ export const SidebarBuildsList = forwardRef<SidebarBuildsListRef, SidebarBuildsL
       </SelectableList.Content>
     </SelectableList.Root>
   );
-});
+}
