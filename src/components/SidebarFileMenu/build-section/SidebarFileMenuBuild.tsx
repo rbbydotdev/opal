@@ -1,5 +1,5 @@
 import { useBuildModal } from "@/components/BuildModal";
-import { SidebarBuildsList, SidebarBuildsListRef } from "@/components/SidebarFileMenu/build-section/SidebarBuildsList";
+import { SidebarBuildsList } from "@/components/SidebarFileMenu/build-section/SidebarBuildsList";
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -8,7 +8,7 @@ import { Workspace } from "@/data/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { Code2, Github, Hammer } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 export function SidebarFileMenuBuild({
   currentWorkspace,
@@ -18,20 +18,14 @@ export function SidebarFileMenuBuild({
 }) {
   const [expanded, setExpand] = useSingleItemExpander("build");
   const { info } = useWorkspaceGitRepo({ currentWorkspace });
-  const { open: openBuildModal } = useBuildModal();
+  const { openNew } = useBuildModal();
   const [selectedBuildIds, setSelectedBuildIds] = useState<string[]>([]);
-  const buildsListRef = useRef<SidebarBuildsListRef>(null);
   const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
 
   const handlePublishToHTML = async () => {
     try {
-      await openBuildModal({
+      await openNew({
         currentWorkspace,
-        onComplete: async (buildDao) => {
-          console.log("Build completed successfully:", buildDao?.guid);
-          // Refresh the builds list to show the new build
-          await buildsListRef.current?.refresh();
-        },
       });
     } catch (error) {
       console.error("Build modal error:", error);
@@ -72,8 +66,7 @@ export function SidebarFileMenuBuild({
 
             {/* Builds List */}
             <SidebarBuildsList
-              ref={buildsListRef}
-              diskId={currentWorkspace.getDisk().guid}
+              workspaceId={currentWorkspace.id}
               selectedBuildIds={selectedBuildIds}
               onSelectionChange={setSelectedBuildIds}
               onDelete={(buildId) => {

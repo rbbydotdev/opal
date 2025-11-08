@@ -12,13 +12,20 @@ function expandForFile(dirTree: string[], file: AbsPath | string | null, exp: Ex
   return exp;
 }
 
-export function TreeExpanderProvider({ children, id }: { children: ReactNode; id: string }) {
+export function TreeExpanderProvider({
+  children,
+  id,
+  defaultExpanded = false,
+}: {
+  children: ReactNode;
+  id: string;
+  defaultExpanded?: boolean;
+}) {
   const { currentWorkspace, flatTree, workspaceRoute } = useWorkspaceContext();
   const expanderId = currentWorkspace.id + "/" + id;
 
-  // Import the hook dynamically to avoid circular dependency
   const value = useTreeExpander({ nodePaths: flatTree, activePath: workspaceRoute.path, expanderId });
-  return <TreeExpanderContext.Provider value={value}>{children}</TreeExpanderContext.Provider>;
+  return <TreeExpanderContext.Provider value={{ ...value, defaultExpanded }}>{children}</TreeExpanderContext.Provider>;
 }
 
 export function useTreeExpanderContext() {

@@ -8,6 +8,7 @@ const defaultExpander: TreeExpanderValue = {
   expanderId: "",
   expandForNode: (_node, _state: boolean) => {},
   isExpanded: (_node) => false,
+  defaultExpanded: false,
 };
 
 export const TreeExpanderContext = createContext<TreeExpanderValue>(defaultExpander);

@@ -9,4 +9,5 @@ export interface TreeExpanderValue {
   expanderId: string;
   expandForNode: (node: TreeNode, state: boolean) => void;
   isExpanded: (node: string | TreeNode) => boolean;
+  defaultExpanded: boolean;
 }

@@ -46,8 +46,8 @@ export const SidebarFileMenuFiles = ({
     throw new Error("SidebarFileMenuFiles: scoped node is not a TreeDir");
   }
 
-  const { expanderId } = useTreeExpanderContext();
-  const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId);
+  const { expanderId, defaultExpanded } = useTreeExpanderContext();
+  const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId, defaultExpanded);
 
   const isEmpty = !Object.keys(treeNode.filterOutChildren(filter) ?? {}).length;
 

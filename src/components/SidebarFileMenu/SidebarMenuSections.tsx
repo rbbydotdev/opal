@@ -204,7 +204,7 @@ function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]
       <DndSlot dndId={"files"}>
         <div className="flex-shrink flex">
           <FileTreeMenuCtxProvider nodeFromPath={nodeFromPath}>
-            <TreeExpanderProvider id="MainFiles">
+            <TreeExpanderProvider id="MainFiles" defaultExpanded={true}>
               <FileTreeProvider currentWorkspace={currentWorkspace} filterOut={FilterInSpecialDirs}>
                 <MainSidebarFileMenuFileSection ItemContextMenu={MainFileTreeContextMenu} />
               </FileTreeProvider>

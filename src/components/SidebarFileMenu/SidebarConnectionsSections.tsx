@@ -4,6 +4,7 @@ import { SelectableList } from "@/components/ui/SelectableList";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { cn } from "@/lib/utils";
 import { Delete, Pencil, Plus, Sparkle } from "lucide-react";
 import { useState } from "react";
 
@@ -43,7 +44,11 @@ function ConnectionManager() {
         </SelectableList.Header>
 
         <SelectableList.Actions>
-          <SelectableList.ActionButton onClick={handleAddConnection} title="Add Connection" className="right-7">
+          <SelectableList.ActionButton
+            onClick={handleAddConnection}
+            title="Add Connection"
+            className={cn({ "right-7": remoteAuths.length > 0, "right-2": remoteAuths.length === 0 })}
+          >
             <Plus className="w-4 h-4" />
             <span className="sr-only">Add Connection</span>
           </SelectableList.ActionButton>

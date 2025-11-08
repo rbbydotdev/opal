@@ -74,6 +74,7 @@ export function errorCode(error: unknown, code?: string): ErrorWithCode {
 }
 
 export class ApplicationError extends Error {
+  private navigateTo: string | null = null;
   name = "ApplicationError";
   // message!: string;
   code: number;
@@ -88,6 +89,13 @@ export class ApplicationError extends Error {
     }
     this._hint = unwrapError(hint);
     return this;
+  }
+  setNavigateTo(path: string) {
+    this.navigateTo = path;
+    return this;
+  }
+  getNavigateTo() {
+    return this.navigateTo;
   }
 
   constructor(errorOrMessage: Error | string = "application error", code: number = 500) {
