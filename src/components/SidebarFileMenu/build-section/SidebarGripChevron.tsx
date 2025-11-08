@@ -1,8 +1,8 @@
 import { ChevronRight, GripVertical } from "lucide-react";
 
-export const SidebarGripChevron = () => (
+export const SidebarGripChevron = ({ canDrag = true }: { canDrag?: boolean }) => (
   <div className="flex items-center">
-    <GripVertical size={12} className="mr-0 cursor-grab opacity-50 w-4" />
+    {canDrag && <GripVertical size={12} className="mr-0 cursor-grab opacity-50 w-4" />}
     <ChevronRight
       size={14}
       className={

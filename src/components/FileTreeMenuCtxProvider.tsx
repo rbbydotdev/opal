@@ -1,3 +1,4 @@
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";
@@ -25,6 +26,8 @@ export const FileTreeMenuCtx = React.createContext<{
     }>
   >;
   selectedFocused: AbsPath[];
+  setIsDragging: (value: boolean) => void;
+  isDragging: boolean;
   draggingNode: TreeNode | null;
   draggingNodes: TreeNode[];
   setDraggingNode: (node: TreeNode | null) => void;
@@ -44,22 +47,23 @@ type EditType = "rename" | "new" | "duplicate";
 
 export const FileTreeMenuCtxProvider = ({
   children,
-  nodeFromPath,
   scope,
   // filterRange is needed since selecting ranges will include hidden files in the range
   // so they need filtered out
   // filterRange, TODO - i don't think we need this anymore
 }: {
   children: React.ReactNode;
-  nodeFromPath: (path?: AbsPath | string | null) => TreeNode | null;
   scope?: AbsPath;
 }) => {
   const location = useLocation();
+  const { currentWorkspace } = useWorkspaceContext();
+  const nodeFromPath = currentWorkspace.nodeFromPath;
 
   const { filePath } = Workspace.parseWorkspacePath(location.pathname);
   const [dragOver, setDragOver] = useState<TreeNode | null>(null);
   const [draggingNode, setDraggingNode] = useState<TreeNode | null>(null);
   const [draggingNodes, setDraggingNodes] = useState<TreeNode[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   const scopedTreeNode = useMemo(
     () => (typeof scope === "undefined" ? nodeFromPath(absPath("/"))! : nodeFromPath(scope)!),
@@ -158,6 +162,8 @@ export const FileTreeMenuCtxProvider = ({
         dragOver,
         setDragOver,
         setDraggingNode,
+        setIsDragging,
+        isDragging,
         setDraggingNodes,
         selectedFocused,
         draggingNodes,

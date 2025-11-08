@@ -3,9 +3,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
-import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { useFileTree } from "@/context/FileTreeProvider";
+import { NoopContextMenu, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
@@ -14,7 +13,7 @@ import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { NULL_TREE_ROOT, RootNode, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import clsx from "clsx";
-import { Files } from "lucide-react";
+import { ChevronRight, Files, GripVertical } from "lucide-react";
 import React, { ComponentProps, JSX } from "react";
 export const SidebarFileMenuFiles = ({
   children,
@@ -23,18 +22,20 @@ export const SidebarFileMenuFiles = ({
   title,
   Icon = Files,
   scope,
+  canDrag,
   contentBanner = null,
-  ItemContextMenu,
+  ItemContextMenu = NoopContextMenu,
   ...rest
 }: {
   className?: string;
   contentBanner?: React.ReactNode | null;
   title: JSX.Element | string;
   children: React.ReactNode;
+  canDrag?: boolean;
   scope?: AbsPath;
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
   Icon?: React.ComponentType<{ size?: number; className?: string }>;
-  ItemContextMenu: FileItemContextMenuComponentType;
+  ItemContextMenu?: FileItemContextMenuComponentType;
 } & ComponentProps<typeof SidebarGroup>) => {
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const { currentWorkspace } = useWorkspaceContext();
@@ -56,7 +57,7 @@ export const SidebarFileMenuFiles = ({
       <ItemContextMenu disabled={!isEmpty} fileNode={fileTreeDir} currentWorkspace={currentWorkspace}>
         <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 ", className)} {...rest}>
           <Collapsible
-            className="group/collapsible flex flex-col min-h-0"
+            className="group/collapsible-files flex flex-col min-h-0"
             open={groupExpanded}
             onOpenChange={groupSetExpand}
           >
@@ -64,7 +65,18 @@ export const SidebarFileMenuFiles = ({
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton className="w-auto flex-grow">
                   <SidebarGroupLabel className="pl-0">
-                    <SidebarGripChevron />
+                    {/* <SidebarGripChevron canDrag={canDrag} /> */}
+
+                    <div className="flex items-center">
+                      {canDrag && <GripVertical size={12} className="mr-0 cursor-grab opacity-50 w-4" />}
+                      <ChevronRight
+                        size={14}
+                        className={
+                          "transition-transform duration-100 group-data-[state=open]/selectablelist:rotate-90 group-data-[state=open]/collapsible-files:rotate-90 group-data-[state=closed]/collapsible-files:rotate-0 group-data-[state=closed]/selectablelist:rotate-0 -ml-1"
+                        }
+                      />
+                    </div>
+
                     <div className="flex justify-center items-center ">
                       <Icon className="mr-2" size={12} />
                       {title}

@@ -35,8 +35,8 @@ function WorkspaceLayout() {
   return (
     <>
       <Toaster />
-      <FileTreeProvider currentWorkspace={currentWorkspace} filterIn={FileOnlyFilter} filterOut={FilterInSpecialDirs}>
-        <FileTreeMenuCtxProvider nodeFromPath={currentWorkspace.nodeFromPath}>
+      <FileTreeProvider filterIn={FileOnlyFilter} filterOut={FilterInSpecialDirs}>
+        <FileTreeMenuCtxProvider>
           <WorkspaceSpotlightSearch />
         </FileTreeMenuCtxProvider>
       </FileTreeProvider>

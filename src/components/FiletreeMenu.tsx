@@ -5,6 +5,7 @@ import { FileTreeDragPreview } from "@/components/FileTreeDragPreview";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { NoopContextMenu } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
@@ -25,7 +26,7 @@ export function FileTreeMenu({
   expandForNode,
   expanded,
   filter,
-  ItemContextMenu,
+  ItemContextMenu = NoopContextMenu,
 }: {
   fileTreeDir: TreeDir | TreeDirRoot;
   depth?: number;
@@ -34,13 +35,12 @@ export function FileTreeMenu({
   expandForNode: (node: TreeNode, state: boolean) => void;
   expanded: { [path: string]: boolean };
   filter?: ((node: TreeNode) => boolean) | AbsPath[];
-  ItemContextMenu: FileItemContextMenuComponentType;
+  ItemContextMenu?: FileItemContextMenuComponentType;
 }) {
   const { currentWorkspace, workspaceRoute } = useWorkspaceContext();
   const { setReactDragImage, DragImagePortal } = useDragImage();
   const sidebarMenuRef = React.useRef<HTMLUListElement>(null);
   const { highlightDragover, draggingNodes } = useFileTreeMenuCtx();
-
   const { handleDragEnter, handleDragLeave, handleDragOver, handleDragStart, handleDrop } = useFileTreeDragDrop({
     currentWorkspace,
     onMoveMultiple: renameDirOrFileMultiple,

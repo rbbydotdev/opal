@@ -1,7 +1,7 @@
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
-import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
+// import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { SidebarFileMenuBuild } from "@/components/SidebarFileMenu/build-section/SidebarFileMenuBuild";
 import { SidebarFileMenuExport } from "@/components/SidebarFileMenu/export-section/SidebarFileMenuExport";
 import { MainSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/main-files-section/MainSidebarFileMenuFileSection";
@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
-import { FileTreeProvider, NoopContextMenu } from "@/context/FileTreeProvider";
+import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { Workspace } from "@/data/Workspace";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
@@ -148,7 +148,6 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
   );
 }
 function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]; currentWorkspace: Workspace }) {
-  const nodeFromPath = currentWorkspace.nodeFromPath.bind(currentWorkspace);
   return (
     <SidebarDndList storageKey={"sidebarMenu"} show={show}>
       <DndSlot dndId={"build"}>
@@ -173,21 +172,21 @@ function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]
         </div>
       </DndSlot>
 
-      <DndSlot dndId={"build_files"}>
+      {/*      <DndSlot dndId={"build_files"}>
         <div className="flex-shrink flex">
-          <FileTreeMenuCtxProvider nodeFromPath={nodeFromPath}>
+          <FileTreeMenuCtxProvider>
             <TreeExpanderProvider id="BuildFiles">
-              <FileTreeProvider currentWorkspace={currentWorkspace}>
-                <BuildSidebarFileMenuFileSection ItemContextMenu={NoopContextMenu} />
+              <FileTreeProvider>
+                <BuildSidebarFileMenuFileSection />
               </FileTreeProvider>
             </TreeExpanderProvider>
           </FileTreeMenuCtxProvider>
         </div>
-      </DndSlot>
+      </DndSlot> */}
 
       <DndSlot dndId={"trash"}>
         <div className="min-h-8 flex-shrink flex">
-          <FileTreeMenuCtxProvider nodeFromPath={nodeFromPath}>
+          <FileTreeMenuCtxProvider>
             <TrashSidebarFileMenuFileSection />
           </FileTreeMenuCtxProvider>
         </div>
@@ -195,7 +194,7 @@ function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]
 
       <DndSlot dndId={"upload"}>
         <div className="flex-shrink flex">
-          <FileTreeMenuCtxProvider nodeFromPath={nodeFromPath}>
+          <FileTreeMenuCtxProvider>
             <SidebarFileMenuUpload />
           </FileTreeMenuCtxProvider>
         </div>
@@ -203,9 +202,9 @@ function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]
 
       <DndSlot dndId={"files"}>
         <div className="flex-shrink flex">
-          <FileTreeMenuCtxProvider nodeFromPath={nodeFromPath}>
+          <FileTreeMenuCtxProvider>
             <TreeExpanderProvider id="MainFiles" defaultExpanded={true}>
-              <FileTreeProvider currentWorkspace={currentWorkspace} filterOut={FilterInSpecialDirs}>
+              <FileTreeProvider filterOut={FilterInSpecialDirs}>
                 <MainSidebarFileMenuFileSection ItemContextMenu={MainFileTreeContextMenu} />
               </FileTreeProvider>
             </TreeExpanderProvider>
