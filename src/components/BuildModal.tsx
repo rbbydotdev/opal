@@ -70,7 +70,6 @@ export function BuildModal({
     onCancel?: () => void;
     onComplete?: (buildDao?: BuildDAO) => void;
   } | null>(null);
-  // const [buildCompleted, setBuildCompleted] = useState(false);
   const [buildError, setBuildError] = useState<string | null>(null);
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
   const [logs, setLogs] = useState<BuildLog[]>([]);
@@ -140,6 +139,12 @@ export function BuildModal({
     setIsOpen(false);
   }, [buildRunner]);
 
+  const handleFocusOutside = (e: Event) => {
+    if (buildRunner.isBuilding) {
+      e.preventDefault();
+    }
+  };
+
   useImperativeHandle(
     cmdRef,
     () => ({
@@ -148,14 +153,10 @@ export function BuildModal({
     }),
     [handleClose, openNew]
   );
-  // const isIdle = buildRunnerRef.current?.build.status === "idle";
 
   return (
-    <Dialog open={isOpen} onOpenChange={buildRunner.isBuilding ? undefined : handleClose}>
-      <DialogContent
-        className="max-w-2xl h-[80vh] flex flex-col"
-        onPointerDownOutside={buildRunner.isBuilding ? (e) => e.preventDefault() : undefined}
-      >
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl h-[80vh] flex flex-col" onPointerDownOutside={handleFocusOutside}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {buildRunner.isBuilding && <Loader size={16} className="animate-spin" />}

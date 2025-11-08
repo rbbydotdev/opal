@@ -343,11 +343,11 @@ function SelectableListItem({ children, id }: SelectableListItemProps) {
 
   return (
     <SidebarMenuItem>
-      <div className="group flex items-center pr-1 py-0">
-        <SidebarMenuButton className="flex-1 min-w-0 pl-4" onClick={(e) => handleSelect(sectionRef, e, id)}>
+      <div className="group flex items-center pr-1 py-0 ">
+        <SidebarMenuButton className="flex-1 min-w-0 pl-1" onClick={(e) => handleSelect(sectionRef, e, id)}>
           <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
             <div className="w-4 h-4 flex justify-center items-center mr-0.5 shrink-0">
-              {isSelected(id) && <Check className="w-3 h-3 rounded-full _border" />}
+              {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
             </div>
             {otherChildren}
           </div>

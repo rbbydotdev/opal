@@ -207,6 +207,7 @@ export class BuildRunner {
         });
       }
     } finally {
+      void this.sourceDisk.triggerIndex().catch((e) => console.warn("Failed to re-index source disk after build:", e));
       Object.freeze(this.build);
       Object.freeze(this);
     }

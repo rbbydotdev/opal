@@ -4,6 +4,7 @@ import { createCustomBasicSetup } from "@/components/Editor/customBasicSetup";
 import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlighting";
+import { canPrettifyMime, prettifyMime } from "@/components/Editor/prettifyMime";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { GitConflictNotice } from "@/components/GitConflictNotice";
 import { Button } from "@/components/ui/button";
@@ -30,11 +31,6 @@ import { vim } from "@replit/codemirror-vim";
 import { useLocation, useRouter } from "@tanstack/react-router";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
-import parserBabel from "prettier/plugins/babel";
-import parserHtml from "prettier/plugins/html";
-import parserMarkdown from "prettier/plugins/markdown";
-import parserPostcss from "prettier/plugins/postcss";
-import * as prettier from "prettier/standalone";
 import { useEffect, useMemo, useRef } from "react";
 
 export type StrictSourceMimesType =
@@ -339,38 +335,11 @@ const CodeMirrorToolbar = ({
     if (!editorView || !mimeType) return;
     try {
       const currentContent = editorView.state.doc.toString();
-      let prettifiedContent = currentContent;
-
-      switch (mimeType) {
-        case "text/css":
-          prettifiedContent = await prettier.format(currentContent, {
-            parser: "css",
-            plugins: [parserBabel, parserPostcss],
-          });
-          break;
-        case "text/markdown":
-          prettifiedContent = await prettier.format(currentContent, {
-            parser: "markdown",
-            plugins: [parserMarkdown],
-          });
-          break;
-        case "text/x-ejs":
-        case "text/x-mustache":
-        case "text/html":
-          prettifiedContent = await prettier.format(currentContent, {
-            parser: "html",
-            plugins: [parserHtml],
-          });
-          break;
-        default:
-          return;
-      }
-
       editorView.dispatch({
         changes: {
           from: 0,
           to: editorView.state.doc.length,
-          insert: prettifiedContent,
+          insert: await prettifyMime(mimeType, currentContent),
         },
       });
     } catch (error) {
@@ -378,13 +347,7 @@ const CodeMirrorToolbar = ({
     }
   };
 
-  const canPrettify =
-    mimeType &&
-    (
-      ["text/css", "text/javascript", "text/markdown", "text/x-mustache", "text/x-ejs", "text/html"] satisfies Array<
-        typeof mimeType | "text/javascript"
-      >
-    ).includes(mimeType);
+  const canPrettify = canPrettifyMime(mimeType);
 
   return (
     <div

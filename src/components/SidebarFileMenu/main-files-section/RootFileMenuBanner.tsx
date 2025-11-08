@@ -1,19 +1,26 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { Workspace } from "@/data/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useNodeResolver } from "@/hooks/useNodeResolver";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
-import { RootNode } from "@/lib/FileTree/TreeNode";
-import { absPath } from "@/lib/paths2";
+import { RootNode, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
+import { AbsPath, absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 
-export const RootFileMenuBanner = ({ currentWorkspace }: { currentWorkspace: Workspace }) => {
+export const RootFileMenuBanner = ({
+  currentWorkspace,
+  rootNode = RootNode,
+}: {
+  currentWorkspace: Workspace;
+  rootNode?: TreeDir | TreeFile | AbsPath;
+}) => {
   const [dragEnter, setDragEnter] = useState(false);
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { setFileTreeCtx } = useFileTreeMenuCtx();
+  const { setFileTreeCtx, isDragging } = useFileTreeMenuCtx();
   const handleClick = () => {
     setFileTreeCtx({
       anchorIndex: -1,
@@ -34,15 +41,17 @@ export const RootFileMenuBanner = ({ currentWorkspace }: { currentWorkspace: Wor
       timeoutRef.current = setTimeout(() => setDragEnter(false), 1000);
     }
   };
+  const resolvedRootNode = useNodeResolver(currentWorkspace, rootNode);
 
   return (
-    <MainFileTreeContextMenu fileNode={RootNode} currentWorkspace={currentWorkspace}>
+    <MainFileTreeContextMenu fileNode={resolvedRootNode} currentWorkspace={currentWorkspace}>
       <div
         className={cn(
           "mb-[5px] visible cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
-          { "border h-8 bg-sidebar scale-110 mt-1": dragEnter }
+          { "border h-8 bg-sidebar scale-y-110 mt-1": dragEnter },
+          { "invisible h-4": isDragging === false }
         )}
-        onDrop={(e) => handleDrop(e, RootNode)}
+        onDrop={(e) => handleDrop(e, resolvedRootNode)}
         onDragEnter={() => setDragEnterWithTimeout(true)}
         onDragLeave={() => setDragEnterWithTimeout(false)}
         onMouseLeave={() => setDragEnterWithTimeout(false)}

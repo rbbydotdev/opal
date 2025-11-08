@@ -1,6 +1,5 @@
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
-import { useWatchWorkspaceFileTree } from "@/context/WorkspaceContext";
-import { Workspace } from "@/data/Workspace";
+import { useWatchWorkspaceFileTree, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
@@ -24,16 +23,15 @@ export const useFileTree = () => {
 };
 
 export function FileTreeProvider({
-  currentWorkspace,
   filterIn,
   filterOut,
   children,
 }: {
   filterIn?: (node: TreeNode) => boolean;
   filterOut?: (node: TreeNode) => boolean;
-  currentWorkspace: Workspace;
   children: React.ReactNode;
 }) {
+  const { currentWorkspace } = useWorkspaceContext();
   const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ currentWorkspace, filterIn, filterOut });
 
   return (

@@ -106,10 +106,10 @@ export function useFileTreeDragDrop({
     return TreeNode.FromPath(dropPath(targetPath, node), node.type);
   }
 
-  // const dropFilesHandler = handleDropFilesForNode({ currentWorkspace });
-  const { selectedRange, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
+  const { selectedRange, setIsDragging, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
     useFileTreeMenuCtx();
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
+    setIsDragging(true);
     event.stopPropagation();
     setDragOver(null);
     setDraggingNode(targetNode);
@@ -151,6 +151,7 @@ export function useFileTreeDragDrop({
 
   const handleExternalDrop = async (event: React.DragEvent, targetNode: TreeNode) => {
     event.preventDefault();
+    setIsDragging(false);
     if (!isExternalFileDrop(event)) {
       return;
     }
@@ -162,6 +163,7 @@ export function useFileTreeDragDrop({
     targetNode: TreeNode = currentWorkspace.getDisk().fileTree.root
   ) => {
     setDragOver(null);
+    setIsDragging(false);
     event.preventDefault();
     event.stopPropagation();
     const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
