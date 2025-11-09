@@ -10,6 +10,9 @@ import svgr from "vite-plugin-svgr";
 // Service Worker Configuration (Development Watch)
 export default defineConfig(() => {
   return {
+    build: {
+      assetsDir: "@static",
+    },
     minify: true,
     // Disable Hot Module Replacement
     plugins: [

@@ -48,6 +48,7 @@ export function BuildSidebarFileMenuFileSectionInternal({
     : Object.keys(fileTree.nodeFromPath(build?.buildPath)?.children ?? {}).length === 0;
   const scope = build?.buildPath || SpecialDirs.Build;
 
+  if (!build) return null;
   return (
     <TreeExpanderProvider id="BuildFiles">
       <SidebarFileMenuFiles
@@ -55,7 +56,7 @@ export function BuildSidebarFileMenuFileSectionInternal({
         className={className}
         scope={scope}
         canDrag={false}
-        collapsibleClassname="max-h-80"
+        collapsibleClassname="max-h-80 -ml-3"
         contentBanner={
           build?.buildPath && !isEmpty ? (
             <RootFileMenuBanner currentWorkspace={currentWorkspace} rootNode={build?.buildPath} />

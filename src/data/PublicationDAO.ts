@@ -1,3 +1,5 @@
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { nanoid } from "nanoid";
 
 export type PublishLogLine = {
@@ -7,7 +9,7 @@ export type PublishLogLine = {
 };
 
 export interface PublicationRecord {
-  remoteAuthId: string;
+  remoteAuth: RemoteAuthJType | RemoteAuthDAO;
   timestamp: Date;
   status: "success" | "failed";
   logs: PublishLogLine[];
@@ -15,19 +17,20 @@ export interface PublicationRecord {
 export type PublicationJType = ReturnType<typeof PublicationDAO.prototype.toJSON>;
 export class PublicationDAO implements PublicationRecord {
   guid: string;
-  remoteAuthId: string;
+  remoteAuth: RemoteAuthDAO;
   timestamp: Date;
   status: "success" | "failed";
   logs: PublishLogLine[];
 
   static guid = () => "__publication__" + nanoid();
 
-  constructor(publication: PublicationRecord) {
+  constructor({ remoteAuth, timestamp, status, logs }: Optional<PublicationRecord, "logs">) {
     this.guid = PublicationDAO.guid();
-    this.remoteAuthId = publication.remoteAuthId;
-    this.timestamp = publication.timestamp;
-    this.status = publication.status;
-    this.logs = publication.logs;
+    // this.remoteAuthId = publication.remoteAuthId;
+    this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth : RemoteAuthDAO.FromJSON(remoteAuth);
+    this.timestamp = timestamp;
+    this.status = status;
+    this.logs = logs || [];
   }
 
   static FromJSON(json: PublicationJType) {
@@ -36,10 +39,10 @@ export class PublicationDAO implements PublicationRecord {
 
   toJSON() {
     return {
-      remoteAuthId: this.remoteAuthId,
+      remoteAuth: this.remoteAuth.toJSON(),
       timestamp: this.timestamp,
       status: this.status,
-      logs: this.logs,
+      // logs: this.logs,
     };
   }
 }

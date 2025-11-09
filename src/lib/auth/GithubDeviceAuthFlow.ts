@@ -26,7 +26,7 @@ export type GithubDeviceAuthFlowPayload = {
 export async function GithubDeviceAuthFlow({
   corsProxy,
   clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
-  scopes = ["repo", "workflow"],
+  scopes = ["read:user", "repo", "workflow"],
   onVerification,
   onAuthentication,
 }: {

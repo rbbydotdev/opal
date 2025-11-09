@@ -1,3 +1,4 @@
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { CreateTypedEmitter } from "@/lib/TypeEmitter";
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
 
@@ -44,7 +45,8 @@ const EMPTY_CONTEXT: ExtCtxNotReadyContext = {
   ready: false,
 };
 
-const PREVIEW_HTML = `
+const FIREFOX_PREVIEW_HTML = `
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -58,7 +60,7 @@ const PREVIEW_HTML = `
 </html>
 `;
 
-const PREVIEW_HTML_INNER = `
+const CHROME_PREVIEW_HTML_INNER = `
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,6 +75,7 @@ abstract class BaseContextProvider implements PreviewContextProvider {
   protected _context: ExtCtxReadyContext | ExtCtxNotReadyContext = EMPTY_CONTEXT;
   protected unsubs: (() => void)[] = [];
   protected events = CreateTypedEmitter<ExtCtxEventMap>();
+  readonly workspaceName: string;
 
   onReady = (callback: (ctx: PreviewContext | null) => void) => {
     return this.events.listen(ExtCtxEvents.READY, callback);
@@ -80,6 +83,10 @@ abstract class BaseContextProvider implements PreviewContextProvider {
   getContext = () => {
     return this._context;
   };
+
+  constructor({ workspaceName }: { workspaceName: string }) {
+    this.workspaceName = workspaceName;
+  }
 
   abstract get doc(): Document | null;
   abstract get win(): Window | null;
@@ -111,10 +118,10 @@ abstract class BaseContextProvider implements PreviewContextProvider {
 
     if (isFirefox) {
       this.doc.open();
-      this.doc.write(PREVIEW_HTML);
+      this.doc.write(FIREFOX_PREVIEW_HTML);
       this.doc.close();
     } else {
-      this.doc.documentElement.innerHTML = PREVIEW_HTML_INNER;
+      this.doc.documentElement.innerHTML = CHROME_PREVIEW_HTML_INNER;
     }
 
     this.events.emit(ExtCtxEvents.READY, this.context);
@@ -127,8 +134,14 @@ abstract class BaseContextProvider implements PreviewContextProvider {
   }
 }
 
-export function useIframeContextProvider({ iframeRef }: { iframeRef: { current: HTMLIFrameElement | null } }) {
-  const contextProvider = useMemo(() => new IframeManager(iframeRef), [iframeRef]);
+export function useIframeContextProvider({
+  workspaceName,
+  iframeRef,
+}: {
+  workspaceName: string;
+  iframeRef: { current: HTMLIFrameElement | null };
+}) {
+  const contextProvider = useMemo(() => new IframeManager({ workspaceName, iframeRef }), [iframeRef, workspaceName]);
   const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
   useEffect(() => {
     contextProvider.init();
@@ -157,8 +170,17 @@ export function useContextProvider<T extends PreviewContextProvider>(managerFact
 }
 
 export class IframeManager extends BaseContextProvider {
-  constructor(private iframeRef: { current: HTMLIFrameElement | null }) {
-    super();
+  private iframeRef: { current: HTMLIFrameElement | null };
+  constructor({
+    iframeRef,
+    workspaceName,
+  }: {
+    workspaceName: string;
+
+    iframeRef: { current: HTMLIFrameElement | null };
+  }) {
+    super({ workspaceName });
+    this.iframeRef = iframeRef;
   }
 
   get doc(): Document | null {
@@ -180,7 +202,10 @@ export class IframeManager extends BaseContextProvider {
     this.unsubs.push(() => {
       iframe.removeEventListener("load", this.initializePreview);
     });
-    iframe.src = "/preview_blank.html";
+    const url = new URL(window.location.href);
+    url.pathname = "/preview_blank.html";
+    url.searchParams.set("workspaceName", this.workspaceName);
+    iframe.src = url.toString();
   }
 }
 
@@ -189,8 +214,8 @@ export class WindowManager extends BaseContextProvider {
   private openEventEmitter = CreateTypedEmitter<{ openChange: boolean }>();
   private pollInterval: number | null = null;
 
-  constructor() {
-    super();
+  constructor({ workspaceName }: { workspaceName: string }) {
+    super({ workspaceName });
   }
 
   onOpenChange = (callback: (isOpen: boolean) => void) => {
@@ -214,7 +239,13 @@ export class WindowManager extends BaseContextProvider {
 
   open(): void {
     if (!this.windowRef.current || this.windowRef.current.closed) {
-      this.windowRef.current = window.open(`/preview_blank.html?previewMode=true`, "_blank");
+      const url = new URL(window.location.href);
+      url.pathname = "/preview_blank.html";
+      url.searchParams.set("workspaceName", this.workspaceName);
+      url.searchParams.set("previewMode", "true");
+      // iframe.src = url.toString();
+
+      this.windowRef.current = window.open(url, "_blank");
       if (!this.windowRef.current) {
         throw new Error("Failed to open external window");
       }
@@ -264,29 +295,32 @@ type WindowContextValue = (ExtCtxReadyContext | ExtCtxNotReadyContext) & {
   isOpen: boolean;
   open: () => void;
   close: () => void;
-}
+};
 
 const WindowContext = createContext<WindowContextValue | null>(null);
 
 export function WindowContextProviderComponent({ children }: { children: React.ReactNode }) {
-  const contextProvider = useMemo(() => new WindowManager(), []);
+  const { currentWorkspace } = useWorkspaceContext();
+  const contextProvider = useMemo(
+    () => new WindowManager({ workspaceName: currentWorkspace.name }),
+    [currentWorkspace.name]
+  );
   const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
   const isOpen = useSyncExternalStore(contextProvider.onOpenChange, contextProvider.getOpenState);
-  
+
   useEffect(() => {
     return () => contextProvider.teardown();
   }, [contextProvider]);
 
-  const value: WindowContextValue = useMemo(() => ({
-    ...context,
-    isOpen,
-    open: () => contextProvider.open(),
-    close: () => contextProvider.close(),
-  }), [context, isOpen, contextProvider]);
-
-  return (
-    <WindowContext.Provider value={value}>
-      {children}
-    </WindowContext.Provider>
+  const value: WindowContextValue = useMemo(
+    () => ({
+      ...context,
+      isOpen,
+      open: () => contextProvider.open(),
+      close: () => contextProvider.close(),
+    }),
+    [context, isOpen, contextProvider]
   );
+
+  return <WindowContext.Provider value={value}>{children}</WindowContext.Provider>;
 }

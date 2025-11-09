@@ -46,7 +46,7 @@ export type GithubOAuthFlowPayload = {
 export function getGithubOAuthUrl({
   clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
   redirectUri,
-  scopes = ["read:user", "repo"], // slim default scope recommendations
+  scopes = ["read:user", "repo", "workflow"], // slim default scope recommendations
   state,
   codeChallenge,
 }: {
