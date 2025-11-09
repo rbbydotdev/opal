@@ -1,9 +1,9 @@
 import { OpalMimeType } from "@/lib/fileType";
-import parserBabel from "prettier/plugins/babel.js";
-import parserHtml from "prettier/plugins/html.js";
-import parserMarkdown from "prettier/plugins/markdown.js";
-import parserPostcss from "prettier/plugins/postcss.js";
-import * as prettier from "prettier/standalone.js";
+import parserBabel from "prettier/plugins/babel";
+import parserHtml from "prettier/plugins/html";
+import parserMarkdown from "prettier/plugins/markdown";
+import parserPostcss from "prettier/plugins/postcss";
+import * as prettier from "prettier/standalone";
 
 export function prettifyMime(mimeType: OpalMimeType, content: string): Promise<string> {
   switch (mimeType) {
