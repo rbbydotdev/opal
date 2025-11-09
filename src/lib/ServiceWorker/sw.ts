@@ -43,6 +43,19 @@ self.addEventListener("fetch", (event: FetchEvent) => {
       workspaceName = searchParams.get('workspaceName');
     }
 
+    // If no workspace name in search params and we have a referrer, check referrer search params
+    if (!workspaceName && request.referrer) {
+      try {
+        const referrerUrl = new URL(request.referrer);
+        const referrerSearchParams = referrerUrl.searchParams;
+        if (referrerSearchParams.has('workspaceName')) {
+          workspaceName = referrerSearchParams.get('workspaceName');
+        }
+      } catch {
+        // If parsing referrer URL fails, ignore
+      }
+    }
+
     // If no workspace name in search params, try to get it from the request URL itself
     if (!workspaceName) {
       try {

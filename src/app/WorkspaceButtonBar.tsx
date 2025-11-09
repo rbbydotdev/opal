@@ -406,15 +406,15 @@ export function WorkspaceButtonBar() {
                   icon={<Delete strokeWidth="1" stroke="current" className="w-full h-full" />}
                   title={"Unregister Services"}
                   to="#"
-                  onClick={() => {
+                  onClick={async () => {
                     const promises: Promise<boolean>[] = [];
-                    void navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+                    await navigator.serviceWorker.getRegistrations().then(async (registrations) => {
                       for (const registration of registrations) {
                         promises.push(registration.unregister());
                       }
                       await Promise.all(promises);
-                      alert("All service workers unregistered!");
                     });
+                    alert("All service workers unregistered!");
                   }}
                 />
               </>

@@ -22,7 +22,7 @@ export function useScrollSync({
   elementRef,
   listenRef,
   path: currentPath,
-  workspaceName: currentWorkspace,
+  workspaceName,
 }: {
   elementRef: RefObject<HTMLElement | null>;
   listenRef?: RefObject<HTMLElement | null>;
@@ -33,7 +33,7 @@ export function useScrollSync({
   const context = useContext(ScrollSyncCtx);
   const workspaceRoute = useWorkspaceRoute();
   const path = currentPath || workspaceRoute.path;
-  const name = currentWorkspace || workspaceRoute.name;
+  const name = workspaceName || workspaceRoute.name;
   const originId = useMemo(() => nanoid(), []);
   const scrollId = name! + path!;
   const scrollPause = useRef(false);
@@ -46,10 +46,11 @@ export function useScrollSync({
     const el = elementRef.current;
     const listenEl = listenRef.current;
     const emitter = context.emitter;
+    
+    
     if (!el || !emitter || !listenEl) return;
 
     const handleScroll = () => {
-      // console.log("emitting scroll");
       if (scrollPause.current) return;
 
       const maxX = el.scrollWidth - el.clientWidth;
@@ -71,6 +72,9 @@ export function useScrollSync({
       scrollPause.current = true;
       const maxX = el.scrollWidth - el.clientWidth;
       const maxY = el.scrollHeight - el.clientHeight;
+      const targetX = x * maxX;
+      const targetY = y * maxY;
+      
       listenEl.addEventListener(
         "scroll",
         () => {
@@ -80,7 +84,7 @@ export function useScrollSync({
           once: true,
         }
       );
-      el.scrollTo(x * maxX, y * maxY);
+      el.scrollTo(targetX, targetY);
     };
 
     listenEl.addEventListener("scroll", handleScroll, { passive: true });

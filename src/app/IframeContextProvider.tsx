@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useMemo, useSyncExternalSt
 export interface PreviewContext {
   document: Document | null;
   window: Window | null;
-  rootElement: HTMLElement | null;
+  // rootElement: HTMLElement | null;
   ready: boolean;
 }
 
@@ -20,13 +20,13 @@ export interface PreviewContextProvider {
 export type ExtCtxReadyContext = {
   document: Document;
   window: Window;
-  rootElement: HTMLElement;
+  // rootElement: HTMLElement;
   ready: true;
 };
 export type ExtCtxNotReadyContext = {
   document: null;
   window: null;
-  rootElement: null;
+  // rootElement: null;
   ready: false;
 };
 
@@ -41,7 +41,7 @@ type ExtCtxEventMap = {
 const EMPTY_CONTEXT: ExtCtxNotReadyContext = {
   document: null,
   window: null,
-  rootElement: null,
+  // rootElement: null,
   ready: false,
 };
 
@@ -55,7 +55,6 @@ const FIREFOX_PREVIEW_HTML = `
     <title>Preview</title>
   </head>
   <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
-    <div id="preview-root"></div>
   </body>
 </html>
 `;
@@ -67,7 +66,6 @@ const CHROME_PREVIEW_HTML_INNER = `
     <title>Preview</title>
   </head>
   <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
-    <div id="preview-root"></div>
   </body>
 `;
 
@@ -90,17 +88,15 @@ abstract class BaseContextProvider implements PreviewContextProvider {
 
   abstract get doc(): Document | null;
   abstract get win(): Window | null;
-  abstract get rootEl(): HTMLElement | null;
 
   get context(): ExtCtxNotReadyContext | ExtCtxReadyContext {
-    if (!this.doc || !this.win || !this.rootEl) {
+    if (!this.doc || !this.win) {
       return EMPTY_CONTEXT;
     }
 
     this._context = {
       document: this.doc,
       window: this.win,
-      rootElement: this.rootEl,
       ready: true,
     } as ExtCtxReadyContext;
 
@@ -191,9 +187,6 @@ export class IframeManager extends BaseContextProvider {
     return this.iframeRef.current?.contentWindow || null;
   }
 
-  get rootEl(): HTMLElement | null {
-    return this.iframeRef.current?.contentDocument?.getElementById("preview-root") || null;
-  }
   init() {
     const iframe = this.iframeRef.current;
     if (!iframe) return;
@@ -231,10 +224,6 @@ export class WindowManager extends BaseContextProvider {
 
   get win(): Window | null {
     return this.windowRef.current;
-  }
-
-  get rootEl(): HTMLElement | null {
-    return this.windowRef.current?.document?.getElementById("preview-root") || null;
   }
 
   open(): void {
