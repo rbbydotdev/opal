@@ -55,6 +55,7 @@ export function BuildSidebarFileMenuFileSectionInternal({
         className={className}
         scope={scope}
         canDrag={false}
+        collapsibleClassname="max-h-80"
         contentBanner={
           build?.buildPath && !isEmpty ? (
             <RootFileMenuBanner currentWorkspace={currentWorkspace} rootNode={build?.buildPath} />

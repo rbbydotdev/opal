@@ -50,8 +50,10 @@ import { useErrorToss } from "@/lib/errorToss";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { RepoInfoType } from "../../../features/git-repo/GitRepo";
-import { useConfirm } from "../../Confirm";
+// import { RepoInfoType } from "../../../features/git-repo/GitRepo";
+// import { useConfirm } from "../../Confirm";
+import { useConfirm } from "@/components/Confirm";
+import { RepoInfoType } from "@/features/git-repo/GitRepo";
 import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";
 

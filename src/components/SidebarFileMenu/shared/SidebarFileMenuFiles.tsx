@@ -12,6 +12,7 @@ import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { NULL_TREE_ROOT, RootNode, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
+import { cn } from "@/lib/utils";
 import clsx from "clsx";
 import { ChevronRight, Files, GripVertical } from "lucide-react";
 import React, { ComponentProps, JSX } from "react";
@@ -20,13 +21,15 @@ export const SidebarFileMenuFiles = ({
   className,
   filter,
   title,
+  collapsibleClassname,
   Icon = Files,
   scope,
-  canDrag,
+  canDrag = true,
   contentBanner = null,
   ItemContextMenu = NoopContextMenu,
   ...rest
 }: {
+  collapsibleClassname?: string;
   className?: string;
   contentBanner?: React.ReactNode | null;
   title: JSX.Element | string;
@@ -65,8 +68,6 @@ export const SidebarFileMenuFiles = ({
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton className="w-auto flex-grow">
                   <SidebarGroupLabel className="pl-0">
-                    {/* <SidebarGripChevron canDrag={canDrag} /> */}
-
                     <div className="flex items-center">
                       {canDrag && <GripVertical size={12} className="mr-0 cursor-grab opacity-50 w-4" />}
                       <ChevronRight
@@ -87,8 +88,8 @@ export const SidebarFileMenuFiles = ({
               {children}
             </SidebarGroupLabel>
 
-            <CollapsibleContent>
-              <SidebarContent className="flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden  group">
+            <CollapsibleContent className={cn(collapsibleClassname)}>
+              <SidebarContent className="flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden group">
                 <>
                   {contentBanner}
                   {isEmpty ? (

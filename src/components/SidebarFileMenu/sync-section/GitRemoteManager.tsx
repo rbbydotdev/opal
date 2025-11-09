@@ -84,7 +84,7 @@ export function GitRemoteManager({
         onSelect={setSelectRemote}
       >
         <GitRemoteManagerDropDown open={selectOpen} setOpen={setSelectOpen}>
-          <DropdownMenuItem onClick={() => cmdRef.current.open("add")} className="flex justify-center items-center">
+          <DropdownMenuItem onClick={() => cmdRef.current.open("add")}>
             <Plus /> Add Remote
           </DropdownMenuItem>
           {Boolean(remotes.length) && (
