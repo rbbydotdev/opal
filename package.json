@@ -182,7 +182,7 @@
     "@types/mime-types": "^2.1.4",
     "@types/mustache": "^4.2.6",
     "@types/node": "^20",
-    "@types/react": "^19",
+    "@types/react": "^19.2.2",
     "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",

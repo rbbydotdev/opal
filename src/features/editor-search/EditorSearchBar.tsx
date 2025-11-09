@@ -173,18 +173,18 @@ export function EditorSearchBar({
     const searchBarWidth = 400; // Approximate width (w-72 + padding + buttons)
     const desiredRight = !isRightSidebarCollapsed ? rightSideBarWidth + 16 : 16;
     const minRight = 16; // Minimum distance from screen edge
-    
+
     // Check if this position would overflow past the left elements
     const wsButtonBarWidth = (document.querySelector("#" + WS_BUTTON_BAR_ID) as HTMLDivElement)?.offsetWidth || 0;
     const leftBoundary = wsButtonBarWidth + leftSidebarWidth + 16; // Left elements + padding
     const searchBarLeftEdge = window.innerWidth - desiredRight - searchBarWidth;
-    
+
     // If search bar would overlap left elements, push it right
     if (searchBarLeftEdge < leftBoundary) {
       const adjustedRight = window.innerWidth - leftBoundary - searchBarWidth - 16;
       return Math.max(adjustedRight, minRight); // Don't go past screen edge
     }
-    
+
     return desiredRight;
   });
 
@@ -196,8 +196,8 @@ export function EditorSearchBar({
 
     updatePosition(); // Initial calculation
 
-    window.addEventListener('resize', updatePosition);
-    return () => window.removeEventListener('resize', updatePosition);
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
   }, [leftSidebarWidth, rightSideBarWidth, isRightSidebarCollapsed, calculateRightPosition]);
 
   const { setStoredValue: setSearchBarSetting, storedValue: searchBarSetting } = useLocalStorage2("EditorSearchBar", {

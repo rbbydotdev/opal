@@ -207,8 +207,6 @@ export const EditorSidebarLayout = ({
               (panes.left.displayWidth || 0),
             MAX_RIGHT_PANE_WIDTH
           ) - 256;
-        console.log("maxAvailableRight:", maxAvailableRight);
-
         const { startX, initialDisplayWidth } = rightPaneDragStartInfoRef.current;
         const dx = startX - e.clientX;
         const potentialNewWidth = initialDisplayWidth + dx;
@@ -247,7 +245,7 @@ export const EditorSidebarLayout = ({
       document.body.classList.remove("select-none");
       document.body.style.cursor = "";
     };
-  }, [isResizing, rightPaneIsResizing, rightPaneEnabled]);
+  }, [isResizing, rightPaneIsResizing, rightPaneEnabled, panes.left.displayWidth]);
 
   return (
     <div className="flex h-screen w-full overflow-clip">
