@@ -4,13 +4,13 @@ import { handleDocxConvertRequest as handleDocxUploadRequest } from "@/lib/Servi
 import { handleDownloadRequest } from "@/lib/ServiceWorker/handleDownloadRequest";
 import { handleDownloadRequestEncrypted } from "@/lib/ServiceWorker/handleDownloadRequestEncrypted";
 import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
+import { handleFileReplace } from "@/lib/ServiceWorker/handleFileReplace";
 import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
 import { handleImageUpload } from "@/lib/ServiceWorker/handleImageUpload";
 import { handleMdImageReplace } from "@/lib/ServiceWorker/handleMdImageReplace";
-import { handleFileReplace } from "@/lib/ServiceWorker/handleFileReplace";
 import { handleStyleSheetRequest } from "@/lib/ServiceWorker/handleStyleSheetRequest";
-import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
 import { handleWorkspaceFilenameSearch } from "@/lib/ServiceWorker/handleWorkspaceFilenameSearch";
+import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
 import { withRequestSignal } from "./utils"; // Assuming utils are in the same dir
 
 // --- Handler Context ---
@@ -42,10 +42,12 @@ export const convertDocxHandler = withRequestSignal(async (context: RequestConte
 });
 
 export const workspaceSearchHandler = withRequestSignal(async (context: RequestContext) => {
-  const { url, params } = context;
+  const { url, params, searchParams } = context;
   const workspaceName = params.workspaceName;
-  const searchTerm = url.searchParams.get("searchTerm");
-  const regexpParam = url.searchParams.get("regexp");
+  const searchTerm = searchParams.searchTerm as string | null;
+  const regexpParam = searchParams.regexp;
+  // const searchTerm = url.searchParams.get("searchTerm");
+  // const regexpParam = url.searchParams.get("regexp");
   const regexp = regexpParam === null ? true : regexpParam === "1";
 
   if (!workspaceName) {

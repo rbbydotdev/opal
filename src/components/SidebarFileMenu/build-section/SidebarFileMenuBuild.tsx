@@ -20,7 +20,7 @@ import { Workspace } from "@/data/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
-import { Code2, Delete, Ellipsis, Github, Hammer, UploadCloud } from "lucide-react";
+import { Code2, Delete, Download, Ellipsis, Github, Hammer, UploadCloud } from "lucide-react";
 import { useMemo, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
@@ -138,6 +138,9 @@ export function SidebarFileMenuBuild({
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
                         <UploadCloud /> Publish Build
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
+                        <Download /> Download Build
                       </DropdownMenuItem>
                     </BuildMenuDropDown>
                   </BuildSelector>
