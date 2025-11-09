@@ -3,10 +3,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { WS_BUTTON_BAR_ID } from "@/layouts/MainAppLayout";
 import { IS_MAC } from "@/lib/isMac";
 import clsx from "clsx";
 import { ChevronDown, ChevronRight, ChevronUp, Replace, ReplaceAll, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface FloatingSearchBarProps {
@@ -161,8 +162,43 @@ export function EditorSearchBar({
   }, [closeOnBlur, handleClose, isOpen]);
 
   const {
+    left: { displayWidth: leftSidebarWidth },
     right: { width: rightSideBarWidth, isCollapsed: isRightSidebarCollapsed },
   } = useSidebarPanes();
+
+  const [rightPosition, setRightPosition] = useState(16);
+
+  // Effect Event to calculate position without making effect reactive to sidebar changes
+  const calculateRightPosition = useEffectEvent(() => {
+    const searchBarWidth = 400; // Approximate width (w-72 + padding + buttons)
+    const desiredRight = !isRightSidebarCollapsed ? rightSideBarWidth + 16 : 16;
+    const minRight = 16; // Minimum distance from screen edge
+    
+    // Check if this position would overflow past the left elements
+    const wsButtonBarWidth = (document.querySelector("#" + WS_BUTTON_BAR_ID) as HTMLDivElement)?.offsetWidth || 0;
+    const leftBoundary = wsButtonBarWidth + leftSidebarWidth + 16; // Left elements + padding
+    const searchBarLeftEdge = window.innerWidth - desiredRight - searchBarWidth;
+    
+    // If search bar would overlap left elements, push it right
+    if (searchBarLeftEdge < leftBoundary) {
+      const adjustedRight = window.innerWidth - leftBoundary - searchBarWidth - 16;
+      return Math.max(adjustedRight, minRight); // Don't go past screen edge
+    }
+    
+    return desiredRight;
+  });
+
+  // Update position on window resize and sidebar changes
+  useEffect(() => {
+    const updatePosition = () => {
+      setRightPosition(calculateRightPosition());
+    };
+
+    updatePosition(); // Initial calculation
+
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [leftSidebarWidth, rightSideBarWidth, isRightSidebarCollapsed, calculateRightPosition]);
 
   const { setStoredValue: setSearchBarSetting, storedValue: searchBarSetting } = useLocalStorage2("EditorSearchBar", {
     expanded: true,
@@ -199,7 +235,7 @@ export function EditorSearchBar({
         className
       )}
       style={{
-        right: !isRightSidebarCollapsed ? rightSideBarWidth + 16 : 16,
+        right: rightPosition,
       }}
     >
       <div className={"p-2 flex flex-col items-center gap-1"}>

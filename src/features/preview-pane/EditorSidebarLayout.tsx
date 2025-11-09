@@ -125,9 +125,6 @@ export const EditorSidebarLayout = ({
   const sidebarRef = useRef<HTMLElement>(null);
   const rightPaneRef = useRef<HTMLElement>(null);
 
-  const sidebarPlusWorkspaceButtonBarWidth =
-    document.querySelector("#" + WS_BUTTON_BAR_ID)?.width + panes.left.displayWidth || 0;
-
   // --- Derived Values ---
   const currentDisplayWidth = panes.left.displayWidth;
   const rightPaneCurrentWidth = panes.right.displayWidth;
@@ -203,6 +200,15 @@ export const EditorSidebarLayout = ({
 
       // Right pane resize
       if (c.rightPaneEnabled && rightPaneIsResizing && rightPaneDragStartInfoRef.current) {
+        const maxAvailableRight =
+          Math.min(
+            window.innerWidth -
+              ((document.querySelector("#" + WS_BUTTON_BAR_ID) as HTMLDivElement)?.offsetWidth || 0) -
+              (panes.left.displayWidth || 0),
+            MAX_RIGHT_PANE_WIDTH
+          ) - 256;
+        console.log("maxAvailableRight:", maxAvailableRight);
+
         const { startX, initialDisplayWidth } = rightPaneDragStartInfoRef.current;
         const dx = startX - e.clientX;
         const potentialNewWidth = initialDisplayWidth + dx;
@@ -211,7 +217,7 @@ export const EditorSidebarLayout = ({
           c.setRightIsCollapsed(true);
         } else {
           c.setRightIsCollapsed(false);
-          const newWidth = Math.max(MIN_RIGHT_PANE_WIDTH, Math.min(potentialNewWidth, MAX_RIGHT_PANE_WIDTH));
+          const newWidth = Math.max(MIN_RIGHT_PANE_WIDTH, Math.min(potentialNewWidth, maxAvailableRight));
           c.setRightWidth(newWidth);
         }
       }
@@ -261,11 +267,12 @@ export const EditorSidebarLayout = ({
         aria-valuemin={COLLAPSED_STATE_WIDTH}
         aria-valuemax={MAX_RESIZABLE_WIDTH}
         onMouseDown={handleMouseDown}
+        id="editor-sidebar-resize-handle"
         className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip border-r-2 bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
         title="Resize sidebar"
       ></div>
 
-      <main className="relative min-w-0 flex-col flex flex-grow overflow-hidden">
+      <main className="relative min-w-32 flex-col flex flex-grow overflow-hidden">
         {panes.left.isCollapsed && (
           <div className="absolute top-0 left-0 pl-2 bg-card p-1 z-50 flex aspect-square h-12 w-12 items-center justify-center rounded-r-lg">
             <Button
