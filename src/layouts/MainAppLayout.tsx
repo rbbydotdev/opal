@@ -23,6 +23,7 @@ import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 interface MainAppLayoutProps {
   children: React.ReactNode;
 }
+export const WS_BUTTON_BAR_ID = "workspace-button-bar-container";
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();
@@ -51,20 +52,21 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                             <PromptProvider>
                               <ConfirmProvider>
                                 <RemoteMDXEditorRealmProvider>
-                                <div className="w-full flex">
-                                  <ErrorBoundary fallback={ErrorPlaque}>
-                                    <div
-                                      className={cn(
-                                        "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
-                                      )}
-                                    >
-                                      <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                        <WorkspaceButtonBar />
-                                      </ErrorBoundary>
-                                    </div>
-                                    <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                  </ErrorBoundary>
-                                </div>
+                                  <div className="w-full flex">
+                                    <ErrorBoundary fallback={ErrorPlaque}>
+                                      <div
+                                        id={WS_BUTTON_BAR_ID}
+                                        className={cn(
+                                          "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
+                                        )}
+                                      >
+                                        <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                          <WorkspaceButtonBar />
+                                        </ErrorBoundary>
+                                      </div>
+                                      <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                    </ErrorBoundary>
+                                  </div>
                                 </RemoteMDXEditorRealmProvider>
                               </ConfirmProvider>
                             </PromptProvider>

@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { WS_BUTTON_BAR_ID } from "@/layouts/MainAppLayout";
 import { PanelLeft } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+// import { useWatchElement } from '@/hooks/useWatchElement';
 
 // --- Configuration Constants ---
 const MIN_RESIZABLE_WIDTH = 200;
@@ -115,11 +117,16 @@ export const EditorSidebarLayout = ({
   // --- Pane States (persisted) ---
   const panes = useSidebarPanes({ registerKeyboardListeners: true });
 
+  // const useWatchElement()
+
   // --- Local UI State ---
   const [isResizing, setIsResizing] = useState(false);
   const [rightPaneIsResizing, setRightPaneIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const rightPaneRef = useRef<HTMLElement>(null);
+
+  const sidebarPlusWorkspaceButtonBarWidth =
+    document.querySelector("#" + WS_BUTTON_BAR_ID)?.width + panes.left.displayWidth || 0;
 
   // --- Derived Values ---
   const currentDisplayWidth = panes.left.displayWidth;

@@ -199,7 +199,7 @@ export function EditorSearchBar({
         className
       )}
       style={{
-        right: !isRightSidebarCollapsed ? rightSideBarWidth + 16 : "inerit",
+        right: !isRightSidebarCollapsed ? rightSideBarWidth + 16 : 16,
       }}
     >
       <div className={"p-2 flex flex-col items-center gap-1"}>
