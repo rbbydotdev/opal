@@ -21,7 +21,8 @@ export function BuildSelector({
       <div className="w-full">
         <Select
           key={builds.length}
-          defaultValue={build?.guid}
+          value={build?.guid}
+          // defaultValue={build?.guid}
           onValueChange={(guid) => setBuildId(guid)}
           disabled={builds.length === 0}
         >

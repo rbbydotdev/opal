@@ -101,8 +101,8 @@ export function SidebarFileMenuBuild({
             </SidebarMenuButton>
           </CollapsibleTrigger>
 
-          <CollapsibleContent>
-            <div className="px-4 pt-2 py-4 flex flex-col gap-4">
+          <CollapsibleContent className="pb-4">
+            <div className="px-4 pt-2 pb-2 flex flex-col gap-4">
               <SidebarGroup className="gap-2 flex flex-col">
                 <SidebarGroupLabel>Workspace Actions</SidebarGroupLabel>
                 {githubConnected && (
@@ -156,7 +156,7 @@ export function SidebarFileMenuBuild({
               }}
             /> */}
             </div>
-            <div className="px-4 pt-2 py-4 flex flex-col gap-4 pl-3">
+            <div className="ml-7 pr-4 pl-2 pt-0 #py-4 flex flex-col gap-4 #pl-3 border-ring border-l border-dashed">
               <div className="flex-shrink flex">
                 <FileTreeMenuCtxProvider>
                   <TreeExpanderProvider id="BuildFiles">
