@@ -6,19 +6,105 @@ import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-sign
 // --- Constants ---
 
 //TODO: possibly have to make this forbidden names on main, because of weird bugs
+// text/javascript
+
+interface WhiteListConfig {
+  url?: string;
+  mimeType?: string;
+  origin?: string;
+}
+
+class WhiteListItem {
+  private urlRegex: RegExp | null = null;
+  private mimeTypeRegex: RegExp | null = null;
+  private originRegex: RegExp | null = null;
+
+  constructor(config: string | WhiteListConfig) {
+    if (typeof config === "string") {
+      this.urlRegex = new RegExp(`^${config}$`);
+    } else {
+      if (config.url) {
+        this.urlRegex = new RegExp(`^${config.url}$`);
+      }
+      if (config.mimeType) {
+        this.mimeTypeRegex = new RegExp(config.mimeType);
+      }
+      if (config.origin) {
+        this.originRegex = new RegExp(config.origin);
+      }
+    }
+  }
+
+  test(url: URL, request: Request): boolean {
+    // URL must match if specified
+    if (this.urlRegex && !this.urlRegex.test(url.pathname)) {
+      return false;
+    }
+
+    // Origin must match if specified
+    if (this.originRegex && !this.originRegex.test(url.origin)) {
+      return false;
+    }
+
+    // MimeType check if specified
+    if (this.mimeTypeRegex) {
+      const extension = url.pathname.split(".").pop();
+      let mimeType = "";
+
+      switch (extension) {
+        case "js":
+          mimeType = "text/javascript";
+          break;
+        case "ts":
+          mimeType = "text/typescript";
+          break;
+        case "css":
+          mimeType = "text/css";
+          break;
+        case "json":
+          mimeType = "application/json";
+          break;
+        case "svg":
+          mimeType = "image/svg+xml";
+          break;
+        case "png":
+          mimeType = "image/png";
+          break;
+        case "jpg":
+        case "jpeg":
+          mimeType = "image/jpeg";
+          break;
+        default:
+          mimeType = "text/plain";
+          break;
+      }
+
+      if (!this.mimeTypeRegex.test(mimeType)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+}
 
 export const WHITELIST = [
-  "/preview/.*",
-  "/editview/.*",
-  "/assets/.*",
+  // "/favicon.ico",
+  // "/icon.svg",
   "/opal.svg",
   "/opal-blank.svg",
-  "/favicon.ico",
-  "/icon.svg",
-  "/node_modules/.*",
-  "/src/.*",
   "/opal-lite.svg",
-].map((path) => new RegExp(`^${path}$`));
+  "@/static/.*",
+  {
+    url: "/node_modules/.*",
+    origin: "https?://localhost(:\\d+)?",
+  },
+  {
+    url: "/src/.*",
+    origin: "https?://localhost(:\\d+)?",
+    mimeType: "text/javascript",
+  },
+].map((config) => new WhiteListItem(config));
 
 // --- Logging Setup ---
 function formatConsoleMsg(msg: unknown): string {

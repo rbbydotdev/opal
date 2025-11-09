@@ -43,8 +43,8 @@ export class GitConfig {
         // Merge with defaults to ensure all properties exist
         return { ...DEFAULT_GIT_CONFIG, ...parsed };
       }
-    } catch (error) {
-      console.warn(`Error reading git config from localStorage:`, error);
+    } catch (_error) {
+      console.warn(`could not read git config from localStorage`);
     }
     return DEFAULT_GIT_CONFIG;
   }

@@ -1,4 +1,5 @@
 import { BuildStrategy, PageData } from "@/builder/builder-types";
+import { prettifyMime } from "@/components/Editor/prettifyMime";
 import { BuildDAO } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
@@ -248,7 +249,7 @@ export class BuildRunner {
     });
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
-    await this.outputDisk.writeFile(indexPath, bookHtml);
+    await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", bookHtml));
     this.log("Book page generated");
   }
 
@@ -340,7 +341,7 @@ export class BuildRunner {
     const globalCss = await this.getGlobalCss();
     const html = mustache.render(content, { globalCss });
 
-    await this.outputDisk.writeFile(outputPath, html);
+    await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
     this.log(`Template processed: ${relativePath}`);
   }
 
@@ -365,7 +366,7 @@ export class BuildRunner {
     const relativePath = relPath(node.path);
     const outputPath = this.getOutputPathForMarkdown(relativePath);
     await this.ensureDirectoryExists(dirname(outputPath));
-    await this.outputDisk.writeFile(outputPath, html);
+    await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
 
     this.log(`Markdown processed: ${relativePath}`);
   }
@@ -428,7 +429,7 @@ export class BuildRunner {
     });
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
-    await this.outputDisk.writeFile(indexPath, html);
+    await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", html));
     this.log("Blog index generated");
   }
 
@@ -462,7 +463,7 @@ export class BuildRunner {
       });
 
       const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
-      await this.outputDisk.writeFile(outputPath, html);
+      await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
 
       this.log(`Blog post generated: ${post.path}`);
     }

@@ -156,7 +156,7 @@ export function SidebarFileMenuBuild({
               }}
             /> */}
             </div>
-            <div className="ml-7 pr-4 pl-2 pt-0 #py-4 flex flex-col gap-4 #pl-3 border-ring border-l border-dashed">
+            <div className="ml-7 pr-4 pl-2 pt-0 flex flex-col gap-4 border-ring border-l border-dashed">
               <div className="flex-shrink flex">
                 <FileTreeMenuCtxProvider>
                   <TreeExpanderProvider id="BuildFiles">
