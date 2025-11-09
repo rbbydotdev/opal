@@ -5,7 +5,39 @@ import { TemplateManager } from "@/features/templating";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, prefix, relPath } from "@/lib/paths2";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+// Reusable hook for render body callback
+function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => void, trigger?: any) {
+  const renderBodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (renderBodyRef.current && onRenderBodyReady) {
+      console.log("render-body ready:", renderBodyRef.current.id);
+      onRenderBodyReady(renderBodyRef.current);
+    }
+  }, [trigger, onRenderBodyReady]);
+
+  return renderBodyRef;
+}
+
+// Reusable component for render body container
+function RenderBodyContainer({
+  html,
+  renderBodyRef,
+}: {
+  html: string;
+  renderBodyRef: React.RefObject<HTMLDivElement>;
+}) {
+  return (
+    <div
+      ref={renderBodyRef}
+      id="render-body"
+      style={{ width: "100%", height: "100%", overflow: "auto" }}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
 
 const getBaseHref = (href: string): string => href.split("?")[0]!;
 
@@ -72,13 +104,22 @@ export function PreviewContent({
   path,
   currentWorkspace,
   context,
+  onRenderBodyReady,
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
   context: PreviewContext;
+  onRenderBodyReady?: (element: HTMLElement) => void;
 }) {
   if (isMarkdown(path)) {
-    return <MarkdownRenderer path={path} currentWorkspace={currentWorkspace} context={context} />;
+    return (
+      <MarkdownRenderer
+        path={path}
+        currentWorkspace={currentWorkspace}
+        context={context}
+        onRenderBodyReady={onRenderBodyReady}
+      />
+    );
   }
 
   if (isImage(path)) {
@@ -86,11 +127,11 @@ export function PreviewContent({
   }
 
   if (isMustache(path) || isEjs(path)) {
-    return <TemplateRenderer path={path} currentWorkspace={currentWorkspace} />;
+    return <TemplateRenderer path={path} currentWorkspace={currentWorkspace} onRenderBodyReady={onRenderBodyReady} />;
   }
 
   if (isHtml(path)) {
-    return <HtmlRenderer path={path} currentWorkspace={currentWorkspace} />;
+    return <HtmlRenderer path={path} currentWorkspace={currentWorkspace} onRenderBodyReady={onRenderBodyReady} />;
   }
 
   return <div>Unsupported file type for preview: {path}</div>;
@@ -100,13 +141,16 @@ export function PreviewContent({
 function MarkdownRenderer({
   path,
   currentWorkspace,
+  onRenderBodyReady,
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
   context: PreviewContext;
+  onRenderBodyReady?: (element: HTMLElement) => void;
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
+  const renderBodyRef = useRenderBodyCallback(onRenderBodyReady, html);
 
   useEffect(() => {
     try {
@@ -119,12 +163,21 @@ function MarkdownRenderer({
     }
   }, [content]);
 
-  return <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <RenderBodyContainer html={html} renderBodyRef={renderBodyRef} />;
 }
 
-function TemplateRenderer({ path, currentWorkspace }: { path: AbsPath; currentWorkspace: Workspace }) {
+function TemplateRenderer({
+  path,
+  currentWorkspace,
+  onRenderBodyReady,
+}: {
+  path: AbsPath;
+  currentWorkspace: Workspace;
+  onRenderBodyReady?: (element: HTMLElement) => void;
+}) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
+  const renderBodyRef = useRenderBodyCallback(onRenderBodyReady, html);
 
   useEffect(() => {
     const renderTemplate = async () => {
@@ -160,13 +213,20 @@ function TemplateRenderer({ path, currentWorkspace }: { path: AbsPath; currentWo
     void renderTemplate();
   }, [content, path, currentWorkspace]);
 
-  return <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <RenderBodyContainer html={html} renderBodyRef={renderBodyRef} />;
 }
 
-function HtmlRenderer({ path, currentWorkspace }: { path: AbsPath; currentWorkspace: Workspace }) {
+function HtmlRenderer({
+  path,
+  currentWorkspace,
+  onRenderBodyReady,
+}: {
+  path: AbsPath;
+  currentWorkspace: Workspace;
+  onRenderBodyReady?: (element: HTMLElement) => void;
+}) {
   const content = useLiveFileContent(currentWorkspace, path);
+  const renderBodyRef = useRenderBodyCallback(onRenderBodyReady, content);
 
-  return (
-    <div style={{ width: "100%", height: "100%", overflow: "auto" }} dangerouslySetInnerHTML={{ __html: content }} />
-  );
+  return <RenderBodyContainer html={content || ""} renderBodyRef={renderBodyRef} />;
 }
