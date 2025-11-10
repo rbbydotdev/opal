@@ -31,7 +31,7 @@ import { vim } from "@replit/codemirror-vim";
 import { useLocation, useRouter } from "@tanstack/react-router";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 export type StrictSourceMimesType =
   | "text/css"
@@ -107,12 +107,12 @@ export const CodeMirrorEditor = ({
   const viewRef = useRef<EditorView | null>(null);
 
   // Compartments for dynamic configuration
-  const languageCompartment = useMemo(() => new Compartment(), []);
-  const vimCompartment = useMemo(() => new Compartment(), []);
-  const editableCompartment = useMemo(() => new Compartment(), []);
-  const conflictCompartment = useMemo(() => new Compartment(), []);
-  const urlRangeCompartment = useMemo(() => new Compartment(), []);
-  const basicSetupCompartment = useMemo(() => new Compartment(), []);
+  const languageCompartment = useRef(new Compartment()).current;
+  const vimCompartment = useRef(new Compartment()).current;
+  const editableCompartment = useRef(new Compartment()).current;
+  const conflictCompartment = useRef(new Compartment()).current;
+  const urlRangeCompartment = useRef(new Compartment()).current;
+  const basicSetupCompartment = useRef(new Compartment()).current;
 
   // initial setup
   useEffect(() => {
@@ -176,20 +176,7 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [
-    basicSetupCompartment,
-    conflictCompartment,
-    editableCompartment,
-    enableConflictResolution,
-    hasConflicts,
-    languageCompartment,
-    location.hash,
-    mimeType,
-    readOnly,
-    urlRangeCompartment,
-    value,
-    vimCompartment,
-  ]); // Only depend on initial value
+  }, [value]); // Only depend on initial value
 
   // Reconfigure language when mimeType/conflicts change
   useEffect(() => {
@@ -202,7 +189,7 @@ export const CodeMirrorEditor = ({
         effects: languageCompartment.reconfigure(ext),
       });
     }
-  }, [mimeType, hasConflicts, globalConflictResolution, languageCompartment]);
+  }, [mimeType, hasConflicts, globalConflictResolution]);
   useEffect(() => {
     //basicsetup compartment - use custom setup that respects vim mode
     if (viewRef.current) {
@@ -210,7 +197,7 @@ export const CodeMirrorEditor = ({
         effects: basicSetupCompartment.reconfigure(createCustomBasicSetup(vimMode)),
       });
     }
-  }, [basicSetupCompartment, vimMode]);
+  }, [vimMode]);
 
   // Reconfigure vim mode
   useEffect(() => {
@@ -219,7 +206,7 @@ export const CodeMirrorEditor = ({
         effects: vimCompartment.reconfigure(vimMode ? vim() : []),
       });
     }
-  }, [vimCompartment, vimMode]);
+  }, [vimMode]);
 
   // Reconfigure editable state
   useEffect(() => {
@@ -228,7 +215,7 @@ export const CodeMirrorEditor = ({
         effects: editableCompartment.reconfigure(EditorView.editable.of(!readOnly)),
       });
     }
-  }, [editableCompartment, readOnly]);
+  }, [readOnly]);
 
   // Reconfigure conflict plugin
   useEffect(() => {
@@ -239,7 +226,7 @@ export const CodeMirrorEditor = ({
         ),
       });
     }
-  }, [conflictCompartment, enableConflictResolution]);
+  }, [enableConflictResolution]);
 
   // Reconfigure URL ranges when hash changes
   useEffect(() => {
@@ -249,7 +236,7 @@ export const CodeMirrorEditor = ({
         effects: urlRangeCompartment.reconfigure(createURLRangeExtension(ranges)),
       });
     }
-  }, [urlRangeCompartment, location.hash]);
+  }, [location.hash]);
 
   // external prop value pushes into editor
   useEffect(() => {
