@@ -51,7 +51,7 @@ export function SidebarFileMenuBuild({
 
   const { builds, build, setBuildId } = useBuildManager({ currentWorkspace });
 
-  const handlePublishToHTML = async () => {
+  const handleBuildToHTML = async () => {
     try {
       await openNew({
         currentWorkspace,
@@ -60,6 +60,7 @@ export function SidebarFileMenuBuild({
       console.error("Build modal error:", error);
     }
   };
+  const handlePublishModal = async () => {};
 
   const handleDeleteBuild = async (buildGuid: string) => {
     try {
@@ -111,7 +112,7 @@ export function SidebarFileMenuBuild({
                     <span className="flex-grow">Push to Github Pages</span>
                   </Button>
                 )}
-                <Button className="w-full flex text-xs" size="sm" variant="outline" onClick={handlePublishToHTML}>
+                <Button className="w-full flex text-xs" size="sm" variant="outline" onClick={handleBuildToHTML}>
                   <Code2 className="mr-1" />
                   <span className="flex-grow">Build to HTML</span>
                 </Button>
@@ -131,20 +132,28 @@ export function SidebarFileMenuBuild({
                     onSelect={(buildGuid: string) => handleDeleteBuild(buildGuid)}
                   />
                 ) : (
-                  <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
-                    <BuildMenuDropDown open={open} setOpen={setOpen}>
-                      <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
-                        <Delete className="text-destructive" /> Delete Build
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
-                        <UploadCloud /> Publish Build
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
-                        <Download /> Download Build
-                      </DropdownMenuItem>
-                    </BuildMenuDropDown>
-                  </BuildSelector>
+                  <>
+                    <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
+                      <BuildMenuDropDown open={open} setOpen={setOpen}>
+                        <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
+                          <Delete className="text-destructive" /> Delete Build
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
+                          <UploadCloud /> Publish Build
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
+                          <Download /> Download Build
+                        </DropdownMenuItem>
+                      </BuildMenuDropDown>
+                    </BuildSelector>
+                  </>
                 )}
+              </div>
+              <div className="min-w-0 flex items-center w-full">
+                <Button className="w-full flex text-xs" size="sm" variant="outline" onClick={handlePublishModal}>
+                  <Code2 className="mr-1" />
+                  <span className="flex-grow">Publish Build</span>
+                </Button>
               </div>
               {/* Builds List */}
               {/* <SidebarBuildsList
