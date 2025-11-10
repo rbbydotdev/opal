@@ -161,4 +161,4 @@ export class NullBuildDAO extends BuildDAO {
   }
 }
 
-export const NullBuild = new NullBuildDAO();
+export const NULL_BUILD = new NullBuildDAO();

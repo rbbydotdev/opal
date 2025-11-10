@@ -12,7 +12,7 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
-import { NullBuild } from "../data/BuildDAO";
+import { NULL_BUILD } from "../data/BuildDAO";
 
 export interface BuildRunnerOptions {
   strategy: BuildStrategy;
@@ -548,7 +548,7 @@ export class BuildRunner {
 export class NullBuildRunner extends BuildRunner {
   constructor() {
     super({
-      build: NullBuild,
+      build: NULL_BUILD,
       strategy: "freeform",
       sourceDisk: new NullDisk(),
     });

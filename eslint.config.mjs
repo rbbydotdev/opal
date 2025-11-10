@@ -8,6 +8,7 @@ import myLocalPlugin from "./eslint/index.js"; // <-- import local rules
 const config = [
   {
     files: ["**/*.ts", "**/*.tsx"],
+    ignores: ["proxies/**/*.ts", "git-protocol-proxy/**/*.ts"],
     languageOptions: {
       parser: typescriptEslintParser,
       parserOptions: {
