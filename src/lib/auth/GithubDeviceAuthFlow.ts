@@ -25,13 +25,11 @@ export type GithubDeviceAuthFlowPayload = {
 };
 export async function GithubDeviceAuthFlow({
   corsProxy,
-  clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
   scopes = ["read:user", "repo", "workflow"],
   onVerification,
   onAuthentication,
 }: {
   corsProxy?: string;
-  clientId?: string;
   scopes?: string[];
   onVerification: OnVerificationCallback;
   onVerificationError?: (error: Error) => void;
@@ -45,7 +43,7 @@ export async function GithubDeviceAuthFlow({
   const auth = createOAuthDeviceAuth({
     request: proxiedRequest,
     clientType: "oauth-app",
-    clientId,
+    clientId: ENV.PUBLIC_GITHUB_CLIENT_ID,
     scopes,
     onVerification,
   });

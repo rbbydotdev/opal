@@ -384,7 +384,6 @@ export function SidebarGitSection({
   const { repo, playbook, info } = useWorkspaceGitRepo({ currentWorkspace });
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
-  const { cmdRef: remoteRef } = useTooltipToastCmd();
   const { cmdRef: branchRef } = useTooltipToastCmd();
   const { cmdRef: commitManagerRef } = useTooltipToastCmd();
   const { cmdRef: fetchRef } = useTooltipToastCmd();
@@ -646,7 +645,6 @@ export function SidebarGitSection({
                 <RemoteManagerSection
                   repo={repo}
                   info={info}
-                  remoteRef={remoteRef}
                   setSelectRemote={setSelectRemote}
                   selectRemote={coalescedRemote}
                 />

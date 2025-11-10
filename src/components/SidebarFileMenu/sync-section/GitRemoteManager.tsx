@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TooltipToast } from "@/components/ui/TooltipToast";
+import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { GitRemote, GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";
@@ -278,27 +278,29 @@ function RemoteSelect({
 export function RemoteManagerSection({
   repo,
   info,
-  remoteRef,
+  // show,
   className,
   selectRemote,
   setSelectRemote,
 }: {
   repo: GitRepo | Comlink.Remote<GitRepo>;
   info: RepoInfoType;
-  remoteRef: React.RefObject<{ show: (text?: string) => void }>;
+  // show: (text: string, variant?: "info" | "success" | "destructive") => void;
   className?: string;
   selectRemote: string | null;
   setSelectRemote: (remote: string) => void;
 }) {
+  const { cmdRef } = useTooltipToastCmd();
+  const show = cmdRef.current.show;
   const { handlePush, handlePull, handleFetch, handleSync } = useRemoteManagerActions({
     repo,
-    log: remoteRef.current.show,
+    show: show,
     selectRemote,
   });
   return (
     <div className={cn("w-full flex justify-center flex-col items-center", className)}>
       <>
-        <TooltipToast cmdRef={remoteRef} durationMs={1000} sideOffset={0} />
+        <TooltipToast cmdRef={cmdRef} durationMs={1000} sideOffset={0} />
         <GitRemoteManager
           isMerging={info.isMerging}
           remotes={info.remotes}
@@ -310,15 +312,15 @@ export function RemoteManagerSection({
           setSelectRemote={setSelectRemote}
           replaceGitRemote={(previousRemote, nextRemote) => {
             void repo.replaceGitRemote(previousRemote, nextRemote);
-            remoteRef.current.show("remote replaced");
+            show("remote replaced");
           }}
           addGitRemote={(remote) => {
             void repo.addGitRemote(remote);
-            remoteRef.current.show("remote added");
+            show("remote added");
           }}
           deleteGitRemote={(remote) => {
             void repo.deleteGitRemote(remote);
-            remoteRef.current.show("remote deleted");
+            show("remote deleted");
           }}
         />
       </>
@@ -328,20 +330,20 @@ export function RemoteManagerSection({
 
 function useRemoteManagerActions({
   repo,
-  log,
+  show,
   selectRemote,
 }: {
   repo: GitRepo | Comlink.Remote<GitRepo>;
-  log: (text: string, variant?: "info" | "success" | "destructive") => void;
+  show: (text: string, variant?: "info" | "success" | "destructive") => void;
   selectRemote: string | null;
 }) {
   const handlePush = async () => {
     if (!selectRemote) return;
     try {
       await repo.push({ remote: selectRemote });
-      log("push successful");
+      show("push successful");
     } catch (e) {
-      log("push failed", "destructive");
+      show("push failed", "destructive");
       console.error(e);
     }
   };
@@ -349,9 +351,9 @@ function useRemoteManagerActions({
     if (!selectRemote) return;
     try {
       await repo.pull({ remote: selectRemote });
-      log("pull successful");
+      show("pull successful");
     } catch (e) {
-      log("pull failed", "destructive");
+      show("pull failed", "destructive");
       console.error(e);
     }
   };
@@ -366,9 +368,9 @@ function useRemoteManagerActions({
         corsProxy: remoteObj.gitCorsProxy,
         onAuth: remoteObj.onAuth,
       });
-      log("fetch successful");
+      show("fetch successful");
     } catch (e) {
-      log("fetch failed", "destructive");
+      show("fetch failed", "destructive");
       console.error(e);
     }
   };
@@ -379,9 +381,9 @@ function useRemoteManagerActions({
       await handleFetch();
       await handlePull();
       await handlePush();
-      log("sync successful");
+      show("sync successful");
     } catch (e) {
-      log("sync failed", "destructive");
+      show("sync failed", "destructive");
       console.error(e);
     }
   };

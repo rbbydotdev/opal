@@ -44,20 +44,18 @@ export type GithubOAuthFlowPayload = {
  * Build GitHub authorize URL
  */
 export function getGithubOAuthUrl({
-  clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
   redirectUri,
   scopes = ["read:user", "repo", "workflow"], // slim default scope recommendations
   state,
   codeChallenge,
 }: {
-  clientId?: string;
   redirectUri: string;
   scopes?: string[];
   state?: string;
   codeChallenge: string;
 }): string {
   const params = new URLSearchParams({
-    client_id: clientId,
+    client_id: ENV.PUBLIC_GITHUB_CLIENT_ID,
     redirect_uri: redirectUri,
     scope: scopes.join(" "),
     code_challenge: codeChallenge,
@@ -73,20 +71,18 @@ export async function exchangeCodeForToken({
   codeVerifier,
   redirectUri,
   corsProxy, // must provide if frontend-only
-  clientId = ENV.PUBLIC_GITHUB_CLIENT_ID,
 }: {
   code: string;
   codeVerifier: string;
   redirectUri?: string;
   corsProxy?: string;
-  clientId?: string;
 }): Promise<GithubOAuthFlowPayload> {
   try {
     const baseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/github.com` : "https://github.com";
     const tokenUrl = `${baseUrl}/login/oauth/access_token`;
 
     const params = new URLSearchParams();
-    params.append("client_id", clientId);
+    params.append("client_id", ENV.PUBLIC_GITHUB_CLIENT_ID);
     params.append("code", code);
     params.append("code_verifier", codeVerifier);
     if (redirectUri) params.append("redirect_uri", redirectUri);
