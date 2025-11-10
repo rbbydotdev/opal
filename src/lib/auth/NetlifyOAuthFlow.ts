@@ -13,7 +13,7 @@ export type NetlifyOAuthFlowPayload = {
  * Build Netlify authorize URL
  */
 export function getNetlifyOAuthUrl({
-  clientId = ENV.PUBLIC_NETLIFY_CLIENT_ID,
+  clientId = ENV.PUBLIC_NETLIFY_CLIENT_ID!,
   redirectUri,
   state,
 }: {
