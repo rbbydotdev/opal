@@ -278,23 +278,20 @@ function RemoteSelect({
 export function RemoteManagerSection({
   repo,
   info,
-  // show,
   className,
   selectRemote,
   setSelectRemote,
 }: {
   repo: GitRepo | Comlink.Remote<GitRepo>;
   info: RepoInfoType;
-  // show: (text: string, variant?: "info" | "success" | "destructive") => void;
   className?: string;
   selectRemote: string | null;
   setSelectRemote: (remote: string) => void;
 }) {
-  const { cmdRef } = useTooltipToastCmd();
-  const show = cmdRef.current.show;
+  const { cmdRef, show } = useTooltipToastCmd();
   const { handlePush, handlePull, handleFetch, handleSync } = useRemoteManagerActions({
     repo,
-    show: show,
+    show,
     selectRemote,
   });
   return (
