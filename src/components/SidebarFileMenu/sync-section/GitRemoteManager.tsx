@@ -290,57 +290,11 @@ export function RemoteManagerSection({
   selectRemote: string | null;
   setSelectRemote: (remote: string) => void;
 }) {
-  const handlePush = async () => {
-    if (!selectRemote) return;
-    try {
-      await repo.push({ remote: selectRemote });
-      remoteRef.current.show("push successful");
-    } catch (e) {
-      remoteRef.current.show("push failed");
-      console.error(e);
-    }
-  };
-  const handlePull = async () => {
-    if (!selectRemote) return;
-    try {
-      await repo.pull({ remote: selectRemote });
-      remoteRef.current.show("pull successful");
-    } catch (e) {
-      remoteRef.current.show("pull failed");
-      console.error(e);
-    }
-  };
-  const handleFetch = async () => {
-    if (!selectRemote) return;
-    try {
-      const remoteObj = await repo.getRemote(selectRemote);
-      if (!remoteObj) throw new Error("Remote not found");
-      const result = await repo.fetch({
-        url: remoteObj.url,
-        remote: remoteObj.name,
-        corsProxy: remoteObj.gitCorsProxy,
-        onAuth: remoteObj.onAuth,
-      });
-      console.log(result);
-      remoteRef.current.show("fetch successful");
-    } catch (e) {
-      remoteRef.current.show("fetch failed");
-      console.error(e);
-    }
-  };
-  const handleSync = async () => {
-    if (!selectRemote) return;
-    try {
-      // Sync = fetch + pull + push
-      await handleFetch();
-      await handlePull();
-      await handlePush();
-      remoteRef.current.show("sync successful");
-    } catch (e) {
-      remoteRef.current.show("sync failed");
-      console.error(e);
-    }
-  };
+  const { handlePush, handlePull, handleFetch, handleSync } = useRemoteManagerActions({
+    repo,
+    log: remoteRef.current.show,
+    selectRemote,
+  });
   return (
     <div className={cn("w-full flex justify-center flex-col items-center", className)}>
       <>
@@ -370,4 +324,66 @@ export function RemoteManagerSection({
       </>
     </div>
   );
+}
+
+function useRemoteManagerActions({
+  repo,
+  log,
+  selectRemote,
+}: {
+  repo: GitRepo | Comlink.Remote<GitRepo>;
+  log: (text: string, variant?: "info" | "success" | "destructive") => void;
+  selectRemote: string | null;
+}) {
+  const handlePush = async () => {
+    if (!selectRemote) return;
+    try {
+      await repo.push({ remote: selectRemote });
+      log("push successful");
+    } catch (e) {
+      log("push failed", "destructive");
+      console.error(e);
+    }
+  };
+  const handlePull = async () => {
+    if (!selectRemote) return;
+    try {
+      await repo.pull({ remote: selectRemote });
+      log("pull successful");
+    } catch (e) {
+      log("pull failed", "destructive");
+      console.error(e);
+    }
+  };
+  const handleFetch = async () => {
+    if (!selectRemote) return;
+    try {
+      const remoteObj = await repo.getRemote(selectRemote);
+      if (!remoteObj) throw new Error("Remote not found");
+      await repo.fetch({
+        url: remoteObj.url,
+        remote: remoteObj.name,
+        corsProxy: remoteObj.gitCorsProxy,
+        onAuth: remoteObj.onAuth,
+      });
+      log("fetch successful");
+    } catch (e) {
+      log("fetch failed", "destructive");
+      console.error(e);
+    }
+  };
+  const handleSync = async () => {
+    if (!selectRemote) return;
+    try {
+      // Sync = fetch + pull + push
+      await handleFetch();
+      await handlePull();
+      await handlePush();
+      log("sync successful");
+    } catch (e) {
+      log("sync failed", "destructive");
+      console.error(e);
+    }
+  };
+  return { handlePush, handlePull, handleFetch, handleSync };
 }
