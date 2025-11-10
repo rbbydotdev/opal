@@ -136,25 +136,29 @@ export function SidebarFileMenuBuild({
                     onSelect={(buildGuid: string) => handleDeleteBuild(buildGuid)}
                   />
                 ) : (
-                  <>
-                    <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
-                      <BuildMenuDropDown open={open} setOpen={setOpen}>
-                        <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
-                          <Delete className="text-destructive" /> Delete Build
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
-                          <UploadCloud /> Publish Build
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
-                          <Download /> Download Build
-                        </DropdownMenuItem>
-                      </BuildMenuDropDown>
-                    </BuildSelector>
-                  </>
+                  <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
+                    <BuildMenuDropDown open={open} setOpen={setOpen} disabled={builds.length === 0}>
+                      <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
+                        <Delete className="text-destructive" /> Delete Build
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
+                        <UploadCloud /> Publish Build
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
+                        <Download /> Download Build
+                      </DropdownMenuItem>
+                    </BuildMenuDropDown>
+                  </BuildSelector>
                 )}
               </div>
               <div className="min-w-0 flex items-center w-full">
-                <Button className="w-full flex text-xs" size="sm" variant="outline" onClick={handlePublishModal}>
+                <Button
+                  disabled={!build}
+                  className="w-full flex text-xs"
+                  size="sm"
+                  variant="outline"
+                  onClick={handlePublishModal}
+                >
                   <Code2 className="mr-1" />
                   <span className="flex-grow">Publish Build</span>
                 </Button>
@@ -191,14 +195,16 @@ const BuildMenuDropDown = ({
   children,
   open,
   setOpen,
+  disabled,
 }: {
   children: React.ReactNode;
   open: boolean;
   setOpen: (open: boolean) => void;
+  disabled?: boolean;
 }) => (
   <DropdownMenu onOpenChange={setOpen} open={open}>
     <DropdownMenuTrigger asChild>
-      <Button variant="outline" className="h-12 w-6 shrink-0 flex-grow" title="Build Menu">
+      <Button variant="outline" disabled={disabled} className="h-12 w-6 shrink-0 flex-grow" title="Build Menu">
         <Ellipsis /> <span className="sr-only">Build Menu</span>
       </Button>
     </DropdownMenuTrigger>
