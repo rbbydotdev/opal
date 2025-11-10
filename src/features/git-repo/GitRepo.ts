@@ -1,4 +1,4 @@
-import { GitConfig } from "@/app/GitConfig";
+import { GitConfig, GitRepoAuthor, OPAL_AUTHOR } from "@/app/GitConfig";
 import { Disk } from "@/data/disk/Disk";
 import { DiskJType } from "@/data/DiskType";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
@@ -21,11 +21,6 @@ import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 import { gitAbbreviateRef } from "./gitAbbreviateRef";
 
-export const OPAL_AUTHOR: GitRepoAuthor = {
-  name: "Opal Editor",
-  email: "user@opaleditor.com",
-};
-
 export interface GitRemote {
   name: string;
   url: string;
@@ -38,11 +33,6 @@ export interface IRemote {
   url: string;
   auth?: AuthCallback;
 }
-
-export type GitRepoAuthor = {
-  name: string;
-  email: string;
-};
 
 // Utility functions for GitRef
 export const createBranchRef = (name: string): GitRef => ({

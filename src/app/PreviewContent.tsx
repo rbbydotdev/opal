@@ -27,7 +27,7 @@ function RenderBodyContainer({
   renderBodyRef,
 }: {
   html: string;
-  renderBodyRef: React.RefObject<HTMLDivElement>;
+  renderBodyRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div

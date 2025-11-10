@@ -9,6 +9,26 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 // import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
 
+function getScrollElement(context: any, renderBodyElement: HTMLElement | null): HTMLElement | null {
+  const isFirefox = navigator.userAgent.includes("Firefox");
+
+  if (isFirefox) {
+    return context.document?.documentElement || context.document?.body || null;
+  }
+
+  return renderBodyElement || context.document?.documentElement || context.document?.body || null;
+}
+
+function getListenElement(context: any, renderBodyElement: HTMLElement | null): HTMLElement | Window | null {
+  const isFirefox = navigator.userAgent.includes("Firefox");
+
+  if (isFirefox) {
+    return context.window as any;
+  }
+
+  return renderBodyElement || (context.window as any);
+}
+
 export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; currentWorkspace: Workspace }) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [renderBodyElement, setRenderBodyElement] = useState<HTMLElement | null>(null);
@@ -47,14 +67,10 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
           path={path}
           workspaceName={currentWorkspace.name}
           elementRef={{
-            current: navigator.userAgent.includes("Firefox")
-              ? context.document?.documentElement || context.document?.body || null
-              : renderBodyElement || context.document?.documentElement || context.document?.body || null,
+            current: getScrollElement(context, renderBodyElement),
           }}
           listenRef={{
-            current: navigator.userAgent.includes("Firefox")
-              ? (context.window as any)
-              : renderBodyElement || (context.window as any),
+            current: getListenElement(context, renderBodyElement) as any,
           }}
         >
           <iframe

@@ -4,6 +4,7 @@ import React, { useImperativeHandle, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { OPAL_AUTHOR } from "@/app/GitConfig";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,10 +19,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 
 export const gitAuthorSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Author name is required")
-    .max(100, "Author name is too long"),
+  name: z.string().min(1, "Author name is required").max(100, "Author name is too long"),
   email: z
     .string()
     .min(1, "Author email is required")
@@ -51,7 +49,7 @@ export function useGitAuthorDialogCmd() {
 
 export function GitAuthorDialog({
   children,
-  defaultValues = { name: "Opal Editor", email: "user@opaleditor.com" },
+  defaultValues = OPAL_AUTHOR,
   onSubmit,
   cmdRef,
 }: {
