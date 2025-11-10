@@ -1,3 +1,13 @@
+export type GitRepoAuthor = {
+  name: string;
+  email: string;
+};
+
+export const OPAL_AUTHOR: GitRepoAuthor = {
+  name: "Opal Editor",
+  email: "user@opaledx.com",
+};
+
 export const GIT_CONFIG_KEY = "app/GitConfig";
 
 export interface GitUserInfo {
@@ -14,10 +24,7 @@ export interface GitConfigData {
 }
 
 export const DEFAULT_GIT_CONFIG: GitConfigData = {
-  user: {
-    name: "Opal Editor",
-    email: "user@opaleditor.com",
-  },
+  user: OPAL_AUTHOR,
 };
 
 export class GitConfig {
