@@ -58,7 +58,9 @@ export function ConnectionsModal({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
-        className="_sm:max-w-[26.5625rem] _sm:min-h-[37rem] max-h-[80vh] overflow-y-auto"
+        // className="max-w-xl max-h-[80vh] flex flex-col fixed top-[20vh] translate-y-0"
+        // <DialogContent
+        //   className="_sm:max-w-[26.5625rem] _sm:min-h-[37rem] max-h-[80vh] overflow-y-auto"
         onSelect={onSelect}
       >
         <ConnectionsModalContent
