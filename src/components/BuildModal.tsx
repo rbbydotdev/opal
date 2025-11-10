@@ -156,7 +156,7 @@ export function BuildModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col" onPointerDownOutside={handleFocusOutside}>
+      <DialogContent className="max-w-2xl h-[70vh] top-[10vh] flex flex-col" onPointerDownOutside={handleFocusOutside}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {buildRunner.isBuilding && <Loader size={16} className="animate-spin" />}

@@ -41,7 +41,7 @@ export function BuildSelector({
                 <div className="h-full w-full flex justify-start flex-col items-start gap-1 truncate">
                   <div className="w-full flex justify-start items-center">{build.label}</div>
                   <div className="text-2xs text-muted-foreground truncate w-full flex justify-start items-center">
-                    {build.Disk.guid} • {timeAgo(build.timestamp)}
+                    {build.disk.guid} • {timeAgo(build.timestamp)}
                   </div>
                 </div>
               </SelectItem>
