@@ -1,4 +1,5 @@
 import { Workspace } from "@/data/Workspace";
+import { ENV } from "@/lib/env";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { hasRouteMatch, routeRequest } from "@/lib/ServiceWorker/router";
@@ -24,6 +25,10 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  if (!ENV.HOST_URLS.some((hostUrl) => url.origin === hostUrl)) {
+    return event.respondWith(defaultFetchHandler(event));
+  }
+
   const whiteListMatch = WHITELIST.some((item) => item.test(url, request));
   // If there's no referrer, it's likely a direct navigation or non-app request.
   // Let the browser handle it directly.
@@ -39,8 +44,8 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
     // First, try to get workspace name from search params
     const searchParams = url.searchParams;
-    if (searchParams.has('workspaceName')) {
-      workspaceName = searchParams.get('workspaceName');
+    if (searchParams.has("workspaceName")) {
+      workspaceName = searchParams.get("workspaceName");
     }
 
     // If no workspace name in search params and we have a referrer, check referrer search params
@@ -48,8 +53,8 @@ self.addEventListener("fetch", (event: FetchEvent) => {
       try {
         const referrerUrl = new URL(request.referrer);
         const referrerSearchParams = referrerUrl.searchParams;
-        if (referrerSearchParams.has('workspaceName')) {
-          workspaceName = referrerSearchParams.get('workspaceName');
+        if (referrerSearchParams.has("workspaceName")) {
+          workspaceName = referrerSearchParams.get("workspaceName");
         }
       } catch {
         // If parsing referrer URL fails, ignore

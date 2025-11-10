@@ -1,45 +1,21 @@
 import { BuildStrategy } from "@/builder/builder-types";
+import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { BuildDAO } from "@/data/BuildDAO";
+import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
-import { createContext, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
-type BuildModalContextType = {
-  openNew: (options: { build: BuildDAO }) => Promise<void>;
-  close: () => void;
-};
-
-const BuildModalContext = createContext<BuildModalContextType | undefined>(undefined);
-
-export function BuildModalProvider({ children }: { children: React.ReactNode }) {
-  const { currentWorkspace } = useWorkspaceContext();
-  const { openNew, close, cmdRef } = useBuildModalCmd();
-  return (
-    <BuildModalContext.Provider value={{ openNew, close }}>
-      {children}
-      <BuildModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
-    </BuildModalContext.Provider>
-  );
-}
-
-export function useBuildModal() {
-  const ctx = useContext(BuildModalContext);
-  if (!ctx) throw new Error("useBuildModal must be used within a BuildModalProvider");
-  return ctx;
-}
-
-export function useBuildModalCmd() {
+export function usePublicationModalCmd() {
   const cmdRef = useRef<{
-    openNew: () => Promise<void>;
+    openNew: ({ build }: { build: BuildDAO }) => Promise<void>;
     close: () => void;
   }>({
     openNew: async () => {},
@@ -52,13 +28,13 @@ export function useBuildModalCmd() {
   };
 }
 
-export function BuildModal({
+export function PublicationModal({
   cmdRef,
   currentWorkspace,
 }: {
   currentWorkspace: Workspace;
   cmdRef: React.ForwardedRef<{
-    openNew: () => void;
+    openNew: ({ build }: { build: BuildDAO }) => void;
     close: () => void;
   }>;
 }) {
@@ -71,6 +47,7 @@ export function BuildModal({
     onComplete?: (buildDao?: BuildDAO) => void;
   } | null>(null);
   const [buildError, setBuildError] = useState<string | null>(null);
+  const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
   const [logs, setLogs] = useState<BuildLog[]>([]);
 
@@ -79,31 +56,10 @@ export function BuildModal({
   const log = useCallback((bl: BuildLogLine) => {
     setLogs((prev) => [...prev, bl]);
   }, []);
-  const openNew = useCallback(async () => {
-    const build = BuildDAO.CreateNew({
-      label: `Build ${new Date().toLocaleString()}`,
-      workspaceId: currentWorkspace.guid,
-      disk: currentWorkspace.getDisk(),
-    });
-    setBuildRunner(
-      BuildRunner.create({
-        build,
-        sourceDisk: currentWorkspace.getDisk(),
-        strategy,
-      })
-    );
+  const openNew = useCallback(async ({ build }: { build: BuildDAO }) => {
+    setBuild(build);
     setIsOpen(true);
-  }, [currentWorkspace, strategy]);
-  const openEdit = async ({ buildId }: { buildId: string }) => {
-    const build = await BuildDAO.FetchFromGuid(buildId);
-    setBuildRunner(
-      BuildRunner.create({
-        build: build!,
-        sourceDisk: currentWorkspace.getDisk(),
-        strategy,
-      })
-    );
-  };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -160,16 +116,16 @@ export function BuildModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {buildRunner.isBuilding && <Loader size={16} className="animate-spin" />}
-            Build Workspace
+            Publish Build
           </DialogTitle>
-          <DialogDescription>Select a build strategy and publish your workspace to static HTML.</DialogDescription>
+          <DialogDescription>Choose Publication Destination</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 flex-1 min-h-0">
-          {/* Strategy Selection */}
+          <BuildLabel build={build} className="border bg-card p-2 rounded-lg font-mono" />
           <div className="space-y-2">
             <label htmlFor="strategy-select" className="text-sm font-medium">
-              Build Strategy
+              Destination
             </label>
             <Select
               value={strategy}
@@ -180,7 +136,7 @@ export function BuildModal({
                 <SelectValue placeholder="Select build strategy" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="freeform" className="_p-4">
+                <SelectItem value="freeform">
                   <div className="flex flex-col items-start gap-1">
                     <span className="font-medium">Freeform</span>
                     <span className="text-xs text-muted-foreground">
@@ -188,7 +144,7 @@ export function BuildModal({
                     </span>
                   </div>
                 </SelectItem>
-                <SelectItem value="book" className="_p-4">
+                <SelectItem value="book">
                   <div className="flex flex-col items-start gap-1">
                     <span className="font-medium">Book</span>
                     <span className="text-xs text-muted-foreground">
@@ -196,7 +152,7 @@ export function BuildModal({
                     </span>
                   </div>
                 </SelectItem>
-                <SelectItem value="blog" className="_p-4">
+                <SelectItem value="blog">
                   <div className="flex flex-col items-start gap-1">
                     <span className="font-medium">Blog</span>
                     <span className="text-xs text-muted-foreground">Blog index with individual post pages</span>

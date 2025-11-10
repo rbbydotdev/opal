@@ -1,7 +1,6 @@
-// DONT FORGET TO SET GITHUB_CLIENT_SECRET in your Cloudflare Workers environment variables!
-
 const ALLOWED_ORIGINS = ['https://opaledx.com', 'http://localhost:3000'];
 const ALLOWED_HOSTS = ['github.com', 'api.github.com', '*.github.com'];
+// DONT FORGET TO SET GITHUB_CLIENT_SECRET in your Cloudflare Workers environment variables!
 
 function filterHeaders(headers: Headers): Headers {
 	const newHeaders = new Headers();
@@ -106,7 +105,7 @@ const handleRequest = async (request: Request, env: Env): Promise<Response> => {
 
 		const body = await request.text();
 		const contentType = request.headers.get('content-type') || '';
-		
+
 		let params: URLSearchParams;
 		if (contentType.includes('application/json')) {
 			// Handle JSON request from @octokit/auth-oauth-device

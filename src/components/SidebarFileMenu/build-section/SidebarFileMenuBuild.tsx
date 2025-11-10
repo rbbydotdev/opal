@@ -1,6 +1,7 @@
-import { useBuildModal } from "@/components/BuildModal";
+import { BuildModal, useBuildModalCmd } from "@/components/BuildModal";
 import { useConfirm } from "@/components/Confirm";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
+import { PublicationModal, usePublicationModalCmd } from "@/components/PublicationModal";
 import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { useBuildManager } from "@/components/SidebarFileMenu/build-files-section/useBuildManager";
@@ -41,10 +42,9 @@ export function SidebarFileMenuBuild({
 }) {
   const [expanded, setExpand] = useSingleItemExpander("build");
   const { info } = useWorkspaceGitRepo({ currentWorkspace });
-  const { openNew } = useBuildModal();
+  const { openNew, cmdRef } = useBuildModalCmd();
+  const { openNew: openNewPub, cmdRef: pubCmdRef } = usePublicationModalCmd();
   const { open: openConfirm } = useConfirm();
-
-  // const [selectedBuildIds, setSelectedBuildIds] = useState<string[]>([]);
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [open, setOpen] = useState(false);
   const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
@@ -53,14 +53,17 @@ export function SidebarFileMenuBuild({
 
   const handleBuildToHTML = async () => {
     try {
-      await openNew({
-        currentWorkspace,
-      });
+      await openNew();
     } catch (error) {
       console.error("Build modal error:", error);
     }
   };
-  const handlePublishModal = async () => {};
+  const handlePublishModal = async () => {
+    if (!build) {
+      return console.warn("No build selected for publication.");
+    }
+    void openNewPub({ build });
+  };
 
   const handleDeleteBuild = async (buildGuid: string) => {
     try {
@@ -86,6 +89,8 @@ export function SidebarFileMenuBuild({
   };
   return (
     <>
+      <PublicationModal currentWorkspace={currentWorkspace} cmdRef={pubCmdRef} />
+      <BuildModal currentWorkspace={currentWorkspace} cmdRef={cmdRef} />
       <SidebarGroup {...props}>
         <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
           <CollapsibleTrigger asChild>

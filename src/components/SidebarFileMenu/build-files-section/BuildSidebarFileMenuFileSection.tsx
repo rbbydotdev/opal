@@ -1,4 +1,3 @@
-import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
@@ -6,33 +5,7 @@ import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/BuildDAO";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { Workspace } from "@/data/Workspace";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
-import { RootNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath } from "@/lib/paths2";
-
-function RootAndDirSelector({
-  isEmpty,
-  currentWorkspace,
-  builds,
-  setBuildId: setBuild,
-  build,
-  scope,
-}: {
-  isEmpty: boolean;
-  currentWorkspace: Workspace;
-  builds: BuildDAO[];
-  setBuildId: (buildId: string) => void;
-  build: BuildDAO | null;
-  scope: AbsPath | null;
-}) {
-  return (
-    <>
-      <BuildSelector builds={builds} setBuildId={setBuild} build={build} />
-      {!isEmpty ? <RootFileMenuBanner rootNode={scope || RootNode} currentWorkspace={currentWorkspace} /> : null}
-    </>
-  );
-}
 
 export function BuildSidebarFileMenuFileSectionInternal({
   className,
