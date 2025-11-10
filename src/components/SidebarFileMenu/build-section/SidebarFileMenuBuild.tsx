@@ -110,7 +110,6 @@ export function SidebarFileMenuBuild({
           <CollapsibleContent className="pb-4">
             <div className="px-4 pt-2 pb-2 flex flex-col gap-4">
               <SidebarGroup className="gap-2 flex flex-col">
-                <SidebarGroupLabel>Workspace Actions</SidebarGroupLabel>
                 {githubConnected && (
                   <Button className="w-full text-xs" size="sm" variant="outline">
                     <Github className="mr-1" />

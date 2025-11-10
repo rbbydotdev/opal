@@ -176,6 +176,7 @@ export const CodeMirrorEditor = ({
       viewRef.current?.destroy();
       viewRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]); // Only depend on initial value
 
   // Reconfigure language when mimeType/conflicts change
@@ -189,7 +190,7 @@ export const CodeMirrorEditor = ({
         effects: languageCompartment.reconfigure(ext),
       });
     }
-  }, [mimeType, hasConflicts, globalConflictResolution]);
+  }, [mimeType, hasConflicts, globalConflictResolution, languageCompartment]);
   useEffect(() => {
     //basicsetup compartment - use custom setup that respects vim mode
     if (viewRef.current) {
@@ -197,7 +198,7 @@ export const CodeMirrorEditor = ({
         effects: basicSetupCompartment.reconfigure(createCustomBasicSetup(vimMode)),
       });
     }
-  }, [vimMode]);
+  }, [basicSetupCompartment, vimMode]);
 
   // Reconfigure vim mode
   useEffect(() => {
@@ -206,7 +207,7 @@ export const CodeMirrorEditor = ({
         effects: vimCompartment.reconfigure(vimMode ? vim() : []),
       });
     }
-  }, [vimMode]);
+  }, [vimCompartment, vimMode]);
 
   // Reconfigure editable state
   useEffect(() => {
@@ -215,7 +216,7 @@ export const CodeMirrorEditor = ({
         effects: editableCompartment.reconfigure(EditorView.editable.of(!readOnly)),
       });
     }
-  }, [readOnly]);
+  }, [editableCompartment, readOnly]);
 
   // Reconfigure conflict plugin
   useEffect(() => {
@@ -226,7 +227,7 @@ export const CodeMirrorEditor = ({
         ),
       });
     }
-  }, [enableConflictResolution]);
+  }, [conflictCompartment, enableConflictResolution]);
 
   // Reconfigure URL ranges when hash changes
   useEffect(() => {
@@ -236,7 +237,7 @@ export const CodeMirrorEditor = ({
         effects: urlRangeCompartment.reconfigure(createURLRangeExtension(ranges)),
       });
     }
-  }, [location.hash]);
+  }, [location.hash, urlRangeCompartment]);
 
   // external prop value pushes into editor
   useEffect(() => {
