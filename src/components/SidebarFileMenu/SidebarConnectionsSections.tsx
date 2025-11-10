@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Delete, Pencil, Plus, Sparkle } from "lucide-react";
 import { useState } from "react";
 
-function ConnectionManager() {
+function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
   const { remoteAuths, deleteRemoteAuth } = useRemoteAuths();
   const [editingConnection, setEditingConnection] = useState<RemoteAuthJType | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -29,7 +29,7 @@ function ConnectionManager() {
   };
 
   return (
-    <>
+    <div {...props}>
       <SelectableList.Root
         data={remoteAuths}
         getItemId={(connection) => connection.guid}
@@ -88,10 +88,8 @@ function ConnectionManager() {
           ))}
         </SelectableList.Content>
       </SelectableList.Root>
-
       {/* Add Connection Modal */}
       <ConnectionsModal open={addModalOpen} onOpenChange={setAddModalOpen} onSuccess={() => setAddModalOpen(false)} />
-
       {/* Edit Connection Modal */}
       <ConnectionsModal
         mode="edit"
@@ -102,7 +100,7 @@ function ConnectionManager() {
         }}
         onSuccess={() => setEditingConnection(null)}
       />
-    </>
+    </div>
   );
 }
 

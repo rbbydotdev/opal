@@ -3,9 +3,7 @@ import { ENV } from "@/lib/env";
 import { errF } from "@/lib/errors";
 import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { hasRouteMatch, routeRequest } from "@/lib/ServiceWorker/router";
-import { EnableRemoteLogger, WHITELIST } from "@/lib/ServiceWorker/utils";
-
-EnableRemoteLogger();
+import { WHITELIST } from "@/lib/ServiceWorker/utils";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -26,7 +24,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const url = new URL(request.url);
 
   if (!ENV.HOST_URLS.some((hostUrl) => url.origin === hostUrl)) {
-    return event.respondWith(defaultFetchHandler(event));
+    return; //event.respondWith(defaultFetchHandler(event));
   }
 
   const whiteListMatch = WHITELIST.some((item) => item.test(url, request));
@@ -36,7 +34,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
     return event.respondWith(routeRequest(event, null, "NAV"));
   }
   if (!request.referrer || whiteListMatch || request.mode === "navigate" || event.request.destination === "script") {
-    return event.respondWith(defaultFetchHandler(event));
+    return; // event.respondWith(defaultFetchHandler(event));
   }
 
   try {
@@ -97,6 +95,6 @@ self.addEventListener("fetch", (event: FetchEvent) => {
       errF`Error in fetch controller: ${request.url}. Referrer: ${request.referrer}. Error: ${e}`.toString()
     );
     // If we can't parse the workspace or another error occurs, fallback to network.
-    event.respondWith(defaultFetchHandler(event));
+    return; //event.respondWith(defaultFetchHandler(event));
   }
 });
