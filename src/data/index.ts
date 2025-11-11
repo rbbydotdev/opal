@@ -3,6 +3,7 @@ import { DiskRecord } from "@/data/disk/DiskRecord";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { SettingsRecord } from "@/data/SettingsRecord";
+import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
 import { default as Dexie, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 import { WorkspaceRecord } from "./WorkspaceRecord";
@@ -10,6 +11,7 @@ import { WorkspaceRecord } from "./WorkspaceRecord";
 export class ClientIndexedDb extends Dexie {
   workspaces!: EntityTable<WorkspaceRecord, "guid">;
   remoteAuths!: EntityTable<RemoteAuthRecord, "guid">;
+  destinations!: EntityTable<DestinationRecord, "guid">;
   settings!: EntityTable<SettingsRecord, "name">;
   disks!: EntityTable<DiskRecord, "guid">;
   builds!: EntityTable<BuildRecord, "guid">;
@@ -27,13 +29,8 @@ export class ClientIndexedDb extends Dexie {
       builds: "guid,diskId,timestamp,workspaceId",
       thumbnails: "[workspaceId+path],guid,path,workspaceId",
       historyDocs: "++edit_id,id,parent,workspaceId",
+      destinations: "guid,type",
     });
-
-    // this.remoteAuths.mapToClass(RemoteAuthRecord);
-    // this.workspaces.mapToClass(WorkspaceRecord);
-    // this.settings.mapToClass(SettingsRecord);
-    // this.disks.mapToClass(DiskRecord);
-    // this.historyDocs.mapToClass(HistoryDocRecord);
 
     applyEncryptionMiddleware<ClientIndexedDb>(
       this as ClientIndexedDb,
