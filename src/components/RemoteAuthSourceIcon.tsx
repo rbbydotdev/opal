@@ -7,6 +7,7 @@ export const RemoteAuthSourceIcon = {
   netlify: <Globe className="h-4 w-4" />,
   cloudflare: <Cloud className="h-4 w-4" />,
   private: <Zap className="h-4 w-4" />,
+  public: <Globe className="h-4 w-4" />,
 } satisfies Record<RemoteAuthSource, React.ReactNode>;
 
 // type RemoteAuthSourceIconType = (typeof RemoteAuthSourceIcon)[keyof typeof RemoteAuthSourceIcon];
