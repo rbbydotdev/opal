@@ -65,7 +65,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "api",
     icon: <RemoteAuthSourceIconComponent source="cloudflare" />,
     data: {
-      corsProxy: ENV.GITHUB_CORS_PROXY,
+      corsProxy: ENV.CLOUDFLARE_CORS_PROXY,
     },
   }),
   template({
