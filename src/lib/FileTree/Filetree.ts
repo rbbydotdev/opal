@@ -41,6 +41,9 @@ export class FileTree {
     return this._root;
   }
   indexMutex = new Mutex();
+  get size() {
+    return this.map.size;
+  }
 
   /* 
   

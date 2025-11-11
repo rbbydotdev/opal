@@ -44,6 +44,7 @@ import {
   ChevronDown,
   ChevronLeft,
   CirclePlus,
+  Clock,
   Delete,
   GlassesIcon,
   KeyboardIcon,
@@ -204,8 +205,6 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
           <span className="pr-4">Spinner</span>
         </ContextMenuItem>
 
-        <ContextMenuSeparator />
-
         {/* Show Sidebar */}
         <ContextMenuItem
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
@@ -264,8 +263,8 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
           onClick={keepMenuOpen(toggleEditHistory)}
         >
           {isEditHistoryEnabled ? <Check size={12} /> : <div className="w-4" />}
-          <Palette size={12} />
-          <span className="pr-4">Edit History</span>
+          <Clock size={12} />
+          <span className="pr-4">Use Editor History</span>
         </ContextMenuItem>
 
         {isEditHistoryEnabled && (
@@ -274,10 +273,13 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
             onClick={keepMenuOpen(toggleHistoryImageGeneration)}
           >
             {isHistoryImageGenerationEnabled ? <Check size={12} /> : <div className="w-4" />}
-            <Palette size={12} />
-            <span className="pr-4">History Images</span>
+            <span className="font-mono text-lg">{"└"}</span>
+            <span className="pr-4">Use History Images</span>
           </ContextMenuItem>
         )}
+        <ContextMenuLabel className="py-2 text-2xs w-full  font-thin justify-center flex gap-2 text-ring italic">
+          {`⚠️ super beta feature`}
+        </ContextMenuLabel>
 
         <ContextMenuSeparator />
 
