@@ -1,6 +1,6 @@
 import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
 import { getNetlifyOAuthUrl } from "@/lib/auth/NetlifyOAuthFlow";
-import { OAuthCbChannel, OAuthCbEvents, OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
+import { OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
 export class NetlifyOAuthProvider extends OAuthProvider {
   constructor() {
@@ -14,22 +14,7 @@ export class NetlifyOAuthProvider extends OAuthProvider {
     });
   }
 
-  setupChannelListeners(
-    channel: OAuthCbChannel,
-    config: OAuthProviderConfig,
-    onSuccess: (data: RemoteAuthDataFor<"oauth">) => void,
-    onError: (error: string) => void
-  ): void {
-    // Handle access token from callback window (implicit flow)
-    void channel.once(OAuthCbEvents.ACCESS_TOKEN, async ({ accessToken, state }) => {
-      try {
-        const authData = await this.validateAndProcessAuth({ accessToken, state }, config);
-        onSuccess(authData);
-      } catch (error) {
-        onError(error instanceof Error ? error.message : "Failed to process access token");
-      }
-    });
-  }
+  // Inherits setupChannelListeners from base OAuthProvider class
 
   async validateAndProcessAuth(
     data: { accessToken: string; state: string },

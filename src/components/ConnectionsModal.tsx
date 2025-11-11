@@ -121,7 +121,6 @@ export function ConnectionsModalContent({
     mode,
     editConnection,
     (f) => {
-      console.log("Connection saved:", f);
       onSuccess(f);
       form.reset();
     },
@@ -142,7 +141,9 @@ export function ConnectionsModalContent({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            return form.handleSubmit(handleSubmit)();
+            return form.handleSubmit(handleSubmit, (fieldErrors) => {
+              console.error("form validation failed", fieldErrors);
+            })();
           }}
           className="space-y-4 py-4"
         >
@@ -200,6 +201,7 @@ export function ConnectionsModalContent({
 
           {selectedTemplate?.type === "oauth" && (
             <OAuth
+              mode={mode}
               form={form as UseFormReturn<RemoteAuthFormValues<"oauth">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
@@ -207,6 +209,7 @@ export function ConnectionsModalContent({
           )}
           {selectedTemplate?.type === "oauth-device" && (
             <DeviceAuth
+              mode={mode}
               form={form as UseFormReturn<RemoteAuthFormValues<"oauth-device">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
@@ -364,7 +367,6 @@ function NoAuth({
   source: RemoteAuthSource;
   onCancel: () => void;
 }) {
-  // const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
   return (
     <div className="space-y-4">
       <FormField
@@ -421,7 +423,6 @@ function BasicAuth({
   source: RemoteAuthSource;
   onCancel: () => void;
 }) {
-  // const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
   return (
     <div className="space-y-4">
       <FormField
