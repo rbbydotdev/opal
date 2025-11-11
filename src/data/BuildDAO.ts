@@ -35,6 +35,10 @@ export class BuildDAO implements BuildRecord {
     this.logs = build.logs;
   }
 
+  get size() {
+    return 0;
+  }
+
   static FromJSON(json: BuildJType) {
     return new BuildDAO(json);
   }
