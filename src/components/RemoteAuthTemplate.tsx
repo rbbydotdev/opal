@@ -1,6 +1,7 @@
+import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthDataFor, RemoteAuthExplicitType, RemoteAuthSource, RemoteAuthType } from "@/data/RemoteAuthTypes";
 import { ENV } from "@/lib/env";
-import { Cloud, Github, Globe, KeyIcon, Network } from "lucide-react";
+import { Globe, KeyIcon } from "lucide-react";
 
 // Use distributive conditional type to create proper union
 export type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = T extends any
@@ -31,7 +32,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     description: "Connect using a GitHub API key",
     source: "github",
     type: "api",
-    icon: <Github className="h-5 w-5" />,
+    icon: <RemoteAuthSourceIconComponent source="github" />,
     data: {
       corsProxy: ENV.GITHUB_CORS_PROXY,
     },
@@ -41,7 +42,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     description: "Connect using GitHub Device Authentication",
     source: "github",
     type: "oauth-device",
-    icon: <Github className="h-5 w-5" />,
+    icon: <RemoteAuthSourceIconComponent source="github" />,
     data: {
       corsProxy: ENV.GITHUB_CORS_PROXY,
     },
@@ -51,7 +52,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     description: "Connect using GitHub OAuth",
     source: "github",
     type: "oauth",
-    icon: <Github className="h-5 w-5" />,
+    icon: <RemoteAuthSourceIconComponent source="github" />,
     data: {
       corsProxy: ENV.GITHUB_CORS_PROXY,
     },
@@ -62,7 +63,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     description: "Connect using a Cloudflare API key",
     source: "cloudflare",
     type: "api",
-    icon: <Cloud className="h-5 w-5" />,
+    icon: <RemoteAuthSourceIconComponent source="cloudflare" />,
     data: {
       corsProxy: ENV.GITHUB_CORS_PROXY,
     },
@@ -72,7 +73,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     description: "Connect using a Netlify API key",
     source: "netlify",
     type: "api",
-    icon: <Network className="h-5 w-5" />,
+    icon: <RemoteAuthSourceIconComponent source="netlify" />,
     data: {
       corsProxy: ENV.NETLIFY_CORS_PROXY,
     },
@@ -82,7 +83,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     description: "Connect using Netlify OAuth",
     source: "netlify",
     type: "oauth",
-    icon: <Network className="h-5 w-5" />,
+    icon: <RemoteAuthSourceIconComponent source="netlify" />,
     data: {
       corsProxy: ENV.NETLIFY_CORS_PROXY,
     },

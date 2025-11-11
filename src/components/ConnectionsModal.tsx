@@ -5,7 +5,6 @@ import { useForm, UseFormReturn } from "react-hook-form";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
 import { OAuth } from "@/components/OAuth";
-import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues, RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Zap } from "lucide-react";
 import { useMemo } from "react";
 import z from "zod";
 // import { CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "cmdk";
@@ -346,7 +345,8 @@ function ApiKeyAuth({
           Cancel
         </Button>
         <Button type="submit" className="w-full">
-          <RemoteAuthSourceIconComponent size={12} source={source} />
+          {/* <RemoteAuthSourceIconComponent size={12} source={source} /> */}
+          <Zap size={12} />
           Connect
         </Button>
       </div>
@@ -401,7 +401,8 @@ function NoAuth({
           Cancel
         </Button>
         <Button type="submit" className="w-full">
-          <RemoteAuthSourceIconComponent size={12} source={source} />
+          {/* <RemoteAuthSourceIconComponent size={12} source={source} /> */}
+          <Zap size={12} />
           Connect
         </Button>
       </div>
@@ -486,7 +487,8 @@ function BasicAuth({
           Cancel
         </Button>
         <Button type="submit" className="w-full">
-          <RemoteAuthSourceIconComponent size={12} source={source} />
+          {/* <RemoteAuthSourceIconComponent size={12} source={source} /> */}
+          <Zap size={12} />
           Connect
         </Button>
       </div>

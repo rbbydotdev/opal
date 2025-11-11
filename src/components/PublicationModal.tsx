@@ -1,4 +1,5 @@
 import { BuildStrategy } from "@/builder/builder-types";
+import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -48,6 +49,7 @@ export function PublicationModal({
     onComplete?: (buildDao?: BuildDAO) => void;
   } | null>(null);
   const { remoteAuths } = useRemoteAuths();
+  const [remoteAuthGuid, setRemoteAuth] = useState<string>();
   const [buildError, setBuildError] = useState<string | null>(null);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
@@ -129,37 +131,22 @@ export function PublicationModal({
             <label htmlFor="strategy-select" className="text-sm font-medium">
               Destination
             </label>
-            <Select
-              value={strategy}
-              onValueChange={(value: BuildStrategy) => setStrategy(value)}
-              disabled={buildRunner.isBuilding || buildRunner.isCompleted}
-            >
-              <SelectTrigger id="strategy-select" className="min-h-14">
-                <SelectValue placeholder="Select build strategy" />
+            <Select value={remoteAuthGuid} onValueChange={(value: string) => {}}>
+              <SelectTrigger className="min-h-14">
+                <SelectValue placeholder="Select Destination" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="freeform">
-                  <div className="flex flex-col items-start gap-1">
-                    <span className="font-medium">Freeform</span>
-                    <span className="text-xs text-muted-foreground">
-                      1:1 file mapping - templates and markdown to HTML
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="book">
-                  <div className="flex flex-col items-start gap-1">
-                    <span className="font-medium">Book</span>
-                    <span className="text-xs text-muted-foreground">
-                      Single page with table of contents for PDF printing
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="blog">
-                  <div className="flex flex-col items-start gap-1">
-                    <span className="font-medium">Blog</span>
-                    <span className="text-xs text-muted-foreground">Blog index with individual post pages</span>
-                  </div>
-                </SelectItem>
+                {remoteAuths.map((auth) => (
+                  <SelectItem key={auth.guid} value={auth.guid}>
+                    <div className="flex flex-col items-start gap-1">
+                      <span className="font-medium flex items-center gap-2 capitalize">
+                        <RemoteAuthSourceIconComponent type={auth.type} source={auth.source} size={16} />
+                        {auth.name} - <span>{auth.type}</span> / <span> {auth.source}</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground">Publish to {auth.source} hosting</span>
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
