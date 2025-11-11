@@ -4,7 +4,7 @@ import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { RootNode } from "@/lib/FileTree/TreeNode";
+import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { Loader, UploadIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -41,7 +41,7 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                     event.preventDefault();
                     event.stopPropagation();
                     setPending(true);
-                    void handleDropFilesEventForNode({ currentWorkspace, event, targetNode: RootNode }).finally(() => {
+                    void handleDropFilesEventForNode({ currentWorkspace, event, targetNode: ROOT_NODE }).finally(() => {
                       setPending(false);
                     });
                   }}
@@ -67,7 +67,7 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
                       void handleDropFilesEventForNode({
                         currentWorkspace,
                         event: { dataTransfer: { files: e.target.files } },
-                        targetNode: RootNode,
+                        targetNode: ROOT_NODE,
                       }).finally(() => setPending(false));
                     }}
                   />

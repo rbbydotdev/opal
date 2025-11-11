@@ -30,7 +30,7 @@ import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { RepoInfoProvider } from "@/lib/FileTree/FileTreeRepoProvider";
-import { RootNode } from "@/lib/FileTree/TreeNode";
+import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
@@ -412,7 +412,7 @@ export const SidebarFileMenuFilesActions = ({
   };
 
   const pasteFiles = async () => {
-    const targetNode = focused ? currentWorkspace.nodeFromPath(focused) : RootNode;
+    const targetNode = focused ? currentWorkspace.nodeFromPath(focused) : ROOT_NODE;
     if (targetNode) {
       try {
         await paste(targetNode);

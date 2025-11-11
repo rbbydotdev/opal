@@ -1,3 +1,4 @@
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,18 +8,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
+import { ROOT_NODE, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
-import {
-  FileCode2Icon,
-  FileTextIcon,
-  Globe,
-  Package,
-} from "lucide-react";
+import { FileCode2Icon, FileTextIcon, Globe, Package } from "lucide-react";
 import { ComponentProps, ReactNode, useRef } from "react";
 
 const ActionButton = ({
@@ -39,8 +35,8 @@ function StockFilesMenuContent({ deferFn }: { deferFn: (fn: () => void) => () =>
   const { addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
   const { expandForNode } = useTreeExpanderContext();
 
-  const addStockFile = (filename: string, content: string) => {
-    const node = addDirFile("file", focused || absPath("/"), filename, content);
+  const addStockFile = (filename: string, content: string, dir?: TreeNode) => {
+    const node = addDirFile("file", dir?.path || focused || absPath("/"), filename, content);
     if (expandForNode) {
       expandForNode(node, true);
     }
@@ -48,7 +44,7 @@ function StockFilesMenuContent({ deferFn }: { deferFn: (fn: () => void) => () =>
 
   return (
     <>
-      <DropdownMenuItem onClick={deferFn(() => addStockFile("global.css", DefaultFile.GlobalCSS()))}>
+      <DropdownMenuItem onClick={deferFn(() => addStockFile("global.css", DefaultFile.GlobalCSS(), ROOT_NODE))}>
         <FileCode2Icon className="w-4 h-4 mr-2" />
         global.css
       </DropdownMenuItem>
@@ -76,10 +72,8 @@ function StockFilesDropdown({ children }: { children: ReactNode }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {children}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent 
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent
         align="end"
         onCloseAutoFocus={(e) => {
           e.preventDefault();

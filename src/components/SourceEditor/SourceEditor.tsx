@@ -5,7 +5,7 @@ import { useFileContents } from "@/context/useFileContents";
 import { Workspace } from "@/data/Workspace";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
-import { RootNode } from "@/lib/FileTree/TreeNode";
+import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { OpalMimeType } from "@/lib/fileType";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +50,7 @@ export const SourceEditor = ({
         handleDropFilesEventForNode({
           currentWorkspace: currentWorkspace,
           event: e,
-          targetNode: RootNode,
+          targetNode: ROOT_NODE,
         })
       }
     >

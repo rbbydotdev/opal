@@ -4,14 +4,14 @@ import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTr
 import { useNodeResolver } from "@/hooks/useNodeResolver";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
-import { RootNode, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
+import { ROOT_NODE, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 
 export const RootFileMenuBanner = ({
   currentWorkspace,
-  rootNode = RootNode,
+  rootNode = ROOT_NODE,
 }: {
   currentWorkspace: Workspace;
   rootNode?: TreeDir | TreeFile | AbsPath;

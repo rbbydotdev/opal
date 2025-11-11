@@ -723,6 +723,6 @@ export class SourceDirTreeNode extends TreeDir {
   }
 }
 
-export const RootNode = TreeNode.FromPath(absPath("/"), "dir");
+export const ROOT_NODE = TreeNode.FromPath(absPath("/"), "dir");
 
 export const NULL_TREE_ROOT = new TreeDirRoot();

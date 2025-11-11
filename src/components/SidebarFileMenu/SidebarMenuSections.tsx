@@ -30,7 +30,7 @@ import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
-import { RootNode } from "@/lib/FileTree/TreeNode";
+import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { IS_MAC } from "@/lib/isMac";
 import { Slot } from "@radix-ui/react-slot";
 import { List, ListXIcon } from "lucide-react";
@@ -86,7 +86,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
         handleDropFilesEventForNode({
           currentWorkspace,
           event,
-          targetNode: RootNode,
+          targetNode: ROOT_NODE,
         })
       }
       className={twMerge("p-0 bg-sidebar sidebar-group h-full", props.className)}
