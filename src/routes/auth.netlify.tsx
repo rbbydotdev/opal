@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal } from "@/data/RemoteAuthTypes";
+import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
 import { Channel } from "@/lib/channel";
 import { unwrapError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
@@ -12,7 +12,7 @@ const OAuthCbEvents = {
 };
 
 type OAuthCbEventPayload = {
-  [OAuthCbEvents.SUCCESS]: RemoteAuthOAuthRecordInternal;
+  [OAuthCbEvents.SUCCESS]: RemoteAuthDataFor<"oauth">;
   [OAuthCbEvents.ERROR]: string;
   [OAuthCbEvents.ACCESS_TOKEN]: { accessToken: string; state: string };
 };

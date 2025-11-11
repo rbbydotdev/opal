@@ -6,28 +6,22 @@ import {
   RemoteAuthGithubOAuthAgent,
 } from "@/data/RemoteAuthAgent";
 import {
-  RemoteAuthAPIRecordInternal,
-  RemoteAuthBasicAuthRecordInternal,
   RemoteAuthDataFor,
-  RemoteAuthDataUnion,
   RemoteAuthExplicitType,
-  RemoteAuthGithubDeviceOAuthRecordInternal,
   RemoteAuthJType,
-  RemoteAuthOAuthRecordInternal,
   RemoteAuthRecord,
   RemoteAuthSource,
   RemoteAuthType,
-  TypedRemoteAuthRecord,
 } from "@/data/RemoteAuthTypes";
 import { nanoid } from "nanoid";
 
-export class RemoteAuthDAO {
+export class RemoteAuthDAO implements Omit<RemoteAuthRecord, "data"> {
   guid: string;
   type: RemoteAuthType;
   source: RemoteAuthSource;
   name: string;
   tags: string[];
-  data: RemoteAuthDataUnion = null;
+  data: RemoteAuthDataFor<RemoteAuthType>;
 
   /* connector: ClientDb.remoteAuths  */
 
@@ -72,12 +66,19 @@ export class RemoteAuthDAO {
     });
   }
 
-  constructor({ guid, source, type, name: name, data: record, tags }: {
+  constructor({
+    guid,
+    source,
+    type,
+    name: name,
+    data: record,
+    tags,
+  }: {
     guid: string;
     source: RemoteAuthSource;
     type: RemoteAuthType;
     name: string;
-    data: RemoteAuthDataUnion;
+    data: RemoteAuthDataFor<RemoteAuthType>;
     tags: string[];
   }) {
     this.source = source;
@@ -132,33 +133,63 @@ export class RemoteAuthDAO {
   }
 }
 
-// Use generics to create specific DAO types  
-export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & { type: "basic-auth"; source: "private"; data: RemoteAuthBasicAuthRecordInternal };
+export type NoAuthRemoteAuthDAO = RemoteAuthDAO & {
+  type: "no-auth";
+  source: "private";
+  data: RemoteAuthDataFor<"no-auth">;
+};
+
+// Use generics to create specific DAO types
+export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & {
+  type: "basic-auth";
+  source: "private";
+  data: RemoteAuthDataFor<"basic-auth">;
+};
 export function isBasicAuthRemoteAuthDAO(record: RemoteAuthDAO): record is BasicAuthRemoteAuthDAO {
   return record.type === "basic-auth" && record.source === "private";
 }
 
-export type GithubAPIRemoteAuthDAO = RemoteAuthDAO & { type: "api"; source: "github"; data: RemoteAuthAPIRecordInternal };
+export type GithubAPIRemoteAuthDAO = RemoteAuthDAO & {
+  type: "api";
+  source: "github";
+  data: RemoteAuthDataFor<"api">;
+};
 export function isGithubAPIRemoteAuthDAO(record: RemoteAuthDAO): record is GithubAPIRemoteAuthDAO {
   return record.type === "api" && record.source === "github";
 }
 
-export type GithubOAuthRemoteAuthDAO = RemoteAuthDAO & { type: "oauth"; source: "github"; data: RemoteAuthOAuthRecordInternal };
+export type GithubOAuthRemoteAuthDAO = RemoteAuthDAO & {
+  type: "oauth";
+  source: "github";
+  data: RemoteAuthDataFor<"oauth">;
+};
 export function isGithubOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is GithubOAuthRemoteAuthDAO {
   return record.type === "oauth" && record.source === "github";
 }
 
-export type GithubDeviceOAuthRemoteAuthDAO = RemoteAuthDAO & { type: "oauth-device"; source: "github"; data: RemoteAuthGithubDeviceOAuthRecordInternal };
+export type GithubDeviceOAuthRemoteAuthDAO = RemoteAuthDAO & {
+  type: "oauth-device";
+  source: "github";
+  data: RemoteAuthDataFor<"oauth-device">;
+};
 export function isGithubDeviceOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is GithubDeviceOAuthRemoteAuthDAO {
   return record.type === "oauth-device" && record.source === "github";
 }
 
-export type NetlifyOAuthRemoteAuthDAO = RemoteAuthDAO & { type: "oauth"; source: "netlify"; data: RemoteAuthOAuthRecordInternal };
+export type NetlifyOAuthRemoteAuthDAO = RemoteAuthDAO & {
+  type: "oauth";
+  source: "netlify";
+  data: RemoteAuthDataFor<"oauth">;
+};
 export function isNetlifyOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is NetlifyOAuthRemoteAuthDAO {
   return record.type === "oauth" && record.source === "netlify";
 }
 
-export type CloudflareAPIRemoteAuthDAO = RemoteAuthDAO & { type: "api"; source: "cloudflare"; data: RemoteAuthAPIRecordInternal };
+export type CloudflareAPIRemoteAuthDAO = RemoteAuthDAO & {
+  type: "api";
+  source: "cloudflare";
+  data: RemoteAuthDataFor<"api">;
+};
 export function isCloudflareAPIRemoteAuthDAO(record: RemoteAuthDAO): record is CloudflareAPIRemoteAuthDAO {
   return record.type === "api" && record.source === "cloudflare";
 }

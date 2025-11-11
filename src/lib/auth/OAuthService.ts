@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { nanoid } from "nanoid";
 import { GitHubOAuthProvider } from "./providers/GitHubOAuthProvider";
 import { NetlifyOAuthProvider } from "./providers/NetlifyOAuthProvider";
@@ -7,7 +7,7 @@ import { OAuthCbChannel, OAuthProvider } from "./providers/OAuthProvider";
 export interface OAuthServiceConfig {
   source: RemoteAuthSource;
   corsProxy?: string;
-  onSuccess: (data: RemoteAuthOAuthRecordInternal) => void;
+  onSuccess: (data: RemoteAuthDataFor<"oauth">) => void;
   onError: (error: string) => void;
   onStateChange: (state: OAuthState) => void;
 }
@@ -58,7 +58,7 @@ export class OAuthService {
     this.provider = null;
   }
 
-  private handleSuccess = (data: RemoteAuthOAuthRecordInternal): void => {
+  private handleSuccess = (data: RemoteAuthDataFor<"oauth">): void => {
     this.setState("success");
     this.config?.onSuccess(data);
     this.cleanup();

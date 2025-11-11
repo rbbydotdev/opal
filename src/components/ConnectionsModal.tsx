@@ -30,7 +30,6 @@ import z from "zod";
 // import { CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "cmdk";
 
 // Re-export type for convenience
-export type { ConnectionsModalMode };
 
 export function ConnectionsModal({
   children,
@@ -40,6 +39,7 @@ export function ConnectionsModal({
   open,
   onOpenChange,
   onSelect,
+  sources,
 }: {
   children?: React.ReactNode;
   mode?: ConnectionsModalMode;
@@ -48,6 +48,7 @@ export function ConnectionsModal({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSelect?: () => void;
+  sources?: RemoteAuthSource[];
 }) {
   // Modal open state is managed here only if not controlled
   const [internalOpen, setInternalOpen] = useState(false);
@@ -57,13 +58,9 @@ export function ConnectionsModal({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent
-        // className="max-w-xl max-h-[80vh] flex flex-col fixed top-[20vh] translate-y-0"
-        // <DialogContent
-        //   className="_sm:max-w-[26.5625rem] _sm:min-h-[37rem] max-h-[80vh] overflow-y-auto"
-        onSelect={onSelect}
-      >
+      <DialogContent onSelect={onSelect}>
         <ConnectionsModalContent
+          sources={sources}
           mode={mode}
           editConnection={editConnection}
           onSuccess={onSuccess}
@@ -80,23 +77,26 @@ export function ConnectionsModalContent({
   onSuccess = () => {},
   onClose = () => {},
   className,
+  sources,
 }: {
   mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
   className?: string;
   onSuccess?: (rad: RemoteAuthDAO) => void;
   onClose?: () => void;
+  sources?: RemoteAuthSource[];
 }) {
-  const defaultValues = editConnection
-    ? {
-        ...editConnection,
-        templateType: typeSource(editConnection),
-      }
-    : RemoteAuthTemplates[0]!;
+  const defaultValues = (
+    editConnection
+      ? {
+          ...editConnection,
+          templateType: typeSource(editConnection),
+        }
+      : RemoteAuthTemplates[0]!
+  ) as RemoteAuthFormValues;
 
   const form = useForm<RemoteAuthFormValues>({
     defaultValues,
-    // RemoteAuthTemplates
     resolver: (values, opt1, opt2) => {
       return zodResolver(z.object({ data: RemoteAuthSchemaMap[values.type] }).passthrough())(values, opt1, opt2 as any);
     },
@@ -110,6 +110,7 @@ export function ConnectionsModalContent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [form.watch()["templateType"], form]
   );
+
   const cancelReset = () => {
     form.reset();
     reset(); // Reset the error state from useRemoteAuthSubmit
@@ -160,17 +161,19 @@ export function ConnectionsModalContent({
                     <SelectValue placeholder="Select a connection type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {RemoteAuthTemplates.map((connection) => (
-                      <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
-                        <div className="flex items-center gap-2">
-                          {connection.icon}
-                          <div>
-                            <p className="text-sm font-medium">{connection.name}</p>
-                            <p className="text-xs text-muted-foreground">{connection.description}</p>
+                    {RemoteAuthTemplates.filter((t) => (sources ? sources.includes(t.source) : true)).map(
+                      (connection) => (
+                        <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
+                          <div className="flex items-center gap-2">
+                            {connection.icon}
+                            <div>
+                              <p className="text-sm font-medium">{connection.name}</p>
+                              <p className="text-xs text-muted-foreground">{connection.description}</p>
+                            </div>
                           </div>
-                        </div>
-                      </SelectItem>
-                    ))}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
 
@@ -187,18 +190,42 @@ export function ConnectionsModalContent({
           )}
 
           {selectedTemplate?.type === "api" && (
-            <ApiKeyAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+            <ApiKeyAuth
+              form={form as UseFormReturn<RemoteAuthFormValues<"api">>}
+              source={selectedTemplate.source}
+              onCancel={cancelReset}
+            />
           )}
 
           {selectedTemplate?.type === "oauth" && (
-            <OAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+            <OAuth
+              form={form as UseFormReturn<RemoteAuthFormValues<"oauth">>}
+              source={selectedTemplate.source}
+              onCancel={cancelReset}
+            />
           )}
           {selectedTemplate?.type === "oauth-device" && (
-            <DeviceAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+            <DeviceAuth
+              form={form as UseFormReturn<RemoteAuthFormValues<"oauth-device">>}
+              source={selectedTemplate.source}
+              onCancel={cancelReset}
+            />
           )}
 
           {selectedTemplate?.type === "basic-auth" && (
-            <BasicAuth form={form} source={selectedTemplate.source} onCancel={cancelReset} />
+            <BasicAuth
+              form={form as UseFormReturn<RemoteAuthFormValues<"basic-auth">>}
+              source={selectedTemplate.source}
+              onCancel={cancelReset}
+            />
+          )}
+
+          {selectedTemplate?.type === "no-auth" && (
+            <NoAuth
+              form={form as UseFormReturn<RemoteAuthFormValues<"no-auth">>}
+              source={selectedTemplate.source}
+              onCancel={cancelReset}
+            />
           )}
         </form>
       </Form>
@@ -212,7 +239,7 @@ function ApiKeyAuth({
   source,
   onCancel,
 }: {
-  form: UseFormReturn<RemoteAuthFormValues>;
+  form: UseFormReturn<RemoteAuthFormValues<"api">>;
   source: RemoteAuthSource;
   onCancel: () => void;
 }) {
@@ -289,13 +316,12 @@ function ApiKeyAuth({
   );
 }
 
-// API Key Auth Section
-function BasicAuth({
+function NoAuth({
   form,
   source,
   onCancel,
 }: {
-  form: UseFormReturn<RemoteAuthFormValues>;
+  form: UseFormReturn<RemoteAuthFormValues<"no-auth">>;
   source: RemoteAuthSource;
   onCancel: () => void;
 }) {
@@ -312,6 +338,76 @@ function BasicAuth({
             </FormLabel>
             <FormControl>
               <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="data.endpoint"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{capitalizeFirst(source)} Endpoint</FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} placeholder="Endpoint" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full">
+          Cancel
+        </Button>
+        <Button type="submit" className="w-full">
+          <RemoteAuthSourceIconComponent size={12} source={source} />
+          Connect
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// API Key Auth Section
+function BasicAuth({
+  form,
+  source,
+  onCancel,
+}: {
+  form: UseFormReturn<RemoteAuthFormValues<"basic-auth">>;
+  source: RemoteAuthSource;
+  onCancel: () => void;
+}) {
+  // const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
+  return (
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="data.corsProxy"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>
+              {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
+            </FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="data.endpoint"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{capitalizeFirst(source)} Endpoint</FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} placeholder="Endpoint" />
             </FormControl>
             <FormMessage />
           </FormItem>

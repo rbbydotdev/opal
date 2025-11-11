@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal } from "@/data/RemoteAuthTypes";
+import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
 import {
   exchangeCodeForToken,
   generateCodeChallenge,
@@ -29,7 +29,7 @@ export class GitHubOAuthProvider extends OAuthProvider {
   setupChannelListeners(
     channel: OAuthCbChannel,
     config: OAuthProviderConfig,
-    onSuccess: (data: RemoteAuthOAuthRecordInternal) => void,
+    onSuccess: (data: RemoteAuthDataFor<"oauth">) => void,
     onError: (error: string) => void
   ): void {
     // Handle authorization code from callback window
@@ -46,7 +46,7 @@ export class GitHubOAuthProvider extends OAuthProvider {
   async validateAndProcessAuth(
     data: { code: string; state: string },
     config: OAuthProviderConfig
-  ): Promise<RemoteAuthOAuthRecordInternal> {
+  ): Promise<RemoteAuthDataFor<"oauth">> {
     if (!this.codeVerifier) {
       throw new Error("No code verifier available");
     }
