@@ -98,11 +98,7 @@ export function ConnectionsModalContent({
     defaultValues,
     // RemoteAuthTemplates
     resolver: (values, opt1, opt2) => {
-      return zodResolver(z.object({ data: RemoteAuthSchemaMap[values.type] }).passthrough())(
-        values as any,
-        opt1,
-        opt2 as any
-      );
+      return zodResolver(z.object({ data: RemoteAuthSchemaMap[values.type] }).passthrough())(values, opt1, opt2 as any);
     },
   });
 
