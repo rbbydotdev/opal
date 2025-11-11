@@ -5,7 +5,6 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-import removeConsole from "vite-plugin-remove-console";
 import svgr from "vite-plugin-svgr";
 
 // Service Worker Configuration (Development Watch)
@@ -14,8 +13,19 @@ export default defineConfig(({ mode }) => {
   return {
     build: {
       assetsDir: "@static",
+      minify: isProd ? "esbuild" : false,
+      ...(isProd && {
+        rollupOptions: {
+          output: {
+            manualChunks: undefined,
+          },
+        },
+      }),
     },
-    minify: true,
+    esbuild: isProd ? {
+      drop: ["console"],
+      pure: ["console.log", "console.debug", "console.info"],
+    } : undefined,
     // Disable Hot Module Replacement
     plugins: [
       react({
@@ -26,13 +36,13 @@ export default defineConfig(({ mode }) => {
         exclude: [/\.ww\.(ts|js)$/, /sw\.(ts|js)$/],
       }),
       // Only apply the removeConsole plugin in production
-      ...(isProd
-        ? [
-            removeConsole({
-              includes: ["log", "debug", "info"], // Keep warn/error visible in PROD if you want
-            }),
-          ]
-        : []),
+      // ...(isProd
+      //   ? [
+      //       removeConsolePlugin.default({
+      //         includes: ["log", "debug", "info"], // Keep warn/error visible in PROD if you want
+      //       }),
+      //     ]
+      //   : []),
       // TanStackRouterVite(),
       tanstackRouter({
         routeToken: "layout",
