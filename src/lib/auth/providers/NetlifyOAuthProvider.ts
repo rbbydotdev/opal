@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal } from "@/data/RemoteAuthTypes";
+import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
 import { getNetlifyOAuthUrl } from "@/lib/auth/NetlifyOAuthFlow";
 import { OAuthCbChannel, OAuthCbEvents, OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
@@ -17,7 +17,7 @@ export class NetlifyOAuthProvider extends OAuthProvider {
   setupChannelListeners(
     channel: OAuthCbChannel,
     config: OAuthProviderConfig,
-    onSuccess: (data: RemoteAuthOAuthRecordInternal) => void,
+    onSuccess: (data: RemoteAuthDataFor<"oauth">) => void,
     onError: (error: string) => void
   ): void {
     // Handle access token from callback window (implicit flow)
@@ -34,7 +34,7 @@ export class NetlifyOAuthProvider extends OAuthProvider {
   async validateAndProcessAuth(
     data: { accessToken: string; state: string },
     config: OAuthProviderConfig
-  ): Promise<RemoteAuthOAuthRecordInternal> {
+  ): Promise<RemoteAuthDataFor<"oauth">> {
     // For Netlify, we could validate the token here if needed
     // const validation = await validateNetlifyToken({ accessToken: data.accessToken });
 

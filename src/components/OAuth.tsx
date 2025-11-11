@@ -4,7 +4,7 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { OAuthService, OAuthState } from "@/lib/auth/OAuthService";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Loader } from "lucide-react";
@@ -16,7 +16,7 @@ export function OAuth({
   source,
   onCancel,
 }: {
-  form: UseFormReturn<RemoteAuthFormValues>;
+  form: UseFormReturn<RemoteAuthFormValues<"oauth">>;
   source: RemoteAuthSource;
   onCancel: () => void;
 }) {
@@ -40,7 +40,7 @@ export function OAuth({
     oauthServiceRef.current?.destroy();
   }, [source]);
 
-  const handleAuthSuccess = (data: RemoteAuthOAuthRecordInternal) => {
+  const handleAuthSuccess = (data: RemoteAuthDataFor<"oauth">) => {
     // Update the form with OAuth data
     form.setValue("data", {
       ...form.getValues().data,
@@ -66,7 +66,7 @@ export function OAuth({
       return;
     }
 
-    const corsProxy = form.getValues()?.data?.corsProxy;
+    const corsProxy = form.getValues()?.data.corsProxy;
 
     try {
       await oauthServiceRef.current.startOAuthFlow({

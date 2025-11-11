@@ -4,7 +4,7 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RemoteAuthGithubDeviceOAuthRecordInternal, RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { RemoteAuthDataFor, RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { ENV } from "@/lib/env";
@@ -19,7 +19,7 @@ export function DeviceAuth({
   onCancel = () => {},
   editConnection,
 }: {
-  form: UseFormReturn<RemoteAuthFormValues>;
+  form: UseFormReturn<RemoteAuthFormValues<"oauth-device">>;
   source: RemoteAuthSource;
   onCancel: () => void;
   editConnection?: RemoteAuthJType;
@@ -29,7 +29,7 @@ export function DeviceAuth({
   >("idle");
   const [verificationUri, setVerificationUri] = useState<string | null>(null);
   const [pin, setPin] = useState<string>("");
-  const remoteAuthRef = useRef<RemoteAuthGithubDeviceOAuthRecordInternal | null>(null);
+  const remoteAuthRef = useRef<RemoteAuthDataFor<"oauth-device"> | null>(null);
   const [corsProxy, setCorsProxy] = useState<string>(ENV.GITHUB_CORS_PROXY || "");
   const [error, setError] = useState<string | null>(null);
   const [apiName, setApiName] = useState<string>(

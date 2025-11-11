@@ -2,12 +2,7 @@ import { z } from "zod";
 
 // 1. Add the new type to the union
 export type RemoteAuthType = "api" | "oauth" | "oauth-device" | "basic-auth" | "no-auth";
-export type RemoteAuthSource =
-  | "github"
-  | "netlify"
-  | "cloudflare"
-  | "private"
-  | "public"; /*| "gitlab" | "bitbucket" | "custom";*/
+export type RemoteAuthSource = "github" | "netlify" | "cloudflare" | "private" | "public";
 
 // 2. Define all record schemas
 export const RemoteAuthAPIRecordInternalSchema = z.object({
@@ -18,18 +13,16 @@ export const RemoteAuthAPIRecordInternalSchema = z.object({
     .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
     .pipe(z.string().url().nullable().optional()),
 });
-export type RemoteAuthAPIRecordInternal = z.infer<typeof RemoteAuthAPIRecordInternalSchema>;
 
 export const RemoteAuthBasicAuthRecordInternalSchema = z.object({
   username: z.string(),
   password: z.string(),
+  endpoint: z.string().url(),
   corsProxy: z
     .string()
     .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
     .pipe(z.string().url().nullable().optional()),
 });
-
-export type RemoteAuthBasicAuthRecordInternal = z.infer<typeof RemoteAuthBasicAuthRecordInternalSchema>;
 
 export const RemoteAuthOAuthRecordInternalSchema = z.object({
   accessToken: z.string(),
@@ -44,11 +37,14 @@ export const RemoteAuthOAuthRecordInternalSchema = z.object({
     .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
     .pipe(z.string().url().nullable().optional()),
 });
-export type RemoteAuthOAuthRecordInternal = z.infer<typeof RemoteAuthOAuthRecordInternalSchema>;
 
-export const RemoteAuthNoAuthRecordInternalSchema = z.null();
-
-export type RemoteAuthNoAuthRecordInternal = z.infer<typeof RemoteAuthNoAuthRecordInternalSchema>;
+export const RemoteAuthNoAuthRecordInternalSchema = z.object({
+  endpoint: z.string().url(),
+  corsProxy: z
+    .string()
+    .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
+    .pipe(z.string().url().nullable().optional()),
+});
 
 export const RemoteAuthGithubDeviceOAuthRecordInternalSchema = z.object({
   accessToken: z.string(),
@@ -70,8 +66,6 @@ export const RemoteAuthSchemaMap = {
   "no-auth": RemoteAuthNoAuthRecordInternalSchema,
 } as const;
 
-export type RemoteAuthGithubDeviceOAuthRecordInternal = z.infer<typeof RemoteAuthGithubDeviceOAuthRecordInternalSchema>;
-
 // 3. Main record type - properly distributed
 export type RemoteAuthRecord = RemoteAuthType extends any
   ? RemoteAuthSource extends any
@@ -85,12 +79,9 @@ export type RemoteAuthRecord = RemoteAuthType extends any
       }
     : never
   : never;
-export type RemoteAuthExplicitType =
-  | { type: "api"; data: RemoteAuthAPIRecordInternal }
-  | { type: "oauth"; data: RemoteAuthOAuthRecordInternal }
-  | { type: "oauth-device"; data: RemoteAuthGithubDeviceOAuthRecordInternal }
-  | { type: "basic-auth"; data: RemoteAuthBasicAuthRecordInternal }
-  | { type: "no-auth"; data: RemoteAuthNoAuthRecordInternal };
+export type RemoteAuthExplicitType = RemoteAuthType extends any
+  ? { type: RemoteAuthType; data: RemoteAuthDataFor<RemoteAuthType> }
+  : never;
 
 // Generate specific DAO types using distributive conditional types
 export type RemoteAuthDAOFor<
@@ -105,10 +96,7 @@ export type RemoteAuthDAOFor<
   : never;
 
 // Type for specific type/source combinations using distributive pattern
-export type TypedRemoteAuthRecord<
-  T extends RemoteAuthType,
-  S extends RemoteAuthSource,
-> = T extends any
+export type TypedRemoteAuthRecord<T extends RemoteAuthType, S extends RemoteAuthSource> = T extends any
   ? S extends any
     ? {
         guid: string;
@@ -122,12 +110,12 @@ export type TypedRemoteAuthRecord<
   : never;
 
 // Use distributive conditional types to generate the union automatically
-export type RemoteAuthJType = RemoteAuthType extends any 
+export type RemoteAuthJType = RemoteAuthType extends any
   ? RemoteAuthSource extends any
     ? {
         guid: string;
         type: RemoteAuthType;
-        source: RemoteAuthSource; 
+        source: RemoteAuthSource;
         name: string;
         tags: string[];
         data: RemoteAuthDataFor<RemoteAuthType>;
@@ -135,15 +123,12 @@ export type RemoteAuthJType = RemoteAuthType extends any
     : never
   : never;
 
-export type RemoteAuthDataFor<T extends RemoteAuthExplicitType["type"]> = Extract<
-  RemoteAuthExplicitType,
-  { type: T }
->["data"];
+export type RemoteAuthDataFor<T extends RemoteAuthType> = T extends keyof typeof RemoteAuthSchemaMap
+  ? z.infer<(typeof RemoteAuthSchemaMap)[T]>
+  : never;
 
 // Union of all possible data types using distributive conditional type
-export type RemoteAuthDataUnion = RemoteAuthType extends any 
-  ? RemoteAuthDataFor<RemoteAuthType>
-  : never;
+export type RemoteAuthDataUnion = RemoteAuthType extends any ? RemoteAuthDataFor<RemoteAuthType> : never;
 
 // Helper type for creating type guards
 export type RemoteAuthWithType<T extends RemoteAuthType> = RemoteAuthRecord & {
@@ -157,10 +142,7 @@ export type RemoteAuthWithSource<S extends RemoteAuthSource> = RemoteAuthRecord 
 };
 
 // Helper for creating DAO types with specific type/source combinations
-export type RemoteAuthDAOWithTypeAndSource<
-  T extends RemoteAuthType,
-  S extends RemoteAuthSource
-> = T extends any
+export type RemoteAuthDAOWithTypeAndSource<T extends RemoteAuthType, S extends RemoteAuthSource> = T extends any
   ? S extends any
     ? {
         guid: string;
@@ -180,20 +162,14 @@ export type RemoteAuthDAOWithTypeAndSource<
   : never;
 
 // 4. Type guards using helper types
-export const isApiAuth = (
-  record: RemoteAuthRecord
-): record is RemoteAuthWithType<"api"> => {
+export const isApiAuth = (record: RemoteAuthRecord): record is RemoteAuthWithType<"api"> => {
   return record.type === "api";
 };
 
-export const isOAuthAuth = (
-  record: RemoteAuthRecord
-): record is RemoteAuthWithType<"oauth"> => {
+export const isOAuthAuth = (record: RemoteAuthRecord): record is RemoteAuthWithType<"oauth"> => {
   return record.type === "oauth";
 };
 
-export const isGithubDeviceOAuthAuth = (
-  record: RemoteAuthRecord
-): record is RemoteAuthWithType<"oauth-device"> => {
+export const isGithubDeviceOAuthAuth = (record: RemoteAuthRecord): record is RemoteAuthWithType<"oauth-device"> => {
   return record.type === "oauth-device";
 };

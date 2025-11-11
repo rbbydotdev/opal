@@ -1,4 +1,4 @@
-import { RemoteAuthOAuthRecordInternal, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { Channel } from "@/lib/channel";
 
 export interface OAuthFlowResult {
@@ -34,11 +34,11 @@ export abstract class OAuthProvider {
   abstract setupChannelListeners(
     channel: OAuthCbChannel,
     config: OAuthProviderConfig,
-    onSuccess: (data: RemoteAuthOAuthRecordInternal) => void,
+    onSuccess: (data: RemoteAuthDataFor<"oauth">) => void,
     onError: (error: string) => void
   ): void;
 
-  abstract validateAndProcessAuth(data: any, config: OAuthProviderConfig): Promise<RemoteAuthOAuthRecordInternal>;
+  abstract validateAndProcessAuth(data: any, config: OAuthProviderConfig): Promise<RemoteAuthDataFor<"oauth">>;
 }
 
 export const OAuthCbEvents = {
@@ -49,7 +49,7 @@ export const OAuthCbEvents = {
 };
 
 export type OAuthCbEventPayload = {
-  [OAuthCbEvents.SUCCESS]: RemoteAuthOAuthRecordInternal;
+  [OAuthCbEvents.SUCCESS]: RemoteAuthDataFor<"oauth">;
   [OAuthCbEvents.ERROR]: string;
   [OAuthCbEvents.AUTHORIZATION_CODE]: { code: string; state: string };
   [OAuthCbEvents.ACCESS_TOKEN]: { accessToken: string; state: string };

@@ -209,6 +209,7 @@ export function GitRemoteDialog({
             <ConnectionsModalContent
               className={cn("w-full min-w-0", { hidden: !showConnectionModal })}
               mode={"add"}
+              sources={["github"]}
               onSuccess={(rad) => {
                 form.setValue("authId", rad.guid);
                 setShowConnModal(false);
