@@ -9,7 +9,8 @@ export const useRemoteAuthSubmit = (
   mode: ConnectionsModalMode,
   editConnection: RemoteAuthJType | undefined,
   onSuccess: (rad: RemoteAuthDAO) => void,
-  onCancel: () => void
+  onCancel: () => void,
+  tags: string[] = ["github"]
 ) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export const useRemoteAuthSubmit = (
           type: editConnection.type,
           name: formValues.name,
           data: formValues.data,
+          tags: tags,
         });
         await dao.save();
         onSuccess(dao);

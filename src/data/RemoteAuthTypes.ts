@@ -1,21 +1,32 @@
 import { z } from "zod";
 
 // 1. Add the new type to the union
-export type RemoteAuthType = "api" | "oauth" | "oauth-device" | "basic-auth";
-export type RemoteAuthSource = "github" | "netlify" | "cloudflare" | "private"; /*| "gitlab" | "bitbucket" | "custom";*/
+export type RemoteAuthType = "api" | "oauth" | "oauth-device" | "basic-auth" | "no-auth";
+export type RemoteAuthSource =
+  | "github"
+  | "netlify"
+  | "cloudflare"
+  | "private"
+  | "public"; /*| "gitlab" | "bitbucket" | "custom";*/
 
 // 2. Define all record schemas
 export const RemoteAuthAPIRecordInternalSchema = z.object({
   apiKey: z.string(),
   apiSecret: z.string().optional(),
-  corsProxy: z.string().url().nullable().optional(),
+  corsProxy: z
+    .string()
+    .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
+    .pipe(z.string().url().nullable().optional()),
 });
 export type RemoteAuthAPIRecordInternal = z.infer<typeof RemoteAuthAPIRecordInternalSchema>;
 
 export const RemoteAuthBasicAuthRecordInternalSchema = z.object({
   username: z.string(),
   password: z.string(),
-  corsProxy: z.string().url().nullable().optional(),
+  corsProxy: z
+    .string()
+    .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
+    .pipe(z.string().url().nullable().optional()),
 });
 
 export type RemoteAuthBasicAuthRecordInternal = z.infer<typeof RemoteAuthBasicAuthRecordInternalSchema>;
@@ -28,7 +39,10 @@ export const RemoteAuthOAuthRecordInternalSchema = z.object({
   scope: z.string(),
   obtainedAt: z.number(),
   idToken: z.string().optional(),
-  corsProxy: z.string().url().nullable().optional(),
+  corsProxy: z
+    .string()
+    .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
+    .pipe(z.string().url().nullable().optional()),
 });
 export type RemoteAuthOAuthRecordInternal = z.infer<typeof RemoteAuthOAuthRecordInternalSchema>;
 
@@ -38,7 +52,10 @@ export const RemoteAuthGithubDeviceOAuthRecordInternalSchema = z.object({
   expiresIn: z.number().optional(),
   login: z.string(),
   obtainedAt: z.number(),
-  corsProxy: z.string().url().nullable().optional(),
+  corsProxy: z
+    .string()
+    .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
+    .pipe(z.string().url().nullable().optional()),
 });
 
 export const RemoteAuthSchemaMap = {
@@ -56,6 +73,7 @@ export interface RemoteAuthRecord {
   type: RemoteAuthType;
   source: RemoteAuthSource;
   name: string;
+  tags: string[];
   data:
     | RemoteAuthAPIRecordInternal
     | RemoteAuthOAuthRecordInternal

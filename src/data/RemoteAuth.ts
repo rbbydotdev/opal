@@ -24,6 +24,8 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
   type: RemoteAuthType;
   source: RemoteAuthSource;
   name: string;
+  tags: string[];
+  endpoint: string;
   data: RemoteAuthRecord["data"] | null = null;
 
   /* connector: ClientDb.remoteAuths  */
@@ -59,28 +61,23 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
   }
 
   save() {
-    return ClientDb.remoteAuths.put(
-      Object.entries({
-        data: this.data,
-        guid: this.guid,
-        type: this.type,
-        name: this.name,
-        source: this.source,
-      }).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          // @ts-ignore
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as RemoteAuthJType)
-    );
+    return ClientDb.remoteAuths.put({
+      data: this.data,
+      guid: this.guid,
+      type: this.type,
+      name: this.name,
+      source: this.source,
+      endpoint: this.endpoint,
+      tags: this.tags,
+    });
   }
 
-  constructor({ guid, source, type, name: name, data: record }: RemoteAuthRecord) {
+  constructor({ guid, source, type, name: name, data: record, tags }: RemoteAuthRecord) {
     this.source = source;
     this.guid = guid;
     this.name = name;
     this.type = type;
+    this.tags = tags;
     this.data = record || null;
   }
 
@@ -90,10 +87,11 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
     type: T,
     source: RemoteAuthSource,
     name: string,
-    data: RemoteAuthDataFor<T>
+    data: RemoteAuthDataFor<T>,
+    tags: string[] = []
   ): Promise<RemoteAuthDAO> {
     const guid = RemoteAuthDAO.guid();
-    const dao = new RemoteAuthDAO({ guid, source, name, type, data });
+    const dao = new RemoteAuthDAO({ guid, source, name, type, data, tags });
     return dao.save().then(() => dao);
   }
 
@@ -103,6 +101,7 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
       guid: this.guid,
       type: this.type,
       source: this.source,
+      endpoint: this.endpoint,
     } as RemoteAuthJType;
   }
 
@@ -115,23 +114,17 @@ export class RemoteAuthDAO implements RemoteAuthRecord {
     });
   }
 
-  load() {
-    throw new Error("RemoteAuthDAO.load() is deprecated, use ClientDb.remoteAuths.get(guid) instead");
-  }
-
-  static FromJSON(json: RemoteAuthJType | RemoteAuthJType) {
+  static FromJSON(json: RemoteAuthJType) {
     return new RemoteAuthDAO({
       source: json.source,
       name: json.name,
       guid: json.guid,
       type: json.type,
-      data: isRemoteAuthPrivate(json) ? json.data : null,
+      data: json.data ?? null,
+      tags: json.tags,
+      endpoint: json.endpoint,
     });
   }
-}
-
-function isRemoteAuthPrivate(record: RemoteAuthDAO | RemoteAuthJType): record is RemoteAuthRecord {
-  return (record as RemoteAuthRecord).data !== undefined;
 }
 
 export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & {
