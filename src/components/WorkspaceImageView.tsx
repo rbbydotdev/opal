@@ -3,7 +3,7 @@ import { ImageViewer } from "@/components/ImageViewer";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { Workspace } from "@/data/Workspace";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
-import { RootNode } from "@/lib/FileTree/TreeNode";
+import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { useNavigate } from "@tanstack/react-router";
 
 export function WorkspaceImageView({ currentWorkspace }: { currentWorkspace: Workspace }) {
@@ -19,7 +19,7 @@ export function WorkspaceImageView({ currentWorkspace }: { currentWorkspace: Wor
             handleDropFilesEventForNode({
               currentWorkspace: currentWorkspace,
               event: e,
-              targetNode: RootNode,
+              targetNode: ROOT_NODE,
             }).then(([filePath]) => {
               if (filePath) return navigate({ to: currentWorkspace.resolveFileUrl(filePath) });
             })

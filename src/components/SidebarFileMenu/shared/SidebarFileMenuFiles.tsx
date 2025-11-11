@@ -10,7 +10,7 @@ import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/u
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { NULL_TREE_ROOT, RootNode, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
+import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import clsx from "clsx";
@@ -95,7 +95,9 @@ export const SidebarFileMenuFiles = ({
                   {isEmpty ? (
                     <div
                       className="w-full px-4 py-2"
-                      onDrop={(event) => handleDropFilesEventForNode({ currentWorkspace, event, targetNode: RootNode })}
+                      onDrop={(event) =>
+                        handleDropFilesEventForNode({ currentWorkspace, event, targetNode: ROOT_NODE })
+                      }
                     >
                       <EmptySidebarLabel label={"empty"} />
                     </div>

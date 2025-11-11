@@ -1,5 +1,5 @@
 import { Workspace } from "@/data/Workspace";
-import { RootNode, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
+import { ROOT_NODE, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 
 export const useNodeResolver = (
@@ -12,7 +12,7 @@ export const useNodeResolver = (
     if (!rn) {
       if (defaultNode) return defaultNode;
       console.error(new Error("Invalid path provided to useNodeResolver"));
-      return RootNode;
+      return ROOT_NODE;
     }
     return rn;
   }

@@ -9,7 +9,7 @@ import { AbsPath, equals, isImage, prefix, relPath, RelPath } from "@/lib/paths2
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
-import { FileCode2, FileText } from "lucide-react";
+import { FileCode2, FileText, Globe } from "lucide-react";
 import { ComponentProps, HTMLAttributes, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -164,6 +164,9 @@ function IconForTreeNode({ treeNode }: { treeNode: TreeNode }) {
     case "text/markdown":
       return <FileText className="w-3 h-3 flex-shrink-0 mr-2" />;
     case "text/css":
+      if (treeNode.path === "/global.css") {
+        return <Globe className="w-3 h-3 flex-shrink-0 mr-2" />;
+      }
       return <FileCode2 className="w-3 h-3 flex-shrink-0 mr-2" />;
     case "image/png":
     case "image/jpeg":

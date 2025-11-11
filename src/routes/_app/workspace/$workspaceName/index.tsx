@@ -7,7 +7,7 @@ import {
   isExternalFileDrop,
   useHandleDropFilesEventForNodeRedirect,
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
-import { RootNode, TreeNode } from "@/lib/FileTree/TreeNode";
+import { ROOT_NODE, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -44,7 +44,7 @@ function WorkspaceIndexPage() {
           e.stopPropagation();
         }}
       >
-        <ConditionalDropzone shouldActivate={isExternalFileDrop} onDrop={(e) => handleExternalDrop(e, RootNode)}>
+        <ConditionalDropzone shouldActivate={isExternalFileDrop} onDrop={(e) => handleExternalDrop(e, ROOT_NODE)}>
           <div
             className="bg-background"
             style={{
