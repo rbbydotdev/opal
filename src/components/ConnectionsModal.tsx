@@ -25,6 +25,7 @@ import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import { useMemo } from "react";
 import z from "zod";
 // import { CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "cmdk";
@@ -244,6 +245,8 @@ function ApiKeyAuth({
   onCancel: () => void;
 }) {
   // const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
+  const [hideApiKey, setHideApiKey] = useState(true);
+  const [hideApiSecret, setHideApiSecret] = useState(true);
   return (
     <div className="space-y-4">
       <FormField
@@ -284,7 +287,25 @@ function ApiKeyAuth({
           <FormItem>
             <FormLabel>API Key</FormLabel>
             <FormControl>
-              <Input {...field} value={field.value ?? ""} placeholder="API Key" required />
+              <div className="flex items-center gap-2">
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  placeholder="API Key"
+                  type={hideApiKey ? "password" : "text"}
+                  required
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setHideApiKey(!hideApiKey)}
+                  aria-label="Toggle API Key Visibility"
+                  className="shrink-0"
+                >
+                  {hideApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -297,7 +318,24 @@ function ApiKeyAuth({
           <FormItem>
             <FormLabel>API Secret</FormLabel>
             <FormControl>
-              <Input {...field} value={field.value ?? ""} placeholder="API Secret (optional)" />
+              <div className="flex items-center gap-2">
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  placeholder="API Secret (optional)"
+                  type={hideApiSecret ? "password" : "text"}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setHideApiSecret(!hideApiSecret)}
+                  aria-label="Toggle API Secret Visibility"
+                  className="shrink-0"
+                >
+                  {hideApiSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>

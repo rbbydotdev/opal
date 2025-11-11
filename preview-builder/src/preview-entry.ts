@@ -57,7 +57,7 @@ async function snapshot(target: HTMLElement) {
   // Snapdom capture with fast mode
   const captureStart = performance.now();
   const capture = await snapdom.capture(target, {
-    fast: true, // Enable fast mode
+    fast: false, //disabled to allow from request idle callback
     scale: 1, // Avoid internal scaling
   });
   console.debug(`[iframe] Snapdom capture took ${performance.now() - captureStart}ms`);

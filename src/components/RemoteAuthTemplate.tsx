@@ -74,7 +74,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "api",
     icon: <Network className="h-5 w-5" />,
     data: {
-      corsProxy: ENV.GITHUB_CORS_PROXY,
+      corsProxy: ENV.NETLIFY_CORS_PROXY,
     },
   }),
   template({
@@ -84,13 +84,13 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "oauth",
     icon: <Network className="h-5 w-5" />,
     data: {
-      corsProxy: ENV.GITHUB_CORS_PROXY, // or a netlify-specific proxy if needed
+      corsProxy: ENV.NETLIFY_CORS_PROXY,
     },
   }),
   template({
     name: "Basic Auth",
     description: "Connect using Basic Auth",
-    source: "private",
+    source: "custom",
     type: "basic-auth",
     icon: <KeyIcon className="h-5 w-5" />,
     data: {
@@ -101,7 +101,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
   template({
     name: "No Auth",
     description: "Connect without authentication",
-    source: "public",
+    source: "custom",
     type: "no-auth",
     icon: <Globe className="h-5 w-5" />,
     data: {

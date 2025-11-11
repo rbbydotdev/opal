@@ -1,3 +1,4 @@
+import { isFirefox } from "@/app/isFirefox";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { CreateTypedEmitter } from "@/lib/TypeEmitter";
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
@@ -110,9 +111,7 @@ abstract class BaseContextProvider implements PreviewContextProvider {
       throw new Error("Document not available");
     }
 
-    const isFirefox = navigator.userAgent.includes("Firefox");
-
-    if (isFirefox) {
+    if (isFirefox()) {
       this.doc.open();
       this.doc.write(FIREFOX_PREVIEW_HTML);
       this.doc.close();

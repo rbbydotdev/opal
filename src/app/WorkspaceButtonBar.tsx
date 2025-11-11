@@ -65,9 +65,6 @@ type ButtonVariant = "lg" | "sm";
 function useShrink() {
   return useLocalStorage2("BigButtonBar/shrink", false);
 }
-function useAutoHide() {
-  return useLocalStorage2("BigButtonBar/autohide", false);
-}
 
 function BigButton({
   icon,
@@ -141,7 +138,6 @@ function BigButton({
 function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { storedValue: spin, setStoredValue: setSpin } = useWorkspacButtonBarSpin();
   const { mode, value, themeName, setPreference, setTheme } = useThemeSettings();
-  const { setStoredValue: setAutoHide, storedValue: autoHide } = useAutoHide();
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
   const { setZoom, isCurrentZoom, availableZooms } = useZoom();
 
@@ -209,16 +205,6 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         </ContextMenuItem>
 
         <ContextMenuSeparator />
-
-        {/* Auto-hide Dock */}
-        <ContextMenuItem
-          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-          onClick={keepMenuOpen(() => setAutoHide((v) => !v))}
-        >
-          {autoHide ? <Check size={12} /> : <div className="w-4" />}
-          <Sidebar size={12} />
-          <span className="pr-4">Auto-hide Dock</span>
-        </ContextMenuItem>
 
         {/* Show Sidebar */}
         <ContextMenuItem
@@ -325,7 +311,6 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
 }
 export function WorkspaceButtonBar() {
   const { storedValue: shrink } = useShrink();
-  const { storedValue: autoHide } = useAutoHide();
   const { pending } = useRequestSignals();
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
@@ -524,7 +509,7 @@ export function WorkspaceButtonBar() {
         </div>
       </div>
 
-      {!autoHide && <DragCollapseBar />}
+      <DragCollapseBar />
     </div>
   );
 }
