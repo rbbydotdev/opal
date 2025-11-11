@@ -64,7 +64,7 @@ export function useAllPlugins({
             const { left } = useSidebarPanes();
             return (
               <div
-                className={cn("flex w-full", {
+                className={cn("flex gap-1 w-full", {
                   "ml-0": !left.isCollapsed,
                   "ml-16": left.isCollapsed,
                 })}
@@ -79,7 +79,10 @@ export function useAllPlugins({
                 />
                 <LivePreviewButtons />
                 <MdxSearchToolbar />
-                <MdxToolbar />
+
+                <div className="flex-grow flex justify-start ml-2">
+                  <MdxToolbar />
+                </div>
               </div>
             );
           },

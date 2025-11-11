@@ -39,7 +39,7 @@ export const useSidebarPanes = ({
 
   // Right pane state
   const rightWidth = useLocalStorage2<number>(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH, DEFAULT_RIGHT_PANE_WIDTH);
-  const rightCollapsed = useLocalStorage2<boolean>(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, false);
+  const rightCollapsed = useLocalStorage2<boolean>(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, true);
 
   // Derived values for display
   const leftDisplayWidth = leftCollapsed.storedValue ? COLLAPSED_STATE_WIDTH : leftWidth.storedValue;

@@ -135,18 +135,18 @@ export class RemoteAuthDAO implements Omit<RemoteAuthRecord, "data"> {
 
 export type NoAuthRemoteAuthDAO = RemoteAuthDAO & {
   type: "no-auth";
-  source: "public";
+  source: "custom";
   data: RemoteAuthDataFor<"no-auth">;
 };
 
 // Use generics to create specific DAO types
 export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & {
   type: "basic-auth";
-  source: "public";
+  source: "custom";
   data: RemoteAuthDataFor<"basic-auth">;
 };
 export function isBasicAuthRemoteAuthDAO(record: RemoteAuthDAO): record is BasicAuthRemoteAuthDAO {
-  return record.type === "basic-auth" && record.source === "private";
+  return record.type === "basic-auth" && record.source === "custom";
 }
 
 export type GithubAPIRemoteAuthDAO = RemoteAuthDAO & {

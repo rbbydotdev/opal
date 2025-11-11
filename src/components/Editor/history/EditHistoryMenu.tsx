@@ -17,7 +17,7 @@ import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
-import { Check, CheckCircle2, ChevronDown, Circle, History, X } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Circle, Clock, History, X } from "lucide-react";
 import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
 import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
@@ -83,18 +83,20 @@ export function EditHistoryMenu({
   // When disabled, show minimal UI with just the toggle
   if (disabled) {
     return (
-      <div className="relative flex items-center pl-2 gap-2 font-mono text-sm opacity-50 mx-2">
+      <div className="relative flex items-center pl-1 gap-2 font-mono text-sm opacity-50 mr-1">
         <DropdownMenu open={isOpen} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <button
               tabIndex={0}
-              className="mx-1 h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
+              className="mr-1 h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
               title="Edit History (disabled)"
+              aria-label="Edit History (disabled)"
             >
               <div className=" mr-2 flex items-center space-x-2">
-                <span className="whitespace-nowrap flex justify-start items-center gap-2">
-                  <X className="w-4 h-4" />
-                  Edit history
+                <span className="whitespace-nowrap flex justify-start items-center gap-2 pl-2">
+                  {/* <X className="w-4 h-4" /> */}
+                  {/* Edit history */}
+                  <Clock size={16} />
                 </span>
               </div>
               <ChevronDown size={12} />
