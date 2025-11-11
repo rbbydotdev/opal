@@ -107,7 +107,6 @@ export async function exchangeCodeForToken({
       error?: string;
       error_description?: string;
     };
-    // console.log("Token response data:", tokenData);
 
     if (tokenData.error) {
       throw new Error(`OAuth error: ${tokenData.error_description || tokenData.error}`);
@@ -117,8 +116,6 @@ export async function exchangeCodeForToken({
     if (!token) {
       throw new Error("No access token received in response");
     }
-
-    // console.log("Token received, fetching user info...");
 
     const apiBaseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/api.github.com` : undefined;
 
