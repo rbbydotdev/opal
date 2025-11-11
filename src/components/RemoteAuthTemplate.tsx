@@ -1,6 +1,6 @@
 import { RemoteAuthDataFor, RemoteAuthExplicitType, RemoteAuthSource, RemoteAuthType } from "@/data/RemoteAuthTypes";
 import { ENV } from "@/lib/env";
-import { Github, Globe, KeyIcon } from "lucide-react";
+import { Cloud, Github, Globe, KeyIcon, Network } from "lucide-react";
 
 // Use distributive conditional type to create proper union
 export type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = T extends any
@@ -56,6 +56,37 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
       corsProxy: ENV.GITHUB_CORS_PROXY,
     },
   }),
+
+  template({
+    name: "Cloudflare API",
+    description: "Connect using a Cloudflare API key",
+    source: "cloudflare",
+    type: "api",
+    icon: <Cloud className="h-5 w-5" />,
+    data: {
+      corsProxy: ENV.GITHUB_CORS_PROXY,
+    },
+  }),
+  template({
+    name: "Netlify API",
+    description: "Connect using a Netlify API key",
+    source: "netlify",
+    type: "api",
+    icon: <Network className="h-5 w-5" />,
+    data: {
+      corsProxy: ENV.GITHUB_CORS_PROXY,
+    },
+  }),
+  template({
+    name: "Netlify OAuth",
+    description: "Connect using Netlify OAuth",
+    source: "netlify",
+    type: "oauth",
+    icon: <Network className="h-5 w-5" />,
+    data: {
+      corsProxy: ENV.GITHUB_CORS_PROXY, // or a netlify-specific proxy if needed
+    },
+  }),
   template({
     name: "Basic Auth",
     description: "Connect using Basic Auth",
@@ -70,7 +101,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
   template({
     name: "No Auth",
     description: "Connect without authentication",
-    source: "private",
+    source: "public",
     type: "no-auth",
     icon: <Globe className="h-5 w-5" />,
     data: {
