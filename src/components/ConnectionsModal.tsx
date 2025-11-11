@@ -121,6 +121,7 @@ export function ConnectionsModalContent({
     mode,
     editConnection,
     (f) => {
+      console.log("Connection saved:", f);
       onSuccess(f);
       form.reset();
     },

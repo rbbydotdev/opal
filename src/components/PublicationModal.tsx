@@ -11,7 +11,7 @@ import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
-import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
+import { AlertTriangle, CheckCircle, Loader, Plus, X } from "lucide-react";
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
@@ -131,24 +131,29 @@ export function PublicationModal({
             <label htmlFor="strategy-select" className="text-sm font-medium">
               Destination
             </label>
-            <Select value={remoteAuthGuid} onValueChange={(value: string) => {}}>
-              <SelectTrigger className="min-h-14">
-                <SelectValue placeholder="Select Destination" />
-              </SelectTrigger>
-              <SelectContent>
-                {remoteAuths.map((auth) => (
-                  <SelectItem key={auth.guid} value={auth.guid}>
-                    <div className="flex flex-col items-start gap-1">
-                      <span className="font-medium flex items-center gap-2 capitalize">
-                        <RemoteAuthSourceIconComponent type={auth.type} source={auth.source} size={16} />
-                        {auth.name} - <span>{auth.type}</span> / <span> {auth.source}</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground">Publish to {auth.source} hosting</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={remoteAuthGuid} onValueChange={(value: string) => {}}>
+                <SelectTrigger className="min-h-14">
+                  <SelectValue placeholder="Select Destination" />
+                </SelectTrigger>
+                <SelectContent>
+                  {remoteAuths.map((auth) => (
+                    <SelectItem key={auth.guid} value={auth.guid}>
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="font-medium flex items-center gap-2 capitalize">
+                          <RemoteAuthSourceIconComponent type={auth.type} source={auth.source} size={16} />
+                          {auth.name} - <span>{auth.type}</span> / <span> {auth.source}</span>
+                        </span>
+                        <span className="text-xs text-muted-foreground">Publish to {auth.source} hosting</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant={"outline"} className="min-h-14">
+                <Plus />
+              </Button>
+            </div>
           </div>
 
           {/* Build Controls */}
