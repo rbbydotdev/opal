@@ -567,17 +567,7 @@ export class Workspace {
     filterIn?: (node: TreeNode) => boolean;
     filterOut?: (node: TreeNode) => boolean;
   }) {
-    if (filterIn || filterOut) {
-      return this.disk.fileTree
-        .all()
-        .filter((node) => {
-          if (filterIn && !filterIn(node)) return false;
-          if (filterOut && filterOut(node)) return false;
-          return true;
-        })
-        .map((node) => node.path);
-    }
-    return this.disk.fileTree.all().map((node) => node.path);
+    return this.disk.getFlatTree({ filterIn, filterOut });
   }
 
   nodeFromPath = (path?: AbsPath | string | null) => {

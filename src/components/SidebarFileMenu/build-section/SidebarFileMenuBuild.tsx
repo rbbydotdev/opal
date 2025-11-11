@@ -160,7 +160,7 @@ export function SidebarFileMenuBuild({
                   variant="outline"
                   onClick={handlePublishModal}
                 >
-                  <Code2 className="mr-1" />
+                  <UploadCloud className="mr-1" />
                   <span className="flex-grow">Publish Build</span>
                 </Button>
               </div>

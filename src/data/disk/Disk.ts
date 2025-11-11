@@ -63,6 +63,29 @@ export abstract class Disk {
   set fileTree(value: FileTree) {
     this._fileTree = value;
   }
+  get isNull() {
+    return this.type === "NullDisk";
+  }
+
+  getFlatTree({
+    filterIn,
+    filterOut,
+  }: {
+    filterIn?: (node: TreeNode) => boolean;
+    filterOut?: (node: TreeNode) => boolean;
+  }) {
+    if (filterIn || filterOut) {
+      return this.fileTree
+        .all()
+        .filter((node) => {
+          if (filterIn && !filterIn(node)) return false;
+          if (filterOut && filterOut(node)) return false;
+          return true;
+        })
+        .map((node) => node.path);
+    }
+    return this.fileTree.all().map((node) => node.path);
+  }
 
   constructor(
     public readonly guid: string,

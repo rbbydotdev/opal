@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Disk } from "@/data/disk/Disk";
 import { NullWorkspace } from "@/data/NullWorkspace";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { Workspace } from "@/data/Workspace";
@@ -156,33 +157,32 @@ export const DirOnlyFilter: DirOnlyFilter = Object.assign((node: TreeNode) => no
   __brand: "DirOnlyFilter" as const,
 });
 export function useWatchWorkspaceFileTree({
-  currentWorkspace,
   filterIn,
+  disk,
   filterOut,
 }: {
-  currentWorkspace: Workspace;
   filterIn?: FileOnlyFilter | DirOnlyFilter | ((node: TreeNode) => boolean);
+  disk: Disk;
   filterOut?: FileOnlyFilter | DirOnlyFilter | ((node: TreeNode) => boolean);
 }) {
-  const [fileTreeDir, setFileTreeDir] = useState<TreeDirRoot>(() => currentWorkspace.getFileTreeRoot());
+  const [fileTreeDir, setFileTreeDir] = useState<TreeDirRoot>(() => disk.fileTree.root);
   const [flatTree, setFlatTree] = useState<AbsPath[]>([]);
-  const [fileTree, setFileTree] = useState(() => currentWorkspace.getFileTree());
+  const [fileTree, setFileTree] = useState(() => disk.fileTree);
 
   useEffect(() => {
-    if (currentWorkspace) {
-      return currentWorkspace.watchDiskIndex((fileTreeDir: TreeDir) => {
+    if (!disk.isNull) {
+      return disk.latestIndexListener((fileTreeDir: TreeDir) => {
         const newTree = new TreeDirRoot(fileTreeDir.deepCopy() as TreeDir).pruneMutate((treeNode) => {
           if (filterIn && !filterIn(treeNode)) return true; // filterIn
           if (filterOut && filterOut(treeNode)) return true; // filterOut
           return false;
         });
-        // console.log("useWatchWorkspaceFileTree update", { newTree });
         setFileTreeDir(newTree);
-        setFlatTree(currentWorkspace.getFlatTree({ filterIn, filterOut }));
-        setFileTree(currentWorkspace.getFileTree());
+        setFlatTree(disk.getFlatTree({ filterIn, filterOut }));
+        setFileTree(disk.fileTree);
       });
     }
-  }, [currentWorkspace, filterIn, filterOut]);
+  }, [disk, filterIn, filterOut]);
 
   return { fileTreeDir, fileTree, flatTree };
 }
@@ -204,7 +204,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaces = useLiveWorkspaces();
   const workspaceRoute = useWorkspaceRoute();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
-  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ currentWorkspace });
+  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ disk: currentWorkspace.getDisk() });
   const location = useLocation();
   const navigate = useNavigate();
   const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);

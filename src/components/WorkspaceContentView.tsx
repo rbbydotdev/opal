@@ -40,7 +40,7 @@ export function WorkspaceMarkdownEditor({
   const { mimeType } = useCurrentFilepath();
 
   const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
-  const documentId = useWorkspaceDocumentId(contents);
+  const documentId = useWorkspaceDocumentId(contents, currentWorkspace.resolveFileUrl(path));
 
   const markdown = String(contents || "");
   const { data, content } = useMemo(() => {

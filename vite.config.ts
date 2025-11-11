@@ -5,10 +5,12 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import removeConsole from "vite-plugin-remove-console";
 import svgr from "vite-plugin-svgr";
 
 // Service Worker Configuration (Development Watch)
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const isProd = mode === "production";
   return {
     build: {
       assetsDir: "@static",
@@ -23,6 +25,14 @@ export default defineConfig(() => {
         // Exclude service worker and web worker files from React plugin
         exclude: [/\.ww\.(ts|js)$/, /sw\.(ts|js)$/],
       }),
+      // Only apply the removeConsole plugin in production
+      ...(isProd
+        ? [
+            removeConsole({
+              includes: ["log", "debug", "info"], // Keep warn/error visible in PROD if you want
+            }),
+          ]
+        : []),
       // TanStackRouterVite(),
       tanstackRouter({
         routeToken: "layout",

@@ -1,5 +1,6 @@
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { useWatchWorkspaceFileTree, useWorkspaceContext } from "@/context/WorkspaceContext";
+import { Disk } from "@/data/disk/Disk";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
@@ -26,13 +27,19 @@ export function FileTreeProvider({
   filterIn,
   filterOut,
   children,
+  disk,
 }: {
   filterIn?: (node: TreeNode) => boolean;
   filterOut?: (node: TreeNode) => boolean;
-  children: React.ReactNode;
+  children: React.ReactNode | ((context: { fileTree: FileTree }) => React.ReactNode);
+  disk?: Disk;
 }) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ currentWorkspace, filterIn, filterOut });
+  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({
+    disk: disk || currentWorkspace.getDisk(),
+    filterIn,
+    filterOut,
+  });
 
   return (
     <FileTreeContext.Provider
@@ -42,7 +49,7 @@ export function FileTreeProvider({
         fileTree,
       }}
     >
-      {children}
+      {typeof children === "function" ? children({ fileTree }) : children}
     </FileTreeContext.Provider>
   );
 }
