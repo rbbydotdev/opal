@@ -2,6 +2,7 @@ import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { SelectableList } from "@/components/ui/SelectableList";
 import { SidebarGroup } from "@/components/ui/sidebar";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
@@ -9,7 +10,7 @@ import { Delete, Pencil, Plus, Sparkle } from "lucide-react";
 import { useState } from "react";
 
 function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
-  const { remoteAuths, deleteRemoteAuth } = useRemoteAuths();
+  const { remoteAuths } = useRemoteAuths();
   const [editingConnection, setEditingConnection] = useState<RemoteAuthJType | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
 
@@ -21,7 +22,7 @@ function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
   };
 
   const handleDelete = (id: string) => {
-    return deleteRemoteAuth(id);
+    return RemoteAuthDAO.deleteByGuid(id);
   };
 
   const handleAddConnection = () => {

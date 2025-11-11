@@ -8,6 +8,7 @@ import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
+import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
@@ -46,6 +47,7 @@ export function PublicationModal({
     onCancel?: () => void;
     onComplete?: (buildDao?: BuildDAO) => void;
   } | null>(null);
+  const { remoteAuths } = useRemoteAuths();
   const [buildError, setBuildError] = useState<string | null>(null);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
