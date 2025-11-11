@@ -9,12 +9,14 @@ const OAuthCbEvents = {
   SUCCESS: "success" as const,
   ERROR: "error" as const,
   AUTHORIZATION_CODE: "authorization_code" as const,
+  CLOSE_WINDOW: "close_window" as const,
 };
 
 type OAuthCbEventPayload = {
   [OAuthCbEvents.SUCCESS]: RemoteAuthDataFor<"oauth">;
   [OAuthCbEvents.ERROR]: string;
   [OAuthCbEvents.AUTHORIZATION_CODE]: { code: string; state: string };
+  [OAuthCbEvents.CLOSE_WINDOW]: void;
 };
 
 class OAuthCbChannel extends Channel<OAuthCbEventPayload> {}
@@ -91,12 +93,27 @@ function OAuthCallback() {
         // Send the authorization code to parent window for token exchange
         await channel.emit(OAuthCbEvents.AUTHORIZATION_CODE, { code, state: state || "" });
 
-        setStatus("success");
-        // console.log("Callback: Authorization code sent successfully");
+        // Don't assume success - wait for parent to respond
+        setStatus("processing");
+        // console.log("Callback: Authorization code sent, waiting for parent response...");
 
-        setTimeout(() => {
-          window.close();
-        }, 1_500);
+        // Listen for parent's response
+        channel.once(OAuthCbEvents.SUCCESS, () => {
+          setStatus("success");
+        });
+
+        channel.once(OAuthCbEvents.ERROR, (errorMsg) => {
+          setStatus("error");
+          setError(errorMsg);
+        });
+
+        // Listen for parent telling us to close
+        channel.once(OAuthCbEvents.CLOSE_WINDOW, () => {
+          setTimeout(() => {
+            window.close();
+          }, 100);
+        });
+
       } catch (e) {
         const errorMsg = unwrapError(e);
         console.error("Failed to send authorization code:", e);

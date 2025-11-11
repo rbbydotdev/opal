@@ -5,7 +5,7 @@ import {
   generateCodeVerifier,
   getGithubOAuthUrl,
 } from "@/lib/auth/GithubOAuthFlow";
-import { OAuthCbChannel, OAuthCbEvents, OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
+import { OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
 export class GitHubOAuthProvider extends OAuthProvider {
   private codeVerifier: string | null = null;
@@ -26,22 +26,7 @@ export class GitHubOAuthProvider extends OAuthProvider {
     });
   }
 
-  setupChannelListeners(
-    channel: OAuthCbChannel,
-    config: OAuthProviderConfig,
-    onSuccess: (data: RemoteAuthDataFor<"oauth">) => void,
-    onError: (error: string) => void
-  ): void {
-    // Handle authorization code from callback window
-    channel.once(OAuthCbEvents.AUTHORIZATION_CODE, async ({ code, state }) => {
-      try {
-        const authData = await this.validateAndProcessAuth({ code, state }, config);
-        onSuccess(authData);
-      } catch (error) {
-        onError(error instanceof Error ? error.message : "Token exchange failed");
-      }
-    });
-  }
+  // Inherits setupChannelListeners from base OAuthProvider class
 
   async validateAndProcessAuth(
     data: { code: string; state: string },

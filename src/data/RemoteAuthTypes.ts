@@ -54,6 +54,7 @@ export const RemoteAuthGithubDeviceOAuthRecordInternalSchema = z.object({
   obtainedAt: z.number(),
   corsProxy: z
     .string()
+    .optional()
     .transform((val) => ((val ?? "").trim() === "" ? undefined : val))
     .pipe(z.string().url().nullable().optional()),
 });

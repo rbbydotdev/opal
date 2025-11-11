@@ -6,16 +6,19 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { OAuthService, OAuthState } from "@/lib/auth/OAuthService";
+import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Loader } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
 export function OAuth({
+  mode = "add",
   form,
   source,
   onCancel,
 }: {
+  mode?: ConnectionsModalMode;
   form: UseFormReturn<RemoteAuthFormValues<"oauth">>;
   source: RemoteAuthSource;
   onCancel: () => void;
@@ -148,12 +151,24 @@ export function OAuth({
         <Button type="button" variant="outline" onClick={handleCancel} className="w-full">
           Cancel
         </Button>
-        {authSuccess ? (
+        
+        {/* Edit mode: Show Save button only when not authenticated */}
+        {mode === "edit" && !authSuccess && (
+          <Button type="submit" variant="default" className="w-full">
+            Save
+          </Button>
+        )}
+        
+        {/* Save button after authentication (both create and edit modes) */}
+        {authSuccess && (
           <Button type="submit" variant="default" className="w-full">
             <RemoteAuthSourceIconComponent size={12} source={source} />
-            Save Connection
+            Save
           </Button>
-        ) : (
+        )}
+        
+        {/* Connect button (both create and edit modes) */}
+        {!authSuccess && (
           <Button
             type="button"
             variant="default"

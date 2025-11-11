@@ -1,28 +1,28 @@
-import { RemoteAuthSourceIcon } from "@/components/RemoteAuthSourceIcon";
+import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RemoteAuthDataFor, RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
-import { ENV } from "@/lib/env";
 import { unwrapError } from "@/lib/errors";
-import { CheckCircle2Icon, ExternalLink, Loader } from "lucide-react";
+import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
+import { ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
 export function DeviceAuth({
+  mode = "add",
   form,
   source,
   onCancel = () => {},
-  editConnection,
 }: {
+  mode?: ConnectionsModalMode;
   form: UseFormReturn<RemoteAuthFormValues<"oauth-device">>;
   source: RemoteAuthSource;
   onCancel: () => void;
-  editConnection?: RemoteAuthJType;
 }) {
   const [state, setState] = useState<
     "idle" | "pin-loading" | "pin-loaded" | "auth-success" | "pending-rad-save" | "error"
@@ -30,19 +30,17 @@ export function DeviceAuth({
   const [verificationUri, setVerificationUri] = useState<string | null>(null);
   const [pin, setPin] = useState<string>("");
   const remoteAuthRef = useRef<RemoteAuthDataFor<"oauth-device"> | null>(null);
-  const [corsProxy, setCorsProxy] = useState<string>(ENV.GITHUB_CORS_PROXY || "");
+  // Remove local corsProxy state - use form state instead
   const [error, setError] = useState<string | null>(null);
-  const [apiName, setApiName] = useState<string>(
-    form ? form.getValues()?.name || editConnection?.name || "my-gh-auth" : "my-gh-auth"
-  );
 
   async function handleGithubDeviceAuth() {
     setError(null);
     setState("pin-loading");
     setPin("");
+    const formCorsProxy = form.getValues().data?.corsProxy;
     try {
       await GithubDeviceAuthFlow({
-        corsProxy,
+        corsProxy: formCorsProxy || undefined,
         onVerification: (data) => {
           setVerificationUri(data.verification_uri);
           setPin(data.user_code);
@@ -53,6 +51,7 @@ export function DeviceAuth({
             accessToken: auth.token,
             login: auth.login,
             obtainedAt: Date.now(),
+            corsProxy: formCorsProxy, // Use form's corsProxy value
           };
 
           // Populate the form with the authentication data (same as OAuth component)
@@ -71,69 +70,41 @@ export function DeviceAuth({
 
   return (
     <div className="space-y-4">
-      {form ? (
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Connection Name</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Connection Name"
-                  onChange={(e) => {
-                    field.onChange(e);
-                    setApiName(e.target.value);
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : (
-        <FormItem>
-          <FormLabel className="text-sm font-medium">Connection Name</FormLabel>
-          <Input
-            type="text"
-            placeholder="API Name"
-            value={apiName}
-            onChange={(e) => setApiName(e.target.value)}
-            className="w-full"
-            required
-          />
-        </FormItem>
-      )}
-      <FormItem>
-        <FormLabel className="text-sm font-medium">
-          {capitalizeFirst(source)} CORS Proxy URL (optional) <OptionalProbablyToolTip />
-        </FormLabel>
-        <Input
-          type="text"
-          placeholder="CORS Proxy URL"
-          value={corsProxy}
-          onChange={(e) => setCorsProxy(e.target.value)}
-          className="w-full"
-        />
-      </FormItem>
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Connection Name</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Connection Name" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="data.corsProxy"
+        render={({ field: { value, ...rest } }) => (
+          <FormItem>
+            <FormLabel>
+              {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
+            </FormLabel>
+            <FormControl>
+              <Input {...rest} value={value ?? ""} placeholder="Proxy URL (optional)" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       {state === "error" && (
         <div className="rounded-md bg-destructive p-4 text-destructive-foreground">
           <p className="mb-2 font-bold">Error</p>
           <p className="mb-2">{error}</p>
-          {/* <Button type="button" onClick={handleRetry} variant={"outline"} className="text-destructive">
-            Retry
-          </Button> */}
         </div>
       )}
-      {/* {state === "pin-loaded" && (
-        <div className="rounded-md bg-muted p-4">
-          <p className="text-sm flex items-center gap-2">
-            <Loader size={12} className="animate-spin animation-iteration-infinite" />
-            Waiting for user pin code entry on {capitalizeFirst(source)}
-          </p>
-        </div>
-      )} */}
       {state === "pin-loaded" && (
         <div className="rounded-md bg-muted p-4">
           <p className="text-sm mb-2">
@@ -160,20 +131,30 @@ export function DeviceAuth({
         </div>
       )}
       {state === "auth-success" && (
-        <div className="rounded-md bg-success p-4 text-success-foreground text-sm ">
-          <div className="font-bold flex justify-start items-center gap-2  ">
-            <CheckCircle2Icon size={12} /> Authentication Successful
-          </div>
+        <div className="rounded-md bg-success p-4 text-success-foreground">
+          <p className="font-bold flex items-center gap-2">
+            <span className="text-green-500">✓</span> Authorization Successful
+          </p>
+          <p className="text-sm mt-1">You can now save this connection.</p>
         </div>
       )}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
+
+        {/* Edit mode: Show Update button only when not authenticated */}
+        {mode === "edit" && state !== "auth-success" && state !== "pending-rad-save" && (
+          <Button type="submit" variant="default">
+            Save
+          </Button>
+        )}
+
+        {/* Save/Update button after authentication (both create and edit modes) */}
         {(state === "auth-success" || state === "pending-rad-save") && (
           <Button type="submit" variant="default" disabled={state === "pending-rad-save"}>
             {state === "pending-rad-save" && <Loader size={12} className="animate-spin animation-iteration-infinite" />}
-            OK
+            Save
           </Button>
         )}
 
@@ -193,8 +174,7 @@ export function DeviceAuth({
         {state === "pin-loaded" && (
           <Button asChild type="button" className="flex items-center gap-2">
             <a href="https://github.com/login/device" target="_blank" rel="noopener noreferrer">
-              {/* {selectedConnection.icon} */}
-              {RemoteAuthSourceIcon[source] ?? ""}
+              <RemoteAuthSourceIconComponent source={source} size={16} />
               Go to {capitalizeFirst(source)}
               <ExternalLink className="ml-1 h-4 w-4" />
             </a>
