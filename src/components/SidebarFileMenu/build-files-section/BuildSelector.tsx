@@ -30,7 +30,11 @@ export function BuildSelector({
             title="Select Build"
             className={cn(
               className,
-              "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-12"
+              "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs ",
+              {
+                "h-12": builds.length > 0,
+                "h-8": builds.length === 0,
+              }
             )}
           >
             <SelectValue className="w-full" placeholder="Select Build" />

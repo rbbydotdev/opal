@@ -21,6 +21,7 @@ import { Workspace } from "@/data/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
+import { cn } from "@/lib/utils";
 import { Code2, Delete, Download, Ellipsis, Github, Hammer, UploadCloud } from "lucide-react";
 import { useMemo, useState } from "react";
 import { timeAgo } from "short-time-ago";
@@ -196,6 +197,7 @@ const BuildMenuDropDown = ({
   open,
   setOpen,
   disabled,
+  // size: "full"| "compact"
 }: {
   children: React.ReactNode;
   open: boolean;
@@ -204,7 +206,19 @@ const BuildMenuDropDown = ({
 }) => (
   <DropdownMenu onOpenChange={setOpen} open={open}>
     <DropdownMenuTrigger asChild>
-      <Button variant="outline" disabled={disabled} className="h-12 w-6 shrink-0 flex-grow" title="Build Menu">
+      <Button
+        variant="outline"
+        disabled={disabled}
+        className={cn(
+          "w-6 shrink-0 flex-grow",
+
+          {
+            "h-12": !disabled,
+            "h-8": disabled,
+          }
+        )}
+        title="Build Menu"
+      >
         <Ellipsis /> <span className="sr-only">Build Menu</span>
       </Button>
     </DropdownMenuTrigger>

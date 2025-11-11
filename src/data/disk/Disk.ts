@@ -43,7 +43,6 @@ export abstract class Disk {
   mutex = new Mutex();
   _fs: CommonFileSystem;
   _fileTree: FileTree;
-  // private origFs: CommonFileSystem | null = null;
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
 
