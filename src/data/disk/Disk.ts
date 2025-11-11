@@ -172,7 +172,7 @@ export abstract class Disk {
 
   async refresh() {
     const { indexCache } = await this.connector.hydrate();
-    this.initialIndexFromCache(indexCache ?? new TreeDirRoot());
+    return this.initialIndexFromCache(indexCache ?? new TreeDirRoot());
   }
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     await this.ready;
