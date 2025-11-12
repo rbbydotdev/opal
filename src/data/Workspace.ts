@@ -714,10 +714,9 @@ export class Workspace {
 
   getImages() {
     const result: AbsPath[] = [];
-    this.disk.fileTree.walk((node) => {
-      if (isImage(node.path)) {
-        result.push(node.path);
-      }
+    this.disk.fileTree.walk((node, _depth, _exit, $stop_token) => {
+      if (SpecialDirs.All.includes(node.path)) return $stop_token;
+      if (isImage(node.path)) result.push(node.path);
     });
     return result;
   }

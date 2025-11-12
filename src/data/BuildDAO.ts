@@ -15,6 +15,7 @@ export class BuildDAO implements BuildRecord {
   guid: string;
   disk: Disk | DiskJType;
   label: string;
+  fileCount: number;
   timestamp: Date;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   workspaceId: string;
@@ -28,15 +29,12 @@ export class BuildDAO implements BuildRecord {
     this.guid = build.guid;
     this.label = build.label;
     this.timestamp = build.timestamp;
+    this.fileCount = build.fileCount;
     this.disk = build.disk;
     this.workspaceId = build.workspaceId;
     this.buildPath = build.buildPath;
     this.status = "idle";
     this.logs = build.logs;
-  }
-
-  get size() {
-    return 0;
   }
 
   static FromJSON(json: BuildJType) {
@@ -52,6 +50,7 @@ export class BuildDAO implements BuildRecord {
       workspaceId: this.workspaceId,
       buildPath: this.buildPath,
       logs: this.logs,
+      fileCount: this.fileCount,
     };
   }
 
@@ -60,11 +59,15 @@ export class BuildDAO implements BuildRecord {
     disk,
     workspaceId,
     guid = BuildDAO.guid(),
+    fileCount = 0,
+    logs = [],
   }: {
     label: string;
     disk: Disk | DiskJType;
     workspaceId: string;
     guid?: string;
+    fileCount?: number;
+    logs: BuildLogLine[];
   }) {
     const buildPath = joinPath(SpecialDirs.Build, relPath(guid));
     return new BuildDAO({
@@ -74,7 +77,8 @@ export class BuildDAO implements BuildRecord {
       disk: disk instanceof Disk ? disk : DiskFromJSON(disk),
       workspaceId,
       buildPath,
-      logs: [],
+      logs,
+      fileCount,
     });
   }
 
@@ -107,10 +111,10 @@ export class BuildDAO implements BuildRecord {
   }
 
   async update({ ...properties }: Partial<Omit<BuildRecord, "guid">>) {
+    await ClientDb.builds.update(this.guid, properties);
     for (const [key, value] of Object.entries(properties)) {
       (this as any)[key] = value;
     }
-    await ClientDb.builds.update(this.guid, properties);
     return this;
   }
 
@@ -124,6 +128,7 @@ export class BuildDAO implements BuildRecord {
       buildPath: this.buildPath,
       logs: this.logs,
       status: this.status,
+      fileCount: this.fileCount,
     });
   }
 
@@ -161,6 +166,7 @@ export class NullBuildDAO extends BuildDAO {
       workspaceId: "",
       buildPath: absPath("/"),
       logs: [],
+      fileCount: 0,
     });
   }
 }

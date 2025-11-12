@@ -9,6 +9,7 @@ export interface BuildRecord {
   disk: Disk | DiskJType;
   workspaceId: string;
   buildPath: AbsPath;
+  fileCount: number;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: BuildLogLine[];
 }

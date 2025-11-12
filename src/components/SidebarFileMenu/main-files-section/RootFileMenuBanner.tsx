@@ -3,6 +3,7 @@ import { Workspace } from "@/data/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useNodeResolver } from "@/hooks/useNodeResolver";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { FileTree } from "@/lib/FileTree/Filetree";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
 import { ROOT_NODE, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath } from "@/lib/paths2";
@@ -11,9 +12,11 @@ import { useRef, useState } from "react";
 
 export const RootFileMenuBanner = ({
   currentWorkspace,
+  fileTree,
   rootNode = ROOT_NODE,
 }: {
   currentWorkspace: Workspace;
+  fileTree?: FileTree;
   rootNode?: TreeDir | TreeFile | AbsPath;
 }) => {
   const [dragEnter, setDragEnter] = useState(false);
@@ -41,7 +44,7 @@ export const RootFileMenuBanner = ({
       timeoutRef.current = setTimeout(() => setDragEnter(false), 1000);
     }
   };
-  const resolvedRootNode = useNodeResolver(currentWorkspace, rootNode);
+  const resolvedRootNode = useNodeResolver(fileTree ?? currentWorkspace.getFileTree(), rootNode);
 
   return (
     <MainFileTreeContextMenu fileNode={resolvedRootNode} currentWorkspace={currentWorkspace}>

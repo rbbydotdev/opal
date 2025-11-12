@@ -277,9 +277,6 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
             <span className="pr-4">Use History Images</span>
           </ContextMenuItem>
         )}
-        <ContextMenuLabel className="py-2 text-2xs w-full  font-thin justify-center flex gap-2 text-ring italic">
-          {`⚠️ super beta feature`}
-        </ContextMenuLabel>
 
         <ContextMenuSeparator />
 

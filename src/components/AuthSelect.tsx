@@ -24,13 +24,15 @@ interface AuthSelectProps {
 //   }
 // };
 
-export function AuthSelect({
+export function GitAuthSelect({
   value,
   onValueChange,
   onAddAuth,
   placeholder = "Select authentication",
 }: AuthSelectProps) {
-  const { remoteAuths } = useRemoteAuths();
+  const { remoteAuths } = useRemoteAuths({
+    sources: ["github", "custom"],
+  });
 
   const currentSelectValue = remoteAuths.find((auth) => auth.guid === value)?.guid ?? "none";
 

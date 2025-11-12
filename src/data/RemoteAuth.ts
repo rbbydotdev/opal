@@ -15,13 +15,13 @@ import {
 } from "@/data/RemoteAuthTypes";
 import { nanoid } from "nanoid";
 
-export class RemoteAuthDAO implements Omit<RemoteAuthRecord, "data"> {
+export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements Omit<RemoteAuthRecord, "data"> {
   guid: string;
   type: RemoteAuthType;
   source: RemoteAuthSource;
   name: string;
   tags: string[];
-  data: RemoteAuthDataFor<RemoteAuthType>;
+  data: RemoteAuthDataFor<T>;
 
   /* connector: ClientDb.remoteAuths  */
 
@@ -78,7 +78,7 @@ export class RemoteAuthDAO implements Omit<RemoteAuthRecord, "data"> {
     source: RemoteAuthSource;
     type: RemoteAuthType;
     name: string;
-    data: RemoteAuthDataFor<RemoteAuthType>;
+    data: RemoteAuthDataFor<T>;
     tags: string[];
   }) {
     this.source = source;
@@ -86,7 +86,7 @@ export class RemoteAuthDAO implements Omit<RemoteAuthRecord, "data"> {
     this.name = name;
     this.type = type;
     this.tags = tags;
-    this.data = record || null;
+    this.data = record;
   }
 
   static guid = () => "__remoteauth__" + nanoid();

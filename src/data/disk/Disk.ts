@@ -142,7 +142,7 @@ export abstract class Disk {
     if (writeIndexCache) {
       /*await*/ void this.connector.save();
     }
-    newIndex.walk((node) => {});
+    // newIndex.walk((node) => {});
     return newIndex;
   };
 

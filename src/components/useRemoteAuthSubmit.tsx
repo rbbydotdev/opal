@@ -25,9 +25,9 @@ export const useRemoteAuthSubmit = (
     try {
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
-          source: editConnection.source,
+          source: formValues.source,
           guid: editConnection.guid,
-          type: editConnection.type,
+          type: formValues.type,
           name: formValues.name,
           data: formValues.data,
           tags: tags,

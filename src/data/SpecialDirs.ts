@@ -1,3 +1,4 @@
+import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath } from "@/lib/paths2";
 
 const paths = {
@@ -9,10 +10,10 @@ const paths = {
 };
 export const SpecialDirs = {
   ...paths,
-  allInSpecialDirsExcept(...paths: (AbsPath | { toString(): string })[]): AbsPath[] {
+  allInSpecialDirsExcept(...paths: (AbsPath | TreeNode)[]): AbsPath[] {
     return this.All.filter((dir) => !paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
   },
-  allOutSpecialDirsExcept(...paths: (AbsPath | { toString(): string })[]): AbsPath[] {
+  allOutSpecialDirsExcept(...paths: (AbsPath | TreeNode)[]): AbsPath[] {
     return this.All.filter((dir) => paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
   },
   get All() {
@@ -20,15 +21,60 @@ export const SpecialDirs = {
   },
 } as const;
 
-export function FilterOutSpecialDirs(path: AbsPath | { toString(): string }): boolean {
+export function FilterOutSpecialDirs(path: AbsPath | TreeNode): boolean {
   return !SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
-export function FilterInSpecialDirs(path: AbsPath | { toString(): string }): boolean {
+export function FilterInSpecialDirs(path: AbsPath | TreeNode): boolean {
   return SpecialDirs.All.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
-export function FilterDirs(path: AbsPath | { toString(): string }, dirs: AbsPath[]): boolean {
+export function FilterDirs(path: AbsPath | TreeNode, dirs: AbsPath[]): boolean {
   return dirs.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
+
+// Fluent filter builder
+export class Filter {
+  constructor(private predicate: (path: AbsPath | TreeNode) => boolean) {}
+
+  static only(...dirs: AbsPath[]) {
+    return new Filter((path) => FilterDirs(path, dirs));
+  }
+
+  static except(...dirs: AbsPath[]) {
+    return new Filter((path) => !FilterDirs(path, dirs));
+  }
+
+  static all() {
+    return new Filter(() => true);
+  }
+
+  static none() {
+    return new Filter(() => false);
+  }
+
+  and(other: Filter) {
+    return new Filter((path) => this.predicate(path) && other.predicate(path));
+  }
+
+  or(other: Filter) {
+    return new Filter((path) => this.predicate(path) || other.predicate(path));
+  }
+
+  not() {
+    return new Filter((path) => !this.predicate(path));
+  }
+
+  // Getter that returns a bound function - preserves this context
+  get $() {
+    return (path: AbsPath | TreeNode) => this.predicate(path);
+  }
+}
+
+// Usage examples:
+// Filter.only(SpecialDirs.Build).$
+// Filter.except(SpecialDirs.Git, SpecialDirs.Trash).$
+// Filter.only(SpecialDirs.Build).or(Filter.only(SpecialDirs.Storage)).$
+// Filter.all().except(SpecialDirs.Git).and(Filter.only(SpecialDirs.Build)).$
+// Filter.except(SpecialDirs.Git).not().$
 
 // const BuildIgnoreDirs = [
 //   relPath("node_modules"),

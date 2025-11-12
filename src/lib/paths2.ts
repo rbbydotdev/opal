@@ -1,7 +1,6 @@
 export type AbsPath = Brand<string, "AbsolutePath">;
 export type RelPath = Brand<string, "RelativePath">;
 
-import { errorCode } from "@/lib/errors";
 import { isImageType } from "@/lib/fileType";
 import pathModule from "path";
 import { isMarkdownType } from "./fileType";
@@ -333,4 +332,3 @@ export const stringifyEntry = (
   }
   return String(entry);
 };
-

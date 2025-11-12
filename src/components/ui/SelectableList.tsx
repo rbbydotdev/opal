@@ -362,9 +362,12 @@ function SelectableListItemIcon({ children }: { children: React.ReactNode }) {
   return <div className="flex-shrink-0">{children}</div>;
 }
 
-function SelectableListItemLabel({ children }: { children: React.ReactNode }) {
+function SelectableListItemLabel({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
-    <div className="max-w-[32ch] font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink ml-1">
+    <div
+      title={title}
+      className="max-w-[32ch] font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink ml-1"
+    >
       {children}
     </div>
   );
