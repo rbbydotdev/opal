@@ -1,5 +1,14 @@
 /// <reference types="vite/types/importMeta.d.ts" />
-export const ENV = {
+export const ENV: {
+  PUBLIC_GITHUB_CLIENT_ID: string;
+  PUBLIC_NETLIFY_CLIENT_ID: string;
+  GIT_PROTOCOL_PROXY: string;
+  GITHUB_CORS_PROXY: string;
+  CLOUDFLARE_CORS_PROXY: string;
+  NETLIFY_CORS_PROXY: string;
+  PRIVATE_CORS_PROXY: string;
+  HOST_URLS: string[];
+} = {
   PUBLIC_GITHUB_CLIENT_ID: import.meta.env.VITE_PUBLIC_GITHUB_CLIENT_ID || "Ov23lipqkfiZDSS9HrCI",
   PUBLIC_NETLIFY_CLIENT_ID:
     import.meta.env.VITE_PUBLIC_NETLIFY_CLIENT_ID || "wDCLyXefml-6EbcYCB1Ny0j_xDdlAK7io33K6MMekWQ",
@@ -11,13 +20,4 @@ export const ENV = {
   HOST_URLS: (import.meta.env.VITE_HOST_URLS || `https://opaledx.com,http://localhost:3000,http://localhost`).split(
     ","
   ),
-} satisfies {
-  PUBLIC_GITHUB_CLIENT_ID: string;
-  PUBLIC_NETLIFY_CLIENT_ID: string;
-  GIT_PROTOCOL_PROXY: string;
-  GITHUB_CORS_PROXY: string;
-  CLOUDFLARE_CORS_PROXY: string;
-  NETLIFY_CORS_PROXY: string;
-  PRIVATE_CORS_PROXY: string;
-  HOST_URLS: string[];
 };

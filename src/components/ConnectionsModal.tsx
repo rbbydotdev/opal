@@ -156,7 +156,19 @@ export function ConnectionsModalContent({
                 <Select
                   defaultValue={field.value}
                   onValueChange={(value: typeof field.value) => {
-                    form.reset(RemoteAuthTemplates.find((t) => typeSource(t) === value));
+                    const selectedTemplate = RemoteAuthTemplates.find((t) => typeSource(t) === value);
+                    if (selectedTemplate && editConnection) {
+                      // Preserve existing connection data when changing template in edit mode
+                      form.reset({
+                        ...selectedTemplate,
+                        guid: editConnection.guid,
+                        name: form.getValues('name') || editConnection.name,
+                        // Merge existing data with new template data, prioritizing existing values
+                        data: { ...selectedTemplate.data, ...form.getValues('data') }
+                      });
+                    } else {
+                      form.reset(selectedTemplate);
+                    }
                   }}
                 >
                   <SelectTrigger id="connection-type">

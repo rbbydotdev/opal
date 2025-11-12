@@ -32,7 +32,7 @@ export function BuildSidebarFileMenuFileSectionInternal({
         collapsibleClassname="max-h-80 -ml-3"
         contentBanner={
           build?.buildPath && !isEmpty ? (
-            <RootFileMenuBanner currentWorkspace={currentWorkspace} rootNode={build?.buildPath} />
+            <RootFileMenuBanner fileTree={fileTree} currentWorkspace={currentWorkspace} rootNode={build?.buildPath} />
           ) : null
         }
       >

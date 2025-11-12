@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Ban, GitBranch, Loader, Plus, Search } from "lucide-react";
 
-import { AuthSelect } from "@/components/AuthSelect";
+import { GitAuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
@@ -209,7 +209,7 @@ export function GitRemoteDialog({
             <ConnectionsModalContent
               className={cn("w-full min-w-0", { hidden: !showConnectionModal })}
               mode={"add"}
-              sources={["github"]}
+              sources={["github", "custom"]}
               onSuccess={(rad) => {
                 form.setValue("authId", rad.guid);
                 setShowConnModal(false);
@@ -293,7 +293,7 @@ function GitRemoteDialogInternal({
               <FormItem className="w-full min-w-0">
                 <FormLabel>Authentication</FormLabel>
                 <FormControl>
-                  <AuthSelect
+                  <GitAuthSelect
                     value={field.value}
                     onValueChange={field.onChange}
                     placeholder="Optional - Select authentication"

@@ -230,19 +230,70 @@ export class TreeNode {
     return gen.bind(this)(this) as IterableIterator<this>;
   }
 
-  walk(
-    cb: (node: TreeNode, depth: number, exit: () => void) => void,
-    node: TreeNode = this,
+  walk = (
+    cb: (node: TreeNode, depth: number, exit: () => void, $stop_token: Symbol) => unknown,
+    depth = 0,
+    status = { exit: false }
+  ) => {
+    return TreeNode.walk(this, cb, depth, status);
+  };
+  countChildren = ({
+    filterIn,
+    filterOut,
+  }: {
+    filterIn?: (node: TreeNode) => boolean;
+    filterOut?: (node: TreeNode) => boolean;
+  }) => {
+    return TreeNode.countChildren({ node: this, filterIn, filterOut });
+  };
+
+  static walk(
+    node: TreeNode,
+    cb: (node: TreeNode, depth: number, exit: () => void, $stop_token: Symbol) => unknown,
     depth = 0,
     status = { exit: false }
   ) {
     const exit = () => (status.exit = true);
-    cb(node, depth, exit);
+    let $stop_token = Symbol("stop_token");
+    if (cb(node, depth, exit, $stop_token) === $stop_token) return;
     for (const childNode of Object.values((node as TreeDir).children ?? {})) {
       if (status.exit) break;
-      this.walk(cb, childNode, depth + 1, status);
+      TreeNode.walk(childNode, cb, depth + 1, status);
     }
   }
+
+  static countChildren({
+    node,
+    filterIn,
+    filterOut,
+  }: {
+    node: TreeNode;
+    filterIn?: (node: TreeNode) => boolean;
+    filterOut?: (node: TreeNode) => boolean;
+  }): number {
+    let count = 0;
+    TreeNode.walk(node, (n, _depth, _exit, $stop) => {
+      if (filterIn && !filterIn(n)) return $stop;
+      if (filterOut && filterOut(n)) return $stop;
+      count++;
+    });
+    return count;
+  }
+
+  // walk(
+  //   cb: (node: TreeNode, depth: number, exit: () => void, $stop_token: Symbol) => unknown,
+  //   node: TreeNode = this,
+  //   depth = 0,
+  //   status = { exit: false }
+  // ) {
+  //   const exit = () => (status.exit = true);
+  //   let $stop_token = Symbol("stop_token");
+  //   if (cb(node, depth, exit, $stop_token) === $stop_token) return;
+  //   for (const childNode of Object.values((node as TreeDir).children ?? {})) {
+  //     if (status.exit) break;
+  //     this.walk(cb, childNode, depth + 1, status);
+  //   }
+  // }
   constructor({
     type,
     dirname,

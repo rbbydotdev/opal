@@ -4,7 +4,7 @@ import { BuildDAO } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { NullDisk } from "@/data/NullDisk";
-import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
+import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { getMimeType } from "@zip.js/zip.js";
@@ -43,7 +43,6 @@ export class BuildRunner {
   sourcePath: AbsPath;
   strategy: BuildStrategy;
   logs: BuildLogLine[] = [];
-  // isBuilding: boolean = false;
   completed: boolean = false;
   get isBuilding() {
     return this.build.status === "pending";
@@ -188,11 +187,21 @@ export class BuildRunner {
 
       infoLog("Build completed successfully!");
 
+      // Re-index output disk and calculate file count before final update
+      await this.outputDisk.triggerIndex().catch((e) => console.warn("Failed to re-index output disk after build:", e));
       infoLog(`Build saved with ID: ${this.build.guid}`);
-      return this.build.update({
+      const count =
+        this.outputDisk.fileTree.nodeFromPath(this.outputPath)?.countChildren({
+          filterIn: Filter.only(SpecialDirs.Build).$,
+        }) ?? 0;
+
+      infoLog(`Total files in build output: ${count}`);
+      await this.build.update({
         logs: this.logs,
         status: "success",
+        fileCount: count,
       });
+      return this.build;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       errorLog(`Build failed: ${errorMessage}`);
@@ -208,7 +217,6 @@ export class BuildRunner {
         });
       }
     } finally {
-      void this.sourceDisk.triggerIndex().catch((e) => console.warn("Failed to re-index source disk after build:", e));
       Object.freeze(this.build);
       Object.freeze(this);
     }

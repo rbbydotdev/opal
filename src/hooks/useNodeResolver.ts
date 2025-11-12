@@ -1,17 +1,18 @@
-import { Workspace } from "@/data/Workspace";
+import { FileTree } from "@/lib/FileTree/Filetree";
 import { ROOT_NODE, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 
 export const useNodeResolver = (
-  currentWorkspace: Workspace,
+  fileTree: FileTree,
   nodeOrPath: TreeDir | TreeFile | AbsPath,
   defaultNode?: TreeDir | TreeFile
 ) => {
   if (typeof nodeOrPath === "string") {
-    const rn = currentWorkspace.nodeFromPath(nodeOrPath);
+    const rn = fileTree.nodeFromPath(nodeOrPath);
     if (!rn) {
       if (defaultNode) return defaultNode;
-      console.error(new Error("Invalid path provided to useNodeResolver"));
+      console.error(new Error("Invalid path provided to useNodeResolver " + nodeOrPath));
+      // console.log(currentWorkspace.getFileTree().root.map)
       return ROOT_NODE;
     }
     return rn;

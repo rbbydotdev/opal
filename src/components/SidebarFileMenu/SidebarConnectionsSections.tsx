@@ -66,7 +66,7 @@ function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
                   className="flex-shrink-0"
                 />
               </SelectableList.ItemIcon>
-              <SelectableList.ItemLabel>{connection.name}</SelectableList.ItemLabel>
+              <SelectableList.ItemLabel title={connection.name}>{connection.name}</SelectableList.ItemLabel>
               <SelectableList.ItemSubLabel>
                 {`${connection.type} ${connection.source}`.toLowerCase()}
               </SelectableList.ItemSubLabel>

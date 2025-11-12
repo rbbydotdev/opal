@@ -22,7 +22,6 @@ export function BuildSelector({
         <Select
           key={builds.length}
           value={build?.guid}
-          // defaultValue={build?.guid}
           onValueChange={(guid) => setBuildId(guid)}
           disabled={builds.length === 0}
         >
