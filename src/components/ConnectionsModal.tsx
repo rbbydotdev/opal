@@ -102,13 +102,10 @@ export function ConnectionsModalContent({
     },
   });
 
+  const templateType = form.watch()["templateType"];
   const selectedTemplate = useMemo(
-    () =>
-      RemoteAuthTemplates.find(
-        (connection) => `${connection.type}/${connection.source}` === form.watch()["templateType"]
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [form.watch()["templateType"], form]
+    () => RemoteAuthTemplates.find((connection) => `${connection.type}/${connection.source}` === templateType),
+    [templateType]
   );
 
   const cancelReset = () => {
@@ -162,9 +159,9 @@ export function ConnectionsModalContent({
                       form.reset({
                         ...selectedTemplate,
                         guid: editConnection.guid,
-                        name: form.getValues('name') || editConnection.name,
+                        name: form.getValues("name") || editConnection.name,
                         // Merge existing data with new template data, prioritizing existing values
-                        data: { ...selectedTemplate.data, ...form.getValues('data') }
+                        data: { ...selectedTemplate.data, ...form.getValues("data") },
                       });
                     } else {
                       form.reset(selectedTemplate);

@@ -44,7 +44,7 @@ export function SidebarFileMenuBuild({
   const [expanded, setExpand] = useSingleItemExpander("build");
   const { info } = useWorkspaceGitRepo({ currentWorkspace });
   const { openNew, cmdRef } = useBuildModalCmd();
-  const { openNew: openNewPub, cmdRef: pubCmdRef } = usePublicationModalCmd();
+  const { open: openNewPub, cmdRef: pubCmdRef } = usePublicationModalCmd();
   const { open: openConfirm } = useConfirm();
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [open, setOpen] = useState(false);
@@ -61,9 +61,8 @@ export function SidebarFileMenuBuild({
   };
   const handlePublishModal = async () => {
     if (!build) {
-      return console.warn("No build selected for publication.");
     }
-    void openNewPub({ build });
+    void openNewPub(true);
   };
 
   const handleDeleteBuild = async (buildGuid: string) => {

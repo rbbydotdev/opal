@@ -118,6 +118,10 @@ export function EditHistoryMenu({
               </Button>
             </div>
             <div className="p-4 text-center text-muted-foreground text-sm">History tracking is disabled</div>
+            <Separator />
+            <div className="p-4 text-center text-muted-foreground text-2xs italic bold muted uppercase">
+              ⚠️ beta feature ⚠️
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
