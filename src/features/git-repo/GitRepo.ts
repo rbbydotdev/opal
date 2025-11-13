@@ -932,7 +932,7 @@ export class GitRepo {
         if (isMergeConflictError(e)) {
           // console.log("Merge conflict detected:", e);
           await this.setMergeState(await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
-          console.log((await this.fs.readFile("/.git/HEAD")).toString());
+          // console.log((await this.fs.readFile("/.git/HEAD")).toString());
 
           await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
 
@@ -957,7 +957,6 @@ export class GitRepo {
   mustBeInitialized = async (defaultBranch = this.defaultMainBranch): Promise<boolean> => {
     if (this.state.fullInitialized) return true;
     if (!(await this.fullInitialized())) {
-      console.log(defaultBranch);
       await this.git.init({
         fs: this.fs,
         dir: this.dir,

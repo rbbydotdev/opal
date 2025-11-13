@@ -159,8 +159,8 @@ export class BuildDAO implements BuildRecord {
 export class NullBuildDAO extends BuildDAO {
   constructor() {
     super({
-      guid: "",
-      label: "",
+      guid: "_null_build_",
+      label: "NullBuild",
       timestamp: new Date(0),
       disk: new NullDisk(),
       workspaceId: "",
