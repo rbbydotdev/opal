@@ -1,33 +1,55 @@
 import { ClientDb } from "@/data/instance";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
 import { nanoid } from "nanoid";
+import z from "zod";
 
-type DestinationJType = ReturnType<DestinationDAO["toJSON"]>;
+export type DestinationJType<T = unknown> = ReturnType<DestinationDAO<T>["toJSON"]>;
 
-export class DestinationDAO {
+type DestinationData<T> = T;
+
+export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   guid: string;
+  label: string;
+  remoteAuth: RemoteAuthDAO | RemoteAuthJType;
+  meta: DestinationData<T>;
   static guid = () => "__dest__" + nanoid();
 
-  constructor(destination: DestinationRecord) {
+  constructor(destination: DestinationRecord<T>) {
     this.guid = destination.guid;
+    this.remoteAuth = destination.remoteAuth;
+    this.meta = destination.meta;
+    this.label = destination.label;
   }
 
-  static FromJSON(json: DestinationJType) {
-    return new DestinationDAO(json);
+  static FromJSON<T>(json: DestinationJType<T>) {
+    return new DestinationDAO<T>(json);
   }
 
   toJSON() {
     return {
+      remoteAuth: this.RemoteAuth.toJSON(),
       guid: this.guid,
+      meta: this.meta,
+      label: this.label,
     };
   }
 
-  static CreateNew() {
-    return new DestinationDAO({ guid: DestinationDAO.guid() });
+  get RemoteAuth() {
+    return this.remoteAuth instanceof RemoteAuthDAO ? this.remoteAuth : RemoteAuthDAO.FromJSON(this.remoteAuth);
   }
 
-  static New(guid: string) {
-    return new DestinationDAO({ guid });
+  static CreateNew<T>({
+    remoteAuth,
+    meta,
+    label,
+  }: {
+    remoteAuth: RemoteAuthDAO | RemoteAuthJType;
+    meta: T;
+    label: string;
+  }) {
+    return new DestinationDAO<T>({ guid: DestinationDAO.guid(), remoteAuth, meta, label });
   }
 
   static FetchFromGuid(guid: string) {
@@ -45,7 +67,10 @@ export class DestinationDAO {
 
   save() {
     return ClientDb.destinations.put({
+      remoteAuth: this.RemoteAuth.toJSON(),
       guid: this.guid,
+      meta: this.meta,
+      label: this.label,
     });
   }
 
@@ -56,3 +81,80 @@ export class DestinationDAO {
     return ClientDb.destinations.delete(guid);
   }
 }
+
+type CloudflareDestinationData = {
+  accountId: string;
+  siteId: string;
+};
+export class CloudflareDestination extends DestinationDAO<CloudflareDestinationData> {
+  override meta: CloudflareDestinationData;
+  constructor(destination: DestinationRecord<CloudflareDestinationData>) {
+    super(destination);
+    this.meta = {
+      ...destination.meta,
+    };
+  }
+}
+
+type NetlifyDestinationData = {
+  netAccountId: string;
+};
+
+export class NetlifyDestination extends DestinationDAO<{}> {
+  override meta: NetlifyDestinationData;
+  constructor(destination: DestinationRecord<NetlifyDestinationData>) {
+    super(destination);
+    this.meta = {
+      ...destination.meta,
+    };
+  }
+}
+
+export const DestinationSchemaMap = {
+  cloudflare: z
+    .object({
+      remoteAuthId: z.string(),
+      label: z.string(),
+      meta: z.object({
+        accountId: z.string(),
+        siteId: z.string(),
+      }),
+    })
+    .default({
+      remoteAuthId: "",
+      label: "",
+      meta: { accountId: "", siteId: "" },
+    }),
+  netlify: z
+    .object({
+      remoteAuthId: z.string(),
+      label: z.string(),
+      meta: z.object({
+        netAccountId: z.string(),
+      }),
+    })
+    .default({
+      remoteAuthId: "",
+      label: "",
+      meta: { netAccountId: "" },
+    }),
+  github: z
+    .object({
+      remoteAuthId: z.string(),
+      label: z.string(),
+      meta: z.object({
+        repository: z.string(),
+        branch: z.string(),
+      }),
+    })
+    .default({
+      remoteAuthId: "",
+      label: "",
+      meta: { repository: "", branch: "" },
+    }),
+};
+
+export type DestinationType = keyof typeof DestinationSchemaMap;
+
+export type DestinationSchemaTypeMap<DestinationType extends keyof typeof DestinationSchemaMap> = z.infer<(typeof DestinationSchemaMap)[DestinationType]>;
+// DestinationSchemaTypeMap

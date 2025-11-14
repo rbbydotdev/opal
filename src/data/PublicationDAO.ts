@@ -1,5 +1,4 @@
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
-import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { DestinationDAO, DestinationJType } from "@/data/DestinationDAO";
 import { nanoid } from "nanoid";
 
 export type PublishLogLine = {
@@ -9,31 +8,38 @@ export type PublishLogLine = {
 };
 
 export interface PublicationRecord {
-  remoteAuth: RemoteAuthJType | RemoteAuthDAO;
-  timestamp: Date;
-  status: "success" | "failed";
+  destination: DestinationJType | DestinationDAO;
+  timestamp: Date | null;
+  status: "idle" | "success" | "failed";
   logs: PublishLogLine[];
 }
 export type PublicationJType = ReturnType<typeof PublicationDAO.prototype.toJSON>;
 export class PublicationDAO implements PublicationRecord {
   guid: string;
-  remoteAuth: RemoteAuthDAO | RemoteAuthJType;
-  timestamp: Date;
-  status: "success" | "failed";
+  destination: DestinationJType | DestinationDAO;
+  timestamp: Date | null;
+  status: "idle" | "success" | "failed";
   logs: PublishLogLine[];
 
   static guid = () => "__publication__" + nanoid();
 
-  constructor({ remoteAuth, timestamp, status, logs }: Optional<PublicationRecord, "logs">) {
+  constructor({ destination, timestamp, status, logs }: Optional<PublicationRecord, "logs" | "timestamp">) {
     this.guid = PublicationDAO.guid();
-    this.remoteAuth = remoteAuth instanceof RemoteAuthDAO ? remoteAuth : RemoteAuthDAO.FromJSON(remoteAuth);
-    this.timestamp = timestamp;
+    this.destination = destination; // instanceof DestinationDAO ? destination : DestinationDAO.FromJSON(destination);
+    this.timestamp = timestamp ?? null;
     this.status = status;
     this.logs = logs || [];
   }
 
-  get RemoteAuth() {
-    return this.remoteAuth instanceof RemoteAuthDAO ? this.remoteAuth : RemoteAuthDAO.FromJSON(this.remoteAuth);
+  static FromDestination(destination: DestinationDAO | DestinationJType) {
+    return new PublicationDAO({
+      destination,
+      status: "idle",
+    });
+  }
+
+  get Destination() {
+    return this.destination instanceof DestinationDAO ? this.destination : DestinationDAO.FromJSON(this.destination);
   }
 
   static FromJSON(json: PublicationJType) {
@@ -42,10 +48,10 @@ export class PublicationDAO implements PublicationRecord {
 
   toJSON() {
     return {
-      remoteAuth: this.RemoteAuth.toJSON(),
+      destination: this.Destination.toJSON(),
       timestamp: this.timestamp,
       status: this.status,
-      // logs: this.logs,
+      logs: this.logs,
     };
   }
 }

@@ -5061,6 +5061,88 @@
           "shadow": "0px 4px 8px -1px hsl(0 0% 0% / 0.10)"
         }
       }
+    },
+    {
+      "name": "rose-pine-moon",
+      "type": "registry:style",
+      "title": "Rose Pine",
+      "description": "A dark theme inspired by the enchanting colors of the moonlit garden, part of the Rosé Pine collection.",
+      "cssVars": {
+        "theme": {
+          "font-sans": "Inter, sans-serif",
+          "font-mono": "JetBrains Mono, monospace",
+          "font-serif": "Source Serif 4, serif",
+          "radius": "0.5rem"
+        },
+        "dark": {
+          "background": "#232136",
+          "foreground": "#e0def4",
+          "card": "#2a273f",
+          "card-foreground": "#e0def4",
+          "popover": "#2a273f",
+          "popover-foreground": "#e0def4",
+          "primary": "#ea9a97",
+          "primary-foreground": "#232136",
+          "secondary": "#393552",
+          "secondary-foreground": "#e0def4",
+          "muted": "#393552",
+          "muted-foreground": "#908caa",
+          "accent": "#c4a7e7",
+          "accent-foreground": "#232136",
+          "destructive": "#eb6f92",
+          "destructive-foreground": "#e0def4",
+          "border": "#393552",
+          "input": "#393552",
+          "ring": "#c4a7e7",
+          "chart-1": "#9ccfd8",
+          "chart-2": "#ea9a97",
+          "chart-3": "#c4a7e7",
+          "chart-4": "#f6c177",
+          "chart-5": "#eb6f92",
+          "sidebar": "#232136",
+          "sidebar-foreground": "#908caa",
+          "sidebar-primary": "#ea9a97",
+          "sidebar-primary-foreground": "#232136",
+          "sidebar-accent": "#c4a7e7",
+          "sidebar-accent-foreground": "#232136",
+          "sidebar-border": "#393552",
+          "sidebar-ring": "#c4a7e7"
+        },
+        "light": {
+          "background": "#faf4ed",
+          "foreground": "#575279",
+          "card": "#fffaf3",
+          "card-foreground": "#575279",
+          "popover": "#fffaf3",
+          "popover-foreground": "#575279",
+          "primary": "#d7827e",
+          "primary-foreground": "#faf4ed",
+          "secondary": "#f2e9e1",
+          "secondary-foreground": "#575279",
+          "muted": "#f2e9e1",
+          "muted-foreground": "#797593",
+          "accent": "#907aa9",
+          "accent-foreground": "#faf4ed",
+          "destructive": "#b4637a",
+          "destructive-foreground": "#faf4ed",
+          "border": "#f2e9e1",
+          "input": "#f2e9e1",
+          "ring": "#907aa9",
+          "chart-1": "#56949f",
+          "chart-2": "#d7827e",
+          "chart-3": "#907aa9",
+          "chart-4": "#ea9d34",
+          "chart-5": "#b4637a",
+          "sidebar": "#faf4ed",
+          "sidebar-foreground": "#797593",
+          "sidebar-primary": "#d7827e",
+          "sidebar-primary-foreground": "#faf4ed",
+          "sidebar-accent": "#907aa9",
+          "sidebar-accent-foreground": "#faf4ed",
+          "sidebar-border": "#f2e9e1",
+          "sidebar-ring": "#907aa9"
+        }
+      }
     }
   ]
 }
