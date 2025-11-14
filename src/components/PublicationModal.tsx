@@ -324,6 +324,7 @@ function PublicationModalConnection({
           {destinationType === "cloudflare" && (
             <CloudflareDestinationForm form={form as DestinationFormType<"cloudflare">} />
           )}
+          <FRICK />
         </form>
       </Form>
     </DialogContent>

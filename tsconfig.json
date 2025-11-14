@@ -29,17 +29,7 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "**/*.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/types",
-    "next-env.d.ts",
-    ".next/types/**/*.ts",
-    "src/features/preview-pane/useWorkspacePathPreviewURL.tsx"
-  ],
+  "include": ["**/*.d.ts", "**/*.ts", "**/*.tsx", "./src/**/*.ts", "./src/**/*.tsx", "./src/types"],
   "exclude": [
     "./proxies/**/*.ts",
     "./git-protocol-proxy/**/*.ts",
@@ -49,7 +39,6 @@
     "./tools",
     ".next",
     "**/*/*.test.ts",
-    ".next/types/**/*.ts",
     "src/app/sand/**",
     "node_modules/**/*",
     "tailwind.config.ts",
