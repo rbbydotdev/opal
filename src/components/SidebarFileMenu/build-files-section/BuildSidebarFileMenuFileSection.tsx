@@ -29,14 +29,13 @@ export function BuildSidebarFileMenuFileSectionInternal({
         className={className}
         scope={scope}
         canDrag={false}
-        collapsibleClassname="max-h-80 -ml-3"
+        collapsibleClassname="max-h-80 -ml-3 gap-0"
         contentBanner={
           build?.buildPath && !isEmpty ? (
             <RootFileMenuBanner fileTree={fileTree} currentWorkspace={currentWorkspace} rootNode={build?.buildPath} />
           ) : null
         }
       >
-        dasd
         {!isEmpty ? <TinyNotice /> : null}
       </SidebarFileMenuFiles>
     </TreeExpanderProvider>

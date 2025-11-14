@@ -8,6 +8,7 @@ import { useBuildManager } from "@/components/SidebarFileMenu/build-files-sectio
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
+// import { Circle } from "lucide";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
@@ -61,8 +62,9 @@ export function SidebarFileMenuBuild({
   };
   const handlePublishModal = async () => {
     if (!build) {
+      return;
     }
-    void openNewPub(true);
+    void openNewPub({ build });
   };
 
   const handleDeleteBuild = async (buildGuid: string) => {
@@ -151,7 +153,7 @@ export function SidebarFileMenuBuild({
                   </BuildSelector>
                 )}
               </div>
-              <div className="min-w-0 flex items-center w-full">
+              <div className="min-w-0 flex items-center w-full flex-col">
                 <Button
                   disabled={!build}
                   className="w-full flex text-xs"
@@ -162,6 +164,10 @@ export function SidebarFileMenuBuild({
                   <UploadCloud className="mr-1" />
                   <span className="flex-grow">Publish Build</span>
                 </Button>
+                <SidebarGroupLabel className="text-2xs mono border-b border-dashed italic w-full flex">
+                  {/* <Circle /> */}
+                  {build?.label}
+                </SidebarGroupLabel>
               </div>
               {/* Builds List */}
               {/* <SidebarBuildsList
