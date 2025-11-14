@@ -4,16 +4,10 @@ import type {
   GithubDeviceOAuthRemoteAuthDAO,
   GithubOAuthRemoteAuthDAO,
 } from "@/data/RemoteAuth";
+import { IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { Octokit } from "@octokit/core";
 
-export interface IRemoteAuthAgent {
-  getUsername(): string;
-  getApiToken(): string;
-  onAuth(): { username: string; password: string };
-}
-export interface IRemoteGitApiAgent extends IRemoteAuthAgent, IGitProviderAgent {}
-
-export abstract class IRemoteAuthGithubAgent implements IRemoteGitApiAgent {
+export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
   private _octokit!: Octokit;
   get octokit() {
     return (
@@ -116,7 +110,7 @@ export class RemoteAuthBasicAuthAgent implements IRemoteGitApiAgent {
   }
 }
 // IGitProviderAgent
-export class RemoteAuthGithubOAuthAgent extends IRemoteAuthGithubAgent {
+export class RemoteAuthGithubOAuthAgent extends RemoteAuthGithubAgent {
   getUsername(): string {
     return "x-access-token";
   }
@@ -129,7 +123,7 @@ export class RemoteAuthGithubOAuthAgent extends IRemoteAuthGithubAgent {
   }
 }
 
-export class RemoteAuthGithubAPIAgent extends IRemoteAuthGithubAgent {
+export class RemoteAuthGithubAPIAgent extends RemoteAuthGithubAgent {
   getUsername = () => {
     return "x-access-token";
   };
@@ -140,7 +134,7 @@ export class RemoteAuthGithubAPIAgent extends IRemoteAuthGithubAgent {
     super();
   }
 }
-export class RemoteAuthGithubDeviceOAuthAgent extends IRemoteAuthGithubAgent {
+export class RemoteAuthGithubDeviceOAuthAgent extends RemoteAuthGithubAgent {
   getUsername(): string {
     return "x-access-token";
   }
@@ -151,21 +145,4 @@ export class RemoteAuthGithubDeviceOAuthAgent extends IRemoteAuthGithubAgent {
   constructor(private remoteAuth: GithubDeviceOAuthRemoteAuthDAO) {
     super();
   }
-}
-
-export interface Repo {
-  id: string | number;
-  name: string;
-  full_name: string;
-  description: string | null;
-  html_url: string;
-  updated_at: Date;
-}
-export interface IGitProviderAgent {
-  getRepos(options?: { signal?: AbortSignal }): Promise<Repo[]>;
-
-  hasUpdates(
-    etag: string | null,
-    options?: { signal?: AbortSignal }
-  ): Promise<{ updated: boolean; newEtag: string | null }>;
 }

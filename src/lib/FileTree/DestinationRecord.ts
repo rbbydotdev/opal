@@ -1,9 +1,8 @@
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
-import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 
 export class DestinationRecord<T = unknown> {
   guid!: string;
   label!: string;
-  remoteAuth!: RemoteAuthDAO | RemoteAuthJType;
+  remoteAuth!: RemoteAuthRecord;
   meta!: T;
 }
