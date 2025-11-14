@@ -1,12 +1,11 @@
-import { Disk } from "@/data/disk/Disk";
-import { DiskJType } from "@/data/DiskType";
+import { DiskRecord } from "@/data/disk/DiskRecord";
 import { AbsPath } from "@/lib/paths2";
 
 export interface BuildRecord {
   guid: string;
   label: string;
   timestamp: Date;
-  disk: Disk | DiskJType;
+  disk: DiskRecord;
   workspaceId: string;
   buildPath: AbsPath;
   fileCount: number;

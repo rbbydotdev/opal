@@ -25,6 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useDebounce } from "@/context/useDebounce";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { isFuzzyResult, useRepoSearch } from "@/data/useGithubRepoSearch";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
@@ -439,7 +440,7 @@ function GitRepoSearchContainer({
 }) {
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const agent = useMemo(() => remoteAuth?.toAgent() || null, [remoteAuth]);
+  const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
   const { isLoading, results, error } = useRepoSearch(agent, debouncedSearchValue);
   const searchResults = useMemo(() => {
     return results.map((repo) => {
@@ -612,7 +613,7 @@ function RepoCreateContainer({
   const [repoName, setRepoName] = useState(workspaceName || "");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const agent = useMemo(() => remoteAuth?.toAgent() || null, [remoteAuth]);
+  const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
 
   // Get username from auth if available
   const username = useMemo(() => {

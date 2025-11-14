@@ -1,11 +1,5 @@
 import { ClientDb } from "@/data/instance";
 import {
-  RemoteAuthBasicAuthAgent,
-  RemoteAuthGithubAPIAgent,
-  RemoteAuthGithubDeviceOAuthAgent,
-  RemoteAuthGithubOAuthAgent,
-} from "@/data/RemoteAuthAgent";
-import {
   RemoteAuthDataFor,
   RemoteAuthExplicitType,
   RemoteAuthJType,
@@ -35,21 +29,6 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
 
   static deleteByGuid(guid: string) {
     return ClientDb.remoteAuths.delete(guid);
-  }
-  toAgent() {
-    if (isGithubAPIRemoteAuthDAO(this)) {
-      return new RemoteAuthGithubAPIAgent(this);
-    }
-    if (isGithubOAuthRemoteAuthDAO(this)) {
-      return new RemoteAuthGithubOAuthAgent(this);
-    }
-    if (isGithubDeviceOAuthRemoteAuthDAO(this)) {
-      return new RemoteAuthGithubDeviceOAuthAgent(this);
-    }
-    if (isBasicAuthRemoteAuthDAO(this)) {
-      return new RemoteAuthBasicAuthAgent(this);
-    }
-    throw new Error(`No RemoteAuthGitAgent for this type: ${this.type} source: ${this.source}`);
   }
   hasRemoteApi() {
     return this.type === "api" || this.type === "oauth" || this.type === "oauth-device";

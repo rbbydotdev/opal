@@ -7,6 +7,7 @@ import { ConflictError, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
 import { NullDisk } from "@/data/NullDisk";
+import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { Remote } from "comlink";
 import * as git from "isomorphic-git";
 
@@ -202,7 +203,8 @@ export class GitPlaybook {
       throw new Error(`Remote ${remote} not found`);
     }
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
-    const onAuth = RemoteAuth?.toAgent()?.onAuth;
+
+    const onAuth = AgentFromRemoteAuth(RemoteAuth)?.onAuth;
     const result = await this.repo.fetch({
       remote: remoteObj.name,
       url: remoteObj.url,
@@ -253,8 +255,8 @@ export class GitPlaybook {
 
   async addRemoteAndFetch(remote: GitRemote) {
     await this.repo.addGitRemote(remote);
-    const RemoteAuth = remote.authId ? await RemoteAuthDAO.GetByGuid(remote.authId) : null;
-    const onAuth = RemoteAuth?.toAgent()?.onAuth;
+    const remoteAuth = remote.authId ? await RemoteAuthDAO.GetByGuid(remote.authId) : null;
+    const onAuth = AgentFromRemoteAuth(remoteAuth)?.onAuth;
     return await this.repo.fetch({
       remote: remote.name,
       url: remote.url,

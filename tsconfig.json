@@ -33,11 +33,8 @@
   "exclude": [
     "./proxies/**/*.ts",
     "./git-protocol-proxy/**/*.ts",
-    "./src/components/ui/calendar.tsx",
     "./node_modules",
-    "./src/components/ui/input-otp.tsx",
     "./tools",
-    ".next",
     "**/*/*.test.ts",
     "src/app/sand/**",
     "node_modules/**/*",

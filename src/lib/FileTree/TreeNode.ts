@@ -1,4 +1,4 @@
-import { SpecialDirs } from "@/data/SpecialDirs";
+import { SpecialDirsPaths } from "@/data/SpecialDirsPaths";
 import { getMimeType } from "@/lib/mimeType";
 import {
   AbsPath,
@@ -621,7 +621,7 @@ export class TreeDirRoot extends TreeDir {
     return new TreeDirRoot({
       ...this,
       children: Object.fromEntries(
-        Object.entries(this.children).filter(([_, child]) => child.path === SpecialDirs.Trash)
+        Object.entries(this.children).filter(([_, child]) => child.path === SpecialDirsPaths.Trash)
       ),
     });
   }

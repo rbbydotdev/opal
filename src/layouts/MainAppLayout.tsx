@@ -19,11 +19,11 @@ import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
+import { WS_BUTTON_BAR_ID } from "@/constants/layout";
 
 interface MainAppLayoutProps {
   children: React.ReactNode;
 }
-export const WS_BUTTON_BAR_ID = "workspace-button-bar-container";
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();

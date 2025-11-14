@@ -174,3 +174,30 @@ export const isOAuthAuth = (record: RemoteAuthRecord): record is RemoteAuthWithT
 export const isGithubDeviceOAuthAuth = (record: RemoteAuthRecord): record is RemoteAuthWithType<"oauth-device"> => {
   return record.type === "oauth-device";
 };
+
+// Interface definitions to break circular dependencies
+export interface IRemoteAuthAgent {
+  getUsername(): string;
+  getApiToken(): string;
+  onAuth(): { username: string; password: string };
+}
+
+export interface Repo {
+  id: string | number;
+  name: string;
+  full_name: string;
+  description: string | null;
+  html_url: string;
+  updated_at: Date;
+}
+
+export interface IGitProviderAgent {
+  getRepos(options?: { signal?: AbortSignal }): Promise<Repo[]>;
+
+  hasUpdates(
+    etag: string | null,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ updated: boolean; newEtag: string | null }>;
+}
+
+export interface IRemoteGitApiAgent extends IRemoteAuthAgent, IGitProviderAgent {}

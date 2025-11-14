@@ -12,6 +12,7 @@ import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { HideFs } from "@/data/fs/HideFs";
+import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
@@ -828,7 +829,7 @@ export class GitRepo {
       if (!RemoteAuth) {
         throw new NotFoundError("Remote auth not found");
       }
-      return { ...remote, RemoteAuth, onAuth: RemoteAuth.toAgent().onAuth };
+      return { ...remote, RemoteAuth, onAuth: AgentFromRemoteAuth(RemoteAuth)?.onAuth };
     }
     return { ...remote, RemoteAuth: null };
   };

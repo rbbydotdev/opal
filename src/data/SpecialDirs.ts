@@ -1,15 +1,9 @@
-import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, absPath } from "@/lib/paths2";
+import { SpecialDirsPaths } from "@/data/SpecialDirsPaths";
+import type { TreeNode } from "@/lib/FileTree/TreeNode";
+import { AbsPath } from "@/lib/paths2";
 
-const paths = {
-  Trash: absPath("/.trash"),
-  Storage: absPath("/.storage"),
-  Git: absPath("/.git"),
-  Thumb: absPath("/.thumb"),
-  Build: absPath("/.build"),
-};
 export const SpecialDirs = {
-  ...paths,
+  ...SpecialDirsPaths,
   allInSpecialDirsExcept(...paths: (AbsPath | TreeNode)[]): AbsPath[] {
     return this.All.filter((dir) => !paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
   },
@@ -17,7 +11,7 @@ export const SpecialDirs = {
     return this.All.filter((dir) => paths.some((path) => String(path) === dir || String(path).startsWith(dir + "/")));
   },
   get All() {
-    return Object.values(paths);
+    return Object.values(SpecialDirsPaths);
   },
 } as const;
 
