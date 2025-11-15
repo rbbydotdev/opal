@@ -119,11 +119,11 @@ export class NetlifyDestination extends DestinationDAO<{}> {
 export const DestinationSchemaMap = {
   cloudflare: z
     .object({
-      remoteAuthId: z.string(),
-      label: z.string(),
+      remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
+      label: z.string().default("Cloudflare"),
       meta: z.object({
-        accountId: z.string(),
-        siteId: z.string(),
+        accountId: z.string().min(1, "Account ID is required"),
+        siteId: z.string().min(1, "Site ID is required"),
       }),
     })
     .default(() => ({
@@ -134,10 +134,10 @@ export const DestinationSchemaMap = {
   netlify: z
     .object({
       remoteAuthId: z.string(),
-      label: z.string(),
+      label: z.string().default("Netlify"),
       meta: z.object({
         // implicit! accountId: z.string(),
-        siteName: z.string(),
+        siteName: z.string().min(1, "Site Name is required"),
       }),
     })
     .default(() => ({
@@ -149,11 +149,11 @@ export const DestinationSchemaMap = {
     })),
   github: z
     .object({
-      remoteAuthId: z.string(),
+      remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
       label: z.string(),
       meta: z.object({
-        repository: z.string(),
-        branch: z.string(),
+        repository: z.string().min(1, "Repository is required"),
+        branch: z.string().min(1, "Branch is required"),
       }),
     })
     .default(() => ({
@@ -161,6 +161,33 @@ export const DestinationSchemaMap = {
       label: "Github",
       meta: { repository: "", branch: "" },
     })),
+};
+
+// Completeness check schemas - more lenient for UI state
+export const DestinationCompletenessSchemaMap = {
+  cloudflare: z.object({
+    remoteAuthId: z.string().min(1),
+    label: z.string().min(1),
+    meta: z.object({
+      accountId: z.string().min(1),
+      siteId: z.string().min(1),
+    }),
+  }),
+  netlify: z.object({
+    remoteAuthId: z.string().min(1),
+    label: z.string().min(1),
+    meta: z.object({
+      siteName: z.string().min(1),
+    }),
+  }),
+  github: z.object({
+    remoteAuthId: z.string().min(1),
+    label: z.string().min(1),
+    meta: z.object({
+      repository: z.string().min(1),
+      branch: z.string().min(1),
+    }),
+  }),
 };
 
 export type DestinationType = keyof typeof DestinationSchemaMap;

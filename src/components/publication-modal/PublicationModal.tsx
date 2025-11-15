@@ -1,21 +1,22 @@
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { Button } from "@/components/ui/button";
-import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
-import { DestinationMetaType, DestinationSchemaMap, DestinationType } from "@/data/DestinationDAO";
+import { DestinationMetaType, DestinationSchemaMap, DestinationCompletenessSchemaMap, DestinationType } from "@/data/DestinationDAO";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { cn } from "@/lib/utils";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, CheckCircle, Loader, Plus, X } from "lucide-react";
-import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, X } from "lucide-react";
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
@@ -48,24 +49,26 @@ export function PublicationModal({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
-  // const [destination, setDestination] = useState<DestinationDAO | null>(null);
 
   const [destinationType, setDestinationType] = useState<DestinationType>("cloudflare");
   const { remoteAuths } = useRemoteAuths();
   const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
-    defaultValues: useMemo(() => DestinationSchemaMap[destinationType].parse(undefined), [destinationType]),
+    defaultValues: useMemo(() => {
+      const result = DestinationSchemaMap[destinationType].safeParse(undefined);
+      return result.success ? result.data : DestinationSchemaMap[destinationType]._def.defaultValue();
+    }, [destinationType]),
     resolver: (values, opt1, opt2) => {
       return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
         DestinationSchemaMap[destinationType]
       )(values, opt1, opt2);
     },
+    mode: "onSubmit",
   });
-  const [mode, setMode] = useState<"publish" | "destination">("publish");
+  const [mode, setMode] = useState<"new" | "edit">("new");
+  const [view, setView] = useState<"publish" | "destination">("publish");
   const handleSubmit = (data: any) => {
-    console.log("Form submitted:", data);
+    // Handle form submission
   };
-
-  // const [publication
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
@@ -81,31 +84,45 @@ export function PublicationModal({
     }),
     []
   );
+  const handleOpenChange = (open: boolean) => {
+    // if (mode === "edit"){};
+    if (view === "destination") {
+      setView("publish");
+    } else {
+      setIsOpen(open);
+    }
+  };
 
   return (
-    <DialogContent className={className}>
-      <DialogHeader>
-        <DialogTitle>Edit Publish Target</DialogTitle>
-        <DialogDescription>Update your connection details.</DialogDescription>
-      </DialogHeader>
-      {mode === "destination" ? (
-        <PublicationModalDestinationContent
-          className={className}
-          handleSubmit={handleSubmit}
-          form={form as UseFormReturn<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>}
-          remoteAuths={remoteAuths}
-          destinationType={destinationType}
-        />
-      ) : null}
-      {mode === "publish" ? (
-        <PublicationModalPublishContent
-          addDestination={() => setMode("destination")}
-          currentWorkspace={currentWorkspace}
-          onOpenChange={() => {}}
-          build={NULL_BUILD}
-        />
-      ) : null}
-    </DialogContent>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className={cn("overflow-y-auto top-[10vh]", className)}>
+        <DialogHeader>
+          <DialogTitle>Publish</DialogTitle>
+          <DialogDescription>
+            {view === "publish" ? "Deploy to selected destination" : "Create Destination to deploy to"}
+          </DialogDescription>
+        </DialogHeader>
+        {view === "destination" && (
+          <>
+            <PublicationModalDestinationContent
+              close={() => setView("publish")}
+              handleSubmit={handleSubmit}
+              remoteAuths={remoteAuths}
+              destinationType={destinationType}
+            />
+          </>
+        )}
+        {view === "publish" && (
+          <PublicationModalPublishContent
+            addDestination={() => setView("destination")}
+            currentWorkspace={currentWorkspace}
+            onOpenChange={setIsOpen}
+            build={build}
+            onClose={handleClose}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -162,28 +179,50 @@ function CloudflareDestinationForm({ form }: { form: UseFormReturn<DestinationMe
 }
 
 export function PublicationModalDestinationContent({
-  className,
+  close,
   handleSubmit,
-  form,
   remoteAuths,
   destinationType,
+  // form,
+  // children,
+  // className,
 }: {
-  className?: string;
+  close: () => void;
   handleSubmit: (data: any) => void;
-  form: UseFormReturn<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>;
   remoteAuths: ReturnType<typeof useRemoteAuths>["remoteAuths"];
   destinationType: DestinationType;
+  // form: UseFormReturn<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>;
+  // children: React.ReactNode;
+  // className?: string;
 }) {
+  const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
+  const currentCompletenessSchema = useMemo(() => DestinationCompletenessSchemaMap[destinationType], [destinationType]);
+  
+  const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
+    defaultValues: { ...currentSchema.safeParse(undefined).data, remoteAuthId: remoteAuths[0]?.guid || "" },
+    resolver: (values, opt1, opt2) => {
+      return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
+        DestinationSchemaMap[destinationType]
+      )(values, opt1, opt2);
+    },
+    mode: "onSubmit", // Only validate on submit, not on change
+  });
+  
+  // When destinationType changes, reset the form, not ideal but here we are
+  useEffect(() => {
+    form.reset({ ...currentSchema.safeParse(undefined).data, remoteAuthId: remoteAuths[0]?.guid || "" });
+  }, [currentSchema, destinationType, form, remoteAuths]);
+
+  const isComplateOkay = currentCompletenessSchema.safeParse(form.getValues()).success;
+
   return (
     <Form {...form}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          return form.handleSubmit(handleSubmit, (fieldErrors) => {
-            console.error("form validation failed", fieldErrors);
-          })();
+          return form.handleSubmit(handleSubmit)();
         }}
-        className="space-y-4 py-4"
+        className="space-y-4 py-4 pt-2"
       >
         <FormField
           control={form.control}
@@ -191,7 +230,7 @@ export function PublicationModalDestinationContent({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Connection Type</FormLabel>
-              <Select defaultValue={field.value} onValueChange={(value: typeof field.value) => {}}>
+              <Select value={field.value || ""} onValueChange={field.onChange}>
                 <SelectTrigger id="connection-type">
                   <SelectValue placeholder="Select a connection type" />
                 </SelectTrigger>
@@ -237,9 +276,17 @@ export function PublicationModalDestinationContent({
         {destinationType === "netlify" && (
           <NetlifyDestinationForm form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>} />
         )}
+
+        <div className="w-full justify-end flex gap-4">
+          <Button variant="outline" onClick={close}>
+            <ArrowLeft /> Back
+          </Button>
+          <Button type="submit" disabled={!isComplateOkay}>
+            Next
+          </Button>
+        </div>
       </form>
     </Form>
-    // </DialogContent>
   );
 }
 
@@ -248,11 +295,13 @@ export function PublicationModalPublishContent({
   onOpenChange,
   addDestination,
   build,
+  onClose,
 }: {
   currentWorkspace: Workspace;
   onOpenChange: (value: boolean) => void;
   build: BuildDAO;
   addDestination: () => void;
+  onClose?: () => void;
 }) {
   const { remoteAuths } = useRemoteAuths();
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -279,18 +328,10 @@ export function PublicationModalPublishContent({
     }
   };
 
-  const status: "ERROR" | "SUCCESS" = true ? "SUCCESS" : "ERROR";
+  const showStatus = buildCompleted || publishError;
+  const status: "ERROR" | "SUCCESS" = buildCompleted ? "SUCCESS" : "ERROR";
 
   return (
-    // <DialogContent className="max-w-2xl h-[70vh] top-[10vh] flex flex-col" onPointerDownOutside={() => {}}>
-    //   <DialogHeader>
-    //     <DialogTitle className="flex items-center gap-2">
-    //       {/* {true && <Loader size={16} className="animate-spin" />} */}
-    //       Publish Build
-    //     </DialogTitle>
-    //     <DialogDescription>Choose Publication Destination</DialogDescription>
-    //   </DialogHeader>
-
     <div className="flex flex-col gap-4 flex-1 min-h-0">
       <BuildLabel build={build} className="border bg-card p-2 rounded-lg font-mono" />
       <div className="space-y-2">
@@ -298,7 +339,7 @@ export function PublicationModalPublishContent({
           Destination
         </label>
         <div className="flex gap-2">
-          <Select value={undefined /*remoteAuthGuid*/} onValueChange={(_value: string) => {}}>
+          <Select value={remoteAuths[0]?.guid} onValueChange={(_value: string) => {}}>
             <SelectTrigger className="min-h-14">
               <SelectValue placeholder="Select Destination" />
             </SelectTrigger>
@@ -341,14 +382,14 @@ export function PublicationModalPublishContent({
           </Button>
         )}
 
-        <Button variant="outline" onClick={() => {}} className="flex items-center gap-2">
+        <Button variant="outline" onClick={onClose || (() => onOpenChange(false))} className="flex items-center gap-2">
           <X size={16} />
           Cancel
         </Button>
       </div>
 
       {/* Build Success Indicator */}
-      {status === "SUCCESS" && (
+      {showStatus && status === "SUCCESS" && (
         <div className="border-2 border-success bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-success justify-between">
             <div className="flex items-center gap-4">
@@ -363,7 +404,7 @@ export function PublicationModalPublishContent({
       )}
 
       {/* Build Error Indicator */}
-      {status === "ERROR" && (
+      {showStatus && status === "ERROR" && (
         <div className="border-2 border-destructive bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-destructive justify-between">
             <div className="flex items-center gap-4">
@@ -379,7 +420,7 @@ export function PublicationModalPublishContent({
       {/* Log Output */}
       <div className="flex-1 flex flex-col min-h-0">
         <label className="text-sm font-medium mb-2">Output</label>
-        <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30">
+        <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30 h-96">
           <div className="font-mono text-sm space-y-1">
             {logs.length === 0 ? (
               <div className="text-muted-foreground italic">Output will appear here...</div>
@@ -398,6 +439,5 @@ export function PublicationModalPublishContent({
         </ScrollArea>
       </div>
     </div>
-    // </DialogContent>
   );
 }
