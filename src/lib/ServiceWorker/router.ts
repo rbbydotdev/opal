@@ -50,13 +50,7 @@ function createRoute(method: "GET" | "POST" | "NAV" | "ANY", path: string, handl
   return { method, pattern, handler, paramNames };
 }
 
-function previewBuildHandler(context: RequestContext): Response | Promise<Response> {
-  console.log("Preview Build Handler Invoked");
-  return new Response("Preview Build Handler - Not Implemented", { status: 200 });
-}
-
 const routes: Route[] = [
-  createRoute("NAV", "/preview-build/:workspaceName/:buildId/.*", previewBuildHandler),
   createRoute("POST", "/replace-md-images", replaceMdImageHandler),
   createRoute("POST", "/replace-files", replaceFileHandler),
   createRoute("POST", "/upload-image/.*", uploadImageHandler),

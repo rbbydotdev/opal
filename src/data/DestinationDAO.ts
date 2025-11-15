@@ -1,6 +1,6 @@
 import { ClientDb } from "@/data/instance";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
-import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
 import { nanoid } from "nanoid";
 import z from "zod";
@@ -161,7 +161,7 @@ export const DestinationSchemaMap = {
       label: "Github",
       meta: { repository: "", branch: "" },
     })),
-  none: z
+  custom: z
     .object({
       remoteAuthId: z.string().default(""),
       label: z.string().default(""),
@@ -170,9 +170,11 @@ export const DestinationSchemaMap = {
     .default(() => ({
       remoteAuthId: "",
       label: "",
-      meta: {},
+      meta: {
+        endpoint: z.string().url().default("https://example.com"),
+      },
     })),
-};
+} satisfies Record<RemoteAuthSource, z.ZodTypeAny>;
 
 // Unified form schema for destination creation
 export const DestinationFormSchema = z
@@ -218,33 +220,6 @@ export const DestinationFormSchema = z
   );
 
 export type DestinationFormType = z.infer<typeof DestinationFormSchema>;
-
-// Completeness check schemas - more lenient for UI state
-export const DestinationCompletenessSchemaMap = {
-  cloudflare: z.object({
-    remoteAuthId: z.string().min(1),
-    label: z.string().min(1),
-    meta: z.object({
-      accountId: z.string().min(1),
-      siteId: z.string().min(1),
-    }),
-  }),
-  netlify: z.object({
-    remoteAuthId: z.string().min(1),
-    label: z.string().min(1),
-    meta: z.object({
-      siteName: z.string().min(1),
-    }),
-  }),
-  github: z.object({
-    remoteAuthId: z.string().min(1),
-    label: z.string().min(1),
-    meta: z.object({
-      repository: z.string().min(1),
-      branch: z.string().min(1),
-    }),
-  }),
-};
 
 export type DestinationType = keyof typeof DestinationSchemaMap;
 
