@@ -120,7 +120,7 @@ export const DestinationSchemaMap = {
   cloudflare: z
     .object({
       remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
-      label: z.string().default("Cloudflare"),
+      label: z.string().min(1, "Label is required").default("Cloudflare"),
       meta: z.object({
         accountId: z.string().min(1, "Account ID is required"),
         siteId: z.string().min(1, "Site ID is required"),
@@ -134,7 +134,7 @@ export const DestinationSchemaMap = {
   netlify: z
     .object({
       remoteAuthId: z.string(),
-      label: z.string().default("Netlify"),
+      label: z.string().min(1, "Label is required").default("Netlify"),
       meta: z.object({
         // implicit! accountId: z.string(),
         siteName: z.string().min(1, "Site Name is required"),
@@ -150,7 +150,7 @@ export const DestinationSchemaMap = {
   github: z
     .object({
       remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
-      label: z.string(),
+      label: z.string().min(1, "Label is required"),
       meta: z.object({
         repository: z.string().min(1, "Repository is required"),
         branch: z.string().min(1, "Branch is required"),
@@ -161,7 +161,63 @@ export const DestinationSchemaMap = {
       label: "Github",
       meta: { repository: "", branch: "" },
     })),
+  none: z
+    .object({
+      remoteAuthId: z.string().default(""),
+      label: z.string().default(""),
+      meta: z.object({}),
+    })
+    .default(() => ({
+      remoteAuthId: "",
+      label: "",
+      meta: {},
+    })),
 };
+
+// Unified form schema for destination creation
+export const DestinationFormSchema = z
+  .object({
+    destinationType: z.enum(["cloudflare", "netlify", "github", "none"]),
+    remoteAuthId: z.string(),
+    label: z.string(),
+    meta: z.object({
+      // Cloudflare fields
+      accountId: z.string().optional(),
+      siteId: z.string().optional(),
+      // Netlify fields
+      siteName: z.string().optional(),
+      // GitHub fields
+      repository: z.string().optional(),
+      branch: z.string().optional(),
+    }),
+  })
+  .refine(
+    (data) => {
+      // Dynamic validation based on destination type
+      if (data.destinationType === "none") return true;
+
+      // Common validations for all non-none types
+      if (!data.remoteAuthId || data.remoteAuthId.length === 0) return false;
+      if (!data.label || data.label.length === 0) return false;
+
+      // Type-specific validations
+      switch (data.destinationType) {
+        case "cloudflare":
+          return !!(data.meta.accountId && data.meta.siteId);
+        case "netlify":
+          return !!data.meta.siteName;
+        case "github":
+          return !!(data.meta.repository && data.meta.branch);
+        default:
+          return false;
+      }
+    },
+    {
+      message: "Please fill in all required fields for the selected destination type",
+    }
+  );
+
+export type DestinationFormType = z.infer<typeof DestinationFormSchema>;
 
 // Completeness check schemas - more lenient for UI state
 export const DestinationCompletenessSchemaMap = {
