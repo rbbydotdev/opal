@@ -1,5 +1,6 @@
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
+import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, Sele
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { DestinationMetaType, DestinationSchemaMap, DestinationType } from "@/data/DestinationDAO";
+import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
@@ -135,6 +137,10 @@ export function PublicationModal({
         )}
         {view === "connection" && (
           <ConnectionsModalContent
+            preferConnection={{
+              type: "api",
+              source: "netlify",
+            }}
             mode="add"
             onClose={() => {
               console.log("Connection modal closed, switching to destination view");
@@ -238,7 +244,7 @@ export function PublicationModalDestinationContent({
 }: {
   close: () => void;
   handleSubmit: (data: any) => void;
-  remoteAuths: ReturnType<typeof useRemoteAuths>["remoteAuths"];
+  remoteAuths: RemoteAuthRecord[];
   onAddConnection: () => void;
 }) {
   const defaultRemoteAuth = remoteAuths[0];
@@ -373,12 +379,12 @@ export function PublicationModalPublishContent({
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
   const [logs, setLogs] = useState<BuildLog[]>([]);
 
+  const NO_DESTINATIONS = remoteAuths.length === 0;
+
   useEffect(() => {
     if (destination === undefined && remoteAuths[0]) setDestination(remoteAuths[0]?.guid);
   }, [destination, remoteAuths]);
 
-  // console.log(remoteAuths[0]?.guid, "<<<<<<<<<<<");
-  const buildCompleted = buildRunner ? buildRunner.isSuccessful : false;
   const handleOkay = () => onOpenChange(false);
   const log = useCallback((bl: BuildLogLine) => {
     setLogs((prev) => [...prev, bl]);
@@ -397,9 +403,15 @@ export function PublicationModalPublishContent({
       setPublishError("Build was cancelled.");
     }
   };
+  const handleSetDestination = (destId: string) => {
+    setDestination(destId);
+    if (NO_DESTINATIONS) {
+      console.log(destId);
+    }
+  };
 
-  const showStatus = buildCompleted || publishError;
-  const status: "ERROR" | "SUCCESS" = buildCompleted ? "SUCCESS" : "ERROR";
+  const showStatus = publishError;
+  const status: "ERROR" | "SUCCESS" = true ? "SUCCESS" : "ERROR";
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
@@ -409,14 +421,14 @@ export function PublicationModalPublishContent({
           Destination
         </label>
         <div className="flex gap-2">
-          <Select value={destination} onValueChange={setDestination}>
-            <SelectTrigger className="min-h-14">
+          <Select value={destination} onValueChange={handleSetDestination}>
+            <SelectTrigger className="min-h-12 p-2">
               <SelectValue placeholder="Select Destination" />
             </SelectTrigger>
             <SelectContent>
               {remoteAuths.map((auth) => (
                 <SelectItem key={auth.guid} value={auth.guid}>
-                  <div className="flex flex-col items-start gap-1">
+                  <div className="flex flex-col items-start gap-0">
                     <span className="font-medium flex items-center gap-2 capitalize">
                       <RemoteAuthSourceIconComponent type={auth.type} source={auth.source} size={16} />
                       {auth.name} - <span>{auth.type}</span> / <span> {auth.source}</span>
@@ -425,9 +437,29 @@ export function PublicationModalPublishContent({
                   </div>
                 </SelectItem>
               ))}
+              {NO_DESTINATIONS && (
+                <>
+                  <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
+                    <Zap size={16} />
+                    Add a connection to publish
+                  </div>
+                  <SelectSeparator />
+                  {RemoteAuthTemplates.map((connection) => (
+                    <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
+                      <div className="flex items-center gap-2">
+                        {connection.icon}
+                        <div>
+                          <p className="text-sm font-medium">{connection.name}</p>
+                          <p className="text-xs text-muted-foreground">{connection.description}</p>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </>
+              )}
             </SelectContent>
           </Select>
-          <Button variant={"outline"} className="min-h-14" onClick={addDestination}>
+          <Button variant={"outline"} className="min-h-12" onClick={addDestination}>
             <Plus />
           </Button>
         </div>
@@ -435,7 +467,7 @@ export function PublicationModalPublishContent({
 
       {/* Build Controls */}
       <div className="flex gap-2">
-        {!buildCompleted && (
+        {!true && (
           <Button
             onClick={handleBuild}
             disabled={buildRunner.isBuilding || buildRunner.isCompleted}
