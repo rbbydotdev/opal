@@ -2,6 +2,7 @@ import { ClientDb } from "@/data/instance";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
+import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { nanoid } from "nanoid";
 import z from "zod";
 
@@ -120,7 +121,7 @@ export const DestinationSchemaMap = {
   cloudflare: z
     .object({
       remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
-      label: z.string().min(1, "Label is required").default("Cloudflare"),
+      label: z.string().min(1, "Label is required"),
       meta: z.object({
         accountId: z.string().min(1, "Account ID is required"),
         siteId: z.string().min(1, "Site ID is required"),
@@ -128,13 +129,13 @@ export const DestinationSchemaMap = {
     })
     .default(() => ({
       remoteAuthId: "",
-      label: "Cloudflare",
+      label: `My-Cloudflare-${RandomSlugWords(1)}`,
       meta: { accountId: "", siteId: "" },
     })),
   netlify: z
     .object({
       remoteAuthId: z.string(),
-      label: z.string().min(1, "Label is required").default("Netlify"),
+      label: z.string().min(1, "Label is required"),
       meta: z.object({
         // implicit! accountId: z.string(),
         siteName: z.string().min(1, "Site Name is required"),
@@ -142,7 +143,7 @@ export const DestinationSchemaMap = {
     })
     .default(() => ({
       remoteAuthId: "",
-      label: "Netlify",
+      label: `My-Netlify-${RandomSlugWords(1)}`,
       meta: {
         siteName: "",
       },
@@ -158,7 +159,7 @@ export const DestinationSchemaMap = {
     })
     .default(() => ({
       remoteAuthId: "",
-      label: "Github",
+      label: `My-Github-${RandomSlugWords(1)}`,
       meta: { repository: "", branch: "" },
     })),
   custom: z

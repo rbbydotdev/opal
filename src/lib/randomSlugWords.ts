@@ -13,10 +13,11 @@ function shuffle(array: any[]) {
   }
   return arr;
 }
-export const RandomSlugWords = (length = 3) => {
+export const RandomSlugWords = (length = 3, { capitalize } = { capitalize: true }) => {
   return new Array(length)
     .fill(0)
     .map(() => WORDS[Math.trunc(Math.random() * (WORDS.length - 1))])
+    .map((word) => (capitalize ? (word ?? "").charAt(0).toUpperCase() + (word ?? "").slice(1) : word))
     .join("-");
 };
 export const RandomSlugWords____ = (length = 3) => {

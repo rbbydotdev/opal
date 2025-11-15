@@ -105,12 +105,14 @@ function SelectableListRoot<T = any>({
 
   useEffect(() => {
     if (!sectionRef?.current) return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selected.length) setSelected([]);
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selected.length) return setSelected([]);
     };
-    sectionRef.current.addEventListener("keydown", handleEscape, { passive: true });
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [sectionRef, selected.length]);
+    sectionRef.current.addEventListener("keydown", handleKeydown, { passive: true });
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    };
+  }, [allItemIds, onClick, sectionRef, selected, selected.length]);
 
   const contextValue: SelectableListContextValue<T> = {
     items,
@@ -342,7 +344,7 @@ function SelectableListItem({ children, id }: SelectableListItemProps) {
   );
 
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem tabIndex={-1} data-selectable-id={id}>
       <div className="group flex items-center pr-1 py-0 ">
         <SidebarMenuButton className="flex-1 min-w-0 pl-1" onClick={(e) => handleSelect(sectionRef, e, id)}>
           <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
