@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, Sele
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { DestinationMetaType, DestinationSchemaMap, DestinationType } from "@/data/DestinationDAO";
-import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
+import { RemoteAuthJType, RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
@@ -59,7 +59,11 @@ export function PublicationModal({
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const { remoteAuths } = useRemoteAuths();
   const [view, setView] = usePublicationView();
+  const [backview, setBackview] = useState<PublicationViewType>("publish");
 
+  const [preferredConnection, setPreferredConnection] = useState<Pick<RemoteAuthRecord, "type" | "source"> | null>(
+    null
+  );
   const handleSubmit = (data: any) => {
     console.log("Destination form submitted with data:", data);
     // Handle form submission
@@ -79,18 +83,10 @@ export function PublicationModal({
 
   const handleEscapeKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      console.log("Escape key pressed");
-      if (view === "destination") {
-        console.log("Going back to publish view (escape key)");
-        e.preventDefault(); // Prevent modal from closing
-        setView("publish");
-      } else if (view === "connection") {
-        console.log("Going back to destination view (escape key)");
-        e.preventDefault(); // Prevent modal from closing
-        setView("destination");
-      }
+      e.preventDefault();
+      setView(backview);
     },
-    [setView, view]
+    [backview, setView]
   );
 
   useImperativeHandle(
@@ -112,7 +108,13 @@ export function PublicationModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
-        className={cn("overflow-y-auto top-[10vh]", className)}
+        className={cn(
+          {
+            "min-h-[80vh]": view === "publish",
+          },
+          "overflow-y-auto top-[10vh]",
+          className
+        )}
         onPointerDownOutside={handlePointerDownOutside}
         onEscapeKeyDown={handleEscapeKeyDown}
       >
@@ -127,24 +129,24 @@ export function PublicationModal({
             <PublicationModalDestinationContent
               close={() => {
                 console.log("Back button clicked, switching to publish view");
-                setView("publish");
+                setView(backview);
               }}
               handleSubmit={handleSubmit}
               remoteAuths={remoteAuths}
-              onAddConnection={() => setView("connection")}
+              onAddConnection={() => {
+                setView("connection");
+                setBackview("destination");
+              }}
             />
           </>
         )}
         {view === "connection" && (
           <ConnectionsModalContent
-            preferConnection={{
-              type: "api",
-              source: "netlify",
-            }}
+            preferConnection={preferredConnection}
             mode="add"
             onClose={() => {
               console.log("Connection modal closed, switching to destination view");
-              setView("destination");
+              setView(backview);
             }}
             onSuccess={() => {
               console.log("Connection added successfully, switching to destination view");
@@ -159,6 +161,12 @@ export function PublicationModal({
         )}
         {view === "publish" && (
           <PublicationModalPublishContent
+            //* for jumping to new connection
+            setPreferredConnection={setPreferredConnection}
+            setView={setView}
+            view={view}
+            setBackview={setBackview}
+            //*
             addDestination={() => setView("destination")}
             currentWorkspace={currentWorkspace}
             onOpenChange={setIsOpen}
@@ -268,7 +276,7 @@ export function PublicationModalDestinationContent({
   const isComplateOkay = currentSchema.safeParse(form.getValues()).success;
   const handleSelectType = (value: string) => {
     form.setValue("remoteAuthId", value);
-    const ra = remoteAuths.find((ra) => ra.guid === value);
+    const ra = remoteAuths.find((remoteAuth) => remoteAuth.guid === value);
     const newType = ra ? (ra.source as DestinationType) : "custom";
     setDestinationType(newType);
     form.reset({
@@ -364,11 +372,19 @@ export function PublicationModalPublishContent({
   currentWorkspace,
   onOpenChange,
   addDestination,
+  setPreferredConnection,
+  setView,
+  setBackview,
+  view,
   build,
   onClose,
 }: {
   currentWorkspace: Workspace;
   onOpenChange: (value: boolean) => void;
+  setPreferredConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
+  setView: (view: PublicationViewType) => void;
+  setBackview: (view: PublicationViewType) => void;
+  view: PublicationViewType;
   build: BuildDAO;
   addDestination: () => void;
   onClose?: () => void;
@@ -404,9 +420,12 @@ export function PublicationModalPublishContent({
     }
   };
   const handleSetDestination = (destId: string) => {
-    setDestination(destId);
-    if (NO_DESTINATIONS) {
-      console.log(destId);
+    if (!remoteAuths.find((remoteAuth) => remoteAuth.guid === destId)) {
+      setPreferredConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
+      setBackview("publish");
+      setView("connection");
+    } else {
+      setDestination(destId);
     }
   };
 

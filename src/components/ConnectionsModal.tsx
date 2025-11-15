@@ -90,7 +90,7 @@ export function ConnectionsModalContent({
 }: {
   mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
-  preferConnection?: Pick<RemoteAuthJType, "type" | "source">; //to preload a specific connection type/source
+  preferConnection?: Pick<RemoteAuthJType, "type" | "source"> | null; //to preload a specific connection type/source
   className?: string;
   onSuccess?: (rad: RemoteAuthDAO) => void;
   onClose?: () => void;
