@@ -35,6 +35,8 @@
     "./git-protocol-proxy/**/*.ts",
     "./node_modules",
     "./tools",
+    "./dist",
+    "./dist/**",
     "**/*/*.test.ts",
     "src/app/sand/**",
     "node_modules/**/*",
