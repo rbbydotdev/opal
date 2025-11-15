@@ -39,9 +39,31 @@ export function usePublicationModalCmd() {
   };
 }
 type PublicationViewType = "publish" | "destination" | "connection";
-function usePublicationView() {
-  const [view, setView] = useState<PublicationViewType>("publish");
-  return [view, setView] as const;
+
+function usePublicationViewStack() {
+  const [viewStack, setViewStack] = useState<PublicationViewType[]>(["publish"]);
+
+  const currentView = viewStack[viewStack.length - 1];
+
+  const pushView = (view: PublicationViewType) => {
+    setViewStack((prev) => [...prev, view]);
+  };
+
+  const popView = () => {
+    setViewStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+  };
+
+  const resetToDefault = () => {
+    setViewStack(["publish"]);
+  };
+
+  return {
+    currentView,
+    pushView,
+    popView,
+    resetToDefault,
+    canGoBack: viewStack.length > 1,
+  };
 }
 
 export function PublicationModal({
@@ -58,8 +80,7 @@ export function PublicationModal({
   const [isOpen, setIsOpen] = useState(false);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const { remoteAuths } = useRemoteAuths();
-  const [view, setView] = usePublicationView();
-  const [backview, setBackview] = useState<PublicationViewType>("publish");
+  const { currentView, pushView, popView, resetToDefault, canGoBack } = usePublicationViewStack();
 
   const [preferredConnection, setPreferredConnection] = useState<Pick<RemoteAuthRecord, "type" | "source"> | null>(
     null
@@ -75,18 +96,22 @@ export function PublicationModal({
   }, []);
 
   const handlePointerDownOutside = useCallback(() => {
-    if (view === "destination") {
-      setView("publish");
+    if (currentView === "destination") {
+      resetToDefault();
       setIsOpen(false);
-    } else if (view === "connection") setView("destination");
-  }, [setView, view]);
+    } else if (currentView === "connection") {
+      popView();
+    }
+  }, [currentView, popView, resetToDefault]);
 
   const handleEscapeKeyDown = useCallback(
     (e: KeyboardEvent) => {
       e.preventDefault();
-      setView(backview);
+      if (canGoBack) {
+        popView();
+      }
     },
-    [backview, setView]
+    [canGoBack, popView]
   );
 
   useImperativeHandle(
@@ -101,7 +126,7 @@ export function PublicationModal({
   );
   const handleOpenChange = (open: boolean) => {
     console.log("Modal close triggered (X button or programmatic):", open);
-    if (!open) setView("publish"); // Always reset view when closing
+    if (!open) resetToDefault(); // Always reset view when closing
     setIsOpen(open);
   };
 
@@ -110,7 +135,7 @@ export function PublicationModal({
       <DialogContent
         className={cn(
           {
-            "min-h-[80vh]": view === "publish",
+            "min-h-[80vh]": currentView === "publish",
           },
           "overflow-y-auto top-[10vh]",
           className
@@ -121,37 +146,35 @@ export function PublicationModal({
         <DialogHeader>
           <DialogTitle>Publish</DialogTitle>
           <DialogDescription>
-            <PublicationModalDescription view={view} />
+            <PublicationModalDescription view={currentView!} />
           </DialogDescription>
         </DialogHeader>
-        {view === "destination" && (
+        {currentView === "destination" && (
           <>
             <PublicationModalDestinationContent
               close={() => {
-                console.log("Back button clicked, switching to publish view");
-                setView(backview);
+                console.log("Back button clicked, popping view from stack");
+                popView();
               }}
               handleSubmit={handleSubmit}
               remoteAuths={remoteAuths}
               onAddConnection={() => {
-                setView("connection");
-                setBackview("destination");
+                pushView("connection");
               }}
             />
           </>
         )}
-        {view === "connection" && (
+        {currentView === "connection" && (
           <ConnectionsModalContent
             preferConnection={preferredConnection}
             mode="add"
             onClose={() => {
-              console.log("Connection modal closed, switching to destination view");
-              setView(backview);
+              console.log("Connection modal closed, popping view from stack");
+              popView();
             }}
             onSuccess={() => {
-              console.log("Connection added successfully, switching to destination view");
-
-              setView("destination");
+              console.log("Connection added successfully, popping to previous view");
+              popView();
             }}
           >
             <DialogHeader>
@@ -159,15 +182,14 @@ export function PublicationModal({
             </DialogHeader>
           </ConnectionsModalContent>
         )}
-        {view === "publish" && (
+        {currentView === "publish" && (
           <PublicationModalPublishContent
             //* for jumping to new connection
             setPreferredConnection={setPreferredConnection}
-            setView={setView}
-            view={view}
-            setBackview={setBackview}
+            pushView={pushView}
+            view={currentView}
             //*
-            addDestination={() => setView("destination")}
+            addDestination={() => pushView("destination")}
             currentWorkspace={currentWorkspace}
             onOpenChange={setIsOpen}
             build={build}
@@ -231,7 +253,8 @@ function CloudflareDestinationForm({ form }: { form: UseFormReturn<DestinationMe
   );
 }
 
-function PublicationModalDescription({ view }: { view: "publish" | "destination" | "connection" }) {
+function PublicationModalDescription({ view }: { view: "publish" | "destination" | "connection" | undefined }) {
+  if (!view) return null;
   switch (view) {
     case "publish":
       return "Deploy to selected destination";
@@ -373,8 +396,7 @@ export function PublicationModalPublishContent({
   onOpenChange,
   addDestination,
   setPreferredConnection,
-  setView,
-  setBackview,
+  pushView,
   view,
   build,
   onClose,
@@ -382,8 +404,7 @@ export function PublicationModalPublishContent({
   currentWorkspace: Workspace;
   onOpenChange: (value: boolean) => void;
   setPreferredConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
-  setView: (view: PublicationViewType) => void;
-  setBackview: (view: PublicationViewType) => void;
+  pushView: (view: PublicationViewType) => void;
   view: PublicationViewType;
   build: BuildDAO;
   addDestination: () => void;
@@ -422,8 +443,7 @@ export function PublicationModalPublishContent({
   const handleSetDestination = (destId: string) => {
     if (!remoteAuths.find((remoteAuth) => remoteAuth.guid === destId)) {
       setPreferredConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
-      setBackview("publish");
-      setView("connection");
+      pushView("connection");
     } else {
       setDestination(destId);
     }
