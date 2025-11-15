@@ -8,15 +8,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
-import { DestinationMetaType, DestinationSchemaMap, DestinationCompletenessSchemaMap, DestinationType } from "@/data/DestinationDAO";
+import { DestinationMetaType, DestinationSchemaMap, DestinationType } from "@/data/DestinationDAO";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, X } from "lucide-react";
-import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, X, Zap } from "lucide-react";
+import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
@@ -67,7 +67,9 @@ export function PublicationModal({
   const [mode, setMode] = useState<"new" | "edit">("new");
   const [view, setView] = useState<"publish" | "destination">("publish");
   const handleSubmit = (data: any) => {
+    console.log("Destination form submitted with data:", data);
     // Handle form submission
+    // TODO: Save destination and move to next step
   };
 
   const handleClose = useCallback(() => {
@@ -85,17 +87,34 @@ export function PublicationModal({
     []
   );
   const handleOpenChange = (open: boolean) => {
-    // if (mode === "edit"){};
-    if (view === "destination") {
-      setView("publish");
-    } else {
-      setIsOpen(open);
+    console.log("Modal close triggered (X button or programmatic):", open);
+    if (!open) {
+      setView("publish"); // Always reset view when closing
     }
+    setIsOpen(open);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className={cn("overflow-y-auto top-[10vh]", className)}>
+      <DialogContent
+        className={cn("overflow-y-auto top-[10vh]", className)}
+        onPointerDownOutside={() => {
+          console.log("Clicked outside modal");
+          if (view === "destination") {
+            console.log("Closing entire modal from destination view (outside click)");
+            setView("publish");
+            setIsOpen(false);
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          console.log("Escape key pressed");
+          if (view === "destination") {
+            console.log("Going back to publish view (escape key)");
+            e.preventDefault(); // Prevent modal from closing
+            setView("publish");
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Publish</DialogTitle>
           <DialogDescription>
@@ -105,10 +124,12 @@ export function PublicationModal({
         {view === "destination" && (
           <>
             <PublicationModalDestinationContent
-              close={() => setView("publish")}
+              close={() => {
+                console.log("Back button clicked, switching to publish view");
+                setView("publish");
+              }}
               handleSubmit={handleSubmit}
               remoteAuths={remoteAuths}
-              destinationType={destinationType}
             />
           </>
         )}
@@ -134,9 +155,9 @@ function NetlifyDestinationForm({ form }: { form: UseFormReturn<DestinationMetaT
         name="meta.siteName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Account Id</FormLabel>
+            <FormLabel>Site Name</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="My Site" />
+              <Input {...field} placeholder="my-netlify-site" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -182,43 +203,41 @@ export function PublicationModalDestinationContent({
   close,
   handleSubmit,
   remoteAuths,
-  destinationType,
-  // form,
-  // children,
-  // className,
 }: {
   close: () => void;
   handleSubmit: (data: any) => void;
   remoteAuths: ReturnType<typeof useRemoteAuths>["remoteAuths"];
-  destinationType: DestinationType;
-  // form: UseFormReturn<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>;
-  // children: React.ReactNode;
-  // className?: string;
 }) {
+  const [destinationType, setDestinationType] = useState<DestinationType>("none");
   const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
-  const currentCompletenessSchema = useMemo(() => DestinationCompletenessSchemaMap[destinationType], [destinationType]);
-  
-  const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
-    defaultValues: { ...currentSchema.safeParse(undefined).data, remoteAuthId: remoteAuths[0]?.guid || "" },
+
+  var form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
+    defaultValues: currentSchema._def.defaultValue(),
     resolver: (values, opt1, opt2) => {
       return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
         DestinationSchemaMap[destinationType]
       )(values, opt1, opt2);
     },
-    mode: "onSubmit", // Only validate on submit, not on change
+    mode: "onChange",
   });
-  
-  // When destinationType changes, reset the form, not ideal but here we are
-  useEffect(() => {
-    form.reset({ ...currentSchema.safeParse(undefined).data, remoteAuthId: remoteAuths[0]?.guid || "" });
-  }, [currentSchema, destinationType, form, remoteAuths]);
 
-  const isComplateOkay = currentCompletenessSchema.safeParse(form.getValues()).success;
+  const isComplateOkay = currentSchema.safeParse(form.getValues()).success;
+  const handleSelectType = (value: string) => {
+    form.setValue("remoteAuthId", value);
+    const ra = remoteAuths.find((ra) => ra.guid === value);
+    const newType = ra ? (ra.source as DestinationType) : "none";
+    setDestinationType(newType);
+    form.reset({
+      ...DestinationSchemaMap[newType]._def.defaultValue(),
+      remoteAuthId: value,
+    });
+  };
 
   return (
     <Form {...form}>
       <form
         onSubmit={(e) => {
+          console.log("Submitting destination form");
           e.preventDefault();
           return form.handleSubmit(handleSubmit)();
         }}
@@ -230,7 +249,7 @@ export function PublicationModalDestinationContent({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Connection Type</FormLabel>
-              <Select value={field.value || ""} onValueChange={field.onChange}>
+              <Select value={field.value || ""} onValueChange={handleSelectType}>
                 <SelectTrigger id="connection-type">
                   <SelectValue placeholder="Select a connection type" />
                 </SelectTrigger>
@@ -257,19 +276,21 @@ export function PublicationModalDestinationContent({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="label"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Destination Label</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="label" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {destinationType !== "none" && (
+          <FormField
+            control={form.control}
+            name="label"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Destination Label</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="label" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         {destinationType === "cloudflare" && (
           <CloudflareDestinationForm form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>} />
         )}
@@ -278,11 +299,12 @@ export function PublicationModalDestinationContent({
         )}
 
         <div className="w-full justify-end flex gap-4">
-          <Button variant="outline" onClick={close}>
+          <Button type="button" variant="outline" onClick={close}>
             <ArrowLeft /> Back
           </Button>
           <Button type="submit" disabled={!isComplateOkay}>
-            Next
+            <Zap />
+            Save
           </Button>
         </div>
       </form>
