@@ -208,11 +208,16 @@ export function PublicationModalDestinationContent({
   handleSubmit: (data: any) => void;
   remoteAuths: ReturnType<typeof useRemoteAuths>["remoteAuths"];
 }) {
-  const [destinationType, setDestinationType] = useState<DestinationType>("none");
+  const defaultRemoteAuth = remoteAuths[0];
+  const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
+  const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
   const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
 
   var form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
-    defaultValues: currentSchema._def.defaultValue(),
+    defaultValues: {
+      ...currentSchema._def.defaultValue(),
+      remoteAuthId: defaultRemoteAuth?.guid || "",
+    },
     resolver: (values, opt1, opt2) => {
       return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
         DestinationSchemaMap[destinationType]
@@ -225,7 +230,7 @@ export function PublicationModalDestinationContent({
   const handleSelectType = (value: string) => {
     form.setValue("remoteAuthId", value);
     const ra = remoteAuths.find((ra) => ra.guid === value);
-    const newType = ra ? (ra.source as DestinationType) : "none";
+    const newType = ra ? (ra.source as DestinationType) : "custom";
     setDestinationType(newType);
     form.reset({
       ...DestinationSchemaMap[newType]._def.defaultValue(),
@@ -276,7 +281,7 @@ export function PublicationModalDestinationContent({
           )}
         />
 
-        {destinationType !== "none" && (
+        {destinationType !== "custom" && (
           <FormField
             control={form.control}
             name="label"
