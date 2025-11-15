@@ -9,6 +9,10 @@ export type DestinationJType<T = unknown> = ReturnType<DestinationDAO<T>["toJSON
 
 type DestinationData<T> = T;
 
+export type DestinationMetaType<T extends DestinationType> = T extends DestinationType
+  ? DestinationSchemaTypeMap<T>
+  : never;
+
 export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   guid: string;
   label: string;
@@ -110,6 +114,8 @@ export class NetlifyDestination extends DestinationDAO<{}> {
   }
 }
 
+// const deploySlug = () => `deploy:${RandomSlugWords()}`;
+
 export const DestinationSchemaMap = {
   cloudflare: z
     .object({
@@ -120,24 +126,27 @@ export const DestinationSchemaMap = {
         siteId: z.string(),
       }),
     })
-    .default({
+    .default(() => ({
       remoteAuthId: "",
-      label: "",
+      label: "Cloudflare",
       meta: { accountId: "", siteId: "" },
-    }),
+    })),
   netlify: z
     .object({
       remoteAuthId: z.string(),
       label: z.string(),
       meta: z.object({
-        netAccountId: z.string(),
+        // implicit! accountId: z.string(),
+        siteName: z.string(),
       }),
     })
-    .default({
+    .default(() => ({
       remoteAuthId: "",
-      label: "",
-      meta: { netAccountId: "" },
-    }),
+      label: "Netlify",
+      meta: {
+        siteName: "",
+      },
+    })),
   github: z
     .object({
       remoteAuthId: z.string(),
@@ -147,14 +156,16 @@ export const DestinationSchemaMap = {
         branch: z.string(),
       }),
     })
-    .default({
+    .default(() => ({
       remoteAuthId: "",
-      label: "",
+      label: "Github",
       meta: { repository: "", branch: "" },
-    }),
+    })),
 };
 
 export type DestinationType = keyof typeof DestinationSchemaMap;
 
-export type DestinationSchemaTypeMap<DestinationType extends keyof typeof DestinationSchemaMap> = z.infer<(typeof DestinationSchemaMap)[DestinationType]>;
+export type DestinationSchemaTypeMap<DestinationType extends keyof typeof DestinationSchemaMap> = z.infer<
+  (typeof DestinationSchemaMap)[DestinationType]
+>;
 // DestinationSchemaTypeMap
