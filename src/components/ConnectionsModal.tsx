@@ -81,6 +81,7 @@ export function ConnectionsModal({
 export function ConnectionsModalContent({
   mode,
   editConnection,
+  preferConnection,
   onSuccess = () => {},
   onClose = () => {},
   className,
@@ -89,6 +90,7 @@ export function ConnectionsModalContent({
 }: {
   mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
+  preferConnection?: Pick<RemoteAuthJType, "type" | "source">; //to preload a specific connection type/source
   className?: string;
   onSuccess?: (rad: RemoteAuthDAO) => void;
   onClose?: () => void;
@@ -96,12 +98,14 @@ export function ConnectionsModalContent({
   children?: React.ReactNode;
 }) {
   const defaultValues = (
-    editConnection
-      ? {
-          ...editConnection,
-          templateType: typeSource(editConnection),
-        }
-      : RemoteAuthTemplates[0]!
+    preferConnection
+      ? { templateType: typeSource(preferConnection) }
+      : editConnection
+        ? {
+            ...editConnection,
+            templateType: typeSource(editConnection),
+          }
+        : RemoteAuthTemplates[0]!
   ) as RemoteAuthFormValues;
 
   const form = useForm<RemoteAuthFormValues>({
@@ -157,13 +161,14 @@ export function ConnectionsModalContent({
               <FormItem>
                 <FormLabel>Connection Type</FormLabel>
                 <Select
-                  defaultValue={field.value}
+                  value={field.value}
                   onValueChange={(value: typeof field.value) => {
                     const selectedTemplate = RemoteAuthTemplates.find((t) => typeSource(t) === value);
                     if (selectedTemplate && editConnection) {
                       // Preserve existing connection data when changing template in edit mode
                       form.reset({
                         ...selectedTemplate,
+
                         guid: editConnection.guid,
                         name: form.getValues("name") || editConnection.name,
                         // Merge existing data with new template data, prioritizing existing values
