@@ -20,7 +20,6 @@ export const useRemoteAuthSubmit = (
   };
 
   const handleSubmit = async (formValues: RemoteAuthFormValues) => {
-    console.log("handleSubmit called with values:", formValues);
     setSubmitting(true);
     try {
       if (mode === "edit" && editConnection) {

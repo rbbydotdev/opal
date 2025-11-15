@@ -65,7 +65,14 @@ export function ConnectionsModal({
           editConnection={editConnection}
           onSuccess={onSuccess}
           onClose={() => setIsOpen(false)}
-        />
+        >
+          <DialogHeader>
+            <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
+            <DialogDescription>
+              {mode === "edit" ? "Update your connection details." : "Connect to API"}
+            </DialogDescription>
+          </DialogHeader>
+        </ConnectionsModalContent>
       </DialogContent>
     </Dialog>
   );
@@ -78,6 +85,7 @@ export function ConnectionsModalContent({
   onClose = () => {},
   className,
   sources,
+  children,
 }: {
   mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
@@ -85,6 +93,7 @@ export function ConnectionsModalContent({
   onSuccess?: (rad: RemoteAuthDAO) => void;
   onClose?: () => void;
   sources?: RemoteAuthSource[];
+  children?: React.ReactNode;
 }) {
   const defaultValues = (
     editConnection
@@ -130,10 +139,7 @@ export function ConnectionsModalContent({
 
   return (
     <div className={className}>
-      <DialogHeader>
-        <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
-        <DialogDescription>{mode === "edit" ? "Update your connection details." : "Connect to API"}</DialogDescription>
-      </DialogHeader>
+      {children}
       <Form {...form}>
         <form
           onSubmit={(e) => {
@@ -308,6 +314,7 @@ function ApiKeyAuth({
                   required
                   className="flex-1"
                 />
+
                 <Button
                   type="button"
                   variant="outline"

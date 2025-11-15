@@ -1,3 +1,4 @@
+import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, X, Zap } from "lucide-react";
-import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
@@ -35,6 +36,11 @@ export function usePublicationModalCmd() {
     cmdRef,
   };
 }
+type PublicationViewType = "publish" | "destination" | "connection";
+function usePublicationView() {
+  const [view, setView] = useState<PublicationViewType>("publish");
+  return [view, setView] as const;
+}
 
 export function PublicationModal({
   currentWorkspace,
@@ -49,23 +55,9 @@ export function PublicationModal({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
-
-  const [destinationType, setDestinationType] = useState<DestinationType>("cloudflare");
   const { remoteAuths } = useRemoteAuths();
-  const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
-    defaultValues: useMemo(() => {
-      const result = DestinationSchemaMap[destinationType].safeParse(undefined);
-      return result.success ? result.data : DestinationSchemaMap[destinationType]._def.defaultValue();
-    }, [destinationType]),
-    resolver: (values, opt1, opt2) => {
-      return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
-        DestinationSchemaMap[destinationType]
-      )(values, opt1, opt2);
-    },
-    mode: "onSubmit",
-  });
-  const [mode, setMode] = useState<"new" | "edit">("new");
-  const [view, setView] = useState<"publish" | "destination">("publish");
+  const [view, setView] = usePublicationView();
+
   const handleSubmit = (data: any) => {
     console.log("Destination form submitted with data:", data);
     // Handle form submission
@@ -75,6 +67,29 @@ export function PublicationModal({
   const handleClose = useCallback(() => {
     setIsOpen(false);
   }, []);
+
+  const handlePointerDownOutside = useCallback(() => {
+    if (view === "destination") {
+      setView("publish");
+      setIsOpen(false);
+    } else if (view === "connection") setView("destination");
+  }, [setView, view]);
+
+  const handleEscapeKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      console.log("Escape key pressed");
+      if (view === "destination") {
+        console.log("Going back to publish view (escape key)");
+        e.preventDefault(); // Prevent modal from closing
+        setView("publish");
+      } else if (view === "connection") {
+        console.log("Going back to destination view (escape key)");
+        e.preventDefault(); // Prevent modal from closing
+        setView("destination");
+      }
+    },
+    [setView, view]
+  );
 
   useImperativeHandle(
     cmdRef,
@@ -88,9 +103,7 @@ export function PublicationModal({
   );
   const handleOpenChange = (open: boolean) => {
     console.log("Modal close triggered (X button or programmatic):", open);
-    if (!open) {
-      setView("publish"); // Always reset view when closing
-    }
+    if (!open) setView("publish"); // Always reset view when closing
     setIsOpen(open);
   };
 
@@ -98,27 +111,13 @@ export function PublicationModal({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
         className={cn("overflow-y-auto top-[10vh]", className)}
-        onPointerDownOutside={() => {
-          console.log("Clicked outside modal");
-          if (view === "destination") {
-            console.log("Closing entire modal from destination view (outside click)");
-            setView("publish");
-            setIsOpen(false);
-          }
-        }}
-        onEscapeKeyDown={(e) => {
-          console.log("Escape key pressed");
-          if (view === "destination") {
-            console.log("Going back to publish view (escape key)");
-            e.preventDefault(); // Prevent modal from closing
-            setView("publish");
-          }
-        }}
+        onPointerDownOutside={handlePointerDownOutside}
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         <DialogHeader>
           <DialogTitle>Publish</DialogTitle>
           <DialogDescription>
-            {view === "publish" ? "Deploy to selected destination" : "Create Destination to deploy to"}
+            <PublicationModalDescription view={view} />
           </DialogDescription>
         </DialogHeader>
         {view === "destination" && (
@@ -130,8 +129,27 @@ export function PublicationModal({
               }}
               handleSubmit={handleSubmit}
               remoteAuths={remoteAuths}
+              onAddConnection={() => setView("connection")}
             />
           </>
+        )}
+        {view === "connection" && (
+          <ConnectionsModalContent
+            mode="add"
+            onClose={() => {
+              console.log("Connection modal closed, switching to destination view");
+              setView("destination");
+            }}
+            onSuccess={() => {
+              console.log("Connection added successfully, switching to destination view");
+
+              setView("destination");
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Add connection for publish target</DialogTitle>
+            </DialogHeader>
+          </ConnectionsModalContent>
         )}
         {view === "publish" && (
           <PublicationModalPublishContent
@@ -199,14 +217,29 @@ function CloudflareDestinationForm({ form }: { form: UseFormReturn<DestinationMe
   );
 }
 
+function PublicationModalDescription({ view }: { view: "publish" | "destination" | "connection" }) {
+  switch (view) {
+    case "publish":
+      return "Deploy to selected destination";
+    case "destination":
+      return "Create Destination to deploy to";
+    case "connection":
+      return "Add or manage connections";
+    default:
+      return "Deploy to selected destination";
+  }
+}
+
 export function PublicationModalDestinationContent({
   close,
   handleSubmit,
   remoteAuths,
+  onAddConnection,
 }: {
   close: () => void;
   handleSubmit: (data: any) => void;
   remoteAuths: ReturnType<typeof useRemoteAuths>["remoteAuths"];
+  onAddConnection: () => void;
 }) {
   const defaultRemoteAuth = remoteAuths[0];
   const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
@@ -254,28 +287,32 @@ export function PublicationModalDestinationContent({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Connection Type</FormLabel>
-              <Select value={field.value || ""} onValueChange={handleSelectType}>
-                <SelectTrigger id="connection-type">
-                  <SelectValue placeholder="Select a connection type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectSeparator />
-                  {remoteAuths.map((connection) => (
-                    <SelectItem key={connection.guid} value={connection.guid}>
-                      <div className="flex items-center gap-2">
-                        <RemoteAuthSourceIconComponent source={connection.source} />
-                        <div>
-                          <p className="text-sm font-medium">{connection.name}</p>
-                          <p className="text-xs text-muted-foreground capitalize">
-                            {connection.source} {connection.type}
-                          </p>
+              <div className="flex gap-2">
+                <Select value={field.value || ""} onValueChange={handleSelectType}>
+                  <SelectTrigger id="connection-type">
+                    <SelectValue placeholder="Select a connection type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectSeparator />
+                    {remoteAuths.map((connection) => (
+                      <SelectItem key={connection.guid} value={connection.guid}>
+                        <div className="flex items-center gap-2">
+                          <RemoteAuthSourceIconComponent source={connection.source} />
+                          <div>
+                            <p className="text-sm font-medium">{connection.name}</p>
+                            <p className="text-xs text-muted-foreground capitalize">
+                              {connection.source} {connection.type}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" onClick={onAddConnection}>
+                  <Plus />
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -332,9 +369,15 @@ export function PublicationModalPublishContent({
 }) {
   const { remoteAuths } = useRemoteAuths();
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [destination, setDestination] = useState<string | undefined>();
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
   const [logs, setLogs] = useState<BuildLog[]>([]);
 
+  useEffect(() => {
+    if (destination === undefined && remoteAuths[0]) setDestination(remoteAuths[0]?.guid);
+  }, [destination, remoteAuths]);
+
+  // console.log(remoteAuths[0]?.guid, "<<<<<<<<<<<");
   const buildCompleted = buildRunner ? buildRunner.isSuccessful : false;
   const handleOkay = () => onOpenChange(false);
   const log = useCallback((bl: BuildLogLine) => {
@@ -366,7 +409,7 @@ export function PublicationModalPublishContent({
           Destination
         </label>
         <div className="flex gap-2">
-          <Select value={remoteAuths[0]?.guid} onValueChange={(_value: string) => {}}>
+          <Select value={destination} onValueChange={setDestination}>
             <SelectTrigger className="min-h-14">
               <SelectValue placeholder="Select Destination" />
             </SelectTrigger>
@@ -384,7 +427,7 @@ export function PublicationModalPublishContent({
               ))}
             </SelectContent>
           </Select>
-          <Button variant={"outline"} className="min-h-14" onClick={() => addDestination()}>
+          <Button variant={"outline"} className="min-h-14" onClick={addDestination}>
             <Plus />
           </Button>
         </div>

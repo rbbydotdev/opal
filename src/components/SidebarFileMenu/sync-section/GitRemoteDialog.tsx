@@ -216,7 +216,12 @@ export function GitRemoteDialog({
                 setShowConnModal(false);
               }}
               onClose={() => setShowConnModal(false)}
-            />
+            >
+              <DialogHeader>
+                <DialogTitle>Connect to API</DialogTitle>
+                <DialogDescription>Connect to API</DialogDescription>
+              </DialogHeader>
+            </ConnectionsModalContent>
           </div>
           <ErrorBoundary fallback={ErrorMiniPlaque}>
             <GitRemoteDialogInternal
