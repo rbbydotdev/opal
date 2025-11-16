@@ -71,7 +71,7 @@ export function PublicationModal({
   cmdRef,
   className,
 }: {
-  className: string;
+  className?: string;
   currentWorkspace: Workspace;
   cmdRef: React.ForwardedRef<{
     open: ({ build }: { build: BuildDAO }) => void;
@@ -115,8 +115,11 @@ export function PublicationModal({
       if (canGoBack) {
         popView();
       }
+      if (currentView === "publish") {
+        setIsOpen(false);
+      }
     },
-    [canGoBack, popView]
+    [canGoBack, currentView, popView]
   );
 
   useImperativeHandle(

@@ -24,12 +24,15 @@ export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
       password: this.getApiToken(),
     };
   };
-  async createRepo(repoName: string) {
+  async createRepo(repoName: string, { signal }: { signal?: AbortSignal } = {}) {
     const finalRepoName = repoName.trim();
     return this.octokit.request("POST /user/repos", {
       name: finalRepoName,
       private: true,
       auto_init: false,
+      request: {
+        signal,
+      },
     });
   }
   async getRemoteUsername(): Promise<string> {
