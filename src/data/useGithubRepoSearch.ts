@@ -1,12 +1,12 @@
-import { IGitProviderAgent, Repo } from "@/data/RemoteAuthAgent";
+import { IGitProviderAgent, Repo } from "@/data/RemoteAuthTypes";
 import fuzzysort from "fuzzysort";
 import { useEffect, useRef, useState } from "react";
 
 const EMPTY_SEARCH_RESULT: Fuzzysort.KeyResults<Repo> = Object.assign([], {
   total: 0,
 });
-export const isFuzzyResult = (result: unknown): result is Fuzzysort.KeyResult<Repo> => {
-  return (result as Fuzzysort.KeyResult<Repo>).highlight !== undefined;
+export const isFuzzyResult = <T = any>(result: unknown): result is Fuzzysort.KeyResult<T> => {
+  return (result as Fuzzysort.KeyResult<T>).highlight !== undefined;
 };
 
 export function useRepoSearch(agent: IGitProviderAgent | null, searchTerm: string) {

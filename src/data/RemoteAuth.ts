@@ -155,6 +155,15 @@ export function isGithubDeviceOAuthRemoteAuthDAO(record: RemoteAuthDAO): record 
   return record.type === "oauth-device" && record.source === "github";
 }
 
+export type NetlifyAPIRemoteAuthDAO = RemoteAuthDAO & {
+  type: "api";
+  source: "netlify";
+  data: RemoteAuthDataFor<"api">;
+};
+export function isNetlifyAPIRemoteAuthDAO(record: RemoteAuthDAO): record is NetlifyAPIRemoteAuthDAO {
+  return record.type === "api" && record.source === "netlify";
+}
+
 export type NetlifyOAuthRemoteAuthDAO = RemoteAuthDAO & {
   type: "oauth";
   source: "netlify";
@@ -175,3 +184,4 @@ export function isCloudflareAPIRemoteAuthDAO(record: RemoteAuthDAO): record is C
 
 // Union types using generics
 export type GithubRemoteAuthDAO = GithubAPIRemoteAuthDAO | GithubOAuthRemoteAuthDAO | GithubDeviceOAuthRemoteAuthDAO;
+export type NetlifyRemoteAuthDAO = NetlifyAPIRemoteAuthDAO | NetlifyOAuthRemoteAuthDAO;

@@ -201,7 +201,8 @@ export function GitRemoteDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         onEscapeKeyDown={(event) => {
-          if (event.target instanceof HTMLElement && event.target.closest(`#${REPO_URL_SEARCH_ID}`)) {
+          // if (event.target instanceof HTMLElement && event.target.closest(`#${REPO_URL_SEARCH_ID}`)) {
+          if (event.target instanceof HTMLElement && event.target.closest("[data-no-escape]")) {
             event.preventDefault();
           }
         }}
@@ -312,7 +313,7 @@ function GitRemoteDialogInternal({
             )}
           />
           <div className="flex items-end gap-2 justify-end w-full">
-            <div id={REPO_URL_SEARCH_ID} className="w-full">
+            <div data-no-escape className="w-full">
               <FormItem className="min-w-0 w-full">
                 <FormLabel>
                   {urlMode === "manual" ? (

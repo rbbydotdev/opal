@@ -45,10 +45,11 @@ export class NetlifyClient {
     return this.request<NetlifyDeploy[]>(`/sites/${siteId}/deploys`);
   }
 
-  async createSite(data: CreateSiteData): Promise<NetlifySite> {
+  async createSite(data: CreateSiteData, { signal }: { signal?: AbortSignal } = {}): Promise<NetlifySite> {
     return this.request<NetlifySite>("/sites", {
       method: "POST",
       body: JSON.stringify(data),
+      signal,
     });
   }
 

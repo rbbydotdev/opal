@@ -1,6 +1,12 @@
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
+import {
+  RemoteItemCreateInput,
+  RemoteItemSearchDropDown,
+  useRemoteNetlifySearch,
+  useRemoteNetlifySite,
+} from "@/components/RemoteConnectionItem";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,7 +16,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
-import { DestinationMetaType, DestinationSchemaMap, DestinationType } from "@/data/DestinationDAO";
+import { DestinationMetaType, DestinationSchemaMap, DestinationType, NetlifyDestination } from "@/data/DestinationDAO";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthNetlifyAgent } from "@/data/RemoteAuthAgent";
+import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
 import { RemoteAuthJType, RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
@@ -18,9 +27,9 @@ import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, UploadCloud, X, Zap } from "lucide-react";
-import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { useForm, UseFormReturn } from "react-hook-form";
+import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, Search, UploadCloud, X, Zap } from "lucide-react";
+import { ReactNode, useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { useForm, UseFormReturn, useWatch } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
 
@@ -110,14 +119,13 @@ export function PublicationModal({
   }, [currentView, popView, resetToDefault]);
 
   const handleEscapeKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      e.preventDefault();
-      if (canGoBack) {
-        popView();
+    (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLElement && event.target.closest(`[data-no-escape]`)) {
+        return event.preventDefault();
       }
-      if (currentView === "publish") {
-        setIsOpen(false);
-      }
+      event.preventDefault();
+      if (canGoBack) return popView();
+      if (currentView === "publish") return setIsOpen(false);
     },
     [canGoBack, currentView, popView]
   );
@@ -148,6 +156,11 @@ export function PublicationModal({
           "overflow-y-auto top-[10vh]",
           className
         )}
+        // onEscapeKeyDown={(event) => {
+        //   if (event.target instanceof HTMLElement && event.target.closest(`#${REPO_URL_SEARCH_ID}`)) {
+        //     event.preventDefault();
+        //   }
+        // }}
         onPointerDownOutside={handlePointerDownOutside}
         onEscapeKeyDown={handleEscapeKeyDown}
       >
@@ -166,6 +179,7 @@ export function PublicationModal({
               }}
               handleSubmit={handleSubmit}
               remoteAuths={remoteAuths}
+              defaultName={currentWorkspace.name}
               preferredDestConnection={preferredDestConnection}
               onAddConnection={() => {
                 pushView("connection");
@@ -211,24 +225,93 @@ export function PublicationModal({
   );
 }
 
-function NetlifyDestinationForm({ form }: { form: UseFormReturn<DestinationMetaType<"netlify">> }) {
-  return (
-    <>
+function NetlifyDestinationForm({
+  form,
+  remoteAuth,
+  destination,
+  defaultName,
+}: {
+  form: UseFormReturn<DestinationMetaType<"netlify">>;
+  remoteAuth: RemoteAuthDAO | null;
+  destination: NetlifyDestination | null;
+  defaultName?: string;
+}) {
+  const [mode, setMode] = useState<"search" | "input" | "create">("input");
+  const agent = useRemoteAuthAgent<RemoteAuthNetlifyAgent>(remoteAuth);
+  const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteNetlifySearch({
+    mapResult: (result) => ({
+      element: <div>{result.name}</div>,
+      name: result.name,
+      label: result.name,
+    }),
+    searchRequest: agent.searchSites,
+  });
+  const { ident, msg, request } = useRemoteNetlifySite({
+    createRequest: agent.createSite,
+    defaultName,
+  });
+  if (mode === "search") {
+    return (
+      <div>
+        <FormLabel>Site Name</FormLabel>
+        <RemoteItemSearchDropDown
+          className="mt-2"
+          isLoading={isLoading}
+          searchValue={searchValue}
+          onSearchChange={updateSearch}
+          onClose={() => setMode("input")}
+          onSelect={(item: { element: ReactNode; label: string; value: string }) => ({})}
+          error={error}
+          allItems={searchResults}
+        />
+      </div>
+    );
+  }
+  if (mode === "create") {
+    return (
+      <div>
+        <FormLabel>Site Name</FormLabel>
+        <RemoteItemCreateInput
+          className="mt-2"
+          placeholder="my-netlify-site"
+          onClose={() => {
+            setMode("input");
+          }}
+          onCreated={(res) => {
+            void destination?.update({ meta: { siteId: res.site_id } });
+          }}
+          request={request}
+          msg={msg}
+          ident={ident}
+        />
+      </div>
+    );
+  }
+  if (mode === "input") {
+    return (
       <FormField
         control={form.control}
         name="meta.siteName"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Site Name</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="my-netlify-site" />
-            </FormControl>
+            <div className="flex justify-center w-full items-center gap-2">
+              <FormControl>
+                <Input {...field} placeholder="my-netlify-site" />
+              </FormControl>
+              <Button variant="outline" title="Add Site" onClick={() => setMode("create")}>
+                <Plus />
+              </Button>
+              <Button variant="outline" title="Find Site" onClick={() => setMode("search")}>
+                <Search />
+              </Button>
+            </div>
             <FormMessage />
           </FormItem>
         )}
       />
-    </>
-  );
+    );
+  }
 }
 function CloudflareDestinationForm({ form }: { form: UseFormReturn<DestinationMetaType<"cloudflare">> }) {
   return (
@@ -280,14 +363,16 @@ function PublicationModalDescription({ view }: { view: "publish" | "destination"
 export function PublicationModalDestinationContent({
   close,
   handleSubmit,
+  defaultName,
   preferredDestConnection,
   remoteAuths,
   onAddConnection,
 }: {
   close: () => void;
   handleSubmit: (data: any) => void;
+  defaultName?: string;
   preferredDestConnection: RemoteAuthRecord | null;
-  remoteAuths: RemoteAuthRecord[];
+  remoteAuths: RemoteAuthDAO[];
   onAddConnection: () => void;
 }) {
   const defaultRemoteAuth = preferredDestConnection || remoteAuths[0];
@@ -295,7 +380,7 @@ export function PublicationModalDestinationContent({
   const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
   const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
 
-  var form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
+  const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
     defaultValues: {
       ...currentSchema._def.defaultValue(),
       remoteAuthId: defaultRemoteAuth?.guid || "",
@@ -307,6 +392,16 @@ export function PublicationModalDestinationContent({
     },
     mode: "onChange",
   });
+
+  const currentRemoteAuthId = useWatch({
+    control: form.control,
+    name: "remoteAuthId",
+  });
+  const remoteAuth = useMemo(
+    () =>
+      currentRemoteAuthId ? RemoteAuthDAO.FromJSON(remoteAuths.find((ra) => ra.guid === currentRemoteAuthId)!) : null,
+    [currentRemoteAuthId, remoteAuths]
+  );
 
   const isComplateOkay = currentSchema.safeParse(form.getValues()).success;
   const handleSelectType = (value: string) => {
@@ -386,7 +481,12 @@ export function PublicationModalDestinationContent({
           <CloudflareDestinationForm form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>} />
         )}
         {destinationType === "netlify" && (
-          <NetlifyDestinationForm form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>} />
+          <NetlifyDestinationForm
+            form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
+            defaultName={defaultName}
+            remoteAuth={remoteAuth}
+            destination={null}
+          />
         )}
 
         <div className="w-full justify-end flex gap-4">
