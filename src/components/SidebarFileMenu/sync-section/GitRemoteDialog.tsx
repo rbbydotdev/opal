@@ -26,8 +26,10 @@ import { useDebounce } from "@/context/useDebounce";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
-import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
-import { isFuzzyResult, useRepoSearch } from "@/data/useGithubRepoSearch";
+import { AgentFromRemoteAuth, useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
+import { IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
+import { useAnySearch } from "@/data/useGithubRepoSearch";
+import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/useRemoteSearch";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
@@ -450,29 +452,11 @@ function GitRepoSearchContainer({
 }) {
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
-  const { isLoading, results, error } = useRepoSearch(agent, debouncedSearchValue);
-  const searchResults = useMemo(() => {
-    return results.map((repo) => {
-      if (isFuzzyResult(repo)) {
-        return {
-          label: repo.obj.full_name,
-          value: repo.obj.html_url,
-          element: repo.highlight((m, i) => (
-            <b className="text-highlight-foreground" key={i}>
-              {m}
-            </b>
-          )),
-        };
-      } else {
-        return {
-          label: repo.full_name,
-          value: repo.html_url,
-          element: repo.full_name,
-        };
-      }
-    });
-  }, [results]);
+  const agent = useRemoteAuthAgent<IRemoteGitApiAgent>(remoteAuth);
+  const { isLoading, searchResults, error } = useRemoteGitRepoSearch({
+    agent,
+    defaultValue,
+  });
 
   return (
     <div className="w-full relative">
@@ -487,6 +471,44 @@ function GitRepoSearchContainer({
       />
     </div>
   );
+}
+
+export function useRemoteGitRepoSearch({
+  agent,
+  defaultValue = "",
+}: {
+  agent: IRemoteAuthAgentSearch<Repo> | null;
+  defaultValue?: string;
+}) {
+  const [searchValue, updateSearch] = useState(defaultValue);
+  const debouncedSearchValue = useDebounce(searchValue, 500);
+  const { loading, results, error } = useAnySearch<Repo>({
+    agent,
+    searchTerm: debouncedSearchValue,
+    searchKey: "full_name",
+  });
+  const searchResults = useMemo(() => {
+    return results.map((repo) => {
+      return {
+        label: isFuzzyResult<Repo>(repo) ? repo.obj.full_name : repo.full_name,
+        value: isFuzzyResult<Repo>(repo) ? repo.obj.html_url : repo.html_url,
+        element: isFuzzyResult<Repo>(repo)
+          ? repo.highlight((m, i) => (
+              <b className="text-highlight-foreground" key={i}>
+                {m}
+              </b>
+            ))
+          : repo.full_name,
+      };
+    });
+  }, [results]);
+  return {
+    isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
+    searchValue,
+    updateSearch,
+    searchResults,
+    error,
+  };
 }
 
 function RepoDropDown({

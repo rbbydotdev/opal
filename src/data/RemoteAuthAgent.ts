@@ -7,7 +7,8 @@ import type {
   NetlifyOAuthRemoteAuthDAO,
 } from "@/data/RemoteAuth";
 import { IRemoteAuthAgent, IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
-import { NetlifyClient } from "@/lib/netlify/NetlifyClient";
+import { IRemoteAuthAgentSearch } from "@/data/useRemoteSearch";
+import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { Octokit } from "@octokit/core";
 
 export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
@@ -42,7 +43,8 @@ export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
     const user = await this.octokit.request("GET /user");
     return user.data.login;
   }
-  async getRepos({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
+
+  async fetchAll({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
     const allRepos: Repo[] = [];
     let page = 1;
     let hasMore = true;
@@ -54,6 +56,12 @@ export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
         affiliation: "owner,collaborator",
         request: { signal },
       });
+
+      // Add defensive check for response.data
+      if (!Array.isArray(response.data)) {
+        console.error("GitHub API returned unexpected response format:", response.data);
+        throw new Error(`GitHub API returned unexpected response format. Expected array, got: ${typeof response.data}`);
+      }
 
       allRepos.push(
         ...response.data.map(({ updated_at, id, name, full_name, description, html_url }) => ({
@@ -111,10 +119,11 @@ export class RemoteAuthBasicAuthAgent implements IRemoteGitApiAgent {
       password: this.getApiToken(),
     };
   }
-  async getRepos(): Promise<Repo[]> {
-    console.warn("RemoteAuthBasicAuthAgent.getRepos() is not implemented");
+  async fetchAll(): Promise<Repo[]> {
+    console.warn("RemoteAuthBasicAuthAgent.fetchAll() is not implemented");
     return [];
   }
+
   hasUpdates(
     etag: string | null,
     options?: { signal?: AbortSignal }
@@ -161,7 +170,7 @@ export class RemoteAuthGithubDeviceOAuthAgent extends RemoteAuthGithubAgent {
   }
 }
 
-export abstract class RemoteAuthNetlifyAgent implements IRemoteAuthAgent {
+export abstract class RemoteAuthNetlifyAgent implements IRemoteAuthAgent, IRemoteAuthAgentSearch<NetlifySite> {
   private _netlifyClient!: NetlifyClient;
 
   get netlifyClient() {
@@ -173,6 +182,17 @@ export abstract class RemoteAuthNetlifyAgent implements IRemoteAuthAgent {
       username: this.getUsername(),
       password: this.getApiToken(),
     };
+  }
+
+  fetchAll(options?: { signal?: AbortSignal }): Promise<NetlifySite[]> {
+    return this.netlifyClient.getSites();
+  }
+  hasUpdates(
+    etag: string | null,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ updated: boolean; newEtag: string | null }> {
+    // Netlify API does not support ETag for sites, so we always return updated=true
+    return Promise.resolve({ updated: true, newEtag: null });
   }
 
   async getRemoteUsername(): Promise<string> {

@@ -1,3 +1,4 @@
+import { IRemoteAuthAgentSearch } from "@/data/useRemoteSearch";
 import { z } from "zod";
 
 // 1. Add the new type to the union
@@ -191,13 +192,4 @@ export interface Repo {
   updated_at: Date;
 }
 
-export interface IGitProviderAgent {
-  getRepos(options?: { signal?: AbortSignal }): Promise<Repo[]>;
-
-  hasUpdates(
-    etag: string | null,
-    options?: { signal?: AbortSignal }
-  ): Promise<{ updated: boolean; newEtag: string | null }>;
-}
-
-export interface IRemoteGitApiAgent extends IRemoteAuthAgent, IGitProviderAgent {}
+export interface IRemoteGitApiAgent extends IRemoteAuthAgent, IRemoteAuthAgentSearch<Repo> {}

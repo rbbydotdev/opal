@@ -1,8 +1,9 @@
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/context/useDebounce";
-import { Repo } from "@/data/RemoteAuthTypes";
-import { isFuzzyResult, useRepoSearch } from "@/data/useGithubRepoSearch";
+import { useAnySearch } from "@/data/useGithubRepoSearch";
+import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/useRemoteSearch";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { cn } from "@/lib/utils";
 import { Ban, Loader } from "lucide-react";
 import React, { ReactNode, useEffect, useMemo, useState } from "react";
@@ -223,27 +224,37 @@ export function RemoteItemSearchDropDown({
   );
 }
 
-export function useRemoteNetlifySearch({ defaultValue = "" }: { defaultValue?: string }) {
+export function useRemoteNetlifySearch({
+  agent,
+  defaultValue = "",
+}: {
+  agent: IRemoteAuthAgentSearch<NetlifySite> | null;
+  defaultValue?: string;
+}) {
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { isLoading, results, error } = useRepoSearch(agent, debouncedSearchValue);
+  const { loading, results, error } = useAnySearch<NetlifySite>({
+    agent,
+    searchTerm: debouncedSearchValue,
+    searchKey: "name",
+  });
   const searchResults = useMemo(() => {
-    return results.map((repo) => {
+    return results.map((result) => {
       return {
-        label: isFuzzyResult<Repo>(repo) ? repo.obj.full_name : repo.full_name,
-        value: isFuzzyResult<Repo>(repo) ? repo.obj.html_url : repo.html_url,
-        element: isFuzzyResult<Repo>(repo)
-          ? repo.highlight((m, i) => (
+        label: isFuzzyResult<NetlifySite>(result) ? result.obj.name : result.name,
+        value: isFuzzyResult<NetlifySite>(result) ? result.obj.site_id : result.site_id,
+        element: isFuzzyResult<NetlifySite>(result)
+          ? result.highlight((m, i) => (
               <b className="text-highlight-foreground" key={i}>
                 {m}
               </b>
             ))
-          : repo.full_name,
+          : result.name,
       };
     });
   }, [results]);
   return {
-    isLoading: isLoading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
+    isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
     searchValue,
     updateSearch,
     searchResults,

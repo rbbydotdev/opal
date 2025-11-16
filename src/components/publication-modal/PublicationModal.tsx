@@ -149,13 +149,9 @@ export function PublicationModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
-        className={cn(
-          {
-            "min-h-[80vh]": currentView === "publish",
-          },
-          "overflow-y-auto top-[10vh]",
-          className
-        )}
+        className={cn("overflow-y-auto top-[10vh] min-h-[50vh]", className, {
+          "min-h-[80vh]": currentView === "publish",
+        })}
         // onEscapeKeyDown={(event) => {
         //   if (event.target instanceof HTMLElement && event.target.closest(`#${REPO_URL_SEARCH_ID}`)) {
         //     event.preventDefault();
@@ -239,12 +235,7 @@ function NetlifyDestinationForm({
   const [mode, setMode] = useState<"search" | "input" | "create">("input");
   const agent = useRemoteAuthAgent<RemoteAuthNetlifyAgent>(remoteAuth);
   const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteNetlifySearch({
-    mapResult: (result) => ({
-      element: <div>{result.name}</div>,
-      name: result.name,
-      label: result.name,
-    }),
-    searchRequest: agent.searchSites,
+    agent,
   });
   const { ident, msg, request } = useRemoteNetlifySite({
     createRequest: agent.createSite,
@@ -260,7 +251,10 @@ function NetlifyDestinationForm({
           searchValue={searchValue}
           onSearchChange={updateSearch}
           onClose={() => setMode("input")}
-          onSelect={(item: { element: ReactNode; label: string; value: string }) => ({})}
+          onSelect={(item: { element: ReactNode; label: string; value: string }) => {
+            form.setValue("meta.siteName", item.value);
+            setMode("input");
+          }}
           error={error}
           allItems={searchResults}
         />
