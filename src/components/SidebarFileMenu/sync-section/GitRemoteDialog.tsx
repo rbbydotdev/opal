@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useEffectEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -25,6 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useDebounce } from "@/context/useDebounce";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
 import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { isFuzzyResult, useRepoSearch } from "@/data/useGithubRepoSearch";
 import { GitRemote } from "@/features/git-repo/GitRepo";
@@ -607,6 +608,60 @@ function RepoDropDown({
   );
 }
 
+function useGithubAccountRepo({ remoteAuth }: { remoteAuth: null | RemoteAuthDAO }) {
+  const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const username = useMemo(() => {
+    if (!agent) return "";
+    if ("login" in (remoteAuth?.data || {})) {
+      return (remoteAuth?.data as any).login;
+    }
+    return agent.getUsername() === "x-access-token" ? "" : agent.getUsername();
+  }, [agent, remoteAuth]);
+
+  const repoPrefix = username ? `${username}/` : "";
+  const handleCreateRepo = useEffectEvent(async (repoName: string, onCreate: (url: string) => void) => {
+    const finalRepoName = repoName.trim();
+    if (!agent) {
+      return console.warn("No agent available for creating repository");
+    }
+    if (!finalRepoName) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (!(agent instanceof RemoteAuthGithubAgent)) {
+        throw new Error("Unsupported Git provider for repository creation / this should not never happen lol");
+      }
+      const response = await agent.octokit.request("POST /user/repos", {
+        name: finalRepoName,
+        private: true,
+        auto_init: false,
+      });
+      setError(null);
+      return onCreate(response.data.html_url);
+    } catch (err: any) {
+      setError(err.message || "Failed to create repository");
+    } finally {
+      setIsLoading(false);
+    }
+  });
+  return {
+    agent,
+    username,
+    repoPrefix,
+    request: {
+      error,
+      isLoading,
+      reset: () => {
+        setError(null);
+        setIsLoading(true);
+      },
+      createRepo: handleCreateRepo,
+    },
+  };
+}
+
 function RepoCreateContainer({
   remoteAuth,
   workspaceName,
@@ -619,89 +674,49 @@ function RepoCreateContainer({
   onCreated: (repoUrl: string) => void;
 }) {
   const [repoName, setRepoName] = useState(workspaceName || "");
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
 
-  // Get username from auth if available
-  const username = useMemo(() => {
-    if (!agent) return "";
-    if ("login" in (remoteAuth?.data || {})) {
-      return (remoteAuth?.data as any).login;
-    }
-    return agent.getUsername() === "x-access-token" ? "" : agent.getUsername();
-  }, [agent, remoteAuth]);
-
-  const handleCreateRepo = async () => {
-    if (!agent || !repoName.trim()) return;
-
-    setIsCreating(true);
-    setError(null);
-
-    try {
-      const githubAgent = agent as any;
-      if (!githubAgent.octokit) {
-        throw new Error("GitHub API not available");
-      }
-
-      const response = await githubAgent.octokit.request("POST /user/repos", {
-        name: repoName.trim(),
-        private: true,
-        auto_init: false,
-      });
-
-      onCreated(response.data.html_url);
-    } catch (err: any) {
-      setError(err.message || "Failed to create repository");
-    } finally {
-      setIsCreating(false);
-    }
-  };
+  const { username, repoPrefix, request } = useGithubAccountRepo({ remoteAuth });
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isCreating && repoName.trim()) {
+    if (e.key === "Enter" && !request.isLoading && repoName.trim()) {
       e.preventDefault();
-      return handleCreateRepo();
+      return request.createRepo(repoName, onCreated);
     } else if (e.key === "Escape") {
       e.preventDefault();
       onClose();
     }
   };
 
-  const prefixedValue = username ? `${username}/` : "";
-  const displayValue = repoName.startsWith(prefixedValue) ? repoName : prefixedValue + repoName;
-
   return (
     <div className="w-full relative">
       <div className="w-full p-0 relative">
         <Input
           autoFocus
-          // onBlurCapture={}
-          value={displayValue}
+          value={repoName.startsWith(repoPrefix) ? repoName : repoPrefix + repoName}
           onChange={(e) => {
             const value = e.target.value;
-            if (value.startsWith(prefixedValue)) {
-              setRepoName(value.slice(prefixedValue.length));
+            if (value.startsWith(repoPrefix)) {
+              setRepoName(value.slice(repoPrefix.length));
             } else {
               setRepoName(value);
             }
           }}
           onKeyDown={handleKeyDown}
-          placeholder={`${prefixedValue}my-new-repo`}
+          placeholder={`${repoPrefix}my-new-repo`}
           className="w-full"
-          disabled={isCreating}
+          disabled={request.isLoading}
         />
 
-        {error && (
+        {request.error && (
           <div className="absolute z-20 w-full top-10 bg-sidebar border border-destructive rounded-b-lg shadow-lg">
             <div className="flex items-center px-3 py-2 text-sm text-destructive">
               <Ban className="h-4 w-4 mr-2" />
-              {error}
+              {request.error}
             </div>
           </div>
         )}
 
-        {isCreating && (
+        {request.isLoading && (
           <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
             <div className="flex items-center px-3 py-2 text-sm text-muted-foreground">
               <Loader className="animate-spin h-4 w-4 mr-2" />
@@ -710,7 +725,7 @@ function RepoCreateContainer({
           </div>
         )}
 
-        {!error && !isCreating && repoName.trim() && (
+        {!request.error && !request.isLoading && repoName.trim() && (
           <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
             <div className="px-3 py-2 text-sm text-muted-foreground">
               Press Enter to create repository "{username ? `${username}/` : ""}
