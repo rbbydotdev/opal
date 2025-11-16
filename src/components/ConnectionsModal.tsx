@@ -99,7 +99,10 @@ export function ConnectionsModalContent({
 }) {
   const defaultValues = (
     preferredNewConnection
-      ? { templateType: typeSource(preferredNewConnection) }
+      ? {
+          ...preferredNewConnection,
+          templateType: typeSource(preferredNewConnection),
+        }
       : editConnection
         ? {
             ...editConnection,
