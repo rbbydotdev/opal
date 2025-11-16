@@ -75,6 +75,7 @@ export function GitAuthSelect({
         </SelectContent>
       </Select>
       <Button
+        title="Add Authentication"
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
