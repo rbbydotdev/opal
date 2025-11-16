@@ -3,8 +3,11 @@ import type {
   GithubAPIRemoteAuthDAO,
   GithubDeviceOAuthRemoteAuthDAO,
   GithubOAuthRemoteAuthDAO,
+  NetlifyAPIRemoteAuthDAO,
+  NetlifyOAuthRemoteAuthDAO,
 } from "@/data/RemoteAuth";
-import { IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
+import { IRemoteAuthAgent, IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
+import { NetlifyClient } from "@/lib/netlify/NetlifyClient";
 import { Octokit } from "@octokit/core";
 
 export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
@@ -154,6 +157,62 @@ export class RemoteAuthGithubDeviceOAuthAgent extends RemoteAuthGithubAgent {
   }
 
   constructor(private remoteAuth: GithubDeviceOAuthRemoteAuthDAO) {
+    super();
+  }
+}
+
+export abstract class RemoteAuthNetlifyAgent implements IRemoteAuthAgent {
+  private _netlifyClient!: NetlifyClient;
+
+  get netlifyClient() {
+    return this._netlifyClient || (this._netlifyClient = new NetlifyClient(this.getApiToken()));
+  }
+
+  onAuth(): { username: string; password: string } {
+    return {
+      username: this.getUsername(),
+      password: this.getApiToken(),
+    };
+  }
+
+  async getRemoteUsername(): Promise<string> {
+    const user = await this.netlifyClient.getCurrentUser();
+    return user.full_name || user.email;
+  }
+
+  createSite = (siteName: string, { signal }: { signal?: AbortSignal } = {}) => {
+    const finalSiteName = siteName.trim();
+    return this.netlifyClient.createSite({ name: finalSiteName }, { signal });
+  };
+
+  abstract getUsername(): string;
+  abstract getApiToken(): string;
+}
+
+export class RemoteAuthNetlifyOAuthAgent extends RemoteAuthNetlifyAgent {
+  getUsername(): string {
+    return "netlify-oauth";
+  }
+
+  getApiToken(): string {
+    return this.remoteAuth.data.accessToken;
+  }
+
+  constructor(private remoteAuth: NetlifyOAuthRemoteAuthDAO) {
+    super();
+  }
+}
+
+export class RemoteAuthNetlifyAPIAgent extends RemoteAuthNetlifyAgent {
+  getUsername(): string {
+    return "netlify-api";
+  }
+
+  getApiToken(): string {
+    return this.remoteAuth.data.apiKey;
+  }
+
+  constructor(private remoteAuth: NetlifyAPIRemoteAuthDAO) {
     super();
   }
 }

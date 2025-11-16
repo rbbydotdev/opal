@@ -105,7 +105,7 @@ type NetlifyDestinationData = {
   netAccountId: string;
 };
 
-export class NetlifyDestination extends DestinationDAO<{}> {
+export class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {
   override meta: NetlifyDestinationData;
   constructor(destination: DestinationRecord<NetlifyDestinationData>) {
     super(destination);
