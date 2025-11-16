@@ -377,6 +377,7 @@ function GitRemoteDialogInternal({
               <Button
                 variant={urlMode === "search" ? "default" : "outline"}
                 onMouseDown={(e) => e.preventDefault()}
+                title="Search Repositories"
                 onClick={(e) => {
                   e.preventDefault();
                   setUrlMode(urlMode === "search" ? "manual" : "search");
@@ -385,7 +386,9 @@ function GitRemoteDialogInternal({
               >
                 <Search />
               </Button>
+
               <Button
+                title="Create Repository"
                 variant={urlMode === "create" ? "default" : "outline"}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={(e) => {
