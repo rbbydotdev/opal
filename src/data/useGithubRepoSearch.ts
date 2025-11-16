@@ -1,88 +1,76 @@
-import { IGitProviderAgent, Repo } from "@/data/RemoteAuthTypes";
-import fuzzysort from "fuzzysort";
-import { useEffect, useRef, useState } from "react";
+import { Repo } from "@/data/RemoteAuthTypes";
+import { IRemoteAuthAgentSearch, RemoteSearchFuzzyCache } from "@/data/useRemoteSearch";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 
-const EMPTY_SEARCH_RESULT: Fuzzysort.KeyResults<Repo> = Object.assign([], {
-  total: 0,
-});
-export const isFuzzyResult = <T = any>(result: unknown): result is Fuzzysort.KeyResult<T> => {
-  return (result as Fuzzysort.KeyResult<T>).highlight !== undefined;
-};
+// New hook using class-based approach with useSyncExternalStore
+export function useRepoSearch(agent: IRemoteAuthAgentSearch<Repo> | null, searchTerm: string) {
+  // Create and manage the search instance
+  const searchInstance = useMemo(() => {
+    return new RemoteSearchFuzzyCache(agent, "full_name");
+  }, [agent]);
 
-export function useRepoSearch(agent: IGitProviderAgent | null, searchTerm: string) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [results, setResults] = useState<Fuzzysort.KeyResults<Repo> | Repo[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const cache = useRef<{
-    allRepos: Repo[];
-    etag: string | null;
-    lastCheck: number;
-  }>({ allRepos: [], etag: null, lastCheck: 0 });
-
-  const requestIdRef = useRef(0);
-
+  // Update agent and search term when they change, then trigger search
   useEffect(() => {
-    if (!agent) {
-      setResults(EMPTY_SEARCH_RESULT);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
+    searchInstance.setSearchTerm(searchTerm).search();
+  }, [searchTerm, searchInstance]);
 
-    const controller = new AbortController();
-    const currentRequestId = ++requestIdRef.current;
+  // Subscribe using class methods directly
+  const loading = useSyncExternalStore(searchInstance.onLoading, searchInstance.getLoading);
+  const results = useSyncExternalStore(searchInstance.onResults, searchInstance.getResults);
+  const error = useSyncExternalStore(searchInstance.onError, searchInstance.getError);
 
-    const performSearch = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        let isStale = cache.current.allRepos.length === 0;
-
-        if (!isStale && Date.now() - cache.current.lastCheck > 2000) {
-          const { updated, newEtag } = await agent.hasUpdates(cache.current.etag, { signal: controller.signal });
-          isStale = updated;
-          cache.current.etag = newEtag;
-          cache.current.lastCheck = Date.now();
-        }
-
-        if (isStale) {
-          cache.current.allRepos = await agent.getRepos({ signal: controller.signal });
-        }
-
-        if (requestIdRef.current === currentRequestId) {
-          const searchResults = !searchTerm
-            ? cache.current.allRepos
-            : fuzzysort.go(searchTerm, cache.current.allRepos, { key: "full_name" });
-          // searchResults.map(r=>r.
-          setResults(searchResults);
-          setIsLoading(false);
-          setError(null);
-        }
-      } catch (e: any) {
-        if (e.name !== "AbortError") {
-          const message = e?.message || "Unknown error";
-          if (requestIdRef.current === currentRequestId) {
-            setError(message);
-            setResults(EMPTY_SEARCH_RESULT);
-          }
-          console.error("Failed to search repos:", e);
-        }
-      } finally {
-        if (requestIdRef.current === currentRequestId) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void performSearch();
-
+  // Clean up on unmount
+  useEffect(() => {
     return () => {
-      fuzzysort.cleanup();
-      controller.abort();
+      searchInstance.dispose();
     };
-  }, [searchTerm, agent]);
+  }, [searchInstance]);
 
-  return { results, isLoading, error, clearError: () => setError(null) };
+  return {
+    results,
+    loading,
+    error,
+    clearError: () => searchInstance.clearError(),
+    search: () => searchInstance.search(),
+  };
+}
+
+export function useAnySearch<T extends Record<string, any>>({
+  agent,
+  searchTerm,
+  searchKey,
+}: {
+  agent: IRemoteAuthAgentSearch<T> | null;
+  searchTerm: string;
+  searchKey: keyof T;
+}) {
+  // Create and manage the search instance
+  const searchInstance = useMemo(() => {
+    return new RemoteSearchFuzzyCache(agent, searchKey);
+  }, [agent, searchKey]);
+
+  // Update agent and search term when they change, then trigger search
+  useEffect(() => {
+    searchInstance.setSearchTerm(searchTerm).search();
+  }, [searchTerm, searchInstance]);
+
+  // Subscribe using class methods directly
+  const loading = useSyncExternalStore(searchInstance.onLoading, searchInstance.getLoading);
+  const results = useSyncExternalStore(searchInstance.onResults, searchInstance.getResults);
+  const error = useSyncExternalStore(searchInstance.onError, searchInstance.getError);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      searchInstance.dispose();
+    };
+  }, [searchInstance]);
+
+  return {
+    results,
+    loading,
+    error,
+    clearError: () => searchInstance.clearError(),
+    search: () => searchInstance.search(),
+  };
 }
