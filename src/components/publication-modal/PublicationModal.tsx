@@ -18,8 +18,8 @@ import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, X, Zap } from "lucide-react";
-import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, UploadCloud, X, Zap } from "lucide-react";
+import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
@@ -82,9 +82,12 @@ export function PublicationModal({
   const { remoteAuths } = useRemoteAuths();
   const { currentView, pushView, popView, resetToDefault, canGoBack } = usePublicationViewStack();
 
-  const [preferredConnection, setPreferredConnection] = useState<Pick<RemoteAuthRecord, "type" | "source"> | null>(
-    null
-  );
+  const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
+    RemoteAuthRecord,
+    "type" | "source"
+  > | null>(null);
+  const [preferredDestConnection, setPreferredDestConnection] = useState<RemoteAuthRecord | null>(null);
+
   const handleSubmit = (data: any) => {
     console.log("Destination form submitted with data:", data);
     // Handle form submission
@@ -93,6 +96,8 @@ export function PublicationModal({
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
+    setPreferredDestConnection(null);
+    setPreferredNewConnection(null);
   }, []);
 
   const handlePointerDownOutside = useCallback(() => {
@@ -146,7 +151,7 @@ export function PublicationModal({
         <DialogHeader>
           <DialogTitle>Publish</DialogTitle>
           <DialogDescription>
-            <PublicationModalDescription view={currentView!} />
+            <PublicationModalDescription view={currentView} />
           </DialogDescription>
         </DialogHeader>
         {currentView === "destination" && (
@@ -158,6 +163,7 @@ export function PublicationModal({
               }}
               handleSubmit={handleSubmit}
               remoteAuths={remoteAuths}
+              preferredDestConnection={preferredDestConnection}
               onAddConnection={() => {
                 pushView("connection");
               }}
@@ -166,7 +172,7 @@ export function PublicationModal({
         )}
         {currentView === "connection" && (
           <ConnectionsModalContent
-            preferConnection={preferredConnection}
+            preferredNewConnection={preferredNewConnection}
             mode="add"
             onClose={() => {
               console.log("Connection modal closed, popping view from stack");
@@ -185,7 +191,8 @@ export function PublicationModal({
         {currentView === "publish" && (
           <PublicationModalPublishContent
             //* for jumping to new connection
-            setPreferredConnection={setPreferredConnection}
+            setPreferredNewConnection={setPreferredNewConnection}
+            setPreferredDestConnection={setPreferredDestConnection}
             pushView={pushView}
             view={currentView}
             //*
@@ -270,15 +277,17 @@ function PublicationModalDescription({ view }: { view: "publish" | "destination"
 export function PublicationModalDestinationContent({
   close,
   handleSubmit,
+  preferredDestConnection,
   remoteAuths,
   onAddConnection,
 }: {
   close: () => void;
   handleSubmit: (data: any) => void;
+  preferredDestConnection: RemoteAuthRecord | null;
   remoteAuths: RemoteAuthRecord[];
   onAddConnection: () => void;
 }) {
-  const defaultRemoteAuth = remoteAuths[0];
+  const defaultRemoteAuth = preferredDestConnection || remoteAuths[0];
   const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
   const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
   const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
@@ -395,7 +404,8 @@ export function PublicationModalPublishContent({
   currentWorkspace,
   onOpenChange,
   addDestination,
-  setPreferredConnection,
+  setPreferredNewConnection,
+  setPreferredDestConnection,
   pushView,
   view,
   build,
@@ -403,7 +413,8 @@ export function PublicationModalPublishContent({
 }: {
   currentWorkspace: Workspace;
   onOpenChange: (value: boolean) => void;
-  setPreferredConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
+  setPreferredNewConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
+  setPreferredDestConnection: (connection: RemoteAuthRecord) => void;
   pushView: (view: PublicationViewType) => void;
   view: PublicationViewType;
   build: BuildDAO;
@@ -416,11 +427,13 @@ export function PublicationModalPublishContent({
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
   const [logs, setLogs] = useState<BuildLog[]>([]);
 
+  const destinations: { guid: string }[] = [];
+
   const NO_DESTINATIONS = remoteAuths.length === 0;
 
-  useEffect(() => {
-    if (destination === undefined && remoteAuths[0]) setDestination(remoteAuths[0]?.guid);
-  }, [destination, remoteAuths]);
+  // useEffect(() => {
+  //   if (destination === undefined && remoteAuths[0]) setDestination(remoteAuths[0]?.guid);
+  // }, [destination, remoteAuths]);
 
   const handleOkay = () => onOpenChange(false);
   const log = useCallback((bl: BuildLogLine) => {
@@ -441,11 +454,15 @@ export function PublicationModalPublishContent({
     }
   };
   const handleSetDestination = (destId: string) => {
-    if (!remoteAuths.find((remoteAuth) => remoteAuth.guid === destId)) {
-      setPreferredConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
+    const selectedRemoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === destId);
+    if (!selectedRemoteAuth) {
+      setPreferredNewConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
       pushView("connection");
-    } else {
+    } else if (destinations.find((d) => d.guid === destId)) {
       setDestination(destId);
+    } else {
+      setPreferredDestConnection(remoteAuths.find((remoteAuth) => remoteAuth.guid === destId)!);
+      pushView("destination");
     }
   };
 
@@ -465,6 +482,18 @@ export function PublicationModalPublishContent({
               <SelectValue placeholder="Select Destination" />
             </SelectTrigger>
             <SelectContent>
+              <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
+                <UploadCloud size={16} className="text-ring" />
+                My Destinations
+              </div>
+              <div className="font-mono font-bold italic flex border-dashed p-1 border border-ring justify-center text-2xs mb-2 mx-4">
+                none
+              </div>
+              <SelectSeparator />
+              <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
+                <Zap size={16} className="text-ring" />
+                Existing Connections
+              </div>
               {remoteAuths.map((auth) => (
                 <SelectItem key={auth.guid} value={auth.guid}>
                   <div className="flex flex-col items-start gap-0">
@@ -476,29 +505,29 @@ export function PublicationModalPublishContent({
                   </div>
                 </SelectItem>
               ))}
-              {NO_DESTINATIONS && (
-                <>
-                  <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
-                    <Zap size={16} />
-                    Add a connection to publish
+              <SelectSeparator />
+              <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
+                <Plus size={16} className="text-ring" />
+                Add a connection to publish
+              </div>
+              {RemoteAuthTemplates.map((connection) => (
+                <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
+                  <div className="flex items-center gap-2">
+                    {connection.icon}
+                    <div>
+                      <p className="text-sm font-medium">{connection.name}</p>
+                      <p className="text-xs text-muted-foreground">{connection.description}</p>
+                    </div>
                   </div>
-                  <SelectSeparator />
-                  {RemoteAuthTemplates.map((connection) => (
-                    <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
-                      <div className="flex items-center gap-2">
-                        {connection.icon}
-                        <div>
-                          <p className="text-sm font-medium">{connection.name}</p>
-                          <p className="text-xs text-muted-foreground">{connection.description}</p>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </>
-              )}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Button variant={"outline"} className="min-h-12" onClick={addDestination}>
+          <Button
+            variant={"outline"}
+            className="min-h-12"
+            onClick={() => pushView(NO_DESTINATIONS ? "connection" : "destination")}
+          >
             <Plus />
           </Button>
         </div>

@@ -47,8 +47,11 @@ export function useAllPlugins({
   const { contents, writeFileContents } = useFileContents({ currentWorkspace });
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
   const { filePath } = useCurrentFilepath();
+  const { isEditHistoryEnabled } = useToggleEditHistory();
 
-  const documentId = useWorkspaceDocumentId(contents, currentWorkspace.resolveFileUrl(filePath!));
+  const documentId = isEditHistoryEnabled 
+    ? useWorkspaceDocumentId(contents, currentWorkspace.resolveFileUrl(filePath!))
+    : "";
 
   const realm = useRemoteMDXEditorRealm(realmId);
   useEffect(() => {
@@ -128,6 +131,35 @@ function EditHistoryMenuWithRealm({
   realm: Realm | undefined;
 }) {
   const { isEditHistoryEnabled } = useToggleEditHistory();
+
+  if (!isEditHistoryEnabled) {
+    return <EditHistoryMenu disabled />;
+  }
+
+  return (
+    <EditHistoryMenuEnabled
+      currentWorkspace={currentWorkspace}
+      documentId={documentId}
+      contents={contents}
+      writeFileContents={writeFileContents}
+      realm={realm}
+    />
+  );
+}
+
+function EditHistoryMenuEnabled({
+  currentWorkspace,
+  documentId,
+  contents,
+  writeFileContents,
+  realm,
+}: {
+  currentWorkspace: Workspace;
+  documentId: string;
+  contents: string | null;
+  writeFileContents: (newContents: string) => void;
+  realm: Realm | undefined;
+}) {
   const historyDB = useSnapHistoryDB();
 
   const {
@@ -146,12 +178,8 @@ function EditHistoryMenuWithRealm({
     historyStorage: historyDB,
     rootMarkdown: String(contents ?? ""),
     realm,
-    enabled: isEditHistoryEnabled,
+    enabled: true,
   });
-
-  if (!isEditHistoryEnabled) {
-    return <EditHistoryMenu disabled />;
-  }
 
   return (
     <EditHistoryMenu
