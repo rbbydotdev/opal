@@ -164,30 +164,22 @@ export function SidebarFileMenuBuild({
                   <UploadCloud className="mr-1" />
                   <span className="flex-grow">Publish Build</span>
                 </Button>
-                <SidebarGroupLabel className="text-2xs mono border-b border-dashed italic w-full flex">
-                  {/* <Circle /> */}
+                {/* <SidebarGroupLabel className="text-2xs mono border-b border-dashed italic w-full flex">
                   {build?.label}
-                </SidebarGroupLabel>
+                </SidebarGroupLabel> */}
               </div>
-              {/* Builds List */}
-              {/* <SidebarBuildsList
-              workspaceId={currentWorkspace.id}
-              selectedBuildIds={selectedBuildIds}
-              onSelectionChange={setSelectedBuildIds}
-              onDelete={(buildId) => {
-                setSelectedBuildIds((prev) => prev.filter((id) => id !== buildId));
-              }}
-            /> */}
             </div>
-            <div className="ml-7 pr-4 pl-2 pt-0 flex flex-col gap-4 border-ring border-l border-dashed">
-              <div className="flex-shrink flex">
-                <FileTreeMenuCtxProvider>
-                  <TreeExpanderProvider id="BuildFiles">
-                    <FileTreeProvider>
-                      <BuildSidebarFileMenuFileSection build={build} />
-                    </FileTreeProvider>
-                  </TreeExpanderProvider>
-                </FileTreeMenuCtxProvider>
+            <div className="px-4 pt-2 pb-2 flex flex-col gap-4">
+              <div className="pl-2 pt-0 flex flex-col gap-4 border-ring border-l border-dashed">
+                <div className="flex-shrink flex">
+                  <FileTreeMenuCtxProvider>
+                    <TreeExpanderProvider id="BuildFiles">
+                      <FileTreeProvider>
+                        <BuildSidebarFileMenuFileSection build={build} />
+                      </FileTreeProvider>
+                    </TreeExpanderProvider>
+                  </FileTreeMenuCtxProvider>
+                </div>
               </div>
             </div>
           </CollapsibleContent>

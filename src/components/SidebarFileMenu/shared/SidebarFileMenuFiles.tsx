@@ -64,11 +64,11 @@ export const SidebarFileMenuFiles = ({
             open={groupExpanded}
             onOpenChange={groupSetExpand}
           >
-            <SidebarGroupLabel className="hover:bg-sidebar-accent relative pr-0 flex flex-wrap h-auto justify-between items-center">
+            <SidebarGroupLabel className="hover:bg-sidebar-accent w-full relative pr-0 flex h-auto justify-between items-center">
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton className="w-auto flex-grow">
-                  <SidebarGroupLabel className="pl-0">
-                    <div className="flex items-center">
+                <SidebarMenuButton className="#flex-shrink w-full">
+                  <SidebarGroupLabel className="pl-0 flex w-full truncate justify-start">
+                    <div className="flex items-center flex-shrink">
                       {canDrag && <GripVertical size={12} className="mr-0 cursor-grab opacity-50 w-4" />}
                       <ChevronRight
                         size={14}
@@ -78,9 +78,9 @@ export const SidebarFileMenuFiles = ({
                       />
                     </div>
 
-                    <div className="flex justify-center items-center ">
-                      <Icon className="mr-2" size={12} />
-                      {title}
+                    <div className="flex justify-start items-center flex-grow w-full truncate">
+                      <Icon className="mr-2 flex-shrink-0" size={12} />
+                      <div className="truncate">{title}</div>
                     </div>
                   </SidebarGroupLabel>
                 </SidebarMenuButton>

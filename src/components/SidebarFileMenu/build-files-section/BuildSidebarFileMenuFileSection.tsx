@@ -25,7 +25,7 @@ export function BuildSidebarFileMenuFileSectionInternal({
   return (
     <TreeExpanderProvider id="BuildFiles">
       <SidebarFileMenuFiles
-        title={"Build Files"}
+        title={build.label || "Build Files"}
         className={className}
         scope={scope}
         canDrag={false}
