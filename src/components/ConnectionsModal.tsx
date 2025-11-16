@@ -81,7 +81,7 @@ export function ConnectionsModal({
 export function ConnectionsModalContent({
   mode,
   editConnection,
-  preferConnection,
+  preferredNewConnection,
   onSuccess = () => {},
   onClose = () => {},
   className,
@@ -90,7 +90,7 @@ export function ConnectionsModalContent({
 }: {
   mode: ConnectionsModalMode;
   editConnection?: RemoteAuthJType;
-  preferConnection?: Pick<RemoteAuthJType, "type" | "source"> | null; //to preload a specific connection type/source
+  preferredNewConnection?: Pick<RemoteAuthJType, "type" | "source"> | null; //to preload a specific connection type/source
   className?: string;
   onSuccess?: (rad: RemoteAuthDAO) => void;
   onClose?: () => void;
@@ -98,8 +98,8 @@ export function ConnectionsModalContent({
   children?: React.ReactNode;
 }) {
   const defaultValues = (
-    preferConnection
-      ? { templateType: typeSource(preferConnection) }
+    preferredNewConnection
+      ? { templateType: typeSource(preferredNewConnection) }
       : editConnection
         ? {
             ...editConnection,
