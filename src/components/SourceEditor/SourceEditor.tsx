@@ -11,15 +11,28 @@ import { cn } from "@/lib/utils";
 
 export type SourceMimeType = Extract<
   OpalMimeType,
-  "text/css" | "text/plain" | "text/markdown" | "text/html" | "text/x-mustache" | "text/x-ejs"
+  | "text/css"
+  | "text/plain"
+  | "text/markdown"
+  | "text/html"
+  | "application/xml"
+  | "text/x-mustache"
+  | "text/x-ejs"
+  | "application/json"
+  | "application/javascript"
 >;
 export const isSourceMimeType = (mimeType: string): mimeType is SourceMimeType =>
-  mimeType === "text/css" ||
-  mimeType === "text/plain" ||
-  mimeType === "text/markdown" ||
-  mimeType === "text/html" ||
-  mimeType === "text/x-mustache" ||
-  mimeType === "text/x-ejs";
+  [
+    "text/css",
+    "application/json",
+    "application/javascript",
+    "text/plain",
+    "text/markdown",
+    "application/xml",
+    "text/html",
+    "text/x-mustache",
+    "text/x-ejs",
+  ].includes(mimeType);
 
 export const SourceEditor = ({
   hasConflicts,

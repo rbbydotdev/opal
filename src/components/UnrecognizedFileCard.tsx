@@ -10,7 +10,9 @@ interface UnrecognizedFileCardProps {
 export function UnrecognizedFileCard({ fileName, mimeType }: UnrecognizedFileCardProps) {
   const handleEditAnyway = () => {
     const url = new URL(window.location.href);
-    url.hash = url.hash ? `${url.hash}&editOverride=true` : `#editOverride=true`;
+    const qp = new URLSearchParams(url.hash.replace(/^#/, ""));
+    qp.set("editOverride", "true");
+    url.hash = `#${qp.toString()}`;
     window.location.href = url.toString();
   };
 
