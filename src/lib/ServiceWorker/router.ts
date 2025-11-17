@@ -66,19 +66,12 @@ const routes: Route[] = [
   createRoute("GET", "/.*.{jpg|webp|jpeg|png|svg}", imageHandler),
 ];
 
-export function hasRouteMatch(event: FetchEvent, method: Route["method"] | null = null): boolean {
+export function hasRouteMatch(event: FetchEvent, method?: Route["method"]): boolean {
   const { request } = event;
   const url = new URL(request.url);
   const requestMethod = method || request.method;
-  for (const route of routes) {
-    if (route.method !== "ANY" && route.method !== requestMethod) {
-      continue;
-    }
-
-    const match = url.pathname.match(route.pattern);
-    if (match) {
-      return true;
-    }
+  for (const route of routes.filter((route) => route.method === "ANY" || route.method === requestMethod)) {
+    if (url.pathname.match(route.pattern)) return true;
   }
   return false;
 }
