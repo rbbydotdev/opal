@@ -24,7 +24,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const url = new URL(request.url);
 
   if (!ENV.HOST_URLS.some((hostUrl) => url.origin === hostUrl)) {
-    return; //event.respondWith(defaultFetchHandler(event));
+    return;
   }
 
   const whiteListMatch = WHITELIST.some((item) => item.test(url, request));
@@ -33,8 +33,8 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   if ((request.mode === "navigate" || !request.referrer) && hasRouteMatch(event, "NAV")) {
     return event.respondWith(routeRequest(event, null, "NAV"));
   }
-  if (!request.referrer || whiteListMatch || request.mode === "navigate" || event.request.destination === "script") {
-    return; // event.respondWith(defaultFetchHandler(event));
+  if (!request.referrer || whiteListMatch || event.request.destination === "script") {
+    return;
   }
 
   try {
