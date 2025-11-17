@@ -202,7 +202,8 @@ export class FileTree {
     } catch (e) {
       if (!haltOnError && e instanceof NotFoundError) {
         console.error(e);
-        yield* await this.recurseTree(parent, depth, haltOnError);
+        // yield* await this.recurseTree(parent, depth, haltOnError);
+        // Don't recurse infinitely - just return early when a directory is not found
         return;
       }
       throw e;
