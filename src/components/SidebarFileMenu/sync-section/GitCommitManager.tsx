@@ -143,7 +143,7 @@ function CompactCommitLabel({ commitData }: { commitData: RepoCommit }) {
   const timestamp = new Date(commitData.commit.author.timestamp * 1000);
   return (
     <div className="flex items-center gap-2 truncate min-w-0" title={`${timestamp} - ${commitData.commit.message}`}>
-      <GitCommit size={12} className="flex-shrink-0" />
+      <GitCommit size={12} className="flex-shrink-0 w-4 h-4" />
       <CommitAvatar author={commitData.commit.author} />
 
       <span className="text-2xs whitespace-nowrap ">{timeAgo(timestamp)}</span>
@@ -171,7 +171,7 @@ function CommitSelect({
       <div className="w-full ">
         <Select key={value} onValueChange={(v) => onSelect(v)} value={value}>
           <SelectTrigger
-            title="select commit"
+            title="Select Commit"
             className={cn(
               className,
               "grid grid-cols-[1fr,auto] whitespace-normal truncate w-full bg-background text-xs h-8"

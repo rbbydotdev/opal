@@ -10,6 +10,8 @@ export const MimeTypes = {
   MUSTACHE: "text/x-mustache",
   HTML: "text/html",
   PLAIN: "text/plain",
+  JAVASCRIPT: "text/javascript",
+  JSON: "application/json",
 } as const;
 
 export const MimeTypeExt = {
@@ -24,6 +26,8 @@ export const MimeTypeExt = {
   "text/x-ejs": "ejs",
   "text/x-mustache": "mustache",
   "text/html": "html",
+  "text/javascript": "js",
+  "application/json": "json",
 } as const;
 
 export type OpalMimeType = (typeof MimeTypes)[keyof typeof MimeTypes];

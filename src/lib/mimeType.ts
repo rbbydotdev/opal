@@ -19,5 +19,15 @@ export const getMimeType = (path: string): OpalMimeType => {
     return MimeTypes.HTML;
   }
 
+  // Handle .js files
+  if (filePath.endsWith(".js")) {
+    return MimeTypes.JAVASCRIPT;
+  }
+
+  // Handle .json files
+  if (filePath.endsWith(".json")) {
+    return MimeTypes.JSON;
+  }
+
   return (mime.lookup(filePath) || "") as OpalMimeType;
 };
