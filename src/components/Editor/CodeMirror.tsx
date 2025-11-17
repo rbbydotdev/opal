@@ -344,26 +344,28 @@ const CodeMirrorToolbar = ({
         "pl-16": left.isCollapsed,
       })}
     >
-      {isMarkdown && !hasConflicts && !hasEditOverride && (
-        <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />
-      )}
-      {!isMarkdown && previewNode?.isMarkdownFile() && !hasEditOverride && (
-        <SourceButton
-          onClick={() =>
-            router.navigate({
-              to: currentWorkspace.resolveFileUrl(previewNode.path),
-            })
-          }
-        />
-      )}
-      {!hasEditOverride && <LivePreviewButtons />}
-      {canPrettify && !hasEditOverride && (
-        <Button variant="outline" size="sm" onClick={handlePrettify}>
-          <span className="text-xs flex justify-center items-center gap-1">
-            <Sparkles size={12} />
-            Prettify
-          </span>
-        </Button>
+      {!hasEditOverride && (
+        <>
+          {isMarkdown && !hasConflicts && <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />}
+          {!isMarkdown && previewNode?.isMarkdownFile() && (
+            <SourceButton
+              onClick={() =>
+                router.navigate({
+                  to: currentWorkspace.resolveFileUrl(previewNode.path),
+                })
+              }
+            />
+          )}
+          <LivePreviewButtons />
+          {canPrettify && (
+            <Button variant="outline" size="sm" onClick={handlePrettify}>
+              <span className="text-xs flex justify-center items-center gap-1">
+                <Sparkles size={12} />
+                Prettify
+              </span>
+            </Button>
+          )}
+        </>
       )}
       {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">

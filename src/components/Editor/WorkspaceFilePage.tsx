@@ -1,3 +1,4 @@
+import { Editor, Editors } from "@/components/Editor/Editors";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { FileError } from "@/components/FileError";
 import { isSourceMimeType, SourceEditor } from "@/components/SourceEditor/SourceEditor";
@@ -42,6 +43,28 @@ export function WorkspaceFilePage() {
     return <ImageViewer filePath={filePath} currentWorkspace={currentWorkspace} />;
   }
   return <TextEditor filePath={filePath} currentWorkspace={currentWorkspace} />;
+}
+
+function getEditor({
+  isRecognized,
+  isMarkdown,
+  isSourceView,
+  hasConflicts,
+  mimeType,
+}: {
+  isRecognized: boolean;
+  isMarkdown: boolean;
+  isSourceView: boolean;
+  hasConflicts: boolean;
+  mimeType: string;
+}) {
+  if (!isRecognized) {
+    return "unrecognized";
+  }
+  if (isMarkdown && !isSourceView && !hasConflicts && isSourceMimeType(mimeType)) {
+    return "markdown";
+  }
+  return "source";
 }
 
 function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspace; filePath: AbsPath }) {
@@ -130,25 +153,23 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
   return (
     <>
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
-      {!isRecognized ? (
-        <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
-      ) : (!isMarkdown || isSourceView || hasConflicts) && isSourceMimeType(mimeType) ? (
-        <SourceEditor
-          // extPreviewCtrl={extPreviewCtrl}
-          onChange={handleSourceContentChange}
-          hasConflicts={hasConflicts}
-          mimeType={mimeType}
-          currentWorkspace={currentWorkspace}
-          key={filePath}
-        />
-      ) : (
-        <WorkspaceMarkdownEditor
-          // extPreviewCtrl={extPreviewCtrl}
-          contents={hotContents}
-          path={filePath}
-          currentWorkspace={currentWorkspace}
-        />
-      )}
+      <Editors selected={getEditor({ isRecognized, isMarkdown, isSourceView, hasConflicts, mimeType })}>
+        <Editor id="unrecognized">
+          <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
+        </Editor>
+        <Editor id="source">
+          <SourceEditor
+            onChange={handleSourceContentChange}
+            hasConflicts={hasConflicts}
+            mimeType={mimeType}
+            currentWorkspace={currentWorkspace}
+            key={filePath}
+          />
+        </Editor>
+        <Editor id="markdown">
+          <WorkspaceMarkdownEditor contents={hotContents} path={filePath} currentWorkspace={currentWorkspace} />
+        </Editor>
+      </Editors>
     </>
   );
 }

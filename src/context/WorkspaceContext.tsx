@@ -1,4 +1,5 @@
 import { useWatchViewMode } from "@/components/Editor/view-mode/useWatchViewMode";
+import { isSourceMimeType } from "@/components/SourceEditor/SourceEditor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,15 +65,14 @@ export const DEFAULT_MIME_TYPE = "application/octet-stream"; //i think this just
 function isRecognizedFileType(mimeType: string): boolean {
   // Images, markdown, text files (including code files), HTML, CSS, EJS templates, and common web formats are recognized
   return (
-    mimeType.startsWith("image/") ||
-    mimeType.startsWith("text/") ||
-    mimeType === "application/json" ||
-    mimeType === "application/javascript" ||
-    mimeType === "application/typescript" ||
-    mimeType === "application/xml" ||
-    mimeType === "text/html" ||
-    mimeType === "text/css" ||
-    mimeType === "text/x-ejs"
+    mimeType.startsWith("image/") || mimeType.startsWith("text/") || isSourceMimeType(mimeType)
+    // mimeType === "application/json" ||
+    // mimeType === "application/javascript" ||
+    // mimeType === "application/typescript" ||
+    // mimeType === "application/xml" ||
+    // mimeType === "text/html" ||
+    // mimeType === "text/css" ||
+    // mimeType === "text/x-ejs"
   );
 }
 
