@@ -1,6 +1,5 @@
 import { TrashBanner } from "@/components/TrashBanner";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
-import { encodePath } from "@/lib/paths2";
 import { useEffect, useRef } from "react";
 
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
@@ -68,7 +67,7 @@ export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; ori
           ref={imgRef}
           className="aspect-auto object-contain rounded-md overflow-hidden"
           alt={alt}
-          src={encodePath(origSrc)}
+          src={origSrc}
           crossOrigin="anonymous"
         />
       </div>

@@ -1,8 +1,9 @@
 import { errF, isError, NotFoundError } from "@/lib/errors";
+import { SuperUrl } from "./SuperUrl";
 import { SWWStore } from "./SWWStore";
 
 export async function handleFileReplace(
-  url: URL,
+  url: SuperUrl,
   workspaceName: string,
   findReplace: [string, string][]
 ): Promise<Response> {

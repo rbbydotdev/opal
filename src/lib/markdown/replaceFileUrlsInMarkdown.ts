@@ -1,4 +1,4 @@
-import { decodePath, encodePath } from "@/lib/paths2";
+import { decodePath } from "@/lib/paths2";
 import graymatter from "gray-matter";
 import mdast from "mdast";
 import remarkDirective from "remark-directive";
@@ -27,17 +27,18 @@ export function replaceFileUrlsInMarkdown(
       const decodedFromUrl = decodePath(fromUrl);
       const decodedToUrl = decodePath(toUrl);
       let pathname = decodePath(url);
-      
+
       if (pathname.startsWith(origin) && (pathname.startsWith("http://") || pathname.startsWith("https://"))) {
         try {
           const urlObj = new URL(pathname);
           pathname = urlObj.pathname;
         } catch (_e) {}
       }
-      
+
       if (pathname === decodedFromUrl) {
         changed = true;
-        return encodePath(decodedToUrl);
+        // encode ? return encodePath(decodedToUrl);
+        return decodedToUrl;
       }
     }
     return url;

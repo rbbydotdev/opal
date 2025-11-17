@@ -20,7 +20,6 @@ import {
   basename,
   decodePath,
   dirname,
-  encodePath,
   isImage,
   joinPath,
   RelPath,
@@ -223,10 +222,10 @@ export class Workspace {
   }
 
   // Deprecated: Use parseWorkspacePath instead
-  static parseWorkspacePathLegacy(pathOrUrl: string) {
-    const result = Workspace.parseWorkspacePath(pathOrUrl);
-    return { workspaceName: result.workspaceName, filePath: result.filePath };
-  }
+  // static parseWorkspacePathLegacy(pathOrUrl: string) {
+  //   const result = Workspace.parseWorkspacePath(pathOrUrl);
+  //   return { workspaceName: result.workspaceName, filePath: result.filePath };
+  // }
 
   static async CreateNew(
     name: string,
@@ -300,7 +299,7 @@ export class Workspace {
           .catch((e) => {
             console.error(e);
           }),
-        this.imageCache.getCache().then((c) => c.delete(String(encodePath(imagePath)))),
+        this.imageCache.getCache().then((c) => c.delete(String(imagePath))),
       ])
     );
     return this.disk.removeMultipleFiles(filePaths.map((path) => absPath(path)));
@@ -313,7 +312,7 @@ export class Workspace {
           .catch((e) => {
             console.error(e);
           }),
-        this.imageCache.getCache().then((c) => c.delete(encodePath(filePath))),
+        this.imageCache.getCache().then((c) => c.delete(filePath)),
       ]);
     }
     return this.disk.removeFile(filePath);
@@ -322,10 +321,10 @@ export class Workspace {
   private async adjustThumbAndCachePath(oldNode: TreeNode, newPath: AbsPath) {
     if (isImage(oldNode.path)) {
       await this.imageCache.getCache().then(async (c) => {
-        const res = await c.match(encodePath(oldNode.path));
+        const res = await c.match(oldNode.path);
         if (res) {
-          await c.delete(encodePath(oldNode.path));
-          await c.put(encodePath(newPath), res);
+          await c.delete(oldNode.path);
+          await c.put(newPath, res);
         }
       });
       const oldThumb = this.NewThumb(oldNode.path);
@@ -701,7 +700,7 @@ export class Workspace {
     return this.href;
   }
   resolveFileUrl = (filePath: AbsPath) => {
-    return this.href + encodePath(filePath);
+    return this.href + filePath;
   };
 
   async tryFirstFileUrl() {

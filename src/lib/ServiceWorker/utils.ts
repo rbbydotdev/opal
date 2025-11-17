@@ -1,6 +1,7 @@
 declare const self: ServiceWorkerGlobalScope;
 import { RemoteLogger } from "@/lib/RemoteLogger";
 // import { RemoteLogger } from "@/lib/RemoteLogger";
+import { decodePath } from "@/lib/paths2";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
 
 // --- Constants ---
@@ -36,8 +37,10 @@ class WhiteListItem {
   }
 
   test(url: URL, request: Request): boolean {
+    const decodedPathname = decodePath(url.pathname);
+    
     // URL must match if specified
-    if (this.urlRegex && !this.urlRegex.test(url.pathname)) {
+    if (this.urlRegex && !this.urlRegex.test(decodedPathname)) {
       return false;
     }
 
@@ -48,7 +51,7 @@ class WhiteListItem {
 
     // MimeType check if specified
     if (this.mimeTypeRegex) {
-      const extension = url.pathname.split(".").pop();
+      const extension = decodedPathname.split(".").pop();
       let mimeType = "";
 
       switch (extension) {

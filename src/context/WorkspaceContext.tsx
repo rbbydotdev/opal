@@ -23,7 +23,7 @@ import { useErrorToss } from "@/lib/errorToss";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, decodePath, isAncestor, isBin, isCss, isEjs, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
+import { AbsPath, isAncestor, isBin, isCss, isEjs, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { TriangleAlert } from "lucide-react";
@@ -256,8 +256,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       currentWorkspace.renameListener((CHANGES) => {
         for (const { oldPath, newPath, fileType } of CHANGES) {
           if (
-            (fileType === "file" &&
-              decodePath(location.pathname) === decodePath(currentWorkspace.resolveFileUrl(oldPath))) ||
+            (fileType === "file" && location.pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
             (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
           ) {
             if (newPath.startsWith(SpecialDirs.Trash)) {

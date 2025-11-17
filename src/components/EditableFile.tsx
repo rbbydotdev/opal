@@ -150,10 +150,11 @@ export function SelectedMark({ selected = false, conflicted = false }: { selecte
 
 export const ActiveLink = ({
   active,
+  to,
   ...props
 }: { active: boolean } & (ComponentProps<typeof Link> & HTMLAttributes<HTMLDivElement>)) => {
   if (!active) {
-    return <Link {...props} />;
+    return <Link to={to} {...props} />;
   }
   // @ts-ignore
   return <div {...props} />;

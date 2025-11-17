@@ -13,6 +13,7 @@ import {
   workspaceFilenameSearchHandler,
   workspaceSearchHandler,
 } from "@/lib/ServiceWorker/handler";
+import { SuperUrl } from "@/lib/ServiceWorker/SuperUrl";
 
 type HandlerFunction = (context: RequestContext) => Response | Promise<Response>;
 
@@ -68,7 +69,7 @@ const routes: Route[] = [
 
 export function hasRouteMatch(event: FetchEvent, method?: Route["method"]): boolean {
   const { request } = event;
-  const url = new URL(request.url);
+  const url = new SuperUrl(request.url);
   const requestMethod = method || request.method;
   for (const route of routes.filter((route) => route.method === "ANY" || route.method === requestMethod)) {
     if (url.pathname.match(route.pattern)) return true;
@@ -82,7 +83,7 @@ export async function routeRequest(
   methodOverride: Route["method"] | null = null
 ): Promise<Response> {
   const { request } = event;
-  const url = new URL(request.url);
+  const url = new SuperUrl(request.url);
   const requestMethod = methodOverride || request.method;
 
   for (const route of routes) {

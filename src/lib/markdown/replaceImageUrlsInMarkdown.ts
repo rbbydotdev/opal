@@ -1,4 +1,4 @@
-import { decodePath, encodePath } from "@/lib/paths2";
+import { decodePath } from "@/lib/paths2";
 import graymatter from "gray-matter";
 import mdast from "mdast";
 import remarkDirective from "remark-directive";
@@ -33,7 +33,8 @@ export function replaceImageUrlsInMarkdown(
         } catch (_e) {}
       }
       if (pathname === decodedFromUrl) {
-        node.url = encodePath(decodedToUrl);
+        //encode?
+        node.url = decodedToUrl;
         changed = true;
         break;
       }

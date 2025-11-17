@@ -2,7 +2,7 @@ import { Disk } from "@/data/disk/Disk";
 import { createThumbnail } from "@/lib/createThumbnail";
 import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath, encodePath, joinPath } from "@/lib/paths2";
+import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 
 export class Thumb {
   constructor(
@@ -26,14 +26,14 @@ export class Thumb {
   }
   static pathToURL({ path, workspaceName, size = 100 }: { path: AbsPath; workspaceName?: string; size?: number }) {
     if (path.endsWith(".svg")) {
-      return absPath(encodePath(path));
+      return absPath(path);
     }
     const params = new URLSearchParams();
     params.set("thumb", size.toString());
     if (workspaceName) {
       params.set("workspaceName", workspaceName);
     }
-    return absPath(encodePath(path) + "?" + params.toString());
+    return absPath(path + "?" + params.toString());
   }
   static resolveURLFromNode(node: TreeNode) {
     return absPath(Thumb.pathToURL({ path: node.isDupNode() ? node.source : node.path }));
@@ -69,7 +69,7 @@ export class Thumb {
   }
 
   url() {
-    return encodePath(this.path) + "?thumb=" + this.size;
+    return this.path + "?thumb=" + this.size;
   }
 
   async move(oldPath: AbsPath, newPath: AbsPath) {

@@ -24,7 +24,6 @@ import {
   absPath,
   basename,
   dirname,
-  encodePath,
   incPath,
   joinPath,
   reduceLineage,
@@ -387,7 +386,7 @@ export abstract class Disk {
       }
     }
     await this.mkdirRecursive(absPath(dirname(finalPath)));
-    await this.fs.rename(encodePath(oldPath), encodePath(finalPath));
+    await this.fs.rename(oldPath, finalPath);
     return finalPath;
   }
 
@@ -404,7 +403,7 @@ export abstract class Disk {
       if (oldFullPath instanceof TreeNode) {
         fileType = oldFullPath.isTreeDir() ? "dir" : "file";
       } else {
-        const stat = await this.fs.stat(encodePath(oldFullPath));
+        const stat = await this.fs.stat(oldFullPath);
         fileType = stat.isDirectory() ? "dir" : "file";
       }
     }
@@ -422,7 +421,7 @@ export abstract class Disk {
     const uniquePath = await this.nextPath(cleanFullPath); // ensure the path is unique
     try {
       await this.mkdirRecursive(absPath(dirname(uniquePath)));
-      await this.fs.rename(encodePath(String(oldFullPath)), encodePath(uniquePath));
+      await this.fs.rename(String(oldFullPath), uniquePath);
     } catch (e) {
       throw e;
     }
@@ -494,7 +493,7 @@ export abstract class Disk {
     await this.ready;
     try {
       //TODO: run clean up for file ? like document id etc?
-      await this.fs.unlink(encodePath(filePath));
+      await this.fs.unlink(filePath);
     } catch (err) {
       if (isErrorWithCode(err, "ENOENT")) {
         throw new NotFoundError(`File not found: ${filePath}`);
@@ -599,12 +598,12 @@ export abstract class Disk {
       }
     }
     await this.mkdirRecursive(absPath(dirname(newPath)));
-    const entries = await this.fs.readdir(encodePath(oldPath));
+    const entries = await this.fs.readdir(oldPath);
     for (const entry of entries) {
       const oldEntryPath = joinPath(oldPath, stringifyEntry(entry));
       const newEntryPath = joinPath(newPath, stringifyEntry(entry));
       if (typeof entry === "string" || entry instanceof String) {
-        if ((await this.fs.stat(encodePath(oldEntryPath))).isDirectory()) {
+        if ((await this.fs.stat(oldEntryPath)).isDirectory()) {
           await this.copyDirQuiet(oldEntryPath, newEntryPath, overWrite);
         } else {
           await this.copyFileQuiet(oldEntryPath, newEntryPath, overWrite);
@@ -655,7 +654,7 @@ export abstract class Disk {
     }
 
     await this.mkdirRecursive(dirname(newPath));
-    await this.fs.writeFile(encodePath(newPath), oldContent, {
+    await this.fs.writeFile(newPath, oldContent, {
       encoding: "utf8",
       mode: 0o777,
     });
@@ -766,7 +765,7 @@ export abstract class Disk {
         data = content;
       }
       // console.log(`writeFileRecursive: Writing file ${filePath}`);
-      return this.fs.writeFile(encodePath(filePath), data, { encoding: "utf8", mode: 0o777 });
+      return this.fs.writeFile(filePath, data, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
         console.error(`Error writing file ${filePath}:`, err);
@@ -776,7 +775,7 @@ export abstract class Disk {
   async pathExists(filePath: AbsPath | TreeNode) {
     await this.ready;
     try {
-      await this.fs.stat(encodePath(String(filePath)));
+      await this.fs.stat(String(filePath));
       return true;
     } catch (_e) {
       return false;
@@ -785,15 +784,17 @@ export abstract class Disk {
 
   async writeFile<T extends string | Uint8Array>(filePath: AbsPath, contents: T | Promise<T>) {
     const awaitedContents = contents instanceof Promise ? await contents : contents;
-    await this.fs.writeFile(encodePath(filePath), awaitedContents, { encoding: "utf8", mode: 0o777 });
+    console.log(`Disk.writeFile: Writing file ${filePath}`);
+    await this.fs.writeFile(filePath, awaitedContents, { encoding: "utf8", mode: 0o777 });
     void this.remote.emit(DiskEvents.OUTSIDE_WRITE, { filePaths: [filePath] });
     void this.local.emit(DiskEvents.INSIDE_WRITE, { filePaths: [filePath] });
     return;
   }
   async readFile(filePath: AbsPath) {
+    console.log(`Disk.readFile: Reading file ${filePath}`);
     await this.ready;
     try {
-      return await this.fs.readFile(encodePath(filePath));
+      return await this.fs.readFile(filePath);
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
         throw new NotFoundError(`File not found: ${filePath}`);

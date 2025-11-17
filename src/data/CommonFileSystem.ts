@@ -1,6 +1,6 @@
 import { NamespacedFs } from "@/data/fs/NamespacedFs";
 import { isErrorWithCode } from "@/lib/errors";
-import { AbsPath, encodePath, joinPath, relPath } from "@/lib/paths2";
+import { AbsPath, joinPath, relPath } from "@/lib/paths2";
 import { CommonFileSystem } from "./FileSystemTypes";
 
 type OPFSFileSystem = CommonFileSystem & {
@@ -20,11 +20,11 @@ export class OPFSNamespacedFs extends NamespacedFs {
   }
 
   tearDown(): Promise<void> {
-    return this.fs.rm(encodePath(this.namespace), { recursive: true, force: true });
+    return this.fs.rm(this.namespace, { recursive: true, force: true });
   }
 
   rm(path: string, options?: { force?: boolean; recursive?: boolean }) {
-    return this.fs.rm(encodePath(joinPath(this.namespace, path)), options);
+    return this.fs.rm(joinPath(this.namespace, path), options);
   }
   async symlink(_target: string, _path: string): Promise<void> {
     throw new Error("OPFS does not support symlinks");

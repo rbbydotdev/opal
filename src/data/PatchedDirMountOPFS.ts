@@ -199,7 +199,7 @@ export class PatchedDirMountOPFS implements CommonFileSystem {
     await this.mkdir(newPath, { recursive: true, mode: 0o777 });
 
     // Get entries from source directory
-    const entries = (await this.readdir(oldPath)).map((e) => String(e));
+    const entries = (await this.readdir(oldPath)).map((e) => String(e as any));
 
     for (const entry of entries) {
       const sourcePath = `${oldPath}/${entry}`;
