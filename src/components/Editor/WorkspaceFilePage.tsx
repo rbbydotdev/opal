@@ -1,7 +1,7 @@
 import { Editor, Editors } from "@/components/Editor/Editors";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { FileError } from "@/components/FileError";
-import { isSourceMimeType, SourceEditor } from "@/components/SourceEditor/SourceEditor";
+import { isSourceMimeType, SourceEditor, SourceMimeType } from "@/components/SourceEditor/SourceEditor";
 import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
 import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
@@ -161,7 +161,7 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
           <SourceEditor
             onChange={handleSourceContentChange}
             hasConflicts={hasConflicts}
-            mimeType={mimeType}
+            mimeType={mimeType as SourceMimeType}
             currentWorkspace={currentWorkspace}
             key={filePath}
           />

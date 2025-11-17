@@ -25,6 +25,7 @@ import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
+import { json } from "@codemirror/lang-json";
 import { Compartment, EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
@@ -40,7 +41,8 @@ export type StrictSourceMimesType =
   | "text/javascript"
   | "text/x-ejs"
   | "text/x-mustache"
-  | "text/html";
+  | "text/html"
+  | "application/json";
 
 const getLanguageExtension = (
   language:
@@ -51,6 +53,7 @@ const getLanguageExtension = (
     | "text/x-ejs"
     | "text/x-mustache"
     | "text/html"
+    | "application/json"
     | string
 ) => {
   switch (language) {
@@ -66,6 +69,8 @@ const getLanguageExtension = (
       return ejs();
     case "text/x-mustache":
       return mustache();
+    case "application/json":
+      return json();
     case "text/plain":
     default:
       return null;
@@ -85,7 +90,7 @@ export const CodeMirrorEditor = ({
   hasConflicts: boolean;
   mimeType: Extract<
     OpalMimeType,
-    "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html" | "text/x-mustache"
+    "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html" | "text/x-mustache" | "application/json"
   >;
   value: string;
   onChange: (value: string) => void;
@@ -281,7 +286,7 @@ export const CodeMirrorEditor = ({
   );
 };
 
-const SourceButton = ({ onClick }: { onClick: () => void }) => (
+const RichButton = ({ onClick }: { onClick: () => void }) => (
   <Button variant="outline" size="sm" onClick={onClick}>
     <span className="text-xs flex justify-center items-center gap-1">
       <ChevronLeftIcon size={12} />
@@ -313,7 +318,7 @@ const CodeMirrorToolbar = ({
   mimeType?: OpalMimeType;
   editorView?: EditorView | null;
 }) => {
-  const { isMarkdown, hasEditOverride } = useCurrentFilepath();
+  const { isMarkdown, hasEditOverride, isSourceView, isCssFile } = useCurrentFilepath();
 
   const { left } = useSidebarPanes();
   const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
@@ -346,9 +351,11 @@ const CodeMirrorToolbar = ({
     >
       {!hasEditOverride && (
         <>
-          {isMarkdown && !hasConflicts && <SourceButton onClick={() => setViewMode("rich-text", "hash+search")} />}
+          {isMarkdown && !hasConflicts && isSourceView && (
+            <RichButton onClick={() => setViewMode("rich-text", "hash+search")} />
+          )}
           {!isMarkdown && previewNode?.isMarkdownFile() && (
-            <SourceButton
+            <RichButton
               onClick={() =>
                 router.navigate({
                   to: currentWorkspace.resolveFileUrl(previewNode.path),
@@ -356,16 +363,16 @@ const CodeMirrorToolbar = ({
               }
             />
           )}
-          <LivePreviewButtons />
-          {canPrettify && (
-            <Button variant="outline" size="sm" onClick={handlePrettify}>
-              <span className="text-xs flex justify-center items-center gap-1">
-                <Sparkles size={12} />
-                Prettify
-              </span>
-            </Button>
-          )}
+          {(isMarkdown || isCssFile) && <LivePreviewButtons />}
         </>
+      )}
+      {!hasEditOverride && canPrettify && (
+        <Button variant="outline" size="sm" onClick={handlePrettify}>
+          <span className="text-xs flex justify-center items-center gap-1">
+            <Sparkles size={12} />
+            Prettify
+          </span>
+        </Button>
       )}
       {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">

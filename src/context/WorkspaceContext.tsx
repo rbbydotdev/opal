@@ -23,6 +23,7 @@ import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
+import { OpalMimeType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor, isBin, isCss, isEjs, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
 import { useLocation, useNavigate } from "@tanstack/react-router";
@@ -60,20 +61,11 @@ export type WorkspaceRouteType = { name: string | null; path: AbsPath | null };
 
 export type Workspaces = WorkspaceDAO[];
 
-export const DEFAULT_MIME_TYPE = "application/octet-stream"; //i think this just means binary?
+export const DEFAULT_MIME_TYPE: OpalMimeType = "application/octet-stream"; //i think this just means binary?
 
 function isRecognizedFileType(mimeType: string): boolean {
   // Images, markdown, text files (including code files), HTML, CSS, EJS templates, and common web formats are recognized
-  return (
-    mimeType.startsWith("image/") || mimeType.startsWith("text/") || isSourceMimeType(mimeType)
-    // mimeType === "application/json" ||
-    // mimeType === "application/javascript" ||
-    // mimeType === "application/typescript" ||
-    // mimeType === "application/xml" ||
-    // mimeType === "text/html" ||
-    // mimeType === "text/css" ||
-    // mimeType === "text/x-ejs"
-  );
+  return mimeType.startsWith("image/") || mimeType.startsWith("text/") || isSourceMimeType(mimeType);
 }
 
 export function useCurrentFilepath() {
@@ -97,6 +89,13 @@ export function useCurrentFilepath() {
       isEjs: false,
       isSource: false,
       inTrash: false,
+      isBin: false,
+      isRecognized: false,
+      isSourceView: false,
+      isRichView: false,
+      isDiffView: false,
+      viewMode: null,
+      hasEditOverride: false,
     };
   }
   const mimeType = getMimeType(filePath) || DEFAULT_MIME_TYPE;

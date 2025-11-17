@@ -12,6 +12,20 @@ export function prettifyMime(mimeType: OpalMimeType, content: string): Promise<s
         parser: "css",
         plugins: [parserBabel, parserPostcss],
       });
+    case "text/javascript":
+      return prettier.format(content, {
+        parser: "babel",
+        plugins: [parserBabel],
+      });
+    case "application/json":
+      try {
+        // Parse and stringify to format JSON
+        const parsed = JSON.parse(content);
+        return Promise.resolve(JSON.stringify(parsed, null, 2));
+      } catch (error) {
+        // If parsing fails, return original content
+        return Promise.resolve(content);
+      }
     case "text/markdown":
       return prettier.format(content, {
         parser: "markdown",
@@ -31,8 +45,8 @@ export function prettifyMime(mimeType: OpalMimeType, content: string): Promise<s
 export function canPrettifyMime(mimeType: OpalMimeType | null | undefined): boolean {
   if (!mimeType) return false;
   return (
-    ["text/css", "text/javascript", "text/markdown", "text/x-mustache", "text/x-ejs", "text/html"] satisfies Array<
-      typeof mimeType | "text/javascript"
+    ["text/css", "text/javascript", "application/json", "text/markdown", "text/x-mustache", "text/x-ejs", "text/html"] satisfies Array<
+      typeof mimeType | "text/javascript" | "application/json"
     >
   ).includes(mimeType);
 }
