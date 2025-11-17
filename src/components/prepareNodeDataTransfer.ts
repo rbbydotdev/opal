@@ -2,7 +2,7 @@ import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { treeNodeDataTransfer } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { encodePath, isImage, isMarkdown, prefix } from "@/lib/paths2";
+import { isImage, isMarkdown, prefix } from "@/lib/paths2";
 import { INTERNAL_NODE_FILE_TYPE } from "@/types/FiletreeTypes";
 
 export const prepareNodeDataTransfer = <T extends MetaDataTransfer | DataTransfer>({
@@ -31,11 +31,11 @@ export const prepareNodeDataTransfer = <T extends MetaDataTransfer | DataTransfe
     const HTML =
       paths
         .filter(isImage)
-        .map((path) => `<img src="${encodePath(path) || ""}" />`)
+        .map((path) => `<img src="${path || ""}" />`)
         .join(" ") +
       paths
         .filter(isMarkdown)
-        .map((path) => `<a href="${encodePath(path) || ""}">${capitalizeFirst(prefix(path))}</a>`)
+        .map((path) => `<a href="${path || ""}">${capitalizeFirst(prefix(path))}</a>`)
         .join(" ");
     dt.setData("text/html", HTML);
     if (action === "move") {
@@ -43,7 +43,7 @@ export const prepareNodeDataTransfer = <T extends MetaDataTransfer | DataTransfe
       //which is not as fun
       //origin will NOT BE included /path/to/file
       new Set(nodes).forEach((node, i) => {
-        dt.setData(`${node.getMimeType()};index=${i}`, encodePath(node.path));
+        dt.setData(`${node.getMimeType()};index=${i}`, node.path);
       });
     }
   } catch (e) {

@@ -1,12 +1,13 @@
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";
-import { absPath, decodePath } from "@/lib/paths2";
+import { absPath } from "@/lib/paths2";
+import { SuperUrl } from "./SuperUrl";
 import { SWWStore } from "./SWWStore";
 
-export async function handleStyleSheetRequest(url: URL, workspaceName: string): Promise<Response> {
+export async function handleStyleSheetRequest(url: SuperUrl, workspaceName: string): Promise<Response> {
   try {
-    const decodedPathname = decodePath(url.pathname);
+    const decodedPathname = url.decodedPathname;
     console.log(`Intercepted request for: 
     decodedPathname: ${decodedPathname}
     url.pathname: ${url.pathname}

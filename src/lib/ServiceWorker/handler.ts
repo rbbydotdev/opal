@@ -1,5 +1,5 @@
 import { isImageType } from "@/lib/fileType";
-import { absPath, decodePath } from "@/lib/paths2";
+import { absPath } from "@/lib/paths2";
 import { handleDocxConvertRequest as handleDocxUploadRequest } from "@/lib/ServiceWorker/handleDocxConvertRequest";
 import { handleDownloadRequest } from "@/lib/ServiceWorker/handleDownloadRequest";
 import { handleDownloadRequestEncrypted } from "@/lib/ServiceWorker/handleDownloadRequestEncrypted";
@@ -11,12 +11,13 @@ import { handleMdImageReplace } from "@/lib/ServiceWorker/handleMdImageReplace";
 import { handleStyleSheetRequest } from "@/lib/ServiceWorker/handleStyleSheetRequest";
 import { handleWorkspaceFilenameSearch } from "@/lib/ServiceWorker/handleWorkspaceFilenameSearch";
 import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
+import { SuperUrl } from "@/lib/ServiceWorker/SuperUrl";
 import { withRequestSignal } from "./utils"; // Assuming utils are in the same dir
 
 // --- Handler Context ---
 export interface RequestContext {
   event: FetchEvent;
-  url: URL;
+  url: SuperUrl;
   workspaceName: string;
   params: Record<string, string>;
   searchParams: Record<string, unknown>;
@@ -26,7 +27,7 @@ export interface RequestContext {
 
 export const uploadImageHandler = withRequestSignal((context: RequestContext) => {
   const { event, url, workspaceName } = context;
-  const filePath = absPath(decodePath(url.pathname).replace("/upload-image", ""));
+  const filePath = absPath(url.decodedPathname.replace("/upload-image", ""));
   console.log(`Handling image upload for: ${url.pathname}`);
 
   return handleImageUpload(event, url, filePath, workspaceName);
@@ -35,7 +36,7 @@ export const uploadImageHandler = withRequestSignal((context: RequestContext) =>
 export const convertDocxHandler = withRequestSignal(async (context: RequestContext) => {
   const { event, url, workspaceName } = context;
 
-  const fullPathname = absPath(decodePath(url.pathname).replace("/upload-docx", ""));
+  const fullPathname = absPath(url.decodedPathname.replace("/upload-docx", ""));
   console.log(`Handling DOCX upload for: ${fullPathname}`);
 
   return handleDocxUploadRequest(workspaceName, fullPathname, await event.request.arrayBuffer());
@@ -100,7 +101,7 @@ export const styleSheetHandler = withRequestSignal((context: RequestContext) => 
 export const imageHandler = withRequestSignal((context: RequestContext) => {
   const { event, url, workspaceName } = context;
 
-  if (event.request.destination === "image" || isImageType(url.pathname)) {
+  if (event.request.destination === "image" || isImageType(url.decodedPathname)) {
     console.log(`Handling image request for: ${url.pathname}`);
     return handleImageRequest(event, url, workspaceName);
   }

@@ -62,7 +62,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
     // If no workspace name in search params, try to get it from the request URL itself
     if (!workspaceName) {
       try {
-        const urlResult = Workspace.parseWorkspacePathLegacy(request.url);
+        const urlResult = Workspace.parseWorkspacePath(request.url);
         workspaceName = urlResult.workspaceName;
       } catch {
         // If parsing URL fails, ignore and try referrer
@@ -72,7 +72,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
     // If no workspace name found and we have a referrer, try parsing that
     if (!workspaceName && request.referrer) {
       try {
-        const referrerResult = Workspace.parseWorkspacePathLegacy(request.referrer);
+        const referrerResult = Workspace.parseWorkspacePath(request.referrer);
         workspaceName = referrerResult.workspaceName;
       } catch {
         // If parsing referrer fails, continue with null workspaceName

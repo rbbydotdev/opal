@@ -3,13 +3,14 @@ import { Workspace } from "@/data/Workspace";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";
-import { absPath, decodePath } from "@/lib/paths2";
+import { absPath } from "@/lib/paths2";
+import { SuperUrl } from "./SuperUrl";
 import { SWWStore } from "./SWWStore";
 
-export async function handleImageRequest(event: FetchEvent, url: URL, workspaceName: string): Promise<Response> {
+export async function handleImageRequest(event: FetchEvent, url: SuperUrl, workspaceName: string): Promise<Response> {
   // TODO hoist controller logic up to the top level
   try {
-    const decodedPathname = decodePath(url.pathname);
+    const decodedPathname = url.decodedPathname;
     const isThumbnail = Thumb.isThumbURL(url);
     console.log(`Intercepted request for: 
     decodedPathname: ${decodedPathname}
