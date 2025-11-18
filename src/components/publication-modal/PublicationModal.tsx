@@ -29,9 +29,9 @@ import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
 import { RemoteAuthJType, RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
+import { useDestinations } from "@/hooks/useDestinations";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
-import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, Search, UploadCloud, X, Zap } from "lucide-react";
 import { ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
@@ -95,6 +95,7 @@ export function PublicationModal({
   const [isOpen, setIsOpen] = useState(false);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const { remoteAuths } = useRemoteAuths();
+  const [destination, setDestination] = useState<DestinationDAO | null>(null);
   const { currentView, pushView, popView, resetToDefault, canGoBack } = useViewStack<PublicationViewType>("publish");
 
   const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
@@ -106,8 +107,10 @@ export function PublicationModal({
   const handleSubmit = async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
-    await DestinationDAO.CreateNew({ ...data, remoteAuth }).save();
-    popView();
+    const destination = DestinationDAO.CreateNew({ ...data, remoteAuth });
+    await destination.save();
+    setDestination(destination);
+    resetToDefault();
   };
 
   const handleClose = useCallback(() => {
@@ -159,11 +162,6 @@ export function PublicationModal({
         className={cn("overflow-y-auto top-[10vh] min-h-[50vh]", className, {
           "min-h-[80vh]": currentView === "publish",
         })}
-        // onEscapeKeyDown={(event) => {
-        //   if (event.target instanceof HTMLElement && event.target.closest(`#${REPO_URL_SEARCH_ID}`)) {
-        //     event.preventDefault();
-        //   }
-        // }}
         onPointerDownOutside={handlePointerDownOutside}
         onEscapeKeyDown={handleEscapeKeyDown}
       >
@@ -216,6 +214,8 @@ export function PublicationModal({
             pushView={pushView}
             view={currentView}
             //*
+            destination={destination}
+            setDestination={setDestination}
             addDestination={() => pushView("destination")}
             currentWorkspace={currentWorkspace}
             onOpenChange={setIsOpen}
@@ -242,7 +242,7 @@ function NetlifyDestinationForm({
   const [mode, setMode] = useState<"search" | "input" | "create">("input");
   const inputRef = useRef<HTMLInputElement>(null);
   const agent = useRemoteAuthAgent<RemoteAuthNetlifyAgent>(remoteAuth);
-  const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteNetlifySearch({
+  const { isLoading, searchValue, updateSearch, searchResults, error, clearError } = useRemoteNetlifySearch({
     agent,
   });
   const { ident, msg, request } = useRemoteNetlifySite({
@@ -251,11 +251,16 @@ function NetlifyDestinationForm({
   });
 
   useEffect(() => {
-    if (mode === "input" && inputRef.current) {
-      // Small delay to ensure the input is rendered
-      setTimeout(() => inputRef.current?.focus(), 0);
-    }
+    if (mode === "input" && inputRef.current) inputRef.current?.focus();
   }, [mode]);
+
+  const handleCreateSubmit = async () => {
+    const res = await request.submit();
+    if (!res) return null;
+    void destination?.update({ meta: { siteName: res.name } });
+    form.setValue("meta.siteName", res.name);
+    setMode("input");
+  };
   if (mode === "search") {
     return (
       <div>
@@ -294,11 +299,8 @@ function NetlifyDestinationForm({
               form.setValue("meta.siteName", inputVal);
             }
           }}
-          onCreated={async (res) => {
-            void destination?.update({ meta: { siteName: res.name } });
-            form.setValue("meta.siteName", res.name);
-            setMode("input");
-          }}
+          submit={handleCreateSubmit}
+          // }
           request={request}
           msg={msg}
           ident={ident}
@@ -550,9 +552,13 @@ export function PublicationModalPublishContent({
   setPreferredDestConnection,
   pushView,
   view,
+  destination,
+  setDestination,
   build,
   onClose,
 }: {
+  destination: DestinationDAO | null;
+  setDestination: (destination: DestinationDAO) => void;
   currentWorkspace: Workspace;
   onOpenChange: (value: boolean) => void;
   setPreferredNewConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
@@ -564,47 +570,34 @@ export function PublicationModalPublishContent({
   onClose?: () => void;
 }) {
   const { remoteAuths } = useRemoteAuths();
+  const { destinations } = useDestinations();
+
   const [publishError, setPublishError] = useState<string | null>(null);
-  const [destination, setDestination] = useState<string | undefined>();
-  const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
   const [logs, setLogs] = useState<BuildLog[]>([]);
 
-  const destinations: { guid: string }[] = [];
-
-  const NO_DESTINATIONS = remoteAuths.length === 0;
-
-  // useEffect(() => {
-  //   if (destination === undefined && remoteAuths[0]) setDestination(remoteAuths[0]?.guid);
-  // }, [destination, remoteAuths]);
+  const NO_REMOTES = remoteAuths.length === 0;
 
   const handleOkay = () => onOpenChange(false);
   const log = useCallback((bl: BuildLogLine) => {
     setLogs((prev) => [...prev, bl]);
   }, []);
-  const handleBuild = async () => {
-    if (!buildRunner) return;
-    await buildRunner.execute({
-      log,
-    });
-    if (buildRunner.isSuccessful) {
-      setPublishError(null);
-      console.log("Build completed successfully");
-    } else if (buildRunner.isFailed) {
-      setPublishError("Build failed. Please check the logs for more details.");
-    } else if (buildRunner.isCancelled) {
-      setPublishError("Build was cancelled.");
-    }
-  };
+  const handleBuild = async () => {};
   const handleSetDestination = (destId: string) => {
     const selectedRemoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === destId);
-    if (!selectedRemoteAuth) {
-      setPreferredNewConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
-      pushView("connection");
-    } else if (destinations.find((d) => d.guid === destId)) {
-      setDestination(destId);
-    } else {
+    const selectedDestination = destinations.find((d) => d.guid === destId);
+
+    //determine which kind was selected
+    if (selectedDestination) {
+      //destination
+      setDestination(selectedDestination);
+    } else if (selectedRemoteAuth) {
+      //remote auth
       setPreferredDestConnection(remoteAuths.find((remoteAuth) => remoteAuth.guid === destId)!);
       pushView("destination");
+    } else if (!selectedRemoteAuth) {
+      //needs new connection
+      setPreferredNewConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
+      pushView("connection");
     }
   };
 
@@ -619,7 +612,7 @@ export function PublicationModalPublishContent({
           Destination
         </label>
         <div className="flex gap-2">
-          <Select value={destination} onValueChange={handleSetDestination}>
+          <Select value={destination?.guid} onValueChange={handleSetDestination}>
             <SelectTrigger className="min-h-12 p-2">
               <SelectValue placeholder="Select Destination" />
             </SelectTrigger>
@@ -628,9 +621,28 @@ export function PublicationModalPublishContent({
                 <UploadCloud size={16} className="text-ring" />
                 My Destinations
               </div>
-              <div className="font-mono font-bold italic flex border-dashed p-1 border border-ring justify-center text-2xs mb-2 mx-4">
-                none
-              </div>
+              {destinations.length === 0 && (
+                <div className="font-mono font-bold italic flex border-dashed p-1 border border-ring justify-center text-2xs mb-2 mx-4">
+                  none
+                </div>
+              )}
+              {destinations.map((dest) => (
+                <SelectItem key={dest.guid} value={dest.guid}>
+                  <div className="flex flex-col items-start gap-0">
+                    <span className="font-medium flex items-center gap-2 capitalize">
+                      <RemoteAuthSourceIconComponent
+                        type={dest.RemoteAuth.type}
+                        source={dest.RemoteAuth.source}
+                        size={16}
+                      />
+                      {dest.label} - <span>{dest.RemoteAuth.type}</span> / <span> {dest.RemoteAuth.source}</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground capitalize">
+                      Publish to {dest.RemoteAuth.source} hosting
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
               <SelectSeparator />
               <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
                 <Zap size={16} className="text-ring" />
@@ -668,7 +680,7 @@ export function PublicationModalPublishContent({
           <Button
             variant={"outline"}
             className="min-h-12"
-            onClick={() => pushView(NO_DESTINATIONS ? "connection" : "destination")}
+            onClick={() => pushView(NO_REMOTES ? "connection" : "destination")}
           >
             <Plus />
           </Button>
@@ -678,12 +690,8 @@ export function PublicationModalPublishContent({
       {/* Build Controls */}
       <div className="flex gap-2">
         {!true && (
-          <Button
-            onClick={handleBuild}
-            disabled={buildRunner.isBuilding || buildRunner.isCompleted}
-            className="flex items-center gap-2"
-          >
-            {buildRunner.isBuilding ? (
+          <Button onClick={handleBuild} className="flex items-center gap-2">
+            {false ? (
               <>
                 <Loader size={16} className="animate-spin" />
                 Publishing...

@@ -70,7 +70,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     return destinations.map((destination) => DestinationDAO.FromJSON(destination));
   }
 
-  save() {
+  async save() {
     return ClientDb.destinations.put({
       remoteAuth: this.RemoteAuth.toJSON(),
       guid: this.guid,
