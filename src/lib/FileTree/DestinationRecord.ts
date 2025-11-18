@@ -6,4 +6,5 @@ export class DestinationRecord<T = unknown> {
   remoteAuth!: RemoteAuthRecord;
   meta!: T;
   timestamp?: number;
+  remoteAuthGuid?: string;
 }

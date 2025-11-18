@@ -12,6 +12,7 @@ export class ClientIndexedDb extends Dexie {
   workspaces!: EntityTable<WorkspaceRecord, "guid">;
   remoteAuths!: EntityTable<RemoteAuthRecord, "guid">;
   destinations!: EntityTable<DestinationRecord, "guid">;
+
   settings!: EntityTable<SettingsRecord, "name">;
   disks!: EntityTable<DiskRecord, "guid">;
   builds!: EntityTable<BuildRecord, "guid">;
@@ -23,13 +24,13 @@ export class ClientIndexedDb extends Dexie {
 
     this.version(1).stores({
       settings: "name",
-      remoteAuths: "guid,type,ta,timestamp",
+      remoteAuths: "guid,type,timestamp",
       workspaces: "guid,name,timestamp",
       disks: "guid,timestamp",
       builds: "guid,diskId,timestamp,workspaceId",
       thumbnails: "[workspaceId+path],guid,path,workspaceId",
       historyDocs: "++edit_id,id,parent,workspaceId",
-      destinations: "guid,type,timestamp",
+      destinations: "guid,type,timestamp,remoteAuthGuid",
     });
 
     applyEncryptionMiddleware<ClientIndexedDb>(
@@ -40,5 +41,17 @@ export class ClientIndexedDb extends Dexie {
       },
       clearAllTables
     );
+
+    this.destinations.hook("creating", (_primaryKey, obj) => {
+      obj.remoteAuthGuid = obj.remoteAuth?.guid ?? null;
+    });
+
+    this.destinations.hook("updating", (mods: Partial<DestinationRecord>) => {
+      if (mods.remoteAuth?.guid) return { remoteAuthGuid: mods.remoteAuth.guid };
+    });
+
+    this.remoteAuths.hook("deleting", (_primaryKey, remoteAuth, _tx) => {
+      return this.destinations.where("remoteAuthId").equals(remoteAuth.guid).delete();
+    });
   }
 }

@@ -270,7 +270,6 @@ function ApiKeyAuth({
   source: RemoteAuthSource;
   onCancel: () => void;
 }) {
-  // const { submitting, handleSubmit } = useRemoteAuthSubmit(mode, editConnection, onSuccess, onCancel);
   const [hideApiKey, setHideApiKey] = useState(true);
   const [hideApiSecret, setHideApiSecret] = useState(true);
   return (
@@ -373,7 +372,6 @@ function ApiKeyAuth({
           Cancel
         </Button>
         <Button type="submit" className="w-full">
-          {/* <RemoteAuthSourceIconComponent size={12} source={source} /> */}
           <Zap size={12} />
           Connect
         </Button>
