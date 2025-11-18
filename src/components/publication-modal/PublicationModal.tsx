@@ -68,6 +68,10 @@ function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
     setViewStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
   };
 
+  const replaceView = (view: T) => {
+    setViewStack((prev) => [...prev.slice(0, -1), view]);
+  };
+
   const resetToDefault = () => {
     setViewStack([defaultView]);
   };
@@ -75,6 +79,7 @@ function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
   return {
     currentView,
     pushView,
+    replaceView,
     popView,
     resetToDefault,
     canGoBack: viewStack.length > 1,
@@ -96,7 +101,8 @@ export function PublicationModal({
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const { remoteAuths } = useRemoteAuths();
   const [destination, setDestination] = useState<DestinationDAO | null>(null);
-  const { currentView, pushView, popView, resetToDefault, canGoBack } = useViewStack<PublicationViewType>("publish");
+  const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } =
+    useViewStack<PublicationViewType>("publish");
 
   const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
     RemoteAuthRecord,
@@ -182,9 +188,7 @@ export function PublicationModal({
               remoteAuths={remoteAuths}
               defaultName={currentWorkspace.name}
               preferredDestConnection={preferredDestConnection}
-              onAddConnection={() => {
-                pushView("connection");
-              }}
+              onAddConnection={() => pushView("connection")}
             />
           </>
         )}
@@ -192,13 +196,10 @@ export function PublicationModal({
           <ConnectionsModalContent
             preferredNewConnection={preferredNewConnection}
             mode="add"
-            onClose={() => {
-              console.log("Connection modal closed, popping view from stack");
-              popView();
-            }}
-            onSuccess={() => {
-              console.log("Connection added successfully, popping to previous view");
-              popView();
+            onClose={popView}
+            onSuccess={(remoteAuth) => {
+              setPreferredDestConnection(remoteAuth);
+              replaceView("destination");
             }}
           >
             <DialogHeader>
@@ -212,11 +213,9 @@ export function PublicationModal({
             setPreferredNewConnection={setPreferredNewConnection}
             setPreferredDestConnection={setPreferredDestConnection}
             pushView={pushView}
-            view={currentView}
             //*
             destination={destination}
             setDestination={setDestination}
-            addDestination={() => pushView("destination")}
             currentWorkspace={currentWorkspace}
             onOpenChange={setIsOpen}
             build={build}
@@ -545,29 +544,24 @@ export function PublicationModalDestinationContent({
 }
 
 export function PublicationModalPublishContent({
-  currentWorkspace,
-  onOpenChange,
-  addDestination,
-  setPreferredNewConnection,
-  setPreferredDestConnection,
-  pushView,
-  view,
-  destination,
-  setDestination,
   build,
+  destination,
   onClose,
+  onOpenChange,
+  pushView,
+  setDestination,
+  setPreferredDestConnection,
+  setPreferredNewConnection,
 }: {
-  destination: DestinationDAO | null;
-  setDestination: (destination: DestinationDAO) => void;
-  currentWorkspace: Workspace;
-  onOpenChange: (value: boolean) => void;
-  setPreferredNewConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
-  setPreferredDestConnection: (connection: RemoteAuthRecord) => void;
-  pushView: (view: PublicationViewType) => void;
-  view: PublicationViewType;
   build: BuildDAO;
-  addDestination: () => void;
+  currentWorkspace: Workspace;
+  destination: DestinationDAO | null;
   onClose?: () => void;
+  onOpenChange: (value: boolean) => void;
+  pushView: (view: PublicationViewType) => void;
+  setDestination: (destination: DestinationDAO) => void;
+  setPreferredDestConnection: (connection: RemoteAuthRecord) => void;
+  setPreferredNewConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
 }) {
   const { remoteAuths } = useRemoteAuths();
   const { destinations } = useDestinations();

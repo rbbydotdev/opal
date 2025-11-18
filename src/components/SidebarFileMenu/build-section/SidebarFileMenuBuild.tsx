@@ -194,7 +194,6 @@ const BuildMenuDropDown = ({
   open,
   setOpen,
   disabled,
-  // size: "full"| "compact"
 }: {
   children: React.ReactNode;
   open: boolean;

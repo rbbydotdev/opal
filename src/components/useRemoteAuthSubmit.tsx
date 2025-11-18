@@ -40,7 +40,6 @@ export const useRemoteAuthSubmit = (
         const result = await RemoteAuthDAO.Create(type, source, uniq, values.data!);
         onSuccess(result);
       }
-      onCancel();
     } catch (error) {
       setError("Failed to save connection");
       console.error("Error saving connection:", error);

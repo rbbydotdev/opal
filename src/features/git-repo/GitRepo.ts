@@ -842,8 +842,10 @@ export class GitRepo {
     });
     return Promise.all(
       remotes.map(async (remote) => {
-        const gitCorsProxy = await this.getGitCorsProxy(remote.remote);
-        const authId = await this.getAuthId(remote.remote);
+        const { gitCorsProxy, authId } = await Promise.obj({
+          gitCorsProxy: this.getGitCorsProxy(remote.remote),
+          authId: this.getAuthId(remote.remote),
+        });
         return {
           name: remote.remote,
           url: remote.url,
