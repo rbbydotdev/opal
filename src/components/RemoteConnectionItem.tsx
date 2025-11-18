@@ -1,8 +1,5 @@
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/context/useDebounce";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
-import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
-import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { Repo } from "@/data/RemoteAuthTypes";
 import { useAnySearch } from "@/data/useGithubRepoSearch";
 import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/useRemoteSearch";
@@ -11,7 +8,7 @@ import { NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import { Ban, Loader } from "lucide-react";
-import React, { ReactNode, useEffect, useEffectEvent, useMemo, useState } from "react";
+import React, { ReactNode, useEffect, useMemo, useState } from "react";
 
 // const { msg, request, isValid, name, setName } = useAccountItem({ remoteAuth, defaultName: workspaceName });
 type RemoteRequestType<T = any> = {
@@ -122,12 +119,11 @@ export function RemoteItemSearchDropDown({
   searchValue: string;
   className?: string;
   onSearchChange: (value: string) => void;
-  onClose: () => void;
+  onClose: (inputVal?: string) => void;
   onSelect: (item: RemoteItem) => void;
   error?: string | null;
   allItems: RemoteItem[];
 }) {
-  const [open, setOpen] = useState(true);
   const { resetActiveIndex, containerRef, handleKeyDown, getInputProps, getMenuProps, getItemProps } =
     useKeyboardNavigation({
       onEnter: (activeIndex) => {
@@ -136,7 +132,6 @@ export function RemoteItemSearchDropDown({
         }
       },
       onEscape: () => {
-        setOpen(false);
         onClose();
       },
       searchValue,
@@ -153,8 +148,7 @@ export function RemoteItemSearchDropDown({
   };
 
   const handleInputBlur = (e: React.FocusEvent) => {
-    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-      setOpen(false);
+    if (!containerRef.current?.contains(e.relatedTarget as Node) && !e.relatedTarget?.closest("[data-capture-focus]")) {
       onClose();
     }
   };
@@ -163,15 +157,7 @@ export function RemoteItemSearchDropDown({
   const showDropdown = !!hasError || !!isLoading || allItems.length > 0 || (allItems.length === 0 && !!searchValue);
 
   return (
-    <Popover.Root
-      open={showDropdown}
-      onOpenChange={(newOpen) => {
-        setOpen(newOpen);
-        if (!newOpen) {
-          onClose();
-        }
-      }}
-    >
+    <Popover.Root open={showDropdown}>
       <div ref={containerRef} className={cn("w-full p-0", className)} onKeyDown={handleKeyDown}>
         <Popover.Anchor asChild>
           <Input
@@ -180,6 +166,9 @@ export function RemoteItemSearchDropDown({
             autoFocus
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onClose();
+            }}
             onBlur={handleInputBlur}
             placeholder="Search..."
             className="w-full"
@@ -193,6 +182,7 @@ export function RemoteItemSearchDropDown({
             sideOffset={2}
             className="z-50 w-[var(--radix-popover-trigger-width)] max-h-96 overflow-auto rounded-lg bg-sidebar shadow-lg border"
             onOpenAutoFocus={(e) => e.preventDefault()}
+            data-capture-focus
           >
             {hasError && (
               <div className="flex w-full flex-col rounded p-1">
@@ -219,7 +209,7 @@ export function RemoteItemSearchDropDown({
                     <button
                       {...getItemProps(index)}
                       onClick={() => handleItemClick(repo)}
-                      className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
+                      className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
                     >
                       <div className="min-w-0 truncate text-md font-mono">{repo.element}</div>
                     </button>
@@ -436,37 +426,38 @@ export function useRemoteGitRepo<T = any>({
   };
 }
 
-export function useGitHubRepoCreation({ remoteAuth }: { remoteAuth: RemoteAuthDAO | null }) {
-  const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
+// export function useGitHubRepoCreation({ remoteAuth }: { remoteAuth: RemoteAuthDAO | null }) {
+//   const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
 
-  const username = useMemo(() => {
-    if (!agent) return "";
-    if ("login" in (remoteAuth?.data || {})) {
-      return (remoteAuth?.data as any).login;
-    }
-    return agent.getUsername() === "x-access-token" ? "" : agent.getUsername();
-  }, [agent, remoteAuth]);
+//   const username = useMemo(() => {
+//     if (!agent) return "";
+//     if ("login" in (remoteAuth?.data || {})) {
+//       return (remoteAuth?.data as any).login;
+//     }
+//     return agent.getUsername() === "x-access-token" ? "" : agent.getUsername();
+//   }, [agent, remoteAuth]);
 
-  const repoPrefix = username ? `${username}/` : "";
+//   const repoPrefix = username ? `${username}/` : "";
 
-  const createRequest = useEffectEvent(async (name: string, { signal }: { signal?: AbortSignal }) => {
-    if (!agent) {
-      throw new Error("No agent available for creating repository");
-    }
-    if (!(agent instanceof RemoteAuthGithubAgent)) {
-      throw new Error("Unsupported Git provider for repository creation");
-    }
-    const response = await agent.octokit.request("POST /user/repos", {
-      name,
-      private: true,
-      auto_init: false,
-    });
-    return response.data;
-  });
+//   const createRequest = useEffectEvent(async (name: string, { signal }: { signal?: AbortSignal }) => {
+//     if (!agent) {
+//       throw new Error("No agent available for creating repository");
+//     }
+//     if (!(agent instanceof RemoteAuthGithubAgent)) {
+//       throw new Error("Unsupported Git provider for repository creation");
+//     }
+//     const response = await agent.octokit.request("POST /user/repos", {
+//       name,
+//       private: true,
+//       auto_init: false,
+//       signal,
+//     });
+//     return response.data;
+//   });
 
-  return {
-    createRequest,
-    repoPrefix,
-    username,
-  };
-}
+//   return {
+//     createRequest,
+//     repoPrefix,
+//     username,
+//   };
+// }

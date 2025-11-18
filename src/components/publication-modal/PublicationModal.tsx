@@ -103,10 +103,12 @@ export function PublicationModal({
     // TODO: Save destination and move to next step
   };
 
-  const handleClose = useCallback(() => {
+  const handleClose = useCallback((val?: string) => {
     setIsOpen(false);
     setPreferredDestConnection(null);
     setPreferredNewConnection(null);
+    if (typeof val !== "undefined") {
+    }
   }, []);
 
   const handlePointerDownOutside = useCallback(() => {
@@ -250,7 +252,12 @@ function NetlifyDestinationForm({
           isLoading={isLoading}
           searchValue={searchValue}
           onSearchChange={updateSearch}
-          onClose={() => setMode("input")}
+          onClose={(val?: string) => {
+            setMode("input");
+            if (typeof val !== "undefined") {
+              form.setValue("meta.siteName", val);
+            }
+          }}
           onSelect={(item: { element: ReactNode; label: string; value: string }) => {
             form.setValue("meta.siteName", item.value);
             setMode("input");
@@ -394,15 +401,18 @@ export function PublicationModalDestinationContent({
   const currentRemoteAuthId = formValues.remoteAuthId;
   const remoteAuth = useMemo(
     () =>
-      currentRemoteAuthId ? RemoteAuthDAO.FromJSON(remoteAuths.find((ra) => ra.guid === currentRemoteAuthId)!) : null,
+      currentRemoteAuthId
+        ? RemoteAuthDAO.FromJSON(remoteAuths.find((remoteAuth) => remoteAuth.guid === currentRemoteAuthId)!)
+        : null,
     [currentRemoteAuthId, remoteAuths]
   );
 
   const isCompleteOkay = currentSchema.safeParse(formValues).success;
+
   const handleSelectType = (value: string) => {
     form.setValue("remoteAuthId", value);
-    const ra = remoteAuths.find((remoteAuth) => remoteAuth.guid === value);
-    const newType = ra ? (ra.source as DestinationType) : "custom";
+    const remoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === value);
+    const newType = remoteAuth ? (remoteAuth.source as DestinationType) : "custom";
     setDestinationType(newType);
     form.reset({
       ...DestinationSchemaMap[newType]._def.defaultValue(),

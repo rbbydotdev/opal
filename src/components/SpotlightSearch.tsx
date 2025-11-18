@@ -51,7 +51,7 @@ const SpotlightSearchItemLink = forwardRef<
         role={role}
         tabIndex={tabIndex}
         onClick={onSelect}
-        className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
+        className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
       >
         {(mime.lookup(basename(href)) || "").startsWith("image/") ? (
           <img
@@ -91,12 +91,12 @@ const SpotlightSearchItemCmd = forwardRef<
         role={role}
         tabIndex={tabIndex}
         onClick={onSelect}
-        className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
+        className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
       >
         <div className="w-6 h-6 flex justify-center items-center">
           <CommandIcon className="mr-1 h-4 w-4 flex-shrink-0 flex-grow-0 text-ring" />
         </div>
-        <div className="min-w-0 truncate text-md font-mono _text-sidebar-foreground/70">{title}</div>
+        <div className="min-w-0 truncate text-md font-mono">{title}</div>
       </button>
     </li>
   );
