@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffectEvent } from "react";
+import React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -14,28 +14,30 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Ban, GitBranch, Loader, Plus, Search } from "lucide-react";
+import { GitBranch, Plus, Search } from "lucide-react";
 
 import { GitAuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
+import {
+  RemoteItemCreateInput,
+  RemoteItemSearchDropDown,
+  useRemoteGitRepo,
+  useRemoteGitRepoSearch,
+} from "@/components/RemoteConnectionItem";
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useDebounce } from "@/context/useDebounce";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
-import { AgentFromRemoteAuth, useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
-import { IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
-import { useAnySearch } from "@/data/useGithubRepoSearch";
-import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/useRemoteSearch";
+import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
+import { IRemoteGitApiAgent } from "@/data/RemoteAuthTypes";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
-import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { ENV } from "@/lib/env";
 import { cn } from "@/lib/utils";
-import { useImperativeHandle, useMemo, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 
 export const gitRemoteSchema = z.object({
   name: z
@@ -107,7 +109,6 @@ const TryPathname = (url: string) => {
     return url;
   }
 };
-const REPO_URL_SEARCH_ID = "repo-url-search";
 export function GitRemoteDialog({
   children,
   defaultName = "origin",
@@ -121,8 +122,6 @@ export function GitRemoteDialog({
 }) {
   const defaultValues = {
     name: defaultName,
-    // url: "https://github.com/user/repo",
-    // url: "",
     url: "https://github.com/rbbydotdev/test123",
     gitCorsProxy: ENV.GIT_PROTOCOL_PROXY,
   };
@@ -450,19 +449,17 @@ function GitRepoSearchContainer({
   onClose: () => void;
   onSelect: (repo: GithubSearchReposResult) => void;
 }) {
-  const [searchValue, updateSearch] = useState(defaultValue);
-  const debouncedSearchValue = useDebounce(searchValue, 500);
   const agent = useRemoteAuthAgent<IRemoteGitApiAgent>(remoteAuth);
-  const { isLoading, searchResults, error } = useRemoteGitRepoSearch({
+  const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteGitRepoSearch({
     agent,
     defaultValue,
   });
 
   return (
     <div className="w-full relative">
-      <RepoDropDown
-        isLoading={isLoading || (debouncedSearchValue !== searchValue && Boolean(searchValue))}
-        allRepos={searchResults}
+      <RemoteItemSearchDropDown
+        isLoading={isLoading}
+        allItems={searchResults}
         searchValue={searchValue}
         onSearchChange={updateSearch}
         onClose={onClose}
@@ -471,218 +468,6 @@ function GitRepoSearchContainer({
       />
     </div>
   );
-}
-
-export function useRemoteGitRepoSearch({
-  agent,
-  defaultValue = "",
-}: {
-  agent: IRemoteAuthAgentSearch<Repo> | null;
-  defaultValue?: string;
-}) {
-  const [searchValue, updateSearch] = useState(defaultValue);
-  const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { loading, results, error } = useAnySearch<Repo>({
-    agent,
-    searchTerm: debouncedSearchValue,
-    searchKey: "full_name",
-  });
-  const searchResults = useMemo(() => {
-    return results.map((repo) => {
-      return {
-        label: isFuzzyResult<Repo>(repo) ? repo.obj.full_name : repo.full_name,
-        value: isFuzzyResult<Repo>(repo) ? repo.obj.html_url : repo.html_url,
-        element: isFuzzyResult<Repo>(repo)
-          ? repo.highlight((m, i) => (
-              <b className="text-highlight-foreground" key={i}>
-                {m}
-              </b>
-            ))
-          : repo.full_name,
-      };
-    });
-  }, [results]);
-  return {
-    isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
-    searchValue,
-    updateSearch,
-    searchResults,
-    error,
-  };
-}
-
-function RepoDropDown({
-  isLoading,
-  searchValue,
-  onSearchChange,
-  onClose,
-  onSelect,
-  allRepos,
-  error,
-}: {
-  isLoading: boolean;
-  searchValue: string;
-  onSearchChange: (value: string) => void;
-  onClose: () => void;
-  onSelect: (repo: GithubSearchReposResult) => void;
-  error?: string | null;
-  allRepos: GithubSearchReposResult[];
-}) {
-  const {
-    // activeIndex,
-    resetActiveIndex,
-    containerRef,
-    handleKeyDown,
-    getInputProps,
-    getMenuProps,
-    getItemProps,
-    // isItemActive,
-  } = useKeyboardNavigation({
-    onEnter: (activeIndex) => {
-      if (activeIndex >= 0 && activeIndex < allRepos.length) {
-        onSelect(allRepos[activeIndex]!);
-      }
-    },
-    onEscape: onClose,
-    searchValue,
-    onSearchChange,
-    wrapAround: true,
-  });
-
-  // Reset active index when filtered repos change
-  React.useEffect(() => {
-    resetActiveIndex();
-  }, [resetActiveIndex]);
-
-  const handleItemClick = (repo: GithubSearchReposResult) => {
-    onSelect(repo);
-  };
-
-  const handleBlur = (e: React.FocusEvent) => {
-    // Close dropdown if focus moves outside the component
-    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-      onClose();
-    }
-  };
-  const hasError = !!error;
-
-  return (
-    <div ref={containerRef} className="w-full p-0 relative" onKeyDown={handleKeyDown} onBlur={handleBlur}>
-      <Input
-        {...getInputProps()}
-        autoFocus
-        value={searchValue}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Search repositories..."
-        className="w-full"
-      />
-      {hasError && (
-        <ul
-          {...getMenuProps()}
-          className="absolute z-20 text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg top-10"
-        >
-          <li className="flex w-full flex-col rounded p-1 ">
-            <div className="group flex h-8 min-w-0 items-center rounded-md justify-start border-destructive border px-2 py-5">
-              <Ban className="text-destructive h-4 w-4 mr-2" />
-              <span className="text-md font-mono truncate min-w-0">Error {error}</span>
-            </div>
-          </li>
-        </ul>
-      )}
-      {!hasError && isLoading && (
-        <ul
-          {...getMenuProps()}
-          className="absolute z-20 text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg top-10"
-        >
-          <li className="flex w-full flex-col rounded p-1">
-            <div className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2  px-2 py-5">
-              <Loader className="animate-spin h-4 w-4 text-muted-foreground mr-2" />
-              <span className="text-md font-mono shimmer-text">Loading...</span>
-            </div>
-          </li>
-        </ul>
-      )}
-
-      {!hasError && !isLoading && allRepos.length > 0 && (
-        <ul
-          {...getMenuProps()}
-          className="text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg absolute top-10 z-10"
-        >
-          {allRepos.map((repo, index) => (
-            <li key={repo.value} role="presentation" className="flex w-full flex-col rounded p-1">
-              <button
-                {...getItemProps(index)}
-                onClick={() => handleItemClick(repo)}
-                className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
-              >
-                <div className="min-w-0 truncate text-md font-mono _text-sidebar-foreground/70">{repo.element}</div>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {allRepos.length === 0 && searchValue && (
-        <div className="absolute w-full top-10 z-10 bg-sidebar border border-t-0 rounded-b-lg shadow-lg">
-          <div className="px-3 py-2 text-sm text-muted-foreground">No repositories found</div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function useGithubAccountRepo({ remoteAuth }: { remoteAuth: null | RemoteAuthDAO }) {
-  const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const username = useMemo(() => {
-    if (!agent) return "";
-    if ("login" in (remoteAuth?.data || {})) {
-      return (remoteAuth?.data as any).login;
-    }
-    return agent.getUsername() === "x-access-token" ? "" : agent.getUsername();
-  }, [agent, remoteAuth]);
-
-  const repoPrefix = username ? `${username}/` : "";
-  const handleCreateRepo = useEffectEvent(async (repoName: string, onCreate: (url: string) => void) => {
-    const finalRepoName = repoName.trim();
-    if (!agent) {
-      return console.warn("No agent available for creating repository");
-    }
-    if (!finalRepoName) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (!(agent instanceof RemoteAuthGithubAgent)) {
-        throw new Error("Unsupported Git provider for repository creation / this should not never happen lol");
-      }
-      const response = await agent.octokit.request("POST /user/repos", {
-        name: finalRepoName,
-        private: true,
-        auto_init: false,
-      });
-      setError(null);
-      return onCreate(response.data.html_url);
-    } catch (err: any) {
-      setError(err.message || "Failed to create repository");
-    } finally {
-      setIsLoading(false);
-    }
-  });
-  return {
-    agent,
-    username,
-    repoPrefix,
-    request: {
-      error,
-      isLoading,
-      reset: () => {
-        setError(null);
-        setIsLoading(true);
-      },
-      createRepo: handleCreateRepo,
-    },
-  };
 }
 
 function RepoCreateContainer({
@@ -696,67 +481,45 @@ function RepoCreateContainer({
   onClose: () => void;
   onCreated: (repoUrl: string) => void;
 }) {
-  const [repoName, setRepoName] = useState(workspaceName || "");
+  const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
+  const { ident, msg, request } = useRemoteGitRepo({
+    createRequest: async (name: string) => {
+      if (!agent) {
+        throw new Error("No agent available for creating repository");
+      }
+      const response = await agent.octokit.request("POST /user/repos", {
+        name,
+        private: true,
+        auto_init: false,
+      });
+      return response.data;
+    },
+    defaultName: workspaceName,
+  });
 
-  const { username, repoPrefix, request } = useGithubAccountRepo({ remoteAuth });
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !request.isLoading && repoName.trim()) {
-      e.preventDefault();
-      return request.createRepo(repoName, onCreated);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-    }
-  };
+  const username = (remoteAuth?.data as any)?.login || agent.getUsername().replace("x-access-token", "");
+  const repoPrefix = username ? `${username}/` : "";
 
   return (
     <div className="w-full relative">
-      <div className="w-full p-0 relative">
-        <Input
-          autoFocus
-          value={repoName.startsWith(repoPrefix) ? repoName : repoPrefix + repoName}
-          onChange={(e) => {
-            const value = e.target.value;
+      <RemoteItemCreateInput
+        placeholder={`${repoPrefix}my-new-repo`}
+        onClose={onClose}
+        onCreated={(repoData: any) => onCreated(repoData.html_url)}
+        request={request}
+        msg={msg}
+        ident={{
+          ...ident,
+          name: ident.name.startsWith(repoPrefix) ? ident.name : repoPrefix + ident.name,
+          setName: (value: string) => {
             if (value.startsWith(repoPrefix)) {
-              setRepoName(value.slice(repoPrefix.length));
+              ident.setName(value.slice(repoPrefix.length));
             } else {
-              setRepoName(value);
+              ident.setName(value);
             }
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder={`${repoPrefix}my-new-repo`}
-          className="w-full"
-          disabled={request.isLoading}
-        />
-
-        {request.error && (
-          <div className="absolute z-20 w-full top-10 bg-sidebar border border-destructive rounded-b-lg shadow-lg">
-            <div className="flex items-center px-3 py-2 text-sm text-destructive">
-              <Ban className="h-4 w-4 mr-2" />
-              {request.error}
-            </div>
-          </div>
-        )}
-
-        {request.isLoading && (
-          <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
-            <div className="flex items-center px-3 py-2 text-sm text-muted-foreground">
-              <Loader className="animate-spin h-4 w-4 mr-2" />
-              Creating repository...
-            </div>
-          </div>
-        )}
-
-        {!request.error && !request.isLoading && repoName.trim() && (
-          <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
-            <div className="px-3 py-2 text-sm text-muted-foreground">
-              Press Enter to create repository "{username ? `${username}/` : ""}
-              {repoName.trim()}"
-            </div>
-          </div>
-        )}
-      </div>
+          },
+        }}
+      />
     </div>
   );
 }

@@ -1,12 +1,16 @@
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/context/useDebounce";
+import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
+import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
+import { Repo } from "@/data/RemoteAuthTypes";
 import { useAnySearch } from "@/data/useGithubRepoSearch";
 import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/useRemoteSearch";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { cn } from "@/lib/utils";
 import { Ban, Loader } from "lucide-react";
-import React, { ReactNode, useEffect, useMemo, useState } from "react";
+import React, { ReactNode, useEffect, useEffectEvent, useMemo, useState } from "react";
 
 // const { msg, request, isValid, name, setName } = useAccountItem({ remoteAuth, defaultName: workspaceName });
 type RemoteRequestType<T = any> = {
@@ -242,10 +246,10 @@ export function useRemoteNetlifySearch({
     return results.map((result) => {
       return {
         label: isFuzzyResult<NetlifySite>(result) ? result.obj.name : result.name,
-        value: isFuzzyResult<NetlifySite>(result) ? result.obj.site_id : result.site_id,
+        value: isFuzzyResult<NetlifySite>(result) ? result.obj.name : result.name,
         element: isFuzzyResult<NetlifySite>(result)
           ? result.highlight((m, i) => (
-              <b className="text-highlight-foreground" key={i}>
+              <b className="text-ring" key={i}>
                 {m}
               </b>
             ))
@@ -320,58 +324,136 @@ export function useRemoteNetlifySite<T = any>({
   };
 }
 
-// function useGithubRemoteItem({ remoteAuth, defaultName }: { remoteAuth: null | RemoteAuthDAO; defaultName?: string }): {
-//   request: RemoteItemType.Request;
-//   ident: RemoteItemType.Ident;
-//   msg: RemoteItemType.Msg;
-// } {
-//   const [name, setName] = useState(defaultName || "");
-//   const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth) as RemoteAuthGithubAgent, [remoteAuth]);
-//   const [error, setError] = useState<string | null>(null);
-//   const [isLoading, setIsLoading] = useState<boolean>(false);
-//   const abortCntrlRef = React.useRef<AbortController | null>(null);
+export function useRemoteGitRepoSearch({
+  agent,
+  defaultValue = "",
+}: {
+  agent: IRemoteAuthAgentSearch<Repo> | null;
+  defaultValue?: string;
+}) {
+  const [searchValue, updateSearch] = useState(defaultValue);
+  const debouncedSearchValue = useDebounce(searchValue, 500);
+  const { loading, results, error } = useAnySearch<Repo>({
+    agent,
+    searchTerm: debouncedSearchValue,
+    searchKey: "full_name",
+  });
+  const searchResults = useMemo(() => {
+    return results.map((repo) => {
+      return {
+        label: isFuzzyResult<Repo>(repo) ? repo.obj.full_name : repo.full_name,
+        value: isFuzzyResult<Repo>(repo) ? repo.obj.html_url : repo.html_url,
+        element: isFuzzyResult<Repo>(repo)
+          ? repo.highlight((m, i) => (
+              <b className="text-highlight-foreground" key={i}>
+                {m}
+              </b>
+            ))
+          : repo.full_name,
+      };
+    });
+  }, [results]);
+  return {
+    isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
+    searchValue,
+    updateSearch,
+    searchResults,
+    error,
+  };
+}
 
-//   const handleCreateRepo = async (onCreate: (url: string) => void) => {
-//     const finalRepoName = name.trim();
-//     if (!agent) {
-//       return console.warn("No agent available for creating repository");
-//     }
-//     if (!finalRepoName) return;
-//     setIsLoading(true);
-//     setError(null);
-//     try {
-//       abortCntrlRef.current = new AbortController();
-//       const repoUrl = (await agent.createRepo(finalRepoName, { signal: abortCntrlRef.current.signal }))?.data?.html_url;
-//       setError(null);
-//       return onCreate(repoUrl);
-//     } catch (err: any) {
-//       setError(err.message || "Failed to create repository");
-//     } finally {
-//       abortCntrlRef.current = null;
-//       setIsLoading(false);
-//     }
-//   };
-//   return {
-//     request: {
-//       error,
-//       isLoading,
-//       reset: () => {
-//         setError(null);
-//         setIsLoading(false);
-//         abortCntrlRef.current?.abort();
-//       },
-//       create: handleCreateRepo,
-//     },
-//     ident: {
-//       isValid: !error && !isLoading && !!name.trim(),
-//       setName,
-//       name,
-//     },
-//     msg: {
-//       creating: "Creating repository...",
-//       askToEnter: "Enter a name to create a new repository",
-//       valid: `Press Enter to create repository "${name.trim()}"`,
-//       error,
-//     },
-//   };
-// }
+export function useRemoteGitRepo<T = any>({
+  createRequest,
+  defaultName,
+  repoPrefix = "",
+}: {
+  createRequest: (name: string, { signal }: { signal?: AbortSignal }) => Promise<T>;
+  defaultName?: string;
+  repoPrefix?: string;
+}): {
+  request: RemoteItemType.Request<T>;
+  ident: RemoteItemType.Ident;
+  msg: RemoteItemType.Msg;
+} {
+  const [name, setName] = useState(defaultName || "");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const abortCntrlRef = React.useRef<AbortController | null>(null);
+
+  const create = async (onCreate: (result: T) => void) => {
+    const finalName = name.trim();
+    if (!finalName) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      abortCntrlRef.current = new AbortController();
+      const result = await createRequest(finalName, { signal: abortCntrlRef.current.signal });
+      setError(null);
+      return onCreate(result);
+    } catch (err: any) {
+      setError(err.message || "Failed to create repository");
+    } finally {
+      abortCntrlRef.current = null;
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    request: {
+      error,
+      isLoading,
+      reset: () => {
+        setError(null);
+        setIsLoading(false);
+        abortCntrlRef.current?.abort();
+      },
+      create,
+    },
+    ident: {
+      isValid: !error && !isLoading && !!name.trim(),
+      setName,
+      name,
+    },
+    msg: {
+      creating: "Creating repository...",
+      askToEnter: "Enter a name to create a new repository",
+      valid: `Press Enter to create repository "${repoPrefix}${name.trim()}"`,
+      error,
+    },
+  };
+}
+
+export function useGitHubRepoCreation({ remoteAuth }: { remoteAuth: RemoteAuthDAO | null }) {
+  const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
+
+  const username = useMemo(() => {
+    if (!agent) return "";
+    if ("login" in (remoteAuth?.data || {})) {
+      return (remoteAuth?.data as any).login;
+    }
+    return agent.getUsername() === "x-access-token" ? "" : agent.getUsername();
+  }, [agent, remoteAuth]);
+
+  const repoPrefix = username ? `${username}/` : "";
+
+  const createRequest = useEffectEvent(async (name: string, { signal }: { signal?: AbortSignal }) => {
+    if (!agent) {
+      throw new Error("No agent available for creating repository");
+    }
+    if (!(agent instanceof RemoteAuthGithubAgent)) {
+      throw new Error("Unsupported Git provider for repository creation");
+    }
+    const response = await agent.octokit.request("POST /user/repos", {
+      name,
+      private: true,
+      auto_init: false,
+    });
+    return response.data;
+  });
+
+  return {
+    createRequest,
+    repoPrefix,
+    username,
+  };
+}

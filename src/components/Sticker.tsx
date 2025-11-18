@@ -1,7 +1,7 @@
 import OpalThemeSvg from "@/opalsvg/opal-theme.svg?react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export const Sticker = memo(function Sticker() {
+export const Sticker = memo(function Sticker({ enabled }: { enabled?: boolean }) {
   const stickerRef = useRef<SVGSVGElement>(null);
 
   // Static configuration
@@ -47,11 +47,11 @@ export const Sticker = memo(function Sticker() {
   );
 
   useEffect(() => {
-    if (config.pointer) {
+    if (config.pointer && enabled) {
       window.addEventListener("pointermove", handlePointerMove);
       return () => window.removeEventListener("pointermove", handlePointerMove);
     }
-  }, [config.pointer, handlePointerMove]);
+  }, [config.pointer, enabled, handlePointerMove]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = config.theme;
@@ -70,40 +70,42 @@ export const Sticker = memo(function Sticker() {
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <filter id="sticker-filter">
-            {/* Outline & merge layers */}
-            <feMerge result="merged">
-              <feMergeNode in="outlineflat" />
-              <feMergeNode in="outline" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+          {enabled && (
+            <filter id="sticker-filter">
+              {/* Outline & merge layers */}
+              <feMerge result="merged">
+                <feMergeNode in="outlineflat" />
+                <feMergeNode in="outline" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
 
-            {/* Blurs & lighting */}
-            <feGaussianBlur in="SourceAlpha" stdDeviation={config.deviation} result="blur" />
-            <feSpecularLighting
-              result="lighting"
-              in="blur"
-              surfaceScale={config.surface}
-              specularConstant={config.specular}
-              specularExponent={config.exponent}
-              lightingColor={config.light}
-            >
-              <fePointLight x={lightPos.x} y={lightPos.y} z={lightPos.z} />
-            </feSpecularLighting>
+              {/* Blurs & lighting */}
+              <feGaussianBlur in="SourceAlpha" stdDeviation={config.deviation} result="blur" />
+              <feSpecularLighting
+                result="lighting"
+                in="blur"
+                surfaceScale={config.surface}
+                specularConstant={config.specular}
+                specularExponent={config.exponent}
+                lightingColor={config.light}
+              >
+                <fePointLight x={lightPos.x} y={lightPos.y} z={lightPos.z} />
+              </feSpecularLighting>
 
-            {/* Lighting composition */}
-            <feComposite in="lighting" in2="SourceAlpha" operator="in" result="lit" />
-            <feComposite in="merged" in2="lit" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" />
+              {/* Lighting composition */}
+              <feComposite in="lighting" in2="SourceAlpha" operator="in" result="lit" />
+              <feComposite in="merged" in2="lit" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" />
 
-            {/* Drop shadow */}
-            <feDropShadow
-              dx={config.dx}
-              dy={config.dy}
-              stdDeviation={config.shadowDev}
-              floodColor={config.shadow}
-              floodOpacity={config.shadowOpacity}
-            />
-          </filter>
+              {/* Drop shadow */}
+              <feDropShadow
+                dx={config.dx}
+                dy={config.dy}
+                stdDeviation={config.shadowDev}
+                floodColor={config.shadow}
+                floodOpacity={config.shadowOpacity}
+              />
+            </filter>
+          )}
         </defs>
 
         {/* Sticker SVG Content */}

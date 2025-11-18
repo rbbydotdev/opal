@@ -61,7 +61,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     return ClientDb.destinations.where("guid").equals(guid).first();
   }
 
-  update(properties: Partial<DestinationRecord>) {
+  update(properties: Partial<DestinationRecord<T>>) {
     return ClientDb.destinations.update(this.guid, properties);
   }
 
@@ -87,35 +87,14 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 }
 
-type CloudflareDestinationData = {
-  accountId: string;
-  siteId: string;
-};
-export class CloudflareDestination extends DestinationDAO<CloudflareDestinationData> {
-  override meta: CloudflareDestinationData;
-  constructor(destination: DestinationRecord<CloudflareDestinationData>) {
-    super(destination);
-    this.meta = {
-      ...destination.meta,
-    };
-  }
-}
+type CloudflareDestinationData = z.infer<(typeof DestinationSchemaMap)["cloudflare"]>["meta"];
+export class CloudflareDestination extends DestinationDAO<CloudflareDestinationData> {}
 
-type NetlifyDestinationData = {
-  netAccountId: string;
-};
+type NetlifyDestinationData = z.infer<(typeof DestinationSchemaMap)["netlify"]>["meta"];
+export class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {}
 
-export class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {
-  override meta: NetlifyDestinationData;
-  constructor(destination: DestinationRecord<NetlifyDestinationData>) {
-    super(destination);
-    this.meta = {
-      ...destination.meta,
-    };
-  }
-}
-
-// const deploySlug = () => `deploy:${RandomSlugWords()}`;
+const RandomTag = (tag: string) =>
+  `My-${tag}-${RandomSlugWords(1)}-${`${Math.trunc(Math.random() * 100)}`.padStart(3, "0")}`;
 
 export const DestinationSchemaMap = {
   cloudflare: z
@@ -129,7 +108,7 @@ export const DestinationSchemaMap = {
     })
     .default(() => ({
       remoteAuthId: "",
-      label: `My-Cloudflare-${RandomSlugWords(1)}`,
+      label: RandomTag("Cloudflare"),
       meta: { accountId: "", siteId: "" },
     })),
   netlify: z
@@ -143,7 +122,7 @@ export const DestinationSchemaMap = {
     })
     .default(() => ({
       remoteAuthId: "",
-      label: `My-Netlify-${RandomSlugWords(1)}`,
+      label: RandomTag("Netlify"),
       meta: {
         siteName: "",
       },
@@ -159,7 +138,7 @@ export const DestinationSchemaMap = {
     })
     .default(() => ({
       remoteAuthId: "",
-      label: `My-Github-${RandomSlugWords(1)}`,
+      label: RandomTag("Github"),
       meta: { repository: "", branch: "" },
     })),
   custom: z
