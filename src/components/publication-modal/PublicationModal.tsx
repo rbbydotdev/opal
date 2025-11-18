@@ -655,8 +655,13 @@ export function PublicationModalPublishContent({
               ))}
               <SelectSeparator />
               <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
-                <Plus size={16} className="text-ring" />
-                Add a connection to publish
+                <button
+                  className="hover:text-ring flex w-full justify-start gap-2"
+                  onClick={() => pushView("connection")}
+                >
+                  <Plus size={16} className="text-ring" />
+                  Add a connection to publish
+                </button>
               </div>
               {RemoteAuthTemplates.map((connection) => (
                 <SelectItem key={typeSource(connection)} value={typeSource(connection)}>

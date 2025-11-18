@@ -27,7 +27,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     this.remoteAuth = remoteAuth;
     this.meta = meta;
     this.label = label;
-    this.timestamp = timestamp ?? Date.now();
+    this.timestamp = timestamp;
   }
 
   static FromJSON<T>(json: Optional<DestinationJType<T>, "timestamp">) {
@@ -57,7 +57,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     meta: T;
     label: string;
   }) {
-    return new DestinationDAO<T>({ guid: DestinationDAO.guid(), remoteAuth, meta, label, timestamp: Date.now() });
+    return new DestinationDAO<T>({ guid: DestinationDAO.guid(), remoteAuth, meta, label, timestamp: new Date() });
   }
 
   static FetchFromGuid(guid: string) {

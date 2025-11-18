@@ -16,7 +16,7 @@ export class DiskDAO {
     this.indexCache = indexCache ?? new TreeDirRoot().toJSON();
     this.guid = guid;
     this.type = type;
-    this.timestamp = timestamp ?? Date.now();
+    this.timestamp = timestamp;
   }
 
   static FromJSON(json: DiskJType) {
@@ -33,11 +33,11 @@ export class DiskDAO {
   }
 
   static CreateNew(type: DiskType = DefaultDiskType) {
-    return new DiskDAO({ type: type, guid: DiskDAO.guid(), timestamp: Date.now() });
+    return new DiskDAO({ type: type, guid: DiskDAO.guid(), timestamp: new Date() });
   }
 
   static New(type: DiskType, guid: string, indexCache?: TreeDirRootJType) {
-    return new DiskDAO({ type, guid, indexCache, timestamp: Date.now() });
+    return new DiskDAO({ type, guid, indexCache, timestamp: new Date() });
   }
 
   static FetchFromGuid(guid: string) {

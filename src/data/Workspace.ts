@@ -1,6 +1,5 @@
 import { Disk } from "@/data/disk/Disk";
 import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "@/data/disk/DiskEvents";
-import { HistoryDAO } from "@/data/HistoryDAO";
 import { ImageCache } from "@/data/ImageCache";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { SpecialDirs } from "@/data/SpecialDirs";
@@ -679,13 +678,7 @@ export class Workspace {
   async destroy() {
     void this.local.emit(WorkspaceEvents.DELETE, { id: this.id });
     void this.remote.emit(WorkspaceEvents.DELETE, { id: this.id });
-    return Promise.all([
-      HistoryDAO.removeAllForWorkspaceId(this.id),
-      this.connector.delete(),
-      this.disk.destroy(),
-      this.thumbs.destroy(),
-      this.imageCache.destroy(),
-    ]);
+    return Promise.all([this.connector.delete(), this.imageCache.destroy()]);
   }
 
   async rename(name: string) {

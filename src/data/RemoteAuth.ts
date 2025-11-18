@@ -73,7 +73,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
     this.type = type;
     this.tags = tags;
     this.data = record;
-    this.timestamp = timestamp ?? Date.now();
+    this.timestamp = timestamp;
   }
 
   static guid = () => "__remoteauth__" + nanoid();
@@ -86,7 +86,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
     tags: string[] = []
   ): Promise<RemoteAuthDAO> {
     const guid = RemoteAuthDAO.guid();
-    const dao = new RemoteAuthDAO({ guid, source, name, type, data, tags, timestamp: Date.now() });
+    const dao = new RemoteAuthDAO({ guid, source, name, type, data, tags, timestamp: new Date() });
     return dao.save().then(() => dao);
   }
 

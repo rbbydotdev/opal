@@ -1,7 +1,6 @@
 import { BuildLogLine, BuildRecord } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
-import { DiskRecord } from "@/data/disk/DiskRecord";
 import { DiskJType } from "@/data/DiskType";
 import { ClientDb } from "@/data/instance";
 import { NullDisk } from "@/data/NullDisk";
@@ -14,7 +13,7 @@ export type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
 
 export class BuildDAO implements BuildRecord {
   guid: string;
-  disk: DiskRecord | DiskJType;
+  disk: Disk | DiskJType;
   label: string;
   fileCount: number;
   timestamp: Date;
@@ -29,7 +28,7 @@ export class BuildDAO implements BuildRecord {
   constructor({ guid, label, timestamp, fileCount, disk, workspaceId, buildPath, logs }: Omit<BuildRecord, "status">) {
     this.guid = guid;
     this.label = label;
-    this.timestamp = timestamp ?? Date.now();
+    this.timestamp = timestamp;
     this.fileCount = fileCount;
     this.disk = disk;
     this.workspaceId = workspaceId;
@@ -75,7 +74,7 @@ export class BuildDAO implements BuildRecord {
       guid,
       label,
       timestamp: new Date(),
-      disk,
+      disk: disk instanceof Disk ? disk : DiskFromJSON(disk),
       workspaceId,
       buildPath,
       logs,
@@ -90,7 +89,7 @@ export class BuildDAO implements BuildRecord {
   }
 
   static async all() {
-    return (await ClientDb.builds.orderBy("timestamp").toArray()).map((build) => BuildDAO.FromJSON(build));
+    return (await ClientDb.builds.orderBy("timestamp").toArray()).map(BuildDAO.FromJSON);
   }
 
   static async allForWorkspace(workspaceId: string) {
@@ -125,7 +124,7 @@ export class BuildDAO implements BuildRecord {
       label: this.label,
       timestamp: this.timestamp,
       workspaceId: this.workspaceId,
-      disk: this.disk,
+      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
       buildPath: this.buildPath,
       logs: this.logs,
       status: this.status,
@@ -138,18 +137,15 @@ export class BuildDAO implements BuildRecord {
   }
 
   get Disk() {
-    return DiskFromJSON(this.disk);
+    return (this.disk = this.disk instanceof Disk ? this.disk : DiskFromJSON(this.disk));
   }
 
   async delete() {
     try {
-      const disk = this.Disk;
-      await disk.removeMultipleFiles([this.buildPath]);
+      await this.Disk.removeMultipleFiles([this.buildPath]);
     } catch (error) {
       console.error(`Failed to remove build files at ${this.buildPath}:`, error);
     }
-    //todo delete disk, when i move over to build disks
-    // return Promise.all([BuildDAO.delete(this.guid)]);
     return BuildDAO.delete(this.guid);
   }
   static delete(guid: string) {

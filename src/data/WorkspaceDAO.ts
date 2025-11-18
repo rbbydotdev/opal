@@ -134,10 +134,11 @@ export class WorkspaceDAO {
     thumbs?: DiskDAO;
     disk?: DiskDAO;
   }) {
-    let uniqueName = WorkspaceDAO.Slugify(name);
+    const slugName = WorkspaceDAO.Slugify(name).toLowerCase();
+    let uniqueName = slugName;
     let inc = 0;
     while (await WorkspaceDAO.nameExists(uniqueName)) {
-      uniqueName = `${name}-${++inc}`;
+      uniqueName = `${slugName}-${++inc}`;
     }
     const workspace = new WorkspaceDAO({
       name: uniqueName,
@@ -146,7 +147,7 @@ export class WorkspaceDAO {
       thumbs,
       remoteAuths,
       code: WS_OK,
-      timestamp: Date.now(),
+      timestamp: new Date(),
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
       return await Promise.all([
@@ -265,6 +266,6 @@ export class WorkspaceDAO {
     this.disk = DiskDAO.FromJSON(disk);
     this.thumbs = DiskDAO.FromJSON(thumbs);
     this.remoteAuths = remoteAuths.map((ra) => RemoteAuthDAO.FromJSON(ra));
-    this.timestamp = timestamp ?? Date.now();
+    this.timestamp = timestamp;
   }
 }
