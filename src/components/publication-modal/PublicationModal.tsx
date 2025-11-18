@@ -272,7 +272,7 @@ function NetlifyDestinationForm({
             setMode("input");
           }}
           onCreated={(res) => {
-            void destination?.update({ meta: { siteId: res.site_id } });
+            void destination?.update({ meta: { siteName: res.name } });
           }}
           request={request}
           msg={msg}
