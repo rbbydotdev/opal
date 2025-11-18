@@ -483,17 +483,7 @@ function RepoCreateContainer({
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
   const { ident, msg, request } = useRemoteGitRepo({
-    createRequest: async (name: string) => {
-      if (!agent) {
-        throw new Error("No agent available for creating repository");
-      }
-      const response = await agent.octokit.request("POST /user/repos", {
-        name,
-        private: true,
-        auto_init: false,
-      });
-      return response.data;
-    },
+    createRequest: agent.createRepo,
     defaultName: workspaceName,
   });
 
@@ -505,7 +495,7 @@ function RepoCreateContainer({
       <RemoteItemCreateInput
         placeholder={`${repoPrefix}my-new-repo`}
         onClose={onClose}
-        onCreated={(repoData: any) => onCreated(repoData.html_url)}
+        submit={() => request.submit().then((r) => (r ? onCreated(r.data.html_url) : void 0))}
         request={request}
         msg={msg}
         ident={{

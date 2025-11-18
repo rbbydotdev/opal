@@ -14,7 +14,7 @@ import React, { ReactNode, useEffect, useMemo, useState } from "react";
 type RemoteRequestType<T = any> = {
   error: string | null;
   isLoading: boolean;
-  create: (onCreate: (result: T) => void) => Promise<void>;
+  submit: () => Promise<T | null>;
   reset: () => void;
 };
 type RemoteRequestMsgType = {
@@ -37,14 +37,14 @@ namespace RemoteItemType {
 export function RemoteItemCreateInput<T = any>({
   onClose,
   request,
-  onCreated,
   msg,
   className,
   ident,
+  submit,
   placeholder = "my-new-thing",
 }: {
   onClose: (val?: string) => void;
-  onCreated: (result: T) => void;
+  submit: () => void;
   request: RemoteItemType.Request<T>;
   msg: RemoteItemType.Msg;
   ident: RemoteItemType.Ident;
@@ -54,7 +54,7 @@ export function RemoteItemCreateInput<T = any>({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && ident.isValid) {
       e.preventDefault();
-      return request.create(onCreated);
+      return submit();
     } else if (e.key === "Escape") {
       e.preventDefault();
       onClose();
@@ -95,9 +95,17 @@ export function RemoteItemCreateInput<T = any>({
         )}
 
         {ident.isValid && (
-          <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
-            <div className="px-3 py-2 text-sm text-muted-foreground">{msg.valid}</div>
-          </div>
+          <button
+            className="hover:text-ring group text-left flex justify-center items-center absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg"
+            onClick={(e) => {
+              e.preventDefault();
+              // void request.create(onCreated);
+              submit();
+            }}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <span className="px-3 py-2 text-sm group-hover:text-ring text-muted-foreground">{msg.valid}</span>
+          </button>
         )}
       </div>
     </div>
@@ -240,7 +248,7 @@ export function useRemoteNetlifySearch({
 }) {
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { loading, results, error } = useAnySearch<NetlifySite>({
+  const { loading, results, error, clearError } = useAnySearch<NetlifySite>({
     agent,
     searchTerm: debouncedSearchValue,
     searchKey: "name",
@@ -264,6 +272,7 @@ export function useRemoteNetlifySearch({
     isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
     searchValue,
     updateSearch,
+    clearError,
     searchResults,
     error,
   };
@@ -285,22 +294,23 @@ export function useRemoteNetlifySite<T = any>({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const abortCntrlRef = React.useRef<AbortController | null>(null);
 
-  const create = async (onCreate: (result: T) => void) => {
+  const create = async () => {
     const finalName = name.trim();
-    if (!finalName) return;
+    if (!finalName) return null;
     setIsLoading(true);
     setError(null);
     try {
       abortCntrlRef.current = new AbortController();
       const result = await createRequest(finalName, { signal: abortCntrlRef.current.signal });
       setError(null);
-      return onCreate(result);
+      return result;
     } catch (err: any) {
       setError(err.message || "Failed to create");
     } finally {
       abortCntrlRef.current = null;
       setIsLoading(false);
     }
+    return null;
   };
   return {
     request: {
@@ -311,7 +321,7 @@ export function useRemoteNetlifySite<T = any>({
         setIsLoading(false);
         abortCntrlRef.current?.abort();
       },
-      create,
+      submit: create,
     },
     ident: {
       isValid: !error && !isLoading && !!name.trim(),
@@ -383,22 +393,23 @@ export function useRemoteGitRepo<T = any>({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const abortCntrlRef = React.useRef<AbortController | null>(null);
 
-  const create = async (onCreate: (result: T) => void) => {
+  const create = async () => {
     const finalName = name.trim();
-    if (!finalName) return;
+    if (!finalName) return null;
     setIsLoading(true);
     setError(null);
     try {
       abortCntrlRef.current = new AbortController();
       const result = await createRequest(finalName, { signal: abortCntrlRef.current.signal });
       setError(null);
-      return onCreate(result);
+      return result;
     } catch (err: any) {
       setError(err.message || "Failed to create repository");
     } finally {
       abortCntrlRef.current = null;
       setIsLoading(false);
     }
+    return null;
   };
 
   return {
@@ -410,7 +421,7 @@ export function useRemoteGitRepo<T = any>({
         setIsLoading(false);
         abortCntrlRef.current?.abort();
       },
-      create,
+      submit: create,
     },
     ident: {
       isValid: !error && !isLoading && !!name.trim(),
