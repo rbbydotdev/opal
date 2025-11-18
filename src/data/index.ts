@@ -23,13 +23,13 @@ export class ClientIndexedDb extends Dexie {
 
     this.version(1).stores({
       settings: "name",
-      remoteAuths: "guid,type,ta",
-      workspaces: "guid,name",
-      disks: "guid",
+      remoteAuths: "guid,type,ta,timestamp",
+      workspaces: "guid,name,timestamp",
+      disks: "guid,timestamp",
       builds: "guid,diskId,timestamp,workspaceId",
       thumbnails: "[workspaceId+path],guid,path,workspaceId",
       historyDocs: "++edit_id,id,parent,workspaceId",
-      destinations: "guid,type",
+      destinations: "guid,type,timestamp",
     });
 
     applyEncryptionMiddleware<ClientIndexedDb>(
