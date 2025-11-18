@@ -9,12 +9,14 @@ export class DiskDAO {
   guid: string;
   type: DiskType;
   indexCache: TreeDirRootJType | null;
+  timestamp: number;
   static guid = () => "__disk__" + nanoid();
 
   constructor(disk: Optional<DiskRecord, "indexCache">) {
     this.indexCache = disk.indexCache ?? new TreeDirRoot().toJSON();
     this.guid = disk.guid;
     this.type = disk.type;
+    this.timestamp = disk.timestamp ?? Date.now();
   }
 
   static FromJSON(json: DiskJType) {
@@ -25,16 +27,17 @@ export class DiskDAO {
     return {
       guid: this.guid,
       type: this.type,
+      timestamp: this.timestamp,
       ...(includeIndexCache ? { indexCache: this.indexCache } : {}),
     };
   }
 
   static CreateNew(type: DiskType = DefaultDiskType) {
-    return new DiskDAO({ type: type, guid: DiskDAO.guid() });
+    return new DiskDAO({ type: type, guid: DiskDAO.guid(), timestamp: Date.now() });
   }
 
   static New(type: DiskType, guid: string, indexCache?: TreeDirRootJType) {
-    return new DiskDAO({ type, guid, indexCache });
+    return new DiskDAO({ type, guid, indexCache, timestamp: Date.now() });
   }
 
   static FetchFromGuid(guid: string) {
@@ -66,6 +69,7 @@ export class DiskDAO {
       guid: this.guid,
       type: this.type,
       indexCache: this.indexCache,
+      timestamp: this.timestamp,
     });
   }
 

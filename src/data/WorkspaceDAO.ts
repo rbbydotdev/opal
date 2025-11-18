@@ -30,6 +30,7 @@ export class WorkspaceDAO {
   code: WorkspaceStatusCode;
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
+  timestamp: number;
 
   toJSON() {
     return {
@@ -39,6 +40,7 @@ export class WorkspaceDAO {
       remoteAuth: this.remoteAuths,
       disk: this.disk,
       thumbs: this.thumbs,
+      timestamp: this.timestamp,
     };
   }
 
@@ -100,6 +102,7 @@ export class WorkspaceDAO {
       remoteAuths: this.remoteAuths,
       thumbs: this.thumbs,
       code: this.code,
+      timestamp: this.timestamp,
     });
   };
   static async CreateNewWithDiskType({
@@ -143,6 +146,7 @@ export class WorkspaceDAO {
       thumbs,
       remoteAuths,
       code: WS_OK,
+      timestamp: Date.now(),
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
       return await Promise.all([
@@ -245,6 +249,7 @@ export class WorkspaceDAO {
     thumbs,
     remoteAuths = [],
     code,
+    timestamp,
   }: {
     guid: string;
     name: string;
@@ -252,6 +257,7 @@ export class WorkspaceDAO {
     thumbs: DiskDAO | DiskJType;
     remoteAuths: RemoteAuthJType[];
     code: WorkspaceStatusCode;
+    timestamp?: number;
   }) {
     this.guid = guid;
     this.name = name;
@@ -259,5 +265,6 @@ export class WorkspaceDAO {
     this.disk = DiskDAO.FromJSON(disk);
     this.thumbs = DiskDAO.FromJSON(thumbs);
     this.remoteAuths = remoteAuths.map((ra) => RemoteAuthDAO.FromJSON(ra));
+    this.timestamp = timestamp ?? Date.now();
   }
 }

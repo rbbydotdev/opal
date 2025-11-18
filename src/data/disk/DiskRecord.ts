@@ -5,4 +5,5 @@ export class DiskRecord {
   guid!: string;
   type!: DiskType;
   indexCache!: TreeDirRootJType | null;
+  timestamp?: number;
 }

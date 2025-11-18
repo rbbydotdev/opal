@@ -78,6 +78,7 @@ export type RemoteAuthRecord = RemoteAuthType extends any
         name: string;
         tags: string[];
         data: RemoteAuthDataFor<RemoteAuthType>;
+        timestamp?: number;
       }
     : never
   : never;

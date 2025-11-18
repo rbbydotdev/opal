@@ -16,6 +16,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
   name: string;
   tags: string[];
   data: RemoteAuthDataFor<T>;
+  timestamp: number;
 
   /* connector: ClientDb.remoteAuths  */
 
@@ -42,6 +43,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
       name: this.name,
       source: this.source,
       tags: this.tags,
+      timestamp: this.timestamp,
     });
   }
 
@@ -52,6 +54,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
     name: name,
     data: record,
     tags,
+    timestamp,
   }: {
     guid: string;
     source: RemoteAuthSource;
@@ -59,6 +62,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
     name: string;
     data: RemoteAuthDataFor<T>;
     tags: string[];
+    timestamp?: number;
   }) {
     this.source = source;
     this.guid = guid;
@@ -66,6 +70,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
     this.type = type;
     this.tags = tags;
     this.data = record;
+    this.timestamp = timestamp ?? Date.now();
   }
 
   static guid = () => "__remoteauth__" + nanoid();
@@ -78,7 +83,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
     tags: string[] = []
   ): Promise<RemoteAuthDAO> {
     const guid = RemoteAuthDAO.guid();
-    const dao = new RemoteAuthDAO({ guid, source, name, type, data, tags });
+    const dao = new RemoteAuthDAO({ guid, source, name, type, data, tags, timestamp: Date.now() });
     return dao.save().then(() => dao);
   }
 
@@ -88,6 +93,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
       guid: this.guid,
       type: this.type,
       source: this.source,
+      timestamp: this.timestamp,
     } as RemoteAuthJType;
   }
 
@@ -108,6 +114,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
       type: json.type,
       data: json.data ?? null,
       tags: json.tags,
+      timestamp: json.timestamp,
     });
   }
 }
