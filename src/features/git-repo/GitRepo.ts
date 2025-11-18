@@ -57,13 +57,13 @@ export type RepoLatestCommit = {
   author: {
     name: string;
     email: string;
-    timestamp: number;
+    timestamp: Date;
     timezoneOffset: number;
   };
 };
 export type RepoCommit = {
   oid: string;
-  commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
+  commit: { message: string; author: { name: string; email: string; timestamp: Date; timezoneOffset: number } };
 };
 export const RepoLatestCommitNull = {
   oid: "",

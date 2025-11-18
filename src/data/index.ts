@@ -4,7 +4,7 @@ import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { SettingsRecord } from "@/data/SettingsRecord";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
-import { default as Dexie, type EntityTable } from "dexie";
+import { default as Dexie, Table, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 import { WorkspaceRecord } from "./WorkspaceRecord";
 
@@ -22,7 +22,7 @@ export class ClientIndexedDb extends Dexie {
   constructor() {
     super("ClientIndexedDb");
 
-    this.version(1).stores({
+    this.version(2).stores({
       settings: "name",
       remoteAuths: "guid,type,timestamp",
       workspaces: "guid,name,timestamp",
@@ -41,17 +41,46 @@ export class ClientIndexedDb extends Dexie {
       },
       clearAllTables
     );
-
+    // === DESTINATIONS ===
     this.destinations.hook("creating", (_primaryKey, obj) => {
       obj.remoteAuthGuid = obj.remoteAuth?.guid ?? null;
     });
 
     this.destinations.hook("updating", (mods: Partial<DestinationRecord>) => {
-      if (mods.remoteAuth?.guid) return { remoteAuthGuid: mods.remoteAuth.guid };
+      if (mods.remoteAuth?.guid) {
+        return { remoteAuthGuid: mods.remoteAuth.guid };
+      }
     });
 
-    this.remoteAuths.hook("deleting", (_primaryKey, remoteAuth, _tx) => {
-      return this.destinations.where("remoteAuthId").equals(remoteAuth.guid).delete();
+    // === REMOTEAUTHS ===
+    this.remoteAuths.hook("deleting", (_primaryKey, remoteAuth, tx) => {
+      // Wait until this transaction finishes, then do cleanup.
+      tx.on("complete", async () => {
+        await this.destinations.where("remoteAuthGuid").equals(remoteAuth.guid).delete();
+      });
     });
+
+    // === WORKSPACES ===
+    this.workspaces.hook("deleting", (primaryKey, workspace, tx) => {
+      // Avoid nested transaction error — wait until after the workspace delete finishes.
+      tx.on("complete", async () => {
+        await Promise.all([
+          this.disks.where("guid").equals(workspace.disk.guid).delete(),
+          this.disks.where("guid").equals(workspace.thumbs.guid).delete(),
+          this.builds.where("workspaceId").equals(workspace.guid).delete(),
+          this.historyDocs.where("workspaceId").equals(workspace.guid).delete(),
+        ]);
+      });
+    });
+
+    this.attachTimestampHooks();
+  }
+
+  private attachTimestampHooks(tables: Table<any, any>[] = this.tables) {
+    for (const table of tables) {
+      table.hook("creating", (_pk, obj) => {
+        obj.timestamp = new Date();
+      });
+    }
   }
 }

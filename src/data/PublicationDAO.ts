@@ -26,7 +26,7 @@ export class PublicationDAO implements PublicationRecord {
   constructor({ destination, timestamp, status, logs }: Optional<PublicationRecord, "logs" | "timestamp">) {
     this.guid = PublicationDAO.guid();
     this.destination = destination; // instanceof DestinationDAO ? destination : DestinationDAO.FromJSON(destination);
-    this.timestamp = timestamp ?? Date.now();
+    this.timestamp = timestamp;
     this.status = status;
     this.logs = logs || [];
   }
