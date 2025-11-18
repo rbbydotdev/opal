@@ -56,7 +56,7 @@ export class DiskDAO {
   }
 
   static async all() {
-    const disks = await ClientDb.disks.toArray();
+    const disks = await ClientDb.disks.orderBy("timestamp").toArray();
     return disks.map((disk) => DiskDAO.FromJSON(disk));
   }
 
