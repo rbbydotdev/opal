@@ -90,7 +90,7 @@ export class BuildDAO implements BuildRecord {
   }
 
   static async all() {
-    return (await ClientDb.builds.toArray()).map((build) => BuildDAO.FromJSON(build));
+    return (await ClientDb.builds.orderBy("timestamp").toArray()).map((build) => BuildDAO.FromJSON(build));
   }
 
   static async allForWorkspace(workspaceId: string) {

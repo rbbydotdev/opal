@@ -70,7 +70,7 @@ export class WorkspaceDAO {
     return ClientDb.workspaces.toArray();
   }
   static async all() {
-    const workspaceRecords = await ClientDb.workspaces.toArray();
+    const workspaceRecords = await ClientDb.workspaces.orderBy("timestamp").toArray();
     return workspaceRecords.map((ws) => new WorkspaceDAO(ws));
   }
   static async nameExists(name: string) {
