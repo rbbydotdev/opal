@@ -84,6 +84,7 @@ export function BuildModal({
       label: `Build ${new Date().toLocaleString()}`,
       workspaceId: currentWorkspace.guid,
       disk: currentWorkspace.getDisk(),
+      logs: [],
     });
     setBuildRunner(
       BuildRunner.create({

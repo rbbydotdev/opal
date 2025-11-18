@@ -16,7 +16,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
   name: string;
   tags: string[];
   data: RemoteAuthDataFor<T>;
-  timestamp: number;
+  timestamp?: number;
 
   /* connector: ClientDb.remoteAuths  */
 
@@ -93,6 +93,8 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
       guid: this.guid,
       type: this.type,
       source: this.source,
+      tags: this.tags,
+      data: this.data,
       timestamp: this.timestamp,
     } as RemoteAuthJType;
   }
