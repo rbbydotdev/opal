@@ -43,7 +43,7 @@ export function RemoteItemCreateInput<T = any>({
   ident,
   placeholder = "my-new-thing",
 }: {
-  onClose: () => void;
+  onClose: (val?: string) => void;
   onCreated: (result: T) => void;
   request: RemoteItemType.Request<T>;
   msg: RemoteItemType.Msg;
@@ -70,7 +70,7 @@ export function RemoteItemCreateInput<T = any>({
           value={ident.name}
           onChange={(e) => ident.setName(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={() => onClose()}
+          onBlur={() => onClose(ident.name.trim() || undefined)}
           placeholder={placeholder}
           className="w-full"
           disabled={request.isLoading}
@@ -132,7 +132,7 @@ export function RemoteItemSearchDropDown({
         }
       },
       onEscape: () => {
-        onClose();
+        onClose(searchValue.trim() || undefined);
       },
       searchValue,
       onSearchChange,
@@ -149,7 +149,7 @@ export function RemoteItemSearchDropDown({
 
   const handleInputBlur = (e: React.FocusEvent) => {
     if (!containerRef.current?.contains(e.relatedTarget as Node) && !e.relatedTarget?.closest("[data-capture-focus]")) {
-      onClose();
+      onClose(searchValue.trim() || undefined);
     }
   };
 
@@ -167,7 +167,7 @@ export function RemoteItemSearchDropDown({
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") onClose();
+              if (e.key === "Enter") onClose(searchValue.trim());
             }}
             onBlur={handleInputBlur}
             placeholder="Search..."

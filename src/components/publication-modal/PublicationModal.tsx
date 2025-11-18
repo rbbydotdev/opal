@@ -16,7 +16,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
-import { DestinationMetaType, DestinationSchemaMap, DestinationType, NetlifyDestination } from "@/data/DestinationDAO";
+import {
+  DestinationDAO,
+  DestinationMetaType,
+  DestinationSchemaMap,
+  DestinationType,
+  NetlifyDestination,
+} from "@/data/DestinationDAO";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthNetlifyAgent } from "@/data/RemoteAuthAgent";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
@@ -28,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, Search, UploadCloud, X, Zap } from "lucide-react";
-import { ReactNode, useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
@@ -49,12 +55,12 @@ export function usePublicationModalCmd() {
 }
 type PublicationViewType = "publish" | "destination" | "connection";
 
-function usePublicationViewStack() {
-  const [viewStack, setViewStack] = useState<PublicationViewType[]>(["publish"]);
+function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
+  const [viewStack, setViewStack] = useState<T[]>([defaultView]);
 
   const currentView = viewStack[viewStack.length - 1];
 
-  const pushView = (view: PublicationViewType) => {
+  const pushView = (view: T) => {
     setViewStack((prev) => [...prev, view]);
   };
 
@@ -63,7 +69,7 @@ function usePublicationViewStack() {
   };
 
   const resetToDefault = () => {
-    setViewStack(["publish"]);
+    setViewStack([defaultView]);
   };
 
   return {
@@ -89,7 +95,7 @@ export function PublicationModal({
   const [isOpen, setIsOpen] = useState(false);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const { remoteAuths } = useRemoteAuths();
-  const { currentView, pushView, popView, resetToDefault, canGoBack } = usePublicationViewStack();
+  const { currentView, pushView, popView, resetToDefault, canGoBack } = useViewStack<PublicationViewType>("publish");
 
   const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
     RemoteAuthRecord,
@@ -97,18 +103,17 @@ export function PublicationModal({
   > | null>(null);
   const [preferredDestConnection, setPreferredDestConnection] = useState<RemoteAuthRecord | null>(null);
 
-  const handleSubmit = (data: any) => {
-    console.log("Destination form submitted with data:", data);
-    // Handle form submission
-    // TODO: Save destination and move to next step
+  const handleSubmit = async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
+    const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
+    if (!remoteAuth) throw new Error("RemoteAuth not found");
+    await DestinationDAO.CreateNew({ ...data, remoteAuth }).save();
+    popView();
   };
 
-  const handleClose = useCallback((val?: string) => {
+  const handleClose = useCallback(() => {
     setIsOpen(false);
     setPreferredDestConnection(null);
     setPreferredNewConnection(null);
-    if (typeof val !== "undefined") {
-    }
   }, []);
 
   const handlePointerDownOutside = useCallback(() => {
@@ -235,6 +240,7 @@ function NetlifyDestinationForm({
   defaultName?: string;
 }) {
   const [mode, setMode] = useState<"search" | "input" | "create">("input");
+  const inputRef = useRef<HTMLInputElement>(null);
   const agent = useRemoteAuthAgent<RemoteAuthNetlifyAgent>(remoteAuth);
   const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteNetlifySearch({
     agent,
@@ -243,6 +249,13 @@ function NetlifyDestinationForm({
     createRequest: agent.createSite,
     defaultName,
   });
+
+  useEffect(() => {
+    if (mode === "input" && inputRef.current) {
+      // Small delay to ensure the input is rendered
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [mode]);
   if (mode === "search") {
     return (
       <div>
@@ -254,7 +267,7 @@ function NetlifyDestinationForm({
           onSearchChange={updateSearch}
           onClose={(val?: string) => {
             setMode("input");
-            if (typeof val !== "undefined") {
+            if (val) {
               form.setValue("meta.siteName", val);
             }
           }}
@@ -275,8 +288,11 @@ function NetlifyDestinationForm({
         <RemoteItemCreateInput
           className="mt-2"
           placeholder="my-netlify-site"
-          onClose={() => {
+          onClose={(inputVal?: string) => {
             setMode("input");
+            if (inputVal) {
+              form.setValue("meta.siteName", inputVal);
+            }
           }}
           onCreated={async (res) => {
             void destination?.update({ meta: { siteName: res.name } });
@@ -300,12 +316,37 @@ function NetlifyDestinationForm({
             <FormLabel>Site Name</FormLabel>
             <div className="flex justify-center w-full items-center gap-2">
               <FormControl>
-                <Input {...field} placeholder="my-netlify-site" />
+                <Input
+                  {...field}
+                  ref={inputRef}
+                  placeholder="my-netlify-site"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                    }
+                  }}
+                />
               </FormControl>
-              <Button variant="outline" title="Add Site" onClick={() => setMode("create")}>
+              <Button
+                variant="outline"
+                title="Add Site"
+                onClick={() => {
+                  const currentValue = form.getValues("meta.siteName");
+                  ident.setName(currentValue || "");
+                  setMode("create");
+                }}
+              >
                 <Plus />
               </Button>
-              <Button variant="outline" title="Find Site" onClick={() => setMode("search")}>
+              <Button
+                variant="outline"
+                title="Find Site"
+                onClick={() => {
+                  const currentValue = form.getValues("meta.siteName");
+                  updateSearch(currentValue || "");
+                  setMode("search");
+                }}
+              >
                 <Search />
               </Button>
             </div>
