@@ -9,14 +9,14 @@ export class DiskDAO {
   guid: string;
   type: DiskType;
   indexCache: TreeDirRootJType | null;
-  timestamp: number;
+  timestamp?: number;
   static guid = () => "__disk__" + nanoid();
 
-  constructor(disk: Optional<DiskRecord, "indexCache">) {
-    this.indexCache = disk.indexCache ?? new TreeDirRoot().toJSON();
-    this.guid = disk.guid;
-    this.type = disk.type;
-    this.timestamp = disk.timestamp ?? Date.now();
+  constructor({ guid, type, indexCache, timestamp }: Optional<DiskRecord, "indexCache">) {
+    this.indexCache = indexCache ?? new TreeDirRoot().toJSON();
+    this.guid = guid;
+    this.type = type;
+    this.timestamp = timestamp ?? Date.now();
   }
 
   static FromJSON(json: DiskJType) {

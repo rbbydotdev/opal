@@ -19,18 +19,18 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   label: string;
   remoteAuth: RemoteAuthDAO | RemoteAuthJType;
   meta: DestinationData<T>;
-  timestamp: number;
+  timestamp?: number;
   static guid = () => "__dest__" + nanoid();
 
-  constructor(destination: DestinationRecord<T>) {
-    this.guid = destination.guid;
-    this.remoteAuth = destination.remoteAuth;
-    this.meta = destination.meta;
-    this.label = destination.label;
-    this.timestamp = destination.timestamp ?? Date.now();
+  constructor({ guid, remoteAuth, meta, label, timestamp }: DestinationRecord<T>) {
+    this.guid = guid;
+    this.remoteAuth = remoteAuth;
+    this.meta = meta;
+    this.label = label;
+    this.timestamp = timestamp ?? Date.now();
   }
 
-  static FromJSON<T>(json: DestinationJType<T>) {
+  static FromJSON<T>(json: Optional<DestinationJType<T>, "timestamp">) {
     return new DestinationDAO<T>(json);
   }
 

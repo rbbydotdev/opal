@@ -9,7 +9,7 @@ export type PublishLogLine = {
 
 export interface PublicationRecord {
   destination: DestinationJType | DestinationDAO;
-  timestamp: Date | null;
+  timestamp?: number;
   status: "idle" | "success" | "failed";
   logs: PublishLogLine[];
 }
@@ -17,7 +17,7 @@ export type PublicationJType = ReturnType<typeof PublicationDAO.prototype.toJSON
 export class PublicationDAO implements PublicationRecord {
   guid: string;
   destination: DestinationJType | DestinationDAO;
-  timestamp: Date | null;
+  timestamp?: number;
   status: "idle" | "success" | "failed";
   logs: PublishLogLine[];
 
@@ -26,7 +26,7 @@ export class PublicationDAO implements PublicationRecord {
   constructor({ destination, timestamp, status, logs }: Optional<PublicationRecord, "logs" | "timestamp">) {
     this.guid = PublicationDAO.guid();
     this.destination = destination; // instanceof DestinationDAO ? destination : DestinationDAO.FromJSON(destination);
-    this.timestamp = timestamp ?? null;
+    this.timestamp = timestamp ?? Date.now();
     this.status = status;
     this.logs = logs || [];
   }

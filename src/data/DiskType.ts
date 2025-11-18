@@ -1,7 +1,7 @@
 import { BrowserAbility } from "@/lib/BrowserAbility";
 import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 
-export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType | null };
+export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType | null; timestamp?: number };
 
 export const DiskKinds = [
   "IndexedDbDisk",

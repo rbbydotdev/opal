@@ -1,6 +1,7 @@
 import { BuildLogLine, BuildRecord } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
+import { DiskRecord } from "@/data/disk/DiskRecord";
 import { DiskJType } from "@/data/DiskType";
 import { ClientDb } from "@/data/instance";
 import { NullDisk } from "@/data/NullDisk";
@@ -13,7 +14,7 @@ export type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
 
 export class BuildDAO implements BuildRecord {
   guid: string;
-  disk: Disk | DiskJType;
+  disk: DiskRecord | DiskJType;
   label: string;
   fileCount: number;
   timestamp: Date;
@@ -25,16 +26,16 @@ export class BuildDAO implements BuildRecord {
 
   static guid = () => "build_id_" + nanoid();
 
-  constructor(build: Omit<BuildRecord, "status">) {
-    this.guid = build.guid;
-    this.label = build.label;
-    this.timestamp = build.timestamp;
-    this.fileCount = build.fileCount;
-    this.disk = build.disk;
-    this.workspaceId = build.workspaceId;
-    this.buildPath = build.buildPath;
+  constructor({ guid, label, timestamp, fileCount, disk, workspaceId, buildPath, logs }: Omit<BuildRecord, "status">) {
+    this.guid = guid;
+    this.label = label;
+    this.timestamp = timestamp ?? Date.now();
+    this.fileCount = fileCount;
+    this.disk = disk;
+    this.workspaceId = workspaceId;
+    this.buildPath = buildPath;
     this.status = "idle";
-    this.logs = build.logs;
+    this.logs = logs;
   }
 
   static FromJSON(json: BuildJType) {
@@ -46,7 +47,7 @@ export class BuildDAO implements BuildRecord {
       guid: this.guid,
       label: this.label,
       timestamp: this.timestamp,
-      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
+      disk: this.disk,
       workspaceId: this.workspaceId,
       buildPath: this.buildPath,
       logs: this.logs,
@@ -74,7 +75,7 @@ export class BuildDAO implements BuildRecord {
       guid,
       label,
       timestamp: new Date(),
-      disk: disk instanceof Disk ? disk : DiskFromJSON(disk),
+      disk,
       workspaceId,
       buildPath,
       logs,
@@ -124,7 +125,7 @@ export class BuildDAO implements BuildRecord {
       label: this.label,
       timestamp: this.timestamp,
       workspaceId: this.workspaceId,
-      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
+      disk: this.disk,
       buildPath: this.buildPath,
       logs: this.logs,
       status: this.status,
@@ -137,7 +138,7 @@ export class BuildDAO implements BuildRecord {
   }
 
   get Disk() {
-    return (this.disk = this.disk instanceof Disk ? this.disk : DiskFromJSON(this.disk));
+    return DiskFromJSON(this.disk);
   }
 
   async delete() {
@@ -162,7 +163,7 @@ export class NullBuildDAO extends BuildDAO {
       guid: "_null_build_",
       label: "NullBuild",
       timestamp: new Date(0),
-      disk: new NullDisk(),
+      disk: new NullDisk().toJSON(),
       workspaceId: "",
       buildPath: absPath("/"),
       logs: [],

@@ -30,7 +30,7 @@ export class WorkspaceDAO {
   code: WorkspaceStatusCode;
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
-  timestamp: number;
+  timestamp?: number;
 
   toJSON() {
     return {
