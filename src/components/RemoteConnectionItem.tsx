@@ -9,6 +9,7 @@ import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/useRemoteSearch";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { cn } from "@/lib/utils";
+import * as Popover from "@radix-ui/react-popover";
 import { Ban, Loader } from "lucide-react";
 import React, { ReactNode, useEffect, useEffectEvent, useMemo, useState } from "react";
 
@@ -126,6 +127,7 @@ export function RemoteItemSearchDropDown({
   error?: string | null;
   allItems: RemoteItem[];
 }) {
+  const [open, setOpen] = useState(true);
   const { resetActiveIndex, containerRef, handleKeyDown, getInputProps, getMenuProps, getItemProps } =
     useKeyboardNavigation({
       onEnter: (activeIndex) => {
@@ -133,13 +135,15 @@ export function RemoteItemSearchDropDown({
           onSelect(allItems[activeIndex]!);
         }
       },
-      onEscape: onClose,
+      onEscape: () => {
+        setOpen(false);
+        onClose();
+      },
       searchValue,
       onSearchChange,
       wrapAround: true,
     });
 
-  // Reset active index when filtered repos change
   useEffect(() => {
     resetActiveIndex();
   }, [resetActiveIndex]);
@@ -148,84 +152,93 @@ export function RemoteItemSearchDropDown({
     onSelect(item);
   };
 
-  const handleBlur = (e: React.FocusEvent) => {
-    // Close dropdown if focus moves outside the component
+  const handleInputBlur = (e: React.FocusEvent) => {
     if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+      setOpen(false);
       onClose();
     }
   };
+
   const hasError = !!error;
+  const showDropdown = !!hasError || !!isLoading || allItems.length > 0 || (allItems.length === 0 && !!searchValue);
 
   return (
-    <div
-      ref={containerRef}
-      className={cn("w-full p-0 relative", className)}
-      onKeyDown={handleKeyDown}
-      onBlur={handleBlur}
+    <Popover.Root
+      open={showDropdown}
+      onOpenChange={(newOpen) => {
+        setOpen(newOpen);
+        if (!newOpen) {
+          onClose();
+        }
+      }}
     >
-      <Input
-        {...getInputProps()}
-        data-no-escape
-        autoFocus
-        value={searchValue}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Search..."
-        className="w-full"
-        // onKeyDown={
-      />
-      {hasError && (
-        <ul
-          {...getMenuProps()}
-          className="absolute z-20 text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg top-10"
-        >
-          <li className="flex w-full flex-col rounded p-1 ">
-            <div className="group flex h-8 min-w-0 items-center rounded-md justify-start border-destructive border px-2 py-5">
-              <Ban className="text-destructive h-4 w-4 mr-2" />
-              <span className="text-md font-mono truncate min-w-0">Error {error}</span>
-            </div>
-          </li>
-        </ul>
-      )}
-      {!hasError && isLoading && (
-        <ul
-          {...getMenuProps()}
-          className="absolute z-20 text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg top-10"
-        >
-          <li className="flex w-full flex-col rounded p-1">
-            <div className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2  px-2 py-5">
-              <Loader className="animate-spin h-4 w-4 text-muted-foreground mr-2" />
-              <span className="text-md font-mono shimmer-text">Loading...</span>
-            </div>
-          </li>
-        </ul>
-      )}
+      <div ref={containerRef} className={cn("w-full p-0", className)} onKeyDown={handleKeyDown}>
+        <Popover.Anchor asChild>
+          <Input
+            {...getInputProps()}
+            data-no-escape
+            autoFocus
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onBlur={handleInputBlur}
+            placeholder="Search..."
+            className="w-full"
+          />
+        </Popover.Anchor>
 
-      {!hasError && !isLoading && allItems.length > 0 && (
-        <ul
-          {...getMenuProps()}
-          className="text-xs block max-h-96 w-full justify-center overflow-scroll rounded-lg bg-sidebar drop-shadow-lg absolute top-10 z-10"
-        >
-          {allItems.map((repo, index) => (
-            <li key={repo.value} role="presentation" className="flex w-full flex-col rounded p-1">
-              <button
-                {...getItemProps(index)}
-                onClick={() => handleItemClick(repo)}
-                className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
-              >
-                <div className="min-w-0 truncate text-md font-mono">{repo.element}</div>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+        <Popover.Portal>
+          <Popover.Content
+            side="bottom"
+            align="start"
+            sideOffset={2}
+            className="z-50 w-[var(--radix-popover-trigger-width)] max-h-96 overflow-auto rounded-lg bg-sidebar shadow-lg border"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            {hasError && (
+              <div className="flex w-full flex-col rounded p-1">
+                <div className="group flex h-8 min-w-0 items-center rounded-md justify-start border-destructive border px-2 py-5">
+                  <Ban className="text-destructive h-4 w-4 mr-2" />
+                  <span className="text-md font-mono truncate min-w-0">Error {error}</span>
+                </div>
+              </div>
+            )}
 
-      {allItems.length === 0 && searchValue && (
-        <div className="absolute w-full top-10 z-10 bg-sidebar border border-t-0 rounded-b-lg shadow-lg">
-          <div className="px-3 py-2 text-sm text-muted-foreground">None found</div>
-        </div>
-      )}
-    </div>
+            {!hasError && isLoading && (
+              <div className="flex w-full flex-col rounded p-1">
+                <div className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 px-2 py-5">
+                  <Loader className="animate-spin h-4 w-4 text-muted-foreground mr-2" />
+                  <span className="text-md font-mono shimmer-text">Loading...</span>
+                </div>
+              </div>
+            )}
+
+            {!hasError && !isLoading && allItems.length > 0 && (
+              <ul {...getMenuProps()} className="text-xs">
+                {allItems.map((repo, index) => (
+                  <li key={repo.value} role="presentation" className="flex w-full flex-col rounded p-1">
+                    <button
+                      {...getItemProps(index)}
+                      onClick={() => handleItemClick(repo)}
+                      className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 _bg-sidebar px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
+                    >
+                      <div className="min-w-0 truncate text-md font-mono">{repo.element}</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {allItems.length === 0 && searchValue && !hasError && !isLoading && (
+              <div className="px-3 py-2 text-sm text-muted-foreground">None found</div>
+            )}
+          </Popover.Content>
+        </Popover.Portal>
+      </div>
+    </Popover.Root>
   );
+}
+function extractResult<T = unknown>(result: T | Fuzzysort.KeyResult<T>): T {
+  return isFuzzyResult<T>(result) ? result.obj : result;
 }
 
 export function useRemoteNetlifySearch({
@@ -341,8 +354,8 @@ export function useRemoteGitRepoSearch({
   const searchResults = useMemo(() => {
     return results.map((repo) => {
       return {
-        label: isFuzzyResult<Repo>(repo) ? repo.obj.full_name : repo.full_name,
-        value: isFuzzyResult<Repo>(repo) ? repo.obj.html_url : repo.html_url,
+        label: extractResult<Repo>(repo).full_name,
+        value: extractResult<Repo>(repo).html_url,
         element: isFuzzyResult<Repo>(repo)
           ? repo.highlight((m, i) => (
               <b className="text-highlight-foreground" key={i}>

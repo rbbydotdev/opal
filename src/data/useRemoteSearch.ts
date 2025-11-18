@@ -23,7 +23,7 @@ type RemoteSearchEventMap<TResult = any> = {
   error: string | null;
 };
 
-export class RemoteSearchFuzzyCache<TResult = any> {
+export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record<string, any>> {
   private cache: {
     allItems: TResult[];
     etag: string | null;
@@ -41,7 +41,7 @@ export class RemoteSearchFuzzyCache<TResult = any> {
 
   constructor(
     agent: IRemoteAuthAgentSearch<TResult> | null = null,
-    private searchKey: string | keyof TResult
+    private searchKey: Extract<keyof TResult, string>
   ) {
     this.agent = agent;
   }
@@ -125,10 +125,10 @@ export class RemoteSearchFuzzyCache<TResult = any> {
   }
 
   private async performSearch(): Promise<void> {
-    console.debug("performSearch called - agent:", !!this.agent, "searchTerm:", this._searchTerm);
+    // console.debug("performSearch called - agent:", !!this.agent, "searchTerm:", this._searchTerm);
 
     if (!this.agent) {
-      console.debug("No agent, returning empty results");
+      // console.debug("No agent, returning empty results");
       this.setResults(EMPTY_SEARCH_RESULT);
       this.setLoading(false);
       this.setError(null);
@@ -144,32 +144,32 @@ export class RemoteSearchFuzzyCache<TResult = any> {
     const currentRequestId = ++this.requestId;
 
     try {
-      console.debug("Starting search, setting loading to true");
+      // console.debug("Starting search, setting loading to true");
       this.setLoading(true);
       this.setError(null);
 
       let isStale = this.cache.allItems.length === 0;
-      console.debug("Cache status - isStale:", isStale, "cache length:", this.cache.allItems.length);
+      // console.debug("Cache status - isStale:", isStale, "cache length:", this.cache.allItems.length);
 
       // Check for updates if we have cached data and it's been more than 2 seconds
       if (!isStale && Date.now() - this.cache.lastCheck > 2000) {
-        console.debug("Checking for updates...");
+        // console.debug("Checking for updates...");
         const { updated, newEtag } = await this.agent.hasUpdates(this.cache.etag, {
           signal: this.controller.signal,
         });
         isStale = updated;
         this.cache.etag = newEtag;
         this.cache.lastCheck = Date.now();
-        console.debug("Update check complete - isStale:", isStale);
+        // console.debug("Update check complete - isStale:", isStale);
       }
 
       // Fetch fresh data if needed
       if (isStale) {
-        console.debug("Data is stale, calling fetchAll...");
+        // console.debug("Data is stale, calling fetchAll...");
         this.cache.allItems = await this.agent.fetchAll({ signal: this.controller.signal });
-        console.debug("fetchAll complete, got", this.cache.allItems.length, "items");
+        // console.debug("fetchAll complete, got", this.cache.allItems.length, "items");
       } else {
-        console.debug("Using cached data");
+        // console.debug("Using cached data");
       }
 
       // Only update results if this is still the current request

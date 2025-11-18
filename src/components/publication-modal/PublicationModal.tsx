@@ -29,7 +29,7 @@ import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, Search, UploadCloud, X, Zap } from "lucide-react";
 import { ReactNode, useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { useForm, UseFormReturn, useWatch } from "react-hook-form";
+import { useForm, UseFormReturn } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
 
@@ -271,8 +271,10 @@ function NetlifyDestinationForm({
           onClose={() => {
             setMode("input");
           }}
-          onCreated={(res) => {
+          onCreated={async (res) => {
             void destination?.update({ meta: { siteName: res.name } });
+            form.setValue("meta.siteName", res.name);
+            setMode("input");
           }}
           request={request}
           msg={msg}
@@ -387,17 +389,16 @@ export function PublicationModalDestinationContent({
     mode: "onChange",
   });
 
-  const currentRemoteAuthId = useWatch({
-    control: form.control,
-    name: "remoteAuthId",
-  });
+  const formValues = form.watch();
+
+  const currentRemoteAuthId = formValues.remoteAuthId;
   const remoteAuth = useMemo(
     () =>
       currentRemoteAuthId ? RemoteAuthDAO.FromJSON(remoteAuths.find((ra) => ra.guid === currentRemoteAuthId)!) : null,
     [currentRemoteAuthId, remoteAuths]
   );
 
-  const isComplateOkay = currentSchema.safeParse(form.getValues()).success;
+  const isCompleteOkay = currentSchema.safeParse(formValues).success;
   const handleSelectType = (value: string) => {
     form.setValue("remoteAuthId", value);
     const ra = remoteAuths.find((remoteAuth) => remoteAuth.guid === value);
@@ -411,14 +412,7 @@ export function PublicationModalDestinationContent({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={(e) => {
-          console.log("Submitting destination form");
-          e.preventDefault();
-          return form.handleSubmit(handleSubmit)();
-        }}
-        className="space-y-4 py-4 pt-2"
-      >
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4 pt-2">
         <FormField
           control={form.control}
           name="remoteAuthId"
@@ -487,7 +481,7 @@ export function PublicationModalDestinationContent({
           <Button type="button" variant="outline" onClick={close}>
             <ArrowLeft /> Back
           </Button>
-          <Button type="submit" disabled={!isComplateOkay}>
+          <Button type="submit" disabled={!isCompleteOkay}>
             <Zap />
             Save
           </Button>
