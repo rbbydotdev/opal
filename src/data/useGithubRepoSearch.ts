@@ -42,7 +42,7 @@ export function useAnySearch<T extends Record<string, any>>({
 }: {
   agent: IRemoteAuthAgentSearch<T> | null;
   searchTerm: string;
-  searchKey: keyof T;
+  searchKey: Extract<keyof T, string>;
 }) {
   // Create and manage the search instance
   const searchInstance = useMemo(() => {
