@@ -161,7 +161,7 @@ export function PublicationModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
-        className={cn("overflow-y-auto top-[10vh] min-h-[50vh]", {
+        className={cn("overflow-y-auto top-[10vh] min-h-[50vh] max-w-2xl", {
           "min-h-[80vh]": currentView === "publish",
         })}
         onPointerDownOutside={handlePointerDownOutside}
@@ -628,76 +628,78 @@ export function PublicationModalPublishContent({
           Destination
         </label>
         <div className="flex gap-2">
-          <Select value={destination?.guid} onValueChange={handleSetDestination}>
-            <SelectTrigger className="min-h-12 p-2">
-              <SelectValue placeholder="Select Destination" />
-            </SelectTrigger>
-            <SelectContent>
-              <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
-                <UploadCloud size={16} className="text-ring" />
-                My Destinations
-              </div>
-              {destinations.length === 0 && (
-                <div className="font-mono font-bold italic flex border-dashed p-1 border border-ring justify-center text-2xs mb-2 mx-4">
-                  none
+          <div className="w-full">
+            <Select value={destination?.guid} onValueChange={handleSetDestination}>
+              <SelectTrigger className="min-h-12 p-2">
+                <SelectValue placeholder="Select Destination" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
+                  <UploadCloud size={16} className="text-ring" />
+                  My Destinations
                 </div>
-              )}
-              {destinations.map((dest) => (
-                <SelectItem key={dest.guid} value={dest.guid}>
-                  <div className="flex flex-col items-start gap-0">
-                    <span className="font-medium flex items-center gap-2 capitalize">
-                      <RemoteAuthSourceIconComponent
-                        type={dest.RemoteAuth.type}
-                        source={dest.RemoteAuth.source}
-                        size={16}
-                      />
-                      {dest.label} - <span>{dest.RemoteAuth.type}</span> / <span> {dest.RemoteAuth.source}</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground capitalize">
-                      Publish to {dest.RemoteAuth.source} hosting
-                    </span>
+                {destinations.length === 0 && (
+                  <div className="font-mono font-bold italic flex border-dashed p-1 border border-ring justify-center text-2xs mb-2 mx-4">
+                    none
                   </div>
-                </SelectItem>
-              ))}
-              <SelectSeparator />
-              <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
-                <Zap size={16} className="text-ring" />
-                Existing Connections
-              </div>
-              {remoteAuths.map((auth) => (
-                <SelectItem key={auth.guid} value={auth.guid}>
-                  <div className="flex flex-col items-start gap-0">
-                    <span className="font-medium flex items-center gap-2 capitalize">
-                      <RemoteAuthSourceIconComponent type={auth.type} source={auth.source} size={16} />
-                      {auth.name} - <span>{auth.type}</span> / <span> {auth.source}</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground capitalize">Publish to {auth.source} hosting</span>
-                  </div>
-                </SelectItem>
-              ))}
-              <SelectSeparator />
-              <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
-                <button
-                  className="hover:text-ring flex w-full justify-start gap-2"
-                  onClick={() => pushView("connection")}
-                >
-                  <Plus size={16} className="text-ring" />
-                  Add a connection to publish
-                </button>
-              </div>
-              {RemoteAuthTemplates.map((connection) => (
-                <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
-                  <div className="flex items-center gap-2">
-                    {connection.icon}
-                    <div>
-                      <p className="text-sm font-medium">{connection.name}</p>
-                      <p className="text-xs text-muted-foreground">{connection.description}</p>
+                )}
+                {destinations.map((dest) => (
+                  <SelectItem key={dest.guid} value={dest.guid}>
+                    <div className="flex flex-col items-start gap-0">
+                      <span className="font-medium flex items-center gap-2 capitalize">
+                        <RemoteAuthSourceIconComponent
+                          type={dest.RemoteAuth.type}
+                          source={dest.RemoteAuth.source}
+                          size={16}
+                        />
+                        {dest.label} - <span>{dest.RemoteAuth.type}</span> / <span> {dest.RemoteAuth.source}</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground capitalize">
+                        Publish to {dest.RemoteAuth.source} hosting
+                      </span>
                     </div>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  </SelectItem>
+                ))}
+                <SelectSeparator />
+                <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
+                  <Zap size={16} className="text-ring" />
+                  Existing Connections
+                </div>
+                {remoteAuths.map((auth) => (
+                  <SelectItem key={auth.guid} value={auth.guid}>
+                    <div className="flex flex-col items-start gap-0">
+                      <span className="font-medium flex items-center gap-2 capitalize">
+                        <RemoteAuthSourceIconComponent type={auth.type} source={auth.source} size={16} />
+                        {auth.name} - <span>{auth.type}</span> / <span> {auth.source}</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground capitalize">Publish to {auth.source} hosting</span>
+                    </div>
+                  </SelectItem>
+                ))}
+                <SelectSeparator />
+                <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
+                  <button
+                    className="hover:text-ring flex w-full justify-start gap-2"
+                    onClick={() => pushView("connection")}
+                  >
+                    <Plus size={16} className="text-ring" />
+                    Add a connection to publish
+                  </button>
+                </div>
+                {RemoteAuthTemplates.map((connection) => (
+                  <SelectItem key={typeSource(connection)} value={typeSource(connection)}>
+                    <div className="flex items-center gap-2">
+                      {connection.icon}
+                      <div>
+                        <p className="text-sm font-medium">{connection.name}</p>
+                        <p className="text-xs text-muted-foreground">{connection.description}</p>
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             variant={"outline"}
             className="min-h-12"
@@ -710,6 +712,13 @@ export function PublicationModalPublishContent({
               <Pencil />
             </Button>
           )}
+        </div>
+        <div className="w-full flex">
+          <p>
+            {destination
+              ? `Ready to publish to ${destination.label} via ${destination.RemoteAuth.source} hosting.`
+              : "Please select a destination to publish to."}
+          </p>
         </div>
       </div>
 
