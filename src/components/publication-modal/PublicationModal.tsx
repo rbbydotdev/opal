@@ -34,16 +34,26 @@ import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, Search, UploadCloud, X, Zap } from "lucide-react";
-import { ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
 
+type PubicationModalCmd = {
+  open: ({ build }: { build: BuildDAO }) => void;
+  close: () => void;
+};
 export function usePublicationModalCmd() {
-  const cmdRef = useRef<{
-    open: ({ build }: { build: BuildDAO }) => void;
-    close: () => void;
-  }>({
+  const cmdRef = useRef<PubicationModalCmd>({
     open: () => {},
     close: () => {},
   });
@@ -53,6 +63,19 @@ export function usePublicationModalCmd() {
     cmdRef,
   };
 }
+export const PublicationModalContext = createContext<PubicationModalCmd>({
+  open: () => {},
+  close: () => {},
+});
+
+export const PublicationModalProvider = ({ children }: { children: ReactNode }) => {
+  const cmdRef = useRef<PubicationModalCmd>({
+    open: () => {},
+    close: () => {},
+  });
+  return <PublicationModalContext.Provider value={cmdRef.current}>{children}</PublicationModalContext.Provider>;
+};
+
 type PublicationViewType = "publish" | "destination" | "connection";
 
 function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
@@ -86,6 +109,7 @@ function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
   };
 }
 
+//MARK: Publication Modal
 export function PublicationModal({
   currentWorkspace,
   cmdRef,
@@ -177,6 +201,8 @@ export function PublicationModal({
             <PublicationModalDescription view={currentView} />
           </DialogDescription>
         </DialogHeader>
+
+        {/* MARK: destination */}
         {currentView === "destination" && (
           <>
             <PublicationModalDestinationContent
@@ -192,6 +218,7 @@ export function PublicationModal({
             />
           </>
         )}
+        {/* MARK: Connection */}
         {currentView === "connection" && (
           <ConnectionsModalContent
             preferredNewConnection={preferredNewConnection}
@@ -207,6 +234,8 @@ export function PublicationModal({
             </DialogHeader>
           </ConnectionsModalContent>
         )}
+
+        {/* MARK: publish */}
         {currentView === "publish" && (
           <PublicationModalPublishContent
             //* for jumping to new connection
@@ -227,6 +256,9 @@ export function PublicationModal({
   );
 }
 
+//MARK: Destination Forms
+
+//MARK: Netlify Form
 function NetlifyDestinationForm({
   form,
   remoteAuth,
@@ -358,6 +390,7 @@ function NetlifyDestinationForm({
     );
   }
 }
+//MARK: Cloudflare Form
 function CloudflareDestinationForm({ form }: { form: UseFormReturn<DestinationMetaType<"cloudflare">> }) {
   return (
     <>
@@ -405,6 +438,7 @@ function PublicationModalDescription({ view }: { view: "publish" | "destination"
   }
 }
 
+//MARK: Destination Content
 export function PublicationModalDestinationContent({
   close,
   handleSubmit,
@@ -543,6 +577,7 @@ export function PublicationModalDestinationContent({
   );
 }
 
+//MARK: Publish Content
 export function PublicationModalPublishContent({
   build,
   destination,

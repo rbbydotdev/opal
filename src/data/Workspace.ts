@@ -538,10 +538,6 @@ export class Workspace {
     return results;
   }
 
-  async refreshDisk() {
-    await this.disk.refresh();
-  }
-
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
     const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
     await this.indexAndEmitNewFiles(results);
@@ -619,15 +615,10 @@ export class Workspace {
     });
   }
 
-  // isReady(){
-  //   return this.disk.isReady() && this.repo.isReady();
-  // }
-
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     try {
       const unsubs: (() => void)[] = [];
       // Store disk initialization errors to re-throw them
-      // let diskInitError: Error | null = null;
       unsubs.push(
         await this.disk.init({
           skipListeners,
@@ -656,7 +647,6 @@ export class Workspace {
       }
       return this;
     } catch (e) {
-      // this.setEror
       console.error("Error initializing workspace", e);
       await this.connector.setStatusCode(WS_ERR_NONRECOVERABLE);
       throw e;
@@ -751,7 +741,6 @@ export class Workspace {
   async renameMdImages(paths: [to: string, from: string][]) {
     if (paths.length === 0 || !paths.flat().length) return [];
     let res: AbsPath[] = [];
-    // const response = await fetch("/replace-md-images", {
     const response = await fetch("/replace-files", {
       method: "POST",
       body: JSON.stringify(paths),

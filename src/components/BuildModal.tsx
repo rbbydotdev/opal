@@ -5,12 +5,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/BuildDAO";
-import { BuildLogLine } from "@/data/BuildRecord";
 import { Workspace } from "@/data/Workspace";
-import { BuildLog } from "@/hooks/useBuildLogs";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
-import { createContext, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { timeAgo } from "short-time-ago";
 
 type BuildModalContextType = {
@@ -63,7 +70,6 @@ export function BuildModal({
   }>;
 }) {
   const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
-
   const [isOpen, setIsOpen] = useState(false);
   const optionsRef = useRef<{
     currentWorkspace: Workspace;
@@ -72,13 +78,10 @@ export function BuildModal({
   } | null>(null);
   const [buildError, setBuildError] = useState<string | null>(null);
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
-  const [logs, setLogs] = useState<BuildLog[]>([]);
-
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const logs = useSyncExternalStore(buildRunner.onLog, buildRunner.getLogs);
   const buildCompleted = buildRunner ? buildRunner.isSuccessful : false;
   const handleOkay = () => setIsOpen(false);
-  const log = useCallback((bl: BuildLogLine) => {
-    setLogs((prev) => [...prev, bl]);
-  }, []);
   const openNew = useCallback(async () => {
     const build = BuildDAO.CreateNew({
       label: `Build ${new Date().toLocaleString()}`,
@@ -95,31 +98,20 @@ export function BuildModal({
     );
     setIsOpen(true);
   }, [currentWorkspace, strategy]);
-  const openEdit = async ({ buildId }: { buildId: string }) => {
-    const build = await BuildDAO.FetchFromGuid(buildId);
-    setBuildRunner(
-      BuildRunner.create({
-        build: build!,
-        sourceDisk: currentWorkspace.getDisk(),
-        strategy,
-      })
-    );
-  };
 
   useEffect(() => {
     return () => {
-      if (!isOpen) {
-        setBuildError(null);
-        setLogs([]);
-      }
+      if (!isOpen) setBuildError(null);
     };
-  }, [isOpen, strategy, log, optionsRef, setBuildError, currentWorkspace]);
+  }, [isOpen, strategy, optionsRef, setBuildError, currentWorkspace]);
+
+  // useEffect(() => {
+  //   bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  // }, [logs]);
 
   const handleBuild = async () => {
     if (!buildRunner) return;
-    await buildRunner.execute({
-      log,
-    });
+    await buildRunner.execute();
     if (buildRunner.isSuccessful) {
       setBuildError(null);
       console.log("Build completed successfully");
@@ -128,12 +120,13 @@ export function BuildModal({
     } else if (buildRunner.isCancelled) {
       setBuildError("Build was cancelled.");
     }
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 0);
   };
 
   const handleCancel = useCallback(() => {
-    buildRunner!.cancel({ log });
+    buildRunner!.cancel();
     setIsOpen(false);
-  }, [buildRunner, log]);
+  }, [buildRunner]);
 
   const handleClose = useCallback(() => {
     if (buildRunner.isBuilding) return;
@@ -240,7 +233,7 @@ export function BuildModal({
               <div className="flex items-center gap-2 font-mono text-success justify-between">
                 <div className="flex items-center gap-4">
                   <CheckCircle size={20} className="text-success" />
-                  <span className="font-semibold">BUILD COMPLETED SUCCESSFULLY</span>
+                  <span className="font-semibold uppercase">build completed successfully</span>
                 </div>
                 <Button onClick={handleOkay} className="flex items-center gap-2">
                   Okay
@@ -255,7 +248,7 @@ export function BuildModal({
               <div className="flex items-center gap-2 font-mono text-destructive justify-between">
                 <div className="flex items-center gap-4">
                   <AlertTriangle size={20} className="text-destructive" />
-                  <span className="font-semibold">BUILD FAILED</span>
+                  <span className="font-semibold uppercase">build failed</span>
                 </div>
                 <Button onClick={handleOkay} variant="destructive" className="flex items-center gap-2">
                   Okay
@@ -281,6 +274,7 @@ export function BuildModal({
                     </div>
                   ))
                 )}
+                <div ref={bottomRef} />
               </div>
             </ScrollArea>
           </div>

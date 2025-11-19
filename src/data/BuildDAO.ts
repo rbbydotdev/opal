@@ -112,9 +112,7 @@ export class BuildDAO implements BuildRecord {
 
   async update({ ...properties }: Partial<Omit<BuildRecord, "guid">>) {
     await ClientDb.builds.update(this.guid, properties);
-    for (const [key, value] of Object.entries(properties)) {
-      (this as any)[key] = value;
-    }
+    for (const [key, value] of Object.entries(properties)) (this as any)[key] = value;
     return this;
   }
 

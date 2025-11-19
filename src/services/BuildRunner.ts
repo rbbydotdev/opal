@@ -7,6 +7,7 @@ import { NullDisk } from "@/data/NullDisk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
+import { CreateSuperTypedEmitter } from "@/lib/TypeEmitter";
 import { getMimeType } from "@zip.js/zip.js";
 import matter from "gray-matter";
 import { marked } from "marked";
@@ -27,7 +28,8 @@ export interface BuildResult {
   success: boolean;
   error?: string;
 }
-function logLine(message: string, type: "info" | "error" | "warning" = "info") {
+type BuildLogType = "info" | "error" | "warning";
+function logLine(message: string, type: BuildLogType = "info") {
   return {
     timestamp: new Date(),
     message,
@@ -44,6 +46,11 @@ export class BuildRunner {
   strategy: BuildStrategy;
   logs: BuildLogLine[] = [];
   completed: boolean = false;
+
+  logEmitter = CreateSuperTypedEmitter<{
+    [key in BuildLogType]: BuildLogLine;
+  }>();
+
   get isBuilding() {
     return this.build.status === "pending";
   }
@@ -63,9 +70,10 @@ export class BuildRunner {
     return this.build.status === "idle";
   }
   private abortController: AbortController = new AbortController();
-  protected readonly log = (message: string, type?: "info" | "error") => {
+  protected readonly log = (message: string, type?: BuildLogType) => {
     const l = logLine(message, type);
-    this.logs.push(l);
+    this.logs = [...this.logs, l];
+    this.logEmitter.emit(type || "info", l);
     return l;
   };
 
@@ -113,10 +121,19 @@ export class BuildRunner {
     this.outputDisk = this.sourceDisk;
     this.outputPath = this.build.getBuildPath();
   }
-  async tearDown() {}
-  cancel({ log = () => {} }: { log?: (l: BuildLogLine) => void } = {}) {
+
+  onLog = (callback: (log: BuildLogLine) => void) => {
+    return this.logEmitter.on("*", callback);
+  };
+  getLogs = () => this.logs;
+
+  tearDown() {
+    this.logEmitter.clearListeners();
+  }
+
+  cancel() {
     this.abortController.abort();
-    log(this.log("Build cancelled by user", "error"));
+    this.log("Build cancelled by user", "error");
   }
   async execute({
     abortSignal = this.abortController.signal,
@@ -217,8 +234,8 @@ export class BuildRunner {
         });
       }
     } finally {
-      Object.freeze(this.build);
-      Object.freeze(this);
+      // Object.freeze(this.build);
+      // Object.freeze(this);
     }
   }
 
