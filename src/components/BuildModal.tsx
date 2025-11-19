@@ -1,4 +1,5 @@
 import { BuildStrategy } from "@/builder/builder-types";
+import { usePublicationModalCmd } from "@/components/publication-modal/PubicationModalCmd";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,7 +8,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/BuildDAO";
 import { Workspace } from "@/data/Workspace";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
-import { AlertTriangle, CheckCircle, Loader, X } from "lucide-react";
+import { AlertTriangle, CheckCircle, Loader, UploadCloud, X } from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -105,6 +106,8 @@ export function BuildModal({
     };
   }, [isOpen, strategy, optionsRef, setBuildError, currentWorkspace]);
 
+  const { open: openPubModal } = usePublicationModalCmd();
+
   const handleBuild = async () => {
     if (!buildRunner) return;
     await buildRunner.execute();
@@ -133,6 +136,10 @@ export function BuildModal({
     if (buildRunner.isBuilding) {
       e.preventDefault();
     }
+  };
+  const handleOpenPubModal = () => {
+    handleClose();
+    openPubModal({ build: buildRunner.build });
   };
 
   useImperativeHandle(
@@ -231,9 +238,14 @@ export function BuildModal({
                   <CheckCircle size={20} className="text-success" />
                   <span className="font-semibold uppercase">build completed successfully</span>
                 </div>
-                <Button onClick={handleOkay} className="flex items-center gap-2">
-                  Okay
-                </Button>
+                <div className="flex gap-4 justify-center items-center">
+                  <Button onClick={handleOkay} className="flex items-center gap-2">
+                    Okay
+                  </Button>
+                  <Button onClick={handleOpenPubModal} className="flex items-center gap-2" variant="secondary">
+                    <UploadCloud /> Publish
+                  </Button>
+                </div>
               </div>
             </div>
           )}
