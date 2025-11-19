@@ -481,7 +481,7 @@ export function WorkspaceButtonBar() {
                 <div className="top-2 absolute group-data-[state=open]:hidden flex w-full justify-center ">
                   <OpalSvg
                     className={cn("rounded overflow-clip rotate-12", {
-                      "w-9": !shrink,
+                      "w-8": !shrink,
                       "w-5": shrink,
                     })}
                   />

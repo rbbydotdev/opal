@@ -106,6 +106,9 @@ export function CreateTypedEmitter<Events extends Record<string, any>>(): TypedE
   return new (CreateTypedEmitterClass<Events>())() as TypedEmitter<Events>;
 }
 
+export function CreateSuperTypedEmitter<Events extends Record<string, any>, Meta = {}>() {
+  return new (CreateSuperTypedEmitterClass<Events, Meta>())();
+}
 export class SuperEmitter<Events extends Record<string, any> = Record<string, any>> {
   private emitter = new EventEmitter();
   constructor() {
