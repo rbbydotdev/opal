@@ -1,9 +1,6 @@
 .code-mirror-source-editor {
   .cm-activeLine {
-    background-color: inherit !important;
-    & > * {
-      color: inherit !important;
-    }
+    background-color: unset !important;
   }
 }
 

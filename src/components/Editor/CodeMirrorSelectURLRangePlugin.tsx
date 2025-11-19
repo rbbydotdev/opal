@@ -1,4 +1,4 @@
-import { EditorSelection, Extension, StateEffect, StateField, Compartment } from "@codemirror/state";
+import { EditorSelection, Extension, StateEffect, StateField } from "@codemirror/state";
 import { EditorView, ViewPlugin } from "@codemirror/view";
 import { checkSum } from "../../lib/checkSum";
 
@@ -6,7 +6,7 @@ import { checkSum } from "../../lib/checkSum";
 const setAppliedRangesEffect = StateEffect.define<string>();
 
 // State field to track applied highlight ranges
-const appliedRangesField = StateField.define<string | null>({
+export const appliedRangesField = StateField.define<string | null>({
   create: () => null,
   update: (value, tr) => {
     const effect = tr.effects.find((e) => e.is(setAppliedRangesEffect));
@@ -14,7 +14,7 @@ const appliedRangesField = StateField.define<string | null>({
   },
 });
 
-const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, chsum?: number][] | null) =>
+export const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number, chsum?: number][] | null) =>
   ViewPlugin.fromClass(
     class {
       private view: EditorView;

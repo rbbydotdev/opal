@@ -1,5 +1,9 @@
 import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
-import { createURLRangeExtension, parseParamsToRanges } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import {
+  appliedRangesField,
+  codeMirrorSelectURLRangePlugin,
+  parseParamsToRanges,
+} from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { createCustomBasicSetup } from "@/components/Editor/customBasicSetup";
 import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
@@ -171,9 +175,10 @@ export const CodeMirrorEditor = ({
         conflictCompartment.reconfigure(
           enableConflictResolution && hasConflicts ? gitConflictEnhancedPlugin(getLanguageExtension) : []
         ),
-        urlRangeCompartment.reconfigure(
-          createURLRangeExtension(parseParamsToRanges(new URLSearchParams(location.hash)).ranges)
-        ),
+        urlRangeCompartment.reconfigure([
+          appliedRangesField,
+          codeMirrorSelectURLRangePlugin(parseParamsToRanges(new URLSearchParams(location.hash)).ranges),
+        ]),
       ],
     });
 
@@ -239,7 +244,8 @@ export const CodeMirrorEditor = ({
     if (viewRef.current) {
       const ranges = parseParamsToRanges(new URLSearchParams(location.hash)).ranges;
       viewRef.current.dispatch({
-        effects: urlRangeCompartment.reconfigure(createURLRangeExtension(ranges)),
+        // effects: urlRangeCompartment.reconfigure(createURLRangeExtension(ranges)),
+        effects: urlRangeCompartment.reconfigure([appliedRangesField, codeMirrorSelectURLRangePlugin(ranges)]),
       });
     }
   }, [location.hash, urlRangeCompartment]);
