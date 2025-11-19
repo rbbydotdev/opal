@@ -1,5 +1,5 @@
 /* beware: vibe coded */
-import { getCSSVariableColor, hexToRgb, rgbToHex } from "@/lib/colorUtils";
+import { getCSSVariableColor, hexToRgb, rgbToHex, oklchStringToRgb } from "@/lib/colorUtils";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { yamlFrontmatter } from "@codemirror/lang-yaml";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
@@ -131,10 +131,11 @@ export const getContrastSafeColor = (
     const cmBackgroundColor = getCSSVariableColor(cmBackgroundVar);
     const primaryColor = getCSSVariableColor(primaryVar);
 
-    // Check if we have valid hex colors that we can adjust
-    if (primaryColor.startsWith("#") && cmBackgroundColor.startsWith("#")) {
+    // Check if we have valid colors that we can adjust (hex or oklch)
+    if ((primaryColor.startsWith("#") || primaryColor.startsWith("oklch(")) && 
+        (cmBackgroundColor.startsWith("#") || cmBackgroundColor.startsWith("oklch("))) {
       // Detect dark themes and use higher contrast requirements
-      const bgRgb = hexToRgb(cmBackgroundColor);
+      const bgRgb = hexToRgb(cmBackgroundColor) || oklchStringToRgb(cmBackgroundColor);
       const isDarkTheme = bgRgb ? getLuminance(...bgRgb) < 0.2 : false;
       const targetContrast = isDarkTheme ? 3.5 : 2.8;
 
@@ -156,8 +157,9 @@ export const getContrastSafeColor = (
 
     // If we can't process the primary color, try the fallback
     const fallbackColor = getCSSVariableColor(fallbackVar);
-    if (fallbackColor.startsWith("#") && cmBackgroundColor.startsWith("#")) {
-      const bgRgb = hexToRgb(cmBackgroundColor);
+    if ((fallbackColor.startsWith("#") || fallbackColor.startsWith("oklch(")) && 
+        (cmBackgroundColor.startsWith("#") || cmBackgroundColor.startsWith("oklch("))) {
+      const bgRgb = hexToRgb(cmBackgroundColor) || oklchStringToRgb(cmBackgroundColor);
       const isDarkTheme = bgRgb ? getLuminance(...bgRgb) < 0.2 : false;
       const targetContrast = isDarkTheme ? 3.5 : 2.8;
 
@@ -620,7 +622,8 @@ export const debugContrastRatios = (codeMirrorBackground: string = "--background
 
   colors.forEach(({ name, var: cssVar }) => {
     const color = getCSSVariableColor(cssVar);
-    if (color.startsWith("#") && bgColor.startsWith("#")) {
+    if ((color.startsWith("#") || color.startsWith("oklch(")) && 
+        (bgColor.startsWith("#") || bgColor.startsWith("oklch("))) {
       const contrast = getContrastRatio(color, bgColor);
       const adjustedColor = adjustColorForContrast(color, bgColor, 2.8);
       const adjustedContrast = getContrastRatio(adjustedColor, bgColor);

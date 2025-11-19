@@ -21,12 +21,12 @@ export const ThemePreview = ({
         <span className="text-2xs px-1 py-0.5 font-mono bg-success text-success-foreground rounded">Current</span>
       )}
       {(!mode || mode === "light") && (
-        <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: palette.lightBg.value }}>
+        <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: `oklch(${palette.lightBg.value})` }}>
           {palette.light.map((color, index) => (
             <div
               key={`light-${index}`}
               className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: color.value }}
+              style={{ backgroundColor: `oklch(${color.value})` }}
               title={`Light mode color ${color.key}`}
             />
           ))}
@@ -34,12 +34,12 @@ export const ThemePreview = ({
       )}
 
       {(!mode || mode === "dark") && (
-        <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: palette.darkBg.value }}>
+        <div className="flex gap-1 p-1 rounded" style={{ backgroundColor: `oklch(${palette.darkBg.value})` }}>
           {palette.dark.map((color, index) => (
             <div
               key={`dark-${index}`}
               className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: color.value }}
+              style={{ backgroundColor: `oklch(${color.value})` }}
               title={`Dark mode color ${color.key}`}
             />
           ))}

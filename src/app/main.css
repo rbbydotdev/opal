@@ -20,7 +20,7 @@
     overscroll-behavior: none;
   }
   ::selection {
-    /* @apply bg-ring text-foreground; */
+    @apply bg-ring text-foreground;
   }
 }
 

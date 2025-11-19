@@ -26,7 +26,7 @@ export function ImageFileHoverCard({
         side="right"
         // sideOffset={20}
         className={cn("p-2 bg-white border border-gray-200 shadow-lg rounded w-32 h-32 relative", className)}
-        style={{ boxShadow: "0 4px 12px 0 hsl(var(--foreground))" }}
+        style={{ boxShadow: "0 4px 12px 0 oklch(var(--foreground))" }}
       >
         {/* Triangle edge pointing left */}
         {/* <span

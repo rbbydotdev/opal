@@ -29,13 +29,13 @@
 }
 
 .mdxeditor .cm-selectionBackground {
-  background-color: hsl(var(--search-highlight-bg)) !important;
+  background-color: oklch(var(--ring)) !important;
 }
 
 .mdxeditor .cm-highlight-range {
-  background-color: hsl(var(--search-highlight-bg)) !important;
+  background-color: oklch(var(--ring)) !important;
   & > * {
-    color: hsl(var(--search-highlight-fg)) !important;
+    color: oklch(var(--foreground)) !important;
   }
 }
 
@@ -45,7 +45,7 @@
 
 .mdxeditor {
   [data-editor-block-type="image"] {
-    border: 1px solid hsl(var(--border));
+    border: 1px solid oklch(var(--border));
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
@@ -113,48 +113,48 @@
 /* MDXEditor Theme Integration with Shadcn Colors */
 .mdxeditor {
   /* Base colors - using shadcn muted/background colors */
-  --baseBase: var(--background) !important;
-  --baseBgSubtle: var(--muted) !important;
-  --baseBg: var(--card) !important;
-  --baseBgHover: var(--accent) !important;
-  --baseBgActive: var(--accent) !important;
-  --baseLine: var(--border) !important;
-  --baseBorder: var(--border) !important;
-  --baseBorderHover: var(--input) !important;
-  --baseSolid: var(--muted-foreground) !important;
-  --baseSolidHover: var(--foreground) !important;
-  --baseText: var(--foreground) !important;
-  --baseTextContrast: var(--foreground) !important;
+  --baseBase: oklch(var(--background)) !important;
+  --baseBgSubtle: oklch(var(--muted)) !important;
+  --baseBg: oklch(var(--card)) !important;
+  --baseBgHover: oklch(var(--accent)) !important;
+  --baseBgActive: oklch(var(--accent)) !important;
+  --baseLine: oklch(var(--border)) !important;
+  --baseBorder: oklch(var(--border)) !important;
+  --baseBorderHover: oklch(var(--input)) !important;
+  --baseSolid: oklch(var(--muted-foreground)) !important;
+  --baseSolidHover: oklch(var(--foreground)) !important;
+  --baseText: oklch(var(--foreground)) !important;
+  --baseTextContrast: oklch(var(--foreground)) !important;
 
   /* Accent colors - using shadcn primary colors */
-  --accentBase: var(--primary) !important;
-  --accentBgSubtle: var(--secondary) !important;
-  --accentBg: var(--secondary) !important;
-  --accentBgHover: var(--secondary) !important;
-  --accentBgActive: var(--secondary) !important;
-  --accentLine: var(--primary) !important;
-  --accentBorder: var(--primary) !important;
-  --accentBorderHover: var(--primary) !important;
-  --accentSolid: var(--primary) !important;
-  --accentSolidHover: var(--primary) !important;
-  --accentText: var(--primary) !important;
-  --accentTextContrast: var(--primary-foreground) !important;
+  --accentBase: oklch(var(--primary)) !important;
+  --accentBgSubtle: oklch(var(--secondary)) !important;
+  --accentBg: oklch(var(--secondary)) !important;
+  --accentBgHover: oklch(var(--secondary)) !important;
+  --accentBgActive: oklch(var(--secondary)) !important;
+  --accentLine: oklch(var(--primary)) !important;
+  --accentBorder: oklch(var(--primary)) !important;
+  --accentBorderHover: oklch(var(--primary)) !important;
+  --accentSolid: oklch(var(--primary)) !important;
+  --accentSolidHover: oklch(var(--primary)) !important;
+  --accentText: oklch(var(--primary)) !important;
+  --accentTextContrast: oklch(var(--primary-foreground)) !important;
 
   /* Admonition colors - using available shadcn colors */
-  --admonitionTipBg: var(--secondary) !important;
-  --admonitionTipBorder: var(--border) !important;
+  --admonitionTipBg: oklch(var(--secondary)) !important;
+  --admonitionTipBorder: oklch(var(--border)) !important;
 
-  --admonitionInfoBg: var(--secondary) !important;
-  --admonitionInfoBorder: var(--border) !important;
+  --admonitionInfoBg: oklch(var(--secondary)) !important;
+  --admonitionInfoBorder: oklch(var(--border)) !important;
 
-  --admonitionCautionBg: var(--secondary) !important;
-  --admonitionCautionBorder: var(--border) !important;
+  --admonitionCautionBg: oklch(var(--secondary)) !important;
+  --admonitionCautionBorder: oklch(var(--border)) !important;
 
-  --admonitionDangerBg: var(--destructive) !important;
-  --admonitionDangerBorder: var(--destructive) !important;
+  --admonitionDangerBg: oklch(var(--destructive)) !important;
+  --admonitionDangerBorder: oklch(var(--destructive)) !important;
 
-  --admonitionNoteBg: var(--muted) !important;
-  --admonitionNoteBorder: var(--border) !important;
+  --admonitionNoteBg: oklch(var(--muted)) !important;
+  --admonitionNoteBorder: oklch(var(--border)) !important;
 
   /* Typography - using shadcn font variables if available */
   font-family: var(
@@ -184,13 +184,13 @@
   ) !important;
 
   /* Background and text colors */
-  color: var(--foreground) !important;
-  --basePageBg: var(--background) !important;
-  background: var(--background) !important;
+  color: oklch(var(--foreground)) !important;
+  --basePageBg: oklch(var(--background)) !important;
+  background: oklch(var(--background)) !important;
 
   /* Ensure proper contrast in content editable */
   .mdxeditor-root-contenteditable {
-    color: var(--foreground) !important;
+    color: oklch(var(--foreground)) !important;
     > div {
       /* weird */
       overflow-x: scroll;
@@ -200,7 +200,7 @@
   /* Fix caret color */
   .mdxeditor-root-contenteditable,
   .content-editable {
-    caret-color: var(--foreground) !important;
+    caret-color: oklch(var(--foreground)) !important;
   }
 }
 

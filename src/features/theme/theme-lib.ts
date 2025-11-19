@@ -57,6 +57,7 @@ const ALL_VARS = new Set([
   "secondary-foreground",
   "shadow",
   "shadow-2xl",
+  "success",
   "shadow-2xs",
   "shadow-blur",
   "shadow-color",
@@ -79,6 +80,10 @@ const ALL_VARS = new Set([
   "sidebar-ring",
   "spacing",
   "tracking-normal",
+  "highlight",
+  "highlight-focus",
+  "highlight-focus-foreground",
+  "highlight-foreground",
 ]);
 
 export interface ApplyThemeOptions {
