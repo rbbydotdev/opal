@@ -25,7 +25,7 @@ import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { OpalMimeType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, isAncestor, isBin, isCss, isEjs, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
+import { AbsPath, isAncestor, isBin, isCss, isEjs, isHtml, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { TriangleAlert } from "lucide-react";
@@ -84,6 +84,7 @@ export function useCurrentFilepath() {
       filePath: null,
       mimeType: DEFAULT_MIME_TYPE,
       isImage: false,
+      isHtml: false,
       isMarkdown: false,
       isCssFile: false,
       isEjs: false,
@@ -104,6 +105,7 @@ export function useCurrentFilepath() {
     filePath,
     mimeType,
 
+    isHtml: isHtml(filePath),
     isMarkdown: isMarkdown(filePath),
     isImage: isImage(filePath),
     isSource: isSourceOnly(filePath),

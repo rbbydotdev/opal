@@ -324,7 +324,7 @@ const CodeMirrorToolbar = ({
   mimeType?: OpalMimeType;
   editorView?: EditorView | null;
 }) => {
-  const { isMarkdown, hasEditOverride, isSourceView, isCssFile } = useCurrentFilepath();
+  const { isMarkdown, hasEditOverride, isHtml, isSourceView, isCssFile } = useCurrentFilepath();
 
   const { left } = useSidebarPanes();
   const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
@@ -369,16 +369,17 @@ const CodeMirrorToolbar = ({
               }
             />
           )}
-          {(isMarkdown || isCssFile) && <LivePreviewButtons />}
+          {(isMarkdown || isCssFile || isHtml) && <LivePreviewButtons />}
+
+          {canPrettify && (
+            <Button variant="outline" size="sm" onClick={handlePrettify}>
+              <span className="text-xs flex justify-center items-center gap-1">
+                <Sparkles size={12} />
+                Prettify
+              </span>
+            </Button>
+          )}
         </>
-      )}
-      {!hasEditOverride && canPrettify && (
-        <Button variant="outline" size="sm" onClick={handlePrettify}>
-          <span className="text-xs flex justify-center items-center gap-1">
-            <Sparkles size={12} />
-            Prettify
-          </span>
-        </Button>
       )}
       {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">
