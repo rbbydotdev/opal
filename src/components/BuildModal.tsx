@@ -105,10 +105,6 @@ export function BuildModal({
     };
   }, [isOpen, strategy, optionsRef, setBuildError, currentWorkspace]);
 
-  // useEffect(() => {
-  //   bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  // }, [logs]);
-
   const handleBuild = async () => {
     if (!buildRunner) return;
     await buildRunner.execute();
@@ -120,7 +116,7 @@ export function BuildModal({
     } else if (buildRunner.isCancelled) {
       setBuildError("Build was cancelled.");
     }
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 0);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   };
 
   const handleCancel = useCallback(() => {

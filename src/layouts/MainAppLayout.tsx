@@ -10,9 +10,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/ErrorPlaque";
 import { GitStatusProvider } from "@/components/GitStatusModal";
 import { PromptProvider } from "@/components/Prompt";
-import { PublicationModalProvider } from "@/components/publication-modal/PublicationModal";
+import { PublicationModalProvider } from "@/components/publication-modal/PubicationModalCmd";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { WS_BUTTON_BAR_ID } from "@/constants/layout";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
@@ -21,17 +22,11 @@ import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
+import { Toaster } from "sonner";
 
 interface MainAppLayoutProps {
   children: React.ReactNode;
 }
-
-const Foobar = () => {
-  void (async () => {
-    throw new Error("Foobarrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
-  })();
-  return null;
-};
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();
@@ -49,42 +44,45 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
           className="w-full h-full flex items-center justify-center bg-background"
         >
           <ServiceWorker>
+            <Toaster />
+
             <AsyncWindowErrorBoundary>
               <ErrorPopper>
                 <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
                   <WorkspaceProvider>
-                    <WindowContextProviderComponent>
-                      <GitStatusProvider>
-                        <PublicationModalProvider>
-                          <BuildModalProvider>
+                    <TooltipProvider delayDuration={1000}>
+                      <WindowContextProviderComponent>
+                        <GitStatusProvider>
+                          <PublicationModalProvider>
                             <SidebarProvider>
-                              <PromptProvider>
-                                <ConfirmProvider>
-                                  <Foobar />
-                                  <RemoteMDXEditorRealmProvider>
-                                    <div className="w-full flex">
-                                      <ErrorBoundary fallback={ErrorPlaque}>
-                                        <div
-                                          id={WS_BUTTON_BAR_ID}
-                                          className={cn(
-                                            "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
-                                          )}
-                                        >
-                                          <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                            <WorkspaceButtonBar />
-                                          </ErrorBoundary>
-                                        </div>
-                                        <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                      </ErrorBoundary>
-                                    </div>
-                                  </RemoteMDXEditorRealmProvider>
-                                </ConfirmProvider>
-                              </PromptProvider>
+                              <BuildModalProvider>
+                                <PromptProvider>
+                                  <ConfirmProvider>
+                                    <RemoteMDXEditorRealmProvider>
+                                      <div className="w-full flex">
+                                        <ErrorBoundary fallback={ErrorPlaque}>
+                                          <div
+                                            id={WS_BUTTON_BAR_ID}
+                                            className={cn(
+                                              "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
+                                            )}
+                                          >
+                                            <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                              <WorkspaceButtonBar />
+                                            </ErrorBoundary>
+                                          </div>
+                                          <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                        </ErrorBoundary>
+                                      </div>
+                                    </RemoteMDXEditorRealmProvider>
+                                  </ConfirmProvider>
+                                </PromptProvider>
+                              </BuildModalProvider>
                             </SidebarProvider>
-                          </BuildModalProvider>
-                        </PublicationModalProvider>
-                      </GitStatusProvider>
-                    </WindowContextProviderComponent>
+                          </PublicationModalProvider>
+                        </GitStatusProvider>
+                      </WindowContextProviderComponent>
+                    </TooltipProvider>
                   </WorkspaceProvider>
                 </ErrorBoundary>
               </ErrorPopper>

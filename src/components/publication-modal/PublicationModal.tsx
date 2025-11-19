@@ -14,11 +14,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import {
   DestinationDAO,
+  DestinationJType,
   DestinationMetaType,
   DestinationSchemaMap,
   DestinationType,
@@ -34,47 +34,22 @@ import { useDestinations } from "@/hooks/useDestinations";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, ArrowLeft, CheckCircle, Loader, Plus, Search, UploadCloud, X, Zap } from "lucide-react";
 import {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle,
+  Loader,
+  Pencil,
+  Plus,
+  Search,
+  UploadCloud,
+  UploadCloudIcon,
+  Zap,
+} from "lucide-react";
+import { ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { timeAgo } from "short-time-ago";
 import z from "zod";
-
-type PubicationModalCmd = {
-  open: ({ build }: { build: BuildDAO }) => void;
-  close: () => void;
-};
-export function usePublicationModalCmd() {
-  return useContext(PublicationModalContext);
-}
-export const PublicationModalContext = createContext<PubicationModalCmd>({
-  open: () => {},
-  close: () => {},
-});
-
-export const PublicationModalProvider = ({ children }: { children: ReactNode }) => {
-  const cmdRef = useRef<PubicationModalCmd>({
-    open: () => {},
-    close: () => {},
-  });
-  const { currentWorkspace } = useWorkspaceContext();
-  return (
-    <PublicationModalContext.Provider value={cmdRef.current}>
-      <PublicationModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
-      {children}
-    </PublicationModalContext.Provider>
-  );
-};
 
 type PublicationViewType = "publish" | "destination" | "connection";
 
@@ -131,7 +106,6 @@ export function PublicationModal({
     "type" | "source"
   > | null>(null);
   const [preferredDestConnection, setPreferredDestConnection] = useState<RemoteAuthRecord | null>(null);
-
   const handleSubmit = async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
@@ -194,7 +168,17 @@ export function PublicationModal({
         onEscapeKeyDown={handleEscapeKeyDown}
       >
         <DialogHeader>
-          <DialogTitle>Publish</DialogTitle>
+          <DialogTitle>
+            <div className="flex gap-4 justify-start items-center mb-4">
+              {canGoBack && (
+                <Button variant="outline" size="sm" title="back" onClick={popView}>
+                  <ArrowLeft />
+                  <div className="uppercase text-2xs">back</div>
+                </Button>
+              )}
+              Publish
+            </div>
+          </DialogTitle>
           <DialogDescription>
             <PublicationModalDescription view={currentView} />
           </DialogDescription>
@@ -212,6 +196,7 @@ export function PublicationModal({
               remoteAuths={remoteAuths}
               defaultName={currentWorkspace.name}
               preferredDestConnection={preferredDestConnection}
+              editDestination={destination}
               onAddConnection={() => pushView("connection")}
             />
           </>
@@ -442,12 +427,14 @@ export function PublicationModalDestinationContent({
   handleSubmit,
   defaultName,
   preferredDestConnection,
+  editDestination,
   remoteAuths,
   onAddConnection,
 }: {
   close: () => void;
   handleSubmit: (data: any) => void;
   defaultName?: string;
+  editDestination?: DestinationDAO | null;
   preferredDestConnection: RemoteAuthRecord | null;
   remoteAuths: RemoteAuthDAO[];
   onAddConnection: () => void;
@@ -461,6 +448,7 @@ export function PublicationModalDestinationContent({
     defaultValues: {
       ...currentSchema._def.defaultValue(),
       remoteAuthId: defaultRemoteAuth?.guid || "",
+      ...(editDestination?.toJSON() as DestinationJType<any>),
     },
     resolver: (values, opt1, opt2) => {
       return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
@@ -593,6 +581,7 @@ export function PublicationModalPublishContent({
   onOpenChange: (value: boolean) => void;
   pushView: (view: PublicationViewType) => void;
   setDestination: (destination: DestinationDAO) => void;
+  // setEditDestination: (destination: DestinationDAO) => void;
   setPreferredDestConnection: (connection: RemoteAuthRecord) => void;
   setPreferredNewConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
 }) {
@@ -716,28 +705,33 @@ export function PublicationModalPublishContent({
           >
             <Plus />
           </Button>
+          {destination && (
+            <Button className="min-h-12" type="button" variant="outline" onClick={() => pushView("destination")}>
+              <Pencil />
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Build Controls */}
       <div className="flex gap-2">
-        {!true && (
-          <Button onClick={handleBuild} className="flex items-center gap-2">
+        <Button variant="outline" onClick={onClose || (() => onOpenChange(false))} className="flex items-center gap-2">
+          Cancel
+        </Button>
+        {true && (
+          <Button onClick={handleBuild} className="flex items-center gap-2" variant="secondary">
             {false ? (
               <>
                 <Loader size={16} className="animate-spin" />
                 Publishing...
               </>
             ) : (
-              "Publish"
+              <>
+                <UploadCloudIcon /> Publish
+              </>
             )}
           </Button>
         )}
-
-        <Button variant="outline" onClick={onClose || (() => onOpenChange(false))} className="flex items-center gap-2">
-          <X size={16} />
-          Cancel
-        </Button>
       </div>
 
       {/* Build Success Indicator */}

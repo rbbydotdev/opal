@@ -60,6 +60,9 @@ export default {
           DEFAULT: "var(--success)",
           foreground: "var(--success-foreground)",
         },
+        // blah: {
+        //   DEFAULT: "hsl(var(--blah) / <alpha-value>)",
+        // },
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
@@ -168,21 +171,6 @@ export default {
         },
       });
     },
-
-    // ✨ Single shimmer-text utility
-    // plugin(function ({ addUtilities }) {
-    //   addUtilities({
-    //     ".shimmer-text": {
-    //       background:
-    //         "linear-gradient(90deg, var(--shimmer-from, var(--foreground)) 25%, var(--shimmer-via, var(--muted-foreground)) 50%, var(--shimmer-to, var(--muted-foreground)) 75%)",
-    //       backgroundSize: "200% 100%",
-    //       WebkitBackgroundClip: "text",
-    //       backgroundClip: "text",
-    //       color: "transparent",
-    //       animation: "shimmer 4s linear infinite",
-    //     },
-    //   });
-    // }),
 
     tailwindProse,
     tailwindAnimate,

@@ -1,27 +1,27 @@
-import { ErrorPlaque } from "@/components/ErrorPlaque";
-import { useEscapeKeyClose } from "@/hooks/useEscapeKeyClose";
-import { useLocation } from "@tanstack/react-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "@/components/ui/sonner";
+import React, { useCallback, useEffect } from "react";
 
 export const AsyncWindowErrorBoundary = ({ children }: { children: React.ReactNode }) => {
-  const [error, setError] = useState<Error | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const reset = useCallback(() => {
-    setError(null);
-    setIsOpen(false);
-  }, []);
-
   const promiseRejectionHandler = useCallback((event: PromiseRejectionEvent) => {
-    setError(event.reason);
-    setIsOpen(true);
-  }, []);
+    const error = event.reason;
 
-  const location = useLocation();
-  useEffect(() => {
-    reset();
-  }, [location.pathname, reset]);
-  //close on keyboard escape key
-  useEscapeKeyClose(isOpen, reset);
+    console.error("Unhandled promise rejection:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : typeof error === "string" ? error : "An unexpected error occurred";
+
+    toast({
+      title: "Something went wrong",
+      description: (
+        <div className="space-y-1">
+          <div className="font-bold truncate w-full">{errorMessage}</div>
+          <div className="text-xs text-muted-foreground font-mono">Check console for details</div>
+        </div>
+      ),
+      type: "error",
+      position: "top-right",
+    });
+  }, []);
 
   useEffect(() => {
     window.addEventListener("unhandledrejection", promiseRejectionHandler);
@@ -31,5 +31,5 @@ export const AsyncWindowErrorBoundary = ({ children }: { children: React.ReactNo
     };
   }, [promiseRejectionHandler]);
 
-  return error && isOpen ? <ErrorPlaque error={error} reset={reset} /> : children;
+  return <>{children}</>;
 };

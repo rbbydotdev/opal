@@ -9,7 +9,7 @@ type ToasterProps = React.ComponentProps<typeof SonnerToaster>;
 interface ToastProps {
   id: string | number;
   title?: string;
-  description?: string;
+  description?: string | React.ReactNode;
   type?: "default" | "success" | "error" | "warning" | "info";
   action?: {
     label: string;
@@ -56,7 +56,7 @@ function Toast(props: ToastProps) {
     <div
       className={`flex rounded-lg shadow-lg border w-full max-w-md min-w-[20rem] min-h-16 items-center p-4 ${getTypeStyles()}`}
     >
-      <div className="flex flex-1 items-center min-h-0">
+      <div className="flex flex-1 items-center min-h-0 w-full">
         <p className="w-full flex flex-col justify-center">
           {title && (
             <span className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
@@ -82,7 +82,11 @@ function Toast(props: ToastProps) {
               {title}
             </span>
           )}
-          {description && <span className="mt-1 text-sm text-muted-foreground leading-tight">{description}</span>}
+          {description && (
+            <div className="mt-1 text-sm text-muted-foreground leading-tight">
+              {typeof description === "string" ? description : description}
+            </div>
+          )}
         </p>
       </div>
       {action && (
