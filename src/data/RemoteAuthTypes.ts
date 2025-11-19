@@ -182,6 +182,7 @@ export interface IRemoteAuthAgent {
   getUsername(): string;
   getApiToken(): string;
   onAuth(): { username: string; password: string };
+  test(): Promise<{ status: "error"; msg: string } | { status: "success" }>;
 }
 
 export interface Repo {
