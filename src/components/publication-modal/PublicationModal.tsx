@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import {
@@ -38,6 +39,7 @@ import {
   createContext,
   ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -53,15 +55,7 @@ type PubicationModalCmd = {
   close: () => void;
 };
 export function usePublicationModalCmd() {
-  const cmdRef = useRef<PubicationModalCmd>({
-    open: () => {},
-    close: () => {},
-  });
-
-  return {
-    ...cmdRef.current,
-    cmdRef,
-  };
+  return useContext(PublicationModalContext);
 }
 export const PublicationModalContext = createContext<PubicationModalCmd>({
   open: () => {},
@@ -73,7 +67,13 @@ export const PublicationModalProvider = ({ children }: { children: ReactNode }) 
     open: () => {},
     close: () => {},
   });
-  return <PublicationModalContext.Provider value={cmdRef.current}>{children}</PublicationModalContext.Provider>;
+  const { currentWorkspace } = useWorkspaceContext();
+  return (
+    <PublicationModalContext.Provider value={cmdRef.current}>
+      <PublicationModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
+      {children}
+    </PublicationModalContext.Provider>
+  );
 };
 
 type PublicationViewType = "publish" | "destination" | "connection";
@@ -113,9 +113,7 @@ function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
 export function PublicationModal({
   currentWorkspace,
   cmdRef,
-  className,
 }: {
-  className?: string;
   currentWorkspace: Workspace;
   cmdRef: React.ForwardedRef<{
     open: ({ build }: { build: BuildDAO }) => void;
@@ -189,7 +187,7 @@ export function PublicationModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
-        className={cn("overflow-y-auto top-[10vh] min-h-[50vh]", className, {
+        className={cn("overflow-y-auto top-[10vh] min-h-[50vh]", {
           "min-h-[80vh]": currentView === "publish",
         })}
         onPointerDownOutside={handlePointerDownOutside}
