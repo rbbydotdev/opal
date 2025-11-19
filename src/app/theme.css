@@ -11,38 +11,6 @@ body {
     /* Non-color variables that won't be overridden by theme registry */
     --navbar-height: 2.5rem;
     --editor-toolbar-height: 3.5rem;
-
-    /* Missing variables that map to existing theme colors */
-    --success: var(--ring);
-    --success-foreground: var(--primary-foreground);
-    --highlight: var(--muted);
-    --highlight-foreground: var(--muted-foreground);
-    --highlight-focus: var(--ring);
-    --highlight-focus-foreground: var(--foreground);
-    --sidebar-background: var(--sidebar);
-
-    /* Search variables that map to theme colors */
-    /* --search-bg: var(--muted);
-    --search-border: var(--border);
-    --search-header-bg: var(--card);
-    --search-row-hover: var(--accent);
-    --search-match-hover: var(--secondary);
-    --search-highlight-fg: var(--accent-foreground);
-    --search-highlight-bg: var(--accent);
-    --search-muted: var(--muted-foreground);
-    --search-muted-2: var(--foreground);
-    --search-icon: var(--primary); */
-
-    /* "search-bg": "oklch(0.20 0.02 250)",
-      "search-border": "oklch(0.30 0.02 250)",
-      "search-header-bg": "oklch(0.25 0.02 250)",
-      "search-row-hover": "oklch(0.28 0.02 250)",
-      "search-match-hover": "oklch(0.22 0.02 170)",
-      "search-highlight-fg": "oklch(0.35 0.15 35)",
-      "search-highlight-bg": "oklch(0.85 0.20 90)",
-      "search-muted": "oklch(0.72 0.02 250)",
-      "search-muted-2": "oklch(0.55 0.02 250)",
-      "search-icon": "oklch(0.62 0.19 262.1)" */
   }
 }
 

@@ -11,7 +11,6 @@ import useFavicon from "@/hooks/useFavicon";
 import { ScrollSyncProvider } from "@/lib/useScrollSync";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Toaster } from "sonner";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName")({
   component: WorkspaceLayout,
@@ -34,7 +33,6 @@ function WorkspaceLayout() {
   const previewKey = previewNode?.path + "-" + key;
   return (
     <>
-      <Toaster />
       <FileTreeProvider filterIn={FileOnlyFilter} filterOut={FilterInSpecialDirs}>
         <FileTreeMenuCtxProvider>
           <WorkspaceSpotlightSearch />

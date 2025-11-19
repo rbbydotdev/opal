@@ -27,9 +27,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import { useMemo } from "react";
 import z from "zod";
-// import { CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "cmdk";
-
-// Re-export type for convenience
 
 export function ConnectionsModal({
   children,

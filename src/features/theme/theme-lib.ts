@@ -191,6 +191,24 @@ export function applyTheme(options: ApplyThemeOptions): void {
       }
     }
 
+    /* Missing variables that map to existing theme colors */
+    `
+    --success: var(--ring);
+    --success-foreground: var(--primary-foreground);
+    --highlight: var(--muted);
+    --highlight-foreground: var(--muted-foreground);
+    --highlight-focus: var(--ring);
+    --highlight-focus-foreground: var(--foreground);
+    --sidebar-background: var(--sidebar);
+    `
+      .split("\n")
+      .forEach((line) => {
+        const trimmed = line.trim();
+        if (trimmed) {
+          vars.push(trimmed);
+        }
+      });
+
     return vars.join("\n");
   };
 
