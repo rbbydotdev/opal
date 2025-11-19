@@ -1,5 +1,6 @@
 import type {
   BasicAuthRemoteAuthDAO,
+  CloudflareAPIRemoteAuthDAO,
   GithubAPIRemoteAuthDAO,
   GithubDeviceOAuthRemoteAuthDAO,
   GithubOAuthRemoteAuthDAO,
@@ -9,6 +10,7 @@ import type {
 import { IRemoteAuthAgent, IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { IRemoteAuthAgentSearch } from "@/data/useRemoteSearch";
 import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
+import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
 import { Octokit } from "@octokit/core";
 
 export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
@@ -101,6 +103,18 @@ export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
     }
   }
 
+  async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
+    try {
+      await this.octokit.request("GET /user");
+      return { status: "success" };
+    } catch (error: any) {
+      return { 
+        status: "error", 
+        msg: `GitHub API test failed: ${error.message || "Unknown error"}` 
+      };
+    }
+  }
+
   abstract getUsername(): string;
   abstract getApiToken(): string;
 }
@@ -130,6 +144,13 @@ export class RemoteAuthBasicAuthAgent implements IRemoteGitApiAgent {
   ): Promise<{ updated: boolean; newEtag: string | null }> {
     console.warn("RemoteAuthBasicAuthAgent.hasUpdates() is not implemented");
     return Promise.resolve({ updated: false, newEtag: etag });
+  }
+
+  async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
+    return { 
+      status: "error", 
+      msg: "Basic auth test not implemented" 
+    };
   }
 }
 // IGitProviderAgent
@@ -205,6 +226,18 @@ export abstract class RemoteAuthNetlifyAgent implements IRemoteAuthAgent, IRemot
     return this.netlifyClient.createSite({ name: finalSiteName }, { signal });
   };
 
+  async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
+    try {
+      await this.netlifyClient.getCurrentUser();
+      return { status: "success" };
+    } catch (error: any) {
+      return { 
+        status: "error", 
+        msg: `Netlify API test failed: ${error.message || "Unknown error"}` 
+      };
+    }
+  }
+
   abstract getUsername(): string;
   abstract getApiToken(): string;
 }
@@ -235,4 +268,41 @@ export class RemoteAuthNetlifyAPIAgent extends RemoteAuthNetlifyAgent {
   constructor(private remoteAuth: NetlifyAPIRemoteAuthDAO) {
     super();
   }
+}
+
+export class RemoteAuthCloudflareAPIAgent implements IRemoteAuthAgent {
+  private _cloudflareClient!: CloudflareClient;
+
+  get cloudflareClient() {
+    return this._cloudflareClient || (this._cloudflareClient = new CloudflareClient(this.getApiToken()));
+  }
+
+  onAuth(): { username: string; password: string } {
+    return {
+      username: this.getUsername(),
+      password: this.getApiToken(),
+    };
+  }
+
+  getUsername(): string {
+    return "cloudflare-api";
+  }
+
+  getApiToken(): string {
+    return this.remoteAuth.data.apiKey;
+  }
+
+  async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
+    try {
+      await this.cloudflareClient.verifyToken();
+      return { status: "success" };
+    } catch (error: any) {
+      return { 
+        status: "error", 
+        msg: `Cloudflare API test failed: ${error.message || "Unknown error"}` 
+      };
+    }
+  }
+
+  constructor(private remoteAuth: CloudflareAPIRemoteAuthDAO) {}
 }
