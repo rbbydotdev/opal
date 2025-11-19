@@ -92,16 +92,16 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
       </div>
       <style>{`
         ::highlight(${MDX_SEARCH_NAME}) {
-          background-color: var(--highlight);
-          color: var(--highlight-foreground);
+          background-color: oklch(var(--highlight));
+          color: oklch(var(--highlight-foreground));
         }
         ::highlight(${MDX_FOCUS_SEARCH_NAME}) {
-          background-color: var(--highlight-focus);
-          color: var(--highlight-focus-foreground);
+          background-color: oklch(var(--highlight-focus));
+          color: oklch(var(--highlight-focus-foreground));
         }
         ::highlight(${MDX_TREE_HIGHLIGHT_NAME}) {
-          background-color: var(--highlight-focus);
-          color: var(--highlight-focus-foreground);
+          background-color: oklch(var(--highlight-focus));
+          color: oklch(var(--highlight-focus-foreground));
         }
       `}</style>
     </ThemeProvider>

@@ -50,7 +50,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               className="w-12 h-12 border-2 border-primary-foreground bg-background rounded-lg"
               style={{
                 ...transformStyle,
-                boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
+                boxShadow: "0 4px 12px 0 oklch(var(--foreground))",
               }}
             >
               <Folder fill="white" key={treeNode.path} strokeWidth={1} className="text-ring rounded w-full h-full" />
@@ -65,7 +65,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
               className="w-12 h-12 overflow-hidden border-2 border-primary-foreground bg-background rounded-lg"
               style={{
                 ...transformStyle,
-                boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
+                boxShadow: "0 4px 12px 0 oklch(var(--foreground))",
               }}
             >
               <img
@@ -84,7 +84,7 @@ export const FileTreeDragPreview = forwardRef<HTMLDivElement>((_props, ref) => {
             className="w-12 h-12 border-2 border-primary-foreground rounded-lg"
             style={{
               ...transformStyle,
-              boxShadow: "0 4px 12px 0 hsl(var(--foreground))",
+              boxShadow: "0 4px 12px 0 oklch(var(--foreground))",
             }}
           >
             {treeNode.isCssFile() ? (

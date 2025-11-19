@@ -151,7 +151,7 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
 }
 
-function oklchStringToRgb(oklchStr: string): [number, number, number] | null {
+export function oklchStringToRgb(oklchStr: string): [number, number, number] | null {
   const match = oklchStr.match(/oklch\(([^)]+)\)/);
   if (!match) return null;
   const [l, c, h] = match[1]!.split(" ").map((v) => parseFloat(v));
@@ -225,13 +225,19 @@ export const getContrastRatio = (color1: string, color2: string): number => {
   return (lighter + 0.05) / (darker + 0.05);
 };
 
-// Get computed CSS variable color
+// Get computed CSS variable color - returns oklch format for our theme system
 export const getCSSVariableColor = (variable: string): string => {
-  if (typeof window === "undefined") return "#000000";
+  if (typeof window === "undefined") return "oklch(0 0 0)";
   const computed = getComputedStyle(document.documentElement).getPropertyValue(
     variable.replace("var(", "").replace(")", "")
   );
-  return computed.trim() || "#000000";
+  const trimmed = computed.trim();
+  
+  if (!trimmed) return "oklch(0 0 0)";
+  
+  // Our CSS variables contain raw OKLCH values like "0.98 0.01 318.70"
+  // Wrap them in oklch() for proper parsing by contrast functions
+  return `oklch(${trimmed})`;
 };
 
 // Contrast ratio calculation utilities

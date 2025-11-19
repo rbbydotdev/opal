@@ -33,7 +33,7 @@ export class ConflictContentWidget extends WidgetType {
     header.className = "conflict-editor-header";
     header.style.cssText = `
       padding: 4px 8px;
-      background: ${this.contentType === "current" ? "var(--chart-2)" : "var(--chart-3)"};
+      background: ${this.contentType === "current" ? "oklch(var(--chart-2))" : "oklch(var(--chart-3))"};
       color: white;
       font-size: 12px;
       font-weight: bold;
@@ -47,11 +47,11 @@ export class ConflictContentWidget extends WidgetType {
     // Create editor container
     const editorContainer = document.createElement("div");
     editorContainer.style.cssText = `
-      border: 1px solid ${this.contentType === "current" ? "var(--chart-2)" : "var(--chart-3)"};
+      border: 1px solid ${this.contentType === "current" ? "oklch(var(--chart-2))" : "oklch(var(--chart-3))"};
       border-top: none;
       border-radius: 0 0 4px 4px;
       overflow: hidden;
-      background: var(--background);
+      background: oklch(var(--background));
     `;
 
     // Set up the embedded editor
@@ -107,7 +107,7 @@ export class ConflictContentWidget extends WidgetType {
       margin: 8px 0;
       border-radius: 4px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      background: var(--card);
+      background: oklch(var(--card));
     `;
 
     return container;
@@ -183,8 +183,8 @@ export class EnhancedConflictResolverWidget extends WidgetType {
     container.style.cssText = `
       margin: 16px 0;
       padding: 16px;
-      background: var(--card);
-      border: 2px solid var(--border);
+      background: oklch(var(--card));
+      border: 2px solid oklch(var(--border));
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     `;
@@ -194,7 +194,7 @@ export class EnhancedConflictResolverWidget extends WidgetType {
     title.textContent = "Git Merge Conflict";
     title.style.cssText = `
       margin: 0 0 16px 0;
-      color: var(--foreground);
+      color: oklch(var(--foreground));
       font-size: 16px;
       font-weight: bold;
       display: flex;
@@ -230,10 +230,10 @@ export class EnhancedConflictResolverWidget extends WidgetType {
     `;
 
     const buttons = [
-      { text: "Accept Current", choice: "current" as const, color: "var(--chart-2)" },
-      { text: "Accept Incoming", choice: "incoming" as const, color: "var(--chart-3)" },
-      { text: "Accept Both", choice: "both" as const, color: "var(--primary)" },
-      { text: "Accept Edited", choice: "custom" as const, color: "var(--chart-5)" },
+      { text: "Accept Current", choice: "current" as const, color: "oklch(var(--chart-2))" },
+      { text: "Accept Incoming", choice: "incoming" as const, color: "oklch(var(--chart-3))" },
+      { text: "Accept Both", choice: "both" as const, color: "oklch(var(--primary))" },
+      { text: "Accept Edited", choice: "custom" as const, color: "oklch(var(--chart-5))" },
     ];
 
     buttons.forEach(({ text, choice, color }) => {
@@ -302,8 +302,8 @@ class SimpleConflictResolverWidget extends WidgetType {
       gap: 4px;
       align-items: center;
       padding: 4px 8px;
-      background: var(--muted);
-      border: 1px solid var(--border);
+      background: oklch(var(--muted));
+      border: 1px solid oklch(var(--border));
       border-radius: 4px;
       margin: 0 4px;
       font-size: 11px;
@@ -311,9 +311,9 @@ class SimpleConflictResolverWidget extends WidgetType {
     `;
 
     const buttons = [
-      { text: "Current", choice: "current" as const, color: "var(--chart-2)" },
-      { text: "Incoming", choice: "incoming" as const, color: "var(--chart-3)" },
-      { text: "Both", choice: "both" as const, color: "var(--primary)" },
+      { text: "Current", choice: "current" as const, color: "oklch(var(--chart-2))" },
+      { text: "Incoming", choice: "incoming" as const, color: "oklch(var(--chart-3))" },
+      { text: "Both", choice: "both" as const, color: "oklch(var(--primary))" },
     ];
 
     buttons.forEach(({ text, choice, color }) => {
