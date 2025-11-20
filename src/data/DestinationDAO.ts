@@ -64,8 +64,15 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     return ClientDb.destinations.where("guid").equals(guid).first();
   }
 
-  update(properties: Partial<DestinationRecord<T>>) {
-    return ClientDb.destinations.update(this.guid, properties);
+  hydrate = async () => {
+    const result = await DestinationDAO.FetchFromGuid(this.guid);
+    if (result) {
+      Object.assign(this, result);
+    }
+  };
+  async update(properties: Partial<Omit<DestinationRecord<T>, "guid">>) {
+    await ClientDb.destinations.update(this.guid, properties);
+    return this.hydrate();
   }
 
   static async all() {

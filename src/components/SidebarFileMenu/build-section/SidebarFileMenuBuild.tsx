@@ -1,4 +1,5 @@
 import { BuildModal } from "@/components/BuildModal";
+import { useBuildModal } from "@/components/BuildModalContext";
 import { useBuildModalCmd } from "@/components/BuildModalContextProvider";
 import { useConfirm } from "@/components/Confirm";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
@@ -25,6 +26,7 @@ import { Workspace } from "@/data/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
+import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { cn } from "@/lib/utils";
 import { Code2, Delete, Download, Ellipsis, Github, Hammer, UploadCloud } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -51,13 +53,17 @@ export function SidebarFileMenuBuild({
 }) {
   const [expanded, setExpand] = useSingleItemExpander("build");
   const { info } = useWorkspaceGitRepo({ currentWorkspace });
-  const { openNew, cmdRef } = useBuildModalCmd();
+  const { cmdRef } = useBuildModalCmd();
+  const { openNew } = useBuildModal();
   const { open: openNewPub } = usePublicationModalCmd();
   const { open: openConfirm } = useConfirm();
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [open, setOpen] = useState(false);
   const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
-  const [activeTab, setActiveTab] = useState<"mgmt" | "files">("files");
+  const { storedValue: activeTab, setStoredValue: setActiveTab } = useLocalStorage2<"mgmt" | "files">(
+    "SidebarFileMenuBuild/activeTab",
+    "files"
+  );
 
   const { builds, build, setBuildId } = useBuildManager({ currentWorkspace });
 

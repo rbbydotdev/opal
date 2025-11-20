@@ -326,5 +326,3 @@ export class OmniBusEmitter extends CreateSuperTypedEmitterClass<Record<string, 
     return Array.from(this.classToInstancesMap.keys());
   }
 }
-
-// Re-export the singleton for convenience

@@ -38,10 +38,14 @@ function logLine(message: string, type: BuildLogType = "info") {
 
 export class BuildRunner {
   build: BuildDAO;
-  completed: boolean = false;
+  get completed() {
+    return this.build.completed;
+  }
 
-  logEmitter = CreateSuperTypedEmitter<{
-    [key in BuildLogType]: BuildLogLine;
+  emitter = CreateSuperTypedEmitter<{
+    log: BuildLogLine;
+    complete: boolean;
+    update: BuildDAO;
   }>();
 
   get sourceDisk(): Disk {
@@ -90,7 +94,7 @@ export class BuildRunner {
   protected readonly log = (message: string, type?: BuildLogType) => {
     const l = logLine(message, type);
     this.build.logs = [...this.build.logs, l];
-    this.logEmitter.emit(type || "info", l);
+    this.emitter.emit("log", l);
     return l;
   };
 
@@ -121,12 +125,16 @@ export class BuildRunner {
   }
 
   onLog = (callback: (log: BuildLogLine) => void) => {
-    return this.logEmitter.on("*", callback);
+    return this.emitter.on("log", callback);
   };
   getLogs = () => this.logs;
+  onComplete = (callback: (complete: boolean) => void) => {
+    return this.emitter.on("complete", callback);
+  };
+  getComplete = () => this.isCompleted;
 
   tearDown() {
-    this.logEmitter.clearListeners();
+    this.emitter.clearListeners();
   }
 
   cancel() {
@@ -211,29 +219,28 @@ export class BuildRunner {
         }) ?? 0;
 
       infoLog(`Total files in build output: ${count}`);
-      await this.build.update({
+
+      return await this.build.update({
         logs: this.logs,
         status: "success",
         fileCount: count,
       });
-      return this.build;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       errorLog(`Build failed: ${errorMessage}`);
       if (!abortSignal?.aborted) {
-        return this.build.update({
+        return await this.build.update({
           logs: this.logs,
           status: "failed",
         });
       } else {
-        return this.build.update({
+        return await this.build.update({
           logs: this.logs,
           status: "cancelled",
         });
       }
     } finally {
-      // Object.freeze(this.build);
-      // Object.freeze(this);
+      this.emitter.emit("complete", this.isCompleted);
     }
   }
 
