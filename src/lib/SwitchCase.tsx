@@ -2,7 +2,7 @@ export function Case({ condition: _condition, children }: { condition: boolean; 
   return <>{children}</>;
 }
 
-export function Switch({
+export function SwitchCase({
   children,
 }: {
   children: React.ReactElement<typeof Case> | React.ReactElement<typeof Case>[];

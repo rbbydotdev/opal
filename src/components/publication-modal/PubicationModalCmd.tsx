@@ -1,19 +1,7 @@
+import { PubicationModalCmd, PublicationModalContext } from "@/components/publication-modal/PubicationModalCmdContext";
 import { PublicationModal } from "@/components/publication-modal/PublicationModal";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { BuildDAO } from "@/data/BuildDAO";
-import { createContext, ReactNode, useContext, useRef } from "react";
-
-type PubicationModalCmd = {
-  open: ({ build }: { build: BuildDAO }) => void;
-  close: () => void;
-};
-export function usePublicationModalCmd() {
-  return useContext(PublicationModalContext);
-}
-export const PublicationModalContext = createContext<PubicationModalCmd>({
-  open: () => {},
-  close: () => {},
-});
+import { ReactNode, useRef } from "react";
 
 export const PublicationModalProvider = ({ children }: { children: ReactNode }) => {
   const cmdRef = useRef<PubicationModalCmd>({

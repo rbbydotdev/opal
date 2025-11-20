@@ -61,7 +61,7 @@ export class ClientIndexedDb extends Dexie {
     });
 
     // === WORKSPACES ===
-    this.workspaces.hook("deleting", (primaryKey, workspace, tx) => {
+    this.workspaces.hook("deleting", (_primaryKey, workspace, tx) => {
       // Avoid nested transaction error — wait until after the workspace delete finishes.
       tx.on("complete", async () => {
         await Promise.all([

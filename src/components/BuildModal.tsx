@@ -1,66 +1,15 @@
 import { BuildStrategy } from "@/builder/builder-types";
-import { usePublicationModalCmd } from "@/components/publication-modal/PubicationModalCmd";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/BuildDAO";
 import { Workspace } from "@/data/Workspace";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { AlertTriangle, CheckCircle, Loader, UploadCloud, X } from "lucide-react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 import { timeAgo } from "short-time-ago";
-
-type BuildModalContextType = {
-  openNew: (options: { build: BuildDAO }) => Promise<void>;
-  close: () => void;
-};
-
-const BuildModalContext = createContext<BuildModalContextType | undefined>(undefined);
-
-export function BuildModalProvider({ children }: { children: React.ReactNode }) {
-  const { currentWorkspace } = useWorkspaceContext();
-  const { openNew, close, cmdRef } = useBuildModalCmd();
-  return (
-    <BuildModalContext.Provider value={{ openNew, close }}>
-      {children}
-      <BuildModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
-    </BuildModalContext.Provider>
-  );
-}
-
-export function useBuildModal() {
-  const ctx = useContext(BuildModalContext);
-  if (!ctx) throw new Error("useBuildModal must be used within a BuildModalProvider");
-  return ctx;
-}
-
-export function useBuildModalCmd() {
-  const cmdRef = useRef<{
-    openNew: () => Promise<void>;
-    openEdit: (build: BuildDAO) => void;
-    close: () => void;
-  }>({
-    openNew: async () => {},
-    openEdit: (_build: BuildDAO) => {},
-    close: () => {},
-  });
-
-  return {
-    ...cmdRef.current,
-    cmdRef,
-  };
-}
+import { usePublicationModalCmd } from "./publication-modal/PubicationModalCmdContext";
 
 export function BuildModal({
   cmdRef,

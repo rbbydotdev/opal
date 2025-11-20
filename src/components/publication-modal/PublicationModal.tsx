@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { DestinationDAO, DestinationMetaType, DestinationType } from "@/data/DestinationDAO";
@@ -17,6 +16,7 @@ import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useDestinations } from "@/hooks/useDestinations";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { Case, SwitchCase } from "@/lib/SwitchCase";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
@@ -150,7 +150,7 @@ export function PublicationModal({
       >
         <DialogHeader>
           <DialogTitle>
-            <div className="flex gap-4 justify-start items-center mb-4">
+            <div className="flex gap-4 justify-start items-center mb-4 text-xl">
               {canGoBack && (
                 <Button variant="outline" size="sm" title="back" onClick={popView}>
                   <ArrowLeft />
@@ -160,8 +160,19 @@ export function PublicationModal({
               Publish
             </div>
           </DialogTitle>
-          <DialogDescription>
-            <PublicationModalDescription view={currentView} />
+          <DialogDescription className="flex flex-col w-full">
+            <span className="font-bold text-lg text-foreground">
+              <SwitchCase>
+                <Case condition={currentView === "publish"}>Deploy</Case>
+                <Case condition={currentView === "destination"}>Destination</Case>
+                <Case condition={currentView === "connection"}>Connection</Case>
+              </SwitchCase>
+            </span>
+            <SwitchCase>
+              <Case condition={currentView === "publish"}>Deploy to selected destination</Case>
+              <Case condition={currentView === "destination"}>Create Destination to deploy to</Case>
+              <Case condition={currentView === "connection"}>Add or manage connections</Case>
+            </SwitchCase>
           </DialogDescription>
         </DialogHeader>
 
@@ -220,24 +231,6 @@ export function PublicationModal({
   );
 }
 
-function PublicationModalDescription2() {
-  return <Switch></Switch>;
-}
-
-function PublicationModalDescription({ view }: { view: "publish" | "destination" | "connection" | undefined }) {
-  if (!view) return null;
-  switch (view) {
-    case "publish":
-      return "Deploy to selected destination";
-    case "destination":
-      return "Create Destination to deploy to";
-    case "connection":
-      return "Add or manage connections";
-    default:
-      return "Deploy to selected destination";
-  }
-}
-
 //MARK: Destination Content Modal View
 
 //MARK: Publish Content
@@ -267,6 +260,7 @@ export function PublicationModalPublishContent({
 
   const [publishError, setPublishError] = useState<string | null>(null);
   const [logs, setLogs] = useState<BuildLog[]>([]);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const NO_REMOTES = remoteAuths.length === 0;
 
@@ -274,7 +268,25 @@ export function PublicationModalPublishContent({
   const log = useCallback((bl: BuildLogLine) => {
     setLogs((prev) => [...prev, bl]);
   }, []);
-  const handleBuild = async () => {};
+  const handleBuild = async () => {
+    if (!destination) return;
+    setIsPublishing(true);
+    setLogs([]);
+    setPublishError(null);
+    // try {
+    //   await build.publish?.({
+    //     destination,
+    //     onLog: (line) => {
+    //       log({ type: "info", message: line, timestamp: Date.now() });
+    //     },
+    //   });
+    // } catch (error) {
+    //   log({ type: "error", message: (error as Error).message, timestamp: Date.now() });
+    //   setPublishError((error as Error).message);
+    // } finally {
+    //   setIsPublishing(false);
+    // }
+  };
   const handleSetDestination = (destId: string) => {
     const selectedRemoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === destId);
     const selectedDestination = destinations.find((d) => d.guid === destId);
@@ -310,7 +322,7 @@ export function PublicationModalPublishContent({
               <SelectTrigger className="min-h-12 p-2">
                 <SelectValue placeholder="Select Destination" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-96">
                 <div className="mono italic text-card-foreground text-xs p-2 flex justify-start items-center gap-2">
                   <UploadCloud size={16} className="text-ring" />
                   My Destinations
@@ -406,7 +418,7 @@ export function PublicationModalPublishContent({
             Cancel
           </Button>
           <Button onClick={handleBuild} className="flex items-center gap-2" variant="secondary">
-            {false ? (
+            {isPublishing ? (
               <>
                 <Loader size={16} className="animate-spin" />
                 Publishing...

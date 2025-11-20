@@ -1,7 +1,7 @@
 import { WindowContextProviderComponent } from "@/app/IframeContextProvider";
 import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
-import { BuildModalProvider } from "@/components/BuildModal";
+import { BuildModalProvider } from "@/components/BuildModalContextProvider";
 import { ConfirmProvider } from "@/components/Confirm";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
