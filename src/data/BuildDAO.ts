@@ -38,10 +38,11 @@ export class BuildDAO implements BuildRecord {
     sourceDisk,
     sourcePath,
     strategy,
+    status = "idle",
     workspaceId,
     buildPath,
     logs,
-  }: Omit<BuildRecord, "status">) {
+  }: Optional<BuildRecord, "status">) {
     this.guid = guid;
     this.label = label;
     this.timestamp = timestamp;
@@ -52,7 +53,7 @@ export class BuildDAO implements BuildRecord {
     this.strategy = strategy;
     this.workspaceId = workspaceId;
     this.buildPath = buildPath;
-    this.status = "idle";
+    this.status = status;
     this.logs = logs;
   }
 
@@ -143,8 +144,7 @@ export class BuildDAO implements BuildRecord {
 
   async update({ ...properties }: Partial<Omit<BuildRecord, "guid">>) {
     await ClientDb.builds.update(this.guid, properties);
-    for (const [key, value] of Object.entries(properties)) (this as any)[key] = value;
-    return this;
+    return this.hydrate();
   }
 
   save() {
@@ -162,6 +162,10 @@ export class BuildDAO implements BuildRecord {
       status: this.status,
       fileCount: this.fileCount,
     });
+  }
+
+  get completed() {
+    return this.status === "success" || this.status === "failed" || this.status === "cancelled";
   }
 
   getBuildPath(): AbsPath {

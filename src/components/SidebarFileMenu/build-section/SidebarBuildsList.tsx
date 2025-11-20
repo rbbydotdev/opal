@@ -1,4 +1,4 @@
-import { useBuildModalCmd } from "@/components/BuildModalContextProvider";
+import { useBuildModal } from "@/components/BuildModalContext";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SelectableList } from "@/components/ui/SelectableList";
@@ -21,7 +21,7 @@ export function SidebarBuildsList({
   onDelete?: (buildId: string) => void;
   className?: string;
 }) {
-  const { openEdit } = useBuildModalCmd();
+  const { openEdit } = useBuildModal();
   const errorToss = useErrorToss();
   const builds = useLiveQuery(async () => BuildDAO.allForWorkspace(workspaceId), [workspaceId]) || [];
   const handleDelete = async (buildId: string) => {
@@ -35,8 +35,6 @@ export function SidebarBuildsList({
 
   const handleView = (buildId: string) => {
     openEdit({ buildId });
-    // This could open a build details modal in the future
-    // console.log("View build:", buildId);
   };
 
   return (

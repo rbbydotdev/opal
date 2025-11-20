@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BuildDAO } from "@/data/BuildDAO";
+import { useBuildRunner } from "@/components/useBuildRunner";
 import { Workspace } from "@/data/Workspace";
-import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { AlertTriangle, CheckCircle, Loader, UploadCloud, X } from "lucide-react";
-import { useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export function BuildModal({
@@ -24,76 +23,55 @@ export function BuildModal({
 }) {
   const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
   const [isOpen, setIsOpen] = useState(false);
-  const optionsRef = useRef<{
-    currentWorkspace: Workspace;
-    onCancel?: () => void;
-    onComplete?: (buildDao?: BuildDAO) => void;
-  } | null>(null);
-  const [buildError, setBuildError] = useState<string | null>(null);
-  const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const logs = useSyncExternalStore(buildRunner.onLog, buildRunner.getLogs);
-  const buildCompleted = buildRunner ? buildRunner.isSuccessful : false;
+
+  const {
+    buildRunner,
+    logs,
+    buildCompleted,
+    isBuilding,
+    runBuild,
+    cancelBuild,
+    openNew: hookOpenNew,
+    openEdit: hookOpenEdit,
+    buildError,
+    clearError,
+  } = useBuildRunner(currentWorkspace);
+
   const handleOkay = () => setIsOpen(false);
+
   const openNew = useCallback(async () => {
-    const build = BuildDAO.CreateNew({
-      label: `Build ${new Date().toLocaleString()}`,
-      workspaceId: currentWorkspace.guid,
-      disk: currentWorkspace.getDisk(),
-      sourceDisk: currentWorkspace.getDisk(),
-      strategy,
-      logs: [],
-    });
-    setBuildRunner(
-      BuildRunner.create({
-        build,
-      })
-    );
+    await hookOpenNew(strategy);
     setIsOpen(true);
-  }, [currentWorkspace, strategy]);
-  const openEdit = useCallback(async ({ buildId }: { buildId: string }) => {
-    setBuildRunner(
-      await BuildRunner.recall({
-        buildId,
-      })
-    );
-    setIsOpen(true);
-  }, []);
+  }, [strategy, hookOpenNew]);
 
-  useEffect(() => {
-    return () => {
-      if (!isOpen) setBuildError(null);
-    };
-  }, [isOpen, strategy, optionsRef, setBuildError, currentWorkspace]);
-
-  const { open: openPubModal } = usePublicationModalCmd();
+  const openEdit = useCallback(
+    async ({ buildId }: { buildId: string }) => {
+      await hookOpenEdit(buildId);
+      setIsOpen(true);
+    },
+    [hookOpenEdit]
+  );
 
   const handleBuild = async () => {
-    if (!buildRunner) return;
-    await buildRunner.execute();
-    if (buildRunner.isSuccessful) {
-      setBuildError(null);
-      console.log("Build completed successfully");
-    } else if (buildRunner.isFailed) {
-      setBuildError("Build failed. Please check the logs for more details.");
-    } else if (buildRunner.isCancelled) {
-      setBuildError("Build was cancelled.");
-    }
+    await runBuild();
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   };
 
   const handleCancel = useCallback(() => {
-    buildRunner!.cancel();
+    cancelBuild();
     setIsOpen(false);
-  }, [buildRunner]);
+  }, [cancelBuild]);
+
+  const { open: openPubModal } = usePublicationModalCmd();
 
   const handleClose = useCallback(() => {
-    if (buildRunner.isBuilding) return;
+    if (isBuilding) return;
     setIsOpen(false);
-  }, [buildRunner]);
+  }, [isBuilding]);
 
   const handleFocusOutside = (e: Event) => {
-    if (buildRunner.isBuilding) {
+    if (isBuilding) {
       e.preventDefault();
     }
   };
@@ -112,6 +90,7 @@ export function BuildModal({
     [handleClose, openEdit, openNew]
   );
 
+  if (!isOpen) return null;
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl h-[70vh] top-[10vh] flex flex-col" onPointerDownOutside={handleFocusOutside}>
@@ -132,7 +111,7 @@ export function BuildModal({
             <Select
               value={strategy}
               onValueChange={(value: BuildStrategy) => setStrategy(value)}
-              disabled={buildRunner.isBuilding || buildRunner.isCompleted}
+              disabled={isBuilding || buildCompleted}
             >
               <SelectTrigger id="strategy-select" className="min-h-14">
                 <SelectValue placeholder="Select build strategy" />
@@ -167,12 +146,8 @@ export function BuildModal({
           {/* Build Controls */}
           <div className="flex gap-2">
             {!buildCompleted && (
-              <Button
-                onClick={handleBuild}
-                disabled={buildRunner.isBuilding || buildRunner.isCompleted}
-                className="flex items-center gap-2"
-              >
-                {buildRunner.isBuilding ? (
+              <Button onClick={handleBuild} disabled={isBuilding || buildCompleted} className="flex items-center gap-2">
+                {isBuilding ? (
                   <>
                     <Loader size={16} className="animate-spin" />
                     Building...
@@ -183,7 +158,7 @@ export function BuildModal({
               </Button>
             )}
 
-            {buildRunner.isBuilding && (
+            {isBuilding && (
               <Button variant="outline" onClick={handleCancel} className="flex items-center gap-2">
                 <X size={16} />
                 Cancel
@@ -219,7 +194,7 @@ export function BuildModal({
                   <AlertTriangle size={20} className="text-destructive" />
                   <span className="font-semibold uppercase">build failed</span>
                 </div>
-                <Button onClick={handleOkay} variant="destructive" className="flex items-center gap-2">
+                <Button onClick={clearError} variant="destructive" className="flex items-center gap-2">
                   Okay
                 </Button>
               </div>

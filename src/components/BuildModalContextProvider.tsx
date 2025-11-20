@@ -5,9 +5,9 @@ import { useRef } from "react";
 
 export function BuildModalProvider({ children }: { children: React.ReactNode }) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { openNew, openEdit, close, cmdRef } = useBuildModalCmd();
+  const { cmdRef } = useBuildModalCmd();
   return (
-    <BuildModalContext.Provider value={{ openNew, openEdit, close }}>
+    <BuildModalContext.Provider value={{ ...cmdRef.current, close: () => {} }}>
       {children}
       <BuildModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
     </BuildModalContext.Provider>
@@ -25,7 +25,6 @@ export function useBuildModalCmd() {
   });
 
   return {
-    ...cmdRef.current,
     cmdRef,
   };
 }
