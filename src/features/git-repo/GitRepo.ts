@@ -57,13 +57,13 @@ export type RepoLatestCommit = {
   author: {
     name: string;
     email: string;
-    timestamp: Date;
+    timestamp: number;
     timezoneOffset: number;
   };
 };
 export type RepoCommit = {
   oid: string;
-  commit: { message: string; author: { name: string; email: string; timestamp: Date; timezoneOffset: number } };
+  commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
 };
 export const RepoLatestCommitNull = {
   oid: "",
@@ -690,9 +690,6 @@ export class GitRepo {
   };
   tryInfo = async (): Promise<RepoInfoType> => {
     try {
-      // if (!(await this.fullInitialized())) {
-      //   return RepoDefaultInfo;
-      // }
       const currentBranch = await this.getCurrentBranch();
       const latestCommit = await this.getLatestCommit();
       const currentRef = currentBranch

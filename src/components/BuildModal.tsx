@@ -1,4 +1,5 @@
 import { BuildStrategy } from "@/builder/builder-types";
+import { usePublicationModalCmd } from "@/components/publication-modal/PubicationModalCmdContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,7 +10,6 @@ import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { AlertTriangle, CheckCircle, Loader, UploadCloud, X } from "lucide-react";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 import { timeAgo } from "short-time-ago";
-import { usePublicationModalCmd } from "./publication-modal/PubicationModalCmdContext";
 
 export function BuildModal({
   cmdRef,
@@ -18,7 +18,7 @@ export function BuildModal({
   currentWorkspace: Workspace;
   cmdRef: React.ForwardedRef<{
     openNew: () => void;
-    openEdit: (build: BuildDAO) => void;
+    openEdit: (options: { buildId: string }) => void;
     close: () => void;
   }>;
 }) {
@@ -40,17 +40,25 @@ export function BuildModal({
       label: `Build ${new Date().toLocaleString()}`,
       workspaceId: currentWorkspace.guid,
       disk: currentWorkspace.getDisk(),
+      sourceDisk: currentWorkspace.getDisk(),
+      strategy,
       logs: [],
     });
     setBuildRunner(
       BuildRunner.create({
         build,
-        sourceDisk: currentWorkspace.getDisk(),
-        strategy,
       })
     );
     setIsOpen(true);
   }, [currentWorkspace, strategy]);
+  const openEdit = useCallback(async ({ buildId }: { buildId: string }) => {
+    setBuildRunner(
+      await BuildRunner.recall({
+        buildId,
+      })
+    );
+    setIsOpen(true);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -98,10 +106,10 @@ export function BuildModal({
     cmdRef,
     () => ({
       openNew,
-      openEdit: (_build: BuildDAO) => {},
+      openEdit,
       close: handleClose,
     }),
-    [handleClose, openNew]
+    [handleClose, openEdit, openNew]
   );
 
   return (

@@ -1,14 +1,13 @@
 import { BuildModal } from "@/components/BuildModal";
 import { BuildModalContext } from "@/components/BuildModalContext";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { BuildDAO } from "@/data/BuildDAO";
 import { useRef } from "react";
 
 export function BuildModalProvider({ children }: { children: React.ReactNode }) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { openNew, close, cmdRef } = useBuildModalCmd();
+  const { openNew, openEdit, close, cmdRef } = useBuildModalCmd();
   return (
-    <BuildModalContext.Provider value={{ openNew, close }}>
+    <BuildModalContext.Provider value={{ openNew, openEdit, close }}>
       {children}
       <BuildModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
     </BuildModalContext.Provider>
@@ -17,11 +16,11 @@ export function BuildModalProvider({ children }: { children: React.ReactNode }) 
 export function useBuildModalCmd() {
   const cmdRef = useRef<{
     openNew: () => Promise<void>;
-    openEdit: (build: BuildDAO) => void;
+    openEdit: (options: { buildId: string }) => void;
     close: () => void;
   }>({
     openNew: async () => {},
-    openEdit: (_build: BuildDAO) => {},
+    openEdit: (options: { buildId: string }) => {},
     close: () => {},
   });
 

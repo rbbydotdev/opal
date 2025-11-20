@@ -3,10 +3,9 @@ import { prettifyMime } from "@/components/Editor/prettifyMime";
 import { BuildDAO } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
-import { NullDisk } from "@/data/NullDisk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
+import { AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { CreateSuperTypedEmitter } from "@/lib/TypeEmitter";
 import { getMimeType } from "@zip.js/zip.js";
 import matter from "gray-matter";
@@ -39,17 +38,35 @@ function logLine(message: string, type: BuildLogType = "info") {
 
 export class BuildRunner {
   build: BuildDAO;
-  sourceDisk: Disk; // = new NullDisk();
-  outputDisk: Disk; // = new NullDisk();
-  outputPath: AbsPath;
-  sourcePath: AbsPath;
-  strategy: BuildStrategy;
-  logs: BuildLogLine[] = [];
   completed: boolean = false;
 
   logEmitter = CreateSuperTypedEmitter<{
     [key in BuildLogType]: BuildLogLine;
   }>();
+
+  get sourceDisk(): Disk {
+    return this.build.getSourceDisk();
+  }
+
+  get strategy(): BuildStrategy {
+    return this.build.strategy;
+  }
+
+  get logs(): BuildLogLine[] {
+    return this.build.logs;
+  }
+
+  get outputDisk(): Disk {
+    return this.build.getSourceDisk();
+  }
+
+  get outputPath(): AbsPath {
+    return this.build.getOutputPath();
+  }
+
+  get sourcePath(): AbsPath {
+    return this.build.sourcePath;
+  }
 
   get isBuilding() {
     return this.build.status === "pending";
@@ -72,25 +89,22 @@ export class BuildRunner {
   private abortController: AbortController = new AbortController();
   protected readonly log = (message: string, type?: BuildLogType) => {
     const l = logLine(message, type);
-    this.logs = [...this.logs, l];
+    this.build.logs = [...this.build.logs, l];
     this.logEmitter.emit(type || "info", l);
     return l;
   };
 
-  static create({
-    build,
-    strategy,
-    sourceDisk = new NullDisk(),
-  }: {
-    strategy: BuildStrategy;
-    buildLabel?: string;
-    build: BuildDAO;
-    sourceDisk: Disk;
-  }): BuildRunner {
+  static async recall({ buildId }: { buildId: string }): Promise<BuildRunner> {
+    const build = await BuildDAO.FetchFromGuid(buildId);
+    if (!build) throw new Error(`Build with ID ${buildId} not found`);
     return new BuildRunner({
       build,
-      strategy,
-      sourceDisk,
+    });
+  }
+
+  static create({ build }: { build: BuildDAO }): BuildRunner {
+    return new BuildRunner({
+      build,
     });
   }
 
@@ -102,24 +116,8 @@ export class BuildRunner {
     return this.build.guid;
   }
 
-  constructor({
-    sourceDisk,
-    sourcePath = absPath("/"),
-    strategy,
-    build,
-  }: {
-    sourcePath?: AbsPath;
-    sourceDisk: Disk;
-    build: BuildDAO;
-    strategy: BuildStrategy;
-  }) {
-    this.sourceDisk = sourceDisk;
-    this.sourcePath = sourcePath;
-    this.strategy = strategy;
+  constructor({ build }: { build: BuildDAO }) {
     this.build = build;
-
-    this.outputDisk = this.sourceDisk;
-    this.outputPath = this.build.getBuildPath();
   }
 
   onLog = (callback: (log: BuildLogLine) => void) => {
@@ -574,8 +572,6 @@ export class NullBuildRunner extends BuildRunner {
   constructor() {
     super({
       build: NULL_BUILD,
-      strategy: "freeform",
-      sourceDisk: new NullDisk(),
     });
   }
 
