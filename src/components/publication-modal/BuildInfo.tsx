@@ -22,7 +22,7 @@ export function BuildInfo({
     // Build info
     "Build Label": build.label,
     "File Count": `${build.fileCount} files`,
-    "Build Created": timeAgo(build.timestamp),
+    "Build Created": timeAgo(new Date(build.timestamp)),
     "Build Status": build.status,
 
     // Destination info

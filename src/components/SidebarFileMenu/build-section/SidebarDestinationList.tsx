@@ -64,7 +64,7 @@ export function SidebarDestinationList({
               <div className="flex flex-col min-w-0 ml-1">
                 <div className="font-mono text-xs truncate">{build.label}</div>
                 <div className="text-2xs text-muted-foreground truncate">
-                  Disk: {build.disk.guid.slice(-8)} • {timeAgo(build.timestamp)}
+                  Disk: {build.disk.guid.slice(-8)} • {timeAgo(new Date(build.timestamp))}
                 </div>
               </div>
               <SelectableList.ItemMenu>

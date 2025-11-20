@@ -30,7 +30,7 @@ export interface BuildResult {
 type BuildLogType = "info" | "error" | "warning";
 function logLine(message: string, type: BuildLogType = "info") {
   return {
-    timestamp: new Date(),
+    timestamp: Date.now(),
     message,
     type,
   } as BuildLogLine;

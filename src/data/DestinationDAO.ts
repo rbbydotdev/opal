@@ -19,7 +19,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   label: string;
   remoteAuth: RemoteAuthDAO | RemoteAuthJType;
   meta: DestinationData<T>;
-  timestamp?: Date;
+  timestamp?: number;
   static guid = () => "__dest__" + nanoid();
 
   constructor({ guid, remoteAuth, meta, label, timestamp }: DestinationRecord<T>) {
@@ -57,7 +57,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     meta: T;
     label: string;
   }) {
-    return new DestinationDAO<T>({ guid: DestinationDAO.guid(), remoteAuth, meta, label, timestamp: new Date() });
+    return new DestinationDAO<T>({ guid: DestinationDAO.guid(), remoteAuth, meta, label, timestamp: Date.now() });
   }
 
   static FetchFromGuid(guid: string) {

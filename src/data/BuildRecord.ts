@@ -1,11 +1,11 @@
+import { BuildStrategy } from "@/builder/builder-types";
 import { DiskJType } from "@/data/DiskType";
 import { AbsPath } from "@/lib/paths2";
-import { BuildStrategy } from "@/builder/builder-types";
 
 export interface BuildRecord {
   guid: string;
   label: string;
-  timestamp: Date;
+  timestamp: number;
   disk: DiskJType;
   sourceDisk: DiskJType;
   sourcePath: AbsPath;
@@ -18,7 +18,7 @@ export interface BuildRecord {
 }
 
 export type BuildLogLine = {
-  timestamp: Date;
+  timestamp: number;
   message: string;
   type: "info" | "error";
 };

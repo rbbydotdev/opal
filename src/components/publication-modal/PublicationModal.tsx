@@ -474,7 +474,7 @@ export function PublicationModalPublishContent({
                   key={index}
                   className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
                 >
-                  <span className="text-muted-foreground shrink-0">[{timeAgo(log.timestamp)}]</span>
+                  <span className="text-muted-foreground shrink-0">[{timeAgo(new Date(log.timestamp))}]</span>
                   <span className="break-all">{log.message}</span>
                 </div>
               ))

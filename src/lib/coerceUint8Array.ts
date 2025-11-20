@@ -11,3 +11,22 @@ export function coerceUint8Array(data: Uint8Array | ArrayBuffer | string | null 
     throw new TypeError("Unsupported type for coerceUint8Array");
   }
 }
+
+export function coerceString(data: Uint8Array | string | null | undefined): string {
+  if (typeof data === "string") {
+    return data;
+  } else if (data instanceof Uint8Array) {
+    return new TextDecoder("utf-8").decode(data);
+  } else if (data === null || data === undefined) {
+    return "";
+  } else {
+    throw new TypeError("Unsupported type for coerceString");
+  }
+}
+
+export function coerceFileContent(data: Uint8Array | string, options?: { encoding?: "utf8" }): Uint8Array | string {
+  if (options?.encoding === "utf8") {
+    return coerceString(data);
+  }
+  return coerceUint8Array(data);
+}

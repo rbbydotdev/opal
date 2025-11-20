@@ -1,4 +1,5 @@
 import { CommonFileSystem } from "@/data/FileSystemTypes";
+import { coerceFileContent, coerceUint8Array } from "@/lib/coerceUint8Array";
 
 export interface AsyncKeyValueStore {
   get(key: string): Promise<string | null>;
@@ -92,14 +93,14 @@ export class KVFileSystem implements CommonFileSystem {
     if (!entry || entry.type !== "file") {
       throw new Error(`ENOENT: no such file, open '${path}'`);
     }
-    if (options?.encoding === "utf8") {
-      return entry.data;
-    }
-    return entry.data;
+    return coerceFileContent(entry.data, options);
   }
 
   async writeFile(path: string, data: Uint8Array | Buffer | string, options?: { encoding?: "utf8"; mode?: number }) {
-    await this.setEntry(path, { type: "file", data });
+    const normalizedData = options?.encoding === "utf8" && typeof data === "string" 
+      ? data 
+      : coerceUint8Array(data);
+    await this.setEntry(path, { type: "file", data: normalizedData });
   }
 
   async mkdir(path: string, options?: { recursive?: boolean; mode?: number }) {

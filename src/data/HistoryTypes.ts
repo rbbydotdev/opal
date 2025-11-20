@@ -1,7 +1,7 @@
 export class HistoryDocRecord {
   id: string;
   change: string;
-  timestamp: Date;
+  timestamp: number;
   parent: number | null;
   edit_id!: number;
   preview: Blob | null;
@@ -11,7 +11,7 @@ export class HistoryDocRecord {
     workspaceId: string,
     id: string,
     change: string,
-    timestamp: Date,
+    timestamp: number,
     parent: number | null,
     preview: Blob | null = null
   ) {
@@ -27,7 +27,7 @@ export class HistoryDocRecord {
     id: string;
     edit_id: number;
     change: string;
-    timestamp: Date;
+    timestamp: number;
     parent: number | null;
     preview?: Blob | null;
   }) {

@@ -147,7 +147,7 @@ export class WorkspaceDAO {
       thumbs,
       remoteAuths,
       code: WS_OK,
-      timestamp: new Date(),
+      timestamp: Date.now(),
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
       return await Promise.all([
