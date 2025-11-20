@@ -1,3 +1,4 @@
+import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SelectableList } from "@/components/ui/SelectableList";
 import { BuildDAO } from "@/data/BuildDAO";
@@ -5,7 +6,6 @@ import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Archive, Delete, Eye } from "lucide-react";
-import { timeAgo } from "short-time-ago";
 
 export function SidebarBuildsList({
   workspaceId,
@@ -58,12 +58,7 @@ export function SidebarBuildsList({
           {builds.length === 0 && <EmptySidebarLabel label="no builds" />}
           {builds.map((build) => (
             <SelectableList.Item key={build.guid} id={build.guid}>
-              <div className="flex flex-col min-w-0 ml-1">
-                <div className="font-mono text-xs truncate">{build.label}</div>
-                <div className="text-2xs text-muted-foreground truncate">
-                  Disk: {build.disk.guid.slice(-8)} • {timeAgo(build.timestamp)}
-                </div>
-              </div>
+              <BuildLabel build={build} />
               <SelectableList.ItemMenu>
                 <SelectableList.ItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
                   View

@@ -1,7 +1,8 @@
-import { BuildModal, useBuildModalCmd } from "@/components/BuildModal";
+import { BuildModal } from "@/components/BuildModal";
+import { useBuildModalCmd } from "@/components/BuildModalContextProvider";
 import { useConfirm } from "@/components/Confirm";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
-import { usePublicationModalCmd } from "@/components/publication-modal/PubicationModalCmd";
+import { usePublicationModalCmd } from "@/components/publication-modal/PubicationModalCmdContext";
 import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { useBuildManager } from "@/components/SidebarFileMenu/build-files-section/useBuildManager";

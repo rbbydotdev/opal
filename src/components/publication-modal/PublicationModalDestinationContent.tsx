@@ -2,7 +2,7 @@ import { CloudflareDestinationForm } from "@/components/publication-modal/Cloudf
 import { NetlifyDestinationForm } from "@/components/publication-modal/NetlifyDestinationForm";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -17,7 +17,7 @@ import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Plus, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Form, useForm, UseFormReturn } from "react-hook-form";
+import { useForm, UseFormReturn } from "react-hook-form";
 import z from "zod";
 
 export function PublicationModalDestinationContent({
