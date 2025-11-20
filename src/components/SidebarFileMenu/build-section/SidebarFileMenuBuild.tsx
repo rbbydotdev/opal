@@ -145,7 +145,13 @@ export function SidebarFileMenuBuild({
                       <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
                         <Delete className="text-destructive" /> Delete Build
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (!build) return;
+                          openNewPub({ build });
+                        }}
+                        disabled={!build}
+                      >
                         <UploadCloud /> Publish Build
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
@@ -196,7 +202,7 @@ function MiniTab({ children, active, onClick }: { children: React.ReactNode; act
       tabIndex={0}
       onClick={onClick}
       className={cn(
-        "rounded-t-lg active:scale-95 active:translate-y-0.5 text-muted-foreground bg-muted/50 hover:text-primary hover:scale-105 transition-transform border-t border-l border-r text-xs p-2 font-mono",
+        "rounded-t border-muted active:scale-95 active:translate-y-0.5 text-muted-foreground bg-muted/50 hover:text-primary hover:scale-105 transition-transform border-t border-l border-r text-xs p-2 font-mono",
         {
           "bg-muted": active,
           "bg-transparent": !active,
