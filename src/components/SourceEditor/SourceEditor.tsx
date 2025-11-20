@@ -1,38 +1,13 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
 import "@/components/SourceEditor/code-mirror-source-editor.css";
+import { SourceMimeType } from "@/components/SourceEditor/SourceMimeType";
 import { useFileContents } from "@/context/useFileContents";
 import { Workspace } from "@/data/Workspace";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
-import { OpalMimeType } from "@/lib/fileType";
 import { cn } from "@/lib/utils";
-
-export type SourceMimeType = Extract<
-  OpalMimeType,
-  | "text/css"
-  | "text/plain"
-  | "text/markdown"
-  | "text/html"
-  | "application/xml"
-  | "text/x-mustache"
-  | "text/x-ejs"
-  | "application/json"
-  | "application/javascript"
->;
-export const isSourceMimeType = (mimeType: string): mimeType is SourceMimeType =>
-  [
-    "text/css",
-    "application/json",
-    "application/javascript",
-    "text/plain",
-    "text/markdown",
-    "application/xml",
-    "text/html",
-    "text/x-mustache",
-    "text/x-ejs",
-  ].includes(mimeType);
 
 export const SourceEditor = ({
   hasConflicts,

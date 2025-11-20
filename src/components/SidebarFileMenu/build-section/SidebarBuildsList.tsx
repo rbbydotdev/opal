@@ -58,9 +58,6 @@ export function SidebarBuildsList({
           {builds.length === 0 && <EmptySidebarLabel label="no builds" />}
           {builds.map((build) => (
             <SelectableList.Item key={build.guid} id={build.guid}>
-              {/* <SelectableList.ItemIcon>
-                <Archive size={12} className="flex-shrink-0 text-muted-foreground" />
-              </SelectableList.ItemIcon> */}
               <div className="flex flex-col min-w-0 ml-1">
                 <div className="font-mono text-xs truncate">{build.label}</div>
                 <div className="text-2xs text-muted-foreground truncate">

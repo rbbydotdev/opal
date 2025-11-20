@@ -5,6 +5,7 @@ import { usePublicationModalCmd } from "@/components/publication-modal/Pubicatio
 import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { useBuildManager } from "@/components/SidebarFileMenu/build-files-section/useBuildManager";
+import { SidebarBuildsList } from "@/components/SidebarFileMenu/build-section/SidebarBuildsList";
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton, SidebarSeparator } from "@/components/ui/sidebar";
+import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
+import { BuildDAO } from "@/data/BuildDAO";
 import { Workspace } from "@/data/Workspace";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
@@ -50,6 +52,7 @@ export function SidebarFileMenuBuild({
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [open, setOpen] = useState(false);
   const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
+  const [activeTab, setActiveTab] = useState<"mgmt" | "files">("files");
 
   const { builds, build, setBuildId } = useBuildManager({ currentWorkspace });
 
@@ -110,7 +113,7 @@ export function SidebarFileMenuBuild({
           </CollapsibleTrigger>
 
           <CollapsibleContent className="pb-4">
-            <div className="px-4 pt-2 pb-2 flex flex-col gap-4">
+            <div className="px-4 pt-2 pb-2 flex flex-col gap-2">
               <SidebarGroup className="gap-2 flex flex-col">
                 {githubConnected && (
                   <Button className="w-full text-xs" size="sm" variant="outline">
@@ -123,7 +126,6 @@ export function SidebarFileMenuBuild({
                   <span className="flex-grow">Build to HTML</span>
                 </Button>
               </SidebarGroup>
-              <SidebarSeparator />
               <div className="min-w-0 flex items-center w-full">
                 {selectMode === "delete" ? (
                   <SelectHighlight
@@ -164,28 +166,62 @@ export function SidebarFileMenuBuild({
                   <UploadCloud className="mr-1" />
                   <span className="flex-grow">Publish Build</span>
                 </Button>
-                {/* <SidebarGroupLabel className="text-2xs mono border-b border-dashed italic w-full flex">
-                  {build?.label}
-                </SidebarGroupLabel> */}
               </div>
             </div>
-            <div className="px-4 pt-2 pb-2 flex flex-col gap-4">
-              <div className="pl-2 pt-0 flex flex-col gap-4 border-ring border-l border-dashed">
-                <div className="flex-shrink flex">
-                  <FileTreeMenuCtxProvider>
-                    <TreeExpanderProvider id="BuildFiles">
-                      <FileTreeProvider>
-                        <BuildSidebarFileMenuFileSection build={build} />
-                      </FileTreeProvider>
-                    </TreeExpanderProvider>
-                  </FileTreeMenuCtxProvider>
-                </div>
+            <div className="px-4 pt-2 pb-2 flex flex-col">
+              <div className="flex gap-4">
+                <MiniTab onClick={() => setActiveTab("files")} active={activeTab === "files"}>
+                  Files
+                </MiniTab>
+                <MiniTab onClick={() => setActiveTab("mgmt")} active={activeTab === "mgmt"}>
+                  Management
+                </MiniTab>
+              </div>
+              <div className="bg-highlight rounded rounded-tl-none py-4 px-2">
+                <div>{activeTab === "files" && <BuildSidebarFileExplorer build={build} />}</div>
+                <div>{activeTab === "mgmt" && <SidebarBuildListManager workspaceId={currentWorkspace.guid} />}</div>
               </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
       </SidebarGroup>
     </>
+  );
+}
+// function useMiniTabs<T extends string[]>(defaultTab: T[0]) {
+// }
+function MiniTab({ children, active, onClick }: { children: React.ReactNode; active?: boolean; onClick: () => void }) {
+  return (
+    <button
+      tabIndex={0}
+      onClick={onClick}
+      className={cn(
+        "rounded-t-lg active:scale-95 active:translate-y-0.5 text-muted-foreground bg-muted/50 hover:text-primary hover:scale-105 transition-transform border-t border-l border-r text-xs p-2 font-mono",
+        {
+          "bg-muted": active,
+          "bg-transparent": !active,
+        }
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+function BuildSidebarFileExplorer({ build }: { build: BuildDAO | null }) {
+  return (
+    <div className="px-4 pt-2 pb-2 flex flex-col gap-2">
+      <div className="pl-2 pt-0 flex flex-col gap-4 border-ring border-l border-dashed">
+        <div className="flex-shrink flex">
+          <FileTreeMenuCtxProvider>
+            <TreeExpanderProvider id="BuildFiles">
+              <FileTreeProvider>
+                <BuildSidebarFileMenuFileSection build={build} />
+              </FileTreeProvider>
+            </TreeExpanderProvider>
+          </FileTreeMenuCtxProvider>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -221,3 +257,7 @@ const BuildMenuDropDown = ({
     <DropdownMenuContent align="end">{children}</DropdownMenuContent>
   </DropdownMenu>
 );
+
+function SidebarBuildListManager({ workspaceId }: { workspaceId: string }) {
+  return <SidebarBuildsList workspaceId={workspaceId} />;
+}

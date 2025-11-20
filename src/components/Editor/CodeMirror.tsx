@@ -285,7 +285,7 @@ export const CodeMirrorEditor = ({
           hasConflicts={hasConflicts}
           mimeType={mimeType}
           editorView={viewRef.current}
-        />
+        ></CodeMirrorToolbar>
         <div className={cn("code-mirror-source-editor bg-background min-h-0", className)} ref={editorRef} />
       </ScrollSync>
     </>
