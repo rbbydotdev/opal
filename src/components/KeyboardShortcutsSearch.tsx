@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import React, { forwardRef } from "react";
+import { forwardRef } from "react";
 
 interface KeyboardShortcutsSearchProps {
   value: string;
@@ -12,7 +12,7 @@ interface KeyboardShortcutsSearchProps {
 export const KeyboardShortcutsSearch = forwardRef<HTMLInputElement, KeyboardShortcutsSearchProps>(
   ({ value, onChange, placeholder = "Search shortcuts...", className }, ref) => {
     const handleMagnifyClick = () => {
-      if (ref && 'current' in ref) {
+      if (ref && "current" in ref) {
         ref.current?.focus();
       }
     };
@@ -20,8 +20,8 @@ export const KeyboardShortcutsSearch = forwardRef<HTMLInputElement, KeyboardShor
     return (
       <div className="relative mb-4">
         <div className="relative">
-          <Search 
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" 
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer"
             onClick={handleMagnifyClick}
           />
           <Input

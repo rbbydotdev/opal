@@ -13,6 +13,7 @@ import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMod
 import { GitConflictNotice } from "@/components/GitConflictNotice";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/data/Workspace";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
@@ -399,14 +400,21 @@ const CodeMirrorToolbar = ({
 
         <Label htmlFor="vimMode" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
           <span className="text-sm">Vim Mode</span>
-          <input
+          <Switch
+            id="vimMode"
+            className="ml-1"
+            checked={vimMode}
+            onCheckedChange={(checked) => setVimMode(checked)}
+            aria-label="Enable Vim mode"
+          />
+          {/* <input
             id="vimMode"
             type="checkbox"
             className="ml-1"
             checked={vimMode}
             onChange={(e) => setVimMode(e.target.checked)}
             aria-label="Enable Vim mode"
-          />
+          /> */}
         </Label>
       </div>
       {children}

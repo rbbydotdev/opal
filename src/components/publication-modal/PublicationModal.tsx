@@ -1,4 +1,5 @@
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
+import { BuildInfo } from "@/components/publication-modal/BuildInfo";
 import { PublicationModalDestinationContent } from "@/components/publication-modal/PublicationModalDestinationContent";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { DestinationDAO, DestinationMetaType, DestinationType } from "@/data/DestinationDAO";
@@ -218,6 +220,10 @@ export function PublicationModal({
   );
 }
 
+function PublicationModalDescription2() {
+  return <Switch></Switch>;
+}
+
 function PublicationModalDescription({ view }: { view: "publish" | "destination" | "connection" | undefined }) {
   if (!view) return null;
   switch (view) {
@@ -384,12 +390,8 @@ export function PublicationModalPublishContent({
             </Button>
           )}
         </div>
-        <div className="w-full flex">
-          <p>
-            {destination
-              ? `Ready to publish to ${destination.label} via ${destination.RemoteAuth.source} hosting.`
-              : "Please select a destination to publish to."}
-          </p>
+        <div className="w-full">
+          <BuildInfo build={build} destination={destination} />
         </div>
       </div>
 

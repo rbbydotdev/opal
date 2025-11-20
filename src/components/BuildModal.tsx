@@ -48,9 +48,11 @@ export function useBuildModal() {
 export function useBuildModalCmd() {
   const cmdRef = useRef<{
     openNew: () => Promise<void>;
+    openEdit: (build: BuildDAO) => void;
     close: () => void;
   }>({
     openNew: async () => {},
+    openEdit: (_build: BuildDAO) => {},
     close: () => {},
   });
 
@@ -67,6 +69,7 @@ export function BuildModal({
   currentWorkspace: Workspace;
   cmdRef: React.ForwardedRef<{
     openNew: () => void;
+    openEdit: (build: BuildDAO) => void;
     close: () => void;
   }>;
 }) {
@@ -146,6 +149,7 @@ export function BuildModal({
     cmdRef,
     () => ({
       openNew,
+      openEdit: (_build: BuildDAO) => {},
       close: handleClose,
     }),
     [handleClose, openNew]
