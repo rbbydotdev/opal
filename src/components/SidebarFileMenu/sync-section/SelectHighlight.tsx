@@ -24,7 +24,7 @@ export function SelectHighlight({
         if (!open) onCancel();
       }}
     >
-      <SelectTrigger className={cn(className, "w-full bg-background text-xs h-8")}>
+      <SelectTrigger className={cn(className, "w-full bg-background text-xs")}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

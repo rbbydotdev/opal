@@ -1,3 +1,4 @@
+import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
@@ -21,7 +22,7 @@ export function BuildSidebarFileMenuFileSectionInternal({
     : Object.keys(fileTree.nodeFromPath(build?.buildPath)?.children ?? {}).length === 0;
   const scope = build?.buildPath || SpecialDirs.Build;
 
-  if (!build) return null;
+  if (!build) return <EmptySidebarLabel label="No Build" className="w-full" />;
   return (
     <TreeExpanderProvider id="BuildFiles">
       <SidebarFileMenuFiles

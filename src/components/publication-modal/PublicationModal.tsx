@@ -1,39 +1,21 @@
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
+import { PublicationModalDestinationContent } from "@/components/publication-modal/PublicationModalDestinationContent";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
-import {
-  RemoteItemCreateInput,
-  RemoteItemSearchDropDown,
-  useRemoteNetlifySearch,
-  useRemoteNetlifySite,
-} from "@/components/RemoteConnectionItem";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
-import {
-  DestinationDAO,
-  DestinationJType,
-  DestinationMetaType,
-  DestinationSchemaMap,
-  DestinationType,
-  NetlifyDestination,
-} from "@/data/DestinationDAO";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
-import { RemoteAuthNetlifyAgent } from "@/data/RemoteAuthAgent";
-import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
+import { DestinationDAO, DestinationMetaType, DestinationType } from "@/data/DestinationDAO";
 import { RemoteAuthJType, RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useDestinations } from "@/hooks/useDestinations";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -41,19 +23,16 @@ import {
   Loader,
   Pencil,
   Plus,
-  Search,
   UploadCloud,
   UploadCloudIcon,
   Zap,
 } from "lucide-react";
-import { ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { useForm, UseFormReturn } from "react-hook-form";
+import { useCallback, useImperativeHandle, useState } from "react";
 import { timeAgo } from "short-time-ago";
-import z from "zod";
 
-type PublicationViewType = "publish" | "destination" | "connection";
+export type PublicationViewType = "publish" | "destination" | "connection";
 
-function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
+export function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
   const [viewStack, setViewStack] = useState<T[]>([defaultView]);
 
   const currentView = viewStack[viewStack.length - 1];
@@ -184,7 +163,7 @@ export function PublicationModal({
           </DialogDescription>
         </DialogHeader>
 
-        {/* MARK: destination */}
+        {/* MARK: view-destination */}
         {currentView === "destination" && (
           <>
             <PublicationModalDestinationContent
@@ -201,7 +180,7 @@ export function PublicationModal({
             />
           </>
         )}
-        {/* MARK: Connection */}
+        {/* MARK: view-connection */}
         {currentView === "connection" && (
           <ConnectionsModalContent
             preferredNewConnection={preferredNewConnection}
@@ -218,7 +197,7 @@ export function PublicationModal({
           </ConnectionsModalContent>
         )}
 
-        {/* MARK: publish */}
+        {/* MARK: view-publish */}
         {currentView === "publish" && (
           <PublicationModalPublishContent
             //* for jumping to new connection
@@ -239,174 +218,6 @@ export function PublicationModal({
   );
 }
 
-//MARK: Destination Forms
-
-//MARK: Netlify Form
-function NetlifyDestinationForm({
-  form,
-  remoteAuth,
-  destination,
-  defaultName,
-}: {
-  form: UseFormReturn<DestinationMetaType<"netlify">>;
-  remoteAuth: RemoteAuthDAO | null;
-  destination: NetlifyDestination | null;
-  defaultName?: string;
-}) {
-  const [mode, setMode] = useState<"search" | "input" | "create">("input");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const agent = useRemoteAuthAgent<RemoteAuthNetlifyAgent>(remoteAuth);
-  const { isLoading, searchValue, updateSearch, searchResults, error, clearError } = useRemoteNetlifySearch({
-    agent,
-  });
-  const { ident, msg, request } = useRemoteNetlifySite({
-    createRequest: agent.createSite,
-    defaultName,
-  });
-
-  useEffect(() => {
-    if (mode === "input" && inputRef.current) inputRef.current?.focus();
-  }, [mode]);
-
-  const handleCreateSubmit = async () => {
-    const res = await request.submit();
-    if (!res) return null;
-    void destination?.update({ meta: { siteName: res.name } });
-    form.setValue("meta.siteName", res.name);
-    setMode("input");
-  };
-  if (mode === "search") {
-    return (
-      <div>
-        <FormLabel>Site Name</FormLabel>
-        <RemoteItemSearchDropDown
-          className="mt-2"
-          isLoading={isLoading}
-          searchValue={searchValue}
-          onSearchChange={updateSearch}
-          onClose={(val?: string) => {
-            setMode("input");
-            if (val) {
-              form.setValue("meta.siteName", val);
-            }
-          }}
-          onSelect={(item: { element: ReactNode; label: string; value: string }) => {
-            form.setValue("meta.siteName", item.value);
-            setMode("input");
-          }}
-          error={error}
-          allItems={searchResults}
-        />
-      </div>
-    );
-  }
-  if (mode === "create") {
-    return (
-      <div>
-        <FormLabel>Site Name</FormLabel>
-        <RemoteItemCreateInput
-          className="mt-2"
-          placeholder="my-netlify-site"
-          onClose={(inputVal?: string) => {
-            setMode("input");
-            if (inputVal) {
-              form.setValue("meta.siteName", inputVal);
-            }
-          }}
-          submit={handleCreateSubmit}
-          // }
-          request={request}
-          msg={msg}
-          ident={ident}
-        />
-      </div>
-    );
-  }
-  if (mode === "input") {
-    return (
-      <FormField
-        control={form.control}
-        name="meta.siteName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Site Name</FormLabel>
-            <div className="flex justify-center w-full items-center gap-2">
-              <FormControl>
-                <Input
-                  {...field}
-                  ref={inputRef}
-                  placeholder="my-netlify-site"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                    }
-                  }}
-                />
-              </FormControl>
-              <Button
-                variant="outline"
-                title="Add Site"
-                onClick={() => {
-                  const currentValue = form.getValues("meta.siteName");
-                  ident.setName(currentValue || "");
-                  setMode("create");
-                }}
-              >
-                <Plus />
-              </Button>
-              <Button
-                variant="outline"
-                title="Find Site"
-                onClick={() => {
-                  const currentValue = form.getValues("meta.siteName");
-                  updateSearch(currentValue || "");
-                  setMode("search");
-                }}
-              >
-                <Search />
-              </Button>
-            </div>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    );
-  }
-}
-//MARK: Cloudflare Form
-function CloudflareDestinationForm({ form }: { form: UseFormReturn<DestinationMetaType<"cloudflare">> }) {
-  return (
-    <>
-      <FormField
-        control={form.control}
-        name="meta.accountId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Account Id</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="account-id" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="meta.siteId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Site Id</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="my-cloudflare-site-id" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </>
-  );
-}
-
 function PublicationModalDescription({ view }: { view: "publish" | "destination" | "connection" | undefined }) {
   if (!view) return null;
   switch (view) {
@@ -421,147 +232,7 @@ function PublicationModalDescription({ view }: { view: "publish" | "destination"
   }
 }
 
-//MARK: Destination Content
-export function PublicationModalDestinationContent({
-  close,
-  handleSubmit,
-  defaultName,
-  preferredDestConnection,
-  editDestination,
-  remoteAuths,
-  onAddConnection,
-}: {
-  close: () => void;
-  handleSubmit: (data: any) => void;
-  defaultName?: string;
-  editDestination?: DestinationDAO | null;
-  preferredDestConnection: RemoteAuthRecord | null;
-  remoteAuths: RemoteAuthDAO[];
-  onAddConnection: () => void;
-}) {
-  const defaultRemoteAuth = preferredDestConnection || remoteAuths[0];
-  const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
-  const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
-  const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
-
-  const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
-    defaultValues: {
-      ...currentSchema._def.defaultValue(),
-      remoteAuthId: defaultRemoteAuth?.guid || "",
-      ...(editDestination?.toJSON() as DestinationJType<any>),
-    },
-    resolver: (values, opt1, opt2) => {
-      return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
-        DestinationSchemaMap[destinationType]
-      )(values, opt1, opt2);
-    },
-    mode: "onChange",
-  });
-
-  const formValues = form.watch();
-
-  const currentRemoteAuthId = formValues.remoteAuthId;
-  const remoteAuth = useMemo(
-    () =>
-      currentRemoteAuthId
-        ? RemoteAuthDAO.FromJSON(remoteAuths.find((remoteAuth) => remoteAuth.guid === currentRemoteAuthId)!)
-        : null,
-    [currentRemoteAuthId, remoteAuths]
-  );
-
-  const isCompleteOkay = currentSchema.safeParse(formValues).success;
-
-  const handleSelectType = (value: string) => {
-    form.setValue("remoteAuthId", value);
-    const remoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === value);
-    const newType = remoteAuth ? (remoteAuth.source as DestinationType) : "custom";
-    setDestinationType(newType);
-    form.reset({
-      ...DestinationSchemaMap[newType]._def.defaultValue(),
-      remoteAuthId: value,
-    });
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4 pt-2">
-        <FormField
-          control={form.control}
-          name="remoteAuthId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Connection Type</FormLabel>
-              <div className="flex gap-2">
-                <Select value={field.value || ""} onValueChange={handleSelectType}>
-                  <SelectTrigger id="connection-type">
-                    <SelectValue placeholder="Select a connection type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectSeparator />
-                    {remoteAuths.map((connection) => (
-                      <SelectItem key={connection.guid} value={connection.guid}>
-                        <div className="flex items-center gap-2">
-                          <RemoteAuthSourceIconComponent source={connection.source} />
-                          <div>
-                            <p className="text-sm font-medium">{connection.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                              {connection.source} {connection.type}
-                            </p>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button type="button" variant="outline" onClick={onAddConnection}>
-                  <Plus />
-                </Button>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {destinationType !== "custom" && (
-          <FormField
-            control={form.control}
-            name="label"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Destination Label</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="label" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {destinationType === "cloudflare" && (
-          <CloudflareDestinationForm form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>} />
-        )}
-        {destinationType === "netlify" && (
-          <NetlifyDestinationForm
-            form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
-            defaultName={defaultName}
-            remoteAuth={remoteAuth}
-            destination={null}
-          />
-        )}
-
-        <div className="w-full justify-end flex gap-4">
-          <Button type="button" variant="outline" onClick={close}>
-            <ArrowLeft /> Back
-          </Button>
-          <Button type="submit" disabled={!isCompleteOkay}>
-            <Zap />
-            Save
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
-}
+//MARK: Destination Content Modal View
 
 //MARK: Publish Content
 export function PublicationModalPublishContent({
@@ -723,11 +394,15 @@ export function PublicationModalPublishContent({
       </div>
 
       {/* Build Controls */}
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={onClose || (() => onOpenChange(false))} className="flex items-center gap-2">
-          Cancel
-        </Button>
-        {true && (
+      {destination && (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={onClose || (() => onOpenChange(false))}
+            className="flex items-center gap-2"
+          >
+            Cancel
+          </Button>
           <Button onClick={handleBuild} className="flex items-center gap-2" variant="secondary">
             {false ? (
               <>
@@ -740,8 +415,8 @@ export function PublicationModalPublishContent({
               </>
             )}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Build Success Indicator */}
       {showStatus && status === "SUCCESS" && (
