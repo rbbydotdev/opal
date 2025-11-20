@@ -344,18 +344,18 @@ function SelectableListItem({ children, id }: SelectableListItemProps) {
   );
 
   return (
-    <SidebarMenuItem tabIndex={-1} data-selectable-id={id}>
-      <div className="flex items-center pr-1 py-2 hover:bg-sidebar-accent">
-        <SidebarMenuButton className="flex-1 min-w-0 pl-1 group" onClick={(e) => handleSelect(sectionRef, e, id)}>
-          <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
-            <div className="w-4 h-4 flex justify-center items-center mr-0.5 shrink-0">
-              {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
-            </div>
-            {otherChildren}
+    <SidebarMenuItem tabIndex={-1} data-selectable-id={id} className="flex w-full rounded justify-center items-center">
+      {/* <div className="flex items-center pr-1 py-2 hover:bg-sidebar-accent"> */}
+      <SidebarMenuButton className="flex-1 min-w-0 group h-full py-1" onClick={(e) => handleSelect(sectionRef, e, id)}>
+        <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
+          <div className="w-4 h-4 flex justify-center items-center mr-0.5 shrink-0">
+            {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
           </div>
-        </SidebarMenuButton>
-        {menuChild}
-      </div>
+          {otherChildren}
+        </div>
+      </SidebarMenuButton>
+      {menuChild}
+      {/* </div> */}
     </SidebarMenuItem>
   );
 }

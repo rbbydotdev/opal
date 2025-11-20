@@ -3,6 +3,7 @@ import { createContext, useContext } from "react";
 
 type BuildModalContextType = {
   openNew: (options: { build: BuildDAO }) => Promise<void>;
+  openEdit: (options: { buildId: string }) => void;
   close: () => void;
 };
 export const BuildModalContext = createContext<BuildModalContextType | undefined>(undefined);
