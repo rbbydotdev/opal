@@ -33,11 +33,11 @@ export class DiskDAO {
   }
 
   static CreateNew(type: DiskType = DefaultDiskType) {
-    return new DiskDAO({ type: type, guid: DiskDAO.guid(), timestamp: new Date() });
+    return new DiskDAO({ type: type, guid: DiskDAO.guid(), timestamp: Date.now() });
   }
 
   static New(type: DiskType, guid: string, indexCache?: TreeDirRootJType) {
-    return new DiskDAO({ type, guid, indexCache, timestamp: new Date() });
+    return new DiskDAO({ type, guid, indexCache, timestamp: Date.now() });
   }
 
   static FetchFromGuid(guid: string) {

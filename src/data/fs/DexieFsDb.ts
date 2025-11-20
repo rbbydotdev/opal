@@ -1,5 +1,6 @@
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { ConflictError, NotFoundError } from "@/lib/errors";
+import { coerceFileContent, coerceUint8Array, coerceString } from "@/lib/coerceUint8Array";
 import Dexie from "dexie";
 import path from "path";
 
@@ -72,10 +73,8 @@ export class DexieFsDb implements CommonFileSystem {
     if (!entry || entry.type !== "file") {
       throw new NotFoundError(`ENOENT: no such file or directory, open '${filePath}'`);
     }
-    if (options?.encoding === "utf8" && typeof entry.content === "string") {
-      return entry.content;
-    }
-    return entry.content as Uint8Array;
+    
+    return coerceFileContent(entry.content!, options);
   }
 
   async mkdir(dirPath: string, _options?: { recursive?: boolean; mode: number }): Promise<string | void> {
@@ -149,14 +148,17 @@ export class DexieFsDb implements CommonFileSystem {
     if (!parentEntry) {
       throw new NotFoundError(`ENOENT: no such file or directory, open '${filePath}'`);
     }
-    const content =
-      options?.encoding === "utf8" && typeof data === "string" ? data : new Uint8Array(data as Uint8Array);
+    
+    const content = options?.encoding === "utf8" && typeof data === "string" 
+      ? data 
+      : coerceUint8Array(data);
+    
     await this.files.put({
       path: filePath,
       content,
       type: "file",
       parent: parentPath,
-      size: content.length,
+      size: typeof content === "string" ? coerceUint8Array(content).length : content.length,
       mtimeMs: Date.now(),
       ctimeMs: Date.now(),
     });

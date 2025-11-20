@@ -386,6 +386,10 @@ export class Workspace {
     return await this.renameMultiple(trashedNodes);
   }
 
+  async refreshDisk() {
+    await this.disk.refresh();
+  }
+
   renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]) {
     return this.disk.renameMultiple(nodes);
   }

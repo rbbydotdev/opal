@@ -20,7 +20,7 @@ export class BuildDAO implements BuildRecord {
   strategy: BuildStrategy;
   label: string;
   fileCount: number;
-  timestamp: Date;
+  timestamp: number;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   workspaceId: string;
   buildPath: AbsPath;
@@ -101,7 +101,7 @@ export class BuildDAO implements BuildRecord {
     return new BuildDAO({
       guid,
       label,
-      timestamp: new Date(),
+      timestamp: Date.now(),
       disk: disk instanceof Disk ? disk : DiskFromJSON(disk),
       sourceDisk: sourceDisk instanceof Disk ? sourceDisk : DiskFromJSON(sourceDisk),
       sourcePath,
@@ -198,7 +198,7 @@ export class NullBuildDAO extends BuildDAO {
     super({
       guid: "_null_build_",
       label: "NullBuild",
-      timestamp: new Date(0),
+      timestamp: Date.now(),
       disk: new NullDisk().toJSON(),
       sourceDisk: new NullDisk().toJSON(),
       sourcePath: absPath("/"),

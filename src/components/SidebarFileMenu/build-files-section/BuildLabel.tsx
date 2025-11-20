@@ -11,7 +11,7 @@ export function BuildLabel({ build, className }: { build: BuildDAO; className?: 
         {build.label}
       </div>
       <div className="text-xs text-muted-foreground truncate w-full flex justify-start items-center gap-2">
-        <FolderOpenIcon size={12} /> {`${build.fileCount} files & dirs`} • {timeAgo(build.timestamp)}
+        <FolderOpenIcon size={12} /> {`${build.fileCount} files & dirs`} • {timeAgo(new Date(build.timestamp))}
       </div>
     </div>
   );

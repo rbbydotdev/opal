@@ -2,7 +2,7 @@ import { DestinationDAO, DestinationJType } from "@/data/DestinationDAO";
 import { nanoid } from "nanoid";
 
 export type PublishLogLine = {
-  timestamp: Date;
+  timestamp: number;
   message: string;
   type: "info" | "error";
 };

@@ -30,11 +30,15 @@ import { Code2, Delete, Download, Ellipsis, Github, Hammer, UploadCloud } from "
 import { useMemo, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
-const BuildItem = ({ build }: { build: { guid: string; label: string; timestamp: Date; Disk: { guid: string } } }) => (
+const BuildItem = ({
+  build,
+}: {
+  build: { guid: string; label: string; timestamp: number; Disk: { guid: string } };
+}) => (
   <div className="h-full w-full flex justify-start flex-col items-start gap-1 truncate">
     <div className="w-full flex justify-start items-center">{build.label}</div>
     <div className="text-2xs text-muted-foreground truncate w-full flex justify-start items-center">
-      {build.Disk.guid} • {timeAgo(build.timestamp)}
+      {build.Disk.guid} • {timeAgo(new Date(build.timestamp))}
     </div>
   </div>
 );

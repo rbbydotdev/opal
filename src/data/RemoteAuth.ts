@@ -86,7 +86,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
     tags: string[] = []
   ): Promise<RemoteAuthDAO> {
     const guid = RemoteAuthDAO.guid();
-    const dao = new RemoteAuthDAO({ guid, source, name, type, data, tags, timestamp: new Date() });
+    const dao = new RemoteAuthDAO({ guid, source, name, type, data, tags, timestamp: Date.now() });
     return dao.save().then(() => dao);
   }
 
