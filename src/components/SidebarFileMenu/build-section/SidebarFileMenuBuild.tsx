@@ -3,11 +3,12 @@ import { useBuildModal } from "@/components/BuildModalContext";
 import { useBuildModalCmd } from "@/components/BuildModalContextProvider";
 import { useConfirm } from "@/components/Confirm";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
-import { usePublicationModalCmd } from "@/components/publication-modal/PubicationModalCmdContext";
+import { usePublicationModalCmd } from "@/components/publish-modal/PubicationModalCmdContext";
 import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { useBuildManager } from "@/components/SidebarFileMenu/build-files-section/useBuildManager";
 import { SidebarBuildsList } from "@/components/SidebarFileMenu/build-section/SidebarBuildsList";
+import { SidebarDestinationList } from "@/components/SidebarFileMenu/build-section/SidebarDestinationList";
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
@@ -195,10 +196,10 @@ export function SidebarFileMenuBuild({
                   Destinations
                 </MiniTab>
               </div>
-              <div className="bg-highlight rounded rounded-tl-none py-4 px-2">
+              <div className="bg-highlight rounded rounded-tl-none pb-4 pt-1 px-2">
                 <div>{activeTab === "files" && <BuildSidebarFileExplorer build={build} />}</div>
                 <div>{activeTab === "builds" && <SidebarBuildsList workspaceId={currentWorkspace.guid} />}</div>
-                <div>{activeTab === "destinations"}</div>
+                <div>{activeTab === "destinations" && <SidebarDestinationList />}</div>
               </div>
             </div>
           </CollapsibleContent>

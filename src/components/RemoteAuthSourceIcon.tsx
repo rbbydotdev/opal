@@ -25,7 +25,7 @@ export function RemoteAuthSourceIconComponent({
 } & LucideProps) {
   const Icon = RemoteAuthSourceIcon[source] || <Zap className="h-4 w-4" />; /*@ts-ignore*/
   return (
-    <div className="bg-black p-0.5 rounded-md text-white">
+    <div className="bg-black p-0.5 rounded-md text-white w-6 h-6 flex items-center justify-center">
       {React.cloneElement(Icon as React.ReactElement, { className, ...rest } as any)}
     </div>
   );

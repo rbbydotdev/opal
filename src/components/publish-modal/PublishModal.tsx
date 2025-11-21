@@ -1,6 +1,6 @@
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
-import { BuildInfo } from "@/components/publication-modal/BuildInfo";
-import { PublicationModalDestinationContent } from "@/components/publication-modal/PublicationModalDestinationContent";
+import { BuildInfo } from "@/components/publish-modal/BuildInfo";
+import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
@@ -33,9 +33,9 @@ import {
 import { useCallback, useImperativeHandle, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
-export type PublicationViewType = "publish" | "destination" | "connection";
+export type PublishViewType = "publish" | "destination" | "connection";
 
-export function useViewStack<T extends string = PublicationViewType>(defaultView: T) {
+export function useViewStack<T extends string = PublishViewType>(defaultView: T) {
   const [viewStack, setViewStack] = useState<T[]>([defaultView]);
 
   const currentView = viewStack[viewStack.length - 1];
@@ -67,7 +67,7 @@ export function useViewStack<T extends string = PublicationViewType>(defaultView
 }
 
 //MARK: Publication Modal
-export function PublicationModal({
+export function PublishModal({
   currentWorkspace,
   cmdRef,
 }: {
@@ -81,7 +81,7 @@ export function PublicationModal({
   const { remoteAuths } = useRemoteAuths();
   const [destination, setDestination] = useState<DestinationDAO | null>(null);
   const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } =
-    useViewStack<PublicationViewType>("publish");
+    useViewStack<PublishViewType>("publish");
 
   const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
     RemoteAuthRecord,
@@ -177,12 +177,11 @@ export function PublicationModal({
           </DialogDescription>
         </DialogHeader>
 
-        {/* MARK: view-destination */}
+        {/* MARK: view dest*/}
         {currentView === "destination" && (
           <>
             <PublicationModalDestinationContent
               close={() => {
-                console.log("Back button clicked, popping view from stack");
                 popView();
               }}
               handleSubmit={handleSubmit}
@@ -194,7 +193,7 @@ export function PublicationModal({
             />
           </>
         )}
-        {/* MARK: view-connection */}
+        {/* MARK: view conn */}
         {currentView === "connection" && (
           <ConnectionsModalContent
             preferredNewConnection={preferredNewConnection}
@@ -211,7 +210,7 @@ export function PublicationModal({
           </ConnectionsModalContent>
         )}
 
-        {/* MARK: view-publish */}
+        {/* MARK: view pub */}
         {currentView === "publish" && (
           <PublicationModalPublishContent
             //* for jumping to new connection
@@ -250,7 +249,7 @@ export function PublicationModalPublishContent({
   destination: DestinationDAO | null;
   onClose?: () => void;
   onOpenChange: (value: boolean) => void;
-  pushView: (view: PublicationViewType) => void;
+  pushView: (view: PublishViewType) => void;
   setDestination: (destination: DestinationDAO) => void;
   // setEditDestination: (destination: DestinationDAO) => void;
   setPreferredDestConnection: (connection: RemoteAuthRecord) => void;

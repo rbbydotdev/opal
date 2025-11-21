@@ -7,19 +7,7 @@ import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { Archive, Delete, Eye } from "lucide-react";
 
-export function SidebarBuildsList({
-  workspaceId,
-  // selectedBuildIds,
-  // onSelectionChange,
-  // onDelete,
-  // className,
-}: {
-  workspaceId: string;
-  // selectedBuildIds?: string[];
-  // onSelectionChange?: (selectedIds: string[]) => void;
-  // onDelete?: (buildId: string) => void;
-  // className?: string;
-}) {
+export function SidebarBuildsList({ workspaceId }: { workspaceId: string }) {
   const { openEdit } = useBuildModal();
   const errorToss = useErrorToss();
   const { builds } = useBuilds({ workspaceId });
