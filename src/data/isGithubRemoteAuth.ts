@@ -4,7 +4,7 @@ import {
   isGithubAPIRemoteAuthDAO,
   isGithubDeviceOAuthRemoteAuthDAO,
   isGithubOAuthRemoteAuthDAO,
-} from "@/data/RemoteAuth";
+} from "@/data/RemoteAuthDAO";
 
 export function isGithubRemoteAuth(remoteAuth: RemoteAuthDAO): remoteAuth is GithubRemoteAuthDAO {
   return (

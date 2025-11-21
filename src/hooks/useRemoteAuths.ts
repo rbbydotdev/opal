@@ -1,4 +1,4 @@
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useLiveQuery } from "dexie-react-hooks";
 
 export function useRemoteAuths({ sources }: { sources?: string[] } = {}): {

@@ -1,6 +1,6 @@
 import { Disk } from "@/data/disk/Disk";
 import { IsoGitApiCallbackForRemoteAuth } from "@/data/IsoGitApiCallbackForRemoteAuth";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
 import { ConflictError, NotFoundError } from "@/lib/errors";

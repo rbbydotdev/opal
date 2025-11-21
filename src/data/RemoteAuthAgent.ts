@@ -6,11 +6,11 @@ import type {
   GithubOAuthRemoteAuthDAO,
   NetlifyAPIRemoteAuthDAO,
   NetlifyOAuthRemoteAuthDAO,
-} from "@/data/RemoteAuth";
+} from "@/data/RemoteAuthDAO";
 import { IRemoteAuthAgent, IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { IRemoteAuthAgentSearch } from "@/data/useRemoteSearch";
-import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
+import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { Octokit } from "@octokit/core";
 
 export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
@@ -108,9 +108,9 @@ export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
       await this.octokit.request("GET /user");
       return { status: "success" };
     } catch (error: any) {
-      return { 
-        status: "error", 
-        msg: `GitHub API test failed: ${error.message || "Unknown error"}` 
+      return {
+        status: "error",
+        msg: `GitHub API test failed: ${error.message || "Unknown error"}`,
       };
     }
   }
@@ -147,9 +147,9 @@ export class RemoteAuthBasicAuthAgent implements IRemoteGitApiAgent {
   }
 
   async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
-    return { 
-      status: "error", 
-      msg: "Basic auth test not implemented" 
+    return {
+      status: "error",
+      msg: "Basic auth test not implemented",
     };
   }
 }
@@ -231,9 +231,9 @@ export abstract class RemoteAuthNetlifyAgent implements IRemoteAuthAgent, IRemot
       await this.netlifyClient.getCurrentUser();
       return { status: "success" };
     } catch (error: any) {
-      return { 
-        status: "error", 
-        msg: `Netlify API test failed: ${error.message || "Unknown error"}` 
+      return {
+        status: "error",
+        msg: `Netlify API test failed: ${error.message || "Unknown error"}`,
       };
     }
   }
@@ -297,9 +297,9 @@ export class RemoteAuthCloudflareAPIAgent implements IRemoteAuthAgent {
       await this.cloudflareClient.verifyToken();
       return { status: "success" };
     } catch (error: any) {
-      return { 
-        status: "error", 
-        msg: `Cloudflare API test failed: ${error.message || "Unknown error"}` 
+      return {
+        status: "error",
+        msg: `Cloudflare API test failed: ${error.message || "Unknown error"}`,
       };
     }
   }

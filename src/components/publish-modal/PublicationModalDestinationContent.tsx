@@ -12,7 +12,7 @@ import {
   DestinationSchemaMap,
   DestinationType,
 } from "@/data/DestinationDAO";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Plus, Zap } from "lucide-react";

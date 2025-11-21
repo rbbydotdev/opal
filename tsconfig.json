@@ -29,10 +29,11 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["**/*.d.ts", "**/*.ts", "**/*.tsx", "./src/**/*.ts", "./src/**/*.tsx", "./src/types"],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "*.ts", "*.d.ts"],
   "exclude": [
     "proxies/**/*.ts",
     "proxies",
+    "patches",
     "./git-protocol-proxy/**/*.ts",
     "./node_modules",
     "./tools",
@@ -42,6 +43,7 @@
     "src/dist/**",
     "**/*/*.test.ts",
     "src/app/sand/**",
+    "node_modules",
     "node_modules/**/*",
     "tailwind.config.ts",
     "scripts/build-preview.ts",

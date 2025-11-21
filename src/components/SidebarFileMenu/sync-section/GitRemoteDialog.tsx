@@ -29,8 +29,8 @@ import {
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
 import { IRemoteGitApiAgent } from "@/data/RemoteAuthTypes";
 import { GitRemote } from "@/features/git-repo/GitRepo";
