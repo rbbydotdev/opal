@@ -41,13 +41,17 @@ export function PublicationModalDestinationContent({
   const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
   const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
   const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
+  const defaultValues = useMemo(
+    () => ({
+      ...currentSchema._def.defaultValue(),
+      remoteAuthId: editDestination?.toJSON()?.remoteAuth?.guid || defaultRemoteAuth?.guid || "",
+      ...(editDestination?.toJSON() as DestinationJType<any>),
+    }),
+    [currentSchema._def, defaultRemoteAuth?.guid, editDestination]
+  );
 
   const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
-    defaultValues: {
-      ...currentSchema._def.defaultValue(),
-      remoteAuthId: defaultRemoteAuth?.guid || "",
-      ...(editDestination?.toJSON() as DestinationJType<any>),
-    },
+    defaultValues,
     resolver: (values, opt1, opt2) => {
       return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
         DestinationSchemaMap[destinationType]

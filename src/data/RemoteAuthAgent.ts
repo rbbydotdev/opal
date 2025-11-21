@@ -6,11 +6,13 @@ import type {
   GithubOAuthRemoteAuthDAO,
   NetlifyAPIRemoteAuthDAO,
   NetlifyOAuthRemoteAuthDAO,
+  VercelAPIRemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
 import { IRemoteAuthAgent, IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { IRemoteAuthAgentSearch } from "@/data/useRemoteSearch";
 import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
 import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
+import { VercelClient, VercelProject } from "@/lib/vercel/VercelClient";
 import { Octokit } from "@octokit/core";
 
 export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
@@ -266,6 +268,73 @@ export class RemoteAuthNetlifyAPIAgent extends RemoteAuthNetlifyAgent {
   }
 
   constructor(private remoteAuth: NetlifyAPIRemoteAuthDAO) {
+    super();
+  }
+}
+
+export abstract class RemoteAuthVercelAgent implements IRemoteAuthAgent, IRemoteAuthAgentSearch<VercelProject> {
+  private _vercelClient!: VercelClient;
+
+  get vercelClient() {
+    return this._vercelClient || (this._vercelClient = new VercelClient(this.getApiToken()));
+  }
+
+  onAuth(): { username: string; password: string } {
+    return {
+      username: this.getUsername(),
+      password: this.getApiToken(),
+    };
+  }
+
+  async fetchAll(options?: { signal?: AbortSignal }): Promise<VercelProject[]> {
+    return this.vercelClient.getProjects();
+  }
+
+  hasUpdates(
+    etag: string | null,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ updated: boolean; newEtag: string | null }> {
+    // Vercel API does not support ETag for projects, so we always return updated=true
+    return Promise.resolve({ updated: true, newEtag: null });
+  }
+
+  async getRemoteUsername(): Promise<string> {
+    const user = await this.vercelClient.getCurrentUser();
+    return user.name || user.username || user.email;
+  }
+
+  createProject = (projectName: string, { signal }: { signal?: AbortSignal } = {}) => {
+    // Vercel doesn't have a simple project creation API, would need to deploy
+    console.warn("Vercel project creation requires deployment - not implemented");
+    throw new Error("Vercel project creation not implemented");
+  };
+
+  async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
+    try {
+      await this.vercelClient.getCurrentUser();
+      return { status: "success" };
+    } catch (error: any) {
+      return {
+        status: "error",
+        msg: `Vercel API test failed: ${error.message || "Unknown error"}`,
+      };
+    }
+  }
+
+  abstract getUsername(): string;
+  abstract getApiToken(): string;
+}
+
+export class RemoteAuthVercelAPIAgent extends RemoteAuthVercelAgent {
+  getUsername(): string {
+    return "vercel-api";
+  }
+
+  getApiToken(): string {
+    return this.remoteAuth.data.apiKey;
+  }
+
+  constructor(private remoteAuth: VercelAPIRemoteAuthDAO) {
     super();
   }
 }

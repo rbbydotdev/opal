@@ -282,19 +282,6 @@ export function PublicationModalPublishContent({
     setIsPublishing(true);
     setLogs([]);
     setPublishError(null);
-    // try {
-    //   await build.publish?.({
-    //     destination,
-    //     onLog: (line) => {
-    //       log({ type: "info", message: line, timestamp: Date.now() });
-    //     },
-    //   });
-    // } catch (error) {
-    //   log({ type: "error", message: (error as Error).message, timestamp: Date.now() });
-    //   setPublishError((error as Error).message);
-    // } finally {
-    //   setIsPublishing(false);
-    // }
   };
   const handleSetDestination = (destId: string) => {
     const selectedRemoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === destId);
@@ -389,12 +376,19 @@ export function PublicationModalPublishContent({
           <Button
             variant={"outline"}
             className="min-h-12"
+            title="Add Destination"
             onClick={() => pushView(NO_REMOTES ? "connection" : "destination")}
           >
             <Plus />
           </Button>
           {destination && (
-            <Button className="min-h-12" type="button" variant="outline" onClick={() => pushView("destination")}>
+            <Button
+              className="min-h-12"
+              title="Edit Destination"
+              type="button"
+              variant="outline"
+              onClick={() => pushView("destination")}
+            >
               <Pencil />
             </Button>
           )}
