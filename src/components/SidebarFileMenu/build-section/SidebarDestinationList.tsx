@@ -1,4 +1,4 @@
-import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
+import { useDestinationManager } from "@/components/DestinationManagerContext";
 import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SimpleSelectableList } from "@/components/ui/SelectableList";
@@ -9,7 +9,7 @@ import { useErrorToss } from "@/lib/errorToss";
 import { Delete, Eye } from "lucide-react";
 
 export function SidebarDestinationList() {
-  const { openDestinationFlow } = useBuildPublisher();
+  const { openDestinationFlow } = useDestinationManager();
   const errorToss = useErrorToss();
   const { destinations } = useDestinations();
   const handleDelete = async (destId: string) => {

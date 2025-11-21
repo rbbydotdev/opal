@@ -1,125 +1,111 @@
+import { ConnectionsModalContent } from "@/components/ConnectionsModal";
+import { ModalShell } from "@/components/modals/ModalShell";
 import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
 import { PublishViewType, useViewStack } from "@/components/publish-modal/PublishModalStack";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
-import { DestinationDAO, DestinationMetaType, DestinationType } from "@/data/DestinationDAO";
-import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
-import { useRemoteAuths } from "@/hooks/useRemoteAuths";
-import { cn } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
+import { useDestinationFlow } from "@/hooks/useDestinationFlow";
 import { useCallback, useImperativeHandle, useState } from "react";
 
-export function DestinationModal({
-  currentWorkspace,
-  cmdRef,
-}: {
+export type DestinationModalProps = {
   currentWorkspace: Workspace;
   cmdRef: React.ForwardedRef<{
-    open: ({ build }: { build: BuildDAO }) => void;
+    openDestinationFlow: (options: { destinationId: string }) => void;
+    close: () => void;
   }>;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
-  const { remoteAuths } = useRemoteAuths();
-  const [destination, setDestination] = useState<DestinationDAO | null>(null);
-  const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } =
-    useViewStack<PublishViewType>("publish");
+};
 
-  const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
-    RemoteAuthRecord,
-    "type" | "source"
-  > | null>(null);
-  const [preferredDestConnection, setPreferredDestConnection] = useState<RemoteAuthRecord | null>(null);
-  const handleSubmit = async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
-    const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
-    if (!remoteAuth) throw new Error("RemoteAuth not found");
-    const destination = DestinationDAO.CreateNew({ ...data, remoteAuth });
-    await destination.save();
-    setDestination(destination);
-    resetToDefault();
-  };
+export function DestinationModal({ currentWorkspace, cmdRef }: DestinationModalProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { currentView, pushView, popView, resetToDefault, canGoBack } = useViewStack<PublishViewType>("destination");
+  
+  const {
+    destination,
+    preferredNewConnection,
+    preferredDestConnection,
+    remoteAuths,
+    handleSubmit,
+    loadDestination,
+    updateDestination,
+    reset,
+    setPreferredNewConnection,
+  } = useDestinationFlow();
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
-    setPreferredDestConnection(null);
-    setPreferredNewConnection(null);
-  }, []);
+    resetToDefault();
+    reset();
+  }, [resetToDefault, reset]);
 
-  const handlePointerDownOutside = useCallback(() => {
-    if (currentView === "destination") {
-      resetToDefault();
-      setIsOpen(false);
-    } else if (currentView === "connection") {
-      popView();
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      handleClose();
     }
-  }, [currentView, popView, resetToDefault]);
+  }, [handleClose]);
 
-  const handleEscapeKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLElement && event.target.closest(`[data-no-escape]`)) {
-        return event.preventDefault();
-      }
-      event.preventDefault();
-      if (canGoBack) return popView();
-      if (currentView === "publish") return setIsOpen(false);
-    },
-    [canGoBack, currentView, popView]
-  );
+  const handleSubmitAndClose = useCallback(async (data: any) => {
+    await handleSubmit(data);
+    resetToDefault();
+  }, [handleSubmit, resetToDefault]);
 
   useImperativeHandle(
     cmdRef,
     () => ({
-      open: ({ build }) => {
+      openDestinationFlow: async ({ destinationId }) => {
+        await loadDestination(destinationId);
         setIsOpen(true);
-        setBuild(build);
       },
+      close: handleClose,
     }),
-    []
+    [loadDestination, handleClose]
   );
-  const handleOpenChange = (open: boolean) => {
-    if (!open) resetToDefault(); // Always reset view when closing
-    setIsOpen(open);
+
+  const getTitle = () => {
+    return currentView === "connection" ? "Add Connection" : "Destination";
+  };
+
+  const getSubtitle = () => {
+    if (currentView === "connection") return "Connect to Service";
+    return destination?.label || "Manage Destination";
+  };
+
+  const getDescription = () => {
+    if (currentView === "connection") return "Connect to a hosting service";
+    return "View and edit destination configuration";
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className={cn("overflow-y-auto top-[10vh] min-h-[50vh] max-w-2xl", {
-          "min-h-[80vh]": currentView === "publish",
-        })}
-        onPointerDownOutside={handlePointerDownOutside}
-        onEscapeKeyDown={handleEscapeKeyDown}
-      >
-        <DialogHeader>
-          <DialogTitle>
-            <div className="flex gap-4 justify-start items-center mb-4 text-xl">
-              {canGoBack && (
-                <Button variant="outline" size="sm" title="back" onClick={popView}>
-                  <ArrowLeft />
-                  <div className="uppercase text-2xs">back</div>
-                </Button>
-              )}
-              Publish
-            </div>
-          </DialogTitle>
-          <DialogDescription className="flex flex-col w-full">
-            <span className="font-bold text-lg text-foreground">Destination</span>
-            Create Destination to deploy to
-          </DialogDescription>
-        </DialogHeader>
-
+    <ModalShell
+      isOpen={isOpen}
+      onOpenChange={handleOpenChange}
+      title={getTitle()}
+      subtitle={getSubtitle()}
+      description={getDescription()}
+      canGoBack={canGoBack}
+      onBack={popView}
+      contentClassName={currentView === "destination" ? "min-h-[80vh]" : undefined}
+    >
+      {currentView === "destination" && (
         <PublicationModalDestinationContent
-          close={() => popView}
-          handleSubmit={handleSubmit}
+          close={handleClose}
+          handleSubmit={handleSubmitAndClose}
           remoteAuths={remoteAuths}
           defaultName={currentWorkspace.name}
           preferredDestConnection={preferredDestConnection}
           editDestination={destination}
           onAddConnection={() => pushView("connection")}
         />
-      </DialogContent>
-    </Dialog>
+      )}
+      
+      {currentView === "connection" && (
+        <ConnectionsModalContent
+          mode="add"
+          onClose={() => popView()}
+          onSuccess={(auth) => {
+            setPreferredNewConnection({ type: auth.type, source: auth.source });
+            popView();
+          }}
+        />
+      )}
+    </ModalShell>
   );
 }

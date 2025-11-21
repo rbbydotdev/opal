@@ -3,6 +3,7 @@ import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
 import { BuildCreationProvider } from "@/components/BuildModalContextProvider";
 import { ConfirmProvider } from "@/components/Confirm";
+import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
 import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserveViewModeURL";
@@ -55,7 +56,8 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                         <GitStatusProvider>
                           <PublicationModalProvider>
                             <SidebarProvider>
-                              <BuildCreationProvider>
+                              <DestinationManagerProvider>
+                                <BuildCreationProvider>
                                 <PromptProvider>
                                   <ConfirmProvider>
                                     <RemoteMDXEditorRealmProvider>
@@ -78,6 +80,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                                   </ConfirmProvider>
                                 </PromptProvider>
                               </BuildCreationProvider>
+                              </DestinationManagerProvider>
                             </SidebarProvider>
                           </PublicationModalProvider>
                         </GitStatusProvider>
