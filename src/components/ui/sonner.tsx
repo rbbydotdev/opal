@@ -38,28 +38,42 @@ function toast(toastData: ToastOptions) {
   );
 }
 
-function Toast(props: ToastProps) {
+export function Toast(props: ToastProps) {
   const { title, description, action, id, type = "default" } = props;
 
   const getTypeStyles = () => {
     switch (type) {
       case "success":
+        return "bg-card border-success";
       case "error":
+        return "bg-card border-destructive";
       case "warning":
+        return "bg-card border-chart-1";
       case "info":
+        return "bg-card border-chart-2";
       default:
         return "bg-card border-accent";
     }
   };
 
+  // Accessibility IDs
+  const titleId = `toast-title-${id}`;
+  const descId = `toast-desc-${id}`;
+
   return (
     <div
       className={`flex rounded-lg shadow-lg border w-full max-w-md min-w-[20rem] min-h-16 items-center p-4 ${getTypeStyles()}`}
+      // Live region and semantic role for screen readers
+      role={type === "error" ? "alert" : "status"}
+      aria-live={type === "error" ? "assertive" : "polite"}
+      aria-atomic="true"
+      aria-labelledby={title ? titleId : undefined}
+      aria-describedby={description ? descId : undefined}
     >
       <div className="flex flex-1 items-center min-h-0 w-full">
-        <p className="w-full flex flex-col justify-center">
+        <div className="w-full flex flex-col justify-center">
           {title && (
-            <span className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
+            <span id={titleId} className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
               <span
                 className={cn("block rounded-full w-2 h-2", {
                   "bg-success": type === "success",
@@ -83,11 +97,11 @@ function Toast(props: ToastProps) {
             </span>
           )}
           {description && (
-            <div className="mt-1 text-sm text-muted-foreground leading-tight">
-              {typeof description === "string" ? description : description}
+            <div id={descId} className="mt-1 text-sm text-muted-foreground leading-tight">
+              {description}
             </div>
           )}
-        </p>
+        </div>
       </div>
       {action && (
         <div className="ml-4 shrink-0 flex items-center">
@@ -97,6 +111,7 @@ function Toast(props: ToastProps) {
               action.onClick();
               sonnerToast.dismiss(id);
             }}
+            aria-label={action.label}
           >
             {action.label}
           </button>

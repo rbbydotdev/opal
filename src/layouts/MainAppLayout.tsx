@@ -10,7 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/ErrorPlaque";
 import { GitStatusProvider } from "@/components/GitStatusModal";
 import { PromptProvider } from "@/components/Prompt";
-import { PublicationModalProvider } from "@/components/publication-modal/PubicationModalCmd";
+import { PublicationModalProvider } from "@/components/publish-modal/PubicationModalCmd";
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";

@@ -55,7 +55,7 @@ function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
           </SelectableList.ActionButton>
         </SelectableList.Actions>
 
-        <SelectableList.Content>
+        <SelectableList.Content className="ml-7">
           {remoteAuths.map((connection) => (
             <SelectableList.Item key={connection.guid} id={connection.guid}>
               <SelectableList.ItemIcon>

@@ -1,5 +1,5 @@
-import { CloudflareDestinationForm } from "@/components/publication-modal/CloudflareDestinationForm";
-import { NetlifyDestinationForm } from "@/components/publication-modal/NetlifyDestinationForm";
+import { CloudflareDestinationForm } from "@/components/publish-modal/CloudflareDestinationForm";
+import { NetlifyDestinationForm } from "@/components/publish-modal/NetlifyDestinationForm";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";

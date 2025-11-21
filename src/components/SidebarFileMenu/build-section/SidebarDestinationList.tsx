@@ -1,32 +1,20 @@
 import { useBuildModal } from "@/components/BuildModalContext";
-import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
+import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
-import { SelectableList } from "@/components/ui/SelectableList";
-import { useBuilds } from "@/hooks/useBuilds";
+import { SimpleSelectableList } from "@/components/ui/SelectableList";
+import { useDestinations } from "@/hooks/useDestinations";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { Archive, Delete, Eye } from "lucide-react";
 
-export function SidebarDestinationList({
-  workspaceId,
-  // selectedBuildIds,
-  // onSelectionChange,
-  // onDelete,
-  // className,
-}: {
-  workspaceId: string;
-  // selectedBuildIds?: string[];
-  // onSelectionChange?: (selectedIds: string[]) => void;
-  // onDelete?: (buildId: string) => void;
-  // className?: string;
-}) {
+export function SidebarDestinationList() {
   const { openEdit } = useBuildModal();
   const errorToss = useErrorToss();
-  const { builds } = useBuilds({ workspaceId });
+  const { destinations } = useDestinations();
   const handleDelete = async (buildId: string) => {
     try {
-      const build = builds.find((b) => b.guid === buildId);
-      if (build) await build.delete();
+      const destination = destinations.find((b) => b.guid === buildId);
+      if (destination) await destination.delete();
     } catch (error) {
       errorToss(coerceError(error));
     }
@@ -37,44 +25,41 @@ export function SidebarDestinationList({
   };
 
   return (
-    <SelectableList.Root
-      data={builds}
+    <SimpleSelectableList.Root
+      data={destinations}
       getItemId={(build) => build.guid}
       onClick={handleView}
       onDelete={handleDelete}
-      expanderId="builds"
-      emptyLabel="no builds found"
+      emptyLabel="no destinations found"
       showGrip={false}
     >
-      <SelectableList.Header>
-        <Archive size={12} className="mr-2" />
-        Destinations
-      </SelectableList.Header>
+      <SimpleSelectableList.Actions />
 
-      <SelectableList.Actions />
-
-      <SelectableList.Content>
+      <SimpleSelectableList.Items>
         <div className="flex flex-col gap-2 mt-4 ml-3 group">
-          {builds.length === 0 && <EmptySidebarLabel label="no builds" />}
-          {builds.map((build) => (
-            <SelectableList.Item key={build.guid} id={build.guid}>
-              <BuildLabel build={build} />
-              <SelectableList.ItemMenu>
-                <SelectableList.ItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
+          {destinations.length === 0 && <EmptySidebarLabel label="no destinations" />}
+          {destinations.map((destination) => (
+            <SimpleSelectableList.Item key={destination.guid} id={destination.guid}>
+              <DestinationLabel destination={destination} />
+              <SimpleSelectableList.ItemMenu>
+                <SimpleSelectableList.ItemAction
+                  onClick={() => handleView(destination.guid)}
+                  icon={<Eye className="w-4 h-4" />}
+                >
                   View
-                </SelectableList.ItemAction>
-                <SelectableList.ItemAction
-                  onClick={() => handleDelete(build.guid)}
+                </SimpleSelectableList.ItemAction>
+                <SimpleSelectableList.ItemAction
+                  onClick={() => handleDelete(destination.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >
                   Delete
-                </SelectableList.ItemAction>
-              </SelectableList.ItemMenu>
-            </SelectableList.Item>
+                </SimpleSelectableList.ItemAction>
+              </SimpleSelectableList.ItemMenu>
+            </SimpleSelectableList.Item>
           ))}
         </div>
-      </SelectableList.Content>
-    </SelectableList.Root>
+      </SimpleSelectableList.Items>
+    </SimpleSelectableList.Root>
   );
 }

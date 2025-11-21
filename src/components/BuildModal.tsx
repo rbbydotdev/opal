@@ -1,5 +1,5 @@
 import { BuildStrategy } from "@/builder/builder-types";
-import { usePublicationModalCmd } from "@/components/publication-modal/PubicationModalCmdContext";
+import { usePublicationModalCmd } from "@/components/publish-modal/PubicationModalCmdContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,25 +32,25 @@ export function BuildModal({
     isBuilding,
     runBuild,
     cancelBuild,
-    openNew: hookOpenNew,
-    openEdit: hookOpenEdit,
+    openNew,
+    openEdit,
     buildError,
     clearError,
   } = useBuildRunner(currentWorkspace);
 
   const handleOkay = () => setIsOpen(false);
 
-  const openNew = useCallback(async () => {
-    await hookOpenNew(strategy);
+  const handleOpenNew = useCallback(async () => {
+    await openNew(strategy);
     setIsOpen(true);
-  }, [strategy, hookOpenNew]);
+  }, [strategy, openNew]);
 
-  const openEdit = useCallback(
+  const handleOpenEdit = useCallback(
     async ({ buildId }: { buildId: string }) => {
-      await hookOpenEdit(buildId);
+      await openEdit(buildId);
       setIsOpen(true);
     },
-    [hookOpenEdit]
+    [openEdit]
   );
 
   const handleBuild = async () => {
@@ -83,11 +83,11 @@ export function BuildModal({
   useImperativeHandle(
     cmdRef,
     () => ({
-      openNew,
-      openEdit,
+      openNew: handleOpenNew,
+      openEdit: handleOpenEdit,
       close: handleClose,
     }),
-    [handleClose, openEdit, openNew]
+    [handleClose, handleOpenEdit, handleOpenNew]
   );
 
   if (!isOpen) return null;
