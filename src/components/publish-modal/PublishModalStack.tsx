@@ -190,7 +190,6 @@ export function PublishModalStack({
         {currentView === "destination" && (
           <>
             <PublicationModalDestinationContent
-              mode="flow"
               close={() => {
                 popView();
               }}
