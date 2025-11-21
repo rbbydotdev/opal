@@ -277,7 +277,7 @@ export class TreeNode {
       if (filterOut && filterOut(n)) return $stop;
       count++;
     });
-    return count;
+    return count - 1; //subtract root
   }
 
   // walk(

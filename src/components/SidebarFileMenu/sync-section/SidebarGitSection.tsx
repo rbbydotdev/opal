@@ -594,7 +594,7 @@ export function SidebarGitSection({
 
         <CollapsibleContent>
           <SidebarMenu className="pb-3">
-            <div className="px-4 pt-2 gap-2 flex flex-col relative">
+            <div className="pl-4 pt-2 gap-2 flex flex-col relative">
               <div
                 className={cn("absolute inset-0", {
                   hidden: !globalPending,

@@ -31,7 +31,7 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-4 pt-2 py-4 flex flex-col gap-4">
+          <div className="pl-4 pt-2 py-4 flex flex-col gap-4">
             <SidebarGroup className="gap-2 flex flex-col">
               <form className="w-full flex flex-col gap-2">
                 <label

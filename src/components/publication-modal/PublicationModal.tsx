@@ -4,6 +4,7 @@ import { PublicationModalDestinationContent } from "@/components/publication-mod
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
+import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -334,19 +335,7 @@ export function PublicationModalPublishContent({
                 )}
                 {destinations.map((dest) => (
                   <SelectItem key={dest.guid} value={dest.guid}>
-                    <div className="flex flex-col items-start gap-0">
-                      <span className="font-medium flex items-center gap-2 capitalize">
-                        <RemoteAuthSourceIconComponent
-                          type={dest.RemoteAuth.type}
-                          source={dest.RemoteAuth.source}
-                          size={16}
-                        />
-                        {dest.label} - <span>{dest.RemoteAuth.type}</span> / <span> {dest.RemoteAuth.source}</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground capitalize">
-                        Publish to {dest.RemoteAuth.source} hosting
-                      </span>
-                    </div>
+                    <DestinationLabel destination={dest} />
                   </SelectItem>
                 ))}
                 <SelectSeparator />
