@@ -2,6 +2,7 @@ import { RemoteAuthSource, RemoteAuthType } from "@/data/RemoteAuthTypes";
 import Cloudflare from "@/icons/cloudflare.svg?react";
 import Github from "@/icons/github.svg?react";
 import Netlify from "@/icons/netlify.svg?react";
+import Vercel from "@/icons/vercel.svg?react";
 import { LucideProps, Zap } from "lucide-react";
 import React from "react";
 
@@ -9,6 +10,7 @@ export const RemoteAuthSourceIcon = {
   github: <Github style={{ width: "18px", height: "18px" }} />,
   netlify: <Netlify style={{ width: "18px", height: "18px" }} />,
   cloudflare: <Cloudflare style={{ width: "18px", height: "18px" }} />,
+  vercel: <Vercel style={{ width: "18px", height: "18px" }} />,
   custom: <Zap style={{ width: "18px", height: "18px" }} />,
 };
 

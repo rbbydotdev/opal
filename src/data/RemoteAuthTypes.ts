@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // 1. Add the new type to the union
 export type RemoteAuthType = "api" | "oauth" | "oauth-device" | "basic-auth" | "no-auth";
-export type RemoteAuthSource = "github" | "netlify" | "cloudflare" | "custom";
+export type RemoteAuthSource = "github" | "netlify" | "cloudflare" | "vercel" | "custom";
 
 // 2. Define all record schemas
 export const RemoteAuthAPIRecordInternalSchema = z.object({

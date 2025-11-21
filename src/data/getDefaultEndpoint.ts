@@ -25,6 +25,13 @@
 //       "basic-auth": "https://api.cloudflare.com/client/v4",
 //       "no-auth": "https://api.cloudflare.com/client/v4",
 //     },
+//     vercel: {
+//       api: "https://api.vercel.com",
+//       oauth: "https://api.vercel.com/oauth/authorize",
+//       "oauth-device": "https://api.vercel.com/oauth/authorize",
+//       "basic-auth": "https://api.vercel.com",
+//       "no-auth": "https://api.vercel.com",
+//     },
 //     custom: {
 //       api: "",
 //       oauth: "",
