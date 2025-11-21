@@ -1,5 +1,6 @@
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { BuildInfo } from "@/components/publish-modal/BuildInfo";
+import { BuildPublisherCmd } from "@/components/publish-modal/PubicationModalCmdContext";
 import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
@@ -67,14 +68,12 @@ export function useViewStack<T extends string = PublishViewType>(defaultView: T)
 }
 
 //MARK: Publication Modal
-export function PublishModal({
+export function PublishModalStack({
   currentWorkspace,
   cmdRef,
 }: {
   currentWorkspace: Workspace;
-  cmdRef: React.ForwardedRef<{
-    open: ({ build }: { build: BuildDAO }) => void;
-  }>;
+  cmdRef: React.ForwardedRef<BuildPublisherCmd>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
@@ -131,11 +130,21 @@ export function PublishModal({
         setIsOpen(true);
         setBuild(build);
       },
+      close: () => {
+        setIsOpen(false);
+      },
+      openDestinationFlow: async ({ destinationId }) => {
+        const destination = await DestinationDAO.FetchDAOFromGuid(destinationId, true);
+        setPreferredDestConnection(destination.remoteAuth);
+        setDestination(destination);
+        setBuild(NULL_BUILD); // Set a null build for destination-only mode
+        setIsOpen(true);
+        replaceView("destination");
+      },
     }),
-    []
+    [replaceView]
   );
   const handleOpenChange = (open: boolean) => {
-    console.log("Modal close triggered (X button or programmatic):", open);
     if (!open) resetToDefault(); // Always reset view when closing
     setIsOpen(open);
   };
@@ -181,6 +190,7 @@ export function PublishModal({
         {currentView === "destination" && (
           <>
             <PublicationModalDestinationContent
+              mode="flow"
               close={() => {
                 popView();
               }}

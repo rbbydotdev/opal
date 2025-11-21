@@ -1,9 +1,9 @@
 import { BuildModal } from "@/components/BuildModal";
-import { useBuildModal } from "@/components/BuildModalContext";
-import { useBuildModalCmd } from "@/components/BuildModalContextProvider";
+import { useBuildCreation } from "@/components/BuildModalContext";
+import { useBuildCreationCmd } from "@/components/BuildModalContextProvider";
 import { useConfirm } from "@/components/Confirm";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
-import { usePublicationModalCmd } from "@/components/publish-modal/PubicationModalCmdContext";
+import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { useBuildManager } from "@/components/SidebarFileMenu/build-files-section/useBuildManager";
@@ -53,9 +53,9 @@ export function SidebarFileMenuBuild({
 }) {
   const [expanded, setExpand] = useSingleItemExpander("build");
   // const { info } = useWorkspaceGitRepo({ currentWorkspace });
-  const { cmdRef } = useBuildModalCmd();
-  const { openNew } = useBuildModal();
-  const { open: openNewPub } = usePublicationModalCmd();
+  const { cmdRef } = useBuildCreationCmd();
+  const { openNew } = useBuildCreation();
+  const { open: openNewPub } = useBuildPublisher();
   const { open: openConfirm } = useConfirm();
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [open, setOpen] = useState(false);

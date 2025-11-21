@@ -1,6 +1,7 @@
 import { ClientDb } from "@/data/instance";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { NotFoundError } from "@/lib/errors";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { nanoid } from "nanoid";
@@ -62,6 +63,15 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
 
   static FetchFromGuid(guid: string) {
     return ClientDb.destinations.where("guid").equals(guid).first();
+  }
+  static async FetchDAOFromGuid(guid: string, throwNotFound: false): Promise<DestinationDAO<any> | null>;
+  static async FetchDAOFromGuid(guid: string, throwNotFound: true): Promise<DestinationDAO<any>>;
+  static async FetchDAOFromGuid(guid: string, throwNotFound = false) {
+    const dest = await ClientDb.destinations.where("guid").equals(guid).first();
+    if (throwNotFound && !dest) {
+      throw new NotFoundError("Destination not found");
+    }
+    return dest ? DestinationDAO.FromJSON(dest) : null;
   }
 
   hydrate = async () => {

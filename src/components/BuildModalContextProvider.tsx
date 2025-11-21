@@ -1,19 +1,19 @@
 import { BuildModal } from "@/components/BuildModal";
-import { BuildModalContext } from "@/components/BuildModalContext";
+import { BuildCreationContext } from "@/components/BuildModalContext";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useRef } from "react";
 
-export function BuildModalProvider({ children }: { children: React.ReactNode }) {
+export function BuildCreationProvider({ children }: { children: React.ReactNode }) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { cmdRef } = useBuildModalCmd();
+  const { cmdRef } = useBuildCreationCmd();
   return (
-    <BuildModalContext.Provider value={{ ...cmdRef.current, close: () => {} }}>
+    <BuildCreationContext.Provider value={{ ...cmdRef.current }}>
       {children}
       <BuildModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
-    </BuildModalContext.Provider>
+    </BuildCreationContext.Provider>
   );
 }
-export function useBuildModalCmd() {
+export function useBuildCreationCmd() {
   const cmdRef = useRef<{
     openNew: () => Promise<void>;
     openEdit: (options: { buildId: string }) => void;
