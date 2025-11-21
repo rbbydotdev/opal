@@ -69,19 +69,15 @@ export const RemoteAuthSchemaMap = {
 } as const;
 
 // 3. Main record type - properly distributed
-export type RemoteAuthRecord = RemoteAuthType extends any
-  ? RemoteAuthSource extends any
-    ? {
-        guid: string;
-        type: RemoteAuthType;
-        source: RemoteAuthSource;
-        name: string;
-        tags: string[];
-        data: RemoteAuthDataFor<RemoteAuthType>;
-        timestamp?: number;
-      }
-    : never
-  : never;
+export type RemoteAuthRecord = {
+  guid: string;
+  type: RemoteAuthType;
+  source: RemoteAuthSource;
+  name: string;
+  tags: string[];
+  data: RemoteAuthDataFor<RemoteAuthType>;
+  timestamp?: number;
+};
 export type RemoteAuthExplicitType = RemoteAuthType extends any
   ? { type: RemoteAuthType; data: RemoteAuthDataFor<RemoteAuthType> }
   : never;
@@ -113,18 +109,14 @@ export type TypedRemoteAuthRecord<T extends RemoteAuthType, S extends RemoteAuth
   : never;
 
 // Use distributive conditional types to generate the union automatically
-export type RemoteAuthJType = RemoteAuthType extends any
-  ? RemoteAuthSource extends any
-    ? {
-        guid: string;
-        type: RemoteAuthType;
-        source: RemoteAuthSource;
-        name: string;
-        tags: string[];
-        data: RemoteAuthDataFor<RemoteAuthType>;
-      }
-    : never
-  : never;
+export type RemoteAuthJType = {
+  guid: string;
+  type: RemoteAuthType;
+  source: RemoteAuthSource;
+  name: string;
+  tags: string[];
+  data: RemoteAuthDataFor<RemoteAuthType>;
+};
 
 export type RemoteAuthDataFor<T extends RemoteAuthType> = T extends keyof typeof RemoteAuthSchemaMap
   ? z.infer<(typeof RemoteAuthSchemaMap)[T]>

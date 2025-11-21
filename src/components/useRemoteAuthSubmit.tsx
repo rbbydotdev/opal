@@ -9,7 +9,7 @@ export const useRemoteAuthSubmit = (
   mode: ConnectionsModalMode,
   editConnection: RemoteAuthJType | undefined,
   onSuccess: (rad: RemoteAuthDAO) => void,
-  onCancel: () => void,
+  onCancel?: (error?: Error | string) => void,
   tags: string[] = ["github"]
 ) => {
   const [submitting, setSubmitting] = useState(false);
@@ -24,8 +24,8 @@ export const useRemoteAuthSubmit = (
     try {
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
-          source: formValues.source,
           guid: editConnection.guid,
+          source: formValues.source,
           type: formValues.type,
           name: formValues.name,
           data: formValues.data,
@@ -43,6 +43,7 @@ export const useRemoteAuthSubmit = (
     } catch (error) {
       setError("Failed to save connection");
       console.error("Error saving connection:", error);
+      onCancel?.(error as string | Error);
     } finally {
       setSubmitting(false);
     }

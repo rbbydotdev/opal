@@ -23,6 +23,7 @@ import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
 import { RemoteAuthDAO } from "@/data/RemoteAuth";
 import { RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
+import { Case, SwitchCase } from "@/lib/SwitchCase";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import { useMemo } from "react";
@@ -64,9 +65,17 @@ export function ConnectionsModal({
           onClose={() => setIsOpen(false)}
         >
           <DialogHeader>
-            <DialogTitle>{mode === "edit" ? "Edit Connection" : "Connect to API"}</DialogTitle>
+            <DialogTitle>
+              <SwitchCase>
+                <Case condition={mode === "edit"}>Edit Connection</Case>
+                <Case condition={mode === "add"}>Connect to API</Case>
+              </SwitchCase>
+            </DialogTitle>
             <DialogDescription>
-              {mode === "edit" ? "Update your connection details." : "Connect to API"}
+              <SwitchCase>
+                <Case condition={mode === "edit"}>Update your connection details.</Case>
+                <Case condition={mode === "add"}>Connect to API</Case>
+              </SwitchCase>
             </DialogDescription>
           </DialogHeader>
         </ConnectionsModalContent>
@@ -127,19 +136,10 @@ export function ConnectionsModalContent({
     onClose();
   };
 
-  const { handleSubmit, reset, error } = useRemoteAuthSubmit(
-    mode,
-    editConnection,
-    (f) => {
-      onSuccess(f);
-      form.reset();
-    },
-    () => {
-      onClose();
-      form.reset();
-      reset(); // Reset the error state
-    }
-  );
+  const { handleSubmit, reset, error } = useRemoteAuthSubmit(mode, editConnection, (f) => {
+    onSuccess(f);
+    form.reset();
+  });
 
   return (
     <div className={className}>
@@ -168,7 +168,6 @@ export function ConnectionsModalContent({
                       // Preserve existing connection data when changing template in edit mode
                       form.reset({
                         ...selectedTemplate,
-
                         guid: editConnection.guid,
                         name: form.getValues("name") || editConnection.name,
                         // Merge existing data with new template data, prioritizing existing values

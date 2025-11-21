@@ -132,6 +132,20 @@ export const DestinationSchemaMap = {
       label: RandomTag("Cloudflare"),
       meta: { accountId: "", siteId: "" },
     })),
+  vercel: z
+    .object({
+      remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
+      label: z.string().min(1, "Label is required"),
+      meta: z.object({
+        // implicit! projectId: z.string(),
+        // implicit! teamId: z.string().optional(),
+      }),
+    })
+    .default(() => ({
+      remoteAuthId: "",
+      label: RandomTag("Vercel"),
+      meta: {},
+    })),
   netlify: z
     .object({
       remoteAuthId: z.string(),
@@ -180,7 +194,7 @@ export const DestinationSchemaMap = {
 // Unified form schema for destination creation
 export const DestinationFormSchema = z
   .object({
-    destinationType: z.enum(["cloudflare", "netlify", "github", "none"]),
+    destinationType: z.enum(["cloudflare", "netlify", "github", "vercel", "none"]),
     remoteAuthId: z.string(),
     label: z.string(),
     meta: z.object({

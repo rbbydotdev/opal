@@ -77,7 +77,7 @@ export async function exchangeCodeForToken({
       throw new Error(`Token exchange failed: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any; //fixme: define type
 
     if (data.error) {
       throw new Error(`OAuth error: ${data.error} - ${data.error_description || ""}`);

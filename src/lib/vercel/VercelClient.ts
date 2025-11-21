@@ -21,11 +21,11 @@ export class VercelClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+        const errorMessage = (errorData as any)?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
         throw new Error(`Vercel API error: ${errorMessage}`);
       }
 
-      return await response.json();
+      return (await response.json()) as T;
     } catch (e) {
       throw mapToTypedError(e);
     }
@@ -54,10 +54,10 @@ export class VercelClient {
   async getDeployments(projectId?: string, teamId?: string): Promise<VercelDeployment[]> {
     let endpoint = "/v6/deployments";
     const params = new URLSearchParams();
-    
+
     if (projectId) params.append("projectId", projectId);
     if (teamId) params.append("teamId", teamId);
-    
+
     if (params.toString()) {
       endpoint += `?${params.toString()}`;
     }
