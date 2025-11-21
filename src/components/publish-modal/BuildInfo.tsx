@@ -47,7 +47,7 @@ export function BuildInfo({
         <Badge variant="outline">Info</Badge>
       </summary>
       <div className="w-full mt-2 p-3 bg-muted/30 rounded-md">
-        <DataDisplay data={displayData} className="mb-4 capitalize" />
+        <DataDisplay data={displayData} className="mb-4" />
       </div>
     </details>
   );

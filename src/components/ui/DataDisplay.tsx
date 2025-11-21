@@ -51,7 +51,7 @@ export function DataDisplay({ data, className = "", keyClassName = "", valueClas
         <React.Fragment key={key}>
           <dt
             className={cn(
-              "font-bold px-2 py-1",
+              "font-bold px-2 py-1 capitalize",
               {
                 "bg-muted/20": index % 2 === 0,
                 "bg-transparent": index % 2 !== 0,
