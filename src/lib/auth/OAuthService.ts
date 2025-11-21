@@ -1,4 +1,5 @@
 import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { VercelOAuthProvider } from "@/lib/auth/providers/VercelOAuthProvider";
 import { nanoid } from "nanoid";
 import { GitHubOAuthProvider } from "./providers/GitHubOAuthProvider";
 import { NetlifyOAuthProvider } from "./providers/NetlifyOAuthProvider";
@@ -29,6 +30,8 @@ export class OAuthService {
         return new GitHubOAuthProvider();
       case "netlify":
         return new NetlifyOAuthProvider();
+      case "vercel":
+        return new VercelOAuthProvider();
       default:
         throw new Error(`Unsupported OAuth source: ${source}`);
     }

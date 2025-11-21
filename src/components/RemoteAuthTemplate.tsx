@@ -69,6 +69,26 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     },
   }),
   template({
+    name: "Vercel API",
+    description: "Connect using a Vercel API token",
+    source: "vercel",
+    type: "api",
+    icon: <RemoteAuthSourceIconComponent source="vercel" />,
+    data: {
+      corsProxy: ENV.VERCEL_CORS_PROXY,
+    },
+  }),
+  /*template({
+    name: "Vercel OAuth",
+    description: "Connect using Vercel OAuth",
+    source: "vercel",
+    type: "oauth",
+    icon: <RemoteAuthSourceIconComponent source="vercel" />,
+    data: {
+      corsProxy: ENV.VERCEL_CORS_PROXY,
+    },
+  }),*/
+  template({
     name: "Netlify API",
     description: "Connect using a Netlify API key",
     source: "netlify",
