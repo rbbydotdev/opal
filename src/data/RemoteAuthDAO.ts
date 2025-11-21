@@ -194,6 +194,15 @@ export function isCloudflareAPIRemoteAuthDAO(record: RemoteAuthDAO): record is C
   return record.type === "api" && record.source === "cloudflare";
 }
 
+export type VercelAPIRemoteAuthDAO = RemoteAuthDAO & {
+  type: "api";
+  source: "vercel";
+  data: RemoteAuthDataFor<"api">;
+};
+export function isVercelAPIRemoteAuthDAO(record: RemoteAuthDAO): record is VercelAPIRemoteAuthDAO {
+  return record.type === "api" && record.source === "vercel";
+}
+
 // Union types using generics
 export type GithubRemoteAuthDAO = GithubAPIRemoteAuthDAO | GithubOAuthRemoteAuthDAO | GithubDeviceOAuthRemoteAuthDAO;
 export type NetlifyRemoteAuthDAO = NetlifyAPIRemoteAuthDAO | NetlifyOAuthRemoteAuthDAO;
