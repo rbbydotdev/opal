@@ -1,27 +1,27 @@
-import { useBuildModal } from "@/components/BuildModalContext";
+import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SimpleSelectableList } from "@/components/ui/SelectableList";
+import { DestinationDAO } from "@/data/DestinationDAO";
 import { useDestinations } from "@/hooks/useDestinations";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
-import { Archive, Delete, Eye } from "lucide-react";
+import { Delete, Eye } from "lucide-react";
 
 export function SidebarDestinationList() {
-  const { openEdit } = useBuildModal();
+  const { openDestinationFlow } = useBuildPublisher();
   const errorToss = useErrorToss();
   const { destinations } = useDestinations();
-  const handleDelete = async (buildId: string) => {
+  const handleDelete = async (destId: string) => {
     try {
-      const destination = destinations.find((b) => b.guid === buildId);
-      if (destination) await destination.delete();
+      await DestinationDAO.delete(destId);
     } catch (error) {
       errorToss(coerceError(error));
     }
   };
 
-  const handleView = (buildId: string) => {
-    openEdit({ buildId });
+  const handleView = (destinationId: string) => {
+    openDestinationFlow({ destinationId });
   };
 
   return (

@@ -791,7 +791,6 @@ export abstract class Disk {
     return;
   }
   async readFile(filePath: AbsPath) {
-    console.log(`Disk.readFile: Reading file ${filePath}`);
     await this.ready;
     try {
       return await this.fs.readFile(filePath);

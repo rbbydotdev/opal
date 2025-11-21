@@ -1,14 +1,16 @@
 import { BuildDAO } from "@/data/BuildDAO";
 import { createContext, useContext } from "react";
 
-export type PubicationModalCmd = {
-  open: ({ build }: { build: BuildDAO }) => void;
+export type BuildPublisherCmd = {
+  open: (options: { build: BuildDAO }) => void;
   close: () => void;
+  openDestinationFlow: (options: { destinationId: string }) => void;
 };
-export function usePublicationModalCmd() {
-  return useContext(PublicationModalContext);
+export function useBuildPublisher() {
+  return useContext(BuildPublisherContext);
 }
-export const PublicationModalContext = createContext<PubicationModalCmd>({
+export const BuildPublisherContext = createContext<BuildPublisherCmd>({
   open: () => {},
   close: () => {},
+  openDestinationFlow: () => {},
 });

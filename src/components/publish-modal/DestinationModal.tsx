@@ -1,5 +1,5 @@
 import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
-import { PublishViewType, useViewStack } from "@/components/publish-modal/PublishModal";
+import { PublishViewType, useViewStack } from "@/components/publish-modal/PublishModalStack";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";

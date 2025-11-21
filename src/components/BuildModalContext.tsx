@@ -1,14 +1,14 @@
 import { createContext, useContext } from "react";
 
-type BuildModalContextType = {
+type BuildCreationContextType = {
   openNew: () => Promise<void>;
   openEdit: (options: { buildId: string }) => void;
   close: () => void;
 };
-export const BuildModalContext = createContext<BuildModalContextType | undefined>(undefined);
+export const BuildCreationContext = createContext<BuildCreationContextType | undefined>(undefined);
 
-export function useBuildModal() {
-  const ctx = useContext(BuildModalContext);
-  if (!ctx) throw new Error("useBuildModal must be used within a BuildModalProvider");
+export function useBuildCreation() {
+  const ctx = useContext(BuildCreationContext);
+  if (!ctx) throw new Error("useBuildCreation must be used within a BuildCreationProvider");
   return ctx;
 }

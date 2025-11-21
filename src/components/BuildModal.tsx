@@ -1,5 +1,5 @@
 import { BuildStrategy } from "@/builder/builder-types";
-import { usePublicationModalCmd } from "@/components/publish-modal/PubicationModalCmdContext";
+import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -63,7 +63,7 @@ export function BuildModal({
     setIsOpen(false);
   }, [cancelBuild]);
 
-  const { open: openPubModal } = usePublicationModalCmd();
+  const { open: openPubModal } = useBuildPublisher();
 
   const handleClose = useCallback(() => {
     if (isBuilding) return;
