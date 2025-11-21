@@ -7,7 +7,7 @@ import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { Archive, Delete, Eye } from "lucide-react";
 
-export function SidebarBuildsList({
+export function SidebarDestinationList({
   workspaceId,
   // selectedBuildIds,
   // onSelectionChange,
@@ -48,7 +48,7 @@ export function SidebarBuildsList({
     >
       <SelectableList.Header>
         <Archive size={12} className="mr-2" />
-        Recent Builds
+        Destinations
       </SelectableList.Header>
 
       <SelectableList.Actions />

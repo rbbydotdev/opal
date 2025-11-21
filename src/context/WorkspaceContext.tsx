@@ -19,6 +19,7 @@ import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceCorruption } from "@/features/workspace-corruption/useWorkspaceCorruption";
 import { WorkspaceCorruptionModal } from "@/features/workspace-corruption/WorkspaceCorruptionModal";
 import { useUrlParam } from "@/hooks/useUrlParam";
+import { useWorkspaces } from "@/hooks/useWorkspaces";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
@@ -27,7 +28,6 @@ import { OpalMimeType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor, isBin, isCss, isEjs, isHtml, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useLiveQuery } from "dexie-react-hooks";
 import { TriangleAlert } from "lucide-react";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
@@ -188,21 +188,12 @@ export function useWatchWorkspaceFileTree({
   return { fileTreeDir, fileTree, flatTree };
 }
 
-export function useLiveWorkspaces() {
-  const [workspaces, setWorkspaces] = useState<WorkspaceDAO[]>([]);
-  useLiveQuery(async () => {
-    const wrkspcs = await WorkspaceDAO.all();
-    setWorkspaces(wrkspcs);
-  }, [setWorkspaces]);
-  return workspaces;
-}
-
 export function useWorkspaceContext() {
   return useContext(WorkspaceContext);
 }
 
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
-  const workspaces = useLiveWorkspaces();
+  const workspaces = useWorkspaces();
   const workspaceRoute = useWorkspaceRoute();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
   const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ disk: currentWorkspace.getDisk() });
