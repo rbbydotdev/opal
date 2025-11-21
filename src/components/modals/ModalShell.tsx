@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import { useCallback } from "react";
@@ -7,9 +7,6 @@ import { useCallback } from "react";
 export type ModalShellProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
-  description?: string;
-  subtitle?: string;
   children: React.ReactNode;
   
   // Navigation
@@ -29,9 +26,6 @@ export type ModalShellProps = {
 export function ModalShell({
   isOpen,
   onOpenChange,
-  title,
-  description,
-  subtitle,
   children,
   canGoBack = false,
   onBack,
@@ -82,26 +76,21 @@ export function ModalShell({
         onPointerDownOutside={handlePointerDownOutside}
         onEscapeKeyDown={handleEscapeKeyDown}
       >
-        <DialogHeader>
-          <DialogTitle>
-            <div className="flex gap-4 justify-start items-center mb-4 text-xl">
-              {canGoBack && onBack && (
-                <Button variant="outline" size="sm" title="back" onClick={onBack}>
-                  <ArrowLeft />
-                  <div className="uppercase text-2xs">back</div>
-                </Button>
-              )}
-              {title}
-            </div>
-          </DialogTitle>
-          {(description || subtitle) && (
-            <DialogDescription className="flex flex-col w-full">
-              {subtitle && <span className="font-bold text-lg text-foreground">{subtitle}</span>}
-              {description}
-            </DialogDescription>
-          )}
-        </DialogHeader>
+        {/* Navigation Button - positioned absolutely so it doesn't interfere with content layout */}
+        {canGoBack && onBack && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="absolute top-4 left-4 z-10"
+            title="back" 
+            onClick={onBack}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="uppercase text-2xs ml-1">back</span>
+          </Button>
+        )}
         
+        {/* Content has full control */}
         {children}
       </DialogContent>
     </Dialog>
