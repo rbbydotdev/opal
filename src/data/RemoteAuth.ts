@@ -40,14 +40,14 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
 
   save() {
     return ClientDb.remoteAuths.put({
-      data: this.data,
       guid: this.guid,
+      data: this.data,
       type: this.type,
       name: this.name,
       source: this.source,
       tags: this.tags,
       timestamp: this.timestamp,
-    });
+    }); // this.guid
   }
 
   constructor({
