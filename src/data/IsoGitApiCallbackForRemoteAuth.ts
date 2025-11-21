@@ -1,4 +1,4 @@
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthAgentForRemoteAuth } from "./RemoteAuthAgentForRemoteAuth";
 
 export function IsoGitApiCallbackForRemoteAuth(remoteAuth: RemoteAuthDAO) {

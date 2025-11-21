@@ -1,14 +1,14 @@
 import {
-  RemoteAuthDAO,
-  isGithubAPIRemoteAuthDAO,
-  isGithubDeviceOAuthRemoteAuthDAO,
-  isGithubOAuthRemoteAuthDAO,
-} from "@/data/RemoteAuth";
-import {
   RemoteAuthGithubAPIAgent,
   RemoteAuthGithubDeviceOAuthAgent,
   RemoteAuthGithubOAuthAgent,
 } from "@/data/RemoteAuthAgent";
+import {
+  RemoteAuthDAO,
+  isGithubAPIRemoteAuthDAO,
+  isGithubDeviceOAuthRemoteAuthDAO,
+  isGithubOAuthRemoteAuthDAO,
+} from "@/data/RemoteAuthDAO";
 
 export function RemoteAuthAgentForRemoteAuth(remoteAuth: RemoteAuthDAO) {
   if (isGithubAPIRemoteAuthDAO(remoteAuth)) {

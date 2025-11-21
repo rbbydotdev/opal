@@ -1,5 +1,5 @@
 import { ClientDb } from "@/data/instance";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";

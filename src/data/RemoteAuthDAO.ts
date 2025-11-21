@@ -47,7 +47,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
       source: this.source,
       tags: this.tags,
       timestamp: this.timestamp,
-    }); // this.guid
+    });
   }
 
   constructor({

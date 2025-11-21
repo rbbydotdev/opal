@@ -1,7 +1,7 @@
 import { GitConfig, GitRepoAuthor, OPAL_AUTHOR } from "@/app/GitConfig";
 import { Disk } from "@/data/disk/Disk";
 import { DiskJType } from "@/data/DiskType";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { debounce } from "@/lib/debounce";

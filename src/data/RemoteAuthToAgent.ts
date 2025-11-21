@@ -1,13 +1,4 @@
 import {
-  isBasicAuthRemoteAuthDAO,
-  isGithubAPIRemoteAuthDAO,
-  isGithubDeviceOAuthRemoteAuthDAO,
-  isGithubOAuthRemoteAuthDAO,
-  isNetlifyAPIRemoteAuthDAO,
-  isNetlifyOAuthRemoteAuthDAO,
-  RemoteAuthDAO,
-} from "@/data/RemoteAuth";
-import {
   RemoteAuthBasicAuthAgent,
   RemoteAuthGithubAPIAgent,
   RemoteAuthGithubDeviceOAuthAgent,
@@ -16,6 +7,15 @@ import {
   RemoteAuthNetlifyAPIAgent,
   RemoteAuthNetlifyOAuthAgent,
 } from "@/data/RemoteAuthAgent";
+import {
+  isBasicAuthRemoteAuthDAO,
+  isGithubAPIRemoteAuthDAO,
+  isGithubDeviceOAuthRemoteAuthDAO,
+  isGithubOAuthRemoteAuthDAO,
+  isNetlifyAPIRemoteAuthDAO,
+  isNetlifyOAuthRemoteAuthDAO,
+  RemoteAuthDAO,
+} from "@/data/RemoteAuthDAO";
 import { IRemoteGitApiAgent } from "@/data/RemoteAuthTypes";
 import { useMemo } from "react";
 

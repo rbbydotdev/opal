@@ -1,7 +1,7 @@
 import { Disk } from "@/data/disk/Disk";
 import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "@/data/disk/DiskEvents";
 import { ImageCache } from "@/data/ImageCache";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { NamespacedThumb } from "@/data/Thumb";
 import { WorkspaceDAO } from "@/data/WorkspaceDAO";

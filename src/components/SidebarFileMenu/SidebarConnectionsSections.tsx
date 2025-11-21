@@ -2,7 +2,7 @@ import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { SelectableList } from "@/components/ui/SelectableList";
 import { SidebarGroup } from "@/components/ui/sidebar";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";

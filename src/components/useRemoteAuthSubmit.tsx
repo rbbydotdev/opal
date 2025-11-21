@@ -1,5 +1,5 @@
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
@@ -24,6 +24,7 @@ export const useRemoteAuthSubmit = (
     try {
       if (mode === "edit" && editConnection) {
         const dao = RemoteAuthDAO.FromJSON({
+          ...editConnection,
           guid: editConnection.guid,
           source: formValues.source,
           type: formValues.type,

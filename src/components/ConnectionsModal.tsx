@@ -20,7 +20,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
-import { RemoteAuthDAO } from "@/data/RemoteAuth";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Case, SwitchCase } from "@/lib/SwitchCase";
