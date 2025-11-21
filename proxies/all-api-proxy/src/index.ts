@@ -9,21 +9,25 @@ const SERVICES = {
     hosts: ["github.com", "api.github.com", "*.github.com"],
     oauthEndpoint: "/login/oauth/access_token",
     clientSecretEnv: "GITHUB_CLIENT_SECRET",
+    oauthEnabled: true,
   },
   netlify: {
     hosts: ["api.netlify.com"],
     oauthEndpoint: "/oauth/token",
     clientSecretEnv: "NETLIFY_CLIENT_SECRET",
+    oauthEnabled: true,
   },
   vercel: {
     hosts: ["api.vercel.com"],
     oauthEndpoint: "/oauth/access_token",
     clientSecretEnv: "VERCEL_CLIENT_SECRET",
+    oauthEnabled: false, // API only, no OAuth support
   },
   cloudflare: {
     hosts: ["api.cloudflare.com"],
-    oauthEndpoint: "/client/v4/oauth2/token", // Cloudflare OAuth endpoint (if/when supported)
+    oauthEndpoint: "/client/v4/oauth2/token",
     clientSecretEnv: "CLOUDFLARE_CLIENT_SECRET",
+    oauthEnabled: false, // API only, no OAuth support yet
   },
 } as const;
 
@@ -112,9 +116,9 @@ async function handleOAuthTokenExchange(
   origin: string | null
 ): Promise<Response | null> {
   const service = SERVICES[serviceName];
-  
-  // Check if this is an OAuth token exchange endpoint
-  if (path !== service.oauthEndpoint || request.method !== "POST") {
+
+  // Check if OAuth is enabled for this service and if this is an OAuth token exchange endpoint
+  if (!service.oauthEnabled || path !== service.oauthEndpoint || request.method !== "POST") {
     return null;
   }
 
@@ -203,7 +207,7 @@ const handleRequest = async (request: Request, env: Env): Promise<Response> => {
     });
   }
 
-  const host = segments[0];
+  const host = segments[0]!;
   const path = "/" + segments.slice(1).join("/");
 
   if (!isHostAllowed(host)) {
@@ -225,15 +229,7 @@ const handleRequest = async (request: Request, env: Env): Promise<Response> => {
 
   // Handle service-specific OAuth token exchange
   if (serviceName) {
-    const oauthResponse = await handleOAuthTokenExchange(
-      request,
-      serviceName,
-      host,
-      path,
-      targetUrl,
-      env,
-      origin
-    );
+    const oauthResponse = await handleOAuthTokenExchange(request, serviceName, host, path, targetUrl, env, origin);
     if (oauthResponse) {
       return oauthResponse;
     }
@@ -243,8 +239,8 @@ const handleRequest = async (request: Request, env: Env): Promise<Response> => {
   const fetchInit = {
     method: request.method,
     headers: filterHeaders(request.headers),
-    body: request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined,
-    redirect: "follow",
+    body: request.method !== "GET" && request.method !== "HEAD" ? await request.text() : null,
+    redirect: "follow" as RequestRedirect,
   };
 
   let response: Response;

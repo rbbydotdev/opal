@@ -80,7 +80,7 @@ const handleRequest = async (request: Request, env: Env): Promise<Response> => {
   const host = segments[0];
   const path = "/" + segments.slice(1).join("/");
 
-  if (!isHostAllowed(host)) {
+  if (!isHostAllowed(host!)) {
     return new Response("Forbidden: Host not allowed", {
       status: 403,
       headers: corsHeaders(origin),
