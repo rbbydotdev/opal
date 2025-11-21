@@ -15,23 +15,27 @@ A unified Cloudflare Worker that proxies requests to GitHub, Netlify, Vercel, an
 
 ### GitHub
 - **Hosts**: `github.com`, `api.github.com`, `*.github.com`  
-- **OAuth Endpoint**: `/login/oauth/access_token`
+- **OAuth**: ✅ Enabled - `/login/oauth/access_token`
 - **Secret**: `GITHUB_CLIENT_SECRET`
+- **Auth Types**: API tokens + OAuth
 
 ### Netlify  
 - **Hosts**: `api.netlify.com`
-- **OAuth Endpoint**: `/oauth/token`
+- **OAuth**: ✅ Enabled - `/oauth/token`
 - **Secret**: `NETLIFY_CLIENT_SECRET`
+- **Auth Types**: API tokens + OAuth
 
 ### Vercel
 - **Hosts**: `api.vercel.com`
-- **OAuth Endpoint**: `/oauth/access_token`  
-- **Secret**: `VERCEL_CLIENT_SECRET`
+- **OAuth**: ❌ Disabled (API tokens only)
+- **Secret**: Not required for API-only usage
+- **Auth Types**: API tokens only
 
 ### Cloudflare
 - **Hosts**: `api.cloudflare.com`
-- **OAuth Endpoint**: `/client/v4/oauth2/token` (for future OAuth support)
-- **Secret**: `CLOUDFLARE_CLIENT_SECRET`
+- **OAuth**: ❌ Disabled (API tokens only)
+- **Secret**: Not required for API-only usage  
+- **Auth Types**: API tokens only
 
 ## Setup
 
@@ -43,13 +47,16 @@ npm install
 
 ### 2. Configure Secrets
 
-Set the client secrets for OAuth token exchange:
+Set the client secrets for OAuth-enabled services:
 
 ```bash
+# Required for OAuth-enabled services
 wrangler secret put GITHUB_CLIENT_SECRET
 wrangler secret put NETLIFY_CLIENT_SECRET
-wrangler secret put VERCEL_CLIENT_SECRET
-wrangler secret put CLOUDFLARE_CLIENT_SECRET
+
+# Optional - not needed for API-only services (Vercel, Cloudflare)
+# wrangler secret put VERCEL_CLIENT_SECRET
+# wrangler secret put CLOUDFLARE_CLIENT_SECRET
 ```
 
 ### 3. Deploy
@@ -95,23 +102,34 @@ https://your-worker-domain.workers.dev/api.cloudflare.com/client/v4/user
 
 ### OAuth Token Exchange
 
-For OAuth token exchange, make POST requests to the respective OAuth endpoints:
+For OAuth-enabled services, make POST requests to the respective OAuth endpoints:
 
 - **GitHub**: `https://your-worker-domain.workers.dev/github.com/login/oauth/access_token`
 - **Netlify**: `https://your-worker-domain.workers.dev/api.netlify.com/oauth/token`
-- **Vercel**: `https://your-worker-domain.workers.dev/api.vercel.com/oauth/access_token`
 
 The proxy will automatically inject the appropriate `client_secret` parameter.
+
+**Note**: Vercel and Cloudflare are configured for API-only access and do not support OAuth token exchange through the proxy.
 
 ## Configuration
 
 ### Environment Variables
 
 Set via `wrangler secret put`:
-- `GITHUB_CLIENT_SECRET`: GitHub OAuth application client secret
-- `NETLIFY_CLIENT_SECRET`: Netlify OAuth application client secret
-- `VERCEL_CLIENT_SECRET`: Vercel OAuth application client secret
-- `CLOUDFLARE_CLIENT_SECRET`: Cloudflare OAuth application client secret (future)
+- `GITHUB_CLIENT_SECRET`: GitHub OAuth application client secret (required for OAuth)
+- `NETLIFY_CLIENT_SECRET`: Netlify OAuth application client secret (required for OAuth)
+- `VERCEL_CLIENT_SECRET`: Not used (API-only service)
+- `CLOUDFLARE_CLIENT_SECRET`: Not used (API-only service)
+
+### Service Configuration
+
+Each service can be configured in the `SERVICES` object with:
+- `hosts`: Array of allowed hostnames
+- `oauthEndpoint`: OAuth token exchange endpoint path
+- `clientSecretEnv`: Environment variable name for client secret
+- `oauthEnabled`: Boolean flag to enable/disable OAuth support
+
+**Enabling OAuth for API-only services**: Change `oauthEnabled: false` to `true` in the service configuration and set the appropriate client secret.
 
 ### Allowed Origins
 
