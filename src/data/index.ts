@@ -1,4 +1,5 @@
 import { BuildRecord } from "@/data/BuildRecord";
+import { DeployRecord } from "@/data/DeployRecord";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
@@ -16,18 +17,20 @@ export class ClientIndexedDb extends Dexie {
   settings!: EntityTable<SettingsRecord, "name">;
   disks!: EntityTable<DiskRecord, "guid">;
   builds!: EntityTable<BuildRecord, "guid">;
+  deployments!: EntityTable<DeployRecord, "guid">;
 
   historyDocs!: EntityTable<HistoryDocRecord, "edit_id">; // Auto-increment edit_id
 
   constructor() {
     super("ClientIndexedDb");
 
-    this.version(2).stores({
+    this.version(3).stores({
       settings: "name",
       remoteAuths: "guid,type,timestamp",
       workspaces: "guid,name,timestamp",
       disks: "guid,timestamp",
       builds: "guid,diskId,timestamp,workspaceId",
+      deployments: "guid,buildId,timestamp,workspaceId,destinationType",
       thumbnails: "[workspaceId+path],guid,path,workspaceId",
       historyDocs: "++edit_id,id,parent,workspaceId",
       destinations: "guid,type,timestamp,remoteAuthGuid",
@@ -60,6 +63,14 @@ export class ClientIndexedDb extends Dexie {
       });
     });
 
+    // === BUILDS ===
+    this.builds.hook("deleting", (_primaryKey, build, tx) => {
+      // Delete related deployments when build is deleted
+      tx.on("complete", async () => {
+        await this.deployments.where("buildId").equals(build.guid).delete();
+      });
+    });
+
     // === WORKSPACES ===
     this.workspaces.hook("deleting", (_primaryKey, workspace, tx) => {
       // Avoid nested transaction error — wait until after the workspace delete finishes.
@@ -68,6 +79,7 @@ export class ClientIndexedDb extends Dexie {
           this.disks.where("guid").equals(workspace.disk.guid).delete(),
           this.disks.where("guid").equals(workspace.thumbs.guid).delete(),
           this.builds.where("workspaceId").equals(workspace.guid).delete(),
+          this.deployments.where("workspaceId").equals(workspace.guid).delete(),
           this.historyDocs.where("workspaceId").equals(workspace.guid).delete(),
         ]);
       });

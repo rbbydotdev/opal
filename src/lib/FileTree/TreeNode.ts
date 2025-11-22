@@ -243,7 +243,7 @@ export class TreeNode {
   }: {
     filterIn?: (node: TreeNode) => boolean;
     filterOut?: (node: TreeNode) => boolean;
-  }) => {
+  } = {}) => {
     return TreeNode.countChildren({ node: this, filterIn, filterOut });
   };
 
