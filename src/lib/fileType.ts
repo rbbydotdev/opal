@@ -1,18 +1,33 @@
 export const MimeTypes = {
   PNG: "image/png",
   JPEG: "image/jpeg",
-  GIF: "image/gif",
   WEBP: "image/webp",
   BIN: "application/octet-stream",
+  GIF: "image/gif",
   MARKDOWN: "text/markdown",
   CSS: "text/css",
   EJS: "text/x-ejs",
+  YAML: "application/yaml",
   MUSTACHE: "text/x-mustache",
   HTML: "text/html",
+  XML: "application/xml",
   PLAIN: "text/plain",
   JAVASCRIPT: "text/javascript",
   JSON: "application/json",
 } as const;
+
+export const StringMimeTypes = [
+  "text/markdown",
+  "text/css",
+  "text/x-ejs",
+  "application/yaml",
+  "text/x-mustache",
+  "text/html",
+  "application/xml",
+  "text/plain",
+  "text/javascript",
+  "application/json",
+] as const satisfies Partial<OpalMimeType>[];
 
 export const MimeTypeExt = {
   "image/png": "png",
@@ -24,8 +39,10 @@ export const MimeTypeExt = {
   "text/css": "css",
   "text/plain": "txt",
   "text/x-ejs": "ejs",
+  "application/yaml": "yaml",
   "text/x-mustache": "mustache",
   "text/html": "html",
+  "application/xml": "xml",
   "text/javascript": "js",
   "application/json": "json",
 } as const;

@@ -23,6 +23,7 @@ import {
   strictPrefix,
 } from "@/lib/paths2";
 import { extname } from "path";
+import { resolveFromRoot } from "../paths2";
 
 export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
@@ -86,27 +87,7 @@ export class TreeNode {
   get length() {
     return this.path.length;
   }
-  scope(path: AbsPath | string): TreeNode | null {
-    if (this.path.startsWith(path) || path.startsWith(this.path)) {
-      if (this.isTreeDir()) {
-        return new TreeDir({
-          ...this,
-          children:
-            Object.fromEntries(
-              Object.entries(this.children ?? {})
-                .map(([key, child]) => {
-                  const scoped = child.scope(path);
-                  return scoped ? [key, scoped] : null;
-                })
-                .filter((entry): entry is [string, TreeFile | TreeDir] => entry !== null)
-            ) ?? {},
-        });
-      }
-      return this;
-    } else {
-      return null;
-    }
-  }
+
   isDupNode(): this is VirtualDupTreeNode {
     return isVirtualDupNode(this);
   }
@@ -213,11 +194,11 @@ export class TreeNode {
     }
   }
 
-  async *asyncWalkIterator(node: TreeNode = this, depth = 0): AsyncIterableIterator<TreeNode> {
-    for (const childNode of Object.values((node as TreeDir).children ?? {})) {
-      yield* await childNode.asyncWalkIterator(childNode, depth + 1);
-    }
-  }
+  // async *asyncWalkIterator(node: TreeNode = this, depth = 0): AsyncIterableIterator<TreeNode> {
+  //   for (const childNode of Object.values((node as TreeDir).children ?? {})) {
+  //     yield* await childNode.asyncWalkIterator(childNode, depth + 1);
+  //   }
+  // }
 
   iterator(filterIn?: (n: TreeNode) => boolean): IterableIterator<this> {
     function* gen(node: TreeNode): IterableIterator<unknown> {
@@ -280,20 +261,19 @@ export class TreeNode {
     return count - 1; //subtract root
   }
 
-  // walk(
-  //   cb: (node: TreeNode, depth: number, exit: () => void, $stop_token: Symbol) => unknown,
-  //   node: TreeNode = this,
-  //   depth = 0,
-  //   status = { exit: false }
-  // ) {
-  //   const exit = () => (status.exit = true);
-  //   let $stop_token = Symbol("stop_token");
-  //   if (cb(node, depth, exit, $stop_token) === $stop_token) return;
-  //   for (const childNode of Object.values((node as TreeDir).children ?? {})) {
-  //     if (status.exit) break;
-  //     this.walk(cb, childNode, depth + 1, status);
-  //   }
-  // }
+  nodeFromPath(path: AbsPath): TreeNode | null {
+    if (this.path === path) return this;
+    if (!this.isTreeDir()) return null;
+    const [segment, ...rest] = resolveFromRoot(this.path, path).split("/").filter(Boolean);
+    const childNode = this.children?.[segment!];
+    return childNode?.nodeFromPath(absPath(joinPath(this.path, ...rest))) ?? null;
+  }
+  scope(newRootPath: AbsPath) {
+    this.path = newRootPath;
+    this.parent = null;
+    return this;
+  }
+
   constructor({
     type,
     dirname,

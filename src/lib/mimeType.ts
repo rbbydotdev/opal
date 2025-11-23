@@ -19,6 +19,14 @@ export const getMimeType = (path: string): OpalMimeType => {
     return MimeTypes.HTML;
   }
 
+  if (filePath.endsWith(".xml")) {
+    return MimeTypes.XML;
+  }
+
+  if (filePath.endsWith(".yaml") || filePath.endsWith(".yml")) {
+    return MimeTypes.YAML;
+  }
+
   // Handle .js files
   if (filePath.endsWith(".js")) {
     return MimeTypes.JAVASCRIPT;

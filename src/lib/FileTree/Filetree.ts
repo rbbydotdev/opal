@@ -58,11 +58,7 @@ export class FileTree {
 
   walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
   asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
-  asyncWalkIterator = (...args: Parameters<TreeDirRoot["asyncWalkIterator"]>) => this.root.asyncWalkIterator(...args);
-
-  // getRootTree() {
-  //   return this.root;
-  // }
+  // asyncWalkIterator = (...args: Parameters<TreeDirRoot["asyncWalkIterator"]>) => this.root.asyncWalkIterator(...args);
 
   iterator(...args: Parameters<TreeDirRoot["iterator"]>) {
     return this.root.iterator(...args);
@@ -245,22 +241,6 @@ export class FileTree {
   nodeFromPath(path: AbsPath | string): TreeNode | null {
     return this.map.get(path + "") ?? null;
   }
-  // countChildren({
-  //   parent,
-  //   filterIn,
-  //   filterOut,
-  // }: {
-  //   parent: TreeNode;
-  //   filterIn?: (node: TreeNode) => boolean;
-  //   filterOut?: (node: TreeNode) => boolean;
-  // }): number {
-  //   let count = 0;
-  //   this.walk(parent, (node) => {
-  //     if (filterIn && !filterIn(node)) return;
-  //     if (filterOut && filterOut(node)) return;
-  //   });
-  //   // return Object.keys(parent.children).length;
-  // }
 }
 
 function spliceNode<T extends VirtualTreeNode | TreeNode>(targetNode: TreeDir, newNode: T) {
