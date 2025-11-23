@@ -173,6 +173,9 @@ export type RepoJType = {
   dir: AbsPath;
   defaultBranch: string;
 };
+
+export type GitFullRemoteObjType = GitRemote & { RemoteAuth: RemoteAuthDAO | null; onAuth?: AuthCallback };
+
 export class GitRepo {
   disk: Disk;
   dir: AbsPath = absPath("/");
@@ -424,7 +427,7 @@ export class GitRepo {
     corsProxy,
     onAuth,
   }: {
-    remote: string;
+    remote: GitFullRemoteObjType | string;
     ref?: string;
     force?: boolean;
     remoteRef?: string;
@@ -440,7 +443,8 @@ export class GitRepo {
       fs: this.fs,
       http,
       dir: this.dir,
-      remote,
+      remote: typeof remote === "string" ? remote : undefined,
+      url: typeof remote === "string" ? undefined : remote.url,
       force,
       ref: await this.normalizeRef({ ref: finalRef }),
       remoteRef,
@@ -645,6 +649,10 @@ export class GitRepo {
     });
   };
 
+  static GitFullRemoteObj(remote: GitRemote, RemoteAuth: RemoteAuthDAO): GitFullRemoteObjType {
+    return { ...remote, RemoteAuth, onAuth: AgentFromRemoteAuth(RemoteAuth)?.onAuth };
+  }
+
   isMerging = async (): Promise<boolean> => {
     if ((await this.fullInitialized()) === false) return false;
     const mergeHead = await this.getMergeState();
@@ -814,9 +822,7 @@ export class GitRepo {
     return branches.includes(ref) || tags.includes(ref);
   };
 
-  getRemote = async (
-    name: string
-  ): Promise<(GitRemote & { RemoteAuth: RemoteAuthDAO | null; onAuth?: AuthCallback }) | null> => {
+  getRemote = async (name: string): Promise<GitFullRemoteObjType | null> => {
     const remotes = await this.getRemotes();
     const remote = remotes.find((r) => r.name === name);
     if (!remote) return null;
