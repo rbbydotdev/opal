@@ -1,20 +1,15 @@
 import { Disk } from "@/data/disk/Disk";
 import { DiskDAO } from "@/data/disk/DiskDAO";
+import { NullDiskContext } from "@/data/disk/NullDiskContext";
+import { OpFsDirMountDiskContext } from "@/data/disk/OpFsDirMountDiskContext";
 import { DiskType } from "@/data/DiskType";
-import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { DirectoryHandleStore } from "@/data/fs/DirectoryHandleStore";
-import { MutexFs } from "@/data/fs/MutexFs";
-import { PatchedDirMountOPFS } from "@/data/PatchedDirMountOPFS";
-import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
-import { Mutex } from "async-mutex";
-import { memfs } from "memfs";
-import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
-export class OpFsDirMountDisk extends Disk {
+
+export class OpFsDirMountDisk extends Disk<OpFsDirMountDiskContext> {
   static type: DiskType = "OpFsDirMountDisk";
   type = OpFsDirMountDisk.type;
   ready: Promise<void>;
-
   private directoryHandle: FileSystemDirectoryHandle | null = null;
 
   get dirName() {
@@ -24,27 +19,19 @@ export class OpFsDirMountDisk extends Disk {
   constructor(
     public readonly guid: string,
     indexCache?: TreeDirRootJType,
-    private fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
+    context?: OpFsDirMountDiskContext
   ) {
-    const mutex = new Mutex();
+    const ctx = context ?? NullDiskContext.create("__null__/" + guid);
+    super(guid, ctx.fs, ctx.fileTree, DiskDAO.New(OpFsDirMountDisk.type, guid, indexCache));
+    this._context = ctx;
+
     const { promise, resolve, reject } = Promise.withResolvers<void>();
-
-    // Initialize with a temporary memfs until directory is selected
-    const tempFs = memfs().fs;
-    void mutex.acquire();
-    super(
-      guid,
-      new MutexFs(tempFs.promises, mutex),
-      new FileTree(tempFs.promises, guid, mutex),
-      DiskDAO.New(OpFsDirMountDisk.type, guid, indexCache)
-    );
-
     this.ready = promise;
 
     // Try to restore directory handle from storage
     this.initializeFromStorage()
       .then(() => {
-        mutex.release();
+        ctx.mutex.release();
         resolve();
       })
       .catch(reject);
@@ -62,15 +49,11 @@ export class OpFsDirMountDisk extends Disk {
     this.directoryHandle = handle;
     const shouldStore = !skipStorage && (!previousHandle || previousHandle.name !== handle.name);
     if (shouldStore) await DirectoryHandleStore.storeHandle(this.guid, handle);
-    const patchedDirMountOPFS = this.fsTransform(
-      new PatchedDirMountOPFS(Promise.resolve(handle) as unknown as Promise<IFileSystemDirectoryHandle>)
-    );
-    const mutex = new Mutex();
-    const mutexFs = new MutexFs(patchedDirMountOPFS, mutex);
-    const ft = new FileTree(patchedDirMountOPFS, this.guid, mutex);
-    this.fs = mutexFs;
-    this.fileTree = ft;
+
+    const newContext = OpFsDirMountDiskContext.createFromHandle(this.guid, handle);
+    await this.setDiskContext(newContext);
   }
+
 
   async selectDirectory(): Promise<FileSystemDirectoryHandle> {
     if (typeof window.showDirectoryPicker === "undefined") {
