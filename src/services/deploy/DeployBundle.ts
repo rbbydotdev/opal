@@ -70,9 +70,11 @@ export class DeployBundle {
     remoteAuth,
     buildDir = absPath("/"),
     disk = this.disk,
+    url,
   }: {
     ghPagesBranch?: string;
     remoteAuth: RemoteAuthDAO;
+    url: string;
     buildDir?: AbsPath;
     disk?: Disk;
   }): Promise<void> {
@@ -84,10 +86,11 @@ export class DeployBundle {
       const repo = GitRepo.New(disk, `DeployGit/${disk.guid}`, buildDir, ghPagesBranch, OPAL_AUTHOR);
       const playbook = new GitPlaybook(repo);
       await playbook.initialCommit("deploy bundle commit");
-      await playbook.push({
-        remote: "origin", //need to match remoteRef
+      await playbook.pushRemoteAuth({
+        remoteAuth,
         ref: ghPagesBranch,
         force: true,
+        url,
       });
     } catch (error) {
       //check if network error?

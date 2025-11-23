@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
+import { AnimatedTabs, MiniTab } from "@/components/ui/AnimatedTabs";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { BuildDAO } from "@/data/BuildDAO";
 import { Workspace } from "@/data/Workspace";
@@ -185,7 +186,7 @@ export function SidebarFileMenuBuild({
               </div>
             </div>
             <div className="pl-4 pt-2 pb-2 flex flex-col">
-              <div className="flex gap-4">
+              <AnimatedTabs activeTab={activeTab}>
                 <MiniTab onClick={() => setActiveTab("files")} active={activeTab === "files"}>
                   Files
                 </MiniTab>
@@ -195,7 +196,7 @@ export function SidebarFileMenuBuild({
                 <MiniTab onClick={() => setActiveTab("destinations")} active={activeTab === "destinations"}>
                   Destinations
                 </MiniTab>
-              </div>
+              </AnimatedTabs>
               <div className="bg-highlight rounded rounded-tl-none pb-4 pt-1 px-2">
                 <div>{activeTab === "files" && <BuildSidebarFileExplorer build={build} />}</div>
                 <div>{activeTab === "builds" && <SidebarBuildsList workspaceId={currentWorkspace.guid} />}</div>
@@ -206,25 +207,6 @@ export function SidebarFileMenuBuild({
         </Collapsible>
       </SidebarGroup>
     </>
-  );
-}
-// function useMiniTabs<T extends string[]>(defaultTab: T[0]) {
-// }
-function MiniTab({ children, active, onClick }: { children: React.ReactNode; active?: boolean; onClick: () => void }) {
-  return (
-    <button
-      tabIndex={0}
-      onClick={onClick}
-      className={cn(
-        "rounded-t border-muted active:scale-95 active:translate-y-0.5 text-muted-foreground bg-muted/50 hover:text-primary hover:scale-105 transition-transform border-t border-l border-r text-xs p-2 font-mono",
-        {
-          "bg-muted": active,
-          "bg-transparent": !active,
-        }
-      )}
-    >
-      {children}
-    </button>
   );
 }
 function BuildSidebarFileExplorer({ build }: { build: BuildDAO | null }) {

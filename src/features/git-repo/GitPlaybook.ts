@@ -1,8 +1,8 @@
 import { Disk } from "@/data/disk/Disk";
 import { IsoGitApiCallbackForRemoteAuth } from "@/data/IsoGitApiCallbackForRemoteAuth";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
-import { GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
+import { GitFullRemoteObjType, GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
@@ -294,18 +294,41 @@ export class GitPlaybook {
     });
   }
 
-  async push({ remote, force, ref }: { remote: string; force?: boolean; ref?: string }) {
+  async pushRemoteAuth({
+    url,
+    remoteAuth,
+    force,
+    gitCorsProxy,
+    ref,
+  }: {
+    url: string;
+    remoteAuth: GithubRemoteAuthDAO;
+    ref?: string;
+    gitCorsProxy?: string;
+    force?: boolean;
+  }) {
+    const remoteObj = GitRepo.GitFullRemoteObj(
+      {
+        name: "origin",
+        url,
+        gitCorsProxy,
+      },
+      remoteAuth
+    );
+    return this.push({ remote: remoteObj, force, ref });
+  }
+  async push({ remote, force, ref }: { remote: string | GitFullRemoteObjType; force?: boolean; ref?: string }) {
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.PREPUSH,
       });
     }
-    const remoteObj = await this.repo.getRemote(remote);
+    const remoteObj = typeof remote === "string" ? await this.repo.getRemote(remote) : remote;
     if (!remoteObj) {
-      throw new Error(`Remote ${remote} not found`);
+      throw new Error(`Remote ${(remote as any)?.name || remote} not found`);
     }
     if (remoteObj.authId && !remoteObj.RemoteAuth) {
-      throw new Error(`Remote ${remote} has authId but no RemoteAuth object found`);
+      throw new Error(`Remote ${(remote as any)?.name || remote} has authId but no RemoteAuth object found`);
     }
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
 
