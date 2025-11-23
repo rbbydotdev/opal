@@ -1,6 +1,5 @@
-import { DestinationModal } from "@/components/publish-modal/DestinationModal";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { createContext, useContext, useRef } from "react";
+import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
+import { createContext, useContext } from "react";
 
 type DestinationManagerContextType = {
   openDestinationFlow: (options: { destinationId: string }) => void;
@@ -10,24 +9,16 @@ type DestinationManagerContextType = {
 const DestinationManagerContext = createContext<DestinationManagerContextType | null>(null);
 
 export function DestinationManagerProvider({ children }: { children: React.ReactNode }) {
-  const { currentWorkspace } = useWorkspaceContext();
-  const cmdRef = useRef<{
-    openDestinationFlow: (options: { destinationId: string }) => void;
-    close: () => void;
-  }>({
-    openDestinationFlow: () => {},
-    close: () => {},
-  });
+  const buildPublisher = useBuildPublisher();
 
   const value: DestinationManagerContextType = {
-    openDestinationFlow: (options) => cmdRef.current.openDestinationFlow(options),
-    close: () => cmdRef.current.close(),
+    openDestinationFlow: (options) => buildPublisher.openDestinationFlow(options),
+    close: () => buildPublisher.close(),
   };
 
   return (
     <DestinationManagerContext.Provider value={value}>
       {children}
-      <DestinationModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
     </DestinationManagerContext.Provider>
   );
 }
