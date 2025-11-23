@@ -1,3 +1,4 @@
+import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { SpecialDirsPaths } from "@/data/SpecialDirsPaths";
 import { getMimeType } from "@/lib/mimeType";
 import {
@@ -278,6 +279,7 @@ export class TreeNode {
     depth,
     source,
     virtualContent,
+    fs,
   }: {
     type: "dir" | "file";
     dirname: AbsPath | string;
@@ -287,6 +289,7 @@ export class TreeNode {
     depth?: number;
     source?: AbsPath;
     virtualContent?: string;
+    fs: CommonFileSystem;
   }) {
     this.type = type;
     this._dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
