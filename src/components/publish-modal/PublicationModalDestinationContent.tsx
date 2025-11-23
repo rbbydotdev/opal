@@ -1,6 +1,7 @@
 import { AWSDestinationForm } from "@/components/publish-modal/AWSDestinationForm";
 import { CloudflareDestinationForm } from "@/components/publish-modal/CloudflareDestinationForm";
 import { NetlifyDestinationForm } from "@/components/publish-modal/NetlifyDestinationForm";
+import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -28,8 +29,8 @@ export function PublicationModalDestinationContent({
   preferredConnection,
   editDestination,
   remoteAuths,
-  onAddConnection,
-  onEditConnection,
+  setPreferredConnection,
+  pushView,
 }: {
   close: () => void;
   handleSubmit: (data: any) => void;
@@ -37,8 +38,8 @@ export function PublicationModalDestinationContent({
   editDestination?: DestinationDAO | null;
   preferredConnection: RemoteAuthJType | PartialRemoteAuthJType | null;
   remoteAuths: RemoteAuthDAO[];
-  onAddConnection: () => void;
-  onEditConnection: (connection: RemoteAuthDAO) => void;
+  pushView: (view: PublishViewType) => void;
+  setPreferredConnection: (connection: RemoteAuthJType | PartialRemoteAuthJType | null) => void;
 }) {
   const defaultRemoteAuth = preferredConnection || remoteAuths[0];
   const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
@@ -49,6 +50,7 @@ export function PublicationModalDestinationContent({
     : isRemoteAuthJType(defaultRemoteAuth)
       ? defaultRemoteAuth.guid
       : "";
+
   const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
   const defaultValues = useMemo(
     () => ({
@@ -124,15 +126,25 @@ export function PublicationModalDestinationContent({
                     ))}
                   </SelectContent>
                 </Select>
-                <Button type="button" variant="outline" onClick={onAddConnection}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    pushView("connection");
+                    setPreferredConnection(null);
+                  }}
+                >
                   <Plus />
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
+                  // pushView
                   onClick={() => {
                     const selectedConnection = remoteAuths.find((conn) => conn.guid === field.value);
-                    if (selectedConnection) onEditConnection(selectedConnection);
+                    if (selectedConnection) setPreferredConnection(selectedConnection);
+                    console.log("Editing connection:", selectedConnection);
+                    pushView("connection");
                   }}
                   disabled={!field.value || field.value === ""}
                   title="Edit Connection"

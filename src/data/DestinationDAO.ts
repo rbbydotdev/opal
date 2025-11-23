@@ -3,6 +3,7 @@ import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
+import { getUniqueSlugAsync } from "@/lib/getUniqueSlug";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { nanoid } from "nanoid";
 import z from "zod";
@@ -83,6 +84,13 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   async update(properties: Partial<Omit<DestinationRecord<T>, "guid">>) {
     await ClientDb.destinations.update(this.guid, properties);
     return this.hydrate();
+  }
+
+  static FindUniqueLabel(name: string) {
+    return getUniqueSlugAsync(name, async (candidate) => {
+      const existing = await ClientDb.destinations.where("label").equals(candidate).first();
+      return !!existing;
+    });
   }
 
   static async all() {
