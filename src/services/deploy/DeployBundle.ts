@@ -47,12 +47,12 @@ type DeployBundleTree = DeployBundleTreeEntry[];
 export class DeployBundle {
   constructor(readonly disk: Disk) {}
 
-  getDeployBundleTree = async (): Promise<DeployBundleTree> => {
+  getDeployBundleFiles = async (rootPath = absPath("/")): Promise<DeployBundleTree> => {
     await this.disk.refresh();
     return Promise.all(
       [...this.disk.fileTree.root.deepCopy().iterator((node: TreeNode) => node.isTreeFile())].map(async (node) =>
         DeployFile({
-          path: resolveFromRoot(absPath("/this.buildPath.or.something"), node.path),
+          path: resolveFromRoot(rootPath, node.path),
           getContent: async () => this.disk.readFile(node.path) as Promise<DeployBundleTreeFileContent>,
           encoding: isStringish(node.path) ? "utf-8" : "base64",
         })
