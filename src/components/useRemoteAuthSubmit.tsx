@@ -1,13 +1,13 @@
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
-import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { useState } from "react";
 
 export const useRemoteAuthSubmit = (
   mode: ConnectionsModalMode,
-  editConnection: RemoteAuthJType | undefined,
+  editConnection: RemoteAuthJType | PartialRemoteAuthJType | null | undefined,
   onSuccess: (rad: RemoteAuthDAO) => void,
   onCancel?: (error?: Error | string) => void,
   tags: string[] = ["github"]
@@ -22,7 +22,7 @@ export const useRemoteAuthSubmit = (
   const handleSubmit = async (formValues: RemoteAuthFormValues) => {
     setSubmitting(true);
     try {
-      if (mode === "edit" && editConnection) {
+      if (mode === "edit" && isRemoteAuthJType(editConnection)) {
         const dao = RemoteAuthDAO.FromJSON({
           ...editConnection,
           guid: editConnection.guid,

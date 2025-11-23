@@ -5,6 +5,7 @@ import { useAnySearch } from "@/data/useGithubRepoSearch";
 import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/useRemoteSearch";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { NetlifySite } from "@/lib/netlify/NetlifyClient";
+import { AWSS3Bucket } from "@/lib/aws/AWSClient";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import { Ban, Loader } from "lucide-react";
@@ -432,6 +433,105 @@ export function useRemoteGitRepo<T = any>({
       creating: "Creating repository...",
       askToEnter: "Enter a name to create a new repository",
       valid: `Press Enter to create repository "${repoPrefix}${name.trim()}"`,
+      error,
+    },
+  };
+}
+
+export function useRemoteAWSSearch({
+  agent,
+  defaultValue = "",
+}: {
+  agent: IRemoteAuthAgentSearch<AWSS3Bucket> | null;
+  defaultValue?: string;
+}) {
+  const [searchValue, updateSearch] = useState(defaultValue);
+  const debouncedSearchValue = useDebounce(searchValue, 500);
+  const { loading, results, error, clearError } = useAnySearch<AWSS3Bucket>({
+    agent,
+    searchTerm: debouncedSearchValue,
+    searchKey: "name",
+  });
+  const searchResults = useMemo(() => {
+    return results.map((result) => {
+      return {
+        label: isFuzzyResult<AWSS3Bucket>(result) ? result.obj.name : result.name,
+        value: isFuzzyResult<AWSS3Bucket>(result) ? result.obj.name : result.name,
+        element: isFuzzyResult<AWSS3Bucket>(result)
+          ? result.highlight((m, i) => (
+              <b className="text-ring" key={i}>
+                {m}
+              </b>
+            ))
+          : result.name,
+      };
+    });
+  }, [results]);
+  return {
+    isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
+    searchValue,
+    updateSearch,
+    clearError,
+    searchResults,
+    error,
+  };
+}
+
+export function useRemoteAWSBucket<T = any>({
+  createRequest,
+  defaultName,
+}: {
+  createRequest: (name: string, { signal }: { signal?: AbortSignal }) => Promise<T>;
+  defaultName?: string;
+}): {
+  request: RemoteItemType.Request<T>;
+  ident: RemoteItemType.Ident;
+  msg: RemoteItemType.Msg;
+} {
+  const [name, setName] = useState(defaultName || "");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const abortCntrlRef = React.useRef<AbortController | null>(null);
+
+  const create = async () => {
+    const finalName = name.trim().toLowerCase(); // S3 bucket names must be lowercase
+    if (!finalName) return null;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      abortCntrlRef.current = new AbortController();
+      const result = await createRequest(finalName, { signal: abortCntrlRef.current.signal });
+      setError(null);
+      return result;
+    } catch (err: any) {
+      setError(err.message || "Failed to create bucket");
+    } finally {
+      abortCntrlRef.current = null;
+      setIsLoading(false);
+    }
+    return null;
+  };
+  return {
+    request: {
+      error,
+      isLoading,
+      reset: () => {
+        setError(null);
+        setIsLoading(false);
+        abortCntrlRef.current?.abort();
+      },
+      submit: create,
+    },
+    ident: {
+      isValid: !error && !isLoading && !!name.trim(),
+      setName,
+      name,
+    },
+    msg: {
+      creating: "Creating S3 bucket...",
+      askToEnter: "Enter a name to create a new S3 bucket",
+      valid: `Press Enter to create S3 bucket "${name.trim().toLowerCase()}"`,
       error,
     },
   };

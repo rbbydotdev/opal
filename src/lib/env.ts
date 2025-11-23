@@ -9,6 +9,7 @@ export const ENV: {
   CLOUDFLARE_CORS_PROXY: string;
   NETLIFY_CORS_PROXY: string;
   VERCEL_CORS_PROXY: string;
+  AWS_CORS_PROXY: string;
   PRIVATE_CORS_PROXY: string;
   HOST_URLS: string[];
 } = {
@@ -22,6 +23,7 @@ export const ENV: {
   CLOUDFLARE_CORS_PROXY: import.meta.env.CLOUDFLARE_CORS_PROXY || "https://all-api-proxy.rbbydotdev.workers.dev",
   NETLIFY_CORS_PROXY: import.meta.env.VITE_NETLIFY_CORS_PROXY || "https://all-api-proxy.rbbydotdev.workers.dev",
   VERCEL_CORS_PROXY: import.meta.env.VITE_VERCEL_CORS_PROXY || "https://all-api-proxy.rbbydotdev.workers.dev",
+  AWS_CORS_PROXY: import.meta.env.VITE_AWS_CORS_PROXY || "https://all-api-proxy.rbbydotdev.workers.dev",
   PRIVATE_CORS_PROXY: import.meta.env.VITE_PRIVATE_CORS_PROXY || "", //https://private-cors-proxy
   HOST_URLS: (import.meta.env.VITE_HOST_URLS || `https://opaledx.com,http://localhost:3000,http://localhost`).split(
     ","

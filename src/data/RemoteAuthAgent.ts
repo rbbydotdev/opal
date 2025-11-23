@@ -425,10 +425,8 @@ export class RemoteAuthAWSAPIAgent implements IRemoteAuthAgent, IRemoteAuthAgent
     return this.getUsername();
   }
 
-  createBucket = (bucketName: string, { signal }: { signal?: AbortSignal } = {}) => {
-    // S3 bucket creation would be implemented here
-    console.warn("AWS S3 bucket creation not implemented");
-    throw new Error("AWS S3 bucket creation not implemented");
+  createBucket = async (bucketName: string, { signal }: { signal?: AbortSignal } = {}) => {
+    return this.s3Client.createBucket(bucketName);
   };
 
   async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {

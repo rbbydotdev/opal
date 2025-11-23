@@ -85,7 +85,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     type: "api",
     icon: <RemoteAuthSourceIconComponent source="aws" />,
     data: {
-      corsProxy: "",
+      corsProxy: ENV.AWS_CORS_PROXY,
     },
   }),
   /*template({
