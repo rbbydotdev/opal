@@ -1,5 +1,6 @@
-import { S3Client, ListBucketsCommand, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, ListBucketsCommand, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, CreateBucketCommand, CreateBucketConfiguration } from "@aws-sdk/client-s3";
 import type { StreamingBlobPayloadInputTypes } from "@smithy/types";
+import { ENV } from "@/lib/env";
 
 export interface AWSS3Bucket {
   name: string;
@@ -22,15 +23,27 @@ export class AWSS3Client {
   private s3Client: S3Client;
   private region: string;
 
-  constructor(accessKeyId: string, secretAccessKey: string, region: string = 'us-east-1') {
+  constructor(accessKeyId: string, secretAccessKey: string, region: string = 'us-east-1', corsProxy?: string) {
     this.region = region;
-    this.s3Client = new S3Client({
+    
+    // Configure S3 client with proper regional endpoint
+    const clientConfig: any = {
       region: region,
       credentials: {
         accessKeyId: accessKeyId,
         secretAccessKey: secretAccessKey,
       },
-    });
+    };
+
+    // If CORS proxy is provided, construct the proper proxy URL for the region
+    if (corsProxy || ENV.AWS_CORS_PROXY) {
+      const proxyUrl = corsProxy || ENV.AWS_CORS_PROXY;
+      const s3Host = region === 'us-east-1' ? 's3.amazonaws.com' : `s3.${region}.amazonaws.com`;
+      clientConfig.endpoint = `${proxyUrl}/${s3Host}`;
+      clientConfig.forcePathStyle = true; // Required for custom endpoints
+    }
+
+    this.s3Client = new S3Client(clientConfig);
   }
 
   async listBuckets(): Promise<AWSS3Bucket[]> {
@@ -100,6 +113,29 @@ export class AWSS3Client {
       })) || [];
     } catch (error) {
       console.error(`Error listing objects in bucket ${bucketName}:`, error);
+      throw error;
+    }
+  }
+
+  async createBucket(bucketName: string): Promise<AWSS3Bucket> {
+    try {
+      const createBucketConfig: CreateBucketConfiguration | undefined = this.region !== 'us-east-1' ? {
+        LocationConstraint: this.region as any // AWS SDK types are strict about region values
+      } : undefined;
+
+      const command = new CreateBucketCommand({
+        Bucket: bucketName,
+        CreateBucketConfiguration: createBucketConfig
+      });
+
+      await this.s3Client.send(command);
+      
+      return {
+        name: bucketName,
+        creationDate: new Date(),
+      };
+    } catch (error) {
+      console.error(`Error creating bucket ${bucketName}:`, error);
       throw error;
     }
   }

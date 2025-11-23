@@ -16,7 +16,7 @@ export async function archiveTree({
   onFileError?: (error: Error, filePath: string) => void;
   onFileProcessed?: (filePath: string, fileCount: number, total: number) => void;
   prefixPath: AbsPath;
-  scope: AbsPath;
+  scope?: AbsPath;
 }): Promise<ReadableStream<any>> {
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();

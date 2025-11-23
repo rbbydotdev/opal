@@ -19,17 +19,15 @@ export type DestinationModalProps = {
 export function DestinationModal({ currentWorkspace, cmdRef }: DestinationModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { currentView, pushView, popView, resetToDefault, canGoBack } = useViewStack<PublishViewType>("destination");
-  
+
   const {
     destination,
-    preferredNewConnection,
-    preferredDestConnection,
+    preferredConnection,
     remoteAuths,
     handleSubmit,
     loadDestination,
-    updateDestination,
     reset,
-    setPreferredNewConnection,
+    setPreferredConnection,
   } = useDestinationFlow();
 
   const handleClose = useCallback(() => {
@@ -38,16 +36,22 @@ export function DestinationModal({ currentWorkspace, cmdRef }: DestinationModalP
     reset();
   }, [resetToDefault, reset]);
 
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      handleClose();
-    }
-  }, [handleClose]);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        handleClose();
+      }
+    },
+    [handleClose]
+  );
 
-  const handleSubmitAndClose = useCallback(async (data: any) => {
-    await handleSubmit(data);
-    resetToDefault();
-  }, [handleSubmit, resetToDefault]);
+  const handleSubmitAndClose = useCallback(
+    async (data: any) => {
+      await handleSubmit(data);
+      resetToDefault();
+    },
+    [handleSubmit, resetToDefault]
+  );
 
   useImperativeHandle(
     cmdRef,
@@ -74,37 +78,35 @@ export function DestinationModal({ currentWorkspace, cmdRef }: DestinationModalP
           <DialogHeader>
             <DialogTitle>Destination</DialogTitle>
             <DialogDescription className="flex flex-col w-full">
-              <span className="font-bold text-lg text-foreground">
-                {destination?.label || "Manage Destination"}
-              </span>
+              <span className="font-bold text-lg text-foreground">{destination?.label || "Manage Destination"}</span>
               View and edit destination configuration
             </DialogDescription>
           </DialogHeader>
-          
+
           <PublicationModalDestinationContent
             close={handleClose}
             handleSubmit={handleSubmitAndClose}
             remoteAuths={remoteAuths}
             defaultName={currentWorkspace.name}
-            preferredDestConnection={preferredDestConnection}
+            preferredConnection={preferredConnection}
             editDestination={destination}
             onAddConnection={() => pushView("connection")}
+            onEditConnection={() => pushView("connection")}
           />
         </Case>
-        
+
         <Case condition={currentView === "connection"}>
           <DialogHeader>
             <DialogTitle>Add Connection</DialogTitle>
-            <DialogDescription>
-              Connect to a hosting service
-            </DialogDescription>
+            <DialogDescription>Connect to a hosting service</DialogDescription>
           </DialogHeader>
-          
+
           <ConnectionsModalContent
+            connection={null}
             mode="add"
             onClose={() => popView()}
             onSuccess={(auth) => {
-              setPreferredNewConnection({ type: auth.type, source: auth.source });
+              setPreferredConnection({ type: auth.type, source: auth.source });
               popView();
             }}
           />

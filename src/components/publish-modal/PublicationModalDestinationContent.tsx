@@ -1,6 +1,6 @@
+import { AWSDestinationForm } from "@/components/publish-modal/AWSDestinationForm";
 import { CloudflareDestinationForm } from "@/components/publish-modal/CloudflareDestinationForm";
 import { NetlifyDestinationForm } from "@/components/publish-modal/NetlifyDestinationForm";
-import { AWSDestinationForm } from "@/components/publish-modal/AWSDestinationForm";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -14,9 +14,9 @@ import {
   DestinationType,
 } from "@/data/DestinationDAO";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
-import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
+import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Plus, Zap } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import z from "zod";
@@ -25,30 +25,38 @@ export function PublicationModalDestinationContent({
   close,
   handleSubmit,
   defaultName,
-  preferredDestConnection,
+  preferredConnection,
   editDestination,
   remoteAuths,
   onAddConnection,
+  onEditConnection,
 }: {
   close: () => void;
   handleSubmit: (data: any) => void;
   defaultName?: string;
   editDestination?: DestinationDAO | null;
-  preferredDestConnection: RemoteAuthRecord | null;
+  preferredConnection: RemoteAuthJType | PartialRemoteAuthJType | null;
   remoteAuths: RemoteAuthDAO[];
   onAddConnection: () => void;
+  onEditConnection: (connection: RemoteAuthDAO) => void;
 }) {
-  const defaultRemoteAuth = preferredDestConnection || remoteAuths[0];
+  const defaultRemoteAuth = preferredConnection || remoteAuths[0];
   const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
   const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
+
+  const remoteAuthId = editDestination
+    ? editDestination.toJSON().remoteAuth.guid
+    : isRemoteAuthJType(defaultRemoteAuth)
+      ? defaultRemoteAuth.guid
+      : "";
   const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
   const defaultValues = useMemo(
     () => ({
       ...currentSchema._def.defaultValue(),
-      remoteAuthId: editDestination?.toJSON()?.remoteAuth?.guid || defaultRemoteAuth?.guid || "",
+      remoteAuthId,
       ...(editDestination?.toJSON() as DestinationJType<any>),
     }),
-    [currentSchema._def, defaultRemoteAuth?.guid, editDestination]
+    [currentSchema._def, editDestination, remoteAuthId]
   );
 
   const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
@@ -119,6 +127,18 @@ export function PublicationModalDestinationContent({
                 <Button type="button" variant="outline" onClick={onAddConnection}>
                   <Plus />
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const selectedConnection = remoteAuths.find((conn) => conn.guid === field.value);
+                    if (selectedConnection) onEditConnection(selectedConnection);
+                  }}
+                  disabled={!field.value || field.value === ""}
+                  title="Edit Connection"
+                >
+                  <Pencil />
+                </Button>
               </div>
               <FormMessage />
             </FormItem>
@@ -152,7 +172,12 @@ export function PublicationModalDestinationContent({
           />
         )}
         {destinationType === "aws" && (
-          <AWSDestinationForm form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>} />
+          <AWSDestinationForm
+            form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
+            remoteAuth={remoteAuth}
+            destination={null}
+            defaultName={defaultName}
+          />
         )}
 
         <div className="w-full justify-end flex gap-4">

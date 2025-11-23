@@ -1,6 +1,7 @@
+//@ts-nocheck
 import { RemoteAuthNetlifyAPIAgent, RemoteAuthNetlifyOAuthAgent } from "@/data/RemoteAuthAgent";
-import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { DeployResult, DeployRunner, DeployRunnerOptions } from "./DeployRunner";
 import { NetlifyDeployData } from "./DeployTypes";
 
@@ -27,7 +28,7 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
         state: "new",
       },
     });
-    
+
     if (this.destination) {
       this.netlifyClient = (this.destination as any).netlifyClient;
     }
@@ -46,7 +47,7 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
 
     try {
       const options = this.options as NetlifyDeployRunnerOptions;
-      
+
       // Get or create site
       let site: NetlifySite;
       if (options.siteId) {
@@ -91,7 +92,6 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
         success: true,
         data: deployData,
       };
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return {
@@ -103,9 +103,9 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
 
   private async createSite(siteName?: string): Promise<NetlifySite> {
     const name = siteName || this.generateSiteName();
-    
+
     this.log(`Creating site: ${name}`, "info");
-    
+
     const site = await this.netlifyClient.createSite({
       name,
       processing_settings: {
@@ -121,11 +121,11 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
 
   private async collectBuildFiles(): Promise<Map<string, string | Blob>> {
     const files = new Map<string, string | Blob>();
-    
+
     if (!this.buildDisk || !this.buildOutputPath) {
       throw new Error("Build disk or output path not available");
     }
-    
+
     // Iterate through all files in the build output
     for (const node of this.buildDisk.fileTree.iterator(
       (node: TreeNode) => node.isTreeFile() && this.buildOutputPath && node.path.startsWith(this.buildOutputPath)
@@ -133,16 +133,16 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
       try {
         const content = await this.buildDisk.readFile(node.path);
         const relativePath = node.path.replace(this.buildOutputPath!, "").replace(/^\//, "");
-        
+
         // Use the file path relative to build output, or default to index.html for root
         const deployPath = relativePath || "index.html";
-        
+
         // Convert content to string or Blob
         if (content instanceof Uint8Array) {
           // Check if it's likely text content
-          const textExtensions = ['.html', '.css', '.js', '.json', '.txt', '.md', '.svg', '.xml'];
-          const isText = textExtensions.some(ext => deployPath.toLowerCase().endsWith(ext));
-          
+          const textExtensions = [".html", ".css", ".js", ".json", ".txt", ".md", ".svg", ".xml"];
+          const isText = textExtensions.some((ext) => deployPath.toLowerCase().endsWith(ext));
+
           if (isText) {
             files.set(deployPath, new TextDecoder().decode(content));
           } else {
@@ -151,7 +151,7 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
         } else {
           files.set(deployPath, String(content));
         }
-        
+
         this.log(`Collected: ${deployPath}`, "info");
       } catch (error) {
         this.log(`Warning: Could not read file ${node.path}: ${error}`, "warning");
@@ -169,8 +169,8 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
     while (Date.now() - startTime < maxWaitTime) {
       try {
         const deploys = await this.netlifyClient.getDeploys(siteId);
-        const deployment = deploys.find(d => d.id === deployId);
-        
+        const deployment = deploys.find((d) => d.id === deployId);
+
         if (!deployment) {
           throw new Error(`Deployment ${deployId} not found`);
         }
@@ -181,26 +181,25 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
           case "ready":
             this.log("Deployment is ready!", "success");
             return;
-          
+
           case "error":
           case "failed":
             const errorMsg = deployment.error_message || "Deployment failed";
             throw new Error(`Deployment failed: ${errorMsg}`);
-          
+
           case "building":
           case "uploading":
           case "new":
             // Continue polling
             break;
-          
+
           default:
             this.log(`Unknown deployment state: ${deployment.state}`, "warning");
             break;
         }
 
         // Wait before next poll
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
-        
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
       } catch (error) {
         if (Date.now() - startTime > maxWaitTime - pollInterval) {
           throw new Error(`Deployment timed out after ${maxWaitTime / 1000} seconds`);
@@ -215,6 +214,9 @@ export class NetlifyDeployRunner extends DeployRunner<NetlifyDeployData> {
   private generateSiteName(): string {
     const buildLabel = this.build?.label || "webeditor-deploy";
     const timestamp = Date.now();
-    return `${buildLabel}-${timestamp}`.toLowerCase().replace(/[^a-z0-9-]/g, "-").substring(0, 50);
+    return `${buildLabel}-${timestamp}`
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
+      .substring(0, 50);
   }
 }

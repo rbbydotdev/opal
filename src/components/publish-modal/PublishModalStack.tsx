@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, Sele
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { DestinationDAO, DestinationMetaType, DestinationType } from "@/data/DestinationDAO";
-import { RemoteAuthJType, RemoteAuthRecord } from "@/data/RemoteAuthTypes";
+import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useDestinations } from "@/hooks/useDestinations";
@@ -82,11 +82,12 @@ export function PublishModalStack({
   const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } =
     useViewStack<PublishViewType>("publish");
 
-  const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
-    RemoteAuthRecord,
-    "type" | "source"
-  > | null>(null);
-  const [preferredDestConnection, setPreferredDestConnection] = useState<RemoteAuthRecord | null>(null);
+  // const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
+  //   RemoteAuthRecord,
+  //   "type" | "source"
+  // > | null>(null);
+  // const [editConnection, setEditConnection] = useState<RemoteAuthDAO | null>(null);
+  const [preferredConnection, setPreferredConnection] = useState<RemoteAuthJType | PartialRemoteAuthJType | null>(null);
   const handleSubmit = async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
@@ -98,8 +99,7 @@ export function PublishModalStack({
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
-    setPreferredDestConnection(null);
-    setPreferredNewConnection(null);
+    setPreferredConnection(null);
   }, []);
 
   const handlePointerDownOutside = useCallback(() => {
@@ -135,7 +135,7 @@ export function PublishModalStack({
       },
       openDestinationFlow: async ({ destinationId }) => {
         const destination = await DestinationDAO.FetchDAOFromGuid(destinationId, true);
-        setPreferredDestConnection(destination.remoteAuth);
+        setPreferredConnection(destination.remoteAuth);
         setDestination(destination);
         setBuild(NULL_BUILD); // Set a null build for destination-only mode
         setIsOpen(true);
@@ -148,6 +148,8 @@ export function PublishModalStack({
     if (!open) resetToDefault(); // Always reset view when closing
     setIsOpen(open);
   };
+
+  const isEditConnection = isRemoteAuthJType(preferredConnection);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -196,25 +198,35 @@ export function PublishModalStack({
               handleSubmit={handleSubmit}
               remoteAuths={remoteAuths}
               defaultName={currentWorkspace.name}
-              preferredDestConnection={preferredDestConnection}
+              preferredConnection={preferredConnection}
               editDestination={destination}
-              onAddConnection={() => pushView("connection")}
+              onAddConnection={() => {
+                setPreferredConnection(null);
+                pushView("connection");
+              }}
+              onEditConnection={(connection) => {
+                setPreferredConnection(connection);
+                pushView("connection");
+              }}
             />
           </>
         )}
         {/* MARK: view conn */}
         {currentView === "connection" && (
           <ConnectionsModalContent
-            preferredNewConnection={preferredNewConnection}
-            mode="add"
-            onClose={popView}
+            connection={preferredConnection}
+            mode={isEditConnection ? "edit" : "add"}
+            onClose={() => {
+              setPreferredConnection(null);
+              popView();
+            }}
             onSuccess={(remoteAuth) => {
-              setPreferredDestConnection(remoteAuth);
+              setPreferredConnection(remoteAuth);
               replaceView("destination");
             }}
           >
             <DialogHeader>
-              <DialogTitle>Add connection for publish target</DialogTitle>
+              <DialogTitle>{isEditConnection ? "Edit connection" : "Add connection for publish target"}</DialogTitle>
             </DialogHeader>
           </ConnectionsModalContent>
         )}
@@ -223,8 +235,7 @@ export function PublishModalStack({
         {currentView === "publish" && (
           <PublicationModalPublishContent
             //* for jumping to new connection
-            setPreferredNewConnection={setPreferredNewConnection}
-            setPreferredDestConnection={setPreferredDestConnection}
+            setPreferredConnection={setPreferredConnection}
             pushView={pushView}
             //*
             destination={destination}
@@ -250,8 +261,7 @@ export function PublicationModalPublishContent({
   onOpenChange,
   pushView,
   setDestination,
-  setPreferredDestConnection,
-  setPreferredNewConnection,
+  setPreferredConnection,
 }: {
   build: BuildDAO;
   currentWorkspace: Workspace;
@@ -260,9 +270,7 @@ export function PublicationModalPublishContent({
   onOpenChange: (value: boolean) => void;
   pushView: (view: PublishViewType) => void;
   setDestination: (destination: DestinationDAO) => void;
-  // setEditDestination: (destination: DestinationDAO) => void;
-  setPreferredDestConnection: (connection: RemoteAuthRecord) => void;
-  setPreferredNewConnection: (connection: Pick<RemoteAuthJType, "type" | "source">) => void;
+  setPreferredConnection: (connection: RemoteAuthJType | PartialRemoteAuthJType) => void;
 }) {
   const { remoteAuths } = useRemoteAuths();
   const { destinations } = useDestinations();
@@ -286,18 +294,17 @@ export function PublicationModalPublishContent({
   const handleSetDestination = (destId: string) => {
     const selectedRemoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === destId);
     const selectedDestination = destinations.find((d) => d.guid === destId);
-
     //determine which kind was selected
     if (selectedDestination) {
       //destination
       setDestination(selectedDestination);
     } else if (selectedRemoteAuth) {
       //remote auth
-      setPreferredDestConnection(remoteAuths.find((remoteAuth) => remoteAuth.guid === destId)!);
+      setPreferredConnection(remoteAuths.find((remoteAuth) => remoteAuth.guid === destId)!);
       pushView("destination");
     } else if (!selectedRemoteAuth) {
       //needs new connection
-      setPreferredNewConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
+      setPreferredConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
       pushView("connection");
     }
   };

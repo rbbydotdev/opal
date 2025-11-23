@@ -1,4 +1,4 @@
-// Unified API Proxy for GitHub, Netlify, Vercel, and Cloudflare APIs
+// Unified API Proxy for GitHub, Netlify, Vercel, Cloudflare, and AWS S3 APIs
 // Combines all service-specific proxies into one intelligent proxy
 
 const ALLOWED_ORIGINS = ["https://opaledx.com", "http://localhost:3000"];
@@ -8,26 +8,32 @@ const SERVICES = {
   github: {
     hosts: ["github.com", "api.github.com", "*.github.com"],
     oauthEndpoint: "/login/oauth/access_token",
-    clientSecretEnv: "GITHUB_CLIENT_SECRET",
+    clientSecretEnv: "GITHUB_CLIENT_SECRET" as keyof Env,
     oauthEnabled: true,
   },
   netlify: {
     hosts: ["api.netlify.com"],
     oauthEndpoint: "/oauth/token",
-    clientSecretEnv: "NETLIFY_CLIENT_SECRET",
+    clientSecretEnv: "NETLIFY_CLIENT_SECRET" as keyof Env,
     oauthEnabled: true,
   },
   vercel: {
     hosts: ["api.vercel.com"],
     oauthEndpoint: "/oauth/access_token",
-    clientSecretEnv: "VERCEL_CLIENT_SECRET",
+    clientSecretEnv: "VERCEL_CLIENT_SECRET" as keyof Env,
     oauthEnabled: false, // API only, no OAuth support
   },
   cloudflare: {
     hosts: ["api.cloudflare.com"],
     oauthEndpoint: "/client/v4/oauth2/token",
-    clientSecretEnv: "CLOUDFLARE_CLIENT_SECRET",
+    clientSecretEnv: "CLOUDFLARE_CLIENT_SECRET" as keyof Env,
     oauthEnabled: false, // API only, no OAuth support yet
+  },
+  aws: {
+    hosts: ["*.amazonaws.com", "s3.amazonaws.com", "*.s3.amazonaws.com"],
+    oauthEndpoint: null, // Not applicable for AWS API authentication
+    clientSecretEnv: null, // Not applicable for AWS API authentication
+    oauthEnabled: false, // API only, uses access keys
   },
 } as const;
 
@@ -118,7 +124,7 @@ async function handleOAuthTokenExchange(
   const service = SERVICES[serviceName];
 
   // Check if OAuth is enabled for this service and if this is an OAuth token exchange endpoint
-  if (!service.oauthEnabled || path !== service.oauthEndpoint || request.method !== "POST") {
+  if (!service.oauthEnabled || !service.clientSecretEnv || path !== service.oauthEndpoint || request.method !== "POST") {
     return null;
   }
 

@@ -1,7 +1,7 @@
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import type React from "react";
 import { useState } from "react";
-import { useForm, UseFormReturn } from "react-hook-form";
+import { useForm, UseFormReturn, useWatch } from "react-hook-form";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
 import { OAuth } from "@/components/OAuth";
@@ -21,7 +21,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
-import { RemoteAuthJType, RemoteAuthSchemaMap, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import {
+  isRemoteAuthJType,
+  PartialRemoteAuthJType,
+  RemoteAuthJType,
+  RemoteAuthSchemaMap,
+  RemoteAuthSource,
+} from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Case, SwitchCase } from "@/lib/SwitchCase";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,7 +66,7 @@ export function ConnectionsModal({
         <ConnectionsModalContent
           sources={sources}
           mode={mode}
-          editConnection={editConnection}
+          connection={editConnection}
           onSuccess={onSuccess}
           onClose={() => setIsOpen(false)}
         >
@@ -86,8 +92,7 @@ export function ConnectionsModal({
 
 export function ConnectionsModalContent({
   mode,
-  editConnection,
-  preferredNewConnection,
+  connection,
   onSuccess = () => {},
   onClose = () => {},
   className,
@@ -95,8 +100,7 @@ export function ConnectionsModalContent({
   children,
 }: {
   mode: ConnectionsModalMode;
-  editConnection?: RemoteAuthJType;
-  preferredNewConnection?: Pick<RemoteAuthJType, "type" | "source"> | null; //to preload a specific connection type/source
+  connection?: RemoteAuthJType | PartialRemoteAuthJType | null;
   className?: string;
   onSuccess?: (rad: RemoteAuthDAO) => void;
   onClose?: () => void;
@@ -104,17 +108,12 @@ export function ConnectionsModalContent({
   children?: React.ReactNode;
 }) {
   const defaultValues = (
-    preferredNewConnection
+    connection
       ? {
-          ...preferredNewConnection,
-          templateType: typeSource(preferredNewConnection),
+          ...connection,
+          templateType: typeSource(connection),
         }
-      : editConnection
-        ? {
-            ...editConnection,
-            templateType: typeSource(editConnection),
-          }
-        : RemoteAuthTemplates[0]!
+      : RemoteAuthTemplates[0]!
   ) as RemoteAuthFormValues;
 
   const form = useForm<RemoteAuthFormValues>({
@@ -124,7 +123,10 @@ export function ConnectionsModalContent({
     },
   });
 
-  const templateType = form.watch()["templateType"];
+  const templateType = useWatch({
+    control: form.control,
+    name: "templateType",
+  });
   const selectedTemplate = useMemo(
     () => RemoteAuthTemplates.find((connection) => `${connection.type}/${connection.source}` === templateType),
     [templateType]
@@ -136,10 +138,31 @@ export function ConnectionsModalContent({
     onClose();
   };
 
-  const { handleSubmit, reset, error } = useRemoteAuthSubmit(mode, editConnection, (f) => {
+  const { handleSubmit, reset, error } = useRemoteAuthSubmit(mode, connection, (f) => {
     onSuccess(f);
     form.reset();
   });
+
+  const handleSelectChange = (value: string) => {
+    const selectedTemplate = RemoteAuthTemplates.find((t) => typeSource(t) === value);
+    if (selectedTemplate && isRemoteAuthJType(connection)) {
+      form.reset({
+        ...selectedTemplate,
+        guid: connection.guid,
+        name: form.getValues("name") || connection.name,
+        // Merge existing data with new template data, prioritizing existing values
+        data: {
+          ...selectedTemplate.data,
+          ...form.getValues("data"),
+          // ...Object.fromEntries(
+          //   Object.entries(form.getValues("data")).filter(([k]) => k in (selectedTemplate?.data || {}))
+          // ),
+        },
+      });
+    } else {
+      form.reset(selectedTemplate);
+    }
+  };
 
   return (
     <div className={className}>
@@ -160,24 +183,7 @@ export function ConnectionsModalContent({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Connection Type</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={(value: typeof field.value) => {
-                    const selectedTemplate = RemoteAuthTemplates.find((t) => typeSource(t) === value);
-                    if (selectedTemplate && editConnection) {
-                      // Preserve existing connection data when changing template in edit mode
-                      form.reset({
-                        ...selectedTemplate,
-                        guid: editConnection.guid,
-                        name: form.getValues("name") || editConnection.name,
-                        // Merge existing data with new template data, prioritizing existing values
-                        data: { ...selectedTemplate.data, ...form.getValues("data") },
-                      });
-                    } else {
-                      form.reset(selectedTemplate);
-                    }
-                  }}
-                >
+                <Select value={field.value} onValueChange={handleSelectChange}>
                   <SelectTrigger id="connection-type">
                     <SelectValue placeholder="Select a connection type" />
                   </SelectTrigger>

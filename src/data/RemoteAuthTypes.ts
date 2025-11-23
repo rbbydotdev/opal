@@ -117,6 +117,16 @@ export type RemoteAuthJType = {
   tags: string[];
   data: RemoteAuthDataFor<RemoteAuthType>;
 };
+export type PartialRemoteAuthJType = Pick<RemoteAuthJType, "type" | "source">;
+
+export const isParitalRemoteAuthJType = (rad: unknown): rad is PartialRemoteAuthJType => {
+  if (!rad) return false;
+  return !(rad as RemoteAuthJType).name;
+};
+export const isRemoteAuthJType = (rad: unknown): rad is RemoteAuthJType => {
+  if (!rad) return false;
+  return (rad as RemoteAuthJType).name !== undefined;
+};
 
 export type RemoteAuthDataFor<T extends RemoteAuthType> = T extends keyof typeof RemoteAuthSchemaMap
   ? z.infer<(typeof RemoteAuthSchemaMap)[T]>

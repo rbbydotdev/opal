@@ -212,6 +212,7 @@ export function GitRemoteDialog({
           <div className="col-start-1 row-start-1">
             <ConnectionsModalContent
               className={cn("w-full min-w-0", { hidden: !showConnectionModal })}
+              connection={null}
               mode={"add"}
               sources={["github", "custom"]}
               onSuccess={(rad) => {
