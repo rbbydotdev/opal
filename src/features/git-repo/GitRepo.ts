@@ -540,7 +540,6 @@ export class GitRepo {
 
   sync = async ({ emitRemote = true } = {}) => {
     const newInfo = { ...(await this.tryInfo()) };
-    // await this.$p.resolve(newInfo);
     if (deepEqual(this.info, newInfo)) {
       return this.info; // No changes, return current info
     }

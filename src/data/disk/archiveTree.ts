@@ -2,7 +2,7 @@ import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { NotFoundError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
-import { absPath, AbsPath, addTrailingSlash, joinPath } from "@/lib/paths2";
+import { absPath, AbsPath, addTrailingSlash, joinPath, resolveFromRoot } from "@/lib/paths2";
 import * as fflate from "fflate";
 
 export async function archiveTree({
@@ -10,11 +10,13 @@ export async function archiveTree({
   onFileError,
   onFileProcessed,
   prefixPath = absPath("/archive"),
+  scope = absPath("/"),
 }: {
   fileTree: FileTree;
   onFileError?: (error: Error, filePath: string) => void;
   onFileProcessed?: (filePath: string, fileCount: number, total: number) => void;
   prefixPath: AbsPath;
+  scope: AbsPath;
 }): Promise<ReadableStream<any>> {
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
@@ -40,7 +42,10 @@ export async function archiveTree({
     allFiles.map(async (node) => {
       if (node.isTreeFile()) {
         try {
-          const fileStream = new fflate.ZipDeflate(addTrailingSlash(joinPath(prefixPath, node.path)), { level: 9 });
+          const fileStream = new fflate.ZipDeflate(
+            addTrailingSlash(joinPath(prefixPath, resolveFromRoot(scope, node.path))),
+            { level: 9 }
+          );
           zip.add(fileStream);
           void node
             .read()
@@ -55,7 +60,9 @@ export async function archiveTree({
           onFileError?.(e as Error, node.path);
         }
       } else if (node.type === "dir") {
-        const emptyDir = new fflate.ZipPassThrough(addTrailingSlash(joinPath(prefixPath, node.path)));
+        const emptyDir = new fflate.ZipPassThrough(
+          addTrailingSlash(joinPath(prefixPath, resolveFromRoot(scope, node.path)))
+        );
         zip.add(emptyDir);
         emptyDir.push(new Uint8Array(0), true);
       }

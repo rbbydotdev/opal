@@ -87,11 +87,11 @@ export class GitPlaybook {
     return true;
   };
 
-  async initialCommit() {
+  async initialCommit(message = "Initial commit") {
     await this.repo.mustBeInitialized();
     await this.repo.add(".");
     await this.repo.commit({
-      message: "Initial commit",
+      message,
     });
   }
   // async _____initialCommit() {
