@@ -1,3 +1,4 @@
+import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import {
   DiskEvents,
@@ -33,7 +34,7 @@ import {
 import { Mutex } from "async-mutex";
 import { nanoid } from "nanoid";
 
-export abstract class Disk {
+export abstract class Disk<TContext extends DiskContext = DiskContext> {
   static readonly IDENT = Symbol("Disk");
   instanceId = nanoid();
   remote: DiskEventsRemote;
@@ -42,6 +43,7 @@ export abstract class Disk {
   mutex = new Mutex();
   _fs: CommonFileSystem;
   _fileTree: FileTree;
+  protected _context?: TContext;
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
 
@@ -803,6 +805,19 @@ export abstract class Disk {
       }
       throw e;
     }
+  }
+
+  async setDiskContext(newContext: TContext): Promise<void> {
+    const oldContext = this._context;
+
+    if (oldContext) {
+      await oldContext.tearDown();
+    }
+
+    this._context = newContext;
+    this.fs = newContext.fs;
+    this.fileTree = newContext.fileTree;
+    this.mutex = newContext.mutex;
   }
 
   async destroy() {
