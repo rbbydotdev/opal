@@ -11,7 +11,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   build: BuildJType | BuildDAO;
   timestamp: number;
   workspaceId: string;
-  destinationType: "cloudflare" | "netlify" | "github" | "vercel";
+  destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
   destinationName: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: DeployLogLine[];
@@ -91,7 +91,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     workspaceId: string;
     build: BuildDAO;
     data: T;
-    destinationType: "cloudflare" | "netlify" | "github" | "vercel";
+    destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
     destinationName: string;
     guid?: string;
     logs?: DeployLogLine[];

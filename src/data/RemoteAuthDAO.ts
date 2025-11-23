@@ -203,6 +203,15 @@ export function isVercelAPIRemoteAuthDAO(record: RemoteAuthDAO): record is Verce
   return record.type === "api" && record.source === "vercel";
 }
 
+export type AWSAPIRemoteAuthDAO = RemoteAuthDAO & {
+  type: "api";
+  source: "aws";
+  data: RemoteAuthDataFor<"api">;
+};
+export function isAWSAPIRemoteAuthDAO(record: RemoteAuthDAO): record is AWSAPIRemoteAuthDAO {
+  return record.type === "api" && record.source === "aws";
+}
+
 // Union types using generics
 export type GithubRemoteAuthDAO = GithubAPIRemoteAuthDAO | GithubOAuthRemoteAuthDAO | GithubDeviceOAuthRemoteAuthDAO;
 export type NetlifyRemoteAuthDAO = NetlifyAPIRemoteAuthDAO | NetlifyOAuthRemoteAuthDAO;

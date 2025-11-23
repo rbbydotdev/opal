@@ -42,12 +42,22 @@ export interface VercelDeployData extends BaseDeployData {
   alias?: string[];
 }
 
+export interface AWSDeployData extends BaseDeployData {
+  deployUrl: string;
+  bucketName: string;
+  region: string;
+  objectCount?: number;
+  totalSize?: number;
+  lastModified?: string;
+}
+
 // Union type for all deploy data types
 export type DeployData = 
   | CloudflareDeployData 
   | NetlifyDeployData 
   | GitHubPagesDeployData 
   | VercelDeployData
+  | AWSDeployData
   | BaseDeployData; // fallback for unknown types
 
 // Type mapping for deploy types to data
@@ -56,6 +66,7 @@ export interface DeployDataMap {
   netlify: NetlifyDeployData;
   github: GitHubPagesDeployData;
   vercel: VercelDeployData;
+  aws: AWSDeployData;
 }
 
 // Helper type to get data type for a specific deploy type

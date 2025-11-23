@@ -7,7 +7,7 @@ export interface DeployRecord<T = any> {
   timestamp: number;
   build: BuildDAO | BuildJType;
   workspaceId: string;
-  destinationType: "cloudflare" | "netlify" | "github" | "vercel";
+  destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
   destinationName: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: DeployLogLine[];

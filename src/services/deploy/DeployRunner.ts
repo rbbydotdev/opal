@@ -11,7 +11,7 @@ export interface DeployRunnerOptions<T = BaseDeployData> {
   deploy: DeployDAO<T>;
   build: BuildDAO;
   destination: IRemoteAuthAgent;
-  destinationType?: "cloudflare" | "netlify" | "github" | "vercel";
+  destinationType?: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
   destinationName?: string;
   deployLabel?: string;
   data: T;

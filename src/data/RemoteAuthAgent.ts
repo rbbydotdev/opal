@@ -7,12 +7,14 @@ import type {
   NetlifyAPIRemoteAuthDAO,
   NetlifyOAuthRemoteAuthDAO,
   VercelAPIRemoteAuthDAO,
+  AWSAPIRemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
 import { IRemoteAuthAgent, IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { IRemoteAuthAgentSearch } from "@/data/useRemoteSearch";
 import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
 import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { VercelClient, VercelProject } from "@/lib/vercel/VercelClient";
+import { AWSS3Client, AWSS3Bucket } from "@/lib/aws/AWSClient";
 import { Octokit } from "@octokit/core";
 
 export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
@@ -374,4 +376,76 @@ export class RemoteAuthCloudflareAPIAgent implements IRemoteAuthAgent {
   }
 
   constructor(private remoteAuth: CloudflareAPIRemoteAuthDAO) {}
+}
+
+export class RemoteAuthAWSAPIAgent implements IRemoteAuthAgent, IRemoteAuthAgentSearch<AWSS3Bucket> {
+  private _s3Client!: AWSS3Client;
+
+  get s3Client() {
+    return this._s3Client || (this._s3Client = new AWSS3Client(
+      this.remoteAuth.data.apiKey,
+      this.remoteAuth.data.apiSecret!,
+      'us-east-1' // Default region, could be made configurable
+    ));
+  }
+
+  onAuth(): { username: string; password: string } {
+    return {
+      username: this.getUsername(),
+      password: this.getApiToken(),
+    };
+  }
+
+  getUsername(): string {
+    return "aws-api";
+  }
+
+  getApiToken(): string {
+    return this.remoteAuth.data.apiKey;
+  }
+
+  getSecretKey(): string {
+    return this.remoteAuth.data.apiSecret || "";
+  }
+
+  async fetchAll(options?: { signal?: AbortSignal }): Promise<AWSS3Bucket[]> {
+    return this.s3Client.listBuckets();
+  }
+
+  hasUpdates(
+    etag: string | null,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ updated: boolean; newEtag: string | null }> {
+    // S3 doesn't support ETag for bucket lists, so we always return updated=true
+    return Promise.resolve({ updated: true, newEtag: null });
+  }
+
+  async getRemoteUsername(): Promise<string> {
+    // For AWS, we don't have a username concept, so return the access key ID
+    return this.getUsername();
+  }
+
+  createBucket = (bucketName: string, { signal }: { signal?: AbortSignal } = {}) => {
+    // S3 bucket creation would be implemented here
+    console.warn("AWS S3 bucket creation not implemented");
+    throw new Error("AWS S3 bucket creation not implemented");
+  };
+
+  async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
+    try {
+      const isValid = await this.s3Client.verifyCredentials();
+      if (isValid) {
+        return { status: "success" };
+      } else {
+        return { status: "error", msg: "AWS credentials validation failed" };
+      }
+    } catch (error: any) {
+      return {
+        status: "error",
+        msg: `AWS API test failed: ${error.message || "Unknown error"}`,
+      };
+    }
+  }
+
+  constructor(private remoteAuth: AWSAPIRemoteAuthDAO) {}
 }
