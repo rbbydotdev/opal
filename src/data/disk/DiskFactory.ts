@@ -1,23 +1,17 @@
-import { DexieFsDbDisk } from "@/data/disk/DexieFsDbDisk";
 import { Disk } from "@/data/disk/Disk";
-import { MemDisk } from "@/data/disk/MemDisk";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { OpFsDisk } from "@/data/disk/OpFsDisk";
 import { DiskJType } from "@/data/DiskType";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
-import { LocalStorageFsDisk } from "@/data/fs/LocalStorageFsDisk";
 import { IndexedDbDisk } from "@/data/IndexedDbDisk";
 import { NullDisk } from "@/data/NullDisk";
 import { TreeDirRoot } from "@/lib/FileTree/TreeNode";
 
 const DiskMap = {
   [IndexedDbDisk.type]: IndexedDbDisk,
-  [MemDisk.type]: MemDisk,
-  [DexieFsDbDisk.type]: DexieFsDbDisk,
   [NullDisk.type]: NullDisk,
   [OpFsDisk.type]: OpFsDisk,
   [OpFsDirMountDisk.type]: OpFsDirMountDisk,
-  [LocalStorageFsDisk.type]: LocalStorageFsDisk,
 };
 
 // export { DefaultDiskType };
