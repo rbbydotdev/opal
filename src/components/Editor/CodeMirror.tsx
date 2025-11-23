@@ -11,6 +11,7 @@ import { enhancedMarkdownExtension } from "@/components/Editor/markdownHighlight
 import { canPrettifyMime, prettifyMime } from "@/components/Editor/prettifyMime";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { GitConflictNotice } from "@/components/GitConflictNotice";
+import { SourceMimeType } from "@/components/SourceEditor/SourceMimeType";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -93,10 +94,7 @@ export const CodeMirrorEditor = ({
   enableConflictResolution = true,
 }: {
   hasConflicts: boolean;
-  mimeType: Extract<
-    OpalMimeType,
-    "text/css" | "text/plain" | "text/markdown" | "text/x-ejs" | "text/html" | "text/x-mustache" | "application/json"
-  >;
+  mimeType: SourceMimeType;
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;

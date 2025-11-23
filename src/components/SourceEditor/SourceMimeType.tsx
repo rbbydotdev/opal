@@ -2,25 +2,25 @@ import { OpalMimeType } from "@/lib/fileType";
 
 export type SourceMimeType = Extract<
   OpalMimeType,
-  | "text/css"
-  | "text/plain"
-  | "text/markdown"
-  | "text/html"
-  | "application/xml"
-  | "text/x-mustache"
-  | "text/x-ejs"
-  | "application/json"
   | "application/javascript"
+  | "application/json"
+  | "application/xml"
+  | "text/css"
+  | "text/html"
+  | "text/markdown"
+  | "text/plain"
+  | "text/x-ejs"
+  | "text/x-mustache"
 >;
 export const isSourceMimeType = (mimeType: string): mimeType is SourceMimeType =>
   [
-    "text/css",
-    "application/json",
     "application/javascript",
-    "text/plain",
-    "text/markdown",
+    "application/json",
     "application/xml",
+    "text/css",
     "text/html",
-    "text/x-mustache",
+    "text/markdown",
+    "text/plain",
     "text/x-ejs",
+    "text/x-mustache",
   ].includes(mimeType);

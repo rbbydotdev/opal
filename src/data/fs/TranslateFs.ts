@@ -1,6 +1,6 @@
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { isErrorWithCode } from "@/lib/errors";
-import { AbsPath, absPath, joinPath, relPath, resolveFromRoot } from "@/lib/paths2";
+import { AbsPath, absPath, joinPath, relPath, stringifyEntry } from "@/lib/paths2";
 
 function translateFs(
   fs: CommonFileSystem,
@@ -9,7 +9,7 @@ function translateFs(
   const newFs: CommonFileSystem = {} as CommonFileSystem;
   const translateFn =
     typeof translate === "function" ? translate : (path: AbsPath | string) => joinPath(absPath(translate), path);
-  
+
   // Handle all methods that take a path as first argument
   for (const method of [
     "readdir",
@@ -33,12 +33,12 @@ function translateFs(
       };
     }
   }
-  
+
   // Special handling for rename which takes two path arguments
   newFs["rename"] = (oldPath: string, newPath: string) => {
     return fs.rename(translateFn(oldPath), translateFn(newPath));
   };
-  
+
   return newFs;
 }
 
@@ -112,11 +112,8 @@ export class TranslateFs implements CommonFileSystem {
 
 export class NamespacedFs2 extends TranslateFs {
   namespace: AbsPath;
-  
-  constructor(
-    fs: CommonFileSystem,
-    namespace: AbsPath | string
-  ) {
+
+  constructor(fs: CommonFileSystem, namespace: AbsPath | string) {
     const normalizedNamespace = typeof namespace === "string" ? absPath(namespace) : namespace;
     super(fs, relPath(normalizedNamespace));
     this.namespace = normalizedNamespace;
@@ -144,25 +141,25 @@ export class MountingFS implements CommonFileSystem {
 
   mount(mountPath: AbsPath | string, filesystem: CommonFileSystem) {
     const normalizedMountPath = typeof mountPath === "string" ? absPath(mountPath) : mountPath;
-    
+
     // Remove existing mount at the same path
-    this.mounts = this.mounts.filter(mount => mount.mountPath !== normalizedMountPath);
-    
+    this.mounts = this.mounts.filter((mount) => mount.mountPath !== normalizedMountPath);
+
     // Add new mount
     this.mounts.push({ mountPath: normalizedMountPath, filesystem });
-    
+
     // Sort by path length (descending) so longer paths are matched first
     this.mounts.sort((a, b) => b.mountPath.length - a.mountPath.length);
   }
 
   unmount(mountPath: AbsPath | string) {
     const normalizedMountPath = typeof mountPath === "string" ? absPath(mountPath) : mountPath;
-    this.mounts = this.mounts.filter(mount => mount.mountPath !== normalizedMountPath);
+    this.mounts = this.mounts.filter((mount) => mount.mountPath !== normalizedMountPath);
   }
 
   private findMount(path: string): { filesystem: CommonFileSystem; relativePath: string } {
     const normalizedPath = absPath(path);
-    
+
     // Check for mounted filesystems (longest paths first)
     for (const mount of this.mounts) {
       if (normalizedPath.startsWith(mount.mountPath)) {
@@ -223,13 +220,80 @@ export class MountingFS implements CommonFileSystem {
   async rename(oldPath: string, newPath: string): Promise<void> {
     const oldMount = this.findMount(oldPath);
     const newMount = this.findMount(newPath);
-    
-    // Check if both paths are on the same filesystem
-    if (oldMount.filesystem !== newMount.filesystem) {
-      throw new Error("Cannot rename across different mounted filesystems");
+
+    if (oldMount.filesystem === newMount.filesystem) {
+      // Same filesystem - use native rename
+      return oldMount.filesystem.rename(oldMount.relativePath, newMount.relativePath);
+    } else {
+      // Cross-mount rename: copy + delete
+      try {
+        // First, check if source exists by attempting to stat it
+        await oldMount.filesystem.stat(oldMount.relativePath);
+
+        // Check if source is a directory - we need to handle this recursively
+        const sourceStats = await oldMount.filesystem.stat(oldMount.relativePath);
+        if (sourceStats.isDirectory()) {
+          await this.copyDirectoryRecursive(oldMount, newMount);
+        } else {
+          // Copy file
+          const data = await oldMount.filesystem.readFile(oldMount.relativePath);
+          await newMount.filesystem.writeFile(newMount.relativePath, data);
+        }
+
+        // Delete source after successful copy
+        if (sourceStats.isDirectory()) {
+          await oldMount.filesystem.rmdir(oldMount.relativePath, { recursive: true });
+        } else {
+          await oldMount.filesystem.unlink(oldMount.relativePath);
+        }
+      } catch (error) {
+        // If copy+delete fails, try to clean up any partial copy
+        try {
+          const targetStats = await newMount.filesystem.stat(newMount.relativePath);
+          if (targetStats.isDirectory()) {
+            await newMount.filesystem.rmdir(newMount.relativePath, { recursive: true });
+          } else {
+            await newMount.filesystem.unlink(newMount.relativePath);
+          }
+        } catch {
+          // Ignore cleanup errors
+        }
+        throw error;
+      }
     }
-    
-    return oldMount.filesystem.rename(oldMount.relativePath, newMount.relativePath);
+  }
+
+  private async copyDirectoryRecursive(
+    sourceMount: { filesystem: CommonFileSystem; relativePath: string },
+    targetMount: { filesystem: CommonFileSystem; relativePath: string }
+  ): Promise<void> {
+    // Create target directory
+    await targetMount.filesystem.mkdir(targetMount.relativePath, { recursive: true, mode: 0o755 });
+
+    // Read source directory contents
+    const entries = await sourceMount.filesystem.readdir(sourceMount.relativePath);
+
+    for (const entry of entries) {
+      const entryName = stringifyEntry(entry);
+      const sourcePath =
+        sourceMount.relativePath === "/" ? `/${entryName}` : `${sourceMount.relativePath}/${entryName}`;
+      const targetPath =
+        targetMount.relativePath === "/" ? `/${entryName}` : `${targetMount.relativePath}/${entryName}`;
+
+      const entryStats = await sourceMount.filesystem.stat(sourcePath);
+
+      if (entryStats.isDirectory()) {
+        // Recursively copy subdirectory
+        await this.copyDirectoryRecursive(
+          { filesystem: sourceMount.filesystem, relativePath: sourcePath },
+          { filesystem: targetMount.filesystem, relativePath: targetPath }
+        );
+      } else {
+        // Copy file
+        const data = await sourceMount.filesystem.readFile(sourcePath);
+        await targetMount.filesystem.writeFile(targetPath, data);
+      }
+    }
   }
 
   async unlink(path: string): Promise<void> {
@@ -273,6 +337,6 @@ export class MountingFS implements CommonFileSystem {
 
   isMounted(path: AbsPath | string): boolean {
     const normalizedPath = typeof path === "string" ? absPath(path) : path;
-    return this.mounts.some(mount => mount.mountPath === normalizedPath);
+    return this.mounts.some((mount) => mount.mountPath === normalizedPath);
   }
 }

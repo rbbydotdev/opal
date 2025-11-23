@@ -194,13 +194,8 @@ export class TreeNode {
     }
   }
 
-  // async *asyncWalkIterator(node: TreeNode = this, depth = 0): AsyncIterableIterator<TreeNode> {
-  //   for (const childNode of Object.values((node as TreeDir).children ?? {})) {
-  //     yield* await childNode.asyncWalkIterator(childNode, depth + 1);
-  //   }
-  // }
-
-  iterator(filterIn?: (n: TreeNode) => boolean): IterableIterator<this> {
+  iterator(filterIn?: (n: TreeNode) => boolean): IterableIterator<TreeNode> {
+    // iterator(filterIn?: (n: TreeNode) => boolean): IterableIterator<this> {
     function* gen(node: TreeNode): IterableIterator<unknown> {
       if (!filterIn || filterIn(node)) yield node;
       // if (node.isTreeFile()) return node;
