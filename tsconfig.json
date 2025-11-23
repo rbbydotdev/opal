@@ -29,7 +29,7 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "*.ts", "*.d.ts"],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "./tests/**/*.ts", "*.ts", "*.d.ts"],
   "exclude": [
     "proxies/**/*.ts",
     "proxies",
@@ -41,7 +41,6 @@
     "./dist/**",
     "dist",
     "src/dist/**",
-    "**/*/*.test.ts",
     "src/app/sand/**",
     "node_modules",
     "node_modules/**/*",
