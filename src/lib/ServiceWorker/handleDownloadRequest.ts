@@ -1,3 +1,4 @@
+import { archiveTree } from "@/data/disk/archiveTree";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
@@ -9,6 +10,34 @@ import * as fflate from "fflate";
 import { SWWStore } from "./SWWStore";
 
 export async function handleDownloadRequest(workspaceName: string): Promise<Response> {
+  const workspace = await SWWStore.tryWorkspace(workspaceName);
+  await workspace.refreshDisk();
+  const fileTree = workspace.getDisk().fileTree;
+
+  signalRequest({ type: REQ_SIGNAL.START });
+  const readable = await archiveTree({
+    fileTree,
+    prefixPath: absPath(strictPathname(workspaceName)),
+    onFileError: (error, filePath) => {
+      console.error(`Error processing file ${filePath}:`, error);
+    },
+    onFileProcessed: (filePath, fileCount, total) => {
+      console.log(`Processed file: ${filePath}. Remaining: ${fileCount}/${total}`);
+      if (fileCount === 0) {
+        console.log(`All files processed for workspace: ${workspace.name}`);
+        signalRequest({ type: REQ_SIGNAL.END });
+      }
+    },
+  });
+
+  return new Response(readable, {
+    headers: {
+      "Content-Type": "application/zip",
+      "Content-Disposition": `attachment; filename="${workspace.name}.zip"`,
+    },
+  });
+}
+export async function handleDownloadRequest___OLD(workspaceName: string): Promise<Response> {
   try {
     const workspaceDirName = absPath(strictPathname(workspaceName));
     const { readable, writable } = new TransformStream();

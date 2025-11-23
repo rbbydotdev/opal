@@ -1,9 +1,9 @@
-import { CommonFileSystem } from "@/data/FileSystemTypes";
+import { CommonFileSystem, NullFileSystem } from "@/data/FileSystemTypes";
 import { SpecialDirsPaths } from "@/data/SpecialDirsPaths";
+import { errorCode, NotFoundError } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";
 import {
   AbsPath,
-  RelPath,
   absPath,
   basename,
   dirname,
@@ -20,6 +20,7 @@ import {
   isText,
   joinPath,
   prefix,
+  RelPath,
   relPath,
   strictPrefix,
 } from "@/lib/paths2";
@@ -103,7 +104,9 @@ export class TreeNode {
   }
   siblings(filterIn: ((node: TreeNode) => boolean) | AbsPath[] = () => true): TreeNode[] {
     const filterFn = Array.isArray(filterIn) ? (node: TreeNode) => filterIn.includes(node.path) : filterIn;
-    return this.parent ? Object.values(this.parent.children).filter((child) => child !== this && filterFn(child)) : [];
+    return this.parent
+      ? Object.values(this.parent.children).filter((child) => child.path !== this.path && filterFn(child))
+      : [];
   }
   closestDirPath(): AbsPath {
     return this.isTreeDir() ? this.path : dirname(this.path);
@@ -279,7 +282,6 @@ export class TreeNode {
     depth,
     source,
     virtualContent,
-    fs,
   }: {
     type: "dir" | "file";
     dirname: AbsPath | string;
@@ -289,7 +291,6 @@ export class TreeNode {
     depth?: number;
     source?: AbsPath;
     virtualContent?: string;
-    fs: CommonFileSystem;
   }) {
     this.type = type;
     this._dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
@@ -299,6 +300,7 @@ export class TreeNode {
     this.parent = parent;
     this.source = source;
     this.virtualContent = virtualContent;
+    // this._fs = new WeakRef(fs);
   }
 
   remove() {
@@ -633,7 +635,6 @@ export function isTreeDir(node: TreeNode): node is TreeDir {
 }
 export class TreeFile extends TreeNode {
   type = "file" as const;
-
   constructor({
     dirname,
     basename,
@@ -642,18 +643,48 @@ export class TreeFile extends TreeNode {
     parent,
     source,
     virtualContent,
+    fs = NullFileSystem,
   }: {
     dirname: AbsPath;
     basename: RelPath;
     path: AbsPath;
-
     depth: number;
     parent: TreeDir | null;
     source?: AbsPath;
     virtualContent?: string;
+    fs?: CommonFileSystem;
   }) {
     super({ type: "file", parent, dirname, basename, path, depth, source, virtualContent });
+    this._fs = new WeakRef(fs);
   }
+
+  private _fs: WeakRef<CommonFileSystem>;
+
+  get fs(): CommonFileSystem {
+    const fs = this._fs?.deref();
+    if (!fs) {
+      throw new ReferenceError(`File system reference has been garbage collected for node: ${this.path}`);
+    }
+    return fs;
+  }
+
+  async read(): Promise<string | Uint8Array> {
+    try {
+      return await this.fs.readFile(this.path);
+    } catch (e) {
+      if (errorCode(e).code === "ENOENT") {
+        throw new NotFoundError(`File not found: ${this.path}`);
+      }
+      throw e;
+    }
+  }
+
+  async write<T extends string | Uint8Array>(filePath: AbsPath, contents: T | Promise<T>) {
+    const awaitedContents = contents instanceof Promise ? await contents : contents;
+    await this.fs.writeFile(filePath, awaitedContents, { encoding: "utf8", mode: 0o777 });
+    return;
+  }
+
   static FromJSON(json: TreeFileJType, parent: TreeDir | null = null): TreeFile {
     return new TreeFile({
       dirname: absPath(json.dirname),
@@ -671,10 +702,6 @@ function tagSource<T extends TreeNode>(this: T, sourceNode: TreeNode) {
   this.source = sourceNode.path;
   return this;
 }
-// function tagContent<T extends TreeNode>(this: T, content?: string) {
-//   if (content != undefined) this.virtualContent = content;
-//   return this;
-// }
 
 export class VirtualTreeNode extends TreeNode {
   isVirtual = true;
