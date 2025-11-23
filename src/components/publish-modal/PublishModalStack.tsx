@@ -88,6 +88,7 @@ export function PublishModalStack({
   // > | null>(null);
   // const [editConnection, setEditConnection] = useState<RemoteAuthDAO | null>(null);
   const [preferredConnection, setPreferredConnection] = useState<RemoteAuthJType | PartialRemoteAuthJType | null>(null);
+  console.log(">>>> preferredConnection:", preferredConnection);
   const handleSubmit = async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
@@ -200,14 +201,8 @@ export function PublishModalStack({
               defaultName={currentWorkspace.name}
               preferredConnection={preferredConnection}
               editDestination={destination}
-              onAddConnection={() => {
-                setPreferredConnection(null);
-                pushView("connection");
-              }}
-              onEditConnection={(connection) => {
-                setPreferredConnection(connection);
-                pushView("connection");
-              }}
+              setPreferredConnection={setPreferredConnection}
+              pushView={pushView}
             />
           </>
         )}
@@ -300,7 +295,8 @@ export function PublicationModalPublishContent({
       setDestination(selectedDestination);
     } else if (selectedRemoteAuth) {
       //remote auth
-      setPreferredConnection(remoteAuths.find((remoteAuth) => remoteAuth.guid === destId)!);
+      setPreferredConnection(selectedRemoteAuth);
+      console.log(">>>> selected remote auth", selectedRemoteAuth);
       pushView("destination");
     } else if (!selectedRemoteAuth) {
       //needs new connection

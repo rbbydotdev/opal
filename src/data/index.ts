@@ -33,7 +33,7 @@ export class ClientIndexedDb extends Dexie {
       deployments: "guid,buildId,timestamp,workspaceId,destinationType",
       thumbnails: "[workspaceId+path],guid,path,workspaceId",
       historyDocs: "++edit_id,id,parent,workspaceId",
-      destinations: "guid,type,timestamp,remoteAuthGuid",
+      destinations: "label,guid,type,timestamp,remoteAuthGuid",
     });
 
     applyEncryptionMiddleware<ClientIndexedDb>(

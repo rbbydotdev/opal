@@ -65,6 +65,8 @@ export function DestinationModal({ currentWorkspace, cmdRef }: DestinationModalP
     [loadDestination, handleClose]
   );
 
+  console.log(123);
+
   return (
     <ModalShell
       isOpen={isOpen}
@@ -90,8 +92,8 @@ export function DestinationModal({ currentWorkspace, cmdRef }: DestinationModalP
             defaultName={currentWorkspace.name}
             preferredConnection={preferredConnection}
             editDestination={destination}
-            onAddConnection={() => pushView("connection")}
-            onEditConnection={() => pushView("connection")}
+            pushView={pushView}
+            setPreferredConnection={setPreferredConnection}
           />
         </Case>
 
