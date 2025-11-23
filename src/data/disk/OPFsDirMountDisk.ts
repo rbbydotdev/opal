@@ -1,10 +1,37 @@
 import { Disk } from "@/data/disk/Disk";
+import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
-import { NullDiskContext } from "@/data/disk/NullDiskContext";
-import { OpFsDirMountDiskContext } from "@/data/disk/OpFsDirMountDiskContext";
 import { DiskType } from "@/data/DiskType";
+import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { DirectoryHandleStore } from "@/data/fs/DirectoryHandleStore";
+import { MutexFs } from "@/data/fs/MutexFs";
+import { NullDiskContext } from "@/data/NullDisk";
+import { PatchedDirMountOPFS } from "@/data/PatchedDirMountOPFS";
+import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
+import { Mutex } from "async-mutex";
+import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
+
+export class OpFsDirMountDiskContext extends DiskContext {
+  constructor(fs: CommonFileSystem, fileTree: FileTree, mutex: Mutex) {
+    super(fs, fileTree, mutex);
+  }
+
+  static createFromHandle(guid: string, handle: FileSystemDirectoryHandle): OpFsDirMountDiskContext {
+    const mutex = new Mutex();
+    const patchedDirMountOPFS = new PatchedDirMountOPFS(
+      Promise.resolve(handle) as unknown as Promise<IFileSystemDirectoryHandle>
+    );
+    const mutexFs = new MutexFs(patchedDirMountOPFS, mutex);
+    const fileTree = new FileTree(patchedDirMountOPFS, guid, mutex);
+
+    return new OpFsDirMountDiskContext(mutexFs, fileTree, mutex);
+  }
+
+  async tearDown(): Promise<void> {
+    // Clean up any resources if needed
+  }
+}
 
 export class OpFsDirMountDisk extends Disk<OpFsDirMountDiskContext> {
   static type: DiskType = "OpFsDirMountDisk";
