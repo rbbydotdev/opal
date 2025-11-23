@@ -1,6 +1,6 @@
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { isErrorWithCode } from "@/lib/errors";
-import { AbsPath, absPath, decodePath, joinPath, relPath } from "@/lib/paths2";
+import { AbsPath, absPath, joinPath, relPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";
 
@@ -11,7 +11,7 @@ export class NamespacedFs implements CommonFileSystem {
     namespace: AbsPath | string
   ) {
     if (typeof namespace === "string") {
-      this.namespace = absPath(decodePath(namespace));
+      this.namespace = absPath(namespace);
     } else {
       this.namespace = namespace;
     }

@@ -168,6 +168,7 @@
     "thememirror": "^2.0.1",
     "tsx": "^4.20.3",
     "unified": "^11.0.5",
+    "unionfs": "^4.6.0",
     "unist": "^0.0.1",
     "unist-util-visit": "^5.0.0",
     "vaul": "^1.1.2",

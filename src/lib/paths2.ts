@@ -1,7 +1,7 @@
 export type AbsPath = Brand<string, "AbsolutePath">;
 export type RelPath = Brand<string, "RelativePath">;
 
-import { isImageType } from "@/lib/fileType";
+import { isImageType, StringMimeTypes } from "@/lib/fileType";
 import pathModule from "path";
 import { isMarkdownType } from "./fileType";
 import { getMimeType } from "./mimeType";
@@ -161,6 +161,10 @@ export function isMarkdown(path: AbsPath | RelPath | string | { toString(): stri
 }
 export function isText(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))).startsWith("text/");
+}
+export function isStringish(path: AbsPath | RelPath | string | { toString(): string }): boolean {
+  const mimeType = getMimeType(relPath(String(path)));
+  return StringMimeTypes.includes(mimeType);
 }
 export function isEjs(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/x-ejs";
