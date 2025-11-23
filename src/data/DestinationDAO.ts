@@ -114,6 +114,9 @@ export class CloudflareDestination extends DestinationDAO<CloudflareDestinationD
 type NetlifyDestinationData = z.infer<(typeof DestinationSchemaMap)["netlify"]>["meta"];
 export class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {}
 
+type AWSDestinationData = z.infer<(typeof DestinationSchemaMap)["aws"]>["meta"];
+export class AWSDestination extends DestinationDAO<AWSDestinationData> {}
+
 const RandomTag = (tag: string) =>
   `My-${tag}-${RandomSlugWords(1)}-${`${Math.trunc(Math.random() * 100)}`.padStart(3, "0")}`;
 
@@ -176,6 +179,20 @@ export const DestinationSchemaMap = {
       label: RandomTag("Github"),
       meta: { repository: "", branch: "" },
     })),
+  aws: z
+    .object({
+      remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
+      label: z.string().min(1, "Label is required"),
+      meta: z.object({
+        bucketName: z.string().min(1, "Bucket name is required"),
+        region: z.string().min(1, "Region is required"),
+      }),
+    })
+    .default(() => ({
+      remoteAuthId: "",
+      label: RandomTag("AWS"),
+      meta: { bucketName: "", region: "us-east-1" },
+    })),
   custom: z
     .object({
       remoteAuthId: z.string().default(""),
@@ -194,7 +211,7 @@ export const DestinationSchemaMap = {
 // Unified form schema for destination creation
 export const DestinationFormSchema = z
   .object({
-    destinationType: z.enum(["cloudflare", "netlify", "github", "vercel", "none"]),
+    destinationType: z.enum(["cloudflare", "netlify", "github", "vercel", "aws", "none"]),
     remoteAuthId: z.string(),
     label: z.string(),
     meta: z.object({
@@ -206,6 +223,9 @@ export const DestinationFormSchema = z
       // GitHub fields
       repository: z.string().optional(),
       branch: z.string().optional(),
+      // AWS fields
+      bucketName: z.string().optional(),
+      region: z.string().optional(),
     }),
   })
   .refine(
@@ -225,6 +245,8 @@ export const DestinationFormSchema = z
           return !!data.meta.siteName;
         case "github":
           return !!(data.meta.repository && data.meta.branch);
+        case "aws":
+          return !!(data.meta.bucketName && data.meta.region);
         default:
           return false;
       }

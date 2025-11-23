@@ -1,5 +1,6 @@
 import { CloudflareDestinationForm } from "@/components/publish-modal/CloudflareDestinationForm";
 import { NetlifyDestinationForm } from "@/components/publish-modal/NetlifyDestinationForm";
+import { AWSDestinationForm } from "@/components/publish-modal/AWSDestinationForm";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -149,6 +150,9 @@ export function PublicationModalDestinationContent({
             remoteAuth={remoteAuth}
             destination={null}
           />
+        )}
+        {destinationType === "aws" && (
+          <AWSDestinationForm form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>} />
         )}
 
         <div className="w-full justify-end flex gap-4">
