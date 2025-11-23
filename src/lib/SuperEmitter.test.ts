@@ -1,3 +1,4 @@
+import { TestSuite } from "../../tests/TestSuite";
 import { SuperEmitter } from "./TypeEmitter";
 
 // Test event types
@@ -6,53 +7,6 @@ type TestEvents = {
   data: { count: number };
   signal: undefined;
 };
-
-// Simple test framework
-class TestSuite {
-  private tests: Array<{ name: string; fn: () => void | Promise<void> }> = [];
-  private passed = 0;
-  private failed = 0;
-
-  test(name: string, fn: () => void | Promise<void>) {
-    this.tests.push({ name, fn });
-  }
-
-  assert(condition: boolean, message: string) {
-    if (!condition) {
-      throw new Error(`Assertion failed: ${message}`);
-    }
-  }
-
-  assertEqual<T>(actual: T, expected: T, message?: string) {
-    if (actual !== expected) {
-      throw new Error(
-        `Assertion failed: ${message || "Values not equal"}\nExpected: ${expected}\nActual: ${actual}`
-      );
-    }
-  }
-
-  async run() {
-    console.log("🧪 Running SuperEmitter tests...\n");
-
-    for (const { name, fn } of this.tests) {
-      try {
-        await fn();
-        console.log(`✅ ${name}`);
-        this.passed++;
-      } catch (error) {
-        console.log(`❌ ${name}`);
-        console.log(`   Error: ${error instanceof Error ? error.message : String(error)}\n`);
-        this.failed++;
-      }
-    }
-
-    console.log(`\n📊 Results: ${this.passed} passed, ${this.failed} failed`);
-    
-    if (this.failed > 0) {
-      process.exit(1);
-    }
-  }
-}
 
 // Test suite
 const suite = new TestSuite();
@@ -117,7 +71,7 @@ suite.test("should work with .once()", () => {
 
   emitter.emit("message", "test1");
   emitter.emit("message", "test2");
-  
+
   suite.assertEqual(callCount, 1, "Should only receive one message with .once()");
 
   unsub(); // Should be safe to call even after auto-unsub
@@ -125,7 +79,7 @@ suite.test("should work with .once()", () => {
 
 suite.test("should support awaitEvent", async () => {
   const emitter = new SuperEmitter<TestEvents>();
-  
+
   // Emit after a short delay
   setTimeout(() => {
     emitter.emit("data", { count: 42 });
@@ -192,7 +146,7 @@ suite.test("should handle complex event payloads", () => {
 
   const testData = { count: 123 };
   emitter.emit("data", testData);
-  
+
   suite.assert(received !== null, "Should receive data");
   suite.assertEqual(received!.count, 123, "Should receive correct data structure");
 });

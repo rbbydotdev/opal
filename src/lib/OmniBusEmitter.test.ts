@@ -1,4 +1,5 @@
-import { OmniBusEmitter, CreateSuperTypedEmitterClass } from "./TypeEmitter";
+import { TestSuite } from "../../tests/TestSuite";
+import { CreateSuperTypedEmitterClass, OmniBusEmitter } from "./TypeEmitter";
 
 // Test event types for different emitters
 type UserEvents = {
@@ -19,60 +20,13 @@ type FileEvents = {
 
 // Create custom emitter classes with IDENT symbols
 class UserEmitter extends CreateSuperTypedEmitterClass<UserEvents>() {
-  static readonly IDENT = Symbol('UserEmitter');
+  static readonly IDENT = Symbol("UserEmitter");
 }
 class SystemEmitter extends CreateSuperTypedEmitterClass<SystemEvents>() {
-  static readonly IDENT = Symbol('SystemEmitter');
+  static readonly IDENT = Symbol("SystemEmitter");
 }
 class FileEmitter extends CreateSuperTypedEmitterClass<FileEvents>() {
-  static readonly IDENT = Symbol('FileEmitter');
-}
-
-// Simple test framework (reusing the same one)
-class TestSuite {
-  private tests: Array<{ name: string; fn: () => void | Promise<void> }> = [];
-  private passed = 0;
-  private failed = 0;
-
-  test(name: string, fn: () => void | Promise<void>) {
-    this.tests.push({ name, fn });
-  }
-
-  assert(condition: boolean, message: string) {
-    if (!condition) {
-      throw new Error(`Assertion failed: ${message}`);
-    }
-  }
-
-  assertEqual<T>(actual: T, expected: T, message?: string) {
-    if (actual !== expected) {
-      throw new Error(
-        `Assertion failed: ${message || "Values not equal"}\nExpected: ${expected}\nActual: ${actual}`
-      );
-    }
-  }
-
-  async run() {
-    console.log("🧪 Running OmniBusEmitter tests...\n");
-
-    for (const { name, fn } of this.tests) {
-      try {
-        await fn();
-        console.log(`✅ ${name}`);
-        this.passed++;
-      } catch (error) {
-        console.log(`❌ ${name}`);
-        console.log(`   Error: ${error instanceof Error ? error.message : String(error)}\n`);
-        this.failed++;
-      }
-    }
-
-    console.log(`\n📊 Results: ${this.passed} passed, ${this.failed} failed`);
-    
-    if (this.failed > 0) {
-      process.exit(1);
-    }
-  }
+  static readonly IDENT = Symbol("FileEmitter");
 }
 
 // Test suite
@@ -100,7 +54,7 @@ suite.test("should connect and retrieve emitters by symbol", () => {
 suite.test("should forward events from connected emitters to omnibus", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
-  
+
   // Connect the emitter using symbol
   omnibus.connect(UserEmitter.IDENT, userEmitter);
 
@@ -171,9 +125,9 @@ suite.test("should support wildcard listening on omnibus", () => {
 
   // Listen to all events using wildcard
   omnibus.on("*", (payload) => {
-    wildcardEvents.push({ 
-      eventName: payload.eventName as string, 
-      payload: { ...payload, eventName: undefined } // Remove eventName for comparison
+    wildcardEvents.push({
+      eventName: payload.eventName as string,
+      payload: { ...payload, eventName: undefined }, // Remove eventName for comparison
     });
   });
 
@@ -193,9 +147,9 @@ suite.test("should support wildcard listening on omnibus", () => {
 suite.test("should disconnect emitters properly", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
-  
+
   omnibus.connect(UserEmitter.IDENT, userEmitter);
-  
+
   let eventCount = 0;
   omnibus.on("login", () => eventCount++);
 
@@ -205,7 +159,7 @@ suite.test("should disconnect emitters properly", () => {
 
   // Disconnect
   omnibus.disconnect(UserEmitter.IDENT);
-  
+
   // Verify it's disconnected
   const retrieved = omnibus.get(UserEmitter.IDENT);
   suite.assert(retrieved === undefined, "Should not retrieve disconnected emitter");
@@ -263,7 +217,7 @@ suite.test("should listen to specific emitter types with onType", () => {
   userEmitter.emit("login", { userId: "alice" });
   systemEmitter.emit("startup", { version: "v1.0.0" });
   fileEmitter.emit("created", { path: "/test.txt" });
-  
+
   // Also emit events with same names from different emitters
   userEmitter.emit("logout", { userId: "alice" }); // Different event, same emitter
   fileEmitter.emit("deleted", { path: "/test.txt" }); // Different event, different emitter
@@ -280,17 +234,17 @@ suite.test("should listen to specific emitter types with onType", () => {
 
 suite.test("should isolate events by emitter type even with same event names", () => {
   const omnibus = new OmniBusEmitter();
-  
+
   // Create events with potential name conflicts
-  type ConflictEvents = { 
-    update: { data: string; source: string }; 
+  type ConflictEvents = {
+    update: { data: string; source: string };
   };
-  
+
   class EmitterA extends CreateSuperTypedEmitterClass<ConflictEvents>() {
-    static readonly IDENT = Symbol('EmitterA');
+    static readonly IDENT = Symbol("EmitterA");
   }
   class EmitterB extends CreateSuperTypedEmitterClass<ConflictEvents>() {
-    static readonly IDENT = Symbol('EmitterB');
+    static readonly IDENT = Symbol("EmitterB");
   }
 
   const emitterA = new EmitterA();
@@ -313,7 +267,7 @@ suite.test("should isolate events by emitter type even with same event names", (
 
   suite.assertEqual(eventsFromA.length, 2, "Should receive 2 events from EmitterA");
   suite.assertEqual(eventsFromB.length, 1, "Should receive 1 event from EmitterB");
-  
+
   suite.assertEqual(eventsFromA[0].source, "emitterA", "First A event correct");
   suite.assertEqual(eventsFromA[1].source, "emitterA", "Second A event correct");
   suite.assertEqual(eventsFromB[0].source, "emitterB", "B event correct");
@@ -349,7 +303,7 @@ suite.test("should support array of events in onType method", () => {
 
   // Listen to multiple events from UserEmitter
   omnibus.onType(UserEmitter.IDENT, ["login", "logout"], (payload) => userEvents.push(payload));
-  
+
   // Listen to multiple events from FileEmitter
   omnibus.onType(FileEmitter.IDENT, ["created", "deleted", "modified"], (payload) => fileEvents.push(payload));
 
@@ -362,7 +316,7 @@ suite.test("should support array of events in onType method", () => {
 
   suite.assertEqual(userEvents.length, 2, "Should receive both user events");
   suite.assertEqual(fileEvents.length, 3, "Should receive all three file events");
-  
+
   suite.assertEqual(userEvents[0].userId, "alice", "Login event payload correct");
   suite.assertEqual(userEvents[1].userId, "alice", "Logout event payload correct");
   suite.assertEqual(fileEvents[0].path, "/test.txt", "Created event payload correct");
@@ -420,7 +374,7 @@ suite.test("should support array of events in onInstance method", () => {
 
   suite.assertEqual(instance1Events.length, 2, "Should receive both events from instance1");
   suite.assertEqual(fileInstanceEvents.length, 2, "Should receive both file events from fileInstance");
-  
+
   suite.assertEqual(instance1Events[0].userId, "alice", "Instance1 login event correct");
   suite.assertEqual(instance1Events[1].userId, "alice", "Instance1 logout event correct");
   suite.assertEqual(fileInstanceEvents[0].path, "/test.txt", "File created event correct");
@@ -451,21 +405,21 @@ suite.test("should clean up array listeners in onInstance method", () => {
 suite.test("should provide type safety for connected emitters", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
-  
+
   omnibus.connect(UserEmitter.IDENT, userEmitter);
-  
+
   // This should be typed correctly
   const retrievedEmitter = omnibus.get(UserEmitter.IDENT);
-  
+
   // TypeScript should know this is UserEmitter | undefined
   if (retrievedEmitter) {
     // This should be type-safe - TypeScript knows about emit method and event types
     retrievedEmitter.emit("login", { userId: "typed-test" });
-    
+
     // This would be a TypeScript error if uncommented:
     // retrievedEmitter.emit("invalidEvent", { data: "test" });
   }
-  
+
   // The test passes if it compiles without TypeScript errors
   suite.assert(true, "Type safety test passed (compile-time check)");
 });

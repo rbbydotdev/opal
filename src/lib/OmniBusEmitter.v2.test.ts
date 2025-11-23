@@ -1,4 +1,5 @@
-import { OmniBusEmitter, CreateSuperTypedEmitterClass, EmitterSymbol } from "./TypeEmitter";
+import { TestSuite } from "../../tests/TestSuite";
+import { CreateSuperTypedEmitterClass, EmitterSymbol, OmniBusEmitter } from "./TypeEmitter";
 
 // Test event types
 type DiskEvents = {
@@ -14,61 +15,16 @@ type NetworkEvents = {
 
 // Create emitter classes with both class and instance identifiers
 class Disk extends CreateSuperTypedEmitterClass<DiskEvents>() {
-  static readonly IDENT = Symbol('Disk');
-  readonly IIDENT = EmitterSymbol('DiskInstance'); // Symbol-like object for WeakMap/WeakSet compatibility
+  static readonly IDENT = Symbol("Disk");
+  readonly IIDENT = EmitterSymbol("DiskInstance"); // Symbol-like object for WeakMap/WeakSet compatibility
 }
 
 class Network extends CreateSuperTypedEmitterClass<NetworkEvents>() {
-  static readonly IDENT = Symbol('Network');
-  readonly IIDENT = EmitterSymbol('NetworkInstance'); // Symbol-like object for WeakMap/WeakSet compatibility
+  static readonly IDENT = Symbol("Network");
+  readonly IIDENT = EmitterSymbol("NetworkInstance"); // Symbol-like object for WeakMap/WeakSet compatibility
 }
 
 // Simple test framework
-class TestSuite {
-  private tests: Array<{ name: string; fn: () => void | Promise<void> }> = [];
-  private passed = 0;
-  private failed = 0;
-
-  test(name: string, fn: () => void | Promise<void>) {
-    this.tests.push({ name, fn });
-  }
-
-  assert(condition: boolean, message: string) {
-    if (!condition) {
-      throw new Error(`Assertion failed: ${message}`);
-    }
-  }
-
-  assertEqual<T>(actual: T, expected: T, message?: string) {
-    if (actual !== expected) {
-      throw new Error(
-        `Assertion failed: ${message || "Values not equal"}\nExpected: ${expected}\nActual: ${actual}`
-      );
-    }
-  }
-
-  async run() {
-    console.log("🧪 Running OmniBusEmitter v2 (dual-identifier) tests...\n");
-
-    for (const { name, fn } of this.tests) {
-      try {
-        await fn();
-        console.log(`✅ ${name}`);
-        this.passed++;
-      } catch (error) {
-        console.log(`❌ ${name}`);
-        console.log(`   Error: ${error instanceof Error ? error.message : String(error)}\n`);
-        this.failed++;
-      }
-    }
-
-    console.log(`\n📊 Results: ${this.passed} passed, ${this.failed} failed`);
-    
-    if (this.failed > 0) {
-      process.exit(1);
-    }
-  }
-}
 
 // Test suite
 const suite = new TestSuite();
@@ -78,12 +34,12 @@ suite.test("should create descriptive EmitterSymbol objects", () => {
   const networkSymbol = EmitterSymbol("NetworkInstance");
   const unnamed = EmitterSymbol();
 
-  suite.assert(typeof diskSymbol === 'object', "Should return an object");
+  suite.assert(typeof diskSymbol === "object", "Should return an object");
   suite.assert(Object.isFrozen(diskSymbol), "Should be frozen/immutable");
   suite.assertEqual(diskSymbol.toString(), "EmitterSymbol(DiskInstance)", "Should have descriptive toString");
   suite.assertEqual(networkSymbol.toString(), "EmitterSymbol(NetworkInstance)", "Should have descriptive toString");
   suite.assertEqual(unnamed.toString(), "EmitterSymbol()", "Should handle unnamed symbols");
-  
+
   // Each call should return a unique object
   const another = EmitterSymbol("DiskInstance");
   suite.assert(diskSymbol !== another, "Should create unique objects even with same description");
@@ -91,47 +47,47 @@ suite.test("should create descriptive EmitterSymbol objects", () => {
 
 suite.test("should support flexible connection patterns", () => {
   const omnibus = new OmniBusEmitter();
-  
+
   // Test 1: Connect with IIDENT (existing pattern)
   const disk1 = new Disk();
   const cleanup1 = omnibus.connect(Disk.IDENT, disk1);
-  
+
   // Test 2: Connect with explicit instance identifier
   const disk2 = new Disk();
   const customInstanceId = EmitterSymbol("CustomDiskInstance");
   const cleanup2 = omnibus.connect(Disk.IDENT, disk2, customInstanceId);
-  
+
   // Test 3: Connect without IIDENT (should auto-generate)
   class SimpleDisk extends CreateSuperTypedEmitterClass<DiskEvents>() {
-    static readonly IDENT = Symbol('SimpleDisk');
+    static readonly IDENT = Symbol("SimpleDisk");
     // No IIDENT property
   }
   const disk3 = new SimpleDisk();
   const cleanup3 = omnibus.connect(SimpleDisk.IDENT, disk3);
-  
+
   // All should be connected and retrievable
   suite.assert(omnibus.get(disk1.IIDENT) === disk1, "Should retrieve disk1 with its IIDENT");
   suite.assert(omnibus.get(customInstanceId) === disk2, "Should retrieve disk2 with custom instance ID");
   // Note: disk3's auto-generated ID is internal, so we can't easily test retrieval
-  
+
   // Test class-level listening works for all patterns
   let eventCount = 0;
   omnibus.onType(Disk.IDENT, "write", () => eventCount++);
-  
+
   disk1.emit("write", { path: "/test1.txt", size: 100 });
   disk2.emit("write", { path: "/test2.txt", size: 200 });
-  
+
   suite.assertEqual(eventCount, 2, "Should receive events from both disk instances");
-  
+
   // Test individual disconnection
   cleanup1(); // Should only disconnect disk1
   eventCount = 0;
-  
+
   disk1.emit("write", { path: "/test1-again.txt", size: 100 }); // Should not trigger
   disk2.emit("write", { path: "/test2-again.txt", size: 200 }); // Should trigger
-  
+
   suite.assertEqual(eventCount, 1, "Should only receive event from disk2 after disk1 disconnect");
-  
+
   // Cleanup
   cleanup2();
   cleanup3();
@@ -139,28 +95,28 @@ suite.test("should support flexible connection patterns", () => {
 
 suite.test("should handle instance-specific listening with custom instance IDs", () => {
   const omnibus = new OmniBusEmitter();
-  
+
   const disk1 = new Disk();
-  const disk2 = new Disk(); 
-  
+  const disk2 = new Disk();
+
   const customId1 = EmitterSymbol("SpecialDisk1");
   const customId2 = EmitterSymbol("SpecialDisk2");
-  
+
   omnibus.connect(Disk.IDENT, disk1, customId1);
   omnibus.connect(Disk.IDENT, disk2, customId2);
-  
+
   const disk1Events: any[] = [];
   const disk2Events: any[] = [];
-  
+
   // Listen to specific instances using custom IDs
   omnibus.onInstance(customId1, "write", (payload) => disk1Events.push(payload));
   omnibus.onInstance(customId2, "write", (payload) => disk2Events.push(payload));
-  
+
   // Emit from both
   disk1.emit("write", { path: "/disk1-file.txt", size: 100 });
   disk2.emit("write", { path: "/disk2-file.txt", size: 200 });
   disk1.emit("write", { path: "/disk1-file2.txt", size: 150 });
-  
+
   suite.assertEqual(disk1Events.length, 2, "Should receive 2 events from disk1");
   suite.assertEqual(disk2Events.length, 1, "Should receive 1 event from disk2");
   suite.assertEqual(disk1Events[0].path, "/disk1-file.txt", "First disk1 event correct");
@@ -178,9 +134,9 @@ suite.test("should connect multiple instances and return cleanup functions", () 
   const cleanupDisk2 = omnibus.connect(Disk.IDENT, disk2);
   const cleanupNetwork1 = omnibus.connect(Network.IDENT, network1);
 
-  suite.assert(typeof cleanupDisk1 === 'function', "Should return cleanup function for disk1");
-  suite.assert(typeof cleanupDisk2 === 'function', "Should return cleanup function for disk2");
-  suite.assert(typeof cleanupNetwork1 === 'function', "Should return cleanup function for network1");
+  suite.assert(typeof cleanupDisk1 === "function", "Should return cleanup function for disk1");
+  suite.assert(typeof cleanupDisk2 === "function", "Should return cleanup function for disk2");
+  suite.assert(typeof cleanupNetwork1 === "function", "Should return cleanup function for network1");
 
   // Verify instances are connected
   suite.assert(omnibus.get(disk1.IIDENT) === disk1, "Should retrieve disk1 by instance");
@@ -264,7 +220,7 @@ suite.test("should handle granular disconnection", () => {
   disk1.emit("write", { path: "/test1.txt", size: 100 });
   disk2.emit("write", { path: "/test2.txt", size: 100 });
   disk3.emit("write", { path: "/test3.txt", size: 100 });
-  
+
   suite.assertEqual(eventCount, 3, "Should receive events from all 3 disks");
 
   // Disconnect only disk2
@@ -339,7 +295,7 @@ suite.test("should provide class-level queries", () => {
 
   suite.assertEqual(diskInstances.length, 3, "Should return 3 disk instances");
   suite.assertEqual(networkInstances.length, 1, "Should return 1 network instance");
-  
+
   suite.assert(diskInstances.includes(disk1), "Should include disk1");
   suite.assert(diskInstances.includes(disk2), "Should include disk2");
   suite.assert(diskInstances.includes(disk3), "Should include disk3");
