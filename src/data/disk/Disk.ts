@@ -170,8 +170,8 @@ export abstract class Disk {
   }
 
   async refresh() {
-    const { indexCache } = await this.connector.hydrate();
-    return this.initialIndexFromCache(indexCache ?? new TreeDirRoot());
+    await this.connector.hydrate();
+    return this.hydrateIndexFromDisk();
   }
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     await this.ready;
@@ -684,6 +684,10 @@ export abstract class Disk {
       for (const n of node.iterator()) {
         if (n.isTreeDir()) result.push((await this.mkdirRecursive(n.path)) as AbsPath);
         else {
+          if (!n.source) {
+            console.error("Source node missing source property", n);
+            continue;
+          }
           await this.writeFile(n.path, await fromDisk.readFile(n.source));
           result.push(n.path);
         }

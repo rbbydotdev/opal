@@ -153,6 +153,7 @@ export class BuildRunner {
     try {
       this.build.status = "pending";
       await this.build.save();
+      await this.sourceDisk.refresh();
       infoLog(`Starting ${this.strategy} build, id ${this.build.guid}...`);
       infoLog(`Source disk: ${this.sourceDisk.guid}`);
       infoLog(`Output path: ${this.outputPath}`);
@@ -197,7 +198,8 @@ export class BuildRunner {
           await this.buildBlog();
           break;
         default:
-          throw new Error(`Unknown build strategy: ${this.strategy}`);
+          this.strategy satisfies never;
+          throw new TypeError(`Unknown build strategy: ${this.strategy}`);
       }
       infoLog(`${this.strategy} build strategy completed`);
 

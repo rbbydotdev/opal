@@ -136,9 +136,7 @@ export class BuildDAO implements BuildRecord {
 
   async hydrate() {
     const build = await BuildDAO.FetchFromGuid(this.guid);
-    if (build) {
-      Object.assign(this, build);
-    }
+    if (build) Object.assign(this, build);
     return this;
   }
 

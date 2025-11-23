@@ -1,7 +1,6 @@
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, joinPath, strictPathname } from "@/lib/paths2";
 import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
 import { signalRequest } from "@/lib/ServiceWorker/utils";
@@ -26,9 +25,9 @@ export async function handleDownloadRequest(workspaceName: string): Promise<Resp
 
     const workspace = await SWWStore.tryWorkspace(workspaceName);
 
-    await workspace.getDisk().fileTree.index();
+    await workspace.refreshDisk();
 
-    const fileNodes = [...workspace.getDisk().fileTree.iterator(FilterOutSpecialDirs)] as TreeNode[];
+    const fileNodes = [...workspace.getDisk().fileTree.iterator(FilterOutSpecialDirs)];
 
     if (!fileNodes || fileNodes.length === 0) {
       console.warn("No files found in the workspace to download.");
@@ -37,37 +36,35 @@ export async function handleDownloadRequest(workspaceName: string): Promise<Resp
     let fileCount = fileNodes.filter((node) => node.isTreeFile()).length;
 
     signalRequest({ type: REQ_SIGNAL.START });
-    await Promise.all(
-      fileNodes.map(async (node) => {
-        if (node.isTreeFile()) {
-          try {
-            console.log(`Adding file to zip: ${node.path}`);
-            const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
-            zip.add(fileStream);
-            //'stream' file by file
-            void workspace
-              .getDisk()
-              .readFile(node.path)
-              .then((data) => {
-                fileStream.push(coerceUint8Array(data), true);
-              })
-              .finally(() => {
-                fileCount--;
-                if (fileCount === 0) {
-                  console.log(`All files processed for workspace: ${workspace.name}`);
-                  signalRequest({ type: REQ_SIGNAL.END });
-                }
-              }); // true = last chunk
-          } catch (e) {
-            console.error(`Failed to add file to zip: ${node.path}`, e);
-          }
-        } else if (node.type === "dir") {
-          const emptyDir = new fflate.ZipPassThrough(joinPath(workspaceDirName, node.path) + "/");
-          zip.add(emptyDir);
-          emptyDir.push(new Uint8Array(0), true);
+    for (const node of fileNodes) {
+      if (node.isTreeFile()) {
+        try {
+          console.log(`Adding file to zip: ${node.path}`);
+          const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
+          zip.add(fileStream);
+          //'stream' file by file
+          void workspace
+            .getDisk()
+            .readFile(node.path)
+            .then((data) => {
+              fileStream.push(coerceUint8Array(data), true);
+            })
+            .finally(() => {
+              fileCount--;
+              if (fileCount === 0) {
+                console.log(`All files processed for workspace: ${workspace.name}`);
+                signalRequest({ type: REQ_SIGNAL.END });
+              }
+            }); // true = last chunk
+        } catch (e) {
+          console.error(`Failed to add file to zip: ${node.path}`, e);
         }
-      })
-    );
+      } else if (node.type === "dir") {
+        const emptyDir = new fflate.ZipPassThrough(joinPath(workspaceDirName, node.path) + "/");
+        zip.add(emptyDir);
+        emptyDir.push(new Uint8Array(0), true);
+      }
+    }
     console.log(`All files added to zip for workspace: ${workspace.name}`);
 
     zip.end();

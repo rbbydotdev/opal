@@ -293,6 +293,11 @@ export function resolveFromRoot(rootPath: AbsPath | RelPath, path: AbsPath | Rel
   throw new Error("Both paths must be of the same type (AbsPath or RelPath).");
 }
 
+export function addTrailingSlash(path: string): string {
+  if (path.endsWith("/")) return path;
+  return path + "/";
+}
+
 export function absPathname(path: string) {
   //in the case we get a url then just get the path from the url parse
   //other wise just return the string
