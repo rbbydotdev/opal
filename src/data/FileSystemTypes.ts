@@ -30,10 +30,7 @@ export interface CommonFileSystem {
 }
 
 // Helper function for recursive directory creation
-export async function mkdirRecursive(
-  this: CommonFileSystem, 
-  filePath: string
-): Promise<string | void> {
+export async function mkdirRecursive(this: CommonFileSystem, filePath: string): Promise<string | void> {
   const segments = filePath.split("/").filter((s) => s !== "");
   for (let i = 1; i <= segments.length; i++) {
     const dirPath = "/" + segments.slice(0, i).join("/");
@@ -47,3 +44,49 @@ export async function mkdirRecursive(
   }
   return filePath;
 }
+
+export const NullFileSystem: CommonFileSystem = {
+  readdir: async (_path: string) => {
+    return [];
+  },
+  stat: async (_path: string) => {
+    return {
+      isDirectory: () => false,
+      isFile: () => false,
+    };
+  },
+  readFile: async (_path: string, _options?: { encoding?: "utf8" }) => {
+    return new Uint8Array();
+  },
+  mkdir: async (_path: string, _options?: { recursive?: boolean; mode: number }) => {
+    return;
+  },
+  rename: async (_oldPath: string, _newPath: string) => {
+    return;
+  },
+  unlink: async (_path: string) => {
+    return;
+  },
+  writeFile: async (
+    _path: string,
+    _data: Uint8Array | Buffer | string,
+    _options?: { encoding?: "utf8"; mode: number }
+  ) => {
+    return;
+  },
+  rmdir: async (_path: string, _options?: { recursive?: boolean }) => {
+    return;
+  },
+  lstat: async (_path: string) => {
+    return {
+      isDirectory: () => false,
+      isFile: () => false,
+    };
+  },
+  symlink: async (_target: string, _path: string) => {
+    return;
+  },
+  readlink: async (_path: string) => {
+    return null;
+  },
+};

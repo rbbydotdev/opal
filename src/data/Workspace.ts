@@ -352,7 +352,7 @@ export class Workspace {
     const untrashedNodes = nodes.map((node) => {
       const fromNode = node;
       const toNode = TreeNode.FromPath(resolveFromRoot(SpecialDirs.Trash, node.path), node.type);
-      return [fromNode, toNode] as [TreeDir, TreeNode];
+      return [fromNode, toNode] as [TreeNode, TreeNode];
     });
 
     return await this.renameMultiple(untrashedNodes);

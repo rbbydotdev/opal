@@ -1,12 +1,9 @@
 import { Disk } from "@/data/disk/Disk";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, addTrailingSlash, isStringish, joinPath, resolveFromRoot } from "@/lib/paths2";
+import { absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
-import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
-import { coerceUint8Array } from "@/lib/coerceUint8Array";
-import { ApplicationError, errF, NotFoundError } from "@/lib/errors";
-import { FileTree } from "@/lib/FileTree/Filetree";
-import * as fflate from "fflate";
+import { archiveTree } from "@/data/disk/archiveTree";
+import { ApplicationError, errF } from "@/lib/errors";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;
@@ -65,58 +62,18 @@ export class DeployBundle {
 
   async bundleTreeZipStream(disk: Disk = this.disk): Promise<ReadableStream<any>> {
     await disk.refresh();
-    const fileTree: FileTree = disk.fileTree;
-    const prefixPath = absPath("/bundle");
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
-
-    // Set up the ZIP stream
-    const zip = new fflate.Zip(async (err, data, final) => {
-      if (err) {
-        await writer.abort(err);
-        return;
-      }
-      await writer.write(data);
-      if (final) await writer.close();
-    });
-
-    const allFiles = [...fileTree.iterator(FilterOutSpecialDirs)];
-    let fileCount = allFiles.filter((node) => node.isTreeFile()).length;
-    if (fileCount === 0) {
-      throw new NotFoundError("No files to bundle");
-    }
-
-    await Promise.all(
-      allFiles.map(async (node) => {
-        if (node.isTreeFile()) {
-          try {
-            const fileStream = new fflate.ZipDeflate(addTrailingSlash(joinPath(prefixPath, node.path)), { level: 9 });
-            zip.add(fileStream);
-            //'stream' file by file
-            void disk
-              .readFile(node.path)
-              .then((data) => {
-                fileStream.push(coerceUint8Array(data), true);
-              })
-              .finally(() => {
-                fileCount--;
-                if (fileCount === 0) {
-                  //finished
-                }
-              }); // true = last chunk
-          } catch (e) {
-            throw new ApplicationError(errF`Failed to add file to zip: ${node.path} ${e}`);
-          }
-        } else if (node.type === "dir") {
-          const emptyDir = new fflate.ZipPassThrough(addTrailingSlash(joinPath(prefixPath, node.path)));
-          zip.add(emptyDir);
-          emptyDir.push(new Uint8Array(0), true);
+    return await archiveTree({
+      fileTree: disk.fileTree,
+      prefixPath: absPath("/bundle"),
+      onFileError: (error, filePath) => {
+        throw new ApplicationError(errF`Failed to add file to zip: ${filePath} ${error}`);
+      },
+      onFileProcessed: (filePath, fileCount, total) => {
+        console.debug(`Processed file: ${filePath}. Remaining: ${fileCount}/${total}`);
+        if (fileCount === 0) {
+          console.debug(`All files processed`);
         }
-      })
-    );
-
-    zip.end();
-
-    return readable;
+      },
+    });
   }
 }
