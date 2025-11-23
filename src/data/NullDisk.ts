@@ -1,11 +1,10 @@
 import { Disk } from "@/data/disk/Disk";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { DiskType } from "@/data/DiskType";
-import { CommonFileSystem } from "@/data/FileSystemTypes";
+import { CommonFileSystem, NullFileSystem } from "@/data/FileSystemTypes";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 import { Mutex } from "async-mutex";
-import { memfs } from "memfs";
 
 export class NullDisk extends Disk {
   static type: DiskType = "NullDisk";
@@ -17,7 +16,7 @@ export class NullDisk extends Disk {
     _indexCache?: TreeDirRootJType,
     fsTransform: (fs: CommonFileSystem) => CommonFileSystem = (fs) => fs
   ) {
-    const fs = fsTransform(memfs().fs.promises);
+    const fs = fsTransform(NullFileSystem);
     const mt = new Mutex();
     const ft = new FileTree(fs, guid, mt);
     super("__disk__NullDisk", fs, ft, DiskDAO.New(NullDisk.type, guid));
