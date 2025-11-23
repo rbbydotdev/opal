@@ -1,9 +1,14 @@
 import { Disk } from "@/data/disk/Disk";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
+import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
+import { OPAL_AUTHOR } from "@/app/GitConfig";
 import { archiveTree } from "@/data/disk/archiveTree";
+import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
+import { GitRepo } from "@/features/git-repo/GitRepo";
 import { ApplicationError, errF } from "@/lib/errors";
+import { isGithubRemoteAuth } from "../../data/isGithubRemoteAuth";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;
@@ -60,10 +65,41 @@ export class DeployBundle {
     );
   };
 
-  async bundleTreeZipStream(disk: Disk = this.disk): Promise<ReadableStream<any>> {
+  async deployWithGit({
+    ghPagesBranch = "gh-pages",
+    remoteAuth,
+    buildDir = absPath("/"),
+    disk = this.disk,
+  }: {
+    ghPagesBranch?: string;
+    remoteAuth: RemoteAuthDAO;
+    buildDir?: AbsPath;
+    disk?: Disk;
+  }): Promise<void> {
+    // const isGithubRemoteAuth
+    if (!isGithubRemoteAuth(remoteAuth)) {
+      throw new ApplicationError(errF`Only GitHub remote auth is supported for deploy`);
+    }
+    try {
+      const repo = GitRepo.New(disk, `DeployGit/${disk.guid}`, buildDir, ghPagesBranch, OPAL_AUTHOR);
+      const playbook = new GitPlaybook(repo);
+      await playbook.initialCommit("deploy bundle commit");
+      await playbook.push({
+        remote: "origin", //need to match remoteRef
+        ref: ghPagesBranch,
+        force: true,
+      });
+    } catch (error) {
+      //check if network error?
+      throw new ApplicationError(errF`Failed to deploy bundle via git: ${error}`);
+    }
+  }
+
+  async bundleTreeZipStream(buildDir = absPath("/"), disk: Disk = this.disk): Promise<ReadableStream<any>> {
     await disk.refresh();
     return await archiveTree({
       fileTree: disk.fileTree,
+      scope: buildDir,
       prefixPath: absPath("/bundle"),
       onFileError: (error, filePath) => {
         throw new ApplicationError(errF`Failed to add file to zip: ${filePath} ${error}`);
