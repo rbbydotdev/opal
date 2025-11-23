@@ -35,7 +35,7 @@ const keyboardShortcuts: KeyboardShortcut[] = [
   {
     section: "Layout",
     action: "Toggle Preview Pane",
-    keys: [IS_MAC ? "⌘" : "Ctrl", "/"],
+    keys: [IS_MAC ? "⌘" : "Ctrl", "\\"],
     description: "Show or hide the preview pane",
   },
   {
