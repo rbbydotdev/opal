@@ -3,6 +3,7 @@ import { AWSS3Client } from "@/lib/aws/AWSClient";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { DeployResult, DeployRunner, DeployRunnerOptions } from "./DeployRunner";
 import { AWSDeployData } from "./DeployTypes";
+import type { StreamingBlobPayloadInputTypes } from "@smithy/types";
 
 export interface AWSDeployRunnerOptions extends DeployRunnerOptions<AWSDeployData> {
   destination: RemoteAuthAWSAPIAgent;
@@ -156,7 +157,7 @@ export class AWSDeployRunner extends DeployRunner<AWSDeployData> {
       this.log(`Uploading: ${file.path}`, "info");
       
       try {
-        await this.s3Client.putObject(bucketName, file.path, file.content as BodyInit, file.mimeType);
+        await this.s3Client.putObject(bucketName, file.path, file.content as StreamingBlobPayloadInputTypes, file.mimeType);
         totalFiles++;
         totalSize += file.content.length;
         
