@@ -1,4 +1,5 @@
 import {
+  RemoteAuthAWSAPIAgent,
   RemoteAuthBasicAuthAgent,
   RemoteAuthGithubAPIAgent,
   RemoteAuthGithubDeviceOAuthAgent,
@@ -7,9 +8,9 @@ import {
   RemoteAuthNetlifyAPIAgent,
   RemoteAuthNetlifyOAuthAgent,
   RemoteAuthVercelAPIAgent,
-  RemoteAuthAWSAPIAgent,
 } from "@/data/RemoteAuthAgent";
 import {
+  isAWSAPIRemoteAuthDAO,
   isBasicAuthRemoteAuthDAO,
   isGithubAPIRemoteAuthDAO,
   isGithubDeviceOAuthRemoteAuthDAO,
@@ -17,7 +18,6 @@ import {
   isNetlifyAPIRemoteAuthDAO,
   isNetlifyOAuthRemoteAuthDAO,
   isVercelAPIRemoteAuthDAO,
-  isAWSAPIRemoteAuthDAO,
   RemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
 import { IRemoteGitApiAgent } from "@/data/RemoteAuthTypes";

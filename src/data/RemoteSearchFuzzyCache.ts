@@ -125,21 +125,14 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
   }
 
   private async performSearch(): Promise<void> {
-    // console.debug("performSearch called - agent:", !!this.agent, "searchTerm:", this._searchTerm);
-
     if (!this.agent) {
-      // console.debug("No agent, returning empty results");
       this.setResults(EMPTY_SEARCH_RESULT);
       this.setLoading(false);
       this.setError(null);
       return;
     }
 
-    // Cancel previous request
-    if (this.controller) {
-      this.controller.abort();
-    }
-
+    this.controller?.abort();
     this.controller = new AbortController();
     const currentRequestId = ++this.requestId;
 
@@ -199,17 +192,13 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
   }
 
   cancel = (): void => {
-    if (this.controller) {
-      this.controller.abort();
-      this.controller = null;
-    }
+    this.controller?.abort();
+    this.controller = null;
   };
 
   dispose(): void {
-    if (this.controller) {
-      this.controller.abort();
-      this.controller = null;
-    }
+    this.controller?.abort();
+    this.controller = null;
     fuzzysort.cleanup();
     this.events.removeAllListeners();
   }

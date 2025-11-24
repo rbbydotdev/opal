@@ -3,7 +3,7 @@ import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
-import { getUniqueSlugAsync } from "@/lib/getUniqueSlug";
+import { getUniqueSlug, getUniqueSlugAsync } from "@/lib/getUniqueSlug";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { nanoid } from "nanoid";
 import z from "zod";
@@ -50,7 +50,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     return this.remoteAuth instanceof RemoteAuthDAO ? this.remoteAuth : RemoteAuthDAO.FromJSON(this.remoteAuth);
   }
 
-  static CreateNew<T>({
+  static async Create<T>({
     remoteAuth,
     meta,
     label,
@@ -59,7 +59,9 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     meta: T;
     label: string;
   }) {
-    return new DestinationDAO<T>({ guid: DestinationDAO.guid(), remoteAuth, meta, label, timestamp: Date.now() });
+    const existingNames = (await DestinationDAO.all()).map((rad) => rad.label);
+    const uniq = getUniqueSlug(label, existingNames);
+    return new DestinationDAO<T>({ guid: DestinationDAO.guid(), remoteAuth, meta, label: uniq, timestamp: Date.now() });
   }
 
   static FetchFromGuid(guid: string) {
@@ -99,6 +101,13 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 
   async save() {
+    // console.log({
+    //   remoteAuth: this.RemoteAuth.toJSON(),
+    //   guid: this.guid,
+    //   meta: this.meta,
+    //   label: this.label,
+    //   timestamp: this.timestamp,
+    // });
     return ClientDb.destinations.put({
       remoteAuth: this.RemoteAuth.toJSON(),
       guid: this.guid,
@@ -124,6 +133,9 @@ export class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {
 
 type AWSDestinationData = z.infer<(typeof DestinationSchemaMap)["aws"]>["meta"];
 export class AWSDestination extends DestinationDAO<AWSDestinationData> {}
+
+type GitHubDestinationData = z.infer<(typeof DestinationSchemaMap)["github"]>["meta"];
+export class GitHubDestination extends DestinationDAO<GitHubDestinationData> {}
 
 const RandomTag = (tag: string) =>
   `My-${tag}-${RandomSlugWords(1)}-${`${Math.trunc(Math.random() * 100)}`.padStart(3, "0")}`;
@@ -271,4 +283,8 @@ export type DestinationType = keyof typeof DestinationSchemaMap;
 export type DestinationSchemaTypeMap<DestinationType extends keyof typeof DestinationSchemaMap> = z.infer<
   (typeof DestinationSchemaMap)[DestinationType]
 >;
-// DestinationSchemaTypeMap
+
+// Union type of all possible destination form data
+export type AnyDestinationMetaType = {
+  [K in DestinationType]: DestinationMetaType<K>;
+}[DestinationType];

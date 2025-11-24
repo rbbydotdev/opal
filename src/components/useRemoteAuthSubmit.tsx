@@ -1,7 +1,7 @@
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { getUniqueSlug } from "@/lib/getUniqueSlug";
+import { errF } from "@/lib/errors";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { useState } from "react";
 
@@ -36,14 +36,18 @@ export const useRemoteAuthSubmit = (
         onSuccess(dao);
       } else {
         const { type, source, name, ...values } = formValues;
-        const existingNames = (await RemoteAuthDAO.all()).map((rad) => rad.name);
-        const uniq = getUniqueSlug(name, existingNames);
-        const result = await RemoteAuthDAO.Create(type, source, uniq, values.data!);
+        const result = await RemoteAuthDAO.Create({
+          type,
+          source,
+          name,
+          data: values.data!,
+          tags: tags,
+        });
         onSuccess(result);
       }
     } catch (error) {
       setError("Failed to save connection");
-      console.error("Error saving connection:", error);
+      console.error(errF`Error saving connection: ${error}`);
       onCancel?.(error as string | Error);
     } finally {
       setSubmitting(false);

@@ -1,5 +1,6 @@
 import { AWSDestinationForm } from "@/components/publish-modal/AWSDestinationForm";
 import { CloudflareDestinationForm } from "@/components/publish-modal/CloudflareDestinationForm";
+import { GitHubDestinationForm } from "@/components/publish-modal/GitHubDestinationForm";
 import { NetlifyDestinationForm } from "@/components/publish-modal/NetlifyDestinationForm";
 import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
@@ -8,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
+  AnyDestinationMetaType,
   DestinationDAO,
   DestinationJType,
   DestinationMetaType,
@@ -33,7 +35,7 @@ export function PublicationModalDestinationContent({
   pushView,
 }: {
   close: () => void;
-  handleSubmit: (data: any) => void;
+  handleSubmit: (data: AnyDestinationMetaType) => void;
   defaultName?: string;
   editDestination?: DestinationDAO | null;
   preferredConnection: RemoteAuthJType | PartialRemoteAuthJType | null;
@@ -169,6 +171,14 @@ export function PublicationModalDestinationContent({
                 <FormMessage />
               </FormItem>
             )}
+          />
+        )}
+        {destinationType === "github" && (
+          <GitHubDestinationForm
+            form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
+            remoteAuth={remoteAuth}
+            destination={null}
+            defaultName={defaultName}
           />
         )}
         {destinationType === "cloudflare" && (

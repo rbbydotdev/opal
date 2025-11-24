@@ -210,18 +210,18 @@ function SelectableListActions({ children }: SelectableListActionsProps) {
   return (
     <div className="group-data-[state=closed]/selectablelist:hidden">
       {/* Custom action buttons (like Add button) */}
-      {children}
 
       {/* Dropdown menu for bulk actions */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {allItemIds.length > 0 && (
-            <SidebarGroupAction className={cn("p-0 top-1.5 z-10", children ? "right-0" : "right-0")} title="Items Menu">
-              <Ellipsis /> <span className="sr-only">Items Menu</span>
-            </SidebarGroupAction>
-          )}
+          {/* {allItemIds.length > 0 && ( */}
+          <SidebarGroupAction className={cn("p-0 top-1.5 z-10", children ? "right-0" : "right-0")} title="Items Menu">
+            <Ellipsis /> <span className="sr-only">Items Menu</span>
+          </SidebarGroupAction>
+          {/* )} */}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {children}
           <DropdownMenuItem
             onClick={() => setSelected(allItemIds)}
             className="grid grid-cols-[auto_1fr] items-center gap-2"

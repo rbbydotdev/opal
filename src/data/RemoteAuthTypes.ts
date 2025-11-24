@@ -1,4 +1,4 @@
-import { IRemoteAuthAgentSearch } from "@/data/useRemoteSearch";
+import { IRemoteAuthAgentSearch } from "@/data/RemoteSearchFuzzyCache";
 import { z } from "zod";
 
 // 1. Add the new type to the union

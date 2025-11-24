@@ -7,6 +7,7 @@ import {
   RemoteAuthSource,
   RemoteAuthType,
 } from "@/data/RemoteAuthTypes";
+import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { nanoid } from "nanoid";
 
 export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements Omit<RemoteAuthRecord, "data"> {
@@ -78,15 +79,24 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
 
   static guid = () => "__remoteauth__" + nanoid();
 
-  static Create<T extends RemoteAuthExplicitType["type"]>(
-    type: T,
-    source: RemoteAuthSource,
-    name: string,
-    data: RemoteAuthDataFor<T>,
-    tags: string[] = []
-  ): Promise<RemoteAuthDAO> {
+  static async Create<T extends RemoteAuthExplicitType["type"]>({
+    type,
+    source,
+    name,
+    data,
+    tags = [],
+  }: {
+    type: T;
+    source: RemoteAuthSource;
+    name: string;
+    data: RemoteAuthDataFor<T>;
+    tags: string[];
+  }): Promise<RemoteAuthDAO> {
     const guid = RemoteAuthDAO.guid();
-    const dao = new RemoteAuthDAO({ guid, source, name, type, data, tags, timestamp: Date.now() });
+
+    const existingNames = (await RemoteAuthDAO.all()).map((rad) => rad.name);
+    const uniq = getUniqueSlug(name, existingNames);
+    const dao = new RemoteAuthDAO({ guid, source, name: uniq, type, data, tags, timestamp: Date.now() });
     return dao.save().then(() => dao);
   }
 
