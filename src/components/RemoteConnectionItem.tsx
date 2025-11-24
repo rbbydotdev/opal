@@ -1,11 +1,11 @@
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/context/useDebounce";
 import { Repo } from "@/data/RemoteAuthTypes";
-import { useAnySearch } from "@/data/useGithubRepoSearch";
-import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/useRemoteSearch";
+import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/RemoteSearchFuzzyCache";
+import { useAnySearch } from "@/data/useAnySearch";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { AWSS3Bucket } from "@/lib/aws/AWSClient";
+import { NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import { Ban, Loader } from "lucide-react";
@@ -189,8 +189,15 @@ export function RemoteItemSearchDropDown({
             side="bottom"
             align="start"
             sideOffset={2}
-            className="z-50 w-[var(--radix-popover-trigger-width)] max-h-96 overflow-auto rounded-lg bg-sidebar shadow-lg border"
+            className="z-50 w-[var(--radix-popover-trigger-width)] max-h-96 overflow-auto rounded-lg bg-sidebar shadow-lg border scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
             onOpenAutoFocus={(e) => e.preventDefault()}
+            onWheel={(e) => {
+              /* fixes scroll: https://github.com/radix-ui/primitives/issues/1159 */
+              e.stopPropagation();
+            }}
+            onTouchMove={(e) => {
+              e.stopPropagation();
+            }}
             data-capture-focus
           >
             {hasError && (
@@ -240,35 +247,57 @@ function extractResult<T = unknown>(result: T | Fuzzysort.KeyResult<T>): T {
   return isFuzzyResult<T>(result) ? result.obj : result;
 }
 
-export function useRemoteNetlifySearch({
+// Generic search hook configuration
+interface RemoteSearchConfig<T extends Record<string, any>> {
+  searchKey: Extract<keyof T, string>;
+  mapResult?: (item: T, highlightedElement?: ReactNode) => { label: string; value: string; element: ReactNode };
+}
+
+// Core generic search hook
+function useRemoteSearch<T extends Record<string, any>>({
   agent,
+  config,
   defaultValue = "",
 }: {
-  agent: IRemoteAuthAgentSearch<NetlifySite> | null;
+  agent: IRemoteAuthAgentSearch<T> | null;
+  config: RemoteSearchConfig<T>;
   defaultValue?: string;
 }) {
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { loading, results, error, clearError } = useAnySearch<NetlifySite>({
+  const { loading, results, error, clearError } = useAnySearch<T>({
     agent,
     searchTerm: debouncedSearchValue,
-    searchKey: "name",
+    searchKey: config.searchKey,
   });
+
   const searchResults = useMemo(() => {
     return results.map((result) => {
+      const item = extractResult<T>(result);
+      const keyValue = String(item[config.searchKey]);
+
+      // Generate highlighted element
+      const highlightedElement = isFuzzyResult<T>(result)
+        ? result.highlight((m, i) => (
+            <b className={"text-ring"} key={i}>
+              {m}
+            </b>
+          ))
+        : keyValue;
+
+      if (config.mapResult) {
+        return config.mapResult(item, highlightedElement);
+      }
+
+      // Default mapping logic
       return {
-        label: isFuzzyResult<NetlifySite>(result) ? result.obj.name : result.name,
-        value: isFuzzyResult<NetlifySite>(result) ? result.obj.name : result.name,
-        element: isFuzzyResult<NetlifySite>(result)
-          ? result.highlight((m, i) => (
-              <b className="text-ring" key={i}>
-                {m}
-              </b>
-            ))
-          : result.name,
+        label: keyValue,
+        value: keyValue,
+        element: highlightedElement,
       };
     });
-  }, [results]);
+  }, [results, config]);
+
   return {
     isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
     searchValue,
@@ -277,6 +306,22 @@ export function useRemoteNetlifySearch({
     searchResults,
     error,
   };
+}
+
+export function useRemoteNetlifySearch({
+  agent,
+  defaultValue = "",
+}: {
+  agent: IRemoteAuthAgentSearch<NetlifySite> | null;
+  defaultValue?: string;
+}) {
+  return useRemoteSearch<NetlifySite>({
+    agent,
+    config: {
+      searchKey: "name",
+    },
+    defaultValue,
+  });
 }
 
 export function useRemoteNetlifySite<T = any>({
@@ -290,52 +335,18 @@ export function useRemoteNetlifySite<T = any>({
   ident: RemoteItemType.Ident;
   msg: RemoteItemType.Msg;
 } {
-  const [name, setName] = useState(defaultName || "");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const abortCntrlRef = React.useRef<AbortController | null>(null);
-
-  const create = async () => {
-    const finalName = name.trim();
-    if (!finalName) return null;
-    setIsLoading(true);
-    setError(null);
-    try {
-      abortCntrlRef.current = new AbortController();
-      const result = await createRequest(finalName, { signal: abortCntrlRef.current.signal });
-      setError(null);
-      return result;
-    } catch (err: any) {
-      setError(err.message || "Failed to create");
-    } finally {
-      abortCntrlRef.current = null;
-      setIsLoading(false);
-    }
-    return null;
-  };
-  return {
-    request: {
-      error,
-      isLoading,
-      reset: () => {
-        setError(null);
-        setIsLoading(false);
-        abortCntrlRef.current?.abort();
+  return useRemoteResource<T>({
+    createRequest,
+    defaultName,
+    config: {
+      messages: {
+        creating: "Creating Netlify site...",
+        askToEnter: "Enter a name to create a new Netlify site",
+        validPrefix: "Press Enter to create Netlify site",
+        errorFallback: "Failed to create",
       },
-      submit: create,
     },
-    ident: {
-      isValid: !error && !isLoading && !!name.trim(),
-      setName,
-      name,
-    },
-    msg: {
-      creating: "Creating Netlify site...",
-      askToEnter: "Enter a name to create a new Netlify site",
-      valid: `Press Enter to create Netlify site "${name.trim()}"`,
-      error,
-    },
-  };
+  });
 }
 
 export function useRemoteGitRepoSearch({
@@ -345,35 +356,18 @@ export function useRemoteGitRepoSearch({
   agent: IRemoteAuthAgentSearch<Repo> | null;
   defaultValue?: string;
 }) {
-  const [searchValue, updateSearch] = useState(defaultValue);
-  const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { loading, results, error } = useAnySearch<Repo>({
+  return useRemoteSearch<Repo>({
     agent,
-    searchTerm: debouncedSearchValue,
-    searchKey: "full_name",
+    config: {
+      searchKey: "full_name",
+      mapResult: (repo, highlightedElement) => ({
+        label: repo.full_name,
+        value: repo.html_url,
+        element: highlightedElement || repo.full_name,
+      }),
+    },
+    defaultValue,
   });
-  const searchResults = useMemo(() => {
-    return results.map((repo) => {
-      return {
-        label: extractResult<Repo>(repo).full_name,
-        value: extractResult<Repo>(repo).html_url,
-        element: isFuzzyResult<Repo>(repo)
-          ? repo.highlight((m, i) => (
-              <b className="text-highlight-foreground" key={i}>
-                {m}
-              </b>
-            ))
-          : repo.full_name,
-      };
-    });
-  }, [results]);
-  return {
-    isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
-    searchValue,
-    updateSearch,
-    searchResults,
-    error,
-  };
 }
 
 export function useRemoteGitRepo<T = any>({
@@ -389,29 +383,96 @@ export function useRemoteGitRepo<T = any>({
   ident: RemoteItemType.Ident;
   msg: RemoteItemType.Msg;
 } {
+  const result = useRemoteResource<T>({
+    createRequest,
+    defaultName,
+    config: {
+      messages: {
+        creating: "Creating repository...",
+        askToEnter: "Enter a name to create a new repository",
+        validPrefix: "Press Enter to create repository",
+        errorFallback: "Failed to create repository",
+      },
+    },
+  });
+
+  // Override msg to include repoPrefix
+  return {
+    ...result,
+    msg: {
+      ...result.msg,
+      valid: `Press Enter to create repository "${repoPrefix}${result.ident.name.trim()}"`,
+    },
+  };
+}
+
+export function useRemoteAWSSearch({
+  agent,
+  defaultValue = "",
+}: {
+  agent: IRemoteAuthAgentSearch<AWSS3Bucket> | null;
+  defaultValue?: string;
+}) {
+  return useRemoteSearch<AWSS3Bucket>({
+    agent,
+    config: {
+      searchKey: "name",
+    },
+    defaultValue,
+  });
+}
+
+// Generic resource creation hook configuration
+interface RemoteResourceConfig {
+  messages: {
+    creating: string;
+    askToEnter: string;
+    validPrefix: string; // e.g., "Press Enter to create Netlify site"
+    errorFallback: string;
+  };
+  transformName?: (name: string) => string;
+}
+
+// Core generic resource creation hook
+function useRemoteResource<T>({
+  createRequest,
+  config,
+  defaultName,
+}: {
+  createRequest: (name: string, { signal }: { signal?: AbortSignal }) => Promise<T>;
+  config: RemoteResourceConfig;
+  defaultName?: string;
+}): {
+  request: RemoteItemType.Request<T>;
+  ident: RemoteItemType.Ident;
+  msg: RemoteItemType.Msg;
+} {
   const [name, setName] = useState(defaultName || "");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const abortCntrlRef = React.useRef<AbortController | null>(null);
 
   const create = async () => {
-    const finalName = name.trim();
-    if (!finalName) return null;
+    const transformedName = config.transformName ? config.transformName(name.trim()) : name.trim();
+    if (!transformedName) return null;
+
     setIsLoading(true);
     setError(null);
     try {
       abortCntrlRef.current = new AbortController();
-      const result = await createRequest(finalName, { signal: abortCntrlRef.current.signal });
+      const result = await createRequest(transformedName, { signal: abortCntrlRef.current.signal });
       setError(null);
       return result;
     } catch (err: any) {
-      setError(err.message || "Failed to create repository");
+      setError(err.message || config.messages.errorFallback);
     } finally {
       abortCntrlRef.current = null;
       setIsLoading(false);
     }
     return null;
   };
+
+  const displayName = config.transformName ? config.transformName(name.trim()) : name.trim();
 
   return {
     request: {
@@ -430,50 +491,11 @@ export function useRemoteGitRepo<T = any>({
       name,
     },
     msg: {
-      creating: "Creating repository...",
-      askToEnter: "Enter a name to create a new repository",
-      valid: `Press Enter to create repository "${repoPrefix}${name.trim()}"`,
+      creating: config.messages.creating,
+      askToEnter: config.messages.askToEnter,
+      valid: `${config.messages.validPrefix} "${displayName}"`,
       error,
     },
-  };
-}
-
-export function useRemoteAWSSearch({
-  agent,
-  defaultValue = "",
-}: {
-  agent: IRemoteAuthAgentSearch<AWSS3Bucket> | null;
-  defaultValue?: string;
-}) {
-  const [searchValue, updateSearch] = useState(defaultValue);
-  const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { loading, results, error, clearError } = useAnySearch<AWSS3Bucket>({
-    agent,
-    searchTerm: debouncedSearchValue,
-    searchKey: "name",
-  });
-  const searchResults = useMemo(() => {
-    return results.map((result) => {
-      return {
-        label: isFuzzyResult<AWSS3Bucket>(result) ? result.obj.name : result.name,
-        value: isFuzzyResult<AWSS3Bucket>(result) ? result.obj.name : result.name,
-        element: isFuzzyResult<AWSS3Bucket>(result)
-          ? result.highlight((m, i) => (
-              <b className="text-ring" key={i}>
-                {m}
-              </b>
-            ))
-          : result.name,
-      };
-    });
-  }, [results]);
-  return {
-    isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
-    searchValue,
-    updateSearch,
-    clearError,
-    searchResults,
-    error,
   };
 }
 
@@ -488,87 +510,17 @@ export function useRemoteAWSBucket<T = any>({
   ident: RemoteItemType.Ident;
   msg: RemoteItemType.Msg;
 } {
-  const [name, setName] = useState(defaultName || "");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const abortCntrlRef = React.useRef<AbortController | null>(null);
-
-  const create = async () => {
-    const finalName = name.trim().toLowerCase(); // S3 bucket names must be lowercase
-    if (!finalName) return null;
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      abortCntrlRef.current = new AbortController();
-      const result = await createRequest(finalName, { signal: abortCntrlRef.current.signal });
-      setError(null);
-      return result;
-    } catch (err: any) {
-      setError(err.message || "Failed to create bucket");
-    } finally {
-      abortCntrlRef.current = null;
-      setIsLoading(false);
-    }
-    return null;
-  };
-  return {
-    request: {
-      error,
-      isLoading,
-      reset: () => {
-        setError(null);
-        setIsLoading(false);
-        abortCntrlRef.current?.abort();
+  return useRemoteResource<T>({
+    createRequest,
+    defaultName,
+    config: {
+      messages: {
+        creating: "Creating S3 bucket...",
+        askToEnter: "Enter a name to create a new S3 bucket",
+        validPrefix: "Press Enter to create S3 bucket",
+        errorFallback: "Failed to create bucket",
       },
-      submit: create,
+      transformName: (name) => name.toLowerCase(), // S3 bucket names must be lowercase
     },
-    ident: {
-      isValid: !error && !isLoading && !!name.trim(),
-      setName,
-      name,
-    },
-    msg: {
-      creating: "Creating S3 bucket...",
-      askToEnter: "Enter a name to create a new S3 bucket",
-      valid: `Press Enter to create S3 bucket "${name.trim().toLowerCase()}"`,
-      error,
-    },
-  };
+  });
 }
-
-// export function useGitHubRepoCreation({ remoteAuth }: { remoteAuth: RemoteAuthDAO | null }) {
-//   const agent = useMemo(() => AgentFromRemoteAuth(remoteAuth), [remoteAuth]);
-
-//   const username = useMemo(() => {
-//     if (!agent) return "";
-//     if ("login" in (remoteAuth?.data || {})) {
-//       return (remoteAuth?.data as any).login;
-//     }
-//     return agent.getUsername() === "x-access-token" ? "" : agent.getUsername();
-//   }, [agent, remoteAuth]);
-
-//   const repoPrefix = username ? `${username}/` : "";
-
-//   const createRequest = useEffectEvent(async (name: string, { signal }: { signal?: AbortSignal }) => {
-//     if (!agent) {
-//       throw new Error("No agent available for creating repository");
-//     }
-//     if (!(agent instanceof RemoteAuthGithubAgent)) {
-//       throw new Error("Unsupported Git provider for repository creation");
-//     }
-//     const response = await agent.octokit.request("POST /user/repos", {
-//       name,
-//       private: true,
-//       auto_init: false,
-//       signal,
-//     });
-//     return response.data;
-//   });
-
-//   return {
-//     createRequest,
-//     repoPrefix,
-//     username,
-//   };
-// }

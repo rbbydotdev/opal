@@ -1,4 +1,5 @@
 import type {
+  AWSAPIRemoteAuthDAO,
   BasicAuthRemoteAuthDAO,
   CloudflareAPIRemoteAuthDAO,
   GithubAPIRemoteAuthDAO,
@@ -7,14 +8,13 @@ import type {
   NetlifyAPIRemoteAuthDAO,
   NetlifyOAuthRemoteAuthDAO,
   VercelAPIRemoteAuthDAO,
-  AWSAPIRemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
 import { IRemoteAuthAgent, IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
-import { IRemoteAuthAgentSearch } from "@/data/useRemoteSearch";
+import { IRemoteAuthAgentSearch } from "@/data/RemoteSearchFuzzyCache";
+import { AWSS3Bucket, AWSS3Client } from "@/lib/aws/AWSClient";
 import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
 import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { VercelClient, VercelProject } from "@/lib/vercel/VercelClient";
-import { AWSS3Client, AWSS3Bucket } from "@/lib/aws/AWSClient";
 import { Octokit } from "@octokit/core";
 
 export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
@@ -382,11 +382,14 @@ export class RemoteAuthAWSAPIAgent implements IRemoteAuthAgent, IRemoteAuthAgent
   private _s3Client!: AWSS3Client;
 
   get s3Client() {
-    return this._s3Client || (this._s3Client = new AWSS3Client(
-      this.remoteAuth.data.apiKey,
-      this.remoteAuth.data.apiSecret!,
-      'us-east-1' // Default region, could be made configurable
-    ));
+    return (
+      this._s3Client ||
+      (this._s3Client = new AWSS3Client(
+        this.remoteAuth.data.apiKey,
+        this.remoteAuth.data.apiSecret!,
+        "us-east-1" // Default region, could be made configurable
+      ))
+    );
   }
 
   onAuth(): { username: string; password: string } {

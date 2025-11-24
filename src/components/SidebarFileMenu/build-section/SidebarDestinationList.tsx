@@ -1,12 +1,13 @@
 import { useDestinationManager } from "@/components/DestinationManagerContext";
 import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { SimpleSelectableList } from "@/components/ui/SelectableList";
 import { DestinationDAO } from "@/data/DestinationDAO";
 import { useDestinations } from "@/hooks/useDestinations";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
-import { Delete, Eye } from "lucide-react";
+import { Delete, Eye, Plus } from "lucide-react";
 
 export function SidebarDestinationList() {
   const { openDestinationFlow } = useDestinationManager();
@@ -33,7 +34,11 @@ export function SidebarDestinationList() {
       emptyLabel="no destinations found"
       showGrip={false}
     >
-      <SimpleSelectableList.Actions />
+      <SimpleSelectableList.Actions>
+        <DropdownMenuItem onClick={() => {}} className="grid grid-cols-[auto_1fr] items-center gap-2">
+          <Plus /> Add Destination
+        </DropdownMenuItem>
+      </SimpleSelectableList.Actions>
 
       <SimpleSelectableList.Items>
         <div className="flex flex-col gap-2 mt-4 ml-3 group">

@@ -12,7 +12,7 @@ export function useDestinationFlow() {
     async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
       const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
       if (!remoteAuth) throw new Error("RemoteAuth not found");
-      const newDestination = DestinationDAO.CreateNew({ ...data, remoteAuth });
+      const newDestination = await DestinationDAO.Create({ ...data, remoteAuth });
       await newDestination.save();
       setDestination(newDestination);
       return newDestination;

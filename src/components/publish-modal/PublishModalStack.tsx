@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO, NULL_BUILD } from "@/data/BuildDAO";
 import { BuildLogLine } from "@/data/BuildRecord";
-import { DestinationDAO, DestinationMetaType, DestinationType } from "@/data/DestinationDAO";
+import { AnyDestinationMetaType, DestinationDAO } from "@/data/DestinationDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
@@ -48,7 +48,10 @@ export function useViewStack<T extends string = PublishViewType>(defaultView: T,
   const popView = () => {
     viewStack.pop();
     setViewStack([...viewStack]);
-    if (viewStack.length === 0) return onEmpty?.();
+    if (viewStack.length === 0) {
+      onEmpty?.();
+      setViewStack([defaultView]);
+    }
   };
 
   const replaceView = (view: T) => {
@@ -82,10 +85,10 @@ export function PublishModalStack({
   const { remoteAuths } = useRemoteAuths();
   const [destination, setDestination] = useState<DestinationDAO | null>(null);
   const [preferredConnection, setPreferredConnection] = useState<RemoteAuthJType | PartialRemoteAuthJType | null>(null);
-  const handleSubmit = async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
+  const handleSubmit = async ({ remoteAuthId, label, meta }: AnyDestinationMetaType) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
-    const destination = DestinationDAO.CreateNew({ ...data, remoteAuth });
+    const destination = await DestinationDAO.Create({ label, meta, remoteAuth });
     await destination.save();
     setDestination(destination);
     resetToDefault();
@@ -149,7 +152,7 @@ export function PublishModalStack({
     setIsOpen(open);
   };
 
-  const isEditConnection = isRemoteAuthJType(preferredConnection);
+  const isEditConnection = isRemoteAuthJType(preferredConnection) && preferredConnection?.guid;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
