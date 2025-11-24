@@ -143,7 +143,6 @@ export function PublicationModalDestinationContent({
                   onClick={() => {
                     const selectedConnection = remoteAuths.find((conn) => conn.guid === field.value);
                     if (selectedConnection) setPreferredConnection(selectedConnection);
-                    console.log("Editing connection:", selectedConnection);
                     pushView("connection");
                   }}
                   disabled={!field.value || field.value === ""}

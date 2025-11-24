@@ -116,8 +116,6 @@ export function ConnectionsModalContent({
       : RemoteAuthTemplates[0]!
   ) as RemoteAuthFormValues;
 
-  console.log(">>>>", connection);
-
   const form = useForm<RemoteAuthFormValues>({
     defaultValues,
     resolver: (values, opt1, opt2) => {

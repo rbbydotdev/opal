@@ -36,7 +36,7 @@ import { timeAgo } from "short-time-ago";
 
 export type PublishViewType = "publish" | "destination" | "connection";
 
-export function useViewStack<T extends string = PublishViewType>(defaultView: T) {
+export function useViewStack<T extends string = PublishViewType>(defaultView: T, onEmpty?: () => void) {
   const [viewStack, setViewStack] = useState<T[]>([defaultView]);
 
   const currentView = viewStack[viewStack.length - 1];
@@ -46,7 +46,9 @@ export function useViewStack<T extends string = PublishViewType>(defaultView: T)
   };
 
   const popView = () => {
-    setViewStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    viewStack.pop();
+    setViewStack([...viewStack]);
+    if (viewStack.length === 0) return onEmpty?.();
   };
 
   const replaceView = (view: T) => {
@@ -79,16 +81,7 @@ export function PublishModalStack({
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
   const { remoteAuths } = useRemoteAuths();
   const [destination, setDestination] = useState<DestinationDAO | null>(null);
-  const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } =
-    useViewStack<PublishViewType>("publish");
-
-  // const [preferredNewConnection, setPreferredNewConnection] = useState<Pick<
-  //   RemoteAuthRecord,
-  //   "type" | "source"
-  // > | null>(null);
-  // const [editConnection, setEditConnection] = useState<RemoteAuthDAO | null>(null);
   const [preferredConnection, setPreferredConnection] = useState<RemoteAuthJType | PartialRemoteAuthJType | null>(null);
-  console.log(">>>> preferredConnection:", preferredConnection);
   const handleSubmit = async ({ remoteAuthId, ...data }: DestinationMetaType<DestinationType>) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
@@ -102,6 +95,11 @@ export function PublishModalStack({
     setIsOpen(false);
     setPreferredConnection(null);
   }, []);
+
+  const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } = useViewStack<PublishViewType>(
+    "publish",
+    handleClose
+  );
 
   const handlePointerDownOutside = useCallback(() => {
     if (currentView === "destination") {
@@ -118,10 +116,11 @@ export function PublishModalStack({
         return event.preventDefault();
       }
       event.preventDefault();
-      if (canGoBack) return popView();
-      if (currentView === "publish") return setIsOpen(false);
+      popView();
+      // if (canGoBack) return popView();
+      // if (currentView === "publish") return setIsOpen(false);
     },
-    [canGoBack, currentView, popView]
+    [popView]
   );
 
   useImperativeHandle(
@@ -296,7 +295,6 @@ export function PublicationModalPublishContent({
     } else if (selectedRemoteAuth) {
       //remote auth
       setPreferredConnection(selectedRemoteAuth);
-      console.log(">>>> selected remote auth", selectedRemoteAuth);
       pushView("destination");
     } else if (!selectedRemoteAuth) {
       //needs new connection
