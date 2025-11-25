@@ -1,8 +1,5 @@
-import {
-  useRemoteNetlifySearch,
-  useRemoteNetlifySite,
-} from "@/components/RemoteConnectionItem";
-import { DestinationMetaType, NetlifyDestination } from "@/data/DestinationDAO";
+import { useRemoteNetlifySearch, useRemoteNetlifySite } from "@/components/RemoteConnectionItem";
+import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthNetlifyAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
@@ -12,12 +9,10 @@ import { RemoteResource } from "./RemoteResourceField";
 export function NetlifyDestinationForm({
   form,
   remoteAuth,
-  destination,
   defaultName,
 }: {
   form: UseFormReturn<DestinationMetaType<"netlify">>;
   remoteAuth: RemoteAuthDAO | null;
-  destination: NetlifyDestination | null;
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthNetlifyAgent>(remoteAuth);
@@ -50,9 +45,6 @@ export function NetlifyDestinationForm({
         ident={ident}
         msg={msg}
         request={request}
-        onCreateSuccess={(name: string) => {
-          void destination?.update({ meta: { siteName: name } });
-        }}
       />
       <RemoteResource.Input
         label="Site Name"

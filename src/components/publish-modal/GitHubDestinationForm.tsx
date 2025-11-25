@@ -1,10 +1,7 @@
-import {
-  useRemoteGitRepo,
-  useRemoteGitRepoSearch,
-} from "@/components/RemoteConnectionItem";
+import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { DestinationMetaType, GitHubDestination } from "@/data/DestinationDAO";
+import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
@@ -14,12 +11,10 @@ import { RemoteResource } from "./RemoteResourceField";
 export function GitHubDestinationForm({
   form,
   remoteAuth,
-  destination,
   defaultName,
 }: {
   form: UseFormReturn<DestinationMetaType<"github">>;
   remoteAuth: RemoteAuthDAO | null;
-  destination: GitHubDestination | null;
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
@@ -57,16 +52,6 @@ export function GitHubDestinationForm({
           ident={ident}
           msg={msg}
           request={request}
-          onCreateSuccess={(name: string) => {
-            // Note: For GitHub, we store the repository name, not the URL
-            // The name should match what the user sees in the interface
-            void destination?.update({ 
-              meta: { 
-                repository: name,
-                branch: form.getValues("meta.branch") || "main"
-              } 
-            });
-          }}
         />
         <RemoteResource.Input
           label="Repository"
@@ -86,7 +71,7 @@ export function GitHubDestinationForm({
             <FormControl>
               <Input
                 {...field}
-                placeholder="main"
+                placeholder="gh-pages"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();

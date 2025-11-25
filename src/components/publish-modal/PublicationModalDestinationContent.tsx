@@ -86,6 +86,12 @@ export function PublicationModalDestinationContent({
 
   const isCompleteOkay = currentSchema.safeParse(formValues).success;
 
+  const handleClose = () => {
+    form.reset();
+    setDestinationType(defaultDestinationType);
+    close();
+  };
+
   const handleSelectType = (value: string) => {
     form.setValue("remoteAuthId", value);
     const remoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === value);
@@ -177,7 +183,6 @@ export function PublicationModalDestinationContent({
           <GitHubDestinationForm
             form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
             remoteAuth={remoteAuth}
-            destination={null}
             defaultName={defaultName}
           />
         )}
@@ -189,20 +194,18 @@ export function PublicationModalDestinationContent({
             form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
             defaultName={defaultName}
             remoteAuth={remoteAuth}
-            destination={null}
           />
         )}
         {destinationType === "aws" && (
           <AWSDestinationForm
             form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
             remoteAuth={remoteAuth}
-            destination={null}
             defaultName={defaultName}
           />
         )}
 
         <div className="w-full justify-end flex gap-4">
-          <Button type="button" variant="outline" onClick={close}>
+          <Button type="button" variant="outline" onClick={handleClose}>
             <ArrowLeft /> Back
           </Button>
           <Button type="submit" disabled={!isCompleteOkay}>

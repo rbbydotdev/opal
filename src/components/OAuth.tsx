@@ -6,9 +6,9 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { OAuthService, OAuthState } from "@/lib/auth/OAuthService";
-import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
-import { Loader } from "lucide-react";
+import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
+import { Check, Loader } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
@@ -135,7 +135,10 @@ export function OAuth({
       {authSuccess && (
         <div className="rounded-md bg-success p-4 text-success-foreground">
           <p className="font-bold flex items-center gap-2">
-            <span className="text-green-500">✓</span> Authorization Successful
+            <span className="text-success bg-foreground rounded-full w-6 h-6 flex items-center justify-center p-1">
+              <Check strokeWidth={4} />
+            </span>
+            Authorization Successful
           </p>
           <p className="text-sm mt-1">You can now save this connection.</p>
         </div>
@@ -151,14 +154,14 @@ export function OAuth({
         <Button type="button" variant="outline" onClick={handleCancel} className="w-full">
           Cancel
         </Button>
-        
+
         {/* Edit mode: Show Save button only when not authenticated */}
         {mode === "edit" && !authSuccess && (
           <Button type="submit" variant="default" className="w-full">
             Save
           </Button>
         )}
-        
+
         {/* Save button after authentication (both create and edit modes) */}
         {authSuccess && (
           <Button type="submit" variant="default" className="w-full">
@@ -166,7 +169,7 @@ export function OAuth({
             Save
           </Button>
         )}
-        
+
         {/* Connect button (both create and edit modes) */}
         {!authSuccess && (
           <Button
