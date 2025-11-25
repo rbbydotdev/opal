@@ -2,7 +2,7 @@ import { BuildDAO } from "@/data/BuildDAO";
 import { DeployDAO, NULL_DEPLOY } from "@/data/DeployDAO";
 import { DeployLogLine } from "@/data/DeployRecord";
 import { Disk } from "@/data/disk/Disk";
-import { IRemoteAuthAgent } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { AbsPath } from "@/lib/paths2";
 import { CreateSuperTypedEmitter } from "@/lib/TypeEmitter";
 import { BaseDeployData } from "./DeployTypes";
@@ -10,7 +10,7 @@ import { BaseDeployData } from "./DeployTypes";
 export interface DeployRunnerOptions<T = BaseDeployData> {
   deploy: DeployDAO<T>;
   build: BuildDAO;
-  destination: IRemoteAuthAgent;
+  destination: RemoteAuthAgent;
   destinationType?: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
   destinationName?: string;
   deployLabel?: string;
@@ -52,7 +52,7 @@ export abstract class DeployRunner<T = BaseDeployData> {
     return this.options.build;
   }
 
-  get destination(): IRemoteAuthAgent {
+  get destination(): RemoteAuthAgent {
     return this.options.destination;
   }
 
@@ -304,7 +304,7 @@ export class NullDeployRunner extends DeployRunner<BaseDeployData> {
   constructor() {
     super({
       deploy: NULL_DEPLOY,
-      destination: {} as IRemoteAuthAgent,
+      destination: {} as RemoteAuthAgent,
       build: {} as BuildDAO,
       data: {},
     });

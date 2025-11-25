@@ -13,6 +13,7 @@ import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/S
 import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
 // import { Circle } from "lucide";
+import { AnimatedTabs, MiniTab } from "@/components/ui/AnimatedTabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
@@ -21,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { AnimatedTabs, MiniTab } from "@/components/ui/AnimatedTabs";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { BuildDAO } from "@/data/BuildDAO";
 import { Workspace } from "@/data/Workspace";
@@ -62,7 +62,7 @@ export function SidebarFileMenuBuild({
   const [open, setOpen] = useState(false);
   // const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
   const { storedValue: activeTab, setStoredValue: setActiveTab } = useLocalStorage2<
-    "builds" | "files" | "destinations"
+    "builds" | "files" | "destinations" | "deployments"
   >("SidebarFileMenuBuild/activeTab", "files");
 
   const { builds, build, setBuildId } = useBuildManager({ currentWorkspace });
@@ -195,6 +195,9 @@ export function SidebarFileMenuBuild({
                 </MiniTab>
                 <MiniTab onClick={() => setActiveTab("destinations")} active={activeTab === "destinations"}>
                   Destinations
+                </MiniTab>
+                <MiniTab onClick={() => setActiveTab("deployments")} active={activeTab === "deployments"}>
+                  Deployments
                 </MiniTab>
               </AnimatedTabs>
               <div className="bg-highlight rounded rounded-tl-none pb-4 pt-1 px-2">

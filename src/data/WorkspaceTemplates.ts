@@ -5,9 +5,19 @@ export type WorkspaceTemplate = {
   name: string;
   description: string;
   seedFiles: Record<string, string | Promise<string>>;
+  navigate?: string;
 };
 
 export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
+  {
+    id: "hello_world",
+    name: "Hello World",
+    description: "A simple starter workspace with a hello world markdown file",
+    seedFiles: {
+      "/hello.md": DefaultFile.HelloWorld(),
+    },
+    navigate: "/hello.md",
+  },
   {
     id: "blank",
     name: "Blank",

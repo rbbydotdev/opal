@@ -9,7 +9,7 @@ import type {
   NetlifyOAuthRemoteAuthDAO,
   VercelAPIRemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
-import { IRemoteAuthAgent, IRemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAgent, RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { IRemoteAuthAgentSearch } from "@/data/RemoteSearchFuzzyCache";
 import { AWSS3Bucket, AWSS3Client } from "@/lib/aws/AWSClient";
 import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
@@ -17,7 +17,7 @@ import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { VercelClient, VercelProject } from "@/lib/vercel/VercelClient";
 import { Octokit } from "@octokit/core";
 
-export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
+export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
   private _octokit!: Octokit;
   get octokit() {
     return (
@@ -123,7 +123,7 @@ export abstract class RemoteAuthGithubAgent implements IRemoteGitApiAgent {
   abstract getApiToken(): string;
 }
 
-export class RemoteAuthBasicAuthAgent implements IRemoteGitApiAgent {
+export class RemoteAuthBasicAuthAgent implements RemoteGitApiAgent {
   getUsername(): string {
     return this.remoteAuth.data.username;
   }
@@ -195,19 +195,19 @@ export class RemoteAuthGithubDeviceOAuthAgent extends RemoteAuthGithubAgent {
   }
 }
 
-export abstract class RemoteAuthNetlifyAgent implements IRemoteAuthAgent, IRemoteAuthAgentSearch<NetlifySite> {
+export abstract class RemoteAuthNetlifyAgent implements RemoteAuthAgent, IRemoteAuthAgentSearch<NetlifySite> {
   private _netlifyClient!: NetlifyClient;
 
   get netlifyClient() {
     return this._netlifyClient || (this._netlifyClient = new NetlifyClient(this.getApiToken()));
   }
 
-  onAuth(): { username: string; password: string } {
-    return {
-      username: this.getUsername(),
-      password: this.getApiToken(),
-    };
-  }
+  // onAuth(): { username: string; password: string } {
+  //   return {
+  //     username: this.getUsername(),
+  //     password: this.getApiToken(),
+  //   };
+  // }
 
   fetchAll(options?: { signal?: AbortSignal }): Promise<NetlifySite[]> {
     return this.netlifyClient.getSites();
@@ -274,7 +274,7 @@ export class RemoteAuthNetlifyAPIAgent extends RemoteAuthNetlifyAgent {
   }
 }
 
-export abstract class RemoteAuthVercelAgent implements IRemoteAuthAgent, IRemoteAuthAgentSearch<VercelProject> {
+export abstract class RemoteAuthVercelAgent implements RemoteAuthAgent, IRemoteAuthAgentSearch<VercelProject> {
   private _vercelClient!: VercelClient;
 
   get vercelClient() {
@@ -341,7 +341,7 @@ export class RemoteAuthVercelAPIAgent extends RemoteAuthVercelAgent {
   }
 }
 
-export class RemoteAuthCloudflareAPIAgent implements IRemoteAuthAgent {
+export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   private _cloudflareClient!: CloudflareClient;
 
   get cloudflareClient() {
@@ -378,7 +378,7 @@ export class RemoteAuthCloudflareAPIAgent implements IRemoteAuthAgent {
   constructor(private remoteAuth: CloudflareAPIRemoteAuthDAO) {}
 }
 
-export class RemoteAuthAWSAPIAgent implements IRemoteAuthAgent, IRemoteAuthAgentSearch<AWSS3Bucket> {
+export class RemoteAuthAWSAPIAgent implements RemoteAuthAgent, IRemoteAuthAgentSearch<AWSS3Bucket> {
   private _s3Client!: AWSS3Client;
 
   get s3Client() {

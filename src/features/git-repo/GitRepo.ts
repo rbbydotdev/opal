@@ -1,7 +1,7 @@
 import { GitConfig, GitRepoAuthor, OPAL_AUTHOR } from "@/app/GitConfig";
 import { Disk } from "@/data/disk/Disk";
 import { DiskJType } from "@/data/DiskType";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { debounce } from "@/lib/debounce";
@@ -12,7 +12,8 @@ import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { HideFs } from "@/data/fs/HideFs";
-import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
+import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
+import { AgentFromRemoteAuth, GitAgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
@@ -649,8 +650,9 @@ export class GitRepo {
     });
   };
 
-  static GitFullRemoteObj(remote: GitRemote, RemoteAuth: RemoteAuthDAO): GitFullRemoteObjType {
-    return { ...remote, RemoteAuth, onAuth: AgentFromRemoteAuth(RemoteAuth)?.onAuth };
+  static GitFullRemoteObj(remote: GitRemote, RemoteAuth: GithubRemoteAuthDAO): GitFullRemoteObjType {
+    const onAuth = RemoteAuth ? GitAgentFromRemoteAuth(RemoteAuth).onAuth : undefined;
+    return { ...remote, RemoteAuth, onAuth };
   }
 
   isMerging = async (): Promise<boolean> => {
@@ -831,7 +833,11 @@ export class GitRepo {
       if (!RemoteAuth) {
         throw new NotFoundError("Remote auth not found");
       }
-      return { ...remote, RemoteAuth, onAuth: AgentFromRemoteAuth(RemoteAuth)?.onAuth };
+      const agent = AgentFromRemoteAuth(RemoteAuth);
+      if (!(agent instanceof RemoteAuthGithubAgent)) {
+        throw new TypeError("Git agent be used for git operations");
+      }
+      return { ...remote, RemoteAuth, onAuth: agent.onAuth };
     }
     return { ...remote, RemoteAuth: null };
   };

@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import { useAnimatedTabs } from "@/hooks/useAnimatedTabs";
+import { cn } from "@/lib/utils";
 
 interface AnimatedTabsProps<T extends string> {
   activeTab: T;
@@ -12,9 +12,7 @@ export function AnimatedTabs<T extends string>({ activeTab, children, className 
 
   return (
     <div ref={tabsRef} className={className}>
-      <div className="flex gap-4">
-        {children}
-      </div>
+      <div className="flex">{children}</div>
       <div
         className="bg-ring"
         style={{
@@ -39,20 +37,22 @@ interface MiniTabProps {
 
 export function MiniTab({ children, active, onClick, className }: MiniTabProps) {
   return (
-    <button
-      tabIndex={0}
-      onClick={onClick}
-      data-active-tab={active}
-      className={cn(
-        "rounded-t border-muted active:scale-95 active:translate-y-0.5 text-muted-foreground bg-muted/50 hover:text-primary hover:scale-105 transition-transform border-t border-l border-r text-xs p-2 font-mono",
-        {
-          "bg-muted": active,
-          "bg-transparent": !active,
-        },
-        className
-      )}
-    >
-      {children}
-    </button>
+    <>
+      <button
+        tabIndex={0}
+        onClick={onClick}
+        data-active-tab={active}
+        className={cn(
+          "flex-shrink w-full min-w-0 truncate rounded-t border-muted active:scale-95 active:translate-y-0.5 text-muted-foreground bg-muted/50 hover:text-primary hover:scale-105 transition-transform border-t border-l border-r text-xs p-2 font-mono",
+          {
+            "bg-muted": active,
+            "bg-transparent": !active,
+          },
+          className
+        )}
+      >
+        {children}
+      </button>
+    </>
   );
 }
