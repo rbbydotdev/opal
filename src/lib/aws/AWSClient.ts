@@ -1,4 +1,5 @@
 import {
+  BucketLocationConstraint,
   CreateBucketCommand,
   CreateBucketConfiguration,
   DeleteObjectCommand,
@@ -29,14 +30,22 @@ export interface AWSS3PutResult {
 
 export class AWSS3Client {
   private s3Client: S3Client;
-  private region: string;
+  private config: S3ClientConfig;
 
-  constructor(accessKeyId: string, secretAccessKey: string, region: string = "us-east-1", corsProxy?: string) {
-    this.region = region;
-
+  constructor({
+    accessKeyId,
+    secretAccessKey,
+    region = "us-east-1",
+    corsProxy,
+  }: {
+    accessKeyId: string;
+    secretAccessKey: string;
+    region: string;
+    corsProxy?: string | null;
+  }) {
     // Configure S3 client with proper regional endpoint
-    const clientConfig: S3ClientConfig = {
-      region: region,
+    this.config = {
+      region,
       credentials: {
         accessKeyId: accessKeyId,
         secretAccessKey: secretAccessKey,
@@ -47,11 +56,11 @@ export class AWSS3Client {
     if (corsProxy) {
       const proxyUrl = corsProxy;
       const s3Host = region === "us-east-1" ? "s3.amazonaws.com" : `s3.${region}.amazonaws.com`;
-      clientConfig.endpoint = `${proxyUrl}/${s3Host}`;
-      clientConfig.forcePathStyle = true; // Required for custom endpoints
+      this.config.endpoint = `${proxyUrl}/${s3Host}`;
+      this.config.forcePathStyle = true; // Required for custom endpoints
     }
 
-    this.s3Client = new S3Client(clientConfig);
+    this.s3Client = new S3Client(this.config);
   }
 
   async listBuckets(): Promise<AWSS3Bucket[]> {
@@ -89,7 +98,7 @@ export class AWSS3Client {
 
       return {
         etag: response.ETag?.replace(/"/g, "") || "", // Remove quotes from etag
-        location: `https://${bucketName}.s3.${this.region}.amazonaws.com/${key}`,
+        location: `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${key}`,
       };
     } catch (error) {
       console.error(`Error uploading object ${key} to bucket ${bucketName}:`, error);
@@ -137,9 +146,9 @@ export class AWSS3Client {
   async createBucket(bucketName: string): Promise<AWSS3Bucket> {
     try {
       const createBucketConfig: CreateBucketConfiguration | undefined =
-        this.region !== "us-east-1"
+        this.config.region !== "us-east-1"
           ? {
-              LocationConstraint: this.region as any, // AWS SDK types are strict about region values
+              LocationConstraint: this.config.region as BucketLocationConstraint, // AWS SDK types are strict about region values
             }
           : undefined;
 

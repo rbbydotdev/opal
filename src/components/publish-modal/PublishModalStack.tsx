@@ -23,7 +23,9 @@ import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowUpRight,
   CheckCircle,
+  Globe,
   Loader,
   Pencil,
   Plus,
@@ -148,7 +150,12 @@ export function PublishModalStack({
     [replaceView]
   );
   const handleOpenChange = (open: boolean) => {
-    if (!open) resetToDefault(); // Always reset view when closing
+    if (!open) {
+      resetToDefault(); // Always reset view when closing
+      setPreferredConnection(null);
+      setDestination(null);
+      setBuild(NULL_BUILD);
+    }
     setIsOpen(open);
   };
 
@@ -178,9 +185,24 @@ export function PublishModalStack({
           <DialogDescription className="flex flex-col w-full">
             <span className="font-bold text-lg text-foreground">
               <SwitchCase>
-                <Case condition={currentView === "publish"}>Deploy</Case>
-                <Case condition={currentView === "destination"}>Destination</Case>
-                <Case condition={currentView === "connection"}>Connection</Case>
+                <Case condition={currentView === "publish"}>
+                  <span className="flex justify-start items center gap-2">
+                    <ArrowUpRight className="text-ring" />
+                    Deploy
+                  </span>
+                </Case>
+                <Case condition={currentView === "destination"}>
+                  <span className="flex justify-start items center gap-2">
+                    <Globe className="text-ring" />
+                    Destination
+                  </span>
+                </Case>
+                <Case condition={currentView === "connection"}>
+                  <span className="flex justify-start items center gap-2">
+                    <Zap className="text-ring" />
+                    Connection
+                  </span>
+                </Case>
               </SwitchCase>
             </span>
             <SwitchCase>
@@ -266,7 +288,7 @@ export function PublicationModalPublishContent({
   onClose?: () => void;
   onOpenChange: (value: boolean) => void;
   pushView: (view: PublishViewType) => void;
-  setDestination: (destination: DestinationDAO) => void;
+  setDestination: (destination: DestinationDAO | null) => void;
   setPreferredConnection: (connection: RemoteAuthJType | PartialRemoteAuthJType) => void;
 }) {
   const { remoteAuths } = useRemoteAuths();
@@ -381,7 +403,10 @@ export function PublicationModalPublishContent({
             variant={"outline"}
             className="min-h-12"
             title="Add Destination"
-            onClick={() => pushView(NO_REMOTES ? "connection" : "destination")}
+            onClick={() => {
+              setDestination(null);
+              pushView(NO_REMOTES ? "connection" : "destination");
+            }}
           >
             <Plus />
           </Button>

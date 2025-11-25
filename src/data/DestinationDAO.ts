@@ -197,7 +197,7 @@ export const DestinationSchemaMap = {
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Github"),
-      meta: { repository: "", branch: "" },
+      meta: { repository: "", branch: "gh-pages" },
     })),
   aws: z
     .object({
@@ -227,56 +227,6 @@ export const DestinationSchemaMap = {
       },
     })),
 } satisfies Record<RemoteAuthSource, z.ZodTypeAny>;
-
-// Unified form schema for destination creation
-export const DestinationFormSchema = z
-  .object({
-    destinationType: z.enum(["cloudflare", "netlify", "github", "vercel", "aws", "none"]),
-    remoteAuthId: z.string(),
-    label: z.string(),
-    meta: z.object({
-      // Cloudflare fields
-      accountId: z.string().optional(),
-      siteId: z.string().optional(),
-      // Netlify fields
-      siteName: z.string().optional(),
-      // GitHub fields
-      repository: z.string().optional(),
-      branch: z.string().optional(),
-      // AWS fields
-      bucketName: z.string().optional(),
-      region: z.string().optional(),
-    }),
-  })
-  .refine(
-    (data) => {
-      // Dynamic validation based on destination type
-      if (data.destinationType === "none") return true;
-
-      // Common validations for all non-none types
-      if (!data.remoteAuthId || data.remoteAuthId.length === 0) return false;
-      if (!data.label || data.label.length === 0) return false;
-
-      // Type-specific validations
-      switch (data.destinationType) {
-        case "cloudflare":
-          return !!(data.meta.accountId && data.meta.siteId);
-        case "netlify":
-          return !!data.meta.siteName;
-        case "github":
-          return !!(data.meta.repository && data.meta.branch);
-        case "aws":
-          return !!(data.meta.bucketName && data.meta.region);
-        default:
-          return false;
-      }
-    },
-    {
-      message: "Please fill in all required fields for the selected destination type",
-    }
-  );
-
-export type DestinationFormType = z.infer<typeof DestinationFormSchema>;
 
 export type DestinationType = keyof typeof DestinationSchemaMap;
 

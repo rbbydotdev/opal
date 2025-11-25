@@ -66,8 +66,9 @@ export class ClientIndexedDb extends Dexie {
     // === BUILDS ===
     this.builds.hook("deleting", (_primaryKey, build, tx) => {
       // Delete related deployments when build is deleted
+      const buildId = build.guid;
       tx.on("complete", async () => {
-        await this.deployments.where("buildId").equals(build.guid).delete();
+        await this.deployments.where("buildId").equals(buildId).delete();
       });
     });
 

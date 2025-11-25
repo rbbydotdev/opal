@@ -382,21 +382,12 @@ export class RemoteAuthAWSAPIAgent implements IRemoteAuthAgent, IRemoteAuthAgent
   private _s3Client!: AWSS3Client;
 
   get s3Client() {
-    return (
-      this._s3Client ||
-      (this._s3Client = new AWSS3Client(
-        this.remoteAuth.data.apiKey,
-        this.remoteAuth.data.apiSecret!,
-        "us-east-1" // Default region, could be made configurable
-      ))
-    );
-  }
-
-  onAuth(): { username: string; password: string } {
-    return {
-      username: this.getUsername(),
-      password: this.getApiToken(),
-    };
+    return (this._s3Client ||= new AWSS3Client({
+      accessKeyId: this.remoteAuth.data.apiKey,
+      secretAccessKey: this.remoteAuth.data.apiSecret!,
+      region: "us-east-1", // Default region, could be made configurable
+      corsProxy: this.remoteAuth.data.corsProxy,
+    }));
   }
 
   getUsername(): string {
@@ -421,11 +412,6 @@ export class RemoteAuthAWSAPIAgent implements IRemoteAuthAgent, IRemoteAuthAgent
   ): Promise<{ updated: boolean; newEtag: string | null }> {
     // S3 doesn't support ETag for bucket lists, so we always return updated=true
     return Promise.resolve({ updated: true, newEtag: null });
-  }
-
-  async getRemoteUsername(): Promise<string> {
-    // For AWS, we don't have a username concept, so return the access key ID
-    return this.getUsername();
   }
 
   createBucket = async (bucketName: string, { signal }: { signal?: AbortSignal } = {}) => {

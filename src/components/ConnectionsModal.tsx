@@ -143,6 +143,14 @@ export function ConnectionsModalContent({
     form.reset();
   });
 
+  // // Reset form when connection changes (e.g., switching from edit to add mode)
+  // useEffect(() => {
+  //   if (mode === "add" && !connection) {
+  //     form.reset();
+  //     reset();
+  //   }
+  // }, [mode, connection, form, reset]);
+
   const handleSelectChange = (value: string) => {
     const selectedTemplate = RemoteAuthTemplates.find((t) => typeSource(t) === value);
     if (selectedTemplate && isRemoteAuthJType(connection)) {
@@ -154,9 +162,6 @@ export function ConnectionsModalContent({
         data: {
           ...selectedTemplate.data,
           ...form.getValues("data"),
-          // ...Object.fromEntries(
-          //   Object.entries(form.getValues("data")).filter(([k]) => k in (selectedTemplate?.data || {}))
-          // ),
         },
       });
     } else {

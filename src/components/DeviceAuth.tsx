@@ -9,7 +9,7 @@ import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { unwrapError } from "@/lib/errors";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
-import { ExternalLink, Loader } from "lucide-react";
+import { Check, ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
@@ -133,7 +133,10 @@ export function DeviceAuth({
       {state === "auth-success" && (
         <div className="rounded-md bg-success p-4 text-success-foreground">
           <p className="font-bold flex items-center gap-2">
-            <span className="text-green-500">✓</span> Authorization Successful
+            <span className="text-success bg-foreground rounded-full w-6 h-6 flex items-center justify-center p-1">
+              <Check strokeWidth={4} />
+            </span>
+            Authorization Successful
           </p>
           <p className="text-sm mt-1">You can now save this connection.</p>
         </div>

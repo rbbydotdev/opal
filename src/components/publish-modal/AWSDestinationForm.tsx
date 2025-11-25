@@ -1,7 +1,7 @@
 import { useRemoteAWSBucket, useRemoteAWSSearch } from "@/components/RemoteConnectionItem";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AWSDestination, DestinationMetaType } from "@/data/DestinationDAO";
+import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthAWSAPIAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
@@ -12,12 +12,10 @@ import { RemoteResource } from "./RemoteResourceField";
 export function AWSDestinationForm({
   form,
   remoteAuth,
-  destination,
   defaultName,
 }: {
   form: UseFormReturn<DestinationMetaType<"aws">>;
   remoteAuth: RemoteAuthDAO | null;
-  destination: AWSDestination | null;
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthAWSAPIAgent>(remoteAuth);
@@ -55,14 +53,6 @@ export function AWSDestinationForm({
           ident={ident}
           msg={msg}
           request={request}
-          onCreateSuccess={(name: string) => {
-            void destination?.update({
-              meta: {
-                bucketName: name,
-                region: form.getValues("meta.region"),
-              },
-            });
-          }}
         />
         <RemoteResource.Input
           label="Bucket Name"
