@@ -16,6 +16,7 @@ import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/data/DiskType";
 import { Workspace } from "@/data/Workspace";
 import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/data/WorkspaceTemplates";
+import { AbsPath } from "@/lib/paths2";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { useNavigate } from "@tanstack/react-router";
 import { FolderIcon, LoaderIcon, XIcon } from "lucide-react";
@@ -110,7 +111,7 @@ export function NewWorkspaceDialog({
 
       setPending(false);
       setIsOpen(false);
-      void navigate({ to: String(workspace.home()) });
+      void navigate({ to: workspace.resolveFileUrl(template.navigate as AbsPath) || String(workspace.home()) });
     } catch (error: any) {
       setPending(false);
       setDirectoryError(error.message || "Failed to create workspace");

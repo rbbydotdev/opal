@@ -112,6 +112,21 @@ Each post should start with a title (using \`#\`) and can include any markdown c
 `);
   },
 
+  HelloWorld: () => {
+    return newMd(`# Hello, World!
+
+This is your first markdown file. You can edit this content to get started.
+
+## Features
+
+- Write in **Markdown**
+- Create multiple files
+- Organize your content
+
+Happy writing!
+`);
+  },
+
   BlogGettingStarted: () => {
     return newMd(`# Getting Started with Your Blog
 

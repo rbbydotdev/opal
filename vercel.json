@@ -1,44 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
-    {
-      "source": "/download.zip",
-      "destination": "/download.zip"
-    },
-    {
-      "source": "/auth/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.*).js",
-      "destination": "/$1.js"
-    },
-    {
-      "source": "/workspace/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/preview/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/preview",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/settings",
-      "destination": "/index.html"
-    }
-  ],
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        }
-      ]
+      "headers": [{ "key": "Service-Worker-Allowed", "value": "/" }]
     }
   ]
 }

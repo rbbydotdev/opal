@@ -4,7 +4,6 @@ import {
   RemoteAuthGithubAPIAgent,
   RemoteAuthGithubDeviceOAuthAgent,
   RemoteAuthGithubOAuthAgent,
-  RemoteAuthNetlifyAgent,
   RemoteAuthNetlifyAPIAgent,
   RemoteAuthNetlifyOAuthAgent,
   RemoteAuthVercelAPIAgent,
@@ -20,10 +19,18 @@ import {
   isVercelAPIRemoteAuthDAO,
   RemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
-import { IRemoteGitApiAgent } from "@/data/RemoteAuthTypes";
+import { isRemoteGitApiAgent } from "@/data/RemoteAuthTypes";
+
 import { useMemo } from "react";
 
-export function AgentFromRemoteAuth(remoteAuth?: RemoteAuthDAO | null) {
+export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
+  const agent = AgentFromRemoteAuth(remoteAuth);
+  if (!isRemoteGitApiAgent(agent)) {
+    throw new TypeError("AgentFromRemoteAuth(RemoteAuthDAO) does not satisfy RemoteGitApiAgent");
+  }
+  return agent;
+}
+export function AgentFromRemoteAuth<T extends RemoteAuthDAO>(remoteAuth?: T | null) {
   if (!remoteAuth) return null;
 
   if (isGithubAPIRemoteAuthDAO(remoteAuth)) {
@@ -53,8 +60,8 @@ export function AgentFromRemoteAuth(remoteAuth?: RemoteAuthDAO | null) {
   throw new Error(`No RemoteAuthGitAgent for this type: ${remoteAuth.type} source: ${remoteAuth.source}`);
 }
 
-export function useRemoteAuthAgent<
-  T extends ReturnType<typeof AgentFromRemoteAuth> | RemoteAuthNetlifyAgent | IRemoteGitApiAgent,
->(remoteAuth?: RemoteAuthDAO | null) {
+export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAuth>>(
+  remoteAuth?: RemoteAuthDAO | null
+) {
   return useMemo(() => AgentFromRemoteAuth(remoteAuth) as T, [remoteAuth]);
 }

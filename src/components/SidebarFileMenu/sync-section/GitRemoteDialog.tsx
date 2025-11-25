@@ -32,7 +32,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
-import { IRemoteGitApiAgent } from "@/data/RemoteAuthTypes";
+import { RemoteGitApiAgent } from "@/data/RemoteAuthTypes";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
@@ -450,7 +450,7 @@ function GitRepoSearchContainer({
   onClose: () => void;
   onSelect: (repo: GithubSearchReposResult) => void;
 }) {
-  const agent = useRemoteAuthAgent<IRemoteGitApiAgent>(remoteAuth);
+  const agent = useRemoteAuthAgent<RemoteGitApiAgent>(remoteAuth);
   const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteGitRepoSearch({
     agent,
     defaultValue,

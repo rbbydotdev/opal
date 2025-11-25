@@ -1,5 +1,4 @@
 import { Disk } from "@/data/disk/Disk";
-import { IsoGitApiCallbackForRemoteAuth } from "@/data/IsoGitApiCallbackForRemoteAuth";
 import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitFullRemoteObjType, GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
@@ -7,7 +6,7 @@ import { ConflictError, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
 import { NullDisk } from "@/data/NullDisk";
-import { AgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
+import { GitAgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { Remote } from "comlink";
 import * as git from "isomorphic-git";
 
@@ -204,7 +203,7 @@ export class GitPlaybook {
     }
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
 
-    const onAuth = AgentFromRemoteAuth(RemoteAuth)?.onAuth;
+    const onAuth = RemoteAuth ? GitAgentFromRemoteAuth(RemoteAuth).onAuth : undefined;
     const result = await this.repo.fetch({
       remote: remoteObj.name,
       url: remoteObj.url,
@@ -256,7 +255,7 @@ export class GitPlaybook {
   async addRemoteAndFetch(remote: GitRemote) {
     await this.repo.addGitRemote(remote);
     const remoteAuth = remote.authId ? await RemoteAuthDAO.GetByGuid(remote.authId) : null;
-    const onAuth = AgentFromRemoteAuth(remoteAuth)?.onAuth;
+    const onAuth = remoteAuth ? GitAgentFromRemoteAuth(remoteAuth).onAuth : undefined;
     return await this.repo.fetch({
       remote: remote.name,
       url: remote.url,
@@ -332,7 +331,8 @@ export class GitPlaybook {
     }
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
 
-    const onAuth = RemoteAuth ? IsoGitApiCallbackForRemoteAuth(RemoteAuth) : undefined;
+    const onAuth = RemoteAuth ? GitAgentFromRemoteAuth(RemoteAuth).onAuth : undefined;
+
     await this.repo.push({
       ref,
       force,

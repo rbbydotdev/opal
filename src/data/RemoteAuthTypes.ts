@@ -180,10 +180,9 @@ export const isGithubDeviceOAuthAuth = (record: RemoteAuthRecord): record is Rem
 };
 
 // Interface definitions to break circular dependencies
-export interface IRemoteAuthAgent {
+export interface RemoteAuthAgent {
   getUsername(): string;
   getApiToken(): string;
-  onAuth(): { username: string; password: string };
   test(): Promise<{ status: "error"; msg: string } | { status: "success" }>;
 }
 
@@ -196,4 +195,10 @@ export interface Repo {
   updated_at: Date;
 }
 
-export interface IRemoteGitApiAgent extends IRemoteAuthAgent, IRemoteAuthAgentSearch<Repo> {}
+export interface RemoteGitApiAgent extends RemoteAuthAgent, IRemoteAuthAgentSearch<Repo> {
+  onAuth(): { username: string; password: string };
+}
+
+export const isRemoteGitApiAgent = <T extends RemoteGitApiAgent>(agent: T | unknown | null): agent is T => {
+  return !!(agent as any)?.onAuth;
+};
