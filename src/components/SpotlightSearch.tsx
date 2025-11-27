@@ -1,4 +1,5 @@
 import { useWindowContextProvider } from "@/app/IframeContextProvider";
+import { useBuildCreation } from "@/components/BuildModalContext";
 import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { toast } from "@/components/ui/sonner";
@@ -534,7 +535,7 @@ function SpotlightSearchInternal({
       deferredSearch !== lastSearchRef.current &&
       !deferredSearch.startsWith(commandPrefix)
     ) {
-      console.log("Filename search:", deferredSearch);
+      // console.log("Filename search:", deferredSearch);
 
       lastSearchRef.current = deferredSearch;
       if (deferredSearch) {
@@ -813,10 +814,19 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
 
   const { open: openPreview } = useWindowContextProvider();
   const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useTheme();
+  const { openNew } = useBuildCreation();
 
   const cmdMap = useMemo(
     () =>
       ({
+        // MARK: Build/Publish Commands
+
+        "Build to HTML": [
+          NewCmdExec(() => {
+            void openNew();
+          }),
+        ],
+
         // MARK: Editor Commands
 
         "Open External Preview": [

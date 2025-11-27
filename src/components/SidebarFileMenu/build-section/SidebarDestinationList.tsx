@@ -35,14 +35,16 @@ export function SidebarDestinationList() {
       emptyLabel="no destinations found"
       showGrip={false}
     >
-      <SimpleSelectableList.Actions>
-        <DropdownMenuItem
-          onClick={() => openDestinationFlow()}
-          className="grid grid-cols-[auto_1fr] items-center gap-2"
-        >
-          <Plus /> Add Destination
-        </DropdownMenuItem>
-      </SimpleSelectableList.Actions>
+      <SimpleSelectableList.Actions
+        menuItems={
+          <DropdownMenuItem
+            onClick={() => openDestinationFlow()}
+            className="grid grid-cols-[auto_1fr] items-center gap-2"
+          >
+            <Plus /> Add Destination
+          </DropdownMenuItem>
+        }
+      />
 
       <SimpleSelectableList.Items>
         <div className="flex flex-col gap-2 mt-4 ml-3 group">

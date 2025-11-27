@@ -186,11 +186,7 @@ function SelectableListRoot<T = any>({ children, expanderId, ...coreProps }: Sel
   );
 }
 
-type SelectableListActionsProps = {
-  children?: React.ReactNode;
-};
-
-function SelectableListActions({ children }: SelectableListActionsProps) {
+function SelectableListActions({ children, menuItems }: { children?: React.ReactNode; menuItems?: React.ReactNode }) {
   const { selected, setSelected, onDelete, allItemIds } = useSelectableListContext();
   const { open: openConfirm } = useConfirm();
 
@@ -209,19 +205,15 @@ function SelectableListActions({ children }: SelectableListActionsProps) {
 
   return (
     <div className="group-data-[state=closed]/selectablelist:hidden">
-      {/* Custom action buttons (like Add button) */}
-
-      {/* Dropdown menu for bulk actions */}
+      {children}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {/* {allItemIds.length > 0 && ( */}
           <SidebarGroupAction className={cn("p-0 top-1.5 z-10", children ? "right-0" : "right-0")} title="Items Menu">
             <Ellipsis /> <span className="sr-only">Items Menu</span>
           </SidebarGroupAction>
-          {/* )} */}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {children}
+          {menuItems}
           <DropdownMenuItem
             onClick={() => setSelected(allItemIds)}
             className="grid grid-cols-[auto_1fr] items-center gap-2"
