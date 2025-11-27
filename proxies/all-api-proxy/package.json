@@ -14,5 +14,8 @@
 		"typescript": "^5.5.2",
 		"vitest": "~3.2.0",
 		"wrangler": "^4.28.1"
+	},
+	"dependencies": {
+		"itty-router": "^5.0.22"
 	}
 }
