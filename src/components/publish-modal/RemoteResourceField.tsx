@@ -193,6 +193,7 @@ interface RemoteResourceInputProps {
     setName: (name: string) => void;
   };
   onSearchChange: (value: string) => void;
+  onInputChange?: (value: string) => void;
 }
 
 function RemoteResourceInput({
@@ -202,6 +203,7 @@ function RemoteResourceInput({
   searchButtonTitle = "Search",
   ident,
   onSearchChange,
+  onInputChange,
 }: RemoteResourceInputProps) {
   const { mode, setMode, control, fieldName, getValue, inputRef } = useRemoteResourceContext();
 
@@ -220,6 +222,10 @@ function RemoteResourceInput({
                 {...field}
                 ref={inputRef}
                 placeholder={placeholder}
+                onChange={(e) => {
+                  field.onChange(e);
+                  onInputChange?.(e.target.value);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();

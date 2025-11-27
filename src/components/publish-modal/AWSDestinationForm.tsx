@@ -57,6 +57,7 @@ export function AWSDestinationForm({
           searchButtonTitle="Search Buckets"
           ident={ident}
           onSearchChange={updateSearch}
+          onInputChange={request.reset}
         />
       </RemoteResource.Root>
       <FormField
