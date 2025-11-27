@@ -389,15 +389,12 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
     (child) => !React.isValidElement(child) || child.type !== SelectableListItemMenu
   );
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleSelect(sectionRef, e as any, id);
-    }
-  };
-
   return (
-    <SidebarMenuItem tabIndex={-1} data-selectable-id={id} className="flex w-full rounded justify-center items-center relative">
+    <SidebarMenuItem
+      tabIndex={-1}
+      data-selectable-id={id}
+      className="flex w-full rounded justify-center items-center relative"
+    >
       {/* <div className="flex items-center pr-1 py-2 hover:bg-sidebar-accent"> */}
       <SidebarMenuButton className="flex-1 min-w-0 group h-full py-1" onClick={(e) => handleSelect(sectionRef, e, id)}>
         <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
@@ -446,7 +443,7 @@ export function SelectableListItemMenu({ children }: { children: React.ReactNode
         <Button
           size="sm"
           variant="ghost"
-          className="h-6 w-6 p-4.5 opacity-0 group-hover:opacity-100 group-has-[:focus]:opacity-100 transition-opacity absolute right-1 top-1/2 -translate-y-1/2"
+          className="h-6 w-6 p-4.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity absolute right-1 top-1/2 -translate-y-1/2"
         >
           <MoreHorizontal className="w-4 h-4" />
         </Button>
