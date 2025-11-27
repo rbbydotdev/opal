@@ -46,6 +46,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   protected _context?: TContext;
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
+  // undoStack = new UndoStack();
 
   get dirName(): string | null {
     return null;
@@ -357,6 +358,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     );
   }
 
+  //#undoable
   async renameMultiple(nodes: [from: TreeNode, to: TreeNode | AbsPath][]): Promise<RenameFileType[]> {
     if (nodes.length === 0) return [];
     const results: RenameFileType[] = [];
@@ -371,9 +373,11 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     }
     return this.broadcastRename(results);
   }
+  //#undoable
   async renameDir(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
     return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "dir"))[0]!;
   }
+  //#undoable
   async renameFile(oldFullPath: AbsPath, newFullPath: AbsPath): Promise<RenameFileType> {
     return (await this.renameDirOrFileDiskMethod(oldFullPath, newFullPath, "file"))[0]!;
   }

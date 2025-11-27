@@ -13,6 +13,7 @@ import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/S
 import { SelectHighlight } from "@/components/SidebarFileMenu/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
 // import { Circle } from "lucide";
+import { SidebarDeploymentList } from "@/components/SidebarFileMenu/build-section/SidebarDeploymentList";
 import { MiniTab } from "@/components/ui/AnimatedTabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -204,6 +205,7 @@ export function SidebarFileMenuBuild({
                 <div>{activeTab === "files" && <BuildSidebarFileExplorer build={build} />}</div>
                 <div>{activeTab === "builds" && <SidebarBuildsList workspaceId={currentWorkspace.guid} />}</div>
                 <div>{activeTab === "destinations" && <SidebarDestinationList />}</div>
+                <div>{activeTab === "deployments" && <SidebarDeploymentList />}</div>
               </div>
             </div>
           </CollapsibleContent>

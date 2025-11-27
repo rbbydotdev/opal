@@ -1,7 +1,6 @@
 import { useDestinationManager } from "@/components/DestinationManagerContext";
-import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
+import { DeployLabel } from "@/components/SidebarFileMenu/build-files-section/DeployLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   SelectableListActions,
   SelectableListItem,
@@ -11,15 +10,15 @@ import {
   SelectableListSimple,
 } from "@/components/ui/SelectableList";
 import { DestinationDAO } from "@/data/DestinationDAO";
-import { useDestinations } from "@/hooks/useDestinations";
+import { useDeploys } from "@/hooks/useDeploys";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
-import { Delete, Eye, Plus } from "lucide-react";
+import { Delete, Eye } from "lucide-react";
 
-export function SidebarDestinationList() {
+export function SidebarDeploymentList() {
   const { openDestinationFlow } = useDestinationManager();
   const errorToss = useErrorToss();
-  const { destinations } = useDestinations();
+  const { deploys } = useDeploys();
   const handleDelete = async (destId: string) => {
     try {
       await DestinationDAO.delete(destId);
@@ -34,39 +33,27 @@ export function SidebarDestinationList() {
 
   return (
     <SelectableListSimple
-      data={destinations}
+      data={deploys}
       getItemId={(build) => build.guid}
       onClick={handleView}
       onDelete={handleDelete}
-      emptyLabel="no destinations found"
+      emptyLabel="no deploys found"
       showGrip={false}
     >
-      <SelectableListActions
-        menuItems={
-          <DropdownMenuItem
-            onClick={() => openDestinationFlow()}
-            className="grid grid-cols-[auto_1fr] items-center gap-2"
-          >
-            <Plus /> Add Destination
-          </DropdownMenuItem>
-        }
-      />
+      <SelectableListActions />
 
       <SelectableListItems>
         <div className="flex flex-col gap-2 mt-4 ml-3 group">
-          {destinations.length === 0 && <EmptySidebarLabel label="no destinations" />}
-          {destinations.map((destination) => (
-            <SelectableListItem key={destination.guid} id={destination.guid}>
-              <DestinationLabel destination={destination} />
+          {deploys.length === 0 && <EmptySidebarLabel label="no deploys" />}
+          {deploys.map((deploy) => (
+            <SelectableListItem key={deploy.guid} id={deploy.guid}>
+              <DeployLabel deploy={deploy} />
               <SelectableListItemMenu>
-                <SelectableListItemAction
-                  onClick={() => handleView(destination.guid)}
-                  icon={<Eye className="w-4 h-4" />}
-                >
+                <SelectableListItemAction onClick={() => handleView(deploy.guid)} icon={<Eye className="w-4 h-4" />}>
                   View
                 </SelectableListItemAction>
                 <SelectableListItemAction
-                  onClick={() => handleDelete(destination.guid)}
+                  onClick={() => handleDelete(deploy.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >

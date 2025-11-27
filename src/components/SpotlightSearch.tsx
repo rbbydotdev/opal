@@ -20,8 +20,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
+import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
-import clsx from "clsx";
 import fuzzysort from "fuzzysort";
 import { CommandIcon, FileTextIcon } from "lucide-react";
 import mime from "mime-types";
@@ -623,11 +623,14 @@ function SpotlightSearchInternal({
       {createPortal(<div className="inset-0 absolute backdrop-blur-sm"></div>, document.body)}
       <div
         ref={containerRef}
-        className={clsx(
-          "absolute left-0 right-0 top-4 z-50 m-auto flex w-[36rem] flex-col items-center justify-center",
+        className={cn(
+          "rounded-lg absolute left-0 right-0 top-4 z-50 m-auto flex w-[36rem] flex-col items-center justify-center",
           "translate-y-12",
           { "animate-in": open }
         )}
+        style={{
+          boxShadow: "2px 4px 12px 0 oklch(var(--foreground))",
+        }}
         onKeyDown={handleKeyDown}
         onBlur={(e) => {
           if (!containerRef.current?.contains(e.relatedTarget as Node)) {
@@ -635,7 +638,7 @@ function SpotlightSearchInternal({
           }
         }}
       >
-        <div className="flex h-12 w-full items-center justify-center rounded-lg border bg-background p-2 _text-sidebar-foreground/70 shadow-lg relative">
+        <div className="flex h-12 w-full items-center justify-center rounded-lg border bg-background p-2 shadow-lg relative">
           <input
             {...getInputProps()}
             value={search}
