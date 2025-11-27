@@ -60,6 +60,7 @@ export function GitHubDestinationForm({
           searchButtonTitle="Search Repositories"
           ident={ident}
           onSearchChange={updateSearch}
+          onInputChange={request.reset}
         />
       </RemoteResource.Root>
       <FormField

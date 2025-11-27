@@ -53,6 +53,7 @@ export function NetlifyDestinationForm({
         searchButtonTitle="Find Site"
         ident={ident}
         onSearchChange={updateSearch}
+        onInputChange={request.reset}
       />
     </RemoteResource.Root>
   );

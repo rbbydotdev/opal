@@ -452,6 +452,13 @@ function useRemoteResource<T>({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const abortCntrlRef = React.useRef<AbortController | null>(null);
 
+  // Clear error when name changes
+  useEffect(() => {
+    if (error) {
+      setError(null);
+    }
+  }, [name, error]);
+
   const create = async () => {
     const transformedName = config.transformName ? config.transformName(name.trim()) : name.trim();
     if (!transformedName) return null;
