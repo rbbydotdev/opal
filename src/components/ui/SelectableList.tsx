@@ -210,7 +210,7 @@ export function SelectableListActions({
   };
 
   return (
-    <div className="group-data-[state=closed]/selectablelist:hidden">
+    <div className="group-data-[state=closed]/selectablelist:hidden ">
       {children}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

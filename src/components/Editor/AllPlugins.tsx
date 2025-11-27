@@ -7,7 +7,6 @@ import { useEditorHistoryPlugin2WithRealm } from "@/components/Editor/history/us
 import { useWorkspaceDocumentId } from "@/components/Editor/history/useWorkspaceDocumentId";
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
-import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { useFileContents } from "@/context/useFileContents";
 import { useSnapHistoryDB } from "@/data/HistoryDAO";
 import { Workspace } from "@/data/Workspace";
@@ -46,12 +45,9 @@ export function useAllPlugins({
 }) {
   const { contents, writeFileContents } = useFileContents({ currentWorkspace });
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
-  const { filePath } = useCurrentFilepath();
   const { isEditHistoryEnabled } = useToggleEditHistory();
 
-  const documentId = isEditHistoryEnabled 
-    ? useWorkspaceDocumentId(contents, currentWorkspace.resolveFileUrl(filePath!))
-    : "";
+  const documentId = isEditHistoryEnabled ? useWorkspaceDocumentId(contents) : "";
 
   const realm = useRemoteMDXEditorRealm(realmId);
   useEffect(() => {

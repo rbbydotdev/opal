@@ -91,9 +91,9 @@ export function PublishModalStack({
   const handleSubmit = async ({ remoteAuthId, label, meta }: AnyDestinationMetaType) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
-    const destination = await DestinationDAO.Create({ label, meta, remoteAuth });
-    await destination.save();
-    setDestination(destination);
+    const submitDest = await DestinationDAO.CreateNew({ ...destination?.toJSON(), label, meta, remoteAuth });
+    await submitDest.save();
+    setDestination(submitDest);
     popView();
   };
 
@@ -350,9 +350,7 @@ export function PublicationModalPublishContent({
       {/* <BuildLabel build={build} className="border bg-card p-2 rounded-lg font-mono" /> */}
       <BuildSelector builds={builds} build={build} setBuildId={handleBuildSelect}></BuildSelector>
       <div className="space-y-2">
-        <label htmlFor="strategy-select" className="text-sm font-medium">
-          Destination
-        </label>
+        <span className="text-sm font-medium">Destination</span>
         <div className="flex gap-2">
           <div className="w-full">
             <Select value={destination?.guid} onValueChange={handleSetDestination}>

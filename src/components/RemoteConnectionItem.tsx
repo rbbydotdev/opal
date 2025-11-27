@@ -47,16 +47,6 @@ export const RemoteItemCreateInput = forwardRef<
     placeholder?: string;
   }
 >(({ onClose, request, msg, className, ident, submit, placeholder = "my-new-thing" }, ref) => {
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (ident.isValid) return submit();
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-    }
-  };
-
   return (
     <div className={cn("w-full relative", className)}>
       <div className="w-full p-0 relative">
@@ -66,7 +56,7 @@ export const RemoteItemCreateInput = forwardRef<
           autoFocus
           value={ident.name}
           onChange={(e) => ident.setName(e.target.value)}
-          onKeyDown={handleKeyDown}
+          // onKeyDown={handleKeyDown}
           onBlur={() => onClose(ident.name.trim() || undefined)}
           placeholder={placeholder}
           className="w-full"
@@ -164,7 +154,7 @@ export function RemoteItemSearchDropDown({
 
   return (
     <Popover.Root open={showDropdown}>
-      <div ref={containerRef} className={cn("w-full p-0", className)}>
+      <div ref={containerRef} className={cn("w-full p-0", className)} onKeyDown={handleKeyDown}>
         <Popover.Anchor asChild>
           <Input
             {...getInputProps()}
@@ -172,7 +162,6 @@ export function RemoteItemSearchDropDown({
             autoFocus
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={handleKeyDown}
             onBlur={handleInputBlur}
             placeholder="Search..."
             className="w-full"
@@ -260,7 +249,7 @@ function useRemoteSearch<T extends Record<string, any>>({
 }) {
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { loading, results, error, clearError } = useAnySearch<T>({
+  const { loading, results, error, clearError, clearCache } = useAnySearch<T>({
     agent,
     searchTerm: debouncedSearchValue,
     searchKey: config.searchKey,
@@ -298,6 +287,7 @@ function useRemoteSearch<T extends Record<string, any>>({
     searchValue,
     updateSearch,
     clearError,
+    clearCache,
     searchResults,
     error,
   };

@@ -105,6 +105,13 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
     return this;
   }
 
+  clearCache(): this {
+    this.cache.allItems = [];
+    this.cache.etag = null;
+    this.cache.lastCheck = 0;
+    return this;
+  }
+
   private setLoading(loading: boolean): void {
     if (this._loading !== loading) {
       this._loading = loading;
@@ -113,6 +120,9 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
   }
 
   private setResults(results: Fuzzysort.KeyResults<TResult> | TResult[]): void {
+    // // Force a new reference to fix React identity crisis when cache is updated
+    // this._results = Array.isArray(results) && !isFuzzyResult(results[0]) ? [...results] : results;
+    // this.events.emit("results", this._results);
     this._results = results;
     this.events.emit("results", results);
   }
@@ -142,36 +152,35 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
       this.setError(null);
 
       let isStale = this.cache.allItems.length === 0;
-      // console.debug("Cache status - isStale:", isStale, "cache length:", this.cache.allItems.length);
 
-      // Check for updates if we have cached data and it's been more than 2 seconds
-      if (!isStale && Date.now() - this.cache.lastCheck > 2000) {
-        // console.debug("Checking for updates...");
+      // Check for updates if we have cached data and it's been more than 10 seconds
+      if (!isStale && Date.now() - this.cache.lastCheck > 5_000) {
+        //
+        this.setLoading(false); //stale while revalidating
+        this.setResults(this.cache.allItems); //show cached while revalidating
+        this.searchResults();
+        //
+
         const { updated, newEtag } = await this.agent.hasUpdates(this.cache.etag, {
           signal: this.controller.signal,
         });
         isStale = updated;
         this.cache.etag = newEtag;
         this.cache.lastCheck = Date.now();
-        // console.debug("Update check complete - isStale:", isStale);
       }
-
       // Fetch fresh data if needed
       if (isStale) {
-        // console.debug("Data is stale, calling fetchAll...");
         this.cache.allItems = await this.agent.fetchAll({ signal: this.controller.signal });
-        // console.debug("fetchAll complete, got", this.cache.allItems.length, "items");
-      } else {
-        // console.debug("Using cached data");
       }
 
       // Only update results if this is still the current request
       if (this.requestId === currentRequestId) {
-        const searchResults = !this._searchTerm
-          ? this.cache.allItems
-          : fuzzysort.go(this._searchTerm, this.cache.allItems, { key: this.searchKey });
+        // const searchResults = !this._searchTerm
+        //   ? this.cache.allItems
+        //   : fuzzysort.go(this._searchTerm, this.cache.allItems, { key: this.searchKey });
+        // this.setResults(searchResults);
 
-        this.setResults(searchResults);
+        this.searchResults();
         this.setLoading(false);
         this.setError(null);
       }
@@ -190,6 +199,14 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
       }
     }
   }
+
+  searchResults = (searchStr = this._searchTerm) => {
+    const searchResults = !searchStr
+      ? this.cache.allItems
+      : fuzzysort.go(searchStr, this.cache.allItems, { key: this.searchKey });
+
+    this.setResults(searchResults);
+  };
 
   cancel = (): void => {
     this.controller?.abort();

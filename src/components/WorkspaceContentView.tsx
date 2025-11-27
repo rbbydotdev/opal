@@ -5,8 +5,8 @@ import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/HistoryDAO";
 import { Workspace } from "@/data/Workspace";
-import { useToggleHistoryImageGeneration } from "./Editor/history/useToggleHistoryImageGeneration";
 import { useToggleEditHistory } from "./Editor/history/useToggleEditHistory";
+import { useToggleHistoryImageGeneration } from "./Editor/history/useToggleHistoryImageGeneration";
 // import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
@@ -42,16 +42,12 @@ export function WorkspaceMarkdownEditor({
 
   const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
   const { isEditHistoryEnabled } = useToggleEditHistory();
-  const documentId = isEditHistoryEnabled 
-    ? useWorkspaceDocumentId(contents, currentWorkspace.resolveFileUrl(path))
-    : "";
+  const documentId = isEditHistoryEnabled ? useWorkspaceDocumentId(contents) : "";
 
   const markdown = String(contents || "");
   const { data, content } = useMemo(() => {
     const md = matter(markdown);
-    const frontmatter = isEditHistoryEnabled && documentId 
-      ? { documentId, ...(md.data ?? {}) }
-      : md.data ?? {};
+    const frontmatter = isEditHistoryEnabled && documentId ? { documentId, ...(md.data ?? {}) } : (md.data ?? {});
     return { data: frontmatter, content: md.content };
   }, [documentId, markdown, isEditHistoryEnabled]);
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();

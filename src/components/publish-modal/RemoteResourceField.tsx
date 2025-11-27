@@ -2,7 +2,7 @@ import { RemoteItemCreateInput, RemoteItemSearchDropDown } from "@/components/Re
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
 
@@ -65,15 +65,6 @@ export function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>
   return <RemoteResourceContext.Provider value={contextValue}>{children}</RemoteResourceContext.Provider>;
 }
 
-interface RemoteResourceSearchProps {
-  label: string;
-  isLoading: boolean;
-  searchValue: string;
-  onSearchChange: (value: string) => void;
-  searchResults: Array<{ element: ReactNode; label: string; value: string }>;
-  error: string | null;
-}
-
 export function RemoteResourceSearch({
   label,
   isLoading,
@@ -81,7 +72,14 @@ export function RemoteResourceSearch({
   onSearchChange,
   searchResults,
   error,
-}: RemoteResourceSearchProps) {
+}: {
+  label: string;
+  isLoading: boolean;
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  searchResults: Array<{ element: ReactNode; label: string; value: string }>;
+  error: string | null;
+}) {
   const { mode, setMode, onValueChange } = useRemoteResourceContext();
 
   if (mode !== "search") return null;
@@ -89,29 +87,41 @@ export function RemoteResourceSearch({
   return (
     <div>
       <FormLabel>{label}</FormLabel>
-      <RemoteItemSearchDropDown
-        className="mt-2"
-        isLoading={isLoading}
-        searchValue={searchValue}
-        onSearchChange={onSearchChange}
-        onClose={(val?: string) => {
-          setMode("input");
-          if (val) {
-            onValueChange(val);
-          }
-        }}
-        onSelect={(item: { element: ReactNode; label: string; value: string }) => {
-          onValueChange(item.value);
-          setMode("input");
-        }}
-        error={error}
-        allItems={searchResults}
-      />
+      <div className="flex justify-center w-full items-center gap-2 mt-2">
+        <RemoteItemSearchDropDown
+          className="flex-1"
+          isLoading={isLoading}
+          searchValue={searchValue}
+          onSearchChange={onSearchChange}
+          onClose={(val?: string) => {
+            setMode("input");
+            if (val) {
+              onValueChange(val);
+            }
+          }}
+          onSelect={(item: { element: ReactNode; label: string; value: string }) => {
+            onValueChange(item.value);
+            setMode("input");
+          }}
+          error={error}
+          allItems={searchResults}
+        />
+        <Button type="button" variant="outline" title="Exit search" onClick={() => setMode("input")}>
+          <X />
+        </Button>
+      </div>
     </div>
   );
 }
 
-interface RemoteResourceCreateProps {
+export function RemoteResourceCreate({
+  label,
+  placeholder,
+  ident,
+  msg,
+  request,
+  onCreateSuccess,
+}: {
   label: string;
   placeholder: string;
   ident: {
@@ -132,16 +142,7 @@ interface RemoteResourceCreateProps {
     reset: () => void;
   };
   onCreateSuccess?: (name: string) => void;
-}
-
-export function RemoteResourceCreate({
-  label,
-  placeholder,
-  ident,
-  msg,
-  request,
-  onCreateSuccess,
-}: RemoteResourceCreateProps) {
+}) {
   const { mode, setMode, onValueChange } = useRemoteResourceContext();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -162,16 +163,21 @@ export function RemoteResourceCreate({
   return (
     <div>
       <FormLabel>{label}</FormLabel>
-      <RemoteItemCreateInput
-        className="mt-2"
-        ref={inputRef}
-        placeholder={placeholder}
-        onClose={() => setMode("input")}
-        submit={handleCreateSubmit}
-        request={request}
-        msg={msg}
-        ident={ident}
-      />
+      <div className="flex justify-center w-full items-center gap-2 mt-2">
+        <RemoteItemCreateInput
+          className="flex-1"
+          ref={inputRef}
+          placeholder={placeholder}
+          onClose={() => setMode("input")}
+          submit={handleCreateSubmit}
+          request={request}
+          msg={msg}
+          ident={ident}
+        />
+        <Button type="button" variant="outline" title="Exit create" onClick={() => setMode("input")}>
+          <X />
+        </Button>
+      </div>
     </div>
   );
 }

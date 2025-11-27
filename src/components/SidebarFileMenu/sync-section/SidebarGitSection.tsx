@@ -424,14 +424,10 @@ export function SidebarGitSection({
     if (currentGitRef?.type === "commit") return "detatched";
     return "commit";
   })();
-  // onPending
-
-  // repo.onPending
   const globalPending = useSyncExternalStore(repo.onPending, repo.isPending);
 
   // Remote management functions
   const addRemoteCmdRef = useGitRemoteDialogCmd();
-  // const remoteSelectState = useRemoteSelectState(info.remotes);
 
   const handleFetchRemote = async () => {
     let remote = null;
