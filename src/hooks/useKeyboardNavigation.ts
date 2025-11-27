@@ -29,6 +29,7 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const menuItems = menuRef.current?.querySelectorAll('[role="menuitem"]');
     const itemsLength = menuItems?.length ?? 0;
+    // const usingMaxIndex = (wantIndex: number) => Math.max(0, Math.min(wantIndex, itemsLength - 1));
 
     switch (e.key) {
       case "Enter":
@@ -57,6 +58,7 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
           });
         } else {
           setActiveIndex((prev) => {
+            if (itemsLength < prev) return 0; //for when size changes
             if (prev < itemsLength - 1) return prev + 1;
             return wrapAround ? -1 : prev;
           });
@@ -66,6 +68,7 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
       case "ArrowDown":
         e.preventDefault();
         setActiveIndex((prev) => {
+          if (itemsLength < prev) return 0; //for when size changes
           if (prev < itemsLength - 1) return prev + 1;
           return wrapAround ? -1 : prev;
         });
