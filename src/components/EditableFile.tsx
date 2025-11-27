@@ -66,7 +66,6 @@ export const EditableFile = ({
     <div className="select-none">
       {!isEditing ? (
         <>
-          <SelectedMark selected={isSelected} conflicted={isConflicted} />
           <ActiveLink
             active={equals(fullPath, workspaceRoute.path)}
             draggable
@@ -74,7 +73,7 @@ export const EditableFile = ({
             to={currentWorkspace.resolveFileUrl(fullPath)}
             className={cn(
               className,
-              { "ring-sidebar-accent ring-2 font-bold": isSelectedRange || isFocused },
+              { "ring-ring ring-2 font-bold": isSelectedRange || isFocused },
               "group cursor-pointer"
             )}
             ref={linkRef}
