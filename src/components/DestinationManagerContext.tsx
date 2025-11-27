@@ -2,7 +2,7 @@ import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmd
 import { createContext, useContext } from "react";
 
 type DestinationManagerContextType = {
-  openDestinationFlow: (options: { destinationId: string }) => void;
+  openDestinationFlow: (destinationId?: string | null) => void;
   close: () => void;
 };
 
@@ -12,15 +12,11 @@ export function DestinationManagerProvider({ children }: { children: React.React
   const buildPublisher = useBuildPublisher();
 
   const value: DestinationManagerContextType = {
-    openDestinationFlow: (options) => buildPublisher.openDestinationFlow(options),
+    openDestinationFlow: (destinationId) => buildPublisher.openDestinationFlow(destinationId),
     close: () => buildPublisher.close(),
   };
 
-  return (
-    <DestinationManagerContext.Provider value={value}>
-      {children}
-    </DestinationManagerContext.Provider>
-  );
+  return <DestinationManagerContext.Provider value={value}>{children}</DestinationManagerContext.Provider>;
 }
 
 export function useDestinationManager() {

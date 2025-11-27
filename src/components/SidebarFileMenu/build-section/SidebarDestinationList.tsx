@@ -15,6 +15,7 @@ export function SidebarDestinationList() {
   const { destinations } = useDestinations();
   const handleDelete = async (destId: string) => {
     try {
+      console.log("Deleting destination", destId);
       await DestinationDAO.delete(destId);
     } catch (error) {
       errorToss(coerceError(error));
@@ -22,7 +23,7 @@ export function SidebarDestinationList() {
   };
 
   const handleView = (destinationId: string) => {
-    openDestinationFlow({ destinationId });
+    openDestinationFlow(destinationId);
   };
 
   return (
@@ -35,7 +36,10 @@ export function SidebarDestinationList() {
       showGrip={false}
     >
       <SimpleSelectableList.Actions>
-        <DropdownMenuItem onClick={() => {}} className="grid grid-cols-[auto_1fr] items-center gap-2">
+        <DropdownMenuItem
+          onClick={() => openDestinationFlow()}
+          className="grid grid-cols-[auto_1fr] items-center gap-2"
+        >
           <Plus /> Add Destination
         </DropdownMenuItem>
       </SimpleSelectableList.Actions>

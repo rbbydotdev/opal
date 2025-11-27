@@ -93,7 +93,7 @@ export function PublishModalStack({
     const destination = await DestinationDAO.Create({ label, meta, remoteAuth });
     await destination.save();
     setDestination(destination);
-    resetToDefault();
+    popView();
   };
 
   const handleClose = useCallback(() => {
@@ -138,10 +138,15 @@ export function PublishModalStack({
       close: () => {
         setIsOpen(false);
       },
-      openDestinationFlow: async ({ destinationId }) => {
-        const destination = await DestinationDAO.FetchDAOFromGuid(destinationId, true);
-        setPreferredConnection(destination.remoteAuth);
-        setDestination(destination);
+      openDestinationFlow: async (destinationId) => {
+        if (destinationId) {
+          const destination = await DestinationDAO.FetchDAOFromGuid(destinationId, true);
+          setPreferredConnection(destination.remoteAuth);
+          setDestination(destination);
+        } else {
+          setDestination(null);
+          setPreferredConnection(null);
+        }
         setBuild(NULL_BUILD); // Set a null build for destination-only mode
         setIsOpen(true);
         replaceView("destination");
@@ -241,7 +246,7 @@ export function PublishModalStack({
             }}
             onSuccess={(remoteAuth) => {
               setPreferredConnection(remoteAuth);
-              replaceView("destination");
+              popView();
             }}
           >
             <DialogHeader>

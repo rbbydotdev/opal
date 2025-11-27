@@ -9,7 +9,8 @@ import {
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { ROOT_NODE, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName/")({
   component: WorkspaceIndexPage,
@@ -17,13 +18,12 @@ export const Route = createFileRoute("/_app/workspace/$workspaceName/")({
 
 function WorkspaceIndexPage() {
   const { currentWorkspace } = useWorkspaceContext();
-  // const navigate = useNavigate()
 
   const handleExternalDrop = useHandleDropFilesEventForNodeRedirect({ currentWorkspace });
 
   return (
     <>
-      {/* <SpotlightSearch currentWorkspace={currentWorkspace} /> */}
+      <FirstFileRedirect disabled />
       <div
         style={{
           backgroundImage: "url('/opal.svg')",
@@ -61,13 +61,13 @@ function WorkspaceIndexPage() {
   );
 }
 
-// function FirstFileRedirect() {
-//   const navigate = useNavigate();
-//   const { currentWorkspace } = useWorkspaceContext();
-//   useEffect(() => {
-//     if (!currentWorkspace.isNull) {
-//       void currentWorkspace.tryFirstFileUrl().then((ff) => navigate({ to: ff }));
-//     }
-//   }, [currentWorkspace, navigate]);
-//   return null;
-// }
+function FirstFileRedirect({ disabled }: { disabled?: boolean }) {
+  const navigate = useNavigate();
+  const { currentWorkspace } = useWorkspaceContext();
+  useEffect(() => {
+    if (!currentWorkspace.isNull && !disabled) {
+      void currentWorkspace.tryFirstFileUrl().then((ff) => navigate({ to: ff }));
+    }
+  }, [currentWorkspace, disabled, navigate]);
+  return null;
+}
