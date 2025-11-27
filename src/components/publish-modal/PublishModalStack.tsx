@@ -329,14 +329,17 @@ export function PublicationModalPublishContent({
     const selectedDestination = destinations.find((d) => d.guid === destId);
     //determine which kind was selected
     if (selectedDestination) {
-      //destination
+      //known destination with connection
       setDestination(selectedDestination);
+      setPreferredConnection(selectedDestination.remoteAuth);
     } else if (selectedRemoteAuth) {
-      //remote auth
+      //known connection
       setPreferredConnection(selectedRemoteAuth);
+      setDestination(null);
       pushView("destination");
     } else if (!selectedRemoteAuth) {
-      //needs new connection
+      //fresh connection
+      setDestination(null);
       setPreferredConnection(RemoteAuthTemplates.find((t) => typeSource(t) === destId)!);
       pushView("connection");
     }

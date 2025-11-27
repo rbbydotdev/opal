@@ -88,7 +88,14 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
   };
 
   setSearchTerm(searchTerm: string): this {
-    this._searchTerm = searchTerm;
+    this._searchTerm = (() => {
+      try {
+        return new URL(searchTerm).pathname.replace(/^\//, "");
+      } catch (_e) {
+        return searchTerm;
+      }
+    })();
+
     return this;
   }
 

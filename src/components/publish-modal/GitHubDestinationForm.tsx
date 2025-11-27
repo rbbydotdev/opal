@@ -30,7 +30,6 @@ export function GitHubDestinationForm({
     createRequest: async (name: string, options: { signal?: AbortSignal }) => {
       const response = await agent.createRepo(name, options);
       clearCache();
-      // Transform GitHub API response to match expected format
       return { name: response.data.name };
     },
     defaultName,
