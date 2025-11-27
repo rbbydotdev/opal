@@ -62,6 +62,7 @@ export function PublicationModalDestinationContent({
     }),
     [currentSchema._def, editDestination, remoteAuthId]
   );
+  // console.log(defaultValues);
 
   const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
     defaultValues,
@@ -172,7 +173,15 @@ export function PublicationModalDestinationContent({
               <FormItem>
                 <FormLabel>Destination Label</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="label" />
+                  <Input
+                    {...field}
+                    placeholder="label"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        return e.preventDefault();
+                      }
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

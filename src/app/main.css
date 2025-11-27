@@ -10,6 +10,11 @@
     scrollbar-width: none;
   }
 }
+@layer utilities {
+  .after-dot {
+    @apply after:absolute after:top-1 after:right-1 after:block after:h-2 after:w-2 after:rounded-full after:bg-ring after:content-['*'];
+  }
+}
 
 @layer base {
   * {

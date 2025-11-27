@@ -50,18 +50,22 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     return this.remoteAuth instanceof RemoteAuthDAO ? this.remoteAuth : RemoteAuthDAO.FromJSON(this.remoteAuth);
   }
 
-  static async Create<T>({
+  static async CreateNew<T>({
+    guid = DestinationDAO.guid(),
     remoteAuth,
     meta,
     label,
+    timestamp = Date.now(),
   }: {
+    guid?: string;
     remoteAuth: RemoteAuthDAO | RemoteAuthJType;
     meta: T;
     label: string;
+    timestamp?: number;
   }) {
     const existingNames = (await DestinationDAO.all()).map((rad) => rad.label);
     const uniq = getUniqueSlug(label, existingNames);
-    return new DestinationDAO<T>({ guid: DestinationDAO.guid(), remoteAuth, meta, label: uniq, timestamp: Date.now() });
+    return new DestinationDAO<T>({ guid, remoteAuth, meta, label: uniq, timestamp });
   }
 
   static FetchFromGuid(guid: string) {

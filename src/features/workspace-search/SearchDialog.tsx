@@ -195,7 +195,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
                 </Label>
               </div>
               <RadioGroup
-                className="_flex ml-4 hidden items-center gap-2 TODO-SOMEDAY"
+                className="ml-4 hidden items-center gap-2"
                 defaultValue={optionsValue.type}
                 onValueChange={(type: "markdown" | "rich") => {
                   setOptionsValue((prev) => ({ ...prev, type }));

@@ -23,12 +23,13 @@ export function GitHubDestinationForm({
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
-  const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteGitRepoSearch({
+  const { isLoading, searchValue, updateSearch, clearCache, searchResults, error } = useRemoteGitRepoSearch({
     agent,
   });
   const { ident, msg, request } = useRemoteGitRepo({
     createRequest: async (name: string, options: { signal?: AbortSignal }) => {
       const response = await agent.createRepo(name, options);
+      clearCache();
       // Transform GitHub API response to match expected format
       return { name: response.data.name };
     },

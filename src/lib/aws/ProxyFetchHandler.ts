@@ -1,5 +1,5 @@
-import { FetchHttpHandler } from "@smithy/fetch-http-handler";
 import type { FetchHttpHandlerOptions } from "@smithy/fetch-http-handler";
+import { FetchHttpHandler } from "@smithy/fetch-http-handler";
 import type { HttpRequest, HttpResponse } from "@smithy/protocol-http";
 import { HttpRequest as HttpRequestClass } from "@smithy/protocol-http";
 import type { HttpHandlerOptions } from "@smithy/types";
@@ -53,11 +53,11 @@ export class ProxyFetchHandler extends FetchHttpHandler {
       body: request.body,
     });
 
-    console.log("🔄 ProxyFetchHandler:", {
-      original: `${request.protocol}//${request.hostname}${request.path}`,
-      proxied: `${modifiedRequest.protocol}//${modifiedRequest.hostname}:${modifiedRequest.port}${modifiedRequest.path}`,
-      hostHeader: modifiedRequest.headers["Host"],
-    });
+    // console.debug("🔄 ProxyFetchHandler:", {
+    //   original: `${request.protocol}//${request.hostname}${request.path}`,
+    //   proxied: `${modifiedRequest.protocol}//${modifiedRequest.hostname}:${modifiedRequest.port}${modifiedRequest.path}`,
+    //   hostHeader: modifiedRequest.headers["Host"],
+    // });
 
     // Use the parent's handle method with our modified request
     return super.handle(modifiedRequest, options);

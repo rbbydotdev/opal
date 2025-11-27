@@ -38,5 +38,6 @@ export function useAnySearch<T extends Record<string, any>>({
     error,
     clearError: () => searchInstance.clearError(),
     search: () => searchInstance.search(),
+    clearCache: () => searchInstance.clearCache(),
   };
 }

@@ -91,7 +91,15 @@ function RegionSearchDropdown({
 
   return (
     <Popover.Root open={showDropdown}>
-      <div ref={containerRef} className={cn("w-full p-0", className)} onKeyDown={handleKeyDown}>
+      <div
+        ref={containerRef}
+        className={cn("w-full p-0", className)}
+        onKeyDown={(e) => {
+          console.log(e);
+          e.stopPropagation();
+          handleKeyDown(e);
+        }}
+      >
         <Popover.Anchor asChild>
           <Input
             {...getInputProps()}
@@ -101,6 +109,9 @@ function RegionSearchDropdown({
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") onClose(searchValue.trim());
+              console.log(e);
+              console.log("..........................");
+              handleKeyDown(e);
             }}
             onBlur={handleInputBlur}
             placeholder="Search regions..."
@@ -232,11 +243,21 @@ export function AWSDestinationForm({
                   />
                 ) : (
                   <Input
+                    data-no-escape
                     value={displayValue}
                     placeholder="Select a region"
+                    autoFocus
                     onClick={() => setShowSearch(true)}
-                    readOnly
-                    className="cursor-pointer lowercase foobar"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        return e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) => {
+                      setSearchValue(e.target.value.toLowerCase());
+                      setShowSearch(true);
+                    }}
+                    className="cursor-pointer lowercase"
                   />
                 )}
               </FormControl>

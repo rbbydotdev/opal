@@ -60,6 +60,9 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
         page,
         per_page: 100,
         affiliation: "owner,collaborator",
+        headers: {
+          "If-None-Match": "", // Force fresh response, bypass browser cache
+        },
         request: { signal },
       });
 
