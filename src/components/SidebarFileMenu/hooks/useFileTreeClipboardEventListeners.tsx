@@ -5,6 +5,7 @@ import { toast } from "@/components/ui/sonner";
 import { Workspace } from "@/data/Workspace";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { useEffect } from "react";
+import { useWatchElement } from "../../../hooks/useWatchElement";
 
 const files = (count: number) => (count > 1 ? "files" : "file");
 
@@ -17,10 +18,12 @@ export function useFileTreeClipboardEventListeners({
 }) {
   const { focused, editing, selectedFocused, setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
   const handlePaste = useFileMenuPaste({ currentWorkspace });
+  const sidebarElement = useWatchElement(elementSelector) as HTMLElement | null;
 
   //check editing or else copying filenames gives the node not the name!
   useEffect(() => {
     const handlePasteEvent = async (event: ClipboardEvent) => {
+      console.debug("paste event");
       const target = event.target as HTMLElement | null;
       const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]);
       if (target?.closest?.(elementSelector) && !editing) {
@@ -44,6 +47,7 @@ export function useFileTreeClipboardEventListeners({
       }
     };
     const handleCutEvent = (event: ClipboardEvent) => {
+      console.debug("cut event");
       const target = event.target as HTMLElement | null;
 
       toast({
@@ -61,6 +65,7 @@ export function useFileTreeClipboardEventListeners({
       }
     };
     const handleCopyEvent = (event: ClipboardEvent) => {
+      console.debug("copy event");
       const target = event.target as HTMLElement | null;
       if (target?.closest?.(elementSelector) && !editing) {
         toast({
@@ -76,8 +81,7 @@ export function useFileTreeClipboardEventListeners({
         });
       }
     };
-    //should i just listen on "[data-sidebar-file-menu] ???
-    const sidebarElement = document.querySelector(elementSelector) as HTMLElement | null;
+    // const sidebarElement = document.querySelector(elementSelector) as HTMLElement | null;
     if (!sidebarElement) return;
     sidebarElement.addEventListener("paste", handlePasteEvent);
     sidebarElement.addEventListener("cut", handleCutEvent);
@@ -87,5 +91,14 @@ export function useFileTreeClipboardEventListeners({
       sidebarElement.removeEventListener("cut", handleCutEvent);
       sidebarElement.removeEventListener("copy", handleCopyEvent);
     };
-  }, [currentWorkspace, focused, selectedFocused, setFileTreeCtx, handlePaste, editing, elementSelector]);
+  }, [
+    currentWorkspace,
+    focused,
+    selectedFocused,
+    setFileTreeCtx,
+    handlePaste,
+    editing,
+    elementSelector,
+    sidebarElement,
+  ]);
 }

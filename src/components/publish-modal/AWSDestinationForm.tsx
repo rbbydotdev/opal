@@ -23,11 +23,7 @@ export function AWSDestinationForm({
     agent,
   });
   const { ident, msg, request } = useRemoteAWSBucket({
-    createRequest:
-      agent.createBucket ||
-      (async () => {
-        throw new Error("No agent available");
-      }),
+    createRequest: agent.createBucket,
     defaultName,
   });
 

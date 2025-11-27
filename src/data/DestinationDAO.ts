@@ -143,11 +143,11 @@ const RandomTag = (tag: string) =>
 export const DestinationSchemaMap = {
   cloudflare: z
     .object({
-      remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
-      label: z.string().min(1, "Label is required"),
+      remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
+      label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        accountId: z.string().min(1, "Account ID is required"),
-        siteId: z.string().min(1, "Site ID is required"),
+        accountId: z.string().trim().min(1, "Account ID is required"),
+        siteId: z.string().trim().min(1, "Site ID is required"),
       }),
     })
     .default(() => ({
@@ -157,11 +157,11 @@ export const DestinationSchemaMap = {
     })),
   vercel: z
     .object({
-      remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
-      label: z.string().min(1, "Label is required"),
+      remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
+      label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        // implicit! projectId: z.string(),
-        // implicit! teamId: z.string().optional(),
+        // implicit! projectId: z.string().trim(),
+        // implicit! teamId: z.string().trim().optional(),
       }),
     })
     .default(() => ({
@@ -171,11 +171,11 @@ export const DestinationSchemaMap = {
     })),
   netlify: z
     .object({
-      remoteAuthId: z.string(),
-      label: z.string().min(1, "Label is required"),
+      remoteAuthId: z.string().trim(),
+      label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        // implicit! accountId: z.string(),
-        siteName: z.string().min(1, "Site Name is required"),
+        // implicit! accountId: z.string().trim(),
+        siteName: z.string().trim().min(1, "Site Name is required"),
       }),
     })
     .default(() => ({
@@ -187,11 +187,11 @@ export const DestinationSchemaMap = {
     })),
   github: z
     .object({
-      remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
-      label: z.string().min(1, "Label is required"),
+      remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
+      label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        repository: z.string().min(1, "Repository is required"),
-        branch: z.string().min(1, "Branch is required"),
+        repository: z.string().trim().min(1, "Repository is required"),
+        branch: z.string().trim().min(1, "Branch is required"),
       }),
     })
     .default(() => ({
@@ -201,11 +201,11 @@ export const DestinationSchemaMap = {
     })),
   aws: z
     .object({
-      remoteAuthId: z.string().min(1, "Remote Auth ID is required"),
-      label: z.string().min(1, "Label is required"),
+      remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
+      label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        bucketName: z.string().min(1, "Bucket name is required"),
-        region: z.string().min(1, "Region is required"),
+        bucketName: z.string().trim().min(1, "Bucket name is required"),
+        region: z.string().trim().min(1, "Region is required"),
       }),
     })
     .default(() => ({
@@ -215,15 +215,15 @@ export const DestinationSchemaMap = {
     })),
   custom: z
     .object({
-      remoteAuthId: z.string().default(""),
-      label: z.string().default(""),
+      remoteAuthId: z.string().trim().default(""),
+      label: z.string().trim().default(""),
       meta: z.object({}),
     })
     .default(() => ({
       remoteAuthId: "",
       label: "",
       meta: {
-        endpoint: z.string().url().default("https://example.com"),
+        endpoint: z.string().trim().url().default("https://example.com"),
       },
     })),
 } satisfies Record<RemoteAuthSource, z.ZodTypeAny>;

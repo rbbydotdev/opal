@@ -3,6 +3,7 @@ import z from "zod";
 export const gitBranchSchema = z.object({
   branch: z
     .string()
+    .trim()
     .min(1, "Branch name is required")
     .max(100, "Branch name is too long")
     .regex(

@@ -61,66 +61,68 @@ export const EditableDir = ({
   }, [isFocused, isEditing, linkRef, treeDir]);
 
   return (
-    <span
-      {...props}
-      draggable
-      onClick={handleClick}
-      tabIndex={0}
-      onDragStart={onDragStart}
-      ref={linkRef}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onFocus={handleFocus}
-      className={cn(
-        { "ring-sidebar-accent ring-2 font-bold": isSelectedRange || isFocused },
-        className,
-        "w-full flex cursor-pointer select-none group/dir"
-      )}
-      onKeyDown={(e) => handleKeyDown(e)}
-    >
-      <div className="flex w-full items-center truncate" style={{ paddingLeft: depth + 0.15 + "rem" }}>
-        <div className="mr-1">
-          <ChevronRight
-            size={14}
-            className={
-              "transition-transform duration-100 rotate-0 group-data-[state=open]/dir:rotate-90 -ml-[0.175rem]"
-            }
-          />
-        </div>
-        <div className="text-xs truncate w-full flex items-center pl-[0.175rem]">
-          <FolderOpen className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=open]/dir:block hidden" />
-          <Folder className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=closed]/dir:block hidden" />
-          <div
-            className="truncate text-xs"
-            onDoubleClick={() => {
-              if (isEditing) return;
-              setFileTreeCtx(({ anchorIndex }) => ({
-                anchorIndex,
-                editing: fullPath,
-                editType: "rename",
-                virtual: null,
-                focused: fullPath,
-                selectedRange: [],
-              }));
-            }}
-          >
-            {isEditing ? (
-              <input
-                ref={inputRef}
-                className={"bg-transparent outline-none border-b border-dashed border-border w-full"}
-                type="text"
-                value={fileName}
-                onChange={(e) => setFileName((!e.target.value ? "" : relPath(e.target.value)) as RelPath)}
-                onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
-              />
-            ) : (
-              <span title={fullPath}>{basename(fullPath)}</span>
-            )}
+    <div className="mx-1">
+      <a
+        {...props}
+        draggable
+        onClick={handleClick}
+        tabIndex={0}
+        onDragStart={onDragStart}
+        ref={linkRef}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onFocus={handleFocus}
+        className={cn(
+          { "ring-sidebar-accent ring-2 font-bold": isSelectedRange || isFocused },
+          className,
+          "w-full flex cursor-pointer select-none group/dir"
+        )}
+        onKeyDown={(e) => handleKeyDown(e)}
+      >
+        <div className="flex w-full items-center truncate" style={{ paddingLeft: depth + 0.15 + "rem" }}>
+          <div className="mr-1">
+            <ChevronRight
+              size={14}
+              className={
+                "transition-transform duration-100 rotate-0 group-data-[state=open]/dir:rotate-90 -ml-[0.175rem]"
+              }
+            />
+          </div>
+          <div className="text-xs truncate w-full flex items-center pl-[0.175rem]">
+            <FolderOpen className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=open]/dir:block hidden" />
+            <Folder className="w-3 h-3 flex-shrink-0 mr-2 group-data-[state=closed]/dir:block hidden" />
+            <div
+              className="truncate text-xs"
+              onDoubleClick={() => {
+                if (isEditing) return;
+                setFileTreeCtx(({ anchorIndex }) => ({
+                  anchorIndex,
+                  editing: fullPath,
+                  editType: "rename",
+                  virtual: null,
+                  focused: fullPath,
+                  selectedRange: [],
+                }));
+              }}
+            >
+              {isEditing ? (
+                <input
+                  ref={inputRef}
+                  className={"bg-transparent outline-none border-b border-dashed border-border w-full"}
+                  type="text"
+                  value={fileName}
+                  onChange={(e) => setFileName((!e.target.value ? "" : relPath(e.target.value)) as RelPath)}
+                  onKeyDown={handleKeyDown}
+                  onBlur={handleBlur}
+                />
+              ) : (
+                <span title={fullPath}>{basename(fullPath)}</span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </span>
+      </a>
+    </div>
   );
 };
 EditableDir.displayName = "EditableDir";

@@ -535,8 +535,6 @@ function SpotlightSearchInternal({
       deferredSearch !== lastSearchRef.current &&
       !deferredSearch.startsWith(commandPrefix)
     ) {
-      // console.log("Filename search:", deferredSearch);
-
       lastSearchRef.current = deferredSearch;
       if (deferredSearch) {
         filenameSearchHook.submit({
@@ -874,7 +872,6 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
               currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
               ("/" as AbsPath);
             const path = await newFile(joinPath(dir, fileName), DefaultFile.Mustache());
-            console.log((await currentWorkspace.readFile(path!)) + "");
             if (path) {
               void navigate({
                 to: currentWorkspace.resolveFileUrl(path),
@@ -936,7 +933,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
               currentWorkspace.nodeFromPath(currentPath || ("/" as AbsPath))?.closestDirPath() ?? ("/" as AbsPath);
             const dirName = joinPath(dir, prefix(basename(name || "newdir")));
             const path = await newDir(absPath(strictPrefix(dirName)));
-            console.log("New directory created at:", path);
+            console.debug("New directory created at:", path);
           }),
         ],
 
