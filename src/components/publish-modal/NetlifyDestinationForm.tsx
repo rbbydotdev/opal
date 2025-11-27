@@ -4,7 +4,12 @@ import { RemoteAuthNetlifyAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
 import { UseFormReturn } from "react-hook-form";
-import { RemoteResource } from "./RemoteResourceField";
+import {
+  RemoteResourceCreate,
+  RemoteResourceInput,
+  RemoteResourceRoot,
+  RemoteResourceSearch,
+} from "./RemoteResourceField";
 
 export function NetlifyDestinationForm({
   form,
@@ -25,13 +30,13 @@ export function NetlifyDestinationForm({
   });
 
   return (
-    <RemoteResource.Root
+    <RemoteResourceRoot
       control={form.control}
       fieldName="meta.siteName"
       onValueChange={(value: string) => form.setValue("meta.siteName", value)}
       getValue={() => form.getValues("meta.siteName")}
     >
-      <RemoteResource.Search
+      <RemoteResourceSearch
         label="Site Name"
         isLoading={isLoading}
         searchValue={searchValue}
@@ -39,14 +44,8 @@ export function NetlifyDestinationForm({
         searchResults={searchResults}
         error={error}
       />
-      <RemoteResource.Create
-        label="Site Name"
-        placeholder="my-netlify-site"
-        ident={ident}
-        msg={msg}
-        request={request}
-      />
-      <RemoteResource.Input
+      <RemoteResourceCreate label="Site Name" placeholder="my-netlify-site" ident={ident} msg={msg} request={request} />
+      <RemoteResourceInput
         label="Site Name"
         placeholder="my-netlify-site"
         createButtonTitle="Add Site"
@@ -55,6 +54,6 @@ export function NetlifyDestinationForm({
         onSearchChange={updateSearch}
         onInputChange={request.reset}
       />
-    </RemoteResource.Root>
+    </RemoteResourceRoot>
   );
 }

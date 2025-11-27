@@ -6,7 +6,12 @@ import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
 import { UseFormReturn } from "react-hook-form";
-import { RemoteResource } from "./RemoteResourceField";
+import {
+  RemoteResourceCreate,
+  RemoteResourceInput,
+  RemoteResourceRoot,
+  RemoteResourceSearch,
+} from "./RemoteResourceField";
 
 export function GitHubDestinationForm({
   form,
@@ -32,13 +37,13 @@ export function GitHubDestinationForm({
 
   return (
     <>
-      <RemoteResource.Root
+      <RemoteResourceRoot
         control={form.control}
         fieldName="meta.repository"
         onValueChange={(value: string) => form.setValue("meta.repository", value)}
         getValue={() => form.getValues("meta.repository")}
       >
-        <RemoteResource.Search
+        <RemoteResourceSearch
           label="Repository"
           isLoading={isLoading}
           searchValue={searchValue}
@@ -46,14 +51,14 @@ export function GitHubDestinationForm({
           searchResults={searchResults}
           error={error}
         />
-        <RemoteResource.Create
+        <RemoteResourceCreate
           label="Repository"
           placeholder="my-website-repo"
           ident={ident}
           msg={msg}
           request={request}
         />
-        <RemoteResource.Input
+        <RemoteResourceInput
           label="Repository"
           placeholder="my-website-repo"
           createButtonTitle="Create Repository"
@@ -62,7 +67,7 @@ export function GitHubDestinationForm({
           onSearchChange={updateSearch}
           onInputChange={request.reset}
         />
-      </RemoteResource.Root>
+      </RemoteResourceRoot>
       <FormField
         control={form.control}
         name="meta.branch"

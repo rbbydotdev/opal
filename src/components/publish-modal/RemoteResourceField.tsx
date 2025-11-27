@@ -1,7 +1,4 @@
-import {
-  RemoteItemCreateInput,
-  RemoteItemSearchDropDown,
-} from "@/components/RemoteConnectionItem";
+import { RemoteItemCreateInput, RemoteItemSearchDropDown } from "@/components/RemoteConnectionItem";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -26,7 +23,7 @@ const RemoteResourceContext = createContext<RemoteResourceContextValue<any, any>
 function useRemoteResourceContext<T extends FieldValues, K extends FieldPath<T>>() {
   const context = useContext(RemoteResourceContext);
   if (!context) {
-    throw new Error("RemoteResource compound components must be used within RemoteResource.Root");
+    throw new Error("RemoteResource compound components must be used within RemoteResourceRoot");
   }
   return context as RemoteResourceContextValue<T, K>;
 }
@@ -39,7 +36,7 @@ interface RemoteResourceRootProps<T extends FieldValues, K extends FieldPath<T>>
   getValue: () => string | undefined;
 }
 
-function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>>({
+export function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>>({
   children,
   control,
   fieldName,
@@ -65,11 +62,7 @@ function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>>({
     inputRef,
   };
 
-  return (
-    <RemoteResourceContext.Provider value={contextValue}>
-      {children}
-    </RemoteResourceContext.Provider>
-  );
+  return <RemoteResourceContext.Provider value={contextValue}>{children}</RemoteResourceContext.Provider>;
 }
 
 interface RemoteResourceSearchProps {
@@ -81,7 +74,7 @@ interface RemoteResourceSearchProps {
   error: string | null;
 }
 
-function RemoteResourceSearch({
+export function RemoteResourceSearch({
   label,
   isLoading,
   searchValue,
@@ -141,7 +134,7 @@ interface RemoteResourceCreateProps {
   onCreateSuccess?: (name: string) => void;
 }
 
-function RemoteResourceCreate({
+export function RemoteResourceCreate({
   label,
   placeholder,
   ident,
@@ -150,15 +143,20 @@ function RemoteResourceCreate({
   onCreateSuccess,
 }: RemoteResourceCreateProps) {
   const { mode, setMode, onValueChange } = useRemoteResourceContext();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   if (mode !== "create") return null;
 
   const handleCreateSubmit = async () => {
-    const res = await request.submit();
-    if (!res) return;
-    onValueChange(res.name);
-    onCreateSuccess?.(res.name);
-    setMode("input");
+    try {
+      const res = await request.submit();
+      if (!res) return;
+      onValueChange(res.name);
+      setMode("input");
+      onCreateSuccess?.(res.name);
+    } catch {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
   };
 
   return (
@@ -166,13 +164,9 @@ function RemoteResourceCreate({
       <FormLabel>{label}</FormLabel>
       <RemoteItemCreateInput
         className="mt-2"
+        ref={inputRef}
         placeholder={placeholder}
-        onClose={(inputVal?: string) => {
-          setMode("input");
-          if (inputVal) {
-            onValueChange(inputVal);
-          }
-        }}
+        onClose={() => setMode("input")}
         submit={handleCreateSubmit}
         request={request}
         msg={msg}
@@ -196,7 +190,7 @@ interface RemoteResourceInputProps {
   onInputChange?: (value: string) => void;
 }
 
-function RemoteResourceInput({
+export function RemoteResourceInput({
   label,
   placeholder,
   createButtonTitle = "Create",

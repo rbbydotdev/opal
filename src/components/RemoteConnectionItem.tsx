@@ -9,7 +9,7 @@ import { NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import { Ban, Loader } from "lucide-react";
-import React, { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from "react";
 
 // const { msg, request, isValid, name, setName } = useAccountItem({ remoteAuth, defaultName: workspaceName });
 type RemoteRequestType<T = any> = {
@@ -35,27 +35,22 @@ namespace RemoteItemType {
   export type Ident = RemoteRequestIdentType;
 }
 
-export function RemoteItemCreateInput<T = any>({
-  onClose,
-  request,
-  msg,
-  className,
-  ident,
-  submit,
-  placeholder = "my-new-thing",
-}: {
-  onClose: (val?: string) => void;
-  submit: () => void;
-  request: RemoteItemType.Request<T>;
-  msg: RemoteItemType.Msg;
-  ident: RemoteItemType.Ident;
-  className?: string;
-  placeholder?: string;
-}) {
+export const RemoteItemCreateInput = forwardRef<
+  HTMLInputElement,
+  {
+    onClose: (val?: string) => void;
+    submit: () => void;
+    request: RemoteItemType.Request<any>;
+    msg: RemoteItemType.Msg;
+    ident: RemoteItemType.Ident;
+    className?: string;
+    placeholder?: string;
+  }
+>(({ onClose, request, msg, className, ident, submit, placeholder = "my-new-thing" }, ref) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && ident.isValid) {
+    if (e.key === "Enter") {
       e.preventDefault();
-      return submit();
+      if (ident.isValid) return submit();
     } else if (e.key === "Escape") {
       e.preventDefault();
       onClose();
@@ -66,6 +61,7 @@ export function RemoteItemCreateInput<T = any>({
     <div className={cn("w-full relative", className)}>
       <div className="w-full p-0 relative">
         <Input
+          ref={ref}
           data-no-escape
           autoFocus
           value={ident.name}
@@ -100,7 +96,6 @@ export function RemoteItemCreateInput<T = any>({
             className="hover:text-ring group text-left flex justify-center items-center absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg"
             onClick={(e) => {
               e.preventDefault();
-              // void request.create(onCreated);
               submit();
             }}
             onMouseDown={(e) => e.preventDefault()}
@@ -111,7 +106,9 @@ export function RemoteItemCreateInput<T = any>({
       </div>
     </div>
   );
-}
+});
+
+RemoteItemCreateInput.displayName = "RemoteItemCreateInput";
 
 type RemoteItem = { element: ReactNode; label: string; value: string };
 export function RemoteItemSearchDropDown({
@@ -167,7 +164,7 @@ export function RemoteItemSearchDropDown({
 
   return (
     <Popover.Root open={showDropdown}>
-      <div ref={containerRef} className={cn("w-full p-0", className)} onKeyDown={handleKeyDown}>
+      <div ref={containerRef} className={cn("w-full p-0", className)}>
         <Popover.Anchor asChild>
           <Input
             {...getInputProps()}
@@ -175,9 +172,7 @@ export function RemoteItemSearchDropDown({
             autoFocus
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onClose(searchValue.trim());
-            }}
+            onKeyDown={handleKeyDown}
             onBlur={handleInputBlur}
             placeholder="Search..."
             className="w-full"
@@ -447,17 +442,17 @@ function useRemoteResource<T>({
   ident: RemoteItemType.Ident;
   msg: RemoteItemType.Msg;
 } {
-  const [name, setName] = useState(defaultName || "");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const abortCntrlRef = React.useRef<AbortController | null>(null);
+  const [name, setNameInternal] = useState(defaultName || "");
 
-  // Clear error when name changes
-  useEffect(() => {
+  const setName = (newName: string) => {
+    setNameInternal(newName);
     if (error) {
       setError(null);
     }
-  }, [name, error]);
+  };
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const abortCntrlRef = useRef<AbortController | null>(null);
 
   const create = async () => {
     const transformedName = config.transformName ? config.transformName(name.trim()) : name.trim();
@@ -469,14 +464,15 @@ function useRemoteResource<T>({
       abortCntrlRef.current = new AbortController();
       const result = await createRequest(transformedName, { signal: abortCntrlRef.current.signal });
       setError(null);
+      abortCntrlRef.current = null;
+      setIsLoading(false);
       return result;
     } catch (err: any) {
       setError(err.message || config.messages.errorFallback);
-    } finally {
       abortCntrlRef.current = null;
       setIsLoading(false);
+      throw err;
     }
-    return null;
   };
 
   const displayName = config.transformName ? config.transformName(name.trim()) : name.trim();
