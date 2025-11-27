@@ -19,7 +19,8 @@ import {
   isVercelAPIRemoteAuthDAO,
   RemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
-import { isRemoteGitApiAgent } from "@/data/RemoteAuthTypes";
+import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 
 import { useMemo } from "react";
 
@@ -30,7 +31,9 @@ export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
   }
   return agent;
 }
-export function AgentFromRemoteAuth<T extends RemoteAuthDAO>(remoteAuth?: T | null) {
+export function AgentFromRemoteAuth<T extends RemoteAuthDAO>(
+  remoteAuth?: T | null
+): (RemoteAuthAgent & RemoteAuthAgentSearchType<any>) | null {
   if (!remoteAuth) return null;
 
   if (isGithubAPIRemoteAuthDAO(remoteAuth)) {
@@ -53,6 +56,7 @@ export function AgentFromRemoteAuth<T extends RemoteAuthDAO>(remoteAuth?: T | nu
   }
   if (isVercelAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthVercelAPIAgent(remoteAuth);
+    // RemoteAuthVercelAgent
   }
   if (isAWSAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthAWSAPIAgent(remoteAuth);

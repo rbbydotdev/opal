@@ -9,7 +9,7 @@ export const isFuzzyResult = <T = any>(result: unknown): result is Fuzzysort.Key
   return (result as Fuzzysort.KeyResult<T>).highlight !== undefined;
 };
 
-export interface IRemoteAuthAgentSearch<T = any> {
+export interface RemoteAuthAgentSearchType<T = any> {
   hasUpdates(
     etag: string | null,
     options?: { signal?: AbortSignal }
@@ -34,13 +34,13 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
   private _results: Fuzzysort.KeyResults<TResult> | TResult[] = EMPTY_SEARCH_RESULT;
   private _error: string | null = null;
   private _searchTerm = "";
-  private agent: IRemoteAuthAgentSearch<TResult> | null = null;
+  private agent: RemoteAuthAgentSearchType<TResult> | null = null;
   private requestId = 0;
   private controller: AbortController | null = null;
   private events = CreateTypedEmitter<RemoteSearchEventMap>();
 
   constructor(
-    agent: IRemoteAuthAgentSearch<TResult> | null = null,
+    agent: RemoteAuthAgentSearchType<TResult> | null = null,
     private searchKey: Extract<keyof TResult, string>
   ) {
     this.agent = agent;

@@ -1,4 +1,4 @@
-import { IRemoteAuthAgentSearch, RemoteSearchFuzzyCache } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentSearchType, RemoteSearchFuzzyCache } from "@/data/RemoteSearchFuzzyCache";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 
 export function useAnySearch<T extends Record<string, any>>({
@@ -6,7 +6,7 @@ export function useAnySearch<T extends Record<string, any>>({
   searchTerm,
   searchKey,
 }: {
-  agent: IRemoteAuthAgentSearch<T> | null;
+  agent: RemoteAuthAgentSearchType<T> | null;
   searchTerm: string;
   searchKey: Extract<keyof T, string>;
 }) {

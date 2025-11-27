@@ -1,4 +1,4 @@
-import { IRemoteAuthAgentSearch } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { z } from "zod";
 
 // 1. Add the new type to the union
@@ -195,7 +195,7 @@ export interface Repo {
   updated_at: Date;
 }
 
-export interface RemoteGitApiAgent extends RemoteAuthAgent, IRemoteAuthAgentSearch<Repo> {
+export interface RemoteGitApiAgent extends RemoteAuthAgent, RemoteAuthAgentSearchType<Repo> {
   onAuth(): { username: string; password: string };
 }
 

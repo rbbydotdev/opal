@@ -4,7 +4,7 @@ import { BuildPublisherCmd } from "@/components/publish-modal/PubicationModalCmd
 import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
-import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
+import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
 import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ import { AnyDestinationMetaType, DestinationDAO } from "@/data/DestinationDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
+import { useBuilds } from "@/hooks/useBuilds";
 import { useDestinations } from "@/hooks/useDestinations";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { Case, SwitchCase } from "@/lib/SwitchCase";
@@ -266,7 +267,9 @@ export function PublishModalStack({
             setDestination={setDestination}
             currentWorkspace={currentWorkspace}
             onOpenChange={setIsOpen}
+            setBuild={setBuild}
             build={build}
+            // builds={builds}
             onClose={handleClose}
           />
         )}
@@ -275,12 +278,12 @@ export function PublishModalStack({
   );
 }
 
-//MARK: Destination Content Modal View
-
 //MARK: Publish Content
 export function PublicationModalPublishContent({
   build,
+  setBuild,
   destination,
+  currentWorkspace,
   onClose,
   onOpenChange,
   pushView,
@@ -288,6 +291,7 @@ export function PublicationModalPublishContent({
   setPreferredConnection,
 }: {
   build: BuildDAO;
+  setBuild: (build: BuildDAO) => void;
   currentWorkspace: Workspace;
   destination: DestinationDAO | null;
   onClose?: () => void;
@@ -297,6 +301,7 @@ export function PublicationModalPublishContent({
   setPreferredConnection: (connection: RemoteAuthJType | PartialRemoteAuthJType) => void;
 }) {
   const { remoteAuths } = useRemoteAuths();
+  const { builds } = useBuilds({ workspaceId: currentWorkspace.id });
   const { destinations } = useDestinations();
 
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -314,6 +319,10 @@ export function PublicationModalPublishContent({
     setIsPublishing(true);
     setLogs([]);
     setPublishError(null);
+  };
+  const handleBuildSelect = (buildId: string) => {
+    const build = builds.find((build) => build.guid === buildId)!;
+    setBuild(build);
   };
   const handleSetDestination = (destId: string) => {
     const selectedRemoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === destId);
@@ -338,7 +347,8 @@ export function PublicationModalPublishContent({
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
-      <BuildLabel build={build} className="border bg-card p-2 rounded-lg font-mono" />
+      {/* <BuildLabel build={build} className="border bg-card p-2 rounded-lg font-mono" /> */}
+      <BuildSelector builds={builds} build={build} setBuildId={handleBuildSelect}></BuildSelector>
       <div className="space-y-2">
         <label htmlFor="strategy-select" className="text-sm font-medium">
           Destination

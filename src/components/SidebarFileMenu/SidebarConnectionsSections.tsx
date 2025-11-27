@@ -1,6 +1,18 @@
 import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
-import { SelectableList } from "@/components/ui/SelectableList";
+import {
+  SelectableListActionButton,
+  SelectableListActions,
+  SelectableListContent,
+  SelectableListHeader,
+  SelectableListItem,
+  SelectableListItemAction,
+  SelectableListItemIcon,
+  SelectableListItemLabel,
+  SelectableListItemMenu,
+  SelectableListItemSubLabel,
+  SelectableListRoot,
+} from "@/components/ui/SelectableList";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
@@ -31,7 +43,7 @@ function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
 
   return (
     <div {...props}>
-      <SelectableList.Root
+      <SelectableListRoot
         data={remoteAuths}
         getItemId={(connection) => connection.guid}
         onClick={handleEdit}
@@ -39,56 +51,56 @@ function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
         expanderId="connections"
         emptyLabel="no connections"
       >
-        <SelectableList.Header>
+        <SelectableListHeader>
           <Sparkle size={12} className="mr-2" />
           Connections
-        </SelectableList.Header>
+        </SelectableListHeader>
 
-        <SelectableList.Actions>
-          <SelectableList.ActionButton
+        <SelectableListActions>
+          <SelectableListActionButton
             onClick={handleAddConnection}
             title="Add Connection"
             className={cn({ "right-7": remoteAuths.length > 0, "right-2": remoteAuths.length === 0 })}
           >
             <Plus className="w-4 h-4" />
             <span className="sr-only">Add Connection</span>
-          </SelectableList.ActionButton>
-        </SelectableList.Actions>
+          </SelectableListActionButton>
+        </SelectableListActions>
 
-        <SelectableList.Content className="ml-7">
+        <SelectableListContent className="ml-7">
           {remoteAuths.map((connection) => (
-            <SelectableList.Item key={connection.guid} id={connection.guid}>
-              <SelectableList.ItemIcon>
+            <SelectableListItem key={connection.guid} id={connection.guid}>
+              <SelectableListItemIcon>
                 <RemoteAuthSourceIconComponent
                   type={connection.type}
                   source={connection.source}
                   size={12}
                   className="flex-shrink-0"
                 />
-              </SelectableList.ItemIcon>
-              <SelectableList.ItemLabel title={connection.name}>{connection.name}</SelectableList.ItemLabel>
-              <SelectableList.ItemSubLabel>
+              </SelectableListItemIcon>
+              <SelectableListItemLabel title={connection.name}>{connection.name}</SelectableListItemLabel>
+              <SelectableListItemSubLabel>
                 {`${connection.type} ${connection.source}`.toLowerCase()}
-              </SelectableList.ItemSubLabel>
-              <SelectableList.ItemMenu>
-                <SelectableList.ItemAction
+              </SelectableListItemSubLabel>
+              <SelectableListItemMenu>
+                <SelectableListItemAction
                   onClick={() => handleEdit(connection.guid)}
                   icon={<Pencil className="w-4 h-4" />}
                 >
                   Edit
-                </SelectableList.ItemAction>
-                <SelectableList.ItemAction
+                </SelectableListItemAction>
+                <SelectableListItemAction
                   onClick={() => handleDelete(connection.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >
                   Delete
-                </SelectableList.ItemAction>
-              </SelectableList.ItemMenu>
-            </SelectableList.Item>
+                </SelectableListItemAction>
+              </SelectableListItemMenu>
+            </SelectableListItem>
           ))}
-        </SelectableList.Content>
-      </SelectableList.Root>
+        </SelectableListContent>
+      </SelectableListRoot>
       {/* Add Connection Modal */}
       <ConnectionsModal open={addModalOpen} onOpenChange={setAddModalOpen} onSuccess={() => setAddModalOpen(false)} />
       {/* Edit Connection Modal */}

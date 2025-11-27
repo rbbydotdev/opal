@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -29,10 +29,9 @@ import {
 import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { RemoteAuthGithubAgent, RemoteAuthGithubAPIAgent } from "@/data/RemoteAuthAgent";
+import { GithubAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
-import { RemoteGitApiAgent } from "@/data/RemoteAuthTypes";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
@@ -333,7 +332,7 @@ function GitRemoteDialogInternal({
                 </FormLabel>
                 {urlMode === "search" && (
                   <GitRepoSearchContainer
-                    remoteAuth={remoteAuth}
+                    remoteAuth={remoteAuth as GithubAPIRemoteAuthDAO}
                     defaultValue={TryPathname(form.getValues("url"))
                       .replace(/^\//, "")
                       .replace(/\.git$/, "")}
@@ -445,12 +444,12 @@ function GitRepoSearchContainer({
   onClose,
   onSelect,
 }: {
-  remoteAuth: null | RemoteAuthDAO;
+  remoteAuth: null | GithubAPIRemoteAuthDAO;
   defaultValue: string;
   onClose: () => void;
   onSelect: (repo: GithubSearchReposResult) => void;
 }) {
-  const agent = useRemoteAuthAgent<RemoteGitApiAgent>(remoteAuth);
+  const agent = useMemo(() => (remoteAuth ? new RemoteAuthGithubAPIAgent(remoteAuth) : null), [remoteAuth]);
   const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteGitRepoSearch({
     agent,
     defaultValue,
