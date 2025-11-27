@@ -52,12 +52,12 @@ const SelectableListContext = createContext<SelectableListContextValue | null>(n
 const useSelectableListContext = () => {
   const context = useContext(SelectableListContext);
   if (!context) {
-    throw new Error("SelectableList compound components must be used within SelectableList.Root");
+    throw new Error("SelectableList compound components must be used within SelectableListRoot");
   }
   return context;
 };
 
-// Core provider for selectable list functionality
+// Core provider for selectable list export functionality
 type SelectableListCoreProps<T = any> = {
   children: React.ReactNode;
   items?: SelectableItem[];
@@ -81,7 +81,7 @@ type SelectableListRootProps<T = any> = {
   showGrip?: boolean;
 };
 
-function SelectableListCore<T = any>({
+export function SelectableListCore<T = any>({
   children,
   items = [],
   data,
@@ -163,7 +163,7 @@ type SelectableListSimpleProps<T = any> = {
   showGrip?: boolean;
 };
 
-function SelectableListSimple<T = any>(props: SelectableListSimpleProps<T>) {
+export function SelectableListSimple<T = any>(props: SelectableListSimpleProps<T>) {
   return (
     <SelectableListCore {...props}>
       <SidebarGroup className="pl-0 py-0">{props.children}</SidebarGroup>
@@ -172,7 +172,7 @@ function SelectableListSimple<T = any>(props: SelectableListSimpleProps<T>) {
 }
 
 // Collapsible version using expanderId
-function SelectableListRoot<T = any>({ children, expanderId, ...coreProps }: SelectableListRootProps<T>) {
+export function SelectableListRoot<T = any>({ children, expanderId, ...coreProps }: SelectableListRootProps<T>) {
   const [expanded, setExpand] = useSingleItemExpander(expanderId);
 
   return (
@@ -186,7 +186,13 @@ function SelectableListRoot<T = any>({ children, expanderId, ...coreProps }: Sel
   );
 }
 
-function SelectableListActions({ children, menuItems }: { children?: React.ReactNode; menuItems?: React.ReactNode }) {
+export function SelectableListActions({
+  children,
+  menuItems,
+}: {
+  children?: React.ReactNode;
+  menuItems?: React.ReactNode;
+}) {
   const { selected, setSelected, onDelete, allItemIds } = useSelectableListContext();
   const { open: openConfirm } = useConfirm();
 
@@ -252,7 +258,7 @@ function SelectableListActions({ children, menuItems }: { children?: React.React
   );
 }
 
-function SelectableListHeader({ children }: { children: React.ReactNode }) {
+export function SelectableListHeader({ children }: { children: React.ReactNode }) {
   const { showGrip } = useSelectableListContext();
 
   return (
@@ -277,7 +283,7 @@ function SelectableListHeader({ children }: { children: React.ReactNode }) {
 }
 
 // Basic list items wrapper (non-collapsible)
-function SelectableListItems({ children }: { children?: React.ReactNode }) {
+export function SelectableListItems({ children }: { children?: React.ReactNode }) {
   const { emptyLabel, items, data, setChildItemIds } = useSelectableListContext();
 
   const childrenCount = React.Children.count(children);
@@ -309,7 +315,7 @@ function SelectableListItems({ children }: { children?: React.ReactNode }) {
 }
 
 // Collapsible content wrapper
-function SelectableListContent({ children, className }: { children?: React.ReactNode; className?: string }) {
+export function SelectableListContent({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (
     <CollapsibleContent className={className}>
       <SelectableListItems>{children}</SelectableListItems>
@@ -321,11 +327,11 @@ type SelectableListMapProps<T> = {
   map: (item: T) => React.ReactNode;
 };
 
-function SelectableListMap<T>({ map }: SelectableListMapProps<T>) {
+export function SelectableListMap<T>({ map }: SelectableListMapProps<T>) {
   const { data, getItemId } = useSelectableListContext();
 
   if (!data || !getItemId) {
-    console.warn("SelectableList.Map requires data and getItemId to be provided in SelectableList.Root");
+    console.warn("SelectableList.Map requires data and getItemId to be provided in SelectableListRoot");
     return null;
   }
 
@@ -337,7 +343,7 @@ type SelectableListTriggerProps = {
   onTrigger?: () => void;
 };
 
-function SelectableListTrigger({ children, onTrigger }: SelectableListTriggerProps) {
+export function SelectableListTrigger({ children, onTrigger }: SelectableListTriggerProps) {
   return (
     <Button variant="outline" size="sm" className="w-full mb-2" onClick={onTrigger}>
       {children}
@@ -352,7 +358,7 @@ type SelectableListActionButtonProps = {
   className?: string;
 };
 
-function SelectableListActionButton({ children, onClick, title, className }: SelectableListActionButtonProps) {
+export function SelectableListActionButton({ children, onClick, title, className }: SelectableListActionButtonProps) {
   const { items } = useSelectableListContext();
 
   return (
@@ -371,7 +377,7 @@ type SelectableListItemProps = {
   id: string;
 };
 
-function SelectableListItem({ children, id }: SelectableListItemProps) {
+export function SelectableListItem({ children, id }: SelectableListItemProps) {
   const { isSelected, handleSelect } = useSelectableListContext();
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
@@ -400,11 +406,11 @@ function SelectableListItem({ children, id }: SelectableListItemProps) {
   );
 }
 
-function SelectableListItemIcon({ children }: { children: React.ReactNode }) {
+export function SelectableListItemIcon({ children }: { children: React.ReactNode }) {
   return <div className="flex-shrink-0">{children}</div>;
 }
 
-function SelectableListItemLabel({ children, title }: { children: React.ReactNode; title?: string }) {
+export function SelectableListItemLabel({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
     <div
       title={title}
@@ -415,7 +421,7 @@ function SelectableListItemLabel({ children, title }: { children: React.ReactNod
   );
 }
 
-function SelectableListItemSubLabel({ children }: { children: React.ReactNode }) {
+export function SelectableListItemSubLabel({ children }: { children: React.ReactNode }) {
   return (
     <>
       <div className="flex-shrink-0 text-xs">{"/"}</div>
@@ -426,7 +432,7 @@ function SelectableListItemSubLabel({ children }: { children: React.ReactNode })
   );
 }
 
-function SelectableListItemMenu({ children }: { children: React.ReactNode }) {
+export function SelectableListItemMenu({ children }: { children: React.ReactNode }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -450,7 +456,7 @@ type SelectableListItemActionProps = {
   destructive?: boolean;
 };
 
-function SelectableListItemAction({ children, onClick, icon, destructive }: SelectableListItemActionProps) {
+export function SelectableListItemAction({ children, onClick, icon, destructive }: SelectableListItemActionProps) {
   return (
     <DropdownMenuItem onClick={onClick} className={destructive ? "text-destructive" : ""}>
       {icon && <div className="w-4 h-4 mr-2">{icon}</div>}
@@ -458,36 +464,3 @@ function SelectableListItemAction({ children, onClick, icon, destructive }: Sele
     </DropdownMenuItem>
   );
 }
-
-// Collapsible version (original API)
-export const SelectableList = {
-  Root: SelectableListRoot as <T = any>(props: SelectableListRootProps<T>) => React.ReactElement,
-  Header: SelectableListHeader, // <SelectableList.Header> <SelectableListHeader
-  Actions: SelectableListActions, // <SelectableList.Actions> <SelectableListActions
-  ActionButton: SelectableListActionButton, // <SelectableList.ActionButton <SelectableListActionButton
-  Content: SelectableListContent, // <SelectableList.Content <SelectableListContent
-  Map: SelectableListMap as <T = any>(props: SelectableListMapProps<T>) => React.ReactElement | null,
-  Trigger: SelectableListTrigger, // <SelectableList.Trigger <SelectableListTrigger
-  Item: SelectableListItem, // <SelectableList.Item <SelectableListItem
-  ItemIcon: SelectableListItemIcon, // <SelectableList.ItemIcon <SelectableListItemIcon
-  ItemLabel: SelectableListItemLabel, // <SelectableList.ItemLabel <SelectableListItemLabel
-  ItemSubLabel: SelectableListItemSubLabel, // <SelectableList.ItemSubLabel <SelectableListItemSubLabel
-  ItemMenu: SelectableListItemMenu, // <SelectableList.ItemMenu <SelectableListItemMenu
-  ItemAction: SelectableListItemAction, // <SelectableList.ItemAction <SelectableListItemAction
-};
-
-// Simple non-collapsible version
-export const SimpleSelectableList = {
-  Root: SelectableListSimple as <T = any>(props: SelectableListSimpleProps<T>) => React.ReactElement,
-  Actions: SelectableListActions,
-  ActionButton: SelectableListActionButton,
-  Items: SelectableListItems, // <SimpleSelectableList.Items <SimpleSelectableListItems instead of Content
-  Map: SelectableListMap as <T = any>(props: SelectableListMapProps<T>) => React.ReactElement | null,
-  Trigger: SelectableListTrigger,
-  Item: SelectableListItem,
-  ItemIcon: SelectableListItemIcon,
-  ItemLabel: SelectableListItemLabel,
-  ItemSubLabel: SelectableListItemSubLabel,
-  ItemMenu: SelectableListItemMenu,
-  ItemAction: SelectableListItemAction,
-};

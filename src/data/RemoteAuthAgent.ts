@@ -10,7 +10,7 @@ import type {
   VercelAPIRemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
 import { RemoteAuthAgent, RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
-import { IRemoteAuthAgentSearch } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { AWSS3Bucket, AWSS3Client } from "@/lib/aws/AWSClient";
 import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
 import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
@@ -195,7 +195,7 @@ export class RemoteAuthGithubDeviceOAuthAgent extends RemoteAuthGithubAgent {
   }
 }
 
-export abstract class RemoteAuthNetlifyAgent implements RemoteAuthAgent, IRemoteAuthAgentSearch<NetlifySite> {
+export abstract class RemoteAuthNetlifyAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<NetlifySite> {
   private _netlifyClient!: NetlifyClient;
 
   get netlifyClient() {
@@ -273,8 +273,8 @@ export class RemoteAuthNetlifyAPIAgent extends RemoteAuthNetlifyAgent {
     super();
   }
 }
-
-export abstract class RemoteAuthVercelAgent implements RemoteAuthAgent, IRemoteAuthAgentSearch<VercelProject> {
+// implements RemoteAuthAgent, RemoteAuthAgentSearchType<NetlifySite>
+export abstract class RemoteAuthVercelAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<VercelProject> {
   private _vercelClient!: VercelClient;
 
   get vercelClient() {
@@ -378,7 +378,7 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   constructor(private remoteAuth: CloudflareAPIRemoteAuthDAO) {}
 }
 
-export class RemoteAuthAWSAPIAgent implements RemoteAuthAgent, IRemoteAuthAgentSearch<AWSS3Bucket> {
+export class RemoteAuthAWSAPIAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<AWSS3Bucket> {
   private _s3Client!: AWSS3Client;
 
   get s3Client() {

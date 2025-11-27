@@ -1,7 +1,14 @@
 import { useBuildCreation } from "@/components/BuildModalContext";
 import { BuildLabel } from "@/components/SidebarFileMenu/build-files-section/BuildLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
-import { SimpleSelectableList } from "@/components/ui/SelectableList";
+import {
+  SelectableListActions,
+  SelectableListItem,
+  SelectableListItemAction,
+  SelectableListItemMenu,
+  SelectableListItems,
+  SelectableListSimple,
+} from "@/components/ui/SelectableList";
 import { BuildDAO } from "@/data/BuildDAO";
 import { useBuilds } from "@/hooks/useBuilds";
 import { coerceError } from "@/lib/errors";
@@ -25,7 +32,7 @@ export function SidebarBuildsList({ workspaceId }: { workspaceId: string }) {
   };
 
   return (
-    <SimpleSelectableList.Root
+    <SelectableListSimple
       data={builds}
       getItemId={(build) => build.guid}
       onClick={handleView}
@@ -33,33 +40,30 @@ export function SidebarBuildsList({ workspaceId }: { workspaceId: string }) {
       emptyLabel="no builds found"
       showGrip={false}
     >
-      <SimpleSelectableList.Actions />
+      <SelectableListActions />
 
-      <SimpleSelectableList.Items>
+      <SelectableListItems>
         <div className="flex flex-col gap-2 mt-4 ml-3 group">
           {builds.length === 0 && <EmptySidebarLabel label="no builds" />}
           {builds.map((build) => (
-            <SimpleSelectableList.Item key={build.guid} id={build.guid}>
+            <SelectableListItem key={build.guid} id={build.guid}>
               <BuildLabel build={build} />
-              <SimpleSelectableList.ItemMenu>
-                <SimpleSelectableList.ItemAction
-                  onClick={() => handleView(build.guid)}
-                  icon={<Eye className="w-4 h-4" />}
-                >
+              <SelectableListItemMenu>
+                <SelectableListItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
                   View
-                </SimpleSelectableList.ItemAction>
-                <SimpleSelectableList.ItemAction
+                </SelectableListItemAction>
+                <SelectableListItemAction
                   onClick={() => handleDelete(build.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >
                   Delete
-                </SimpleSelectableList.ItemAction>
-              </SimpleSelectableList.ItemMenu>
-            </SimpleSelectableList.Item>
+                </SelectableListItemAction>
+              </SelectableListItemMenu>
+            </SelectableListItem>
           ))}
         </div>
-      </SimpleSelectableList.Items>
-    </SimpleSelectableList.Root>
+      </SelectableListItems>
+    </SelectableListSimple>
   );
 }

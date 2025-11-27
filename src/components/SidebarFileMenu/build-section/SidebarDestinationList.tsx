@@ -2,7 +2,14 @@ import { useDestinationManager } from "@/components/DestinationManagerContext";
 import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { SimpleSelectableList } from "@/components/ui/SelectableList";
+import {
+  SelectableListActions,
+  SelectableListItem,
+  SelectableListItemAction,
+  SelectableListItemMenu,
+  SelectableListItems,
+  SelectableListSimple,
+} from "@/components/ui/SelectableList";
 import { DestinationDAO } from "@/data/DestinationDAO";
 import { useDestinations } from "@/hooks/useDestinations";
 import { coerceError } from "@/lib/errors";
@@ -27,7 +34,7 @@ export function SidebarDestinationList() {
   };
 
   return (
-    <SimpleSelectableList.Root
+    <SelectableListSimple
       data={destinations}
       getItemId={(build) => build.guid}
       onClick={handleView}
@@ -35,7 +42,7 @@ export function SidebarDestinationList() {
       emptyLabel="no destinations found"
       showGrip={false}
     >
-      <SimpleSelectableList.Actions
+      <SelectableListActions
         menuItems={
           <DropdownMenuItem
             onClick={() => openDestinationFlow()}
@@ -46,31 +53,31 @@ export function SidebarDestinationList() {
         }
       />
 
-      <SimpleSelectableList.Items>
+      <SelectableListItems>
         <div className="flex flex-col gap-2 mt-4 ml-3 group">
           {destinations.length === 0 && <EmptySidebarLabel label="no destinations" />}
           {destinations.map((destination) => (
-            <SimpleSelectableList.Item key={destination.guid} id={destination.guid}>
+            <SelectableListItem key={destination.guid} id={destination.guid}>
               <DestinationLabel destination={destination} />
-              <SimpleSelectableList.ItemMenu>
-                <SimpleSelectableList.ItemAction
+              <SelectableListItemMenu>
+                <SelectableListItemAction
                   onClick={() => handleView(destination.guid)}
                   icon={<Eye className="w-4 h-4" />}
                 >
                   View
-                </SimpleSelectableList.ItemAction>
-                <SimpleSelectableList.ItemAction
+                </SelectableListItemAction>
+                <SelectableListItemAction
                   onClick={() => handleDelete(destination.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >
                   Delete
-                </SimpleSelectableList.ItemAction>
-              </SimpleSelectableList.ItemMenu>
-            </SimpleSelectableList.Item>
+                </SelectableListItemAction>
+              </SelectableListItemMenu>
+            </SelectableListItem>
           ))}
         </div>
-      </SimpleSelectableList.Items>
-    </SimpleSelectableList.Root>
+      </SelectableListItems>
+    </SelectableListSimple>
   );
 }

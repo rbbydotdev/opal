@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/context/useDebounce";
 import { Repo } from "@/data/RemoteAuthTypes";
-import { IRemoteAuthAgentSearch, isFuzzyResult } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentSearchType, isFuzzyResult } from "@/data/RemoteSearchFuzzyCache";
 import { useAnySearch } from "@/data/useAnySearch";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { AWSS3Bucket } from "@/lib/aws/AWSClient";
@@ -259,7 +259,7 @@ function useRemoteSearch<T extends Record<string, any>>({
   config,
   defaultValue = "",
 }: {
-  agent: IRemoteAuthAgentSearch<T> | null;
+  agent: RemoteAuthAgentSearchType<T> | null;
   config: RemoteSearchConfig<T>;
   defaultValue?: string;
 }) {
@@ -312,7 +312,7 @@ export function useRemoteNetlifySearch({
   agent,
   defaultValue = "",
 }: {
-  agent: IRemoteAuthAgentSearch<NetlifySite> | null;
+  agent: RemoteAuthAgentSearchType<NetlifySite> | null;
   defaultValue?: string;
 }) {
   return useRemoteSearch<NetlifySite>({
@@ -353,7 +353,7 @@ export function useRemoteGitRepoSearch({
   agent,
   defaultValue = "",
 }: {
-  agent: IRemoteAuthAgentSearch<Repo> | null;
+  agent: RemoteAuthAgentSearchType<Repo> | null;
   defaultValue?: string;
 }) {
   return useRemoteSearch<Repo>({
@@ -410,7 +410,7 @@ export function useRemoteAWSSearch({
   agent,
   defaultValue = "",
 }: {
-  agent: IRemoteAuthAgentSearch<AWSS3Bucket> | null;
+  agent: RemoteAuthAgentSearchType<AWSS3Bucket> | null;
   defaultValue?: string;
 }) {
   return useRemoteSearch<AWSS3Bucket>({

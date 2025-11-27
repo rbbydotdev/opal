@@ -311,7 +311,7 @@ function SpotlightSearchInternal({
         ) : (
           <>
             {result.highlight((m, i) => (
-              <b className="text-highlight-focus bg-highlight-focus" key={i}>
+              <b className="text-ring" key={i}>
                 {m}
               </b>
             ))}
@@ -413,7 +413,7 @@ function SpotlightSearchInternal({
           element: (
             <>
               {result.highlight((m, i) => (
-                <b className="text-highlight-foreground" key={i}>
+                <b className="text-ring" key={i}>
                   {m}
                 </b>
               ))}
@@ -436,7 +436,7 @@ function SpotlightSearchInternal({
               element: (
                 <>
                   {result.highlight((m, i) => (
-                    <b className="text-highlight-foreground" key={i}>
+                    <b className="text-ring" key={i}>
                       {m}
                     </b>
                   ))}
@@ -465,7 +465,7 @@ function SpotlightSearchInternal({
           element: (
             <>
               {result.highlight((m, i) => (
-                <b className="text-highlight-foreground" key={i}>
+                <b className="text-ring" key={i}>
                   {m}
                 </b>
               ))}
@@ -1071,6 +1071,7 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
       navigate,
       newDir,
       newFile,
+      openNew,
       openPreview,
       playbook,
       renameDirOrFile,
@@ -1102,21 +1103,14 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
     if (gitRepoInfo.fullInitialized) {
       cmds.add("Git Initialize Repo");
     }
-    if (!gitRepoInfo.fullInitialized || !gitRepoInfo?.hasChanges || gitRepoInfo.conflictingFiles.length) {
-      // cmds.add("Git Commit");
+    if (!gitRepoInfo.fullInitialized) {
+      cmds.add("Git Commit");
     }
     if (!gitRepoInfo.conflictingFiles.length || !gitRepoInfo.fullInitialized) {
       cmds.add("Git Merge Commit");
     }
     return cmds;
-  }, [
-    currentWorkspace,
-    currentPath,
-    isMarkdown,
-    gitRepoInfo.fullInitialized,
-    gitRepoInfo?.hasChanges,
-    gitRepoInfo.conflictingFiles.length,
-  ]);
+  }, [currentWorkspace, currentPath, isMarkdown, gitRepoInfo.fullInitialized, gitRepoInfo.conflictingFiles.length]);
 
   const filteredCmds = useMemo(() => {
     return Object.entries(cmdMap)
