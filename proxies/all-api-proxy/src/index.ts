@@ -1,12 +1,15 @@
 // Unified API Proxy for GitHub, Netlify, Vercel, Cloudflare, and AWS S3 APIs
-// Combines all service-specific proxies into one intelligent proxy
+// Using itty-router for clean routing and built-in CORS support
+
+import { AutoRouter, cors } from "itty-router";
+import { getAllowedHeaders, getExposedHeaders } from "./awsHeaders";
 
 const ALLOWED_ORIGINS = ["https://opaledx.com", "http://localhost:3000"];
 
 // Service configuration
 const SERVICES = {
   github: {
-    hosts: ["github.com", "api.github.com", "*.github.com"],
+    hosts: ["github.com", "api.github.com"],
     oauthEndpoint: "/login/oauth/access_token",
     clientSecretEnv: "GITHUB_CLIENT_SECRET" as keyof Env,
     oauthEnabled: true,
@@ -38,6 +41,13 @@ const SERVICES = {
 } as const;
 
 type ServiceName = keyof typeof SERVICES;
+
+interface Env {
+  GITHUB_CLIENT_SECRET?: string;
+  NETLIFY_CLIENT_SECRET?: string;
+  VERCEL_CLIENT_SECRET?: string;
+  CLOUDFLARE_CLIENT_SECRET?: string;
+}
 
 function filterHeaders(headers: Headers): Headers {
   const newHeaders = new Headers();
@@ -88,43 +98,26 @@ function getServiceForHost(host: string): ServiceName | null {
   return null;
 }
 
-function corsHeaders(origin: string | null): Record<string, string> {
-  return {
-    "Access-Control-Allow-Origin": origin ?? "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-      "Accept-Encoding",
-      "Accept-Language",
-      "User-Agent",
-    ].join(", "),
-    "Access-Control-Max-Age": "86400",
-  };
-}
+// Removed createCorsConfig - using simpler global approach
 
-interface Env {
-  GITHUB_CLIENT_SECRET?: string;
-  NETLIFY_CLIENT_SECRET?: string;
-  VERCEL_CLIENT_SECRET?: string;
-  CLOUDFLARE_CLIENT_SECRET?: string;
-}
-
+// OAuth token exchange handler
 async function handleOAuthTokenExchange(
   request: Request,
   serviceName: ServiceName,
   host: string,
   path: string,
   targetUrl: string,
-  env: Env,
-  origin: string | null
+  env: Env
 ): Promise<Response | null> {
   const service = SERVICES[serviceName];
 
   // Check if OAuth is enabled for this service and if this is an OAuth token exchange endpoint
-  if (!service.oauthEnabled || !service.clientSecretEnv || path !== service.oauthEndpoint || request.method !== "POST") {
+  if (
+    !service.oauthEnabled ||
+    !service.clientSecretEnv ||
+    path !== service.oauthEndpoint ||
+    request.method !== "POST"
+  ) {
     return null;
   }
 
@@ -132,7 +125,6 @@ async function handleOAuthTokenExchange(
   if (!clientSecret) {
     return new Response(`Server configuration error: ${serviceName} client secret not configured`, {
       status: 500,
-      headers: corsHeaders(origin),
     });
   }
 
@@ -171,107 +163,153 @@ async function handleOAuthTokenExchange(
   } catch (err) {
     return new Response(`${serviceName} OAuth request failed`, {
       status: 502,
-      headers: corsHeaders(origin),
     });
   }
 
-  const responseBody = await response.arrayBuffer();
-  const respHeaders = new Headers(response.headers);
-  for (const [key, value] of Object.entries(corsHeaders(origin))) {
-    respHeaders.set(key, value);
-  }
-
-  return new Response(responseBody, {
+  return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
-    headers: respHeaders,
+    headers: response.headers,
   });
 }
 
-const handleRequest = async (request: Request, env: Env): Promise<Response> => {
+// Proxy handler
+async function handleProxy(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
+
+  // Log all headers
+  const headerObj: Record<string, string> = {};
+  request.headers.forEach((value, key) => {
+    headerObj[key] = value;
+  });
+
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
-  const allowedOrigin =
-    ALLOWED_ORIGINS.find(
-      (allowed) => (origin && origin.startsWith(allowed)) || (referer && referer.startsWith(allowed))
-    ) ?? null;
+
+  // Validate origin/referer
+  const allowedOrigin = ALLOWED_ORIGINS.find(
+    (allowed) => (origin && origin.startsWith(allowed)) || (referer && referer.startsWith(allowed))
+  );
 
   if (!allowedOrigin) {
-    return new Response("Forbidden: Invalid origin/referer", {
-      status: 403,
-      headers: corsHeaders(origin),
-    });
+    return new Response("Forbidden: Invalid origin/referer", { status: 403 });
   }
 
-  // Path: /<host>/<path>
+  // Path: /<host>/<path> (path can be empty for root requests)
   const segments = url.pathname.split("/").filter(Boolean);
-  if (segments.length < 2) {
-    return new Response("Bad request: missing host or path", {
-      status: 400,
-      headers: corsHeaders(origin),
-    });
+  if (segments.length < 1) {
+    return new Response("Bad request: missing host", { status: 400 });
   }
 
   const host = segments[0]!;
-  const path = "/" + segments.slice(1).join("/");
+  const path = segments.length > 1 ? "/" + segments.slice(1).join("/") : "/";
 
   if (!isHostAllowed(host)) {
-    return new Response("Forbidden: Host not allowed", {
-      status: 403,
-      headers: corsHeaders(origin),
-    });
+    return new Response("Forbidden: Host not allowed", { status: 403 });
   }
 
   const targetUrl = `https://${host}${path}${url.search}`;
   const serviceName = getServiceForHost(host);
 
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders(origin),
-    });
-  }
-
   // Handle service-specific OAuth token exchange
   if (serviceName) {
-    const oauthResponse = await handleOAuthTokenExchange(request, serviceName, host, path, targetUrl, env, origin);
+    const oauthResponse = await handleOAuthTokenExchange(request, serviceName, host, path, targetUrl, env);
     if (oauthResponse) {
       return oauthResponse;
     }
   }
 
   // Standard proxy request
+  const filteredHeaders = filterHeaders(request.headers);
+
+  // For AWS requests, ensure the Host header is correctly set for signature validation
+  if (serviceName === "aws") {
+    filteredHeaders.set("Host", host);
+  }
+
+  const outgoingHeaderObj: Record<string, string> = {};
+  filteredHeaders.forEach((value, key) => {
+    outgoingHeaderObj[key] = value;
+  });
+
   const fetchInit = {
     method: request.method,
-    headers: filterHeaders(request.headers),
-    body: request.method !== "GET" && request.method !== "HEAD" ? await request.text() : null,
+    headers: filteredHeaders,
+    // Preserve raw body for AWS signature validation - don't convert to text
+    body: request.method !== "GET" && request.method !== "HEAD" ? request.body : null,
     redirect: "follow" as RequestRedirect,
   };
 
   let response: Response;
   try {
     response = await fetch(targetUrl, fetchInit);
-  } catch (err) {
-    return new Response("Upstream fetch failed", {
-      status: 502,
-      headers: corsHeaders(origin),
+
+    const responseHeaderObj: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      responseHeaderObj[key] = value;
     });
+
+    // Log response body for debugging (but be careful with large responses)
+    const responseText = await response.text();
+    if (responseText.length < 2000) {
+    } else {
+    }
+
+    // Create new response with the logged body
+    return new Response(responseText, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+  } catch (err) {
+    console.error("Fetch error:", err);
+    return new Response("Upstream fetch failed", { status: 502 });
   }
+}
 
-  const responseBody = await response.arrayBuffer();
-  const respHeaders = new Headers(response.headers);
-  for (const [key, value] of Object.entries(corsHeaders(origin))) {
-    respHeaders.set(key, value);
-  }
+// Create CORS with all possible headers (including AWS) for simplicity
+const { preflight, corsify } = cors({
+  origin: ALLOWED_ORIGINS,
+  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+  allowHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Accept-Encoding",
+    "Accept-Language",
+    "User-Agent",
+    "Cache-Control",
+    "Pragma",
+    // AWS headers for all requests (simpler approach)
+    ...getAllowedHeaders().filter(
+      (h) =>
+        ![
+          "Content-Type",
+          "Authorization",
+          "X-Requested-With",
+          "Accept",
+          "Accept-Encoding",
+          "Accept-Language",
+          "User-Agent",
+          "Cache-Control",
+          "Pragma",
+        ].includes(h)
+    ),
+  ],
+  exposeHeaders: ["etag", ...getExposedHeaders().filter((h) => h !== "etag")],
+  maxAge: 86400,
+});
 
-  return new Response(responseBody, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: respHeaders,
-  });
-};
+// Create router with CORS middleware
+const router = AutoRouter({
+  before: [preflight],
+  finally: [corsify],
+});
 
-export default {
-  fetch: handleRequest,
-};
+// Handle all proxy requests: /:host/*
+router.all("/:host/*", async (request, env) => {
+  return handleProxy(request, env);
+});
+
+export default router;
