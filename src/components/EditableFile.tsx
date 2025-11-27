@@ -65,7 +65,7 @@ export const EditableFile = ({
   return (
     <div className="select-none">
       {!isEditing ? (
-        <>
+        <div className="mx-1">
           <ActiveLink
             active={equals(fullPath, workspaceRoute.path)}
             draggable
@@ -95,15 +95,13 @@ export const EditableFile = ({
               }))
             }
           >
-            <div className="w-full">
-              <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
-                <SelectedMark selected={isSelected} conflicted={isConflicted} />
-                <IconForTreeNode treeNode={treeNode} />
-                <div className="py-2.5 text-xs w-full truncate">{prefix(fileName)}</div>
-              </div>
+            <div style={{ paddingLeft: depth + "rem" }} className="truncate flex items-center">
+              <SelectedMark selected={isSelected} conflicted={isConflicted} />
+              <IconForTreeNode treeNode={treeNode} />
+              <div className="py-2.5 text-xs w-full truncate">{prefix(fileName)}</div>
             </div>
           </ActiveLink>
-        </>
+        </div>
       ) : (
         <div className={twMerge(className, "w-full")}>
           <div className="w-full flex items-center truncate" style={{ paddingLeft: depth + "rem" }}>

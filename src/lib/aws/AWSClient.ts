@@ -1,3 +1,4 @@
+import { errF } from "@/lib/errors";
 import {
   BucketLocationConstraint,
   CreateBucketCommand,
@@ -7,9 +8,9 @@ import {
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
-  S3ClientConfig,
 } from "@aws-sdk/client-s3";
 import type { StreamingBlobPayloadInputTypes } from "@smithy/types";
+import { ProxyFetchHandler } from "./ProxyFetchHandler";
 
 export interface AWSS3Bucket {
   name: string;
@@ -28,9 +29,19 @@ export interface AWSS3PutResult {
   location?: string;
 }
 
+type AWSS3ClientConfig = {
+  region: string;
+  endpoint?: string;
+  forcePathStyle?: boolean;
+  credentials: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
+};
+
 export class AWSS3Client {
   private s3Client: S3Client;
-  private config: S3ClientConfig;
+  private config: AWSS3ClientConfig;
 
   constructor({
     accessKeyId,
@@ -47,17 +58,19 @@ export class AWSS3Client {
     this.config = {
       region,
       credentials: {
-        accessKeyId: accessKeyId,
-        secretAccessKey: secretAccessKey,
+        accessKeyId,
+        secretAccessKey,
       },
     };
 
-    // If CORS proxy is provided, construct the proper proxy URL for the region
+    // Configure S3 client with custom request handler for CORS proxy
     if (corsProxy) {
-      const proxyUrl = corsProxy;
-      const s3Host = region === "us-east-1" ? "s3.amazonaws.com" : `s3.${region}.amazonaws.com`;
-      this.config.endpoint = `${proxyUrl}/${s3Host}`;
-      this.config.forcePathStyle = true; // Required for custom endpoints
+      // Use custom ProxyFetchHandler instead of modifying endpoint
+      // This preserves AWS signature calculation while routing through proxy
+      (this.config as any).requestHandler = new ProxyFetchHandler({
+        proxyUrl: corsProxy,
+        requestTimeout: 30_000,
+      });
     }
 
     this.s3Client = new S3Client(this.config);
@@ -65,7 +78,9 @@ export class AWSS3Client {
 
   async listBuckets(): Promise<AWSS3Bucket[]> {
     try {
-      const command = new ListBucketsCommand({});
+      const command = new ListBucketsCommand({
+        BucketRegion: this.config.region,
+      });
       const response = await this.s3Client.send(command);
 
       return (
@@ -75,7 +90,7 @@ export class AWSS3Client {
         })) || []
       );
     } catch (error) {
-      console.error("Error listing buckets:", error);
+      console.error(errF`Error listing buckets: ${error}`);
       throw error;
     }
   }
