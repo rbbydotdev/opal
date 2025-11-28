@@ -79,16 +79,6 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     },
   }),
   template({
-    name: "AWS S3 API",
-    description: "Connect using AWS Access Key and Secret",
-    source: "aws",
-    type: "api",
-    icon: <RemoteAuthSourceIconComponent source="aws" />,
-    data: {
-      corsProxy: ENV.AWS_CORS_PROXY,
-    },
-  }),
-  template({
     name: "Vercel OAuth",
     description: "Connect using Vercel OAuth",
     source: "vercel",
@@ -96,6 +86,16 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     icon: <RemoteAuthSourceIconComponent source="vercel" />,
     data: {
       corsProxy: ENV.VERCEL_CORS_PROXY,
+    },
+  }),
+  template({
+    name: "AWS S3 API",
+    description: "Connect using AWS Access Key and Secret",
+    source: "aws",
+    type: "api",
+    icon: <RemoteAuthSourceIconComponent source="aws" />,
+    data: {
+      corsProxy: ENV.AWS_CORS_PROXY,
     },
   }),
   template({
