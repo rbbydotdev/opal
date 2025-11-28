@@ -22,9 +22,9 @@ const SERVICES = {
   },
   vercel: {
     hosts: ["api.vercel.com"],
-    oauthEndpoint: "/oauth/access_token",
+    oauthEndpoint: "/login/oauth/token",
     clientSecretEnv: "VERCEL_CLIENT_SECRET" as keyof Env,
-    oauthEnabled: false, // API only, no OAuth support
+    oauthEnabled: true,
   },
   cloudflare: {
     hosts: ["api.cloudflare.com"],

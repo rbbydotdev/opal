@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import fuzzysort from "fuzzysort";
 import React, { ReactNode, useEffect, useMemo, useState } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import {
   RemoteResourceCreate,
   RemoteResourceInput,
@@ -109,8 +109,6 @@ function RegionSearchDropdown({
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") onClose(searchValue.trim());
-              console.log(e);
-              console.log("..........................");
               handleKeyDown(e);
             }}
             onBlur={handleInputBlur}
@@ -170,6 +168,12 @@ export function AWSDestinationForm({
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthAWSAPIAgent>(remoteAuth);
+  const region = useWatch({
+    control: form.control,
+    name: "meta.region",
+  });
+  if (region) agent.setRegion(region);
+
   const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteAWSSearch({
     agent,
   });

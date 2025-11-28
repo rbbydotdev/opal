@@ -223,9 +223,7 @@ export function PublishModalStack({
         {currentView === "destination" && (
           <>
             <PublicationModalDestinationContent
-              close={() => {
-                popView();
-              }}
+              close={popView}
               handleSubmit={handleSubmit}
               remoteAuths={remoteAuths}
               defaultName={currentWorkspace.name}
