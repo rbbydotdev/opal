@@ -1,17 +1,30 @@
 import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
-import { exchangeCodeForToken, getVercelOAuthUrl } from "@/lib/auth/VercelOAuthFlow";
+import { 
+  exchangeCodeForToken, 
+  generateCodeChallenge, 
+  generateCodeVerifier, 
+  getVercelOAuthUrl 
+} from "@/lib/auth/VercelOAuthFlow";
 import { OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
 export class VercelOAuthProvider extends OAuthProvider {
+  private codeVerifier: string | null = null;
+
   constructor() {
     super("vercel");
   }
 
-  getAuthorizationUrl(config: OAuthProviderConfig): string {
+  async getAuthorizationUrl(config: OAuthProviderConfig): Promise<string> {
+    this.codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(this.codeVerifier);
+    const nonce = generateCodeVerifier(); // Generate secure random nonce
+
     return getVercelOAuthUrl({
       redirectUri: config.redirectUri,
       state: config.state,
-      scopes: ["user:read"],
+      nonce,
+      codeChallenge,
+      scopes: ["openid", "email", "profile"],
     });
   }
 
@@ -19,9 +32,14 @@ export class VercelOAuthProvider extends OAuthProvider {
     data: { code: string; state: string },
     config: OAuthProviderConfig
   ): Promise<RemoteAuthDataFor<"oauth">> {
+    if (!this.codeVerifier) {
+      throw new Error("No code verifier available");
+    }
+
     const authData = await exchangeCodeForToken({
       code: data.code,
       redirectUri: config.redirectUri,
+      codeVerifier: this.codeVerifier,
       corsProxy: config.corsProxy,
     });
 

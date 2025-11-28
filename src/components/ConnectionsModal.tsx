@@ -188,7 +188,7 @@ export function ConnectionsModalContent({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Connection Type</FormLabel>
-                <Select value={field.value} onValueChange={handleSelectChange}>
+                <Select value={field.value} onValueChange={handleSelectChange} disabled={mode === "edit"}>
                   <SelectTrigger id="connection-type">
                     <SelectValue placeholder="Select a connection type" />
                   </SelectTrigger>

@@ -88,7 +88,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
       corsProxy: ENV.AWS_CORS_PROXY,
     },
   }),
-  /*template({
+  template({
     name: "Vercel OAuth",
     description: "Connect using Vercel OAuth",
     source: "vercel",
@@ -97,7 +97,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     data: {
       corsProxy: ENV.VERCEL_CORS_PROXY,
     },
-  }),*/
+  }),
   template({
     name: "Netlify API",
     description: "Connect using a Netlify API key",

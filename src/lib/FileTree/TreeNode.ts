@@ -710,7 +710,6 @@ export class VirtualTreeNode extends TreeNode {
 export class VirtualFileTreeNode extends TreeFile {
   isVirtual = true;
   tagSource = tagSource<VirtualTreeNode>;
-  // tagContent = tagContent<VirtualTreeNode>;
 }
 
 export class VirtualDirTreeNode extends TreeDir {

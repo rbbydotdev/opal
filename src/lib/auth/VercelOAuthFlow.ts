@@ -2,6 +2,30 @@ import { ENV } from "@/lib/env";
 import { mapToTypedError } from "@/lib/errors";
 
 /**
+ * PKCE Helper Functions (adapted from GitHub implementation)
+ */
+
+export function generateCodeVerifier(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+}
+
+export async function generateCodeChallenge(verifier: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  const bytes = new Uint8Array(digest);
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+}
+
+/**
  * OAuth Types
  */
 export type VercelOAuthFlowPayload = {
@@ -14,17 +38,21 @@ export type VercelOAuthFlowPayload = {
 };
 
 /**
- * Build Vercel authorize URL
+ * Build Vercel authorize URL with PKCE
  */
 export function getVercelOAuthUrl({
   clientId = ENV.PUBLIC_VERCEL_CLIENT_ID!,
   redirectUri,
   state,
-  scopes = ["user:read"],
+  nonce,
+  codeChallenge,
+  scopes = ["openid", "email", "profile"],
 }: {
   clientId?: string;
   redirectUri: string;
   state?: string;
+  nonce: string;
+  codeChallenge: string;
   scopes?: string[];
 }): string {
   const params = new URLSearchParams({
@@ -32,10 +60,13 @@ export function getVercelOAuthUrl({
     response_type: "code",
     redirect_uri: redirectUri,
     scope: scopes.join(" "),
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
+    nonce: nonce,
     ...(state ? { state } : {}),
   });
 
-  return `https://api.vercel.com/oauth/authorize?${params.toString()}`;
+  return `https://vercel.com/oauth/authorize?${params.toString()}`;
 }
 
 /**
@@ -44,21 +75,21 @@ export function getVercelOAuthUrl({
 export async function exchangeCodeForToken({
   code,
   redirectUri,
+  codeVerifier,
   clientId = ENV.PUBLIC_VERCEL_CLIENT_ID!,
-  clientSecret = ENV.VERCEL_CLIENT_SECRET!,
   corsProxy,
 }: {
   code: string;
   redirectUri: string;
+  codeVerifier: string;
   clientId?: string;
-  clientSecret?: string;
   corsProxy?: string;
 }): Promise<VercelOAuthFlowPayload> {
   try {
-    const tokenUrl = "https://api.vercel.com/oauth/access_token";
-    const url = corsProxy ? `${corsProxy}/${tokenUrl}` : tokenUrl;
+    const baseUrl = corsProxy ? `${corsProxy}/api.vercel.com` : "https://api.vercel.com";
+    const tokenUrl = `${baseUrl}/login/oauth/token`;
 
-    const response = await fetch(url, {
+    const response = await fetch(tokenUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -66,10 +97,10 @@ export async function exchangeCodeForToken({
       },
       body: new URLSearchParams({
         client_id: clientId,
-        client_secret: clientSecret,
         code,
         redirect_uri: redirectUri,
         grant_type: "authorization_code",
+        code_verifier: codeVerifier,
       }),
     });
 

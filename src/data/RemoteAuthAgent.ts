@@ -383,14 +383,28 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
 
 export class RemoteAuthAWSAPIAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<AWSS3Bucket> {
   private _s3Client!: AWSS3Client;
+  private region: string = "us-east-1";
 
   get s3Client() {
-    return (this._s3Client ||= new AWSS3Client({
+    if (!this._s3Client) {
+      this.initClient();
+    }
+    return this._s3Client;
+  }
+  private initClient() {
+    return (this._s3Client = new AWSS3Client({
       accessKeyId: this.remoteAuth.data.apiKey,
       secretAccessKey: this.remoteAuth.data.apiSecret!,
-      region: "us-east-1", // Default region, could be made configurable
+      region: this.region,
       corsProxy: this.remoteAuth.data.corsProxy,
     }));
+  }
+
+  setRegion(region: string) {
+    if (this.region === region) return this;
+    this.region = region;
+    this.initClient();
+    return this;
   }
 
   getUsername(): string {
