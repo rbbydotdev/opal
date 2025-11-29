@@ -368,8 +368,7 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
   const viewMode = JSON.stringify("source");
   const sp = `hlRanges=${ranges}&viewMode=${viewMode}`; //cache buster
   return (
-    // <Link to={href} hash={sp} onClick={onClick}>
-    <a href={href + "#" + sp} onClick={onClick}>
+    <Link to={href} hash={sp} onClick={onClick}>
       <div className="group flex cursor-pointer items-start border-b-4 border-background bg-sidebar-foreground p-1 py-1 font-mono text-xs text-sidebar last-of-type:border-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
         <div className="relative mr-2 min-w-8 text-right font-bold">
           {match.linesSpanned > 0 && (
@@ -388,6 +387,6 @@ function SearchLine({ match, href, onClick }: { match: SearchResult; href: strin
           {match.endText}
         </div>
       </div>
-    </a>
+    </Link>
   );
 }

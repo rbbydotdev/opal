@@ -195,7 +195,7 @@ export const CodeMirrorEditor = ({
         effects: languageCompartment.reconfigure(ext),
       });
     }
-  }, [mimeType, hasConflicts, globalConflictResolution, languageCompartment]);
+  }, [mimeType, hasConflicts, value, globalConflictResolution, languageCompartment]);
   useEffect(() => {
     //basicsetup compartment - use custom setup that respects vim mode
     if (viewRef.current) {
@@ -203,7 +203,7 @@ export const CodeMirrorEditor = ({
         effects: basicSetupCompartment.reconfigure(createCustomBasicSetup(vimMode)),
       });
     }
-  }, [basicSetupCompartment, vimMode]);
+  }, [basicSetupCompartment, value, vimMode]);
 
   // Reconfigure vim mode
   useEffect(() => {
@@ -212,7 +212,7 @@ export const CodeMirrorEditor = ({
         effects: vimCompartment.reconfigure(vimMode ? vim() : []),
       });
     }
-  }, [vimCompartment, vimMode]);
+  }, [vimCompartment, value, vimMode]);
 
   // Reconfigure editable state
   useEffect(() => {
@@ -221,7 +221,7 @@ export const CodeMirrorEditor = ({
         effects: editableCompartment.reconfigure(EditorView.editable.of(!readOnly)),
       });
     }
-  }, [editableCompartment, readOnly]);
+  }, [editableCompartment, value, readOnly]);
 
   // Reconfigure conflict plugin
   useEffect(() => {
@@ -232,7 +232,7 @@ export const CodeMirrorEditor = ({
         ),
       });
     }
-  }, [conflictCompartment, enableConflictResolution]);
+  }, [conflictCompartment, value, enableConflictResolution]);
 
   // external prop value pushes into editor
   useEffect(() => {
