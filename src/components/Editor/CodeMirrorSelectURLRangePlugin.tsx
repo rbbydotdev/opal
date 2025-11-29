@@ -1,68 +1,4 @@
-import { EditorSelection, StateEffect, StateField } from "@codemirror/state";
-import { EditorView, ViewPlugin } from "@codemirror/view";
-
-// Effect to mark ranges as applied
-export const setAppliedRangesEffect = StateEffect.define<string>();
-
-// State field to track applied highlight ranges
-export const appliedRangesField = StateField.define<string | null>({
-  create: () => null,
-  update: (value, tr) => {
-    const effect = tr.effects.find((e) => e.is(setAppliedRangesEffect));
-    return effect ? effect.value : value;
-  },
-});
-
-export const codeMirrorSelectURLRangePlugin = (hlRanges: [start: number, end: number][] | null) =>
-  ViewPlugin.fromClass(
-    class {
-      private view: EditorView;
-
-      constructor(view: EditorView) {
-        this.view = view;
-      }
-
-      private handleSelectRanges = (ranges: [start: number, end: number][]) => {
-        if (!ranges.length) return;
-        const docLength = this.view.state.doc.length;
-        if (!docLength) return;
-
-        const selections = ranges
-          .map(([start, end]) => {
-            // Clamp to valid range
-            const s = Math.max(0, Math.min(start, docLength));
-            const e = Math.max(0, Math.min(end, docLength));
-            // Only include if valid
-            return s < e ? EditorSelection.range(s, e) : null;
-          })
-          .filter(Boolean);
-        if (selections.length) {
-          const rangesKey = JSON.stringify(ranges);
-          this.view.dispatch({
-            selection: EditorSelection.create(selections),
-            scrollIntoView: true,
-            effects: [setAppliedRangesEffect.of(rangesKey)],
-          });
-        }
-      };
-
-      update() {
-        if (hlRanges && this.view.state.doc.length > 0) {
-          const currentRangesKey = JSON.stringify(hlRanges);
-          const appliedRanges = this.view.state.field(appliedRangesField);
-
-          // Only apply ranges if they haven't been applied yet
-          if (appliedRanges !== currentRangesKey) {
-            requestAnimationFrame(() => {
-              this.handleSelectRanges(hlRanges);
-            });
-          }
-        }
-      }
-
-      destroy() {}
-    }
-  );
+import { useLocation } from "@tanstack/react-router";
 
 const RANGE_KEY = "hlRanges";
 export function rangesToSearchParams(ranges: [start: number, end: number][], meta?: Record<string, unknown>): string {
@@ -74,6 +10,23 @@ export function rangesToSearchParams(ranges: [start: number, end: number][], met
     }
   }
   return params.toString();
+}
+
+export function useHashURLRanges():
+  | { start: number; end: number; hasRanges: true }
+  | {
+      start: null;
+      end: null;
+      hasRanges: false;
+    } {
+  // const hash = window.location.hash;
+  const hash = useLocation().hash;
+  const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+  const [start, end] = parseParamsToRanges(params).ranges?.at(0) ?? [];
+  if (start === undefined || end === undefined) {
+    return { start: null, end: null, hasRanges: false };
+  }
+  return { start, end, hasRanges: true };
 }
 
 export function parseParamsToRanges(params: URLSearchParams): {
@@ -105,12 +58,4 @@ export function parseParamsToRanges(params: URLSearchParams): {
     ranges: ranges ? ranges.map(([s, e]) => [parseInt(s), parseInt(e)]) : null,
     meta,
   };
-}
-export function getHighlightRangesFromURL(
-  windowHref: string,
-  type: "hash" | "search" = "hash"
-): [start: number, end: number][] | null {
-  const url = new URL(windowHref);
-  const params = type === "hash" ? new URLSearchParams(url.hash.slice(1)) : url.searchParams;
-  return parseParamsToRanges(params).ranges;
 }

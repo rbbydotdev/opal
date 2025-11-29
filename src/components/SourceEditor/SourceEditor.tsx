@@ -8,6 +8,7 @@ import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/file
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { cn } from "@/lib/utils";
+import { useLocation } from "@tanstack/react-router";
 
 export const SourceEditor = ({
   hasConflicts,
@@ -30,7 +31,10 @@ export const SourceEditor = ({
     currentWorkspace,
   });
 
+  const locationHash = useLocation().hash;
+
   if (contents === null) return null;
+
   return (
     <ConditionalDropzone
       shouldActivate={isExternalFileDrop}
@@ -43,6 +47,7 @@ export const SourceEditor = ({
       }
     >
       <CodeMirrorEditor
+        key={locationHash}
         hasConflicts={hasConflicts}
         currentWorkspace={currentWorkspace}
         mimeType={mimeType}
