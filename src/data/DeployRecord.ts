@@ -1,5 +1,4 @@
 import { BuildDAO, BuildJType } from "@/data/BuildDAO";
-import { BuildLogLine } from "@/data/BuildRecord";
 
 export interface DeployRecord<T = any> {
   guid: string;
@@ -16,6 +15,8 @@ export interface DeployRecord<T = any> {
   error: string | null;
 }
 
-export type DeployLogLine = BuildLogLine & {
+export type DeployLogLine = {
   type: "info" | "error" | "warning" | "success";
+  timestamp: number;
+  message: string;
 };

@@ -1,5 +1,4 @@
-import { BuildStrategy } from "@/builder/builder-types";
-import { BuildLogLine, BuildRecord } from "@/data/BuildRecord";
+import { BuildLogLine, BuildRecord, BuildStrategy } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { DiskJType } from "@/data/DiskType";

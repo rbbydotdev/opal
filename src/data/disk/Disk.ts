@@ -717,10 +717,6 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   ): Promise<AbsPath[]> {
     await this.ready;
     const result: AbsPath[] = [];
-    // console.log(copyPaths);
-    // for (const [from, to] of copyPaths) {
-    //   console.log(from.path, "->", to instanceof TreeNode ? to.path : to);
-    // }
 
     // return [];
     for (const [from, to] of copyPaths) {

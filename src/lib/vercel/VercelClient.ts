@@ -1,5 +1,7 @@
 import { mapToTypedError } from "@/lib/errors";
 
+export class VercelClient2 {}
+
 export class VercelClient {
   private accessToken: string;
   private baseUrl = "https://api.vercel.com";

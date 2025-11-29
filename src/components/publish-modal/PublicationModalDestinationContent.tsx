@@ -16,7 +16,9 @@ import {
   DestinationSchemaMap,
   DestinationType,
 } from "@/data/DestinationDAO";
+import { RemoteAuthVercelAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Pencil, Plus, Zap } from "lucide-react";
@@ -188,6 +190,13 @@ export function PublicationModalDestinationContent({
             )}
           />
         )}
+        {destinationType === "vercel" && (
+          <VercelDestinationForm
+            form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
+            remoteAuth={remoteAuth}
+            defaultName={defaultName}
+          />
+        )}
         {destinationType === "github" && (
           <GitHubDestinationForm
             form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
@@ -224,5 +233,113 @@ export function PublicationModalDestinationContent({
         </div>
       </form>
     </Form>
+  );
+}
+
+function VercelDestinationForm_({ form }: { form: UseFormReturn<DestinationMetaType<"vercel">> }) {
+  return (
+    <>
+      <FormField
+        control={form.control}
+        name="meta.project"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Project Name</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                placeholder="project-name"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    return e.preventDefault();
+                  }
+                }}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
+  );
+}
+
+export function VercelDestinationForm({
+  form,
+  remoteAuth,
+  defaultName,
+}: {
+  form: UseFormReturn<DestinationMetaType<"vercel">>;
+  remoteAuth: RemoteAuthDAO | null;
+  defaultName?: string;
+}) {
+  const agent = useRemoteAuthAgent<RemoteAuthVercelAgent>(remoteAuth);
+  const { isLoading, searchValue, updateSearch, clearCache, searchResults, error } = useRemoteGitRepoSearch({
+    agent,
+  });
+  const { ident, msg, request } = useRemoteGitRepo({
+    createRequest: async (name: string, options: { signal?: AbortSignal }) => {
+      const response = await agent.createRepo(name, options);
+      clearCache();
+      return { name: response.data.name };
+    },
+    defaultName,
+  });
+
+  return (
+    <>
+      <RemoteResourceRoot
+        control={form.control}
+        fieldName="meta.repository"
+        onValueChange={(value: string) => form.setValue("meta.repository", value)}
+        getValue={() => form.getValues("meta.repository")}
+      >
+        <RemoteResourceSearch
+          label="Repository"
+          isLoading={isLoading}
+          searchValue={searchValue}
+          onSearchChange={updateSearch}
+          searchResults={searchResults}
+          error={error}
+        />
+        <RemoteResourceCreate
+          label="Repository"
+          placeholder="my-website-repo"
+          ident={ident}
+          msg={msg}
+          request={request}
+        />
+        <RemoteResourceInput
+          label="Repository"
+          placeholder="my-website-repo"
+          createButtonTitle="Create Repository"
+          searchButtonTitle="Search Repositories"
+          ident={ident}
+          onSearchChange={updateSearch}
+          onInputChange={request.reset}
+        />
+      </RemoteResourceRoot>
+      <FormField
+        control={form.control}
+        name="meta.branch"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Branch</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                placeholder="gh-pages"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                  }
+                }}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
   );
 }
