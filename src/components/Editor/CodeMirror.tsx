@@ -405,14 +405,6 @@ const CodeMirrorToolbar = ({
             onCheckedChange={(checked) => setVimMode(checked)}
             aria-label="Enable Vim mode"
           />
-          {/* <input
-            id="vimMode"
-            type="checkbox"
-            className="ml-1"
-            checked={vimMode}
-            onChange={(e) => setVimMode(e.target.checked)}
-            aria-label="Enable Vim mode"
-          /> */}
         </Label>
       </div>
       {children}

@@ -1,7 +1,7 @@
 import { ConnectionsModal } from "@/components/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
-  SelectableListActionButton,
   SelectableListActions,
   SelectableListContent,
   SelectableListHeader,
@@ -17,7 +17,6 @@ import { SidebarGroup } from "@/components/ui/sidebar";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
-import { cn } from "@/lib/utils";
 import { Delete, Pencil, Plus, Sparkle } from "lucide-react";
 import { useState } from "react";
 
@@ -57,14 +56,9 @@ function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
         </SelectableListHeader>
 
         <SelectableListActions>
-          <SelectableListActionButton
-            onClick={handleAddConnection}
-            title="Add Connection"
-            className={cn({ "right-7": remoteAuths.length > 0, "right-2": remoteAuths.length === 0 })}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="sr-only">Add Connection</span>
-          </SelectableListActionButton>
+          <DropdownMenuItem onClick={handleAddConnection} className="grid grid-cols-[auto_1fr] items-center gap-2">
+            <Plus /> Add Connection
+          </DropdownMenuItem>
         </SelectableListActions>
 
         <SelectableListContent className="ml-7">

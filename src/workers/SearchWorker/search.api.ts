@@ -43,8 +43,6 @@ export const SearchWorkerApi = {
     if (matchedFiles.length > 0) {
       yield {
         matches: matchedFiles.map((filePath) => ({
-          // chsum: filePath, // Use file path as checksum for filename search
-          chsum: 0,
           lineNumber: 1,
           lineStart: 0,
           lineEnd: basename(filePath).length,

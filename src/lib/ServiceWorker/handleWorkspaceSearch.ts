@@ -49,8 +49,6 @@ function createWorkspaceSearchStream({
                 // Create a result in the same format as content search
                 const result = {
                   matches: matchedFiles.map((filePath) => ({
-                    // chsum: filePath, // Use file path as checksum for filename search
-                    chsum: 0,
                     lineNumber: 1,
                     lineStart: 0,
                     lineEnd: basename(filePath).length,

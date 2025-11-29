@@ -60,13 +60,13 @@ const keyboardShortcuts: KeyboardShortcut[] = [
     section: "File Explorer",
     action: "Navigate Down",
     keys: ["↓"],
-    description: "Move selection down in lists",
+    description: "Move selection down in lists (hold shift to multi-select)",
   },
   {
     section: "File Explorer",
     action: "Navigate Up",
     keys: ["↑"],
-    description: "Move selection up in lists",
+    description: "Move selection up in lists (hold shift to multi-select)",
   },
   {
     section: "File Explorer",
@@ -79,6 +79,24 @@ const keyboardShortcuts: KeyboardShortcut[] = [
     action: "Navigate Items (Reverse)",
     keys: ["Shift", "Tab"],
     description: "Navigate backwards between elements",
+  },
+  {
+    section: "File Explorer",
+    action: "Copy Files",
+    keys: [IS_MAC ? "⌘" : "Ctrl", "c"],
+    description: "Copy selected files to clipboard",
+  },
+  {
+    section: "File Explorer",
+    action: "Cut Files",
+    keys: [IS_MAC ? "⌘" : "Ctrl", "x"],
+    description: "Cut selected files to clipboard",
+  },
+  {
+    section: "File Explorer",
+    action: "Paste Files",
+    keys: [IS_MAC ? "⌘" : "Ctrl", "v"],
+    description: "Paste files from clipboard",
   },
   {
     section: "General",

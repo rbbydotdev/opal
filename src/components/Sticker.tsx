@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export const Sticker = memo(function Sticker({ enabled }: { enabled?: boolean }) {
   const stickerRef = useRef<SVGSVGElement>(null);
+  const boundsRef = useRef<{ y: number; x: number } | null>(null);
 
   // Static configuration
   const config = useMemo(
@@ -36,10 +37,10 @@ export const Sticker = memo(function Sticker({ enabled }: { enabled?: boolean })
   const handlePointerMove = useCallback(
     (e: PointerEvent) => {
       if (!stickerRef.current || !config.pointer) return;
-      const bounds = stickerRef.current.getBoundingClientRect();
+      boundsRef.current = stickerRef.current.getBoundingClientRect();
       setLightPos({
-        x: Math.floor(e.clientX - bounds.x),
-        y: Math.floor(e.clientY - bounds.y),
+        x: Math.floor(e.clientX - boundsRef.current.x),
+        y: Math.floor(e.clientY - boundsRef.current.y),
         z: config.defaultLight.z,
       });
     },
