@@ -1,5 +1,4 @@
 import { type SearchResultData } from "@/features/search/SearchResults";
-import { checkSum } from "../../lib/checkSum";
 
 export interface Scannable<T> {
   scan(): AsyncGenerator<T>;
@@ -96,7 +95,6 @@ export class SearchTextScannable<MetaExtType extends object, Scanner extends Sca
         const relEnd = Math.min(matchEndIndex, startLineInfo.lineEnd) - startLineInfo.lineStart;
 
         results.push({
-          chsum: checkSum(haystack.slice(matchStartIndex, matchEndIndex)),
           lineNumber: startLineInfo.lineNumber,
           lineStart: startLineInfo.lineStart,
           lineEnd: startLineInfo.lineEnd,

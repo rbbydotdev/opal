@@ -186,13 +186,7 @@ export function SelectableListRoot<T = any>({ children, expanderId, ...coreProps
   );
 }
 
-export function SelectableListActions({
-  children,
-  menuItems,
-}: {
-  children?: React.ReactNode;
-  menuItems?: React.ReactNode;
-}) {
+export function SelectableListActions({ children }: { children?: React.ReactNode }) {
   const { selected, setSelected, onDelete, allItemIds } = useSelectableListContext();
   const { open: openConfirm } = useConfirm();
 
@@ -211,7 +205,6 @@ export function SelectableListActions({
 
   return (
     <div className="group-data-[state=closed]/selectablelist:hidden ">
-      {children}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <SidebarGroupAction className={cn("p-0 top-1.5 z-10", children ? "right-0" : "right-0")} title="Items Menu">
@@ -219,7 +212,8 @@ export function SelectableListActions({
           </SidebarGroupAction>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {menuItems}
+          {children}
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setSelected(allItemIds)}
             className="grid grid-cols-[auto_1fr] items-center gap-2"
