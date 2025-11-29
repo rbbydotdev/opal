@@ -1,9 +1,5 @@
 import { customCodeMirrorTheme } from "@/components/Editor/codeMirrorCustomTheme";
-import {
-  appliedRangesField,
-  codeMirrorSelectURLRangePlugin,
-  parseParamsToRanges,
-} from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
+import { useHashURLRanges } from "@/components/Editor/CodeMirrorSelectURLRangePlugin";
 import { createCustomBasicSetup } from "@/components/Editor/customBasicSetup";
 import { gitConflictEnhancedPlugin } from "@/components/Editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/components/Editor/LivePreviewButton";
@@ -32,10 +28,10 @@ import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
-import { Compartment, EditorState, Extension } from "@codemirror/state";
+import { Compartment, EditorSelection, EditorState, Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -107,7 +103,7 @@ export const CodeMirrorEditor = ({
     "SourceEditor/enableGitConflictResolution",
     true
   );
-  const location = useLocation();
+  const { start, end, hasRanges } = useHashURLRanges();
 
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -119,8 +115,9 @@ export const CodeMirrorEditor = ({
   const vimCompartment = useRef(new Compartment()).current;
   const editableCompartment = useRef(new Compartment()).current;
   const conflictCompartment = useRef(new Compartment()).current;
-  const urlRangeCompartment = useRef(new Compartment()).current;
   const basicSetupCompartment = useRef(new Compartment()).current;
+
+  // const [start, end] = parseParamsToRanges(new URLSearchParams(location.hash)).ranges?.at(0) ?? [null, null];
 
   // initial setup
   useEffect(() => {
@@ -129,7 +126,6 @@ export const CodeMirrorEditor = ({
     const extensions: Extension[] = [
       autocompletion(),
       EditorView.lineWrapping,
-      urlRangeCompartment.of([]),
       keymap.of([indentWithTab]),
 
       // compartments (start with initial config)
@@ -157,10 +153,15 @@ export const CodeMirrorEditor = ({
     const state = EditorState.create({
       doc: value,
       extensions,
+      selection: hasRanges
+        ? EditorSelection.create([EditorSelection.range(start, end), EditorSelection.cursor(start)])
+        : undefined,
     });
 
     viewRef.current = new EditorView({
       state,
+      scrollTo:
+        start !== null && end !== null ? EditorView.scrollIntoView(EditorSelection.range(start, end)) : undefined,
       parent: editorRef.current,
     });
 
@@ -169,15 +170,10 @@ export const CodeMirrorEditor = ({
     view.dispatch({
       effects: [
         languageCompartment.reconfigure(getLanguageExtension(mimeType) ?? []),
-        // vimCompartment.reconfigure(vimMode ? vim() : []),
         editableCompartment.reconfigure(EditorView.editable.of(!readOnly)),
         conflictCompartment.reconfigure(
           enableConflictResolution && hasConflicts ? gitConflictEnhancedPlugin(getLanguageExtension) : []
         ),
-        urlRangeCompartment.reconfigure([
-          appliedRangesField,
-          codeMirrorSelectURLRangePlugin(parseParamsToRanges(new URLSearchParams(location.hash)).ranges),
-        ]),
       ],
     });
 
@@ -186,7 +182,7 @@ export const CodeMirrorEditor = ({
       viewRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]); // Only depend on initial value
+  }, [value]); // Only depend on initial value or hash
 
   // Reconfigure language when mimeType/conflicts change
   useEffect(() => {
@@ -237,17 +233,6 @@ export const CodeMirrorEditor = ({
       });
     }
   }, [conflictCompartment, enableConflictResolution]);
-
-  // Reconfigure URL ranges when hash changes
-  useEffect(() => {
-    if (viewRef.current) {
-      const ranges = parseParamsToRanges(new URLSearchParams(location.hash)).ranges;
-      viewRef.current.dispatch({
-        // effects: urlRangeCompartment.reconfigure(createURLRangeExtension(ranges)),
-        effects: urlRangeCompartment.reconfigure([appliedRangesField, codeMirrorSelectURLRangePlugin(ranges)]),
-      });
-    }
-  }, [location.hash, urlRangeCompartment]);
 
   // external prop value pushes into editor
   useEffect(() => {
