@@ -141,6 +141,9 @@ export class AWSDestination extends DestinationDAO<AWSDestinationData> {}
 type GitHubDestinationData = z.infer<(typeof DestinationSchemaMap)["github"]>["meta"];
 export class GitHubDestination extends DestinationDAO<GitHubDestinationData> {}
 
+type VercelDestinationData = z.infer<(typeof DestinationSchemaMap)["vercel"]>["meta"];
+export class VercelDestination extends DestinationDAO<VercelDestinationData> {}
+
 const RandomTag = (tag: string) =>
   `My-${tag}-${RandomSlugWords(1)}-${`${Math.trunc(Math.random() * 100)}`.padStart(3, "0")}`;
 
@@ -164,6 +167,7 @@ export const DestinationSchemaMap = {
       remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
       label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
+        project: z.string().trim().min(1, "Project is required"),
         // implicit! projectId: z.string().trim(),
         // implicit! teamId: z.string().trim().optional(),
       }),
@@ -171,7 +175,9 @@ export const DestinationSchemaMap = {
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Vercel"),
-      meta: {},
+      meta: {
+        project: "",
+      },
     })),
   netlify: z
     .object({

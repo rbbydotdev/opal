@@ -1,6 +1,7 @@
-import { BuildStrategy } from "@/builder/builder-types";
 import { DiskJType } from "@/data/DiskType";
 import { AbsPath } from "@/lib/paths2";
+
+export type BuildStrategy = "freeform" | "book" | "blog";
 
 export interface BuildRecord {
   guid: string;

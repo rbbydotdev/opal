@@ -1,8 +1,7 @@
+import { BuildStrategy } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, RelPath } from "@/lib/paths2";
-
-export type BuildStrategy = "freeform" | "book" | "blog";
 
 export interface BuildOptions {
   strategy: BuildStrategy;
