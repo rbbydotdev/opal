@@ -341,3 +341,15 @@ export const stringifyEntry = (
   }
   return String(entry);
 };
+// GithubVarer{
+//    device_code: "3584d83530557fdd1f46af8289938c8ef79f9dc5",
+//    user_code: "WDJB-MJHT",
+//    verification_uri: "https://github.com/login/device",
+//    expires_in: 900,
+//    interval: 5,
+//  };
+// corsProxy,
+// clientId: NotEnv.PublicGithubClientID,
+export const stripTrailingSlash = (path: string): string => {
+  return path.endsWith("/") ? path.slice(0, -1) : path;
+};

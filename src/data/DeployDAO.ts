@@ -1,4 +1,3 @@
-import { BuildDAO, BuildJType, NullBuildDAO } from "@/data/BuildDAO";
 import { DeployLogLine, DeployRecord } from "@/data/DeployRecord";
 import { ClientDb } from "@/data/instance";
 import { nanoid } from "nanoid";
@@ -8,7 +7,7 @@ export type DeployJType = ReturnType<typeof DeployDAO.prototype.toJSON>;
 export class DeployDAO<T = any> implements DeployRecord<T> {
   guid: string;
   label: string;
-  build: BuildJType | BuildDAO;
+  buildId: string;
   timestamp: number;
   workspaceId: string;
   destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
@@ -28,7 +27,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     workspaceId,
     destinationType,
     destinationName,
-    build,
+    buildId,
     status = "idle",
     logs,
     data,
@@ -38,7 +37,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     this.guid = guid;
     this.label = label;
     this.timestamp = timestamp;
-    this.build = build;
+    this.buildId = buildId;
     this.workspaceId = workspaceId;
     this.destinationType = destinationType;
     this.destinationName = destinationName;
@@ -53,19 +52,12 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     return new DeployDAO<T>(json);
   }
 
-  Build(): BuildDAO {
-    if (this.build instanceof BuildDAO) {
-      return this.build;
-    }
-    return BuildDAO.FromJSON(this.build);
-  }
-
   toJSON() {
     return {
       guid: this.guid,
       label: this.label,
       timestamp: this.timestamp,
-      build: this.build instanceof BuildDAO ? this.build.toJSON() : this.build,
+      buildId: this.buildId,
       workspaceId: this.workspaceId,
       destinationType: this.destinationType,
       destinationName: this.destinationName,
@@ -83,13 +75,13 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     destinationType,
     destinationName,
     data,
-    build,
+    buildId,
     guid = DeployDAO.guid(),
     logs = [],
   }: {
     label: string;
     workspaceId: string;
-    build: BuildDAO;
+    buildId: string;
     data: T;
     destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
     destinationName: string;
@@ -101,7 +93,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       label,
       data,
       timestamp: Date.now(),
-      build,
+      buildId,
       workspaceId,
       destinationType,
       completedAt: null,
@@ -153,7 +145,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       guid: this.guid,
       label: this.label,
       timestamp: this.timestamp,
-      build: this.build,
+      buildId: this.buildId,
       workspaceId: this.workspaceId,
       destinationType: this.destinationType,
       destinationName: this.destinationName,
@@ -204,7 +196,7 @@ export class NullDeployDAO extends DeployDAO {
       guid: "_null_deploy_",
       label: "NullDeploy",
       timestamp: Date.now(),
-      build: new NullBuildDAO(),
+      buildId: "",
       workspaceId: "",
       destinationType: "netlify",
       data: {},

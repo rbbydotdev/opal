@@ -113,7 +113,7 @@ export abstract class DeployRunner<T = BaseDeployData> {
 
     return DeployDAO.CreateNew<T>({
       label: this.options.deployLabel || `Deploy ${new Date().toLocaleString()}`,
-      build: this.options.build,
+      buildId: this.options.build.guid,
       workspaceId: this.options.build.workspaceId,
       destinationType: this.options.destinationType,
       destinationName: this.options.destinationName,
@@ -182,7 +182,7 @@ export abstract class DeployRunner<T = BaseDeployData> {
       await this.deploy.save();
 
       infoLog(`Starting deployment, id ${this.deploy.guid}...`);
-      infoLog(`Build ID: ${this.deploy.Build().guid}`);
+      infoLog(`Build ID: ${this.deploy.buildId}`);
       infoLog(`Destination: ${this.getDestinationName()}`);
 
       if (abortSignal?.aborted) {
@@ -194,7 +194,7 @@ export abstract class DeployRunner<T = BaseDeployData> {
       }
 
       // Get the build
-      const build = this.deploy.Build();
+      const build = this.deploy.buildId ? await BuildDAO.FetchFromGuid(this.deploy.buildId) : null;
       if (!build || build.status !== "success") {
         throw new Error("Cannot deploy failed or missing build");
       }
@@ -275,7 +275,7 @@ export abstract class DeployRunner<T = BaseDeployData> {
   protected abstract getDestinationName(): string;
 
   protected async validateBuildOutput(): Promise<void> {
-    const build = this.deploy.Build();
+    const build = this.deploy.buildId ? await BuildDAO.FetchFromGuid(this.deploy.buildId) : null;
     if (!build || !this.buildDisk || !this.buildOutputPath) {
       throw new Error("Build, disk, or output path not available");
     }

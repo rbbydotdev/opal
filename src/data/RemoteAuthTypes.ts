@@ -186,6 +186,10 @@ export interface RemoteAuthAgent {
   test(): Promise<{ status: "error"; msg: string } | { status: "success" }>;
 }
 
+export interface RemoteAuthAgentCORS extends RemoteAuthAgent {
+  getCORSProxy(): string | undefined;
+}
+
 export interface Repo {
   id: string | number;
   name: string;

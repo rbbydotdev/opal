@@ -1,5 +1,5 @@
-import { BuildStrategy } from "@/builder/builder-types";
 import { BuildDAO } from "@/data/BuildDAO";
+import { BuildStrategy } from "@/data/BuildRecord";
 import { Workspace } from "@/data/Workspace";
 import { useCallback, useRef, useState } from "react";
 

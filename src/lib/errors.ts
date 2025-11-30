@@ -6,6 +6,23 @@ type ErrorWithCode = Error & {
   code: string;
 };
 
+export function isErrorLike(error: unknown): error is Error & { message: string } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as Record<string, unknown>).message === "string"
+  );
+}
+export function isAbortError(error: unknown): error is Error & { message: string; name: "AbortError" } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as Record<string, unknown>).name === "AbortError"
+  );
+}
+
 export function coerceError(error: unknown): Error {
   if (error instanceof Error) {
     return error;
@@ -68,7 +85,7 @@ export function errorCode(error: unknown, code?: string): ErrorWithCode {
   if (isErrorWithCode(error, code)) {
     return error as ErrorWithCode;
   }
-  const newError = new Error(JSON.stringify(error)) as ErrorWithCode;
+  const newError = new Error(typeof error !== "string" ? JSON.stringify(error) : error) as ErrorWithCode;
   newError.code = code ?? "unknown";
   return newError;
 }

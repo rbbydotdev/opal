@@ -21,7 +21,14 @@ export function NetlifyDestinationForm({
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthNetlifyAgent>(remoteAuth);
-  const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteNetlifySearch({
+  const {
+    isLoading,
+    searchValue,
+    updateSearch,
+    reset: searchReset,
+    searchResults,
+    error,
+  } = useRemoteNetlifySearch({
     agent,
   });
   const { ident, msg, request } = useRemoteNetlifySite({
@@ -52,7 +59,8 @@ export function NetlifyDestinationForm({
         searchButtonTitle="Find Site"
         ident={ident}
         onSearchChange={updateSearch}
-        onInputChange={request.reset}
+        searchReset={searchReset}
+        createReset={request.reset}
       />
     </RemoteResourceRoot>
   );

@@ -3,6 +3,7 @@ import { CloudflareDestinationForm } from "@/components/publish-modal/Cloudflare
 import { GitHubDestinationForm } from "@/components/publish-modal/GitHubDestinationForm";
 import { NetlifyDestinationForm } from "@/components/publish-modal/NetlifyDestinationForm";
 import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
+import { VercelDestinationForm } from "@/components/publish-modal/VercelDestinationForm";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -16,14 +17,12 @@ import {
   DestinationSchemaMap,
   DestinationType,
 } from "@/data/DestinationDAO";
-import { RemoteAuthVercelAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
-import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Pencil, Plus, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useForm, UseFormReturn } from "react-hook-form";
+import { useForm, UseFormReturn, useWatch } from "react-hook-form";
 import z from "zod";
 
 export function PublicationModalDestinationContent({
@@ -64,7 +63,6 @@ export function PublicationModalDestinationContent({
     }),
     [currentSchema._def, editDestination, remoteAuthId]
   );
-  // console.log(defaultValues);
 
   const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
     defaultValues,
@@ -73,10 +71,10 @@ export function PublicationModalDestinationContent({
         DestinationSchemaMap[destinationType]
       )(values, opt1, opt2);
     },
-    mode: "onChange",
+    mode: "all",
   });
 
-  const formValues = form.watch();
+  const formValues = useWatch({ control: form.control });
 
   const currentRemoteAuthId = formValues.remoteAuthId;
   const remoteAuth = useMemo(
@@ -233,113 +231,5 @@ export function PublicationModalDestinationContent({
         </div>
       </form>
     </Form>
-  );
-}
-
-function VercelDestinationForm_({ form }: { form: UseFormReturn<DestinationMetaType<"vercel">> }) {
-  return (
-    <>
-      <FormField
-        control={form.control}
-        name="meta.project"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Project Name</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                placeholder="project-name"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    return e.preventDefault();
-                  }
-                }}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </>
-  );
-}
-
-export function VercelDestinationForm({
-  form,
-  remoteAuth,
-  defaultName,
-}: {
-  form: UseFormReturn<DestinationMetaType<"vercel">>;
-  remoteAuth: RemoteAuthDAO | null;
-  defaultName?: string;
-}) {
-  const agent = useRemoteAuthAgent<RemoteAuthVercelAgent>(remoteAuth);
-  const { isLoading, searchValue, updateSearch, clearCache, searchResults, error } = useRemoteGitRepoSearch({
-    agent,
-  });
-  const { ident, msg, request } = useRemoteGitRepo({
-    createRequest: async (name: string, options: { signal?: AbortSignal }) => {
-      const response = await agent.createRepo(name, options);
-      clearCache();
-      return { name: response.data.name };
-    },
-    defaultName,
-  });
-
-  return (
-    <>
-      <RemoteResourceRoot
-        control={form.control}
-        fieldName="meta.repository"
-        onValueChange={(value: string) => form.setValue("meta.repository", value)}
-        getValue={() => form.getValues("meta.repository")}
-      >
-        <RemoteResourceSearch
-          label="Repository"
-          isLoading={isLoading}
-          searchValue={searchValue}
-          onSearchChange={updateSearch}
-          searchResults={searchResults}
-          error={error}
-        />
-        <RemoteResourceCreate
-          label="Repository"
-          placeholder="my-website-repo"
-          ident={ident}
-          msg={msg}
-          request={request}
-        />
-        <RemoteResourceInput
-          label="Repository"
-          placeholder="my-website-repo"
-          createButtonTitle="Create Repository"
-          searchButtonTitle="Search Repositories"
-          ident={ident}
-          onSearchChange={updateSearch}
-          onInputChange={request.reset}
-        />
-      </RemoteResourceRoot>
-      <FormField
-        control={form.control}
-        name="meta.branch"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Branch</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                placeholder="gh-pages"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                  }
-                }}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </>
   );
 }

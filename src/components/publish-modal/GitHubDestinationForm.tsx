@@ -5,6 +5,7 @@ import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
+import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import {
   RemoteResourceCreate,
@@ -23,14 +24,24 @@ export function GitHubDestinationForm({
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
-  const { isLoading, searchValue, updateSearch, clearCache, searchResults, error } = useRemoteGitRepoSearch({
+  const [enabled, setEnabled] = useState(false);
+  const {
+    isLoading,
+    searchValue,
+    reset: searchReset,
+    updateSearch,
+    clearCache,
+    searchResults,
+    error,
+  } = useRemoteGitRepoSearch({
+    enabled,
     agent,
   });
   const { ident, msg, request } = useRemoteGitRepo({
     createRequest: async (name: string, options: { signal?: AbortSignal }) => {
       const response = await agent.createRepo(name, options);
       clearCache();
-      return { name: response.data.name };
+      return response.data;
     },
     defaultName,
   });
@@ -46,6 +57,7 @@ export function GitHubDestinationForm({
         <RemoteResourceSearch
           label="Repository"
           isLoading={isLoading}
+          onActive={() => setEnabled(true)}
           searchValue={searchValue}
           onSearchChange={updateSearch}
           searchResults={searchResults}
@@ -65,7 +77,8 @@ export function GitHubDestinationForm({
           searchButtonTitle="Search Repositories"
           ident={ident}
           onSearchChange={updateSearch}
-          onInputChange={request.reset}
+          searchReset={searchReset}
+          createReset={request.reset}
         />
       </RemoteResourceRoot>
       <FormField

@@ -211,11 +211,13 @@ export function PublishModalStack({
                 </Case>
               </SwitchCase>
             </span>
-            <SwitchCase>
-              <Case condition={currentView === "publish"}>Deploy to selected destination</Case>
-              <Case condition={currentView === "destination"}>Create Destination to deploy to</Case>
-              <Case condition={currentView === "connection"}>Add or manage connections</Case>
-            </SwitchCase>
+            <span className="w-full flex justify-start">
+              <SwitchCase>
+                <Case condition={currentView === "publish"}>Deploy to selected destination</Case>
+                <Case condition={currentView === "destination"}>Create Destination to deploy to</Case>
+                <Case condition={currentView === "connection"}>Add or manage connections</Case>
+              </SwitchCase>
+            </span>
           </DialogDescription>
         </DialogHeader>
 

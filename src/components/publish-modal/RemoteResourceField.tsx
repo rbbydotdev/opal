@@ -69,6 +69,7 @@ export function RemoteResourceSearch({
   label,
   isLoading,
   searchValue,
+  onActive,
   onSearchChange,
   searchResults,
   error,
@@ -76,6 +77,7 @@ export function RemoteResourceSearch({
   label: string;
   isLoading: boolean;
   searchValue: string;
+  onActive: () => void;
   onSearchChange: (value: string) => void;
   searchResults: Array<{ element: ReactNode; label: string; value: string }>;
   error: string | null;
@@ -92,12 +94,11 @@ export function RemoteResourceSearch({
           className="flex-1"
           isLoading={isLoading}
           searchValue={searchValue}
+          onFocus={onActive}
           onSearchChange={onSearchChange}
           onClose={(val?: string) => {
             setMode("input");
-            if (val) {
-              onValueChange(val);
-            }
+            if (val) onValueChange(val);
           }}
           onSelect={(item: { element: ReactNode; label: string; value: string }) => {
             onValueChange(item.value);
@@ -182,7 +183,16 @@ export function RemoteResourceCreate({
   );
 }
 
-interface RemoteResourceInputProps {
+export function RemoteResourceInput({
+  label,
+  placeholder,
+  createButtonTitle = "Create",
+  searchButtonTitle = "Search",
+  ident,
+  createReset,
+  searchReset,
+  onSearchChange,
+}: {
   label: string;
   placeholder: string;
   createButtonTitle?: string;
@@ -192,19 +202,10 @@ interface RemoteResourceInputProps {
     name: string;
     setName: (name: string) => void;
   };
+  createReset?: () => void;
+  searchReset?: () => void;
   onSearchChange: (value: string) => void;
-  onInputChange?: (value: string) => void;
-}
-
-export function RemoteResourceInput({
-  label,
-  placeholder,
-  createButtonTitle = "Create",
-  searchButtonTitle = "Search",
-  ident,
-  onSearchChange,
-  onInputChange,
-}: RemoteResourceInputProps) {
+}) {
   const { mode, setMode, control, fieldName, getValue, inputRef } = useRemoteResourceContext();
 
   if (mode !== "input") return null;
@@ -224,7 +225,6 @@ export function RemoteResourceInput({
                 placeholder={placeholder}
                 onChange={(e) => {
                   field.onChange(e);
-                  onInputChange?.(e.target.value);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -238,6 +238,7 @@ export function RemoteResourceInput({
               variant="outline"
               title={createButtonTitle}
               onClick={() => {
+                createReset?.();
                 const currentValue = getValue();
                 ident.setName(currentValue || "");
                 setMode("create");
@@ -253,6 +254,7 @@ export function RemoteResourceInput({
                 const currentValue = getValue();
                 onSearchChange(currentValue || "");
                 setMode("search");
+                searchReset?.();
               }}
             >
               <Search />

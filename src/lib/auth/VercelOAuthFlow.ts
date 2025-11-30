@@ -159,5 +159,3 @@ export async function validateVercelToken({ accessToken }: { accessToken: string
     throw mapToTypedError(e);
   }
 }
-
-export { VercelClient } from "@/lib/vercel/VercelClient";

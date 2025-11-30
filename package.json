@@ -103,7 +103,7 @@
     "@types/marked": "^5.0.2",
     "@uiw/codemirror-theme-basic": "^4.25.1",
     "@uiw/codemirror-theme-github": "^4.25.1",
-    "@vercel/sdk": "github:vercel/sdk",
+    "@vercel/sdk": "^1.17.7",
     "@zip.js/zip.js": "^2.7.62",
     "@zumer/snapdom": "^1.8.0",
     "async-mutex": "^0.5.0",
