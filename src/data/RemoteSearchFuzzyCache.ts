@@ -1,3 +1,4 @@
+import { isAbortError, unwrapError } from "@/lib/errors";
 import { CreateTypedEmitter } from "@/lib/TypeEmitter";
 import fuzzysort from "fuzzysort";
 
@@ -30,12 +31,13 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
     lastCheck: number;
   } = { allItems: [], etag: null, lastCheck: 0 };
 
+  private initiallyLoaded = false;
+  private enabled = false;
   private _loading = false;
   private _results: Fuzzysort.KeyResults<TResult> | TResult[] = EMPTY_SEARCH_RESULT;
   private _error: string | null = null;
   private _searchTerm = "";
   private agent: RemoteAuthAgentSearchType<TResult> | null = null;
-  private requestId = 0;
   private controller: AbortController | null = null;
   private events = CreateTypedEmitter<RemoteSearchEventMap>();
 
@@ -87,6 +89,19 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
     return this._error;
   };
 
+  setEnabled(enabled: boolean): this {
+    this.enabled = enabled;
+    if (!enabled) {
+      //cancel ongoing searches when disabled
+      this.cancel();
+    } else if (!this.initiallyLoaded) {
+      //perform initial search when enabled
+      this.initiallyLoaded = true;
+      this.search();
+    }
+
+    return this;
+  }
   setSearchTerm(searchTerm: string): this {
     this._searchTerm = (() => {
       try {
@@ -119,6 +134,17 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
     return this;
   }
 
+  reset(): this {
+    this.controller?.abort();
+    this.controller = null;
+    this.setError(null);
+    this.setLoading(false);
+    this.setResults(EMPTY_SEARCH_RESULT);
+    this._searchTerm = "";
+    this.clearCache();
+    return this;
+  }
+
   private setLoading(loading: boolean): void {
     if (this._loading !== loading) {
       this._loading = loading;
@@ -142,7 +168,7 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
   }
 
   private async performSearch(): Promise<void> {
-    if (!this.agent) {
+    if (!this.agent || !this.enabled) {
       this.setResults(EMPTY_SEARCH_RESULT);
       this.setLoading(false);
       this.setError(null);
@@ -151,7 +177,6 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
 
     this.controller?.abort();
     this.controller = new AbortController();
-    const currentRequestId = ++this.requestId;
 
     try {
       // console.debug("Starting search, setting loading to true");
@@ -181,29 +206,23 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
       }
 
       // Only update results if this is still the current request
-      if (this.requestId === currentRequestId) {
-        // const searchResults = !this._searchTerm
-        //   ? this.cache.allItems
-        //   : fuzzysort.go(this._searchTerm, this.cache.allItems, { key: this.searchKey });
-        // this.setResults(searchResults);
+      // const searchResults = !this._searchTerm
+      //   ? this.cache.allItems
+      //   : fuzzysort.go(this._searchTerm, this.cache.allItems, { key: this.searchKey });
+      // this.setResults(searchResults);
 
-        this.searchResults();
-        this.setLoading(false);
-        this.setError(null);
-      }
-    } catch (e: any) {
-      if (e.name !== "AbortError") {
-        const message = e?.message || "Unknown error";
-        if (this.requestId === currentRequestId) {
-          this.setError(message);
-          this.setResults(EMPTY_SEARCH_RESULT);
-        }
+      this.searchResults();
+      this.setLoading(false);
+      this.setError(null);
+    } catch (e: unknown) {
+      if (!isAbortError(e)) {
+        const message = unwrapError(e);
+        this.setError(message);
+        this.setResults(EMPTY_SEARCH_RESULT);
         console.error("Failed to search:", e);
       }
     } finally {
-      if (this.requestId === currentRequestId) {
-        this.setLoading(false);
-      }
+      this.setLoading(false);
     }
   }
 
@@ -220,7 +239,7 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
     this.controller = null;
   };
 
-  dispose(): void {
+  teardown(): void {
     this.controller?.abort();
     this.controller = null;
     fuzzysort.cleanup();

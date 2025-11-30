@@ -9,8 +9,7 @@ import {
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { ROOT_NODE, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName/")({
   component: WorkspaceIndexPage,
@@ -23,7 +22,6 @@ function WorkspaceIndexPage() {
 
   return (
     <>
-      <FirstFileRedirect disabled />
       <div
         style={{
           backgroundImage: "url('/opal.svg')",
@@ -59,15 +57,4 @@ function WorkspaceIndexPage() {
       </div>
     </>
   );
-}
-
-function FirstFileRedirect({ disabled }: { disabled?: boolean }) {
-  const navigate = useNavigate();
-  const { currentWorkspace } = useWorkspaceContext();
-  useEffect(() => {
-    if (!currentWorkspace.isNull && !disabled) {
-      void currentWorkspace.tryFirstFileUrl().then((ff) => navigate({ to: ff }));
-    }
-  }, [currentWorkspace, disabled, navigate]);
-  return null;
 }

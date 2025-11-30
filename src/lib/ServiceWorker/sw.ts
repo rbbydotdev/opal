@@ -5,6 +5,8 @@ import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
 import { hasRouteMatch, routeRequest } from "@/lib/ServiceWorker/router";
 import { WHITELIST } from "@/lib/ServiceWorker/utils";
 
+//TODO: use https://itty.dev/itty-router for better routing
+
 declare const self: ServiceWorkerGlobalScope;
 
 // --- Service Worker Lifecycle ---

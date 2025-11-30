@@ -104,7 +104,7 @@ function getServiceForHost(host: string): ServiceName | null {
 async function handleOAuthTokenExchange(
   request: Request,
   serviceName: ServiceName,
-  host: string,
+  _host: string,
   path: string,
   targetUrl: string,
   env: Env
@@ -269,11 +269,13 @@ async function handleProxy(request: Request, env: Env): Promise<Response> {
 
 // Create CORS with all possible headers (including AWS) for simplicity
 const { preflight, corsify } = cors({
+  credentials: true,
   origin: ALLOWED_ORIGINS,
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
   allowHeaders: [
     "Content-Type",
     "Authorization",
+    "authorization",
     "X-Requested-With",
     "Accept",
     "Accept-Encoding",

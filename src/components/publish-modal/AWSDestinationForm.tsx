@@ -173,8 +173,17 @@ export function AWSDestinationForm({
     name: "meta.region",
   });
   if (region) agent.setRegion(region);
+  const [enabled, setEnabled] = useState(false);
 
-  const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteAWSSearch({
+  const {
+    isLoading,
+    searchValue,
+    updateSearch,
+    reset: resetSearch,
+    searchResults,
+    error,
+  } = useRemoteAWSSearch({
+    enabled,
     agent,
   });
   const { ident, msg, request } = useRemoteAWSBucket({
@@ -194,6 +203,7 @@ export function AWSDestinationForm({
           label="Bucket Name"
           isLoading={isLoading}
           searchValue={searchValue}
+          onActive={() => setEnabled(true)}
           onSearchChange={updateSearch}
           searchResults={searchResults}
           error={error}
@@ -212,7 +222,8 @@ export function AWSDestinationForm({
           searchButtonTitle="Search Buckets"
           ident={ident}
           onSearchChange={updateSearch}
-          onInputChange={request.reset}
+          createReset={request.reset}
+          searchReset={resetSearch}
         />
       </RemoteResourceRoot>
       <FormField

@@ -5,15 +5,19 @@ export function useAnySearch<T extends Record<string, any>>({
   agent,
   searchTerm,
   searchKey,
+  enabled,
 }: {
   agent: RemoteAuthAgentSearchType<T> | null;
   searchTerm: string;
   searchKey: Extract<keyof T, string>;
+  enabled: boolean;
 }) {
   // Create and manage the search instance
   const searchInstance = useMemo(() => {
     return new RemoteSearchFuzzyCache(agent, searchKey);
   }, [agent, searchKey]);
+
+  searchInstance.setEnabled(enabled);
 
   // Update agent and search term when they change, then trigger search
   useEffect(() => {
@@ -28,7 +32,7 @@ export function useAnySearch<T extends Record<string, any>>({
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      searchInstance.dispose();
+      searchInstance.teardown();
     };
   }, [searchInstance]);
 
@@ -39,5 +43,6 @@ export function useAnySearch<T extends Record<string, any>>({
     clearError: () => searchInstance.clearError(),
     search: () => searchInstance.search(),
     clearCache: () => searchInstance.clearCache(),
+    reset: () => searchInstance.reset(),
   };
 }

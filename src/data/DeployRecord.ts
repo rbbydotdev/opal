@@ -1,10 +1,8 @@
-import { BuildDAO, BuildJType } from "@/data/BuildDAO";
-
 export interface DeployRecord<T = any> {
   guid: string;
   label: string;
   timestamp: number;
-  build: BuildDAO | BuildJType;
+  buildId: string;
   workspaceId: string;
   destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
   destinationName: string;

@@ -7,6 +7,7 @@ import {
   RemoteAuthNetlifyAPIAgent,
   RemoteAuthNetlifyOAuthAgent,
   RemoteAuthVercelAPIAgent,
+  RemoteAuthVercelOAuthAgent,
 } from "@/data/RemoteAuthAgent";
 import {
   isAWSAPIRemoteAuthDAO,
@@ -17,6 +18,7 @@ import {
   isNetlifyAPIRemoteAuthDAO,
   isNetlifyOAuthRemoteAuthDAO,
   isVercelAPIRemoteAuthDAO,
+  isVercelOAuthRemoteAuthDAO,
   RemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
 import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
@@ -56,7 +58,9 @@ export function AgentFromRemoteAuth<T extends RemoteAuthDAO>(
   }
   if (isVercelAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthVercelAPIAgent(remoteAuth);
-    // RemoteAuthVercelAgent
+  }
+  if (isVercelOAuthRemoteAuthDAO(remoteAuth)) {
+    return new RemoteAuthVercelOAuthAgent(remoteAuth);
   }
   if (isAWSAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthAWSAPIAgent(remoteAuth);

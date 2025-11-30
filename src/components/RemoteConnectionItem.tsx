@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/context/useDebounce";
+import { VercelProject } from "@/data/RemoteAuthAgent";
 import { Repo } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType, isFuzzyResult } from "@/data/RemoteSearchFuzzyCache";
 import { useAnySearch } from "@/data/useAnySearch";
@@ -105,6 +106,7 @@ export function RemoteItemSearchDropDown({
   isLoading,
   searchValue,
   className,
+  onFocus,
   onSearchChange,
   onClose,
   onSelect,
@@ -114,6 +116,7 @@ export function RemoteItemSearchDropDown({
   isLoading: boolean;
   searchValue: string;
   className?: string;
+  onFocus: () => void;
   onSearchChange: (value: string) => void;
   onClose: (inputVal?: string) => void;
   onSelect: (item: RemoteItem) => void;
@@ -150,7 +153,8 @@ export function RemoteItemSearchDropDown({
   };
 
   const hasError = !!error;
-  const showDropdown = !!hasError || !!isLoading || allItems.length > 0 || (allItems.length === 0 && !!searchValue);
+  const showDropdown = !!hasError || !!isLoading || allItems.length > 0 || allItems.length === 0;
+  // console.log("Rendering RemoteItemSearchDropDown", { showDropdown, isLoading, allItems, hasError });
 
   return (
     <Popover.Root open={showDropdown}>
@@ -160,6 +164,7 @@ export function RemoteItemSearchDropDown({
             {...getInputProps()}
             data-no-escape
             autoFocus
+            onFocus={onFocus}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             onBlur={handleInputBlur}
@@ -187,12 +192,13 @@ export function RemoteItemSearchDropDown({
             {hasError && (
               <div className="flex w-full flex-col rounded p-1">
                 <div className="group flex h-8 min-w-0 items-center rounded-md justify-start border-destructive border px-2 py-5">
-                  <Ban className="text-destructive h-4 w-4 mr-2" />
-                  <span className="text-md font-mono truncate min-w-0">Error {error}</span>
+                  <Ban className="flex-shrink-0 text-destructive h-4 w-4 mr-2" />
+                  <span className="text-md font-mono truncate min-w-0" title={error}>
+                    Error {error}
+                  </span>
                 </div>
               </div>
             )}
-
             {!hasError && isLoading && (
               <div className="flex w-full flex-col rounded p-1">
                 <div className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 px-2 py-5">
@@ -201,7 +207,6 @@ export function RemoteItemSearchDropDown({
                 </div>
               </div>
             )}
-
             {!hasError && !isLoading && allItems.length > 0 && (
               <ul {...getMenuProps()} className="text-xs">
                 {allItems.map((repo, index) => (
@@ -217,9 +222,10 @@ export function RemoteItemSearchDropDown({
                 ))}
               </ul>
             )}
-
-            {allItems.length === 0 && searchValue && !hasError && !isLoading && (
-              <div className="px-3 py-2 text-sm text-muted-foreground">None found</div>
+            {allItems.length === 0 && !hasError && !isLoading && (
+              <div className="px-3 py-2 text-sm text-muted-foreground italic m-2 p-1 border border-dashed border-accent">
+                No Results
+              </div>
             )}
           </Popover.Content>
         </Popover.Portal>
@@ -241,16 +247,19 @@ interface RemoteSearchConfig<T extends Record<string, any>> {
 function useRemoteSearch<T extends Record<string, any>>({
   agent,
   config,
+  enabled,
   defaultValue = "",
 }: {
   agent: RemoteAuthAgentSearchType<T> | null;
   config: RemoteSearchConfig<T>;
+  enabled: boolean;
   defaultValue?: string;
 }) {
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { loading, results, error, clearError, clearCache } = useAnySearch<T>({
+  const { loading, results, error, clearError, clearCache, reset } = useAnySearch<T>({
     agent,
+    enabled,
     searchTerm: debouncedSearchValue,
     searchKey: config.searchKey,
   });
@@ -288,6 +297,7 @@ function useRemoteSearch<T extends Record<string, any>>({
     updateSearch,
     clearError,
     clearCache,
+    reset,
     searchResults,
     error,
   };
@@ -296,12 +306,15 @@ function useRemoteSearch<T extends Record<string, any>>({
 export function useRemoteNetlifySearch({
   agent,
   defaultValue = "",
+  enabled,
 }: {
   agent: RemoteAuthAgentSearchType<NetlifySite> | null;
   defaultValue?: string;
+  enabled: boolean;
 }) {
   return useRemoteSearch<NetlifySite>({
     agent,
+    enabled,
     config: {
       searchKey: "name",
     },
@@ -334,15 +347,42 @@ export function useRemoteNetlifySite<T = any>({
   });
 }
 
+export function useRemoteVercelProjectSearch({
+  agent,
+  defaultValue = "",
+  enabled,
+}: {
+  agent: RemoteAuthAgentSearchType<VercelProject> | null;
+  defaultValue?: string;
+  enabled: boolean;
+}) {
+  return useRemoteSearch<VercelProject>({
+    agent,
+    enabled,
+    config: {
+      searchKey: "name",
+      mapResult: (project, highlightedElement) => ({
+        label: project.name,
+        value: project.name,
+        element: highlightedElement || project.name,
+      }),
+    },
+    defaultValue,
+  });
+}
+
 export function useRemoteGitRepoSearch({
   agent,
   defaultValue = "",
+  enabled,
 }: {
   agent: RemoteAuthAgentSearchType<Repo> | null;
   defaultValue?: string;
+  enabled: boolean;
 }) {
   return useRemoteSearch<Repo>({
     agent,
+    enabled,
     config: {
       searchKey: "full_name",
       mapResult: (repo, highlightedElement) => ({
@@ -355,7 +395,7 @@ export function useRemoteGitRepoSearch({
   });
 }
 
-export function useRemoteGitRepo<T = any>({
+export function useRemoteGitRepo<T = { name: string }>({
   createRequest,
   defaultName,
   repoPrefix = "",
@@ -391,14 +431,50 @@ export function useRemoteGitRepo<T = any>({
   };
 }
 
+export function useRemoteVercelProject({
+  createRequest,
+  defaultName,
+}: {
+  createRequest: (name: string, { signal }: { signal?: AbortSignal }) => Promise<VercelProject>;
+  defaultName?: string;
+}): {
+  request: RemoteItemType.Request<VercelProject>;
+  ident: RemoteItemType.Ident;
+  msg: RemoteItemType.Msg;
+} {
+  const result = useRemoteResource<VercelProject>({
+    createRequest,
+    defaultName,
+    config: {
+      messages: {
+        creating: "Creating project...",
+        askToEnter: "Enter a name to create a new project",
+        validPrefix: "Press Enter to create project",
+        errorFallback: "Failed to create project",
+      },
+    },
+  });
+
+  return {
+    ...result,
+    msg: {
+      ...result.msg,
+      valid: `Press Enter to create project "${result.ident.name.trim()}"`,
+    },
+  };
+}
+
 export function useRemoteAWSSearch({
   agent,
   defaultValue = "",
+  enabled,
 }: {
   agent: RemoteAuthAgentSearchType<AWSS3Bucket> | null;
   defaultValue?: string;
+  enabled: boolean;
 }) {
   return useRemoteSearch<AWSS3Bucket>({
+    enabled,
     agent,
     config: {
       searchKey: "name",
