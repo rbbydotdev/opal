@@ -173,7 +173,6 @@ export function AWSDestinationForm({
     name: "meta.region",
   });
   if (region) agent.setRegion(region);
-  const [enabled, setEnabled] = useState(false);
 
   const {
     isLoading,
@@ -182,8 +181,8 @@ export function AWSDestinationForm({
     reset: resetSearch,
     searchResults,
     error,
+    setEnabled,
   } = useRemoteAWSSearch({
-    enabled,
     agent,
   });
   const { ident, msg, request } = useRemoteAWSBucket({

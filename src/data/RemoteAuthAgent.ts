@@ -303,7 +303,6 @@ export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, Remo
         //@ts-ignore
         .getProjects({ teamId, from: continueToken !== null ? continueToken : undefined, limit: "100" }, { signal })
         .then((res) => {
-          console.log(">>>>>>", res.pagination.next);
           continueToken = res.pagination.next as number;
           return res.projects;
         });

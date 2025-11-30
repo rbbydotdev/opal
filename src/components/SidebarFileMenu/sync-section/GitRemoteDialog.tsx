@@ -450,7 +450,7 @@ function GitRepoSearchContainer({
   onSelect: (repo: GithubSearchReposResult) => void;
 }) {
   const agent = useMemo(() => (remoteAuth ? new RemoteAuthGithubAPIAgent(remoteAuth) : null), [remoteAuth]);
-  const { isLoading, searchValue, updateSearch, searchResults, error } = useRemoteGitRepoSearch({
+  const { isLoading, searchValue, updateSearch, searchResults, error, setEnabled } = useRemoteGitRepoSearch({
     agent,
     defaultValue,
   });
@@ -461,6 +461,7 @@ function GitRepoSearchContainer({
         isLoading={isLoading}
         allItems={searchResults}
         searchValue={searchValue}
+        onFocus={() => setEnabled(true)}
         onSearchChange={updateSearch}
         onClose={onClose}
         error={error}
