@@ -9,7 +9,6 @@ import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthVercelAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
-import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
 export function VercelDestinationForm({
@@ -22,7 +21,6 @@ export function VercelDestinationForm({
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthVercelAgent>(remoteAuth);
-  const [enabled, setEnabled] = useState(false);
 
   const {
     isLoading,
@@ -32,8 +30,8 @@ export function VercelDestinationForm({
     reset: resetSearch,
     searchResults,
     error,
+    setEnabled,
   } = useRemoteVercelProjectSearch({
-    enabled,
     agent,
   });
 

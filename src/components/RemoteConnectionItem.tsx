@@ -247,14 +247,13 @@ interface RemoteSearchConfig<T extends Record<string, any>> {
 function useRemoteSearch<T extends Record<string, any>>({
   agent,
   config,
-  enabled,
   defaultValue = "",
 }: {
   agent: RemoteAuthAgentSearchType<T> | null;
   config: RemoteSearchConfig<T>;
-  enabled: boolean;
   defaultValue?: string;
 }) {
+  const [enabled, setEnabled] = useState(false);
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
   const { loading, results, error, clearError, clearCache, reset } = useAnySearch<T>({
@@ -300,21 +299,20 @@ function useRemoteSearch<T extends Record<string, any>>({
     reset,
     searchResults,
     error,
+    enabled,
+    setEnabled,
   };
 }
 
 export function useRemoteNetlifySearch({
   agent,
   defaultValue = "",
-  enabled,
 }: {
   agent: RemoteAuthAgentSearchType<NetlifySite> | null;
   defaultValue?: string;
-  enabled: boolean;
 }) {
   return useRemoteSearch<NetlifySite>({
     agent,
-    enabled,
     config: {
       searchKey: "name",
     },
@@ -350,15 +348,12 @@ export function useRemoteNetlifySite<T = any>({
 export function useRemoteVercelProjectSearch({
   agent,
   defaultValue = "",
-  enabled,
 }: {
   agent: RemoteAuthAgentSearchType<VercelProject> | null;
   defaultValue?: string;
-  enabled: boolean;
 }) {
   return useRemoteSearch<VercelProject>({
     agent,
-    enabled,
     config: {
       searchKey: "name",
       mapResult: (project, highlightedElement) => ({
@@ -374,15 +369,12 @@ export function useRemoteVercelProjectSearch({
 export function useRemoteGitRepoSearch({
   agent,
   defaultValue = "",
-  enabled,
 }: {
   agent: RemoteAuthAgentSearchType<Repo> | null;
   defaultValue?: string;
-  enabled: boolean;
 }) {
   return useRemoteSearch<Repo>({
     agent,
-    enabled,
     config: {
       searchKey: "full_name",
       mapResult: (repo, highlightedElement) => ({
@@ -467,14 +459,11 @@ export function useRemoteVercelProject({
 export function useRemoteAWSSearch({
   agent,
   defaultValue = "",
-  enabled,
 }: {
   agent: RemoteAuthAgentSearchType<AWSS3Bucket> | null;
   defaultValue?: string;
-  enabled: boolean;
 }) {
   return useRemoteSearch<AWSS3Bucket>({
-    enabled,
     agent,
     config: {
       searchKey: "name",

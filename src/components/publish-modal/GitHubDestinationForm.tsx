@@ -5,7 +5,6 @@ import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
-import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import {
   RemoteResourceCreate,
@@ -24,7 +23,6 @@ export function GitHubDestinationForm({
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
-  const [enabled, setEnabled] = useState(false);
   const {
     isLoading,
     searchValue,
@@ -33,8 +31,8 @@ export function GitHubDestinationForm({
     clearCache,
     searchResults,
     error,
+    setEnabled,
   } = useRemoteGitRepoSearch({
-    enabled,
     agent,
   });
   const { ident, msg, request } = useRemoteGitRepo({
