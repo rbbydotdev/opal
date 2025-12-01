@@ -6,6 +6,12 @@ import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
 import { VercelDestinationForm } from "@/components/publish-modal/VercelDestinationForm";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,6 +25,7 @@ import {
 } from "@/data/DestinationDAO";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Pencil, Plus, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -47,6 +54,8 @@ export function PublicationModalDestinationContent({
   const defaultRemoteAuth = preferredConnection || remoteAuths[0];
   const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
   const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
+  const [menuHelperOpen, setMenuHelperOpen] = useState(false);
+  const [selectOpen, setSelectOpen] = useState(false);
 
   const remoteAuthId = editDestination
     ? editDestination.toJSON().remoteAuth.guid
@@ -104,6 +113,43 @@ export function PublicationModalDestinationContent({
     });
   };
 
+  const ConnectionSelectPlaceHolder = (
+    <div className="w-full truncate flex items-center">
+      <div className="p-1 mr-1">
+        <Zap className="w-4 h-4 stroke-ring flex-shrink-0" />
+      </div>
+      Connection
+    </div>
+  );
+
+  const NoConnectionSelectPlaceHolder = (
+    <div className="w-full truncate flex items-center">
+      <div className="p-1 mr-1">
+        <Zap className="w-4 h-4 stroke-ring flex-shrink-0" />
+      </div>
+      Add Connection
+    </div>
+  );
+
+  const ConnectionMenuHelper = ({
+    children,
+    open,
+    setOpen,
+  }: {
+    children: React.ReactNode;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+  }) => (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <div className="cursor-pointer">
+          {remoteAuths.length ? ConnectionSelectPlaceHolder : NoConnectionSelectPlaceHolder}
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">{children}</DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4 pt-2">
@@ -114,9 +160,34 @@ export function PublicationModalDestinationContent({
             <FormItem>
               <FormLabel>Connection Type</FormLabel>
               <div className="flex gap-2">
-                <Select value={field.value || ""} onValueChange={handleSelectType}>
+                <Select
+                  open={selectOpen}
+                  value={field.value || ""}
+                  onValueChange={handleSelectType}
+                  onOpenChange={(open) => {
+                    if (!remoteAuths.length) return setMenuHelperOpen(true);
+                    setSelectOpen(open);
+                  }}
+                >
                   <SelectTrigger id="connection-type">
-                    <SelectValue placeholder="Select a connection type" />
+                    <SelectValue
+                      placeholder={
+                        remoteAuths.length ? (
+                          "Select a connection type"
+                        ) : (
+                          <ConnectionMenuHelper open={menuHelperOpen} setOpen={setMenuHelperOpen}>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                pushView("connection");
+                                setPreferredConnection(null);
+                              }}
+                            >
+                              <Plus /> Add Connection
+                            </DropdownMenuItem>
+                          </ConnectionMenuHelper>
+                        )
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectSeparator />
