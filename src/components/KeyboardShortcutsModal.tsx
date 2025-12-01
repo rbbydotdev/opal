@@ -6,7 +6,7 @@ import { KeyboardIcon } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardShortcutsSearch } from "./KeyboardShortcutsSearch";
 
-const KeyboardSections = ["General", "Layout", "Editor", "Navigation", "Search", "File Explorer"] as const;
+const KeyboardSections = ["General", "Sidebar", "Layout", "Editor", "Navigation", "Search", "File Explorer"] as const;
 interface KeyboardShortcut {
   action: string;
   keys: string[];
@@ -25,6 +25,18 @@ const keyboardShortcuts: KeyboardShortcut[] = [
     action: "Workspace Search",
     keys: [IS_MAC ? "⌘" : "Ctrl", "Shift", "F"],
     description: "Search file contents across workspaces",
+  },
+  {
+    section: "Sidebar",
+    action: "Focus Sidebar",
+    keys: [IS_MAC ? "⌘" : "Ctrl", IS_MAC ? "⌘" : "Ctrl"],
+    description: "Focus the sidebar (press twice to focus first item)",
+  },
+  {
+    section: "Sidebar",
+    action: "Focus Sidebar and Jump to Section",
+    keys: [IS_MAC ? "⌘" : "Ctrl", IS_MAC ? "⌘" : "Ctrl", "A-Z"],
+    description: "Focus the sidebar, then jump to section by first letter",
   },
   {
     section: "Layout",

@@ -14,18 +14,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { GitBranch, Plus, Search } from "lucide-react";
+import { GitBranch } from "lucide-react";
 
 import { GitAuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/ConnectionsModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
-import {
-  RemoteItemCreateInput,
-  RemoteItemSearchDropDown,
-  useRemoteGitRepo,
-  useRemoteGitRepoSearch,
-} from "@/components/RemoteConnectionItem";
+import { RemoteResource } from "@/components/publish-modal/RemoteResourceField";
+import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
@@ -264,11 +260,42 @@ function GitRemoteDialogInternal({
   onCancel: () => void;
   form: ReturnType<typeof useForm<GitRemoteFormValues>>;
 }) {
-  const [urlMode, setUrlMode] = useState<"manual" | "search" | "create">("manual");
   const { currentWorkspace } = useWorkspaceContext();
 
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
+
+  // Search functionality
+  const searchAgent = useMemo(
+    () => (remoteAuth ? new RemoteAuthGithubAPIAgent(remoteAuth as GithubAPIRemoteAuthDAO) : null),
+    [remoteAuth]
+  );
+  const {
+    isLoading: searchLoading,
+    searchValue,
+    updateSearch,
+    searchResults,
+    error: searchError,
+    setEnabled,
+  } = useRemoteGitRepoSearch({
+    agent: searchAgent,
+    defaultValue: TryPathname(form.getValues("url"))
+      .replace(/^\//, "")
+      .replace(/\.git$/, ""),
+  });
+
+  // Create functionality
+  const createAgent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
+  const { ident, msg, request } = useRemoteGitRepo({
+    createRequest: async (name: string, options: { signal?: AbortSignal }) => {
+      if (!createAgent) {
+        throw new Error("No authentication configured for repository creation");
+      }
+      const response = await createAgent.createRepo(name, options);
+      return response.data;
+    },
+    defaultName: currentWorkspace.name,
+  });
 
   return (
     <div className={className}>
@@ -313,96 +340,71 @@ function GitRemoteDialogInternal({
               </FormItem>
             )}
           />
-          <div className="flex items-end gap-2 justify-end w-full">
-            <div data-no-escape className="w-full">
-              <FormItem className="min-w-0 w-full">
-                <FormLabel>
-                  {urlMode === "manual" ? (
-                    <>
-                      URL
-                      <span className={cn({ hidden: authId && remoteAuth?.hasRemoteApi() }, "text-xs mono ml-2")}>
-                        (Select a remote authentication to search or create)
-                      </span>
-                    </>
-                  ) : urlMode === "search" ? (
-                    "Repo Name"
-                  ) : (
-                    "New Repository Name"
-                  )}
-                </FormLabel>
-                {urlMode === "search" && (
-                  <GitRepoSearchContainer
-                    remoteAuth={remoteAuth as GithubAPIRemoteAuthDAO}
-                    defaultValue={TryPathname(form.getValues("url"))
-                      .replace(/^\//, "")
-                      .replace(/\.git$/, "")}
-                    onClose={() => setUrlMode("manual")}
-                    onSelect={(repo) => {
-                      form.setValue("url", repo.value);
-                      setUrlMode("manual");
+          <div data-no-escape className="w-full">
+            <RemoteResource.Root
+              control={form.control}
+              fieldName="url"
+              onValueChange={(value) => form.setValue("url", value)}
+              getValue={() => form.getValues("url")}
+            >
+              {authId && remoteAuth?.hasRemoteApi() && (
+                <>
+                  <RemoteResource.Search
+                    label="Repository"
+                    isLoading={searchLoading}
+                    searchValue={searchValue}
+                    onActive={() => setEnabled(true)}
+                    onSearchChange={updateSearch}
+                    searchResults={searchResults}
+                    error={searchError}
+                  />
+                  <RemoteResource.Create
+                    label="New Repository Name"
+                    placeholder={"my-new-repo"}
+                    ident={{
+                      ...ident,
+                      name: ident.name,
+                      setName: (value: string) => {
+                        ident.setName(value);
+                      },
+                    }}
+                    msg={msg}
+                    request={{
+                      ...request,
+                      submit: async () => {
+                        const result = await request.submit();
+                        return result ? { name: result.html_url } : null;
+                      },
                     }}
                   />
-                )}
-                {urlMode === "create" && (
-                  <RepoCreateContainer
-                    remoteAuth={remoteAuth}
-                    workspaceName={currentWorkspace.name}
-                    onClose={() => setUrlMode("manual")}
-                    onCreated={(repoUrl) => {
-                      form.setValue("url", repoUrl);
-                      setUrlMode("manual");
-                    }}
-                  />
-                )}
-                {urlMode === "manual" && (
-                  <FormField
-                    control={form.control}
-                    name="url"
-                    render={({ field }) => (
-                      <>
-                        <FormControl>
-                          <Input
-                            required
-                            autoComplete="off"
-                            placeholder="https://github.com/user/repo.git"
-                            className="truncate"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </>
-                    )}
-                  />
-                )}
-              </FormItem>
-            </div>
-            <div className="flex gap-1">
-              <Button
-                variant={urlMode === "search" ? "default" : "outline"}
-                onMouseDown={(e) => e.preventDefault()}
-                title="Search Repositories"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setUrlMode(urlMode === "search" ? "manual" : "search");
-                }}
-                className={cn({ hidden: !authId || !remoteAuth?.hasRemoteApi() })} // Hide button if no auth selected
+                </>
+              )}
+              <RemoteResource.InputField
+                label={
+                  authId && remoteAuth?.hasRemoteApi()
+                    ? "URL"
+                    : "URL (Select a remote authentication to search or create)"
+                }
+                placeholder="https://github.com/user/repo.git"
               >
-                <Search />
-              </Button>
-
-              <Button
-                title="Create Repository"
-                variant={urlMode === "create" ? "default" : "outline"}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setUrlMode(urlMode === "create" ? "manual" : "create");
-                }}
-                className={cn({ hidden: !authId || !remoteAuth?.hasRemoteApi() })} // Hide button if no auth selected
-              >
-                <Plus />
-              </Button>
-            </div>
+                {authId && remoteAuth?.hasRemoteApi() && (
+                  <>
+                    <div>
+                      <RemoteResource.CreateButton
+                        title="Create Repository"
+                        ident={ident}
+                        createReset={() => request.reset()}
+                      />
+                    </div>
+                    <RemoteResource.SearchButton
+                      title="Search Repositories"
+                      onSearchChange={updateSearch}
+                      searchReset={() => setEnabled(false)}
+                    />
+                  </>
+                )}
+              </RemoteResource.InputField>
+            </RemoteResource.Root>
           </div>
 
           <FormField
@@ -427,89 +429,6 @@ function GitRemoteDialogInternal({
           </DialogFooter>
         </form>
       </Form>
-    </div>
-  );
-}
-
-type GithubSearchReposResult = {
-  label: string;
-  value: string;
-  element: React.ReactNode;
-};
-function GitRepoSearchContainer({
-  remoteAuth,
-  defaultValue,
-  onClose,
-  onSelect,
-}: {
-  remoteAuth: null | GithubAPIRemoteAuthDAO;
-  defaultValue: string;
-  onClose: () => void;
-  onSelect: (repo: GithubSearchReposResult) => void;
-}) {
-  const agent = useMemo(() => (remoteAuth ? new RemoteAuthGithubAPIAgent(remoteAuth) : null), [remoteAuth]);
-  const { isLoading, searchValue, updateSearch, searchResults, error, setEnabled } = useRemoteGitRepoSearch({
-    agent,
-    defaultValue,
-  });
-
-  return (
-    // RemoteResourceSearch
-    <div className="w-full relative">
-      <RemoteItemSearchDropDown
-        isLoading={isLoading}
-        allItems={searchResults}
-        searchValue={searchValue}
-        onFocus={() => setEnabled(true)}
-        onSearchChange={updateSearch}
-        onClose={onClose}
-        error={error}
-        onSelect={onSelect}
-      />
-    </div>
-  );
-}
-//TODO: deduplicate
-function RepoCreateContainer({
-  remoteAuth,
-  workspaceName,
-  onClose,
-  onCreated,
-}: {
-  remoteAuth: null | RemoteAuthDAO;
-  workspaceName: string;
-  onClose: () => void;
-  onCreated: (repoUrl: string) => void;
-}) {
-  const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
-  const { ident, msg, request } = useRemoteGitRepo({
-    createRequest: agent.createRepo,
-    defaultName: workspaceName,
-  });
-
-  const username = (remoteAuth?.data as any)?.login || agent.getUsername().replace("x-access-token", "");
-  const repoPrefix = username ? `${username}/` : "";
-
-  return (
-    <div className="w-full relative">
-      <RemoteItemCreateInput
-        placeholder={`${repoPrefix}my-new-repo`}
-        onClose={onClose}
-        submit={() => request.submit().then((r) => (r ? onCreated(r.data.html_url) : void 0))}
-        request={request}
-        msg={msg}
-        ident={{
-          ...ident,
-          name: ident.name.startsWith(repoPrefix) ? ident.name : repoPrefix + ident.name,
-          setName: (value: string) => {
-            if (value.startsWith(repoPrefix)) {
-              ident.setName(value.slice(repoPrefix.length));
-            } else {
-              ident.setName(value);
-            }
-          },
-        }}
-      />
     </div>
   );
 }

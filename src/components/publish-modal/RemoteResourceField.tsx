@@ -2,6 +2,7 @@ import { RemoteItemCreateInput, RemoteItemSearchDropDown } from "@/components/Re
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { Check, Plus, Search, X } from "lucide-react";
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
@@ -186,6 +187,131 @@ export function RemoteResourceCreate({
   );
 }
 
+export function RemoteResourceInputField({
+  label,
+  placeholder,
+  children,
+}: {
+  label: string;
+  placeholder: string;
+  children?: React.ReactNode;
+}) {
+  const { mode, setMode, control, fieldName, inputRef } = useRemoteResourceContext();
+
+  const { cmdRef } = useTooltipToastCmd();
+
+  const showSuccess = mode.startsWith("input/success");
+  useEffect(() => {
+    if (showSuccess && cmdRef.current) {
+      cmdRef.current.show("Successfully created!", "success", 2000);
+    }
+  }, [cmdRef, showSuccess]);
+
+  if (!mode.startsWith("input")) return null;
+
+  return (
+    <FormField
+      control={control}
+      name={fieldName}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <div className="flex justify-start w-full items-center gap-2">
+            <FormControl>
+              <div className="flex items-center gap-2 w-full">
+                {showSuccess && (
+                  <div className="rounded-md w-9 h-9 border-success border text-success flex justify-center items-center p-1">
+                    <TooltipToast cmdRef={cmdRef} />
+                    <Check />
+                  </div>
+                )}
+                <Input
+                  {...field}
+                  ref={inputRef}
+                  placeholder={placeholder}
+                  className="flex-1 w-full"
+                  onChange={(e) => {
+                    setMode("input");
+                    field.onChange(e);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                    }
+                  }}
+                />
+              </div>
+            </FormControl>
+            {children}
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function RemoteResourceCreateButton({
+  title = "Create",
+  ident,
+  createReset,
+}: {
+  title?: string;
+  ident: {
+    isValid: boolean;
+    name: string;
+    setName: (name: string) => void;
+  };
+  createReset?: () => void;
+}) {
+  const { setMode, getValue } = useRemoteResourceContext();
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      title={title}
+      onClick={() => {
+        setMode("input");
+        createReset?.();
+        const currentValue = getValue();
+        ident.setName(currentValue || "");
+        setMode("create");
+      }}
+    >
+      <Plus />
+    </Button>
+  );
+}
+
+export function RemoteResourceSearchButton({
+  title = "Search",
+  onSearchChange,
+  searchReset,
+}: {
+  title?: string;
+  onSearchChange: (value: string) => void;
+  searchReset?: () => void;
+}) {
+  const { setMode, getValue } = useRemoteResourceContext();
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      title={title}
+      onClick={() => {
+        const currentValue = getValue();
+        onSearchChange(currentValue || "");
+        setMode("search");
+        searchReset?.();
+      }}
+    >
+      <Search />
+    </Button>
+  );
+}
+
 export function RemoteResourceInput({
   label,
   placeholder,
@@ -209,77 +335,13 @@ export function RemoteResourceInput({
   searchReset?: () => void;
   onSearchChange: (value: string) => void;
 }) {
-  const { mode, setMode, control, fieldName, getValue, inputRef } = useRemoteResourceContext();
-
-  const showSuccess = mode === "input/success";
-
-  if (!mode.startsWith("input")) return null;
-
   return (
-    <FormField
-      control={control}
-      name={fieldName}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <div className="flex justify-center w-full items-center gap-2">
-            <FormControl>
-              <>
-                {showSuccess && (
-                  <div className="rounded-md w-9 h-9 border-success border text-success flex justify-center items-center p-1">
-                    <Check />
-                  </div>
-                )}
-                <Input
-                  {...field}
-                  ref={inputRef}
-                  placeholder={placeholder}
-                  onChange={(e) => {
-                    setMode("input");
-                    field.onChange(e);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                    }
-                  }}
-                />
-              </>
-            </FormControl>
-            <div>
-              <Button
-                type="button"
-                variant="outline"
-                title={createButtonTitle}
-                onClick={() => {
-                  setMode("input");
-                  createReset?.();
-                  const currentValue = getValue();
-                  ident.setName(currentValue || "");
-                  setMode("create");
-                }}
-              >
-                <Plus />
-              </Button>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              title={searchButtonTitle}
-              onClick={() => {
-                const currentValue = getValue();
-                onSearchChange(currentValue || "");
-                setMode("search");
-                searchReset?.();
-              }}
-            >
-              <Search />
-            </Button>
-          </div>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <RemoteResourceInputField label={label} placeholder={placeholder}>
+      <div>
+        <RemoteResourceCreateButton title={createButtonTitle} ident={ident} createReset={createReset} />
+      </div>
+      <RemoteResourceSearchButton title={searchButtonTitle} onSearchChange={onSearchChange} searchReset={searchReset} />
+    </RemoteResourceInputField>
   );
 }
 
@@ -290,4 +352,7 @@ export const RemoteResource = {
   Search: RemoteResourceSearch,
   Create: RemoteResourceCreate,
   Input: RemoteResourceInput,
+  InputField: RemoteResourceInputField,
+  CreateButton: RemoteResourceCreateButton,
+  SearchButton: RemoteResourceSearchButton,
 };
