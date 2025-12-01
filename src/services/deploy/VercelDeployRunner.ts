@@ -1,6 +1,5 @@
-import { RemoteAuthVercelAPIAgent } from "@/data/RemoteAuthAgent";
+import { RemoteAuthVercelAPIAgent, VercelProject } from "@/data/RemoteAuthAgent";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { VercelClient, VercelProject } from "@/lib/vercel/VercelClient";
 import { DeployResult, DeployRunner, DeployRunnerOptions } from "./DeployRunner";
 import { VercelDeployData } from "./DeployTypes";
 
@@ -13,7 +12,7 @@ export interface VercelDeployRunnerOptions extends DeployRunnerOptions<VercelDep
 }
 
 export class VercelDeployRunner extends DeployRunner<VercelDeployData> {
-  private vercelClient!: VercelClient;
+  private vercelClient!: RemoteAuthVercelAPIAgent;
 
   constructor(options: VercelDeployRunnerOptions) {
     super({

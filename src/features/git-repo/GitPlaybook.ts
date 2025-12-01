@@ -5,8 +5,8 @@ import { GitFullRemoteObjType, GitRemote, GitRepo } from "@/features/git-repo/Gi
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
+import { GitAgentFromRemoteAuth } from "@/data/AgentFromRemoteAuthFactory";
 import { NullDisk } from "@/data/NullDisk";
-import { GitAgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { Remote } from "comlink";
 import * as git from "isomorphic-git";
 

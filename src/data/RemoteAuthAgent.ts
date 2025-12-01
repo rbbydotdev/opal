@@ -15,12 +15,82 @@ import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { AWSS3Bucket, AWSS3Client } from "@/lib/aws/AWSClient";
 import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
 import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
-import { stripTrailingSlash } from "@/lib/paths2";
 import { Octokit } from "@octokit/core";
 import { Vercel } from "@vercel/sdk";
 import { GetProjectsProjects } from "@vercel/sdk/models/getprojectsop.js";
+import { Mutex } from "async-mutex";
 
 export type VercelProject = GetProjectsProjects;
+
+function Reauther<T extends object>(
+  clientFactory: () => T,
+  checkAuth: () => Promise<boolean> | boolean,
+  reauth: () => Promise<void> | void
+): T {
+  const mutex = new Mutex();
+  let client: T | null = null;
+  let isReauthing = false;
+
+  return new Proxy({} as T, {
+    get(target, prop, receiver) {
+      const originalClient = client || (client = clientFactory());
+      const value = (originalClient as any)[prop];
+
+      if (typeof value === "function") {
+        return async function (...args: any[]) {
+          const release = await mutex.acquire();
+          try {
+            if (!isReauthing) {
+              const isExpired = !(await checkAuth());
+              if (isExpired) {
+                isReauthing = true;
+                await reauth();
+                client = clientFactory();
+                isReauthing = false;
+              }
+            }
+            const currentClient = client || originalClient;
+            return await (currentClient as any)[prop].apply(currentClient, args);
+          } finally {
+            release();
+          }
+        };
+      }
+
+      if (typeof value === "object" && value !== null) {
+        return new Proxy(value, {
+          get(nestedTarget, nestedProp) {
+            const nestedValue = (nestedTarget as any)[nestedProp];
+            if (typeof nestedValue === "function") {
+              return async function (...args: any[]) {
+                const release = await mutex.acquire();
+                try {
+                  if (!isReauthing) {
+                    const isExpired = !(await checkAuth());
+                    if (isExpired) {
+                      isReauthing = true;
+                      await reauth();
+                      client = clientFactory();
+                      isReauthing = false;
+                    }
+                  }
+                  const currentClient = client || originalClient;
+                  const currentNestedTarget = (currentClient as any)[prop];
+                  return await currentNestedTarget[nestedProp].apply(currentNestedTarget, args);
+                } finally {
+                  release();
+                }
+              };
+            }
+            return nestedValue;
+          }
+        });
+      }
+
+      return value;
+    }
+  });
+}
 
 export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
   private _octokit!: Octokit;
@@ -277,22 +347,32 @@ export class RemoteAuthNetlifyAPIAgent extends RemoteAuthNetlifyAgent {
 export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, RemoteAuthAgentSearchType<VercelProject> {
   private _vercelClient!: Vercel;
 
+  // serverURL: this.getCORSProxy() ? `${stripTrailingSlash(this.getCORSProxy()!)}/api.vercel.com` : undefined,
   get vercelClient(): Vercel {
     return (
       this._vercelClient ||
-      (this._vercelClient = new Vercel({
-        bearerToken: this.getApiToken(),
-        serverURL: this.getCORSProxy() ? `${stripTrailingSlash(this.getCORSProxy()!)}/api.vercel.com` : undefined,
-      }))
+      (this._vercelClient = Reauther(
+        () => new Vercel({
+          bearerToken: this.getApiToken(),
+        }),
+        () => this.checkAuth(),
+        () => this.reauth()
+      ))
     );
   }
 
   async getCurrentUser({ signal }: { signal?: AbortSignal } = {}) {
-    return await this.vercelClient.user.getAuthUser({ signal }).then((res) => res.user);
+    return await this.vercelClient.user.getAuthUser({ signal, mode: "cors" }).then((res) => res.user);
   }
 
   async createProject(params: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
-    return this.vercelClient.projects.createProject(params, { signal });
+    return this.vercelClient.projects.createProject(params, { signal, mode: "cors" });
+  }
+
+  async getProject(projectId: string, teamId?: string, { signal }: { signal?: AbortSignal } = {}) {
+    return (await this.vercelClient.projects.getProjects({ teamId }, { signal, mode: "cors" })).projects.find(
+      (p) => p.id === projectId
+    )!;
   }
 
   async getAllProjects({ teamId }: { teamId?: string } = {}, { signal }: { signal?: AbortSignal } = {}) {
@@ -301,7 +381,10 @@ export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, Remo
     do {
       const projects = await this.vercelClient.projects
         //@ts-ignore
-        .getProjects({ teamId, from: continueToken !== null ? continueToken : undefined, limit: "100" }, { signal })
+        .getProjects(
+          { teamId, from: continueToken !== null ? continueToken : undefined, limit: "100" },
+          { signal, mode: "cors" }
+        )
         .then((res) => {
           continueToken = res.pagination.next as number;
           return res.projects;
@@ -339,6 +422,14 @@ export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, Remo
     }
   }
 
+  checkAuth(): Promise<boolean> | boolean {
+    return true; // Default: assume auth is valid
+  }
+
+  reauth(): Promise<void> | void {
+    // Default: no reauth needed
+  }
+
   abstract getCORSProxy(): string | undefined;
   abstract getUsername(): string;
   abstract getApiToken(): string;
@@ -373,6 +464,25 @@ export class RemoteAuthVercelOAuthAgent extends RemoteAuthVercelAgent {
 
   getApiToken(): string {
     return this.remoteAuth.data.accessToken;
+  }
+
+  async checkAuth(): Promise<boolean> {
+    if (!this.remoteAuth.data.accessToken) return false;
+    const expiresAt = this.remoteAuth.data.obtainedAt + (this.remoteAuth.data.expiresIn * 1000);
+    if (Date.now() >= expiresAt) {
+      return false;
+    }
+    return true;
+  }
+
+  async reauth(): Promise<void> {
+    if (!this.remoteAuth.data.refreshToken) {
+      throw new Error("No refresh token available for reauthentication");
+    }
+    // TODO: Implement token refresh logic
+    // This would typically involve calling the OAuth provider's token endpoint
+    // with the refresh token to get a new access token
+    console.warn("Token refresh not implemented yet");
   }
 
   constructor(private remoteAuth: VercelOAuthRemoteAuthDAO) {

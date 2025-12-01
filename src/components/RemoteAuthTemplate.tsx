@@ -14,6 +14,7 @@ export type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = T ex
         icon: React.ReactNode;
         templateType: `${T}/${RemoteAuthSource}`;
         data?: Partial<RemoteAuthDataFor<T>>;
+        showCorsProxyField: boolean;
       }
     : never
   : never;
@@ -33,6 +34,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "github",
     type: "api",
     icon: <RemoteAuthSourceIconComponent source="github" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.GITHUB_CORS_PROXY,
     },
@@ -43,6 +45,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "github",
     type: "oauth-device",
     icon: <RemoteAuthSourceIconComponent source="github" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.GITHUB_CORS_PROXY,
     },
@@ -53,6 +56,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "github",
     type: "oauth",
     icon: <RemoteAuthSourceIconComponent source="github" />,
+    showCorsProxyField: false,
     data: {
       corsProxy: ENV.GITHUB_CORS_PROXY,
     },
@@ -64,6 +68,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "cloudflare",
     type: "api",
     icon: <RemoteAuthSourceIconComponent source="cloudflare" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.CLOUDFLARE_CORS_PROXY,
     },
@@ -74,6 +79,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "vercel",
     type: "api",
     icon: <RemoteAuthSourceIconComponent source="vercel" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.VERCEL_CORS_PROXY,
     },
@@ -84,6 +90,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "vercel",
     type: "oauth",
     icon: <RemoteAuthSourceIconComponent source="vercel" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.VERCEL_CORS_PROXY,
     },
@@ -94,6 +101,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "aws",
     type: "api",
     icon: <RemoteAuthSourceIconComponent source="aws" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.AWS_CORS_PROXY,
     },
@@ -104,6 +112,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "netlify",
     type: "api",
     icon: <RemoteAuthSourceIconComponent source="netlify" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.NETLIFY_CORS_PROXY,
     },
@@ -114,6 +123,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "netlify",
     type: "oauth",
     icon: <RemoteAuthSourceIconComponent source="netlify" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.NETLIFY_CORS_PROXY,
     },
@@ -124,6 +134,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "custom",
     type: "basic-auth",
     icon: <KeyIcon className="h-5 w-5" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.PRIVATE_CORS_PROXY,
     },
@@ -135,6 +146,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
     source: "custom",
     type: "no-auth",
     icon: <Globe className="h-5 w-5" />,
+    showCorsProxyField: true,
     data: {
       corsProxy: ENV.PRIVATE_CORS_PROXY,
       endpoint: "",

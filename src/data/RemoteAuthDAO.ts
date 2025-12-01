@@ -186,7 +186,7 @@ export function isNetlifyAPIRemoteAuthDAO(record: RemoteAuthDAO): record is Netl
   return record.type === "api" && record.source === "netlify";
 }
 
-export type NetlifyOAuthRemoteAuthDAO = RemoteAuthDAO & {
+export type NetlifyOAuthRemoteAuthDAO = Omit<RemoteAuthDAO, "data"> & {
   type: "oauth";
   source: "netlify";
   data: RemoteAuthDataFor<"oauth">;
@@ -195,7 +195,7 @@ export function isNetlifyOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is Ne
   return record.type === "oauth" && record.source === "netlify";
 }
 
-export type CloudflareAPIRemoteAuthDAO = RemoteAuthDAO & {
+export type CloudflareAPIRemoteAuthDAO = Omit<RemoteAuthDAO, "data"> & {
   type: "api";
   source: "cloudflare";
   data: RemoteAuthDataFor<"api">;
@@ -204,7 +204,7 @@ export function isCloudflareAPIRemoteAuthDAO(record: RemoteAuthDAO): record is C
   return record.type === "api" && record.source === "cloudflare";
 }
 
-export type VercelAPIRemoteAuthDAO = RemoteAuthDAO & {
+export type VercelAPIRemoteAuthDAO = Omit<RemoteAuthDAO, "data"> & {
   type: "api";
   source: "vercel";
   data: RemoteAuthDataFor<"api">;
@@ -212,7 +212,7 @@ export type VercelAPIRemoteAuthDAO = RemoteAuthDAO & {
 export function isVercelAPIRemoteAuthDAO(record: RemoteAuthDAO): record is VercelAPIRemoteAuthDAO {
   return record.type === "api" && record.source === "vercel";
 }
-export type VercelOAuthRemoteAuthDAO = RemoteAuthDAO & {
+export type VercelOAuthRemoteAuthDAO = Omit<RemoteAuthDAO, "data"> & {
   type: "oauth";
   source: "vercel";
   data: RemoteAuthDataFor<"oauth">;
@@ -221,7 +221,7 @@ export function isVercelOAuthRemoteAuthDAO(record: RemoteAuthDAO): record is Ver
   return record.type === "oauth" && record.source === "vercel";
 }
 
-export type AWSAPIRemoteAuthDAO = RemoteAuthDAO & {
+export type AWSAPIRemoteAuthDAO = Omit<RemoteAuthDAO, "data"> & {
   type: "api";
   source: "aws";
   data: RemoteAuthDataFor<"api">;

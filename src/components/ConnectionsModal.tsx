@@ -226,6 +226,7 @@ export function ConnectionsModalContent({
               form={form as UseFormReturn<RemoteAuthFormValues<"api">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
+              showCorsProxyField={selectedTemplate.showCorsProxyField}
             />
           )}
 
@@ -235,6 +236,7 @@ export function ConnectionsModalContent({
               form={form as UseFormReturn<RemoteAuthFormValues<"oauth">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
+              showCorsProxyField={selectedTemplate.showCorsProxyField}
             />
           )}
           {selectedTemplate?.type === "oauth-device" && (
@@ -243,6 +245,7 @@ export function ConnectionsModalContent({
               form={form as UseFormReturn<RemoteAuthFormValues<"oauth-device">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
+              showCorsProxyField={selectedTemplate.showCorsProxyField}
             />
           )}
 
@@ -251,6 +254,7 @@ export function ConnectionsModalContent({
               form={form as UseFormReturn<RemoteAuthFormValues<"basic-auth">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
+              showCorsProxyField={selectedTemplate.showCorsProxyField}
             />
           )}
 
@@ -259,6 +263,7 @@ export function ConnectionsModalContent({
               form={form as UseFormReturn<RemoteAuthFormValues<"no-auth">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
+              showCorsProxyField={selectedTemplate.showCorsProxyField}
             />
           )}
         </form>
@@ -272,10 +277,12 @@ function ApiKeyAuth({
   form,
   source,
   onCancel,
+  showCorsProxyField,
 }: {
   form: UseFormReturn<RemoteAuthFormValues<"api">>;
   source: RemoteAuthSource;
   onCancel: () => void;
+  showCorsProxyField: boolean;
 }) {
   const [hideApiKey, setHideApiKey] = useState(true);
   const [hideApiSecret, setHideApiSecret] = useState(true);
@@ -296,21 +303,23 @@ function ApiKeyAuth({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="data.corsProxy"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>
-              {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
-            </FormLabel>
-            <FormControl>
-              <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {showCorsProxyField && (
+        <FormField
+          control={form.control}
+          name="data.corsProxy"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
+              </FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
       <FormField
         control={form.control}
         name="data.apiKey"
@@ -391,28 +400,32 @@ function NoAuth({
   form,
   source,
   onCancel,
+  showCorsProxyField,
 }: {
   form: UseFormReturn<RemoteAuthFormValues<"no-auth">>;
   source: RemoteAuthSource;
   onCancel: () => void;
+  showCorsProxyField: boolean;
 }) {
   return (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
-        name="data.corsProxy"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>
-              {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
-            </FormLabel>
-            <FormControl>
-              <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {showCorsProxyField && (
+        <FormField
+          control={form.control}
+          name="data.corsProxy"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
+              </FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value ?? ""} placeholder="Proxy URL (optional)" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}
@@ -447,10 +460,12 @@ function BasicAuth({
   form,
   source,
   onCancel,
+  showCorsProxyField,
 }: {
   form: UseFormReturn<RemoteAuthFormValues<"basic-auth">>;
   source: RemoteAuthSource;
   onCancel: () => void;
+  showCorsProxyField: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -470,19 +485,21 @@ function BasicAuth({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="data.endpoint"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{capitalizeFirst(source)} Endpoint</FormLabel>
-            <FormControl>
-              <Input {...field} value={field.value ?? ""} placeholder="Endpoint" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {showCorsProxyField && (
+        <FormField
+          control={form.control}
+          name="data.endpoint"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{capitalizeFirst(source)} Endpoint</FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value ?? ""} placeholder="Endpoint" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}

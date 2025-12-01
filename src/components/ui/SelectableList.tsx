@@ -3,6 +3,7 @@ import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/S
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,25 +58,13 @@ const useSelectableListContext = () => {
   return context;
 };
 
-// Core provider for selectable list export functionality
-type SelectableListCoreProps<T = any> = {
-  children: React.ReactNode;
-  items?: SelectableItem[];
-  data?: T[];
-  getItemId?: (item: T) => string;
-  onClick?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  emptyLabel?: string;
-  showGrip?: boolean;
-};
-
 type SelectableListRootProps<T = any> = {
   children: React.ReactNode;
   items?: SelectableItem[];
   data?: T[];
   getItemId?: (item: T) => string;
   onClick?: (id: string) => void;
-  onDelete?: (id: string) => void;
+  onDelete: (id: string) => void;
   emptyLabel?: string;
   expanderId: string;
   showGrip?: boolean;
@@ -90,7 +79,16 @@ export function SelectableListCore<T = any>({
   onDelete,
   emptyLabel = "no items",
   showGrip = true,
-}: SelectableListCoreProps<T>) {
+}: {
+  children: React.ReactNode;
+  items?: SelectableItem[];
+  data?: T[];
+  getItemId?: (item: T) => string;
+  onClick?: (id: string) => void;
+  onDelete: (id: string) => void;
+  emptyLabel?: string;
+  showGrip?: boolean;
+}) {
   const [selected, setSelected] = useState<string[]>([]);
   const [childItemIds, setChildItemIds] = useState<string[]>([]);
 
@@ -151,19 +149,16 @@ export function SelectableListCore<T = any>({
   );
 }
 
-// Simple non-collapsible list wrapper
-type SelectableListSimpleProps<T = any> = {
+export function SelectableListSimple<T = any>(props: {
   children: React.ReactNode;
   items?: SelectableItem[];
-  data?: T[];
-  getItemId?: (item: T) => string;
-  onClick?: (id: string) => void;
-  onDelete?: (id: string) => void;
+  data: T[];
+  getItemId: (item: T) => string;
+  onClick: (id: string) => void;
+  onDelete: (id: string) => void;
   emptyLabel?: string;
   showGrip?: boolean;
-};
-
-export function SelectableListSimple<T = any>(props: SelectableListSimpleProps<T>) {
+}) {
   return (
     <SelectableListCore {...props}>
       <SidebarGroup className="pl-0 py-0">{props.children}</SidebarGroup>
@@ -384,23 +379,31 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
   );
 
   return (
-    <SidebarMenuItem
-      tabIndex={-1}
-      data-selectable-id={id}
-      className="flex w-full rounded justify-center items-center relative"
-    >
-      {/* <div className="flex items-center pr-1 py-2 hover:bg-sidebar-accent"> */}
-      <SidebarMenuButton className="flex-1 min-w-0 group h-full py-1" onClick={(e) => handleSelect(sectionRef, e, id)}>
-        <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
-          <div className="w-4 h-4 flex justify-center items-center mr-0.5 shrink-0">
-            {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
-          </div>
-          {otherChildren}
-        </div>
-      </SidebarMenuButton>
-      {menuChild}
-      {/* </div> */}
-    </SidebarMenuItem>
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <SidebarMenuItem
+          tabIndex={-1}
+          data-selectable-id={id}
+          className="flex w-full rounded justify-center items-center relative"
+        >
+          {/* <div className="flex items-center pr-1 py-2 hover:bg-sidebar-accent"> */}
+          <SidebarMenuButton
+            className="flex-1 min-w-0 group h-full py-1"
+            onClick={(e) => handleSelect(sectionRef, e, id)}
+          >
+            <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
+              <div className="w-4 h-4 flex justify-center items-center mr-0.5 shrink-0">
+                {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
+              </div>
+              {otherChildren}
+            </div>
+          </SidebarMenuButton>
+          {menuChild}
+          {/* </div> */}
+        </SidebarMenuItem>
+      </ContextMenuTrigger>
+      <ContextMenuContent>{menuChild}</ContextMenuContent>
+    </ContextMenu>
   );
 }
 
