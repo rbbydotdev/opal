@@ -1,10 +1,12 @@
 import { RefreshAuth } from "@/data/RefreshAuth";
-import { RemoteAuthAgentCORS } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAgentCORS, RemoteAuthAgentRefresh } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { Vercel } from "@vercel/sdk";
 import { GetProjectsProjects } from "@vercel/sdk/models/getprojectsop.js";
 
-export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, RemoteAuthAgentSearchType<VercelProject> {
+export type VercelProject = GetProjectsProjects;
+
+export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, RemoteAuthAgentRefresh, RemoteAuthAgentSearchType<VercelProject> {
   private _vercelClient!: Vercel;
 
   // serverURL: this.getCORSProxy() ? `${stripTrailingSlash(this.getCORSProxy()!)}/api.vercel.com` : undefined,
@@ -95,4 +97,3 @@ export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, Remo
   abstract getUsername(): string;
   abstract getApiToken(): string;
 }
-export type VercelProject = GetProjectsProjects;

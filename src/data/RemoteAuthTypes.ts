@@ -47,7 +47,7 @@ export const RemoteAuthNoAuthRecordInternalSchema = z.object({
     .pipe(z.string().url().nullable().optional()),
 });
 
-export const RemoteAuthGithubDeviceOAuthRecordInternalSchema = z.object({
+export const RemoteAuthDeviceOAuthRecordInternalSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string().optional(),
   expiresIn: z.number().optional(),
@@ -63,7 +63,7 @@ export const RemoteAuthGithubDeviceOAuthRecordInternalSchema = z.object({
 export const RemoteAuthSchemaMap = {
   api: RemoteAuthAPIRecordInternalSchema,
   oauth: RemoteAuthOAuthRecordInternalSchema,
-  "oauth-device": RemoteAuthGithubDeviceOAuthRecordInternalSchema,
+  "oauth-device": RemoteAuthDeviceOAuthRecordInternalSchema,
   "basic-auth": RemoteAuthBasicAuthRecordInternalSchema,
   "no-auth": RemoteAuthNoAuthRecordInternalSchema,
 } as const;
@@ -188,6 +188,11 @@ export interface RemoteAuthAgent {
 
 export interface RemoteAuthAgentCORS extends RemoteAuthAgent {
   getCORSProxy(): string | undefined;
+}
+
+export interface RemoteAuthAgentRefresh extends RemoteAuthAgent {
+  checkAuth(): Promise<boolean> | boolean;
+  reauth(): Promise<void> | void;
 }
 
 export interface Repo {

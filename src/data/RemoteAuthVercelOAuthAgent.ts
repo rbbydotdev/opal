@@ -1,5 +1,7 @@
 import type { VercelOAuthRemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthVercelAgent } from "@/data/RemoteAuthVercelAgent";
+import { TokenExpiredError } from "@/lib/errors";
+import { refreshVercelToken } from "@/lib/auth/VercelOAuthFlow";
 
 export class RemoteAuthVercelOAuthAgent extends RemoteAuthVercelAgent {
   getCORSProxy(): string | undefined {
@@ -25,12 +27,28 @@ export class RemoteAuthVercelOAuthAgent extends RemoteAuthVercelAgent {
 
   async reauth(): Promise<void> {
     if (!this.remoteAuth.data.refreshToken) {
-      throw new Error("No refresh token available for reauthentication");
+      throw new TokenExpiredError("Authentication expired and no refresh token available");
     }
-    // TODO: Implement token refresh logic
-    // This would typically involve calling the OAuth provider's token endpoint
-    // with the refresh token to get a new access token
-    console.warn("Token refresh not implemented yet");
+
+    try {
+      const refreshedTokens = await refreshVercelToken({
+        refreshToken: this.remoteAuth.data.refreshToken,
+        corsProxy: this.getCORSProxy(),
+      });
+
+      // Update the stored token data
+      this.remoteAuth.data.accessToken = refreshedTokens.accessToken;
+      this.remoteAuth.data.obtainedAt = refreshedTokens.obtainedAt;
+      this.remoteAuth.data.expiresIn = refreshedTokens.expiresIn || this.remoteAuth.data.expiresIn;
+      if (refreshedTokens.refreshToken) {
+        this.remoteAuth.data.refreshToken = refreshedTokens.refreshToken;
+      }
+      
+      // Save the updated data
+      await this.remoteAuth.save();
+    } catch (error: any) {
+      throw new TokenExpiredError(`Failed to refresh token: ${error.message}`);
+    }
   }
 
   constructor(private remoteAuth: VercelOAuthRemoteAuthDAO) {
