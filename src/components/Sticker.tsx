@@ -22,7 +22,7 @@ export const Sticker = memo(function Sticker({ enabled }: { enabled?: boolean })
       light: "hsla(0, 0%, 80%, 0.5)",
       pointer: true,
       shadow: "hsl(0, 0%, 0%)",
-      shadowOpacity: 0.75,
+      shadowOpacity: 0.25,
       shadowDev: 3,
       dx: 1,
       dy: 3,
@@ -109,7 +109,6 @@ export const Sticker = memo(function Sticker({ enabled }: { enabled?: boolean })
           )}
         </defs>
 
-        {/* Sticker SVG Content */}
         <g filter="url(#sticker-filter)">
           <OpalThemeSvg />
         </g>

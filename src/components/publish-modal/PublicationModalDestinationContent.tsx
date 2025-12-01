@@ -25,7 +25,6 @@ import {
 } from "@/data/DestinationDAO";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Pencil, Plus, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -63,7 +62,7 @@ export function PublicationModalDestinationContent({
       ? defaultRemoteAuth.guid
       : "";
 
-  const currentSchema = useMemo(() => DestinationSchemaMap[destinationType], [destinationType]);
+  const currentSchema = DestinationSchemaMap[destinationType];
   const defaultValues = useMemo(
     () => ({
       ...currentSchema._def.defaultValue(),
@@ -76,11 +75,13 @@ export function PublicationModalDestinationContent({
   const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
     defaultValues,
     resolver: (values, opt1, opt2) => {
-      return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(
-        DestinationSchemaMap[destinationType]
-      )(values, opt1, opt2);
+      return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(currentSchema)(
+        values,
+        opt1,
+        opt2
+      );
     },
-    mode: "all",
+    mode: "onChange",
   });
 
   const formValues = useWatch({ control: form.control });

@@ -56,10 +56,10 @@ export class ClientIndexedDb extends Dexie {
     });
 
     // === REMOTEAUTHS ===
-    this.remoteAuths.hook("deleting", (_primaryKey, remoteAuth, tx) => {
+    this.remoteAuths.hook("deleting", (primaryKey, remoteAuth, tx) => {
       // Wait until this transaction finishes, then do cleanup.
       tx.on("complete", async () => {
-        await this.destinations.where("remoteAuthGuid").equals(remoteAuth.guid).delete();
+        await this.destinations.where("remoteAuthGuid").equals(primaryKey).delete();
       });
     });
 

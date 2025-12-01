@@ -186,11 +186,11 @@ export interface RemoteAuthAgent {
   test(): Promise<{ status: "error"; msg: string } | { status: "success" }>;
 }
 
-export interface RemoteAuthAgentCORS extends RemoteAuthAgent {
+export interface RemoteAuthAgentCORS {
   getCORSProxy(): string | undefined;
 }
 
-export interface RemoteAuthAgentRefresh extends RemoteAuthAgent {
+export interface RemoteAuthAgentRefresh {
   checkAuth(): Promise<boolean> | boolean;
   reauth(): Promise<void> | void;
 }

@@ -223,7 +223,7 @@ export const DestinationSchemaMap = {
       remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
       label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        bucketName: z.string().trim().min(1, "Bucket name is required"),
+        bucketName: z.string().trim().min(1, "Bucket name is required").toLowerCase(),
         region: z.string().trim().min(1, "Region is required"),
       }),
     })

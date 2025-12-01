@@ -50,6 +50,7 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
         break;
 
       case "Tab":
+        if (itemsLength === 0) return;
         e.preventDefault();
         if (e.shiftKey) {
           setActiveIndex((prev) => {

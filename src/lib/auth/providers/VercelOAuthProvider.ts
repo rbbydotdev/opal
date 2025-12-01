@@ -20,7 +20,7 @@ export class VercelOAuthProvider extends OAuthProvider {
       state: config.state,
       nonce,
       codeChallenge,
-      scopes: ["openid", "email", "profile"],
+      scopes: ["openid", "email", "profile", "projects"],
     });
   }
 
