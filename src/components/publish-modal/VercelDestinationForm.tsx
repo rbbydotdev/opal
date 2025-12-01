@@ -5,10 +5,10 @@ import {
   RemoteResourceSearch,
 } from "@/components/publish-modal/RemoteResourceField";
 import { useRemoteVercelProject, useRemoteVercelProjectSearch } from "@/components/RemoteConnectionItem";
+import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
 import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthVercelAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
-import { useRemoteAuthAgent } from "@/data/RemoteAuthToAgent";
 import { UseFormReturn } from "react-hook-form";
 
 export function VercelDestinationForm({

@@ -17,11 +17,13 @@ export function OAuth({
   form,
   source,
   onCancel,
+  showCorsProxyField,
 }: {
   mode?: ConnectionsModalMode;
   form: UseFormReturn<RemoteAuthFormValues<"oauth">>;
   source: RemoteAuthSource;
   onCancel: () => void;
+  showCorsProxyField: boolean;
 }) {
   const oauthServiceRef = useRef<OAuthService | null>(null);
   const [oauthState, setOAuthState] = useState<OAuthState>("idle");
@@ -109,21 +111,23 @@ export function OAuth({
           </FormItem>
         )}
       />
-      <FormField
-        control={form.control}
-        name="data.corsProxy"
-        render={({ field: { value, ...rest } }) => (
-          <FormItem>
-            <FormLabel>
-              {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
-            </FormLabel>
-            <FormControl>
-              <Input {...rest} value={value ?? ""} placeholder="Proxy URL (optional)" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {showCorsProxyField && (
+        <FormField
+          control={form.control}
+          name="data.corsProxy"
+          render={({ field: { value, ...rest } }) => (
+            <FormItem>
+              <FormLabel>
+                {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
+              </FormLabel>
+              <FormControl>
+                <Input {...rest} value={value ?? ""} placeholder="Proxy URL (optional)" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       {authError && (
         <div className="rounded-md bg-destructive p-4 text-destructive-foreground">

@@ -1,10 +1,6 @@
 import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
-import {
-  exchangeCodeForToken,
-  generateCodeChallenge,
-  generateCodeVerifier,
-  getGithubOAuthUrl,
-} from "@/lib/auth/GithubOAuthFlow";
+import { exchangeCodeForToken, getGithubOAuthUrl } from "@/lib/auth/GithubOAuthFlow";
+import { generateCodeChallenge, generateCodeVerifier } from "@/lib/auth/oauth-utils";
 import { OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
 export class GitHubOAuthProvider extends OAuthProvider {

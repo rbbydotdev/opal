@@ -2,30 +2,6 @@ import { ENV } from "@/lib/env";
 import { mapToTypedError } from "@/lib/errors";
 
 /**
- * PKCE Helper Functions (adapted from GitHub implementation)
- */
-
-export function generateCodeVerifier(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return btoa(String.fromCharCode(...array))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
-
-export async function generateCodeChallenge(verifier: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  const bytes = new Uint8Array(digest);
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
-
-/**
  * OAuth Types
  */
 export type VercelOAuthFlowPayload = {
@@ -113,7 +89,6 @@ export async function exchangeCodeForToken({
     if (data.error) {
       throw new Error(`OAuth error: ${data.error} - ${data.error_description || ""}`);
     }
-
     return {
       accessToken: data.access_token,
       tokenType: data.token_type || "bearer",

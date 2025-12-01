@@ -22,18 +22,18 @@ import {
   RemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
 import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
-import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 
+import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { useMemo } from "react";
 
 export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
-  const agent = AgentFromRemoteAuth(remoteAuth);
+  const agent = AgentFromRemoteAuthFactory(remoteAuth);
   if (!isRemoteGitApiAgent(agent)) {
     throw new TypeError("AgentFromRemoteAuth(RemoteAuthDAO) does not satisfy RemoteGitApiAgent");
   }
   return agent;
 }
-export function AgentFromRemoteAuth<T extends RemoteAuthDAO>(
+export function AgentFromRemoteAuthFactory<T extends RemoteAuthDAO>(
   remoteAuth?: T | null
 ): (RemoteAuthAgent & RemoteAuthAgentSearchType<any>) | null {
   if (!remoteAuth) return null;
@@ -47,6 +47,7 @@ export function AgentFromRemoteAuth<T extends RemoteAuthDAO>(
   if (isGithubDeviceOAuthRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthGithubDeviceOAuthAgent(remoteAuth);
   }
+
   if (isBasicAuthRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthBasicAuthAgent(remoteAuth);
   }
@@ -68,8 +69,8 @@ export function AgentFromRemoteAuth<T extends RemoteAuthDAO>(
   throw new Error(`No RemoteAuthGitAgent for this type: ${remoteAuth.type} source: ${remoteAuth.source}`);
 }
 
-export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAuth>>(
+export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAuthFactory>>(
   remoteAuth?: RemoteAuthDAO | null
 ) {
-  return useMemo(() => AgentFromRemoteAuth(remoteAuth) as T, [remoteAuth]);
+  return useMemo(() => AgentFromRemoteAuthFactory(remoteAuth) as T, [remoteAuth]);
 }

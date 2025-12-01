@@ -1,10 +1,6 @@
 import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
-import { 
-  exchangeCodeForToken, 
-  generateCodeChallenge, 
-  generateCodeVerifier, 
-  getVercelOAuthUrl 
-} from "@/lib/auth/VercelOAuthFlow";
+import { exchangeCodeForToken, getVercelOAuthUrl } from "@/lib/auth/VercelOAuthFlow";
+import { generateCodeChallenge, generateCodeVerifier } from "@/lib/auth/oauth-utils";
 import { OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
 export class VercelOAuthProvider extends OAuthProvider {

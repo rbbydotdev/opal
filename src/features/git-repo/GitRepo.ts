@@ -9,11 +9,11 @@ import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 
+import { AgentFromRemoteAuthFactory, GitAgentFromRemoteAuth } from "@/data/AgentFromRemoteAuthFactory";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { HideFs } from "@/data/fs/HideFs";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
-import { AgentFromRemoteAuth, GitAgentFromRemoteAuth } from "@/data/RemoteAuthToAgent";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
@@ -833,7 +833,7 @@ export class GitRepo {
       if (!RemoteAuth) {
         throw new NotFoundError("Remote auth not found");
       }
-      const agent = AgentFromRemoteAuth(RemoteAuth);
+      const agent = AgentFromRemoteAuthFactory(RemoteAuth);
       if (!(agent instanceof RemoteAuthGithubAgent)) {
         throw new TypeError("Git agent be used for git operations");
       }
