@@ -13,7 +13,6 @@ function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => voi
 
   useEffect(() => {
     if (renderBodyRef.current && onRenderBodyReady) {
-      console.log("render-body ready:", renderBodyRef.current.id);
       onRenderBodyReady(renderBodyRef.current);
     }
   }, [trigger, onRenderBodyReady]);
