@@ -14,6 +14,13 @@ export class RemoteAuthVercelAPIAgent extends RemoteAuthVercelAgent {
     return this.remoteAuth.data.apiKey;
   }
 
+  checkAuth(): Promise<boolean> | boolean {
+    return true; // API keys do not expire by default
+  }
+  reauth(): Promise<void> | void {
+    // No reauth needed for API keys
+  }
+
   constructor(private remoteAuth: VercelAPIRemoteAuthDAO) {
     super();
   }

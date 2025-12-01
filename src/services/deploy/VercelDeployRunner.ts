@@ -1,5 +1,6 @@
 import { VercelProject } from "@/data/RemoteAuthVercelAgent";
 import { RemoteAuthVercelAPIAgent } from "@/data/RemoteAuthVercelAPIAgent";
+import { NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { DeployResult, DeployRunner, DeployRunnerOptions } from "./DeployRunner";
 import { VercelDeployData } from "./DeployTypes";
@@ -51,10 +52,13 @@ export class VercelDeployRunner extends DeployRunner<VercelDeployData> {
       const options = this.options as VercelDeployRunnerOptions;
 
       // Get or create project
-      let project: VercelProject;
+      let project: VercelProject | undefined;
       if (options.projectId) {
         this.log(`Using existing project: ${options.projectId}`, "info");
-        project = await this.vercelClient.getProject(options.projectId, options.teamId);
+        project = await this.vercelClient.getProject({ name: "FOOBAR BIZZ BAZZZ!!!!", teamId: options.teamId });
+        if (!project) {
+          throw new NotFoundError(`Vercel project with ID ${options.projectId} not found`);
+        }
       } else if (options.createProjectIfNotExists) {
         this.log("Note: Vercel project creation requires deployment", "info");
         // Vercel doesn't have a simple project creation API - projects are created during deployment

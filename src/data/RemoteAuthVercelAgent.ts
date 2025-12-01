@@ -6,10 +6,11 @@ import { GetProjectsProjects } from "@vercel/sdk/models/getprojectsop.js";
 
 export type VercelProject = GetProjectsProjects;
 
-export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, RemoteAuthAgentRefresh, RemoteAuthAgentSearchType<VercelProject> {
+export abstract class RemoteAuthVercelAgent
+  implements RemoteAuthAgentCORS, RemoteAuthAgentRefresh, RemoteAuthAgentSearchType<VercelProject>
+{
   private _vercelClient!: Vercel;
 
-  // serverURL: this.getCORSProxy() ? `${stripTrailingSlash(this.getCORSProxy()!)}/api.vercel.com` : undefined,
   get vercelClient(): Vercel {
     return (
       this._vercelClient ||
@@ -29,13 +30,22 @@ export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, Remo
   }
 
   async createProject(params: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
-    return this.vercelClient.projects.createProject(params, { signal, mode: "cors" });
+    return this.vercelClient.projects.createProject(
+      {
+        slug: params.name,
+        teamId: params.teamId,
+        requestBody: {
+          name: params.name,
+        },
+      },
+      { signal, mode: "cors" }
+    );
   }
 
-  async getProject(projectId: string, teamId?: string, { signal }: { signal?: AbortSignal } = {}) {
-    return (await this.vercelClient.projects.getProjects({ teamId }, { signal, mode: "cors" })).projects.find(
-      (p) => p.id === projectId
-    )!;
+  async getProject({ name, teamId }: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
+    return (await this.vercelClient.projects.getProjects({ teamId, slug: name }, { signal, mode: "cors" })).projects.at(
+      0
+    );
   }
 
   async getAllProjects({ teamId }: { teamId?: string } = {}, { signal }: { signal?: AbortSignal } = {}) {
@@ -85,14 +95,16 @@ export abstract class RemoteAuthVercelAgent implements RemoteAuthAgentCORS, Remo
     }
   }
 
-  checkAuth(): Promise<boolean> | boolean {
-    return true; // Default: assume auth is valid
-  }
+  // checkAuth(): Promise<boolean> | boolean {
+  //   return true; // Default: assume auth is valid
+  // }
 
-  reauth(): Promise<void> | void {
-    // Default: no reauth needed
-  }
+  // reauth(): Promise<void> | void {
+  //   // Default: no reauth needed
+  // }
 
+  abstract checkAuth(): Promise<boolean> | boolean;
+  abstract reauth(): Promise<void> | void;
   abstract getCORSProxy(): string | undefined;
   abstract getUsername(): string;
   abstract getApiToken(): string;

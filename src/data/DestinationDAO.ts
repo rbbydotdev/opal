@@ -167,7 +167,16 @@ export const DestinationSchemaMap = {
       remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
       label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        project: z.string().trim().min(1, "Project is required"),
+        /*
+        : "Project names can be up to 100 characters long and must be lowercase. They can include letters, digits, and the following characters: '.', '_', '-'. However, they cannot contain the sequence '---'
+        */
+        project: z
+          .string()
+          .trim()
+          .min(1, "Project is required")
+          .max(100, "Project name is too long")
+          .regex(/^[a-z0-9._-]+$/, "Project name must be lowercase and can include letters, digits, '.', '_', and '-'")
+          .refine((val) => !val.includes("---"), "Project name cannot contain the sequence '---'"),
         // implicit! projectId: z.string().trim(),
         // implicit! teamId: z.string().trim().optional(),
       }),
