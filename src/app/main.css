@@ -16,6 +16,15 @@
   }
 }
 
+/* Sidebar focus styles */
+@layer components {
+  .bg-sidebar button:focus,
+  .bg-sidebar [tabindex]:focus,
+  .bg-sidebar a:focus {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background bg-accent/50;
+  }
+}
+
 @layer base {
   * {
     /* @apply border-border; */

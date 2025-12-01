@@ -36,12 +36,13 @@ import { Slot } from "@radix-ui/react-slot";
 import { List, ListXIcon } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
+import { useDoubleCmdFocus } from "@/hooks/useDoubleCmdFocus";
 import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
   return (
     <ErrorBoundary fallback={ErrorMiniPlaque}>
-      <Slot {...rest}>{children}</Slot>
+      <Slot {...rest} data-section-name={dndId}>{children}</Slot>
     </ErrorBoundary>
   );
 }
@@ -64,6 +65,8 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
     "SidebarFileMenu/Dnd",
     dndSections as DndSectionType[]
   );
+  const sidebarListRef = useDoubleCmdFocus();
+
   const setDnds = (ids: DndSectionType[]) => {
     setStoredValue(ids);
   };
@@ -142,7 +145,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
           </DropdownMenuTrigger>
         </SidebarGroupLabel>
       </DropdownMenu>
-      <div className="overflow-y-auto no-scrollbar pr-4">
+      <div ref={sidebarListRef} className="overflow-y-auto no-scrollbar pr-4" tabIndex={-1}>
         <SidebarMenuDndList show={storedValue} currentWorkspace={currentWorkspace} />
       </div>
     </SidebarGroup>
@@ -172,18 +175,6 @@ function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]
           </DisplayTreeProvider>
         </div>
       </DndSlot>
-
-      {/*      <DndSlot dndId={"build_files"}>
-        <div className="flex-shrink flex">
-          <FileTreeMenuCtxProvider>
-            <TreeExpanderProvider id="BuildFiles">
-              <FileTreeProvider>
-                <BuildSidebarFileMenuFileSection />
-              </FileTreeProvider>
-            </TreeExpanderProvider>
-          </FileTreeMenuCtxProvider>
-        </div>
-      </DndSlot> */}
 
       <DndSlot dndId={"trash"}>
         <div className="min-h-8 flex-shrink flex">
