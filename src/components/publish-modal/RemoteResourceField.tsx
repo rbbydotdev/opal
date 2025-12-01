@@ -121,6 +121,7 @@ export function RemoteResourceCreate({
   ident,
   msg,
   request,
+  error,
   onCreateSuccess,
 }: {
   label: string;
@@ -142,6 +143,7 @@ export function RemoteResourceCreate({
     submit: () => Promise<{ name: string } | null>;
     reset: () => void;
   };
+  error?: string | null;
   onCreateSuccess?: (name: string) => void;
 }) {
   const { mode, setMode, onValueChange } = useRemoteResourceContext();
