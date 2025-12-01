@@ -1,4 +1,5 @@
-import { RemoteAuthVercelAPIAgent, VercelProject } from "@/data/RemoteAuthAgent";
+import { VercelProject } from "@/data/RemoteAuthVercelAgent";
+import { RemoteAuthVercelAPIAgent } from "@/data/RemoteAuthVercelAPIAgent";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { DeployResult, DeployRunner, DeployRunnerOptions } from "./DeployRunner";
 import { VercelDeployData } from "./DeployTypes";

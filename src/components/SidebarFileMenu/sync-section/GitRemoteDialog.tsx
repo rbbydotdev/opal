@@ -30,8 +30,9 @@ import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-secti
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
-import { RemoteAuthGithubAgent, RemoteAuthGithubAPIAgent } from "@/data/RemoteAuthAgent";
 import { GithubAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { RemoteAuthGithubAgent } from "@/data/RemoteAuthGithubAgent";
+import { RemoteAuthGithubAPIAgent } from "@/data/RemoteAuthGithubAPIAgent";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";

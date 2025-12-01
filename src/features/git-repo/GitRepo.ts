@@ -13,7 +13,7 @@ import { AgentFromRemoteAuthFactory, GitAgentFromRemoteAuth } from "@/data/Agent
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { HideFs } from "@/data/fs/HideFs";
-import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
+import { RemoteAuthGithubAgent } from "@/data/RemoteAuthGithubAgent";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";

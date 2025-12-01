@@ -1,15 +1,4 @@
 import {
-  RemoteAuthAWSAPIAgent,
-  RemoteAuthBasicAuthAgent,
-  RemoteAuthGithubAPIAgent,
-  RemoteAuthGithubDeviceOAuthAgent,
-  RemoteAuthGithubOAuthAgent,
-  RemoteAuthNetlifyAPIAgent,
-  RemoteAuthNetlifyOAuthAgent,
-  RemoteAuthVercelAPIAgent,
-  RemoteAuthVercelOAuthAgent,
-} from "@/data/RemoteAuthAgent";
-import {
   isAWSAPIRemoteAuthDAO,
   isBasicAuthRemoteAuthDAO,
   isGithubAPIRemoteAuthDAO,
@@ -22,6 +11,15 @@ import {
   RemoteAuthDAO,
 } from "@/data/RemoteAuthDAO";
 import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAWSAPIAgent } from "./RemoteAuthAWSAPIAgent";
+import { RemoteAuthBasicAuthAgent } from "./RemoteAuthBasicAuthAgent";
+import { RemoteAuthGithubAPIAgent } from "./RemoteAuthGithubAPIAgent";
+import { RemoteAuthGithubDeviceOAuthAgent } from "./RemoteAuthGithubDeviceOAuthAgent";
+import { RemoteAuthGithubOAuthAgent } from "./RemoteAuthGithubOAuthAgent";
+import { RemoteAuthNetlifyAPIAgent } from "./RemoteAuthNetlifyAPIAgent";
+import { RemoteAuthNetlifyOAuthAgent } from "./RemoteAuthNetlifyOAuthAgent";
+import { RemoteAuthVercelAPIAgent } from "./RemoteAuthVercelAPIAgent";
+import { RemoteAuthVercelOAuthAgent } from "./RemoteAuthVercelOAuthAgent";
 
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { useMemo } from "react";

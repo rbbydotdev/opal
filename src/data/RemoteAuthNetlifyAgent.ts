@@ -1,0 +1,47 @@
+import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
+import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
+
+export abstract class RemoteAuthNetlifyAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<NetlifySite> {
+  private _netlifyClient!: NetlifyClient;
+
+  get netlifyClient() {
+    return this._netlifyClient || (this._netlifyClient = new NetlifyClient(this.getApiToken()));
+  }
+
+  fetchAll(options?: { signal?: AbortSignal }): Promise<NetlifySite[]> {
+    return this.netlifyClient.getSites();
+  }
+  hasUpdates(
+    etag: string | null,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ updated: boolean; newEtag: string | null }> {
+    // Netlify API does not support ETag for sites, so we always return updated=true
+    return Promise.resolve({ updated: true, newEtag: null });
+  }
+
+  async getRemoteUsername(): Promise<string> {
+    const user = await this.netlifyClient.getCurrentUser();
+    return user.full_name || user.email;
+  }
+
+  createSite = (siteName: string, { signal }: { signal?: AbortSignal } = {}) => {
+    const finalSiteName = siteName.trim();
+    return this.netlifyClient.createSite({ name: finalSiteName }, { signal });
+  };
+
+  async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
+    try {
+      await this.netlifyClient.getCurrentUser();
+      return { status: "success" };
+    } catch (error: any) {
+      return {
+        status: "error",
+        msg: `Netlify API test failed: ${error.message || "Unknown error"}`,
+      };
+    }
+  }
+
+  abstract getUsername(): string;
+  abstract getApiToken(): string;
+}

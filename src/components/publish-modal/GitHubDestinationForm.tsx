@@ -3,8 +3,8 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
 import { DestinationMetaType } from "@/data/DestinationDAO";
-import { RemoteAuthGithubAgent } from "@/data/RemoteAuthAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { RemoteAuthGithubAgent } from "@/data/RemoteAuthGithubAgent";
 import { UseFormReturn } from "react-hook-form";
 import {
   RemoteResourceCreate,
