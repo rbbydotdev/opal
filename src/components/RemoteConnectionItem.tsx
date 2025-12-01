@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/context/useDebounce";
-import { VercelProject } from "@/data/RemoteAuthAgent";
 import { Repo } from "@/data/RemoteAuthTypes";
+import { VercelProject } from "@/data/RemoteAuthVercelAgent";
 import { RemoteAuthAgentSearchType, isFuzzyResult } from "@/data/RemoteSearchFuzzyCache";
 import { useAnySearch } from "@/data/useAnySearch";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";

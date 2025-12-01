@@ -1,5 +1,6 @@
 //@ts-nocheck
-import { RemoteAuthNetlifyAPIAgent, RemoteAuthNetlifyOAuthAgent } from "@/data/RemoteAuthAgent";
+import { RemoteAuthNetlifyAPIAgent } from "@/data/RemoteAuthNetlifyAPIAgent";
+import { RemoteAuthNetlifyOAuthAgent } from "@/data/RemoteAuthNetlifyOAuthAgent";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { NetlifyClient, NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { DeployResult, DeployRunner, DeployRunnerOptions } from "./DeployRunner";

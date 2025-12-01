@@ -3,7 +3,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
 import { DestinationMetaType } from "@/data/DestinationDAO";
-import { RemoteAuthAWSAPIAgent } from "@/data/RemoteAuthAgent";
+import { RemoteAuthAWSAPIAgent } from "@/data/RemoteAuthAWSAPIAgent";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { AWS_REGIONS } from "@/lib/aws/AWSRegions";

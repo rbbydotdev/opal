@@ -1,9 +1,9 @@
-import { RemoteAuthAWSAPIAgent } from "@/data/RemoteAuthAgent";
+import { RemoteAuthAWSAPIAgent } from "@/data/RemoteAuthAWSAPIAgent";
 import { AWSS3Client } from "@/lib/aws/AWSClient";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
+import type { StreamingBlobPayloadInputTypes } from "@smithy/types";
 import { DeployResult, DeployRunner, DeployRunnerOptions } from "./DeployRunner";
 import { AWSDeployData } from "./DeployTypes";
-import type { StreamingBlobPayloadInputTypes } from "@smithy/types";
 
 export interface AWSDeployRunnerOptions extends DeployRunnerOptions<AWSDeployData> {
   destination: RemoteAuthAWSAPIAgent;
@@ -46,7 +46,7 @@ export class AWSDeployRunner extends DeployRunner<AWSDeployData> {
       // Validate credentials first
       this.log("Validating AWS credentials...", "info");
       const isValidCredentials = await this.s3Client.verifyCredentials();
-      
+
       if (!isValidCredentials) {
         throw new Error("AWS credentials validation failed. Please check your access key and secret key.");
       }
@@ -122,28 +122,28 @@ export class AWSDeployRunner extends DeployRunner<AWSDeployData> {
   }
 
   private getMimeType(filePath: string): string {
-    const ext = filePath.split('.').pop()?.toLowerCase() || '';
-    
+    const ext = filePath.split(".").pop()?.toLowerCase() || "";
+
     const mimeTypes: Record<string, string> = {
-      'html': 'text/html',
-      'css': 'text/css',
-      'js': 'text/javascript',
-      'json': 'application/json',
-      'png': 'image/png',
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'gif': 'image/gif',
-      'svg': 'image/svg+xml',
-      'ico': 'image/x-icon',
-      'txt': 'text/plain',
-      'pdf': 'application/pdf',
-      'woff': 'font/woff',
-      'woff2': 'font/woff2',
-      'ttf': 'font/ttf',
-      'eot': 'application/vnd.ms-fontobject',
+      html: "text/html",
+      css: "text/css",
+      js: "text/javascript",
+      json: "application/json",
+      png: "image/png",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      gif: "image/gif",
+      svg: "image/svg+xml",
+      ico: "image/x-icon",
+      txt: "text/plain",
+      pdf: "application/pdf",
+      woff: "font/woff",
+      woff2: "font/woff2",
+      ttf: "font/ttf",
+      eot: "application/vnd.ms-fontobject",
     };
 
-    return mimeTypes[ext] || 'application/octet-stream';
+    return mimeTypes[ext] || "application/octet-stream";
   }
 
   private async deployToS3(
@@ -155,12 +155,17 @@ export class AWSDeployRunner extends DeployRunner<AWSDeployData> {
 
     for (const file of files) {
       this.log(`Uploading: ${file.path}`, "info");
-      
+
       try {
-        await this.s3Client.putObject(bucketName, file.path, file.content as StreamingBlobPayloadInputTypes, file.mimeType);
+        await this.s3Client.putObject(
+          bucketName,
+          file.path,
+          file.content as StreamingBlobPayloadInputTypes,
+          file.mimeType
+        );
         totalFiles++;
         totalSize += file.content.length;
-        
+
         this.log(`Successfully uploaded: ${file.path} (${file.content.length} bytes)`, "info");
       } catch (error) {
         this.log(`Error uploading ${file.path}: ${error}`, "error");
@@ -178,6 +183,6 @@ export class AWSDeployRunner extends DeployRunner<AWSDeployData> {
 
   private getBucketName(): string {
     const options = this.options as AWSDeployRunnerOptions;
-    return options.bucketName || 'webeditor-deploy';
+    return options.bucketName || "webeditor-deploy";
   }
 }

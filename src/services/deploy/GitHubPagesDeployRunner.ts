@@ -1,8 +1,6 @@
-import {
-  RemoteAuthGithubAPIAgent,
-  RemoteAuthGithubDeviceOAuthAgent,
-  RemoteAuthGithubOAuthAgent,
-} from "@/data/RemoteAuthAgent";
+import { RemoteAuthGithubAPIAgent } from "@/data/RemoteAuthGithubAPIAgent";
+import { RemoteAuthGithubDeviceOAuthAgent } from "@/data/RemoteAuthGithubDeviceOAuthAgent";
+import { RemoteAuthGithubOAuthAgent } from "@/data/RemoteAuthGithubOAuthAgent";
 import { coerceString, coerceUint8Array } from "@/lib/coerceUint8Array";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { isStringish, resolveFromRoot } from "@/lib/paths2";
