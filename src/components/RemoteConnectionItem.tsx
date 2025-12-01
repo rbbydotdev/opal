@@ -48,6 +48,7 @@ export const RemoteItemCreateInput = forwardRef<
     placeholder?: string;
   }
 >(({ onClose, request, msg, className, ident, submit, placeholder = "my-new-thing" }, ref) => {
+  const handleBlur = () => onClose(ident.name.trim() || undefined);
   return (
     <div className={cn("w-full relative", className)}>
       <div className="w-full p-0 relative">
@@ -57,19 +58,27 @@ export const RemoteItemCreateInput = forwardRef<
           autoFocus
           value={ident.name}
           onChange={(e) => ident.setName(e.target.value)}
-          // onKeyDown={handleKeyDown}
-          onBlur={() => onClose(ident.name.trim() || undefined)}
+          onBlur={handleBlur}
           placeholder={placeholder}
           className="w-full"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") handleBlur();
+            if (e.key === "Enter") {
+              e.preventDefault();
+              submit();
+            }
+          }}
           disabled={request.isLoading}
         />
 
         {request.error && (
           <div className="absolute z-20 w-full top-10 bg-sidebar border border-destructive rounded-b-lg shadow-lg">
-            <div className="flex items-center px-3 py-2 text-sm text-destructive">
-              <Ban className="h-4 w-4 mr-2" />
-              {request.error}
-            </div>
+            <span className="flex items-center px-3 py-2 text-sm text-destructive">
+              <Ban className="flex-shrink-0 h-4 w-4 mr-2" />
+              <span className="truncate" title={request.error}>
+                {request.error}
+              </span>
+            </span>
           </div>
         )}
 
@@ -91,7 +100,7 @@ export const RemoteItemCreateInput = forwardRef<
             }}
             onMouseDown={(e) => e.preventDefault()}
           >
-            <span className="px-3 py-2 text-sm group-hover:text-ring text-muted-foreground">{msg.valid}</span>
+            <span className="px-3 py-2 text-sm group-hover:text-ring text-muted-foreground truncate">{msg.valid}</span>
           </button>
         )}
       </div>
@@ -116,7 +125,7 @@ export function RemoteItemSearchDropDown({
   isLoading: boolean;
   searchValue: string;
   className?: string;
-  onFocus: () => void;
+  onFocus: (e: React.FocusEvent) => void;
   onSearchChange: (value: string) => void;
   onClose: (inputVal?: string) => void;
   onSelect: (item: RemoteItem) => void;
@@ -164,7 +173,10 @@ export function RemoteItemSearchDropDown({
             {...getInputProps()}
             data-no-escape
             autoFocus
-            onFocus={onFocus}
+            onFocus={(e) => {
+              onFocus(e);
+              e.target.select();
+            }}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             onBlur={handleInputBlur}
@@ -480,7 +492,6 @@ interface RemoteResourceConfig {
     validPrefix: string; // e.g., "Press Enter to create Netlify site"
     errorFallback: string;
   };
-  transformName?: (name: string) => string;
 }
 
 // Core generic resource creation hook
@@ -510,14 +521,13 @@ function useRemoteResource<T>({
   const abortCntrlRef = useRef<AbortController | null>(null);
 
   const create = async () => {
-    const transformedName = config.transformName ? config.transformName(name.trim()) : name.trim();
-    if (!transformedName) return null;
+    if (!name.trim()) return null;
 
     setIsLoading(true);
     setError(null);
     try {
       abortCntrlRef.current = new AbortController();
-      const result = await createRequest(transformedName, { signal: abortCntrlRef.current.signal });
+      const result = await createRequest(name.trim(), { signal: abortCntrlRef.current.signal });
       setError(null);
       abortCntrlRef.current = null;
       setIsLoading(false);
@@ -530,8 +540,7 @@ function useRemoteResource<T>({
     }
   };
 
-  const displayName = config.transformName ? config.transformName(name.trim()) : name.trim();
-
+  const displayName = name.trim();
   return {
     request: {
       error,
@@ -578,7 +587,6 @@ export function useRemoteAWSBucket<T = any>({
         validPrefix: "Press Enter to create S3 bucket",
         errorFallback: "Failed to create bucket",
       },
-      transformName: (name) => name.toLowerCase(), // S3 bucket names must be lowercase
     },
   });
 }

@@ -132,7 +132,7 @@ export function OAuth({
       {authSuccess && (
         <div className="rounded-md bg-success p-4 text-success-foreground">
           <p className="font-bold flex items-center gap-2">
-            <span className="text-success bg-foreground rounded-full w-6 h-6 flex items-center justify-center p-1">
+            <span className="text-success bg-success-foreground rounded-full w-6 h-6 flex items-center justify-center p-1">
               <Check strokeWidth={4} />
             </span>
             Authorization Successful

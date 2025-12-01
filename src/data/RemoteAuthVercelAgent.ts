@@ -1,13 +1,15 @@
 import { RefreshAuth } from "@/data/RefreshAuth";
-import { RemoteAuthAgentCORS, RemoteAuthAgentRefresh } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefresh } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
+import { mapToTypedError } from "@/lib/errors";
 import { Vercel } from "@vercel/sdk";
 import { GetProjectsProjects } from "@vercel/sdk/models/getprojectsop.js";
+import { VercelError } from "@vercel/sdk/models/vercelerror.js";
 
 export type VercelProject = GetProjectsProjects;
 
 export abstract class RemoteAuthVercelAgent
-  implements RemoteAuthAgentCORS, RemoteAuthAgentRefresh, RemoteAuthAgentSearchType<VercelProject>
+  implements RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefresh, RemoteAuthAgentSearchType<VercelProject>
 {
   private _vercelClient!: Vercel;
 
@@ -24,22 +26,41 @@ export abstract class RemoteAuthVercelAgent
       ))
     );
   }
+  static handleError(error: any): never {
+    if (error instanceof VercelError) {
+      throw (function () {
+        try {
+          const parsed = JSON.parse(error.body) as any;
+          const message = parsed.error.message;
+          const code = parsed.error.code;
+          return mapToTypedError(null, { message, code });
+        } catch {
+          return error;
+        }
+      })();
+    }
+    throw error;
+  }
 
   async getCurrentUser({ signal }: { signal?: AbortSignal } = {}) {
-    return await this.vercelClient.user.getAuthUser({ signal, mode: "cors" }).then((res) => res.user);
+    return await this.vercelClient.user
+      .getAuthUser({ signal, mode: "cors" })
+      .then((res) => res.user)
+      .catch(RemoteAuthVercelAgent.handleError);
   }
 
   async createProject(params: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
-    return this.vercelClient.projects.createProject(
-      {
-        slug: params.name,
-        teamId: params.teamId,
-        requestBody: {
-          name: params.name,
+    return this.vercelClient.projects
+      .createProject(
+        {
+          teamId: params.teamId,
+          requestBody: {
+            name: params.name,
+          },
         },
-      },
-      { signal, mode: "cors" }
-    );
+        { signal, mode: "cors" }
+      )
+      .catch(RemoteAuthVercelAgent.handleError);
   }
 
   async getProject({ name, teamId }: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
@@ -61,7 +82,8 @@ export abstract class RemoteAuthVercelAgent
         .then((res) => {
           continueToken = res.pagination.next as number;
           return res.projects;
-        });
+        })
+        .catch(RemoteAuthVercelAgent.handleError);
       results.push(...projects);
     } while (continueToken);
     return results;

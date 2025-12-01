@@ -2,11 +2,11 @@ import { RemoteItemCreateInput, RemoteItemSearchDropDown } from "@/components/Re
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, X } from "lucide-react";
+import { Check, Plus, Search, X } from "lucide-react";
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
 
-type RemoteResourceMode = "search" | "input" | "create";
+type RemoteResourceMode = "search" | "input" | "create" | "input/success";
 
 type RemoteResourceContextValue<T extends FieldValues, K extends FieldPath<T>> = {
   mode: RemoteResourceMode;
@@ -121,8 +121,6 @@ export function RemoteResourceCreate({
   ident,
   msg,
   request,
-  error,
-  onCreateSuccess,
 }: {
   label: string;
   placeholder: string;
@@ -143,26 +141,24 @@ export function RemoteResourceCreate({
     submit: () => Promise<{ name: string } | null>;
     reset: () => void;
   };
-  error?: string | null;
-  onCreateSuccess?: (name: string) => void;
 }) {
   const { mode, setMode, onValueChange } = useRemoteResourceContext();
   const inputRef = useRef<HTMLInputElement>(null);
-
+  const pauseCloseRef = useRef<boolean>(false);
   if (mode !== "create") return null;
-
   const handleCreateSubmit = async () => {
     try {
+      pauseCloseRef.current = true;
       const res = await request.submit();
+      pauseCloseRef.current = false;
       if (!res) return;
       onValueChange(res.name);
-      setMode("input");
-      onCreateSuccess?.(res.name);
-    } catch {
+      setMode("input/success");
+    } catch (_e) {
+      inputRef.current?.addEventListener("focus", () => (pauseCloseRef.current = false), { once: true });
       setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
-
   return (
     <div>
       <FormLabel>{label}</FormLabel>
@@ -171,7 +167,12 @@ export function RemoteResourceCreate({
           className="flex-1"
           ref={inputRef}
           placeholder={placeholder}
-          onClose={() => setMode("input")}
+          onClose={(newName) => {
+            if (!pauseCloseRef.current) {
+              onValueChange(newName || "");
+              setMode("input");
+            }
+          }}
           submit={handleCreateSubmit}
           request={request}
           msg={msg}
@@ -210,7 +211,9 @@ export function RemoteResourceInput({
 }) {
   const { mode, setMode, control, fieldName, getValue, inputRef } = useRemoteResourceContext();
 
-  if (mode !== "input") return null;
+  const showSuccess = mode === "input/success";
+
+  if (!mode.startsWith("input")) return null;
 
   return (
     <FormField
@@ -221,33 +224,44 @@ export function RemoteResourceInput({
           <FormLabel>{label}</FormLabel>
           <div className="flex justify-center w-full items-center gap-2">
             <FormControl>
-              <Input
-                {...field}
-                ref={inputRef}
-                placeholder={placeholder}
-                onChange={(e) => {
-                  field.onChange(e);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                  }
-                }}
-              />
+              <>
+                {showSuccess && (
+                  <div className="rounded-md w-9 h-9 border-success border text-success flex justify-center items-center p-1">
+                    <Check />
+                  </div>
+                )}
+                <Input
+                  {...field}
+                  ref={inputRef}
+                  placeholder={placeholder}
+                  onChange={(e) => {
+                    setMode("input");
+                    field.onChange(e);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                    }
+                  }}
+                />
+              </>
             </FormControl>
-            <Button
-              type="button"
-              variant="outline"
-              title={createButtonTitle}
-              onClick={() => {
-                createReset?.();
-                const currentValue = getValue();
-                ident.setName(currentValue || "");
-                setMode("create");
-              }}
-            >
-              <Plus />
-            </Button>
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                title={createButtonTitle}
+                onClick={() => {
+                  setMode("input");
+                  createReset?.();
+                  const currentValue = getValue();
+                  ident.setName(currentValue || "");
+                  setMode("create");
+                }}
+              >
+                <Plus />
+              </Button>
+            </div>
             <Button
               type="button"
               variant="outline"
