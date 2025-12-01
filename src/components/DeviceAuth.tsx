@@ -1,6 +1,5 @@
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
-import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -18,13 +17,11 @@ export function DeviceAuth({
   form,
   source,
   onCancel = () => {},
-  showCorsProxyField,
 }: {
   mode?: ConnectionsModalMode;
   form: UseFormReturn<RemoteAuthFormValues<"oauth-device">>;
   source: RemoteAuthSource;
   onCancel: () => void;
-  showCorsProxyField: boolean;
 }) {
   const [state, setState] = useState<
     "idle" | "pin-loading" | "pin-loaded" | "auth-success" | "pending-rad-save" | "error"
@@ -86,23 +83,19 @@ export function DeviceAuth({
         )}
       />
 
-      {showCorsProxyField && (
-        <FormField
-          control={form.control}
-          name="data.corsProxy"
-          render={({ field: { value, ...rest } }) => (
-            <FormItem>
-              <FormLabel>
-                {capitalizeFirst(source)} CORS Proxy (optional) <OptionalProbablyToolTip />
-              </FormLabel>
-              <FormControl>
-                <Input {...rest} value={value ?? ""} placeholder="Proxy URL (optional)" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
+      <FormField
+        control={form.control}
+        name="data.corsProxy"
+        render={({ field: { value, ...rest } }) => (
+          <FormItem>
+            <FormLabel>{capitalizeFirst(source)} CORS Proxy</FormLabel>
+            <FormControl>
+              <Input {...rest} value={value ?? ""} placeholder="Proxy URL (optional)" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       {state === "error" && (
         <div className="rounded-md bg-destructive p-4 text-destructive-foreground">
           <p className="mb-2 font-bold">Error</p>

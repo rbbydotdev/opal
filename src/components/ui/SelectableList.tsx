@@ -3,7 +3,7 @@ import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/S
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +41,7 @@ type SelectableListContextValue<T = any> = {
   setSelected: React.Dispatch<React.SetStateAction<string[]>>;
   handleSelect: (sectionRef: React.RefObject<HTMLDivElement | null>, event: React.MouseEvent, id: string) => void;
   onClick?: (id: string) => void;
-  onDelete?: (id: string) => void;
+  onDelete: (id: string) => void;
   emptyLabel?: string;
   showGrip?: boolean;
   allItemIds: string[];
@@ -225,18 +225,14 @@ export function SelectableListActions({ children }: { children?: React.ReactNode
             <SquareDashed className="w-4 h-4" />
             <span>Deselect All</span>
           </DropdownMenuItem>
-          {onDelete && (
-            <>
-              <DropdownMenuItem
-                onClick={handleDeleteAll}
-                className="grid grid-cols-[auto_1fr] items-center gap-2"
-                disabled={!selected.length}
-              >
-                <Delete className="w-4 h-4 text-destructive" />
-                <span>Delete Selected</span>
-              </DropdownMenuItem>
-            </>
-          )}
+          <DropdownMenuItem
+            onClick={handleDeleteAll}
+            className="grid grid-cols-[auto_1fr] items-center gap-2"
+            disabled={!selected.length}
+          >
+            <Delete className="w-4 h-4 text-destructive" />
+            <span>Delete Selected</span>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="py-2 text-2xs w-full text-muted-foreground font-thin">
             {IS_MAC ? "⌘ cmd" : "^ ctrl"} + click items / multi-select
@@ -367,7 +363,7 @@ type SelectableListItemProps = {
 };
 
 export function SelectableListItem({ children, id }: SelectableListItemProps) {
-  const { isSelected, handleSelect } = useSelectableListContext();
+  const { isSelected, handleSelect, onDelete } = useSelectableListContext();
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
   // Separate menu from other children
@@ -402,7 +398,12 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
           {/* </div> */}
         </SidebarMenuItem>
       </ContextMenuTrigger>
-      <ContextMenuContent>{menuChild}</ContextMenuContent>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={() => onDelete(id)} className="grid grid-cols-[auto_1fr] items-center gap-2">
+          <Delete className="w-4 h-4 text-destructive" />
+          <span>Delete</span>
+        </ContextMenuItem>
+      </ContextMenuContent>
     </ContextMenu>
   );
 }

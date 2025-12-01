@@ -26,7 +26,6 @@ import {
   useRemoteGitRepo,
   useRemoteGitRepoSearch,
 } from "@/components/RemoteConnectionItem";
-import { OptionalProbablyToolTip } from "@/components/SidebarFileMenu/sync-section/OptionalProbablyToolTips";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
@@ -411,9 +410,7 @@ function GitRemoteDialogInternal({
             name="gitCorsProxy"
             render={({ field }) => (
               <FormItem className="min-w-0">
-                <FormLabel>
-                  Git CORS Proxy <OptionalProbablyToolTip />
-                </FormLabel>
+                <FormLabel>Git CORS Proxy</FormLabel>
                 <FormControl>
                   <Input autoComplete="off" placeholder="Optional" className="truncate" {...field} />
                 </FormControl>

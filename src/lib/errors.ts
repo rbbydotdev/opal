@@ -165,6 +165,14 @@ export class BadGatewayError extends ApplicationError {
   }
 }
 
+export class TokenExpiredError extends ApplicationError {
+  name = "TokenExpiredError";
+  constructor(errorOrMessage: Error | string = "token expired") {
+    super(errorOrMessage, 401);
+    Object.setPrototypeOf(this, TokenExpiredError.prototype);
+  }
+}
+
 export class UnauthorizedError extends ApplicationError {
   name = "UnauthorizedError";
   constructor(errorOrMessage: Error | string = "unauthorized") {

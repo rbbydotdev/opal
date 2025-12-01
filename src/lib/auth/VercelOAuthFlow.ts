@@ -1,5 +1,6 @@
 import { ENV } from "@/lib/env";
 import { mapToTypedError } from "@/lib/errors";
+import { stripTrailingSlash } from "./oauth-utils";
 
 /**
  * OAuth Types
@@ -67,6 +68,7 @@ export async function exchangeCodeForToken({
 
     const response = await fetch(tokenUrl, {
       method: "POST",
+      mode: "cors",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         Accept: "application/json",
@@ -95,6 +97,59 @@ export async function exchangeCodeForToken({
       scope: data.scope || "",
       expiresIn: data.expires_in,
       refreshToken: data.refresh_token,
+      obtainedAt: Date.now(),
+    };
+  } catch (e) {
+    throw mapToTypedError(e);
+  }
+}
+
+/**
+ * Refresh Vercel access token using refresh token
+ */
+export async function refreshVercelToken({
+  refreshToken,
+  clientId = ENV.PUBLIC_VERCEL_CLIENT_ID!,
+  corsProxy,
+}: {
+  refreshToken: string;
+  clientId?: string;
+  corsProxy?: string;
+}): Promise<VercelOAuthFlowPayload> {
+  try {
+    const baseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/api.vercel.com` : "https://api.vercel.com";
+    const tokenUrl = `${baseUrl}/login/oauth/token`;
+
+    const response = await fetch(tokenUrl, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Token refresh failed: ${response.status} ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as any;
+
+    if (data.error) {
+      throw new Error(`OAuth refresh error: ${data.error} - ${data.error_description || ""}`);
+    }
+
+    return {
+      accessToken: data.access_token,
+      tokenType: data.token_type || "bearer",
+      scope: data.scope || "",
+      expiresIn: data.expires_in,
+      refreshToken: data.refresh_token || refreshToken, // Use new refresh token if provided, else keep current
       obtainedAt: Date.now(),
     };
   } catch (e) {
