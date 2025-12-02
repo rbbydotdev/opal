@@ -114,7 +114,7 @@ export async function refreshVercelToken({
 }: {
   refreshToken: string;
   clientId?: string;
-  corsProxy?: string;
+  corsProxy?: string | null;
 }): Promise<VercelOAuthFlowPayload> {
   try {
     const baseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/api.vercel.com` : "https://api.vercel.com";

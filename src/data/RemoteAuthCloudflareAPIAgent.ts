@@ -3,6 +3,7 @@ import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 
 import Cloudflare from "cloudflare";
+
 export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   private _cloudflareClient!: Cloudflare;
   private _accountId: string | null = null;
@@ -18,6 +19,7 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
       this._cloudflareClient ||
       (this._cloudflareClient = new Cloudflare({
         apiToken: this.getApiToken(),
+        baseURL: this.remoteAuth.data.corsProxy ? this.remoteAuth.data.corsProxy : undefined,
       }))
     );
   }

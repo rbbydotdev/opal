@@ -1,7 +1,7 @@
 import type { VercelOAuthRemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthVercelAgent } from "@/data/RemoteAuthVercelAgent";
-import { TokenExpiredError } from "@/lib/errors";
 import { refreshVercelToken } from "@/lib/auth/VercelOAuthFlow";
+import { TokenExpiredError } from "@/lib/errors";
 
 export class RemoteAuthVercelOAuthAgent extends RemoteAuthVercelAgent {
   getCORSProxy(): string | undefined {
@@ -33,7 +33,7 @@ export class RemoteAuthVercelOAuthAgent extends RemoteAuthVercelAgent {
     try {
       const refreshedTokens = await refreshVercelToken({
         refreshToken: this.remoteAuth.data.refreshToken,
-        corsProxy: this.getCORSProxy(),
+        corsProxy: this.remoteAuth.data.corsProxy,
       });
 
       // Update the stored token data
@@ -43,7 +43,7 @@ export class RemoteAuthVercelOAuthAgent extends RemoteAuthVercelAgent {
       if (refreshedTokens.refreshToken) {
         this.remoteAuth.data.refreshToken = refreshedTokens.refreshToken;
       }
-      
+
       // Save the updated data
       await this.remoteAuth.save();
     } catch (error: any) {

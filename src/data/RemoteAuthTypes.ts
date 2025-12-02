@@ -190,7 +190,7 @@ export interface RemoteAuthAgentCORS {
   getCORSProxy(): string | undefined;
 }
 
-export interface RemoteAuthAgentRefresh {
+export interface RemoteAuthAgentRefreshToken {
   checkAuth(): Promise<boolean> | boolean;
   reauth(): Promise<void> | void;
 }

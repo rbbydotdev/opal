@@ -1,5 +1,5 @@
 import { RefreshAuth } from "@/data/RefreshAuth";
-import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefresh } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefreshToken } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { mapToTypedError } from "@/lib/errors";
 import { Vercel } from "@vercel/sdk";
@@ -10,7 +10,7 @@ import { VercelError } from "@vercel/sdk/models/vercelerror.js";
 export type VercelProject = GetProjectsProjects;
 
 export abstract class RemoteAuthVercelAgent
-  implements RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefresh, RemoteAuthAgentSearchType<VercelProject>
+  implements RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefreshToken, RemoteAuthAgentSearchType<VercelProject>
 {
   private _vercelClient!: Vercel;
 
