@@ -1,4 +1,5 @@
-import { DestinationDAO, DestinationMetaType, DestinationType } from "@/data/DestinationDAO";
+import { DestinationDAO, DestinationMetaType } from "@/data/DestinationDAO";
+import { DestinationType } from "@/data/DestinationSchemaMap";
 import { PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { useCallback, useState } from "react";

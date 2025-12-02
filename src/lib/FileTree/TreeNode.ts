@@ -198,7 +198,7 @@ export class TreeNode {
     }
   }
 
-  iterator(filterIn?: (n: TreeNode) => boolean): IterableIterator<TreeNode> {
+  iterator(filterIn?: (n: TreeNode) => boolean | null): IterableIterator<TreeNode> {
     // iterator(filterIn?: (n: TreeNode) => boolean): IterableIterator<this> {
     function* gen(node: TreeNode): IterableIterator<unknown> {
       if (!filterIn || filterIn(node)) yield node;

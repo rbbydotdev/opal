@@ -255,8 +255,28 @@ interface RemoteSearchConfig<T extends Record<string, any>> {
   mapResult?: (item: T, highlightedElement?: ReactNode) => { label: string; value: string; element: ReactNode };
 }
 
+export function useRemoteSearchFn<T = any>(
+  fetchAll: RemoteAuthAgentSearchType<T>["fetchAll"],
+  hasUpdates: RemoteAuthAgentSearchType<T>["hasUpdates"],
+  {
+    config,
+    defaultValue = "",
+  }: {
+    config: RemoteSearchConfig<any>;
+    defaultValue?: string;
+  }
+) {
+  return useRemoteSearch<any>({
+    agent: {
+      fetchAll,
+      hasUpdates,
+    },
+    config,
+    defaultValue,
+  });
+}
 // Core generic search hook
-function useRemoteSearch<T extends Record<string, any>>({
+export function useRemoteSearch<T extends Record<string, any>>({
   agent,
   config,
   defaultValue = "",
@@ -433,6 +453,31 @@ export function useRemoteGitRepo<T = { name: string }>({
       valid: `Press Enter to create repository "${repoPrefix}${result.ident.name.trim()}"`,
     },
   };
+}
+
+export function useRemoteCloudflareProject({
+  createRequest,
+  defaultName,
+}: {
+  createRequest: (name: string, { signal }: { signal?: AbortSignal }) => Promise<any>;
+  defaultName?: string;
+}): {
+  request: RemoteItemType.Request<any>;
+  ident: RemoteItemType.Ident;
+  msg: RemoteItemType.Msg;
+} {
+  return useRemoteResource<any>({
+    createRequest,
+    defaultName,
+    config: {
+      messages: {
+        creating: "Creating Cloudflare project...",
+        askToEnter: "Enter a name to create a new Cloudflare project",
+        validPrefix: "Press Enter to create Cloudflare project",
+        errorFallback: "Failed to create project",
+      },
+    },
+  });
 }
 
 export function useRemoteVercelProject({

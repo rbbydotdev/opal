@@ -3,6 +3,7 @@ import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefresh } from "@/
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { mapToTypedError } from "@/lib/errors";
 import { Vercel } from "@vercel/sdk";
+import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 import { GetProjectsProjects } from "@vercel/sdk/models/getprojectsop.js";
 import { VercelError } from "@vercel/sdk/models/vercelerror.js";
 
@@ -61,6 +62,67 @@ export abstract class RemoteAuthVercelAgent
         { signal, mode: "cors" }
       )
       .catch(RemoteAuthVercelAgent.handleError);
+  }
+  async deploy({ projectName, files }: { projectName: string; files: InlinedFile[] }) {
+    const { id, url } = await this.vercelClient.deployments.createDeployment(
+      {
+        requestBody: {
+          name: projectName,
+          files,
+        },
+      },
+      {
+        mode: "cors",
+      }
+    );
+    return { deploymentId: id, deploymentUrl: url };
+  }
+
+  pollProjectDeploymentStatus({
+    deploymentId,
+    onStatus,
+    pollInterval = 2500,
+    signal,
+  }: {
+    deploymentId: string;
+    onStatus: (status: string) => void;
+    pollInterval?: number;
+    signal?: AbortSignal;
+  }): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(async () => {
+        try {
+          const deployment = await this.vercelClient.deployments.getDeployment(
+            {
+              idOrUrl: deploymentId,
+            },
+            {
+              signal,
+              mode: "cors",
+            }
+          );
+          onStatus(deployment.status);
+          if (deployment.status === "READY") {
+            clearInterval(interval);
+            resolve();
+          }
+          if (deployment.status === "ERROR") {
+            clearInterval(interval);
+            reject(new Error(deployment.errorMessage || "Deployment failed with unknown error"));
+          }
+        } catch (error) {
+          clearInterval(interval);
+          reject(error);
+        }
+      }, pollInterval);
+
+      if (signal) {
+        signal.addEventListener("abort", () => {
+          clearInterval(interval);
+          reject(new Error("Polling aborted"));
+        });
+      }
+    });
   }
 
   async getProject({ name, teamId }: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {

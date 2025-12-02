@@ -2,7 +2,6 @@ import { Disk } from "@/data/disk/Disk";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
-import { OPAL_AUTHOR } from "@/app/GitConfig";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
@@ -48,16 +47,20 @@ const isDeployBundleTreeDirEntry = (
 };
 
 type DeployBundleTree = DeployBundleTreeEntry[];
+export type DeployBundleTreeFileOnly = Extract<DeployBundleTreeEntry, { type: "file" }>[];
 
 export class DeployBundle {
-  constructor(readonly disk: Disk) {}
+  constructor(
+    readonly disk: Disk,
+    readonly buildDir = absPath("/")
+  ) {}
 
-  getDeployBundleFiles = async (rootPath = absPath("/")): Promise<DeployBundleTree> => {
+  getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly> => {
     await this.disk.refresh();
     return Promise.all(
       [...this.disk.fileTree.root.deepCopy().iterator((node: TreeNode) => node.isTreeFile())].map(async (node) =>
         DeployFile({
-          path: resolveFromRoot(rootPath, node.path),
+          path: resolveFromRoot(this.buildDir, node.path),
           getContent: async () => this.disk.readFile(node.path) as Promise<DeployBundleTreeFileContent>,
           encoding: isStringish(node.path) ? "utf-8" : "base64",
         })
@@ -68,7 +71,6 @@ export class DeployBundle {
   async deployWithGit({
     ghPagesBranch = "gh-pages",
     remoteAuth,
-    buildDir = absPath("/"),
     disk = this.disk,
     url,
   }: {
@@ -78,13 +80,11 @@ export class DeployBundle {
     buildDir?: AbsPath;
     disk?: Disk;
   }): Promise<void> {
-    // const isGithubRemoteAuth
     if (!isGithubRemoteAuth(remoteAuth)) {
       throw new ApplicationError(errF`Only GitHub remote auth is supported for deploy`);
     }
     try {
-      const repo = GitRepo.New(disk, `DeployGit/${disk.guid}`, buildDir, ghPagesBranch, OPAL_AUTHOR);
-      const playbook = new GitPlaybook(repo);
+      const playbook = new GitPlaybook(GitRepo.GHPagesRepo(disk, this.buildDir, ghPagesBranch));
       await playbook.initialCommit("deploy bundle commit");
       await playbook.pushRemoteAuth({
         remoteAuth,
@@ -93,16 +93,15 @@ export class DeployBundle {
         url,
       });
     } catch (error) {
-      //check if network error?
       throw new ApplicationError(errF`Failed to deploy bundle via git: ${error}`);
     }
   }
 
-  async bundleTreeZipStream(buildDir = absPath("/"), disk: Disk = this.disk): Promise<ReadableStream<any>> {
+  async bundleTreeZipStream(disk: Disk = this.disk): Promise<ReadableStream<any>> {
     await disk.refresh();
     return await archiveTree({
       fileTree: disk.fileTree,
-      scope: buildDir,
+      scope: this.buildDir,
       prefixPath: absPath("/bundle"),
       onFileError: (error, filePath) => {
         throw new ApplicationError(errF`Failed to add file to zip: ${filePath} ${error}`);

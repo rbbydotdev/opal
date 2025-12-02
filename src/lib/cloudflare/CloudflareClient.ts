@@ -1,5 +1,18 @@
 import { mapToTypedError } from "@/lib/errors";
+import Cloudflare from "cloudflare";
 
+export class CloudflareClient2 {
+  private cf: Cloudflare;
+  private accountId: string;
+
+  constructor({ apiToken, apiKey, accountId }: { apiToken: string; apiKey: string; accountId: string }) {
+    this.cf = new Cloudflare({
+      apiToken,
+      apiKey,
+    });
+    this.accountId = accountId;
+  }
+}
 export class CloudflareClient {
   private apiToken: string;
   private baseUrl = "https://api.cloudflare.com/client/v4";
