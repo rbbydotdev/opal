@@ -1,5 +1,6 @@
 import { ENV } from "@/lib/env";
 import { mapToTypedError } from "@/lib/errors";
+import { optionalCORSBaseURL } from "@/lib/optionalCORSBaseURL";
 import { stripTrailingSlash } from "@/lib/paths2";
 import { createOAuthDeviceAuth } from "@octokit/auth-oauth-device";
 import { Octokit } from "@octokit/core";
@@ -38,7 +39,7 @@ export async function GithubDeviceAuthFlow({
   const authResult = await auth({ type: "oauth" });
 
   try {
-    const baseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/api.github.com` : undefined;
+    const baseUrl = optionalCORSBaseURL(corsProxy, "api.github.com");
     const octokit = new Octokit({
       auth: authResult.token,
       baseUrl,

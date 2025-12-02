@@ -267,7 +267,7 @@ async function handleProxy(request: Request, env: Env): Promise<Response> {
   }
 }
 
-// Create CORS with all possible headers (including AWS) for simplicity
+// Create CORS with all possible headers (including AWS and Cloudflare) for simplicity
 const { preflight, corsify } = cors({
   credentials: true,
   origin: ALLOWED_ORIGINS,
@@ -278,26 +278,24 @@ const { preflight, corsify } = cors({
     "authorization",
     "X-Requested-With",
     "Accept",
+    "Access-Control-Allow-Origin",
     "Accept-Encoding",
     "Accept-Language",
     "User-Agent",
     "Cache-Control",
     "Pragma",
+    // Cloudflare SDK (Stainless) headers
+    "api-version",
+    "x-stainless-arch",
+    "x-stainless-lang",
+    "x-stainless-os", 
+    "x-stainless-package-version",
+    "x-stainless-retry-count",
+    "x-stainless-runtime",
+    "x-stainless-runtime-version",
+    "x-stainless-timeout",
     // AWS headers for all requests (simpler approach)
-    ...getAllowedHeaders().filter(
-      (h) =>
-        ![
-          "Content-Type",
-          "Authorization",
-          "X-Requested-With",
-          "Accept",
-          "Accept-Encoding",
-          "Accept-Language",
-          "User-Agent",
-          "Cache-Control",
-          "Pragma",
-        ].includes(h)
-    ),
+    ...getAllowedHeaders(),
   ],
   exposeHeaders: ["etag", ...getExposedHeaders().filter((h) => h !== "etag")],
   maxAge: 86400,
