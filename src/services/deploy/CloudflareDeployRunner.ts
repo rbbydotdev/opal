@@ -25,10 +25,6 @@ export class CloudflareDeployRunner extends DeployRunner<CloudflareDeployData> {
         accountId: options.accountId || "",
       },
     });
-
-    if (this.destination) {
-      this.cloudflareClient = (this.destination as RemoteAuthCloudflareAPIAgent).cloudflareClient;
-    }
   }
 
   protected getDestinationName(): string {

@@ -3,23 +3,15 @@ import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 
 import Cloudflare from "cloudflare";
-// import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
-//
-
-// export class CloudflareClient2 {
-//   private cf: Cloudflare;
-//   private accountId: string;
-
-//   constructor({ apiToken, apiKey, accountId }: { apiToken: string; apiKey: string; accountId: string }) {
-//     this.cf = new Cloudflare({
-//       apiToken,
-//       apiKey,
-//     });
-//     this.accountId = accountId;
-//   }
-// }
 export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   private _cloudflareClient!: Cloudflare;
+  private _accountId: string | null = null;
+  getAccountId() {
+    return this._accountId;
+  }
+  setAccountId(accountId: string) {
+    this._accountId = accountId;
+  }
 
   get cloudflareClient() {
     return (
@@ -30,29 +22,22 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     );
   }
 
-  createProject(params: { name: string }, options: { signal?: AbortSignal } = {}) {
-    return this.cloudflareClient;
-  }
-
   getUsername(): string {
     return "cloudflare-api";
   }
   toProjectSearchAgent(): RemoteAuthAgentSearchType<any> {
     return {
-      fetchAll: this.fetchAll.bind(this),
+      fetchAll: this.fetchAllProjects.bind(this),
       hasUpdates: this.hasUpdates.bind(this),
     };
   }
   toAccountSearchAgent(): RemoteAuthAgentSearchType<any> {
     return {
-      fetchAll: this.fetchAll.bind(this),
+      fetchAll: this.fetchAllAccounts.bind(this),
       hasUpdates: this.hasUpdates.bind(this),
     };
   }
 
-  async fetchAll() {
-    return []; //r2 buckets
-  }
   async hasUpdates() {
     return { updated: true, newEtag: null };
   }
@@ -69,5 +54,46 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     return { status: "success" };
   }
 
-  constructor(private remoteAuth: CloudflareAPIRemoteAuthDAO) {}
+  private cf: Cloudflare;
+
+  constructor(private remoteAuth: CloudflareAPIRemoteAuthDAO) {
+    this.cf = new Cloudflare({
+      apiToken: this.remoteAuth.data.apiKey,
+    });
+  }
+  async fetchAllAccounts({ signal }: { signal?: AbortSignal } = {}) {
+    const accounts = [];
+    const res = await this.cf.accounts.list({ signal });
+    for await (const page of res.iterPages()) {
+      accounts.push(...page.result);
+      if (signal?.aborted) break;
+    }
+    return accounts;
+  }
+  async fetchAllProjects({ signal }: { signal?: AbortSignal } = {}) {
+    const projects = [];
+    if (!this.getAccountId()) {
+      return [];
+    }
+    const res = await this.cf.pages.projects.list(
+      { account_id: this.getAccountId()! },
+      {
+        signal,
+      }
+    );
+    for await (const page of res.iterPages()) {
+      projects.push(...page.result);
+      if (signal?.aborted) break;
+    }
+    return projects.map((project) => ({ name: project.project_name, accountId: this.getAccountId()! }));
+  }
+  createProject({ name }: { name: string }, { signal }: { signal?: AbortSignal } = {}) {
+    return this.cf.pages.projects.create(
+      {
+        account_id: this.getAccountId()!,
+        name,
+      },
+      { signal }
+    );
+  }
 }

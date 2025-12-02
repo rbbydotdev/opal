@@ -200,7 +200,8 @@ export type CloudflareAPIRemoteAuthDAO = Omit<RemoteAuthDAO, "data"> & {
   source: "cloudflare";
   data: RemoteAuthDataFor<"api">;
 };
-export function isCloudflareAPIRemoteAuthDAO(record: RemoteAuthDAO): record is CloudflareAPIRemoteAuthDAO {
+export function isCloudflareAPIRemoteAuthDAO(record: RemoteAuthDAO | null): record is CloudflareAPIRemoteAuthDAO {
+  if (!record) return false;
   return record.type === "api" && record.source === "cloudflare";
 }
 

@@ -3,14 +3,35 @@ import Cloudflare from "cloudflare";
 
 export class CloudflareClient2 {
   private cf: Cloudflare;
-  private accountId: string;
 
-  constructor({ apiToken, apiKey, accountId }: { apiToken: string; apiKey: string; accountId: string }) {
+  constructor({ apiToken, apiKey }: { apiToken: string; apiKey: string }) {
     this.cf = new Cloudflare({
       apiToken,
       apiKey,
     });
-    this.accountId = accountId;
+  }
+  async fetchAllAccounts() {
+    const accounts = [];
+    const res = await this.cf.accounts.list();
+    for await (const page of res.iterPages()) {
+      accounts.push(...page.result);
+    }
+    return accounts;
+  }
+  async fetchAllProjects({ accountId }: { accountId: string }) {
+    const projects = [];
+    // const account_id = accountId ? accountId : (await this.cf.accounts.list()).result[0]!.id;
+    const res = await this.cf.pages.projects.list({ account_id: accountId });
+    for await (const page of res.iterPages()) {
+      projects.push(...page.result);
+    }
+    return projects;
+  }
+  createProject({ accountId, name }: { accountId: string; name: string }) {
+    return this.cf.pages.projects.create({
+      account_id: accountId,
+      name,
+    });
   }
 }
 export class CloudflareClient {
