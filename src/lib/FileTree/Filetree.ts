@@ -1,6 +1,5 @@
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { isErrorWithCode, NotFoundError } from "@/lib/errors";
-import { exhaustAsyncGenerator } from "@/lib/exhaustAsyncGenerator";
 import {
   TreeDir,
   TreeDirRoot,
@@ -121,7 +120,8 @@ export class FileTree {
   }
 
   async index(tree?: TreeDirRoot) {
-    await exhaustAsyncGenerator(this.indexIter(tree));
+    for await (const _ of this.indexIter(tree)) {
+    }
     return this.root;
   }
   //forces the index, for the case of loading from cache

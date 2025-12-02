@@ -265,6 +265,7 @@ function GitRemoteDialogInternal({
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
 
+  // const storageObject = useRef({}).current;
   // Search functionality
   const searchAgent = useMemo(
     () => (remoteAuth ? new RemoteAuthGithubAPIAgent(remoteAuth as GithubAPIRemoteAuthDAO) : null),
