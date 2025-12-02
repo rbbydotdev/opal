@@ -34,10 +34,10 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
     return user.data.login;
   }
 
-  async *fetchAll({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
+  async fetchAll({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
     const allRepos: Repo[] = [];
     let page = 1;
-    const perPage = 10;
+    const perPage = 100;
 
     while (true) {
       const response = await this.octokit.request("GET /user/repos", {
@@ -49,10 +49,6 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
         },
         request: { signal },
       });
-      const linkHeader = response.headers.link;
-      if (!linkHeader || !linkHeader.includes('rel="next"')) {
-        break; // No more pages
-      }
 
       // Add defensive check for response.data
       if (!Array.isArray(response.data)) {
@@ -68,12 +64,17 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
         description,
         html_url,
       }));
-      yield result;
       allRepos.push(...result);
 
       page++;
+      const linkHeader = response.headers.link;
+      if (!linkHeader || !linkHeader.includes('rel="next"')) {
+        console.log(linkHeader);
+        break; // No more pages
+      }
     }
 
+    console.log(allRepos);
     return allRepos;
   }
 
