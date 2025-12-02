@@ -345,6 +345,26 @@ export function RemoteResourceInput({
   );
 }
 
+export function RemoteResourceSearchInput({
+  label,
+  placeholder,
+  searchButtonTitle = "Search",
+  searchReset,
+  onSearchChange,
+}: {
+  label: string;
+  placeholder: string;
+  searchButtonTitle?: string;
+  searchReset?: () => void;
+  onSearchChange: (value: string) => void;
+}) {
+  return (
+    <RemoteResourceInputField label={label} placeholder={placeholder}>
+      <RemoteResourceSearchButton title={searchButtonTitle} onSearchChange={onSearchChange} searchReset={searchReset} />
+    </RemoteResourceInputField>
+  );
+}
+
 export const RemoteResource = {
   Root: RemoteResourceRoot as <T extends FieldValues, K extends FieldPath<T>>(
     props: RemoteResourceRootProps<T, K>

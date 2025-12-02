@@ -1,14 +1,14 @@
 import {
   RemoteResourceCreate,
+  RemoteResourceInput,
   RemoteResourceRoot,
   RemoteResourceSearch,
+  RemoteResourceSearchInput,
 } from "@/components/publish-modal/RemoteResourceField";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
 import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthCloudflareAPIAgent } from "@/data/RemoteAuthCloudflareAPIAgent";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { CloudflareAPIRemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { useMemo } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { useRemoteCloudflareProject, useRemoteSearch } from "../RemoteConnectionItem";
 /*
@@ -27,7 +27,7 @@ function CloudflareAccountIdSearchDropdown({
   agent: RemoteAuthCloudflareAPIAgent;
   form: UseFormReturn<DestinationMetaType<"cloudflare">>;
 }) {
-  const { isLoading, searchValue, updateSearch, searchResults, error, setEnabled } = useRemoteSearch({
+  const { isLoading, searchValue, updateSearch, searchResults, error, setEnabled, reset: searchReset } = useRemoteSearch({
     agent: agent.toAccountSearchAgent(),
     config: { searchKey: "accountId" },
   });
@@ -48,6 +48,13 @@ function CloudflareAccountIdSearchDropdown({
         searchResults={searchResults}
         error={error}
       />
+      <RemoteResourceSearchInput
+        label="Account Id"
+        placeholder="Enter account ID"
+        searchButtonTitle="Search Accounts"
+        onSearchChange={updateSearch}
+        searchReset={searchReset}
+      />
     </RemoteResourceRoot>
   );
 }
@@ -59,17 +66,17 @@ function CloudflareProjectNameSearchDropdown({
   agent: RemoteAuthCloudflareAPIAgent;
   form: UseFormReturn<DestinationMetaType<"cloudflare">>;
 }) {
+  const { isLoading, searchValue, clearCache, updateSearch, searchResults, error, setEnabled, reset: searchReset } = useRemoteSearch({
+    agent: agent.toProjectSearchAgent(),
+    config: { searchKey: "name" },
+  });
   const { ident, msg, request } = useRemoteCloudflareProject({
     createRequest: async (name: string, options: { signal?: AbortSignal }) => {
       const response = await agent.createProject({ name }, options);
       clearCache();
       return response;
     },
-    defaultName,
-  });
-  const { isLoading, searchValue, updateSearch, searchResults, error, setEnabled } = useRemoteSearch({
-    agent: agent.toProjectSearchAgent(),
-    config: { searchKey: "name" },
+    defaultName: "",
   });
 
   return (
@@ -80,7 +87,7 @@ function CloudflareProjectNameSearchDropdown({
       getValue={() => form.getValues("meta.projectName")}
     >
       <RemoteResourceSearch
-        label="Account Id"
+        label="Project Name"
         isLoading={isLoading}
         searchValue={searchValue}
         onActive={() => setEnabled(true)}
@@ -88,7 +95,17 @@ function CloudflareProjectNameSearchDropdown({
         searchResults={searchResults}
         error={error}
       />
-      <RemoteResourceCreate></RemoteResourceCreate>
+      <RemoteResourceCreate label="Project Name" placeholder="my-project" ident={ident} msg={msg} request={request} />
+      <RemoteResourceInput
+        label="Project Name"
+        placeholder="my-project"
+        createButtonTitle="Create Project"
+        searchButtonTitle="Search Projects"
+        ident={ident}
+        onSearchChange={updateSearch}
+        searchReset={searchReset}
+        createReset={request.reset}
+      />
     </RemoteResourceRoot>
   );
 }
@@ -98,38 +115,14 @@ export function CloudflareDestinationForm({
   remoteAuth,
 }: {
   form: UseFormReturn<DestinationMetaType<"cloudflare">>;
-  remoteAuth: RemoteAuthDAO | null;
+  remoteAuth: CloudflareAPIRemoteAuthDAO | null;
 }) {
-  const agent = useRemoteAuthAgent<RemoteAuthCloudflareAPIAgent>(remoteAuth);
+  const agent = useMemo(() => (remoteAuth ? new RemoteAuthCloudflareAPIAgent(remoteAuth) : null), [remoteAuth]);
+  if (!agent) return null;
   return (
     <>
-      <FormField
-        control={form.control}
-        name="meta.accountId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Account Id</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="account-id" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="meta.projectName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Project Name</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="my-cloudflare-site-id" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
       <CloudflareAccountIdSearchDropdown agent={agent} form={form} />
+      <CloudflareProjectNameSearchDropdown agent={agent} form={form} />
     </>
   );
 }

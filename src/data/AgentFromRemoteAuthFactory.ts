@@ -1,7 +1,6 @@
 import {
   isAWSAPIRemoteAuthDAO,
   isBasicAuthRemoteAuthDAO,
-  isCloudflareAPIRemoteAuthDAO,
   isGithubAPIRemoteAuthDAO,
   isGithubDeviceOAuthRemoteAuthDAO,
   isGithubOAuthRemoteAuthDAO,
@@ -22,7 +21,6 @@ import { RemoteAuthNetlifyOAuthAgent } from "./RemoteAuthNetlifyOAuthAgent";
 import { RemoteAuthVercelAPIAgent } from "./RemoteAuthVercelAPIAgent";
 import { RemoteAuthVercelOAuthAgent } from "./RemoteAuthVercelOAuthAgent";
 
-import { RemoteAuthCloudflareAPIAgent } from "@/data/RemoteAuthCloudflareAPIAgent";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { useMemo } from "react";
 
@@ -60,17 +58,14 @@ export function AgentFromRemoteAuthFactory<T extends RemoteAuthDAO>(
   if (isVercelAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthVercelAPIAgent(remoteAuth);
   }
-  if (isCloudflareAPIRemoteAuthDAO(remoteAuth)) {
-    return new RemoteAuthCloudflareAPIAgent(remoteAuth);
-  }
+  // if (isCloudflareAPIRemoteAuthDAO(remoteAuth)) {
+  //   return new RemoteAuthCloudflareAPIAgent(remoteAuth);
+  // }
   if (isVercelOAuthRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthVercelOAuthAgent(remoteAuth);
   }
   if (isAWSAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthAWSAPIAgent(remoteAuth);
-  }
-  if (isCloudflareAPIRemoteAuthDAO(remoteAuth)) {
-    return new RemoteAuthCloudflareAPIAgent(remoteAuth);
   }
   throw new Error(`No Agent for this type: ${remoteAuth.type} source: ${remoteAuth.source}`);
 }

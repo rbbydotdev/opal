@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnyDestinationMetaType, DestinationDAO, DestinationJType, DestinationMetaType } from "@/data/DestinationDAO";
 import { DestinationSchemaMap, DestinationType } from "@/data/DestinationSchemaMap";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { isCloudflareAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Pencil, Plus, Zap } from "lucide-react";
@@ -268,7 +268,7 @@ export function PublicationModalDestinationContent({
             defaultName={defaultName}
           />
         )}
-        {destinationType === "cloudflare" && (
+        {destinationType === "cloudflare" && isCloudflareAPIRemoteAuthDAO(remoteAuth) && (
           <CloudflareDestinationForm
             form={form as UseFormReturn<DestinationMetaType<typeof destinationType>>}
             remoteAuth={remoteAuth}
