@@ -3,6 +3,7 @@ import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 
 import Cloudflare from "cloudflare";
+import { optionalCORSBaseURL } from "../lib/optionalCORSBaseURL";
 
 export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   private _cloudflareClient!: Cloudflare;
@@ -14,12 +15,14 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     this._accountId = accountId;
   }
 
-  get cloudflareClient() {
+  get cf() {
+    console.log(">>>>>>>>>>>>>>>>>", optionalCORSBaseURL(this.remoteAuth.data.corsProxy, "api.cloudflare.com"));
+    // 'Access-Control-Allow-Headers': '*', // **Allows all headers**
     return (
       this._cloudflareClient ||
       (this._cloudflareClient = new Cloudflare({
         apiToken: this.getApiToken(),
-        baseURL: this.remoteAuth.data.corsProxy ? this.remoteAuth.data.corsProxy : undefined,
+        baseURL: optionalCORSBaseURL(this.remoteAuth.data.corsProxy, "api.cloudflare.com"),
       }))
     );
   }
@@ -45,7 +48,7 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   }
 
   deploy() {
-    this.cloudflareClient;
+    throw new Error("Method not implemented.");
   }
 
   getApiToken(): string {
@@ -56,13 +59,7 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     return { status: "success" };
   }
 
-  private cf: Cloudflare;
-
-  constructor(private remoteAuth: CloudflareAPIRemoteAuthDAO) {
-    this.cf = new Cloudflare({
-      apiToken: this.remoteAuth.data.apiKey,
-    });
-  }
+  constructor(private remoteAuth: CloudflareAPIRemoteAuthDAO) {}
   async fetchAllAccounts({ signal }: { signal?: AbortSignal } = {}) {
     const accounts = [];
     const res = await this.cf.accounts.list({ signal });
