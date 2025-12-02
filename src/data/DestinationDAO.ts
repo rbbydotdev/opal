@@ -1,12 +1,12 @@
+import { DestinationSchemaTypeMap, DestinationType } from "@/data/DestinationSchemaMap";
 import { ClientDb } from "@/data/instance";
 import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
-import { RemoteAuthJType, RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors";
 import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
 import { getUniqueSlug, getUniqueSlugAsync } from "@/lib/getUniqueSlug";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { nanoid } from "nanoid";
-import z from "zod";
 
 export type DestinationJType<T = unknown> = ReturnType<DestinationDAO<T>["toJSON"]>;
 
@@ -129,129 +129,8 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 }
 
-type CloudflareDestinationData = z.infer<(typeof DestinationSchemaMap)["cloudflare"]>["meta"];
-export class CloudflareDestination extends DestinationDAO<CloudflareDestinationData> {}
-
-type NetlifyDestinationData = z.infer<(typeof DestinationSchemaMap)["netlify"]>["meta"];
-export class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {}
-
-type AWSDestinationData = z.infer<(typeof DestinationSchemaMap)["aws"]>["meta"];
-export class AWSDestination extends DestinationDAO<AWSDestinationData> {}
-
-type GitHubDestinationData = z.infer<(typeof DestinationSchemaMap)["github"]>["meta"];
-export class GitHubDestination extends DestinationDAO<GitHubDestinationData> {}
-
-type VercelDestinationData = z.infer<(typeof DestinationSchemaMap)["vercel"]>["meta"];
-export class VercelDestination extends DestinationDAO<VercelDestinationData> {}
-
-const RandomTag = (tag: string) =>
+export const RandomTag = (tag: string) =>
   `My-${tag}-${RandomSlugWords(1)}-${`${Math.trunc(Math.random() * 100)}`.padStart(3, "0")}`;
-
-export const DestinationSchemaMap = {
-  cloudflare: z
-    .object({
-      remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
-      label: z.string().trim().min(1, "Label is required"),
-      meta: z.object({
-        accountId: z.string().trim().min(1, "Account ID is required"),
-        siteId: z.string().trim().min(1, "Site ID is required"),
-      }),
-    })
-    .default(() => ({
-      remoteAuthId: "",
-      label: RandomTag("Cloudflare"),
-      meta: { accountId: "", siteId: "" },
-    })),
-  vercel: z
-    .object({
-      remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
-      label: z.string().trim().min(1, "Label is required"),
-      meta: z.object({
-        /*
-        : "Project names can be up to 100 characters long and must be lowercase. They can include letters, digits, and the following characters: '.', '_', '-'. However, they cannot contain the sequence '---'
-        */
-        project: z
-          .string()
-          .trim()
-          .min(1, "Project is required")
-          .max(100, "Project name is too long")
-          .regex(/^[a-z0-9._-]+$/, "Project name must be lowercase and can include letters, digits, '.', '_', and '-'")
-          .refine((val) => !val.includes("---"), "Project name cannot contain the sequence '---'"),
-        // implicit! projectId: z.string().trim(),
-        // implicit! teamId: z.string().trim().optional(),
-      }),
-    })
-    .default(() => ({
-      remoteAuthId: "",
-      label: RandomTag("Vercel"),
-      meta: {
-        project: "",
-      },
-    })),
-  netlify: z
-    .object({
-      remoteAuthId: z.string().trim(),
-      label: z.string().trim().min(1, "Label is required"),
-      meta: z.object({
-        // implicit! accountId: z.string().trim(),
-        siteName: z.string().trim().min(1, "Site Name is required"),
-      }),
-    })
-    .default(() => ({
-      remoteAuthId: "",
-      label: RandomTag("Netlify"),
-      meta: {
-        siteName: "",
-      },
-    })),
-  github: z
-    .object({
-      remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
-      label: z.string().trim().min(1, "Label is required"),
-      meta: z.object({
-        repository: z.string().trim().min(1, "Repository is required"),
-        branch: z.string().trim().min(1, "Branch is required"),
-      }),
-    })
-    .default(() => ({
-      remoteAuthId: "",
-      label: RandomTag("Github"),
-      meta: { repository: "", branch: "gh-pages" },
-    })),
-  aws: z
-    .object({
-      remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
-      label: z.string().trim().min(1, "Label is required"),
-      meta: z.object({
-        bucketName: z.string().trim().min(1, "Bucket name is required").toLowerCase(),
-        region: z.string().trim().min(1, "Region is required"),
-      }),
-    })
-    .default(() => ({
-      remoteAuthId: "",
-      label: RandomTag("AWS"),
-      meta: { bucketName: "", region: "us-east-1" },
-    })),
-  custom: z
-    .object({
-      remoteAuthId: z.string().trim().default(""),
-      label: z.string().trim().default(""),
-      meta: z.object({}),
-    })
-    .default(() => ({
-      remoteAuthId: "",
-      label: "",
-      meta: {
-        endpoint: z.string().trim().url().default("https://example.com"),
-      },
-    })),
-} satisfies Record<RemoteAuthSource, z.ZodTypeAny>;
-
-export type DestinationType = keyof typeof DestinationSchemaMap;
-
-export type DestinationSchemaTypeMap<DestinationType extends keyof typeof DestinationSchemaMap> = z.infer<
-  (typeof DestinationSchemaMap)[DestinationType]
->;
 
 // Union type of all possible destination form data
 export type AnyDestinationMetaType = {

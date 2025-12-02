@@ -75,7 +75,6 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
         >
           <iframe
             ref={iframeRef}
-            // sandbox="allow-same-origin"
             className="w-full h-full border-0 bg-white"
             title={`${currentWorkspace.name} ${relPath(path)}`}
           />
