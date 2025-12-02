@@ -51,6 +51,9 @@ export function ModalShell({
 
       // Default escape behavior
       if (event.target instanceof HTMLElement && event.target.closest(`[data-no-escape]`)) {
+        console.log(">>>>>>>>>>");
+        //blur the element to remove focus
+        event.target.blur();
         return event.preventDefault();
       }
       event.preventDefault();

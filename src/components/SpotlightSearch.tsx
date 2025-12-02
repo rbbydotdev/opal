@@ -820,8 +820,23 @@ export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorksp
   const cmdMap = useMemo(
     () =>
       ({
-        // MARK: Build/Publish Commands
+        //MARK: Navigation Commands
+        "New Workspace": [
+          NewCmdExec(() => {
+            void navigate({
+              to: "/newWorkspace",
+            });
+          }),
+        ],
+        Home: [
+          NewCmdExec(() => {
+            void navigate({
+              to: "/",
+            });
+          }),
+        ],
 
+        // MARK: Build/Publish Commands
         "Build to HTML": [
           NewCmdExec(() => {
             void openNew();

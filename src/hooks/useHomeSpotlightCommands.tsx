@@ -33,9 +33,22 @@ const NewCmdSelect = (
 export function useHomeSpotlightCommands() {
   const navigate = useNavigate();
   const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useTheme();
-
   const cmdMap = useMemo(
     () => ({
+      "New Workspace": [
+        NewCmdExec(() => {
+          void navigate({
+            to: "/newWorkspace",
+          });
+        }),
+      ],
+      Home: [
+        NewCmdExec(() => {
+          void navigate({
+            to: "/",
+          });
+        }),
+      ],
       "Create Workspace": [
         NewCmdPrompt("workspace_name", "Enter workspace name"),
         NewCmdExec(async (context) => {

@@ -34,21 +34,25 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
     return user.data.login;
   }
 
-  async fetchAll({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
+  async *fetchAll({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
     const allRepos: Repo[] = [];
     let page = 1;
-    let hasMore = true;
+    const perPage = 10;
 
-    while (hasMore) {
+    while (true) {
       const response = await this.octokit.request("GET /user/repos", {
         page,
-        per_page: 50,
+        per_page: perPage,
         affiliation: "owner,collaborator",
         headers: {
           "If-None-Match": "", // Force fresh response, bypass browser cache
         },
         request: { signal },
       });
+      const linkHeader = response.headers.link;
+      if (!linkHeader || !linkHeader.includes('rel="next"')) {
+        break; // No more pages
+      }
 
       // Add defensive check for response.data
       if (!Array.isArray(response.data)) {
@@ -56,18 +60,17 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
         throw new Error(`GitHub API returned unexpected response format. Expected array, got: ${typeof response.data}`);
       }
 
-      allRepos.push(
-        ...response.data.map(({ updated_at, id, name, full_name, description, html_url }) => ({
-          updated_at: new Date(updated_at ?? Date.now()),
-          id,
-          name,
-          full_name,
-          description,
-          html_url,
-        }))
-      );
+      const result = response.data.map(({ updated_at, id, name, full_name, description, html_url }) => ({
+        updated_at: new Date(updated_at ?? Date.now()),
+        id,
+        name,
+        full_name,
+        description,
+        html_url,
+      }));
+      yield result;
+      allRepos.push(...result);
 
-      hasMore = response.data.length === 100;
       page++;
     }
 
