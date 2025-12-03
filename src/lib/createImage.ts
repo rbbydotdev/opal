@@ -39,7 +39,7 @@ interface ConvertImageOptions extends BaseImageOptions {
  *
  * @returns A Promise that resolves to the converted (or original) File.
  */
-const convertImage = async ({
+export const convertImage = async ({
   imageInput,
   mimeType = "image/webp",
   prefixName = "image",

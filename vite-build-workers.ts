@@ -90,9 +90,9 @@ function createWorkerConfig({ name, entry, outFile }: WorkerConfig, isDev: boole
 }
 
 const BuildList = [
-  "SearchWorker",
   "ServiceWorker",
-  "DocxWorker",
+  // "SearchWorker",
+  // "DocxWorker",
   // "ImageWorker",
   // "ImageReplaceWorker",
   // "ImageWorker3",
