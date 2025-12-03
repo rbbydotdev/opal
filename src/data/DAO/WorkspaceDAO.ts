@@ -8,8 +8,8 @@ import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { slugifier } from "@/lib/slugifier";
 import { nanoid } from "nanoid";
-import { DiskJType, DiskType } from "./disk/DiskType";
-import { WorkspaceStatusCode, WS_OK } from "./WorkspaceStatusCode";
+import { DiskJType, DiskType } from "../disk/DiskType";
+import { WorkspaceStatusCode, WS_OK } from "../WorkspaceStatusCode";
 
 type WorkspaceGuid = Brand<string, "WorkspaceGuid">;
 

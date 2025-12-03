@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
-import { WorkspaceDAO } from "@/data/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { Opal } from "@/lib/Opal";
 import { cn } from "@/lib/utils";

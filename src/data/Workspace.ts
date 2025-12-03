@@ -1,10 +1,10 @@
 import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
 import { Disk } from "@/data/disk/Disk";
 import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "@/data/disk/DiskEvents";
 import { ImageCache } from "@/data/ImageCache";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { NamespacedThumb } from "@/data/Thumb";
-import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 import { WorkspaceScannable } from "@/data/WorkspaceScannable";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
