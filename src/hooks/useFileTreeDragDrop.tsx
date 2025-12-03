@@ -1,6 +1,6 @@
-import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { allowedFiletreePathMove } from "@/components/SidebarFileMenu/FileTree/allowedFiletreePathMove";
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { allowedFiletreePathMove } from "@/components/sidebar/FileTree/allowedFiletreePathMove";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { prepareNodeDataTransfer } from "@/features/filetree-copy-paste/prepareNodeDataTransfer";
 import { errF } from "@/lib/errors";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";

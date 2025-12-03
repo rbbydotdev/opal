@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { RelPath } from "@/lib/paths2";
 
 interface FrontMatter {

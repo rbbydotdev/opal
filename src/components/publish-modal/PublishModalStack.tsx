@@ -4,8 +4,8 @@ import { BuildPublisherCmd } from "@/components/publish-modal/PubicationModalCmd
 import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
-import { BuildSelector } from "@/components/SidebarFileMenu/build-files-section/BuildSelector";
-import { DestinationLabel } from "@/components/SidebarFileMenu/build-files-section/DestinationLabel";
+import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
+import { DestinationLabel } from "@/components/sidebar/build-files-section/DestinationLabel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";

@@ -1,4 +1,4 @@
-import { TreeFileJType, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeFileJType, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 
 export const INTERNAL_NODE_FILE_TYPE = "web application/opal-file-node+json";
 

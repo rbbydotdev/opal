@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { TreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { ExpandMap } from "@/features/tree-expander/TreeExpanderTypes";

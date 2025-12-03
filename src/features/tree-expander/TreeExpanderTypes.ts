@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 
 export type ExpandMap = { [path: string]: boolean };
 

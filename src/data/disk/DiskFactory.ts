@@ -1,4 +1,4 @@
-import { TreeDirRoot } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeDirRoot } from "@/components/sidebar/FileTree/TreeNode";
 import { Disk } from "@/data/disk/Disk";
 import { DiskJType } from "@/data/disk/DiskType";
 import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";

@@ -1,5 +1,5 @@
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { prepareNodeDataTransfer } from "@/features/filetree-copy-paste/prepareNodeDataTransfer";
 // prepareNodeDataTransfer
 export async function copyFileNodesToClipboard({

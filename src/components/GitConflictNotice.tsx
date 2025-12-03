@@ -1,4 +1,4 @@
-import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
+import { useFlashTooltip } from "@/components/sidebar/main-files-section/useFlashTooltip";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, GitMergeIcon } from "lucide-react";

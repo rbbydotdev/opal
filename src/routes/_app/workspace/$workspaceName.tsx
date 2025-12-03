@@ -1,5 +1,5 @@
+import { FileTreeMenuCtxProvider } from "@/app/filemenu/FileTreeMenuCtxProvider";
 import { EditorSidebar } from "@/components/EditorSidebar";
-import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
 import { WorkspaceSpotlightSearch } from "@/components/SpotlightSearch";
 import { PreviewIFrame } from "@/components/ui/PreviewIframe";
 import { FileTreeProvider } from "@/context/FileTreeProvider";

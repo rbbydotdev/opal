@@ -1,6 +1,6 @@
 import { useConfirm } from "@/components/Confirm";
-import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
-import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
+import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -359,7 +359,7 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
   // Find the current item data
-  const itemData = data && getItemId ? data.find(item => getItemId(item) === id) : undefined;
+  const itemData = data && getItemId ? data.find((item) => getItemId(item) === id) : undefined;
 
   // Separate menu from other children
   const menuChild = React.Children.toArray(children).find(
@@ -371,7 +371,7 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
 
   const itemContextValue: SelectableListItemContextValue = {
     itemId: id,
-    itemData
+    itemData,
   };
 
   return (
