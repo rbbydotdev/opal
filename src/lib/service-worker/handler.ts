@@ -1,17 +1,17 @@
 import { isImageType } from "@/lib/fileType";
 import { absPath } from "@/lib/paths2";
-import { handleDocxConvertRequest as handleDocxUploadRequest } from "@/lib/ServiceWorker/handleDocxConvertRequest";
-import { handleDownloadRequest } from "@/lib/ServiceWorker/handleDownloadRequest";
-import { handleDownloadRequestEncrypted } from "@/lib/ServiceWorker/handleDownloadRequestEncrypted";
-import { handleFaviconRequest } from "@/lib/ServiceWorker/handleFaviconRequest";
-import { handleFileReplace } from "@/lib/ServiceWorker/handleFileReplace";
-import { handleImageRequest } from "@/lib/ServiceWorker/handleImageRequest";
-import { handleImageUpload } from "@/lib/ServiceWorker/handleImageUpload";
-import { handleMdImageReplace } from "@/lib/ServiceWorker/handleMdImageReplace";
-import { handleStyleSheetRequest } from "@/lib/ServiceWorker/handleStyleSheetRequest";
-import { handleWorkspaceFilenameSearch } from "@/lib/ServiceWorker/handleWorkspaceFilenameSearch";
-import { handleWorkspaceSearch } from "@/lib/ServiceWorker/handleWorkspaceSearch";
-import { SuperUrl } from "@/lib/ServiceWorker/SuperUrl";
+import { handleDocxConvertRequest as handleDocxUploadRequest } from "@/lib/service-worker/handleDocxConvertRequest";
+import { handleDownloadRequest } from "@/lib/service-worker/handleDownloadRequest";
+import { handleDownloadRequestEncrypted } from "@/lib/service-worker/handleDownloadRequestEncrypted";
+import { handleFaviconRequest } from "@/lib/service-worker/handleFaviconRequest";
+import { handleFileReplace } from "@/lib/service-worker/handleFileReplace";
+import { handleImageRequest } from "@/lib/service-worker/handleImageRequest";
+import { handleImageUpload } from "@/lib/service-worker/handleImageUpload";
+import { handleMdImageReplace } from "@/lib/service-worker/handleMdImageReplace";
+import { handleStyleSheetRequest } from "@/lib/service-worker/handleStyleSheetRequest";
+import { handleWorkspaceFilenameSearch } from "@/lib/service-worker/handleWorkspaceFilenameSearch";
+import { handleWorkspaceSearch } from "@/lib/service-worker/handleWorkspaceSearch";
+import { SuperUrl } from "@/lib/service-worker/SuperUrl";
 import { withRequestSignal } from "./utils"; // Assuming utils are in the same dir
 
 // --- Handler Context ---

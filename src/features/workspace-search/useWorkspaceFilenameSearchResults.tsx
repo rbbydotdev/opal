@@ -1,5 +1,5 @@
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
-import { FilenameSearchResult } from "@/lib/ServiceWorker/handleWorkspaceFilenameSearch";
+import { FilenameSearchResult } from "@/lib/service-worker/handleWorkspaceFilenameSearch";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
@@ -174,7 +174,10 @@ export function useWorkspaceFilenameSearchResults(debounceMs = SEARCH_DEBOUNCE_M
   );
 
   const workspaceResults = Object.entries(
-    Object.groupBy(filteredResults, (result: FilenameSearchResult) => result.workspaceName) as Record<string, FilenameSearchResult[]>
+    Object.groupBy(filteredResults, (result: FilenameSearchResult) => result.workspaceName) as Record<
+      string,
+      FilenameSearchResult[]
+    >
   );
 
   const hasResults = filteredResults.length > 0;

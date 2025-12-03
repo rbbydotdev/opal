@@ -19,7 +19,7 @@ import { WS_BUTTON_BAR_ID } from "@/constants/layout";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { WorkspaceErrorBoundaryFallback } from "@/layouts/WorkspaceErrorBoundaryFallback";
-import { ServiceWorker } from "@/lib/ServiceWorker/SwSetup";
+import { ServiceWorker } from "@/lib/service-worker/SwSetup";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";

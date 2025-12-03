@@ -3,8 +3,8 @@ import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, joinPath, strictPathname } from "@/lib/paths2";
-import { REQ_SIGNAL } from "@/lib/ServiceWorker/request-signal-types";
-import { signalRequest } from "@/lib/ServiceWorker/utils";
+import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";
+import { signalRequest } from "@/lib/service-worker/utils";
 import * as fflate from "fflate";
 import { SWWStore } from "./SWWStore";
 
