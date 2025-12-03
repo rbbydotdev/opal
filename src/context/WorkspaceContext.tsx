@@ -1,4 +1,4 @@
-import { useWatchViewMode } from "@/components/Editor/view-mode/useWatchViewMode";
+import { useWatchViewMode } from "@/app/editor/view-mode/useWatchViewMode";
 import { isSourceMimeType } from "@/components/SourceEditor/SourceMimeType";
 import {
   AlertDialog,

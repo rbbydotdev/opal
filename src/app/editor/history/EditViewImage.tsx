@@ -1,8 +1,4 @@
-import {
-  ApiPoolWorker,
-  NewComlinkSnapshotPoolWorker,
-  useSnapApiPool,
-} from "@/components/Editor/history/SnapApiPoolProvider";
+import { ApiPoolWorker, NewComlinkSnapshotPoolWorker, useSnapApiPool } from "@/app/editor/history/SnapApiPoolProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { cn } from "@/lib/utils";

@@ -1,12 +1,12 @@
+import { MDX_TREE_HIGHLIGHT_NAME } from "@/app/editor/highlightMdxElement";
+import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/app/editor/searchPlugin";
+import { usePreserveViewModeURL } from "@/app/editor/view-mode/usePreserveViewModeURL";
 import { WindowContextProviderComponent } from "@/app/IframeContextProvider";
 import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
 import { BuildCreationProvider } from "@/components/BuildModalContextProvider";
 import { ConfirmProvider } from "@/components/Confirm";
 import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
-import { MDX_TREE_HIGHLIGHT_NAME } from "@/components/Editor/highlightMdxElement";
-import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/components/Editor/searchPlugin";
-import { usePreserveViewModeURL } from "@/components/Editor/view-mode/usePreserveViewModeURL";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/ErrorPlaque";
 import { GitStatusProvider } from "@/components/GitStatusModal";
@@ -58,28 +58,28 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                             <SidebarProvider>
                               <DestinationManagerProvider>
                                 <BuildCreationProvider>
-                                <PromptProvider>
-                                  <ConfirmProvider>
-                                    <RemoteMDXEditorRealmProvider>
-                                      <div className="w-full flex">
-                                        <ErrorBoundary fallback={ErrorPlaque}>
-                                          <div
-                                            id={WS_BUTTON_BAR_ID}
-                                            className={cn(
-                                              "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
-                                            )}
-                                          >
-                                            <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                              <WorkspaceButtonBar />
-                                            </ErrorBoundary>
-                                          </div>
-                                          <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                        </ErrorBoundary>
-                                      </div>
-                                    </RemoteMDXEditorRealmProvider>
-                                  </ConfirmProvider>
-                                </PromptProvider>
-                              </BuildCreationProvider>
+                                  <PromptProvider>
+                                    <ConfirmProvider>
+                                      <RemoteMDXEditorRealmProvider>
+                                        <div className="w-full flex">
+                                          <ErrorBoundary fallback={ErrorPlaque}>
+                                            <div
+                                              id={WS_BUTTON_BAR_ID}
+                                              className={cn(
+                                                "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
+                                              )}
+                                            >
+                                              <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                                <WorkspaceButtonBar />
+                                              </ErrorBoundary>
+                                            </div>
+                                            <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                          </ErrorBoundary>
+                                        </div>
+                                      </RemoteMDXEditorRealmProvider>
+                                    </ConfirmProvider>
+                                  </PromptProvider>
+                                </BuildCreationProvider>
                               </DestinationManagerProvider>
                             </SidebarProvider>
                           </PublicationModalProvider>

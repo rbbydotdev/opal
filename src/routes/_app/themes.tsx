@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
+// import { CodeMirrorEditor } from "@/app/editor/CodeMirror";
 import { useTheme } from "@/hooks/useTheme";
 import { getContrastRatio } from "@/lib/colorUtils";
 import { createFileRoute } from "@tanstack/react-router";

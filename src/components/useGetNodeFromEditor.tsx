@@ -1,4 +1,4 @@
-import { MainEditorRealmId } from "@/components/Editor/EditorConst";
+import { MainEditorRealmId } from "@/app/editor/EditorConst";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 export function useGetNodeFromEditor(editorRealmId = MainEditorRealmId) {

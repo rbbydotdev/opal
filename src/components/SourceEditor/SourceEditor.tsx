@@ -1,5 +1,5 @@
+import { CodeMirrorEditor } from "@/app/editor/CodeMirror";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
-import { CodeMirrorEditor } from "@/components/Editor/CodeMirror";
 import "@/components/SourceEditor/code-mirror-source-editor.css";
 import { SourceMimeType } from "@/components/SourceEditor/SourceMimeType";
 import { useFileContents } from "@/context/useFileContents";

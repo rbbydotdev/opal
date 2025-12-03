@@ -1,4 +1,4 @@
-import { MdxEditorScrollSelector } from "@/components/Editor/EditorConst";
+import { MdxEditorScrollSelector } from "@/app/editor/EditorConst";
 
 export const scrollToEditorElement = (
   element: { getClientRects: () => DOMRectList },
