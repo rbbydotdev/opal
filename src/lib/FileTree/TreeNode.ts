@@ -30,9 +30,6 @@ import { resolveFromRoot } from "../paths2";
 export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
 };
-
-type TreeNodeJType = TreeFileJType | TreeNodeDirJType;
-
 export type TreeDirRootJType = TreeNodeDirJType;
 
 export type TreeNodeDirJType = ReturnType<TreeNode["toJSON"]> & {
@@ -627,9 +624,6 @@ export class TreeDirRoot extends TreeDir {
   }
 }
 
-function isTreeFile(node: TreeNode): node is TreeFile {
-  return node.type === "file";
-}
 function isTreeDir(node: TreeNode): node is TreeDir {
   return node.type === "dir";
 }
@@ -695,8 +689,6 @@ export class TreeFile extends TreeNode {
     });
   }
 }
-
-type TreeList = Array<string>;
 
 function tagSource<T extends TreeNode>(this: T, sourceNode: TreeNode) {
   this.source = sourceNode.path;

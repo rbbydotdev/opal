@@ -13,4 +13,3 @@ export function mustache(): LanguageSupport {
 }
 
 // Export the default Mustache language support
-const mustacheLanguage = mustache();

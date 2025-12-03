@@ -55,22 +55,6 @@ export const isImageType = (type: OpalMimeType | string): boolean => {
 export const isMarkdownType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.MARKDOWN;
 };
-const isHtmlType = (type: OpalMimeType | string): boolean => {
-  return type === MimeTypes.HTML;
-};
-const isMustacheType = (type: OpalMimeType | string): boolean => {
-  return type === MimeTypes.MUSTACHE;
-};
-const isBinaryType = (type: OpalMimeType | string): boolean => {
-  return type === MimeTypes.BIN;
-};
-function contentsToMimeType(contents: Uint8Array<ArrayBufferLike>): OpalMimeType {
-  return getFileType(contents);
-}
-
-function getMimeTypeExt(fileType: OpalMimeType) {
-  return MimeTypeExt[fileType];
-}
 
 function getFileType(data: string | Uint8Array<ArrayBufferLike>): OpalMimeType {
   if (typeof data === "string") return MimeTypes.MARKDOWN;

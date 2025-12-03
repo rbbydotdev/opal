@@ -8,10 +8,3 @@ export interface WorkspaceCorruptionState {
   canRecover?: boolean;
   workspaceId?: string;
 }
-
-interface WorkspaceCorruptionActions {
-  recoverOpfsHandle: () => Promise<void>;
-  goHome: () => void;
-  createNewWorkspace: () => void;
-  clearError: () => void;
-}

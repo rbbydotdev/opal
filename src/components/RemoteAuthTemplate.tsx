@@ -160,9 +160,3 @@ type TemplateType<
   T extends RemoteAuthType = RemoteAuthType,
   U extends RemoteAuthSource = RemoteAuthSource,
 > = `${T}/${U}`;
-
-type RemoteAuthDefaultData = Partial<{
-  [T in RemoteAuthExplicitType["type"] as `${T}/${string}`]: {
-    data: Partial<RemoteAuthDataFor<T>>;
-  };
-}>;

@@ -118,27 +118,6 @@ export const ErrorPopupControl = {
   },
 };
 
-function ShowErrorDialog({
-  title,
-  description,
-  handleExit,
-}: {
-  title: string;
-  description: string;
-  handleExit?: () => void;
-}) {
-  const [open, setOpen] = React.useState(true);
-  return (
-    <ErrorDialog
-      open={open}
-      title={title}
-      description={description}
-      handleOpenChange={setOpen}
-      handleExit={handleExit}
-    />
-  );
-}
-
 function ErrorDialog({
   open,
   title,

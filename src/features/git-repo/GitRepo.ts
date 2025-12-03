@@ -30,12 +30,6 @@ export interface GitRemote {
   gitCorsProxy?: string;
   authId?: string;
 }
-interface IRemote {
-  branch: string;
-  name: string;
-  url: string;
-  auth?: AuthCallback;
-}
 
 // Utility functions for GitRef
 const createBranchRef = (name: string): GitRef => ({
@@ -145,10 +139,6 @@ class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
 
 function isMergeConflictError(result: unknown): result is InstanceType<typeof GIT.Errors.MergeConflictError> {
   return result instanceof GIT.Errors.MergeConflictError;
-}
-
-function isMergeNotSupportedError(result: unknown): result is InstanceType<typeof GIT.Errors.MergeNotSupportedError> {
-  return result instanceof GIT.Errors.MergeNotSupportedError;
 }
 
 type MergeConflict = InstanceType<typeof GIT.Errors.MergeConflictError>["data"];

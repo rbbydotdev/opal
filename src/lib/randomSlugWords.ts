@@ -20,13 +20,6 @@ export const RandomSlugWords = (length = 3, { capitalize } = { capitalize: true 
     .map((word) => (capitalize ? (word ?? "").charAt(0).toUpperCase() + (word ?? "").slice(1) : word))
     .join("-");
 };
-const RandomSlugWords____ = (length = 3) => {
-  const shuffled = shuffle(WORDS);
-  return shuffled
-    .slice(0, length)
-    .map((w) => w.replace(/[^a-zA-Z0-9]/g, ""))
-    .join("-");
-};
 const WORDS = [
   "accountant",
   "profession",

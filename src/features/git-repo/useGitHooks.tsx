@@ -5,10 +5,4 @@ import "@/workers/transferHandlers/function.th";
 import "@/workers/transferHandlers/repo.th";
 import * as Comlink from "comlink";
 import { useMemo } from "react";
-
-function useGitPlaybook(repo: GitRepo | Comlink.Remote<GitRepo>): GitPlaybook {
-  return useMemo(() => {
-    return new GitPlaybook(repo);
-  }, [repo]);
-}
 export type WorkspaceRepoType = DeepNonNullable<RepoInfoType, "parentOid" | "currentBranch" | "currentRef">;

@@ -15,4 +15,3 @@ export const AWS_REGIONS = [
 
 // --- Types ---
 type AWSRegion = (typeof AWS_REGIONS)[number];
-type AWSRegionCode = AWSRegion["value"];

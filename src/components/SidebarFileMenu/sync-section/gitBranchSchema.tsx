@@ -11,8 +11,3 @@ export const gitBranchSchema = z.object({
       "Invalid branch name: must not start/end with '/', contain spaces, or special characters"
     ),
 });
-
-const gitRefSchema = z.object({
-  value: gitBranchSchema,
-  type: z.enum(["branch", "commit"]),
-});
