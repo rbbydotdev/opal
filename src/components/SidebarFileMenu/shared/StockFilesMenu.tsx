@@ -1,4 +1,5 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { ROOT_NODE, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +12,6 @@ import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
-import { ROOT_NODE, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { FileCode2Icon, FileTextIcon, Globe, Package } from "lucide-react";

@@ -28,13 +28,18 @@ import { WorkspaceScannable } from "@/workspace/WorkspaceScannable";
 import { DiskType } from "../data/disk/DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
+import {
+  SourceDirTreeNode,
+  SourceFileTreeNode,
+  TreeDir,
+  TreeNode,
+} from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
 import { DefaultTemplate } from "@/data/WorkspaceTemplates";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
-import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { reduceLineage } from "@/lib/paths2";
 import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
 import * as Comlink from "comlink";

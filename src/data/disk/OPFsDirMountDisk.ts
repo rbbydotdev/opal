@@ -1,3 +1,5 @@
+import { FileTree } from "@/components/SidebarFileMenu/FileTree/Filetree";
+import { TreeDirRootJType } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
@@ -7,8 +9,6 @@ import { DirectoryHandleStore } from "@/data/fs/DirectoryHandleStore";
 import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
 import { MutexFs } from "@/data/fs/MutexFs";
 import { PatchedDirMountOPFS } from "@/data/PatchedDirMountOPFS";
-import { FileTree } from "@/lib/FileTree/Filetree";
-import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 import { Mutex } from "async-mutex";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 

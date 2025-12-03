@@ -1,10 +1,10 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { FileTree } from "@/components/SidebarFileMenu/FileTree/Filetree";
+import { MainFileTreeContextMenu } from "@/components/SidebarFileMenu/FileTree/MainFileTreeContextMenu";
+import { ROOT_NODE, TreeDir, TreeFile } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useNodeResolver } from "@/hooks/useNodeResolver";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { FileTree } from "@/lib/FileTree/Filetree";
-import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
-import { ROOT_NODE, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";

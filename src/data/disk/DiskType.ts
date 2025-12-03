@@ -1,5 +1,5 @@
+import { TreeDirRootJType } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { BrowserAbility } from "@/lib/BrowserAbility";
-import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 
 export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType | null; timestamp?: number };
 

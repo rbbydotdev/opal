@@ -1,9 +1,9 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
+import { TreeFile, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { WorkspaceRouteType } from "@/context/WorkspaceContext";
 import { Thumb } from "@/data/Thumb";
 import { useEditable } from "@/hooks/useEditable";
-import { TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, equals, isImage, prefix, relPath, RelPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";

@@ -1,4 +1,5 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -14,7 +15,6 @@ import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { Workspace } from "@/workspace/Workspace";
 import {
   ClipboardCopy,

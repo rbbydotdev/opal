@@ -1,10 +1,10 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
+import { TreeDir, TreeFile, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
-import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import {
   AbsPath,
   absPath,

@@ -1,5 +1,5 @@
+import { TreeDirRootJType } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { DiskType } from "@/data/disk/DiskType";
-import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 
 export class DiskRecord {
   guid!: string;

@@ -1,5 +1,7 @@
 import { useWatchViewMode } from "@/app/editor/view-mode/useWatchViewMode";
 import { isSourceMimeType } from "@/app/source-editor/SourceMimeType";
+import { FileTree, NULL_FILE_TREE } from "@/components/SidebarFileMenu/FileTree/Filetree";
+import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,8 +22,6 @@ import { useUrlParam } from "@/hooks/useUrlParam";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
-import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
-import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { OpalMimeType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor, isBin, isCss, isEjs, isHtml, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";

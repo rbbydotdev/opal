@@ -1,5 +1,5 @@
+import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useLocation } from "@tanstack/react-router";

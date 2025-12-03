@@ -1,8 +1,8 @@
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
+import { FileTree, NULL_FILE_TREE } from "@/components/SidebarFileMenu/FileTree/Filetree";
+import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { useWatchWorkspaceFileTree, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Disk } from "@/data/disk/Disk";
-import { FileTree, NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
-import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import { createContext, useContext } from "react";
 

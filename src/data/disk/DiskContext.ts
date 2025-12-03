@@ -1,5 +1,5 @@
+import { FileTree } from "@/components/SidebarFileMenu/FileTree/Filetree";
 import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
-import { FileTree } from "@/lib/FileTree/Filetree";
 import { Mutex } from "async-mutex";
 
 export abstract class DiskContext {
