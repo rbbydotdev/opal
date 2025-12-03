@@ -11,9 +11,9 @@ import { Workspace } from "@/workspace/Workspace";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";
-import { useToggleEditHistory } from "../app/editor/history/useToggleEditHistory";
-import { useToggleHistoryImageGeneration } from "../app/editor/history/useToggleHistoryImageGeneration";
-import { useWorkspaceDocumentId } from "../app/editor/history/useWorkspaceDocumentId";
+import { useToggleEditHistory } from "../../app/editor/history/useToggleEditHistory";
+import { useToggleHistoryImageGeneration } from "../../app/editor/history/useToggleHistoryImageGeneration";
+import { useWorkspaceDocumentId } from "../../app/editor/history/useWorkspaceDocumentId";
 
 export function WorkspaceMarkdownEditor({
   currentWorkspace,

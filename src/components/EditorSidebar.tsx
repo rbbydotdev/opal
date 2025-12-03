@@ -8,8 +8,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { CurrentWorkspaceIcon } from "@/components/WorkspaceIcon";
-import { WorkspaceMenu } from "@/components/WorkspaceMenu";
+import { CurrentWorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
+import { WorkspaceMenu } from "@/components/workspace/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Opal } from "@/lib/Opal";
 import { Link } from "@tanstack/react-router";

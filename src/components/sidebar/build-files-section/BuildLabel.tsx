@@ -1,4 +1,4 @@
-import { WorkspaceIcon } from "@/components/WorkspaceIcon";
+import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { cn } from "@/lib/utils";
 import { FolderOpenIcon } from "lucide-react";

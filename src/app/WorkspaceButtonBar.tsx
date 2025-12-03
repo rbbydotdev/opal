@@ -18,8 +18,8 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { WorkspaceIcon } from "@/components/WorkspaceIcon";
-import { WorkspaceMenu } from "@/components/WorkspaceMenu";
+import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
+import { WorkspaceMenu } from "@/components/workspace/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";

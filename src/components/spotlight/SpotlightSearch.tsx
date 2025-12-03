@@ -3,7 +3,7 @@ import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
 import { useWindowContextProvider } from "@/app/IframeContextProvider";
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
 import { toast } from "@/components/ui/sonner";
-import { WorkspaceIcon } from "@/components/WorkspaceIcon";
+import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
