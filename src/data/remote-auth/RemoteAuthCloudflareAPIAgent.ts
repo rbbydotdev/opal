@@ -4,7 +4,7 @@ import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { mapToTypedError } from "@/lib/errors";
 import Cloudflare, { APIError } from "cloudflare";
 import { V4PagePaginationArray } from "cloudflare/pagination.mjs";
-import { optionalCORSBaseURL } from "../lib/optionalCORSBaseURL";
+import { optionalCORSBaseURL } from "../../lib/optionalCORSBaseURL";
 
 export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   private _cloudflareClient!: Cloudflare;

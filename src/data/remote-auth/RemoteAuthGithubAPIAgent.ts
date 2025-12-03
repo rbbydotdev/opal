@@ -1,5 +1,5 @@
 import type { GithubAPIRemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
-import { RemoteAuthGithubAgent } from "@/data/RemoteAuthGithubAgent";
+import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 
 export class RemoteAuthGithubAPIAgent extends RemoteAuthGithubAgent {
   getUsername = () => {

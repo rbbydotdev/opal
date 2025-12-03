@@ -1,4 +1,4 @@
-import { ConnectionsModalContent } from "@/components/ConnectionsModal";
+import { ConnectionsModalContent } from "@/components/connections-modal/ConnectionsModal";
 import { BuildInfo } from "@/components/publish-modal/BuildInfo";
 import { BuildPublisherCmd } from "@/components/publish-modal/PubicationModalCmdContext";
 import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildLogLine } from "@/data/BuildRecord";
 import { BuildDAO, NULL_BUILD } from "@/data/DAO/BuildDAO";
-import { AnyDestinationMetaType, DestinationDAO } from "@/data/DestinationDAO";
+import { AnyDestinationMetaType, DestinationDAO } from "@/data/DAO/DestinationDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";

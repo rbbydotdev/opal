@@ -1,4 +1,4 @@
-import { ConnectionsModal } from "@/components/ConnectionsModal";
+import { ConnectionsModal } from "@/components/connections-modal/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {

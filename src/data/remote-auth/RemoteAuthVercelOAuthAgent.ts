@@ -1,5 +1,5 @@
 import type { VercelOAuthRemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
-import { RemoteAuthVercelAgent } from "@/data/RemoteAuthVercelAgent";
+import { RemoteAuthVercelAgent } from "@/data/remote-auth/RemoteAuthVercelAgent";
 import { refreshVercelToken } from "@/lib/auth/VercelOAuthFlow";
 import { TokenExpiredError } from "@/lib/errors";
 

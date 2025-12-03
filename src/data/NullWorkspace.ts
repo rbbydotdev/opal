@@ -1,5 +1,5 @@
 // import { NullRemoteAuth } from "@/data/RemoteOAuth";
-import { NullDisk } from "@/data/NullDisk";
+import { NullDisk } from "@/data/disk/NullDisk";
 import { Workspace } from "@/data/Workspace";
 import { WorkspaceDAO } from "@/data/WorkspaceDAO";
 import { NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
