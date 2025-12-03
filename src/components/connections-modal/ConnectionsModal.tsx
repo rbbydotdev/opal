@@ -5,7 +5,7 @@ import { useForm, UseFormReturn, useWatch } from "react-hook-form";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
 import { OAuth } from "@/components/OAuth";
-import { RemoteAuthFormValues, RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
+import { RemoteAuthFormValues, RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

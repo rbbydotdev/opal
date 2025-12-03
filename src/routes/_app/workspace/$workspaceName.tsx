@@ -1,6 +1,6 @@
 import { FileTreeMenuCtxProvider } from "@/app/filemenu/FileTreeMenuCtxProvider";
 import { EditorSidebar } from "@/components/EditorSidebar";
-import { WorkspaceSpotlightSearch } from "@/components/SpotlightSearch";
+import { WorkspaceSpotlightSearch } from "@/components/spotlight/SpotlightSearch";
 import { PreviewIFrame } from "@/components/ui/PreviewIframe";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";

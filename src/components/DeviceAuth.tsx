@@ -1,5 +1,5 @@
-import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
-import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
+import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
+import { RemoteAuthFormValues } from "@/components/remote-auth/RemoteAuthTemplate";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";

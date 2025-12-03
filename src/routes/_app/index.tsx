@@ -1,5 +1,5 @@
 import { OpalCard } from "@/components/OpalCard";
-import { SpotlightSearch } from "@/components/SpotlightSearch";
+import { SpotlightSearch } from "@/components/spotlight/SpotlightSearch";
 import { useHomeSpotlightCommands } from "@/hooks/useHomeSpotlightCommands";
 import { createFileRoute } from "@tanstack/react-router";
 

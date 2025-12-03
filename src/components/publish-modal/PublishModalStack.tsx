@@ -2,8 +2,8 @@ import { ConnectionsModalContent } from "@/components/connections-modal/Connecti
 import { BuildInfo } from "@/components/publish-modal/BuildInfo";
 import { BuildPublisherCmd } from "@/components/publish-modal/PubicationModalCmdContext";
 import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
-import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
-import { RemoteAuthTemplates, typeSource } from "@/components/RemoteAuthTemplate";
+import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
+import { RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
 import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
 import { DestinationLabel } from "@/components/sidebar/build-files-section/DestinationLabel";
 import { Button } from "@/components/ui/button";

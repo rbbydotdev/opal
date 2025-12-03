@@ -1,4 +1,4 @@
-import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
+import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { cn } from "@/lib/utils";
 
