@@ -1,7 +1,7 @@
+import { EncryptedZipDialog } from "@/components/enc-zip-modal/encrypted-zip-dialog";
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { EncryptedZipDialog } from "@/components/ui/encrypted-zip-dialog";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
