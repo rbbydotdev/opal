@@ -1,4 +1,4 @@
-import { DestinationDAO } from "@/data/DAO/DestinationDAO";
+import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useLiveQuery } from "dexie-react-hooks";
 
 export function useDestinations(): {

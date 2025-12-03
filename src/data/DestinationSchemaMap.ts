@@ -1,4 +1,4 @@
-import { DestinationDAO, RandomTag } from "@/data/DAO/DestinationDAO";
+import { DestinationDAO, RandomTag } from "@/data/dao/DestinationDAO";
 import { RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import z from "zod";
 

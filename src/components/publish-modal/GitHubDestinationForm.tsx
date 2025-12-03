@@ -1,8 +1,8 @@
 import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { DestinationMetaType } from "@/data/DAO/DestinationDAO";
-import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import { DestinationMetaType } from "@/data/dao/DestinationDAO";
+import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { UseFormReturn } from "react-hook-form";

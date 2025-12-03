@@ -1,4 +1,4 @@
-import type { CloudflareAPIRemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import type { CloudflareAPIRemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 
 import { mapToTypedError } from "@/lib/errors";

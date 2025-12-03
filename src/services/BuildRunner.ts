@@ -1,6 +1,6 @@
 import { prettifyMime } from "@/app/editor/prettifyMime";
-import { BuildDAO } from "@/data/DAO/BuildDAO";
-import { BuildLogLine, BuildStrategy } from "@/data/DAO/BuildRecord";
+import { BuildDAO } from "@/data/dao/BuildDAO";
+import { BuildLogLine, BuildStrategy } from "@/data/dao/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
@@ -12,7 +12,7 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
-import { NULL_BUILD } from "../data/DAO/BuildDAO";
+import { NULL_BUILD } from "../data/dao/BuildDAO";
 type BuildLogType = "info" | "error" | "warning";
 function logLine(message: string, type: BuildLogType = "info") {
   return {

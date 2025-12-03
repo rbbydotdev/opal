@@ -5,7 +5,7 @@ import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotic
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { BuildDAO } from "@/data/DAO/BuildDAO";
+import { BuildDAO } from "@/data/dao/BuildDAO";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 

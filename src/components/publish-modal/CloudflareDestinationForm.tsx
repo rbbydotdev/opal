@@ -5,8 +5,8 @@ import {
   RemoteResourceSearch,
   RemoteResourceSearchInput,
 } from "@/components/publish-modal/RemoteResourceField";
-import { DestinationMetaType } from "@/data/DAO/DestinationDAO";
-import { CloudflareAPIRemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import { DestinationMetaType } from "@/data/dao/DestinationDAO";
+import { CloudflareAPIRemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthCloudflareAPIAgent } from "@/data/remote-auth/RemoteAuthCloudflareAPIAgent";
 import { useMemo } from "react";
 import { UseFormReturn, useWatch } from "react-hook-form";

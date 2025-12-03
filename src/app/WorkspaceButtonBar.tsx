@@ -21,9 +21,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { WorkspaceMenu } from "@/components/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { BuildDAO } from "@/data/DAO/BuildDAO";
-import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { BuildDAO } from "@/data/dao/BuildDAO";
+import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { useLeftCollapsed } from "@/features/preview-pane/EditorSidebarLayout";
 import { ALL_THEMES } from "@/features/theme/theme-lib";

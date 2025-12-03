@@ -1,6 +1,6 @@
 import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { TreeNodeDataTransferJType } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { handleDropFilesForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeNode } from "@/lib/FileTree/TreeNode";

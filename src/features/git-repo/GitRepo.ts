@@ -1,5 +1,5 @@
 import { GitConfig, GitRepoAuthor, OPAL_AUTHOR } from "@/app/GitConfig";
-import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { Disk } from "@/data/disk/Disk";
 import { DiskJType } from "@/data/disk/DiskType";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";

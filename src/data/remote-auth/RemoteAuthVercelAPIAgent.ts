@@ -1,4 +1,4 @@
-import type { VercelAPIRemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import type { VercelAPIRemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthVercelAgent } from "@/data/remote-auth/RemoteAuthVercelAgent";
 
 export class RemoteAuthVercelAPIAgent extends RemoteAuthVercelAgent {

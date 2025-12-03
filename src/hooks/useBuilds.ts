@@ -1,4 +1,4 @@
-import { BuildDAO } from "@/data/DAO/BuildDAO";
+import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useLiveQuery } from "dexie-react-hooks";
 
 export function useBuilds({ workspaceId }: { workspaceId: string }): {

@@ -5,8 +5,8 @@ import {
   RemoteResourceSearch,
 } from "@/components/publish-modal/RemoteResourceField";
 import { useRemoteVercelProject, useRemoteVercelProjectSearch } from "@/components/RemoteConnectionItem";
-import { DestinationMetaType } from "@/data/DAO/DestinationDAO";
-import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import { DestinationMetaType } from "@/data/dao/DestinationDAO";
+import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthVercelAgent } from "@/data/remote-auth/RemoteAuthVercelAgent";
 import { UseFormReturn } from "react-hook-form";
