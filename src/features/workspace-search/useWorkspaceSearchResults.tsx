@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
 
-type WorkspaceQueryParams = {
+export type WorkspaceQueryParams = {
   workspaceName: string;
   searchTerm: string;
   regexp?: boolean;
