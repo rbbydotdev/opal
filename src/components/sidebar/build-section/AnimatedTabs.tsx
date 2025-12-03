@@ -34,8 +34,6 @@ export function MiniTab({
       >
         {children}
       </button>
-      {/* <div className="w-2 h-2 bg-ring"></div> */}
-      {/* <div className="w-4 flex-shrink"></div> */}
     </>
   );
 }

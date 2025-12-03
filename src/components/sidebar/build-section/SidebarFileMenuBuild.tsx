@@ -7,14 +7,13 @@ import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmd
 import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/sidebar/build-files-section/BuildSidebarFileMenuFileSection";
 import { useBuildManager } from "@/components/sidebar/build-files-section/useBuildManager";
+import { MiniTab } from "@/components/sidebar/build-section/AnimatedTabs";
 import { SidebarBuildsList } from "@/components/sidebar/build-section/SidebarBuildsList";
+import { SidebarDeploymentList } from "@/components/sidebar/build-section/SidebarDeploymentList";
 import { SidebarDestinationList } from "@/components/sidebar/build-section/SidebarDestinationList";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
 import { SelectHighlight } from "@/components/sidebar/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
-// import { Circle } from "lucide";
-import { SidebarDeploymentList } from "@/components/sidebar/build-section/SidebarDeploymentList";
-import { MiniTab } from "@/components/ui/AnimatedTabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
