@@ -1,5 +1,5 @@
-import { BuildModal } from "@/components/BuildModal";
-import { BuildCreationContext } from "@/components/BuildModalContext";
+import { BuildModal } from "@/components/build-modal/BuildModal";
+import { BuildCreationContext } from "@/components/build-modal/BuildModalContext";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useRef } from "react";
 
