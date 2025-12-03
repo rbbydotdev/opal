@@ -8,6 +8,7 @@ import { MainFileTreeContextMenu } from "@/components/sidebar/FileTree/MainFileT
 import { ROOT_NODE } from "@/components/sidebar/FileTree/TreeNode";
 import { MainSidebarFileMenuFileSection } from "@/components/sidebar/main-files-section/MainSidebarFileMenuFileSection";
 import { SidebarConnectionsSection } from "@/components/sidebar/SidebarConnectionsSections";
+import { SidebarDndList } from "@/components/sidebar/SidebarDndList";
 import { SidebarGitSection } from "@/components/sidebar/sync-section/SidebarGitSection";
 import { TrashSidebarFileMenuFileSection } from "@/components/sidebar/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/sidebar/tree-view-section/SidebarMenuTreeSection";
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "@/components/ui/sidebar";
-import { SidebarDndList } from "@/components/ui/SidebarDndList";
 import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";

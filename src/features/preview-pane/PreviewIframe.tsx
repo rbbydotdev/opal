@@ -1,6 +1,6 @@
-import { PreviewComponent } from "@/app/PreviewComponent";
 import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PreviewComponent } from "@/features/preview-pane/PreviewComponent";
 import { AbsPath, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { RefreshCw } from "lucide-react";
