@@ -1,5 +1,5 @@
+import { BuildLogLine, BuildRecord, BuildStrategy } from "@/data/DAO/BuildRecord";
 import { PublicationDAO, PublicationJType } from "@/data/DAO/PublicationDAO";
-import { BuildLogLine, BuildRecord, BuildStrategy } from "@/data/DAO/records/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { DiskJType } from "@/data/disk/DiskType";

@@ -1,4 +1,4 @@
-import { BuildRecord } from "@/data/DAO/records/BuildRecord";
+import { BuildRecord } from "@/data/DAO/BuildRecord";
 import { DeployRecord } from "@/data/DeployRecord";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { HistoryDocRecord } from "@/data/HistoryTypes";

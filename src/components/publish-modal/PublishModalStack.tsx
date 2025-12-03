@@ -11,8 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO, NULL_BUILD } from "@/data/DAO/BuildDAO";
+import { BuildLogLine } from "@/data/DAO/BuildRecord";
 import { AnyDestinationMetaType, DestinationDAO } from "@/data/DAO/DestinationDAO";
-import { BuildLogLine } from "@/data/DAO/records/BuildRecord";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
