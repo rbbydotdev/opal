@@ -1,4 +1,4 @@
-@import "./theme.css";
-@import "./main.css";
-@import "./mdx-overrides.css";
-@import "./radix-ui.css";
+@import "@/styles/theme.css";
+@import "@/styles/main.css";
+@import "@/styles/mdx-overrides.css";
+@import "@/styles/radix-ui.css";

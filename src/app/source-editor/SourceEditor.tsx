@@ -1,8 +1,8 @@
 import { CodeMirrorEditor } from "@/app/editor/CodeMirror";
+import "@/app/source-editor/code-mirror-source-editor.css";
 import { SourceMimeType } from "@/app/source-editor/SourceMimeType";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { ROOT_NODE } from "@/components/sidebar/FileTree/TreeNode";
-import "@/components/source-editor/code-mirror-source-editor.css";
 import { useFileContents } from "@/context/useFileContents";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/hooks/useFileTreeDragDrop";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";

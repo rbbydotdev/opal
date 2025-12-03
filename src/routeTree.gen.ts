@@ -16,11 +16,9 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AuthVercelRouteImport } from './routes/auth.vercel'
 import { Route as AuthNetlifyRouteImport } from './routes/auth.netlify'
 import { Route as AuthGithubRouteImport } from './routes/auth.github'
-import { Route as AllSettingsSplatRouteImport } from './routes/all-settings/$'
 import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppThemesRouteImport } from './routes/_app/themes'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
-import { Route as AppSandboxRouteImport } from './routes/_app/sandbox'
 import { Route as AppNewWorkspaceRouteImport } from './routes/_app/newWorkspace'
 import { Route as AppWorkspaceWorkspaceNameRouteImport } from './routes/_app/workspace/$workspaceName'
 import { Route as AppWorkspaceWorkspaceNameIndexRouteImport } from './routes/_app/workspace/$workspaceName/index'
@@ -61,11 +59,6 @@ const AuthGithubRoute = AuthGithubRouteImport.update({
   path: '/auth/github',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AllSettingsSplatRoute = AllSettingsSplatRouteImport.update({
-  id: '/$',
-  path: '/$',
-  getParentRoute: () => AllSettingsRoute,
-} as any)
 const AppWorkspaceRoute = AppWorkspaceRouteImport.update({
   id: '/workspace',
   path: '/workspace',
@@ -79,11 +72,6 @@ const AppThemesRoute = AppThemesRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSandboxRoute = AppSandboxRouteImport.update({
-  id: '/sandbox',
-  path: '/sandbox',
   getParentRoute: () => AppRoute,
 } as any)
 const AppNewWorkspaceRoute = AppNewWorkspaceRouteImport.update({
@@ -117,14 +105,12 @@ const AppWorkspaceWorkspaceNameSplatRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/all-settings': typeof AllSettingsRouteWithChildren
+  '/all-settings': typeof AllSettingsRoute
   '/preview': typeof PreviewRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
-  '/sandbox': typeof AppSandboxRoute
   '/settings': typeof AppSettingsRoute
   '/themes': typeof AppThemesRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
-  '/all-settings/$': typeof AllSettingsSplatRoute
   '/auth/github': typeof AuthGithubRoute
   '/auth/netlify': typeof AuthNetlifyRoute
   '/auth/vercel': typeof AuthVercelRoute
@@ -135,14 +121,12 @@ export interface FileRoutesByFullPath {
   '/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
 }
 export interface FileRoutesByTo {
-  '/all-settings': typeof AllSettingsRouteWithChildren
+  '/all-settings': typeof AllSettingsRoute
   '/preview': typeof PreviewRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
-  '/sandbox': typeof AppSandboxRoute
   '/settings': typeof AppSettingsRoute
   '/themes': typeof AppThemesRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
-  '/all-settings/$': typeof AllSettingsSplatRoute
   '/auth/github': typeof AuthGithubRoute
   '/auth/netlify': typeof AuthNetlifyRoute
   '/auth/vercel': typeof AuthVercelRoute
@@ -154,14 +138,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
-  '/all-settings': typeof AllSettingsRouteWithChildren
+  '/all-settings': typeof AllSettingsRoute
   '/preview': typeof PreviewRoute
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
-  '/_app/sandbox': typeof AppSandboxRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/themes': typeof AppThemesRoute
   '/_app/workspace': typeof AppWorkspaceRouteWithChildren
-  '/all-settings/$': typeof AllSettingsSplatRoute
   '/auth/github': typeof AuthGithubRoute
   '/auth/netlify': typeof AuthNetlifyRoute
   '/auth/vercel': typeof AuthVercelRoute
@@ -177,11 +159,9 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/preview'
     | '/newWorkspace'
-    | '/sandbox'
     | '/settings'
     | '/themes'
     | '/workspace'
-    | '/all-settings/$'
     | '/auth/github'
     | '/auth/netlify'
     | '/auth/vercel'
@@ -195,11 +175,9 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/preview'
     | '/newWorkspace'
-    | '/sandbox'
     | '/settings'
     | '/themes'
     | '/workspace'
-    | '/all-settings/$'
     | '/auth/github'
     | '/auth/netlify'
     | '/auth/vercel'
@@ -213,11 +191,9 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/preview'
     | '/_app/newWorkspace'
-    | '/_app/sandbox'
     | '/_app/settings'
     | '/_app/themes'
     | '/_app/workspace'
-    | '/all-settings/$'
     | '/auth/github'
     | '/auth/netlify'
     | '/auth/vercel'
@@ -230,7 +206,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
-  AllSettingsRoute: typeof AllSettingsRouteWithChildren
+  AllSettingsRoute: typeof AllSettingsRoute
   PreviewRoute: typeof PreviewRoute
   AuthGithubRoute: typeof AuthGithubRoute
   AuthNetlifyRoute: typeof AuthNetlifyRoute
@@ -288,13 +264,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthGithubRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/all-settings/$': {
-      id: '/all-settings/$'
-      path: '/$'
-      fullPath: '/all-settings/$'
-      preLoaderRoute: typeof AllSettingsSplatRouteImport
-      parentRoute: typeof AllSettingsRoute
-    }
     '/_app/workspace': {
       id: '/_app/workspace'
       path: '/workspace'
@@ -314,13 +283,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/sandbox': {
-      id: '/_app/sandbox'
-      path: '/sandbox'
-      fullPath: '/sandbox'
-      preLoaderRoute: typeof AppSandboxRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/newWorkspace': {
@@ -394,7 +356,6 @@ const AppWorkspaceRouteWithChildren = AppWorkspaceRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppNewWorkspaceRoute: typeof AppNewWorkspaceRoute
-  AppSandboxRoute: typeof AppSandboxRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppThemesRoute: typeof AppThemesRoute
   AppWorkspaceRoute: typeof AppWorkspaceRouteWithChildren
@@ -403,7 +364,6 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppNewWorkspaceRoute: AppNewWorkspaceRoute,
-  AppSandboxRoute: AppSandboxRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppThemesRoute: AppThemesRoute,
   AppWorkspaceRoute: AppWorkspaceRouteWithChildren,
@@ -412,21 +372,9 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
-interface AllSettingsRouteChildren {
-  AllSettingsSplatRoute: typeof AllSettingsSplatRoute
-}
-
-const AllSettingsRouteChildren: AllSettingsRouteChildren = {
-  AllSettingsSplatRoute: AllSettingsSplatRoute,
-}
-
-const AllSettingsRouteWithChildren = AllSettingsRoute._addFileChildren(
-  AllSettingsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
-  AllSettingsRoute: AllSettingsRouteWithChildren,
+  AllSettingsRoute: AllSettingsRoute,
   PreviewRoute: PreviewRoute,
   AuthGithubRoute: AuthGithubRoute,
   AuthNetlifyRoute: AuthNetlifyRoute,
