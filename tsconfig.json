@@ -37,7 +37,7 @@
     "patches",
     "./git-protocol-proxy/**/*.ts",
     "./node_modules",
-    "./tools",
+    "tools.ignore",
     "./src/dist",
     "./dist/**",
     "dist",
