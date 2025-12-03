@@ -1,7 +1,7 @@
 import { NamespacedFs } from "@/data/fs/NamespacedFs";
 import { isErrorWithCode } from "@/lib/errors";
 import { AbsPath, joinPath, relPath } from "@/lib/paths2";
-import { CommonFileSystem } from "./FileSystemTypes";
+import { CommonFileSystem } from "../FileSystemTypes";
 
 type OPFSFileSystem = CommonFileSystem & {
   rm: (path: string, options?: { force?: boolean; recursive?: boolean }) => Promise<void>;
