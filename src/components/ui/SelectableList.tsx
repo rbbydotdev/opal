@@ -50,10 +50,26 @@ type SelectableListContextValue<T = any> = {
 
 const SelectableListContext = createContext<SelectableListContextValue | null>(null);
 
+// Context for the current item being rendered
+type SelectableListItemContextValue<T = any> = {
+  itemId: string;
+  itemData?: T;
+};
+
+const SelectableListItemContext = createContext<SelectableListItemContextValue | null>(null);
+
 const useSelectableListContext = () => {
   const context = useContext(SelectableListContext);
   if (!context) {
     throw new Error("SelectableList compound components must be used within SelectableListRoot");
+  }
+  return context;
+};
+
+const useSelectableListItemContext = () => {
+  const context = useContext(SelectableListItemContext);
+  if (!context) {
+    throw new Error("SelectableListItemAction must be used within SelectableListItem");
   }
   return context;
 };
@@ -363,8 +379,11 @@ type SelectableListItemProps = {
 };
 
 export function SelectableListItem({ children, id }: SelectableListItemProps) {
-  const { isSelected, handleSelect, onDelete } = useSelectableListContext();
+  const { isSelected, handleSelect, onDelete, data, getItemId } = useSelectableListContext();
   const sectionRef = useRef<HTMLDivElement | null>(null);
+
+  // Find the current item data
+  const itemData = data && getItemId ? data.find(item => getItemId(item) === id) : undefined;
 
   // Separate menu from other children
   const menuChild = React.Children.toArray(children).find(
@@ -374,37 +393,44 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
     (child) => !React.isValidElement(child) || child.type !== SelectableListItemMenu
   );
 
+  const itemContextValue: SelectableListItemContextValue = {
+    itemId: id,
+    itemData
+  };
+
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <SidebarMenuItem
-          tabIndex={-1}
-          data-selectable-id={id}
-          className="flex w-full rounded justify-center items-center relative"
-        >
-          {/* <div className="flex items-center pr-1 py-2 hover:bg-sidebar-accent"> */}
-          <SidebarMenuButton
-            className="flex-1 min-w-0 group h-full py-1"
-            onClick={(e) => handleSelect(sectionRef, e, id)}
+    <SelectableListItemContext.Provider value={itemContextValue}>
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <SidebarMenuItem
+            tabIndex={-1}
+            data-selectable-id={id}
+            className="flex w-full rounded justify-center items-center relative"
           >
-            <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
-              <div className="w-4 h-4 flex justify-center items-center mr-0.5 shrink-0">
-                {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
+            {/* <div className="flex items-center pr-1 py-2 hover:bg-sidebar-accent"> */}
+            <SidebarMenuButton
+              className="flex-1 min-w-0 group h-full py-1"
+              onClick={(e) => handleSelect(sectionRef, e, id)}
+            >
+              <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
+                <div className="w-4 h-4 flex justify-center items-center mr-0.5 shrink-0">
+                  {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
+                </div>
+                {otherChildren}
               </div>
-              {otherChildren}
-            </div>
-          </SidebarMenuButton>
-          {menuChild}
-          {/* </div> */}
-        </SidebarMenuItem>
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={() => onDelete(id)} className="grid grid-cols-[auto_1fr] items-center gap-2">
-          <Delete className="w-4 h-4 text-destructive" />
-          <span>Delete</span>
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+            </SidebarMenuButton>
+            {menuChild}
+            {/* </div> */}
+          </SidebarMenuItem>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={() => onDelete(id)} className="grid grid-cols-[auto_1fr] items-center gap-2">
+            <Delete className="w-4 h-4 text-destructive" />
+            <span>Delete</span>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </SelectableListItemContext.Provider>
   );
 }
 
@@ -453,14 +479,20 @@ export function SelectableListItemMenu({ children }: { children: React.ReactNode
 
 type SelectableListItemActionProps = {
   children: React.ReactNode;
-  onClick: () => void;
+  onClick: (event: React.MouseEvent, item?: any) => void;
   icon?: React.ReactNode;
   destructive?: boolean;
 };
 
 export function SelectableListItemAction({ children, onClick, icon, destructive }: SelectableListItemActionProps) {
+  const { itemData } = useSelectableListItemContext();
+
+  const handleClick = (event: React.MouseEvent) => {
+    onClick(event, itemData);
+  };
+
   return (
-    <DropdownMenuItem onClick={onClick} className={destructive ? "text-destructive" : ""}>
+    <DropdownMenuItem onClick={handleClick} className={destructive ? "text-destructive" : ""}>
       {icon && <div className="w-4 h-4 mr-2">{icon}</div>}
       {children}
     </DropdownMenuItem>

@@ -15,7 +15,7 @@ import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { Delete, Eye } from "lucide-react";
 
-export function SidebarBuildsList({ workspaceId }: { workspaceId: string }) {
+export function SidebarBuildsList({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {
   const { openEdit } = useBuildCreation();
   const errorToss = useErrorToss();
   const { builds } = useBuilds({ workspaceId });
@@ -49,6 +49,7 @@ export function SidebarBuildsList({ workspaceId }: { workspaceId: string }) {
             <SelectableListItem key={build.guid} id={build.guid}>
               <BuildLabel build={build} />
               <SelectableListItemMenu>
+                {children}
                 <SelectableListItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
                   View
                 </SelectableListItemAction>
