@@ -1,10 +1,10 @@
+import { DestinationRecord } from "@/components/SidebarFileMenu/FileTree/DestinationRecord";
 import { BuildRecord } from "@/data/dao/BuildRecord";
 import { DeployRecord } from "@/data/DeployRecord";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { SettingsRecord } from "@/data/SettingsRecord";
-import { DestinationRecord } from "@/lib/FileTree/DestinationRecord";
 import { default as Dexie, Table, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 import { WorkspaceRecord } from "./WorkspaceRecord";

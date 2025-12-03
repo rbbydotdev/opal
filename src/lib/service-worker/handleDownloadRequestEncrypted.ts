@@ -1,7 +1,7 @@
+import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, joinPath, strictPathname } from "@/lib/paths2";
 import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";
 import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";

@@ -1,3 +1,11 @@
+import { FileTree } from "@/components/SidebarFileMenu/FileTree/Filetree";
+import {
+  SourceTreeNode,
+  TreeDir,
+  TreeDirRoot,
+  TreeNode,
+  TreeNodeDirJType,
+} from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import {
@@ -14,8 +22,6 @@ import {
 import { DiskType } from "@/data/disk/DiskType";
 import { CommonFileSystem, mkdirRecursive } from "@/data/fs/FileSystemTypes";
 import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
-import { FileTree } from "@/lib/FileTree/Filetree";
-import { SourceTreeNode, TreeDir, TreeDirRoot, TreeNode, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceFileUrlsInMarkdown } from "@/lib/markdown/replaceFileUrlsInMarkdown";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";

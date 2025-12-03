@@ -1,9 +1,9 @@
 import { prettifyMime } from "@/app/editor/prettifyMime";
+import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { BuildLogLine, BuildStrategy } from "@/data/dao/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { CreateSuperTypedEmitter } from "@/lib/TypeEmitter";
 import { PageData } from "@/services/builder-types";

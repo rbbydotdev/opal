@@ -1,5 +1,5 @@
+import type { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { SpecialDirsPaths } from "@/data/SpecialDirsPaths";
-import type { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 
 export const SpecialDirs = {

@@ -1,8 +1,8 @@
+import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { TreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { ExpandMap } from "@/features/tree-expander/TreeExpanderTypes";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { ReactNode, useContext, useEffect, useState } from "react";
 

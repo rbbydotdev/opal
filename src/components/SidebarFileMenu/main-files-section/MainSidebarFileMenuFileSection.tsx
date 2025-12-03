@@ -1,5 +1,7 @@
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { RepoInfoProvider } from "@/components/SidebarFileMenu/FileTree/FileTreeRepoProvider";
+import { ROOT_NODE } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { useFileTreeClipboardEventListeners } from "@/components/SidebarFileMenu/hooks/useFileTreeClipboardEventListeners";
 import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
 import { useFlashTooltip } from "@/components/SidebarFileMenu/main-files-section/useFlashTooltip";
@@ -28,8 +30,6 @@ import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
-import { RepoInfoProvider } from "@/lib/FileTree/FileTreeRepoProvider";
-import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";

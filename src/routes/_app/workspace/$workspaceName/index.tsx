@@ -1,13 +1,13 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { OpalCard } from "@/components/OpalCard";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
+import { ROOT_NODE, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import {
   handleDropFilesEventForNode,
   isExternalFileDrop,
   useHandleDropFilesEventForNodeRedirect,
 } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
-import { ROOT_NODE, TreeNode } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { createFileRoute } from "@tanstack/react-router";
 

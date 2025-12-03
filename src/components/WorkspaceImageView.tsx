@@ -1,8 +1,8 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { ImageViewer } from "@/components/ImageViewer";
+import { ROOT_NODE } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
-import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
 

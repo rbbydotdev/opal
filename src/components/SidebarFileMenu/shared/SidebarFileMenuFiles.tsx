@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { NoopContextMenu, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -12,7 +13,6 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
-import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import clsx from "clsx";

@@ -1,8 +1,8 @@
+import { TreeDirRoot, TreeDirRootJType } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { DiskJType, DiskType } from "@/data/disk/DiskType";
 import { ClientDb } from "@/data/instance";
-import { TreeDirRoot, TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 import { nanoid } from "nanoid";
 
 export class DiskDAO {

@@ -1,4 +1,4 @@
-import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 
 export type TreeNodeDataTransferType = {

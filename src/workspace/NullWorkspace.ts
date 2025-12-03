@@ -1,8 +1,8 @@
 // import { NullRemoteAuth } from "@/data/RemoteOAuth";
+import { NULL_FILE_TREE } from "@/components/SidebarFileMenu/FileTree/Filetree";
+import { NULL_TREE_ROOT } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { NullDisk } from "@/data/disk/NullDisk";
-import { NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
-import { NULL_TREE_ROOT } from "@/lib/FileTree/TreeNode";
 import { Workspace } from "@/workspace/Workspace";
 
 export class NullWorkspace extends Workspace {
