@@ -58,7 +58,7 @@ export const EditableDir = ({
     if (linkRef.current && isFocused && !isEditing) {
       linkRef.current.focus();
     }
-  }, [isFocused, isEditing, linkRef, treeDir]);
+  }, [isFocused, isEditing, linkRef]);
 
   return (
     <div className="mx-1">

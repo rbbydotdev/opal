@@ -2,6 +2,7 @@ import { FileTreeMenu } from "@/components/FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
+import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { NoopContextMenu, useFileTree } from "@/context/FileTreeProvider";
@@ -9,6 +10,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
@@ -16,6 +18,7 @@ import { cn } from "@/lib/utils";
 import clsx from "clsx";
 import { ChevronRight, Files, GripVertical } from "lucide-react";
 import React, { ComponentProps, JSX } from "react";
+import { flushSync } from "react-dom";
 export const SidebarFileMenuFiles = ({
   children,
   className,
@@ -41,6 +44,7 @@ export const SidebarFileMenuFiles = ({
   ItemContextMenu?: FileItemContextMenuComponentType;
 } & ComponentProps<typeof SidebarGroup>) => {
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
+  const { setFileTreeCtx } = useFileTreeMenuCtx();
   const { currentWorkspace } = useWorkspaceContext();
   const { fileTreeDir } = useFileTree();
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
@@ -54,6 +58,43 @@ export const SidebarFileMenuFiles = ({
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId, defaultExpanded);
 
   const isEmpty = !Object.keys(treeNode.filterOutChildren(filter) ?? {}).length;
+  const { flatTree } = useFileTree();
+  const treeExpander = useTreeExpanderContext();
+  const visibleFlatTree = useVisibleFlatTree({ flatTree, treeExpander, currentWorkspace });
+
+  const handleBlurForJump = (e: React.KeyboardEvent) => {
+    console.log("handleBlurForJump", e);
+    // If focus leaves the button, clear focused state
+    flushSync(() =>
+      setFileTreeCtx((prev) => ({
+        ...prev,
+        focused: null,
+      }))
+    );
+  };
+
+  const handleJumpToFiles = (e: React.KeyboardEvent) => {
+    if (visibleFlatTree.length === 0) {
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      flushSync(() => {
+        setFileTreeCtx((prev) => ({
+          ...prev,
+          focused: visibleFlatTree[0]!,
+        }));
+      });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      flushSync(() => {
+        setFileTreeCtx((prev) => ({
+          ...prev,
+          focused: visibleFlatTree[visibleFlatTree.length - 1]!,
+        }));
+      });
+    }
+  };
 
   return (
     <>
@@ -66,7 +107,7 @@ export const SidebarFileMenuFiles = ({
           >
             <SidebarGroupLabel className="hover:bg-sidebar-accent w-full relative pr-0 flex h-auto justify-between items-center">
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton className="#flex-shrink w-full">
+                <SidebarMenuButton onKeyDown={handleBlurForJump} onKeyUp={handleJumpToFiles} className="w-full">
                   <SidebarGroupLabel className="pl-0 flex w-full truncate justify-start">
                     <div className="flex items-center flex-shrink">
                       {canDrag && <GripVertical size={12} className="mr-0 cursor-grab opacity-50 w-4" />}

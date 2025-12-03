@@ -57,10 +57,8 @@ export const EditableFile = ({
   const { setFileTreeCtx } = useFileTreeMenuCtx();
 
   useEffect(() => {
-    if (linkRef.current && isFocused && !isEditing) {
-      linkRef?.current?.focus();
-    }
-  }, [isFocused, isEditing, linkRef]);
+    if (linkRef.current && isFocused && !isEditing) linkRef.current.focus();
+  }, [isFocused, isEditing, linkRef, fullPath]);
 
   return (
     <div className="select-none">

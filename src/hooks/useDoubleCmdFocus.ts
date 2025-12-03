@@ -79,21 +79,20 @@ export function useDoubleCmdFocus() {
         });
         
         if (matchingSections.length > 0) {
-          // Find current focused section index
-          let currentIndex = -1;
-          const currentFocused = document.activeElement;
-          if (currentFocused) {
-            currentIndex = matchingSections.findIndex(section => 
-              section === currentFocused || section.contains(currentFocused)
-            );
+          // Count how many times this letter has been pressed in sequence (including this press)
+          let repeatCount = 0;
+          for (let i = newSequence.length - 1; i >= 0; i--) {
+            if (newSequence[i] === letter) {
+              repeatCount++;
+            } else {
+              break;
+            }
           }
           
-          // Move to next matching section or first one
-          const nextIndex = currentIndex >= 0 && currentIndex < matchingSections.length - 1 
-            ? currentIndex + 1 
-            : 0;
-          
-          const targetSection = matchingSections[nextIndex];
+          // Use the repeat count to determine which section to target
+          // 1st press = index 0, 2nd press = index 1, etc.
+          const targetIndex = (repeatCount - 1) % matchingSections.length;
+          const targetSection = matchingSections[targetIndex];
           if (targetSection) {
             const focusableElement = targetSection.querySelector(
               'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'

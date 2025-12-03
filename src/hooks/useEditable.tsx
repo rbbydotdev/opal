@@ -3,6 +3,7 @@ import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { Workspace } from "@/data/Workspace";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { useRepoInfoContext } from "@/lib/FileTree/FileTreeRepoProvider";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
@@ -27,40 +28,14 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const currentFile = useWorkspaceRoute().path;
 
-  // const info = useWatchWorkspaceGitRepoInfo();
-  // const conflicted = info.conflictedFiles.has(fullPath);
   const { flatTree } = useFileTree();
   const { commitChange, trashSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, anchorIndex, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
 
   const treeExpander = useTreeExpanderContext();
 
-  // Create a visible-only version of the flat tree that respects expanded state
-  const visibleFlatTree = useMemo(() => {
-    if (!treeExpander) {
-      // If no tree expander context, return all items
-      return flatTree;
-    }
+  const visibleFlatTree = useVisibleFlatTree({ flatTree, treeExpander, currentWorkspace });
 
-    return flatTree.filter((path) => {
-      // Skip root directory - it's not a navigable item
-      if (path === "/") return false;
-
-      const node = currentWorkspace.nodeFromPath(path);
-      if (!node) return false;
-
-      // Check if all parent directories are expanded
-      let parentNode = node.parent;
-      while (parentNode && parentNode.path !== "/") {
-        if (!treeExpander.isExpanded(parentNode.path)) {
-          return false;
-        }
-        parentNode = parentNode.parent;
-      }
-
-      return true;
-    });
-  }, [flatTree, treeExpander, currentWorkspace]);
   const [fileName, setFileName] = useState<RelPath>(relPath(basename(fullPath)));
   const info = useRepoInfoContext();
   const isConflicted = useMemo(() => info.conflictingFiles.includes(fullPath), [fullPath, info.conflictingFiles]);
@@ -257,7 +232,6 @@ export function useEditable<T extends TreeFile | TreeDir>({
       return;
     }
     setFileTreeCtx({
-      // anchorIndex: anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex,
       anchorIndex: flatTree.indexOf(treeNode.path),
       editing,
       editType,
