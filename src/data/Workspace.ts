@@ -28,7 +28,6 @@ import {
 import { DiskType } from "./disk/DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
-import { ConcurrentWorkers } from "@/data/ConcurrentWorkers";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
@@ -38,7 +37,6 @@ import { Channel } from "@/lib/channel";
 import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "@/lib/FileTree/TreeNode";
 import { reduceLineage } from "@/lib/paths2";
 import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
-import { DocxConvertType } from "@/types/DocxWorkerTypes";
 import * as Comlink from "comlink";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
@@ -495,22 +493,6 @@ export class Workspace {
     const result = await Workspace.UploadMultipleDocxsFetch(files, targetDir, concurrency);
     await this.indexAndEmitNewFiles(result);
     return result;
-  }
-  async uploadMultipleDocxWorkers(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    try {
-      const result = await ConcurrentWorkers(
-        () => Comlink.wrap<DocxConvertType>(new Worker("/docx.ww.js")),
-        (worker, file) => worker.docxConvert(this, absPath(joinPath(targetDir, file!.name)), file, false),
-        files,
-        concurrency,
-        (worker) => new Promise((rs) => setTimeout(rs, 1000)).then(worker.tearDown)
-      );
-      await this.indexAndEmitNewFiles(result);
-      return result;
-    } catch (e) {
-      console.error("Error renaming md images", e);
-    }
-    return [];
   }
 
   static async UploadMultipleDocxsFetch(

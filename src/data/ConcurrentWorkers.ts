@@ -1,9 +1,3 @@
-// export async function ConcurrentWorkers<
-//   I extends Iterable<unknown> | ArrayLike<unknown>,
-//   T = I extends Iterable<infer U> ? U : I extends ArrayLike<infer V> ? V : never,
-//   R = unknown
-// >(
-
 export async function ConcurrentWorkers<TArg, TResource, TExecReturn>(
   build: () => TResource,
   exec: (r: TResource, i: TArg) => Promise<TExecReturn>,
@@ -32,14 +26,3 @@ export async function ConcurrentWorkers<TArg, TResource, TExecReturn>(
   await Promise.all(queue.map((file) => runWorker(file)));
   return results;
 }
-
-// async function main() {
-//   // const docx =
-
-//   const results = await ConcurrentWorkers(
-//     () => Comlink.wrap<DocxConvertType>(new Worker("/docx.ww.js")),
-//     (worker, item) => worker(item),
-//     [],
-//     8
-//   );
-// }
