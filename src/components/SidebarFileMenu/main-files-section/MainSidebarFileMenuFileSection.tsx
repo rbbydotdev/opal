@@ -74,7 +74,7 @@ export function MainSidebarFileMenuFileSection({
         <SidebarFileMenuFiles
           data-main-sidebar
           // FileItemContextMenu={MainFileTreeContextMenu} // <MainFileTreeContextMenu ...
-          title={"Files"}
+          menuTitle={"Files"}
           ItemContextMenu={ItemContextMenu}
           className={className}
           contentBanner={!fileTreeDir.isEmpty() ? <RootFileMenuBanner currentWorkspace={currentWorkspace} /> : null}
