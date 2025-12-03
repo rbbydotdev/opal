@@ -1,7 +1,7 @@
-import { HistoryDAO } from "@/data/HistoryDAO";
+import { HistoryDAO } from "@/data/DAO/HistoryDAO";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { snapdom } from "@zumer/snapdom";
+import { snapdom } from "snapdom";
 import * as Comlink from "comlink";
 import "github-markdown-css/github-markdown-light.css";
 
