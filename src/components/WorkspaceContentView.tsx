@@ -3,7 +3,7 @@ import { MainEditorRealmId, MdxEditorScrollSelector } from "@/components/Editor/
 import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
-import { HistorySnapDBProvider } from "@/data/HistoryDAO";
+import { HistorySnapDBProvider } from "@/data/DAO/HistoryDAO";
 import { Workspace } from "@/data/Workspace";
 import { useToggleEditHistory } from "./Editor/history/useToggleEditHistory";
 import { useToggleHistoryImageGeneration } from "./Editor/history/useToggleHistoryImageGeneration";

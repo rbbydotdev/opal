@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { DataDisplay } from "@/components/ui/DataDisplay";
-import { BuildDAO } from "@/data/BuildDAO";
+import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { DestinationDAO } from "@/data/DestinationDAO";
 import { timeAgo } from "short-time-ago";
 

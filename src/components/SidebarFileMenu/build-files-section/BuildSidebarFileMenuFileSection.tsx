@@ -5,7 +5,7 @@ import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotic
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { BuildDAO } from "@/data/BuildDAO";
+import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 
@@ -20,13 +20,7 @@ const BuildSideBarLabel = ({ title, id }: { title: React.ReactNode; id: string }
   );
 };
 
-function BuildSidebarFileMenuFileSectionInternal({
-  className,
-  build,
-}: {
-  className?: string;
-  build: BuildDAO | null;
-}) {
+function BuildSidebarFileMenuFileSectionInternal({ className, build }: { className?: string; build: BuildDAO | null }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { fileTree } = useFileTree();
   const isEmpty = !build?.buildPath

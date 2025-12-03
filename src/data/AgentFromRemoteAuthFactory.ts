@@ -9,7 +9,7 @@ import {
   isVercelAPIRemoteAuthDAO,
   isVercelOAuthRemoteAuthDAO,
   RemoteAuthDAO,
-} from "@/data/RemoteAuthDAO";
+} from "@/data/DAO/RemoteAuthDAO";
 import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAWSAPIAgent } from "./RemoteAuthAWSAPIAgent";
 import { RemoteAuthBasicAuthAgent } from "./RemoteAuthBasicAuthAgent";

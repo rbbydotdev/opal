@@ -25,7 +25,7 @@ import {
 import { SelectableListItemAction } from "@/components/ui/SelectableList";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
-import { BuildDAO } from "@/data/BuildDAO";
+import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { Workspace } from "@/data/Workspace";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";

@@ -9,7 +9,7 @@ import {
   SelectableListItems,
   SelectableListSimple,
 } from "@/components/ui/SelectableList";
-import { BuildDAO } from "@/data/BuildDAO";
+import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { useBuilds } from "@/hooks/useBuilds";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";

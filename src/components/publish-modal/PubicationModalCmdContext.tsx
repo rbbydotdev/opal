@@ -1,4 +1,4 @@
-import { BuildDAO } from "@/data/BuildDAO";
+import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { createContext, useContext } from "react";
 
 export type BuildPublisherCmd = {

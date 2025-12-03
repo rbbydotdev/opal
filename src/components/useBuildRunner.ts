@@ -1,5 +1,5 @@
-import { BuildDAO } from "@/data/BuildDAO";
 import { BuildLogLine, BuildStrategy } from "@/data/BuildRecord";
+import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { Workspace } from "@/data/Workspace";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";

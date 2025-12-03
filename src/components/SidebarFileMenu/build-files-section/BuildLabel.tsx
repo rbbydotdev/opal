@@ -1,5 +1,5 @@
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
-import { BuildDAO } from "@/data/BuildDAO";
+import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { cn } from "@/lib/utils";
 import { FolderOpenIcon } from "lucide-react";
 import { timeAgo } from "short-time-ago";

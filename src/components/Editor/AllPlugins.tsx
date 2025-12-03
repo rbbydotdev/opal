@@ -8,7 +8,7 @@ import { useWorkspaceDocumentId } from "@/components/Editor/history/useWorkspace
 import { searchPlugin } from "@/components/Editor/searchPlugin";
 import { useImagesPlugin } from "@/components/Editor/useImagesPlugin";
 import { useFileContents } from "@/context/useFileContents";
-import { useSnapHistoryDB } from "@/data/HistoryDAO";
+import { useSnapHistoryDB } from "@/data/DAO/HistoryDAO";
 import { Workspace } from "@/data/Workspace";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
