@@ -21,12 +21,6 @@ export function GitStatusProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function useGitStatus() {
-  const ctx = useContext(GitStatusContext);
-  if (!ctx) throw new Error("useGitStatus must be used within a GitStatusProvider");
-  return ctx;
-}
-
 function useGitStatusCmd() {
   const cmdRef = useRef<{
     open: (options?: { onCancel?: () => void }) => Promise<"cancelled" | "completed">;

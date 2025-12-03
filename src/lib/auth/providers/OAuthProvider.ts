@@ -1,21 +1,6 @@
 import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { Channel } from "@/lib/channel";
 
-interface OAuthFlowResult {
-  accessToken: string;
-  tokenType: string;
-  scope: string;
-  obtainedAt: number;
-  expiresIn: number;
-  refreshToken: string;
-}
-
-interface OAuthChannel {
-  emit(event: string, data: any): Promise<void>;
-  once(event: string): Promise<any>;
-  tearDown(): void;
-}
-
 export interface OAuthProviderConfig {
   redirectUri: string;
   state: string;

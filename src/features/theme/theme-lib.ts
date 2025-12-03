@@ -115,28 +115,6 @@ export function getThemeModePrefers(themeName: string): "light" | "dark" | null 
   return themePrefersMode(themeItem);
 }
 
-function toggleLightOrDarkClass(root: HTMLElement = document.documentElement): void {
-  if (root.classList.contains("dark")) {
-    root.classList.remove("dark");
-    root.classList.add("light");
-  } else if (root.classList.contains("light")) {
-    root.classList.remove("light");
-    root.classList.add("dark");
-  } else {
-    // Default to dark if no class is set
-    root.classList.add("dark");
-  }
-}
-function setLightOrDarkClass(mode: "light" | "dark", root: HTMLElement = document.documentElement) {
-  if (mode === "dark") {
-    root.classList.add("dark");
-    root.classList.remove("light");
-  } else {
-    root.classList.add("light");
-    root.classList.remove("dark");
-  }
-}
-
 export function applyTheme(options: ApplyThemeOptions): void {
   const { theme: themeName } = options;
 
@@ -236,27 +214,6 @@ export function applyTheme(options: ApplyThemeOptions): void {
   document.head.appendChild(style);
 }
 
-function getThemeNames(registry: ThemeRegistry): string[] {
-  return registry.items.map((item) => item.name);
-}
-
-function removeTheme(registry: ThemeRegistry, rootElement: HTMLElement = document.documentElement): void {
-  rootElement.classList.remove("dark", "light");
-
-  // Get all possible CSS variable names from registry
-  const allVariables = new Set<string>();
-  registry.items.forEach((item) => {
-    Object.keys(item.cssVars.light || {}).forEach((key) => allVariables.add(key));
-    Object.keys(item.cssVars.dark || {}).forEach((key) => allVariables.add(key));
-    Object.keys(item.cssVars.theme || {}).forEach((key) => allVariables.add(key));
-  });
-
-  // Remove all CSS variables
-  allVariables.forEach((key) => {
-    rootElement.style.removeProperty(`--${key}`);
-  });
-}
-
 type ThemeColor = { key: string; value: string };
 
 export function getThemePreviewPalette(themeName: string): {
@@ -328,16 +285,6 @@ interface GenericTheme<TCss = Record<string, any>> {
 }
 
 // Vintage Paper theme using the generic (can still narrow name if desired)
-type VintagePaperTheme<
-  TCss = {
-    "@layer base"?: {
-      body?: {
-        "letter-spacing"?: string;
-      };
-    };
-  },
-> = GenericTheme<TCss>;
-
 // Shared vars for a single color mode (light or dark)
 type ThemeModeVars = {
   background?: string;

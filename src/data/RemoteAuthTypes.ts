@@ -83,17 +83,6 @@ export type RemoteAuthExplicitType = RemoteAuthType extends any
   : never;
 
 // Generate specific DAO types using distributive conditional types
-type RemoteAuthDAOFor<
-  T extends RemoteAuthType = RemoteAuthType,
-  S extends RemoteAuthSource = RemoteAuthSource,
-> = T extends any
-  ? S extends any
-    ? TypedRemoteAuthRecord<T, S> & {
-        // Add DAO-specific methods here if needed
-      }
-    : never
-  : never;
-
 // Type for specific type/source combinations using distributive pattern
 type TypedRemoteAuthRecord<T extends RemoteAuthType, S extends RemoteAuthSource> = T extends any
   ? S extends any
@@ -118,11 +107,6 @@ export type RemoteAuthJType = {
   data: RemoteAuthDataFor<RemoteAuthType>;
 };
 export type PartialRemoteAuthJType = Pick<RemoteAuthJType, "type" | "source">;
-
-const isParitalRemoteAuthJType = (rad: unknown): rad is PartialRemoteAuthJType => {
-  if (!rad) return false;
-  return !(rad as RemoteAuthJType).name;
-};
 export const isRemoteAuthJType = (rad: unknown): rad is RemoteAuthJType => {
   if (!rad) return false;
   return (rad as RemoteAuthJType).name !== undefined;
@@ -133,8 +117,6 @@ export type RemoteAuthDataFor<T extends RemoteAuthType> = T extends keyof typeof
   : never;
 
 // Union of all possible data types using distributive conditional type
-type RemoteAuthDataUnion = RemoteAuthType extends any ? RemoteAuthDataFor<RemoteAuthType> : never;
-
 // Helper type for creating type guards
 type RemoteAuthWithType<T extends RemoteAuthType> = RemoteAuthRecord & {
   type: T;
@@ -142,43 +124,8 @@ type RemoteAuthWithType<T extends RemoteAuthType> = RemoteAuthRecord & {
 };
 
 // Helper for creating source-specific types
-type RemoteAuthWithSource<S extends RemoteAuthSource> = RemoteAuthRecord & {
-  source: S;
-};
-
 // Helper for creating DAO types with specific type/source combinations
-type RemoteAuthDAOWithTypeAndSource<T extends RemoteAuthType, S extends RemoteAuthSource> = T extends any
-  ? S extends any
-    ? {
-        guid: string;
-        type: T;
-        source: S;
-        name: string;
-        tags: string[];
-        data: RemoteAuthDataFor<T>;
-        // DAO methods
-        delete(): Promise<void>;
-        toAgent(): any;
-        hasRemoteApi(): boolean;
-        save(): Promise<any>;
-        toJSON(): RemoteAuthJType;
-      }
-    : never
-  : never;
-
 // 4. Type guards using helper types
-const isApiAuth = (record: RemoteAuthRecord): record is RemoteAuthWithType<"api"> => {
-  return record.type === "api";
-};
-
-const isOAuthAuth = (record: RemoteAuthRecord): record is RemoteAuthWithType<"oauth"> => {
-  return record.type === "oauth";
-};
-
-const isGithubDeviceOAuthAuth = (record: RemoteAuthRecord): record is RemoteAuthWithType<"oauth-device"> => {
-  return record.type === "oauth-device";
-};
-
 // Interface definitions to break circular dependencies
 export interface RemoteAuthAgent {
   getUsername(): string;

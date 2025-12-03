@@ -348,35 +348,6 @@ function PushMenu({ forcePush, disabled }: { forcePush?: () => void; disabled?: 
   );
 }
 
-function useInPlaceConfirmCmd() {
-  const cmdRef = useRef<{
-    open: <U extends () => unknown>(
-      message: string,
-      cb?: U,
-      options?: {
-        variant?: "destructive" | "default";
-        confirmText?: string;
-        cancelText?: string;
-      }
-    ) => Promise<ReturnType<U> | null>;
-  }>({
-    open: async () => null,
-  });
-
-  return {
-    open: <U extends () => unknown>(
-      message: string,
-      cb?: U,
-      options?: {
-        variant?: "destructive" | "default";
-        confirmText?: string;
-        cancelText?: string;
-      }
-    ) => cmdRef.current.open(message, cb, options),
-    cmdRef,
-  };
-}
-
 export function SidebarGitSection({
   currentWorkspace,
   ...props

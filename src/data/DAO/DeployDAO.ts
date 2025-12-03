@@ -205,5 +205,3 @@ class NullDeployDAO extends DeployDAO {
     });
   }
 }
-
-const NULL_DEPLOY = new NullDeployDAO();

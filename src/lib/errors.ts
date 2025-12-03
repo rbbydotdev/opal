@@ -6,14 +6,6 @@ type ErrorWithCode = Error & {
   code: string;
 };
 
-function isErrorLike(error: unknown): error is Error & { message: string } {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof (error as Record<string, unknown>).message === "string"
-  );
-}
 export function isAbortError(error: unknown): error is Error & { message: string; name: "AbortError" } {
   return (
     typeof error === "object" &&

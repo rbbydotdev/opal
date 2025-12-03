@@ -84,18 +84,6 @@ export function joinPath<T extends AbsPath | RelPath>(base: T, ...parts: (string
 }
 
 // --- Shift ---
-function shiftAbsolutePath(path: AbsPath): AbsPath {
-  const segments = path.split("/");
-  segments.shift();
-  segments[0] = "";
-  return absPath(segments.join("/"));
-}
-
-function shiftRelativePath2(path: RelPath): RelPath {
-  const segments = path.split("/");
-  segments.shift();
-  return relPath(segments.join("/"));
-}
 
 export function duplicatePath(path: AbsPath) {
   return changePrefix(path, prefix(path) + "-duplicate");
@@ -162,10 +150,7 @@ export function isMarkdown(path: AbsPath | RelPath | string | { toString(): stri
 export function isText(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))).startsWith("text/");
 }
-function isStringish(path: AbsPath | RelPath | string | { toString(): string }): boolean {
-  const mimeType = getMimeType(relPath(String(path)));
-  return StringMimeTypes.includes(mimeType);
-}
+
 export function isEjs(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/x-ejs";
 }
@@ -204,42 +189,6 @@ export function isAncestor({
   const rootSegments = parent.split("/");
   const pathSegments = child.split("/");
   return pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i]);
-}
-
-/**
- * Replace the leading ancestor portion of a given path with a new base path.
- *
- * This function effectively "re-roots" a path if the given path starts with a
- * specific ancestor (base) path.
- *
- * Behavior:
- * - If `targetPath` is exactly equal to `ancestorPath`, returns `replacementRoot`.
- * - If `targetPath` starts with `ancestorPath` as its leading segments,
- *   returns `replacementRoot` joined with the remaining trailing segments from `targetPath`.
- * - Otherwise, returns `targetPath` unchanged.
- *
- * Examples:
- * replaceAncestor('/a', '/a/b/c', '/x') === '/x/b/c'
- * replaceAncestor('/a/b', '/a/b', '/z') === '/z'
- * replaceAncestor('/a/b', '/a/c/d', '/z') === '/a/c/d'  (unchanged)
- *
- * Notes:
- * - Although null checks exist for backward compatibility, inputs are expected to be non-null strings.
- * - The returned path is normalized via absPath() and joinPath().
- */
-function replaceAncestor(
-  ancestorPath: AbsPath | string, // The base or ancestor path to look for
-  targetPath: AbsPath | string, // The path potentially containing the ancestor
-  replacementRoot: AbsPath | string // The new base to replace the ancestor with
-): AbsPath | string {
-  if (targetPath === ancestorPath) return replacementRoot;
-  if (targetPath === null || ancestorPath === null) return targetPath;
-  const rootSegments = ancestorPath.split("/");
-  const pathSegments = targetPath.split("/");
-  if (pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i])) {
-    return joinPath(absPath(replacementRoot), ...pathSegments.slice(rootSegments.length));
-  }
-  return targetPath;
 }
 
 export function reduceLineage<T extends string | { toString(): string }>(range: Array<T>) {
@@ -293,11 +242,6 @@ export function resolveFromRoot(rootPath: AbsPath | RelPath, path: AbsPath | Rel
   throw new Error("Both paths must be of the same type (AbsPath or RelPath).");
 }
 
-function addTrailingSlash(path: string): string {
-  if (path.endsWith("/")) return path;
-  return path + "/";
-}
-
 export function absPathname(path: string) {
   //in the case we get a url then just get the path from the url parse
   //other wise just return the string
@@ -311,12 +255,6 @@ export function absPathname(path: string) {
   } catch (_e) {
     return absPath(path);
   }
-}
-
-function filterOutAncestor(paths: AbsPath[]) {
-  return (path: AbsPath) => {
-    return !paths.some((ancestor) => isAncestor({ child: path, parent: ancestor }));
-  };
 }
 
 export function strictPrefix(path: string): string {

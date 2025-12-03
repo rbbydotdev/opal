@@ -16,11 +16,6 @@ type WorkspaceGuid = Brand<string, "WorkspaceGuid">;
 const isWorkspaceGuid = (workspaceGuid: string): workspaceGuid is WorkspaceGuid =>
   workspaceGuid.startsWith("__workspace__");
 
-const wrkId = (id: string) => {
-  if (isWorkspaceGuid(id)) return id as WorkspaceGuid;
-  throw new Error("unknown id expected, /^__workspace__.+/");
-};
-
 export class WorkspaceDAO {
   static guid = () => "__workspace__" + nanoid();
 

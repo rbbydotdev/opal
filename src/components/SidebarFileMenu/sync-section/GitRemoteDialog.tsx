@@ -73,11 +73,6 @@ const TitleForMode = {
   [GitRemoteDialogModes.ADD]: "Add Git Remote",
   [GitRemoteDialogModes.EDIT]: "Edit Git Remote",
 };
-function useGitRemoteDialogMode(
-  defaultMode: GitRemoteDialogModeType = GitRemoteDialogModes.ADD
-): [GitRemoteDialogModeType, (mode: GitRemoteDialogModeType) => void] {
-  return useState<GitRemoteDialogModeType>(defaultMode);
-}
 type GitRemoteDialogResult = {
   previous: null | GitRemote;
   next: GitRemote | null;

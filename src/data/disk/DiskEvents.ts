@@ -71,15 +71,6 @@ export type IndexTrigger =
       type: "delete";
       details: DeleteDetails;
     };
-
-type ListenerCallback<T extends "create" | "rename" | "delete"> = T extends "create"
-  ? (props: CreateDetails) => void
-  : T extends "rename"
-    ? (props: RenameDetails[]) => void
-    : T extends "delete"
-      ? (props: DeleteDetails) => void
-      : never;
-
 type DiskRemoteEventPayload = {
   // [DiskEvents.RENAME]: RemoteRenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;

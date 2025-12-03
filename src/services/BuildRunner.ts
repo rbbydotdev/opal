@@ -13,20 +13,6 @@ import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 import { NULL_BUILD } from "../data/DAO/BuildDAO";
-
-interface BuildRunnerOptions {
-  strategy: BuildStrategy;
-  workspaceName: string;
-  buildLabel?: string;
-  abortSignal?: AbortSignal;
-  onLog?: (message: string) => void;
-  onError?: (message: string) => void;
-}
-
-interface BuildResult {
-  success: boolean;
-  error?: string;
-}
 type BuildLogType = "info" | "error" | "warning";
 function logLine(message: string, type: BuildLogType = "info") {
   return {

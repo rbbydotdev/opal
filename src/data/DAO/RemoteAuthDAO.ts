@@ -134,12 +134,6 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
   }
 }
 
-type NoAuthRemoteAuthDAO = RemoteAuthDAO & {
-  type: "no-auth";
-  source: "custom";
-  data: RemoteAuthDataFor<"no-auth">;
-};
-
 // Use generics to create specific DAO types
 export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & {
   type: "basic-auth";
@@ -233,5 +227,3 @@ export function isAWSAPIRemoteAuthDAO(record: RemoteAuthDAO): record is AWSAPIRe
 
 // Union types using generics
 export type GithubRemoteAuthDAO = GithubAPIRemoteAuthDAO | GithubOAuthRemoteAuthDAO | GithubDeviceOAuthRemoteAuthDAO;
-type NetlifyRemoteAuthDAO = NetlifyAPIRemoteAuthDAO | NetlifyOAuthRemoteAuthDAO;
-type VercelRemoteAuthDAO = VercelAPIRemoteAuthDAO | VercelOAuthRemoteAuthDAO;

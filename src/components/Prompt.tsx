@@ -34,12 +34,6 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function usePrompt() {
-  const ctx = useContext(PromptContext);
-  if (!ctx) throw new Error("usePrompt must be used within a PromptProvider");
-  return ctx;
-}
-
 function usePromptCmd() {
   const cmdRef = useRef<{
     open: <T>(form: ReactElement<any>, title: string, description: string) => Promise<T | null>;

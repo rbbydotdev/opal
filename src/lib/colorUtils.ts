@@ -3,26 +3,6 @@ function extractOklchValues(oklchString: string): string {
 }
 
 /**
- * Creates a lighter variant of an OKLCH color
- */
-function lightenOklch(oklchString: string, amount = 0.1): string {
-  const values = extractOklchValues(oklchString);
-  const [l, c, h] = values.split(" ").map((v) => parseFloat(v));
-  const newL = Math.min(1, l! + amount);
-  return `oklch(${newL.toFixed(2)} ${c} ${h})`;
-}
-
-/**
- * Creates a darker variant of an OKLCH color
- */
-function darkenOklch(oklchString: string, amount = 0.1): string {
-  const values = extractOklchValues(oklchString);
-  const [l, c, h] = values.split(" ").map((v) => parseFloat(v));
-  const newL = Math.max(0, l! - amount);
-  return `oklch(${newL.toFixed(2)} ${c} ${h})`;
-}
-
-/**
  * Creates an alpha variant of an OKLCH color
  */
 function oklchWithAlpha(oklchString: string, alpha: number): string {
@@ -42,24 +22,6 @@ function getSubtleHover(baseColor: string): string {
  */
 function getActiveAccent(baseColor: string): string {
   return oklchWithAlpha(baseColor, 0.7);
-}
-
-/**
- * Creates CSS custom properties for derived colors
- */
-function createDerivedColorVars(rootElement: HTMLElement) {
-  const computedStyle = getComputedStyle(rootElement);
-
-  // Get base colors
-  const accent = computedStyle.getPropertyValue("--accent").trim();
-  const border = computedStyle.getPropertyValue("--border").trim();
-  const foreground = computedStyle.getPropertyValue("--foreground").trim();
-
-  // Set derived colors
-  rootElement.style.setProperty("--subtle-hover", getSubtleHover(accent));
-  rootElement.style.setProperty("--active-accent", getActiveAccent(accent));
-  rootElement.style.setProperty("--border-subtle", oklchWithAlpha(border, 0.3));
-  rootElement.style.setProperty("--foreground-muted", oklchWithAlpha(foreground, 0.7));
 }
 
 export const rgbToHex = (r: number, g: number, b: number): string => {
@@ -91,13 +53,6 @@ export function hexToRgb(hex: string): [number, number, number] | null {
   return null;
 }
 
-function luminance([r, g, b]: [number, number, number]): number {
-  const srgb = [r, g, b].map((v) => {
-    const c = v / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * srgb[0]! + 0.7152 * srgb[1]! + 0.0722 * srgb[2]!;
-}
 function parseCssColor(color: string): [number, number, number] | null {
   color = color.trim().toLowerCase();
 
@@ -253,5 +208,3 @@ const getLuminance = (r: number, g: number, b: number): number => {
   });
   return 0.2126 * rs! + 0.7152 * gs! + 0.0722 * bs!;
 };
-
-type ColorFormat = "hex" | "rgb" | "hsl" | "oklch" | "lch" | "hwb";

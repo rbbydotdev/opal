@@ -343,36 +343,12 @@ type SelectableListTriggerProps = {
   children: React.ReactNode;
   onTrigger?: () => void;
 };
-
-function SelectableListTrigger({ children, onTrigger }: SelectableListTriggerProps) {
-  return (
-    <Button variant="outline" size="sm" className="w-full mb-2" onClick={onTrigger}>
-      {children}
-    </Button>
-  );
-}
-
 type SelectableListActionButtonProps = {
   children: React.ReactNode;
   onClick?: () => void;
   title?: string;
   className?: string;
 };
-
-function SelectableListActionButton({ children, onClick, title, className }: SelectableListActionButtonProps) {
-  const { items } = useSelectableListContext();
-
-  return (
-    <SidebarGroupAction
-      className={cn("top-1.5 p-0", { "right-8": items.length }, className)}
-      title={title}
-      onClick={onClick}
-    >
-      {children}
-    </SidebarGroupAction>
-  );
-}
-
 type SelectableListItemProps = {
   children: React.ReactNode;
   id: string;
