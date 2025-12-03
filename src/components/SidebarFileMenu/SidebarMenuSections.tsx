@@ -1,5 +1,5 @@
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
+import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
+import { ErrorMiniPlaque } from "@/components/errors/ErrorPlaque";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
 // import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { SidebarFileMenuBuild } from "@/components/SidebarFileMenu/build-section/SidebarFileMenuBuild";
@@ -27,6 +27,7 @@ import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { Workspace } from "@/data/Workspace";
 import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
+import { useDoubleCmdFocus } from "@/hooks/useDoubleCmdFocus";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu";
@@ -36,13 +37,14 @@ import { Slot } from "@radix-ui/react-slot";
 import { List, ListXIcon } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
-import { useDoubleCmdFocus } from "@/hooks/useDoubleCmdFocus";
 import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
   return (
     <ErrorBoundary fallback={ErrorMiniPlaque}>
-      <Slot {...rest} data-section-name={dndId}>{children}</Slot>
+      <Slot {...rest} data-section-name={dndId}>
+        {children}
+      </Slot>
     </ErrorBoundary>
   );
 }

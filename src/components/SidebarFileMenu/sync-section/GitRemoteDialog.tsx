@@ -18,8 +18,8 @@ import { GitBranch } from "lucide-react";
 
 import { GitAuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/connections-modal/ConnectionsModal";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ErrorMiniPlaque } from "@/components/ErrorPlaque";
+import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
+import { ErrorMiniPlaque } from "@/components/errors/ErrorPlaque";
 import { RemoteResource } from "@/components/publish-modal/RemoteResourceField";
 import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
