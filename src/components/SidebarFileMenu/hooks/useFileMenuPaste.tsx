@@ -3,7 +3,7 @@ import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { TreeNodeDataTransferJType } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
-import { handleDropFilesForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { handleDropFilesForNode } from "@/hooks/useFileTreeDragDrop";
 import { reduceLineage } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 

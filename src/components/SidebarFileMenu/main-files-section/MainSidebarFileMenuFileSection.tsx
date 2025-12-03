@@ -29,9 +29,9 @@ import { SpecialDirs } from "@/data/SpecialDirs";
 import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { useZoom } from "@/hooks/useZoom";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath } from "@/lib/paths2";
-import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import {

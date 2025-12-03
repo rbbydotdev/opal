@@ -15,11 +15,11 @@ import { useCurrentFilepath, useWorkspaceRoute } from "@/context/WorkspaceContex
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { ScrollSync } from "@/hooks/useScrollSync";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { mustache } from "@/lib/codemirror/mustacheLanguage";
 import { OpalMimeType } from "@/lib/fileType";
 import { AbsPath } from "@/lib/paths2";
-import { ScrollSync } from "@/lib/useScrollSync";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { autocompletion } from "@codemirror/autocomplete";

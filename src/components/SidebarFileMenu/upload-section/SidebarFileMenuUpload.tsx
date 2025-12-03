@@ -3,8 +3,8 @@ import { ROOT_NODE } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
+import { handleDropFilesEventForNode } from "@/hooks/useFileTreeDragDrop";
 import { Loader, UploadIcon } from "lucide-react";
 import { useRef, useState } from "react";
 

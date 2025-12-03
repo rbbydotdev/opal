@@ -2,8 +2,8 @@ import { useIframeContextProvider, useWindowContextProvider } from "@/app/Iframe
 import { injectCssFiles, PreviewContent } from "@/app/PreviewContent";
 import { useLiveCssFiles } from "@/app/editor/useLiveCssFiles";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
+import { ScrollSync } from "@/hooks/useScrollSync";
 import { AbsPath, relPath } from "@/lib/paths2";
-import { ScrollSync } from "@/lib/useScrollSync";
 import { Workspace } from "@/workspace/Workspace";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 // import { createRoot } from "react-dom/client";

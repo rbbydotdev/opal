@@ -9,7 +9,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { NoopContextMenu } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
-import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { useFileTreeDragDrop } from "@/hooks/useFileTreeDragDrop";
 import { AbsPath } from "@/lib/paths2";
 import { INTERNAL_NODE_FILE_TYPE, NodeDataJType, NodeDataType } from "@/types/FiletreeTypes";
 import cn from "clsx";
