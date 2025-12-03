@@ -3,12 +3,12 @@ import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/app/editor/searchPlugi
 import { usePreserveViewModeURL } from "@/app/editor/view-mode/usePreserveViewModeURL";
 import { WindowContextProviderComponent } from "@/app/IframeContextProvider";
 import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
-import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
 import { BuildCreationProvider } from "@/components/build-modal/BuildModalContextProvider";
 import { ConfirmProvider } from "@/components/Confirm";
 import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ErrorMiniPlaque, ErrorPlaque } from "@/components/ErrorPlaque";
+import { AsyncWindowErrorBoundary } from "@/components/errors/AsyncWindowErrorBoundary";
+import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
+import { ErrorMiniPlaque, ErrorPlaque } from "@/components/errors/ErrorPlaque";
 import { GitStatusProvider } from "@/components/GitStatusModal";
 import { PromptProvider } from "@/components/Prompt";
 import { PublicationModalProvider } from "@/components/publish-modal/PubicationModalCmd";
