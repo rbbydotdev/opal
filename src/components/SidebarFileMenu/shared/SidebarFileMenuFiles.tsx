@@ -8,9 +8,9 @@ import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/Sideb
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { NoopContextMenu, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { handleDropFilesEventForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { handleDropFilesEventForNode } from "@/hooks/useFileTreeDragDrop";
 import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { AbsPath } from "@/lib/paths2";

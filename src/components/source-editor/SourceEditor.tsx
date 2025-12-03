@@ -4,7 +4,7 @@ import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { ROOT_NODE } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import "@/components/source-editor/code-mirror-source-editor.css";
 import { useFileContents } from "@/context/useFileContents";
-import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+import { handleDropFilesEventForNode, isExternalFileDrop } from "@/hooks/useFileTreeDragDrop";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";

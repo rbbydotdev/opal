@@ -1,5 +1,5 @@
-import { allowedFiletreePathMove } from "@/components/allowedFiletreePathMove";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { allowedFiletreePathMove } from "@/components/SidebarFileMenu/FileTree/allowedFiletreePathMove";
 import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
 import { prepareNodeDataTransfer } from "@/features/filetree-copy-paste/prepareNodeDataTransfer";
 import { errF } from "@/lib/errors";

@@ -7,7 +7,7 @@ import {
   handleDropFilesEventForNode,
   isExternalFileDrop,
   useHandleDropFilesEventForNodeRedirect,
-} from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
+} from "@/hooks/useFileTreeDragDrop";
 import { absPath } from "@/lib/paths2";
 import { createFileRoute } from "@tanstack/react-router";
 
