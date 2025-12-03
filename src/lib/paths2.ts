@@ -267,7 +267,7 @@ export function reduceLineage<T extends string | { toString(): string }>(range: 
   return results;
 }
 
-function strictPathname(str: string): string {
+export function strictPathname(str: string): string {
   // Replace any character that is not a-z, A-Z, 0-9, _, -, /, or . with "_"
   let sanitized = str
     .trim()

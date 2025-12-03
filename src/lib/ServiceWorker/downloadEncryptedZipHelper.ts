@@ -1,10 +1,10 @@
-type DownloadEncryptionProps = {
+export type DownloadEncryptionProps = {
   password: string;
   encryption: "zipcrypto" | "aes";
   name?: string;
 };
-const EncHeader = "X-Encryption";
-const PassHeader = "X-Password";
+export const EncHeader = "X-Encryption";
+export const PassHeader = "X-Password";
 
 export const downloadEncryptedZipHelper = async ({
   password,
