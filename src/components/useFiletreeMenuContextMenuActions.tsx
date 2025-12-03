@@ -1,8 +1,8 @@
-import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
-import { useFileMenuPaste } from "@/components/SidebarFileMenu/hooks/useFileMenuPaste";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { useFileMenuPaste } from "@/components/sidebar/hooks/useFileMenuPaste";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { AbsPath } from "@/lib/paths2";

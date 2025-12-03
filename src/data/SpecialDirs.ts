@@ -1,4 +1,4 @@
-import type { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import type { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { SpecialDirsPaths } from "@/data/SpecialDirsPaths";
 import { AbsPath } from "@/lib/paths2";
 

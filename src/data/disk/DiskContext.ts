@@ -1,4 +1,4 @@
-import { FileTree } from "@/components/SidebarFileMenu/FileTree/Filetree";
+import { FileTree } from "@/components/sidebar/FileTree/Filetree";
 import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
 import { Mutex } from "async-mutex";
 

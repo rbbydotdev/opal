@@ -1,4 +1,4 @@
-import { TreeDirRoot, TreeDirRootJType } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeDirRoot, TreeDirRootJType } from "@/components/sidebar/FileTree/TreeNode";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { DiskJType, DiskType } from "@/data/disk/DiskType";

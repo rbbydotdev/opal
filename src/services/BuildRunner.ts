@@ -1,5 +1,5 @@
 import { prettifyMime } from "@/app/editor/prettifyMime";
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { BuildLogLine, BuildStrategy } from "@/data/dao/BuildRecord";
 import { Disk } from "@/data/disk/Disk";

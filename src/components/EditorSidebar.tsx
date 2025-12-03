@@ -1,4 +1,4 @@
-import { SidebarMenuSections } from "@/components/SidebarFileMenu/SidebarMenuSections";
+import { SidebarMenuSections } from "@/components/sidebar/SidebarMenuSections";
 import {
   Sidebar,
   SidebarContent,

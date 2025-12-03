@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors";

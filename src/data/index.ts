@@ -1,4 +1,4 @@
-import { DestinationRecord } from "@/components/SidebarFileMenu/FileTree/DestinationRecord";
+import { DestinationRecord } from "@/components/sidebar/FileTree/DestinationRecord";
 import { BuildRecord } from "@/data/dao/BuildRecord";
 import { DeployRecord } from "@/data/DeployRecord";
 import { DiskRecord } from "@/data/disk/DiskRecord";

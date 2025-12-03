@@ -1,5 +1,5 @@
-import { GitAuthorFormValues } from "@/components/SidebarFileMenu/sync-section/GitAuthorDialog";
-import { GitConfig, GIT_CONFIG_KEY, DEFAULT_GIT_CONFIG } from "@/app/GitConfig";
+import { DEFAULT_GIT_CONFIG, GIT_CONFIG_KEY } from "@/app/GitConfig";
+import { GitAuthorFormValues } from "@/components/sidebar/sync-section/GitAuthorDialog";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 
 export function useGitAuthorSettings() {
@@ -19,6 +19,7 @@ export function useGitAuthorSettings() {
   return {
     gitAuthor,
     setGitAuthor,
-    isDefaultAuthor: gitAuthor.name === DEFAULT_GIT_CONFIG.user.name && gitAuthor.email === DEFAULT_GIT_CONFIG.user.email,
+    isDefaultAuthor:
+      gitAuthor.name === DEFAULT_GIT_CONFIG.user.name && gitAuthor.email === DEFAULT_GIT_CONFIG.user.email,
   };
 }

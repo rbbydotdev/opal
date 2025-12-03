@@ -1,6 +1,6 @@
-import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { useRepoInfoContext } from "@/components/SidebarFileMenu/FileTree/FileTreeRepoProvider";
-import { TreeDir, TreeFile, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { useRepoInfoContext } from "@/components/sidebar/FileTree/FileTreeRepoProvider";
+import { TreeDir, TreeFile, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";

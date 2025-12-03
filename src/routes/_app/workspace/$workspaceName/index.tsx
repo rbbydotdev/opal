@@ -1,7 +1,7 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { OpalCard } from "@/components/OpalCard";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
-import { ROOT_NODE, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { ROOT_NODE, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import {
   handleDropFilesEventForNode,

@@ -1,6 +1,6 @@
 // import { NullRemoteAuth } from "@/data/RemoteOAuth";
-import { NULL_FILE_TREE } from "@/components/SidebarFileMenu/FileTree/Filetree";
-import { NULL_TREE_ROOT } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { NULL_FILE_TREE } from "@/components/sidebar/FileTree/Filetree";
+import { NULL_TREE_ROOT } from "@/components/sidebar/FileTree/TreeNode";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { NullDisk } from "@/data/disk/NullDisk";
 import { Workspace } from "@/workspace/Workspace";

@@ -1,8 +1,5 @@
 import { MainEditorRealmId } from "@/app/editor/EditorConst";
-import {
-  LexicalTreeViewNode,
-  lexicalToTreeView,
-} from "@/components/SidebarFileMenu/lexical/treeViewDisplayNodesLexical";
+import { LexicalTreeViewNode, lexicalToTreeView } from "@/components/sidebar/lexical/treeViewDisplayNodesLexical";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { debounce } from "@/lib/debounce";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";

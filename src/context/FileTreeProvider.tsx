@@ -1,6 +1,6 @@
-import { FileItemContextMenuComponentType } from "@/components/FileItemContextMenuComponentType";
-import { FileTree, NULL_FILE_TREE } from "@/components/SidebarFileMenu/FileTree/Filetree";
-import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { FileItemContextMenuComponentType } from "@/app/filemenu/FileItemContextMenuComponentType";
+import { FileTree, NULL_FILE_TREE } from "@/components/sidebar/FileTree/Filetree";
+import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { useWatchWorkspaceFileTree, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Disk } from "@/data/disk/Disk";
 import { AbsPath } from "@/lib/paths2";

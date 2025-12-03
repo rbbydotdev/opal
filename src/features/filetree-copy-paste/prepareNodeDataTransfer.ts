@@ -1,5 +1,5 @@
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
-import { TreeNode } from "@/components/SidebarFileMenu/FileTree/TreeNode";
+import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { treeNodeDataTransfer } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { isImage, isMarkdown, prefix } from "@/lib/paths2";
