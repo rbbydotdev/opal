@@ -1,8 +1,8 @@
 import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
+import { DiskType } from "@/data/disk/DiskType";
 import { NullDiskContext } from "@/data/disk/NullDisk";
-import { DiskType } from "@/data/DiskType";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { DirectoryHandleStore } from "@/data/fs/DirectoryHandleStore";
 import { MutexFs } from "@/data/fs/MutexFs";

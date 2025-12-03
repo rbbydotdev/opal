@@ -1,4 +1,4 @@
-import { DiskJType } from "@/data/DiskType";
+import { DiskJType } from "@/data/disk/DiskType";
 import { AbsPath } from "@/lib/paths2";
 
 export type BuildStrategy = "freeform" | "book" | "blog";

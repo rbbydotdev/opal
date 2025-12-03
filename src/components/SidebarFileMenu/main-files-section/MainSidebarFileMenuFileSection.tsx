@@ -22,7 +22,7 @@ import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
 import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { getDiskTypeLabel } from "@/data/DiskType";
+import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { Workspace } from "@/data/Workspace";
 import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";

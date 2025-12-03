@@ -25,7 +25,7 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
-import { DiskType } from "./DiskType";
+import { DiskType } from "./disk/DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { ConcurrentWorkers } from "@/data/ConcurrentWorkers";
