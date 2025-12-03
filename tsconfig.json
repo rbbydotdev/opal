@@ -29,7 +29,7 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "./tests/**/*.ts", "*.ts", "*.d.ts"],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "./playwrite-tests/**/*.ts", "*.ts", "*.d.ts"],
   "exclude": [
     "**/*.test.ts",
     "proxies/**/*.ts",
