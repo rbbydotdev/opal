@@ -2,7 +2,7 @@ import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { DiskType } from "@/data/disk/DiskType";
-import { CommonFileSystem, NullFileSystem } from "@/data/FileSystemTypes";
+import { CommonFileSystem, NullFileSystem } from "@/data/fs/FileSystemTypes";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 import { Mutex } from "async-mutex";

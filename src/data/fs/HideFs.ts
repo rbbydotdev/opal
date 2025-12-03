@@ -1,4 +1,4 @@
-import { CommonFileSystem } from "@/data/FileSystemTypes";
+import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
 import {
   AbsPath,
   RelPath,

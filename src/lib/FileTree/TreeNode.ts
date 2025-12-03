@@ -1,4 +1,4 @@
-import { CommonFileSystem, NullFileSystem } from "@/data/FileSystemTypes";
+import { CommonFileSystem, NullFileSystem } from "@/data/fs/FileSystemTypes";
 import { SpecialDirsPaths } from "@/data/SpecialDirsPaths";
 import { errorCode, NotFoundError } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";
