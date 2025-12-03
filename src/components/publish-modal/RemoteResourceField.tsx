@@ -2,7 +2,7 @@ import { RemoteItemCreateInput, RemoteItemSearchDropDown } from "@/components/Re
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
+import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
 import { Check, Plus, Search, X } from "lucide-react";
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";

@@ -1,6 +1,5 @@
 import { ConnectionsModal } from "@/components/connections-modal/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   SelectableListActions,
   SelectableListContent,
@@ -12,7 +11,8 @@ import {
   SelectableListItemMenu,
   SelectableListItemSubLabel,
   SelectableListRoot,
-} from "@/components/ui/SelectableList";
+} from "@/components/sidebar/SelectableList";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";

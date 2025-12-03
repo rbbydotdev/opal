@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TooltipToast } from "@/components/ui/TooltipToast";
+import { TooltipToast } from "@/components/ui/tooltip-toast";
 import { GitRef, GitRepo, isBranchRef, isCommitRef, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";

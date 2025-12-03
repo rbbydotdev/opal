@@ -12,6 +12,7 @@ import { SidebarBuildsList } from "@/components/sidebar/build-section/SidebarBui
 import { SidebarDeploymentList } from "@/components/sidebar/build-section/SidebarDeploymentList";
 import { SidebarDestinationList } from "@/components/sidebar/build-section/SidebarDestinationList";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
+import { SelectableListItemAction } from "@/components/sidebar/SelectableList";
 import { SelectHighlight } from "@/components/sidebar/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -21,7 +22,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SelectableListItemAction } from "@/components/ui/SelectableList";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { BuildDAO } from "@/data/dao/BuildDAO";

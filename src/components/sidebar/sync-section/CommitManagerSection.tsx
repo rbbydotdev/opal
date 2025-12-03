@@ -1,6 +1,6 @@
 import { useConfirm } from "@/components/Confirm";
 import { GitCommitManager } from "@/components/sidebar/sync-section/GitCommitManager";
-import { TooltipToast } from "@/components/ui/TooltipToast";
+import { TooltipToast } from "@/components/ui/tooltip-toast";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRefType, RepoCommit } from "@/features/git-repo/GitRepo";
 import { useErrorToss } from "@/lib/errorToss";
