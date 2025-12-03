@@ -1,4 +1,4 @@
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";

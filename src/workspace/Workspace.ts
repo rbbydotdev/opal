@@ -1,5 +1,5 @@
-import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Disk } from "@/data/disk/Disk";
 import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "@/data/disk/DiskEvents";
 import { ImageCache } from "@/data/ImageCache";

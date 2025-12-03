@@ -1,7 +1,7 @@
 import { useConfirm } from "@/components/Confirm";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { WorkspaceBadge } from "@/components/WorkspaceBadge";
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Workspace } from "@/workspace/Workspace";
 import { useRouter } from "@tanstack/react-router";
 import { Delete, Pencil } from "lucide-react";

@@ -1,6 +1,6 @@
 import { useIframeImagePooledImperitiveWorker } from "@/app/editor/history/EditViewImage";
 import { useToggleHistoryImageGeneration } from "@/app/editor/history/useToggleHistoryImageGeneration";
-import { NullHistoryDAO } from "@/data/DAO/NullHistoryDAO";
+import { NullHistoryDAO } from "@/data/dao/NullHistoryDAO";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
 import { ClientDb } from "@/data/instance";
 import { useResource } from "@/hooks/useResource";

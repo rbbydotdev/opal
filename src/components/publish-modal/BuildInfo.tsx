@@ -1,7 +1,7 @@
 import { DataDisplay } from "@/components/publish-modal/DataDisplay";
 import { Badge } from "@/components/ui/badge";
-import { BuildDAO } from "@/data/DAO/BuildDAO";
-import { DestinationDAO } from "@/data/DAO/DestinationDAO";
+import { BuildDAO } from "@/data/dao/BuildDAO";
+import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { timeAgo } from "short-time-ago";
 
 export function BuildInfo({

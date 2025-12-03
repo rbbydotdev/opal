@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Disk } from "@/data/disk/Disk";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";

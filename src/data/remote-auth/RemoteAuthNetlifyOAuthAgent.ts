@@ -1,4 +1,4 @@
-import type { NetlifyOAuthRemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import type { NetlifyOAuthRemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthNetlifyAgent } from "@/data/remote-auth/RemoteAuthNetlifyAgent";
 
 export class RemoteAuthNetlifyOAuthAgent extends RemoteAuthNetlifyAgent {

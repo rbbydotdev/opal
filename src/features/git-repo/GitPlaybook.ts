@@ -1,4 +1,4 @@
-import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { Disk } from "@/data/disk/Disk";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitFullRemoteObjType, GitRemote, GitRepo } from "@/features/git-repo/GitRepo";

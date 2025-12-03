@@ -1,4 +1,4 @@
-import { DeployDAO } from "@/data/DAO/DeployDAO";
+import { DeployDAO } from "@/data/dao/DeployDAO";
 import { useLiveQuery } from "dexie-react-hooks";
 
 export function useDeploys(): {

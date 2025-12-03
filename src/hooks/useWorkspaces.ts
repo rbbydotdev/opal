@@ -1,4 +1,4 @@
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { useLiveQuery } from "dexie-react-hooks";
 
 export function useWorkspaces() {

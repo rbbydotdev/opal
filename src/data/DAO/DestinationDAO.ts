@@ -1,4 +1,4 @@
-import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { DestinationSchemaTypeMap, DestinationType } from "@/data/DestinationSchemaMap";
 import { ClientDb } from "@/data/instance";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";

@@ -1,6 +1,6 @@
 import type { CmdMap } from "@/components/SpotlightSearch";
 import { toast } from "@/components/ui/sonner";
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { useTheme } from "@/hooks/useTheme";
 import { useNavigate } from "@tanstack/react-router";

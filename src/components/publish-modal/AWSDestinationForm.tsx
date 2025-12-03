@@ -1,8 +1,8 @@
 import { useRemoteAWSBucket, useRemoteAWSSearch } from "@/components/RemoteConnectionItem";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { DestinationMetaType } from "@/data/DAO/DestinationDAO";
-import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+import { DestinationMetaType } from "@/data/dao/DestinationDAO";
+import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthAWSAPIAgent } from "@/data/remote-auth/RemoteAuthAWSAPIAgent";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";

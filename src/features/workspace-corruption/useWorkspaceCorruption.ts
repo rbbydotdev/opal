@@ -1,4 +1,4 @@
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { ServiceUnavailableError } from "@/lib/errors";
 import { Workspace } from "@/workspace/Workspace";

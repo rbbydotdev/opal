@@ -20,8 +20,8 @@ import {
   DestinationDAO,
   DestinationJType,
   DestinationMetaType,
-} from "@/data/DAO/DestinationDAO";
-import { isCloudflareAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
+} from "@/data/dao/DestinationDAO";
+import { isCloudflareAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { DestinationSchemaMap, DestinationType } from "@/data/DestinationSchemaMap";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { zodResolver } from "@hookform/resolvers/zod";

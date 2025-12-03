@@ -12,7 +12,7 @@ import {
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { useSnapHistoryDB, useSnapHistoryPendingSave } from "@/data/DAO/HistoryDAO";
+import { useSnapHistoryDB, useSnapHistoryPendingSave } from "@/data/dao/HistoryDAO";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";

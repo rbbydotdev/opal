@@ -8,7 +8,7 @@ import { searchPlugin } from "@/app/editor/searchPlugin";
 import { SourceEditorButton } from "@/app/editor/SourceEditorButton";
 import { useImagesPlugin } from "@/app/editor/useImagesPlugin";
 import { useFileContents } from "@/context/useFileContents";
-import { useSnapHistoryDB } from "@/data/DAO/HistoryDAO";
+import { useSnapHistoryDB } from "@/data/dao/HistoryDAO";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";

@@ -1,4 +1,4 @@
-import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Workspace } from "@/workspace/Workspace";
 
 //shared singleton for Service Worker to manage/cache workspaces

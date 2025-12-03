@@ -3,17 +3,16 @@ import { MainEditorRealmId, MdxEditorScrollSelector } from "@/app/editor/EditorC
 import { SnapApiPoolProvider } from "@/app/editor/history/SnapApiPoolProvider";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
-import { HistorySnapDBProvider } from "@/data/DAO/HistoryDAO";
-import { Workspace } from "@/workspace/Workspace";
-import { useToggleEditHistory } from "../app/editor/history/useToggleEditHistory";
-import { useToggleHistoryImageGeneration } from "../app/editor/history/useToggleHistoryImageGeneration";
-// import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
+import { HistorySnapDBProvider } from "@/data/dao/HistoryDAO";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
 import { ScrollSync } from "@/lib/useScrollSync";
+import { Workspace } from "@/workspace/Workspace";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";
+import { useToggleEditHistory } from "../app/editor/history/useToggleEditHistory";
+import { useToggleHistoryImageGeneration } from "../app/editor/history/useToggleHistoryImageGeneration";
 import { useWorkspaceDocumentId } from "../app/editor/history/useWorkspaceDocumentId";
 
 export function WorkspaceMarkdownEditor({
