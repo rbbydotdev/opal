@@ -4,7 +4,7 @@ import { usePreserveViewModeURL } from "@/app/editor/view-mode/usePreserveViewMo
 import { WindowContextProviderComponent } from "@/app/IframeContextProvider";
 import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { AsyncWindowErrorBoundary } from "@/components/AsyncWindowErrorBoundary";
-import { BuildCreationProvider } from "@/components/BuildModalContextProvider";
+import { BuildCreationProvider } from "@/components/build-modal/BuildModalContextProvider";
 import { ConfirmProvider } from "@/components/Confirm";
 import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";

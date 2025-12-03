@@ -1,6 +1,6 @@
-import { BuildModal } from "@/components/BuildModal";
-import { useBuildCreation } from "@/components/BuildModalContext";
-import { useBuildCreationCmd } from "@/components/BuildModalContextProvider";
+import { BuildModal } from "@/components/build-modal/BuildModal";
+import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
+import { useBuildCreationCmd } from "@/components/build-modal/BuildModalContextProvider";
 import { useConfirm } from "@/components/Confirm";
 import { FileTreeMenuCtxProvider } from "@/components/FileTreeMenuCtxProvider";
 import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
