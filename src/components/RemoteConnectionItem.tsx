@@ -1,9 +1,9 @@
 import { Input } from "@/components/ui/input";
-import { useDebounce } from "@/context/useDebounce";
 import { VercelProject } from "@/data/remote-auth/RemoteAuthVercelAgent";
 import { Repo } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType, isFuzzyResult } from "@/data/RemoteSearchFuzzyCache";
 import { useAnySearch } from "@/data/useAnySearch";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { AWSS3Bucket } from "@/lib/aws/AWSClient";
 import { NetlifySite } from "@/lib/netlify/NetlifyClient";
