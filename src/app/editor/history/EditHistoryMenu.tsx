@@ -1,7 +1,7 @@
 // EditHistoryMenu.tsx;
-import { EditViewImage } from "@/components/Editor/history/EditViewImage";
-import { useSelectedItemScroll } from "@/components/Editor/history/useSelectedItemScroll";
-import { useToggleEditHistory } from "@/components/Editor/history/useToggleEditHistory";
+import { EditViewImage } from "@/app/editor/history/EditViewImage";
+import { useSelectedItemScroll } from "@/app/editor/history/useSelectedItemScroll";
+import { useToggleEditHistory } from "@/app/editor/history/useToggleEditHistory";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

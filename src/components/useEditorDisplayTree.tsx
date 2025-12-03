@@ -1,4 +1,4 @@
-import { MainEditorRealmId } from "@/components/Editor/EditorConst";
+import { MainEditorRealmId } from "@/app/editor/EditorConst";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { debounce } from "@/lib/debounce";
 import { LexicalTreeViewNode, lexicalToTreeView } from "@/lib/lexical/treeViewDisplayNodesLexical";

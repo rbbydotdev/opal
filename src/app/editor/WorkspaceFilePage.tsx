@@ -1,5 +1,5 @@
-import { Editor, Editors } from "@/components/Editor/Editors";
-import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
+import { Editor, Editors } from "@/app/editor/Editors";
+import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
 import { FileError } from "@/components/FileError";
 import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
 import { TrashBanner } from "@/components/TrashBanner";
@@ -16,7 +16,7 @@ import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { isSourceMimeType, SourceMimeType } from "../SourceEditor/SourceMimeType";
+import { isSourceMimeType, SourceMimeType } from "../../components/SourceEditor/SourceMimeType";
 
 export function WorkspaceFilePage() {
   const { workspaceName } = useParams({ strict: false });

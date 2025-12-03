@@ -1,6 +1,6 @@
 import { useIframeContextProvider, useWindowContextProvider } from "@/app/IframeContextProvider";
 import { injectCssFiles, PreviewContent } from "@/app/PreviewContent";
-import { useLiveCssFiles } from "@/components/Editor/useLiveCssFiles";
+import { useLiveCssFiles } from "@/app/editor/useLiveCssFiles";
 import { Workspace } from "@/data/Workspace";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import { AbsPath, relPath } from "@/lib/paths2";

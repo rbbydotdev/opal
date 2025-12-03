@@ -1,8 +1,8 @@
+import { useToggleEditHistory } from "@/app/editor/history/useToggleEditHistory";
+import { useToggleHistoryImageGeneration } from "@/app/editor/history/useToggleHistoryImageGeneration";
 import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
 import { useWorkspacButtonBarSpin } from "@/app/useWorkspacButtonBarSpin";
 import { useConfirm } from "@/components/Confirm";
-import { useToggleEditHistory } from "@/components/Editor/history/useToggleEditHistory";
-import { useToggleHistoryImageGeneration } from "@/components/Editor/history/useToggleHistoryImageGeneration";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";

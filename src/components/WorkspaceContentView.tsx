@@ -1,12 +1,12 @@
-import { useAllPlugins } from "@/components/Editor/AllPlugins";
-import { MainEditorRealmId, MdxEditorScrollSelector } from "@/components/Editor/EditorConst";
-import { SnapApiPoolProvider } from "@/components/Editor/history/SnapApiPoolProvider";
+import { useAllPlugins } from "@/app/editor/AllPlugins";
+import { MainEditorRealmId, MdxEditorScrollSelector } from "@/app/editor/EditorConst";
+import { SnapApiPoolProvider } from "@/app/editor/history/SnapApiPoolProvider";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/DAO/HistoryDAO";
 import { Workspace } from "@/data/Workspace";
-import { useToggleEditHistory } from "./Editor/history/useToggleEditHistory";
-import { useToggleHistoryImageGeneration } from "./Editor/history/useToggleHistoryImageGeneration";
+import { useToggleEditHistory } from "../app/editor/history/useToggleEditHistory";
+import { useToggleHistoryImageGeneration } from "../app/editor/history/useToggleHistoryImageGeneration";
 // import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
@@ -14,7 +14,7 @@ import { ScrollSync } from "@/lib/useScrollSync";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";
-import { useWorkspaceDocumentId } from "./Editor/history/useWorkspaceDocumentId";
+import { useWorkspaceDocumentId } from "../app/editor/history/useWorkspaceDocumentId";
 
 export function WorkspaceMarkdownEditor({
   currentWorkspace,

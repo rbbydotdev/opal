@@ -1,6 +1,6 @@
+import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
 import { useWindowContextProvider } from "@/app/IframeContextProvider";
 import { useBuildCreation } from "@/components/BuildModalContext";
-import { setViewMode } from "@/components/Editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";

@@ -1,4 +1,4 @@
-import { scrollToEditorElement } from "@/components/Editor/scrollToEditorElement";
+import { scrollToEditorElement } from "@/app/editor/scrollToEditorElement";
 import { Cell, debounceTime, lexical, realmPlugin, rootEditor$, useCellValue, useRealm } from "@mdxeditor/editor";
 const { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, getNearestEditorFromDOMNode } = lexical;
 export const MDX_SEARCH_NAME = "MdxSearch";
