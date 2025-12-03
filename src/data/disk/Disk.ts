@@ -12,7 +12,7 @@ import {
   SIGNAL_ONLY,
 } from "@/data/disk/DiskEvents";
 import { DiskType } from "@/data/disk/DiskType";
-import { CommonFileSystem, mkdirRecursive } from "@/data/FileSystemTypes";
+import { CommonFileSystem, mkdirRecursive } from "@/data/fs/FileSystemTypes";
 import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { SourceTreeNode, TreeDir, TreeDirRoot, TreeNode, TreeNodeDirJType } from "@/lib/FileTree/TreeNode";

@@ -10,7 +10,7 @@ import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
-import { CommonFileSystem } from "@/data/FileSystemTypes";
+import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
 import { HideFs } from "@/data/fs/HideFs";
 import { AgentFromRemoteAuthFactory, GitAgentFromRemoteAuth } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
