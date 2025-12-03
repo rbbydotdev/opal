@@ -1,7 +1,7 @@
-import { WindowPreviewComponent, WindowPreviewHandler } from "@/app/PreviewComponent";
 import { Button } from "@/components/ui/button";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout.jsx";
+import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/preview-pane/PreviewComponent";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview.js";
 import { ExternalLink, X, Zap } from "lucide-react";
 import { useRef } from "react";

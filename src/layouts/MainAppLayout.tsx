@@ -1,7 +1,6 @@
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/app/editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/app/editor/searchPlugin";
 import { usePreserveViewModeURL } from "@/app/editor/view-mode/usePreserveViewModeURL";
-import { WindowContextProviderComponent } from "@/app/IframeContextProvider";
 import { WorkspaceButtonBar } from "@/app/WorkspaceButtonBar";
 import { BuildCreationProvider } from "@/components/build-modal/BuildModalContextProvider";
 import { ConfirmProvider } from "@/components/Confirm";
@@ -17,6 +16,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WS_BUTTON_BAR_ID } from "@/constants/layout";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
+import { WindowContextProviderComponent } from "@/features/preview-pane/IframeContextProvider";
 import { useZoom } from "@/hooks/useZoom";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { WorkspaceErrorBoundaryFallback } from "@/layouts/WorkspaceErrorBoundaryFallback";

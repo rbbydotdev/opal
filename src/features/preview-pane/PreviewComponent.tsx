@@ -1,6 +1,6 @@
-import { useIframeContextProvider, useWindowContextProvider } from "@/app/IframeContextProvider";
-import { injectCssFiles, PreviewContent } from "@/app/PreviewContent";
 import { useLiveCssFiles } from "@/app/editor/useLiveCssFiles";
+import { useIframeContextProvider, useWindowContextProvider } from "@/features/preview-pane/IframeContextProvider";
+import { injectCssFiles, PreviewContent } from "@/features/preview-pane/PreviewContent";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import { ScrollSync } from "@/hooks/useScrollSync";
 import { AbsPath, relPath } from "@/lib/paths2";

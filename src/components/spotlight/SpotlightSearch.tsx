@@ -1,6 +1,5 @@
 import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
 import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
-import { useWindowContextProvider } from "@/app/IframeContextProvider";
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
@@ -10,6 +9,7 @@ import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { Thumb } from "@/data/Thumb";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
+import { useWindowContextProvider } from "@/features/preview-pane/IframeContextProvider";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
