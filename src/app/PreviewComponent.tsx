@@ -1,10 +1,10 @@
 import { useIframeContextProvider, useWindowContextProvider } from "@/app/IframeContextProvider";
 import { injectCssFiles, PreviewContent } from "@/app/PreviewContent";
 import { useLiveCssFiles } from "@/app/editor/useLiveCssFiles";
-import { Workspace } from "@/data/Workspace";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
 import { AbsPath, relPath } from "@/lib/paths2";
 import { ScrollSync } from "@/lib/useScrollSync";
+import { Workspace } from "@/workspace/Workspace";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 // import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";

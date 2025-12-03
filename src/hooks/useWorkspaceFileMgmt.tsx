@@ -1,7 +1,6 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { Workspace } from "@/data/Workspace";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
@@ -18,6 +17,7 @@ import {
   RelPath,
   relPath,
 } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 

@@ -1,9 +1,9 @@
 // import { NullRemoteAuth } from "@/data/RemoteOAuth";
 import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
 import { NullDisk } from "@/data/disk/NullDisk";
-import { Workspace } from "@/data/Workspace";
 import { NULL_FILE_TREE } from "@/lib/FileTree/Filetree";
 import { NULL_TREE_ROOT } from "@/lib/FileTree/TreeNode";
+import { Workspace } from "@/workspace/Workspace";
 
 export class NullWorkspace extends Workspace {
   async init() {

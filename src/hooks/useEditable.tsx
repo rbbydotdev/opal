@@ -1,13 +1,13 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { Workspace } from "@/data/Workspace";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { useRepoInfoContext } from "@/lib/FileTree/FileTreeRepoProvider";
 import { TreeDir, TreeFile, TreeNode } from "@/lib/FileTree/TreeNode";
 import { basename, newFileName, prefix, RelPath, relPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 

@@ -24,7 +24,6 @@ import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { Workspace } from "@/data/Workspace";
 import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
@@ -34,6 +33,7 @@ import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { absPath } from "@/lib/paths2";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
+import { Workspace } from "@/workspace/Workspace";
 import {
   ClipboardCopy,
   ClipboardPasteIcon,

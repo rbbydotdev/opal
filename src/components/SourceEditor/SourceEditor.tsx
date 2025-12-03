@@ -3,11 +3,11 @@ import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import "@/components/SourceEditor/code-mirror-source-editor.css";
 import { SourceMimeType } from "@/components/SourceEditor/SourceMimeType";
 import { useFileContents } from "@/context/useFileContents";
-import { Workspace } from "@/data/Workspace";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { ROOT_NODE } from "@/lib/FileTree/TreeNode";
 import { cn } from "@/lib/utils";
+import { Workspace } from "@/workspace/Workspace";
 import { useLocation } from "@tanstack/react-router";
 
 export const SourceEditor = ({

@@ -1,5 +1,5 @@
-import { Workspace } from "@/data/Workspace";
 import { AbsPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { Eta } from "eta/core";
 import graymatter from "gray-matter";
 import { BaseRenderer, SharedHelpers } from "./BaseRenderer";

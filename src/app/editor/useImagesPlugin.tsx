@@ -1,8 +1,8 @@
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { Workspace } from "@/data/Workspace";
 import { BadRequestError, isError } from "@/lib/errors";
 import { dirname } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { imagePlugin } from "@mdxeditor/editor";
 import { useEffect, useMemo, useState } from "react";
 

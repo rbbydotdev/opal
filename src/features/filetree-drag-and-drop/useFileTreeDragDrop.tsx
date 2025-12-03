@@ -1,11 +1,11 @@
 import { allowedFiletreePathMove } from "@/components/allowedFiletreePathMove";
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { prepareNodeDataTransfer } from "@/components/prepareNodeDataTransfer";
-import { Workspace } from "@/data/Workspace";
 import { errF } from "@/lib/errors";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
 import { INTERNAL_NODE_FILE_TYPE, NodeDataJType } from "@/types/FiletreeTypes";
+import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
 import React from "react";
 

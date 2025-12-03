@@ -2,11 +2,11 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { useFileMenuPaste } from "@/components/SidebarFileMenu/hooks/useFileMenuPaste";
-import { Workspace } from "@/data/Workspace";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 
 export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });

@@ -1,11 +1,11 @@
 import { INTERNAL_NODE_FILE_TYPE } from "@/components/FiletreeMenu";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
-import { Workspace } from "@/data/Workspace";
 import { TreeNodeDataTransferJType } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { handleDropFilesForNode } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { reduceLineage } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 
 export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Workspace }) {
   // const uploadFilesToWorkspace =

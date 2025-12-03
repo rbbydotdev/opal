@@ -25,7 +25,6 @@ import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
-import { Workspace } from "@/data/Workspace";
 import { useLeftCollapsed } from "@/features/preview-pane/EditorSidebarLayout";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
@@ -37,6 +36,7 @@ import { IS_MAC } from "@/lib/isMac";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { useZoom } from "@/lib/useZoom";
 import { cn } from "@/lib/utils";
+import { Workspace } from "@/workspace/Workspace";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   BombIcon,

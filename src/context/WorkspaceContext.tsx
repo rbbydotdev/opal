@@ -11,9 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
 import { Disk } from "@/data/disk/Disk";
-import { NullWorkspace } from "@/data/NullWorkspace";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { Workspace } from "@/data/Workspace";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceCorruption } from "@/features/workspace-corruption/useWorkspaceCorruption";
@@ -27,6 +25,8 @@ import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/lib/FileTree/T
 import { OpalMimeType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor, isBin, isCss, isEjs, isHtml, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
+import { NullWorkspace } from "@/workspace/NullWorkspace";
+import { Workspace } from "@/workspace/Workspace";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
 import React, { useContext, useEffect, useMemo, useState } from "react";

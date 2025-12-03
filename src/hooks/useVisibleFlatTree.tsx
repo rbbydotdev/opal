@@ -1,6 +1,6 @@
-import { Workspace } from "@/data/Workspace";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { AbsPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { useMemo } from "react";
 
 export function useVisibleFlatTree({

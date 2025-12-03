@@ -15,7 +15,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import React, { useRef, useState, useSyncExternalStore } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 
 import { SidebarGripChevron } from "@/components/SidebarFileMenu/build-section/SidebarGripChevron";
 import { GitAuthorDialog, useGitAuthorDialogCmd } from "@/components/SidebarFileMenu/sync-section/GitAuthorDialog";
@@ -39,7 +39,6 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
-import { Workspace } from "@/data/Workspace";
 import { useGitAuthorSettings } from "@/features/git-repo/useGitAuthorSettings";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
@@ -49,6 +48,7 @@ import { NotFoundError, unwrapError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { Workspace } from "@/workspace/Workspace";
 import { Link } from "@tanstack/react-router";
 // import { RepoInfoType } from "../../../features/git-repo/GitRepo";
 // import { useConfirm } from "../../Confirm";

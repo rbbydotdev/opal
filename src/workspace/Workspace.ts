@@ -5,7 +5,6 @@ import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails }
 import { ImageCache } from "@/data/ImageCache";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { NamespacedThumb } from "@/data/Thumb";
-import { WorkspaceScannable } from "@/data/WorkspaceScannable";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
 import { debounce } from "@/lib/debounce";
@@ -25,7 +24,8 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
-import { DiskType } from "./disk/DiskType";
+import { WorkspaceScannable } from "@/workspace/WorkspaceScannable";
+import { DiskType } from "../data/disk/DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { DiskFromJSON } from "@/data/disk/DiskFactory";

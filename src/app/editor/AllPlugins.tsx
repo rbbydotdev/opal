@@ -9,9 +9,9 @@ import { SourceEditorButton } from "@/app/editor/SourceEditorButton";
 import { useImagesPlugin } from "@/app/editor/useImagesPlugin";
 import { useFileContents } from "@/context/useFileContents";
 import { useSnapHistoryDB } from "@/data/DAO/HistoryDAO";
-import { Workspace } from "@/data/Workspace";
 import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
+import { Workspace } from "@/workspace/Workspace";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,

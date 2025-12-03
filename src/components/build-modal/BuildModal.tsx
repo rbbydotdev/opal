@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBuildRunner } from "@/components/useBuildRunner";
 import { BuildStrategy } from "@/data/DAO/BuildRecord";
-import { Workspace } from "@/data/Workspace";
+import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, CheckCircle, Loader, UploadCloud, X } from "lucide-react";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";

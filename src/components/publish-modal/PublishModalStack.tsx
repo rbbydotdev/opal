@@ -14,13 +14,13 @@ import { BuildDAO, NULL_BUILD } from "@/data/DAO/BuildDAO";
 import { BuildLogLine } from "@/data/DAO/BuildRecord";
 import { AnyDestinationMetaType, DestinationDAO } from "@/data/DAO/DestinationDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { Workspace } from "@/data/Workspace";
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useBuilds } from "@/hooks/useBuilds";
 import { useDestinations } from "@/hooks/useDestinations";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { Case, SwitchCase } from "@/lib/SwitchCase";
 import { cn } from "@/lib/utils";
+import { Workspace } from "@/workspace/Workspace";
 import {
   AlertTriangle,
   ArrowLeft,

@@ -1,9 +1,9 @@
 import { Thumb } from "@/data/Thumb";
-import { Workspace } from "@/data/Workspace";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { SuperUrl } from "./SuperUrl";
 import { SWWStore } from "./SWWStore";
 
