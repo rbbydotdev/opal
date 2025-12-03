@@ -6,7 +6,7 @@ import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
+import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import { Delete, Trash2 } from "lucide-react";
 import { useSyncExternalStore } from "react";
 export function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {

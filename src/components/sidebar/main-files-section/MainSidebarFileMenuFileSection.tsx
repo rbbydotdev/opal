@@ -28,11 +28,11 @@ import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { useZoom } from "@/hooks/useZoom";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import { Workspace } from "@/workspace/Workspace";
 import {
   ClipboardCopy,

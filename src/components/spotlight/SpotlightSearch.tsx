@@ -13,13 +13,13 @@ import { useWindowContextProvider } from "@/features/preview-pane/IframeContextP
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
-import type { FileWithWorkspace } from "@/hooks/useAllWorkspaceFiles";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useTheme } from "@/hooks/useTheme";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import type { FileWithWorkspace } from "@/workspace/useAllWorkspaceFiles";
+import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import { Workspace } from "@/workspace/Workspace";
 import { Link, useNavigate } from "@tanstack/react-router";
 import fuzzysort from "fuzzysort";
