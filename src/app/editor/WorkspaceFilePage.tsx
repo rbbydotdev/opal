@@ -1,7 +1,7 @@
 import { Editor, Editors } from "@/app/editor/Editors";
 import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
 import { FileError } from "@/components/FileError";
-import { SourceEditor } from "@/components/SourceEditor/SourceEditor";
+import { SourceEditor } from "@/components/source-editor/SourceEditor";
 import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
 import { WorkspaceMarkdownEditor } from "@/components/WorkspaceContentView";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { isSourceMimeType, SourceMimeType } from "../../components/SourceEditor/SourceMimeType";
+import { isSourceMimeType, SourceMimeType } from "../../components/source-editor/SourceMimeType";
 
 export function WorkspaceFilePage() {
   const { workspaceName } = useParams({ strict: false });
