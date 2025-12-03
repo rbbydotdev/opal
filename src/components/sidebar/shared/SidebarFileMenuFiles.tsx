@@ -12,9 +12,9 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { handleDropFilesEventForNode } from "@/hooks/useFileTreeDragDrop";
 import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import clsx from "clsx";
 import { ChevronRight, Files, GripVertical } from "lucide-react";
 import React, { ComponentProps } from "react";

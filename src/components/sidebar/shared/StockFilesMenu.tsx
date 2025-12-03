@@ -10,10 +10,10 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import { FileCode2Icon, FileTextIcon, Globe, Package } from "lucide-react";
 import { ComponentProps, ReactNode, useRef } from "react";
 

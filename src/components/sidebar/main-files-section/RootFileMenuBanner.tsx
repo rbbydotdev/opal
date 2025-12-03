@@ -4,9 +4,9 @@ import { MainFileTreeContextMenu } from "@/components/sidebar/FileTree/MainFileT
 import { ROOT_NODE, TreeDir, TreeFile } from "@/components/sidebar/FileTree/TreeNode";
 import { useFileTreeDragDrop } from "@/hooks/useFileTreeDragDrop";
 import { useNodeResolver } from "@/hooks/useNodeResolver";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { AbsPath, absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import { Workspace } from "@/workspace/Workspace";
 import { useRef, useState } from "react";
 

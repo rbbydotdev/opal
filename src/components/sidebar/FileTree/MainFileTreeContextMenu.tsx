@@ -13,8 +13,8 @@ import {
 import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
-import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
 import { DefaultFile } from "@/lib/DefaultFile";
+import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import { Workspace } from "@/workspace/Workspace";
 import {
   ClipboardCopy,
