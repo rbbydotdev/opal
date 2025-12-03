@@ -1,7 +1,6 @@
 import { useDestinationManager } from "@/components/DestinationManagerContext";
 import { DestinationLabel } from "@/components/sidebar/build-files-section/DestinationLabel";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   SelectableListActions,
   SelectableListItem,
@@ -9,7 +8,8 @@ import {
   SelectableListItemMenu,
   SelectableListItems,
   SelectableListSimple,
-} from "@/components/ui/SelectableList";
+} from "@/components/sidebar/SelectableList";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useDestinations } from "@/hooks/useDestinations";
 import { coerceError } from "@/lib/errors";

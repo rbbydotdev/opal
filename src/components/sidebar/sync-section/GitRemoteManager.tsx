@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
+import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
 import { GitRemote, GitRepo, RepoInfoType } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import * as Comlink from "comlink";

@@ -38,7 +38,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { TooltipToast, useTooltipToastCmd } from "@/components/ui/TooltipToast";
+import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
 import { useGitAuthorSettings } from "@/features/git-repo/useGitAuthorSettings";
 import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
