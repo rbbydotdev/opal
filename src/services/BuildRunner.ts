@@ -1,7 +1,7 @@
 import { PageData } from "@/builder/builder-types";
 import { prettifyMime } from "@/components/Editor/prettifyMime";
-import { BuildLogLine, BuildStrategy } from "@/data/BuildRecord";
 import { BuildDAO } from "@/data/DAO/BuildDAO";
+import { BuildLogLine, BuildStrategy } from "@/data/DAO/records/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { TreeNode } from "@/lib/FileTree/TreeNode";

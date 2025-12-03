@@ -1,4 +1,4 @@
-import { BuildStrategy } from "@/data/BuildRecord";
+import { BuildStrategy } from "@/data/DAO/records/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, RelPath } from "@/lib/paths2";
