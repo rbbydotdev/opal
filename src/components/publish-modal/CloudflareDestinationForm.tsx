@@ -9,7 +9,7 @@ import { DestinationMetaType } from "@/data/DestinationDAO";
 import { RemoteAuthCloudflareAPIAgent } from "@/data/RemoteAuthCloudflareAPIAgent";
 import { CloudflareAPIRemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { useMemo } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import { useRemoteCloudflareProject, useRemoteSearch } from "../RemoteConnectionItem";
 /*
 Step 2 — Add Permissions
@@ -27,9 +27,24 @@ function CloudflareAccountIdSearchDropdown({
   agent: RemoteAuthCloudflareAPIAgent;
   form: UseFormReturn<DestinationMetaType<"cloudflare">>;
 }) {
-  const { isLoading, searchValue, updateSearch, searchResults, error, setEnabled, reset: searchReset } = useRemoteSearch({
-    agent: agent.toAccountSearchAgent(),
-    config: { searchKey: "accountId" },
+  const {
+    isLoading,
+    searchValue,
+    updateSearch,
+    searchResults,
+    error,
+    setEnabled,
+    reset: searchReset,
+  } = useRemoteSearch({
+    agent: agent.AccountSearchAgent,
+    config: {
+      searchKey: "name",
+      mapResult: (account, element) => ({
+        label: account.name,
+        value: account.id,
+        element,
+      }),
+    },
   });
 
   return (
@@ -40,7 +55,7 @@ function CloudflareAccountIdSearchDropdown({
       getValue={() => form.getValues("meta.accountId")}
     >
       <RemoteResourceSearch
-        label="Account Id"
+        label="Account Id (search by name)"
         isLoading={isLoading}
         searchValue={searchValue}
         onActive={() => setEnabled(true)}
@@ -50,7 +65,7 @@ function CloudflareAccountIdSearchDropdown({
       />
       <RemoteResourceSearchInput
         label="Account Id"
-        placeholder="Enter account ID"
+        placeholder="my-account"
         searchButtonTitle="Search Accounts"
         onSearchChange={updateSearch}
         searchReset={searchReset}
@@ -66,10 +81,24 @@ function CloudflareProjectNameSearchDropdown({
   agent: RemoteAuthCloudflareAPIAgent;
   form: UseFormReturn<DestinationMetaType<"cloudflare">>;
 }) {
-  const { isLoading, searchValue, clearCache, updateSearch, searchResults, error, setEnabled, reset: searchReset } = useRemoteSearch({
-    agent: agent.toProjectSearchAgent(),
+  const {
+    isLoading,
+    searchValue,
+    clearCache,
+    updateSearch,
+    searchResults,
+    error,
+    setEnabled,
+    reset: searchReset,
+  } = useRemoteSearch({
+    agent: agent.ProjectSearchAgent,
     config: { searchKey: "name" },
   });
+  const accountId = useWatch({
+    control: form.control,
+    name: "meta.accountId",
+  });
+  agent.setAccountId(accountId);
   const { ident, msg, request } = useRemoteCloudflareProject({
     createRequest: async (name: string, options: { signal?: AbortSignal }) => {
       const response = await agent.createProject({ name }, options);
@@ -78,7 +107,6 @@ function CloudflareProjectNameSearchDropdown({
     },
     defaultName: "",
   });
-
   return (
     <RemoteResourceRoot
       control={form.control}
@@ -95,17 +123,28 @@ function CloudflareProjectNameSearchDropdown({
         searchResults={searchResults}
         error={error}
       />
-      <RemoteResourceCreate label="Project Name" placeholder="my-project" ident={ident} msg={msg} request={request} />
-      <RemoteResourceInput
-        label="Project Name"
-        placeholder="my-project"
-        createButtonTitle="Create Project"
-        searchButtonTitle="Search Projects"
-        ident={ident}
-        onSearchChange={updateSearch}
-        searchReset={searchReset}
-        createReset={request.reset}
-      />
+      {accountId && (
+        <>
+          <RemoteResourceCreate
+            label="Project Name"
+            placeholder="my-project"
+            ident={ident}
+            msg={msg}
+            request={request}
+          />
+          <RemoteResourceInput
+            label="Project Name"
+            placeholder="my-project"
+            createButtonTitle="Create Project"
+            searchButtonTitle="Search Projects"
+            ident={ident}
+            onSearchChange={updateSearch}
+            searchReset={searchReset}
+            createReset={request.reset}
+          />
+        </>
+      )}
+      {!accountId && <div className="text-sm text-ring bold mono mt-1">Select an account to continue</div>}
     </RemoteResourceRoot>
   );
 }

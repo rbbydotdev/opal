@@ -10,7 +10,7 @@ export const isFuzzyResult = <T = any>(result: unknown): result is Fuzzysort.Key
   return (result as Fuzzysort.KeyResult<T>).highlight !== undefined;
 };
 
-export interface RemoteAuthAgentSearchType<T = any> {
+export interface RemoteAuthAgentSearchType<T = unknown> {
   hasUpdates(
     etag: string | null,
     options?: { signal?: AbortSignal }

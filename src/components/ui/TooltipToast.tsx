@@ -1,7 +1,7 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useImperativeHandle, useRef, useState } from "react";
 export function useTooltipToastCmd() {
   const cmdRef = useRef<{
     show: (text?: string | React.ReactNode, variant?: "info" | "success" | "destructive", duration?: number) => void;
@@ -32,6 +32,12 @@ export function TooltipToast({
   const [messageText, setText] = useState<string | React.ReactNode>(message || "");
   const [variant, setVariant] = useState<"info" | "success" | "destructive">("info");
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cmds = useRef({
+    setVisible,
+    setText,
+    setVariant,
+  }).current;
+
   useImperativeHandle(
     cmdRef,
     () => ({
@@ -43,21 +49,14 @@ export function TooltipToast({
           clearTimeout(timeoutRef.current);
         }
         timeoutRef.current = setTimeout(() => {
-          setVisible(false);
-          setText(messageText);
-          setVariant("info");
+          cmds.setVisible(false);
+          cmds.setText(messageText);
+          cmds.setVariant("info");
         }, duration ?? durationMs);
       },
     }),
-    [durationMs, messageText]
+    [cmds, durationMs, messageText]
   );
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
   return (
     <TooltipProvider>
       <Tooltip open={visible}>

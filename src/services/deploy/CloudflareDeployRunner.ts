@@ -1,5 +1,4 @@
 import { RemoteAuthCloudflareAPIAgent } from "@/data/RemoteAuthCloudflareAPIAgent";
-import { CloudflareClient } from "@/lib/cloudflare/CloudflareClient";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { DeployResult, DeployRunner, DeployRunnerOptions } from "./DeployRunner";
 import { CloudflareDeployData } from "./DeployTypes";
@@ -11,7 +10,7 @@ export interface CloudflareDeployRunnerOptions extends DeployRunnerOptions<Cloud
 }
 
 export class CloudflareDeployRunner extends DeployRunner<CloudflareDeployData> {
-  private cloudflareClient!: CloudflareClient;
+  private cloudflareClient!: any;
 
   constructor(options: CloudflareDeployRunnerOptions) {
     super({
