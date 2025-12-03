@@ -14,7 +14,6 @@ const defaultFileTreeContext = {
   flatTree: [] as AbsPath[],
   fileTree: NULL_FILE_TREE as FileTree,
 };
-// defaultFileTreeContext
 const FileTreeContext = createContext<typeof defaultFileTreeContext | null>(null);
 
 export const useFileTree = () => {
