@@ -4,7 +4,7 @@ import { SnapApiPoolProvider } from "@/app/editor/history/SnapApiPoolProvider";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/DAO/HistoryDAO";
-import { Workspace } from "@/data/Workspace";
+import { Workspace } from "@/workspace/Workspace";
 import { useToggleEditHistory } from "../app/editor/history/useToggleEditHistory";
 import { useToggleHistoryImageGeneration } from "../app/editor/history/useToggleHistoryImageGeneration";
 // import { DropCommanderProvider } from "@/features/filetree-drag-and-drop/DropCommander";

@@ -1,5 +1,5 @@
-import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { Workspace } from "@/workspace/Workspace";
 import React from "react";
 
 export type FileItemContextMenuComponentType = ({

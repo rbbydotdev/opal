@@ -2,8 +2,8 @@ import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { Workspace } from "@/data/Workspace";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
+import { Workspace } from "@/workspace/Workspace";
 import { Delete, Undo } from "lucide-react";
 import { useRef } from "react";
 export const TrashFileTreeContextMenu = ({

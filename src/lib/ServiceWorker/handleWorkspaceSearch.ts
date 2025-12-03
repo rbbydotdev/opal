@@ -1,9 +1,9 @@
 import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
-import { Workspace } from "@/data/Workspace";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { basename } from "@/lib/paths2";
 import { wrapGeneratorWithSignal } from "@/lib/ServiceWorker/wrapGeneratorWithSignal";
+import { Workspace } from "@/workspace/Workspace";
 import { WorkspaceQueryParams } from "../../data/DAO/useWorkspaceSearchResults";
 import { SWWStore } from "./SWWStore";
 

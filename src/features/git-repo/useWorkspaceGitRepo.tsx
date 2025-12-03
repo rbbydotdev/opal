@@ -1,5 +1,5 @@
-import { Workspace } from "@/data/Workspace";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
+import { Workspace } from "@/workspace/Workspace";
 export function useWorkspaceGitRepo({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const repo = currentWorkspace.getRepo();
   const playbook = currentWorkspace.getPlaybook();

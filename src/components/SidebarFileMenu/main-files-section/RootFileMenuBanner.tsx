@@ -1,5 +1,4 @@
 import { useFileTreeMenuCtx } from "@/components/FileTreeMenuCtxProvider";
-import { Workspace } from "@/data/Workspace";
 import { useFileTreeDragDrop } from "@/features/filetree-drag-and-drop/useFileTreeDragDrop";
 import { useNodeResolver } from "@/hooks/useNodeResolver";
 import { useWorkspaceFileMgmt } from "@/hooks/useWorkspaceFileMgmt";
@@ -8,6 +7,7 @@ import { MainFileTreeContextMenu } from "@/lib/FileTree/MainFileTreeContextMenu"
 import { ROOT_NODE, TreeDir, TreeFile } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { Workspace } from "@/workspace/Workspace";
 import { useRef, useState } from "react";
 
 export const RootFileMenuBanner = ({

@@ -1,7 +1,7 @@
 import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
-import { Workspace } from "@/data/Workspace";
 import { ServiceUnavailableError } from "@/lib/errors";
+import { Workspace } from "@/workspace/Workspace";
 import { useState } from "react";
 import { WorkspaceCorruptionState, WorkspaceErrorType } from "./types";
 

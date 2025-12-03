@@ -1,9 +1,9 @@
 import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
-import { Workspace } from "@/data/Workspace";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { AbsPath, basename } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import fuzzysort from "fuzzysort";
 import { SWWStore } from "./SWWStore";
 
