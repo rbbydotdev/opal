@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useWorkspaceSearchResults } from "@/data/DAO/useWorkspaceSearchResults";
-import { WorkspaceDAO } from "@/data/WorkspaceDAO";
+import { WorkspaceDAO } from "@/data/DAO/WorkspaceDAO";
 import { WorkspaceSearchItem } from "@/data/WorkspaceScannable";
 import { SearchResult } from "@/features/search/SearchResults";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
