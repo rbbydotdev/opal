@@ -69,12 +69,9 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
       page++;
       const linkHeader = response.headers.link;
       if (!linkHeader || !linkHeader.includes('rel="next"')) {
-        console.log(linkHeader);
         break; // No more pages
       }
     }
-
-    console.log(allRepos);
     return allRepos;
   }
 

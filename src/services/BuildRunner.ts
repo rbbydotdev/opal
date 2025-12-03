@@ -5,7 +5,7 @@ import { BuildLogLine, BuildStrategy } from "@/data/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
-import { AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
+import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { CreateSuperTypedEmitter } from "@/lib/TypeEmitter";
 import { getMimeType } from "@zip.js/zip.js";
 import matter from "gray-matter";
@@ -273,11 +273,11 @@ export class BuildRunner {
     const combinedContent = pages.map((page) => page.htmlContent).join('\n<div class="page-break"></div>\n');
 
     const bookLayout = await this.loadTemplate(relPath("book.mustache"));
-    const globalCss = await this.getGlobalCss();
+    const globalCssPath = await this.getGlobalCssPath();
     const bookHtml = mustache.render(bookLayout, {
       tableOfContents,
       content: combinedContent,
-      globalCss,
+      globalCssPath,
     });
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
@@ -370,8 +370,8 @@ export class BuildRunner {
 
     await this.ensureDirectoryExists(dirname(outputPath));
 
-    const globalCss = await this.getGlobalCss();
-    const html = mustache.render(content, { globalCss });
+    const globalCssPath = await this.getGlobalCssPath();
+    const html = mustache.render(content, { globalCssPath });
 
     await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
     this.log(`Template processed: ${relativePath}`);
@@ -384,14 +384,14 @@ export class BuildRunner {
       ? DefaultPageLayout
       : await this.loadTemplate(relPath(`_layouts/${frontMatter.layout}.mustache`));
     const htmlContent = await marked(markdownContent);
-    const additionalStyles = await this.getAdditionalStyles(frontMatter.styles || []);
-    const globalCss = await this.getGlobalCss();
+    const additionalStylePaths = await this.getAdditionalStylePaths(frontMatter.styles || []);
+    const globalCssPath = await this.getGlobalCssPath();
 
     const html = mustache.render(layout, {
       content: htmlContent,
       title: frontMatter.title,
-      globalCss,
-      additionalStyles,
+      globalCssPath,
+      additionalStylePaths,
       ...frontMatter,
     });
 
@@ -454,10 +454,10 @@ export class BuildRunner {
       url: `/posts/${basename(post.path).replace(".md", ".html")}`,
     }));
 
-    const globalCss = await this.getGlobalCss();
+    const globalCssPath = await this.getGlobalCssPath();
     const html = mustache.render(indexLayout, {
       posts: postSummaries,
-      globalCss,
+      globalCssPath,
     });
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
@@ -483,14 +483,14 @@ export class BuildRunner {
     for (const post of posts) {
       const { layout } = await this.processLayout(post);
 
-      const additionalStyles = await this.getAdditionalStyles(post.frontMatter.styles || []);
-      const globalCss = await this.getGlobalCss();
+      const additionalStylePaths = await this.getAdditionalStylePaths(post.frontMatter.styles || []);
+      const globalCssPath = await this.getGlobalCssPath();
 
       const html = mustache.render(layout, {
         content: post.htmlContent,
         title: post.frontMatter.title,
-        globalCss,
-        additionalStyles,
+        globalCssPath,
+        additionalStylePaths,
         ...post.frontMatter,
       });
 
@@ -510,29 +510,30 @@ export class BuildRunner {
     }
   }
 
-  async getGlobalCss(): Promise<string> {
+  async getGlobalCssPath(): Promise<string | null> {
     try {
       const globalCssPath = joinPath(this.sourcePath, relPath("global.css"));
-      return String(await this.sourceDisk.readFile(globalCssPath));
+      await this.sourceDisk.readFile(globalCssPath);
+      return absPath("/global.css");
     } catch {
-      return "";
+      return null;
     }
   }
 
-  async getAdditionalStyles(styleFiles: string[]): Promise<string> {
-    const styles: string[] = [];
+  async getAdditionalStylePaths(styleFiles: string[]): Promise<string[]> {
+    const validPaths: string[] = [];
 
     for (const styleFile of styleFiles) {
       try {
         const stylePath = joinPath(this.sourcePath, relPath(styleFile));
-        const content = String(await this.sourceDisk.readFile(stylePath));
-        styles.push(content);
+        await this.sourceDisk.readFile(stylePath);
+        validPaths.push(absPath(`/${styleFile}`));
       } catch (_err) {
         this.log(`Style file not found: ${styleFile}`, "error");
       }
     }
 
-    return styles.join("\n");
+    return validPaths;
   }
 
   private getOutputPathForTemplate(relativePath: RelPath): AbsPath {
@@ -596,14 +597,14 @@ const DefaultPageLayout = `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{title}}</title>
-  <style>
-    {{#globalCss}}
-    {{{globalCss}}}
-    {{/globalCss}}
-    {{#additionalStyles}}
-    {{{additionalStyles}}}
-    {{/additionalStyles}}
-  </style>
+  {{#globalCssPath}}
+  <link rel="stylesheet" href="{{globalCssPath}}">
+  {{/globalCssPath}}
+  {{#additionalStylePaths}}
+  {{#.}}
+  <link rel="stylesheet" href="{{.}}">
+  {{/.}}
+  {{/additionalStylePaths}}
 </head>
 <body>
   {{{content}}}

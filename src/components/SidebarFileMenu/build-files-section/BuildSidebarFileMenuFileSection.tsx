@@ -2,11 +2,23 @@ import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabe
 import { RootFileMenuBanner } from "@/components/SidebarFileMenu/main-files-section/RootFileMenuBanner";
 import { SidebarFileMenuFiles } from "@/components/SidebarFileMenu/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/SidebarFileMenu/trash-section/TinyNotice";
+import { WorkspaceIcon } from "@/components/WorkspaceIcon";
 import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/BuildDAO";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
+
+const BuildSideBarLabel = ({ title, id }: { title: React.ReactNode; id: string }) => {
+  return (
+    <>
+      <span className="flex justify-start items-center gap-2">
+        <WorkspaceIcon size={4} variant="round" input={id} className="w-2 h-2" />
+        <span className="truncate">{title}</span>
+      </span>
+    </>
+  );
+};
 
 export function BuildSidebarFileMenuFileSectionInternal({
   className,
@@ -23,10 +35,11 @@ export function BuildSidebarFileMenuFileSectionInternal({
   const scope = build?.buildPath || SpecialDirs.Build;
 
   if (!build) return <EmptySidebarLabel label="No Build" className="w-full" />;
+
   return (
     <TreeExpanderProvider id="BuildFiles">
       <SidebarFileMenuFiles
-        title={build.label || "Build Files"}
+        menuTitle={<BuildSideBarLabel id={build.guid} title={build.label || "Build Files"} />}
         className={className}
         scope={scope}
         canDrag={false}

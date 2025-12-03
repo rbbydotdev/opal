@@ -17,13 +17,13 @@ import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import clsx from "clsx";
 import { ChevronRight, Files, GripVertical } from "lucide-react";
-import React, { ComponentProps, JSX } from "react";
+import React, { ComponentProps } from "react";
 import { flushSync } from "react-dom";
 export const SidebarFileMenuFiles = ({
   children,
   className,
   filter,
-  title,
+  menuTitle,
   collapsibleClassname,
   Icon = Files,
   scope,
@@ -35,7 +35,7 @@ export const SidebarFileMenuFiles = ({
   collapsibleClassname?: string;
   className?: string;
   contentBanner?: React.ReactNode | null;
-  title: JSX.Element | string;
+  menuTitle: React.ReactNode;
   children: React.ReactNode;
   canDrag?: boolean;
   scope?: AbsPath;
@@ -121,7 +121,7 @@ export const SidebarFileMenuFiles = ({
 
                     <div className="flex justify-start items-center flex-grow w-full truncate">
                       <Icon className="mr-2 flex-shrink-0" size={12} />
-                      <div className="truncate">{title}</div>
+                      <div className="truncate">{menuTitle}</div>
                     </div>
                   </SidebarGroupLabel>
                 </SidebarMenuButton>

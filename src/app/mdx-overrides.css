@@ -216,3 +216,10 @@
   margin: auto;
   text-align: center;
 }
+
+.mdxeditor {
+  .prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    margin-bottom: 0.175rem;
+    margin-top: 0.175rem;
+  }
+}
