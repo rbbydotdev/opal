@@ -13,7 +13,7 @@ const BuildSideBarLabel = ({ title, id }: { title: React.ReactNode; id: string }
   return (
     <>
       <span className="flex justify-start items-center gap-2">
-        <WorkspaceIcon size={4} variant="round" input={id} className="w-2 h-2" />
+        <WorkspaceIcon size={4} variant="round" input={id} className="w-3 h-3" />
         <span className="truncate">{title}</span>
       </span>
     </>

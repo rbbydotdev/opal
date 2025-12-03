@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SelectableListItemAction } from "@/components/ui/SelectableList";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { BuildDAO } from "@/data/BuildDAO";
@@ -30,7 +31,7 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { cn } from "@/lib/utils";
-import { Code2, Delete, Download, Ellipsis, Hammer, UploadCloud } from "lucide-react";
+import { Code2, Delete, Download, Ellipsis, FilesIcon, Hammer, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { timeAgo } from "short-time-ago";
 
@@ -203,7 +204,21 @@ export function SidebarFileMenuBuild({
               </div>
               <div className="bg-highlight rounded rounded-tl-none pb-4 pt-1 px-2">
                 <div>{activeTab === "files" && <BuildSidebarFileExplorer build={build} />}</div>
-                <div>{activeTab === "builds" && <SidebarBuildsList workspaceId={currentWorkspace.guid} />}</div>
+                <div>
+                  {activeTab === "builds" && (
+                    <SidebarBuildsList workspaceId={currentWorkspace.guid}>
+                      <SelectableListItemAction
+                        onClick={(_, build) => {
+                          setBuildId(build.guid);
+                          setActiveTab("files");
+                        }}
+                        icon={<FilesIcon className="w-4 h-4" />}
+                      >
+                        Files
+                      </SelectableListItemAction>
+                    </SidebarBuildsList>
+                  )}
+                </div>
                 <div>{activeTab === "destinations" && <SidebarDestinationList />}</div>
                 <div>{activeTab === "deployments" && <SidebarDeploymentList />}</div>
               </div>
