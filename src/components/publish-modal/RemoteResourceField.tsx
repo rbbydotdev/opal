@@ -187,7 +187,7 @@ export function RemoteResourceCreate({
   );
 }
 
-export function RemoteResourceInputField({
+function RemoteResourceInputField({
   label,
   placeholder,
   children,
@@ -251,7 +251,7 @@ export function RemoteResourceInputField({
   );
 }
 
-export function RemoteResourceCreateButton({
+function RemoteResourceCreateButton({
   title = "Create",
   ident,
   createReset,
@@ -284,7 +284,7 @@ export function RemoteResourceCreateButton({
   );
 }
 
-export function RemoteResourceSearchButton({
+function RemoteResourceSearchButton({
   title = "Search",
   onSearchChange,
   searchReset,

@@ -4,7 +4,7 @@ import { ENV } from "@/lib/env";
 import { Globe, KeyIcon } from "lucide-react";
 
 // Use distributive conditional type to create proper union
-export type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = T extends any
+type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = T extends any
   ? RemoteAuthSource extends any
     ? {
         name: string;
@@ -156,12 +156,12 @@ export type RemoteAuthFormValues<T extends RemoteAuthType = RemoteAuthType> = T 
       }
     : never
   : never;
-export type TemplateType<
+type TemplateType<
   T extends RemoteAuthType = RemoteAuthType,
   U extends RemoteAuthSource = RemoteAuthSource,
 > = `${T}/${U}`;
 
-export type RemoteAuthDefaultData = Partial<{
+type RemoteAuthDefaultData = Partial<{
   [T in RemoteAuthExplicitType["type"] as `${T}/${string}`]: {
     data: Partial<RemoteAuthDataFor<T>>;
   };

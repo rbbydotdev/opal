@@ -12,7 +12,7 @@ import { absPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 
-export class OpFsDiskContext extends DiskContext {
+class OpFsDiskContext extends DiskContext {
   constructor(
     public readonly internalFs: OPFSNamespacedFs,
     fs: MutexFs,

@@ -6,7 +6,7 @@ import { Decoration, DecorationSet, EditorView, ViewPlugin, WidgetType } from "@
 // const CONFLICT_SEPARATOR_PATTERN = /^={7}$/gm;
 // const CONFLICT_END_PATTERN = /^>{7}(?:\s+(.*))?$/gm;
 
-export interface ConflictSection {
+interface ConflictSection {
   type: "start" | "separator" | "end";
   from: number;
   to: number;
@@ -384,6 +384,6 @@ const conflictTheme = EditorView.theme({
 });
 
 // Main git conflict plugin export
-export function gitConflictPlugin(): Extension {
+function gitConflictPlugin(): Extension {
   return [conflictRegionsField, conflictDetectionPlugin, conflictDecorationPlugin, conflictTheme];
 }

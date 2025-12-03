@@ -1,9 +1,9 @@
 import { ViewMode } from "@mdxeditor/editor";
 
-export const viewModeHash = (vm: ViewMode) => `#viewMode="${vm}"`;
+const viewModeHash = (vm: ViewMode) => `#viewMode="${vm}"`;
 
 export type ViewModeParamType = "hash+search" | "hash" | "search";
-export function getViewMode(
+function getViewMode(
   key = "viewMode",
   type: ViewModeParamType = "hash+search"
 ): "rich-text" | "source" | "diff" | null {

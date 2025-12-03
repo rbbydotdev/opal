@@ -18,7 +18,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-export const gitAuthorSchema = z.object({
+const gitAuthorSchema = z.object({
   name: z.string().min(1, "Author name is required").max(100, "Author name is too long"),
   email: z
     .string()

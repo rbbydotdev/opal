@@ -25,7 +25,7 @@ const LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH = "resizableRightPaneOpenWidth";
 const LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED = "resizableRightPaneIsCollapsed";
 
 const PREVIEW_PANE_ID = "preview-pane-id";
-export const getPreviewPaneElement = () => document.getElementById(PREVIEW_PANE_ID);
+const getPreviewPaneElement = () => document.getElementById(PREVIEW_PANE_ID);
 
 // Combined hook for managing both left and right pane states
 export const useSidebarPanes = ({
@@ -92,7 +92,7 @@ export const useSidebarPanes = ({
 export function useLeftCollapsed() {
   return useLocalStorage2(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
 }
-export const useSidebarWidth = () => {
+const useSidebarWidth = () => {
   const collapsed = useLeftCollapsed().setStoredValue;
   const width = useLocalStorage2(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH).storedValue;
   return { collapsed, width };

@@ -1,4 +1,4 @@
-export interface IIterableWeakSet<T extends object> extends Iterable<T> {
+interface IIterableWeakSet<T extends object> extends Iterable<T> {
   add(value: T): IIterableWeakSet<T>;
   delete(value: T): boolean;
   has(value: T): boolean;

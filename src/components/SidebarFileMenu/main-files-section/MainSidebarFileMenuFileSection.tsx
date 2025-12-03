@@ -360,7 +360,7 @@ const FileMenuCompactActions = ({
   );
 };
 
-export const SidebarFileMenuFilesActions = ({
+const SidebarFileMenuFilesActions = ({
   trashSelectedFiles,
   addFile,
   addDir,

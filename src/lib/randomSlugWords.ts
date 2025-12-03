@@ -20,7 +20,7 @@ export const RandomSlugWords = (length = 3, { capitalize } = { capitalize: true 
     .map((word) => (capitalize ? (word ?? "").charAt(0).toUpperCase() + (word ?? "").slice(1) : word))
     .join("-");
 };
-export const RandomSlugWords____ = (length = 3) => {
+const RandomSlugWords____ = (length = 3) => {
   const shuffled = shuffle(WORDS);
   return shuffled
     .slice(0, length)

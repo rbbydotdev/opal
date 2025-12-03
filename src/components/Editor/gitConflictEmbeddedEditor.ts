@@ -5,7 +5,7 @@ import { createContrastSafeCustomTheme } from "./codeMirrorCustomTheme";
 import { ConflictRegion } from "./gitConflictPlugin";
 
 // Widget that contains an embedded CodeMirror editor for conflict content
-export class ConflictContentWidget extends WidgetType {
+class ConflictContentWidget extends WidgetType {
   private editorView: EditorView | null = null;
 
   constructor(
@@ -138,7 +138,7 @@ export class ConflictContentWidget extends WidgetType {
 }
 
 // Enhanced conflict resolver widget with embedded editors
-export class EnhancedConflictResolverWidget extends WidgetType {
+class EnhancedConflictResolverWidget extends WidgetType {
   private currentEditor: ConflictContentWidget;
   private incomingEditor: ConflictContentWidget;
   private resolvedContent: { current: string; incoming: string } = {

@@ -95,7 +95,7 @@ function HighlightNodeSelector({
   }
 }
 
-export function SidebarTreeViewMenuContent({
+function SidebarTreeViewMenuContent({
   getLexicalNode,
   getDOMNode,
   parent,
@@ -505,7 +505,7 @@ const inorderWalk = (node: LexicalTreeViewNode, callback: (node: LexicalTreeView
   }
 };
 
-export const TreeViewMenuParent = ({
+const TreeViewMenuParent = ({
   depth,
   className,
   node,
@@ -554,7 +554,7 @@ export const TreeViewMenuParent = ({
   );
 };
 
-export const TreeViewTreeMenuChild = ({
+const TreeViewTreeMenuChild = ({
   depth,
   node,
   className,

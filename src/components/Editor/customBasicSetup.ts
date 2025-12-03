@@ -45,7 +45,7 @@ export const createCustomBasicSetup = (vimMode = false) => [
 /**
  * Minimal setup without conflicting keymaps for vim mode
  */
-export const createVimFriendlyMinimalSetup = () => [
+const createVimFriendlyMinimalSetup = () => [
   highlightSpecialChars(),
   history(),
   drawSelection(),

@@ -736,24 +736,24 @@ function SpotlightSearchInternal({
 //
 // ---- Types ----
 //
-export type CmdMapMember = CmdPrompt | CmdExec | CmdSelect;
+type CmdMapMember = CmdPrompt | CmdExec | CmdSelect;
 
 export type CmdMap = {
   [key: string]: CmdMapMember[];
 };
 
-export type CmdPrompt = {
+type CmdPrompt = {
   name: string;
   description: string;
   type: "prompt";
 };
 
-export type CmdExec = {
+type CmdExec = {
   exec: (context: Record<string, unknown>, abort: () => void) => (void | boolean) | Promise<void | boolean>;
   type: "exec";
 };
 
-export type CmdSelect = {
+type CmdSelect = {
   name: string;
   description: string;
   options: string[];
@@ -775,7 +775,7 @@ const NewCmdPrompt = (name: string, description: string): CmdPrompt => ({
   type: "prompt",
 });
 
-export const NewCmdSelect = (
+const NewCmdSelect = (
   name: string,
   description: string,
   options: string[],
@@ -791,17 +791,17 @@ export const NewCmdSelect = (
 //
 // ---- Type Guards ----
 //
-export function isCmdPrompt(cmd: CmdMapMember): cmd is CmdPrompt {
+function isCmdPrompt(cmd: CmdMapMember): cmd is CmdPrompt {
   return cmd.type === "prompt";
 }
-export function isCmdExec(cmd: CmdMapMember): cmd is CmdExec {
+function isCmdExec(cmd: CmdMapMember): cmd is CmdExec {
   return cmd.type === "exec";
 }
-export function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
+function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
   return cmd.type === "select";
 }
 
-export function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
+function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir, renameDirOrFile, trashFile } = useWorkspaceFileMgmt(currentWorkspace);
   // const { repo, playbook } = useMemo(
   //   () => ({ repo: currentWorkspace.getRepo(), playbook: currentWorkspace.getPlaybook() }),

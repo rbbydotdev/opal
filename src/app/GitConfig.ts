@@ -10,12 +10,12 @@ export const OPAL_AUTHOR: GitRepoAuthor = {
 
 export const GIT_CONFIG_KEY = "app/GitConfig";
 
-export interface GitUserInfo {
+interface GitUserInfo {
   name: string;
   email: string;
 }
 
-export interface GitConfigData {
+interface GitConfigData {
   user: GitUserInfo;
   // Future git configs can be added here:
   // defaultBranch?: string;

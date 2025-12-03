@@ -5,7 +5,7 @@ import { EditorView } from "@codemirror/view";
 import { tags as t } from "@lezer/highlight";
 
 /// The editor theme styles that use CSS variables from our app theme.
-export const customTheme = EditorView.theme(
+const customTheme = EditorView.theme(
   {
     "&": {
       color: "oklch(var(--foreground))",
@@ -237,7 +237,7 @@ const createContrastSafeGeneralHighlightStyle = (codeMirrorBackground: string = 
 };
 
 /// The highlighting style for code that uses CSS variables from our app theme.
-export const customHighlightStyle = createContrastSafeGeneralHighlightStyle();
+const customHighlightStyle = createContrastSafeGeneralHighlightStyle();
 
 /// Extension to enable the custom theme (both the editor theme and
 /// the highlight style) that uses CSS variables from our app theme.

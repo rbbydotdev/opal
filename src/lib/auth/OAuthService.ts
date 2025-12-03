@@ -5,7 +5,7 @@ import { GitHubOAuthProvider } from "./providers/GitHubOAuthProvider";
 import { NetlifyOAuthProvider } from "./providers/NetlifyOAuthProvider";
 import { OAuthCbChannel, OAuthProvider } from "./providers/OAuthProvider";
 
-export interface OAuthServiceConfig {
+interface OAuthServiceConfig {
   source: RemoteAuthSource;
   corsProxy?: string;
   onSuccess: (data: RemoteAuthDataFor<"oauth">) => void;

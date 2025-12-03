@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronRight, Delete, Ellipsis, MoreHorizontal, SquareDashed } from "lucide-react";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 
-export type SelectableItem = {
+type SelectableItem = {
   id: string;
   ItemComponent: React.ComponentType<{ id: string; isSelected: boolean }>;
 };
@@ -344,7 +344,7 @@ type SelectableListTriggerProps = {
   onTrigger?: () => void;
 };
 
-export function SelectableListTrigger({ children, onTrigger }: SelectableListTriggerProps) {
+function SelectableListTrigger({ children, onTrigger }: SelectableListTriggerProps) {
   return (
     <Button variant="outline" size="sm" className="w-full mb-2" onClick={onTrigger}>
       {children}
@@ -359,7 +359,7 @@ type SelectableListActionButtonProps = {
   className?: string;
 };
 
-export function SelectableListActionButton({ children, onClick, title, className }: SelectableListActionButtonProps) {
+function SelectableListActionButton({ children, onClick, title, className }: SelectableListActionButtonProps) {
   const { items } = useSelectableListContext();
 
   return (

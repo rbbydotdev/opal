@@ -2,7 +2,7 @@ import { DeployLogLine, DeployRecord } from "@/data/DeployRecord";
 import { ClientDb } from "@/data/instance";
 import { nanoid } from "nanoid";
 
-export type DeployJType = ReturnType<typeof DeployDAO.prototype.toJSON>;
+type DeployJType = ReturnType<typeof DeployDAO.prototype.toJSON>;
 
 export class DeployDAO<T = any> implements DeployRecord<T> {
   guid: string;
@@ -190,7 +190,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   }
 }
 
-export class NullDeployDAO extends DeployDAO {
+class NullDeployDAO extends DeployDAO {
   constructor() {
     super({
       guid: "_null_deploy_",
@@ -206,4 +206,4 @@ export class NullDeployDAO extends DeployDAO {
   }
 }
 
-export const NULL_DEPLOY = new NullDeployDAO();
+const NULL_DEPLOY = new NullDeployDAO();

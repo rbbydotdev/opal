@@ -20,7 +20,7 @@ const BuildSideBarLabel = ({ title, id }: { title: React.ReactNode; id: string }
   );
 };
 
-export function BuildSidebarFileMenuFileSectionInternal({
+function BuildSidebarFileMenuFileSectionInternal({
   className,
   build,
 }: {

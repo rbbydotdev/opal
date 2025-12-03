@@ -9,7 +9,7 @@ export interface FileWithWorkspace {
   workspaceHref: string;
 }
 
-export function useAllWorkspaceFiles() {
+function useAllWorkspaceFiles() {
   // Use the new cross-workspace search hook
   const crossWorkspaceSearch = useCrossWorkspaceFilenameSearch();
 

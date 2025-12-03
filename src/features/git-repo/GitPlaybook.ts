@@ -10,7 +10,7 @@ import { NullDisk } from "@/data/NullDisk";
 import { Remote } from "comlink";
 import * as git from "isomorphic-git";
 
-export const SYSTEM_COMMITS = {
+const SYSTEM_COMMITS = {
   COMMIT: "opal / commit",
   SWITCH_BRANCH: "opal /  switch branch",
   SWITCH_COMMIT: "opal / switch commit",

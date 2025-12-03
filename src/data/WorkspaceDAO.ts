@@ -11,12 +11,12 @@ import { nanoid } from "nanoid";
 import { DiskJType, DiskType } from "./DiskType";
 import { WorkspaceStatusCode, WS_OK } from "./WorkspaceStatusCode";
 
-export type WorkspaceGuid = Brand<string, "WorkspaceGuid">;
+type WorkspaceGuid = Brand<string, "WorkspaceGuid">;
 
-export const isWorkspaceGuid = (workspaceGuid: string): workspaceGuid is WorkspaceGuid =>
+const isWorkspaceGuid = (workspaceGuid: string): workspaceGuid is WorkspaceGuid =>
   workspaceGuid.startsWith("__workspace__");
 
-export const wrkId = (id: string) => {
+const wrkId = (id: string) => {
   if (isWorkspaceGuid(id)) return id as WorkspaceGuid;
   throw new Error("unknown id expected, /^__workspace__.+/");
 };

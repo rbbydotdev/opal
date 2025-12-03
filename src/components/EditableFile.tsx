@@ -129,7 +129,7 @@ export const EditableFile = ({
   );
 };
 
-export function SelectedMark({ selected = false, conflicted = false }: { selected?: boolean; conflicted?: boolean }) {
+function SelectedMark({ selected = false, conflicted = false }: { selected?: boolean; conflicted?: boolean }) {
   return (
     <div
       className={clsx(
@@ -143,7 +143,7 @@ export function SelectedMark({ selected = false, conflicted = false }: { selecte
   );
 }
 
-export const ActiveLink = ({
+const ActiveLink = ({
   active,
   to,
   ...props

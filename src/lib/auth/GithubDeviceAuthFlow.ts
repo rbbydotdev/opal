@@ -6,7 +6,7 @@ import { createOAuthDeviceAuth } from "@octokit/auth-oauth-device";
 import { Octokit } from "@octokit/core";
 import { request } from "@octokit/request";
 import { OnVerificationCallback } from "../../../node_modules/@octokit/auth-oauth-device/dist-types/types";
-export type GithubDeviceAuthFlowPayload = {
+type GithubDeviceAuthFlowPayload = {
   login: string;
   token: string;
   obtainedAt: number;

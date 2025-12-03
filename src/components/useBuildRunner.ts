@@ -4,7 +4,7 @@ import { Workspace } from "@/data/Workspace";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
-export interface UseBuildRunnerReturn {
+interface UseBuildRunnerReturn {
   buildRunner: BuildRunner;
   logs: BuildLogLine[];
   buildCompleted: boolean;

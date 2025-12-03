@@ -10,7 +10,7 @@ import { RequestSignalsInstance } from "@/lib/RequestSignals";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
 
-export class IndexedDbDiskContext extends DiskContext {
+class IndexedDbDiskContext extends DiskContext {
   constructor(
     public readonly lightningFs: LightningFs,
     fs: CommonFileSystem,

@@ -25,7 +25,7 @@ import { useCallback } from "react";
 //   // TODO: Implement type-based default content
 //   return "";
 // }
-export function defaultFileContentFromPath(path: AbsPath) {
+function defaultFileContentFromPath(path: AbsPath) {
   return DefaultFile.fromPath(path);
 }
 

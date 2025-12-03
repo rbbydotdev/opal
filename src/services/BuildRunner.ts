@@ -14,7 +14,7 @@ import mustache from "mustache";
 import slugify from "slugify";
 import { NULL_BUILD } from "../data/BuildDAO";
 
-export interface BuildRunnerOptions {
+interface BuildRunnerOptions {
   strategy: BuildStrategy;
   workspaceName: string;
   buildLabel?: string;
@@ -23,7 +23,7 @@ export interface BuildRunnerOptions {
   onError?: (message: string) => void;
 }
 
-export interface BuildResult {
+interface BuildResult {
   success: boolean;
   error?: string;
 }
@@ -578,7 +578,7 @@ export class BuildRunner {
   }
 }
 
-export class NullBuildRunner extends BuildRunner {
+class NullBuildRunner extends BuildRunner {
   constructor() {
     super({
       build: NULL_BUILD,

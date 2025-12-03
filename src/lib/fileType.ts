@@ -29,7 +29,7 @@ export const StringMimeTypes = [
   "application/json",
 ] as const satisfies Partial<OpalMimeType>[];
 
-export const MimeTypeExt = {
+const MimeTypeExt = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/gif": "gif",
@@ -55,24 +55,24 @@ export const isImageType = (type: OpalMimeType | string): boolean => {
 export const isMarkdownType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.MARKDOWN;
 };
-export const isHtmlType = (type: OpalMimeType | string): boolean => {
+const isHtmlType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.HTML;
 };
-export const isMustacheType = (type: OpalMimeType | string): boolean => {
+const isMustacheType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.MUSTACHE;
 };
-export const isBinaryType = (type: OpalMimeType | string): boolean => {
+const isBinaryType = (type: OpalMimeType | string): boolean => {
   return type === MimeTypes.BIN;
 };
-export function contentsToMimeType(contents: Uint8Array<ArrayBufferLike>): OpalMimeType {
+function contentsToMimeType(contents: Uint8Array<ArrayBufferLike>): OpalMimeType {
   return getFileType(contents);
 }
 
-export function getMimeTypeExt(fileType: OpalMimeType) {
+function getMimeTypeExt(fileType: OpalMimeType) {
   return MimeTypeExt[fileType];
 }
 
-export function getFileType(data: string | Uint8Array<ArrayBufferLike>): OpalMimeType {
+function getFileType(data: string | Uint8Array<ArrayBufferLike>): OpalMimeType {
   if (typeof data === "string") return MimeTypes.MARKDOWN;
   // Check for JPEG (FF D8 FF)
   if (data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) {
@@ -119,7 +119,7 @@ export function getFileType(data: string | Uint8Array<ArrayBufferLike>): OpalMim
   }
   return isBinary(data) ? MimeTypes.BIN : MimeTypes.MARKDOWN;
 }
-export function isBinary(buffer: Uint8Array<ArrayBufferLike>, maxLength = 128): boolean {
+function isBinary(buffer: Uint8Array<ArrayBufferLike>, maxLength = 128): boolean {
   for (let i = 0; i <= Math.min(maxLength, buffer.length); i++) {
     if (buffer[i]! ?? 0 > 127) {
       return true; // Non-ASCII character found, likely binary

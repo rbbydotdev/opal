@@ -8,7 +8,7 @@ export const REQ_SIGNAL = {
   COUNT: "count",
 } as const;
 
-export type ReqSignal = (typeof REQ_SIGNAL)[keyof typeof REQ_SIGNAL];
+type ReqSignal = (typeof REQ_SIGNAL)[keyof typeof REQ_SIGNAL];
 
 export type RequestEventDetail =
   | { type: typeof REQ_SIGNAL.START }

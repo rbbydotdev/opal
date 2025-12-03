@@ -198,7 +198,7 @@ Start writing your own content and make this blog yours!
 };
 
 // Legacy export for compatibility
-export const TemplateDefaultContents = {
+const TemplateDefaultContents = {
   ejs: DefaultFile.EJS(),
   mustache: DefaultFile.Mustache(),
   html: DefaultFile.HTML(),

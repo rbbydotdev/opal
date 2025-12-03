@@ -30,7 +30,7 @@ export interface GitRemote {
   gitCorsProxy?: string;
   authId?: string;
 }
-export interface IRemote {
+interface IRemote {
   branch: string;
   name: string;
   url: string;
@@ -38,12 +38,12 @@ export interface IRemote {
 }
 
 // Utility functions for GitRef
-export const createBranchRef = (name: string): GitRef => ({
+const createBranchRef = (name: string): GitRef => ({
   value: name,
   type: "branch",
 });
 
-export const createCommitRef = (name: string): GitRef => ({
+const createCommitRef = (name: string): GitRef => ({
   value: name,
   type: "commit",
 });
@@ -51,7 +51,7 @@ export const createCommitRef = (name: string): GitRef => ({
 export const isCommitRef = (gitRef: GitRef): gitRef is GitRefCommit => gitRef.type === "commit";
 export const isBranchRef = (gitRef: GitRef): gitRef is GitRefBranch => gitRef.type === "branch";
 
-export type RepoLatestCommit = {
+type RepoLatestCommit = {
   oid: string;
   date: number;
   message: string;
@@ -67,7 +67,7 @@ export type RepoCommit = {
   oid: string;
   commit: { message: string; author: { name: string; email: string; timestamp: number; timezoneOffset: number } };
 };
-export const RepoLatestCommitNull = {
+const RepoLatestCommitNull = {
   oid: "",
   date: 0,
   message: "",
@@ -87,11 +87,11 @@ export type GitRef = {
   type: GitRefType;
 };
 
-export type GitRefBranch = {
+type GitRefBranch = {
   value: string;
   type: "branch";
 };
-export type GitRefCommit = {
+type GitRefCommit = {
   value: string;
   type: "commit";
 };
@@ -122,8 +122,8 @@ export const RepoDefaultInfo = {
 };
 export type RepoInfoType = typeof RepoDefaultInfo;
 
-export const SIGNAL_ONLY = undefined;
-export const RepoEvents = {
+const SIGNAL_ONLY = undefined;
+const RepoEvents = {
   WORKTREE: "worktree" as const,
   GIT: "git" as const,
   INFO: "info" as const,
@@ -134,27 +134,27 @@ type RepoLocalEventPayload = {
   [RepoEvents.GIT]: undefined;
   [RepoEvents.INFO]: RepoInfoType;
 };
-export class RepoEventsLocal extends CreateSuperTypedEmitterClass<RepoLocalEventPayload>() {}
+class RepoEventsLocal extends CreateSuperTypedEmitterClass<RepoLocalEventPayload>() {}
 
-export type RepoRemoteEventPayload = {
+type RepoRemoteEventPayload = {
   [RepoEvents.WORKTREE]: undefined;
   [RepoEvents.GIT]: undefined;
   [RepoEvents.INFO]: RepoInfoType;
 };
-export class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
+class RepoEventsRemote extends Channel<RepoRemoteEventPayload> {}
 
-export function isMergeConflictError(result: unknown): result is InstanceType<typeof GIT.Errors.MergeConflictError> {
+function isMergeConflictError(result: unknown): result is InstanceType<typeof GIT.Errors.MergeConflictError> {
   return result instanceof GIT.Errors.MergeConflictError;
 }
 
-export function isMergeNotSupportedError(
+function isMergeNotSupportedError(
   result: unknown
 ): result is InstanceType<typeof GIT.Errors.MergeNotSupportedError> {
   return result instanceof GIT.Errors.MergeNotSupportedError;
 }
 
-export type MergeConflict = InstanceType<typeof GIT.Errors.MergeConflictError>["data"];
-export function isMergeConflict(data: unknown): data is MergeConflict {
+type MergeConflict = InstanceType<typeof GIT.Errors.MergeConflictError>["data"];
+function isMergeConflict(data: unknown): data is MergeConflict {
   return (
     typeof data === "object" &&
     data !== null &&

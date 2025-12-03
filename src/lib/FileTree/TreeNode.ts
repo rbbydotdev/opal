@@ -31,7 +31,7 @@ export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
 };
 
-export type TreeNodeJType = TreeFileJType | TreeNodeDirJType;
+type TreeNodeJType = TreeFileJType | TreeNodeDirJType;
 
 export type TreeDirRootJType = TreeNodeDirJType;
 
@@ -431,8 +431,8 @@ export class TreeNode {
   }
 }
 
-export type TreeNodeWithContent = TreeFile & { virtualContent: string };
-export type TreeNodeWithSource = TreeNode & { source: AbsPath };
+type TreeNodeWithContent = TreeFile & { virtualContent: string };
+type TreeNodeWithSource = TreeNode & { source: AbsPath };
 
 export class TreeDir extends TreeNode {
   type = "dir" as const;
@@ -627,10 +627,10 @@ export class TreeDirRoot extends TreeDir {
   }
 }
 
-export function isTreeFile(node: TreeNode): node is TreeFile {
+function isTreeFile(node: TreeNode): node is TreeFile {
   return node.type === "file";
 }
-export function isTreeDir(node: TreeNode): node is TreeDir {
+function isTreeDir(node: TreeNode): node is TreeDir {
   return node.type === "dir";
 }
 export class TreeFile extends TreeNode {
@@ -696,7 +696,7 @@ export class TreeFile extends TreeNode {
   }
 }
 
-export type TreeList = Array<string>;
+type TreeList = Array<string>;
 
 function tagSource<T extends TreeNode>(this: T, sourceNode: TreeNode) {
   this.source = sourceNode.path;
@@ -716,7 +716,7 @@ export class VirtualDirTreeNode extends TreeDir {
   isVirtual = true;
   tagSource = tagSource<VirtualTreeNode>;
 }
-export class VirtualFileTreeNodeWithContent extends VirtualFileTreeNode {
+class VirtualFileTreeNodeWithContent extends VirtualFileTreeNode {
   virtualContent!: string;
   constructor(props: ConstructorParameters<typeof VirtualFileTreeNode>[0] & { virtualContent: string }) {
     super(props);
@@ -724,15 +724,15 @@ export class VirtualFileTreeNodeWithContent extends VirtualFileTreeNode {
   }
 }
 
-export function isVirtualNode(node: TreeNode): node is VirtualTreeNode {
+function isVirtualNode(node: TreeNode): node is VirtualTreeNode {
   return typeof node.isVirtual === "boolean" && node.isVirtual !== false;
 }
 
-export class VirtualDupTreeNode extends VirtualTreeNode {
+class VirtualDupTreeNode extends VirtualTreeNode {
   source!: AbsPath;
 }
 
-export function isVirtualDupNode(node: TreeNode): node is VirtualDupTreeNode {
+function isVirtualDupNode(node: TreeNode): node is VirtualDupTreeNode {
   return isVirtualNode(node) && typeof node.source !== "undefined";
 }
 

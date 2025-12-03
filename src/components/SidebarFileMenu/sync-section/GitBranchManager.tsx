@@ -32,7 +32,7 @@ import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { unwrapError } from "@/lib/errors";
 import { Remote } from "comlink";
 
-export function GitBranchManager({
+function GitBranchManager({
   refs,
   addGitBranch,
   setCurrentBranch,

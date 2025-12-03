@@ -21,7 +21,7 @@ export function hasGitConflictMarkers(content: string): boolean {
  * More thorough conflict detection that checks for complete conflict blocks
  * Returns true only if a complete conflict block (start + middle + end) is found
  */
-export function hasCompleteGitConflictBlocks(content: string): boolean {
+function hasCompleteGitConflictBlocks(content: string): boolean {
   if (!content) return false;
   
   const lines = content.split('\n');
@@ -46,7 +46,7 @@ export function hasCompleteGitConflictBlocks(content: string): boolean {
  * Fast initial check for any conflict markers
  * Use this for quick validation before more expensive operations
  */
-export function mayHaveGitConflicts(content: string): boolean {
+function mayHaveGitConflicts(content: string): boolean {
   return content.includes('<<<<<<<') || 
          content.includes('=======') || 
          content.includes('>>>>>>>');

@@ -5,7 +5,7 @@ import { LexicalTreeViewNode, lexicalToTreeView } from "@/lib/lexical/treeViewDi
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import React, { useCallback, useEffect, useState } from "react";
 
-export const DisplayTreeContext = React.createContext<{
+const DisplayTreeContext = React.createContext<{
   displayTree: LexicalTreeViewNode | null;
   flatTree: string[];
 }>({
@@ -32,7 +32,7 @@ export function useEditorDisplayTreeCtx() {
   return context;
 }
 
-export function useEditorDisplayTree(editorRealmId = MainEditorRealmId) {
+function useEditorDisplayTree(editorRealmId = MainEditorRealmId) {
   const realm = useRemoteMDXEditorRealm(editorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
   const [displayTree, setDisplayTree] = useState<LexicalTreeViewNode | null>(null);

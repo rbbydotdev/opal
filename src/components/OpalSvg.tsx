@@ -1,13 +1,13 @@
 import { ClassAttributes, ImgHTMLAttributes, JSX } from "react";
 
-export function OpalSvgDark({
+function OpalSvgDark({
   className,
   ...props
 }: JSX.IntrinsicAttributes & ClassAttributes<HTMLImageElement> & ImgHTMLAttributes<HTMLImageElement>) {
   return <img src="/opal-blank.svg" alt="Opal Icon" {...props} className={"opalSvgDark " + (className ?? "")} />;
 }
 
-export function OpalSvgLight({
+function OpalSvgLight({
   className,
   ...props
 }: JSX.IntrinsicAttributes & ClassAttributes<HTMLImageElement> & ImgHTMLAttributes<HTMLImageElement>) {

@@ -1,11 +1,11 @@
-export function extractOklchValues(oklchString: string): string {
+function extractOklchValues(oklchString: string): string {
   return oklchString.replace(/oklch\((.*?)\)/, "$1");
 }
 
 /**
  * Creates a lighter variant of an OKLCH color
  */
-export function lightenOklch(oklchString: string, amount = 0.1): string {
+function lightenOklch(oklchString: string, amount = 0.1): string {
   const values = extractOklchValues(oklchString);
   const [l, c, h] = values.split(" ").map((v) => parseFloat(v));
   const newL = Math.min(1, l! + amount);
@@ -15,7 +15,7 @@ export function lightenOklch(oklchString: string, amount = 0.1): string {
 /**
  * Creates a darker variant of an OKLCH color
  */
-export function darkenOklch(oklchString: string, amount = 0.1): string {
+function darkenOklch(oklchString: string, amount = 0.1): string {
   const values = extractOklchValues(oklchString);
   const [l, c, h] = values.split(" ").map((v) => parseFloat(v));
   const newL = Math.max(0, l! - amount);
@@ -25,7 +25,7 @@ export function darkenOklch(oklchString: string, amount = 0.1): string {
 /**
  * Creates an alpha variant of an OKLCH color
  */
-export function oklchWithAlpha(oklchString: string, alpha: number): string {
+function oklchWithAlpha(oklchString: string, alpha: number): string {
   const values = extractOklchValues(oklchString);
   return `oklch(${values} / ${alpha})`;
 }
@@ -33,21 +33,21 @@ export function oklchWithAlpha(oklchString: string, alpha: number): string {
 /**
  * Gets a subtle accent color for hover states
  */
-export function getSubtleHover(baseColor: string): string {
+function getSubtleHover(baseColor: string): string {
   return oklchWithAlpha(baseColor, 0.5);
 }
 
 /**
  * Gets a more pronounced accent color for active states
  */
-export function getActiveAccent(baseColor: string): string {
+function getActiveAccent(baseColor: string): string {
   return oklchWithAlpha(baseColor, 0.7);
 }
 
 /**
  * Creates CSS custom properties for derived colors
  */
-export function createDerivedColorVars(rootElement: HTMLElement) {
+function createDerivedColorVars(rootElement: HTMLElement) {
   const computedStyle = getComputedStyle(rootElement);
 
   // Get base colors
@@ -91,7 +91,7 @@ export function hexToRgb(hex: string): [number, number, number] | null {
   return null;
 }
 
-export function luminance([r, g, b]: [number, number, number]): number {
+function luminance([r, g, b]: [number, number, number]): number {
   const srgb = [r, g, b].map((v) => {
     const c = v / 255;
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -246,7 +246,7 @@ export const getCSSVariableColor = (variable: string): string => {
 //   return result ? [parseInt(result[1]!, 16), parseInt(result[2]!, 16), parseInt(result[3]!, 16)] : null;
 // };
 
-export const getLuminance = (r: number, g: number, b: number): number => {
+const getLuminance = (r: number, g: number, b: number): number => {
   const [rs, gs, bs] = [r, g, b].map((c) => {
     c = c / 255;
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -254,4 +254,4 @@ export const getLuminance = (r: number, g: number, b: number): number => {
   return 0.2126 * rs! + 0.7152 * gs! + 0.0722 * bs!;
 };
 
-export type ColorFormat = "hex" | "rgb" | "hsl" | "oklch" | "lch" | "hwb";
+type ColorFormat = "hex" | "rgb" | "hsl" | "oklch" | "lch" | "hwb";

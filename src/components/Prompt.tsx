@@ -34,13 +34,13 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function usePrompt() {
+function usePrompt() {
   const ctx = useContext(PromptContext);
   if (!ctx) throw new Error("usePrompt must be used within a PromptProvider");
   return ctx;
 }
 
-export function usePromptCmd() {
+function usePromptCmd() {
   const cmdRef = useRef<{
     open: <T>(form: ReactElement<any>, title: string, description: string) => Promise<T | null>;
   }>({
@@ -53,7 +53,7 @@ export function usePromptCmd() {
   };
 }
 
-export function Prompt({
+function Prompt({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{

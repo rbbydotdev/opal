@@ -69,7 +69,7 @@ export function useSnapHistoryDB(): HistoryStorageInterface {
   return ctx;
 }
 
-export class HistoryDAO implements HistoryStorageInterface {
+class HistoryDAO implements HistoryStorageInterface {
   // --- Constants for Threshold Calculation ---
   private readonly TIME_NORMALIZATION_MS = 30 * 1000;
   // Number of characters changed after which a save is highly encouraged

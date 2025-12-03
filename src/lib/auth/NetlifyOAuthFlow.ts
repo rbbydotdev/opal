@@ -4,7 +4,7 @@ import { mapToTypedError } from "@/lib/errors";
 /**
  * OAuth Types
  */
-export type NetlifyOAuthFlowPayload = {
+type NetlifyOAuthFlowPayload = {
   accessToken: string;
   obtainedAt: number;
 };

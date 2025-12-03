@@ -1,6 +1,6 @@
 import { DirectoryHandleIDB } from "./DirectoryHandleIDB";
 
-export interface DirectoryHandleRecord {
+interface DirectoryHandleRecord {
   diskId: string;
   directoryName: string;
   lastAccessed: Date;

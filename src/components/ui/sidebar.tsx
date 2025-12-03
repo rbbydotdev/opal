@@ -40,7 +40,7 @@ function useSidebar() {
   return context;
 }
 
-export function useSidebarState(sidebarId = SIDEBAR_STORAGE_NAME) {
+function useSidebarState(sidebarId = SIDEBAR_STORAGE_NAME) {
   const { storedValue, setStoredValue: setValue } = useLocalStorage2(sidebarId, true);
   return [storedValue, setValue] as const;
 }

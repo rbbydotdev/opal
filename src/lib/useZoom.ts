@@ -1,7 +1,7 @@
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useEffect } from "react";
 
-export type ZoomLevel = 0.65 | 0.75 | 0.85 | 0.95 | 1;
+type ZoomLevel = 0.65 | 0.75 | 0.85 | 0.95 | 1;
 
 export const ZOOM_LEVELS: ZoomLevel[] = [0.65, 0.75, 0.85, 0.95, 1];
 

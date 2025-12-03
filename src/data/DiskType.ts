@@ -3,9 +3,9 @@ import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 
 export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType | null; timestamp?: number };
 
-export const DiskKinds = ["IndexedDbDisk", "OpFsDisk", "OpFsDirMountDisk", "NullDisk"] as const;
+const DiskKinds = ["IndexedDbDisk", "OpFsDisk", "OpFsDirMountDisk", "NullDisk"] as const;
 
-export type DiskTypes = (typeof DiskKinds)[number];
+type DiskTypes = (typeof DiskKinds)[number];
 
 export const getDiskTypeLabel = (type: DiskTypes) => {
   return DiskKindLabel[type] ?? "Unknown";

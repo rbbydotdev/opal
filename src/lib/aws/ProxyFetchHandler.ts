@@ -4,7 +4,7 @@ import type { HttpRequest, HttpResponse } from "@smithy/protocol-http";
 import { HttpRequest as HttpRequestClass } from "@smithy/protocol-http";
 import type { HttpHandlerOptions } from "@smithy/types";
 
-export interface ProxyFetchHandlerOptions extends FetchHttpHandlerOptions {
+interface ProxyFetchHandlerOptions extends FetchHttpHandlerOptions {
   proxyUrl?: string;
 }
 

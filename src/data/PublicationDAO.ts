@@ -1,13 +1,13 @@
 import { DestinationDAO, DestinationJType } from "@/data/DestinationDAO";
 import { nanoid } from "nanoid";
 
-export type PublishLogLine = {
+type PublishLogLine = {
   timestamp: number;
   message: string;
   type: "info" | "error";
 };
 
-export interface PublicationRecord {
+interface PublicationRecord {
   destination: DestinationJType | DestinationDAO;
   timestamp?: number;
   status: "idle" | "success" | "failed";

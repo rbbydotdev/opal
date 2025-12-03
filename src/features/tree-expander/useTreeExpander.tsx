@@ -36,7 +36,7 @@ export function useTreeExpanderContext() {
   return context;
 }
 
-export function useTreeExpander({
+function useTreeExpander({
   nodePaths,
   activePath,
   expanderId,

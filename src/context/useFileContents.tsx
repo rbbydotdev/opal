@@ -62,7 +62,7 @@ type ContentEventMap = {
  * Used when components need to push content changes without going through the editor
  * Cleanup: Removes all listeners on unmount to prevent memory leaks
  */
-export function useContentEmitter() {
+function useContentEmitter() {
   const emitter = useMemo(() => CreateTypedEmitter<ContentEventMap>(), []);
   useEffect(() => {
     return () => {

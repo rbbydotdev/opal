@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-export function GitRemoteManager({
+function GitRemoteManager({
   remotes,
   addGitRemote,
   replaceGitRemote,

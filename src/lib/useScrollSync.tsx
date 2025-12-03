@@ -18,7 +18,7 @@ function clamp(value: number, min = 0, max = 1) {
   return Math.min(Math.max(value, min), max);
 }
 
-export function useScrollSync({
+function useScrollSync({
   elementRef,
   listenRef,
   path: currentPath,

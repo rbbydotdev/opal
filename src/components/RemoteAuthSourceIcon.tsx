@@ -7,7 +7,7 @@ import Vercel from "@/icons/vercel.svg?react";
 import { LucideProps, Zap } from "lucide-react";
 import React from "react";
 
-export const RemoteAuthSourceIcon = {
+const RemoteAuthSourceIcon = {
   github: <Github style={{ width: "18px", height: "18px" }} />,
   netlify: <Netlify style={{ width: "18px", height: "18px" }} />,
   cloudflare: <Cloudflare style={{ width: "18px", height: "18px" }} />,

@@ -31,7 +31,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
-export const NULL_WORKSPACE = new NullWorkspace();
+const NULL_WORKSPACE = new NullWorkspace();
 
 const defaultWorkspaceContext = {
   fileTree: NULL_FILE_TREE as FileTree,
@@ -46,20 +46,20 @@ const defaultWorkspaceContext = {
   workspaceRoute: { name: null, path: null } as WorkspaceRouteType,
 };
 
-export type DeepNonNullable<T extends object, K extends keyof T = never> = {
+type DeepNonNullable<T extends object, K extends keyof T = never> = {
   [P in keyof T]: P extends K
     ? T[P]
     : NonNullable<T[P]> extends T
       ? DeepNonNullable<NonNullable<T[P]>, K>
       : NonNullable<T[P]>;
 };
-export type WorkspaceContextType = typeof defaultWorkspaceContext;
+type WorkspaceContextType = typeof defaultWorkspaceContext;
 
-export const WorkspaceContext = React.createContext<WorkspaceContextType>(defaultWorkspaceContext);
+const WorkspaceContext = React.createContext<WorkspaceContextType>(defaultWorkspaceContext);
 
 export type WorkspaceRouteType = { name: string | null; path: AbsPath | null };
 
-export type Workspaces = WorkspaceDAO[];
+type Workspaces = WorkspaceDAO[];
 
 export const DEFAULT_MIME_TYPE: OpalMimeType = "application/octet-stream"; //i think this just means binary?
 

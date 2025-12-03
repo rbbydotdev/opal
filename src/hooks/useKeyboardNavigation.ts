@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export interface KeyboardNavigationOptions {
+interface KeyboardNavigationOptions {
   onEnter?: (activeIndex: number, items: Element[]) => void;
   onEscape?: () => void;
   onSelect?: (activeIndex: number) => void;

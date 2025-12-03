@@ -1,7 +1,7 @@
 import { useLocation } from "@tanstack/react-router";
 
 const RANGE_KEY = "hlRanges";
-export function rangesToSearchParams(ranges: [start: number, end: number][], meta?: Record<string, unknown>): string {
+function rangesToSearchParams(ranges: [start: number, end: number][], meta?: Record<string, unknown>): string {
   const params = new URLSearchParams();
   params.set(RANGE_KEY, JSON.stringify(ranges));
   if (meta) {
@@ -29,7 +29,7 @@ export function useHashURLRanges():
   return { start, end, hasRanges: true };
 }
 
-export function parseParamsToRanges(params: URLSearchParams): {
+function parseParamsToRanges(params: URLSearchParams): {
   ranges: [start: number, end: number][] | null;
   meta: Record<string, unknown>;
 } {

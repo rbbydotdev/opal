@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import { IterableWeakSet } from "./IterableWeakSet";
 
 // Helper function to create symbol-like objects for emitter identification
-export function EmitterSymbol(description?: string): object {
+function EmitterSymbol(description?: string): object {
   return Object.freeze({
     description: description || "",
     [Symbol.toStringTag]: "EmitterSymbol",
@@ -12,7 +12,7 @@ export function EmitterSymbol(description?: string): object {
   });
 }
 
-export type TypedEmitter<Events extends Record<string, any>> = {
+type TypedEmitter<Events extends Record<string, any>> = {
   on<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): EventEmitter;
   once<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): EventEmitter;
   off<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): EventEmitter;
