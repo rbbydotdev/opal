@@ -1,4 +1,4 @@
-import { RemoteAuthFormValues } from "@/components/RemoteAuthTemplate";
+import { RemoteAuthFormValues } from "@/components/remote-auth/RemoteAuthTemplate";
 import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { errF } from "@/lib/errors";

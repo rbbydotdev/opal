@@ -4,7 +4,7 @@ import { GitHubDestinationForm } from "@/components/publish-modal/GitHubDestinat
 import { NetlifyDestinationForm } from "@/components/publish-modal/NetlifyDestinationForm";
 import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
 import { VercelDestinationForm } from "@/components/publish-modal/VercelDestinationForm";
-import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
+import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

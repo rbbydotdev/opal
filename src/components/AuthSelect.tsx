@@ -1,4 +1,4 @@
-import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
+import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";

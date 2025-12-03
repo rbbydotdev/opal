@@ -1,4 +1,4 @@
-import type { CmdMap } from "@/components/SpotlightSearch";
+import type { CmdMap } from "@/components/spotlight/SpotlightSearch";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { ThemePreview } from "@/features/theme/ThemePreview";

@@ -1,4 +1,4 @@
-import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
+import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { RemoteAuthDataFor, RemoteAuthSource, RemoteAuthType } from "@/data/RemoteAuthTypes";
 import { ENV } from "@/lib/env";
 import { Globe, KeyIcon } from "lucide-react";
