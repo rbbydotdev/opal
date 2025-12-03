@@ -68,6 +68,7 @@ export function PublicationModalDestinationContent({
 
   const form = useForm<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>({
     defaultValues,
+    reValidateMode: "onChange",
     resolver: (values, opt1, opt2) => {
       return zodResolver<z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>>(currentSchema)(
         values,

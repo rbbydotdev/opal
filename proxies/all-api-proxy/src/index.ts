@@ -272,31 +272,7 @@ const { preflight, corsify } = cors({
   credentials: true,
   origin: ALLOWED_ORIGINS,
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-  allowHeaders: [
-    "Content-Type",
-    "Authorization",
-    "authorization",
-    "X-Requested-With",
-    "Accept",
-    "Access-Control-Allow-Origin",
-    "Accept-Encoding",
-    "Accept-Language",
-    "User-Agent",
-    "Cache-Control",
-    "Pragma",
-    // Cloudflare SDK (Stainless) headers
-    "api-version",
-    "x-stainless-arch",
-    "x-stainless-lang",
-    "x-stainless-os", 
-    "x-stainless-package-version",
-    "x-stainless-retry-count",
-    "x-stainless-runtime",
-    "x-stainless-runtime-version",
-    "x-stainless-timeout",
-    // AWS headers for all requests (simpler approach)
-    ...getAllowedHeaders(),
-  ],
+  allowHeaders: "*", // Allow all headers - works for AWS, Cloudflare, and any other SDKs
   exposeHeaders: ["etag", ...getExposedHeaders().filter((h) => h !== "etag")],
   maxAge: 86400,
 });

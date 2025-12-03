@@ -221,14 +221,15 @@ export function RemoteItemSearchDropDown({
             )}
             {!hasError && !isLoading && allItems.length > 0 && (
               <ul {...getMenuProps()} className="text-xs">
-                {allItems.map((repo, index) => (
-                  <li key={repo.value} role="presentation" className="flex w-full flex-col rounded p-1">
+                {allItems.map((item, index) => (
+                  <li key={item.value} role="presentation" className="flex w-full flex-col rounded p-1">
                     <button
                       {...getItemProps(index)}
-                      onClick={() => handleItemClick(repo)}
+                      onClick={() => handleItemClick(item)}
+                      title={item.label}
                       className="group flex h-8 min-w-0 items-center justify-start rounded-md border-2 px-2 py-5 outline-none group-hover:border-ring focus:border-ring"
                     >
-                      <div className="min-w-0 truncate text-md font-mono">{repo.element}</div>
+                      <div className="min-w-0 truncate text-md font-mono">{item.element}</div>
                     </button>
                   </li>
                 ))}
