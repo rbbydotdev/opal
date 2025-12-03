@@ -3,6 +3,11 @@ import { highlightMdxElement } from "@/app/editor/highlightMdxElement";
 import { scrollToEditorElement } from "@/app/editor/scrollToEditorElement";
 import { isParent } from "@/components/isParent";
 import { EmptySidebarLabel } from "@/components/SidebarFileMenu/EmptySidebarLabel";
+import {
+  isContainer,
+  isLeaf,
+  LexicalTreeViewNode,
+} from "@/components/SidebarFileMenu/lexical/treeViewDisplayNodesLexical";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
@@ -10,7 +15,6 @@ import { useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { useGetNodeFromEditor } from "@/components/useGetNodeFromEditor";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
-import { isContainer, isLeaf, LexicalTreeViewNode } from "@/lib/lexical/treeViewDisplayNodesLexical";
 import { $createListItemNode, $createListNode, $isListItemNode, $isListNode, ListType } from "@lexical/list";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";
