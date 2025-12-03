@@ -12,7 +12,7 @@ export const gitBranchSchema = z.object({
     ),
 });
 
-export const gitRefSchema = z.object({
+const gitRefSchema = z.object({
   value: gitBranchSchema,
   type: z.enum(["branch", "commit"]),
 });

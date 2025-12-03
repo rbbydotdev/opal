@@ -49,9 +49,9 @@ const WorkspaceEvents = {
 } as const;
 type RenameTrigger = { id: string; oldName: string; newName: string };
 type DeleteTrigger = { id: string };
-export class WorkspaceEventsRemote extends Channel<WorkspaceRemoteEventPayload> {}
-export class WorkspaceEventsLocal extends CreateSuperTypedEmitterClass<WorkspaceRemoteEventPayload>() {}
-export type WorkspaceRemoteEventPayload = {
+class WorkspaceEventsRemote extends Channel<WorkspaceRemoteEventPayload> {}
+class WorkspaceEventsLocal extends CreateSuperTypedEmitterClass<WorkspaceRemoteEventPayload>() {}
+type WorkspaceRemoteEventPayload = {
   [WorkspaceEvents.RENAME]: RenameTrigger;
   [WorkspaceEvents.DELETE]: DeleteTrigger;
 };
@@ -857,4 +857,4 @@ export class Workspace {
     };
   }
 }
-export type WorkspaceJType = ReturnType<Workspace["toJSON"]>;
+type WorkspaceJType = ReturnType<Workspace["toJSON"]>;

@@ -407,7 +407,7 @@ const createContrastSafeHighlightStyle = () => {
 };
 
 // Export the contrast-safe highlight style
-export const markdownHighlightStyle = createContrastSafeHighlightStyle();
+const markdownHighlightStyle = createContrastSafeHighlightStyle();
 
 // Enhanced markdown extension with comprehensive highlighting
 export const enhancedMarkdownExtension = (
@@ -597,7 +597,7 @@ export const enhancedMarkdownExtension = (
 };
 
 // Debug utility to check color contrast for a given theme
-export const debugContrastRatios = (codeMirrorBackground: string = "--background") => {
+const debugContrastRatios = (codeMirrorBackground: string = "--background") => {
   if (typeof window === "undefined") {
     console.log("Contrast debugging only available in browser");
     return;

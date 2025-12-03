@@ -7,7 +7,7 @@ import mime from "mime-types";
  * A flexible representation of an image source, which can be a File,
  * Blob, ArrayBuffer, or Uint8Array.
  */
-export type ImageInput = File | Blob | ArrayBuffer | Uint8Array;
+type ImageInput = File | Blob | ArrayBuffer | Uint8Array;
 
 interface BaseImageOptions {
   prefixName?: string;
@@ -39,7 +39,7 @@ interface ConvertImageOptions extends BaseImageOptions {
  *
  * @returns A Promise that resolves to the converted (or original) File.
  */
-export const convertImage = async ({
+const convertImage = async ({
   imageInput,
   mimeType = "image/webp",
   prefixName = "image",

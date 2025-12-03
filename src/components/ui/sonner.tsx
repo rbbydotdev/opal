@@ -38,7 +38,7 @@ function toast(toastData: ToastOptions) {
   );
 }
 
-export function Toast(props: ToastProps) {
+function Toast(props: ToastProps) {
   const { title, description, action, id, type = "default" } = props;
 
   const getTypeStyles = () => {

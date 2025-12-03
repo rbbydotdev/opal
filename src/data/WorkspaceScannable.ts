@@ -6,5 +6,5 @@ export class WorkspaceScannable extends SearchTextScannable<WorkspaceScannableMe
     super(disk, meta);
   }
 }
-export type WorkspaceScannableMetaType = { workspaceId: string; workspaceName: string };
+type WorkspaceScannableMetaType = { workspaceId: string; workspaceName: string };
 export type WorkspaceSearchItem = UnwrapAsyncGeneratorYield<ReturnType<WorkspaceScannable["search"]>>;

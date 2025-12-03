@@ -4,12 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
 
-export type WorkspaceFilenameQueryParams = {
+type WorkspaceFilenameQueryParams = {
   workspaceName: string;
   searchTerm: string;
 };
 
-export type WorkspaceFilenameFetchParams = WorkspaceFilenameQueryParams & {
+type WorkspaceFilenameFetchParams = WorkspaceFilenameQueryParams & {
   signal: AbortSignal;
 };
 

@@ -6,7 +6,7 @@ import "@/workers/transferHandlers/repo.th";
 import * as Comlink from "comlink";
 import { useMemo } from "react";
 
-export function useGitPlaybook(repo: GitRepo | Comlink.Remote<GitRepo>): GitPlaybook {
+function useGitPlaybook(repo: GitRepo | Comlink.Remote<GitRepo>): GitPlaybook {
   return useMemo(() => {
     return new GitPlaybook(repo);
   }, [repo]);

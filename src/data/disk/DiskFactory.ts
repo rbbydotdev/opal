@@ -18,7 +18,7 @@ export function DiskFromJSON(json: DiskJType): Disk {
   return DiskFactory({ guid: json.guid, type: json.type, indexCache: json.indexCache });
 }
 
-export function DiskFactory({ guid, type, indexCache }: DiskJType): Disk {
+function DiskFactory({ guid, type, indexCache }: DiskJType): Disk {
   if (!DiskMap[type]) throw new Error("invalid disk type " + type);
   const DiskConstructor = DiskMap[type] satisfies {
     new (guid: string): Disk; //TODO interface somewhere?

@@ -9,7 +9,7 @@ import { SpecialDirs } from "@/data/SpecialDirs";
 import { absPath, AbsPath, joinPath, relPath } from "@/lib/paths2";
 import { nanoid } from "nanoid";
 
-export type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
+type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
 
 export class BuildDAO implements BuildRecord {
   guid: string;
@@ -194,7 +194,7 @@ export class BuildDAO implements BuildRecord {
   }
 }
 
-export class NullBuildDAO extends BuildDAO {
+class NullBuildDAO extends BuildDAO {
   constructor() {
     super({
       guid: "_null_build_",

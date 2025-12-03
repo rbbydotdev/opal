@@ -25,7 +25,7 @@ export function relPath(path: string | { toString(): string }): RelPath {
 export function isAbsPath(path: AbsPath | RelPath | string): path is AbsPath {
   return typeof path === "string" && path.startsWith("/");
 }
-export function isRelPath(path: AbsPath | RelPath | string): path is RelPath {
+function isRelPath(path: AbsPath | RelPath | string): path is RelPath {
   return typeof path === "string" && !path.startsWith("/");
 }
 
@@ -84,14 +84,14 @@ export function joinPath<T extends AbsPath | RelPath>(base: T, ...parts: (string
 }
 
 // --- Shift ---
-export function shiftAbsolutePath(path: AbsPath): AbsPath {
+function shiftAbsolutePath(path: AbsPath): AbsPath {
   const segments = path.split("/");
   segments.shift();
   segments[0] = "";
   return absPath(segments.join("/"));
 }
 
-export function shiftRelativePath2(path: RelPath): RelPath {
+function shiftRelativePath2(path: RelPath): RelPath {
   const segments = path.split("/");
   segments.shift();
   return relPath(segments.join("/"));
@@ -130,14 +130,14 @@ export function depth(path: AbsPath): number {
 }
 
 // --- Change Prefix ---
-export function changePrefixAbs(path: AbsPath, newPrefix: string): AbsPath {
+function changePrefixAbs(path: AbsPath, newPrefix: string): AbsPath {
   const ext = extname(path);
   const dir = dirname(path);
   if (!ext) return absPath(pathModule.join(dir, newPrefix));
   return absPath(pathModule.join(dir, `${newPrefix}${ext}`));
 }
 
-export function changePrefix(path: AbsPath | RelPath, newPrefix: string): RelPath | AbsPath {
+function changePrefix(path: AbsPath | RelPath, newPrefix: string): RelPath | AbsPath {
   if (isAbsPath(path)) return changePrefixAbs(path, newPrefix);
   if (isRelPath(path)) return changePrefixRel(path, newPrefix);
   else {
@@ -145,7 +145,7 @@ export function changePrefix(path: AbsPath | RelPath, newPrefix: string): RelPat
   }
 }
 
-export function changePrefixRel(path: RelPath, newPrefix: string): RelPath {
+function changePrefixRel(path: RelPath, newPrefix: string): RelPath {
   const ext = extname(path);
   const dir = dirname(path);
   if (!ext) return relPath(pathModule.join(dir, newPrefix));
@@ -162,7 +162,7 @@ export function isMarkdown(path: AbsPath | RelPath | string | { toString(): stri
 export function isText(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))).startsWith("text/");
 }
-export function isStringish(path: AbsPath | RelPath | string | { toString(): string }): boolean {
+function isStringish(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   const mimeType = getMimeType(relPath(String(path)));
   return StringMimeTypes.includes(mimeType);
 }
@@ -227,7 +227,7 @@ export function isAncestor({
  * - Although null checks exist for backward compatibility, inputs are expected to be non-null strings.
  * - The returned path is normalized via absPath() and joinPath().
  */
-export function replaceAncestor(
+function replaceAncestor(
   ancestorPath: AbsPath | string, // The base or ancestor path to look for
   targetPath: AbsPath | string, // The path potentially containing the ancestor
   replacementRoot: AbsPath | string // The new base to replace the ancestor with
@@ -267,7 +267,7 @@ export function reduceLineage<T extends string | { toString(): string }>(range: 
   return results;
 }
 
-export function strictPathname(str: string): string {
+function strictPathname(str: string): string {
   // Replace any character that is not a-z, A-Z, 0-9, _, -, /, or . with "_"
   let sanitized = str
     .trim()
@@ -293,7 +293,7 @@ export function resolveFromRoot(rootPath: AbsPath | RelPath, path: AbsPath | Rel
   throw new Error("Both paths must be of the same type (AbsPath or RelPath).");
 }
 
-export function addTrailingSlash(path: string): string {
+function addTrailingSlash(path: string): string {
   if (path.endsWith("/")) return path;
   return path + "/";
 }
@@ -313,7 +313,7 @@ export function absPathname(path: string) {
   }
 }
 
-export function filterOutAncestor(paths: AbsPath[]) {
+function filterOutAncestor(paths: AbsPath[]) {
   return (path: AbsPath) => {
     return !paths.some((ancestor) => isAncestor({ child: path, parent: ancestor }));
   };

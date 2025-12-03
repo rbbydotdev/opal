@@ -12,7 +12,7 @@ import { AlertCircle } from "lucide-react";
 import * as React from "react";
 
 // Types
-export interface ErrorPopupProps {
+interface ErrorPopupProps {
   title?: string;
   description?: string;
   onExit?: () => void;
@@ -26,7 +26,7 @@ type ErrorPopupActionType = {
 // Create context
 const ErrorPopupContext = React.createContext<ErrorPopupActionType | null>(null);
 
-export function ErrorPopupProvider({ children }: { children: React.ReactNode }) {
+function ErrorPopupProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = React.useState<{
     open: boolean;
     title: string;
@@ -87,7 +87,7 @@ export function ErrorPopupProvider({ children }: { children: React.ReactNode }) 
 }
 
 // Hook to use the error popup
-export const useErrorPopup = () => {
+const useErrorPopup = () => {
   const context = React.useContext(ErrorPopupContext);
 
   if (!context) {
@@ -118,7 +118,7 @@ export const ErrorPopupControl = {
   },
 };
 
-export function ShowErrorDialog({
+function ShowErrorDialog({
   title,
   description,
   handleExit,
@@ -172,7 +172,7 @@ function ErrorDialog({
 }
 
 // Component to register the instance
-export function ErrorPopupInstanceSetter() {
+function ErrorPopupInstanceSetter() {
   const instance = useErrorPopup();
 
   React.useEffect(() => {

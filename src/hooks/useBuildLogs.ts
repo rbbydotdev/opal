@@ -6,7 +6,7 @@ export interface BuildLog {
   type: "info" | "error";
 }
 
-export function useBuildLogs() {
+function useBuildLogs() {
   const [logs, setLogs] = useState<BuildLog[]>([]);
 
   const addLog = useCallback((message: string, type: "info" | "error" = "info") => {

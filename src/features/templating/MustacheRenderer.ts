@@ -19,7 +19,7 @@ export interface MustacheTemplateData {
   [key: string]: any;
 }
 
-export interface MustacheTemplateHelpers {
+interface MustacheTemplateHelpers {
   // String helpers
   capitalize: () => (text: string, render: (template: string) => string) => string;
   lowercase: () => (text: string, render: (template: string) => string) => string;

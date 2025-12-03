@@ -6,7 +6,7 @@ import { generateCodeVerifier, generateCodeChallenge, stripTrailingSlash } from 
 /**
  * OAuth Types
  */
-export type GithubOAuthFlowPayload = {
+type GithubOAuthFlowPayload = {
   login: string;
   token: string;
   obtainedAt: number;

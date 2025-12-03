@@ -10,7 +10,7 @@ import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath } from "@/lib/paths2";
 import React from "react";
 
-export function tryParseCopyNodesPayload(data: string): TreeNodeDataTransferJType | null {
+function tryParseCopyNodesPayload(data: string): TreeNodeDataTransferJType | null {
   try {
     const parsed = JSON.parse(data) as TreeNodeDataTransferType & { fileNodes: AbsPath[] };
     if (parsed && parsed.workspaceId && Array.isArray(parsed.fileNodes) && parsed.action) {
@@ -51,7 +51,7 @@ export async function copyFileNodesToClipboard({
   }
   return Promise.resolve();
 }
-export function useCopyKeydownImages(currentWorkspace: Workspace) {
+function useCopyKeydownImages(currentWorkspace: Workspace) {
   const { selectedRange, focused } = useFileTreeMenuCtx();
   function handleCopyKeyDown(origFn: (e: React.KeyboardEvent) => void) {
     return function (e: React.KeyboardEvent, fullPath?: AbsPath) {

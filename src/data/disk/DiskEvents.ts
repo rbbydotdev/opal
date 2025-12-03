@@ -72,7 +72,7 @@ export type IndexTrigger =
       details: DeleteDetails;
     };
 
-export type ListenerCallback<T extends "create" | "rename" | "delete"> = T extends "create"
+type ListenerCallback<T extends "create" | "rename" | "delete"> = T extends "create"
   ? (props: CreateDetails) => void
   : T extends "rename"
     ? (props: RenameDetails[]) => void
@@ -80,7 +80,7 @@ export type ListenerCallback<T extends "create" | "rename" | "delete"> = T exten
       ? (props: DeleteDetails) => void
       : never;
 
-export type DiskRemoteEventPayload = {
+type DiskRemoteEventPayload = {
   // [DiskEvents.RENAME]: RemoteRenameFileType[];
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   //for remotes or 'processes'(img node src replace on file move etc)
@@ -113,7 +113,7 @@ export const DiskEvents = {
   CREATE: "create" as const,
   DELETE: "delete" as const,
 };
-export type DiskLocalEventPayload = {
+type DiskLocalEventPayload = {
   [DiskEvents.INDEX]: IndexTrigger | undefined;
   [DiskEvents.OUTSIDE_WRITE]: FilePathsType;
   [DiskEvents.INSIDE_WRITE]: FilePathsType;

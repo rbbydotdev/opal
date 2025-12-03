@@ -120,7 +120,7 @@ export class SearchResult {
   }
 }
 
-export class SearchResults implements Iterable<SearchResult> {
+class SearchResults implements Iterable<SearchResult> {
   public readonly results: SearchResultData[];
   public readonly length: number;
   constructor(results: SearchResultData[]) {

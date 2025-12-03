@@ -1,6 +1,6 @@
 import { DefaultFile } from "@/lib/DefaultFile";
 import globalSeedCss from "@/seedfiles/global-seed.css?raw";
-export type WorkspaceTemplate = {
+type WorkspaceTemplate = {
   id: string;
   name: string;
   description: string;

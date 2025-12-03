@@ -8,7 +8,7 @@ class RequestEvent extends CustomEvent<RequestEventDetail> {
   }
 }
 
-export class RequestSignals {
+class RequestSignals {
   initListeners = false;
   RequestEventBus = new EventTarget();
   count = 0;

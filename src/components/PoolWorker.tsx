@@ -6,7 +6,7 @@ export interface Resource<T = unknown> {
   terminate: () => void;
 }
 
-export interface IPoolWorker<TResource extends Resource> {
+interface IPoolWorker<TResource extends Resource> {
   workId: string;
   exec: (res: TResource) => Promise<unknown>;
   setupResource: () => Promise<TResource> | TResource;

@@ -55,7 +55,7 @@ function useConfirmCmd() {
   };
 }
 
-export function Confirm({
+function Confirm({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{

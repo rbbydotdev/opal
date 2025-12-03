@@ -5,7 +5,7 @@ import { stripTrailingSlash } from "./oauth-utils";
 /**
  * OAuth Types
  */
-export type VercelOAuthFlowPayload = {
+type VercelOAuthFlowPayload = {
   accessToken: string;
   obtainedAt: number;
   expiresIn?: number;

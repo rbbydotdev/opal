@@ -17,14 +17,14 @@ export interface AWSS3Bucket {
   creationDate: Date;
 }
 
-export interface AWSS3Object {
+interface AWSS3Object {
   key: string;
   size: number;
   lastModified: Date;
   etag: string;
 }
 
-export interface AWSS3PutResult {
+interface AWSS3PutResult {
   etag: string;
   location?: string;
 }

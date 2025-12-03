@@ -21,7 +21,7 @@ export function GitStatusProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useGitStatus() {
+function useGitStatus() {
   const ctx = useContext(GitStatusContext);
   if (!ctx) throw new Error("useGitStatus must be used within a GitStatusProvider");
   return ctx;
@@ -43,7 +43,7 @@ function useGitStatusCmd() {
   };
 }
 
-export function GitStatusModal({
+function GitStatusModal({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{

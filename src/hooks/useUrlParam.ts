@@ -1,9 +1,9 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 
-export type UrlParamType = "hash" | "search" | "hash+search";
+type UrlParamType = "hash" | "search" | "hash+search";
 
-export interface UseUrlParamOptions<T> {
+interface UseUrlParamOptions<T> {
   key: string;
   paramType?: UrlParamType;
   parser: (value: string | null) => T;

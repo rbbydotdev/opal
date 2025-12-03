@@ -12,11 +12,11 @@ import registryJson from "./themes.json";
 
 export const registry: ThemeRegistry = registryJson as unknown as ThemeRegistry;
 // Types - annotate your registry.json import with these
-export interface ThemeRegistry {
+interface ThemeRegistry {
   items: ThemeRegistryItem[];
 }
 
-export interface ThemeRegistryItem {
+interface ThemeRegistryItem {
   name: string;
   cssVars: {
     light: Record<string, string>;
@@ -87,7 +87,7 @@ const ALL_VARS = new Set([
   "success-foreground",
 ]);
 
-export interface ApplyThemeOptions {
+interface ApplyThemeOptions {
   theme: string;
   mode: "light" | "dark";
   rootElement?: HTMLElement;
@@ -115,7 +115,7 @@ export function getThemeModePrefers(themeName: string): "light" | "dark" | null 
   return themePrefersMode(themeItem);
 }
 
-export function toggleLightOrDarkClass(root: HTMLElement = document.documentElement): void {
+function toggleLightOrDarkClass(root: HTMLElement = document.documentElement): void {
   if (root.classList.contains("dark")) {
     root.classList.remove("dark");
     root.classList.add("light");
@@ -127,7 +127,7 @@ export function toggleLightOrDarkClass(root: HTMLElement = document.documentElem
     root.classList.add("dark");
   }
 }
-export function setLightOrDarkClass(mode: "light" | "dark", root: HTMLElement = document.documentElement) {
+function setLightOrDarkClass(mode: "light" | "dark", root: HTMLElement = document.documentElement) {
   if (mode === "dark") {
     root.classList.add("dark");
     root.classList.remove("light");
@@ -236,11 +236,11 @@ export function applyTheme(options: ApplyThemeOptions): void {
   document.head.appendChild(style);
 }
 
-export function getThemeNames(registry: ThemeRegistry): string[] {
+function getThemeNames(registry: ThemeRegistry): string[] {
   return registry.items.map((item) => item.name);
 }
 
-export function removeTheme(registry: ThemeRegistry, rootElement: HTMLElement = document.documentElement): void {
+function removeTheme(registry: ThemeRegistry, rootElement: HTMLElement = document.documentElement): void {
   rootElement.classList.remove("dark", "light");
 
   // Get all possible CSS variable names from registry
@@ -314,7 +314,7 @@ export function getThemePreviewPalette(themeName: string): {
 }
 
 // Generic base theme type
-export interface GenericTheme<TCss = Record<string, any>> {
+interface GenericTheme<TCss = Record<string, any>> {
   name: string;
   type: string;
   title: string;
@@ -328,7 +328,7 @@ export interface GenericTheme<TCss = Record<string, any>> {
 }
 
 // Vintage Paper theme using the generic (can still narrow name if desired)
-export type VintagePaperTheme<
+type VintagePaperTheme<
   TCss = {
     "@layer base"?: {
       body?: {
@@ -339,7 +339,7 @@ export type VintagePaperTheme<
 > = GenericTheme<TCss>;
 
 // Shared vars for a single color mode (light or dark)
-export type ThemeModeVars = {
+type ThemeModeVars = {
   background?: string;
   foreground?: string;
   card?: string;
@@ -396,7 +396,7 @@ export type ThemeModeVars = {
 };
 
 // Vars that are shared across modes (theme scope)
-export type ThemeSharedVars = {
+type ThemeSharedVars = {
   "font-sans"?: string;
   "font-mono"?: string;
   "font-serif"?: string;

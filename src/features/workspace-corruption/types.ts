@@ -9,7 +9,7 @@ export interface WorkspaceCorruptionState {
   workspaceId?: string;
 }
 
-export interface WorkspaceCorruptionActions {
+interface WorkspaceCorruptionActions {
   recoverOpfsHandle: () => Promise<void>;
   goHome: () => void;
   createNewWorkspace: () => void;

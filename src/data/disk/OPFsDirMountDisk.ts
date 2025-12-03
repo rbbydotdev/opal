@@ -12,7 +12,7 @@ import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 import { Mutex } from "async-mutex";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";
 
-export class OpFsDirMountDiskContext extends DiskContext {
+class OpFsDirMountDiskContext extends DiskContext {
   constructor(fs: CommonFileSystem, fileTree: FileTree, mutex: Mutex) {
     super(fs, fileTree, mutex);
   }

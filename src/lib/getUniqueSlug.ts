@@ -17,7 +17,7 @@ export function getUniqueSlug(base: string, existing: string[]): string {
   return candidate;
 }
 
-export function getUniqueSlugIter(base: string, existing: Iterable<string>): string {
+function getUniqueSlugIter(base: string, existing: Iterable<string>): string {
   // Collect all existing slugs into a Set for efficient lookup
   const existingSet = new Set(existing);
 

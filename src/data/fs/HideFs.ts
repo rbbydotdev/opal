@@ -12,7 +12,7 @@ import {
   stringifyEntry,
 } from "@/lib/paths2";
 
-export type HideRule = { type: "file"; path: string } | { type: "dir"; path: RelPath | AbsPath };
+type HideRule = { type: "file"; path: string } | { type: "dir"; path: RelPath | AbsPath };
 
 function createENOENTError(path: string, syscall: string): Error {
   const error = new Error(`ENOENT: no such file or directory, ${syscall} '${path}'`) as any;

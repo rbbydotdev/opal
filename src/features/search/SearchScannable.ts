@@ -1,10 +1,10 @@
 import { type SearchResultData } from "@/features/search/SearchResults";
 
-export interface Scannable<T> {
+interface Scannable<T> {
   scan(): AsyncGenerator<T>;
 }
 
-export type UnwrapScannable<T extends Scannable<unknown>> = T extends Scannable<infer U> ? U : never;
+type UnwrapScannable<T extends Scannable<unknown>> = T extends Scannable<infer U> ? U : never;
 
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

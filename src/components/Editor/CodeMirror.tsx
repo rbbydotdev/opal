@@ -36,7 +36,7 @@ import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 
-export type StrictSourceMimesType =
+type StrictSourceMimesType =
   | "text/css"
   | "text/plain"
   | "text/markdown"

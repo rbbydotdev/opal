@@ -5,13 +5,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
 
-export type WorkspaceQueryParams = {
+type WorkspaceQueryParams = {
   workspaceName: string;
   searchTerm: string;
   regexp?: boolean;
   mode?: "content" | "filename";
 };
-export type WorkspaceFetchParams = WorkspaceQueryParams & {
+type WorkspaceFetchParams = WorkspaceQueryParams & {
   signal: AbortSignal;
 };
 async function* fetchQuerySearch({

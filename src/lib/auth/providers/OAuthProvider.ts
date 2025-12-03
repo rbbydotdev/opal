@@ -1,7 +1,7 @@
 import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { Channel } from "@/lib/channel";
 
-export interface OAuthFlowResult {
+interface OAuthFlowResult {
   accessToken: string;
   tokenType: string;
   scope: string;
@@ -10,7 +10,7 @@ export interface OAuthFlowResult {
   refreshToken: string;
 }
 
-export interface OAuthChannel {
+interface OAuthChannel {
   emit(event: string, data: any): Promise<void>;
   once(event: string): Promise<any>;
   tearDown(): void;
@@ -117,7 +117,7 @@ export abstract class OAuthProvider {
   abstract validateAndProcessAuth(data: any, config: OAuthProviderConfig): Promise<RemoteAuthDataFor<"oauth">>;
 }
 
-export const OAuthCbEvents = {
+const OAuthCbEvents = {
   SUCCESS: "success" as const,
   ERROR: "error" as const,
   AUTHORIZATION_CODE: "authorization_code" as const,
@@ -125,7 +125,7 @@ export const OAuthCbEvents = {
   CLOSE_WINDOW: "close_window" as const,
 };
 
-export type OAuthCbEventPayload = {
+type OAuthCbEventPayload = {
   [OAuthCbEvents.SUCCESS]: RemoteAuthDataFor<"oauth">;
   [OAuthCbEvents.ERROR]: string;
   [OAuthCbEvents.AUTHORIZATION_CODE]: { code: string; state: string };

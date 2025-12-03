@@ -5,7 +5,7 @@ import { absPath, AbsPath, dirname } from "@/lib/paths2";
 import { useLocation } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
 
-export const FileTreeMenuCtx = React.createContext<{
+const FileTreeMenuCtx = React.createContext<{
   anchorIndex: number;
   editing: AbsPath | null;
   editType: "rename" | "new" | "duplicate" | null;

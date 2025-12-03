@@ -365,7 +365,7 @@ export function gitConflictEnhancedPlugin(
 export { enhancedConflictRegionsField, setConflictRegions, updateConflictContent };
 
 // Utility function to get current conflict regions
-export function getCurrentConflictRegions(view: EditorView): ConflictRegion[] {
+function getCurrentConflictRegions(view: EditorView): ConflictRegion[] {
   try {
     return view.state.field(enhancedConflictRegionsField).regions;
   } catch {
@@ -375,7 +375,7 @@ export function getCurrentConflictRegions(view: EditorView): ConflictRegion[] {
 }
 
 // Utility function to check if document has conflicts
-export function hasGitConflicts(view: EditorView): boolean {
+function hasGitConflicts(view: EditorView): boolean {
   try {
     const regions = getCurrentConflictRegions(view);
     return regions.some((region) => !region.resolved);

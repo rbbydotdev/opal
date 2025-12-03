@@ -279,7 +279,7 @@ export function PublishModalStack({
 }
 
 //MARK: Publish Content
-export function PublicationModalPublishContent({
+function PublicationModalPublishContent({
   build,
   setBuild,
   destination,

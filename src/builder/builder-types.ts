@@ -3,7 +3,7 @@ import { Disk } from "@/data/disk/Disk";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, RelPath } from "@/lib/paths2";
 
-export interface BuildOptions {
+interface BuildOptions {
   strategy: BuildStrategy;
   sourceDisk: Disk;
   outputDisk: Disk;
@@ -13,7 +13,7 @@ export interface BuildOptions {
   onError?: (error: string) => void;
 }
 
-export interface FrontMatter {
+interface FrontMatter {
   layout?: string;
   title?: string;
   summary?: string;

@@ -10,7 +10,7 @@ const DB_NAME = "DirectoryHandlesDB";
 const DB_VERSION = 1;
 const STORE_NAME = "directoryHandles";
 
-export interface DirectoryHandleRecord {
+interface DirectoryHandleRecord {
   diskId: string;
   handle: FileSystemDirectoryHandle;
   directoryName: string;

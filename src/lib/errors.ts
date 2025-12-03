@@ -6,7 +6,7 @@ type ErrorWithCode = Error & {
   code: string;
 };
 
-export function isErrorLike(error: unknown): error is Error & { message: string } {
+function isErrorLike(error: unknown): error is Error & { message: string } {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -157,7 +157,7 @@ export class ConflictError extends ApplicationError {
   }
 }
 
-export class BadGatewayError extends ApplicationError {
+class BadGatewayError extends ApplicationError {
   name = "BadGatewayError";
   constructor(errorOrMessage: Error | string = "bad gateway") {
     super(errorOrMessage, 502);
@@ -173,7 +173,7 @@ export class TokenExpiredError extends ApplicationError {
   }
 }
 
-export class UnauthorizedError extends ApplicationError {
+class UnauthorizedError extends ApplicationError {
   name = "UnauthorizedError";
   constructor(errorOrMessage: Error | string = "unauthorized") {
     super(errorOrMessage, 401);
@@ -190,7 +190,7 @@ export class BadRequestError extends ApplicationError {
   }
 }
 
-export class ForbiddenError extends ApplicationError {
+class ForbiddenError extends ApplicationError {
   name = "ForbiddenError";
   constructor(errorOrMessage: Error | string = "forbidden") {
     super(errorOrMessage, 403);
@@ -214,7 +214,7 @@ export class ServiceUnavailableError extends ApplicationError {
   }
 }
 
-export class GatewayTimeoutError extends ApplicationError {
+class GatewayTimeoutError extends ApplicationError {
   name = "GatewayTimeoutError";
   constructor(errorOrMessage: Error | string = "Gateway Timeout") {
     super(errorOrMessage, 504);
@@ -222,7 +222,7 @@ export class GatewayTimeoutError extends ApplicationError {
   }
 }
 
-export class NotImplementedError extends ApplicationError {
+class NotImplementedError extends ApplicationError {
   name = "NotImplementedError";
   constructor(errorOrMessage: Error | string = "Not Implemented") {
     super(errorOrMessage, 501);
@@ -234,7 +234,7 @@ export class NotImplementedError extends ApplicationError {
  * New AggregateApplicationError class to handle multiple errors at once.
  * It extends ApplicationError to integrate seamlessly with the existing helpers.
  */
-export class AggregateApplicationError extends ApplicationError {
+class AggregateApplicationError extends ApplicationError {
   name = "AggregateApplicationError";
   public readonly errors: Error[];
 

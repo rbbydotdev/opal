@@ -106,12 +106,12 @@ export type DestinationSchemaTypeMap<DestinationType extends keyof typeof Destin
   (typeof DestinationSchemaMap)[DestinationType]
 >;
 type CloudflareDestinationData = z.infer<(typeof DestinationSchemaMap)["cloudflare"]>["meta"];
-export class CloudflareDestination extends DestinationDAO<CloudflareDestinationData> {}
+class CloudflareDestination extends DestinationDAO<CloudflareDestinationData> {}
 type NetlifyDestinationData = z.infer<(typeof DestinationSchemaMap)["netlify"]>["meta"];
-export class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {}
+class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {}
 type AWSDestinationData = z.infer<(typeof DestinationSchemaMap)["aws"]>["meta"];
-export class AWSDestination extends DestinationDAO<AWSDestinationData> {}
+class AWSDestination extends DestinationDAO<AWSDestinationData> {}
 type GitHubDestinationData = z.infer<(typeof DestinationSchemaMap)["github"]>["meta"];
-export class GitHubDestination extends DestinationDAO<GitHubDestinationData> {}
+class GitHubDestination extends DestinationDAO<GitHubDestinationData> {}
 type VercelDestinationData = z.infer<(typeof DestinationSchemaMap)["vercel"]>["meta"];
-export class VercelDestination extends DestinationDAO<VercelDestinationData> {}
+class VercelDestination extends DestinationDAO<VercelDestinationData> {}

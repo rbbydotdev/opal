@@ -9,7 +9,7 @@ import { SWWStore } from "./SWWStore";
 
 const activeFilenameSearches = new Map<string, AbortController>();
 
-export interface WorkspaceFilenameSearchParams {
+interface WorkspaceFilenameSearchParams {
   workspaceName: string;
   searchTerm: string;
 }

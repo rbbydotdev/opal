@@ -1,7 +1,7 @@
 import { useCellValue, viewMode$ } from "@mdxeditor/editor";
 import { useEffect, useState } from "react";
 
-export function canShowSearchTool() {
+function canShowSearchTool() {
   return typeof Highlight !== "undefined" && typeof CSS.highlights !== "undefined";
 }
 export function useEditorSearchTool() {

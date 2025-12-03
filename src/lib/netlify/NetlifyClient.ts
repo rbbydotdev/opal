@@ -93,7 +93,7 @@ export class NetlifyClient {
   }
 }
 
-export interface NetlifyUser {
+interface NetlifyUser {
   id: string;
   uid: string;
   full_name: string;
@@ -199,7 +199,7 @@ export interface NetlifySite {
   build_image: string;
 }
 
-export interface NetlifyDeploy {
+interface NetlifyDeploy {
   id: string;
   site_id: string;
   user_id: string;
@@ -232,7 +232,7 @@ export interface NetlifyDeploy {
   function_schedules: any[];
 }
 
-export interface CreateSiteData {
+interface CreateSiteData {
   name?: string;
   custom_domain?: string;
   password?: string;

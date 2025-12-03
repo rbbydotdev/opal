@@ -34,7 +34,7 @@ import { ENV } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { useImperativeHandle, useState } from "react";
 
-export const gitRemoteSchema = z.object({
+const gitRemoteSchema = z.object({
   name: z
     .string()
     .min(1, "Remote name is required")
@@ -73,7 +73,7 @@ const TitleForMode = {
   [GitRemoteDialogModes.ADD]: "Add Git Remote",
   [GitRemoteDialogModes.EDIT]: "Edit Git Remote",
 };
-export function useGitRemoteDialogMode(
+function useGitRemoteDialogMode(
   defaultMode: GitRemoteDialogModeType = GitRemoteDialogModes.ADD
 ): [GitRemoteDialogModeType, (mode: GitRemoteDialogModeType) => void] {
   return useState<GitRemoteDialogModeType>(defaultMode);

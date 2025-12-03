@@ -11,7 +11,7 @@ export interface PreviewContext {
 }
 
 // Interface for context providers (iframe vs window)
-export interface PreviewContextProvider {
+interface PreviewContextProvider {
   context: PreviewContext | null;
   onReady: (callback: (ctx: PreviewContext | null) => void) => () => void;
   getContext: () => PreviewContext | null;
@@ -24,7 +24,7 @@ export type ExtCtxReadyContext = {
   // rootElement: HTMLElement;
   ready: true;
 };
-export type ExtCtxNotReadyContext = {
+type ExtCtxNotReadyContext = {
   document: null;
   window: null;
   // rootElement: null;
@@ -164,7 +164,7 @@ export function useContextProvider<T extends PreviewContextProvider>(managerFact
   return context;
 }
 
-export class IframeManager extends BaseContextProvider {
+class IframeManager extends BaseContextProvider {
   private iframeRef: { current: HTMLIFrameElement | null };
   constructor({
     iframeRef,
@@ -201,7 +201,7 @@ export class IframeManager extends BaseContextProvider {
   }
 }
 
-export class WindowManager extends BaseContextProvider {
+class WindowManager extends BaseContextProvider {
   private windowRef: { current: Window | null } = { current: null };
   private openEventEmitter = CreateTypedEmitter<{ openChange: boolean }>();
   private pollInterval: number | null = null;
