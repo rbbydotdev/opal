@@ -1,6 +1,6 @@
 import { useConfirm } from "@/components/Confirm";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { WorkspaceBadge } from "@/components/WorkspaceBadge";
+import { WorkspaceBadge } from "@/components/workspace/WorkspaceBadge";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Workspace } from "@/workspace/Workspace";
 import { useRouter } from "@tanstack/react-router";

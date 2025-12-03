@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { WorkspaceIcon } from "@/components/WorkspaceIcon";
+import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useWorkspaceSearchResults } from "@/data/dao/useWorkspaceSearchResults";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";

@@ -1,4 +1,4 @@
-import { WorkspaceIcon } from "@/components/WorkspaceIcon";
+import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { cn } from "@/lib/utils";
 
 export const WorkspaceBadge = ({
