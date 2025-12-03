@@ -1,11 +1,11 @@
 import { FileTreeMenuCtxProvider } from "@/app/filemenu/FileTreeMenuCtxProvider";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { WorkspaceSpotlightSearch } from "@/components/spotlight/SpotlightSearch";
-import { PreviewIFrame } from "@/components/ui/PreviewIframe";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { EditorSidebarLayout } from "@/features/preview-pane/EditorSidebarLayout";
+import { PreviewIFrame } from "@/features/preview-pane/PreviewIframe";
 import { usePreviewPaneProps } from "@/features/preview-pane/usePreviewPaneProps";
 import useFavicon from "@/hooks/useFavicon";
 import { ScrollSyncProvider } from "@/hooks/useScrollSync";
