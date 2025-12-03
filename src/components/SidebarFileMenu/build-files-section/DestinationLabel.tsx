@@ -1,5 +1,5 @@
 import { RemoteAuthSourceIconComponent } from "@/components/RemoteAuthSourceIcon";
-import { DestinationDAO } from "@/data/DestinationDAO";
+import { DestinationDAO } from "@/data/DAO/DestinationDAO";
 import { cn } from "@/lib/utils";
 
 export function DestinationLabel({ destination, className }: { destination: DestinationDAO; className?: string }) {

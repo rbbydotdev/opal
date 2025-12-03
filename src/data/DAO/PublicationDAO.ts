@@ -1,4 +1,4 @@
-import { DestinationDAO, DestinationJType } from "@/data/DestinationDAO";
+import { DestinationDAO, DestinationJType } from "@/data/DAO/DestinationDAO";
 import { nanoid } from "nanoid";
 
 type PublishLogLine = {

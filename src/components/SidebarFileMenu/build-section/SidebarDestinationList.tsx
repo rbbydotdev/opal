@@ -10,7 +10,7 @@ import {
   SelectableListItems,
   SelectableListSimple,
 } from "@/components/ui/SelectableList";
-import { DestinationDAO } from "@/data/DestinationDAO";
+import { DestinationDAO } from "@/data/DAO/DestinationDAO";
 import { useDestinations } from "@/hooks/useDestinations";
 import { coerceError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";

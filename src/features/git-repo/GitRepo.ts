@@ -9,11 +9,11 @@ import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 
-import { AgentFromRemoteAuthFactory, GitAgentFromRemoteAuth } from "@/data/AgentFromRemoteAuthFactory";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { HideFs } from "@/data/fs/HideFs";
-import { RemoteAuthGithubAgent } from "@/data/RemoteAuthGithubAgent";
+import { AgentFromRemoteAuthFactory, GitAgentFromRemoteAuth } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
+import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { isWebWorker } from "@/lib/isServiceWorker";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";

@@ -1,11 +1,11 @@
 import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
+import { NullDiskContext } from "@/data/disk/NullDisk";
 import { DiskType } from "@/data/DiskType";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { DirectoryHandleStore } from "@/data/fs/DirectoryHandleStore";
 import { MutexFs } from "@/data/fs/MutexFs";
-import { NullDiskContext } from "@/data/NullDisk";
 import { PatchedDirMountOPFS } from "@/data/PatchedDirMountOPFS";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
@@ -80,7 +80,6 @@ export class OpFsDirMountDisk extends Disk<OpFsDirMountDiskContext> {
     const newContext = OpFsDirMountDiskContext.createFromHandle(this.guid, handle);
     await this.setDiskContext(newContext);
   }
-
 
   async selectDirectory(): Promise<FileSystemDirectoryHandle> {
     if (typeof window.showDirectoryPicker === "undefined") {

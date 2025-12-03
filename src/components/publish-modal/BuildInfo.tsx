@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { DataDisplay } from "@/components/ui/DataDisplay";
 import { BuildDAO } from "@/data/DAO/BuildDAO";
-import { DestinationDAO } from "@/data/DestinationDAO";
+import { DestinationDAO } from "@/data/DAO/DestinationDAO";
 import { timeAgo } from "short-time-ago";
 
 export function BuildInfo({

@@ -1,9 +1,9 @@
 import { Disk } from "@/data/disk/Disk";
+import { NullDisk } from "@/data/disk/NullDisk";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { OpFsDisk } from "@/data/disk/OpFsDisk";
 import { DiskJType } from "@/data/DiskType";
 import { IndexedDbDisk } from "@/data/IndexedDbDisk";
-import { NullDisk } from "@/data/NullDisk";
 import { TreeDirRoot } from "@/lib/FileTree/TreeNode";
 
 const DiskMap = {
