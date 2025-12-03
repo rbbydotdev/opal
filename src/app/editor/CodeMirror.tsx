@@ -7,7 +7,7 @@ import { enhancedMarkdownExtension } from "@/app/editor/markdownHighlighting";
 import { canPrettifyMime, prettifyMime } from "@/app/editor/prettifyMime";
 import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
 import { GitConflictNotice } from "@/components/GitConflictNotice";
-import { SourceMimeType } from "@/components/SourceEditor/SourceMimeType";
+import { SourceMimeType } from "@/components/source-editor/SourceMimeType";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
