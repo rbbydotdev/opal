@@ -1,4 +1,4 @@
-import type { GithubOAuthRemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import type { GithubOAuthRemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthGithubAgent";
 
 export class RemoteAuthGithubOAuthAgent extends RemoteAuthGithubAgent {

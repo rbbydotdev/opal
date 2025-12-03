@@ -1,7 +1,7 @@
 import { useRemoteNetlifySearch, useRemoteNetlifySite } from "@/components/RemoteConnectionItem";
 import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
+import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { DestinationMetaType } from "@/data/DestinationDAO";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthNetlifyAgent } from "@/data/RemoteAuthNetlifyAgent";
 import { UseFormReturn } from "react-hook-form";
 import {

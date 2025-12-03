@@ -14,7 +14,7 @@ import {
   SelectableListRoot,
 } from "@/components/ui/SelectableList";
 import { SidebarGroup } from "@/components/ui/sidebar";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { Delete, Pencil, Plus, Sparkle } from "lucide-react";

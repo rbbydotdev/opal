@@ -1,7 +1,7 @@
 import { GitConfig, GitRepoAuthor, OPAL_AUTHOR } from "@/app/GitConfig";
+import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { Disk } from "@/data/disk/Disk";
 import { DiskJType } from "@/data/DiskType";
-import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { debounce } from "@/lib/debounce";
@@ -147,9 +147,7 @@ function isMergeConflictError(result: unknown): result is InstanceType<typeof GI
   return result instanceof GIT.Errors.MergeConflictError;
 }
 
-function isMergeNotSupportedError(
-  result: unknown
-): result is InstanceType<typeof GIT.Errors.MergeNotSupportedError> {
+function isMergeNotSupportedError(result: unknown): result is InstanceType<typeof GIT.Errors.MergeNotSupportedError> {
   return result instanceof GIT.Errors.MergeNotSupportedError;
 }
 

@@ -1,6 +1,6 @@
+import { RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { ClientDb } from "@/data/instance";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { WorkspaceRecord } from "@/data/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors";

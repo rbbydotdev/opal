@@ -1,7 +1,7 @@
 import { PageData } from "@/builder/builder-types";
 import { prettifyMime } from "@/components/Editor/prettifyMime";
-import { BuildDAO } from "@/data/BuildDAO";
 import { BuildLogLine, BuildStrategy } from "@/data/BuildRecord";
+import { BuildDAO } from "@/data/DAO/BuildDAO";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { TreeNode } from "@/lib/FileTree/TreeNode";
@@ -12,7 +12,7 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
-import { NULL_BUILD } from "../data/BuildDAO";
+import { NULL_BUILD } from "../data/DAO/BuildDAO";
 
 interface BuildRunnerOptions {
   strategy: BuildStrategy;

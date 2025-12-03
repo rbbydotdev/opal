@@ -1,5 +1,5 @@
+import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { Disk } from "@/data/disk/Disk";
-import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitFullRemoteObjType, GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
 import { ConflictError, NotFoundError } from "@/lib/errors";

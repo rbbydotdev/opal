@@ -25,7 +25,7 @@ import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteCon
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useRemoteAuthAgent } from "@/data/AgentFromRemoteAuthFactory";
-import { GithubAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { GithubAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { RemoteAuthGithubAgent } from "@/data/RemoteAuthGithubAgent";
 import { RemoteAuthGithubAPIAgent } from "@/data/RemoteAuthGithubAPIAgent";
 import { GitRemote } from "@/features/git-repo/GitRepo";

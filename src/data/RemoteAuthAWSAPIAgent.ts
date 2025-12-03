@@ -1,4 +1,4 @@
-import type { AWSAPIRemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import type { AWSAPIRemoteAuthDAO } from "@/data/DAO/RemoteAuthDAO";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { AWSS3Bucket, AWSS3Client } from "@/lib/aws/AWSClient";

@@ -1,4 +1,4 @@
-import { DeployDAO } from "@/data/DeployDAO";
+import { DeployDAO } from "@/data/DAO/DeployDAO";
 import { cn } from "@/lib/utils";
 
 export function DeployLabel({ deploy, className }: { deploy: DeployDAO; className?: string }) {
