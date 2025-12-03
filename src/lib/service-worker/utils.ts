@@ -2,7 +2,7 @@ declare const self: ServiceWorkerGlobalScope;
 import { RemoteLogger } from "@/lib/RemoteLogger";
 // import { RemoteLogger } from "@/lib/RemoteLogger";
 import { decodePath } from "@/lib/paths2";
-import { REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
+import { REQ_SIGNAL, RequestEventDetail } from "@/lib/service-worker/request-signal-types";
 
 // --- Constants ---
 
@@ -38,7 +38,7 @@ class WhiteListItem {
 
   test(url: URL, request: Request): boolean {
     const decodedPathname = decodePath(url.pathname);
-    
+
     // URL must match if specified
     if (this.urlRegex && !this.urlRegex.test(decodedPathname)) {
       return false;

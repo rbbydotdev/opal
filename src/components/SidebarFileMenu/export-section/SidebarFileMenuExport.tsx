@@ -6,7 +6,7 @@ import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { downloadEncryptedZipHelper } from "@/lib/ServiceWorker/downloadEncryptedZipHelper";
+import { downloadEncryptedZipHelper } from "@/lib/service-worker/downloadEncryptedZipHelper";
 import { Lock } from "lucide-react";
 
 import { Download, Info } from "lucide-react";

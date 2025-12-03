@@ -1,8 +1,8 @@
 import { ENV } from "@/lib/env";
 import { errF } from "@/lib/errors";
-import { defaultFetchHandler } from "@/lib/ServiceWorker/handler";
-import { hasRouteMatch, routeRequest } from "@/lib/ServiceWorker/router";
-import { WHITELIST } from "@/lib/ServiceWorker/utils";
+import { defaultFetchHandler } from "@/lib/service-worker/handler";
+import { hasRouteMatch, routeRequest } from "@/lib/service-worker/router";
+import { WHITELIST } from "@/lib/service-worker/utils";
 import { Workspace } from "@/workspace/Workspace";
 
 declare const self: ServiceWorkerGlobalScope;

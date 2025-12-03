@@ -1,4 +1,4 @@
-import { REQ_NAME, REQ_SIGNAL, RequestEventDetail } from "@/lib/ServiceWorker/request-signal-types";
+import { REQ_NAME, REQ_SIGNAL, RequestEventDetail } from "@/lib/service-worker/request-signal-types";
 import { useEffect, useRef, useState } from "react";
 
 // Strongly-typed CustomEvent for request signals

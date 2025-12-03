@@ -12,8 +12,8 @@ import {
   uploadImageHandler,
   workspaceFilenameSearchHandler,
   workspaceSearchHandler,
-} from "@/lib/ServiceWorker/handler";
-import { SuperUrl } from "@/lib/ServiceWorker/SuperUrl";
+} from "@/lib/service-worker/handler";
+import { SuperUrl } from "@/lib/service-worker/SuperUrl";
 
 type HandlerFunction = (context: RequestContext) => Response | Promise<Response>;
 

@@ -2,7 +2,7 @@ import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { errF, isError, NotFoundError } from "@/lib/errors";
 import { basename } from "@/lib/paths2";
-import { wrapGeneratorWithSignal } from "@/lib/ServiceWorker/wrapGeneratorWithSignal";
+import { wrapGeneratorWithSignal } from "@/lib/service-worker/wrapGeneratorWithSignal";
 import { Workspace } from "@/workspace/Workspace";
 import { WorkspaceQueryParams } from "../../data/dao/useWorkspaceSearchResults";
 import { SWWStore } from "./SWWStore";
