@@ -1,10 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { NewWorkspaceDialog } from "@/components/ui/NewWorkspaceDialog";
+import { NewWorkspaceDialog } from "@/components/new-workspace-modal/NewWorkspaceDialog";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
-export const Route = createFileRoute('/_app/newWorkspace')({
+export const Route = createFileRoute("/_app/newWorkspace")({
   component: NewWorkspacePage,
-})
+});
 
 function NewWorkspacePage() {
   const [isOpen, setIsOpen] = useState(true);
