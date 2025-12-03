@@ -2,7 +2,7 @@ import { OPFSNamespacedFs } from "@/data/CommonFileSystem";
 import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
-import { DiskType } from "@/data/DiskType";
+import { DiskType } from "@/data/disk/DiskType";
 import { MutexFs } from "@/data/fs/MutexFs";
 import { PatchedOPFS } from "@/data/fs/NamespacedFs";
 import { ClientDb } from "@/data/instance";

@@ -1,24 +1,18 @@
 import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
-import { DiskType } from "@/data/DiskType";
+import { DiskType } from "@/data/disk/DiskType";
 import { CommonFileSystem, NullFileSystem } from "@/data/FileSystemTypes";
 import { FileTree } from "@/lib/FileTree/Filetree";
 import { TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 import { Mutex } from "async-mutex";
 
 export class NullDiskContext extends DiskContext {
-  constructor(
-    fs: CommonFileSystem,
-    fileTree: FileTree,
-    mutex: Mutex
-  ) {
+  constructor(fs: CommonFileSystem, fileTree: FileTree, mutex: Mutex) {
     super(fs, fileTree, mutex);
   }
 
-  static create(
-    guid: string = "__disk__NullDisk"
-  ): NullDiskContext {
+  static create(guid: string = "__disk__NullDisk"): NullDiskContext {
     const fs = NullFileSystem;
     const mutex = new Mutex();
     const fileTree = new FileTree(fs, guid, mutex);
@@ -45,7 +39,6 @@ export class NullDisk extends Disk<NullDiskContext> {
     super("__disk__NullDisk", ctx.fs, ctx.fileTree, DiskDAO.New(NullDisk.type, guid));
     this._context = ctx;
   }
-
 
   async init() {
     return () => {};

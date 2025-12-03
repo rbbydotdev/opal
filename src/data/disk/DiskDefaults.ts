@@ -1,3 +1,3 @@
-import { DiskType } from "@/data/DiskType";
+import { DiskType } from "@/data/disk/DiskType";
 
 export const DefaultDiskType: DiskType = "IndexedDbDisk";

@@ -1,6 +1,6 @@
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { WorkspaceStatusCode } from "@/data/WorkspaceStatusCode";
-import { DiskJType } from "./DiskType";
+import { DiskJType } from "./disk/DiskType";
 
 export class WorkspaceRecord {
   guid!: string;

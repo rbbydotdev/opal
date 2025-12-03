@@ -1,7 +1,7 @@
 import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
-import { DiskType } from "@/data/DiskType";
+import { DiskType } from "@/data/disk/DiskType";
 import { CommonFileSystem } from "@/data/FileSystemTypes";
 import { MutexFs } from "@/data/fs/MutexFs";
 import { FileTree } from "@/lib/FileTree/Filetree";

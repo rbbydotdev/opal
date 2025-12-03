@@ -1,8 +1,8 @@
 import { Disk } from "@/data/disk/Disk";
+import { DiskJType } from "@/data/disk/DiskType";
 import { NullDisk } from "@/data/disk/NullDisk";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { OpFsDisk } from "@/data/disk/OpFsDisk";
-import { DiskJType } from "@/data/DiskType";
 import { IndexedDbDisk } from "@/data/IndexedDbDisk";
 import { TreeDirRoot } from "@/lib/FileTree/TreeNode";
 

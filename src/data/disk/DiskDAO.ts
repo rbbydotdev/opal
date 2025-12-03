@@ -1,6 +1,6 @@
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskRecord } from "@/data/disk/DiskRecord";
-import { DiskJType, DiskType } from "@/data/DiskType";
+import { DiskJType, DiskType } from "@/data/disk/DiskType";
 import { ClientDb } from "@/data/instance";
 import { TreeDirRoot, TreeDirRootJType } from "@/lib/FileTree/TreeNode";
 import { nanoid } from "nanoid";

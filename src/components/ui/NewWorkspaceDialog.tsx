@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
-import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/data/DiskType";
+import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/data/disk/DiskType";
 import { Workspace } from "@/data/Workspace";
 import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/data/WorkspaceTemplates";
 import { AbsPath } from "@/lib/paths2";
