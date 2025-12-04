@@ -7,13 +7,14 @@ import Vercel from "@/icons/vercel.svg?react";
 import { LucideProps, Zap } from "lucide-react";
 import React from "react";
 
+const WH = "16px";
 const RemoteAuthSourceIcon = {
-  github: <Github style={{ width: "18px", height: "18px" }} />,
-  netlify: <Netlify style={{ width: "18px", height: "18px" }} />,
-  cloudflare: <Cloudflare style={{ width: "18px", height: "18px" }} />,
-  vercel: <Vercel style={{ width: "18px", height: "18px" }} />,
-  aws: <AWS style={{ width: "18px", height: "18px" }} />,
-  custom: <Zap style={{ width: "18px", height: "18px" }} />,
+  github: <Github style={{ width: WH, height: WH }} />,
+  netlify: <Netlify style={{ width: WH, height: WH }} />,
+  cloudflare: <Cloudflare style={{ width: WH, height: WH }} />,
+  vercel: <Vercel style={{ width: WH, height: WH }} />,
+  aws: <AWS style={{ width: WH, height: WH }} />,
+  custom: <Zap style={{ width: WH, height: WH }} />,
 };
 
 // type RemoteAuthSourceIconType = (typeof RemoteAuthSourceIcon)[keyof typeof RemoteAuthSourceIcon];
@@ -29,7 +30,7 @@ export function RemoteAuthSourceIconComponent({
 } & LucideProps) {
   const Icon = RemoteAuthSourceIcon[source] || <Zap className="h-4 w-4" />; /*@ts-ignore*/
   return (
-    <div className="dark:bg-black bg-white dark:text-white text-black p-0.5 rounded-md w-6 h-6 flex items-center justify-center">
+    <div className="dark:bg-black bg-white dark:text-white text-black p-0.5 rounded-md w-5 h-5 flex items-center justify-center">
       {React.cloneElement(Icon as React.ReactElement, { className, ...rest } as any)}
     </div>
   );

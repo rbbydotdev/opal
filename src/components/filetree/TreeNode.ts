@@ -1,4 +1,5 @@
 import { CommonFileSystem, NullFileSystem } from "@/data/fs/FileSystemTypes";
+import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { SpecialDirsPaths } from "@/data/SpecialDirsPaths";
 import { errorCode, NotFoundError } from "@/lib/errors/errors";
 import { getMimeType } from "@/lib/mimeType";
@@ -207,9 +208,11 @@ export class TreeNode {
     return gen.bind(this)(this) as IterableIterator<this>;
   }
 
-  hasDirChildren(): boolean {
+  hasDirChildren(filterOut = FilterOutSpecialDirs): boolean {
     if (!this.isTreeDir()) return false;
-    return Object.values(this.children ?? {}).some((child) => child.isTreeDir());
+    return Object.values(this.children ?? {})
+      .filter(filterOut)
+      .some((child) => child.isTreeDir());
   }
 
   walk = (

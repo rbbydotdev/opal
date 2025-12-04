@@ -11,7 +11,6 @@ import {
 import { CurrentWorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { WorkspaceMenu } from "@/components/workspace/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { Opal } from "@/lib/Opal";
 import { Link } from "@tanstack/react-router";
 import React, { useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -94,15 +93,7 @@ export function EditorSidebar({
         <SidebarMenuSections />
       </SidebarContent>
 
-      <SidebarFooter className="text-3xs to-sidebar-accent uppercase font-mono w-full flex content-center">
-        <div className="w-full flex items-center justify-start gap-1">
-          <Opal size={12} />
-          opal editor by{" "}
-          <a href="https://github.com/rbbydotdev" className="inline hover:text-ring" tabIndex={-1}>
-            @rbbydotdev
-          </a>
-        </div>
-      </SidebarFooter>
+      <SidebarFooter className="text-3xs to-sidebar-accent uppercase font-mono w-full flex content-center"></SidebarFooter>
     </Sidebar>
   );
 }

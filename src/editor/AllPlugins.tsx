@@ -1,5 +1,6 @@
 import { useFileContents } from "@/context/useFileContents";
 import { useSnapHistoryDB } from "@/data/dao/HistoryDAO";
+import { customCodeMirrorTheme } from "@/editor/codeMirrorCustomTheme";
 import { EditHistoryMenu } from "@/editor/history/EditHistoryMenu";
 import { useEditorHistoryPlugin2WithRealm } from "@/editor/history/useEditorHistoryPlugin2WithRealm";
 import { useWorkspaceDocumentId } from "@/editor/history/useWorkspaceDocumentId";
@@ -106,7 +107,7 @@ export function useAllPlugins({
         codeMirrorPlugin({
           codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
           autoLoadLanguageSupport: true,
-          codeMirrorExtensions: [],
+          codeMirrorExtensions: [customCodeMirrorTheme],
         }),
         directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
         markdownShortcutPlugin(),
