@@ -78,6 +78,9 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
       corsProxy: ENV.VERCEL_CORS_PROXY,
     },
   }),
+  /*
+  
+  Vercel OAuth cannot read or create projects and deployments
   template({
     name: "Vercel OAuth",
     description: "Connect using Vercel OAuth",
@@ -88,6 +91,7 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
       corsProxy: ENV.VERCEL_CORS_PROXY,
     },
   }),
+  */
   template({
     name: "AWS S3 API",
     description: "Connect using AWS Access Key and Secret",
