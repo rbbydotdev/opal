@@ -7,8 +7,8 @@ import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { EditorSidebarLayout } from "@/features/preview-pane/EditorSidebarLayout";
 import { PreviewIFrame } from "@/features/preview-pane/PreviewIframe";
 import { usePreviewPaneProps } from "@/features/preview-pane/usePreviewPaneProps";
+import { ScrollSyncProvider } from "@/features/preview-pane/useScrollSync";
 import useFavicon from "@/hooks/useFavicon";
-import { ScrollSyncProvider } from "@/hooks/useScrollSync";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 

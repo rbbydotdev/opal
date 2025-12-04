@@ -59,4 +59,4 @@ export async function validateNetlifyToken({ accessToken }: { accessToken: strin
   }
 }
 
-export { NetlifyClient } from "@/lib/netlify/NetlifyClient";
+export { NetlifyClient } from "@/api/netlify/NetlifyClient";

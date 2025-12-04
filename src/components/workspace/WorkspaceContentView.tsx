@@ -4,7 +4,7 @@ import { HistorySnapDBProvider } from "@/data/dao/HistoryDAO";
 import { useAllPlugins } from "@/editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
 import { SnapApiPoolProvider } from "@/editor/history/SnapApiPoolProvider";
-import { ScrollSync } from "@/hooks/useScrollSync";
+import { ScrollSync } from "@/features/preview-pane/useScrollSync";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";

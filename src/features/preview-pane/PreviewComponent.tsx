@@ -2,7 +2,7 @@ import { useLiveCssFiles } from "@/editor/useLiveCssFiles";
 import { useIframeContextProvider, useWindowContextProvider } from "@/features/preview-pane/IframeContextProvider";
 import { injectCssFiles, PreviewContent } from "@/features/preview-pane/PreviewContent";
 import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
-import { ScrollSync } from "@/hooks/useScrollSync";
+import { ScrollSync } from "@/features/preview-pane/useScrollSync";
 import { AbsPath, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";

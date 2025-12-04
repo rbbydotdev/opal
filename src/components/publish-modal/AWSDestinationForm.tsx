@@ -1,3 +1,4 @@
+import { AWS_REGIONS } from "@/api/aws/AWSRegions";
 import { useRemoteAWSBucket, useRemoteAWSSearch } from "@/components/RemoteConnectionItem";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,6 @@ import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthAWSAPIAgent } from "@/data/remote-auth/RemoteAuthAWSAPIAgent";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { AWS_REGIONS } from "@/lib/aws/AWSRegions";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import fuzzysort from "fuzzysort";
