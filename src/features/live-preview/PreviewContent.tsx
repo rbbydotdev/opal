@@ -1,5 +1,5 @@
 import { useLiveFileContent } from "@/context/useFileContents";
-import { ExtCtxReadyContext, PreviewContext } from "@/features/preview-pane/IframeContextProvider";
+import { ExtCtxReadyContext, PreviewContext } from "@/features/live-preview/IframeContextProvider";
 import { TemplateManager } from "@/features/templating";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";

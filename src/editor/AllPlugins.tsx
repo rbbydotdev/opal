@@ -9,7 +9,7 @@ import { MdxToolbar } from "@/editor/MdxToolbar";
 import { searchPlugin } from "@/editor/searchPlugin";
 import { SourceEditorButton } from "@/editor/SourceEditorButton";
 import { useImagesPlugin } from "@/editor/useImagesPlugin";
-import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
+import { useSidebarPanes } from "@/features/live-preview/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import {

@@ -15,7 +15,7 @@ import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editor/searchPlugin";
 import { usePreserveViewModeURL } from "@/editor/view-mode/usePreserveViewModeURL";
-import { WindowContextProviderComponent } from "@/features/preview-pane/IframeContextProvider";
+import { WindowContextProviderComponent } from "@/features/live-preview/IframeContextProvider";
 import { useZoom } from "@/hooks/useZoom";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { WorkspaceErrorBoundaryFallback } from "@/layouts/WorkspaceErrorBoundaryFallback";
