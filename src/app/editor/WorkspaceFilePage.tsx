@@ -1,7 +1,7 @@
 import { Editor, Editors } from "@/app/editor/Editors";
 import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
-import { FileError } from "@/app/filemenu/FileError";
 import { SourceEditor } from "@/app/source-editor/SourceEditor";
+import { FileError } from "@/components/filetree/FileError";
 import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
 import { WorkspaceMarkdownEditor } from "@/components/workspace/WorkspaceContentView";

@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { TreeFile, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { WorkspaceRouteType } from "@/context/WorkspaceContext";

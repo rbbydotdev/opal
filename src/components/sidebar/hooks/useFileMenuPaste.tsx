@@ -1,4 +1,4 @@
-import { INTERNAL_NODE_FILE_TYPE } from "@/app/filemenu/FiletreeMenu";
+import { INTERNAL_NODE_FILE_TYPE } from "@/components/filetree/FiletreeMenu";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";

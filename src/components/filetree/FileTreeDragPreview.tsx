@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { Thumb } from "@/data/Thumb";
 import { DragPreviewNode } from "@/features/filetree-drag-and-drop/DragPreviewNode";
 import { FileCode2Icon, FileTextIcon, Folder } from "lucide-react";

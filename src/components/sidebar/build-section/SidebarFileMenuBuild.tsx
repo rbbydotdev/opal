@@ -1,8 +1,8 @@
-import { FileTreeMenuCtxProvider } from "@/app/filemenu/FileTreeMenuCtxProvider";
 import { BuildModal } from "@/components/build-modal/BuildModal";
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
 import { useBuildCreationCmd } from "@/components/build-modal/BuildModalContextProvider";
 import { useConfirm } from "@/components/Confirm";
+import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/sidebar/build-files-section/BuildSidebarFileMenuFileSection";

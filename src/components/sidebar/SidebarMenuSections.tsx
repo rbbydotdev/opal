@@ -1,6 +1,6 @@
-import { FileTreeMenuCtxProvider } from "@/app/filemenu/FileTreeMenuCtxProvider";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/errors/ErrorPlaque";
+import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuCtxProvider";
 // import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { SidebarFileMenuBuild } from "@/components/sidebar/build-section/SidebarFileMenuBuild";
 import { SidebarFileMenuExport } from "@/components/sidebar/export-section/SidebarFileMenuExport";

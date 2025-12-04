@@ -1,5 +1,5 @@
-import { FileItemContextMenuComponentType } from "@/app/filemenu/FileItemContextMenuComponentType";
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { RepoInfoProvider } from "@/components/sidebar/FileTree/FileTreeRepoProvider";
 import { ROOT_NODE } from "@/components/sidebar/FileTree/TreeNode";
 import { useFileTreeClipboardEventListeners } from "@/components/sidebar/hooks/useFileTreeClipboardEventListeners";

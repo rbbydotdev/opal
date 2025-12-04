@@ -1,4 +1,4 @@
-import { FileItemContextMenuComponentType } from "@/app/filemenu/FileItemContextMenuComponentType";
+import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
 import { FileTree, NULL_FILE_TREE } from "@/components/sidebar/FileTree/Filetree";
 import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { useWatchWorkspaceFileTree, useWorkspaceContext } from "@/context/WorkspaceContext";
