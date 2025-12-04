@@ -2,7 +2,7 @@ import { allowedFiletreePathMove } from "@/components/filetree/allowedFiletreePa
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { prepareNodeDataTransfer } from "@/features/filetree-copy-paste/prepareNodeDataTransfer";
-import { errF } from "@/lib/errors";
+import { errF } from "@/lib/errors/errors";
 import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
 import { INTERNAL_NODE_FILE_TYPE, NodeDataJType } from "@/types/FiletreeTypes";

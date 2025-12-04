@@ -6,7 +6,7 @@ import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
 import { debounce } from "@/lib/debounce";
 import { deepEqual } from "@/lib/deepEqual";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 
 import { DiskFromJSON } from "@/data/disk/DiskFactory";

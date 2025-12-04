@@ -10,7 +10,7 @@ import {
   VirtualTreeNode,
 } from "@/components/filetree/TreeNode";
 import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
-import { isErrorWithCode, NotFoundError } from "@/lib/errors";
+import { isErrorWithCode, NotFoundError } from "@/lib/errors/errors";
 import { AbsPath, absPath, basename, dirname, joinPath, RelPath, relPath, stringifyEntry } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 

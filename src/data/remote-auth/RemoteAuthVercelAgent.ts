@@ -1,7 +1,7 @@
 import { RefreshAuth } from "@/data/RefreshAuth";
 import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefreshToken } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
-import { mapToTypedError } from "@/lib/errors";
+import { mapToTypedError } from "@/lib/errors/errors";
 import { Vercel } from "@vercel/sdk";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 import { GetProjectsProjects } from "@vercel/sdk/models/getprojectsop.js";

@@ -3,8 +3,8 @@ import { TreeDir, TreeFile, TreeNode } from "@/components/filetree/TreeNode";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { DefaultFile } from "@/lib/DefaultFile";
-import { NotFoundError } from "@/lib/errors";
-import { useErrorToss } from "@/lib/errorToss";
+import { NotFoundError } from "@/lib/errors/errors";
+import { useErrorToss } from "@/lib/errors/errorToss";
 import { Workspace } from "@/lib/events/Workspace";
 import {
   AbsPath,

@@ -1,5 +1,5 @@
 import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
-import { isErrorWithCode } from "@/lib/errors";
+import { isErrorWithCode } from "@/lib/errors/errors";
 import { AbsPath, absPath, joinPath, relPath } from "@/lib/paths2";
 import { FsaNodeFs } from "memfs/lib/fsa-to-node";
 import path from "path";

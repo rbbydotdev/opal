@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ApplicationError } from "@/lib/errors";
+import { ApplicationError } from "@/lib/errors/errors";
 // import { RotateCcw } from "lucide-react";
 
 export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {

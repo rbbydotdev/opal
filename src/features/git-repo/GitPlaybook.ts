@@ -2,7 +2,7 @@ import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { Disk } from "@/data/disk/Disk";
 import { gitAbbreviateRef } from "@/features/git-repo/gitAbbreviateRef";
 import { GitFullRemoteObjType, GitRemote, GitRepo } from "@/features/git-repo/GitRepo";
-import { ConflictError, NotFoundError } from "@/lib/errors";
+import { ConflictError, NotFoundError } from "@/lib/errors/errors";
 import { absPath, AbsPath } from "@/lib/paths2";
 // import { Mutex } from "async-mutex";
 import { NullDisk } from "@/data/disk/NullDisk";

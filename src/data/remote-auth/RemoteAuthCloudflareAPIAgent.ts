@@ -1,7 +1,7 @@
 import type { CloudflareAPIRemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 
-import { mapToTypedError } from "@/lib/errors";
+import { mapToTypedError } from "@/lib/errors/errors";
 import Cloudflare, { APIError } from "cloudflare";
 import { V4PagePaginationArray } from "cloudflare/pagination.mjs";
 import { optionalCORSBaseURL } from "../../lib/optionalCORSBaseURL";

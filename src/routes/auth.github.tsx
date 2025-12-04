@@ -1,6 +1,6 @@
 import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
 import { Channel } from "@/lib/channel";
-import { unwrapError } from "@/lib/errors";
+import { unwrapError } from "@/lib/errors/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -113,7 +113,6 @@ function OAuthCallback() {
             window.close();
           }, 100);
         });
-
       } catch (e) {
         const errorMsg = unwrapError(e);
         console.error("Failed to send authorization code:", e);

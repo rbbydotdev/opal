@@ -1,7 +1,7 @@
 import { refreshVercelToken } from "@/auth/VercelOAuthFlow";
 import type { VercelOAuthRemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthVercelAgent } from "@/data/remote-auth/RemoteAuthVercelAgent";
-import { TokenExpiredError } from "@/lib/errors";
+import { TokenExpiredError } from "@/lib/errors/errors";
 
 export class RemoteAuthVercelOAuthAgent extends RemoteAuthVercelAgent {
   getCORSProxy(): string | undefined {

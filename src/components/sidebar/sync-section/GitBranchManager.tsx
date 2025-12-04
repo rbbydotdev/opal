@@ -29,7 +29,7 @@ import { gitBranchSchema } from "@/components/sidebar/sync-section/gitBranchSche
 import { SelectHighlight } from "@/components/sidebar/sync-section/SelectHighlight";
 import { Input } from "@/components/ui/input";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
-import { unwrapError } from "@/lib/errors";
+import { unwrapError } from "@/lib/errors/errors";
 import { Remote } from "comlink";
 
 function GitBranchManager({

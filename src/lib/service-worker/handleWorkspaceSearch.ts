@@ -1,6 +1,6 @@
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
-import { errF, isError, NotFoundError } from "@/lib/errors";
+import { errF, isError, NotFoundError } from "@/lib/errors/errors";
 import { Workspace } from "@/lib/events/Workspace";
 import { basename } from "@/lib/paths2";
 import { wrapGeneratorWithSignal } from "@/lib/service-worker/wrapGeneratorWithSignal";

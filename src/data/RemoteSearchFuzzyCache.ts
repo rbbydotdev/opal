@@ -1,4 +1,4 @@
-import { isAbortError, unwrapError } from "@/lib/errors";
+import { isAbortError, unwrapError } from "@/lib/errors/errors";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import fuzzysort from "fuzzysort";
 

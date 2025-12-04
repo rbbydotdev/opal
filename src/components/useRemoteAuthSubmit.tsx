@@ -1,7 +1,7 @@
 import { RemoteAuthFormValues } from "@/components/remote-auth/RemoteAuthTemplate";
 import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { errF } from "@/lib/errors";
+import { errF } from "@/lib/errors/errors";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { useState } from "react";
 

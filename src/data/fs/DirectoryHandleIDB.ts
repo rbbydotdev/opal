@@ -4,7 +4,7 @@
  */
 
 import { promisifyHandler } from "@/lib/promisifyHandler";
-import { InternalServerError, NotFoundError } from "../../lib/errors";
+import { InternalServerError, NotFoundError } from "../../lib/errors/errors";
 
 const DB_NAME = "DirectoryHandlesDB";
 const DB_VERSION = 1;

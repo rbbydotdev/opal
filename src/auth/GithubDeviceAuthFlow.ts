@@ -1,5 +1,5 @@
 import { ENV } from "@/lib/env";
-import { mapToTypedError } from "@/lib/errors";
+import { mapToTypedError } from "@/lib/errors/errors";
 import { optionalCORSBaseURL } from "@/lib/optionalCORSBaseURL";
 import { stripTrailingSlash } from "@/lib/paths2";
 import { createOAuthDeviceAuth } from "@octokit/auth-oauth-device";

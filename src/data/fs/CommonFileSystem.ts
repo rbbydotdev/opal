@@ -1,5 +1,5 @@
 import { NamespacedFs } from "@/data/fs/NamespacedFs";
-import { isErrorWithCode } from "@/lib/errors";
+import { isErrorWithCode } from "@/lib/errors/errors";
 import { AbsPath, joinPath, relPath } from "@/lib/paths2";
 import { CommonFileSystem } from "./FileSystemTypes";
 

@@ -11,8 +11,8 @@ import {
 } from "@/components/sidebar/SelectableList";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useDeploys } from "@/hooks/useDeploys";
-import { coerceError } from "@/lib/errors";
-import { useErrorToss } from "@/lib/errorToss";
+import { coerceError } from "@/lib/errors/errors";
+import { useErrorToss } from "@/lib/errors/errorToss";
 import { Delete, Eye } from "lucide-react";
 
 export function SidebarDeploymentList() {

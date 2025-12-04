@@ -1,6 +1,6 @@
 import { ErrorPopupControl } from "@/components/ui/error-popup";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { BadRequestError, isError } from "@/lib/errors";
+import { BadRequestError, isError } from "@/lib/errors/errors";
 import { Workspace } from "@/lib/events/Workspace";
 import { dirname } from "@/lib/paths2";
 import { imagePlugin } from "@mdxeditor/editor";

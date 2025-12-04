@@ -1,4 +1,4 @@
-import { mapToTypedError } from "@/lib/errors";
+import { mapToTypedError } from "@/lib/errors/errors";
 
 export class NetlifyClient {
   private accessToken: string;
