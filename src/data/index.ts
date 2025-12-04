@@ -1,5 +1,5 @@
-import { DestinationRecord } from "@/components/sidebar/FileTree/DestinationRecord";
 import { BuildRecord } from "@/data/dao/BuildRecord";
+import { DestinationRecord } from "@/data/dao/DestinationRecord";
 import { DeployRecord } from "@/data/DeployRecord";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { HistoryDocRecord } from "@/data/HistoryTypes";

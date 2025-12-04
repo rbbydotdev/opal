@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";

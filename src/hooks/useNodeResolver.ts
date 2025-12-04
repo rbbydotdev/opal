@@ -1,5 +1,5 @@
-import { FileTree } from "@/components/sidebar/FileTree/Filetree";
-import { ROOT_NODE, TreeDir, TreeFile } from "@/components/sidebar/FileTree/TreeNode";
+import { FileTree } from "@/components/filetree/Filetree";
+import { ROOT_NODE, TreeDir, TreeFile } from "@/components/filetree/TreeNode";
 import { AbsPath } from "@/lib/paths2";
 
 export const useNodeResolver = (

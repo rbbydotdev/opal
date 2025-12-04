@@ -1,6 +1,6 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { TreeFile, TreeNode } from "@/components/filetree/TreeNode";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
-import { TreeFile, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { WorkspaceRouteType } from "@/context/WorkspaceContext";
 import { Thumb } from "@/data/Thumb";
 import { useEditable } from "@/hooks/useEditable";

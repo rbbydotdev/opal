@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { AbsPath, dirname } from "@/lib/paths2";
 
 export function allowedFiletreePathMove(targetPath: AbsPath, node: TreeNode) {

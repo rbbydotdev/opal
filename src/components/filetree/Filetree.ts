@@ -8,7 +8,7 @@ import {
   VirtualDirTreeNode,
   VirtualFileTreeNode,
   VirtualTreeNode,
-} from "@/components/sidebar/FileTree/TreeNode";
+} from "@/components/filetree/TreeNode";
 import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
 import { isErrorWithCode, NotFoundError } from "@/lib/errors";
 import { AbsPath, absPath, basename, dirname, joinPath, RelPath, relPath, stringifyEntry } from "@/lib/paths2";

@@ -1,5 +1,5 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
-import { ROOT_NODE, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { ROOT_NODE, TreeNode } from "@/components/filetree/TreeNode";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

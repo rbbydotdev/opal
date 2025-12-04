@@ -1,5 +1,5 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
-import { TreeDir, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { TreeDir, TreeNode } from "@/components/filetree/TreeNode";
 import { WorkspaceRouteType } from "@/context/WorkspaceContext";
 import { useEditable } from "@/hooks/useEditable";
 import { AbsPath, basename, RelPath, relPath } from "@/lib/paths2";

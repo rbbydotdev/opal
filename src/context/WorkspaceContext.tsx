@@ -1,7 +1,7 @@
 import { useWatchViewMode } from "@/app/editor/view-mode/useWatchViewMode";
 import { isSourceMimeType } from "@/app/source-editor/SourceMimeType";
-import { FileTree, NULL_FILE_TREE } from "@/components/sidebar/FileTree/Filetree";
-import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { FileTree, NULL_FILE_TREE } from "@/components/filetree/Filetree";
+import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/components/filetree/TreeNode";
 import {
   AlertDialog,
   AlertDialogAction,

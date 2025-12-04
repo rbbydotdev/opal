@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { AbsPath, prefix } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useCallback, useEffect, useState } from "react";

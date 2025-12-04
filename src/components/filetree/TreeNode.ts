@@ -25,7 +25,7 @@ import {
   strictPrefix,
 } from "@/lib/paths2";
 import { extname } from "path";
-import { resolveFromRoot } from "../../../lib/paths2";
+import { resolveFromRoot } from "../../lib/paths2";
 
 export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";

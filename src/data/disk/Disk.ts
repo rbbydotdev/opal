@@ -1,11 +1,5 @@
-import { FileTree } from "@/components/sidebar/FileTree/Filetree";
-import {
-  SourceTreeNode,
-  TreeDir,
-  TreeDirRoot,
-  TreeNode,
-  TreeNodeDirJType,
-} from "@/components/sidebar/FileTree/TreeNode";
+import { FileTree } from "@/components/filetree/Filetree";
+import { SourceTreeNode, TreeDir, TreeDirRoot, TreeNode, TreeNodeDirJType } from "@/components/filetree/TreeNode";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import {
