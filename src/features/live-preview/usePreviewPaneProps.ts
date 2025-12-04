@@ -1,5 +1,5 @@
-import { useResolvePathForPreview } from "@/features/preview-pane/useResolvePathForPreview";
-import { useWorkspacePathPreviewURL } from "@/features/preview-pane/useWorkspacePathPreviewURL";
+import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
+import { useWorkspacePathPreviewURL } from "@/features/live-preview/useWorkspacePathPreviewURL";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 

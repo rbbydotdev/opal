@@ -1,5 +1,5 @@
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { sessionIdParam, workspacePathSessionId } from "@/features/preview-pane/scrollSyncUtils";
+import { sessionIdParam, workspacePathSessionId } from "@/features/live-preview/scrollSyncUtils";
 import { absPath, joinPath } from "@/lib/paths2";
 
 export function useWorkspacePathPreviewURL(filePathOverride?: string) {

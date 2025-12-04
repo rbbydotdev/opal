@@ -1,5 +1,5 @@
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { isFirefox } from "@/features/preview-pane/isFirefox";
+import { isFirefox } from "@/features/live-preview/isFirefox";
 import { CreateTypedEmitter } from "@/lib/TypeEmitter";
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
 

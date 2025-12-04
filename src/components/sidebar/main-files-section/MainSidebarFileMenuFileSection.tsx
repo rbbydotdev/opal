@@ -26,7 +26,7 @@ import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { useLeftWidth } from "@/features/preview-pane/EditorSidebarLayout";
+import { useLeftWidth } from "@/features/live-preview/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useZoom } from "@/hooks/useZoom";
 import { DefaultFile } from "@/lib/DefaultFile";

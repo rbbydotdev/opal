@@ -9,7 +9,7 @@ import { Thumb } from "@/data/Thumb";
 import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
-import { useWindowContextProvider } from "@/features/preview-pane/IframeContextProvider";
+import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";

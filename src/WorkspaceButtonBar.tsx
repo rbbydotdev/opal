@@ -23,7 +23,7 @@ import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { useToggleEditHistory } from "@/editor/history/useToggleEditHistory";
 import { useToggleHistoryImageGeneration } from "@/editor/history/useToggleHistoryImageGeneration";
-import { useLeftCollapsed } from "@/features/preview-pane/EditorSidebarLayout";
+import { useLeftCollapsed } from "@/features/live-preview/EditorSidebarLayout";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";

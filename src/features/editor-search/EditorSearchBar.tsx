@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { WS_BUTTON_BAR_ID } from "@/constants/layout";
-import { useSidebarPanes } from "@/features/preview-pane/EditorSidebarLayout";
+import { useSidebarPanes } from "@/features/live-preview/EditorSidebarLayout";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { IS_MAC } from "@/lib/isMac";
 import clsx from "clsx";
