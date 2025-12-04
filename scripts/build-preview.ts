@@ -30,14 +30,7 @@ async function build(): Promise<void> {
     metafile: true,
   });
 
-  // await fs.writeFile("meta.json", JSON.stringify(result.metafile));
-  // --- SIMPLIFIED LOGIC ---
-  // The `result.outputFiles` array will now contain only ONE file:
-  // the fully bundled JavaScript (which also contains the CSS).
   const jsContent: string = result.outputFiles?.[0]?.text ?? "";
-  // const jsContent = "/* okay */";
-
-  // Read the HTML template
   const template: string = await fs.readFile("./preview-builder/preview-template.html", "utf-8");
 
   const outdir = path.resolve(appDir, "public");
@@ -47,7 +40,7 @@ async function build(): Promise<void> {
     template.split(MAGIC_STRING).join(`<script>${jsContent}</script>`)
   );
 
-  console.log("✅ Single-file preview page built successfully to public/doc-preview-image.html");
+  console.log("Single-file preview page built successfully to public/doc-preview-image.html");
 }
 
 build().catch((err: unknown) => {

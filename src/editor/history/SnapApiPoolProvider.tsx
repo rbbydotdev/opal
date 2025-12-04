@@ -16,7 +16,6 @@ export async function createApiResource({
     filePath: "/preview-doc.md",
     workspaceId,
   });
-  // console.log("Creating iframe for preview worker with params:", searchParams.toString());
   iframe.src = "/doc-preview-image.html?" + searchParams.toString();
   iframe.style.transform = "translate(-9999px, -9999px)";
   iframe.style.position = "absolute";
@@ -26,10 +25,6 @@ export async function createApiResource({
   let api: Comlink.Remote<PreviewWorkerApiType> | null = Comlink.wrap<PreviewWorkerApiType>(
     Comlink.windowEndpoint(iframe.contentWindow!)
   );
-  //TODO: profile this to see if its even needed
-  //me being paranoid about memory leaks
-  // const wrefApi = new WeakRef(api);
-  // const wrefIframe = new WeakRef(iframe);
   const terminate = () => {
     console.debug("terminating api resource");
     (iframe || { src: "" }).src = "about:blank";
@@ -55,4 +50,3 @@ export class ApiPoolWorker extends PoolWorker<Resource<PreviewWorkerApiType>> {}
 const { PoolProvider, usePool, Context } = CreatePoolContext<ApiPoolWorker>();
 export const SnapApiPoolProvider = PoolProvider;
 export const useSnapApiPool = usePool;
-const SnapApiContext = Context;
