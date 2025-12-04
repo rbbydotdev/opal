@@ -1,7 +1,7 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { TreeNode } from "@/components/filetree/TreeNode";
+import { useFiletreeMenuContextMenuActions } from "@/components/filetree/useFiletreeMenuContextMenuActions";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { Workspace } from "@/workspace/Workspace";
 import { Delete, Undo } from "lucide-react";

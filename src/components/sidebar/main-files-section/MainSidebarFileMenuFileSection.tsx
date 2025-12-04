@@ -1,6 +1,7 @@
 import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
+import { useFiletreeMenuContextMenuActions } from "@/components/filetree/useFiletreeMenuContextMenuActions";
 import { RepoInfoProvider } from "@/components/sidebar/file-menu/FileTreeRepoProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/sidebar/hooks/useFileTreeClipboardEventListeners";
 import { RootFileMenuBanner } from "@/components/sidebar/main-files-section/RootFileMenuBanner";
@@ -21,7 +22,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
-import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
