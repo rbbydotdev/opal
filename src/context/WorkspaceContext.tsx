@@ -1,5 +1,3 @@
-import { useWatchViewMode } from "@/app/editor/view-mode/useWatchViewMode";
-import { isSourceMimeType } from "@/app/source-editor/SourceMimeType";
 import { FileTree, NULL_FILE_TREE } from "@/components/filetree/Filetree";
 import { NULL_TREE_ROOT, TreeDir, TreeDirRoot, TreeNode } from "@/components/filetree/TreeNode";
 import {
@@ -14,6 +12,7 @@ import {
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Disk } from "@/data/disk/Disk";
 import { SpecialDirs } from "@/data/SpecialDirs";
+import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceCorruption } from "@/features/workspace-corruption/useWorkspaceCorruption";
@@ -24,6 +23,7 @@ import { useErrorToss } from "@/lib/errorToss";
 import { OpalMimeType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor, isBin, isCss, isEjs, isHtml, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
+import { isSourceMimeType } from "@/source-editor/SourceMimeType";
 import { NullWorkspace } from "@/workspace/NullWorkspace";
 import { useWorkspaces } from "@/workspace/useWorkspaces";
 import { Workspace } from "@/workspace/Workspace";

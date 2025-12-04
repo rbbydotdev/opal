@@ -1,5 +1,5 @@
-import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
 import { Button } from "@/components/ui/button";
+import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
 import { ChevronRightIcon, FileText } from "lucide-react";
 
 export const SourceEditorButton = () => (

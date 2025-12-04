@@ -1,7 +1,4 @@
 // EditHistoryMenu.tsx;
-import { EditViewImage } from "@/app/editor/history/EditViewImage";
-import { useSelectedItemScroll } from "@/app/editor/history/useSelectedItemScroll";
-import { useToggleEditHistory } from "@/app/editor/history/useToggleEditHistory";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useSnapHistoryDB, useSnapHistoryPendingSave } from "@/data/dao/HistoryDAO";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
+import { EditViewImage } from "@/editor/history/EditViewImage";
+import { useSelectedItemScroll } from "@/editor/history/useSelectedItemScroll";
+import { useToggleEditHistory } from "@/editor/history/useToggleEditHistory";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";

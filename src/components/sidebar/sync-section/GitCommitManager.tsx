@@ -1,4 +1,4 @@
-import { OPAL_AUTHOR } from "@/app/GitConfig";
+import { OPAL_AUTHOR } from "@/GitConfig";
 import { OpalSvg } from "@/components/OpalSvg";
 import { SelectHighlight } from "@/components/sidebar/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";

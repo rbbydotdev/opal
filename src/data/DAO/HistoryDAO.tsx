@@ -1,8 +1,8 @@
-import { useIframeImagePooledImperitiveWorker } from "@/app/editor/history/EditViewImage";
-import { useToggleHistoryImageGeneration } from "@/app/editor/history/useToggleHistoryImageGeneration";
 import { NullHistoryDAO } from "@/data/dao/NullHistoryDAO";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
 import { ClientDb } from "@/data/instance";
+import { useIframeImagePooledImperitiveWorker } from "@/editor/history/EditViewImage";
+import { useToggleHistoryImageGeneration } from "@/editor/history/useToggleHistoryImageGeneration";
 import { useResource } from "@/hooks/useResource";
 
 import { SuperEmitter } from "@/lib/TypeEmitter";

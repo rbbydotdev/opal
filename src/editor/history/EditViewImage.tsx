@@ -1,6 +1,6 @@
-import { ApiPoolWorker, NewComlinkSnapshotPoolWorker, useSnapApiPool } from "@/app/editor/history/SnapApiPoolProvider";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
+import { ApiPoolWorker, NewComlinkSnapshotPoolWorker, useSnapApiPool } from "@/editor/history/SnapApiPoolProvider";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";

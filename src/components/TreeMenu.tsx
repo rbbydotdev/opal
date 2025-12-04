@@ -1,6 +1,3 @@
-import { MainEditorRealmId } from "@/app/editor/EditorConst";
-import { highlightMdxElement } from "@/app/editor/highlightMdxElement";
-import { scrollToEditorElement } from "@/app/editor/scrollToEditorElement";
 import { isParent } from "@/components/isParent";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import {
@@ -14,6 +11,9 @@ import { useCellValueForRealm } from "@/components/useCellValueForRealm";
 import { useEditorDisplayTreeCtx } from "@/components/useEditorDisplayTree";
 import { useGetNodeFromEditor } from "@/components/useGetNodeFromEditor";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
+import { MainEditorRealmId } from "@/editor/EditorConst";
+import { highlightMdxElement } from "@/editor/highlightMdxElement";
+import { scrollToEditorElement } from "@/editor/scrollToEditorElement";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { $createListItemNode, $createListNode, $isListItemNode, $isListNode, ListType } from "@lexical/list";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";

@@ -4,7 +4,7 @@ import React, { useImperativeHandle, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { OPAL_AUTHOR } from "@/app/GitConfig";
+import { OPAL_AUTHOR } from "@/GitConfig";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
