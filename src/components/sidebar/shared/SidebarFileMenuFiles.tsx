@@ -130,7 +130,7 @@ export const SidebarFileMenuFiles = ({
             </SidebarGroupLabel>
 
             <CollapsibleContent className={cn(collapsibleClassname)}>
-              <SidebarContent className="flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden group">
+              <SidebarContent className="gap-0 flex items-center justify-center scrollbar-thin p-0 pb-2 max-w-full overflow-x-hidden group">
                 <>
                   {contentBanner}
                   {isEmpty ? (

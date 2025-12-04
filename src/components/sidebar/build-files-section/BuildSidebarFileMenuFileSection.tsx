@@ -8,6 +8,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
+import { useMemo } from "react";
 
 const BuildSideBarLabel = ({ title, id }: { title: React.ReactNode; id: string }) => {
   return (
@@ -26,6 +27,8 @@ function BuildSidebarFileMenuFileSectionInternal({ className, build }: { classNa
   const isEmpty = !build?.buildPath
     ? true
     : Object.keys(fileTree.nodeFromPath(build?.buildPath)?.children ?? {}).length === 0;
+
+  const hasDirChildren = useMemo(() => fileTree.nodeFromPath(build?.buildPath)?.hasDirChildren(), [fileTree, build]);
   const scope = build?.buildPath || SpecialDirs.Build;
 
   if (!build) return <EmptySidebarLabel label="No Build" className="w-full" />;
@@ -39,7 +42,7 @@ function BuildSidebarFileMenuFileSectionInternal({ className, build }: { classNa
         canDrag={false}
         collapsibleClassname="max-h-80 -ml-3 gap-0"
         contentBanner={
-          build?.buildPath && !isEmpty ? (
+          build?.buildPath && hasDirChildren ? (
             <RootFileMenuBanner fileTree={fileTree} currentWorkspace={currentWorkspace} rootNode={build?.buildPath} />
           ) : null
         }

@@ -238,7 +238,8 @@ export class FileTree {
     return this.insertNode(parent, newNode);
   }
 
-  nodeFromPath(path: AbsPath | string): TreeNode | null {
+  nodeFromPath(path?: AbsPath | string | null): TreeNode | null {
+    if (!path) return null;
     return this.map.get(path + "") ?? null;
   }
 }

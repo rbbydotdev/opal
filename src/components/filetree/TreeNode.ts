@@ -207,6 +207,11 @@ export class TreeNode {
     return gen.bind(this)(this) as IterableIterator<this>;
   }
 
+  hasDirChildren(): boolean {
+    if (!this.isTreeDir()) return false;
+    return Object.values(this.children ?? {}).some((child) => child.isTreeDir());
+  }
+
   walk = (
     cb: (node: TreeNode, depth: number, exit: () => void, $stop_token: Symbol) => unknown,
     depth = 0,

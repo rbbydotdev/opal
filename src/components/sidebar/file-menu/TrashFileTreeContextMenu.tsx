@@ -43,8 +43,8 @@ export const TrashFileTreeContextMenu = ({
         }}
       >
         {isRoot && (
-          <ContextMenuItem className="flex gap-2" onClick={() => remove(SpecialDirs.Trash)}>
-            <Delete className="mr-3 h-4 w-4" />
+          <ContextMenuItem className="flex gap-8 justify-start w-full" onClick={() => remove(SpecialDirs.Trash)}>
+            <Delete className="h-5 w-5 text-destructive" />
             Empty
           </ContextMenuItem>
         )}

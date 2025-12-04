@@ -65,7 +65,6 @@ export function FileTreeMenu({
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, fileTreeDir)}
         onDragEnter={(e) => handleDragEnter(e, "/")}
-        className={cn({ "-mt-4": depth === 0 })}
       >
         {fileNodeChildren.map((fileNode) => (
           <SidebarMenuItem

@@ -62,11 +62,13 @@ export function MainSidebarFileMenuFileSection({
   const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
   const { setExpandAll, expandForNode } = useTreeExpanderContext();
 
-  const { fileTreeDir } = useFileTree();
+  const { fileTreeDir, fileTree } = useFileTree();
 
   useFileTreeClipboardEventListeners({ currentWorkspace, elementSelector: "[data-sidebar-file-menu]" });
 
   const diskType = useMemo(() => getDiskTypeLabel(currentWorkspace.getDisk().type), [currentWorkspace]);
+
+  const hasDirChildren = useMemo(() => fileTree.root.hasDirChildren(), [fileTree]);
 
   return (
     <>
@@ -77,7 +79,7 @@ export function MainSidebarFileMenuFileSection({
           menuTitle={"Files"}
           ItemContextMenu={ItemContextMenu}
           className={className}
-          contentBanner={!fileTreeDir.isEmpty() ? <RootFileMenuBanner currentWorkspace={currentWorkspace} /> : null}
+          contentBanner={hasDirChildren ? <RootFileMenuBanner currentWorkspace={currentWorkspace} /> : null}
           filter={SpecialDirs.All} // Exclude trash and git directories etc
         >
           <span className="block group-data-[state=closed]/collapsible:hidden">

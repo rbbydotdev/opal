@@ -50,7 +50,7 @@ export const RootFileMenuBanner = ({
     <MainFileTreeContextMenu fileNode={resolvedRootNode} currentWorkspace={currentWorkspace}>
       <div
         className={cn(
-          "mb-[5px] visible cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
+          "visible cursor-pointer h-4 transition-all group/banner w-[calc(100%-2rem)] z-10 pl-2 border-dashed hover:border font-mono text-2xs flex justify-center items-center",
           { "border h-8 bg-sidebar scale-y-110 mt-1": dragEnter },
           { "invisible h-4": isDragging === false }
         )}
