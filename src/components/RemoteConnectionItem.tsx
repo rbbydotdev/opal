@@ -1,3 +1,5 @@
+import { AWSS3Bucket } from "@/api/aws/AWSClient";
+import { NetlifySite } from "@/api/netlify/NetlifyClient";
 import { Input } from "@/components/ui/input";
 import { VercelProject } from "@/data/remote-auth/RemoteAuthVercelAgent";
 import { Repo } from "@/data/RemoteAuthTypes";
@@ -5,8 +7,6 @@ import { RemoteAuthAgentSearchType, isFuzzyResult } from "@/data/RemoteSearchFuz
 import { useAnySearch } from "@/data/useAnySearch";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { AWSS3Bucket } from "@/lib/aws/AWSClient";
-import { NetlifySite } from "@/lib/netlify/NetlifyClient";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import { Ban, Loader } from "lucide-react";
