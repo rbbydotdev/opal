@@ -1,8 +1,8 @@
-import type { CmdMap } from "@/components/spotlight/SpotlightSearch";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
+import type { CmdMap } from "@/features/spotlight/SpotlightSearch";
 import { ThemePreview } from "@/features/theme/ThemePreview";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/features/theme/useTheme";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 
