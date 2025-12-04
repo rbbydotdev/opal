@@ -10,48 +10,8 @@ const __dirname = path.dirname(__filename);
 const workers = [
   {
     name: "ServiceWorker",
-    entry: resolve(__dirname, "src/lib/ServiceWorker/sw.ts"),
+    entry: resolve(__dirname, "src/lib/service-worker/sw.ts"),
     outFile: "sw.js",
-  },
-  {
-    name: "DocxWorker",
-    entry: resolve(__dirname, "src/workers/DocxWorker/docx.ww.ts"),
-    outFile: "docx.ww.js",
-  },
-  {
-    name: "ImageWorker",
-    entry: resolve(__dirname, "src/workers/ImageWorker/image.ww.ts"),
-    outFile: "image.ww.js",
-  },
-  {
-    name: "ImageReplaceWorker",
-    entry: resolve(__dirname, "src/workers/ImageWorker/imageReplace.ww.ts"),
-    outFile: "imageReplace.ww.js",
-  },
-  {
-    name: "ImageWorker3",
-    entry: resolve(__dirname, "src/workers/ImageWorker/image3.ww.ts"),
-    outFile: "image3.ww.js",
-  },
-  {
-    name: "SearchWorker",
-    entry: resolve(__dirname, "src/workers/SearchWorker/search.ww.ts"),
-    outFile: "search.ww.js",
-  },
-  {
-    name: "RepoWorker",
-    entry: resolve(__dirname, "src/workers/RepoWorker/repo.ww.ts"),
-    outFile: "repo.ww.js",
-  },
-  {
-    name: "DiskWorker",
-    entry: resolve(__dirname, "src/workers/DiskWorker/disk.ww.ts"),
-    outFile: "disk.ww.js",
-  },
-  {
-    name: "WorkspaceWorker",
-    entry: resolve(__dirname, "src/workers/WorkspaceWorker/workspace.ww.ts"),
-    outFile: "workspace.ww.js",
   },
 ];
 
@@ -89,17 +49,7 @@ function createWorkerConfig({ name, entry, outFile }: WorkerConfig, isDev: boole
   });
 }
 
-const BuildList = [
-  "ServiceWorker",
-  // "SearchWorker",
-  // "DocxWorker",
-  // "ImageWorker",
-  // "ImageReplaceWorker",
-  // "ImageWorker3",
-  // "RepoWorker",
-  // "DiskWorker",
-  // "WorkspaceWorker",
-];
+const BuildList = ["ServiceWorker"];
 
 async function buildAllWorkers(isDev = false) {
   for (const worker of workers) {
