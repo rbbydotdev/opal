@@ -339,16 +339,6 @@ export function SelectableListMap<T>({ map }: SelectableListMapProps<T>) {
   return <>{data.map(map)}</>;
 }
 
-type SelectableListTriggerProps = {
-  children: React.ReactNode;
-  onTrigger?: () => void;
-};
-type SelectableListActionButtonProps = {
-  children: React.ReactNode;
-  onClick?: () => void;
-  title?: string;
-  className?: string;
-};
 type SelectableListItemProps = {
   children: React.ReactNode;
   id: string;

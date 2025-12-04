@@ -55,14 +55,12 @@ export function SidebarFileMenuBuild({
   currentWorkspace: Workspace;
 }) {
   const [expanded, setExpand] = useSingleItemExpander("build");
-  // const { info } = useWorkspaceGitRepo({ currentWorkspace });
   const { cmdRef } = useBuildCreationCmd();
   const { openNew } = useBuildCreation();
   const { open: openNewPub } = useBuildPublisher();
   const { open: openConfirm } = useConfirm();
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [open, setOpen] = useState(false);
-  // const githubConnected = useMemo(() => info.remotes.some((r) => r.url.includes("github.com")), [info]);
   const { storedValue: activeTab, setStoredValue: setActiveTab } = useLocalStorage2<
     "builds" | "files" | "destinations" | "deployments"
   >("SidebarFileMenuBuild/activeTab", "files");
@@ -107,7 +105,6 @@ export function SidebarFileMenuBuild({
   };
   return (
     <>
-      {/* <PublicationModal currentWorkspace={currentWorkspace} cmdRef={pubCmdRef} /> */}
       <BuildModal currentWorkspace={currentWorkspace} cmdRef={cmdRef} />
       <SidebarGroup {...props}>
         <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
@@ -126,14 +123,8 @@ export function SidebarFileMenuBuild({
           </CollapsibleTrigger>
 
           <CollapsibleContent className="pb-4">
-            <div className="pl-4 pr-0 pt-2 pb-2 flex flex-col gap-2">
+            <div className="pl-4 pr-1 pt-2 pb-2 flex flex-col gap-2">
               <SidebarGroup className="gap-2 flex flex-col">
-                {/* {githubConnected && (
-                  <Button className="w-full text-xs" size="sm" variant="outline">
-                    <Github className="mr-1" />
-                    <span className="flex-grow">Push to Github Pages</span>
-                  </Button>
-                )} */}
                 <Button className="w-full flex text-xs" size="sm" variant="outline" onClick={handleBuildToHTML}>
                   <Code2 className="mr-1" />
                   <span className="flex-grow">Build to HTML</span>
@@ -188,7 +179,7 @@ export function SidebarFileMenuBuild({
                 </Button>
               </div>
             </div>
-            <div className="pl-4 pt-2 pb-2 flex flex-col">
+            <div className="pr-1 pl-4 pt-2 pb-2 flex flex-col">
               <div className="flex">
                 <MiniTab onClick={() => setActiveTab("files")} active={activeTab === "files"}>
                   Files
@@ -232,7 +223,7 @@ export function SidebarFileMenuBuild({
 }
 function BuildSidebarFileExplorer({ build }: { build: BuildDAO | null }) {
   return (
-    <div className="pl-4 pr-0 pt-2 pb-2 flex flex-col gap-2">
+    <div className="pl-4 pr-1 pt-2 pb-2 flex flex-col gap-2">
       <div className="pl-2 pt-0 flex flex-col gap-4 border-ring border-l border-dashed">
         <div className="flex-shrink flex">
           <FileTreeMenuCtxProvider>
@@ -280,7 +271,3 @@ const BuildMenuDropDown = ({
     <DropdownMenuContent align="end">{children}</DropdownMenuContent>
   </DropdownMenu>
 );
-
-// function SidebarBuildListManager({ workspaceId }: { workspaceId: string }) {
-//   return <SidebarBuildsList workspaceId={workspaceId} />;
-// }

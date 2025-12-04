@@ -29,14 +29,13 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
               ItemContextMenu={TrashFileTreeContextMenu}
               className={className}
               scope={SpecialDirs.Trash}
-              contentBanner={hasTrash ? <div className="h-2"></div> : null}
             >
               {hasTrash ? <TinyNotice /> : null}
             </SidebarFileMenuFiles>
           </ContextMenuTrigger>
           <ContextMenuContent>
             <ContextMenuItem className="flex gap-2" onClick={() => removeFile(SpecialDirs.Trash)}>
-              <Delete className="mr-3 h-4 w-4" />
+              <Delete className="mr-3 h-4 w-4 text-destructive" />
               Empty
             </ContextMenuItem>
           </ContextMenuContent>
