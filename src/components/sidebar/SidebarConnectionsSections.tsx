@@ -1,5 +1,6 @@
 import { ConnectionsModal } from "@/components/connections-modal/ConnectionsModal";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
+import { useRemoteAuths } from "@/components/remote-auth/useRemoteAuths";
 import {
   SelectableListActions,
   SelectableListContent,
@@ -15,7 +16,6 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { Delete, Pencil, Plus, Sparkle } from "lucide-react";
 import { useState } from "react";

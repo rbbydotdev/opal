@@ -6,6 +6,7 @@ import { useForm, UseFormReturn, useWatch } from "react-hook-form";
 import { DeviceAuth } from "@/components/DeviceAuth";
 import { OAuth } from "@/components/OAuth";
 import { RemoteAuthFormValues, RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
+import { useRemoteAuthSubmit } from "@/components/remote-auth/useRemoteAuthSubmit";
 import { Case, SwitchCase } from "@/components/SwitchCase";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +20,6 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
 import {
   isRemoteAuthJType,
   PartialRemoteAuthJType,

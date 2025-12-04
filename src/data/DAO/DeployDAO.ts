@@ -1,4 +1,4 @@
-import { DeployLogLine, DeployRecord } from "@/data/DeployRecord";
+import { DeployLogLine, DeployRecord } from "@/data/dao/DeployRecord";
 import { ClientDb } from "@/data/instance";
 import { nanoid } from "nanoid";
 

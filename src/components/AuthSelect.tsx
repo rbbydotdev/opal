@@ -1,7 +1,7 @@
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
+import { useRemoteAuths } from "@/components/remote-auth/useRemoteAuths";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { Plus, Shield } from "lucide-react";
 

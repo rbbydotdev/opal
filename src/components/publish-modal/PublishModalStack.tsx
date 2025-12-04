@@ -4,6 +4,7 @@ import { BuildPublisherCmd } from "@/components/publish-modal/PubicationModalCmd
 import { PublicationModalDestinationContent } from "@/components/publish-modal/PublicationModalDestinationContent";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
+import { useRemoteAuths } from "@/components/remote-auth/useRemoteAuths";
 import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
 import { DestinationLabel } from "@/components/sidebar/build-files-section/DestinationLabel";
 import { Case, SwitchCase } from "@/components/SwitchCase";
@@ -18,7 +19,6 @@ import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/da
 import { BuildLog } from "@/hooks/useBuildLogs";
 import { useBuilds } from "@/hooks/useBuilds";
 import { useDestinations } from "@/hooks/useDestinations";
-import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import {
