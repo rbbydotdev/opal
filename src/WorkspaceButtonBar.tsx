@@ -1,7 +1,3 @@
-import { useToggleEditHistory } from "@/app/editor/history/useToggleEditHistory";
-import { useToggleHistoryImageGeneration } from "@/app/editor/history/useToggleHistoryImageGeneration";
-import { unregisterServiceWorkers } from "@/app/unregisterServiceWorkers";
-import { useWorkspacButtonBarSpin } from "@/app/useWorkspacButtonBarSpin";
 import { useConfirm } from "@/components/Confirm";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { OpalSvg } from "@/components/OpalSvg";
@@ -25,6 +21,8 @@ import { BuildDAO } from "@/data/dao/BuildDAO";
 import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
+import { useToggleEditHistory } from "@/editor/history/useToggleEditHistory";
+import { useToggleHistoryImageGeneration } from "@/editor/history/useToggleHistoryImageGeneration";
 import { useLeftCollapsed } from "@/features/preview-pane/EditorSidebarLayout";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
@@ -36,6 +34,8 @@ import { clearAllCaches } from "@/lib/clearAllCaches";
 import { IS_MAC } from "@/lib/isMac";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { cn } from "@/lib/utils";
+import { unregisterServiceWorkers } from "@/unregisterServiceWorkers";
+import { useWorkspacButtonBarSpin } from "@/useWorkspacButtonBarSpin";
 import { Workspace } from "@/workspace/Workspace";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {

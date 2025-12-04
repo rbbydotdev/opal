@@ -1,4 +1,4 @@
-import { DEFAULT_GIT_CONFIG, GIT_CONFIG_KEY } from "@/app/GitConfig";
+import { DEFAULT_GIT_CONFIG, GIT_CONFIG_KEY } from "@/GitConfig";
 import { GitAuthorFormValues } from "@/components/sidebar/sync-section/GitAuthorDialog";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 

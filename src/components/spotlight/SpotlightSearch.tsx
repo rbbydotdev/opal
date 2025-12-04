@@ -1,4 +1,3 @@
-import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { toast } from "@/components/ui/sonner";
@@ -7,6 +6,7 @@ import { useFileTree } from "@/context/FileTreeProvider";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { Thumb } from "@/data/Thumb";
+import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useWindowContextProvider } from "@/features/preview-pane/IframeContextProvider";

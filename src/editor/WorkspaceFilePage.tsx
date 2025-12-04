@@ -1,6 +1,3 @@
-import { Editor, Editors } from "@/app/editor/Editors";
-import { setViewMode } from "@/app/editor/view-mode/handleUrlParamViewMode";
-import { SourceEditor } from "@/app/source-editor/SourceEditor";
 import { FileError } from "@/components/filetree/FileError";
 import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
@@ -8,11 +5,14 @@ import { WorkspaceMarkdownEditor } from "@/components/workspace/WorkspaceContent
 import { WorkspaceImageView } from "@/components/workspace/WorkspaceImageView";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
+import { Editor, Editors } from "@/editor/Editors";
+import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
 import useFavicon from "@/hooks/useFavicon";
 import { NotFoundError } from "@/lib/errors";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { SourceEditor } from "@/source-editor/SourceEditor";
 import { Workspace } from "@/workspace/Workspace";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";

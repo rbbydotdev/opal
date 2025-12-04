@@ -1,9 +1,9 @@
-import { useAllPlugins } from "@/app/editor/AllPlugins";
-import { MainEditorRealmId, MdxEditorScrollSelector } from "@/app/editor/EditorConst";
-import { SnapApiPoolProvider } from "@/app/editor/history/SnapApiPoolProvider";
 import { useFileContents } from "@/context/useFileContents";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/dao/HistoryDAO";
+import { useAllPlugins } from "@/editor/AllPlugins";
+import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
+import { SnapApiPoolProvider } from "@/editor/history/SnapApiPoolProvider";
 import { ScrollSync } from "@/hooks/useScrollSync";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
@@ -11,9 +11,9 @@ import { Workspace } from "@/workspace/Workspace";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";
-import { useToggleEditHistory } from "../../app/editor/history/useToggleEditHistory";
-import { useToggleHistoryImageGeneration } from "../../app/editor/history/useToggleHistoryImageGeneration";
-import { useWorkspaceDocumentId } from "../../app/editor/history/useWorkspaceDocumentId";
+import { useToggleEditHistory } from "../../editor/history/useToggleEditHistory";
+import { useToggleHistoryImageGeneration } from "../../editor/history/useToggleHistoryImageGeneration";
+import { useWorkspaceDocumentId } from "../../editor/history/useWorkspaceDocumentId";
 
 export function WorkspaceMarkdownEditor({
   currentWorkspace,

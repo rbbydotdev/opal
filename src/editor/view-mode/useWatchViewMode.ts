@@ -1,4 +1,4 @@
-import { ViewModeParamType } from "@/app/editor/view-mode/handleUrlParamViewMode";
+import { ViewModeParamType } from "@/editor/view-mode/handleUrlParamViewMode";
 import { useUrlParam } from "@/hooks/useUrlParam";
 import { ViewMode } from "@mdxeditor/editor";
 
