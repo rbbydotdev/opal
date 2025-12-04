@@ -6,7 +6,6 @@ import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { AbsPath, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-// import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
 
 function getScrollElement(context: any, renderBodyElement: HTMLElement | null): HTMLElement | null {
@@ -53,6 +52,7 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
         ? null
         : createPortal(
             <PreviewContent
+              mode="pane"
               path={path}
               currentWorkspace={currentWorkspace}
               context={context}
@@ -121,7 +121,12 @@ export const WindowPreviewComponent = forwardRef<
       {!context?.document?.body
         ? null
         : createPortal(
-            <PreviewContent path={resolvedPath} currentWorkspace={currentWorkspace} context={context} />,
+            <PreviewContent
+              mode="external"
+              path={resolvedPath}
+              currentWorkspace={currentWorkspace}
+              context={context}
+            />,
             context.document.body
           )}
 

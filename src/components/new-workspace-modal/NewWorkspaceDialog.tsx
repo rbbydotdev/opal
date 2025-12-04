@@ -119,7 +119,6 @@ export function NewWorkspaceDialog({
   };
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      {/* 1. Give the form a unique ID */}
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[28rem] max-w-[95vw]">
         <DialogHeader>
@@ -127,8 +126,8 @@ export function NewWorkspaceDialog({
           <DialogDescription>Create A New Workspace</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="gap-4 flex flex-col">
-          <div className="grid gap-4 min-w-0">
-            <div className="grid gap-3">
+          <div className="flex-col flex gap-4 min-w-0">
+            <div className="flex-col flex gap-3">
               <Label htmlFor="name-1">Name</Label>
               <Input
                 required
@@ -139,7 +138,7 @@ export function NewWorkspaceDialog({
                 autoComplete="off"
               />
             </div>
-            <div className="grid gap-3">
+            <div className="flex-col flex gap-3">
               <Label htmlFor="template-1">Template</Label>
               <Select name="template" value={selectedTemplate} onValueChange={setSelectedTemplate}>
                 <SelectTrigger className="h-12">
@@ -202,7 +201,7 @@ export function NewWorkspaceDialog({
               </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <DialogClose asChild>
               <Button variant="outline" disabled={isPending}>
                 Cancel

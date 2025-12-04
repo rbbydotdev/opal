@@ -105,6 +105,7 @@ export function useAllPlugins({
         }),
         codeMirrorPlugin({
           codeBlockLanguages: { js: "JavaScript", css: "CSS", txt: "Plain Text", tsx: "TypeScript", "": "Unspecified" },
+          autoLoadLanguageSupport: true,
         }),
         directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
         markdownShortcutPlugin(),
