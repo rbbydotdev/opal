@@ -1,6 +1,6 @@
 import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
 import { debounce } from "@/lib/debounce";
-import { CreateTypedEmitter } from "@/lib/TypeEmitter";
+import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import { Mutex } from "async-mutex";
 
 const HistoryEvents = {

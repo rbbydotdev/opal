@@ -1,5 +1,5 @@
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
-import { SuperEmitter } from "@/lib/TypeEmitter";
+import { SuperEmitter } from "@/lib/events/TypeEmitter";
 import { nanoid } from "nanoid";
 import { createContext, RefObject, useContext, useEffect, useMemo, useRef } from "react";
 
@@ -46,8 +46,7 @@ function useScrollSync({
     const el = elementRef.current;
     const listenEl = listenRef.current;
     const emitter = context.emitter;
-    
-    
+
     if (!el || !emitter || !listenEl) return;
 
     const handleScroll = () => {
@@ -74,7 +73,7 @@ function useScrollSync({
       const maxY = el.scrollHeight - el.clientHeight;
       const targetX = x * maxX;
       const targetY = y * maxY;
-      
+
       listenEl.addEventListener(
         "scroll",
         () => {

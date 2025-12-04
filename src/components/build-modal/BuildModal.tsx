@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
+import { Workspace } from "@/lib/events/Workspace";
 import { useBuildRunner } from "@/services/useBuildRunner";
-import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, CheckCircle, Loader, UploadCloud, X } from "lucide-react";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";

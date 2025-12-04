@@ -1,6 +1,6 @@
 import { isFilePathsPayload } from "@/data/disk/DiskEvents";
+import { Workspace } from "@/lib/events/Workspace";
 import { absPath, isHtml, isMarkdown, isTemplateFile } from "@/lib/paths2";
-import { Workspace } from "@/workspace/Workspace";
 import { useEffect, useRef, useState } from "react";
 
 const noCached = (filePath: string): string => {

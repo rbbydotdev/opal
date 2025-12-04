@@ -18,9 +18,9 @@ import { BuildLog } from "@/hooks/useBuildLogs";
 import { useBuilds } from "@/hooks/useBuilds";
 import { useDestinations } from "@/hooks/useDestinations";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { Workspace } from "@/lib/events/Workspace";
 import { Case, SwitchCase } from "@/lib/SwitchCase";
 import { cn } from "@/lib/utils";
-import { Workspace } from "@/workspace/Workspace";
 import {
   AlertTriangle,
   ArrowLeft,

@@ -1,5 +1,5 @@
 import { isAbortError, unwrapError } from "@/lib/errors";
-import { CreateTypedEmitter } from "@/lib/TypeEmitter";
+import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import fuzzysort from "fuzzysort";
 
 export const EMPTY_SEARCH_RESULT: Fuzzysort.KeyResults<any> = Object.assign([], {

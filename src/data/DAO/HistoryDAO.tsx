@@ -5,7 +5,7 @@ import { useIframeImagePooledImperitiveWorker } from "@/editor/history/EditViewI
 import { useToggleHistoryImageGeneration } from "@/editor/history/useToggleHistoryImageGeneration";
 import { useResource } from "@/hooks/useResource";
 
-import { SuperEmitter } from "@/lib/TypeEmitter";
+import { SuperEmitter } from "@/lib/events/TypeEmitter";
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";

@@ -46,9 +46,9 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { NotFoundError, unwrapError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
+import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
-import { Workspace } from "@/workspace/Workspace";
 import { Link } from "@tanstack/react-router";
 // import { RepoInfoType } from "../../../features/git-repo/GitRepo";
 // import { useConfirm } from "../../Confirm";

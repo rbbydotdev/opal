@@ -1,5 +1,5 @@
+import { IterableWeakSet } from "@/lib/IterableWeakSet";
 import { EventEmitter } from "events";
-import { IterableWeakSet } from "./IterableWeakSet";
 
 // Helper function to create symbol-like objects for emitter identification
 function EmitterSymbol(description?: string): object {

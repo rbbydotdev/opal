@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SuperEmitter } from "@/lib/TypeEmitter";
+import { SuperEmitter } from "@/lib/events/TypeEmitter";
 
 type PromiseReturningFunctionKeys<T> = Extract<
   {
