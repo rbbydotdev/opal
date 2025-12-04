@@ -6,6 +6,7 @@ import { useForm, UseFormReturn, useWatch } from "react-hook-form";
 import { DeviceAuth } from "@/components/DeviceAuth";
 import { OAuth } from "@/components/OAuth";
 import { RemoteAuthFormValues, RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
+import { Case, SwitchCase } from "@/components/SwitchCase";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,7 +29,6 @@ import {
   RemoteAuthSource,
 } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
-import { Case, SwitchCase } from "@/lib/SwitchCase";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import { useMemo } from "react";
