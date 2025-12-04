@@ -8,6 +8,7 @@ import {
   isExternalFileDrop,
   useHandleDropFilesEventForNodeRedirect,
 } from "@/hooks/useFileTreeDragDrop";
+import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { absPath } from "@/lib/paths2";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -19,12 +20,13 @@ function WorkspaceIndexPage() {
   const { currentWorkspace } = useWorkspaceContext();
 
   const handleExternalDrop = useHandleDropFilesEventForNodeRedirect({ currentWorkspace });
+  const { theme } = useThemeSettings();
 
   return (
     <>
       <div
         style={{
-          backgroundImage: "url('/opal.svg')",
+          backgroundImage: theme === "dark" ? "url('/opal-blank.svg')" : "url('/opal.svg')",
           backgroundRepeat: "repeat",
           backgroundSize: "600px 600px",
           position: "relative",
@@ -48,7 +50,7 @@ function WorkspaceIndexPage() {
             style={{
               position: "absolute",
               inset: 0,
-              opacity: 0.9,
+              opacity: theme === "dark" ? 0.6 : 0.8,
               pointerEvents: "none",
             }}
           />
