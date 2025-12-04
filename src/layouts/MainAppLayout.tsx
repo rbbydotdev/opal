@@ -4,6 +4,7 @@ import { DestinationManagerProvider } from "@/components/DestinationManagerConte
 import { AsyncWindowErrorBoundary } from "@/components/errors/AsyncWindowErrorBoundary";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/errors/ErrorPlaque";
+import { WorkspaceErrorBoundaryFallback } from "@/components/errors/WorkspaceErrorBoundaryFallback";
 import { GitStatusProvider } from "@/components/GitStatusModal";
 import { PromptProvider } from "@/components/Prompt";
 import { PublicationModalProvider } from "@/components/publish-modal/PubicationModalCmd";
@@ -18,7 +19,6 @@ import { usePreserveViewModeURL } from "@/editor/view-mode/usePreserveViewModeUR
 import { WindowContextProviderComponent } from "@/features/live-preview/IframeContextProvider";
 import { useZoom } from "@/hooks/useZoom";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
-import { WorkspaceErrorBoundaryFallback } from "@/layouts/WorkspaceErrorBoundaryFallback";
 import { ServiceWorker } from "@/lib/service-worker/SwSetup";
 import { cn } from "@/lib/utils";
 import { WorkspaceButtonBar } from "@/WorkspaceButtonBar";

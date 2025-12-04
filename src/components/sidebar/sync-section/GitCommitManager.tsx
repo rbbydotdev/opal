@@ -1,4 +1,3 @@
-import { OPAL_AUTHOR } from "@/GitConfig";
 import { OpalSvg } from "@/components/OpalSvg";
 import { SelectHighlight } from "@/components/sidebar/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OPAL_AUTHOR } from "@/features/git-repo/GitConfig";
 import { GitRefType, RepoCommit } from "@/features/git-repo/GitRepo";
 import { cn } from "@/lib/utils";
 import { ArrowBigLeftDashIcon, Ellipsis, GitCommit, RotateCcw } from "lucide-react";

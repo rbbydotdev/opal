@@ -92,8 +92,6 @@ class WhiteListItem {
 }
 
 export const WHITELIST = [
-  // "/favicon.ico",
-  // "/icon.svg",
   "/opal.svg",
   "/opal-blank.svg",
   "/opal-lite.svg",
