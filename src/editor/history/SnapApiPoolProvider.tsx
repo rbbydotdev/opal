@@ -50,3 +50,4 @@ export class ApiPoolWorker extends PoolWorker<Resource<PreviewWorkerApiType>> {}
 const { PoolProvider, usePool, Context } = CreatePoolContext<ApiPoolWorker>();
 export const SnapApiPoolProvider = PoolProvider;
 export const useSnapApiPool = usePool;
+const SnapApiContext = Context;
