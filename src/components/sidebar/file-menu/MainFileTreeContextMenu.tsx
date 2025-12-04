@@ -1,5 +1,6 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { TreeNode } from "@/components/filetree/TreeNode";
+import { useFiletreeMenuContextMenuActions } from "@/components/filetree/useFiletreeMenuContextMenuActions";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -10,7 +11,6 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { DefaultFile } from "@/lib/DefaultFile";
