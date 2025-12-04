@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { WS_BUTTON_BAR_ID } from "@/constants/layout";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { PanelLeft } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 // import { useWatchElement } from '@/hooks/useWatchElement';
