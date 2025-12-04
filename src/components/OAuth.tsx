@@ -1,10 +1,10 @@
+import { OAuthService, OAuthState } from "@/auth/OAuthService";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/remote-auth/RemoteAuthTemplate";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
-import { OAuthService, OAuthState } from "@/lib/auth/OAuthService";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { Check, Loader } from "lucide-react";

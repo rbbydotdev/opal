@@ -1,10 +1,10 @@
+import { GithubDeviceAuthFlow } from "@/auth/GithubDeviceAuthFlow";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { RemoteAuthFormValues } from "@/components/remote-auth/RemoteAuthTemplate";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
-import { GithubDeviceAuthFlow } from "@/lib/auth/GithubDeviceAuthFlow";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { unwrapError } from "@/lib/errors";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";

@@ -1,5 +1,5 @@
+import { getNetlifyOAuthUrl } from "@/auth/NetlifyOAuthFlow";
 import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
-import { getNetlifyOAuthUrl } from "@/lib/auth/NetlifyOAuthFlow";
 import { OAuthProvider, OAuthProviderConfig } from "./OAuthProvider";
 
 export class NetlifyOAuthProvider extends OAuthProvider {
