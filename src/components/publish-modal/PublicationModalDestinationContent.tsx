@@ -21,9 +21,9 @@ import {
   DestinationJType,
   DestinationMetaType,
 } from "@/data/dao/DestinationDAO";
-import { isCloudflareAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { DestinationSchemaMap, DestinationType } from "@/data/DestinationSchemaMap";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { isCloudflareAPIRemoteAuthDAO, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Pencil, Plus, Zap } from "lucide-react";
 import { useMemo, useState } from "react";

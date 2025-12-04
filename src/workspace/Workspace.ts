@@ -1,4 +1,3 @@
-import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Disk } from "@/data/disk/Disk";
 import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "@/data/disk/DiskEvents";
@@ -24,6 +23,7 @@ import {
   relPath,
   resolveFromRoot,
 } from "@/lib/paths2";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { WorkspaceScannable } from "@/workspace/WorkspaceScannable";
 import { DiskType } from "../data/disk/DiskType";
 //TODO move ww to different place

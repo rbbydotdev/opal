@@ -14,9 +14,9 @@ import {
 } from "@/components/sidebar/SelectableList";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { SidebarGroup } from "@/components/ui/sidebar";
-import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { Delete, Pencil, Plus, Sparkle } from "lucide-react";
 import { useState } from "react";
 

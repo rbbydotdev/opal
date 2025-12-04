@@ -1,5 +1,5 @@
-import type { VercelAPIRemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteAuthVercelAgent } from "@/data/remote-auth/RemoteAuthVercelAgent";
+import type { VercelAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 
 export class RemoteAuthVercelAPIAgent extends RemoteAuthVercelAgent {
   getCORSProxy(): string | undefined {

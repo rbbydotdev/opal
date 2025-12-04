@@ -18,7 +18,6 @@ import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { WorkspaceMenu } from "@/components/workspace/WorkspaceMenu";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/dao/BuildDAO";
-import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { useToggleEditHistory } from "@/editor/history/useToggleEditHistory";
@@ -36,6 +35,7 @@ import { useRequestSignals } from "@/lib/RequestSignals";
 import { unregisterServiceWorkers } from "@/lib/service-worker/unregisterServiceWorkers";
 import { cn } from "@/lib/utils";
 import { useWorkspacButtonBarSpin } from "@/useWorkspacButtonBarSpin";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { Workspace } from "@/workspace/Workspace";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {

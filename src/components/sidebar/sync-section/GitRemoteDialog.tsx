@@ -24,7 +24,6 @@ import { RemoteResource } from "@/components/publish-modal/RemoteResourceField";
 import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { GithubAPIRemoteAuthDAO, RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { RemoteAuthGithubAPIAgent } from "@/data/remote-auth/RemoteAuthGithubAPIAgent";
@@ -32,6 +31,7 @@ import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
 import { cn } from "@/lib/utils";
+import { GithubAPIRemoteAuthDAO, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useImperativeHandle, useState } from "react";
 
 const gitRemoteSchema = z.object({

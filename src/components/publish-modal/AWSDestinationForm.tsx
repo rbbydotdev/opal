@@ -3,11 +3,11 @@ import { useRemoteAWSBucket, useRemoteAWSSearch } from "@/components/RemoteConne
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DestinationMetaType } from "@/data/dao/DestinationDAO";
-import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthAWSAPIAgent } from "@/data/remote-auth/RemoteAuthAWSAPIAgent";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { cn } from "@/lib/utils";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import * as Popover from "@radix-ui/react-popover";
 import fuzzysort from "fuzzysort";
 import React, { ReactNode, useEffect, useMemo, useState } from "react";
