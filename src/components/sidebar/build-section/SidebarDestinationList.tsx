@@ -51,7 +51,7 @@ export function SidebarDestinationList() {
       </SelectableListActions>
 
       <SelectableListItems>
-        <div className="flex flex-col gap-2 mt-4 ml-3 group">
+        <div className="flex flex-col gap-2 mt-4 #ml-3 group">
           {destinations.length === 0 && <EmptySidebarLabel label="no destinations" />}
           {destinations.map((destination) => (
             <SelectableListItem key={destination.guid} id={destination.guid}>
