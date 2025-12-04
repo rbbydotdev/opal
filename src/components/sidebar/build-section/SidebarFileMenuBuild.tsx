@@ -20,6 +20,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
@@ -154,9 +155,6 @@ export function SidebarFileMenuBuild({
                 ) : (
                   <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
                     <BuildMenuDropDown open={open} setOpen={setOpen} disabled={builds.length === 0}>
-                      <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
-                        <Delete className="text-destructive" /> Delete Build
-                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
                           if (!build) return;
@@ -168,6 +166,10 @@ export function SidebarFileMenuBuild({
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
                         <Download /> Download Build
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
+                        <Delete className="text-destructive" /> Delete Build
                       </DropdownMenuItem>
                     </BuildMenuDropDown>
                   </BuildSelector>

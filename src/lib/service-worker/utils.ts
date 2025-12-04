@@ -1,13 +1,8 @@
 declare const self: ServiceWorkerGlobalScope;
-import { RemoteLogger } from "@/lib/RemoteLogger";
-// import { RemoteLogger } from "@/lib/RemoteLogger";
 import { decodePath } from "@/lib/paths2";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/service-worker/request-signal-types";
 
-// --- Constants ---
-
-//TODO: possibly have to make this forbidden names on main, because of weird bugs
-// text/javascript
+import { RemoteLogger } from "@/lib/RemoteLogger";
 
 interface WhiteListConfig {
   url?: string;
