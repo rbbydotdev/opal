@@ -3,7 +3,11 @@ import { highlightMdxElement } from "@/app/editor/highlightMdxElement";
 import { scrollToEditorElement } from "@/app/editor/scrollToEditorElement";
 import { isParent } from "@/components/isParent";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
-import { isContainer, isLeaf, LexicalTreeViewNode } from "@/components/sidebar/lexical/treeViewDisplayNodesLexical";
+import {
+  isContainer,
+  isLeaf,
+  LexicalTreeViewNode,
+} from "@/components/sidebar/tree-view-section/treeViewDisplayNodesLexical";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useCellValueForRealm } from "@/components/useCellValueForRealm";
