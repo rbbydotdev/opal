@@ -1,7 +1,7 @@
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { useWorkspacePathPreviewURL } from "@/features/live-preview/useWorkspacePathPreviewURL";
-import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 
 export function usePreviewPaneProps({ path, currentWorkspace }: { path: AbsPath | null; currentWorkspace: Workspace }) {
   const { setPreviewNode, previewNode } = useResolvePathForPreview({ path, currentWorkspace });

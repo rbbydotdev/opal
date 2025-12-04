@@ -1,10 +1,10 @@
 import { useLiveFileContent } from "@/context/useFileContents";
 import { ExtCtxReadyContext, PreviewContext } from "@/features/live-preview/IframeContextProvider";
 import { TemplateManager } from "@/features/templating";
-import { Workspace } from "@/lib/events/Workspace";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, prefix, relPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { useEffect, useRef, useState } from "react";
 
 // Reusable hook for render body callback

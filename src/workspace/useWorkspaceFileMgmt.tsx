@@ -5,7 +5,6 @@ import { SpecialDirs } from "@/data/SpecialDirs";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { NotFoundError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
-import { Workspace } from "@/lib/events/Workspace";
 import {
   AbsPath,
   absPath,
@@ -18,6 +17,7 @@ import {
   RelPath,
   relPath,
 } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 

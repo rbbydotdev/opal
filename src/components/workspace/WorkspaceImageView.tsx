@@ -3,7 +3,7 @@ import { ImageViewer } from "@/components/ImageViewer";
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/hooks/useFileTreeDragDrop";
-import { Workspace } from "@/lib/events/Workspace";
+import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
 
 export function WorkspaceImageView({ currentWorkspace }: { currentWorkspace: Workspace }) {

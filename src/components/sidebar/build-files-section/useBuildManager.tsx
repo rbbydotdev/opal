@@ -1,5 +1,5 @@
 import { useBuilds } from "@/hooks/useBuilds";
-import { Workspace } from "@/lib/events/Workspace";
+import { Workspace } from "@/workspace/Workspace";
 import { useState } from "react";
 
 export function useBuildManager({ currentWorkspace }: { currentWorkspace: Workspace }) {

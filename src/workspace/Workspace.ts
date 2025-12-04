@@ -25,7 +25,7 @@ import {
   resolveFromRoot,
 } from "@/lib/paths2";
 import { WorkspaceScannable } from "@/workspace/WorkspaceScannable";
-import { DiskType } from "../../data/disk/DiskType";
+import { DiskType } from "../data/disk/DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
 import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "@/components/filetree/TreeNode";

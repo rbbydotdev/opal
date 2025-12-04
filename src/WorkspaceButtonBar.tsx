@@ -31,12 +31,12 @@ import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useZoom } from "@/hooks/useZoom";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
-import { Workspace } from "@/lib/events/Workspace";
 import { IS_MAC } from "@/lib/isMac";
 import { useRequestSignals } from "@/lib/RequestSignals";
 import { unregisterServiceWorkers } from "@/lib/service-worker/unregisterServiceWorkers";
 import { cn } from "@/lib/utils";
 import { useWorkspacButtonBarSpin } from "@/useWorkspacButtonBarSpin";
+import { Workspace } from "@/workspace/Workspace";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   BombIcon,

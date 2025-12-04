@@ -1,6 +1,6 @@
 import { DefaultFile } from "@/lib/DefaultFile";
-import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath, isEjs, isMustache } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { BaseRenderer } from "./BaseRenderer";
 import { EtaRenderer, TemplateData } from "./EtaRenderer";
 import { HtmlRenderer, HtmlTemplateData } from "./HtmlRenderer";

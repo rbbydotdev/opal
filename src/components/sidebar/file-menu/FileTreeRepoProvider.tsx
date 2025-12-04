@@ -1,6 +1,6 @@
 import { RepoDefaultInfo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
-import { Workspace } from "@/lib/events/Workspace";
+import { Workspace } from "@/workspace/Workspace";
 import React from "react";
 const defaultRepoInfoContext = RepoDefaultInfo;
 

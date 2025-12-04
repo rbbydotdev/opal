@@ -1,5 +1,5 @@
-import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import Mustache from "mustache";
 import { BaseRenderer, HelperCore, createMustacheLambda } from "./BaseRenderer";
 

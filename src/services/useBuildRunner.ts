@@ -1,7 +1,7 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { BuildLogLine, BuildStrategy } from "@/data/dao/BuildRecord";
-import { Workspace } from "@/lib/events/Workspace";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
+import { Workspace } from "@/workspace/Workspace";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 interface UseBuildRunnerReturn {

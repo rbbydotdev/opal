@@ -1,7 +1,7 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
-import { Workspace } from "@/lib/events/Workspace";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { useLocation } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
 

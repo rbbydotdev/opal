@@ -3,7 +3,7 @@ import { NULL_FILE_TREE } from "@/components/filetree/Filetree";
 import { NULL_TREE_ROOT } from "@/components/filetree/TreeNode";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { NullDisk } from "@/data/disk/NullDisk";
-import { Workspace } from "@/lib/events/Workspace";
+import { Workspace } from "@/workspace/Workspace";
 
 export class NullWorkspace extends Workspace {
   async init() {
