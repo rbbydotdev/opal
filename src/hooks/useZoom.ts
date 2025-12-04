@@ -1,4 +1,4 @@
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useEffect } from "react";
 
 type ZoomLevel = 0.65 | 0.75 | 0.85 | 0.95 | 1;
@@ -6,7 +6,7 @@ type ZoomLevel = 0.65 | 0.75 | 0.85 | 0.95 | 1;
 export const ZOOM_LEVELS: ZoomLevel[] = [0.65, 0.75, 0.85, 0.95, 1];
 
 export function useZoom() {
-  const { storedValue: zoomLevel, setStoredValue: setZoomLevel } = useLocalStorage2<ZoomLevel>("app/zoom-level", 1);
+  const { storedValue: zoomLevel, setStoredValue: setZoomLevel } = useLocalStorage<ZoomLevel>("app/zoom-level", 1);
 
   const applyZoom = (zoom: ZoomLevel) => {
     document.body.style.fontSize = `${zoom}rem`;

@@ -14,7 +14,7 @@ import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
 import { useSidebarPanes } from "@/features/live-preview/EditorSidebarLayout";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { OpalMimeType } from "@/lib/fileType";
 import { AbsPath } from "@/lib/paths2";
@@ -35,16 +35,6 @@ import { useRouter } from "@tanstack/react-router";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
 import { useEffect, useRef } from "react";
-
-type StrictSourceMimesType =
-  | "text/css"
-  | "text/plain"
-  | "text/markdown"
-  | "text/javascript"
-  | "text/x-ejs"
-  | "text/x-mustache"
-  | "text/html"
-  | "application/json";
 
 const getLanguageExtension = (
   language:
@@ -98,8 +88,8 @@ export const CodeMirrorEditor = ({
   currentWorkspace: Workspace;
   enableConflictResolution?: boolean;
 }) => {
-  const { storedValue: vimMode, setStoredValue: setVimMode } = useLocalStorage2("CodeMirrorEditor/vimMode", false);
-  const { storedValue: globalConflictResolution, setStoredValue: setGlobalConflictResolution } = useLocalStorage2(
+  const { storedValue: vimMode, setStoredValue: setVimMode } = useLocalStorage("CodeMirrorEditor/vimMode", false);
+  const { storedValue: globalConflictResolution, setStoredValue: setGlobalConflictResolution } = useLocalStorage(
     "SourceEditor/enableGitConflictResolution",
     true
   );

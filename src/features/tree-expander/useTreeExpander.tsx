@@ -2,7 +2,7 @@ import { TreeNode } from "@/components/filetree/TreeNode";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { TreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { ExpandMap } from "@/features/tree-expander/TreeExpanderTypes";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { ReactNode, useContext, useEffect, useState } from "react";
 
@@ -47,7 +47,7 @@ function useTreeExpander({
 }) {
   const [local, setLocal] = useState<ExpandMap>({});
   const setAllStates = (state: boolean) => nodePaths.reduce<ExpandMap>((acc, path) => ({ ...acc, [path]: state }), {});
-  const { storedValue: stored, setStoredValue: setStored } = useLocalStorage2<ExpandMap>(
+  const { storedValue: stored, setStoredValue: setStored } = useLocalStorage<ExpandMap>(
     `TreeExpander/${expanderId}`,
     local
   );

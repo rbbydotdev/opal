@@ -1,7 +1,7 @@
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function useToggleEditHistory() {
-  const { storedValue, setStoredValue } = useLocalStorage2("app/EditHistory", false);
+  const { storedValue, setStoredValue } = useLocalStorage("app/EditHistory", false);
   const toggle = () => setStoredValue(!storedValue);
   return { isEditHistoryEnabled: storedValue, toggleEditHistory: toggle };
 }

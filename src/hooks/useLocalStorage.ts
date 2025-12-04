@@ -22,11 +22,7 @@ const IS_SERVER = typeof window === "undefined";
  * @param {UseLocalStorageOptions<T>} options - Options for the hook.
  * @returns A tuple of [storedValue, setValue, removeValue].
  */
-export default function useLocalStorage2<T>(
-  key: string,
-  initialValue: T | (() => T),
-  options: UseLocalStorageOptions<T> = {}
-) {
+export function useLocalStorage<T>(key: string, initialValue: T | (() => T), options: UseLocalStorageOptions<T> = {}) {
   const initialValueRef = useRef<T | (() => T)>(initialValue);
   // const { initializeWithValue = true } = options;
   const optionsRef = useRef<UseLocalStorageOptions<T>>(options);

@@ -1,13 +1,11 @@
 import { GitAuthorFormValues } from "@/components/sidebar/sync-section/GitAuthorDialog";
 import { DEFAULT_GIT_CONFIG, GIT_CONFIG_KEY } from "@/features/git-repo/GitConfig";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function useGitAuthorSettings() {
-  const { storedValue: gitConfig, setStoredValue: setGitConfig } = useLocalStorage2(
-    GIT_CONFIG_KEY,
-    DEFAULT_GIT_CONFIG,
-    { initializeWithValue: true }
-  );
+  const { storedValue: gitConfig, setStoredValue: setGitConfig } = useLocalStorage(GIT_CONFIG_KEY, DEFAULT_GIT_CONFIG, {
+    initializeWithValue: true,
+  });
 
   const gitAuthor = gitConfig.user;
 
