@@ -4,7 +4,6 @@ import React, { useImperativeHandle, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { OPAL_AUTHOR } from "@/GitConfig";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { OPAL_AUTHOR } from "@/features/git-repo/GitConfig";
 
 const gitAuthorSchema = z.object({
   name: z.string().min(1, "Author name is required").max(100, "Author name is too long"),

@@ -17,10 +17,6 @@ interface GitUserInfo {
 
 interface GitConfigData {
   user: GitUserInfo;
-  // Future git configs can be added here:
-  // defaultBranch?: string;
-  // pushDefault?: string;
-  // mergeStrategy?: string;
 }
 
 export const DEFAULT_GIT_CONFIG: GitConfigData = {
@@ -75,8 +71,4 @@ export class GitConfig {
   setUserInfo(userInfo: GitUserInfo): void {
     this.setConfig({ user: userInfo });
   }
-
-  // Future methods can be added here:
-  // getDefaultBranch(): string { ... }
-  // setDefaultBranch(branch: string): void { ... }
 }

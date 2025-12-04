@@ -1,5 +1,5 @@
-import { DEFAULT_GIT_CONFIG, GIT_CONFIG_KEY } from "@/GitConfig";
 import { GitAuthorFormValues } from "@/components/sidebar/sync-section/GitAuthorDialog";
+import { DEFAULT_GIT_CONFIG, GIT_CONFIG_KEY } from "@/features/git-repo/GitConfig";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 
 export function useGitAuthorSettings() {
