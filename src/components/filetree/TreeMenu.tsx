@@ -1,4 +1,4 @@
-import { isParent } from "@/components/isParent";
+import { inorderWalk } from "@/components/filetree/inorderWalk";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import {
   isContainer,
@@ -501,13 +501,6 @@ function Bullet({ type, depth }: LexicalTreeViewNode) {
   }
   return null;
 }
-
-const inorderWalk = (node: LexicalTreeViewNode, callback: (node: LexicalTreeViewNode) => void) => {
-  callback(node);
-  if (isParent(node) && node.children) {
-    node.children.forEach((child) => inorderWalk(child, callback));
-  }
-};
 
 const TreeViewMenuParent = ({
   depth,
