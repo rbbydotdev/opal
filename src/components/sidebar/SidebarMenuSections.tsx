@@ -12,6 +12,7 @@ import { SidebarDndList } from "@/components/sidebar/SidebarDndList";
 import { SidebarGitSection } from "@/components/sidebar/sync-section/SidebarGitSection";
 import { TrashSidebarFileMenuFileSection } from "@/components/sidebar/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/sidebar/tree-view-section/SidebarMenuTreeSection";
+import { DisplayTreeProvider } from "@/components/sidebar/tree-view-section/useEditorDisplayTree";
 import { SidebarFileMenuUpload } from "@/components/sidebar/upload-section/SidebarFileMenuUpload";
 import {
   DropdownMenu,
@@ -23,7 +24,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "@/components/ui/sidebar";
-import { DisplayTreeProvider } from "@/components/useEditorDisplayTree";
 import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
