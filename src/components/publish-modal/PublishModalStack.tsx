@@ -6,6 +6,7 @@ import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAu
 import { RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
 import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
 import { DestinationLabel } from "@/components/sidebar/build-files-section/DestinationLabel";
+import { Case, SwitchCase } from "@/components/SwitchCase";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,7 +20,6 @@ import { useBuilds } from "@/hooks/useBuilds";
 import { useDestinations } from "@/hooks/useDestinations";
 import { useRemoteAuths } from "@/hooks/useRemoteAuths";
 import { Workspace } from "@/lib/events/Workspace";
-import { Case, SwitchCase } from "@/lib/SwitchCase";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
