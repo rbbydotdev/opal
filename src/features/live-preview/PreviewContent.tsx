@@ -24,15 +24,17 @@ function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => voi
 function RenderBodyContainer({
   html,
   renderBodyRef,
+  mode = "external",
 }: {
   html: string;
   renderBodyRef: React.RefObject<HTMLDivElement | null>;
+  mode?: "pane" | "external";
 }) {
   return (
     <div
       ref={renderBodyRef}
       id="render-body"
-      style={{ width: "100%", height: "100%", overflow: "auto" }}
+      style={mode === "pane" ? { width: "100%", height: "100%", overflow: "auto" } : {}}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
@@ -104,15 +106,18 @@ export function PreviewContent({
   currentWorkspace,
   context,
   onRenderBodyReady,
+  mode = "external",
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
   context: PreviewContext;
   onRenderBodyReady?: (element: HTMLElement) => void;
+  mode: "pane" | "external";
 }) {
   if (isMarkdown(path)) {
     return (
       <MarkdownRenderer
+        mode={mode}
         path={path}
         currentWorkspace={currentWorkspace}
         context={context}
@@ -126,26 +131,36 @@ export function PreviewContent({
   }
 
   if (isMustache(path) || isEjs(path)) {
-    return <TemplateRenderer path={path} currentWorkspace={currentWorkspace} onRenderBodyReady={onRenderBodyReady} />;
+    return (
+      <TemplateRenderer
+        mode={mode}
+        path={path}
+        currentWorkspace={currentWorkspace}
+        onRenderBodyReady={onRenderBodyReady}
+      />
+    );
   }
 
   if (isHtml(path)) {
-    return <HtmlRenderer path={path} currentWorkspace={currentWorkspace} onRenderBodyReady={onRenderBodyReady} />;
+    return (
+      <HtmlRenderer mode={mode} path={path} currentWorkspace={currentWorkspace} onRenderBodyReady={onRenderBodyReady} />
+    );
   }
 
   return <div>Unsupported file type for preview: {path}</div>;
 }
 
-// Shared renderer components
 function MarkdownRenderer({
   path,
   currentWorkspace,
   onRenderBodyReady,
+  mode = "external",
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
   context: PreviewContext;
   onRenderBodyReady?: (element: HTMLElement) => void;
+  mode?: "pane" | "external";
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
@@ -162,17 +177,19 @@ function MarkdownRenderer({
     }
   }, [content]);
 
-  return <RenderBodyContainer html={html} renderBodyRef={renderBodyRef} />;
+  return <RenderBodyContainer mode={mode} html={html} renderBodyRef={renderBodyRef} />;
 }
 
 function TemplateRenderer({
   path,
   currentWorkspace,
   onRenderBodyReady,
+  mode,
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
   onRenderBodyReady?: (element: HTMLElement) => void;
+  mode: "pane" | "external";
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const [html, setHtml] = useState<string>("");
@@ -212,20 +229,22 @@ function TemplateRenderer({
     void renderTemplate();
   }, [content, path, currentWorkspace]);
 
-  return <RenderBodyContainer html={html} renderBodyRef={renderBodyRef} />;
+  return <RenderBodyContainer mode={mode} html={html} renderBodyRef={renderBodyRef} />;
 }
 
 function HtmlRenderer({
   path,
   currentWorkspace,
   onRenderBodyReady,
+  mode,
 }: {
   path: AbsPath;
   currentWorkspace: Workspace;
   onRenderBodyReady?: (element: HTMLElement) => void;
+  mode: "pane" | "external";
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
   const renderBodyRef = useRenderBodyCallback(onRenderBodyReady, content);
 
-  return <RenderBodyContainer html={content || ""} renderBodyRef={renderBodyRef} />;
+  return <RenderBodyContainer mode={mode} html={content || ""} renderBodyRef={renderBodyRef} />;
 }

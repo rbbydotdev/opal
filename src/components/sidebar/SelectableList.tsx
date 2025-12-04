@@ -304,7 +304,7 @@ export function SelectableListItems({ children }: { children?: React.ReactNode }
   }, [children, setChildItemIds, hasData]);
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className="space-y-1 py-1">
       {childrenCount === 0 && !hasData && (
         <div className="px-4 py-2">
           <EmptySidebarLabel label={emptyLabel} />
@@ -373,7 +373,6 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
             data-selectable-id={id}
             className="flex w-full rounded justify-center items-center relative"
           >
-            {/* <div className="flex items-center pr-1 py-2 hover:bg-sidebar-accent"> */}
             <SidebarMenuButton
               className="flex-1 min-w-0 group h-full py-1"
               onClick={(e) => handleSelect(sectionRef, e, id)}
@@ -386,7 +385,6 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
               </div>
             </SidebarMenuButton>
             {menuChild}
-            {/* </div> */}
           </SidebarMenuItem>
         </ContextMenuTrigger>
         <ContextMenuContent>
