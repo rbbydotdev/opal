@@ -37,7 +37,6 @@ import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { reduceLineage } from "@/lib/paths2";
 import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
-import * as Comlink from "comlink";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
 
@@ -787,23 +786,6 @@ export class Workspace {
 
   getRemoteGitRepos() {
     return this.remoteAuths ?? [];
-  }
-
-  private async __________RepoWorker() {
-    //TODO repo / repoworker should just be apart of workspace from the get go instead of being a separate thing
-    //but it uses async instantiation so care is needed to make sure its torn down properly, think useAsyncEffct
-    // const worker = new Worker(new URL("/src/workers/RepoWorker/repo.ww.ts", import.meta.url), { type: "module" });
-    const worker = new Worker("/repo.ww.js");
-    const RepoApi = Comlink.wrap<typeof GitRepo>(worker);
-    this.unsubs.push(() => worker.terminate());
-    const repo = await new RepoApi({
-      guid: `${this.id}/repo`,
-      disk: this.disk.toJSON(),
-    });
-    return {
-      worker,
-      repo,
-    };
   }
 
   private async initRepo({ skipListeners }: { skipListeners?: boolean } = {}) {

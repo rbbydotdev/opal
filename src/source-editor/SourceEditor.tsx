@@ -1,4 +1,3 @@
-import "@/app/source-editor/code-mirror-source-editor.css";
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { useFileContents } from "@/context/useFileContents";
@@ -6,6 +5,7 @@ import { CodeMirrorEditor } from "@/editor/CodeMirror";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/hooks/useFileTreeDragDrop";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { cn } from "@/lib/utils";
+import "@/source-editor/code-mirror-source-editor.css";
 import { SourceMimeType } from "@/source-editor/SourceMimeType";
 import { Workspace } from "@/workspace/Workspace";
 import { useLocation } from "@tanstack/react-router";
