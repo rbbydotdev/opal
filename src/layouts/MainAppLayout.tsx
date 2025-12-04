@@ -11,17 +11,17 @@ import { PublicationModalProvider } from "@/components/publish-modal/PubicationM
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { WS_BUTTON_BAR_ID } from "@/constants/layout";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editor/searchPlugin";
 import { usePreserveViewModeURL } from "@/editor/view-mode/usePreserveViewModeURL";
 import { WindowContextProviderComponent } from "@/features/live-preview/IframeContextProvider";
 import { useZoom } from "@/hooks/useZoom";
+import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
+import { WorkspaceButtonBar } from "@/layouts/WorkspaceButtonBar";
 import { ServiceWorker } from "@/lib/service-worker/SwSetup";
 import { cn } from "@/lib/utils";
-import { WorkspaceButtonBar } from "@/WorkspaceButtonBar";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import { Toaster } from "sonner";
 
